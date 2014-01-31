@@ -1,4 +1,4 @@
-C$Id: sasrab.f,v 1.6.2.2 2014/01/26 04:51:39 heidinger Exp $
+C$Id$
 c--------------------------------------------------------------------------
 c Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 c

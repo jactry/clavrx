@@ -1,4 +1,4 @@
-! $Id: num_mod.f90,v 1.38.2.3 2014/01/28 22:19:27 dbotambekov Exp $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

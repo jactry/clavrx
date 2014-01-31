@@ -1,4 +1,4 @@
-!$Id: level2_ncdc_minimal.inc,v 1.4 2013/06/08 18:47:20 wstraka Exp $
+!$Id$
  !--- level2 indices
  integer, parameter, private:: Num_Level2_Sds = 172
  integer, private, save:: Sd_Id_Level2

@@ -1,4 +1,4 @@
-!$Id: level2_patmosx_avhrr_ncdc.inc,v 1.4.2.6 2014/01/27 23:43:13 heidinger Exp $
+!$Id$
  !--- level2 indices
  integer, parameter, private:: Num_Level2_Sds = 191
  integer, private, save:: Sd_Id_Level2

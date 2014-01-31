@@ -1,4 +1,4 @@
-!$Id: algorithm_constants.f90,v 1.5.2.3 2014/01/26 04:48:31 heidinger Exp $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

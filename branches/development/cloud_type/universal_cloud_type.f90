@@ -1,4 +1,4 @@
-!$Id: universal_cloud_type.f90,v 1.13 2013/11/19 01:55:34 heidinger Exp $
+!$Id$
 module UNIVERSAL_CLOUD_TYPE_MODULE 
 !====================================================================
 ! Module Name: UNIVERSAL_CLOUD_TYPE_MODULE
@@ -86,7 +86,7 @@ module UNIVERSAL_CLOUD_TYPE_MODULE
 !====================================================================
 #ifdef ISCLAVRX
 subroutine SET_CLOUD_TYPE_VERSION()
-   Cloud_Type_Version = "$Id: universal_cloud_type.f90,v 1.13 2013/11/19 01:55:34 heidinger Exp $"
+   Cloud_Type_Version = "$Id$"
 end subroutine SET_CLOUD_TYPE_VERSION
 #endif
 

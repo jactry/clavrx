@@ -1,4 +1,4 @@
-!$Id: getmod.f90,v 1.5.2.2 2014/01/26 04:48:33 heidinger Exp $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -32,7 +32,7 @@
 ! REVISION HISTORY:
 !  CVS info:
 ! 
-!   $Id: getmod.f90,v 1.5.2.2 2014/01/26 04:48:33 heidinger Exp $
+!   $Id$
 ! 
 !   $Log: getmod.f90,v $
 !   Revision 1.5.2.2  2014/01/26 04:48:33  heidinger

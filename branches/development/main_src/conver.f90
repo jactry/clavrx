@@ -1,4 +1,4 @@
-!$Id: conver.f90,v 1.4.2.2 2014/01/26 04:48:32 heidinger Exp $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -31,7 +31,7 @@
 ! REVISION HISTORY:
 ! CVS info:
 !
-!  $Id: conver.f90,v 1.4.2.2 2014/01/26 04:48:32 heidinger Exp $
+!  $Id$
 !
 !  $Log: conver.f90,v $
 !  Revision 1.4.2.2  2014/01/26 04:48:32  heidinger

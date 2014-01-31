@@ -359,14 +359,14 @@ if (exists($opt{'dcomp_dir'}))
    {
       print CONFIG "export DCOMP=../aw_dcomp/\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP) -L\$\(DCOMPHDF) -I\$\(DCOMPHDFI) \n";
-      print CONFIG "dcomplinks= -ldcomp\n";
+      print CONFIG "dcomplinks= -ldcomp  -licaf90hdf\n";
    }
 }
 else
 {
       print CONFIG "export DCOMP=../aw_dcomp/\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
-      print CONFIG "dcomplinks= -ldcomp\n";
+      print CONFIG "dcomplinks= -ldcomp  -licaf90hdf\n";
 
 }
 
@@ -376,14 +376,14 @@ if (exists($opt{'nlcomp_dir'}))
    {
       print CONFIG "export NLCOMP=$opt{'nlcomp_dir'}\n";
       print CONFIG "nlcomplibs=-L\$\(NLCOMP) -I\$\(NLCOMP)\n";
-      print CONFIG "nlcomplinks= -lnlcomp\n";
+      print CONFIG "nlcomplinks= -lnlcomp  -licaf90hdf\n";
       
    }
    else
    {
       print CONFIG "export NLCOMP=../aw_nlcomp/\n";
       print CONFIG "nlcomplibs=-L\$\(NLCOMP) -I\$\(NLCOMP)\n";
-      print CONFIG "nlcomplinks= -lnlcomp\n";
+      print CONFIG "nlcomplinks= -lnlcomp  -licaf90hdf\n";
    }
 }
 

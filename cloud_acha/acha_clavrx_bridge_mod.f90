@@ -1,4 +1,4 @@
-!$Id: acha_clavrx_bridge_mod.f90,v 1.9 2014/01/21 21:01:51 heidinger Exp $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !

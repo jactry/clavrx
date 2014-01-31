@@ -1,4 +1,4 @@
-!  $Header: /cvsroot/akh_clavrx_src/file_tools.f90,v 1.4.2.2 2014/01/26 04:48:33 heidinger Exp $
+!  $Header$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

@@ -1,4 +1,4 @@
-!$Id: tranmavhrr.f,v 1.8.2.2 2014/01/26 04:51:39 heidinger Exp $
+!$Id$
 c--------------------------------------------------------------------------
 c Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 c

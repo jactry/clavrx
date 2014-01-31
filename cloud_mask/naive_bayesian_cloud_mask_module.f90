@@ -1,4 +1,4 @@
-!$Id: naive_bayesian_cloud_mask_module.f90,v 1.39 2014/01/22 15:51:04 heidinger Exp $
+!$Id$
 !----------------------------------------------------------------------
 ! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
 ! 
@@ -202,7 +202,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 !====================================================================
  subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
    character(len=*), intent(out):: Cloud_Mask_Version
-   Cloud_Mask_Version = "$Id: naive_bayesian_cloud_mask_module.f90,v 1.39 2014/01/22 15:51:04 heidinger Exp $"
+   Cloud_Mask_Version = "$Id$"
  end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================

@@ -1,4 +1,4 @@
-!C $Id: process_clavrx.f90,v 1.24.2.4 2014/01/28 22:18:19 dbotambekov Exp $
+!C $Id$
   program PROCESS_CLAVRX
 !-----------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3

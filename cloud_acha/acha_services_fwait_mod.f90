@@ -1,4 +1,4 @@
-!$Id: acha_services_fwait_mod.f90,v 1.1 2013/11/13 21:48:53 wstraka Exp $
+!$Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------

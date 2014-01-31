@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.55.2.2 2014/01/26 04:47:34 heidinger Exp $
+# $Id$
 #
 # Grand Unified CLAVR-x Makefile.
 #

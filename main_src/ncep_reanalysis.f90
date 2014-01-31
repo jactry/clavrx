@@ -1,4 +1,4 @@
-! $Id: ncep_reanalysis.f90,v 1.7.8.1 2014/01/26 04:48:35 heidinger Exp $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

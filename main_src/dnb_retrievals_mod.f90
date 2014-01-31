@@ -1,4 +1,4 @@
-!  $Header: /cvsroot/akh_clavrx_src/dnb_retrievals_mod.f90,v 1.2.2.2 2014/01/26 04:48:33 heidinger Exp $
+!  $Header$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # LAST MODIFICATION: "Wed, 13 Jul 2005 11:33:22 -0400 (ajelenak)"
 # Author: Aleksandar Jelenak <Aleksandar.Jelenak@noaa.gov>
-# $Id: configure,v 1.20.2.1 2014/01/17 00:21:12 heidinger Exp $
+# $Id$
 
 
 use strict;

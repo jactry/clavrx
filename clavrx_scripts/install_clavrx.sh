@@ -1,6 +1,6 @@
 #!/bin/bash
 # A.Walther 7 Nov 2013
-# $Header: /cvsroot/clavrx_scripts/install_clavrx.sh,v 1.11 2014/01/23 18:45:41 awalther Exp $
+# $Header$
 #!/bin/bash
 #
 #   history 20 January 2014: changed to patmosx branch of clavrx (AW)

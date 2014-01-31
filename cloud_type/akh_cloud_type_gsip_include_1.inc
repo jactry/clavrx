@@ -1,4 +1,4 @@
-!$Id: akh_cloud_type_gsip_include_1.inc,v 1.1 2013/09/12 18:23:59 wstraka Exp $
+!$Id$
 !---------------------------------------------------------------------
 ! UNIVERSAL_CLOUD_TYPE include file #1 : CLAVR-x specific variables
 !----------------------------------------------------------------------

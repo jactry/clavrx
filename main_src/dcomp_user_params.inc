@@ -1,4 +1,4 @@
-! $Id: dcomp_user_params.inc,v 1.6.2.3 2014/01/26 04:50:00 heidinger Exp $
+! $Id$
 ! $URL:$
 
 REAL(KIND=real4), PARAMETER, private :: SAT_ZEN_MAX = 82.0 !-

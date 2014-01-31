@@ -1,0 +1,8 @@
+This directory includes all clavrx related shell scripts which may be useful for users and developers.
+
+
+1. install_clavrx.sh   (AW) 01/16/2014
+    installs and make clavrx
+    
+ 2. add install_clavrx_trunk.sh (AW) 01/21/2014
+    install the "patmosx" branch which is the "offical" trunk version    

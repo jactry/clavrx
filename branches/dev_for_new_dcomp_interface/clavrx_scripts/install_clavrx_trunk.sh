@@ -58,7 +58,7 @@ cd $path
 svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk clavrx_src
 
 svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/trunk cloud_team_dcomp
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/trunk cloud_team_nlcomp
+svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk cloud_team_nlcomp
 
 cd cloud_team_dcomp
 ./configure -hdf5root=$hdf5_path -with-ifort -hdflib=${hdf4_path}/lib

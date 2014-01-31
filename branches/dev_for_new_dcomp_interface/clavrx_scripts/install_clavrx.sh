@@ -53,7 +53,7 @@ cd $path
 svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/branches/development clavrx_src_development
 
 svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/trunk cloud_team_dcomp
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/trunk cloud_team_nlcomp
+svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk cloud_team_nlcomp
 
 
 

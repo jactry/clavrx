@@ -301,12 +301,12 @@ if (exists($opt{'cmask_dir'}))
    }
    else
    {
-      print CONFIG "export CMASK=../jpssrr_nbvcm/\n";
+      print CONFIG "export CMASK=../cloud_mask/\n";
    }
 }
 else
 {
-      print CONFIG "export CMASK=../jpssrr_nbvcm/\n";
+      print CONFIG "export CMASK=../cloud_mask/\n";
 
 }
 if (exists($opt{'ctype_dir'}))
@@ -317,12 +317,12 @@ if (exists($opt{'ctype_dir'}))
    }
    else
    {
-      print CONFIG "export CTYPE=../akh_cloud_type_repo/\n";
+      print CONFIG "export CTYPE=../cloud_type/\n";
    }
 }
 else
 {
-      print CONFIG "export CTYPE=../akh_cloud_type_repo/\n";
+      print CONFIG "export CTYPE=../cloud_type/\n";
 
 }
 
@@ -334,12 +334,12 @@ if (exists($opt{'acha_dir'}))
    }
    else
    {
-      print CONFIG "export ACHA=../akh_acha_repo/\n";
+      print CONFIG "export ACHA=../cloud_acha/\n";
    }
 }
 else
 {
-      print CONFIG "export ACHA=../akh_acha_repo/\n";
+      print CONFIG "export ACHA=../cloud_acha/\n";
 
 }
 

@@ -64,4 +64,4 @@
 3         ! DCOMP MODIS MODE (1 = 0.6/1.6 . 2 = 0.6/2.2 3 = 0.6/3.7  )
 1         ! ACHA MODE (0=11;1=11/12;2=11/13.3;3=11,12,13;4=8.5/11/12  )
 the_name_of_the_bayesian_cloud_mask_data_file
-$Id: clavrxorb_default_options,v 1.8 2013/06/08 18:47:17 wstraka Exp $
+$Id$

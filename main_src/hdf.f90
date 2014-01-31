@@ -1,4 +1,4 @@
-! $Id: hdf.f90,v 1.2.12.1 2014/01/26 04:48:34 heidinger Exp $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

@@ -1,4 +1,4 @@
-! $Header: /cvsroot/akh_clavrx_src/dcomp_clavrx_bridge_mod.f90,v 1.3.2.3 2014/01/26 04:48:32 heidinger Exp $ 
+! $Header$ 
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

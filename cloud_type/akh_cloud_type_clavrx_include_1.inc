@@ -1,4 +1,4 @@
-!$Id: akh_cloud_type_clavrx_include_1.inc,v 1.2 2013/10/22 17:26:03 heidinger Exp $
+!$Id$
 !---------------------------------------------------------------------
 ! UNIVERSAL_CLOUD_TYPE include file #1 : CLAVR-x specific variables
 !----------------------------------------------------------------------

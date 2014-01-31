@@ -4,7 +4,7 @@
    Baseline XML description of algorithms available for GEOCAT.
    Edit this list instead of algorithm_mod.f90, which is now generated from this list.
 
-   "$Id: algorithm_list.xml,v 1.1 2013/11/08 19:53:02 wstraka Exp $"
+   "$Id$"
 -->
 
 <geocat xmlns="http://cimss.ssec.wisc.edu/goesr/xsd/geocat.xsd-1.0"

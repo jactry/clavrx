@@ -1,4 +1,4 @@
-!$Id: acha_gsip_bridge_mod.f90,v 1.3 2013/11/28 18:15:38 wstraka Exp $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !
@@ -27,7 +27,7 @@ module ACHA_GSIP_BRIDGE_MOD
  !
  !====================================================================
  subroutine SET_ACHA_VERSION()
-   Acha_Version = "$Id: acha_gsip_bridge_mod.f90,v 1.3 2013/11/28 18:15:38 wstraka Exp $"
+   Acha_Version = "$Id$"
  end subroutine SET_ACHA_VERSION
 
 

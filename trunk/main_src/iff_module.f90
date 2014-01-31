@@ -1,4 +1,4 @@
-! $Header: /cvsroot/akh_clavrx_src/iff_module.f90,v 1.3.2.4 2014/01/28 22:19:26 dbotambekov Exp $
+! $Header$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

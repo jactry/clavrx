@@ -77,7 +77,7 @@ MODULE Compare_Float_Numbers
   ! -----------------
   ! Module RCS Id string
   CHARACTER( * ), PRIVATE, PARAMETER :: MODULE_RCS_ID = &
-    '$Id: Compare_Float_Numbers.f90,v 1.1.12.1 2014/01/26 04:48:31 heidinger Exp $'
+    '$Id$'
 
 
 CONTAINS

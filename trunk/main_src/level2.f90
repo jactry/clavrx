@@ -1,4 +1,4 @@
-! $Id: level2.f90,v 1.109.2.2 2014/01/26 04:48:34 heidinger Exp $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

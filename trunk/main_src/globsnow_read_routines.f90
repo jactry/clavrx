@@ -1,4 +1,4 @@
-! $Id: globsnow_read_routines.f90,v 1.2.8.1 2014/01/26 04:48:33 heidinger Exp $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

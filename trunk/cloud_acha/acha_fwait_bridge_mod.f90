@@ -1,4 +1,4 @@
-!$Id: acha_fwait_bridge_mod.f90,v 1.1 2013/11/13 21:48:53 wstraka Exp $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !
@@ -27,7 +27,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
  !
  !====================================================================
  subroutine SET_ACHA_VERSION()
-   Acha_Version = "$Id: acha_fwait_bridge_mod.f90,v 1.1 2013/11/13 21:48:53 wstraka Exp $"
+   Acha_Version = "$Id$"
  end subroutine SET_ACHA_VERSION
 
 

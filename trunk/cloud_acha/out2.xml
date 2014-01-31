@@ -5,7 +5,7 @@
    Edit this list instead of output_constants_autogen.f90 or    
    output_pointers_autogen.f90, which are now generated from this list.
 
-   "$Id: out2.xml,v 1.1 2013/11/08 19:53:03 wstraka Exp $"
+   "$Id$"
 -->
 
 <geocat_out2 xmlns="http://cimss.ssec.wisc.edu/goesr/xsd/geocat_out2.xsd-1.0"

@@ -1,4 +1,4 @@
-!$Header: /cvsroot/akh_clavrx_src/Attic/iff_clavrx_bridge.f90,v 1.1.4.6 2014/01/29 22:40:54 dbotambekov Exp $
+!$Header$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

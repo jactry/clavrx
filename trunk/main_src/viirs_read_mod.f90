@@ -1,4 +1,4 @@
-!$Id: viirs_read_mod.f90,v 1.3.2.3 2014/01/29 22:42:50 dbotambekov Exp $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

@@ -1,3 +1,4 @@
+
 # $Id$
 #
 # Grand Unified CLAVR-x Makefile.
@@ -31,6 +32,8 @@ include config.mk
 INC_DCOMP = -I$(DCOMP)
 
      fflags += $(INC_DCOMP)
+	fflags += $(DCOMPHDF)
+	fflags += $(DCOMPHDFI)
 ifdef hdf5libs
    INC_NLCOMP = -I$(NLCOMP)
 

@@ -17,8 +17,12 @@ export CMASK=../jpssrr_nbvcm/
 export CTYPE=../akh_cloud_type_repo/
 export ACHA=../cloud_team_acha/
 export DCOMP=../cloud_team_dcomp/
-dcomplibs=-L$(DCOMP) -I$(DCOMP)
+export DCOMPHDF=../../cloud_team_dcomp/hdf4/lib/
+export DCOMPHDFI=../../cloud_team_dcomp/hdf4/include/
+
+
+dcomplibs=-L$(DCOMP) -I$(DCOMP)   -L$(DCOMPHDF)  -I$(DCOMPHDFI)
 dcomplinks= -ldcomp
 export NLCOMP=../cloud_team_nlcomp/
 nlcomplibs=-L$(NLCOMP) -I$(NLCOMP)
-nlcomplinks= -lnlcomp
+nlcomplinks= -lnlcomp -licaf90hdf

@@ -343,19 +343,22 @@ else
 
 }
 
+ print CONFIG "export DCOMPHDF=../../cloud_team_dcomp/hdf4/lib/\n";
+ print CONFIG "export DCOMPHDFI=../../cloud_team_dcomp/hdf4/include/\n";
+
 if (exists($opt{'dcomp_dir'}))
 {
    if (length($opt{'dcomp_dir'}))
    {
       print CONFIG "export DCOMP=$opt{'dcomp_dir'}\n";
-      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
+      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP) -L\$\(DCOMPHDF) -I\$\(DCOMPHDFI)\n";
       print CONFIG "dcomplinks= -ldcomp\n";
       
    }
    else
    {
       print CONFIG "export DCOMP=../aw_dcomp/\n";
-      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
+      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP) -L\$\(DCOMPHDF) -I\$\(DCOMPHDFI) \n";
       print CONFIG "dcomplinks= -ldcomp\n";
    }
 }

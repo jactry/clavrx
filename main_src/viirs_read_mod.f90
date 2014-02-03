@@ -308,11 +308,19 @@ contains
          case(3) 
             allocate ( time_msec_day ( size ( i1d_buffer)))
             time_msec_day = ( mod ( i1d_buffer , microsec_per_day ) ) / 1000
+<<<<<<< .mine
+            ! make missing data for missing scan time
+            where (i1d_buffer < 0)
+               time_msec_day = missing_value_int
+            endwhere
+            if (.not. allocated ( out % geo % scan_time ) ) allocate (  out % geo % scan_time (dim_seg(2)) )
+=======
             ! make data missing of missing scan time
             where (i1d_buffer < 0)
                time_msec_day = missing_value_int
             endwhere
             if (.not. allocated ( out % geo % scan_time ) ) allocate (  out % geo % scan_time (dim_seg(2)) )
+>>>>>>> .r22
             out % geo % scan_time =  (/( time_msec_day( ( k -1 ) /16  + 1) , k =ny_start , ny_end )/) 
             deallocate ( time_msec_day )
          case(4) 
@@ -474,14 +482,14 @@ contains
          
          !- gdnbo products
          out % file_exists % gdnbo_file_exists = sym%YES
-         file_arr_dummy => file_search (trim(config %dir_1b), 'GDNBO*'//trim(orbit_identifier) , n_files  )
+         file_arr_dummy => file_search (trim(config %dir_1b), 'GDNBO*'//trim(orbit_identifier) , n_files )
          if ( n_files > 0 ) then
             file_gdnbo = file_arr_dummy(1)
             call h5readdataset ( trim(config %dir_1b)//file_gdnbo,'All_Data/VIIRS-DNB-GEO_All/LunarAzimuthAngle' ,offset_mband , dim_seg_dnb , r2d_buffer )
             where ( r2d_buffer < unscaled_missing ) r2d_buffer = missing_value_real4
             do i_map = 1, dim_seg(1)
                if (.not. allocated ( out % geo % lunaz) ) allocate ( out % geo % lunaz (dim_seg(1), dim_seg(2)) )
-               out % geo % lunaz ( i_map , 1 : ( ny_end - ny_start + 1 ) ) = r2d_buffer ( d2m_indx (i_map) , :  )
+               out % geo % lunaz ( i_map , 1 : ( ny_end - ny_start + 1 ) ) = r2d_buffer ( d2m_indx (i_map) , : )
             end do
             deallocate ( r2d_buffer )
          
@@ -489,7 +497,7 @@ contains
             where ( r2d_buffer < unscaled_missing ) r2d_buffer = missing_value_real4
             do i_map = 1, dim_seg(1)
                if (.not. allocated ( out % geo % lunzen ) ) allocate ( out % geo %  lunzen (dim_seg(1), dim_seg(2)) )
-               out % geo %  lunzen ( i_map , 1 : ( ny_end - ny_start + 1 ) ) = r2d_buffer (d2m_indx ( i_map ) , :  )
+               out % geo %  lunzen ( i_map , 1 : ( ny_end - ny_start + 1 ) ) = r2d_buffer (d2m_indx ( i_map ) , : )
             end do
            
             deallocate ( r2d_buffer )
@@ -498,9 +506,9 @@ contains
             
             call compute_relative_azimuth_viirs ( out % geo % lunaz , out % geo % sataz, out % geo % lunrelaz ) 
            
-            call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonIllumFraction', out % geo % Moon_Illum_Frac)
+            call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonIllumFraction', out % geo % Moon_Illum_Frac )
             
-            call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonPhaseAngle', out % geo % Moon_Phase_Angle)
+            call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonPhaseAngle', out % geo % Moon_Phase_Angle )
          else
             out % file_exists % gdnbo_file_exists = sym%NO
          end if
@@ -551,9 +559,9 @@ contains
             setname_iicmo='All_Data/VIIRS-CM-IP_All/QF1_VIIRSCMIP'
             call h5readdataset ( trim(config %dir_1b)//file_iicmo, setname_iicmo  , offset_mband , dim_seg , i2d_buffer )
            
-
             out % prd % cld_mask = 0
  
+            ! extract VCM bits
             where ( btest ( i2d_buffer , 2 ) )
                out % prd % cld_mask  =   out % prd % cld_mask  + 1 
             end where
@@ -561,13 +569,17 @@ contains
                out % prd % cld_mask  =   out % prd % cld_mask  + 2 
             end where
 
-            deallocate ( i2d_buffer)
+            ! assign missing values
+            where ( i2d_buffer == 0 )
+               out % prd % cld_mask = missing_value_int
+            end where
+
+            deallocate ( i2d_buffer )
             
-         
             setname_iicmo='All_Data/VIIRS-CM-IP_All/QF6_VIIRSCMIP'
             call h5readdataset ( trim(config %dir_1b)//file_iicmo, setname_iicmo , offset_mband , dim_seg , i2d_buffer )
             shape_buffer = shape (i2d_buffer)
-            allocate ( cld_type_idps ( shape_buffer(1), shape_buffer(2))  )
+            allocate ( cld_type_idps ( shape_buffer(1), shape_buffer(2)) )
             
             ! - cascade to avoid  seg fault due to too high memory 
             cld_type_idps = log2int ( btest( i2d_buffer , 0 ) )
@@ -577,65 +589,74 @@ contains
            ! cld_type_idps = log2int ( btest( i2d_buffer , 0 ) ) &
            !                    + 2.*  log2int(btest( i2d_buffer , 1 ) ) &
            !                    + 4. * log2int(btest( i2d_buffer , 2 ) )
-            deallocate ( i2d_buffer) 
             
             out % prd % cld_phase  = 5
             where ( cld_type_idps == 1 .or. cld_type_idps == 2 )
                out % prd % cld_phase  = 0
             end where
         
-            where ( cld_type_idps == 3  )
+            where ( cld_type_idps == 3 )
                out % prd % cld_phase  = 1
             end where
         
-            where ( cld_type_idps == 4  )
+            where ( cld_type_idps == 4 )
                out % prd % cld_phase  = 2
             end where
          
-            where ( cld_type_idps == 5 .or. cld_type_idps == 6 .or. cld_type_idps == 7  )
+            where ( cld_type_idps == 5 .or. cld_type_idps == 6 .or. cld_type_idps == 7 )
                out % prd % cld_phase  = 4
             end where
-        
+
+            ! assign missing values
+            where ( i2d_buffer == 0 )
+               out % prd % cld_phase = missing_value_int
+            end where
+
             ! - type
       
             out % prd % cld_type  = 10
             
-            where ( cld_type_idps == 1  )
+            where ( cld_type_idps == 1 )
                out % prd % cld_type = 0
             end where     
             
-            where ( cld_type_idps == 2  )
+            where ( cld_type_idps == 2 )
                out % prd % cld_type = 1
             end where
             
-            where ( cld_type_idps == 3  )
+            where ( cld_type_idps == 3 )
                out % prd % cld_type = 3
             end where
             
-            where ( cld_type_idps == 4  )
+            where ( cld_type_idps == 4 )
                out % prd % cld_type = 4
             end where
             
-            where ( cld_type_idps == 5  )
+            where ( cld_type_idps == 5 )
                out % prd % cld_type = 6
             end where
             
-            where ( cld_type_idps == 6  )
+            where ( cld_type_idps == 6 )
                out % prd % cld_type = 7
             end where
             
-            where ( cld_type_idps == 7  )
+            where ( cld_type_idps == 7 )
                out % prd % cld_type = 8
             end where
             
             deallocate ( cld_type_idps )
  
-            where  ( out % prd % cld_type  == 10  )
-               out % prd % cld_mask  =  missing_value_int
+            where  ( out % prd % cld_type == 10 )
+               out % prd % cld_mask = missing_value_int
             end where
-            !
-            !
-            !
+            
+            ! assign missing values
+            where ( i2d_buffer == 0 )
+               out % prd % cld_type = missing_value_int
+            end where
+
+            deallocate ( i2d_buffer )
+            
          else 
             out % file_exists % iicmo_file_exists = sym%NO
             print*,'IICMO file not found , cld_mask_aux and cld_type_aux are set to missing'

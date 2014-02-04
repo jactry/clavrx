@@ -46,6 +46,7 @@ endif
 
 ifdef nlcomplibs
      fflags_clavr += -DNLCOMP
+     fflags_clavr += -DNLCOMPLIBS
 endif
 
 #-----------------------------------------------------------------------------

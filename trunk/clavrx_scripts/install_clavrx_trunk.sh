@@ -74,10 +74,10 @@ cp level2_all_on.inc level2.inc
 
 
 if make; then 
-  printf '\033[32m Clavrx development branch successfully installed %s\033[m\n'
+  printf '\033[32m Clavrx trunk successfully installed %s\033[m\n'
 else
    ret=$?
-   printf '\033[31m Error !!!! clavrx development branch is not installed  error code $ret %s\033[m\n'
+   printf '\033[31m Error !!!! clavrx trunk is not installed  error code $ret %s\033[m\n'
 fi
 
 #cp clavrxorb_default_options ../

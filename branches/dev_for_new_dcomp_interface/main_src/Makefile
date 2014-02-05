@@ -100,57 +100,57 @@ clavrxorb_objs = process_clavrx.o \
                  calibration_constants.o \
                  algorithm_constants.o \
                  awg_cloud_height.o \
-	             cloud_height_routines.o \
-	             file_tools.o \
-	             clavrx_message_module.o \
-	             land_sfc_properties.o \
-	             avhrr_pixel_aerosol.o \
+	         cloud_height_routines.o \
+	         file_tools.o \
+	         clavrx_message_module.o \
+	         land_sfc_properties.o \
+	         avhrr_pixel_aerosol.o \
                  hdf_params.o \
                  level2.o \
-	             sort_module.o \
+	         sort_module.o \
                  gfs_hdf_module.o \
-	             nwp_common.o \
+	         nwp_common.o \
                  ncep_reanalysis.o \
                  sfc_emiss.o \
-	             rt_utils.o  \
+	         rt_utils.o  \
                  rtm_common.o \
-	             Message_Handler.o \
-	             Compare_Float_Numbers.o \
-	             hdf_read_module.o \
+	         Message_Handler.o \
+	         Compare_Float_Numbers.o \
+	         hdf_read_module.o \
                  tranmavhrr.o \
                  tran_viirsm.o \
                  irtsubn101.o \
                  flip_rtc.o \
                  re4flip.o \
                  getnumsc.o \
-	             tran_modisd101.o \
+	         tran_modisd101.o \
                  big_endian.o \
                  get_lun.o \
                  goestran.o \
                  tranmetsg101.o\
                  tranmts101.o\
                  seviri_module.o \
-	             reposnx.o \
+	         reposnx.o \
                  reposition_module.o \
-		         acha_services_clavrx_mod.o \
-		         acha_clavrx_bridge_mod.o \
+		 acha_services_clavrx_mod.o \
+		 acha_clavrx_bridge_mod.o \
                  naive_bayesian_cloud_mask_module.o \
                  naive_bayesian_clavrx_bridge_module.o \
                  move_bytes.o \
-	             mreadf.o \
-	             modis_module.o \
-	             iff_clavrx_bridge.o \
-	             iff_module.o \
+	         mreadf.o \
+	         modis_module.o \
+	         iff_clavrx_bridge.o \
+	         iff_module.o \
                  goes_module.o   \
                  mtsat_module.o \
                  fy2_module.o \
                  coms_module.o \
                  dnb_retrievals_mod.o \
-		         dcomp_clavrx_bridge_mod.o \
-       		     dcomp_rtm_module.o \
+		 dcomp_clavrx_bridge_mod.o \
+       		 dcomp_rtm_module.o \
                  nlcomp_bridge_mod.o \
                  globsnow_read_routines.o \
-	             laszlo_insolation_module.o \
+	         laszlo_insolation_module.o \
                  conver.o \
                  sasrab.o \
                  getmod.o \
@@ -164,7 +164,7 @@ clavrxorb_objs = process_clavrx.o \
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
                             hdf.o \
-		                    hdf_params.o \
+		            hdf_params.o \
                             level2b.o \
                             num_mod.o \
                             file_utility.o \
@@ -312,7 +312,7 @@ endif
 
 naive_bayesian_clavrx_bridge_module.o: naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o
 
-naive_bayesian_cloud_mask_module.o: naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o
+naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/naive_bayesian_cloud_mask_module.f90
 
 universal_cloud_type.o: universal_cloud_type.f90 constant.o nwp_common.o rtm_common.o	

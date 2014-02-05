@@ -164,6 +164,7 @@ contains
 
  character(len=36)  :: creator
  character(len=100):: Title_String
+ character(len=100):: Calibration_String
  character(len=100):: Product_Version_String
  character(len=100):: Status_String
  character(len=100):: Institution_String
@@ -208,6 +209,7 @@ istatus = sfscatt(hdf_file_id,"cdr_variable", DFNT_CHAR8,len_trim(Variable_Strin
 istatus = sfscatt(hdf_file_id,"institution", DFNT_CHAR8,len_trim(Institution_String),trim(Institution_String)) + istatus
 istatus = sfscatt(hdf_file_id,"cdr_program", DFNT_CHAR8, len_trim(Program_String),trim(Program_String)) + istatus
 istatus = sfscatt(hdf_file_id,"title", DFNT_CHAR8,len_trim(Title_String),trim(Title_String)) + istatus
+istatus = sfscatt(hdf_file_id,"calibration_version", DFNT_CHAR8,len_trim(Calibration_String),trim(Calibration_String)) + istatus
 istatus = sfscatt(hdf_file_id,"keywords", DFNT_CHAR8,len_trim(Keywords_String),trim(Keywords_String)) + istatus
 istatus = sfscatt(hdf_file_id,"keywords_vocabulary", DFNT_CHAR8,len_trim(Keywords_Vocabulary_String),trim(Keywords_Vocabulary_String)) + istatus
 istatus = sfscatt(hdf_file_id,"time_coverage_resolution", DFNT_CHAR8,len_trim(Time_Coverage_Resolution_String),trim(Time_Coverage_Resolution_String)) + istatus

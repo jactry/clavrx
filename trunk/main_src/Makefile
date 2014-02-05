@@ -8,6 +8,7 @@
 
 #--- attributes written to hdf files to describe data
 Title_String = " PATMOS-x AVHRR reflectance, brightness temperature and cloud product CDRs"
+Calibration_String = "mc5y2011"
 Institution_String = " NOAA/NESDIS and the University of Wisconsin-Madison / CIMSS"
 Product_Version_String = "v05r03"
 Program_String = " NOAA Climate Data Record Program for satellites"
@@ -209,6 +210,7 @@ drive_subset_level2b: $(drive_subset_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/drive_subset_level2b $(drive_subset_level2b_objs) $(hdflibs)
 version.inc: Makefile
 	echo ' Title_String = $(Title_String)' > version.inc
+	echo ' Calibration_String = $(Calibration_String)' >> version.inc
 	echo ' Institution_String = $(Institution_String)' >> version.inc
 	echo ' Product_Version_String = $(Product_Version_String)' >> version.inc
 	echo ' Program_String = $(Program_String)' >> version.inc

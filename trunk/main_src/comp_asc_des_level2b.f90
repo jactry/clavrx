@@ -272,6 +272,7 @@ program COMPILE_ASC_DES_LEVEL2B
  integer:: L0,N0,I0,J0,K0
 
  character(len=100):: Title_String
+ character(len=100):: Calibration_String
  character(len=100):: Product_Version_String
  character(len=100):: Status_String
  character(len=100):: Institution_String
@@ -1329,7 +1330,8 @@ Sds_Output_Stride = (/1/)
        Count_Total = count(btest(int(Scaled_Sds_Data_Output),0))
 
        !--- success count
-       Count_Valid = count( (.not. btest(int(Scaled_Sds_Data_Output),1)) .and.  &
+       Count_Valid = count( btest(int(Scaled_Sds_Data_Output),0) .and. &
+                            (.not. btest(int(Scaled_Sds_Data_Output),1)) .and.  &
                             (.not. btest(int(Scaled_Sds_Data_Output),2)) )
 
        if (Count_Total > 0) then

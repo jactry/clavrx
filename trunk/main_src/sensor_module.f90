@@ -558,8 +558,8 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
   !--------------------------------------------------------------------------------------
   !--- Fourth, Test for a PEATE Intermediate File Format (IFF) VIIRS or MODIS data set 
   !--------------------------------------------------------------------------------------
-  itest_iff_viirs = index(File_1b_Temp, 'IFF_npp')
-  itest_iff_modis = index(File_1b_Temp, 'IFF_aqua')
+  itest_iff_viirs = index(File_1b_Temp, 'IFFSDR_npp')
+  itest_iff_modis = index(File_1b_Temp, 'IFFSDR_aqua')
   if (itest_iff_viirs == 1) then
       Iff_Viirs_Flag = sym%YES
   elseif (itest_iff_modis == 1) then

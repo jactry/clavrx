@@ -202,7 +202,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
   !--- special processing for IFF - remove hdf suffix - this hard coded for PEATE files
   if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES) then
-    File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-20)
+    File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-29)
   endif
 
   !--- do this for GOES names which are named goesxx_1_year_jday_hour.area

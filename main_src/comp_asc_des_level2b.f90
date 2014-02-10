@@ -178,6 +178,7 @@ program COMPILE_ASC_DES_LEVEL2B
  character(len=3):: Node_String
  character(len=14):: Spatial_Option_String
  character(len=14):: Overlap_Option_String
+ character(len=10):: Geo_Option_String
  character(len=4):: Time_String
  character(len=2):: Time_Win_String
  character(len=36)::  Date_Created_String
@@ -270,6 +271,7 @@ program COMPILE_ASC_DES_LEVEL2B
  character(len=100) :: Id_String
  character(len=10), dimension(3):: ctime
  integer:: L0,N0,I0,J0,K0
+ integer:: Geo_2d_Flag
 
  character(len=100):: Title_String
  character(len=100):: Calibration_String
@@ -298,6 +300,9 @@ program COMPILE_ASC_DES_LEVEL2B
 
  Overlap_Option_String = 'nadir_overlap'   !'random_overlap'
  Overlap_Flag = 0
+
+ Geo_Option_String = '1d_lat_lon' 
+ Geo_2d_Flag = 0
 !----------------------------------------------------------------------
 ! command line arguments
 !----------------------------------------------------------------------
@@ -310,6 +315,7 @@ program COMPILE_ASC_DES_LEVEL2B
      print *, "argument 1 = node selection (asc, des, geo or zen)"
      print *, "argument 2 = spatial sampling option (near or rand) default is near"
      print *, "argument 3 = orbital overlap sampling option (nadir_overlap or randon_overlap) default is nadir_overlap"
+     print *, "argument 4 = optional argument, 1d_lat_lon or 2d_lat_lon"
      print *, " "
      print *, "other options are read in from a file names comp_asc_des_level2b_input"
      print *, "line 1: directory of level2 files (input)"
@@ -324,6 +330,8 @@ program COMPILE_ASC_DES_LEVEL2B
      stop
  endif
 
+print *, "Number of command line arguements = ", N_Command_Line_Args
+ Geo_Option_String = '1d_lat_lon'
  if (N_Command_Line_Args == 1) then 
      call getarg(1, Node_String)
  elseif (N_Command_Line_Args == 2) then 
@@ -333,8 +341,13 @@ program COMPILE_ASC_DES_LEVEL2B
      call getarg(1, Node_String)
      call getarg(2, Spatial_Option_String)
      call getarg(3, Overlap_Option_String)
+ elseif (N_Command_Line_Args == 4) then 
+     call getarg(1, Node_String)
+     call getarg(2, Spatial_Option_String)
+     call getarg(3, Overlap_Option_String)
+     call getarg(4, Geo_Option_String)
  else
-     print *, LOCAL_EXE_PROMPT, "COMP_ASC_DES_LEVEL2b ERROR:: UnExpected Number of Command Line Arguments"
+     print *, LOCAL_EXE_PROMPT, "COMP_ASC_DES_LEVEL2b ERROR:: Unexpected Number of Command Line Arguments"
  endif
  if (Node_String /= "asc" .and. Node_String /= "des" .and. Node_String /= "geo" .and. Node_String /= "zen") then
      print *, LOCAL_EXE_PROMPT, "COMP_ASC_DES_LEVEL2b ERROR:: First node argument is not asc, des, geo or zen"
@@ -346,6 +359,11 @@ program COMPILE_ASC_DES_LEVEL2B
  endif
  if (trim(Overlap_Option_String) /= "nadir_overlap" .and. trim(Overlap_Option_String) /= "random_overlap") then
      print *, LOCAL_EXE_PROMPT, "COMP_ASC_DES_LEVEL2b ERROR:: Third node argument is not nadir_overlap or random_overlap"
+     print *, trim(Overlap_Option_String)
+     stop 
+ endif
+ if (trim(Geo_Option_String) /= "1d_lat_lon" .and. trim(Geo_Option_String) /= "2d_lat_lon") then
+     print *, LOCAL_EXE_PROMPT, "COMP_ASC_DES_LEVEL2b ERROR:: Fourth argument is not 1d_lat_lon or 2d_lat_lon"
      print *, trim(Overlap_Option_String)
      stop 
  endif
@@ -362,8 +380,12 @@ program COMPILE_ASC_DES_LEVEL2B
     call INIT_RANDOM_SEED()
  endif
 
- Sds_2d_dim_string(1) = "longitude_index"
- Sds_2d_dim_string(2) = "latitude_index"
+ if (trim(Geo_Option_String) == '2d_lat_lon') then
+    Geo_2d_Flag = 1
+ endif
+
+ Sds_2d_Dim_String(1) = "longitude_index"
+ Sds_2d_Dim_String(2) = "latitude_index"
 
 !-----------------------------------------------------
 ! open input file
@@ -437,14 +459,14 @@ if (Lon_West > 0 .and. Lon_East < 0.0) Dateline_Flag = sym%YES
 !------------------------------------------------------------------------
 Ntime_Output = 1
 if (Dateline_Flag == sym%NO) then
-  Nlon_Output = nint((Lon_East - Lon_West) / dlon_Output) + 1
+  Nlon_Output = nint((Lon_East - Lon_West) / Dlon_Output) + 1
   Lon_East = Lon_West + dlon_Output * (Nlon_Output-1)
 else
   Nlon_Output = nint( ((360.0+Lon_East) - Lon_West) / dlon_Output) + 1
   Lon_East = Lon_West + dlon_Output * (Nlon_Output-1) - 360.0
 endif
 
-Nlat_Output = nint((Lat_North - Lat_South) / dlat_Output) + 1
+Nlat_Output = nint((Lat_North - Lat_South) / Dlat_Output) + 1
 Lat_North = Lat_South + dlat_Output * (Nlat_Output-1)
 
 if (Nlat_Output <= 0 .or. Nlon_Output <= 0) then
@@ -728,37 +750,69 @@ Sds_Output_Stride = (/1/)
          !--- if first valid file, write output lon and lat vectors to output file
          if (First_Valid_Input == sym%YES) then
 
-              !--- longitude (first row only)
-              lon_Output_1d = lon_Output(:,1)
-              Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,1,Sds_dims_Output_x)
-              Temp_Name = "X"
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Temp_Name = "longitude"
-              Istatus_Sum = sfscatt(Sds_Id_temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Temp_Name = "longitude"
-              Istatus_Sum = sfscatt(Sds_Id_temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-              Istatus_Sum = sfscatt(Sds_Id_temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-              Istatus_Sum = sfwdata(Sds_Id_temp, Sds_Output_Start, Sds_Output_stride,  &
+              !--- longitude
+              if (Geo_2d_Flag == 0) then    !first row only
+                Lon_Output_1d = Lon_Output(:,1)
+                Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,1,Sds_Dims_Output_x)
+                Temp_Name = "X"
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "longitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "longitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
                                 Sds_dims_Output_x, lon_Output_1d) + Istatus_Sum 
-              Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
+                Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
+              else
+                Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,2,Sds_Dims_Output_xy)
+                Temp_Name = "X"
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "longitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "longitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
+                                Sds_Dims_Output_xy, Lon_Output) + Istatus_Sum 
+                Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
+              endif
 
-              !--- latitude (first column only)
-              lat_Output_1d = lat_Output(1,:)
-              Sds_Id_temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,1,Sds_dims_Output_y)
-              Temp_Name = "Y"
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Temp_Name = "latitude"
-              Istatus_Sum = sfscatt(Sds_Id_temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Temp_Name = "latitude"
-              Istatus_Sum = sfscatt(Sds_Id_temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-              Istatus_Sum = sfscatt(Sds_Id_temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
-              Istatus_Sum = sfsnatt(Sds_Id_temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-              Istatus_Sum = sfwdata(Sds_Id_temp, Sds_Output_Start, Sds_Output_stride,  &
+              !--- latitude 
+              if (Geo_2d_Flag == 0) then   !first column only
+                Lat_Output_1d = Lat_Output(1,:)
+                Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,1,Sds_Dims_Output_y)
+                Temp_Name = "Y"
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "latitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "latitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
                                 Sds_dims_Output_y, lat_Output_1d) + Istatus_Sum 
-              Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
+                Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
+              else
+                Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,2,Sds_Dims_Output_xy)
+                Temp_Name = "Y"
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "latitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Temp_Name = "latitude"
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
+                Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
+                                Sds_dims_Output_xy, Lat_Output) + Istatus_Sum 
+                Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
+              endif
 
               !--- time
 !              Sds_Id_temp = sfcreate(Sd_Id_Output,"time",DFNT_INT32,1,1)

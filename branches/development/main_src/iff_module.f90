@@ -188,9 +188,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       use FILE_TOOLS
       use HDF_READ_MODULE
-      use PIXEL_COMMON, only: &
-          Start_Year &
-          , Start_Day
       use NUMERICAL_ROUTINES, only: &
           COUNTSUBSTRING &
           , SPLIT_STRING &
@@ -488,31 +485,31 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       !Close main file
       call CLOSE_FILE_HDF_READ(Id,TRIM(config%iff_file))
 
-      !0        1         2         3         4
-      !1234567890123456789012345678901234567890
-      !MYD35_L2.A2013218.1000_aqua_IFF.hdf
-      !MYD35_L2.A2013218.1000_viirs_IFF.hdf
+      !0        1         2         3         4         5         6
+      !123456789012345678901234567890123456789012345678901234567890
+      !IFFSDR_aqua_d20130806_t100000_c20140207033513_ssec_dev.hdf
+      !IFFSDR_npp_d20130806_t100000_c20140207034531_ssec_dev.hdf
+      !IFFCMO_aqua_d20130806_t100000_c20140207033616_ssec_dev.hdf
+      !IFFCMO_npp_d20130806_t100000_c20140207034800_ssec_dev.hdf
 
       ! --- Read cld_mask_aux if it set in default file
       if ( config %  iff_cloud_mask_on ) then
          if (ny_end == dim_seg(2)) &
             print *, EXE_PROMPT, "Reading in AUX cloud mask"
 
-         write (year_strg, '(I4)') Start_Year
-         write (doy_strg, '(I0.3)') Start_Day
-
           if (Iff_Viirs_Flag == sym%YES) then
-             file_srch = 'MYD35_L2.A'//year_strg//doy_strg//'.'//trim(config % iff_file &
-                         (len(trim(config % dir_1b))+30:len(trim(config % dir_1b))+33)) &
-                         //'_viirs_IFF.hdf'
+             file_srch = 'IFFCMO_npp_d'//trim(config % iff_file &
+                         (len(trim(config % dir_1b))+13:len(trim(config % dir_1b))+28)) &
+                         //'*_ssec_dev.hdf'
           endif
           if (Iff_Modis_Flag == sym%YES) then
-             file_srch = 'MYD35_L2.A'//year_strg//doy_strg//'.'//trim(config % iff_file &
-                          (len(trim(config % dir_1b))+31:len(trim(config % dir_1b))+34)) &
-                          //'_aqua_IFF.hdf'
+             file_srch = 'IFFCMO_aqua_d'//trim(config % iff_file &
+                          (len(trim(config % dir_1b))+14:len(trim(config % dir_1b))+29)) &
+                          //'*_ssec_dev.hdf'
           endif
 
          file_arr_dummy => FILE_SEARCH ( trim(config %dir_1b), file_srch, n_files )
+
 
          ! if file found read cloud mask
          if ( n_files /= 0 ) then
@@ -560,7 +557,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                                     // TRIM(file_arr_dummy(1)) )
 
          else
-            print*,'MYD35 file not found , cld_mask_aux is set to missing'
+            print*,'AUX Mask file not found , cld_mask_aux is set to missing'
 
          end if 
 
@@ -605,30 +602,24 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
 
 !0        1         2         3         4         5         6
 !1234567890123456789012345678901234567890123456789012345678901234567890
-!IFF_aqua_modis_1km_d20120603_t184000_e184459_c20120801192542
-!IFF_npp_viirs_svm_d20120603_t184500_e184959_c20120801192631
+!IFFCMO_aqua_d20130806_t100000_c20140207033616_ssec_dev.hdf
+!IFFCMO_npp_d20130806_t100000_c20140207034800_ssec_dev.hdf
 
 ! --- Read data from the file name
 if (Iff_Viirs_Flag == sym%YES) then
-  read(Infile(20:23), fmt="(I4)") year
-  read(Infile(24:25), fmt="(I2)") month
-  read(Infile(26:27), fmt="(I2)") day
-  read(Infile(30:31), fmt="(I2)") start_hour
-  read(Infile(32:33), fmt="(I2)") start_minute
-  read(Infile(34:35), fmt="(I2)") start_sec
-  read(Infile(38:39), fmt="(I2)") end_hour
-  read(Infile(40:41), fmt="(I2)") end_minute
-  read(Infile(42:43), fmt="(I2)") end_sec
+  read(Infile(13:16), fmt="(I4)") year
+  read(Infile(17:18), fmt="(I2)") month
+  read(Infile(19:20), fmt="(I2)") day
+  read(Infile(23:24), fmt="(I2)") start_hour
+  read(Infile(25:26), fmt="(I2)") start_minute
+  read(Infile(27:28), fmt="(I2)") start_sec
 elseif (Iff_Modis_Flag == sym%YES) then
-  read(Infile(21:24), fmt="(I4)") year
-  read(Infile(25:26), fmt="(I2)") month
-  read(Infile(27:28), fmt="(I2)") day
-  read(Infile(31:32), fmt="(I2)") start_hour
-  read(Infile(33:34), fmt="(I2)") start_minute
-  read(Infile(35:36), fmt="(I2)") start_sec
-  read(Infile(39:40), fmt="(I2)") end_hour
-  read(Infile(41:42), fmt="(I2)") end_minute
-  read(Infile(43:44), fmt="(I2)") end_sec
+  read(Infile(14:17), fmt="(I4)") year
+  read(Infile(18:19), fmt="(I2)") month
+  read(Infile(20:21), fmt="(I2)") day
+  read(Infile(24:25), fmt="(I2)") start_hour
+  read(Infile(26:27), fmt="(I2)") start_minute
+  read(Infile(28:29), fmt="(I2)") start_sec
 endif
 
 ! --- Calculate the date of year
@@ -638,6 +629,15 @@ days_in_year = 365 + ileap
 
 !--- compute day of the year based on month
 call JULIAN(day,month,year,doy)
+
+! --- Calculate end time
+end_sec = 59
+end_minute = start_minute + 4
+end_hour = start_hour
+if ( end_minute > 60 ) then
+   end_minute = end_minute - 60
+   end_hour = end_hour + 1
+endif
 
 ! --- Calculate start END time
 start_time = ((start_hour * 60 + start_minute) * 60 + start_sec) * 1000
@@ -653,7 +653,6 @@ if ( end_time <= start_time) then
       end_doy = 1
    endif
 endif
-
 
 end subroutine READ_IFF_DATE_TIME
 

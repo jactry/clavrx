@@ -89,11 +89,15 @@ program COMPILE_ASC_DES_LEVEL2B
  integer(kind=int4):: Sd_Id_Input
  integer(kind=int4):: Sd_Id_Output
  integer(kind=int4):: Sds_Id_temp
- integer(kind=int4), dimension(2):: Sds_Dims_Output_xy
- integer(kind=int4), dimension(1):: Sds_Dims_Output_x
- integer(kind=int4), dimension(1):: Sds_Dims_Output_y
- integer(kind=int4), dimension(1):: Sds_Output_Start
- integer(kind=int4), dimension(1):: Sds_Output_Stride
+ integer(kind=int4), dimension(2):: Sds_Dims_Output_XY
+ integer(kind=int4), dimension(1):: Sds_Dims_Output_X
+ integer(kind=int4), dimension(1):: Sds_Dims_Output_Y
+ integer(kind=int4), dimension(1):: Sds_Output_Start_X
+ integer(kind=int4), dimension(1):: Sds_Output_Stride_X
+ integer(kind=int4), dimension(1):: Sds_Output_Start_Y
+ integer(kind=int4), dimension(1):: Sds_Output_Stride_Y
+ integer(kind=int4), dimension(2):: Sds_Output_Start_XY
+ integer(kind=int4), dimension(2):: Sds_Output_Stride_XY
  integer(kind=int4), dimension(2):: Sds_Dims
  real(kind=real4), dimension(:), allocatable:: Input_Array_1d
  real(kind=real4), dimension(:), allocatable:: Output_Array_1d
@@ -508,8 +512,12 @@ call COMPUTE_WMO_ID_KNOWING_SENSOR_NAME(Sensor_Name_Output,Sc_Id_Output)
 Sds_Dims_Output_xy = (/Nlon_Output,Nlat_Output/)
 Sds_Dims_Output_x = (/Nlon_Output/)
 Sds_Dims_Output_y = (/Nlat_Output/)
-Sds_Output_Start = (/0/)
-Sds_Output_Stride = (/1/)
+Sds_Output_Start_X = (/0/)
+Sds_Output_Stride_X = (/1/)
+Sds_Output_Start_Y = (/0/)
+Sds_Output_Stride_Y = (/1/)
+Sds_Output_Start_XY = (/0,0/)
+Sds_Output_Stride_XY = (/1,1/)
 
     !--- set node integer value
     if (Node_String == "asc") then
@@ -763,8 +771,8 @@ Sds_Output_Stride = (/1/)
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
                 Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
-                                Sds_dims_Output_x, lon_Output_1d) + Istatus_Sum 
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_X, Sds_Output_Stride_X,  &
+                                Sds_Dims_Output_x, lon_Output_1d) + Istatus_Sum 
                 Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
               else
                 Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,2,Sds_Dims_Output_xy)
@@ -777,9 +785,9 @@ Sds_Output_Stride = (/1/)
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
                 Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_XY, Sds_Output_Stride_XY,  &
                                 Sds_Dims_Output_xy, Lon_Output) + Istatus_Sum 
-                Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
+                Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
               endif
 
               !--- latitude 
@@ -795,11 +803,11 @@ Sds_Output_Stride = (/1/)
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
                 Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
-                                Sds_dims_Output_y, lat_Output_1d) + Istatus_Sum 
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_Y, Sds_Output_Stride_Y,  &
+                                Sds_dims_Output_Y, lat_Output_1d) + Istatus_Sum 
                 Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
               else
-                Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,2,Sds_Dims_Output_xy)
+                Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,2,Sds_Dims_Output_XY)
                 Temp_Name = "Y"
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
                 Temp_Name = "latitude"
@@ -809,20 +817,11 @@ Sds_Output_Stride = (/1/)
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
                 Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
                 Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start, Sds_Output_Stride,  &
+                Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_XY, Sds_Output_Stride_XY,  &
                                 Sds_dims_Output_xy, Lat_Output) + Istatus_Sum 
                 Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
               endif
 
-              !--- time
-!              Sds_Id_temp = sfcreate(Sd_Id_Output,"time",DFNT_INT32,1,1)
-!              Temp_Name = "time"
-!              Istatus_Sum = sfscatt(Sds_Id_temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum              
-!              Temp_Name = "days since 1970-01-01 00:00:00"
-!              Istatus_Sum = sfscatt(Sds_Id_temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!              Istatus_Sum = sfscatt(Sds_Id_temp, "units", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!              Istatus_Sum = sfwdata(Sds_Id_temp, Sds_Output_Start, Sds_Output_stride, 1, Days_Since_Epoch) + Istatus_Sum
-!              Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
          endif
 
          Num_Points = Num_Elements_Input * Num_Lines_Input

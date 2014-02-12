@@ -43,6 +43,11 @@ module LEVEL2_ROUTINES
    private::DEFINE_PIXEL_2D_SDS, &
             DEFINE_PIXEL_3D_SDS
 
+ !--- rtm indices
+ integer, parameter, private:: Num_Rtm_Sds = 31
+ integer, private, save:: Sd_Id_Rtm
+ integer(kind=int4), dimension(Num_Rtm_Sds), save, private:: Sds_Id_Rtm
+
 !----------------------------------------------------------------------
 ! the following variables taken from process_avhrr_clavr
 !----------------------------------------------------------------------
@@ -90,8 +95,10 @@ module LEVEL2_ROUTINES
 !
 !====================================================================
 subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
+   Dir_Rtm, &
    Dir_Level2, &
-   file_1b, &
+   File_1b, &
+   Rtm_File_Flag, &
    Level2_File_Flag, &
    c1,c2,a1_20, &
    a2_20, &
@@ -131,9 +138,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    End_Time)
 
 
+ character(len=*), intent(in):: Dir_Rtm
  character(len=*), intent(in):: Dir_Level2
  integer(kind=int4), intent(in):: Num_Scans
  character(len=*), intent(in):: File_1b
+ integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
  integer, intent(in):: Sst_Anal_Opt
  integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
@@ -157,6 +166,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  integer(kind=int2), intent(in):: End_Day
  character(len=4):: l1b_ext
  character(len=128):: File_1b_root
+ character(len=128):: File_Rtm
  character(len=128):: File_Level2
 
  character(len=128):: Long_Name_Temp
@@ -286,6 +296,379 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    Comp_Prm(1) = 32
    Comp_Prm(2) = 2
  endif
+
+!---------------------------------------------------------
+!-- define rtm file structure
+!---------------------------------------------------------
+ if (Rtm_File_Flag == sym%YES) then
+
+     file_Rtm = trim(file_1b_root)//".rtm.hdf"
+     print *, EXE_PROMPT, MOD_PROMPT, "creating RTM file ", trim(file_Rtm)
+
+     Sd_Id_Rtm = sfstart(trim(dir_Rtm)//trim(file_Rtm),DFACC_CREATE)
+
+     if (Sd_Id_Rtm < 0) then
+        print *, EXE_PROMPT, MOD_PROMPT, "Creation of RTM product file failed.  Exiting..."
+        erstat = 74
+        stop 74
+     endif
+
+     !--- write global attributes
+     call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Rtm,"PIXEL",file_Rtm,file_1b_root, &
+                           resolution_km, &
+                           start_year,end_year,start_day,end_day,start_time,end_time,&
+                           blank_int4,blank_int4,blank_char,blank_real4, &
+                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
+                           modis_clr_alb_flag, nwp_flag, Ch1_gain_low, Ch1_gain_high, &
+                           Ch1_switch_count, Ch1_dark_count, &
+                           Ch2_gain_low, Ch2_gain_high, &
+                           Ch2_switch_count, Ch2_dark_count, &
+                           Ch3a_gain_low, Ch3a_gain_high, &
+                           Ch3a_switch_count, Ch3a_dark_count, &
+                           sun_earth_distance, &
+                           c1, c2, a1_20, a2_20, nu_20, &
+                           a1_31, a2_31, nu_31, a1_32, a2_32, nu_32, &
+                           solar_Ch20_nu,timerr_seconds, &
+                           acha_mode, dcomp_mode,Sc_Id_WMO, &
+                           Platform_Name_Attribute, Sensor_Name_Attribute, &
+                           Dark_Composite_Name,Bayesian_Cloud_Mask_Name)
+
+     !-- reset status flag for error checking
+     Istatus_Sum = 0
+
+     !-- scan line
+     Sds_Id_Rtm(1) = sfcreate(Sd_Id_Rtm,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
+     Istatus_Sum = sfsnatt(Sds_Id_Rtm(1), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+     Istatus_Sum = sfscatt(Sds_Id_Rtm(1), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
+     Istatus_Sum = sfsnatt(Sds_Id_Rtm(1), "RANGE_MISSING", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+
+     !--- scan time
+     Sds_Id_Rtm(2) = sfcreate(Sd_Id_Rtm,"scan_line_time",DFNT_FLOAT32,Sds_Rank_1d,Sds_Dims_1d)
+     Istatus_Sum = sfsnatt(Sds_Id_Rtm(2), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+     Istatus_Sum = sfscatt(Sds_Id_Rtm(2), "units", DFNT_CHAR8, 5, "hours") + Istatus_Sum
+     Istatus_Sum = sfsnatt(Sds_Id_Rtm(2), "RANGE_MISSING", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
+
+     !--- surface temperature
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(3),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "surface_temp_modeled", &
+                              "surface_temperature_modeled", &
+                              "modeled surface temperature", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Tsfc, Max_Tsfc, "K", Missing_Value_Real4, Istatus)
+     Istatus_Sum = Istatus_Sum + Istatus
+
+     !--- Bt_Ch20_Clear_Rtm
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(4),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_3_75um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_3_75_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 3.75 microns", &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
+                               Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch20_clear_solar_Rtm
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(5),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_3_75um_nom_clear_sky_solar", &
+                               "toa_brightness_temperature_assuming_clear_sky_with_solar_3.75_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "and including solar reflection at the nominal wavelength of 3.75 microns", &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch31_Clear_Rtm
+     if (Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(6),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_11_0um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_11_0_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 11.0 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch32_Clear_Rtm
+     if (Chan_On_Flag_Default(32) == sym%YES) then
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(7),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_12_0um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_12_0_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 12.0 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt32, Max_Bt32, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- etrop
+     if (Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(8),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "emiss_11um_nom_tropopause", &
+                                "emissivity_11_0_micron_nominal_tropopause", &
+                                "emissivity at the tropopause modeled at the nominal wavelength of 11.0 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Etropo, Max_Etropo, "none", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch1_Clear_Rtm
+     if (Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(9),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clear_sky", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
+                               "at the nominal wavelength of 0.65 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch2_Clear_Rtm
+     if (Chan_On_Flag_Default(2) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(10),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_86um_nom_clear_sky", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_86_micron_nominal", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
+                               "at the nominal wavelength of 0.86 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch2, Max_Ref_Ch2, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch31_std_3x3
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(11),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_11_0um_nom_stddev_3x3", &
+                              "brightness_temperature_11_0_micron_nominal_stddev_3x3", &
+                              "3x3 pixel standard deviation of brightness temperature"// &
+                              "at the nominal wavelength of 11.0 microns", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt31_std, Max_Bt31_std, "K", Missing_Value_Real4, Istatus)
+     Istatus_Sum = Istatus_Sum + Istatus
+
+     !--- Bt_Ch31_Max_3x3
+     if (Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(12),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "temp_11_0um_nom_max_3x3", &
+                                "brightness_temperature_11_0_micron_nominal_max_3x3", &
+                                "maximum 3x3 pixel brightness temperature"// &
+                                "at the nominal wavelength of 11.0 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch1_std_3x3
+     if (Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(13),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "refl_0_65um_nom_stddev_3x3", &
+                                "bidirectional_reflectance_0_65_micron_nom_stddev_3x3", &
+                                "3x3 pixel standard deviation of reflectance"// &
+                                "at the nominal wavelength of 0.65 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1_std, Max_Ref_Ch1_std, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch1_Min_3x3
+     if (Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(14),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_0_65um_nom_min_3x3", &
+                              "bidirectional_reflectance_0_65_micron_nom_min_3x3", &
+                              "3x3 pixel minimum reflectance"// &
+                              "at the nominal wavelength of 0.65 microns", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
+     if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(15),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "diff_ch31_ch32_Bt_ch31_max_3x3", &
+                              "difference_11_minus_12_brightness_temperature_max_3x3", &
+                              "3x3 pixel maximum of 11.0 micron minus 12.0 micron"// &
+                              "brightness temperatures (nominal wavelengths)", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Btd_Ch31_Ch32, Max_Btd_Ch31_Ch32, "K", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Ems_Ch20
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(16),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "emiss_3_75um_nom", &
+                                "top_of_atmosphere_emissivity_3_75_micron_nominal", &
+                                "top of atmosphere emissivity at the nominal wavelength of 3.75 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ems_Ch20, Max_Ems_Ch20, "none", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Ems_Ch20 clear
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(17),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "emiss_3_75um_nom_clear", &
+                                "top_of_atmosphere_emissivity_3_75_micron_nominal_clear", &
+                                "top of atmosphere clear sky emissivity estimate "// &
+                                "at the nominal wavelength of 3.75 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ems_Ch20, Max_Ems_Ch20, "none", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Ems_Ch20 median 3x3
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(18),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "emiss_3_75um_nom_median_3x3", &
+                              "emissivity_3_75_micron_nominal_median_3x3", &
+                              "3x3 pixel median top of atmosphere emissivity "// &
+                              "at the nominal wavelength of 3.75 microns", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Ems_Ch20, Max_Ems_Ch20, "none", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Tc_opaque_cloud
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(19),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_temp_opaque", &
+                              "cloud_top_temperature_opaque", &
+                              "cloud top temperature assuming an opaque cloud", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Tc, Max_Tc, "K", Missing_Value_Real4, Istatus)
+
+     !--- Bt_Ch20
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(20),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_75um_nom_median_3x3", &
+                              "brightness_temperature_3.7_micron_nominal_median_3x3", &
+                              "3x3 pixel median filtered brightness temperature "// &
+                              "at the nominal wavelength of 3.75 microns", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+     endif
+
+
+     !--- Ch20 surface emissivity
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(21),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "surface_emiss_3_75um_nom", &
+                              "surface_emissivity_3.7_micron_nominal", &
+                              "surface emissivity at the nominal wavelength of 3.75 microns", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_sfc_ems, Max_sfc_ems, "none", Missing_Value_Real4, Istatus)
+
+     !--- oisst_uni
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(22),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "sst_background_uni_3x3", &
+                              "sea_surface_skin_temperature_background_uni_3x3", &
+                              "background sea surface skin temperature 3x3", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Sst_std, Max_Sst_std, "K", Missing_Value_Real4, Istatus)
+
+     !--- Bt_Ch27_Clear_Rtm
+     if (Chan_On_Flag_Default(27) == sym%YES) then
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(23),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_6_7um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_6_7_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 6.7 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt27, Max_Bt27, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch28_Clear_Rtm
+     if (Chan_On_Flag_Default(28) == sym%YES) then
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(24),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_7_3um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_7_3_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 7.3 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt28, Max_Bt28, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch29_Clear_Rtm
+     if (Chan_On_Flag_Default(29) == sym%YES) then
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(25),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_8_5um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_8_5_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 8.5 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt29, Max_Bt29, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch33_Clear_Rtm
+     if (Chan_On_Flag_Default(33) == sym%YES) then
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(26),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_13_3um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_13_3_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 13.3 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt33, Max_Bt33, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Covariance of Ch27 and Ch31
+     if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(27) == sym%YES) then
+          call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(27),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_11um_vs_67um_covar_5x5", &
+                              "brightness_temperature_11_vs_67_micron_5x5_covariance", &
+                              "5x5 pixel covariance of brightness temperatures at "// &
+                              "11 microns vs 67 microns (nominal wavelengths)", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt_Covar, Max_Bt_Covar, "K^2", Missing_Value_Real4, Istatus)
+     endif
+
+     !--- Zc_opaque_cloud
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(28),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_height_opaque", &
+                              "cloud_top_height_assuming_opaque", &
+                              "cloud top height assuming an opaque cloud", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Zc, Max_Zc, "km", Missing_Value_Real4, Istatus)
+
+     !--- Naive Bayesian Surface Type
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(29),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "bayes_mask_sfc_type", &
+                              "bayes_mask_sfc_type", &
+                              "bayes_mask_sfc_type", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0.0, 0.0, "none", Missing_Value_Real4, Istatus)
+
+     !--- Ref_Ch20_LRC
+     if (Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(30),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_3_75um_nom_lrc", &
+                              "toa_bidirectional_reflectance_3_75_micron_nominal_lrc", &
+                              "top of atmosphere reflectance at the nominal wavelength of 3.75 microns at lrc", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Ref_Ch20, Max_Ref_Ch20, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- etrop_LRC
+     if (Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(31),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                                "emiss_11um_nom_tropopause_lrc", &
+                                "emissivity_11_0_micron_nominal_tropopause_lrc", &
+                                "emissivity at the tropopause modeled at the nominal wavelength of 11.0 microns at lrc", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Etropo, Max_Etropo, "none", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+     !--- check for and report errors
+     if (Istatus_Sum /= 0) then
+       print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in rtm hdf file"
+     endif
+
+  endif
+
 
 !---------------------------------------------------------
 !-- define level2 file structure
@@ -2510,8 +2893,9 @@ end subroutine DEFINE_HDF_FILE_STRUCTURES
 !   appropriate level 2 files and appropriate SDSs for a given segment
 !
 !====================================================================
-subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
+subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
+ integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
  integer:: Istatus
 
@@ -2545,6 +2929,224 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
 
     !--- update Num_Scans_Level2_Hdf
     Num_Scans_Level2_Hdf = min(Num_Scans,Num_Scans_Level2_Hdf + Num_Scans_read)
+!-------------------------------------------------------------------------
+! write to rtm file
+!-------------------------------------------------------------------------
+   if (Rtm_File_Flag == sym%YES) then
+
+   !--- reset status flag
+   Istatus = 0
+
+   !--- scan line number
+   Istatus = sfwdata(Sds_Id_Rtm(1), Sds_Start_2d(2), Sds_Stride_2d(2), &
+                        Sds_Edge_2d(2), scan_number(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- scan line time
+   Istatus = sfwdata(Sds_Id_Rtm(2), Sds_Start_2d(2), Sds_Stride_2d(2), Sds_Edge_2d(2),  &
+                        Utc_Scan_Time_Hours(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- surface temperature
+   call SCALE_VECTOR_I2_RANK2(Tsfc_Nwp_Pix,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- computed Ch20 temperature
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch20 temperature with solar
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Bt_Clear_Ch20_solar_Rtm,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch31 temperature
+   if (Chan_On_Flag_Default(31) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(31)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(6), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch32 temperature
+   if (Chan_On_Flag_Default(32) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(32)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(7), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- etrop
+   if (Chan_On_Flag_Default(31) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(8), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ref_Ch1 clear
+   if (Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(9), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ref_Ch2 clear
+   if (Chan_On_Flag_Default(2) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(2)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch2,Max_Ref_Ch2,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(10), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Bt_Ch31_std_3x3
+   if (Chan_On_Flag_Default(31) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Bt_Ch31_std_3x3,sym%LINEAR_SCALING,Min_Bt31_std,Max_Bt31_std,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(11), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Bt_Ch31_Max_3x3
+   if (Chan_On_Flag_Default(31) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Bt_Ch31_Max_3x3,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ref_Ch1_std_3x3
+   if (Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std,&
+                                Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ref_Ch1_Min_3x3
+   if (Chan_On_Flag_Default(1) == sym%YES) then
+    call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Min_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+    Istatus = sfwdata(Sds_Id_Rtm(14), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
+   if (Chan_On_Flag_Default(31) == sym%YES .and.  Chan_On_Flag_Default(32)==sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3,sym%LINEAR_SCALING, &
+                                Min_Btd_Ch31_Ch32,Max_Btd_Ch31_Ch32,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(15), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ems_Ch20
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ems_Ch20,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
+                                Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(16), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ems_Ch20 clear-sky
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ems_Ch20_clear_solar_Rtm,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
+                                Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(17), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ems_Ch20 median 3x3
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ems_Ch20_median_3x3,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
+                                Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(18), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Tc_opaque_cloud
+   call SCALE_VECTOR_I2_RANK2(Tc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Tc,Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(19), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- Ch20 temperature
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Bt_Ch20_median_3x3,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(20), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Ch20 surface emissiviy
+   call SCALE_VECTOR_I2_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_sfc_ems,Max_sfc_ems,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(21), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !-- background sst uniformity
+   call SCALE_VECTOR_I2_RANK2(sst_anal_uni,sym%LINEAR_SCALING,Min_Sst_std,Max_Sst_std,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(22), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- computed Ch27 temperature
+   if (Chan_On_Flag_Default(27) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(27)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(23), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch28 temperature
+   if (Chan_On_Flag_Default(28) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(28)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(24), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch29 temperature
+   if (Chan_On_Flag_Default(29) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(29)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(25), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- computed Ch33 temperature
+   if (Chan_On_Flag_Default(33) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(26), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !-- 11um and 6.7um covariance
+   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(27) == sym%YES) then
+   call SCALE_VECTOR_I2_RANK2(Covar_Ch27_Ch31_5x5,sym%LINEAR_SCALING,Min_Bt_Covar,Max_Bt_Covar,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(27), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- Zc_opaque_cloud
+   call SCALE_VECTOR_I2_RANK2(Zc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+   Istatus = sfwdata(Sds_Id_Rtm(28), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !---  bayes_sfc_mask
+   Istatus = sfwdata(Sds_Id_Rtm(29), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                     Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
+   !--- Ref_Ch20 LRC
+   if (Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch20_LRC,sym%LINEAR_SCALING,Min_Ref_Ch20,Max_Ref_Ch20, &
+                                Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(30), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- etrop LRC
+   if (Chan_On_Flag_Default(31) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Emiss_11um_Tropo_LRC,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(31), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
+   !--- check for and report errors
+   if (Istatus /= 0) then
+      print *, EXE_PROMPT, MOD_PROMPT, "Error writing to rtm file: ", Istatus
+   endif
+
+   endif
 
 !-------------------------------------------------------------------------
 ! write to level2 file
@@ -3876,8 +4478,9 @@ end subroutine WRITE_PIXEL_HDF_RECORDS
 !   been created, closes the open output files.
 !
 !====================================================================
-subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
+subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
 
+ integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
 
  integer:: Isds
@@ -3887,6 +4490,22 @@ subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
  integer:: sfsnatt
  integer:: sfendacc
  integer:: sfend
+
+
+!------------------------------------------------------------------------
+!--- close rtm file
+!------------------------------------------------------------------------
+  if (Rtm_File_Flag == sym%YES) then
+    Istatus = 0
+    Istatus = sfsnatt(Sd_Id_Rtm, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Num_Pix)+Istatus
+    Istatus = sfsnatt(Sd_Id_Rtm, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Num_Scans)+Istatus
+    Istatus = sfsnatt(Sd_Id_Rtm, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
+    Istatus = sfsnatt(Sd_Id_Rtm, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
+    do Isds = 1, Num_Rtm_Sds
+     Istatus = sfendacc(Sds_Id_Rtm(Isds)) + Istatus
+    enddo
+    Istatus = sfend(Sd_Id_Rtm) + Istatus
+  endif
 
 !------------------------------------------------------------------------
 !--- close level2 file

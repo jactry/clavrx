@@ -1,4 +1,4 @@
-!C $Id$
+! $Id$
   program PROCESS_CLAVRX
 !-----------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
@@ -924,8 +924,10 @@
                Num_Scans_Level2_Hdf = 0
 
                call DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
+                              Dir_Rtm, &
                               Dir_Level2, &
                               File_1b, &
+                              Rtm_File_Flag, &
                               Level2_File_Flag, &
                               c1,c2,a1_20,a2_20,nu_20, &
                               a1_31,a2_31,nu_31,a1_32,a2_32,nu_32,Solar_Ch20_Nu,&
@@ -1508,7 +1510,7 @@
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-            call WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
+            call WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
@@ -1622,7 +1624,7 @@
       call WRITE_ALGORITHM_ATTRIBUTES()
 
       !--- close pixel level hdf files
-      call CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
+      call CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
 
       !--- diagnostic screen output
       print *, EXE_PROMPT, "<----- Timing Results ----->"

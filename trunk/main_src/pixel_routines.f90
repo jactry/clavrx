@@ -517,6 +517,7 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
          endif
      endif
 
+
      !---- consider any scanline with any solar contamination as a bad line
 !    if (maxval(Solar_Contamination_Mask(:,Line_Idx)) == sym%YES) then
 !        Bad_Scan_Flag(Line_Idx) = sym%YES
@@ -535,6 +536,11 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
          Bad_Pixel_Mask = sym%YES
       endwhere
   endif
+
+  !---------------------------------------------------------------------------------------
+  ! Compute the fraction of the segment covered by valid data
+  !---------------------------------------------------------------------------------------
+  Segment_Valid_Fraction = 1.0 - sum(float(Bad_Pixel_Mask)) / float(Number_of_Elements * Number_of_Lines)
 
 end subroutine SET_BAD_PIXEL_MASK
 !--------------------------------------------------------------------------

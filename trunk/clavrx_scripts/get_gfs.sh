@@ -67,7 +67,7 @@ do
   if [ ! -f $file ]; 
   then
    sh -c 'scp -p -r thor:/data1/Ancil_Data/gfs/hdf/gfs.'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
-   [  -f $file_bz ] &&  sh -c 'bunzip2 -v '$file'.bz2' || echo 'all clear'
+   [  -f $file_bz ] &&  sh -c 'bunzip2 -v '$file'.bz2' || echo 'done ...'
    
   fi
 done

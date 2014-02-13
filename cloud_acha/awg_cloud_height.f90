@@ -501,6 +501,7 @@ module AWG_CLOUD_HEIGHT
                                          Line_Idx_Min,  &
                                          Input%Number_of_Lines, & 
                                          Max_LRC_Distance,  &
+                                         Max_LRC_Jump,  &
                                          Grad_Flag_LRC,  &
                                          Missing_Value_Int4, &
                                          Skip_LRC_Mask, &
@@ -3427,6 +3428,7 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
                                           Element_Start, Number_Of_Elements, & 
                                           Line_Start, Number_Of_Lines, & 
                                           Max_Grad_Distance, &
+                                          Max_Grad_Value, &
                                           Grad_Flag,  &
                                           Missing_LRC_Value, &
                                           Skip_LRC_Mask, &
@@ -3442,6 +3444,7 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
   integer (kind=int4), intent(in):: Line_Start
   integer (kind=int4), intent(in):: Number_of_Lines
   integer (kind=int4), intent(in):: Max_Grad_Distance
+  real (kind=real4), intent(in):: Max_Grad_Value
   integer (kind=int4), intent(in):: Grad_Flag
   integer (kind=int4), intent(in):: Missing_LRC_Value
   integer (kind=int1), intent(in), dimension(:,:):: Skip_LRC_Mask
@@ -3518,8 +3521,13 @@ Gradient_Loop:    do ipoint = 1,Max_Grad_Distance
          endif 
 
          !--- compute direction
-         Elem_Idx_Dir = Grad_Indices(1)  - 2
-         Line_Idx_Dir = Grad_Indices(2)  - 2
+         Elem_Idx_Dir = Grad_Indices(1) - 2
+         Line_Idx_Dir = Grad_Indices(2) - 2
+
+         !--- check for going up to steep of gradient
+         if (abs(Grad_Array(Grad_Indices(1),Grad_Indices(2))) > Max_Grad_Value) then
+           exit
+         endif
 
          !--- check for pixels that are located at  minima/maxima
          if (Elem_Idx_Dir == 0 .and. Line_Idx_Dir == 0) then

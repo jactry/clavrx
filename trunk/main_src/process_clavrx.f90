@@ -213,6 +213,7 @@
    
    INTEGER, PARAMETER:: LRC_Meander_Flag = 1
    INTEGER, PARAMETER:: Max_LRC_Distance = 10
+   REAL, PARAMETER:: Max_LRC_Jump = 5.0
    INTEGER, PARAMETER:: Missing_LRC_Value = -999
    INTEGER, PARAMETER:: Grad_Flag_LRC = -1
    REAL, PARAMETER:: Min_Bt_11um_LRC = 220.0
@@ -1264,6 +1265,7 @@
                                        Line_Idx_Min_Segment,  &
                                        Num_Scans_Read, &
                                        Max_LRC_Distance,  &
+                                       Max_LRC_Jump,  &
                                        Grad_Flag_LRC,  &
                                        Missing_Value_Int4, &
                                        Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1), &

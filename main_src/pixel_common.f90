@@ -539,6 +539,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public:: Coast_Mask_Nwp
   integer(kind=int1), dimension(:,:), allocatable, public:: Space_Mask
   integer(kind=int4), dimension(:,:), allocatable, public:: Sfc_Level_Rtm_Pixel
+  real, public:: Segment_Valid_Fraction
 
   !--- viirs arrays
   integer(kind=int4), dimension(:,:), allocatable, public:: Gap_Pixel_Mask_Pattern

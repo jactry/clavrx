@@ -529,11 +529,7 @@
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
-print *, "Calling CREATE_PIXEL ARRAYS"
       call CREATE_PIXEL_ARRAYS()
-
-print *, Chan_On_Flag_Default(31)
-print *, "Emiss Tropo alloc status ", allocated(ch(31)%Emiss_Tropo)
 
       !------------------------------------------------------------------
       ! Check to see if the channels available and selected allow

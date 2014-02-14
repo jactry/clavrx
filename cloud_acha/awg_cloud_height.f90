@@ -3543,7 +3543,6 @@ Gradient_Loop:    do ipoint = 1,Max_Grad_Distance
 
          !--- check for going up to steep of a gradient
          if (abs(Grad_Array(Grad_Indices(1),Grad_Indices(2))) > Max_Grad_Value) then
-           print *, "max grad limit"
            exit
          endif
 

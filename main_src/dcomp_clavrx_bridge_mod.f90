@@ -128,6 +128,7 @@ contains
       
       integer :: dcomp_possible_channels ( 5) 
       integer :: i
+      integer :: CHN_VIS, CHN_NIR
       
       interface
          subroutine dcomp_array (a , b , debug_mode_user)
@@ -162,6 +163,36 @@ contains
             dcomp_input % is_channel_on (dcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
+      
+      !- check mode
+      CHN_VIS = 1
+      select case ( dcomp_mode )
+         case ( 1 ) 
+            CHN_NIR = 6               
+         case ( 2 )
+            CHN_NIR = 7
+         case ( 3 )
+            CHN_NIR = 20
+         case default
+            print*, 'dcomp mode ',dcomp_mode,' not possible'
+            return
+      end select
+      
+      if ( dcomp_input % is_channel_on (CHN_NIR) .eqv. .false.) then
+         if ( iseg_in == 1 ) then
+            print*,'dcomp NIR channel is not set! ==> MODIS equaivalant channel: ', CHN_NIR
+            call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
+         end if
+         return
+      end if
+   
+      if ( dcomp_input % is_channel_on (CHN_VIS) .eqv. .false.) then
+         if ( iseg_in == 1 ) then
+            print*, 'dcomp VIS channel is not set! ==> MODIS equaivalant channel: ', CHN_VIS
+            call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
+         end if
+         return
+      end if
    
       
       ! === ALLOCATION

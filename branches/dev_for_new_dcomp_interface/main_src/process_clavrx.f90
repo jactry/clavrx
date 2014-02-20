@@ -213,6 +213,8 @@
    
    INTEGER, PARAMETER:: LRC_Meander_Flag = 1
    INTEGER, PARAMETER:: Max_LRC_Distance = 10
+   REAL, PARAMETER:: Min_LRC_Jump = 0.5
+   REAL, PARAMETER:: Max_LRC_Jump = 10.0
    INTEGER, PARAMETER:: Missing_LRC_Value = -999
    INTEGER, PARAMETER:: Grad_Flag_LRC = -1
    REAL, PARAMETER:: Min_Bt_11um_LRC = 220.0
@@ -1008,6 +1010,11 @@
             !--- determine a pixel-level mask to exclude bad or unprocessible data
             call SET_BAD_PIXEL_MASK(Num_Pix,Num_Scans_Read)
 
+            !--- if the segment is 99% bad data, skip it
+            if (Segment_Valid_Fraction < 0.01) then 
+                  print *, EXE_PROMPT, "ERROR: Insufficient Data, skipping Segment"
+                  cycle Segment_loop 
+            endif
 
             !*******************************************************************
             ! Marker: Interpolate ancillary data to each pixel in this segment
@@ -1116,32 +1123,32 @@
                      allocate(ch(2)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
                      ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
-!                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
-!                                         ch(2)%Sfc_Ref_White_Sky)
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
+                                          ch(2)%Sfc_Ref_White_Sky)
                endif
                if (Chan_On_Flag_Default(5) == sym%YES) then
                   if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
                      allocate(ch(5)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
                      ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
-!                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
-!                                         ch(5)%Sfc_Ref_White_Sky)
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
+                                          ch(5)%Sfc_Ref_White_Sky)
                endif
                if (Chan_On_Flag_Default(6) == sym%YES) then
                   if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
                      allocate(ch(6)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
                      ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
-!                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
-!                                         ch(6)%Sfc_Ref_White_Sky)
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
+                                          ch(6)%Sfc_Ref_White_Sky)
                endif
                if (Chan_On_Flag_Default(7) == sym%YES) then
                   if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
                      allocate(ch(7)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
                      ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
-!                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
-!                                         ch(7)%Sfc_Ref_White_Sky)
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
+                                          ch(7)%Sfc_Ref_White_Sky)
                endif
             endif
  
@@ -1264,6 +1271,8 @@
                                        Line_Idx_Min_Segment,  &
                                        Num_Scans_Read, &
                                        Max_LRC_Distance,  &
+                                       Min_LRC_Jump,  &
+                                       Max_LRC_Jump,  &
                                        Grad_Flag_LRC,  &
                                        Missing_Value_Int4, &
                                        Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1), &

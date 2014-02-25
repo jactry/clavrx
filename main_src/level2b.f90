@@ -68,6 +68,7 @@ module LEVEL2B_ROUTINES
 
  interface SCALE_SDS
      module procedure      &
+         SCALE_SDS_RANK1,  &
          SCALE_SDS_RANK2,  &
          SCALE_SDS_RANK3
  end interface
@@ -900,17 +901,16 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
     Istatus = sfendacc(Sds%Id_Input) + Istatus
 
    end subroutine READ_SDS_RANK3
-
 !------------------------------------------------------------------------------------------------
-! SUBROUTINE Name: UNSCALE_SDS_RANK2
+! SUBROUTINE Name: UNSCALE_SDS_RANK1
 !
 ! Function:
 !     Unscales scaled SDS data from level2b files
 !-----------------------------------------------------------------------------------------------
-   subroutine UNSCALE_SDS_RANK2(Sds, Scaled_Data, Unscaled_data)
+   subroutine UNSCALE_SDS_RANK1(Sds, Scaled_Data, Unscaled_Data)
       type(Sds_Struct), intent(in):: Sds
-      real(kind=real4), dimension(:,:), intent(in):: Scaled_Data
-      real(kind=real4), dimension(:,:), intent(out):: Unscaled_data
+      real(kind=real4), dimension(:), intent(in):: Scaled_Data
+      real(kind=real4), dimension(:), intent(out):: Unscaled_Data
 
       !--- unscale Sds
 
@@ -918,16 +918,47 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
         !---- linear
         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
-           Unscaled_data = Sds%Scale_Factor * real(Scaled_Data) + Sds%Add_Offset
+           Unscaled_Data = Sds%Scale_Factor * real(Scaled_Data) + Sds%Add_Offset
         endif
 
         where (Scaled_Data == Sds%Fill_Value)
-         Unscaled_data = Missing_Value_Real4
+         Unscaled_Data = Missing_Value_Real4
         endwhere
 
       else
 
-        Unscaled_data = Scaled_Data
+        Unscaled_Data = Scaled_Data
+
+      endif
+
+   end subroutine UNSCALE_SDS_RANK1
+!------------------------------------------------------------------------------------------------
+! SUBROUTINE Name: UNSCALE_SDS_RANK2
+!
+! Function:
+!     Unscales scaled SDS data from level2b files
+!-----------------------------------------------------------------------------------------------
+   subroutine UNSCALE_SDS_RANK2(Sds, Scaled_Data, Unscaled_Data)
+      type(Sds_Struct), intent(in):: Sds
+      real(kind=real4), dimension(:,:), intent(in):: Scaled_Data
+      real(kind=real4), dimension(:,:), intent(out):: Unscaled_Data
+
+      !--- unscale Sds
+
+      if (Sds%Scaling_Type /= sym%NO_SCALING) then
+
+        !---- linear
+        if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
+           Unscaled_Data = Sds%Scale_Factor * real(Scaled_Data) + Sds%Add_Offset
+        endif
+
+        where (Scaled_Data == Sds%Fill_Value)
+         Unscaled_Data = Missing_Value_Real4
+        endwhere
+
+      else
+
+        Unscaled_Data = Scaled_Data
 
       endif
 
@@ -939,39 +970,73 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 ! Function:
 !     Unscales scaled SDS data from level2b files
 !-----------------------------------------------------------------------------------------------
-   subroutine UNSCALE_SDS_RANK3(Sds, Scaled_Data, Unscaled_data)
+   subroutine UNSCALE_SDS_RANK3(Sds, Scaled_Data, Unscaled_Data)
       type(Sds_Struct), intent(in):: Sds
       real(kind=real4), dimension(:,:,:), intent(in):: Scaled_Data
-      real(kind=real4), dimension(:,:,:), intent(out):: Unscaled_data
+      real(kind=real4), dimension(:,:,:), intent(out):: Unscaled_Data
 
       !--- unscale Sds
       if (Sds%Scaling_Type /= sym%NO_SCALING) then
 
         !---- linear
         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
-           Unscaled_data = Sds%Scale_Factor * real(Scaled_Data) + Sds%Add_Offset
+           Unscaled_Data = Sds%Scale_Factor * real(Scaled_Data) + Sds%Add_Offset
         endif
 
         !--- handle missing
         where (Scaled_Data == Sds%Fill_Value)
-         Unscaled_data = Sds%Unscaled_Missing
+         Unscaled_Data = Sds%Unscaled_Missing
         endwhere
         
       else
-        Unscaled_data = Scaled_Data
+        Unscaled_Data = Scaled_Data
       endif
 
    end subroutine UNSCALE_SDS_RANK3
+!------------------------------------------------------------------------------------------------
+! SUBROUTINE Name: SCALE_SDS_RANK1
+!
+! Function:
+!     Scales unscaled SDS data from level2b files
+!-----------------------------------------------------------------------------------------------
+   subroutine SCALE_SDS_RANK1(Sds, Unscaled_Data, Scaled_Data)
+      type(Sds_Struct), intent(in):: Sds
+      real(kind=real4), dimension(:), intent(in):: Unscaled_Data
+      real(kind=real4), dimension(:), intent(out):: Scaled_Data
 
+      !--- scale Sds
+      if (Sds%Scaling_Type /= sym%NO_SCALING) then
+
+        !---- linear
+        if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
+           Scaled_Data = (Unscaled_Data - Sds%Add_Offset)/(Sds%Scale_Factor)
+           where (Scaled_Data < Sds%Valid_Range(1))
+             Scaled_Data = Sds%Valid_Range(1)
+           endwhere
+           where (Scaled_Data > Sds%Valid_Range(2))
+             Scaled_Data = Sds%Valid_Range(2)
+           endwhere
+        endif
+
+        !--- set scaled missing values
+        where (Unscaled_Data == Sds%Unscaled_Missing)
+         Scaled_Data = Sds%Fill_Value
+        endwhere
+
+     else
+       Scaled_Data = Unscaled_Data
+     endif
+
+   end subroutine SCALE_SDS_RANK1
 !------------------------------------------------------------------------------------------------
 ! SUBROUTINE Name: SCALE_SDS_RANK2
 !
 ! Function:
 !     Scales unscaled SDS data from level2b files
 !-----------------------------------------------------------------------------------------------
-   subroutine SCALE_SDS_RANK2(Sds, Unscaled_data, Scaled_Data)
+   subroutine SCALE_SDS_RANK2(Sds, Unscaled_Data, Scaled_Data)
       type(Sds_Struct), intent(in):: Sds
-      real(kind=real4), dimension(:,:), intent(in):: Unscaled_data
+      real(kind=real4), dimension(:,:), intent(in):: Unscaled_Data
       real(kind=real4), dimension(:,:), intent(out):: Scaled_Data
 
       !--- scale Sds
@@ -979,17 +1044,22 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
         !---- linear
         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
-           Scaled_Data = (Unscaled_data - Sds%Add_Offset)/(Sds%Scale_Factor)
-           Scaled_Data = min(real(Sds%Valid_Range(1)),max(real(Sds%Valid_Range(2)),(Scaled_Data)))
+           Scaled_Data = (Unscaled_Data - Sds%Add_Offset)/(Sds%Scale_Factor)
+           where (Scaled_Data < Sds%Valid_Range(1))
+             Scaled_Data = Sds%Valid_Range(1)
+           endwhere
+           where (Scaled_Data > Sds%Valid_Range(2))
+             Scaled_Data = Sds%Valid_Range(2)
+           endwhere
         endif
 
         !--- set scaled missing values
-        where (Unscaled_data == Sds%Unscaled_Missing)
+        where (Unscaled_Data == Sds%Unscaled_Missing)
          Scaled_Data = Sds%Fill_Value
         endwhere
 
      else
-       Scaled_Data = Unscaled_data
+       Scaled_Data = Unscaled_Data
      endif
 
    end subroutine SCALE_SDS_RANK2
@@ -1000,9 +1070,9 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 ! Function:
 !     Scales unscaled SDS data from level2b files
 !-----------------------------------------------------------------------------------------------
-   subroutine SCALE_SDS_RANK3(Sds, Unscaled_data, Scaled_Data)
+   subroutine SCALE_SDS_RANK3(Sds, Unscaled_Data, Scaled_Data)
       type(Sds_Struct), intent(in):: Sds
-      real(kind=real4), dimension(:,:,:), intent(in):: Unscaled_data
+      real(kind=real4), dimension(:,:,:), intent(in):: Unscaled_Data
       real(kind=real4), dimension(:,:,:), intent(out):: Scaled_Data
 
       !--- scale Sds
@@ -1010,17 +1080,22 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
         !---- linear
         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
-           Scaled_Data = (Unscaled_data - Sds%Add_Offset)/(Sds%Scale_Factor)
-           Scaled_Data = min(real(Sds%Valid_Range(1)),max(real(Sds%Valid_Range(2)),(Scaled_Data)))
+           Scaled_Data = (Unscaled_Data - Sds%Add_Offset)/(Sds%Scale_Factor)
+           where (Scaled_Data < Sds%Valid_Range(1))
+             Scaled_Data = Sds%Valid_Range(1)
+           endwhere
+           where (Scaled_Data > Sds%Valid_Range(2))
+             Scaled_Data = Sds%Valid_Range(2)
+           endwhere
         endif
 
         !--- set scaled missing values
-        where (Unscaled_data == Sds%Unscaled_Missing)
+        where (Unscaled_Data == Sds%Unscaled_Missing)
          Scaled_Data = Sds%Fill_Value
         endwhere
 
      else
-       Scaled_Data = Unscaled_data
+       Scaled_Data = Unscaled_Data
      endif
 
    end subroutine SCALE_SDS_RANK3
@@ -1550,7 +1625,7 @@ subroutine COPY_GLOBAL_ATTRIBUTES(Sd_Id_Input,Sd_Id_Output)
             CALL RANDOM_SEED(PUT = seed)
           
             DEALLOCATE(seed)
-  END SUBROUTINE
+  END SUBROUTINE init_random_seed
 !--------------------------------------------------------------------
 ! File Search - similar to IDL
 !--------------------------------------------------------------------

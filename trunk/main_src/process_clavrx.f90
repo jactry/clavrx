@@ -213,8 +213,8 @@
    
    INTEGER, PARAMETER:: LRC_Meander_Flag = 1
    INTEGER, PARAMETER:: Max_LRC_Distance = 10
-   REAL, PARAMETER:: Min_LRC_Jump = 0.5
-   REAL, PARAMETER:: Max_LRC_Jump = 10.0
+   REAL, PARAMETER:: Min_LRC_Jump = 0.0   !0.5
+   REAL, PARAMETER:: Max_LRC_Jump = 100.0 !10.0
    INTEGER, PARAMETER:: Missing_LRC_Value = -999
    INTEGER, PARAMETER:: Grad_Flag_LRC = -1
    REAL, PARAMETER:: Min_Bt_11um_LRC = 220.0
@@ -1012,7 +1012,7 @@
 
             !--- if the segment is 99% bad data, skip it
             if (Segment_Valid_Fraction < 0.01) then 
-                  print *, EXE_PROMPT, "ERROR: Insufficient Data, skipping Segment"
+                  print *, EXE_PROMPT, "ERROR: Insufficient Data, skipping Segment ", Segment_Valid_Fraction
                   cycle Segment_loop 
             endif
 

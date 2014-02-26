@@ -338,7 +338,6 @@ program COMPILE_ASC_DES_LEVEL2B
      stop
  endif
 
-print *, "Number of command line arguements = ", N_Command_Line_Args
  Geo_Option_String = '1d_lat_lon'
  if (N_Command_Line_Args == 1) then 
      call getarg(1, Node_String)
@@ -657,7 +656,7 @@ Sds_Output_Stride_XY = (/1,1/)
           if (Source_Length_End <= Source_Length_Max) then 
            Source_String(Source_Length_Start:Source_Length_End) = L1b_Input(1:L1b_Length)//"; "
           endif
-          
+
           !--- copy global attributes of first valid file to output file
           if (First_Valid_Input == sym%YES) then
 
@@ -778,22 +777,6 @@ Sds_Output_Stride_XY = (/1,1/)
                 Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
 
 
-
-!               Lon_Output_1d = Lon_Output(:,1)
-!               Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,1,Sds_Dims_Output_x)
-!               Temp_Name = "X"
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "longitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "longitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-!               Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_X, Sds_Output_Stride_X,  &
-!                               Sds_Dims_Output_x, lon_Output_1d) + Istatus_Sum 
-!               Istatus_Sum = sfendacc(Sds_Id_temp) + Istatus_Sum
-
               else
 
                 Sds_Lon_Out%Rank = 2
@@ -804,27 +787,12 @@ Sds_Output_Stride_XY = (/1,1/)
                 call WRITE_SDS(Scaled_Sds_Data_Output,Sds_Lon_Out)
                 Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
 
-
-!               Sds_Id_temp = sfcreate(Sd_Id_Output,"longitude",DFNT_FLOAT32,2,Sds_Dims_Output_xy)
-!               Temp_Name = "X"
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "longitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "longitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-                Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_east"), "degrees_east") + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-!               Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_XY, Sds_Output_Stride_XY,  &
-!                               Sds_Dims_Output_xy, Lon_Output) + Istatus_Sum 
-!               Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
               endif
 
               !--- latitude 
               Sds_Lat_Out = Sds_Lat
               if (Geo_2d_Flag == 0) then   !first column only
 
-print *, "before writing 1d lat"
                 Sds_Lat_Out%Rank = 1
                 Lat_Output_1d = Lat_Output(1,:)
                 call CORRECT_SDS_STRINGS (Sds_Lat_Out) 
@@ -834,54 +802,16 @@ print *, "before writing 1d lat"
                 call WRITE_SDS(Scaled_Lat_Output_1d,Sds_Lat_Out)
                 Istatus_Sum = sfendacc(Sds_Lat_Out%Id_Output) + Istatus_Sum
 
-print *, "done writing 1d lat"
-
-
-!               Lat_Output_1d = Lat_Output(1,:)
-!               Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,1,Sds_Dims_Output_y)
-!               Temp_Name = "Y"
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "latitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "latitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim("degrees_north"), "degrees_north") + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Missing_Value_Real4) + Istatus_Sum
-!               Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_Y, Sds_Output_Stride_Y,  &
-!                               Sds_dims_Output_Y, lat_Output_1d) + Istatus_Sum 
-!               Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
-
               else
 
-print *, "before writing 2d lat"
                 Sds_Lat_Out%Rank = 2
                 call CORRECT_SDS_STRINGS (Sds_Lat_Out) 
                 call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_XY,  &
                                 Sds_Dims_Output_XY,Sds_Lat_Out)
-print *, "calling scale sds for lat"
                 call SCALE_SDS(Sds_Lat_Out,Lat_Output,Scaled_Sds_Data_Output)
                 call WRITE_SDS(Scaled_Sds_Data_Output,Sds_Lat_Out)
                 Istatus_Sum = sfendacc(Sds_Lat_Out%Id_Output) + Istatus_Sum
 
-print *, "range in lat = ", minval(Lat_Output), maxval(Lat_Output)
-print *, "range in scaled lat = ", minval(Scaled_Sds_Data_Output), maxval(Scaled_Sds_Data_Output)
-print *, "after writing 2d lat"
-
-!               Sds_Lat_Out = Sds_Lat
-!               Sds_Id_Temp = sfcreate(Sd_Id_Output,"latitude",DFNT_FLOAT32,2,Sds_Dims_Output_XY)
-!               Temp_Name = "Y"
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "latitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "standard_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Temp_Name = "latitude"
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "long_name", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "SCALED", DFNT_INT8, 1, Sds_Lat%Scaling_Type) + Istatus_Sum
-!               Istatus_Sum = sfscatt(Sds_Id_Temp, "units", DFNT_CHAR8, len_trim(Sds_Lat%Units), Sds_Lat%Units) + Istatus_Sum
-!               Istatus_Sum = sfsnatt(Sds_Id_Temp, "_FillValue", DFNT_FLOAT32, 1, Sds_Lat%Fill_Value) + Istatus_Sum
-!               Istatus_Sum = sfwdata(Sds_Id_Temp, Sds_Output_Start_XY, Sds_Output_Stride_XY,  &
-!                               Sds_dims_Output_xy, Lat_Output) + Istatus_Sum 
-!               Istatus_Sum = sfendacc(Sds_Id_Temp) + Istatus_Sum
               endif
 
               !--- add extra attributes

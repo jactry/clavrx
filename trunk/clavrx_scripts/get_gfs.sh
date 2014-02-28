@@ -30,10 +30,11 @@ do
   filebase='gfs.'$DAY_OBS$hhh'_F012.hdf'
   file=$gfs_path$filebase
   file_bz=$file.bz2
-  
+  echo $hhh
   if [ ! -f $file ]; 
   then
-   sh -c 'scp -p -r thor:/data1/Ancil_Data/gfs/hdf/gfs.'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
+   echo 'download the data ....'
+   sh -c 'scp -p -r thor.ssec.wisc.edu:/data1/Ancil_Data/gfs/hdf/gfs.'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
    [  -f $file_bz ] &&  sh -c 'bunzip2 -v '$file'.bz2' || echo 'all clear'
    
   fi
@@ -63,10 +64,11 @@ do
   filebase='gfs.'$DAY_OBS$hhh'_F012.hdf'
   file=$gfs_path$filebase
   file_bz=$file.bz2
-  
+  echo $hhh
   if [ ! -f $file ]; 
   then
-   sh -c 'scp -p -r thor:/data1/Ancil_Data/gfs/hdf/gfs.'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
+  echo 'download the data ....'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
+   sh -c 'scp -p -r thor.ssec.wisc.edu:/data1/Ancil_Data/gfs/hdf/gfs.'$DAY_OBS$hhh'_F012.hdf* '$gfs_path
    [  -f $file_bz ] &&  sh -c 'bunzip2 -v '$file'.bz2' || echo 'done ...'
    
   fi

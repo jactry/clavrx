@@ -14,7 +14,7 @@ satname="viirs"
 echo $HOME
 
 
-algo_path="main_src/"
+algo_path=$HOME"/SOFTWARE/clavrx/akh_clavrx_src/"
 cd $algo_path
 cd ./../
 pwd
@@ -57,7 +57,7 @@ echo "======", $minu,'==='
 
 pwd
 echo $year $doy $hour $minu $l1b_path
-./get_viirs_data.sh $year $doy $hour $minu $l1b_path
+#./get_viirs_data.sh $year $doy $hour $minu $l1b_path
 filetype='GMTCO'
 ./write_filelist.sh $l1b_path $out_path $month$day e$hour$minu $filetype
 ./clavrxorb  -dcomp_mode $dcomp_mode

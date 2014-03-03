@@ -915,6 +915,8 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
       do Chan_Idx = 1,36
 
+         if (Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
+
          if (Chan_Idx < 20 .or. Chan_Idx == 26) then
             call READ_MODIS_LEVEL1B(trim(Dir_1b),trim(File_1b), &
                                Chan_Idx, &

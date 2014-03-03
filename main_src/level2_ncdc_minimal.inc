@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 172
+ integer, parameter, private:: Num_Level2_Sds = 191
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 1
@@ -182,13 +182,22 @@
      Sds_Num_Level2_Acha_Info = 170,     Sds_Num_Level2_Acha_Info_Flag = 0, &
      Sds_Num_Level2_Diag1 = 171,         Sds_Num_Level2_Diag1_Flag = 0, &
      Sds_Num_Level2_Diag2 = 172,         Sds_Num_Level2_Diag2_Flag = 0, &
-     Sds_Num_Level2_Cod_Nlcomp = 173,    Sds_Num_Level2_Cod_Nlcomp_Flag = 0, &
-     Sds_Num_Level2_Ceps_Nlcomp = 174,   Sds_Num_Level2_Ceps_Nlcomp_Flag = 0, &
-     Sds_Num_Level2_Cod_Nlcomp_Uncer = 175,  Sds_Num_Level2_Cod_Nlcomp_Uncer_Flag = 0, &
-     Sds_Num_Level2_Ceps_Nlcomp_Uncer = 176, Sds_Num_Level2_Ceps_Nlcomp_Uncer_Flag = 0, &
-     Sds_Num_Level2_Nlcomp_Quality = 177,  Sds_Num_Level2_Nlcomp_Quality_Flag = 0, &
-     Sds_Num_Level2_Nlcomp_Info = 178,    Sds_Num_Level2_Nlcomp_Info_Flag = 0, &
-     Sds_Num_Level2_Ctt_Acha_Uncer = 179, Sds_Num_Level2_Ctt_Acha_Uncer_Flag = 0, &
-     Sds_Num_Level2_Lunzen = 180,         Sds_Num_Level2_Lunzen_Flag = 0, &
-     Sds_Num_Level2_LunRelaz = 181 ,      Sds_Num_Level2_LunRelaz_Flag = 0,&
-     Sds_Num_Level2_Lunaz = 182,          Sds_Num_Level2_Lunaz_Flag = 0
+     Sds_Num_Level2_Diag3 = 173,         Sds_Num_Level2_Diag3_Flag = 0, &
+     Sds_Num_Level2_Cod_Nlcomp = 174,    Sds_Num_Level2_Cod_Nlcomp_Flag = 0, &
+     Sds_Num_Level2_Ceps_Nlcomp = 175,   Sds_Num_Level2_Ceps_Nlcomp_Flag = 0, &
+     Sds_Num_Level2_Cod_Nlcomp_Uncer = 176,  Sds_Num_Level2_Cod_Nlcomp_Uncer_Flag = 0, &
+     Sds_Num_Level2_Ceps_Nlcomp_Uncer = 177, Sds_Num_Level2_Ceps_Nlcomp_Uncer_Flag = 0, &
+     Sds_Num_Level2_Nlcomp_Quality = 178,  Sds_Num_Level2_Nlcomp_Quality_Flag = 0, &
+     Sds_Num_Level2_Nlcomp_Info = 179,    Sds_Num_Level2_Nlcomp_Info_Flag = 0, &
+     Sds_Num_Level2_Ctt_Acha_Uncer = 180, Sds_Num_Level2_Ctt_Acha_Uncer_Flag = 0, &
+     Sds_Num_Level2_Lunzen = 181,         Sds_Num_Level2_Lunzen_Flag = 0, &
+     Sds_Num_Level2_LunRelaz = 182,       Sds_Num_Level2_LunRelaz_Flag = 0, &
+     Sds_Num_Level2_Lunaz = 183,          Sds_Num_Level2_Lunaz_Flag = 0, &
+     Sds_Num_Level2_Latpc = 184,          Sds_Num_Level2_Latpc_Flag = 0, &
+     Sds_Num_Level2_Lonpc = 185,          Sds_Num_Level2_Lonpc_Flag = 0, &
+     Sds_Num_Level2_Sataz = 186,          Sds_Num_Level2_Sataz_Flag = 0, &
+     Sds_Num_Level2_CldInsol = 187,       Sds_Num_Level2_CldInsol_Flag = 0, &
+     Sds_Num_Level2_CldInsol_Dif = 188,   Sds_Num_Level2_CldInsol_Dif_Flag = 0, &
+     Sds_Num_Level2_LCL_Nwp = 189,        Sds_Num_Level2_LCL_Nwp_Flag = 0,   &
+     Sds_Num_Level2_CCL_Nwp = 190,        Sds_Num_Level2_CCL_Nwp_Flag = 0, &
+     Sds_Num_Level2_Alt = 191,            Sds_Num_Level2_Alt_Flag = 0

@@ -308,11 +308,13 @@ contains
          case(3) 
             allocate ( time_msec_day ( size ( i1d_buffer)))
             time_msec_day = ( mod ( i1d_buffer , microsec_per_day ) ) / 1000
-            ! make missing data for missing scan time
+
+            ! make data missing of missing scan time
             where (i1d_buffer < 0)
                time_msec_day = missing_value_int
             endwhere
             if (.not. allocated ( out % geo % scan_time ) ) allocate (  out % geo % scan_time (dim_seg(2)) )
+
             out % geo % scan_time =  (/( time_msec_day( ( k -1 ) /16  + 1) , k =ny_start , ny_end )/) 
             deallocate ( time_msec_day )
          case(4) 

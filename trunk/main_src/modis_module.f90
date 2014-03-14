@@ -232,8 +232,8 @@ end subroutine CONVERT_RADIANCE
 ! nx_local, ny_local = size of arrays read in from hdf files
 !----------------------------------------------------------------------
 subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
-                              calibrated_data_Out, &
-                              uncert_data_Out, &
+                              calibrated_data_out, &
+                              uncert_data_out, &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
       use CONSTANTS
@@ -248,15 +248,15 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
       integer(kind=int4), intent(in):: ny_total
       integer(kind=int4), intent(out):: ny_local_temp
       integer(kind=int4), intent(out):: Error_Status
-      real(kind=int4), dimension(:,:), intent(out):: calibrated_data_Out
-      integer(kind=int1), dimension(:,:), intent(out):: uncert_data_Out
+      real(kind=int4), dimension(:,:), intent(out):: calibrated_data_out
+      integer(kind=int1), dimension(:,:), intent(out):: uncert_data_out
       integer(kind=int4):: nx_local
       integer(kind=int4):: ny_local
       integer(kind=int4):: ny_start
       integer(kind=int4):: ny_end
-      character(len=120):: Sds_Name
-      character(len=120):: Sds_Name_uncert
-      character(len=120):: Sds_Name_temp
+      character(len=120):: sds_name
+      character(len=120):: sds_name_uncert
+      character(len=120):: sds_name_temp
       character(len=120):: scale_name
       character(len=120):: offset_name
       integer(kind=int4):: Sd_Id
@@ -268,7 +268,7 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
       integer(kind=int4):: nbands
       integer(kind=int4):: sfend, sfstart, sfselect, &
                            sfginfo, sfn2index
-      integer(kind=int4):: num_attrs, sds_data_type, Sds_Rank
+      integer(kind=int4):: num_attrs, sds_data_type, sds_rank
       integer(kind=int4), dimension(3):: sds_dims
       integer(kind=int2), dimension(:,:,:), allocatable:: i2_buffer
       integer(kind=int2), dimension(:,:,:), allocatable:: i1_buffer
@@ -317,32 +317,32 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- based on channel, set appropriate names and sds band index
 
       if (iband == 1 .or. iband == 2) then
-        Sds_Name = "EV_250_Aggr1km_RefSB"
-        Sds_Name_uncert = "EV_250_Aggr1km_RefSB_Uncert_Indexes"
+        sds_name = "EV_250_Aggr1km_RefSB"
+        sds_name_uncert = "EV_250_Aggr1km_RefSB_Uncert_Indexes"
         scale_name = "reflectance_scales"
         offset_name = "reflectance_offsets"
         band_name = "Band_250M"
       endif
 
       if (iband >= 3 .and. iband <= 7) then
-        Sds_Name = "EV_500_Aggr1km_RefSB"
-        Sds_Name_uncert = "EV_500_Aggr1km_RefSB_Uncert_Indexes"
+        sds_name = "EV_500_Aggr1km_RefSB"
+        sds_name_uncert = "EV_500_Aggr1km_RefSB_Uncert_Indexes"
         scale_name = "reflectance_scales"
         offset_name = "reflectance_offsets"
         band_name = "Band_500M"
       endif
 
       if ((iband >=8 .and. iband <= 19) .or. iband == 26) then
-        Sds_Name = "EV_1KM_RefSB"
-        Sds_Name_uncert = "EV_1KM_RefSB_Uncert_Indexes"
+        sds_name = "EV_1KM_RefSB"
+        sds_name_uncert = "EV_1KM_RefSB_Uncert_Indexes"
         scale_name = "reflectance_scales"
         offset_name = "reflectance_offsets"
         band_name = "Band_1km_RefSB"
       endif
 
       if (iband >=20 .and. iband <= 36 .and. iband /= 26) then
-        Sds_Name = "EV_1KM_Emissive"
-        Sds_Name_uncert = "EV_1KM_Emissive_Uncert_Indexes"
+        sds_name = "EV_1KM_Emissive"
+        sds_name_uncert = "EV_1KM_Emissive_Uncert_Indexes"
         scale_name = "radiance_scales"
         offset_name = "radiance_offsets"
         band_name = "Band_1KM_Emissive"
@@ -350,18 +350,18 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       endif
 
       !--- open sds
-      Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim(Sds_Name)))
-      sds_uncert_id = sfselect(Sd_Id, sfn2index(Sd_Id,trim(Sds_Name_uncert)))
+      Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim(sds_name)))
+      sds_uncert_id = sfselect(Sd_Id, sfn2index(Sd_Id,trim(sds_name_uncert)))
 
       !--- get information
-      Status_Flag = sfginfo(Sds_Id, Sds_Name_temp, Sds_Rank, sds_dims,  &
+      Status_Flag = sfginfo(Sds_Id, sds_name_temp, sds_rank, sds_dims,  &
                         sds_data_type, num_attrs) + Status_Flag
 
 !     print *, '================================'
 !     print *, 'iband = ', iband
 !     print *, 'Sds_Id = ', Sds_Id
-!     print *, 'Sds_Name_temp = ', Sds_Name_temp
-!     print *, 'Sds_Rank = ', Sds_Rank
+!     print *, 'sds_name_temp = ', sds_name_temp
+!     print *, 'sds_rank = ', sds_rank
 !     print *, 'sds_dims = ', sds_dims
 !     print *, 'num_attrs = ', num_attrs
 
@@ -435,9 +435,9 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       Status_Flag = sfrnatt(Sds_Id, sffattr(Sds_Id,scale_name), scales) + Status_Flag
       Status_Flag = sfrnatt(Sds_Id, sffattr(Sds_Id,offset_name), offsets) + Status_Flag
 
-     !Status_Flag =  HDF_SDS_readER(Sd_Id, Sds_Name, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
-     !Status_Flag =  HDF_SDS_ATTRIBUTE_readER(Sd_Id, Sds_Name,scale_name,scales ) + Status_Flag
-     !Status_Flag =  HDF_SDS_ATTRIBUTE_readER(Sd_Id, Sds_Name,offset_name,offsets ) + Status_Flag
+     !Status_Flag =  HDF_SDS_readER(Sd_Id, sds_name, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
+     !Status_Flag =  HDF_SDS_ATTRIBUTE_readER(Sd_Id, sds_name,scale_name,scales ) + Status_Flag
+     !Status_Flag =  HDF_SDS_ATTRIBUTE_readER(Sd_Id, sds_name,offset_name,offsets ) + Status_Flag
 
       !--- close file
       Status_Flag = sfend(Sd_Id)
@@ -460,11 +460,11 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
               calibrated_data = missing_value
       endwhere
       
-      calibrated_data_Out = missing_value
-      calibrated_data_Out(1:nx_min,1:ny_min) = calibrated_data(1:nx_min,1:ny_min)
+      calibrated_data_out = missing_value
+      calibrated_data_out(1:nx_min,1:ny_min) = calibrated_data(1:nx_min,1:ny_min)
 
-      uncert_data_Out = missing_value_int1
-      uncert_data_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
+      uncert_data_out = missing_value_int1
+      uncert_data_out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
 
       iend = 1
 
@@ -507,20 +507,20 @@ end subroutine READ_MODIS_LEVEL1B
 ! ny_local_temp = actual number of lines from this file for this segment
 ! time_ms_start = millisecond time at start of file (line=1)
 ! time_ms_end = millisecond time at end of file (line=Num_Scans)
-! Scan_Number = number of line within this file
+! scan_number = number of line within this file
 ! asc_des_flag = 0 for ascending, 1 for descednding
 !----------------------------------------------------------------------
-subroutine READ_MODIS_LEVEL1B_GEOLOCATION(Path,File_Name,  &
-                              Lon_Out,  &
-                              Lat_Out, &
-                              Sensor_zenith_Out,  &
-                              Sensor_azimuth_Out, &
-                              Solar_zenith_Out, &
-                              Solar_azimuth_Out, &
-                              Relative_azimuth_Out, &
-                              Nx,ny,Seg_Idx,ny_total,ny_local_temp, &
-                              Time_ms_start, time_ms_end, Time_Ms, &
-                              Scan_Number, Asc_Des_Flag, Error_Status) 
+subroutine READ_MODIS_LEVEL1B_GEOLOCATION(path,file_name,  &
+                              lon_out,  &
+                              lat_out, &
+                              sensor_zenith_out,  &
+                              sensor_azimuth_out, &
+                              solar_zenith_out, &
+                              solar_azimuth_out, &
+                              relative_azimuth_out, &
+                              nx,ny,Seg_Idx,ny_total,ny_local_temp, &
+                              time_ms_start, time_ms_end, time_ms, &
+                              scan_number, asc_des_flag, Error_Status) 
 
       character(len=*), intent(in):: path
       character(len=*), intent(in):: file_name
@@ -531,21 +531,21 @@ subroutine READ_MODIS_LEVEL1B_GEOLOCATION(Path,File_Name,  &
       integer(kind=int4), intent(in):: time_ms_start
       integer(kind=int4), intent(in):: time_ms_end
       integer(kind=int4), intent(out), dimension(:):: time_ms
-      integer(kind=int4), intent(out), dimension(:):: Scan_Number
+      integer(kind=int4), intent(out), dimension(:):: scan_number
       integer(kind=int1), intent(out), dimension(:):: asc_des_flag
       integer(kind=int4), intent(out):: ny_local_temp
       integer(kind=int4), intent(out):: Error_Status
-      real(kind=real4), dimension(:,:), intent(out):: Lon_Out
-      real(kind=real4), dimension(:,:), intent(out):: Lat_Out
-      real(kind=real4), dimension(:,:), intent(out):: sensor_zenith_Out
-      real(kind=real4), dimension(:,:), intent(out):: sensor_azimuth_Out
-      real(kind=real4), dimension(:,:), intent(out):: solar_zenith_Out
-      real(kind=real4), dimension(:,:), intent(out):: solar_azimuth_Out
-      real(kind=real4), dimension(:,:), intent(out):: relative_azimuth_Out
+      real(kind=real4), dimension(:,:), intent(out):: lon_out
+      real(kind=real4), dimension(:,:), intent(out):: lat_out
+      real(kind=real4), dimension(:,:), intent(out):: sensor_zenith_out
+      real(kind=real4), dimension(:,:), intent(out):: sensor_azimuth_out
+      real(kind=real4), dimension(:,:), intent(out):: solar_zenith_out
+      real(kind=real4), dimension(:,:), intent(out):: solar_azimuth_out
+      real(kind=real4), dimension(:,:), intent(out):: relative_azimuth_out
 
       real(kind=real4), allocatable, dimension(:,:):: r4_buffer
       integer(kind=int2), allocatable, dimension(:,:):: i2_buffer
-      character(len=120):: Sds_Name
+      character(len=120):: sds_name
       integer(kind=int4), dimension(2):: sds_dims
       integer(kind=int4), dimension(2):: sds_start
       integer(kind=int4), dimension(2):: sds_stride
@@ -559,7 +559,7 @@ subroutine READ_MODIS_LEVEL1B_GEOLOCATION(Path,File_Name,  &
       integer:: Status_Flag
       integer(kind=int4):: Sd_Id
       integer(kind=int4):: Sds_Id
-      integer(kind=int4):: num_attrs, sds_data_type, Sds_Rank
+      integer(kind=int4):: num_attrs, sds_data_type, sds_rank
 
       integer(kind=int4):: sfend, sfstart, sfselect, sfrdata, sfendacc, &
                            sfginfo, sfn2index
@@ -578,12 +578,12 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !---- open file
       Sd_Id = sfstart(trim(path)//trim(file_name), DFACC_read)
 
-      !-- if file is unreadable, exit this loop
+      !-- if file is unreadable, exist this loop
       if (Sd_Id <= 0) then
          Status_Flag = 1
          exit
       endif
-
+ 
       !--- Open Latitude and extract data sizes
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Latitude')))
       !-- if latitude is missing, exit this loop  (note,the do while is working)
@@ -592,7 +592,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
          exit
       endif
 
-      Status_Flag = sfginfo(Sds_Id, Sds_Name, Sds_Rank, sds_dims, sds_data_type, num_attrs) + Status_Flag
+      Status_Flag = sfginfo(Sds_Id, sds_name, sds_rank, sds_dims, sds_data_type, num_attrs) + Status_Flag
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
       nx_local = sds_dims(1)
       ny_local = sds_dims(2)
@@ -616,48 +616,48 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- Latitude
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Latitude')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, r4_buffer) + Status_Flag
-      Lat_Out(1:nx_min,1:ny_min) = r4_buffer(1:nx_min,1:ny_min)
+      lat_out(1:nx_min,1:ny_min) = r4_buffer(1:nx_min,1:ny_min)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
  
       !--Longitude
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Longitude')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, r4_buffer) + Status_Flag
-      Lon_Out(1:nx_min,1:ny_min) = r4_buffer(1:nx_min,1:ny_min)
+      lon_out(1:nx_min,1:ny_min) = r4_buffer(1:nx_min,1:ny_min)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
 
       !--Sensor Zenith
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('SensorZenith')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
-      sensor_zenith_Out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
+      sensor_zenith_out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
       
       !--Solar Zenith
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('SolarZenith')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
-      solar_zenith_Out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
+      solar_zenith_out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
 
       !--Sensor Azimuth 
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('SensorAzimuth')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
-      sensor_azimuth_Out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
+      sensor_azimuth_out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
 
       !--Solar Azimuth
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('SolarAzimuth')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
-      solar_azimuth_Out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
+      solar_azimuth_out(1:nx_min,1:ny_min) = i2_buffer(1:nx_min,1:ny_min)/100.0
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
  
       !--- close file
       Status_Flag = sfend(Sd_Id) + Status_Flag
 
       !--- make relative azimuth
-      relative_azimuth_Out = abs(solar_azimuth_Out - sensor_azimuth_Out)
-      where (relative_azimuth_Out > 180.0)
-                relative_azimuth_Out = 360 - relative_azimuth_Out
+      relative_azimuth_out = abs(solar_azimuth_out - sensor_azimuth_out)
+      where (relative_azimuth_out > 180.0)
+                relative_azimuth_out = 360 - relative_azimuth_out
       end where
-      relative_azimuth_Out = 180 - relative_azimuth_Out
+      relative_azimuth_out = 180 - relative_azimuth_out
 
       !---- compute additional angles
 
@@ -675,14 +675,14 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !---- compute time
       dtime_dline = (time_ms_end - time_ms_start) / (Num_Scans-1)
       do iline = 1,ny_local_temp
-        Scan_Number(iline) = ny_start + iline - 1
+        scan_number(iline) = ny_start + iline - 1
         time_ms(iline) = int(float(iline - 1 + ny_start-1)*dtime_dline) + time_ms_start 
       enddo
 
       !--- compute ascending descending flag
       asc_des_flag = 0
       do iline = 1,ny_local_temp-1
-          if (Lat_Out(nx_local/2,iline+1) > Lat_Out(nx_local/2,iline)) then
+          if (lat_out(nx_local/2,iline+1) > lat_out(nx_local/2,iline)) then
                   asc_des_flag(iline) = 0
           else
                   asc_des_flag(iline) = 1
@@ -725,10 +725,10 @@ end subroutine READ_MODIS_LEVEL1B_GEOLOCATION
 ! nx_local = actual number of elements in this file
 ! ny_local = actual number of lines in this file
 ! ny_local_temp = actual number of lines from this file for this segment
-! Scan_Number = number of line within this file
+! scan_number = number of line within this file
 !----------------------------------------------------------------------
 subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
-                              Cloud_Mask_Out,  &
+                              cloud_mask_out,  &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
 
@@ -740,10 +740,10 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int4), intent(in):: ny_total
       integer(kind=int4), intent(out):: ny_local_temp
       integer(kind=int4), intent(out):: Error_Status
-      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Mask_Out
+      integer(kind=int1), dimension(:,:), intent(out):: cloud_mask_out
 
       integer(kind=int1), allocatable, dimension(:,:,:):: i1_buffer
-      character(len=120):: Sds_Name
+      character(len=120):: sds_name
       integer(kind=int4), dimension(3):: sds_dims
       integer(kind=int4), dimension(3):: sds_start
       integer(kind=int4), dimension(3):: sds_stride
@@ -757,7 +757,7 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer:: Status_Flag
       integer(kind=int4):: Sd_Id
       integer(kind=int4):: Sds_Id
-      integer(kind=int4):: num_attrs, sds_data_type, Sds_Rank
+      integer(kind=int4):: num_attrs, sds_data_type, sds_rank
 
       integer(kind=int4):: sfend, sfstart, sfselect, sfrdata, sfendacc, &
                            sfginfo, sfn2index
@@ -782,8 +782,8 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
  
       !--- Open cloud mask and extract data sizes
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Mask')))
-      if (Sds_Id <= 0) Status_Flag = Status_Flag + 1
-      Status_Flag = sfginfo(Sds_Id, Sds_Name, Sds_Rank, sds_dims, sds_data_type, num_attrs) + Status_Flag
+      if (Sds_Id <=0) Status_Flag = Status_Flag + 1
+      Status_Flag = sfginfo(Sds_Id, sds_name, sds_rank, sds_dims, sds_data_type, num_attrs) + Status_Flag
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
       nx_local = sds_dims(1)
       ny_local = sds_dims(2)
@@ -806,7 +806,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- Read Cloud Mask Bytes (packed)
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Mask')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i1_buffer) + Status_Flag
-      Cloud_Mask_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
+      cloud_mask_out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
  
       !--- close file
@@ -817,10 +817,10 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       enddo  error_check ! end of while loop
 
       !--- unpacked needed information for 4-level cloud mask
-      Cloud_Mask_Out = ishft(ishft(Cloud_Mask_Out,5),-6)
+      cloud_mask_out = ishft(ishft(cloud_mask_out,5),-6)
 
       !--- switch CLAVR-x convection
-      Cloud_Mask_Out = 3-Cloud_Mask_Out
+      cloud_mask_out = 3-cloud_mask_out
 
       !--- deallocate memory
       !--- clean up memory
@@ -870,12 +870,12 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       if (Modis_1km_Flag == sym%YES) then
          call READ_MODIS_LEVEL1B_GEOLOCATION(trim(dir_nav_in),  &
                                             trim(Modis_Geo_Name), &
-                                            Lon_1b, Lat_1b, & 
+                                            lon_1b, lat_1b, & 
                                             Satzen, Sataz, Solzen, Solaz, Relaz, &
                                             Num_Pix,Num_Scans_Per_Segment, &
                                             Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            Start_Time,End_Time,Scan_Time, &
-                                            Scan_Number,ascend,Error_Status)
+                                            start_time,end_time,scan_time, &
+                                            scan_number,ascend,Error_Status)
 
         if (Error_Status /= 0) exit
 
@@ -902,12 +902,12 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
          call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Dir_1b),  &
                                             trim(File_1b), &
-                                            Lon_1b, Lat_1b, & 
+                                            lon_1b, lat_1b, & 
                                             Satzen, Sataz, Solzen, Solaz, Relaz, &
                                             Num_Pix,Num_Scans_Per_Segment, &
                                             Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            Start_Time,End_Time,Scan_Time, &
-                                            Scan_Number,ascend,Error_Status)
+                                            start_time,end_time,scan_time, &
+                                            scan_number,ascend,Error_Status)
         if (Error_Status /= 0) exit
 
         if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
@@ -919,6 +919,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       endif
 
       do Chan_Idx = 1,36
+
          if (Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
 
          if (Chan_Idx < 20 .or. Chan_Idx == 26) then
@@ -995,10 +996,10 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       integer:: count
       
       !char arrays from mega array
-      character(len=15):: Start_Time_Eos
-      character(len=15):: End_Time_Eos
-      character(len=10):: Start_Date
-      character(len=10):: End_Date
+      character(len=15):: start_time_eos
+      character(len=15):: end_time_eos
+      character(len=10):: start_date
+      character(len=10):: end_date
       
       !string index in mega array
       integer(kind=int4) :: String_Index
@@ -1038,13 +1039,13 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       !Lets do the begining time now. First we get the index in the string
       !where the string appears
       String_Index=index(Metadata_Temp, 'RANGEBEGINNINGTIME')
-      Start_Time_Eos = Metadata_Temp(String_Index+80:String_Index+80+14)
+      start_time_eos = Metadata_Temp(String_Index+80:String_Index+80+14)
 
       !parse and make start/end time in msec
       
-      read(Start_Time_Eos(1:2), fmt="(I2)") hour     
-      read(Start_Time_Eos(4:5), fmt="(I2)") minute
-      read(Start_Time_Eos(7:8), fmt="(I2)") seconds
+      read(start_time_eos(1:2), fmt="(I2)") hour     
+      read(start_time_eos(4:5), fmt="(I2)") minute
+      read(start_time_eos(7:8), fmt="(I2)") seconds
       
       Start_Time =  (hour + (float(minute)/60.0) + ((float(seconds)/60.0/60.0))) * &
       60.0 * 60.0 * 1000.0
@@ -1052,22 +1053,22 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       !now do the end time
       
       String_Index = index(Metadata_Temp, 'RANGEENDINGTIME')
-      End_Time_Eos = Metadata_Temp(String_Index+77:String_Index+77+14)
+      end_time_eos = Metadata_Temp(String_Index+77:String_Index+77+14)
 
-      read(End_Time_Eos(1:2), fmt="(I2)") hour     
-      read(End_Time_Eos(4:5), fmt="(I2)") minute
-      read(End_Time_Eos(7:8), fmt="(I2)") seconds
+      read(end_time_eos(1:2), fmt="(I2)") hour     
+      read(end_time_eos(4:5), fmt="(I2)") minute
+      read(end_time_eos(7:8), fmt="(I2)") seconds
       
       End_Time =  (hour + (float(minute)/60.0) + ((float(seconds)/60.0/60.0))) * &
       60.0 * 60.0 * 1000.0
              
       !now we have to get the date (which is in yyyy-mm-dd)
       String_Index=index(Metadata_Temp, 'RANGEBEGINNINGDATE')
-      Start_Date = Metadata_Temp(String_Index+80:String_Index+80+9)
+      start_date = Metadata_Temp(String_Index+80:String_Index+80+9)
      
-      read(Start_Date(1:4), fmt="(I4)") year     
-      read(Start_Date(6:7), fmt="(I2)") month
-      read(Start_Date(9:10), fmt="(I2)") day
+      read(start_date(1:4), fmt="(I4)") year     
+      read(start_date(6:7), fmt="(I2)") month
+      read(start_date(9:10), fmt="(I2)") day
       
       CALL JULIAN(day, month, year, jday)
      
@@ -1076,11 +1077,11 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
       !Now we do it for the end day
       String_Index = index(Metadata_Temp, 'RANGEENDINGDATE')
-      End_Date = Metadata_Temp(String_Index+77:String_Index+77+9)
+      end_date = Metadata_Temp(String_Index+77:String_Index+77+9)
 
-      read(End_Date(1:4), fmt="(I4)") End_Year     
-      read(End_Date(6:7), fmt="(I2)") month
-      read(End_Date(9:10), fmt="(I2)") day
+      read(end_date(1:4), fmt="(I4)") End_Year     
+      read(end_date(6:7), fmt="(I2)") month
+      read(end_date(9:10), fmt="(I2)") day
       
       CALL JULIAN(day, month, year, jday)
       

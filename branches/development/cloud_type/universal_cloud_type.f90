@@ -43,10 +43,10 @@ module UNIVERSAL_CLOUD_TYPE_MODULE
 
   implicit none
 
-  PUBLIC::  UNIVERSAL_CLOUD_TYPE
-  PRIVATE:: COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
-  PRIVATE:: OPAQUE_CLOUD_HEIGHT_LOCAL
-  PRIVATE:: H2O_CLOUD_HEIGHT_LOCAL
+  public::  UNIVERSAL_CLOUD_TYPE
+  private:: COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
+  private:: OPAQUE_CLOUD_HEIGHT_LOCAL
+  private:: H2O_CLOUD_HEIGHT_LOCAL
 
   !--- module wide variables to make more efficient argument passing internally
   real (kind=real4), dimension(:), private, pointer:: T_Prof
@@ -64,21 +64,22 @@ module UNIVERSAL_CLOUD_TYPE_MODULE
 #endif
 
   !--- thresholds
-  real(kind=real4), PARAMETER, PRIVATE:: Ice_Temperature_Min = 243.0
-  real(kind=real4), PARAMETER, PRIVATE:: Ice_Temperature_Max = 263.0
-  real(kind=real4), PARAMETER, PRIVATE:: Rad_11um_Thresh = 2.0
-  real(kind=real4), PARAMETER, PRIVATE:: Rad_H2O_Thresh = 0.25
-  real, PRIVATE, PARAMETER:: Zclr_H2O_Moist_Thresh = 8.0
-  real, PRIVATE, PARAMETER:: Bt_Ch27_Ch31_Covar_Cirrus_Moist_Thresh = 0.25
-  real, PRIVATE, PARAMETER:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
-  real, PRIVATE, PARAMETER:: Bt_Ch31_Btd_Ch31_Ch32_Covar_Cirrus_Thresh = -1.0
-  real, PRIVATE, PARAMETER:: Beta_11um_85um_Ice_Thresh = 1.10
-  real, PRIVATE, PARAMETER:: Beta_11um_12um_Overlap_Thresh = 0.95
-  real, PRIVATE, PARAMETER:: Beta_11um_133um_Overlap_Thresh = 0.70
-  real, PRIVATE, PARAMETER:: Emiss_67um_Cirrus_Thresh = 0.05
-  real, PRIVATE, PARAMETER:: Emiss_133um_Cirrus_Thresh = 0.02
+  real(kind=real4), parameter, private:: Ice_Temperature_Min = 243.0
+  real(kind=real4), parameter, private:: Ice_Temperature_Max = 263.0
+  real(kind=real4), parameter, private:: Rad_11um_Thresh = 2.0
+  real(kind=real4), parameter, private:: Rad_H2O_Thresh = 0.25
+  real, private, parameter:: Zclr_H2O_Moist_Thresh = 8.0
+  real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Moist_Thresh = 0.25
+  real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
+  real, private, parameter:: Bt_Ch31_Btd_Ch31_Ch32_Covar_Cirrus_Thresh = -1.0
+  real, private, parameter:: Beta_11um_85um_Ice_Thresh = 1.10
+  real, private, parameter:: Beta_11um_12um_Overlap_Thresh = 0.95
+  real, private, parameter:: Beta_11um_133um_Overlap_Thresh = 0.70
+  real, private, parameter:: Emiss_67um_Cirrus_Thresh = 0.05
+  real, private, parameter:: Emiss_133um_Cirrus_Thresh = 0.02
   real, private, parameter:: Fmft_Cold_Offset = 0.5 !K
   real, private, parameter:: Fmft_Cirrus_Thresh = 1.0 !K
+  real, private, parameter:: Bt_11um_Std_Cirrus_Thresh = 4.0 !K
 
   CONTAINS
 !====================================================================
@@ -203,6 +204,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   Water_Flag = sym%NO
   Ice_Probability = Missing_Value_Real4
   Fire_Flag = sym%NO
+  Cloud_Phase = sym%UNKNOWN_PHASE
 
   !------------------------------------------------------------------
   ! Step #1: Check for non-cloud conditions and 
@@ -236,7 +238,19 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
      if (Fire_Flag == sym%YES) then
         Cloud_Type(Elem_Idx,Line_Idx) = sym%FIRE_TYPE
         Cloud_Phase(Elem_Idx,Line_Idx) = sym%UNKNOWN_PHASE
-        return
+        cycle
+     endif
+
+     !--- set clear to clear phase
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
+          Cloud_Phase(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
+          cycle
+     endif
+
+     !--- set probably clear to clear phase
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
+          Cloud_Phase(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
+          cycle
      endif
 
      !-------------------------------------------------------------
@@ -305,13 +319,17 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   Element_Loop_WATER: do Elem_Idx = 1, Num_Elem
 
 
-   if (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) > 250.0) then
+   if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) cycle
+
+   if (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) > 240.0) then
 
    !---- 1.6 um Spectral Test for Water
    if (Channel_On_Flag(Chan_Idx_16um) == sym%YES) then
         if (Solzen(Elem_Idx,Line_Idx) < 80.0) then
+          if (ch(6)%Ref_Toa_Clear(Elem_Idx,Line_Idx) < 20.0) then
           if (Ref_16um(Elem_Idx,Line_Idx) > 30.0) then
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
+          endif
           endif
        endif
    endif
@@ -319,6 +337,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
    !---- 3.75 um Spectral Test for Water - If triggered, ignore cirrus tests
    if (Channel_On_Flag(Chan_Idx_375um) == sym%YES) then
         if (Solzen(Elem_Idx,Line_Idx) < 80.0) then
+         if (ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx) > 0.90) then
           if (Ref_375um(Elem_Idx,Line_Idx) > 20.0) then
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
           endif
@@ -327,8 +346,13 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
          endif
        endif
+       endif
    endif
 
+   endif
+
+   if (Water_Flag(Elem_Idx,Line_Idx) == sym%YES) then
+       Ice_Probability(Elem_Idx,Line_Idx) = 0.0
    endif
 
   enddo Element_Loop_WATER
@@ -341,6 +365,12 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
   Line_Loop_CIRRUS: do Line_Idx = Line_Start, Line_End
   Element_Loop_CIRRUS: do Elem_Idx = 1, Num_Elem
+
+   !---- don't detect cirrus if clear
+   if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) cycle
+
+   !---- don't detect cirrus if very high 11 um std deviation
+   if (Bt_11um_Stddev(Elem_Idx,Line_Idx) > Bt_11um_Std_Cirrus_Thresh) cycle
 
      !--- split window
      if ((Channel_On_Flag(Chan_Idx_11um) == sym%YES) .and. &
@@ -359,7 +389,6 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
         if (Fmft > Fmft_Cirrus_Thresh) then
                Cirrus_Flag(Elem_Idx,Line_Idx) = sym%YES
         endif
-
      endif
 
       !--- 6.7 um covariance
@@ -370,6 +399,10 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
        endif
  
       endif
+
+     if (Cirrus_Flag(Elem_Idx,Line_Idx) == sym%YES) then
+       Ice_Probability(Elem_Idx,Line_Idx) = 1.0
+     endif
 
   enddo Element_Loop_CIRRUS
   enddo Line_Loop_CIRRUS
@@ -382,38 +415,21 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   !--------------------------------------------------------------------
   ! Step #6: Compute Phase for Pixels that are LRCs  
   !--------------------------------------------------------------------
-  Cloud_Phase = sym%UNKNOWN_PHASE
-
   Line_Loop_LRC: do Line_Idx = Line_Start, Line_End
   Element_Loop_LRC: do Elem_Idx = 1, Num_Elem
 
-     !--- set clear to clear phase
-     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
-          Cloud_Phase(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
-          cycle
-     endif
-
-     !--- set probably clear to clear phase
-     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
-          Cloud_Phase(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
-          cycle
-     endif
-
-     if (Water_Flag(Elem_Idx,Line_Idx) == sym%YES) then
-            Ice_Probability(Elem_Idx,Line_Idx) = 0.0
-     else
-       if (Cirrus_Flag(Elem_Idx,Line_Idx) == sym%YES) then
-            Ice_Probability(Elem_Idx,Line_Idx) = 1.0
-       endif
-     endif
+     if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) cycle
 
      Elem_Lrc_Idx = i_lrc(Elem_Idx,Line_Idx)
      Line_Lrc_Idx = j_lrc(Elem_Idx,Line_Idx)
 
-     if (Elem_Idx == Elem_Lrc_Idx .and. Line_Idx == Line_Lrc_Idx) then
-          if (Ice_Probability(Elem_Lrc_Idx,Line_Lrc_Idx) /= Missing_Value_Real4) then
+     if (Elem_Lrc_Idx > 0 .and. Line_Lrc_Idx > 0) then
+         if (Ice_Probability(Elem_Lrc_Idx,Line_Lrc_Idx) /= Missing_Value_Real4) then
             Ice_Probability(Elem_Idx,Line_Idx) = Ice_Probability(Elem_Lrc_Idx,Line_Lrc_Idx)
-          endif
+         endif
+         if (Cirrus_Flag(ELem_Lrc_Idx,Line_Lrc_Idx) == sym%YES) then
+           Ice_Probability(Elem_Idx,Line_Idx) = 1.0
+         endif
      endif
 
      !--- phase based on ice cloud probability
@@ -452,16 +468,6 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
   enddo Element_Loop_LRC3
   enddo Line_Loop_LRC3
-
-  !---------------------------------------------------------------------------------
-  ! Modify Phase based on Cirrus and Water Flags
-  !---------------------------------------------------------------------------------
-  where(Water_Flag == sym%YES)
-      Cloud_Phase = sym%WATER_PHASE
-  endwhere
-  where(Cirrus_Flag == sym%YES)
-      Cloud_Phase = sym%ICE_PHASE
-  endwhere
 
   !-----------------------------------------------------------------------------------
   ! set all water phase clouds with cold tops as supercooled water

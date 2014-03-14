@@ -820,10 +820,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
                        if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
                        if (Turn_Off_This_Test == symbol%NO) then
                         Classifier_Value(Class_Idx) = Bt_11um(Elem_Idx,Line_Idx)
-                        if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
-                           Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-                           Classifier_Value(Class_Idx) = Bt_11um_LRC(Elem_Idx,Line_Idx)
-                        endif
+                     !  if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
+                     !     Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+                     !     Classifier_Value(Class_Idx) = Bt_11um_LRC(Elem_Idx,Line_Idx)
+                     !  endif
                        endif
 
                     case("T_max-T") 
@@ -846,10 +846,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
                        if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
                        if (Turn_Off_This_Test == symbol%NO) then
                         Classifier_Value(Class_Idx) = Emiss_11um_Tropo_Rtm(Elem_Idx,Line_Idx)
-                        if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
-                           Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-                           Classifier_Value(Class_Idx) = Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx)
-                        endif
+                     !  if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
+                     !     Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+                     !     Classifier_Value(Class_Idx) = Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx)
+                     !  endif
                        endif
 
                     case("FMFT") 

@@ -1,4 +1,7 @@
 !-- ice clouds modeled as aggregate columns (b=0.10)
+!    $Header$
+!    updated 02/05/2014
+!     Yue sent me this via email
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: A_BETA_11um_67um_FIT_ICE =    0.95539
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: B_BETA_11um_67um_FIT_ICE =    0.07902
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: A_BETA_11um_85um_FIT_ICE =    1.40457

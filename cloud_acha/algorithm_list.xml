@@ -45,10 +45,10 @@ Basic layout, including all optional tags
 
         <algorithm name="New_ACHA_Mode_1" keyword="ACHA_mode_1">
                 <comment value="New ACHA Mode 1" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -111,9 +111,17 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Processing_Order">
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 
@@ -122,10 +130,10 @@ Basic layout, including all optional tags
 
         <algorithm name="New_ACHA_Mode_2" keyword="ACHA_mode_2">
                 <comment value="New ACHA Mode 2" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -188,9 +196,17 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Processing_Order">
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 
@@ -200,10 +216,10 @@ Basic layout, including all optional tags
   
         <algorithm name="New_ACHA_Mode_3" keyword="ACHA_mode_3">
                 <comment value="New ACHA Mode 3" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -268,9 +284,17 @@ Basic layout, including all optional tags
                         <sds_item name="Processing_Order">
                                 <produces_output />
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 
@@ -279,10 +303,10 @@ Basic layout, including all optional tags
 
         <algorithm name="New_ACHA_Mode4" keyword="ACHA_mode_4">
                 <comment value="New ACHA Mode 4" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -345,9 +369,17 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Processing_Order">
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 
@@ -356,10 +388,10 @@ Basic layout, including all optional tags
 
         <algorithm name="New_ACHA_Mode5" keyword="ACHA_mode_5">
                 <comment value="New ACHA Mode 5" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -422,9 +454,17 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Processing_Order">
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 
@@ -433,10 +473,10 @@ Basic layout, including all optional tags
         
         <algorithm name="New_ACHA_Mode6" keyword="ACHA_mode_6">
                 <comment value="New ACHA Mode 6" />
-                <module value="awg_cloud_height" />
-                <function value="awg_cloud_height_algorithm" />
+                <function value="awg_cloud_height_bridge" /> 
+                <module value="acha_services_geocat_mod+awg_cloud_height+acha_geocat_bridge_mod" />
                 <reference value="TBD" />
-                <ancil_subdir value=" " />
+                <ancil_subdir value="cloud_acha_svn" />
 
                 <cmask_needed />
                 <ctype_needed />
@@ -499,9 +539,17 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Processing_Order">
                         </sds_item>
-                        <sds_item name="X_LRC_Idx">
+                        <sds_item name="Lon_Pc">
                         </sds_item>
-                        <sds_item name="Y_LRC_Idx">
+                        <sds_item name="Lat_Pc">
+                        </sds_item>
+                        <sds_item name="Zc_Base_Acha">
+                        </sds_item>
+                        <sds_item name="Zc_Top_Acha">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Meta_Data_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
                 </sds_list>
 

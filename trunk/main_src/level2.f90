@@ -2838,6 +2838,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Uniformity Parameter of ChI2 at the M-band resolution
+     if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Chan_On_Flag_Default(38) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_0_86um_nom_iband_uni", &
+                              "refl_0_86um_nom_iband_uni", &
+                              "refl_0_86um_nom_iband_uni", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Uni_Ch2, Max_Uni_Ch2, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Max of ChI5 at the M-band resolution
      if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Chan_On_Flag_Default(41) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -2868,6 +2879,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "temp_11_0um_nom_iband_mean", &
                               DFNT_INT8, sym%LINEAR_SCALING, &
                               Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Uniformity Parameter of ChI5 at the M-band resolution
+     if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Chan_On_Flag_Default(41) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_11_0um_nom_iband_uni", &
+                              "temp_11_0um_nom_iband_uni", &
+                              "temp_11_0um_nom_iband_uni", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Uni_Ch5, Max_Uni_Ch5, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4432,6 +4454,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
+    !--- Uni of I2 at M-band
+    if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Chan_On_Flag_Default(38) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI2,sym%LINEAR_SCALING,Min_Uni_Ch2, &
+                                   Max_Uni_Ch2,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
     !--- Max of I5 at M-band
     if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Chan_On_Flag_Default(41) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Bt_Max_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
@@ -4453,6 +4483,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I1_RANK2(Bt_Mean_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
                                    Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Uni of I5 at M-band
+    if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Chan_On_Flag_Default(41) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI5,sym%LINEAR_SCALING,Min_Uni_Ch5, &
+                                   Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

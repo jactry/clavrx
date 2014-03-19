@@ -412,16 +412,18 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChDNB_Lunar_Min_3x3
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChDNB_Lunar_Std_3x3
 
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Max_ChI5
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Min_ChI5
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Mean_ChI5
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Max_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Min_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Mean_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Uni_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Max_ChI2
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Min_ChI2
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Uni_ChI2
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Mean_ChI2
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Max_ChI5
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Min_ChI5
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Uni_ChI5
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Mean_ChI5
 
 
 
@@ -1713,6 +1715,7 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Ref_ChI2(2*dim1,2*dim2))
            allocate(Ref_Max_ChI2(dim1,dim2))
            allocate(Ref_Min_ChI2(dim1,dim2))
+           allocate(Ref_Uni_ChI2(dim1,dim2))
            allocate(Ref_Mean_ChI2(dim1,dim2))
    endif
    if (Chan_On_Flag_Default(39) == sym%YES) then
@@ -1725,6 +1728,7 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Bt_ChI5(2*dim1,2*dim2))
            allocate(Bt_Max_ChI5(dim1,dim2))
            allocate(Bt_Min_ChI5(dim1,dim2))
+           allocate(Bt_Uni_ChI5(dim1,dim2))
            allocate(Bt_Mean_ChI5(dim1,dim2))
    endif
    if (Chan_On_Flag_Default(42) == sym%YES) then
@@ -1744,12 +1748,14 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
@@ -1766,12 +1772,14 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Ref_ChI2)) deallocate(Ref_ChI2)
   if (allocated(Ref_Max_ChI2)) deallocate(Ref_Max_ChI2)
   if (allocated(Ref_Min_ChI2)) deallocate(Ref_Min_ChI2)
+  if (allocated(Ref_Uni_ChI2)) deallocate(Ref_Uni_ChI2)
   if (allocated(Ref_Mean_ChI2)) deallocate(Ref_Mean_ChI2)
   if (allocated(Ref_ChI3)) deallocate(Ref_ChI3)
   if (allocated(Bt_ChI4)) deallocate(Bt_ChI4)
   if (allocated(Bt_ChI5)) deallocate(Bt_ChI5)
   if (allocated(Bt_Max_ChI5)) deallocate(Bt_Max_ChI5)
   if (allocated(Bt_Min_ChI5)) deallocate(Bt_Min_ChI5)
+  if (allocated(Bt_Uni_ChI5)) deallocate(Bt_Uni_ChI5)
   if (allocated(Bt_Mean_ChI5)) deallocate(Bt_Mean_ChI5)
   if (allocated(Ref_ChDNB_Lunar_Mean_3x3)) deallocate(Ref_ChDNB_Lunar_Mean_3x3)
   if (allocated(Ref_ChDNB_Lunar_Min_3x3)) deallocate(Ref_ChDNB_Lunar_Min_3x3)

@@ -137,7 +137,7 @@ contains
       
 
       ! rel azimuths  - these are all global variables
-      call  compute_relative_azimuth_viirs( solaz , sataz , relaz )
+      call  COMPUTE_RELATIVE_AZIMUTH_VIIRS( solaz , sataz , relaz )
 
       !--- compute the glint zenith angle
       glintzen = glint_angle( solzen , satzen , relaz )
@@ -227,9 +227,10 @@ contains
       !
       !  statistics I-Band on M-band grid
       !
-      if ( is_iband_on( 1 ) ) call compute_iband_statistics (Ref_Chi1  , Ref_Min_ChI1 , Ref_Max_ChI1 , Ref_Mean_ChI1)
-      if ( is_iband_on( 2 ) ) call compute_iband_statistics (Ref_Chi2 , Ref_Min_ChI2 , Ref_Max_ChI2 , Ref_Mean_ChI2) 
-      if ( is_iband_on( 5 ) ) call compute_iband_statistics (Bt_chi5  , Bt_Min_ChI5   , Bt_Max_ChI5    , Bt_Mean_ChI5)
+
+      if ( is_iband_on( 1 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI1 , Ref_Min_ChI1 , Ref_Max_ChI1 , Ref_Mean_ChI1 , Ref_Uni_ChI1)
+!      if ( is_iband_on( 2 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI2 , Ref_Min_ChI2 , Ref_Max_ChI2 , Ref_Mean_ChI2 , Ref_Uni_ChI2) 
+!      if ( is_iband_on( 5 ) ) call COMPUTE_IBAND_STATISTICS (Bt_ChI5  , Bt_Min_ChI5  , Bt_Max_ChI5  , Bt_Mean_ChI5  , Bt_Uni_ChI5 )
   
 
       if ( v_conf % viirs_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
@@ -243,10 +244,10 @@ contains
       
       call out % dealloc ()
     
-   end subroutine read_viirs_data
+   end subroutine READ_VIIRS_DATA
    
     !  this routine should be at a different place
-   subroutine  compute_relative_azimuth_viirs( ang1 , ang2, rel_az_out )
+   subroutine  COMPUTE_RELATIVE_AZIMUTH_VIIRS( ang1 , ang2, rel_az_out )
       real , dimension(:,:), intent(in) :: ang1
       real , dimension(:,:), intent(in) :: ang2
       real , dimension(:,:)  :: rel_az_out
@@ -257,7 +258,7 @@ contains
       end where
       rel_az_out = 180.0 - rel_az_out
      
-   end subroutine compute_relative_azimuth_viirs
+   end subroutine COMPUTE_RELATIVE_AZIMUTH_VIIRS
    !
    !
    !
@@ -265,10 +266,10 @@ contains
    ! - mband 3200 x 768
    !  - output of min_val ... is 3200 768
    !
-   subroutine compute_iband_statistics ( iband_array , out_min_val, out_max_val , out_mean_val)
+   subroutine COMPUTE_IBAND_STATISTICS ( iband_array , out_min_val, out_max_val , out_mean_val, out_std_val )
       implicit none
       real, dimension(:,:) , intent(in) :: iband_array
-      real, dimension(:,:) , intent(out)  :: out_min_val, out_max_val , out_mean_val 
+      real, dimension(:,:) , intent(out)  :: out_min_val, out_max_val , out_mean_val , out_std_val
       real, dimension(2,2) :: small_iband
       
       integer :: im , jm
@@ -291,15 +292,15 @@ contains
             iband_y1 = iband_y0 + 1
             small_iband = iband_array ( iband_x0 :  iband_x1 ,  iband_y0 :  iband_y1 )
             if ( minval ( small_iband ) > 0 ) then 
-               out_min_val ( im, jm ) = minval ( small_iband)
-               out_max_val ( im, jm ) = maxval ( small_iband)
-               out_mean_val ( im, jm ) = sum ( small_iband)/4.0
+               out_min_val ( im, jm ) = minval ( small_iband )
+               out_max_val ( im, jm ) = maxval ( small_iband )
+               out_mean_val ( im, jm ) = sum ( small_iband ) / 4.0
+               out_std_val ( im, jm ) = SQRT ( ( SUM ( (small_iband - out_mean_val(im, jm )) **2 ) ) / ( 4. - 1. ) ) 
             end if
          end do
       end do
-           
    
-   end subroutine
+   end subroutine COMPUTE_IBAND_STATISTICS
 
 
    !----------------------------------------------------------------

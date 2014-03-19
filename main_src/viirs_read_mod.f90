@@ -423,42 +423,45 @@ contains
       ny_start_iband = ny_start * 2 - 1
       offset_iband = [ nx_start_iband -1 , ny_start_iband - 1 ]
       out % file_exists % svi_file_exists (:) = sym%YES
-      do i_iband = 1 , 5   
+      do i_iband = 1 , 5
          if ( .not. is_iband_on(i_iband) ) cycle
          write ( band_nr_file , '(i2.2)'  )  i_iband
          write ( band_nr_var , '(i1)' )       i_iband
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVI'//trim(band_nr_file)//'_*'//trim(orbit_identifier) , n_files  )
          if ( n_files == 0 ) out % file_exists % svi_file_exists (i_iband) = sym%NO
-         if ( n_files == 0 ) cycle 
+         if ( n_files == 0 ) cycle
          file_iband = file_arr_dummy(1)
-     
+
          setname_iband = trim('All_Data/VIIRS-I'//trim(band_nr_var)//'-SDR_All/Reflectance' )
          if ( i_iband > 3) setname_iband = trim('All_Data/VIIRS-I'//trim(band_nr_var)//'-SDR_All/BrightnessTemperature' )
           setname_iband_fac = trim(setname_iband)//'Factors'
-          
-         call h5readdataset ( trim(config %dir_1b)//file_iband, setname_iband , offset_iband  , dim_seg_iband , r2d_buffer )
-         dim_buf = shape ( r2d_buffer )
+
+         call h5readdataset ( trim(config %dir_1b)//file_iband, setname_iband , offset_iband  , dim_seg_iband , i2d_buffer )
+         dim_buf = shape ( i2d_buffer )
          allocate ( invalid_pixel ( dim_buf(1) , dim_buf(2) ) )
-         invalid_pixel = r2d_buffer >= scaled_missing 
+         invalid_pixel = i2d_buffer >= scaled_missing
          call h5readdataset ( trim(config %dir_1b)//trim(file_iband), setname_iband_fac , factors )
-         r2d_buffer =  r2d_buffer * factors(1) + factors(2)
-         
-          
-         if ( i_iband  <= 3) then 
+         allocate  ( r2d_data  ( dim_buf(1) , dim_buf(2) ))
+         r2d_data =  i2d_buffer * factors(1) + factors(2)
+
+         if ( i_iband  <= 3) then
             if (.not. allocated ( out % iband (i_iband) % ref) ) allocate ( out % iband (i_iband) % ref(dim_seg_iband(1), dim_seg_iband(2)) )
-            out % iband ( i_iband) % ref =  100. * r2d_buffer 
+            out % iband ( i_iband) % ref =  100. * r2d_data
             where ( invalid_pixel )  out % iband ( i_iband) % ref  = missing_value_real4
          else
             if (.not. allocated ( out % iband (i_iband) % bt) ) allocate ( out % iband (i_iband) % bt (dim_seg_iband(1), dim_seg_iband(2)) )
-            out % iband ( i_iband) % bt =  r2d_buffer 
+            out % iband ( i_iband) % bt =  r2d_data
             where ( invalid_pixel ) out % iband ( i_iband) % bt  = missing_value_real4
          end if
-   
+
           deallocate ( invalid_pixel )
-          deallocate ( r2d_buffer )
-        
+          deallocate ( i2d_buffer )
+          deallocate ( r2d_data )
+
+          out % iband (i_iband) % is_read = .true.
+
       end do
-   
+
     
       ! - dnb
       ! - 

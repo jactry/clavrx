@@ -41,9 +41,11 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Ref_Ch1 = -2.0, Max_Ref_Ch1 = 120.0
  real, parameter, public:: Min_Uni_Ch1 =  0.0, Max_Uni_Ch1 = 10.0
  real, parameter, public:: Min_Ref_Ch2 = -2.0, Max_Ref_Ch2 = 120.0
+ real, parameter, public:: Min_Uni_Ch2 =  0.0, Max_Uni_Ch2 = 10.0
  real, parameter, public:: Min_Ref_Ch3 = -2.0, Max_Ref_Ch3 = 120.0
  real, parameter, public:: Min_Ref_Ch4 = -2.0, Max_Ref_Ch4 = 120.0
  real, parameter, public:: Min_Ref_Ch5 = -2.0, Max_Ref_Ch5 = 120.0
+ real, parameter, public:: Min_Uni_Ch5 =  0.0, Max_Uni_Ch5 = 10.0
  real, parameter, public:: Min_Ref_Ch6 = -2.0, Max_Ref_Ch6 = 120.0
  real, parameter, public:: Min_Ref_Ch7 = -2.0, Max_Ref_Ch7 = 120.0
  real, parameter, public:: Min_Ref_Ch8 = -2.0, Max_Ref_Ch8 = 120.0

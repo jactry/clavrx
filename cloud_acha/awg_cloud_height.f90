@@ -371,6 +371,7 @@ module AWG_CLOUD_HEIGHT
   real (kind=real4):: Zc_Top_Max
   real (kind=real4):: Zc_Base_Min
   integer (kind=int4):: NWP_Profile_Inversion_Flag
+  integer (kind=int4):: Itemp
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -626,10 +627,8 @@ module AWG_CLOUD_HEIGHT
     if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES .or. &
         Input%Sensor_Zenith_Angle(Elem_Idx,Line_Idx) > Sensor_Zenith_Threshold) then
 
-#ifdef ISCLAVRX
           Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
           Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
-#endif
 
     endif
 
@@ -753,10 +752,8 @@ module AWG_CLOUD_HEIGHT
         Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Missing_Value_Real4
         Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = Missing_Value_Real4
         Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = Missing_Value_Real4
-#ifdef ISCLAVRX
-          Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
-          Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
-#endif
+        Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
+        Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
         cycle
    endif
 
@@ -1214,6 +1211,7 @@ if (( Inver_Level_Rtm == 0) .and. (Rad_Clear_11um < Input%Rad_11um(Elem_Idx,Line
    Output%Qf(Elem_Idx,Line_Idx) = 1
 
    call KNOWING_T_COMPUTE_P_Z(symbol, &
+                              Cloud_Type, &
                               Output%Pc(Elem_Idx,Line_Idx), &
                               Output%Tc(Elem_Idx,Line_Idx), &
                               Output%Zc(Elem_Idx,Line_Idx), &
@@ -1248,7 +1246,7 @@ Retrieval_Loop: do
   !---------------------------------------------------------------------
   Tc_temp = x(1)
 
-  call KNOWING_T_COMPUTE_P_Z(symbol,Pc_temp,Tc_temp,Zc_temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(symbol,Cloud_Type,Pc_temp,Tc_temp,Zc_temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
 
   !--- compute above-cloud terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
@@ -1476,7 +1474,7 @@ if (Fail_Flag == symbol%NO) then  !successful retrieval if statement
  else   !the general top-down solution
 
         !--- Estimate height and pressure
-        call KNOWING_T_COMPUTE_P_Z(symbol, Output%Pc(Elem_Idx,Line_Idx), &
+        call KNOWING_T_COMPUTE_P_Z(symbol,Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                                   Output%Tc(Elem_Idx,Line_Idx), &
                                   Output%Zc(Elem_Idx,Line_Idx),&
                                   Ilev,ierror,NWP_Profile_Inversion_Flag)
@@ -1542,7 +1540,7 @@ else
  Output%Qf(Elem_Idx,Line_Idx) = 1
 
  !--- estimate height and pressure
- call KNOWING_T_COMPUTE_P_Z(symbol,Output%Pc(Elem_Idx,Line_Idx), &
+ call KNOWING_T_COMPUTE_P_Z(symbol,Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx), &
                             Ilev,ierror,NWP_Profile_Inversion_Flag)
@@ -1572,7 +1570,9 @@ endif
 endif     ! ---------- end of data check
  
  
- !--- cloud base and top. Only done in CLAVRX
+ !-----------------------------------------------------------------------------
+ !--- Cloud Base and Top
+ !-----------------------------------------------------------------------------
  if (Output%Zc(Elem_Idx,Line_Idx) /= Missing_Value_Real4 .and. &
      Output%Tau(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
 
@@ -1580,12 +1580,26 @@ endif     ! ---------- end of data check
 
        if(Cloud_Type == symbol%OPAQUE_ICE_TYPE .or. &
           Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-          Cloud_Extinction = ICE_EXTINCTION
+          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
+          select case (Itemp)
+            case (:199)    ; Cloud_Extinction = ICE_EXTINCTION1
+            case (200:219) ; Cloud_Extinction = ICE_EXTINCTION2
+            case (220:239) ; Cloud_Extinction = ICE_EXTINCTION3
+            case (240:259) ; Cloud_Extinction = ICE_EXTINCTION4
+            case (260:)    ; Cloud_Extinction = ICE_EXTINCTION5
+          end select
        endif
 
        if(Cloud_Type == symbol%CIRRUS_TYPE .or. &
           Cloud_Type == symbol%OVERLAP_TYPE) then
-          Cloud_Extinction = CIRRUS_EXTINCTION
+          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
+          select case (Itemp)
+            case (:199)    ; Cloud_Extinction = CIRRUS_EXTINCTION1
+            case (200:219) ; Cloud_Extinction = CIRRUS_EXTINCTION2
+            case (220:239) ; Cloud_Extinction = CIRRUS_EXTINCTION3
+            case (240:259) ; Cloud_Extinction = CIRRUS_EXTINCTION4
+            case (260:)    ; Cloud_Extinction = CIRRUS_EXTINCTION5
+          end select
        endif
 
        Cloud_Geometrical_Thickness = Output%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction
@@ -1594,15 +1608,21 @@ endif     ! ---------- end of data check
           Cloud_Geometrical_Thickness_Top_Offset = Cloud_Geometrical_Thickness/2.0
        else
           Cloud_Geometrical_Thickness_Top_Offset = 1.0 / Cloud_Extinction
-        endif
+       endif
 
        Zc_Top_Max = Hght_Prof_Rtm(Tropo_Level_Rtm)
        Zc_Base_Min = Hght_Prof_Rtm(Sfc_Level_Rtm)
 
-       Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
+       !-- new code
+       if (Output%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
+          Output%Zc_Top(Elem_Idx,Line_Idx) = Output%Zc(Elem_Idx,Line_Idx)
+       else
+          Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
                                              Output%Zc(Elem_Idx,Line_Idx) + Cloud_Geometrical_Thickness_Top_Offset)
-                                             
-       Output%Zc_Base(Elem_Idx,Line_Idx) = max(Zc_Base_Min, & Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness)
+       endif
+
+       Output%Zc_Base(Elem_Idx,Line_Idx) = min(Output%Zc(Elem_Idx,Line_Idx), &
+                                 max(Zc_Base_Min, Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
 
  endif
 
@@ -1974,9 +1994,10 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
    !-----------------------------------------------------------------
    ! Interpolate within profiles knowing T to determine P and Z
    !-----------------------------------------------------------------
-   subroutine KNOWING_T_COMPUTE_P_Z(symbol,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
+   subroutine KNOWING_T_COMPUTE_P_Z(symbol,Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
 
      type(symbol_acha), intent(in) :: symbol
+     integer, intent(in):: Cloud_Type
      real, intent(in):: T
      real, intent(out):: P
      real, intent(out):: Z
@@ -2013,7 +2034,8 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      !--- check to see if colder than min, than assume above tropopause
      !--- and either limit height to tropopause or extrapolate in stratosphere
      if ((T < minval(Temp_Prof_Rtm(kstart:kend))) .or. (klev < Tropo_Level_Rtm)) then
-         if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
+         if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
+!--->      if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
            Z = Hght_Prof_Rtm(kstart) + (T - Temp_Prof_Rtm(kstart)) / Dt_Dz_Strato
            call KNOWING_Z_COMPUTE_T_P(symbol,P,R4_Dummy,Z,klev)
          else

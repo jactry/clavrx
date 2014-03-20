@@ -229,8 +229,8 @@ contains
       !
 
       if ( is_iband_on( 1 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI1 , Ref_Min_ChI1 , Ref_Max_ChI1 , Ref_Mean_ChI1 , Ref_Uni_ChI1)
-!      if ( is_iband_on( 2 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI2 , Ref_Min_ChI2 , Ref_Max_ChI2 , Ref_Mean_ChI2 , Ref_Uni_ChI2) 
-!      if ( is_iband_on( 5 ) ) call COMPUTE_IBAND_STATISTICS (Bt_ChI5  , Bt_Min_ChI5  , Bt_Max_ChI5  , Bt_Mean_ChI5  , Bt_Uni_ChI5 )
+      if ( is_iband_on( 2 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI2 , Ref_Min_ChI2 , Ref_Max_ChI2 , Ref_Mean_ChI2 , Ref_Uni_ChI2) 
+      if ( is_iband_on( 5 ) ) call COMPUTE_IBAND_STATISTICS (Bt_ChI5  , Bt_Min_ChI5  , Bt_Max_ChI5  , Bt_Mean_ChI5  , Bt_Uni_ChI5 )
   
 
       if ( v_conf % viirs_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then

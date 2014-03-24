@@ -21,7 +21,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
    integer :: nr_lines, nr_elem
    
   
-    !- scalar local variables
+    !- scalar local variables here
 
 
    ! - atmos correction

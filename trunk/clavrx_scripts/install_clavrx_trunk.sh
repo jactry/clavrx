@@ -20,7 +20,7 @@ hdf4_path="/usr/local/hdf4"
 hdf5_path=$HOME"/lib/hdf5/"
 hdf4_path=$HOME"/lib/hdf4/"
 
-path='clavrx_test'
+path='clavrx_trunk'
 if [ -n "$1" ]
 then
 path=$1
@@ -49,27 +49,25 @@ if [ -d "$path" ]; then
 
 fi
 echo
-echo '...........     cvs checkout/update programs .................'
+echo "...........     SVN $path checkout/update programs ................."
 echo
 
 mkdir -p  $path
 cd $path
 
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk clavrx_src
+svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk ./
 
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/trunk cloud_team_dcomp
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk cloud_team_nlcomp
 
-cd cloud_team_dcomp
+cd dcomp
 ./configure -hdf5root=$hdf5_path -with-ifort -hdflib=${hdf4_path}/lib
 
 
-cd ../cloud_team_nlcomp
+cd ../nlcomp
 ./configure -hdf5root=$hdf5_path -with-ifort -hdflib=${hdf4_path}/lib
 
-cd ../clavrx_src/main_src
+cd ../main_src
 cp level2_all_on.inc level2.inc
-./configure -hdf5root=$hdf5_path -with-ifort  -hdflib=${hdf4_path}/lib -hdfinc=${hdf4_path}/include -nlcomp_dir=../../cloud_team_nlcomp/ -dcomp_dir=../../cloud_team_dcomp/ -acha_dir=../cloud_acha/
+./configure -hdf5root=$hdf5_path -with-ifort  -hdflib=${hdf4_path}/lib -hdfinc=${hdf4_path}/include -nlcomp_dir=../nlcomp/ -dcomp_dir=../dcomp/ -acha_dir=../cloud_acha/
 
 
 

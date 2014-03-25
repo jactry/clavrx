@@ -21,7 +21,9 @@ hdf4_path="/usr/local/hdf4"
 hdf5_path=$HOME"/lib/hdf5/"
 hdf4_path=$HOME"/lib/hdf4/"
 
-path='clavrx_test'
+stable_version='clavrx_stable_54'
+
+path=$stable_version
 if [ -n "$1" ]
 then
 path=$1
@@ -44,16 +46,16 @@ if [ -d "$path" ]; then
 
 fi
 echo
-echo '...........     svn checkout clavrx stable version .................'
+echo '...........     svn checkout clavrx stable version 5.4 .................'
 echo
 
 mkdir -p  $path
 cd $path
 
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/tags/clavrx_current clavrx_stable
+svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/tags/clavrx_current ./
 
 
-cd clavrx_stable/dcomp
+cd dcomp
 ./configure -hdf5root=$hdf5_path -with-ifort -hdflib=${hdf4_path}/lib
 
 

@@ -431,6 +431,13 @@ print *, "Acha Mode = ", Acha_Mode
           call HELPER()
           stop
         !No default file used
+        
+        else if  ( trim(fargv) == "-version" .or. &
+             trim(fargv) == "-ver") then
+          print*,'clavrx_5.4 trunk'
+          print*,'$Header$'
+          stop
+        
         elseif (trim(fargv) == "-no_Default") then 
           use_Default = sym%NO
         !Different default file used

@@ -4,6 +4,7 @@
 #!/bin/bash
 #
 #   history 20 January 2014: changed to patmosx branch of clavrx (AW)
+#            24 March 2014: for CLAVR-x stable version 
 
 #source ~/.bashrc
 #export DISPLAY=:1
@@ -20,7 +21,9 @@ hdf4_path="/usr/local/hdf4"
 hdf5_path=$HOME"/lib/hdf5/"
 hdf4_path=$HOME"/lib/hdf4/"
 
-path='clavrx_test'
+stable_version='clavrx_stable_54'
+
+path=$stable_version
 if [ -n "$1" ]
 then
 path=$1
@@ -28,9 +31,9 @@ path=$1
 fi
 
 echo
-echo -e "\033[1mClavrx  will be installed in ===> $path \033[0m"
+echo -e "\033[1mClavrx stable version will be installed in ===> $path \033[0m"
 echo
-read -p "Do you wish to continue and install the trunk of clavrx ?? (You may want to install the development branch with ./install_clavrx.sh ?!) " yn
+read -p "Do you wish to continue and install the tag version clavrx ?? (You may want to install the trunk with ./install_clavrx_trunk.sh ?!) " yn
    case $yn in
       [Yy]* ) echo -e "\033[1mClavrx trunk branch will be installed in ===> $path \033[0m";;
       [Nn]* ) exit;;
@@ -49,16 +52,16 @@ if [ -d "$path" ]; then
 
 fi
 echo
-echo '...........     cvs checkout/update programs .................'
+echo '...........     svn checkout clavrx stable version 5.4 .................'
 echo
 
 mkdir -p  $path
 cd $path
 
-svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/tags/clavrx_current clavrx_stabil
+svn checkout -q https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/tags/clavrx_current ./
 
 
-cd clavrx_src/dcomp
+cd dcomp
 ./configure -hdf5root=$hdf5_path -with-ifort -hdflib=${hdf4_path}/lib
 
 
@@ -72,10 +75,10 @@ cp level2_all_on.inc level2.inc
 
 
 if make; then 
-  printf '\033[32m Clavrx trunk successfully installed %s\033[m\n'
+  printf '\033[32m Clavrx stable successfully installed %s\033[m\n'
 else
    ret=$?
-   printf '\033[31m Error !!!! clavrx trunk is not installed  error code $ret %s\033[m\n'
+   printf '\033[31m Error !!!! clavrx stable is not installed  error code $ret %s\033[m\n'
 fi
 
 #cp clavrxorb_default_options ../

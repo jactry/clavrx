@@ -14,7 +14,7 @@ module ACHA_GSIP_BRIDGE_MOD
  implicit none
 
  public :: AWG_CLOUD_HEIGHT_BRIDGE
- public :: SET_ACHA_VERSION
+! public :: SET_ACHA_VERSION
    
    
  contains
@@ -26,9 +26,9 @@ module ACHA_GSIP_BRIDGE_MOD
  !  THIS IS BROKEN- IT ONLY PASSES BRIDGE INFO - FIXME
  !
  !====================================================================
- subroutine SET_ACHA_VERSION()
-   Acha_Version = "$Id$"
- end subroutine SET_ACHA_VERSION
+! subroutine SET_ACHA_VERSION()
+!   Acha_Version = "$Id$"
+! end subroutine SET_ACHA_VERSION
 
 
 !----------------------------------------------------------------------

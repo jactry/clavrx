@@ -3762,6 +3762,12 @@ subroutine COMPUTE_TAU_REFF_ACHA(symbol,  &
    
    Tau = (Qe_vis / Qe_11um) * Tau_Abs_11um / (1.0 - wo_11um * g_11um)
 
+   !--- set negative values to be missing - added by Y Li
+   if (Tau < 0) then
+      Tau = Missing_Value_Real4
+      Reff= Missing_Value_Real4
+   endif
+
 end subroutine COMPUTE_TAU_REFF_ACHA 
 
 !---------------------------------------------------------------------------

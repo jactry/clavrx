@@ -1,4 +1,4 @@
-! $Id: dcomp_lut_mod.f90 5 2014-01-21 23:42:33Z awalther $
+! $Id: dcomp_lut_mod.f90 90 2014-03-31 19:33:53Z awalther $
 module dcomp_lut_mod
 
 
@@ -177,7 +177,7 @@ contains
 			chan_string(2) = '2'
 			chan_string(6) = '3'
 			chan_string(20) = '4'
-        case ('NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11','NOAA-12', 'NOAA-14')  sensor_block
+        case ('NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11','NOAA-12', 'NOAA-14','TIROS-N')  sensor_block
 		    has_sol_table(1) = .true.
 			
 			has_sol_table(20) = .true.

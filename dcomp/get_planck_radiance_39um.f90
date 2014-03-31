@@ -1,4 +1,4 @@
-! $Id: get_planck_radiance_39um.f90 5 2014-01-21 23:42:33Z awalther $
+! $Id: get_planck_radiance_39um.f90 90 2014-03-31 19:33:53Z awalther $
 function get_planck_radiance_39um ( tmp , sensor ) result ( rad )
    implicit none
    real, intent ( in) :: tmp
@@ -63,7 +63,7 @@ function get_planck_radiance_39um ( tmp , sensor ) result ( rad )
       nu_20 = 2708.3865
 	  a1_20 = -0.59392036
 	  a2_20 = 1.0006466	
-      case ( 'NOAA-05')
+      case ( 'NOAA-05','TIROS-N')
       nu_20 = 2655.7409
 	  a1_20 = -1.6485446
 	  a2_20 = 1.0020894      

@@ -1,4 +1,4 @@
-! $Id: get_rad_refl_factor.f90 5 2014-01-21 23:42:33Z awalther $
+! $Id: get_rad_refl_factor.f90 90 2014-03-31 19:33:53Z awalther $
 function get_rad_refl_factor ( sensor , sol_zen  ) result ( rad_to_refl )
    implicit none
    character (len =  * )  :: sensor
@@ -50,7 +50,7 @@ function get_rad_refl_factor ( sensor , sol_zen  ) result ( rad_to_refl )
    case ( 'VIIRS')
       solar = 2.2671891
       ew = 140.86442
-    case ('NOAA-05')
+    case ('NOAA-05','TIROS-N')
       solar =  4.1604741 
       ew = 267.14124
    case ( 'NOAA-06')

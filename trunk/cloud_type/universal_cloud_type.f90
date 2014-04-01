@@ -112,6 +112,9 @@ end subroutine SET_CLOUD_TYPE_VERSION
 !
 !====================================================================
 subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
+
+  implicit none
+
   integer, intent(in):: Line_Start
   integer, intent(in):: Line_End
   integer:: Line_Idx
@@ -179,6 +182,8 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   integer:: water_count
   integer:: ice_count
 
+  integer(kind=int1) :: smoke_pixel
+  integer(kind=int1) :: dust_pixel
 
   !--- begin executable code
 
@@ -504,6 +509,25 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
           Cloud_Type(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE
           cycle
      endif
+
+     !--- Look for smoke and dust if VIIRS 
+     ! (function is in naive_bayesian_cloud_mask_module.f90)
+     ! only for water phase clouds
+     ! only confidently cloudy can come this far
+     ! read mask bits and set type accordingly (0 or 1)
+     if ( Viirs_Flag == sym%YES &
+      .or. Iff_Viirs_Flag == sym%YES ) then
+
+        ! check packed pixels if smoke & dust bits are set 
+        smoke_pixel = ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),4,1)
+        if (smoke_pixel == 1) Cloud_Type(Elem_Idx,Line_Idx) = sym%SMOKE_TYPE
+
+        dust_pixel = ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),5,1)
+        if (dust_pixel == 1) Cloud_Type(Elem_Idx,Line_Idx) = sym%DUST_TYPE
+
+        ! cycle if pixel is dust o smoke
+        if (smoke_pixel == 1 .or. dust_pixel == 1) cycle
+     endif ! sensor check
 
      !--- supercooled
      if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%SUPERCOOLED_PHASE) then

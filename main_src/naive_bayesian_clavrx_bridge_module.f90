@@ -60,15 +60,18 @@ contains
    integer:: Num_Line_Max
    type(symbol_naive_bayesian) :: symbol
 
+   integer:: Chan_On_041um
    integer:: Chan_On_063um
    integer:: Chan_On_086um
    integer:: Chan_On_138um
    integer:: Chan_On_160um
+   integer:: Chan_On_213um
    integer:: Chan_On_375um
    integer:: Chan_On_67um
    integer:: Chan_On_85um
    integer:: Chan_On_11um
    integer:: Chan_On_12um
+   integer:: Chan_On_I1_064um
    integer:: Chan_On_DNB
    
    
@@ -79,8 +82,7 @@ contains
    Num_Elem = Num_Pix
    Num_Line = Num_Scans_Read
    Num_Line_Max = Num_Scans_Per_Segment
-   
-   
+
    !----set symbols to local values
    symbol%CLOUDY = sym%CLOUDY
    symbol%PROB_CLOUDY = sym%PROB_CLOUDY
@@ -122,15 +124,18 @@ contains
    ! store channel mappings into flags sent through bridge
    ! clavrx uses the MODIS channel mapping
    !------------------------------------------------------------------
+   Chan_On_041um = Chan_On_Flag_Default(8)
    Chan_On_063um = Chan_On_Flag_Default(1)
    Chan_On_086um = Chan_On_Flag_Default(2)
    Chan_On_138um = Chan_On_Flag_Default(26)
    Chan_On_160um = Chan_On_Flag_Default(6)
+   Chan_On_213um = Chan_On_Flag_Default(7)
    Chan_On_375um = Chan_On_Flag_Default(20)
    Chan_On_67um = Chan_On_Flag_Default(27)
    Chan_On_85um = Chan_On_Flag_Default(29)
    Chan_On_11um = Chan_On_Flag_Default(31)
    Chan_On_12um = Chan_On_Flag_Default(32)
+   Chan_On_I1_064um = Chan_On_Flag_Default(37)
    Chan_On_DNB = Chan_On_Flag_Default(42)
    
    !Call Naive bayesian routine
@@ -143,18 +148,24 @@ contains
                                Num_Line_Max, &
                                Bad_Pixel_Mask,  &
                                Cld_Test_Vector_Packed, &
+                               Viirs_Flag, &
+                               Iff_Viirs_Flag, &
+                               Chan_On_041um,  &
                                Chan_On_063um,  &
                                Chan_On_086um,  &
                                Chan_On_138um,  &
                                Chan_On_160um,  &
+                               Chan_On_213um,  &
                                Chan_On_375um,  &
                                Chan_On_67um,  &
                                Chan_On_85um,  &
                                Chan_On_11um,  &
                                Chan_On_12um,  &
+                               Chan_On_I1_064um,  &
                                Chan_On_DNB,  &
                                Snow,  &
                                Land, &
+                               Glintzen, &
                                Glint_Mask,  &
                                Glint_Mask_Lunar,  &
                                Coast_Mask, &
@@ -165,6 +176,7 @@ contains
                                Lunzen, &
                                Lat,  &
                                Lon, &
+                               ch(8)%Ref_Toa, &
                                ch(1)%Ref_Toa, &
                                ch(1)%Ref_Toa_Clear, &
                                Ref_Ch1_Std_3x3,  &
@@ -173,6 +185,7 @@ contains
                                ch(26)%Ref_Toa, &
                                ch(6)%Ref_Toa, &
                                ch(6)%Ref_Toa_Clear, &
+                               ch(7)%Ref_Toa, &
                                ch(20)%Bt_Toa,  &
                                Bt_Ch20_Std_3x3,  &
                                Ems_Ch20_Median_3x3,  &    !needed?
@@ -189,6 +202,7 @@ contains
                                ch(32)%Bt_Toa, &
                                ch(32)%Bt_Toa_Clear,  &
                                Covar_Ch27_Ch31_5x5, &
+                               Ref_Uni_ChI1, &
                                Sst_Anal_Uni, &
                                ch(20)%Sfc_Emiss, &
                                ch(42)%Rad_Toa, &

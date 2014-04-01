@@ -141,8 +141,12 @@ program COMPILE_ASC_DES_LEVEL2B
  integer(kind=int4):: Time_Window
  real(kind=real4):: Start_Time_Window
  real(kind=real4):: End_Time_Window
+ real(kind=real4):: Start_Date_Window
+ real(kind=real4):: End_Date_Window
  real(kind=real4):: Start_Time_Input
  real(kind=real4):: End_Time_Input
+ real(kind=real4):: Start_Date_Input
+ real(kind=real4):: End_Date_Input
  integer(kind=int2):: Start_Day_Input
  integer(kind=int2):: End_Day_Input
  integer(kind=int2):: Start_Year_Input
@@ -202,6 +206,7 @@ program COMPILE_ASC_DES_LEVEL2B
  real(kind=real4), dimension(:), allocatable:: Asc_Des_Flag_Input
  real(kind=real4), dimension(:), allocatable:: Scan_Line_Number_1d_Input
 
+ real(kind=real4), dimension(:,:), allocatable:: Date_Input
  real(kind=real4), dimension(:,:), allocatable:: Time_Input
  real(kind=real4), dimension(:,:), allocatable:: Scan_Line_Number_Input
 
@@ -311,6 +316,7 @@ program COMPILE_ASC_DES_LEVEL2B
 
  Geo_Option_String = '1d_lat_lon' 
  Geo_2d_Flag = 0
+
 !----------------------------------------------------------------------
 ! command line arguments
 !----------------------------------------------------------------------
@@ -487,10 +493,32 @@ write (Jday_string,  '(I3.3)') Jday
 write (Time_String,  '(I4.4)') time
 write (time_win_string,  '(I2.2)') time_window
 
+if (Node_String == 'zen') then
+
 hour = real(time/100)
 minute = real(time - hour*100.0)
 Start_Time_Window = hour + (minute-time_window)/60.0
+if (Start_Time_Window < 0) then
+   Start_Time_Window = 24.0 + Start_Time_Window
+   Start_Date_Window = Jday - 1 + Start_Time_Window / 24.0
+else
+   Start_Date_Window = Jday + Start_Time_Window / 24.0
+endif
+
 End_Time_Window = hour + (minute+time_window)/60.0
+if (End_Time_Window >= 24.0) then
+   End_Time_Window = End_Time_Window - 24.0
+   End_Date_Window = Jday + 1 + End_Time_Window / 24.0
+else
+   End_Date_Window = Jday + End_Time_Window / 24.0
+endif
+
+else
+
+    Start_Date_Window = Jday
+    End_Date_Window = Jday + 0.999999
+
+endif
 
 if (Node_String == "geo") then
   root_name = trim(file_Input(1))
@@ -642,12 +670,16 @@ Sds_Output_Stride_XY = (/1,1/)
           Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"WMO_SATELLITE_CODE"),Sc_Id_Input) + Istatus_Sum
           Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"L1B"),L1b_Input) + Istatus_Sum
 
+
+          Start_Date_Input = Start_Day_Input + Start_Time_Input / 24.0
+          End_Date_Input = End_Day_Input + End_Time_Input / 24.0
+
           !--- based on attributes, see if this file should analyzed further
           if ((Start_Year_Input /= Year) .and. (End_Year_Input /= Year)) cycle
-          if ((Start_Day_Input /= Jday) .and. (End_Day_Input /= Jday)) cycle
-          if (Node_String /= "zen" .and. Sc_Id_Output /= Sc_Id_Input) cycle
-          if (Node_String == "zen" .and. Start_Time_Input < Start_Time_Window) cycle
-          if (Node_String == "zen" .and. End_Time_Input > End_Time_Window) cycle
+          if ((Node_String /= "zen") .and. (Start_Day_Input /= Jday) .and. (End_Day_Input /= Jday)) cycle
+          if ((Node_String /= "zen") .and. (Sc_Id_Output /= Sc_Id_Input)) cycle
+          if ((Node_String == "zen") .and. (Start_Date_Input < Start_Date_Window)) cycle
+          if ((Node_String == "zen") .and. (End_Date_Input > End_Date_Window)) cycle
 
           !--- pass along Level1b file for a source global variable
           L1b_Length = index(L1b_Input,achar(0)) - 1
@@ -745,7 +777,7 @@ Sds_Output_Stride_XY = (/1,1/)
           Start_Time_point_Hours = COMPUTE_TIME_HOURS()
 
           !--- compute remapping arrays for this orbit
-          call regrid( Lat_South,        &
+          call REGRID( Lat_South,        &
                        Dlat_Output,      &
                        Nlat_Output,      &
                        Lon_West,         &
@@ -827,9 +859,9 @@ Sds_Output_Stride_XY = (/1,1/)
          allocate(Input_Array_1d(Num_Points))
 
          !--- allocate memory for output on First_Valid_Input
-          if (First_Valid_Input == sym%YES) then
+         if (First_Valid_Input == sym%YES) then
             allocate(Scaled_Sds_Data_Output_Full(Nlon_Output, Nlat_Output, Num_Sds_Input))
-          endif
+         endif
 
          !--------------------------------------------------------------
          !--- bad pixel mask (assumed no scaling applied)
@@ -853,27 +885,39 @@ Sds_Output_Stride_XY = (/1,1/)
          !--------------------------------------------------------------
          !--- read time (assumed no scaling applied)
          !--------------------------------------------------------------
-          Sds_Time%Variable_Name = "scan_line_time"
-          allocate(time_1d_Input(Num_Lines_Input))
-          call READ_SDS(Sd_Id_Input,time_1d_Input,Sds_Time)
-          Sds_Time%Rank = 3
+         Sds_Time%Variable_Name = "scan_line_time"
+         allocate(time_1d_Input(Num_Lines_Input))
+         call READ_SDS(Sd_Id_Input,time_1d_Input,Sds_Time)
+         Sds_Time%Rank = 3
 
-          !---- extrapolate scan-line time to each pixel
-          allocate(Time_Input(Num_Elements_Input,Num_Lines_Input))
-          do Iline = 1, Num_Lines_Input
-              Time_Input(:,Iline) = time_1d_Input(Iline)
-          enddo
-          deallocate(Time_1d_Input)
+         !---- extrapolate scan-line time to each pixel
+         allocate(Time_Input(Num_Elements_Input,Num_Lines_Input))
+         allocate(Date_Input(Num_Elements_Input,Num_Lines_Input))
+         do Iline = 1, Num_Lines_Input
+              Time_Input(:,Iline) = Time_1d_Input(Iline)
+         enddo
+         deallocate(Time_1d_Input)
 
-          !--- define output or read in output values
-          if (First_Valid_Input == sym%YES) then   !define sds in output
+         !--- convert to a fractional day
+         ! Note, this needs to change if we fix geostationary time attributes
+         !---
+         Date_Input = Start_Day_Input + Time_Input / 24.0
+!        if (Start_Day_Input /= End_Day_Input) then 
+         if (Node_String == 'zen') then 
+            where(Time_Input < Start_Time_Input)
+               Date_Input = Start_Day_Input + 1 + Time_Input/24.0
+            endwhere
+         endif
+
+         !--- define output or read in output values
+         if (First_Valid_Input == sym%YES) then   !define sds in output
                  call CORRECT_SDS_STRINGS (Sds_Time) 
                  call DEFINE_SDS_RANK2(Sd_Id_Output, &
                                  Sds_dims_Output_xy, &
                                  Sds_dims_Output_xy, &
                                  Sds_Time)
                  Time_Output(:,:) = Missing_Value_Real4
-          endif
+         endif
 
          !--------------------------------------------------------------
          !--- scan line number
@@ -972,7 +1016,7 @@ Sds_Output_Stride_XY = (/1,1/)
                   !--- nadir check
                   if ((Overlap_Flag == 0) .and.  &
                       (Senzen_Output(Ilon,Ilat) /= Missing_Value_Real4) .and. &
-                      (Senzen_Output(Ilon,Ilat) - Senzen_Input(Ielem,Iline) > Senzen_thresh) .and. &
+                      (Senzen_Output(Ilon,Ilat) - Senzen_Input(Ielem,Iline) > Senzen_Thresh) .and. &
                       (Senzen_Input(Ielem,Iline) < Senzen_Output(Ilon,Ilat))) then
                       Temp_Update_Flag = sym%YES
                   endif
@@ -989,13 +1033,10 @@ Sds_Output_Stride_XY = (/1,1/)
 
                   !--- check time to exclude data from wrong days for orbits that span midnight
                   if (Temp_Update_Flag == sym%YES) then
-                    if ((Jday == Start_Day_Input) .and. (Time_Input(Ielem,Iline) > Start_Time_Input)) then   
-                      Update_Output_Mask(Ilon,Ilat) = sym%YES
-                    endif
-
-                    if ((Jday == End_Day_Input) .and. (Time_Input(Ielem,Iline) < End_Time_Input)) then   
-                     Update_Output_Mask(Ilon,Ilat) = sym%YES
-                    endif
+                      if ((Date_Input(Ielem,Iline) >= Start_Date_Window) .and.  &
+                          (Date_Input(Ielem,Iline) <= End_Date_Window)) then
+                        Update_Output_Mask(Ilon,Ilat) = sym%YES
+                      endif
                   endif
 
                   !--- update senzen output array
@@ -1062,6 +1103,7 @@ Sds_Output_Stride_XY = (/1,1/)
          deallocate(Senzen_Input)
          deallocate(Solzen_Input)
          deallocate(Time_Input)
+         deallocate(Date_Input)
          deallocate(Scan_Line_Number_Input)
          deallocate(Lon_Input)
          deallocate(Lat_Input)
@@ -1084,8 +1126,8 @@ Sds_Output_Stride_XY = (/1,1/)
                               Sds_Dims,                 &
                               sds(Isds)%Data_Type,      &
                               sds(Isds)%Num_Attrs) + Istatus_Sum
-            enddo Sds_loop_1
-          endif
+           enddo Sds_loop_1
+         endif
 
          !---------------------------------------------------------------------
          ! loop through SDS's and store the information about them

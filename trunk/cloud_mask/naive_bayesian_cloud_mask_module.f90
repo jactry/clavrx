@@ -79,6 +79,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  private:: emiss_375um_night_test
  private:: PACK_BITS_INTO_BYTES
  private:: fire_test
+ private:: DUST_DETECTION_VIIRS
+ private:: SMOKE_DETECTION_VIIRS
  public:: CLOUD_MASK_NAIVE_BAYES
  public:: SET_CLOUD_MASK_VERSION
  public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
@@ -387,18 +389,24 @@ module NAIVE_BAYESIAN_CLOUD_MASK
             Num_Line_Max_In, &              !y-dimension of data arrays
             Invalid_Data_Mask,  &           !bad data mask (0=good,1=bad)
             Cld_Flags_Packed, &             !array of packed results 
+            Viirs_Flag_Local, &             !flag if viirs sensor  (0=no,1=yes)
+            Iff_Viirs_Flag_Local, &         !flag if iff_viirs sensor(0=no,1=yes)
+            Chan_On_041um,  &               !flag if 0.41um channel on (0=no,1=yes)
             Chan_On_063um,  &               !flag if 0.63um channel on (0=no,1=yes)
             Chan_On_086um,  &               !flag if 0.86um channel on (0=no,1=yes)
             Chan_On_138um,  &               !flag if 1.38um channel on (0=no,1=yes)
             Chan_On_160um,  &               !flag if 1.60um channel on (0=no,1=yes)
+            Chan_On_213um,  &               !flag if 2.13um channel on (0=no,1=yes)
             Chan_On_375um,  &               !flag if 3.75um channel on (0=no,1=yes)
             Chan_On_67um,  &                !flag if 6.7um channel on (0=no,1=yes)
             Chan_On_85um,  &                !flag if 8.5um channel on (0=no,1=yes)
             Chan_On_11um,  &                !flag if 11.0um channel on (0=no,1=yes)
             Chan_On_12um,  &                !flag if 12.0um channel on (0=no,1=yes)
+            Chan_On_I1_064um,  &            !flag if I1 0.64um channel on (0=no,1=yes)
             Chan_On_DNB,  &                 !flag if DNB channel on (0=no,1=yes)
             Snow_Class,  &                  !Snow Classification 
             Land_Class, &                   !Land Classification
+            Glint_Zen, &                    !Glint Zenith Angle
             Oceanic_Glint_Mask,  &          !Mask of oceanic solar glint (0=no,1=yes)
             Lunar_Oceanic_Glint_Mask,  &    !Mask of oceanic lunar glint (0=no,1=yes)
             Coastal_Mask, &                 !binary coast mask (0=no,1=yes)
@@ -409,6 +417,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
             Lunzen_Local, &                 !Lunar viewing zenith angle (degrees)
             Lat_Local,  &                   !Latitude (degrees)
             Lon_Local, &                    !Longitude (degrees)
+            Ref_041um, &                    !0.41 um toa reflectance (%)
             Ref_063um, &                    !0.63 um toa reflectance (%)
             Ref_063um_Clear, &              !0.63 um toa reflectance for clear-sky (%)
             Ref_063um_Std,  &               !0.63 um toa reflectance 3x3 Std. Dev. (%)
@@ -417,6 +426,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
             Ref_138um,  &                   !1.38 um toa reflectance (%)
             Ref_160um,  &                   !1.60 um toa reflectance (%)
             Ref_160um_Clear,  &             !1.60 um toa reflectance for clear-sky (%)
+            Ref_213um,  &                   !2.13 um toa reflectance (%)
             Bt_375um,  &                    !3.75 um toa brightness temp (K)
             Bt_375um_Std,  &                !3.75 um toa brightness temp 3x3 Std. Dev. (K)
             Emiss_375um,  &                 !3.75 um pseudo toa emissivity
@@ -433,6 +443,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
             Bt_12um, &                      !12 um toa brightness temperature (K)
             Bt_12um_Clear,  &               !12 um toa bright temp clear-sky (K)
             Bt_11um_Bt_67um_Covar, &        !covariance of 11 and 6.7 um bright temp.
+            Ref_ChI1_Std,  &                !st.dev. I1 0.64 um toa reflectance (%)
             Sst_Anal_Uni, &                 !3x3 std of background sst field (K)
             Emiss_Sfc_375um,  &             !the surface emissivity at 3.75 um
             Rad_Lunar, &                    !Lunar toa radiance from DNB
@@ -451,6 +462,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
             Diagnostic_Array_2, &           !diagnostic array #2 for testing
             Diagnostic_Array_3)             !diagnostic array #3 for testing
 
+   implicit none
 
    character (len=120), intent(in) :: Ancil_Data_Path
    character (len=120), intent(in) :: Naive_Bayes_File_Name
@@ -465,21 +477,27 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    integer (kind=INT1), dimension(NUMBER_OF_FLAGS):: Cld_Flags
    integer (kind=INT1), dimension(NUMBER_OF_FLAGS):: Cld_Flag_Bit_Depth
    integer (kind=INT1), dimension(:,:,:), intent(out) :: Cld_Flags_Packed
+   integer (kind=INT4), intent(in) :: Viirs_Flag_Local
+   integer (kind=INT4), intent(in) :: Iff_Viirs_Flag_Local
+   integer, intent(in) :: Chan_On_041um
    integer, intent(in) :: Chan_On_063um
    integer, intent(in) :: Chan_On_086um
    integer, intent(in) :: Chan_On_138um
    integer, intent(in) :: Chan_On_160um
+   integer, intent(in) :: Chan_On_213um
    integer, intent(in) :: Chan_On_375um
    integer, intent(in) :: Chan_On_67um
    integer, intent(in) :: Chan_On_85um
    integer, intent(in) :: Chan_On_11um
    integer, intent(in) :: Chan_On_12um
+   integer, intent(in) :: Chan_On_I1_064um
    integer, intent(in) :: Chan_On_DNB
    integer (kind=INT1), dimension(:,:), intent(in) :: Snow_Class
    integer (kind=INT1), dimension(:,:), intent(in) :: Land_Class
    integer (kind=INT1), dimension(:,:), intent(in) :: Oceanic_Glint_Mask
    integer (kind=INT1), dimension(:,:), intent(in) :: Lunar_Oceanic_Glint_Mask
    integer (kind=INT1), dimension(:,:), intent(in) :: Coastal_Mask
+   real (kind=real4), dimension(:,:), intent(in) :: Glint_Zen
    real (kind=real4), dimension(:,:), intent(in) :: Solzen_Local
    real (kind=real4), dimension(:,:), intent(in) :: Scatzen_Local
    real (kind=real4), dimension(:,:), intent(in) :: Lunscatzen_Local
@@ -495,14 +513,17 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_Max
    real (kind=real4), dimension(:,:), intent(in) :: Bt_12um
    real (kind=real4), dimension(:,:), intent(in) :: Bt_12um_Clear
+   real (kind=real4), dimension(:,:), intent(in) :: Ref_041um
    real (kind=real4), dimension(:,:), intent(in) :: Ref_063um
    real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Std
    real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Min
    real (kind=real4), dimension(:,:), intent(in) :: Ref_086um
    real (kind=real4), dimension(:,:), intent(in) :: Ref_160um
    real (kind=real4), dimension(:,:), intent(in) :: Ref_138um
+   real (kind=real4), dimension(:,:), intent(in) :: Ref_213um
    real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Clear
    real (kind=real4), dimension(:,:), intent(in) :: Ref_160um_Clear
+   real (kind=real4), dimension(:,:), intent(in) :: Ref_ChI1_Std
    real (kind=real4), dimension(:,:), intent(in) :: Bt_67um
    real (kind=real4), dimension(:,:), intent(in) :: Bt_85um
    real (kind=real4), dimension(:,:), intent(in) :: Emiss_375um
@@ -570,6 +591,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    integer, save:: Segment_Number_Local = 1
    real (kind=real4):: Airmass_Local
    integer, parameter:: Spare_Value = 0
+
+   real (kind=real4), parameter:: smoke_solzen_thresh = 75.0
+   real (kind=real4), parameter:: dust_solzen_thresh = 75.0
    
    !------------------------------------------------------------------------------------------
    !---  begin executable code
@@ -1177,6 +1201,53 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
          enddo
 
+         !--- Look for smoke and dust if VIIRS 
+         ! (function is here bellow)
+         ! only for water phase clouds
+         ! only confidently/probably cloudy can come this far
+         if ( (Viirs_Flag_Local == 1 &
+          .or. Iff_Viirs_Flag_Local == 1) &
+          .and. Bt_11um (Elem_Idx,Line_Idx) > 270.0 &
+          .and. Cld_Mask_Bayes(Elem_Idx,Line_Idx) == symbol%CLOUDY ) then
+
+            ! check if M1, M11 & I1 channels are on
+            if (Chan_On_041um == 1 &
+             .and. Chan_On_213um == 1 &
+             .and. Chan_On_I1_064um == 1 ) then
+
+               ! call function only if pixel is during a day and no snow
+               if (Solzen_Local (Elem_Idx,Line_Idx) >= 0.0 &
+                .and. Solzen_Local (Elem_Idx,Line_Idx) < smoke_solzen_thresh &
+                .and. Snow_Class (Elem_Idx,Line_Idx) == 1) then
+                  Cld_Flags(13) = SMOKE_DETECTION_VIIRS( &
+                                              Ref_041um (Elem_Idx,Line_Idx), &
+                                              Ref_213um (Elem_Idx,Line_Idx), &
+                                              Ref_ChI1_Std (Elem_Idx,Line_Idx), &
+                                              Senzen_Local (Elem_Idx,Line_Idx), &
+                                              Glint_Zen (Elem_Idx,Line_Idx), &
+                                              Land_Class (Elem_Idx,Line_Idx) )
+               endif
+            endif ! channels check
+
+            ! check if M1, M5 channels are on
+            if (Chan_On_041um == 1 &
+             .and. Chan_On_063um == 1 ) then
+  
+               ! call function only if pixel is during a day and no snow
+               if (Solzen_Local (Elem_Idx,Line_Idx) >= 0.0 &
+                .and. Solzen_Local (Elem_Idx,Line_Idx) < dust_solzen_thresh &
+                .and. Snow_Class (Elem_Idx,Line_Idx) == 1) then
+                  Cld_Flags(14) = DUST_DETECTION_VIIRS( &
+                                              Ref_041um (Elem_Idx,Line_Idx), &
+                                              Ref_063um (Elem_Idx,Line_Idx), &
+                                              Ref_ChI1_Std (Elem_Idx,Line_Idx), &
+                                              Glint_Zen (Elem_Idx,Line_Idx), &
+                                              Land_Class (Elem_Idx,Line_Idx) )
+               endif
+            endif ! channels check
+         endif ! sensor check
+         
+
          !-------------------------------------------------------------------
          ! Pack Bytes
          !-------------------------------------------------------------------
@@ -1580,4 +1651,187 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
   end subroutine  PACK_BITS_INTO_BYTES
 
+!---------------------------------------------------------------------------------
+! This function is created to detect smoke 
+! (taken from the logic of VCM)
+   elemental function SMOKE_DETECTION_VIIRS(Ref_041um, Ref_213um, Ref_ChI1_Std, &
+                                  Sat_Zen, Glint_Zen, Land_Class) result(Smoke)
+
+    implicit none
+
+    real(kind=real4), intent(in) :: Ref_041um
+    real(kind=real4), intent(in) :: Ref_213um
+    real(kind=real4), intent(in) :: Ref_ChI1_Std
+    real(kind=real4), intent(in) :: Sat_Zen
+    real(kind=real4), intent(in) :: Glint_Zen
+    integer(kind=int1), intent(in) :: Land_Class
+    integer(kind=int1) :: Smoke
+
+    real(kind=real4), parameter :: smoke_conf_m11m1_ref_ratio_thresh = 0.1
+    real(kind=real4), parameter :: smoke_cand_m11m1_ref_ratio_thresh = 0.25
+!    real(kind=real4), parameter :: smoke_st_dev_land_thresh = 0.02 ! original IDPS
+    real(kind=real4), parameter :: smoke_st_dev_land_thresh = 0.1
+    real(kind=real4), parameter :: smoke_st_dev_water_thresh = 0.01
+!    real(kind=real4), parameter :: smoke_st_dev_land_glint_thresh = 0.02 ! original IDPS
+    real(kind=real4), parameter :: smoke_st_dev_land_glint_thresh = 1.0
+    real(kind=real4), parameter :: smoke_st_dev_water_glint_thresh = 0.01
+    real(kind=real4), parameter :: glint_angle_thresh = 40.0
+    real(kind=real4) :: st_dev_thresh_cand
+    real(kind=real4) :: m11m1_ref_ratio
+    real(kind=real4) :: Cos_Sat_Zen
+    integer(kind=int1) :: smoke_cand_flag
+
+    ! initiallize varriables and set
+    Smoke = 0
+    smoke_cand_flag = 0
+    m11m1_ref_ratio = Missing_Value_Real4
+
+    ! check if data is valid
+    if (Ref_041um /= Missing_Value_Real4 &
+     .and. Ref_213um /= Missing_Value_Real4 &
+     .and. Ref_041um > 0) then
+
+       ! --- Perform smoke candidate test
+       ! no glint case
+       if ( Glint_Zen > glint_angle_thresh ) then
+          select case ( Land_Class )
+          ! water
+          case (0,3:7)
+             m11m1_ref_ratio = Ref_213um / Ref_041um
+             Cos_Sat_Zen = Cosd ( Sat_Zen )
+             if (m11m1_ref_ratio <= smoke_conf_m11m1_ref_ratio_thresh * Cos_Sat_Zen &
+              .or.  m11m1_ref_ratio < smoke_cand_m11m1_ref_ratio_thresh * Cos_Sat_Zen ) then
+                smoke_cand_flag = 1
+             endif
+          end select
+       ! glint case any surface
+       elseif ( Glint_Zen <= glint_angle_thresh ) then
+          smoke_cand_flag = 1
+       endif
+
+       ! --- if candidate flag is 1 then perform spatial test
+       !!! 2x2 std_dev is compared with a threshold for different surface !!!
+       if ( smoke_cand_flag == 1) then
+          select case ( Land_Class )
+          ! water
+          case (0,3:7)
+             ! no glint case
+             if ( Glint_Zen > glint_angle_thresh ) then
+                st_dev_thresh_cand = smoke_st_dev_water_thresh
+             ! glint case
+             elseif ( Glint_Zen <= glint_angle_thresh ) then
+                st_dev_thresh_cand = smoke_st_dev_water_glint_thresh
+             endif
+          ! land
+          case (1,2)
+             ! no glint case
+             if ( Glint_Zen > glint_angle_thresh ) then
+                st_dev_thresh_cand = smoke_st_dev_land_thresh
+             ! glint case
+             elseif ( Glint_Zen <= glint_angle_thresh ) then
+                st_dev_thresh_cand = smoke_st_dev_land_glint_thresh
+             endif
+          end select
+
+          if (Ref_ChI1_Std >= 0.0 &
+           .and. Ref_ChI1_Std < st_dev_thresh_cand) then
+             Smoke = 1
+          endif
+       endif ! spatial test for candidate pixel
+    endif ! M1 & M11 ne missing
+
+ end function SMOKE_DETECTION_VIIRS
+
+!---------------------------------------------------------------------------------
+! This function is created to detect dust
+! (taken from the logic of VCM)
+  elemental function DUST_DETECTION_VIIRS(Ref_041um, Ref_063um, Ref_ChI1_Std, &
+                                  Glint_Zen, Land_Class) result(Dust)
+
+    implicit none
+
+    real(kind=real4), intent(in) :: Ref_041um
+    real(kind=real4), intent(in) :: Ref_063um
+    real(kind=real4), intent(in) :: Ref_ChI1_Std
+    real(kind=real4), intent(in) :: Glint_Zen
+    integer(kind=int1), intent(in) :: Land_Class
+    integer(kind=int1) :: Dust
+
+    real(kind=real4), parameter :: dust_m1_refl_thresh = 0.1
+    real(kind=real4), parameter :: dust_cand_m1m5_refl_ratio_thresh = 0.25
+!    real(kind=real4), parameter :: dust_st_dev_land_thresh = 0.02 ! original IDPS
+    real(kind=real4), parameter :: dust_st_dev_land_thresh = 0.1
+    real(kind=real4), parameter :: dust_st_dev_water_thresh = 0.01
+!    real(kind=real4), parameter :: dust_st_dev_land_glint_thresh = 0.02 ! original IDPS
+    real(kind=real4), parameter :: dust_st_dev_land_glint_thresh = 0.5
+    real(kind=real4), parameter :: dust_st_dev_water_glint_thresh = 0.01
+    real(kind=real4), parameter :: glint_angle_thresh = 40.0
+    real(kind=real4) :: st_dev_thresh_cand
+    integer(kind=int1) :: dust_cand_flag
+
+    ! initiallize varriables and set
+    Dust = 0
+    dust_cand_flag = 0
+
+    ! check if data is valid
+    if (Ref_041um /= Missing_Value_Real4 &
+     .and. Ref_063um /= Missing_Value_Real4 &
+     .and. Ref_041um > 0) then
+
+       ! --- Perform dust candidate test
+       ! no glint case
+       if ( Glint_Zen > glint_angle_thresh ) then
+          select case ( Land_Class )
+          ! water
+          case (0,3:7)
+             if (Ref_041um < dust_m1_refl_thresh &
+              .and. Ref_063um > 0.0 &
+              .and. Ref_041um / Ref_063um &
+                  < dust_cand_m1m5_refl_ratio_thresh) then
+                dust_cand_flag = 1
+             endif
+          case (1,2)
+             dust_cand_flag = 1
+          end select
+       ! glint case any surface
+       elseif ( Glint_Zen <= glint_angle_thresh ) then
+          dust_cand_flag = 1
+       endif
+
+       ! --- if candidate flag is 1 then perform spatial test
+       !!! 2x2 std_dev is compared with a threshold for different surface !!!
+       if ( dust_cand_flag == 1) then
+          select case ( Land_Class )
+          ! water
+          case (0,3:7)
+             ! no glint case
+             if ( Glint_Zen > glint_angle_thresh ) then
+                st_dev_thresh_cand = dust_st_dev_water_thresh
+             ! glint case
+             elseif ( Glint_Zen <= glint_angle_thresh ) then
+                st_dev_thresh_cand = dust_st_dev_water_glint_thresh
+             endif
+          ! land
+          case (1,2)
+             ! no glint case
+             if ( Glint_Zen > glint_angle_thresh ) then
+                st_dev_thresh_cand = dust_st_dev_land_thresh
+             ! glint case
+             elseif ( Glint_Zen <= glint_angle_thresh ) then
+                st_dev_thresh_cand = dust_st_dev_land_glint_thresh
+             endif
+          end select
+
+          if (Ref_ChI1_Std >= 0.0 &
+           .and. Ref_ChI1_Std < st_dev_thresh_cand) then
+             Dust = 1
+          endif
+       endif ! spatial test for candidate pixel
+    endif ! M1 & M5 ne missing
+
+ end function DUST_DETECTION_VIIRS
+
+!--------------------------------------------------------------------------------- 
+
 end module
+

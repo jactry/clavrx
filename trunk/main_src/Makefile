@@ -30,14 +30,10 @@ Spatial_Resolution_String = "0.1 x 0.1 degree equal-angle grid"
 include config.mk
 
 INC_DCOMP = -I$(DCOMP)
+fflags += $(INC_DCOMP)
 
-     fflags += $(INC_DCOMP)
-ifdef hdf5libs
-   INC_NLCOMP = -I$(NLCOMP)
+fflags_clavr=
 
-     fflags += $(INC_NLCOMP)
-endif
-     fflags_clavr=
 ifdef hdf5libs
      fflags_clavr += -DHDF5LIBS
 endif
@@ -45,6 +41,8 @@ endif
 ifdef nlcomplibs
      fflags_clavr += -DNLCOMP
      fflags_clavr += -DNLCOMPLIBS
+     INC_NLCOMP = -I$(NLCOMP)
+      fflags += $(INC_NLCOMP)
 endif
 
 #-----------------------------------------------------------------------------

@@ -3602,7 +3602,7 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    Ch1_Dark_Composite_Counts = 0
 
    !--- check to see if a dark composite file exists for this image
-   if (trim(Dark_Composite_Filename) == "no_file") then
+   if (trim(Dark_Composite_Filename) == "no_file" .and. Segment_Number == 1) then
           print *, "No Dark Composite Available for this Image"
           return
    endif
@@ -3734,7 +3734,7 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
      !--- read data
      read(unit=Dark_Lun_Data,rec=Rec_Num,iostat=Io_Status) Dark_Comp_Counts_Temp
      if (Io_Status /= 0) then
-          print *, EXE_PROMPT, "Dark Composite File Could Not be Read"
+          if (Segment_Number == 1) print *, EXE_PROMPT, "Dark Composite File Could Not be Read"
           Dark_Composite_Name = "no_file"
           return
      endif

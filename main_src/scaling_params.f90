@@ -96,6 +96,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Sst = 265.0, Max_Sst = 315.0, Min_Sst_std = 0.0, Max_Sst_std = 20.0
  real, parameter, public:: Min_Lst = 220.0, Max_Lst = 340.0, Min_Lst_std = 0.0, Max_Lst_std = 20.0
  real, parameter, public:: Min_Ndvi = -0.5, Max_Ndvi = 1.0, Min_Ndvi_std = 0.0, Max_Ndvi_std = 1.0
+ real, parameter, public:: Min_Ndsi = -0.5, Max_Ndsi = 1.0
  real, parameter, public:: Min_Zen = 0.0, Max_Zen = 90.0
  real, parameter, public:: Min_Relaz = 0.0, Max_Relaz = 180.0
  real, parameter, public:: Min_Solaz = -180.0, Max_Solaz = 180.0

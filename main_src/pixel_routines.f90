@@ -3499,7 +3499,7 @@ end subroutine COMPUTE_LRC_PSEUDO_OBS
 
  end function NORMALIZED_DIFFERENCE_SNOW_INDEX
 !==============================================================================
-!
+! A routine that call functions to populate some simple surface parameters
 !==============================================================================
  subroutine SURFACE_REMOTE_SENSING(Line_Idx_Min,Line_Idx_Max)
 
@@ -3508,6 +3508,20 @@ end subroutine COMPUTE_LRC_PSEUDO_OBS
 
   if (Chan_On_Flag_Default(31) == sym%YES) then
      call COMPUTE_TSFC(Line_Idx_Min,Line_Idx_Max)
+  endif
+
+  if (Chan_On_Flag_Default(1) == sym%YES .and. &
+      Chan_On_Flag_Default(6) == sym%YES) then
+
+       Ndsi_Toa = NORMALIZED_DIFFERENCE_SNOW_INDEX(  &
+                             ch(1)%Ref_Toa, &
+                             ch(6)%Ref_Toa, &
+                             Solzen)
+
+       Ndsi_Sfc = NORMALIZED_DIFFERENCE_SNOW_INDEX(  &
+                             ch(1)%Ref_Sfc, &
+                             ch(6)%Ref_Sfc, &
+                             Solzen)
   endif
 
   if (Chan_On_Flag_Default(1) == sym%YES .and. &

@@ -536,6 +536,7 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public:: Sst_Masked !sst where non-clear ocean is Masked
   real (kind=real4), dimension(:,:), allocatable, public:: Ndvi_Toa
   real (kind=real4), dimension(:,:), allocatable, public:: Ndsi_Toa
+  real (kind=real4), dimension(:,:), allocatable, public:: Ndsi_Sfc
   real (kind=real4), dimension(:,:), allocatable, public, target:: Btd_Ch31_Ch32
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch31
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch32
@@ -2405,6 +2406,7 @@ subroutine CREATE_SFC_PROD_ARRAYS(dim1,dim2)
   allocate(Trad_Retrieved(dim1,dim2))
   allocate(Tsfc_Qf(dim1,dim2))
   allocate(Ndsi_Toa(dim1,dim2))
+  allocate(Ndsi_Sfc(dim1,dim2))
   allocate(Ndvi_Toa(dim1,dim2))
   allocate(Ndvi_Qf(dim1,dim2))
   allocate(Ndvi_Sfc(dim1,dim2))
@@ -2419,6 +2421,7 @@ subroutine RESET_SFC_PROD_ARRAYS()
   Trad_Retrieved = Missing_Value_Real4
   Tsfc_Qf = Missing_Value_Int1
   Ndsi_Toa = Missing_Value_Real4
+  Ndsi_Sfc = Missing_Value_Real4
   Ndvi_Toa = Missing_Value_Real4
   Ndvi_Qf = Missing_Value_Int1
   Ndvi_Sfc = Missing_Value_Real4
@@ -2433,6 +2436,7 @@ subroutine DESTROY_SFC_PROD_ARRAYS()
   if (allocated(Trad_Retrieved))  deallocate(Trad_Retrieved)
   if (allocated(Tsfc_Qf))  deallocate(Tsfc_Qf)
   if (allocated(Ndsi_Toa)) deallocate(Ndsi_Toa)
+  if (allocated(Ndsi_Sfc)) deallocate(Ndsi_Sfc)
   if (allocated(Ndvi_Toa)) deallocate(Ndvi_Toa)
   if (allocated(Ndvi_Qf)) deallocate(Ndvi_Qf)
   if (allocated(Ndvi_Sfc)) deallocate(Ndvi_Sfc)

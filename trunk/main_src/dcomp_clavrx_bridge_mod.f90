@@ -77,7 +77,6 @@ module dcomp_clavrx_bridge_mod
        , ancil_data_dir &
        , ch &
        , dcomp_mode &
-       , sc_id_internal  &
        , zen_idx_rtm , solar_rtm &
        , sc_id_wmo &
        , chan_on_flag  &

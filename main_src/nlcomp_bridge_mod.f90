@@ -75,7 +75,7 @@ module nlcomp_bridge_mod
       , i_nwp , j_nwp &
       , num_scans_per_segment &
       , ch &
-      , dcomp_mode, sc_id_internal  &
+      , dcomp_mode  &
       , zen_idx_rtm , solar_rtm &
       , sc_id_wmo &
       , chan_on_flag &

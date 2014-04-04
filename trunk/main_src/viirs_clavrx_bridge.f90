@@ -65,9 +65,9 @@ contains
    subroutine read_viirs_data ( segment_number ,  file_gmtco_base , error_out )
       use viirs_read_mod , only : &
           viirs_data_config &
-           ,  viirs_data_out &
+           , viirs_data_out &
            , get_viirs_data 
-		   
+   
       use planck
       use viewing_geometry_module , only: &
           glint_angle &
@@ -234,7 +234,10 @@ contains
   
 
       if ( v_conf % viirs_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
-         cld_mask_aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
+         Cld_Mask_Aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
+         Cloud_Mask_Aux_Read_Flag = 1
+      else
+         Cloud_Mask_Aux_Read_Flag = 0
       end if   
 
       if ( v_conf % viirs_cloud_type_on .and. size(out % prd % cld_type) > 0 ) then

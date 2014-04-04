@@ -170,154 +170,137 @@ module AVHRR_MODULE
 !-------------------------------------------------------------------
 !-- define a Sc_Id that is unique value for each satellite
 !-------------------------------------------------------------------
- subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Sc_Id_Internal,Sc_Id_Char)
+ subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Avhrr_Number,Sc_Id_Char)
 
   integer(kind=int2), intent(in):: Sc_Id
-  integer(kind=int4), intent(out):: Sc_Id_Internal
+  integer(kind=int4), intent(out):: Avhrr_Number
   character(len=6), intent(out):: Sc_Id_Char
 
-  Sc_Id_Internal = 0
+  Avhrr_Number = 0
   if (AVHRR_KLM_Flag == sym%NO) then
     if(Sc_Id == 1 .and. avhrr_1_Flag == sym%YES) then  !TIROS-N
-       Sc_Id_Internal = 5
+       Avhrr_Number = 5
        Sc_Id_WMO = 708
        Sc_Id_Char = 'tirosn'
        Platform_Name_Attribute = 'TIROS-N'
        Sensor_Name_Attribute = 'AVHRR/1'
-!      Sensor_Name_Attribute = 'TIROS-N : AVHRR/1'
     endif
     if(Sc_Id == 2 .and. avhrr_1_Flag == sym%YES) then  !NOAA-6
-       Sc_Id_Internal = 6
+       Avhrr_Number = 6
        Sc_Id_WMO = 706
        Sc_Id_Char = 'noaa06'
        Platform_Name_Attribute = 'NOAA-6'
        Sensor_Name_Attribute = 'AVHRR/1'
-!      Sensor_Name_Attribute = 'NOAA-6 : AVHRR/1'
     endif
     if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
-       Sc_Id_Internal = 7
+       Avhrr_Number = 7
        Sc_Id_WMO = 707
        Sc_Id_Char = 'noaa07'
        Platform_Name_Attribute = 'NOAA-7'
        Sensor_Name_Attribute = 'AVHRR/2'
-!      Sensor_Name_Attribute = 'NOAA-7 : AVHRR/2'
     endif
     if(Sc_Id == 6 .and. avhrr_1_Flag == sym%YES) then  !NOAA-8
-       Sc_Id_Internal = 8
+       Avhrr_Number = 8
        Sc_Id_WMO = 200
        Sc_Id_Char = 'noaa08'
        Platform_Name_Attribute = 'NOAA-8'
        Sensor_Name_Attribute = 'AVHRR/1'
-!      Sensor_Name_Attribute = 'NOAA-8 : AVHRR/1'
     endif
     if(Sc_Id == 7 .and. avhrr_1_Flag == sym%NO) then  !NOAA-9
-       Sc_Id_Internal = 9
+       Avhrr_Number = 9
        Sc_Id_WMO = 201
        Sc_Id_Char = 'noaa09'
        Platform_Name_Attribute = 'NOAA-9'
        Sensor_Name_Attribute = 'AVHRR/2'
-!      Sensor_Name_Attribute = 'NOAA-9 : AVHRR/2'
     endif
     if(Sc_Id == 8 .and. avhrr_1_Flag == sym%YES) then  !NOAA-10
-       Sc_Id_Internal = 10
+       Avhrr_Number = 10
        Sc_Id_WMO = 202
        Sc_Id_Char = 'noaa10'
        Platform_Name_Attribute = 'NOAA-10'
        Sensor_Name_Attribute = 'AVHRR/1'
-!      Sensor_Name_Attribute = 'NOAA-10 : AVHRR/1'
     endif
     if(Sc_Id == 1 .and. avhrr_1_Flag == sym%NO) then  !NOAA-11
-       Sc_Id_Internal = 11
+       Avhrr_Number = 11
        Sc_Id_WMO = 203
        Sc_Id_Char = 'noaa11'
        Platform_Name_Attribute = 'NOAA-11'
        Sensor_Name_Attribute = 'AVHRR/2'
-!      Sensor_Name_Attribute = 'NOAA-11 : AVHRR/2'
     endif
     if(Sc_Id == 5 .and. AVHRR_KLM_Flag==sym%NO) then             !NOAA-12
-       Sc_Id_Internal = 12
+       Avhrr_Number = 12
        Sc_Id_WMO = 204
        Sc_Id_Char = 'noaa12'
        Platform_Name_Attribute = 'NOAA-12'
        Sensor_Name_Attribute = 'AVHRR/2'
-!      Sensor_Name_Attribute = 'NOAA-12 : AVHRR/2'
     endif
     if(Sc_Id == 3 .and. AVHRR_KLM_Flag == sym%NO) then           !NOAA-14
-       Sc_Id_Internal = 14
+       Avhrr_Number = 14
        Sc_Id_WMO = 205
        Sc_Id_Char = 'noaa14'
        Platform_Name_Attribute = 'NOAA-14'
        Sensor_Name_Attribute = 'AVHRR/2'
-!      Sensor_Name_Attribute = 'NOAA-14 : AVHRR/2'
     endif
   else
     if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-15
-       Sc_Id_Internal = 15
+       Avhrr_Number = 15
        Sc_Id_WMO = 206
        Sc_Id_Char = 'noaa15'
        Platform_Name_Attribute = 'NOAA-15'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'NOAA-15 : AVHRR/3'
     endif
     if(Sc_Id == 2 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-16
-       Sc_Id_Internal = 16
+       Avhrr_Number = 16
        Sc_Id_WMO = 207
        Sc_Id_Char = 'noaa16'
        Platform_Name_Attribute = 'NOAA-16'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'NOAA-16 : AVHRR/3'
     endif
     if(Sc_Id == 6 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-17
-       Sc_Id_Internal = 17
+       Avhrr_Number = 17
        Sc_Id_WMO = 208
        Sc_Id_Char = 'noaa17'
        Platform_Name_Attribute = 'NOAA-17'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'NOAA-17 : AVHRR/3'
     endif
     if(Sc_Id == 7 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-18
-       Sc_Id_Internal = 18
+       Avhrr_Number = 18
        Sc_Id_WMO = 209
        Sc_Id_Char = 'noaa18'
        Platform_Name_Attribute = 'NOAA-18'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'NOAA-18 : AVHRR/3'
     endif
     if(Sc_Id == 8 .and. AVHRR_KLM_Flag == sym%YES) then         !NOAA-19
-       Sc_Id_Internal = 19
+       Avhrr_Number = 19
        Sc_Id_WMO = 223
        Sc_Id_Char = 'noaa19'
        Platform_Name_Attribute = 'NOAA-19'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'NOAA-19 : AVHRR/3'
     endif
     if(Sc_Id == 12 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-A
-       Sc_Id_Internal =  2
+       Avhrr_Number =  2
        Sc_Id_WMO = 4
        Sc_Id_Char = 'metopa'
        Platform_Name_Attribute = 'METOP-A'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'METOP-A : AVHRR/3'
     endif
 
     if(Sc_Id == 11 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-B
-       Sc_Id_Internal =  1
+       Avhrr_Number =  1
        Sc_Id_WMO = 3
        Sc_Id_Char = 'metopb'
        Platform_Name_Attribute = 'METOP-B'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'METOP-B : AVHRR/3'
     endif
     !----
     !------- Metop-C Sc_Id numbers are not unknown at this time
     !----
     if(Sc_Id == 13 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-C
-       Sc_Id_Internal =  4
+       Avhrr_Number =  4
        Sc_Id_WMO = 5
        Sc_Id_Char = 'metopc'
        Platform_Name_Attribute = 'METOP-C'
        Sensor_Name_Attribute = 'AVHRR/3'
-!      Sensor_Name_Attribute = 'METOP-C : AVHRR/3'
     endif
 
   endif

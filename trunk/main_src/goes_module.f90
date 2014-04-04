@@ -272,84 +272,67 @@ subroutine ASSIGN_GOES_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num, Elem_Res)
     Goes_1km_Flag = sym%NO
     Goes_Sndr_Flag = sym%NO ! Make sure sounder is turned off
     if (Mcidas_Id_Num == 70)   then
-        Sc_Id_Internal = 22
         Sc_Id_WMO = 252
         Instr_Const_file = 'goes_08_instr.dat'
         Algo_Const_file = 'goes_08_algo.dat'
         Goes_Mop_Flag = sym%NO
         Platform_Name_Attribute = 'GOES-8'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-8 : Imager'
     endif
     if (Mcidas_Id_Num == 72)   then
-        Sc_Id_Internal = 23
-        Sc_Id_WMO = 253
         Instr_Const_file = 'goes_09_instr.dat'
         Algo_Const_file = 'goes_09_algo.dat'
         Goes_Mop_Flag = sym%NO
         Platform_Name_Attribute = 'GOES-9'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-9 : Imager'
     endif
     if (Mcidas_Id_Num == 74)   then
-        Sc_Id_Internal = 24
         Sc_Id_WMO = 254
         Instr_Const_file = 'goes_10_instr.dat'
         Algo_Const_file = 'goes_10_algo.dat'
         Goes_Mop_Flag = sym%NO
         Platform_Name_Attribute = 'GOES-10'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-10 : Imager'
     endif
    if (Mcidas_Id_Num == 76)   then
-        Sc_Id_Internal = 25
         Sc_Id_WMO = 255
         Instr_Const_file = 'goes_11_instr.dat'
         Algo_Const_file = 'goes_11_algo.dat'
         Goes_Mop_Flag = sym%NO
         Platform_Name_Attribute = 'GOES-11'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-11 : Imager'
     endif
     if (Mcidas_Id_Num == 78)   then
-        Sc_Id_Internal = 26
         Sc_Id_WMO = 256
         Instr_Const_file = 'goes_12_instr.dat'
         Algo_Const_file = 'goes_12_algo.dat'
         Goes_Mop_Flag = sym%YES
         Platform_Name_Attribute = 'GOES-12'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-12 : Imager'
     endif
     if (Mcidas_Id_Num == 180)   then
-        Sc_Id_Internal = 27
         Sc_Id_WMO = 257
         Instr_Const_file = 'goes_13_instr.dat'
         Algo_Const_file = 'goes_13_algo.dat'
         Goes_Mop_Flag = sym%YES
         Platform_Name_Attribute = 'GOES-13'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-13 : Imager'
     endif
     if (Mcidas_Id_Num == 182)   then
-        Sc_Id_Internal = 28
         Sc_Id_WMO = 258
         Instr_Const_file = 'goes_14_instr.dat'
         Algo_Const_file = 'goes_14_algo.dat'
         Goes_Mop_Flag = sym%YES
         Platform_Name_Attribute = 'GOES-14'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-14 : Imager'
     endif
     if (Mcidas_Id_Num == 184)   then
-        Sc_Id_Internal = 29
         Sc_Id_WMO = 259
         Instr_Const_file = 'goes_15_instr.dat'
         Algo_Const_file = 'goes_15_algo.dat'
         Goes_Mop_Flag = sym%YES
         Platform_Name_Attribute = 'GOES-15'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'GOES-15 : Imager'
     endif
 
    Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
@@ -377,76 +360,60 @@ subroutine ASSIGN_GOES_SNDR_ID_NUM_INTERNAL(Mcidas_Id_Num)
     Goes_Sndr_Flag = sym%YES
 
     if (Mcidas_Id_Num == 71)   then
-        Sc_Id_Internal = 36
         Sc_Id_WMO = 252
         Instr_Const_file = 'goes_8_Sndr_instr.dat'
         Algo_Const_file = 'goes_8_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-8'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-8 : Sounder'
     endif
     if (Mcidas_Id_Num == 73)   then
-        Sc_Id_Internal = 37
         Sc_Id_WMO = 253
         Instr_Const_file = 'goes_9_Sndr_instr.dat'
         Algo_Const_file = 'goes_9_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-9'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-9 : Sounder'
     endif
     if (Mcidas_Id_Num == 75)   then
-        Sc_Id_Internal = 38
         Sc_Id_WMO = 254
         Instr_Const_file = 'goes_10_Sndr_instr.dat'
         Algo_Const_file = 'goes_10_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-10'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-10 : Sounder'
     endif
     if (Mcidas_Id_Num == 77)   then
-        Sc_Id_Internal = 39
         Sc_Id_WMO = 255
         Instr_Const_file = 'goes_11_Sndr_instr.dat'
         Algo_Const_file = 'goes_11_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-11'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-11 : Sounder'
     endif
     if (Mcidas_Id_Num == 79)   then
-        Sc_Id_Internal = 40
         Sc_Id_WMO = 256
         Instr_Const_file = 'goes_12_Sndr_instr.dat'
         Algo_Const_file = 'goes_12_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-12'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-12 : Sounder'
     endif
     if (Mcidas_Id_Num == 181)   then
-        Sc_Id_Internal = 41
         Sc_Id_WMO = 257
         Instr_Const_file = 'goes_13_Sndr_instr.dat'
         Algo_Const_file = 'goes_13_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-13'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-13 : Sounder'
     endif
     if (Mcidas_Id_Num == 183)   then
-        Sc_Id_Internal = 42
         Sc_Id_WMO = 258
         Instr_Const_file = 'goes_14_Sndr_instr.dat'
         Algo_Const_file = 'goes_14_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-14'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-14 : Sounder'
     endif
     if (Mcidas_Id_Num == 185)   then
-        Sc_Id_Internal = 43
         Sc_Id_WMO = 259
         Instr_Const_file = 'goes_15_Sndr_instr.dat'
         Algo_Const_file = 'goes_15_Sndr_algo.dat'
         Platform_Name_Attribute = 'GOES-15'
         Sensor_Name_Attribute = 'SOUNDER'
-!       Sensor_Name_Attribute = 'GOES-15 : Sounder'
     endif
 
    Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)

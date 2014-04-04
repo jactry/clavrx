@@ -383,7 +383,6 @@ module PIXEL_COMMON
   integer(kind=int2), save, public:: End_Day
 
   !--- satellite and sensor descriptors
-  integer(kind=int4), public, save:: Sc_Id_Internal
   integer(kind=int4), public, save:: Sc_Id_WMO
   integer(kind=int4), public, save:: Sc_Id_WMO_Prev
   character(len=20),public,save:: Sensor_Name_Attribute

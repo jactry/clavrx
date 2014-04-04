@@ -111,23 +111,19 @@ subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
     integer(kind=int4), intent(in):: Mcidas_Id_Num
 
     if (Mcidas_Id_Num == 36)   then
-        Sc_Id_Internal = 50
         Sc_Id_WMO = 514
         Instr_Const_file = 'fy2d_instr.dat'
         Algo_Const_file = 'fy2d_algo.dat'
         Platform_Name_Attribute = 'FY-2D'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'FY-2D : Imager'
     endif
     if (Mcidas_Id_Num == 37)   then
-        Sc_Id_Internal = 51
         Sc_Id_WMO = 515
         Instr_Const_file = 'fy2e_instr.dat'
         Algo_Const_file = 'fy2e_algo.dat'
         Goes_Mop_Flag = sym%NO
         Platform_Name_Attribute = 'FY-2E'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'FY-2E : Imager'
     endif
 
    Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)

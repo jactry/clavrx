@@ -82,29 +82,34 @@ subroutine ASSIGN_MSG_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
     integer(kind=int4), intent(in):: Mcidas_Id_Num
 
     !--- Met-08
+    Sensor_Name_Attribute = 'SEVIRI'
     if (Mcidas_Id_Num == 51)   then
-        Sc_Id_Internal = 31
         Sc_Id_WMO = 55
         Instr_Const_file = 'met8_instr.dat'
         Algo_Const_file = 'met8_algo.dat'
-        Sensor_Name_Attribute = 'Meteosat-8 : Imager'
+        Platform_Name_Attribute = 'Meteosat-8'
     endif
     !--- Met-09
     if (Mcidas_Id_Num == 52)   then
-        Sc_Id_Internal = 32
         Sc_Id_WMO = 56
         Instr_Const_file = 'met9_instr.dat'
         Algo_Const_file = 'met9_algo.dat'
         Goes_Mop_Flag = sym%NO
-        Sensor_Name_Attribute = 'Meteosat-9 : Imager'
+        Platform_Name_Attribute = 'Meteosat-9'
     endif
     !--- Met-10
     if (Mcidas_Id_Num == 53)   then
-        Sc_Id_Internal = 33
         Sc_Id_WMO = 57
         Instr_Const_file = 'met10_instr.dat'
         Algo_Const_file = 'met10_algo.dat'
-        Sensor_Name_Attribute = 'Meteosat-10 : Imager'
+        Platform_Name_Attribute = 'Meteosat-10'
+    endif
+    !--- Met-11
+    if (Mcidas_Id_Num == 54)   then
+        Sc_Id_WMO = 57
+        Instr_Const_file = 'met10_instr.dat'
+        Algo_Const_file = 'met10_algo.dat'
+        Platform_Name_Attribute = 'Meteosat-11'
     endif
 
    Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)

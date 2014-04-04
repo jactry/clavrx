@@ -95,6 +95,7 @@ subroutine SET_SENSOR_CONSTANTS(AREAstr)
    INTEGER(kind=int4):: Hour
    INTEGER(kind=int4):: Minute
    INTEGER(kind=int4):: Second
+   INTEGER(kind=int4):: Avhrr_Number
 
 if (Avhrr_Flag == sym%YES) then
 
@@ -107,7 +108,7 @@ if (Avhrr_Flag == sym%YES) then
    !-- define a sc_Id that is unique value for each satellite
    !-------------------------------------------------------------------
    if (Avhrr_Flag == sym%YES) then
-      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Sc_Id_Internal,Sc_Id_Char)
+      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Avhrr_Number,Sc_Id_Char)
    endif
 
    !--------------------------------------------------------------
@@ -122,16 +123,16 @@ if (Avhrr_Flag == sym%YES) then
    !--------------------------------------------------------------
    !--- based on spacecraft id, set up constants
    !--------------------------------------------------------------
-   if (Sc_Id_Internal < 10) then
+   if (Avhrr_Number < 10) then
     Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-              "avhrr_"//char(Sc_Id_Internal+48)//"_instr.dat"
+              "avhrr_"//char(Avhrr_Number+48)//"_instr.dat"
     Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-              "avhrr_"//char(Sc_Id_Internal+48)//"_algo.dat"
+              "avhrr_"//char(Avhrr_Number+48)//"_algo.dat"
    else
     Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-             "avhrr_1"//char(Sc_Id_Internal - 10 + 48)//"_instr.dat" 
+             "avhrr_1"//char(Avhrr_Number - 10 + 48)//"_instr.dat" 
     Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-             "avhrr_1"//char(Sc_Id_Internal - 10 + 48)//"_algo.dat" 
+             "avhrr_1"//char(Avhrr_Number - 10 + 48)//"_algo.dat" 
    endif
 
 endif
@@ -148,22 +149,18 @@ print *, "calling modis time attr"
   
 print *, "returned from  modis time attr"
   if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES) then
-         Sc_Id_Internal = 21
          Sc_Id_WMO = 784
          Instr_Const_File = 'modis_aqua_instr.dat'
          Algo_Const_File = 'modis_aqua_algo.dat'
          Platform_Name_Attribute = 'AQUA'
          Sensor_Name_Attribute = 'MODIS'
-!        Sensor_Name_Attribute = 'AQUA : MODIS'
   endif
   if (Modis_Terra_Flag == sym%YES) then
-         Sc_Id_Internal = 20
          Sc_Id_WMO = 783
          Instr_Const_File = 'modis_terra_instr.dat'
          Algo_Const_File = 'modis_terra_algo.dat'
          Platform_Name_Attribute = 'TERRA'
          Sensor_Name_Attribute = 'MODIS'
-!        Sensor_Name_Attribute = 'TERRA : MODIS'
   endif
   Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Instr_Const_File)
   Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Algo_Const_File)
@@ -189,7 +186,6 @@ if (Viirs_Flag == sym%YES) then
    Start_Time = Start_Time_tmp
    End_Time = End_Time_tmp
    Orbit_Number = Orbit_Number_tmp
-   Sc_Id_Internal = 30
    Sc_Id_WMO = 224
    Instr_Const_File = 'viirs_npp_instr.dat'
    Algo_Const_File = 'viirs_npp_algo.dat'
@@ -222,21 +218,17 @@ if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES) then
    End_Time = End_Time_tmp
 !   Orbit_Number = Orbit_Number_tmp
    if (Iff_Viirs_Flag == sym%YES) then
-      Sc_Id_Internal = 30 
       Sc_Id_WMO = 224
       Instr_Const_File = 'iff_viirs_npp_instr.dat'
       Algo_Const_File = 'viirs_npp_algo.dat'
       Platform_Name_Attribute = 'NPP'
       Sensor_Name_Attribute = 'VIIRS'
-!     Sensor_Name_Attribute = 'NPP : VIIRS'
    elseif (Iff_Modis_Flag == sym%YES) then
-      Sc_Id_Internal = 21
       Sc_Id_WMO = 784
       Instr_Const_File = 'modis_aqua_instr.dat'
       Algo_Const_File = 'modis_aqua_algo.dat'
       Platform_Name_Attribute = 'AQUA'      
       Sensor_Name_Attribute = 'MODIS'      
-!     Sensor_Name_Attribute = 'AQUA : MODIS'      
    endif
 
    Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Instr_Const_File)
@@ -284,7 +276,7 @@ print *,EXE_PROMPT, "Number of Scans = ", Num_Scans
 
 if (Avhrr_Flag == sym%YES) then
     print *,EXE_PROMPT, "Sensor = AVHRR"
-    print *,EXE_PROMPT, "spacecraft number = ", Sc_Id_Internal
+    print *,EXE_PROMPT, "spacecraft number = ", Avhrr_Number
     print *,EXE_PROMPT, "data type = ", Data_Type
     print *,EXE_PROMPT, "level 1b version = ", Ver_1b
     print *,EXE_PROMPT, "Gac flag = ", AVHRR_GAC_Flag

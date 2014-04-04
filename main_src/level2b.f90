@@ -1684,13 +1684,13 @@ case("metop-01")
   WMO_Id = 3
 case("metop-03")
   WMO_Id = 5
-case("msg-08")
+case("met8")
   WMO_Id = 55
-case("msg-09")
+case("met9")
   WMO_Id = 56
-case("msg-10")
+case("met10")
   WMO_Id = 57
-case("msg-11")
+case("met11")
   WMO_Id = 70
 case("mtsat-1r")
   WMO_Id = 171 

@@ -82,13 +82,11 @@ subroutine ASSIGN_COMS_ID_NUM_INTERNAL(Mcidas_Id_Num)
 
     !COMS-1
     if (Mcidas_Id_Num == 250)   then
-        Sc_Id_Internal = 53
         Sc_Id_WMO = 810
         Instr_Const_file = 'coms1_instr.dat'
         Algo_Const_file = 'coms1_algo.dat'
         Platform_Name_Attribute = 'COMS-1'
         Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'COMS-1'
     endif
 
    Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)

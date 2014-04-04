@@ -76,7 +76,6 @@ subroutine ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
     integer(kind=int4), intent(in):: Mcidas_Id_Num
 
     if (Mcidas_Id_Num == 84)   then
-        Sc_Id_Internal = 34
         Sc_Id_WMO = 171
         Instr_Const_file = 'mtsat1r_instr.dat'
         Algo_Const_file = 'mtsat1r_algo.dat'
@@ -85,7 +84,6 @@ subroutine ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
 !       Sensor_Name_Attribute = 'MTSAT-1R : Imager'
     endif
     if (Mcidas_Id_Num == 85)   then
-        Sc_Id_Internal = 35
         Sc_Id_WMO = 172
         Instr_Const_file = 'mtsat2_instr.dat'
         Algo_Const_file = 'mtsat2_algo.dat'

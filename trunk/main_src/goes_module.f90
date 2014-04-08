@@ -3680,23 +3680,25 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
        
    endif 
 
-   !--- for this segment, compute the words to read in (accounting for offset)
-   First_Line_In_Segment = (Segment_Number-1)*Num_Lines_Per_Segment + 1
+   if (Dark_Composite_Name /= "no_file") then
 
-   First_Line_In_Segment = First_Line_In_Segment + Line_Offset    !check this!!!!
+    !--- for this segment, compute the words to read in (accounting for offset)
+    First_Line_In_Segment = (Segment_Number-1)*Num_Lines_Per_Segment + 1
 
-   Last_Line_In_Segment = min(AREAstr_Image%Num_Line,Segment_Number*Num_Lines_Per_Segment)
+    First_Line_In_Segment = First_Line_In_Segment + Line_Offset    !check this!!!!
+ 
+    Last_Line_In_Segment = min(AREAstr_Image%Num_Line,Segment_Number*Num_Lines_Per_Segment)
 
 
-   !--- determine records to read - this accounts for north-south shift
-   First_Rec_Num = 1  + First_Line_In_Segment + Line_Offset
-   Last_Rec_Num = First_Rec_Num + Num_Scans_Read - 1
-   First_Rec_Num = max(2,First_Rec_Num)
-   Last_Rec_Num = min(Last_Rec_Num,Num_Scans)
-   Num_Recs_To_Read = Last_Rec_Num - First_Rec_Num + 1
+    !--- determine records to read - this accounts for north-south shift
+    First_Rec_Num = 1  + First_Line_In_Segment + Line_Offset
+    Last_Rec_Num = First_Rec_Num + Num_Scans_Read - 1
+    First_Rec_Num = max(2,First_Rec_Num)
+    Last_Rec_Num = min(Last_Rec_Num,Num_Scans)
+    Num_Recs_To_Read = Last_Rec_Num - First_Rec_Num + 1
 
-   Line_Idx = 1
-   do Rec_Num = First_Rec_Num, Last_Rec_Num
+    Line_Idx = 1
+    do Rec_Num = First_Rec_Num, Last_Rec_Num
 
      !--- read data
      read(unit=Dark_Lun_Data,rec=Rec_Num,iostat=Io_Status) Dark_Comp_Counts_Temp
@@ -3729,13 +3731,15 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
      !-- increment Line_Idx
      Line_Idx = Line_Idx + 1
 
-   enddo
+    enddo
+
+   endif
   
    !--- close file
    if (Segment_Number == Num_Segments) then
       close(unit=Dark_Lun_Data)
-      deallocate(Dark_Comp_Counts_Temp)
-      deallocate(Dark_Comp_Counts)
+      if (allocated(Dark_Comp_Counts_Temp)) deallocate(Dark_Comp_Counts_Temp)
+      if (allocated(Dark_Comp_Counts)) deallocate(Dark_Comp_Counts)
 
       !--- delete uncompressed file
       System_String = "rm "//trim(Temporary_Data_Dir)//trim(Dark_Composite_Name)

@@ -71,7 +71,6 @@ contains
    integer:: Chan_On_85um
    integer:: Chan_On_11um
    integer:: Chan_On_12um
-   integer:: Chan_On_I1_064um
    integer:: Chan_On_DNB
    
    
@@ -135,7 +134,6 @@ contains
    Chan_On_85um = Chan_On_Flag_Default(29)
    Chan_On_11um = Chan_On_Flag_Default(31)
    Chan_On_12um = Chan_On_Flag_Default(32)
-   Chan_On_I1_064um = Chan_On_Flag_Default(37)
    Chan_On_DNB = Chan_On_Flag_Default(42)
    
    !Call Naive bayesian routine
@@ -148,8 +146,6 @@ contains
                                Num_Line_Max, &
                                Bad_Pixel_Mask,  &
                                Cld_Test_Vector_Packed, &
-                               Viirs_Flag, &
-                               Iff_Viirs_Flag, &
                                Chan_On_041um,  &
                                Chan_On_063um,  &
                                Chan_On_086um,  &
@@ -161,7 +157,6 @@ contains
                                Chan_On_85um,  &
                                Chan_On_11um,  &
                                Chan_On_12um,  &
-                               Chan_On_I1_064um,  &
                                Chan_On_DNB,  &
                                Snow,  &
                                Land, &
@@ -202,7 +197,6 @@ contains
                                ch(32)%Bt_Toa, &
                                ch(32)%Bt_Toa_Clear,  &
                                Covar_Ch27_Ch31_5x5, &
-                               Ref_Uni_ChI1, &
                                Sst_Anal_Uni, &
                                ch(20)%Sfc_Emiss, &
                                ch(42)%Rad_Toa, &

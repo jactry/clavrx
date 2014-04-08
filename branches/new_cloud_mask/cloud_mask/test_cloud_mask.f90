@@ -13,6 +13,8 @@ use CLOUD_MASK_MOD, only : &
 type ( cloud_mask_input_type ) :: inp
 integer :: info_flags(7)
 real :: erg
+integer :: counter
+
 
 inp % bayesian_mask_classifier = &
    &  '/DATA/Ancil_Data/clavrx_ancil_data/naive_bayes_mask/viirs_default_bayes_mask.txt'
@@ -67,6 +69,11 @@ inp % bayesian_mask_classifier = &
             call cloud_mask_naive_bayes ( inp, erg , info_flags )      
             print*,'cloud probability: ',erg
             print*,info_flags
+            
+            if ( btest(info_Flags(3),4) ) counter = counter + 1
+            if ( btest(info_Flags(3),5) ) counter = counter + 2
+            
+            print*,'test t11: ',counter
 
 
 

@@ -195,7 +195,7 @@ contains
             
       integer :: pos_info_flag , idx_info_flag
       integer :: bits_to_add
-      integer :: class_contr
+      real :: class_contr
       integer :: class_contr_mask
       
      
@@ -277,7 +277,7 @@ contains
       if ( is_cold_375um )          info_flags(2) = ibset ( info_flags ( 2 ) , 1 )
       if ( has_cold_btd )           info_flags(2) = ibset ( info_flags ( 2 ) , 2 )
       
-      
+      ! -TODO : probably wrong
       info_flags(3) = ibits ( sfc_idx , 0 , 3 )
       
                          
@@ -532,15 +532,15 @@ contains
                            & ( bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
                            & + bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
-            if ( class_contr  <= 0.1 ) class_contr_mask = et_cloudiness_class % CLEAR
-            if ( class_contr > 0.1 )  class_contr_mask = et_cloudiness_class % PROB_CLEAR
-            if ( class_contr > 0.5 ) class_contr_mask = et_cloudiness_class % PROB_CLOUDY
-            if ( class_contr > 0.5 ) class_contr_mask = et_cloudiness_class % CLOUDY
+    
+            if ( class_contr > 0.1 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
+            if ( class_contr > 0.5 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1)
+            if ( class_contr > 0.9 ) then
+                info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
+                info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1 )
+            end if
             
-            bits_to_add = ibits ( class_contr_mask , pos_info_flag , 2)
-            if ( btest ( bits_to_add, pos_info_flag ) )     info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
-            if ( btest ( bits_to_add, pos_info_flag + 1 ))  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1 )
-                      
+           
          end if
        
       end do class_loop

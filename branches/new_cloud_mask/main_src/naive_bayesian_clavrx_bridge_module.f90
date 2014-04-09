@@ -112,7 +112,7 @@ module naive_bayesian_clavrx_bridge_module
       , num_scans_read &
       , cld_mask &
       , ancil_data_dir &
-      , Bayesian_Cloud_Mask_Name &
+      , Bayesian_Cloud_Mask_Name 
      
       
              
@@ -193,7 +193,7 @@ contains
             mask_inp % sat % ref_ch1_3x3_std     = Ref_Ch1_Std_3x3(i,j)
             mask_inp % sat % ref_ch1_3x3_min     = Ref_Ch1_Min_3x3(i,j)
                        
-            mask_inp % sat % chan_on ( 1:40)     = Chan_On_Flag_Default(1:40) == 1
+            mask_inp % sat % chan_on ( 1:42)     = Chan_On_Flag_Default(1:42) == 1
             
             
            

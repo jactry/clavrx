@@ -1,7 +1,7 @@
 ! $Header$
 !
 
-module cloud_mask_mod
+module naive_bayesian_cloud_mask_module
 
    implicit none
    
@@ -94,7 +94,7 @@ module cloud_mask_mod
   
    
    type cloud_mask_sat_type
-      logical , dimension(40) :: chan_on
+      logical , dimension(42) :: chan_on
       real :: bt_ch20
       real :: bt_ch27
       real :: bt_ch29
@@ -901,4 +901,4 @@ contains
   
   end function
    
-end module cloud_mask_mod
+end module naive_bayesian_cloud_mask_module

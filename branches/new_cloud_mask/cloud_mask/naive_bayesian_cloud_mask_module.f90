@@ -103,6 +103,7 @@ module naive_bayesian_cloud_mask_module
       real :: ref_ch1
       real :: ref_ch2
       real :: ref_ch6
+      real :: ref_ch8
       real :: ref_ch26
       real :: emis_ch20_3x3_mean
       real :: ref_ch1_3x3_std
@@ -181,6 +182,10 @@ contains
       logical :: has_cold_btd
       logical :: is_cold_375um
       logical :: is_forward_scatter
+      logical :: is_dust
+      logical :: is_smoke
+      logical :: is_cloud_shadow
+      logical :: is_fire
   
 	   real, parameter :: SOLZEN_DAY_THRESH = 85.0       !was 85.0
       real, parameter :: AIRMASS_THRESH = 5.0
@@ -262,6 +267,25 @@ contains
          is_forward_scatter = .true.
       end if 
       
+      is_smoke = .false.
+      ! - TO ADD 
+          
+      is_dust = .false.
+      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
+         is_dust = dust_viirs ( &
+              inp % sat % ref_ch1 &
+            , inp % sat % ref_ch8 &
+            , inp % sat % ref_ch1_3x3_std &
+            , inp % geo % glint &
+            , inp % sfc % land_class ) 
+      end if
+      
+      is_cloud_shadow = .false.
+      ! - TO ADD
+      
+      is_fire = .false.
+      ! - TO ADD
+      
       info_flags = 0 
       
                                     info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
@@ -276,6 +300,11 @@ contains
       if ( is_forward_scatter )     info_flags(2) = ibset ( info_flags ( 2 ) , 0 )
       if ( is_cold_375um )          info_flags(2) = ibset ( info_flags ( 2 ) , 1 )
       if ( has_cold_btd )           info_flags(2) = ibset ( info_flags ( 2 ) , 2 )
+      if ( is_smoke)                info_flags(2) = ibset ( info_flags ( 2 ) , 4 )
+      if ( is_dust)                 info_flags(2) = ibset ( info_flags ( 2 ) , 5 )
+      if ( is_cloud_shadow)         info_flags(2) = ibset ( info_flags ( 2 ) , 6 )
+      if ( is_fire)                 info_flags(2) = ibset ( info_flags ( 2 ) , 7 )
+      
       
       ! -TODO : probably wrong
       info_flags(3) = ibits ( sfc_idx , 0 , 3 )
@@ -899,6 +928,70 @@ contains
       if ( is_night) emiss_375um_test = ems
   
   
-  end function
+   end function
+   !-------------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------------
+   logical elemental function dust_viirs ( &
+              ref_004 &
+            , ref_006 &
+            , ref_006_std &
+            , glint &
+            , land_class )
+            
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_006
+      real , intent(in) :: ref_006_std
+      integer , intent(in) :: glint
+      integer , intent(in) :: land_class  
+      
+      logical :: is_water_sfc      
+      logical :: is_glint
+              
+      real, parameter :: dust_m1_refl_thresh = 0.1
+      real, parameter :: dust_cand_m1m5_refl_ratio_thresh = 0.25
+
+      real, parameter :: DUST_ST_DEV_LAND_THRESH = 0.2
+      real, parameter :: DUST_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: DUST_ST_DEV_LAND_GLINT_THRESH = 0.7
+      real, parameter :: DUST_ST_DEV_WATER_GLINT_THRESH = 0.05
+      real, parameter :: GLINT_ANGLE_THRESH = 40.0  
+      
+      real :: st_dev_thresh_cand   
+      
+      dust_viirs = .false.
+      
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_006 < 0. .or. ref_006_std <= 0.) then
+         dust_viirs=.false.
+         return
+      end if 
+      
+      ! -- exclude water 
+      is_water_sfc = land_class == 0 .or. &
+         & land_class >= 3 .and. land_class <= 7 
+       
+         
+      if ( is_water_sfc .and. ( ref_004 >= DUST_M1_REFL_THRESH &
+               .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
+         dust_viirs=.false.
+         return            
+      end if  
+      
+      is_glint = glint == 1
+            
+      ! adjust thresholds
+      
+      if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint .and. .not. (is_water_sfc) )         st_dev_thresh_cand = DUST_ST_DEV_LAND_GLINT_THRESH
+      if ( .not. ( is_glint) .and. is_water_sfc )        st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
+      if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
+      
+      if (  ref_006_std < st_dev_thresh_cand ) dust_viirs = .true.
+   
+   
+   end function dust_viirs
+   
+   
    
 end module naive_bayesian_cloud_mask_module

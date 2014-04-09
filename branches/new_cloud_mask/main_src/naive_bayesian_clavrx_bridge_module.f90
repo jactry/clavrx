@@ -184,6 +184,7 @@ contains
             mask_inp % sat % ref_ch2             = ch(2) % ref_toa ( i , j )
         
             mask_inp % sat % ref_ch6             = ch(6) % ref_toa ( i , j )
+            mask_inp % sat % ref_ch8             = ch(8) % ref_toa ( i , j )
          
             mask_inp % sat % ref_ch26            = ch(26) % ref_toa ( i , j )
         

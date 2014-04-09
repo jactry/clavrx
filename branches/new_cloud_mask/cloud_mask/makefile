@@ -20,4 +20,4 @@ naive_bayesian_cloud_mask_module.o: naive_bayesian_cloud_mask_module.f90 file_to
 
 
 clean:
-	rm -f *.o *.mod
+	rm -f *.o *.mod test_mask

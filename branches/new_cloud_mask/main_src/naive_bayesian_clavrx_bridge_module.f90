@@ -139,9 +139,8 @@ contains
       ! cloud mask information mask 7 bytes ( 56 bits)    
       integer :: info_flags ( 7 )
       integer :: i , j 
-      real :: erg
-           
-    ! -----------    loop over pixels -----   
+                 
+      ! -----------    loop over pixels -----   
       line_loop: do i = 1, num_pix
          elem_loop: do  j = 1,num_scans_read
             
@@ -193,7 +192,7 @@ contains
             mask_inp % sat % ref_ch1_3x3_std     = Ref_Ch1_Std_3x3(i,j)
             mask_inp % sat % ref_ch1_3x3_min     = Ref_Ch1_Min_3x3(i,j)
                        
-            mask_inp % sat % chan_on ( 1:42)     = Chan_On_Flag_Default(1:42) == 1
+            mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
             
             
            

@@ -65,6 +65,7 @@ module naive_bayesian_cloud_mask_module
       real :: lat
       real :: lon
       real :: sol_zen
+      real :: sat_zen
       real :: airmass
       real :: scat_angle
       integer :: glint
@@ -81,6 +82,7 @@ module naive_bayesian_cloud_mask_module
       real :: bt_ch31_lrc
       real :: bt_ch31_3x3_max
       real :: bt_ch31_3x3_std
+      real :: bt_ch20_3x3_std
       real :: emis_ch31_tropo
       real :: emis_ch32_tropo
       real :: emis_ch20_clear
@@ -103,6 +105,7 @@ module naive_bayesian_cloud_mask_module
       real :: ref_ch1
       real :: ref_ch2
       real :: ref_ch6
+      real :: ref_ch7
       real :: ref_ch8
       real :: ref_ch26
       real :: emis_ch20_3x3_mean
@@ -272,7 +275,7 @@ contains
           
       is_dust = .false.
       if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
-         is_dust = dust_viirs ( &
+         is_dust = dust_detection ( &
               inp % sat % ref_ch1 &
             , inp % sat % ref_ch8 &
             , inp % sat % ref_ch1_3x3_std &
@@ -280,11 +283,32 @@ contains
             , inp % sfc % land_class ) 
       end if
       
+      is_smoke = .false.
+      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (7) ) then
+         is_dust = smoke_detection ( &
+              inp % sat % ref_ch1 &
+            , inp % sat % ref_ch7 &
+            , inp % sat % ref_ch1_3x3_std &
+            , inp % geo % sat_zen &
+            , inp % geo % glint &
+            , inp % sfc % land_class ) 
+      end if
+            
       is_cloud_shadow = .false.
       ! - TO ADD
       
       is_fire = .false.
-      ! - TO ADD
+      
+      if ( inp % sat % chan_on (31) .and. inp % sat % chan_on (20) ) then
+         is_fire = fire_detection ( &
+              inp % sat % bt_ch31 &
+            , inp % sat % bt_ch20 &
+            , inp % rtm % bt_ch31_3x3_std &
+            , inp % rtm % bt_ch20_3x3_std &
+            , inp % geo % sol_zen )
+      end if
+      
+    
       
       info_flags = 0 
       
@@ -929,10 +953,154 @@ contains
   
   
    end function
+   
+   !-------------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------------   
+   logical elemental function fire_detection ( &
+           bt_110 &
+         , bt_037 &
+         , bt_110_std &
+         , bt_037_std &
+         , sol_zen )
+         
+      real, intent(in):: bt_110
+      real, intent(in):: bt_037
+      real, intent(in):: bt_110_std
+      real, intent(in):: bt_037_std
+      real, intent(in):: sol_zen
+      
+      real, parameter :: EUMETCAST_FIRE_DAY_SOLZEN_THRESH = 70.0
+      real, parameter :: EUMETCAST_FIRE_NIGHT_SOLZEN_THRESH = 90.0
+      
+      !---- EUMETCAST fire detection parameters
+      real, parameter :: BT_375UM_EUMET_FIRE_DAY_THRESH = 310.0
+      real, parameter :: BT_DIFF_EUMET_FIRE_DAY_THRESH = 8.0
+      real, parameter :: STDDEV_11UM_EUMET_FIRE_DAY_THRESH = 1.0 
+      real, parameter :: STDDEV_375UM_EUMET_FIRE_DAY_THRESH = 4.0
+      
+      real, parameter :: BT_375UM_EUMET_FIRE_NIGHT_THRESH = 290.0
+      real, parameter :: BT_DIFF_EUMET_FIRE_NIGHT_THRESH = 0.0
+      real, parameter :: STDDEV_11UM_EUMET_FIRE_NIGHT_THRESH = 1.0 
+      real, parameter :: STDDEV_375UM_EUMET_FIRE_NIGHT_THRESH = 4.0
+      
+      real :: Bt_375um_Eumet_Fire_Thresh
+      real :: Bt_Diff_Eumet_Fire_Thresh
+      real :: Stddev_11um_Eumet_Fire_Thresh 
+      real :: Stddev_375um_Eumet_Fire_Thresh
+      
+      integer :: part_of_day
+      integer, parameter :: ET_part_of_day_DAY = 1
+      integer, parameter :: ET_part_of_day_NIGHT = 2
+      integer, parameter :: ET_part_of_day_TWILIGHT = 3
+
+      fire_detection = .false.
+                 
+      ! - check if valid
+      if ( bt_110_std < 0. .or. bt_037_std < 0.) then
+         return
+      end if 
+      
+      part_of_day = ET_part_of_day_TWILIGHT
+      if ( sol_zen < EumetCAST_Fire_Day_Solzen_Thresh )  part_of_day = ET_part_of_day_DAY
+      if ( sol_zen > EumetCAST_Fire_Night_Solzen_Thresh )  part_of_day = ET_part_of_day_NIGHT
+      
+      select case ( part_of_day )
+      
+      case( ET_part_of_day_DAY)
+         Bt_375um_Eumet_Fire_Thresh       = BT_375UM_EUMET_FIRE_DAY_THRESH
+         Bt_Diff_Eumet_Fire_Thresh        = BT_DIFF_EUMET_FIRE_DAY_THRESH
+         Stddev_11um_Eumet_Fire_Thresh    = STDDEV_11UM_EUMET_FIRE_DAY_THRESH
+         Stddev_375um_Eumet_Fire_Thresh   = STDDEV_375UM_EUMET_FIRE_DAY_THRESH
+      
+      case( ET_part_of_day_NIGHT)
+         Bt_375um_Eumet_Fire_Thresh       = BT_375UM_EUMET_FIRE_NIGHT_THRESH
+         Bt_Diff_Eumet_Fire_Thresh        = BT_DIFF_EUMET_FIRE_NIGHT_THRESH
+         Stddev_11um_Eumet_Fire_Thresh    = STDDEV_11UM_EUMET_FIRE_NIGHT_THRESH
+         Stddev_375um_Eumet_Fire_Thresh   = STDDEV_375UM_EUMET_FIRE_NIGHT_THRESH         
+      
+      case( ET_part_of_day_TWILIGHT)
+         Bt_375um_Eumet_Fire_Thresh = ((-1.0)* sol_zen) + 380.0
+         Bt_Diff_Eumet_Fire_Thresh = ((-0.4)* sol_zen) + 36.0
+         Stddev_11um_Eumet_Fire_Thresh = ((0.0)* sol_zen) + 1.0
+         Stddev_375um_Eumet_Fire_Thresh = ((0.0)* sol_zen) + 4.0
+         
+      end select
+      
+      ! All of these conditions need to be met
+      if (  ( bt_037                > Bt_375um_Eumet_Fire_Thresh ) .and. &
+            ( ( bt_037 - bt_110 )   > Bt_Diff_Eumet_Fire_Thresh) .and. &
+            ( bt_037_std            > Stddev_375um_Eumet_Fire_Thresh) .and. &
+            ( bt_110_std            < Stddev_11um_Eumet_Fire_Thresh)  &
+               ) then
+         Fire_detection = .true.
+       endif
+   
+   
+   end function fire_detection
+   
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   logical elemental function dust_viirs ( &
+   logical elemental function  smoke_detection ( &
+           ref_004 &
+         , ref_021 &
+         , ref_006_std &
+         , sat_zen &
+         , glint &
+         , land_class )
+               
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_021
+      real , intent(in) :: ref_006_std
+      real , intent(in) :: sat_zen
+      integer , intent(in) :: glint
+      integer , intent(in) :: land_class  
+      
+      logical :: is_water_sfc      
+      logical :: is_glint
+      
+      
+      real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.2
+      real, parameter :: SMOKE_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: SMOKE_ST_DEV_LAND_GLINT_THRESH = 1.5
+      real, parameter :: SMOKE_ST_DEV_WATER_GLINT_THRESH = 0.05
+      real, parameter :: SMOKE_CAND_M11M1_REF_RATIO_THRESH = 0.25
+      
+      real :: ref_ratio
+      real :: st_dev_thresh_cand 
+      
+      
+      smoke_detection = .false.
+            
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_021 < 0. .or. ref_006_std < 0.) then
+         return
+      end if 
+      
+      is_water_sfc = land_class == 0 .or. &
+         & land_class >= 3 .and. land_class <= 7 
+         
+      is_glint = glint == 1
+      
+      ref_ratio = ref_021 / ref_004 
+      
+      if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH * cosd (sat_zen) ) ) return
+      
+      
+      if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint .and. .not. (is_water_sfc) )         st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
+      if ( .not. ( is_glint) .and. is_water_sfc )        st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
+      if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
+      
+      if (  ref_006_std < st_dev_thresh_cand ) smoke_detection = .true.
+      
+   end function smoke_detection
+   
+   !-------------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------------
+   logical elemental function dust_detection ( &
               ref_004 &
             , ref_006 &
             , ref_006_std &
@@ -955,15 +1123,14 @@ contains
       real, parameter :: DUST_ST_DEV_WATER_THRESH = 0.05
       real, parameter :: DUST_ST_DEV_LAND_GLINT_THRESH = 0.7
       real, parameter :: DUST_ST_DEV_WATER_GLINT_THRESH = 0.05
-      real, parameter :: GLINT_ANGLE_THRESH = 40.0  
+      
       
       real :: st_dev_thresh_cand   
       
-      dust_viirs = .false.
+      dust_detection = .false.
       
       ! - check if valid
       if ( ref_004 < 0. .or. ref_006 < 0. .or. ref_006_std <= 0.) then
-         dust_viirs=.false.
          return
       end if 
       
@@ -974,7 +1141,6 @@ contains
          
       if ( is_water_sfc .and. ( ref_004 >= DUST_M1_REFL_THRESH &
                .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
-         dust_viirs=.false.
          return            
       end if  
       
@@ -987,10 +1153,10 @@ contains
       if ( .not. ( is_glint) .and. is_water_sfc )        st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
       if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
       
-      if (  ref_006_std < st_dev_thresh_cand ) dust_viirs = .true.
+      if (  ref_006_std < st_dev_thresh_cand ) dust_detection = .true.
    
    
-   end function dust_viirs
+   end function dust_detection
    
    
    

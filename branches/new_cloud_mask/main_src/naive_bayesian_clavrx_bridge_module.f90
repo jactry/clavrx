@@ -27,6 +27,7 @@
 !
 !  HISTORY:
 !      2014/04/06:    new interface (AW)
+!      2014/04/21:  add fire mask input
 !
 !  GLOBAL VARIABLES:
 !
@@ -54,6 +55,7 @@
 !              bt_ch31_lrc                               real (:,:)
 !              bt_ch31_max_3x3                           real (:,:)
 !              bt_Ch31_Std_3x3                           real (:,:)
+!              bt_Ch20_Std_3x3                           real (:,:)
 !              Ems_Ch20_Clear_Solar_Rtm                  real (:,:)
 !              ems_ch20_median_3x3                       real (:,:)
 !        1.5 observations
@@ -99,6 +101,7 @@ module naive_bayesian_clavrx_bridge_module
       , bt_ch31_lrc &
       , bt_ch31_max_3x3 &
       , Bt_Ch31_Std_3x3 &
+      , Bt_Ch20_Std_3x3 &
       , ems_Ch20_Clear_Solar_Rtm &
       , ems_ch20_median_3x3 &
       , ch &
@@ -164,7 +167,7 @@ contains
             mask_inp % rtm % bt_ch31_lrc     =  Bt_Ch31_LRC ( i , j )
             mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
             mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
-         
+            mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
         
             mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo (i,j)
             mask_inp % rtm % emis_ch32_tropo = ch(32) % emiss_tropo (i,j)
@@ -184,6 +187,7 @@ contains
             mask_inp % sat % ref_ch2             = ch(2) % ref_toa ( i , j )
         
             mask_inp % sat % ref_ch6             = ch(6) % ref_toa ( i , j )
+            mask_inp % sat % ref_ch7             = ch(7) % ref_toa ( i , j )
             mask_inp % sat % ref_ch8             = ch(8) % ref_toa ( i , j )
          
             mask_inp % sat % ref_ch26            = ch(26) % ref_toa ( i , j )

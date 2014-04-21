@@ -8,7 +8,8 @@ program test_cloud_mask
 use naive_bayesian_cloud_mask_module, only : &
       &   cloud_mask_naive_bayes &
       & , cloud_mask_input_type &
-      & , dust_viirs
+      & , dust_detection &
+      & , fire_detection
       
       
 type ( cloud_mask_input_type ) :: inp
@@ -17,7 +18,9 @@ real :: erg
 integer :: counter
 
 
-print*,dust_viirs(-12.,12.,1.,1,1)
+print*,dust_detection(-12.,12.,1.,1,1)
+
+print*,fire_detection ( 310.,312., 2., 1. ,77. )
 
 
 inp % bayesian_mask_classifier = &

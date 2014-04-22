@@ -35,8 +35,8 @@
 !      1. work as input
 !        1.1 configuration
 !             Chan_On_Flag_Default                       integer (42)
-!             ancil_data_dir                             chacarcter
-!             Bayesian_Cloud_Mask_Name                   chacarcter
+!             ancil_data_dir                             character
+!             Bayesian_Cloud_Mask_Name                   character
 !             num_pix                                    integer
 !             num_scans_read                             integer
 !        1.2 geo data:
@@ -51,12 +51,13 @@
 !              coast                                     integer (:,:)
 !              snow                                      integer (:,:)
 !              zsfc                                      real (:,:)
-!        1.4 rtm 
+!        1.4 rtm / statistics 
 !              bt_ch31_lrc                               real (:,:)
 !              bt_ch31_max_3x3                           real (:,:)
 !              bt_Ch31_Std_3x3                           real (:,:)
 !              bt_Ch20_Std_3x3                           real (:,:)
 !              Ems_Ch20_Clear_Solar_Rtm                  real (:,:)
+!              Covar_Ch27_Ch31_5x5                       real (:,:)
 !              ems_ch20_median_3x3                       real (:,:)
 !        1.5 observations
 !              ch                                        type ( observations )  
@@ -104,6 +105,7 @@ module naive_bayesian_clavrx_bridge_module
       , Bt_Ch20_Std_3x3 &
       , ems_Ch20_Clear_Solar_Rtm &
       , ems_ch20_median_3x3 &
+      , Covar_Ch27_Ch31_5x5 &
       , ch &
       , Ref_Ch1_Std_3x3 &
       , Ref_Ch1_Min_3x3 &
@@ -169,12 +171,13 @@ contains
             mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
             mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
         
-            mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo (i,j)
-            mask_inp % rtm % emis_ch32_tropo = ch(32) % emiss_tropo (i,j)
-            mask_inp % rtm % emis_ch20_clear = Ems_Ch20_Clear_Solar_Rtm( i , j ) 
-            mask_inp % rtm % bt_ch31_atm_sfc = ch(31)%Bt_Toa_Clear( i , j ) 
-            mask_inp % rtm % bt_ch32_atm_sfc = ch(32)%Bt_Toa_Clear( i , j ) 
-            mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_toa_clear (i,j)
+            mask_inp % rtm % emis_ch31_tropo    = ch(31) % emiss_tropo (i,j)
+            mask_inp % rtm % emis_ch32_tropo    = ch(32) % emiss_tropo (i,j)
+            mask_inp % rtm % emis_ch20_clear    = Ems_Ch20_Clear_Solar_Rtm( i , j ) 
+            mask_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i , j ) 
+            mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
+            mask_inp % rtm % ref_ch1_clear      = ch(1) % Ref_toa_clear (i,j)
+            mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
   
             mask_inp % sat % bt_ch20             = ch(20) % bt_toa ( i , j )
             !mask_inp % sat % bt_ch27             = sat % chn(27) % bt ( i , j )

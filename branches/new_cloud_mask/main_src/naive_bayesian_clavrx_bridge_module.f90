@@ -177,10 +177,12 @@ contains
             mask_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i , j ) 
             mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
             mask_inp % rtm % ref_ch1_clear      = ch(1) % Ref_toa_clear (i,j)
-            mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
-  
+				if ( chan_on_flag_default(27) == 1 ) then
+            	mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
+   				mask_inp % sat % bt_ch27             = ch(27) % bt_toa ( i , j )
+				end if	
             mask_inp % sat % bt_ch20             = ch(20) % bt_toa ( i , j )
-            !mask_inp % sat % bt_ch27             = sat % chn(27) % bt ( i , j )
+            
             mask_inp % sat % bt_ch29             = ch(29) % bt_toa ( i , j )
             mask_inp % sat % bt_ch31             = ch(31) % bt_toa ( i , j )
             mask_inp % sat % bt_ch32             = ch(32) % bt_toa ( i , j )

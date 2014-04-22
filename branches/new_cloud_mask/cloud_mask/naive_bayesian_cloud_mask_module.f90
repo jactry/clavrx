@@ -88,6 +88,7 @@ module naive_bayesian_cloud_mask_module
       real :: emis_ch20_clear
       real :: bt_ch31_atm_sfc
       real :: bt_ch32_atm_sfc
+      real :: bt_ch31_ch27_covar
       
       real :: ref_ch1_clear
          
@@ -181,6 +182,7 @@ contains
       logical :: is_mountain 
       logical :: is_day_375um
       logical :: is_day_063um
+      logical :: is_day_063um_spatial_tests
       logical :: is_night_375um
       logical :: has_cold_btd
       logical :: is_cold_375um
@@ -195,6 +197,7 @@ contains
       real, parameter :: SOLZEN_375UM_NIGHT_THRESH = 90.0
       real, parameter :: SOLZEN_375UM_DAY_THRESH = 85.0
       real, parameter :: SOLZEN_063UM_DAY_THRESH = 80.0
+      real, parameter :: SOLZEN_063UM_DAY_THRESH_SPATIAL_TESTS = 85.0
       
       real, parameter :: BT_11UM_COLD_SCENE_THRESH = 220.0
       real, parameter :: BT_037UM_COLD_SCENE_THRESH = 240.0
@@ -264,6 +267,14 @@ contains
          is_day_063um = .false.
          
       end if 
+      
+      is_day_063um_spatial_tests = .true.
+      info_flags(1) = ibset ( info_flags(1) , 1 )
+      if ( inp % geo % sol_zen >  SOLZEN_063UM_DAY_THRESH_SPATIAL_TESTS ) then           
+         is_day_063um_spatial_tests = .false.
+         
+      end if
+      
             
       is_forward_scatter = .false.
       if ( inp % geo %  scat_angle  < 80. .and. inp % geo % sol_zen  < 95.) then
@@ -350,7 +361,7 @@ contains
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             Classifier_Value = inp % sat % bt_ch31  
             if (  inp%sfc %  land_class  == ET_land_class % DEEP_OCEAN ) then
-            Classifier_Value = inp%rtm % bt_ch31_lrc 
+               Classifier_Value = inp%rtm % bt_ch31_lrc 
             end if
             is_on_test = .true.
             pos_info_flag = 4
@@ -414,8 +425,8 @@ contains
             if ( .not. inp % sat % chan_on(27) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
-           
-            is_on_test = .false.
+            Classifier_Value = inp % rtm % bt_ch31_ch27_covar
+            is_on_test = .true.
             pos_info_flag = 0
             idx_info_flag = 5
            
@@ -504,7 +515,7 @@ contains
               
          case( et_class_R_006_STD)
             if ( .not. inp % sat % chan_on(1) ) cycle class_loop
-            if ( .not. is_day_063um ) cycle
+            if ( .not. is_day_063um_spatial_tests ) cycle
             if ( is_mountain  ) cycle class_loop
             if ( inp % sfc % coast_mask   ) cycle
             if ( .not. is_day_063um ) cycle class_loop
@@ -517,7 +528,7 @@ contains
            
          case( et_class_R_006_MIN_3x3_DAY )
             if ( .not. inp % sat % chan_on(1) ) cycle class_loop
-            if ( .not. is_day_063um ) cycle
+            if ( .not. is_day_063um_spatial_tests ) cycle
             if ( is_mountain  ) cycle class_loop
             if ( inp % sfc % coast_mask   ) cycle
           
@@ -532,7 +543,7 @@ contains
         case( et_class_R_RATIO_DAY)
            if ( .not. inp %  sat % chan_on(1) ) cycle class_loop
            if ( .not. inp % sat % chan_on(2) ) cycle class_loop
-           if ( .not. is_day_063um ) cycle
+           if ( .not. is_day_063um_spatial_tests ) cycle
            if ( is_mountain  ) cycle class_loop
            if ( inp % geo  % glint  )  cycle class_loop
           
@@ -554,6 +565,7 @@ contains
             is_on_test = .true.   
             pos_info_flag = 4
             idx_info_flag = 7    
+            
          case ( et_class_R_016_Day)
             if ( .not. inp % sat % chan_on(6) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
@@ -567,7 +579,7 @@ contains
             idx_info_flag = 7  
               
          case default
-            print*,'wrong class ', bayes_coef % Classifier_Value_Name_enum (class_idx) , &
+            print*,'unknown class ', bayes_coef % Classifier_Value_Name_enum (class_idx) , &
                        &  bayes_coef % Classifier_Value_Name (class_idx)
          end select
        
@@ -838,7 +850,6 @@ contains
       allocate(this%Prior_Yes(N_sfc_bayes))
       allocate(this%Prior_No(N_sfc_bayes))
       allocate(this%Optimal_Posterior_Prob(N_sfc_bayes))
-     
       allocate(this%Classifier_Bounds_Min(N_class,N_sfc_bayes))
       allocate(this%Classifier_Bounds_Max(N_class,N_sfc_bayes))
       allocate(this%Delta_Classifier_Bounds(N_class,N_sfc_bayes))

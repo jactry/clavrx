@@ -154,61 +154,63 @@ contains
             
             mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
             
-            mask_inp % geo % lat         = lat ( i,j)            
-            mask_inp % geo % lon         = lon ( i,j)
-            mask_inp % geo % sol_zen     = solzen ( i,j)
-            mask_inp % geo % airmass     = airmass ( i,j)
-            mask_inp % geo % scat_angle  = scatangle ( i,j)
+            mask_inp % geo % lat         = lat ( i , j )            
+            mask_inp % geo % lon         = lon ( i , j )
+            mask_inp % geo % sol_zen     = solzen ( i , j )
+            mask_inp % geo % airmass     = airmass ( i , j )
+            mask_inp % geo % scat_angle  = scatangle ( i , j )
             mask_inp % geo % glint       = glint_mask ( i ,j )
    
             mask_inp % sfc % land_class  = land ( i , j )
             mask_inp % sfc % coast_mask  = coast ( i , j ) 
-            mask_inp % sfc % snow_class  = snow( i , j )
-            mask_inp % sfc % dem         = zsfc  ( i , j )
-         
-            mask_inp % rtm % bt_ch31_lrc     =  Bt_Ch31_LRC ( i , j )
-            mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
-            mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
-            mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
-        
-            mask_inp % rtm % emis_ch31_tropo    = ch(31) % emiss_tropo (i,j)
-            mask_inp % rtm % emis_ch32_tropo    = ch(32) % emiss_tropo (i,j)
-            mask_inp % rtm % emis_ch20_clear    = Ems_Ch20_Clear_Solar_Rtm( i , j ) 
-            mask_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i , j ) 
-            mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
-            mask_inp % rtm % ref_ch1_clear      = ch(1) % Ref_toa_clear (i,j)
-				if ( chan_on_flag_default(27) == 1 ) then
-            	mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
-   				mask_inp % sat % bt_ch27             = ch(27) % bt_toa ( i , j )
-				end if	
-            mask_inp % sat % bt_ch20             = ch(20) % bt_toa ( i , j )
+            mask_inp % sfc % snow_class  = snow ( i , j )
+            mask_inp % sfc % dem         = zsfc ( i , j )
             
-            mask_inp % sat % bt_ch29             = ch(29) % bt_toa ( i , j )
-            mask_inp % sat % bt_ch31             = ch(31) % bt_toa ( i , j )
-            mask_inp % sat % bt_ch32             = ch(32) % bt_toa ( i , j )
+            if ( chan_on_flag_default(1) == 1 ) then
+               mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_toa_clear ( i , j )
+               mask_inp % sat % ref_ch1         = ch(1) % ref_toa ( i , j )
+               mask_inp % sat % ref_ch1_3x3_std = Ref_Ch1_Std_3x3 ( i , j )
+               mask_inp % sat % ref_ch1_3x3_min = Ref_Ch1_Min_3x3 ( i , j )
+            end if
+            
+            if ( chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = ch(2) % ref_toa ( i , j )
+            if ( chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = ch(6) % ref_toa ( i , j )
+            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch6 = ch(7) % ref_toa ( i , j )
+            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch6 = ch(8) % ref_toa ( i , j )
+            
+            if ( chan_on_flag_default(20) == 1 ) then 
+                mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
+                mask_inp % rtm % emis_ch20_clear = Ems_Ch20_Clear_Solar_Rtm( i , j )
+                mask_inp % sat % bt_ch20         = ch(20) % bt_toa ( i , j )
+                mask_inp % sat % emis_ch20_3x3_mean  = ems_ch20_median_3x3 ( i , j )
+            end if
+            
+            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )            
+            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )          	
+            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % ref_ch29 = ch(29) % ref_toa ( i , j )
+            
+            if ( chan_on_flag_default(31) == 1 ) then
+               mask_inp % rtm % bt_ch31_lrc     = Bt_Ch31_LRC ( i , j )
+               mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
+               mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
+               mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo ( i , j )
+               mask_inp % rtm % bt_ch31_atm_sfc = ch(31) % Bt_Toa_Clear( i , j )
+               mask_inp % sat % bt_ch31         = ch(31) % bt_toa ( i , j )
+               if ( chan_on_flag_default(27) == 1 ) then
+                  mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
+               end if   
+            end if   
+               
+            if ( chan_on_flag_default(32) == 1 ) then
+               mask_inp % rtm % emis_ch32_tropo    = ch(32) % emiss_tropo (i,j)
+               mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
+               mask_inp % sat % bt_ch32             = ch(32) % bt_toa ( i , j )
+            end if
 
-            mask_inp % sat % ref_ch1             = ch(1) % ref_toa ( i , j )
-        
-            mask_inp % sat % ref_ch2             = ch(2) % ref_toa ( i , j )
-        
-            mask_inp % sat % ref_ch6             = ch(6) % ref_toa ( i , j )
-            mask_inp % sat % ref_ch7             = ch(7) % ref_toa ( i , j )
-            mask_inp % sat % ref_ch8             = ch(8) % ref_toa ( i , j )
-         
-            mask_inp % sat % ref_ch26            = ch(26) % ref_toa ( i , j )
-        
-            mask_inp % sat % emis_ch20_3x3_mean  = ems_ch20_median_3x3 ( i , j )
-        
-            mask_inp % sat % ref_ch1_3x3_std     = Ref_Ch1_Std_3x3(i,j)
-            mask_inp % sat % ref_ch1_3x3_min     = Ref_Ch1_Min_3x3(i,j)
-                       
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
-            
-            
-           
+             
             call cloud_mask_naive_bayes ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags )
-         
-              
+           
             Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
             Cld_Test_Vector_Packed ( : , i , j )  = info_flags
             

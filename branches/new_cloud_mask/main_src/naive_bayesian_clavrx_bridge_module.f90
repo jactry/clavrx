@@ -46,6 +46,7 @@
 !              scatangle                                 real (:,:)
 !              airmass                                   real (:,:)
 !              glint_mask                                integer (:,:)
+!              Solar_Contamination_Mask                  integer (:,:)
 !        1.3 surface 
 !              land                                      integer (:,:)
 !              coast                                     integer (:,:)
@@ -117,7 +118,8 @@ module naive_bayesian_clavrx_bridge_module
       , num_scans_read &
       , cld_mask &
       , ancil_data_dir &
-      , Bayesian_Cloud_Mask_Name 
+      , Bayesian_Cloud_Mask_Name &
+      , Solar_Contamination_Mask  
      
       
              
@@ -160,6 +162,7 @@ contains
             mask_inp % geo % airmass     = airmass ( i , j )
             mask_inp % geo % scat_angle  = scatangle ( i , j )
             mask_inp % geo % glint       = glint_mask ( i ,j )
+            mask_inp % geo % solar_conta   = Solar_Contamination_Mask ( i ,j ) == 1
    
             mask_inp % sfc % land_class  = land ( i , j )
             mask_inp % sfc % coast_mask  = coast ( i , j ) 

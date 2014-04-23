@@ -560,7 +560,7 @@ contains
          case( et_class_R_013_DAY)
             if ( .not. inp %  sat % chan_on(26) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
-            if ( .not. is_day_063um ) cycle class_loop
+            if ( .not. is_day_063um )  cycle class_loop
             if ( is_mountain  ) cycle class_loop
             if ( inp % sat % ref_ch26  <= 0 ) cycle class_loop
            

@@ -124,6 +124,7 @@
    use USER_OPTIONS
    use UNIVERSAL_CLOUD_TYPE_MODULE
    use CLAVRX_MESSAGE_MODULE
+   use CLOUD_TYPE_BRIDGE_MODULE
    
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
@@ -1359,14 +1360,15 @@
                   Cld_Phase = Cld_Phase_Aux
                   Phase_Called_Flag = sym%YES
 
-               else
+               else  
+                  call CLOUD_TYPE_BRIDGE()
 
 #ifdef xlf90
-                  call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
+                  !call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
+                  !Phase_Called_Flag = sym%YES
 #else
-                  call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
+                  !call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
+                  !Phase_Called_Flag = sym%YES
 #endif
 
                end if

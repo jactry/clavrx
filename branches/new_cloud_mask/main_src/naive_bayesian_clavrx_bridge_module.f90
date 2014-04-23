@@ -187,7 +187,7 @@ contains
             
             if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )            
             if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )          	
-            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % ref_ch29 = ch(29) % ref_toa ( i , j )
+            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29 = ch(29) % bt_toa ( i , j )
             
             if ( chan_on_flag_default(31) == 1 ) then
                mask_inp % rtm % bt_ch31_lrc     = Bt_Ch31_LRC ( i , j )

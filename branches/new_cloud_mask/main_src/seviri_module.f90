@@ -106,7 +106,7 @@ subroutine ASSIGN_MSG_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
     endif
     !--- Met-11
     if (Mcidas_Id_Num == 54)   then
-        Sc_Id_WMO = 57
+        Sc_Id_WMO = 58
         Instr_Const_file = 'met10_instr.dat'
         Algo_Const_file = 'met10_algo.dat'
         Platform_Name_Attribute = 'Meteosat-11'

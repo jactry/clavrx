@@ -1321,7 +1321,7 @@
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
-                     call AWG_CLOUD_BAYES_BRIDGE(Segment_Number)
+                     call AWG_CLOUD_BAYES_BRIDGE()
                      call COMPUTE_CLOUD_FRACTION_3x3(Line_Idx_Min_Segment,Num_Scans_Read)
                   else
                      print *, "Only the Bayesian Cloud Mask is availabe, check selection"

@@ -69,6 +69,7 @@ module naive_bayesian_cloud_mask_module
       real :: airmass
       real :: scat_angle
       integer :: glint
+      logical :: solar_conta
    end type cloud_mask_geo_type
    
    type cloud_mask_sfc_type
@@ -191,6 +192,7 @@ contains
       logical :: is_smoke
       logical :: is_cloud_shadow
       logical :: is_fire
+      logical :: is_solar_contaminated
   
 	   real, parameter :: SOLZEN_DAY_THRESH = 85.0       !was 85.0
       real, parameter :: AIRMASS_THRESH = 5.0
@@ -318,16 +320,18 @@ contains
             , inp % geo % sol_zen )
       end if
       
+      is_solar_contaminated = inp % geo % solar_conta
+      
     
       
       info_flags = 0 
       
                                     info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
       if ( is_day_063um)            info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
-      if ( is_day_063um_spatial_tests)  info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
+      if ( is_day_063um_spatial_tests)  info_flags(1) = ibset ( info_flags ( 1 ) , 2 )
       if ( is_day_375um)            info_flags(1) = ibset ( info_flags ( 1 ) , 3 )
       if ( is_night_375um)          info_flags(1) = ibset ( info_flags ( 1 ) , 4 )
-      
+      if ( is_solar_contaminated)   info_flags(1) = ibset ( info_flags ( 1 ) , 5 )
       if ( inp % sfc % coast_mask)  info_flags(1) = ibset ( info_flags ( 1 ) , 6 )    
       if ( is_mountain )            info_flags(1) = ibset ( info_flags ( 1 ) , 7 )
       
@@ -454,7 +458,7 @@ contains
            
          case( et_class_E_037_DAY)
             if ( .not. inp % sat % chan_on(20) ) cycle class_loop
-            ! solar contima
+            if ( is_solar_contaminated) cycle class_loop 
             if ( inp % geo % glint  )  cycle class_loop
             if ( .not. is_day_375um ) cycle class_loop                  
             if ( is_cold_375um ) cycle class_loop
@@ -469,7 +473,7 @@ contains
            
          case( et_class_E_037_NGT)
             if ( .not. inp % sat % chan_on(20) ) cycle
-            ! solar contima
+            if ( is_solar_contaminated) cycle class_loop 
             if ( .not. is_night_375um ) cycle  
             if (is_cold_375um ) cycle class_loop 
             if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop
@@ -485,7 +489,7 @@ contains
         case( et_class_BTD_037_110_NGT)
            if ( .not. inp % sat % chan_on(20) ) cycle
            if ( .not. inp % sat % chan_on(31) ) cycle
-            ! solar contima
+           if ( is_solar_contaminated) cycle class_loop 
            if ( .not. is_night_375um ) cycle  
            if (is_cold_375um ) cycle class_loop 
            if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop

@@ -308,8 +308,7 @@ contains
       is_cloud_shadow = .false.
       ! - TO ADD
       
-      is_fire = .false.
-      
+      is_fire = .false.      
       if ( inp % sat % chan_on (31) .and. inp % sat % chan_on (20) ) then
          is_fire = fire_detection ( &
               inp % sat % bt_ch31 &
@@ -325,7 +324,7 @@ contains
       
                                     info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
       if ( is_day_063um)            info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
-      
+      if ( is_day_063um_spatial_tests)  info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
       if ( is_day_375um)            info_flags(1) = ibset ( info_flags ( 1 ) , 3 )
       if ( is_night_375um)          info_flags(1) = ibset ( info_flags ( 1 ) , 4 )
       
@@ -598,12 +597,13 @@ contains
                            & + bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
     
-            if ( class_contr > 0.1 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
-            if ( class_contr > 0.5 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1)
+            if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
+            if ( class_contr >= 0.5 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1)
             if ( class_contr > 0.9 ) then
                 info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
                 info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1 )
             end if
+            
             
            
          end if

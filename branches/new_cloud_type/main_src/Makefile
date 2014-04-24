@@ -157,6 +157,7 @@ clavrxorb_objs = process_clavrx.o \
                  fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
+                 cloud_phase_algo_module.o \
                  viewing_geometry_module.o 
 
 #Level2b routines
@@ -308,8 +309,9 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
-cloud_type_bridge_module.o:cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o
+cloud_type_bridge_module.o:cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o cloud_phase_algo_module.o rtm_common.o naive_bayesian_cloud_mask_module.o
 cloud_type_algo_module.o:cloud_type_algo_module.f90 constant.o pixel_common.o
+cloud_phase_algo_module.o:cloud_phase_algo_module.f90 constant.o pixel_common.o
 naive_bayesian_clavrx_bridge_module.o: naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o
 
 naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o
@@ -321,7 +323,7 @@ universal_cloud_type.o: universal_cloud_type.f90 constant.o nwp_common.o rtm_com
 
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
-              sfc_prop_umd.o sfc_emiss.o cloud_type.o \
+              sfc_prop_umd.o sfc_emiss.o cloud_type.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o \
               awg_cloud_height.o cloud_height_routines.o dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \

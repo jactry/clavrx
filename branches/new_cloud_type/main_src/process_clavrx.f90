@@ -1377,10 +1377,10 @@
                   call CLOUD_RETYPE(Line_Idx_Min_Segment,Num_Scans_Read,Cld_type)
                end if
 
-               if (Phase_Called_Flag == sym%NO) then
-                  print *, EXE_PROMPT, "ERROR: No phase algorithm available, stopping"
-                  stop
-               end if
+              ! if (Phase_Called_Flag == sym%NO) then
+               !   print *, EXE_PROMPT, "ERROR: No phase algorithm available, stopping"
+              !    stop
+             !  end if
 
                if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
                    & (Chan_On_Flag_Default(32) == sym%YES)) then

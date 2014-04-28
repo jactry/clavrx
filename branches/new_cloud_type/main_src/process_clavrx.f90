@@ -1361,26 +1361,26 @@
                   Phase_Called_Flag = sym%YES
 
                else  
-                  !call CLOUD_TYPE_BRIDGE()
+                  call CLOUD_TYPE_BRIDGE()
 
 #ifdef xlf90
-                  call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
+                  !call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
+                  !Phase_Called_Flag = sym%YES
 #else
-                  call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
+                  !call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
+                  !Phase_Called_Flag = sym%YES
 #endif
 
                end if
 
-               if (lrc_Flag == sym%YES .and. Cloud_Mask_Aux_Flag == 0) then
-                  call CLOUD_RETYPE(Line_Idx_Min_Segment,Num_Scans_Read,Cld_type)
-               end if
+              ! if (lrc_Flag == sym%YES .and. Cloud_Mask_Aux_Flag == 0) then
+              !    call CLOUD_RETYPE(Line_Idx_Min_Segment,Num_Scans_Read,Cld_type)
+              ! end if
 
-               if (Phase_Called_Flag == sym%NO) then
-                 print *, EXE_PROMPT, "ERROR: No phase algorithm available, stopping"
-                  stop
-               end if
+              ! if (Phase_Called_Flag == sym%NO) then
+              !   print *, EXE_PROMPT, "ERROR: No phase algorithm available, stopping"
+              !    stop
+              ! end if
 
                if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
                    & (Chan_On_Flag_Default(32) == sym%YES)) then

@@ -521,7 +521,7 @@ else
 endif
 
 if (Node_String == "geo") then
-  root_name = trim(file_Input(1))
+  root_name = trim(File_Input(1))
   ipos = index(root_name,'level2.hdf')
   Time_String = root_name(ipos-5:ipos-1)
 endif
@@ -646,17 +646,25 @@ Sds_Output_Stride_XY = (/1,1/)
     !---------------------------------------------------------------------------------
     file_loop: do ifile = 1, n_files
 
-          print *, LOCAL_EXE_PROMPT, "processing file ", ifile, " of ", n_files, " ", trim(file_Input(ifile))
+          print *, LOCAL_EXE_PROMPT, "processing file ", ifile, " of ", n_files, " ", trim(File_Input(ifile))
 
           Istatus_Sum = 0
 
           !---- determine if this file should be skipped
-          Sd_Id_Input = sfstart(trim(dir_in)//trim(file_Input(ifile)), DFACC_READ)
+          Sd_Id_Input = sfstart(trim(dir_in)//trim(File_Input(ifile)), DFACC_READ)
+
+          if (Sd_Id_Input == FAIL) then
+             print *, LOCAL_EXE_PROMPT, "Unable to open: ", trim(File_Input(ifile))
+             cycle
+          endif
 
           !--- determine number of sds's in these files (assume the same)
           Istatus_Sum = sffinfo(Sd_Id_Input,Num_Sds_Input,Num_Global_Attrs)
 
-          if (Sd_Id_Input == FAIL) cycle
+          if (Num_Sds_Input <= 1) then
+             print *, LOCAL_EXE_PROMPT, "Empty File:  ", trim(File_Input(ifile))
+             cycle
+          endif
 
           !--- read attributes of this file
           Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_ELEMENTS"),Num_Elements_Input) + Istatus_Sum
@@ -807,7 +815,6 @@ Sds_Output_Stride_XY = (/1,1/)
                 call SCALE_SDS(Sds_Lon_Out,Lon_Output_1d,Scaled_Lon_Output_1d)
                 call WRITE_SDS(Scaled_Lon_Output_1d,Sds_Lon_Out)
                 Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
-
 
               else
 
@@ -1041,6 +1048,7 @@ Sds_Output_Stride_XY = (/1,1/)
 
                   !--- update senzen output array
                   if (Update_Output_Mask(Ilon,Ilat) == sym%YES) then
+!print *, "updating ", Ilon, Ilat, ielem, iline, Time_Input(ielem, iline)
                     Senzen_Output(Ilon,Ilat) = Senzen_Input(ielem,iline)
                     Time_Output(Ilon,Ilat) = Time_Input(ielem,iline)
                   endif
@@ -1192,9 +1200,25 @@ Sds_Output_Stride_XY = (/1,1/)
          end do Sds_loop_2
 
          !----------------------------------------------------------------------
-         ! after last file, write output
+         ! deallocate allcoated input arrays
          !----------------------------------------------------------------------
-         if (ifile == n_files) then
+         deallocate(Asc_Des_Flag_Input)
+         deallocate(Scaled_Sds_Data_Input)
+         deallocate(Input_Update_Index)
+         deallocate(Input_Array_1d)
+         
+
+         !----- close input hdf file
+         Istatus_Sum = sfend(Sd_Id_Input) + Istatus_Sum 
+      
+         First_Valid_Input = sym%NO
+
+    end do file_loop
+    !----------------------------------------------------------------------------
+    ! after last file, write output if at least one file was successfully read in
+    !----------------------------------------------------------------------------
+
+    if (First_Valid_Input == sym%NO) then
 
             !---- write time to output files
             call SCALE_SDS(Sds_Time,Time_Output,Scaled_Sds_Data_Output)
@@ -1225,38 +1249,20 @@ Sds_Output_Stride_XY = (/1,1/)
                Scaled_Sds_Data_Output = Scaled_Sds_Data_Output_Full(:,:,Isds)
                call WRITE_SDS(Scaled_Sds_Data_Output,Sds(Isds))
 
-               !--- add in attributes to FCDR variables (for NCDC)
-!               if (trim(sds(Isds)%Variable_Name) == "refl_0_65um_nom") then   
-!                  Istatus_Sum = sfscatt(sds(Isds)%id_Output, "FCDR", DFNT_CHAR8, 4, "none") + Istatus_Sum
-!               endif
-!               if (trim(sds(Isds)%Variable_Name) == "refl_0_86um_nom") then   
-!                  Istatus_Sum = sfscatt(sds(Isds)%id_Output, "FCDR", DFNT_CHAR8, 4, "none") + Istatus_Sum
-!               endif
-!              if (NCDC_Attribute_Flag == 1) then
-!                 if (trim(sds(Isds)%Variable_Name) == "ch1_reflectance") then   
-!                  Istatus_Sum = sfscatt(sds(Isds)%id_Output, "FCDR", DFNT_CHAR8, 4, "none") + Istatus_Sum
-!                 endif
-!                 if (trim(sds(Isds)%Variable_Name) == "ch2_reflectance") then   
-!                  Istatus_Sum = sfscatt(sds(Isds)%id_Output, "FCDR", DFNT_CHAR8, 4, "none") + Istatus_Sum
-!                 endif
-!              endif
-
             enddo Sds_loop_3
 
-         endif
+    else
+           print *, LOCAL_EXE_PROMPT, "No data composited"
+           !----- close output hdf file
+           Istatus_Sum = sfend(Sd_Id_Output) + Istatus_Sum
+           call system( 'rm '//trim(dir_out)//trim(File_Output)) 
+           print *, LOCAL_EXE_PROMPT, "Level-2b File Deleted, stopping"
+           stop
+    endif
 
-         deallocate(Asc_Des_Flag_Input)
-         deallocate(Scaled_Sds_Data_Input)
-         deallocate(Input_Update_Index)
-         deallocate(Input_Array_1d)
-         
 
-         !----- close input hdf file
-         Istatus_Sum = sfend(Sd_Id_Input) + Istatus_Sum 
-      
-         First_Valid_Input = sym%NO
 
-    end do file_loop
+
 
     !------------------------------------------------------------------
     ! Read certain fields back in and compute required attributes
@@ -1538,9 +1544,6 @@ Sds_Output_Stride_XY = (/1,1/)
 
     !--- open file for reading and writing
     Sd_Id_Output = sfstart(trim(dir_out)//trim(File_Output),DFACC_RDWR)
-
-
-
 
     !----- close output hdf file
     Istatus_Sum = sfend(Sd_Id_Output) + Istatus_Sum

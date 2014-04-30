@@ -157,7 +157,6 @@ clavrxorb_objs = process_clavrx.o \
                  fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
-                 cloud_phase_algo_module.o \
                  viewing_geometry_module.o 
 
 #Level2b routines
@@ -309,9 +308,8 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
-cloud_type_bridge_module.o:cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o cloud_phase_algo_module.o rtm_common.o naive_bayesian_cloud_mask_module.o
+cloud_type_bridge_module.o:cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o naive_bayesian_cloud_mask_module.o
 cloud_type_algo_module.o:cloud_type_algo_module.f90 constant.o pixel_common.o
-cloud_phase_algo_module.o:cloud_phase_algo_module.f90 constant.o pixel_common.o
 naive_bayesian_clavrx_bridge_module.o: naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o
 
 naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o

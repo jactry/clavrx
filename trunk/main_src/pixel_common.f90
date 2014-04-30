@@ -529,7 +529,7 @@ module PIXEL_COMMON
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Elem_Idx_Min_Bt_Ch31_3x3
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Line_Idx_Min_Bt_Ch31_3x3
 
-  integer (kind=int1), dimension(:,:), allocatable, public:: Dcc_Mask !deep conv cld Mask
+ 
 
   real (kind=real4), dimension(:,:), allocatable, public:: Sst_Unmasked   !sst used in cld Mask
   real (kind=real4), dimension(:,:), allocatable, public:: Sst_Masked !sst where non-clear ocean is Masked
@@ -954,7 +954,7 @@ subroutine CREATE_PIXEL_ARRAYS()
   allocate(Temp_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
 
 
-  allocate(Dcc_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+ 
 
   !--- geometry arrays
   call  CREATE_GEO_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
@@ -1098,7 +1098,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
   deallocate(Sst_Anal_Uni)
 
   deallocate(Solar_Contamination_Mask)
-  deallocate(Dcc_Mask)
+ 
 
   !--- nwp and rtm indices
   if (allocated(Zen_Idx_Rtm)) deallocate(Zen_Idx_Rtm)
@@ -1171,7 +1171,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
         Bt_Ch27_Std_3x3 = Missing_Value_Real4
       endif
 
-      Dcc_Mask = Missing_Value_Int1
+      
       Sst_Anal = Missing_Value_Real4
 
       Zen_Idx_Rtm = Missing_Value_Int1

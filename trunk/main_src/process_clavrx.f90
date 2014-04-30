@@ -124,6 +124,7 @@
    use USER_OPTIONS
    use UNIVERSAL_CLOUD_TYPE_MODULE
    use CLAVRX_MESSAGE_MODULE
+   use CLOUD_TYPE_BRIDGE_MODULE
    
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
@@ -1351,7 +1352,7 @@
                !--- cloud type
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-               Phase_Called_Flag = sym%NO
+               
 
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
 
@@ -1359,34 +1360,11 @@
                   Cld_Phase = Cld_Phase_Aux
                   Phase_Called_Flag = sym%YES
 
-               else
-
-#ifdef xlf90
-                  call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
-#else
-                  call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)  
-                  Phase_Called_Flag = sym%YES
-#endif
-
+               else  
+                  call CLOUD_TYPE_BRIDGE()
                end if
 
-               if (lrc_Flag == sym%YES .and. Cloud_Mask_Aux_Flag == 0) then
-                  call CLOUD_RETYPE(Line_Idx_Min_Segment,Num_Scans_Read,Cld_type)
-               end if
-
-               if (Phase_Called_Flag == sym%NO) then
-                  print *, EXE_PROMPT, "ERROR: No phase algorithm available, stopping"
-                  stop
-               end if
-
-               if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-                   & (Chan_On_Flag_Default(32) == sym%YES)) then
-                  call COMPUTE_INOUE_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)
-               end if
-
-               !--- compute deep convective cloud mask
-               call COMPUTE_DCC_MASK(Line_Idx_Min_Segment,Num_Scans_Read)
+        
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                   Segment_Time_Point_Seconds(7) =  Segment_Time_Point_Seconds(7) + &
@@ -1400,9 +1378,7 @@
             if (Cld_Flag == sym%YES .and. Nwp_Flag > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
-               Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
+              
 
                if (ACHA_Mode >= 0) then    !currently, no avhrr_1_Flag algorithm
 

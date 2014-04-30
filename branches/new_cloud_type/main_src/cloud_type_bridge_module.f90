@@ -131,7 +131,7 @@ contains
       end do elem_loop
       
       
-      ! - now loop over all nonlrc-cores
+      ! - now loop over all non lrc-cores
       elem_loop1: do  j = 1,num_scans_read
          line_loop1: do i = 1, num_pix  
             

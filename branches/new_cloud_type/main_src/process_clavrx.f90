@@ -1352,7 +1352,7 @@
                !--- cloud type
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-               Phase_Called_Flag = sym%NO
+               
 
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
 
@@ -1378,9 +1378,7 @@
             if (Cld_Flag == sym%YES .and. Nwp_Flag > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
-               Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
+              
 
                if (ACHA_Mode >= 0) then    !currently, no avhrr_1_Flag algorithm
 

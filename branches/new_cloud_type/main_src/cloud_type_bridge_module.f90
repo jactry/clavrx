@@ -1,4 +1,4 @@
-! $Header:$
+! $Header$
 !    FROM PIXEL_COMMON:
 !      1. work as input
 !        1.1 configuration
@@ -248,7 +248,13 @@ contains
       type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
       
       type_inp % rtm % Covar_Ch27_Ch31_5x5 = -999.
-      if ( chan_on_flag_default(27) == 1 ) type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
+      
+      if ( chan_on_flag_default(27) == 1 ) then
+         type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
+         type_inp % sat % rad_ch27 = ch(27) % rad_toa ( i,j )
+         type_inp % sat % bt_ch27 =  ch(27) % bt_toa  ( i,j )
+      end if   
+      
       type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
       type_inp % rtm % bt_ch31_atm_sfc     = ch(31)%Bt_Toa_Clear( i,j )
       type_inp % rtm % bt_ch32_atm_sfc     = ch(32)%Bt_Toa_Clear( i,j )

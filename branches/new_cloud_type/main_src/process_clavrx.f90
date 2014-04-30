@@ -1365,13 +1365,6 @@
                end if
 
         
-               if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-                   & (Chan_On_Flag_Default(32) == sym%YES)) then
-                  call COMPUTE_INOUE_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)
-               end if
-
-               !--- compute deep convective cloud mask
-               call COMPUTE_DCC_MASK(Line_Idx_Min_Segment,Num_Scans_Read)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                   Segment_Time_Point_Seconds(7) =  Segment_Time_Point_Seconds(7) + &

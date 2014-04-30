@@ -5,10 +5,18 @@
 !
 !  HISTORY:
 !     2014/04/30:  recoded from AK heidinger type code  (AW)
+!
+!   TODO : H20 profiling
+!
 
 
 module cloud_type_algo_module
-   
+
+   implicit none
+   PRIVATE
+   PUBLIC :: cloud_type_pixel
+   PUBLIC :: cloud_type_input_type
+   PUBLIC :: ET_cloud_type
   
     type  et_cloudtype_class_type
       integer :: FIRST = 0 
@@ -75,10 +83,17 @@ module cloud_type_algo_module
       type ( cloud_type_geo_type) :: geo
       type ( cloud_type_sfc_type) :: sfc
    end type cloud_type_input_type
+   
+   real, parameter :: MISSING_REAL = -999.
 
 contains
-
-   ! - this computes cloud type without any LRC correction
+   ! ---------------------------------------------------------------
+   ! - this computes cloud type without LRC correction
+   ! - LRC correction can be done with theoptional force_ice keyword:
+   ! - 
+   ! -  LRC core is water and pixel is ice  ==>   correct the pixel to WATER
+   ! -  LRC core is ice and pixel is water  ==> run this with force_ice = .true.
+   ! ----------------------------------------------------------- 
    subroutine cloud_type_pixel ( inp , ctype , ice_prob_out , force_ice  ) 
       implicit none
       type ( cloud_type_input_type) , intent(in) :: inp
@@ -103,6 +118,7 @@ contains
       
       call get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_opa , z_opa )
       
+      ! - compute type from ice probablity phase discrimination
       if ( ice_prob > 0.5 .or. force_ice_phase ) then
          call determine_type_ice ( inp % Rtm % Emiss_tropo_ch31 &
             ,inp % sat % bt_ch31 &
@@ -113,13 +129,14 @@ contains
          call determine_type_water ( z_opa , t_opa , ctype ) 
       end if
       
+      ! - optional output
       if ( present ( ice_prob_out ) ) ice_prob_out = ice_prob
    
    end subroutine cloud_type_pixel
    
-   !
-   !
-   !
+   ! ---------------------------------------------------------------
+   !  returns type for ice phase pixels ( ice_probability gt 0.5)
+   ! ---------------------------------------------------------------
    subroutine determine_type_ice ( emiss_tropo_11 &
       , bt_11 &
       , beta_11_12 &
@@ -171,26 +188,27 @@ contains
    
    end subroutine determine_type_ice
    
-   !
-   !
-   !
+   ! ---------------------------------------------------------------
+   !  returns type for water phase pixels ( ice_probability lt 0.5)
+   ! ---------------------------------------------------------------
    subroutine determine_type_water ( z_opa, t_opa , ctype )
       real, intent (in ) :: z_opa
       real, intent ( in) :: t_opa
       integer, intent(out) :: ctype
    
       ctype = ET_cloud_type % WATER
-         if ( t_opa < 273.0) then
+         if ( t_opa < 273.0 .and. t_opa /= MISSING_REAL ) then
             ctype = ET_cloud_type % SUPERCOOLED
          else          
-            if (z_opa < 1.0 ) ctype = ET_cloud_type % FOG
+            if (z_opa < 1.0 .and. z_opa /= MISSING_REAL ) ctype = ET_cloud_type % FOG
          end if
    
    end subroutine determine_type_water
    
    
-   !
-   !
+   ! -----------------------------------------------------------------------------------
+   !  computes ice probability and cirrus water flag and opaque temperature and height
+   ! ------------------------------------------------------------------------------------
    subroutine get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_opa , z_opa ) 
       implicit none
       type ( cloud_type_input_type) , intent(in) :: inp
@@ -208,13 +226,10 @@ contains
       real, parameter:: FMFT_COLD_OFFSET = 0.5 !K
       real, parameter:: FMFT_CIRRUS_THRESH = 1.0 !K
       real, parameter :: BT_11UM_STD_CIRRUS_THRESH = 4.0 ! K
- 
-      
       
       real :: fmft
       real :: h2o_correct
-     
-     
+         
       is_water = .false.
       is_cirrus = .false.
       
@@ -227,7 +242,9 @@ contains
          , inp % rtm % t_prof &
          , inp % rtm % z_prof &
          , t_opa &
-         , z_opa ) 
+         , z_opa )
+      
+      if ( t_opa == MISSING_REAL) t_opa = inp % sat % bt_ch31    
          
       !AW TODO- if h2o channel is available you can do this more accuate
       
@@ -236,9 +253,7 @@ contains
       Ice_Prob = max(0.0,Ice_Prob) 
       
       
-      ! -check if water cloud
-      
-      
+      ! -check if water cloud      
       if ( t_opa > 240.0 ) then
                           
          ! 1.6 spectral test
@@ -302,14 +317,13 @@ contains
       
       ! ++++++++++++++
       
-     
-      
-      
+          
    end subroutine get_ice_probabibility
    
-   ! --------------------------------------------
-   !
-   ! --------------------------------------------
+   ! -----------------------------------------------
+   !   computes Height parameters from NWP profiles
+   !    Called in get_ice_probabibility
+   ! ------------------------------------------------
    subroutine height_opaque ( &
         rad31 &
       , rad31_rtm_prof &
@@ -320,6 +334,8 @@ contains
       , t_opa &
       , z_opa )
       
+      implicit none
+      
       real , intent(in) :: rad31
       real , intent(in) :: rad31_rtm_prof(:)
       integer , intent(in) :: tropo_lev
@@ -328,9 +344,11 @@ contains
       real, intent(in) :: z_prof(:)
       real, intent(out) :: t_opa
       real, intent(out) :: z_opa
+      integer :: cld_lev
+      integer :: idx_lev
       
-      t_opa = -999.
-      z_opa = -999.
+      t_opa = MISSING_REAL
+      z_opa = MISSING_REAL
       
       if ( rad31 < rad31_rtm_prof(tropo_lev) ) then
          cld_lev = tropo_lev

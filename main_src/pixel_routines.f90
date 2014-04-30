@@ -70,11 +70,9 @@ MODULE PIXEL_ROUTINES
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
-          COMPUTE_DCC_MASK,                 &
           COMPUTE_MASKED_SST,               &
           COMPUTE_GLINT,                    &
           COMPUTE_GLINT_LUNAR,              &
-          COMPUTE_INOUE_CLOUD_TYPE,         &
           COMPUTE_CLOUD_FRACTION_3x3,       &
           QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
@@ -2216,129 +2214,6 @@ subroutine COMPUTE_CLEAR_SKY_SCATTER(Tau_Aer, &
 
 end subroutine COMPUTE_CLEAR_SKY_SCATTER
 
-!=============================================================================
-!-- Compute Deep Convective Cloud Mask
-!=============================================================================
-subroutine COMPUTE_DCC_MASK(jmin,jmax)
-
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-
-  Dcc_Mask = missing_value_int1
-
-  !--- abort if 11 um channel is not available
-  if (Chan_On_Flag_Default(31) == sym%NO) then
-        Return
-  endif
-
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Num_Pix
-
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-        CYCLE
-     endif
-
-     Dcc_Mask(Elem_Idx,Line_Idx) = sym%NO
-
-     if (ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) > Emiss_11um_Trop_Dcc_Thresh) then
-       Dcc_Mask(Elem_Idx,Line_Idx) = sym%YES
-
-       !-- set cloud type to overshooting for Dcc events
-       cld_type(Elem_Idx,Line_Idx) = sym%OVERSHOOTING_TYPE
-
-     endif
-
-    end do element_loop
-  end do line_loop
-
- end subroutine COMPUTE_DCC_MASK
-!======================================================================
-! Professor Toshiro Inoue's Split Window Cloud Type
-!
-! In this scheme, there are 17 cloud types
-!  11+12+15+16 = dense cirrus
-!  9+10+13+14 = cumulonimbus
-!  4+8 = cirrus
-!  3+7 = N-type
-!  1+2+5+6 = low level cumulus
-!
-! See Figure 1 of Inoue et al., 2009: Life Cycle of Deep Convective ...
-! Journal of Met Soc Japan, Vol 87A, ! pp 381391, 2009
-!======================================================================
-subroutine COMPUTE_INOUE_CLOUD_TYPE(jmin,jmax)
-
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-  integer:: ct
-
-  real:: TBB
-  real:: BTD
-
-  real, parameter:: TBB_Threshold_1 = 213.0
-  real, parameter:: TBB_Threshold_2 = 235.0
-  real, parameter:: TBB_Threshold_3 = 253.0
-  real, parameter:: TBB_Threshold_4 = 273.0
-  real, parameter:: BTD_Threshold_1 = 0.5
-  real, parameter:: BTD_Threshold_2 = 1.0
-  real, parameter:: BTD_Threshold_3 = 2.0
-
-! Cld_Type_Inoue = 0
-
-  !--- check for needed channels
-  if (Chan_On_Flag_Default(31) == sym%NO) return
-  if (Chan_On_Flag_Default(32) == sym%NO) return
-
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Num_Pix
-
-    !--- initialize
-    ct = 0
-
-    !--- filter bad pixels
-    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-!          Cld_Type_Inoue(Elem_Idx,Line_Idx) = 0
-           CYCLE
-    endif
-
-    !--- local aliases
-    TBB = ch(31)%Bt_Toa(Elem_Idx,Line_Idx)
-    BTD = Btd_Ch31_Ch32(Elem_Idx,Line_Idx)
-
-    !--- opaque class
-    if (TBB <= TBB_Threshold_1) then
-            ct = 17
-!           Cld_Type_Inoue(Elem_Idx,Line_Idx) = ct
-            CYCLE
-    endif
-
-    !--- assign non-opaque codes based on TBB and BTD
-    if (BTD <= BTD_Threshold_1) ct = 1
-    if (BTD >= BTD_Threshold_1 .and. BTD < BTD_Threshold_2) ct = 2
-    if (BTD >= BTD_Threshold_2 .and. BTD < BTD_Threshold_3) ct = 3
-    if (BTD >= BTD_Threshold_3) ct = 4
-
-    if (TBB > TBB_Threshold_1 .and. TBB <= TBB_Threshold_2) then
-        ct = ct + 12
-    endif
-    if (TBB > TBB_Threshold_2 .and. TBB <= TBB_Threshold_3) then
-        ct = ct + 8
-    endif
-    if (TBB > TBB_Threshold_3 .and. TBB <= TBB_Threshold_4) then
-        ct = ct + 4
-    endif
-
-!   Cld_Type_Inoue(Elem_Idx,Line_Idx) = ct
-
-    ENDDO element_loop
-  ENDDO line_loop
-
-end subroutine COMPUTE_INOUE_CLOUD_TYPE
 
 !===========================================================================
 !-- Compute Cloud and Land Masked SST

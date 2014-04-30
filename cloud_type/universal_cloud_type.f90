@@ -275,7 +275,8 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
      !------------------------------------------------------------
      if (Channel_On_Flag(Chan_Idx_67um) == sym%NO) cycle
 
-     ! Determine Clear-sky Water Vapor Weighting Function Peak Height
+      ! Determine Clear-sky Water Vapor Weighting Function Peak Height
+      ! do we need this? where?
      call H2O_CLEAR_SKY_PEAK_HEIGHT(Bt_H2O_Clear(Elem_Idx,Line_Idx), &
                                     Tropo_Level,  &
                                     Sfc_Level, &
@@ -325,7 +326,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
 
    if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) cycle
-
+   !AW - this seems to be tcld_opa via pointer in inc
    if (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) > 240.0) then
 
    !---- 1.6 um Spectral Test for Water

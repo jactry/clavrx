@@ -368,8 +368,8 @@ contains
       real, intent(in) :: rad_h2o
       real, intent(in) :: rad_h2o_clear
       real, intent(in) :: Covar_h2o_110
-      integer , intent(in) :: tropo_lev
-      integer , intent(in) :: sfc_lev
+      integer, intent(in) :: tropo_lev
+      integer, intent(in) :: sfc_lev
       real, intent(in) :: t_prof(:)
       real, intent(in) :: z_prof(:)   
       real, intent(out) :: t_opa
@@ -387,11 +387,11 @@ contains
       real :: intercept
       
       real :: rad_H2O_BB_prediction
-            
+      
+      ! -------------------------------            
       t_opa = MISSING_REAL
       z_opa = MISSING_REAL
-      
-      
+            
       ! some tests
       if ( rad_h2o < 0 ) return
       
@@ -425,8 +425,8 @@ contains
       end if   
       
       if (cld_lev > 0 ) then
-         t_opa = t_prof ( cld_lev)
-         z_opa = z_prof (cld_lev )
+         t_opa = t_prof( cld_lev )
+         z_opa = z_prof( cld_lev )
       end if
       
    end subroutine height_h2o_channel   

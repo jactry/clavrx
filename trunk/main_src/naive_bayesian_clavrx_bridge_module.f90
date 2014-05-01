@@ -126,6 +126,9 @@ module naive_bayesian_clavrx_bridge_module
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
       &   cloud_mask_naive_bayes &
       & , cloud_mask_input_type
+      
+   use FILE_TOOLS, only: &
+      file_test   
 
 
    implicit none

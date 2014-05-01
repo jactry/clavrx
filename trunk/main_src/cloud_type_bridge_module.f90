@@ -1,4 +1,36 @@
 ! $Header$
+!
+! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 
+!
+! NAME: cloud_type_bridge_module.f90 (src)
+!       cloud_type_bridge (program)
+!
+! PURPOSE: 
+!       Builds the interface to Cloud Type algorithm
+!
+! DESCRIPTION: 
+!
+! AUTHORS:
+!  Andrew Heidinger, Andrew.Heidinger@noaa.gov
+!  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
+!  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
+!  William Straka, CIMSS, wstraka@ssec.wisc.edu
+!
+! COPYRIGHT
+! THIS SOFTWARE AND ITS DOCUMENTATION ARE CONSIDERED TO BE IN THE PUBLIC
+! DOMAIN AND THUS ARE AVAILABLE FOR UNRESTRICTED PUBLIC USE. THEY ARE
+! FURNISHED "AS IS." THE AUTHORS, THE UNITED STATES GOVERNMENT, ITS
+! INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND AGENTS MAKE NO WARRANTY,
+! EXPRESS OR IMPLIED, AS TO THE USEFULNESS OF THE SOFTWARE AND
+! DOCUMENTATION FOR ANY PURPOSE. THEY ASSUME NO RESPONSIBILITY (1) FOR
+! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
+! SUPPORT TO USERS.
+!
+!  HISTORY:
+!      2014/04/30:    new interface (AW)
+!
+!  GLOBAL VARIABLES:
+!
 !    FROM PIXEL_COMMON:
 !      1. work as input
 !        1.1 configuration
@@ -7,24 +39,31 @@
 !             num_scans_read                             integer
 !        1.2 geo data:                   
 !              solzen                                    real (:,:)
+!              satzen                                    real (:,:)
 !        1.3 surface 
 !        1.4 rtm / statistics 
-!              bt_ch31_lrc                               real (:,:)
+!
 !              bt_ch31_max_3x3                           real (:,:)
 !              bt_Ch31_Std_3x3                           real (:,:)
-!              Ems_Ch20_Clear_Solar_Rtm                  real (:,:)
+!              Covar_Ch27_Ch31_5x5                       real (:,:)
 !              Beta_11um_12um_Tropo_Rtm                  real (:,:)
-!             Beta_11um_133um_Tropo_Rtm                  real (:,:)
+!              Beta_11um_133um_Tropo_Rtm                  real (:,:)
+!              zen_idx_rtm                               integer (:,:)
+!              i_nwp
+!              j_nwp
+!              i_lrc
+!              j_lrc
 !        1.5 observations
 !              ch                                        type ( observations )  
-
+!        1.6 products
+!             cld_mask    
 !       
-!         2. work as output  
+!      2. work as output  
 !              cld_type                                  integer (:,:) 
 !           
 !     FROM RTM_COMMON:
 !            rtm                                         type ( ) 
-!            p_std_rtm
+!            p_std_rtm                                   real(:)
 !
 !     CLOUD_TYPE_ALGO_MODULE
 !             cloud_type_pixel                     subroutine
@@ -41,7 +80,8 @@ module cloud_type_bridge_module
 
    
    use PIXEL_COMMON, only : &
-      solzen  &
+        solzen  &
+      , satzen &   
       , zen_idx_rtm &
       , Chan_On_Flag_Default &
       , ch &
@@ -52,7 +92,6 @@ module cloud_type_bridge_module
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
-      , cld_phase &
       , cld_type &
       , cld_mask &
       , i_lrc, j_lrc &
@@ -99,8 +138,7 @@ contains
       type_inp % sat % chan_on = Chan_On_Flag_Default == 1
       
       
-      ! -----------    loop over pixels to get ice probabbilty for LRC cores -----   
-      
+      ! -----------    loop over LRC core pixels to get ice probabbilty -----         
       elem_loop: do  j = 1,num_scans_read
          line_loop: do i = 1, num_pix  
          
@@ -114,7 +152,7 @@ contains
                cycle
             end if
             
-            
+            ! - take only LRC cores
             if ( i /= i_lrc (i,j) .or. j /= j_lrc (i,j) ) cycle
                              
             call POPULATE_INPUT ( i, j , type_inp )
@@ -212,7 +250,7 @@ contains
    
    !
    !
-   !
+   ! ---------
    subroutine populate_input ( i, j , type_inp)
       integer, intent(in) :: i
       integer, intent(in) :: j
@@ -262,6 +300,7 @@ contains
       
       ! - geo
       type_inp % geo % sol_zen     = solzen ( i , j )
+       type_inp % geo % sat_zen     = satzen ( i , j )
       
       !- sfc
       type_inp % sfc % emiss_ch20     = ch(20) % sfc_emiss ( i , j )

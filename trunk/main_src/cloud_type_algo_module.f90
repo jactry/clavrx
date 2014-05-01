@@ -13,10 +13,11 @@
 module cloud_type_algo_module
 
    implicit none
-   PRIVATE
-   PUBLIC :: cloud_type_pixel
-   PUBLIC :: cloud_type_input_type
-   PUBLIC :: ET_cloud_type
+   
+   private
+   public :: cloud_type_pixel
+   public :: cloud_type_input_type
+   public :: ET_cloud_type
   
     type  et_cloudtype_class_type
       integer :: FIRST = 0 
@@ -74,6 +75,7 @@ module cloud_type_algo_module
    
    type cloud_type_geo_type   
       real :: sol_zen
+      real :: sat_zen
    end type cloud_type_geo_type
    
    type cloud_type_sfc_type   
@@ -90,13 +92,14 @@ module cloud_type_algo_module
    real, parameter :: MISSING_REAL = -999.
 
 contains
-   ! ---------------------------------------------------------------
+   ! -----------------------------------------------------------------------------
    ! - this computes cloud type without LRC correction
    ! - LRC correction can be done with theoptional force_ice keyword:
    ! - 
    ! -  LRC core is water and pixel is ice  ==>   correct the pixel to WATER
    ! -  LRC core is ice and pixel is water  ==> run this with force_ice = .true.
-   ! ----------------------------------------------------------- 
+   ! ----------------------------------------------------------------------------- 
+   
    subroutine cloud_type_pixel ( inp , ctype , ice_prob_out , force_ice  ) 
       implicit none
       type ( cloud_type_input_type) , intent(in) :: inp
@@ -111,6 +114,10 @@ contains
       real :: t_opa
       real :: z_opa
       
+      logical :: is_overlap
+      logical :: experimental_on = .false.
+      
+      ! --   executable -----------------
       is_cirrus = .false.
       is_water = .false.
       
@@ -119,7 +126,8 @@ contains
          if ( force_ice ) force_ice_phase = .true.          
       end if
       
-      call get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_opa , z_opa )
+      call get_ice_probabibility (inp &
+         & , ice_prob , is_cirrus , is_water , t_opa , z_opa ) 
       
       ! - compute type from ice probablity phase discrimination
       if ( ice_prob > 0.5 .or. force_ice_phase ) then
@@ -132,9 +140,22 @@ contains
          call determine_type_water ( z_opa , t_opa , ctype ) 
       end if
       
-      ! - optional output
+      ! - optional output of ice probability
       if ( present ( ice_prob_out ) ) ice_prob_out = ice_prob
-   
+      
+      ! - experimental overlap test
+      
+      if ( experimental_on ) then
+      
+         call overlap_test ( inp % sat % bt_ch31 &
+                        , inp % sat % bt_ch32 &
+                        , inp % sat % ref_ch6 & 
+                        , inp % geo % sol_zen &
+                        , inp % geo % sat_zen &
+                        , is_overlap ) 
+         
+         print*,ctype,is_overlap,inp % sat % bt_ch31-inp % sat % bt_ch32,inp % sat % ref_ch6
+      end if   
    end subroutine cloud_type_pixel
    
    ! ---------------------------------------------------------------
@@ -180,6 +201,9 @@ contains
          end if   
             
          if ( is_cirrus .and. is_water ) ctype = ET_cloud_type % OVERLAP
+         
+         
+         
             
       end if
          
@@ -324,7 +348,7 @@ contains
          end if
          ! -----------
          
-         ! - 6.7 covariance
+         ! - 6.7 covariance test
          if ( inp % sat % chan_on ( 27 ) &
             .and. inp % sat % chan_on ( 31 ) ) then
             
@@ -475,7 +499,42 @@ contains
       end if
         
    end subroutine height_opaque
-
+   
+   ! -----------------------------------------------------
+   !   experimental code for additional overlap test
+   !      this is just a placeholder now..
+   !
+   !      we need coeffcieints for vis and bt difference as
+   !        function of solar and sensor angle
+   !  
+   !    05/01/2014 AW
+   ! ---------------------------------------------------- 
+   subroutine overlap_test ( bt_11 &
+                        , bt_12 &
+                        , ref_vis & 
+                        , sol_zen &
+                        ,  sat_zen &
+                        , is_overlap )
+                        
+      real, intent(in) :: bt_11
+      real, intent(in) :: bt_12
+       real, intent(in) :: ref_vis
+      real, intent(in) :: sol_zen
+      real, intent(in) :: sat_zen
+      
+      logical, intent(out) :: is_overlap
+      
+      real :: btd_thresh
+      real :: ref_vis_thresh
+      
+      is_overlap = .false.
+       
+      btd_thresh = 1.
+      ref_vis_thresh = 40.                 
+                        
+      if (( bt_11 - bt_12 ) > btd_thresh &
+         .and.  ref_vis > ref_vis_thresh ) is_overlap = .true.                 
+   end subroutine overlap_test
 
 end module cloud_type_algo_module
     

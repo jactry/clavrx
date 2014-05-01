@@ -121,11 +121,8 @@ contains
       
       type ( cloud_type_input_type) :: type_inp
       
-      integer :: phase
       integer :: ctype
-      integer :: i , j
-      
-      
+      integer :: i , j   
       integer :: ii , jj
       real :: ice_prob 
       integer :: cld_type_lrc

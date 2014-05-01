@@ -243,9 +243,7 @@ contains
       logical, intent(out) :: is_water
       real, intent(out)    :: t_opa
       real, intent(out)    :: z_opa
-      
-      integer :: phase
-      integer :: ctype
+     
       
       real, parameter:: ICE_TEMP_MIN = 243.0
       real, parameter:: ICE_TEMP_MAX = 263.0

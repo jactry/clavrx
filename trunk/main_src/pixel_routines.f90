@@ -959,7 +959,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
    integer:: Elem_Idx_Min
    integer:: Num_Elements
    integer:: Chan_Idx
-   integer:: Idx
+   
    real:: Ref_ss
    real:: Albedo_View
    real:: Albedo_Sun
@@ -3224,7 +3224,7 @@ subroutine COMPUTE_LRC_PSEUDO_OBS(Number_of_Elements,Number_of_Lines)
 integer, intent(in)::  Number_of_Elements, Number_of_Lines
 integer:: Elem_Idx,Line_Idx
 integer:: Elem_LRC_Idx,Line_LRC_Idx
-integer(kind=int1), dimension(:,:), pointer:: Object_Mask
+
 
 if (Chan_On_Flag_Default(31) == sym%YES) then
          Bt_Ch31_LRC = ch(31)%Bt_Toa
@@ -3262,31 +3262,7 @@ Diag_Pix_Array_2 = ch(31)%Emiss_Tropo - Emiss_11um_Tropo_LRC
 Diag_Pix_Array_3 = I_LRC
 
 
-!--- cloud object processing
-!Object_Mask => One_Byte_Temp
-!Object_Mask = 0
 
-!element_loop_object: do Elem_Idx = 1, Number_of_Elements
-!  line_loop_object: do Line_Idx = 1, Number_of_Lines
-!      Elem_LRC_Idx = I_LRC(Elem_Idx,Line_Idx)
-!      Line_LRC_Idx = J_LRC(Elem_Idx,Line_Idx)
-!      if (Elem_LRC_Idx < 1 .or. Line_LRC_Idx < 1) cycle
-!
-!      if (Object_Mask(Elem_Idx,Line_Idx) == 1) cycle
-!
-!      if (Chan_On_Flag_Default(31) == sym%YES) then
-!           where(I_LRC == Elem_LRC_Idx .and. J_LRC == Line_LRC_Idx)           
-!               Object_Mask = 1
-!               Bt_Ch31_Std_LRC = Maxval(Bt_Ch31_Std_3x3)
-!               Bt_Ch31_Max_LRC = Maxval(Bt_Ch31)
-!           endwhere
-!      endif
-!
-!    end do line_loop_object
-!end do element_loop_object
-
-!Object_Mask => null()
-!print *, "LEAVING PSEUDO"
 
 
 end subroutine COMPUTE_LRC_PSEUDO_OBS

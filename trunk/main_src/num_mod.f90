@@ -1258,7 +1258,7 @@ subroutine WIND_SPEED_AND_DIRECTION(u,v,dir,spd)
   real, intent(in) :: v
   real, intent(out) :: spd
   real, intent(out) :: dir
-  real:: xspd
+ 
 
   real, parameter:: SPDTST = 1.0e-10
   real, parameter:: RTOD = 57.2957795

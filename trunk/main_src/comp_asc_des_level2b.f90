@@ -84,11 +84,11 @@ program COMPILE_ASC_DES_LEVEL2B
  integer(kind=int4):: N_Command_Line_Args
  integer, parameter:: Source_Length_Max = 1000
 
- integer:: Idx
+ 
  integer(kind=int4):: First_Valid_Input
  integer(kind=int4):: Sd_Id_Input
  integer(kind=int4):: Sd_Id_Output
- integer(kind=int4):: Sds_Id_temp
+
  integer(kind=int4), dimension(2):: Sds_Dims_Output_XY
  integer(kind=int4), dimension(1):: Sds_Dims_Output_X
  integer(kind=int4), dimension(1):: Sds_Dims_Output_Y
@@ -237,8 +237,8 @@ program COMPILE_ASC_DES_LEVEL2B
  integer:: sffinfo
  integer:: sfginfo
  integer:: sfselect
- integer:: sfcreate
- integer:: sfwdata
+
+ 
  integer:: sfendacc
  integer:: sfend
 
@@ -280,7 +280,7 @@ program COMPILE_ASC_DES_LEVEL2B
  integer:: Source_Length_Start
  integer:: Source_Length_End
  integer:: L1b_Length
- integer:: L1b_Root_Length
+ 
  character(len=100) :: Id_String
  character(len=10), dimension(3):: ctime
  integer:: L0,N0,I0,J0,K0

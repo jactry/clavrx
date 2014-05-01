@@ -162,7 +162,7 @@ contains
             mask_inp % geo % airmass     = airmass ( i , j )
             mask_inp % geo % scat_angle  = scatangle ( i , j )
             mask_inp % geo % glint       = glint_mask ( i ,j )
-            mask_inp % geo % solar_conta   = Solar_Contamination_Mask ( i ,j ) == 1
+            mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i ,j ) == 1
    
             mask_inp % sfc % land_class  = land ( i , j )
             mask_inp % sfc % coast_mask  = coast ( i , j ) 
@@ -178,8 +178,8 @@ contains
             
             if ( chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = ch(2) % ref_toa ( i , j )
             if ( chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = ch(6) % ref_toa ( i , j )
-            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch6 = ch(7) % ref_toa ( i , j )
-            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch6 = ch(8) % ref_toa ( i , j )
+            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch7 = ch(7) % ref_toa ( i , j )
+            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch8 = ch(8) % ref_toa ( i , j )
             
             if ( chan_on_flag_default(20) == 1 ) then 
                 mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )

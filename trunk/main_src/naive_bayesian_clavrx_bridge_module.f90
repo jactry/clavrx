@@ -74,6 +74,9 @@
 !     FROM CONSTANTS:
 !            sym                                         type ( symbol_struct ) 
 !
+!     FILE_TOOLS
+!           file_test         
+!
 !     NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 !             cloud_mask_naive_bayes                     subroutine
 !                  subroutine which retrieves cloud probability

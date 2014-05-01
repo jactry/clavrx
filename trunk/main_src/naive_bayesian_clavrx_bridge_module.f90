@@ -146,6 +146,19 @@ contains
       ! cloud mask information mask 7 bytes ( 56 bits)    
       integer :: info_flags ( 7 )
       integer :: i , j 
+      
+      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
+      
+      if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
+         print*,'Classifier file not there: '
+         print*, 'check location: '
+         print*, mask_inp % bayesian_mask_classifier
+         print*
+         print*,'stopping.........'
+      
+         stop
+      
+      end if
                  
       ! -----------    loop over pixels -----   
       line_loop: do i = 1, num_pix
@@ -154,7 +167,7 @@ contains
             if ( land (i,j) < 0 ) cycle
             
             
-            mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
+            
             
             mask_inp % geo % lat         = lat ( i , j )            
             mask_inp % geo % lon         = lon ( i , j )

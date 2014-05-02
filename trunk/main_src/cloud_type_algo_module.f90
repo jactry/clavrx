@@ -71,6 +71,7 @@ module cloud_type_algo_module
    
    type cloud_type_rtm_type
       real, allocatable:: rad_ch31_bb_prof (:)
+      real, allocatable:: rad_ch27_bb_prof (:)
       real, allocatable:: p_prof (:)
       real, allocatable:: z_prof (:)
       real, allocatable:: t_prof (:)
@@ -81,6 +82,7 @@ module cloud_type_algo_module
       real :: Covar_Ch27_Ch31_5x5
       real :: ref_ch6_clear
       real :: rad_ch27_atm_sfc
+      real :: rad_ch31_atm_sfc
       real :: bt_ch31_atm_sfc
       real :: bt_ch32_atm_sfc
       real :: emiss_tropo_ch31     
@@ -279,9 +281,10 @@ contains
       if ( inp % sat % chan_on ( 27) ) then
          call height_h2o_channel ( &
             inp % sat % rad_ch31 &
-            , inp % rtm % rad_ch31_bb_prof &  
-            , inp % rtm % bt_ch31_atm_sfc &
+            , inp % rtm % rad_ch31_bb_prof &              
+            , inp % rtm % rad_ch31_atm_sfc &
             , inp % sat % rad_ch27 &
+            , inp % rtm % rad_ch27_bb_prof & 
             , inp % rtm % rad_ch27_atm_sfc &
             , inp % rtm % Covar_Ch27_Ch31_5x5 &
             , inp % rtm % tropo_lev &
@@ -291,7 +294,7 @@ contains
             , t_opa &
             , z_opa )
       end if
-      
+     
       if ( t_opa == MISSING_REAL) then
          call height_opaque ( &
             inp % sat % rad_ch31 &
@@ -389,6 +392,7 @@ contains
          , rad_110um_rtm_prof &  
          , rad_110um_clear &
          , rad_h2o &
+         , rad_h2o_rtm_prof &
          , rad_h2o_clear &
          , Covar_h2o_110 &
          , tropo_lev &
@@ -403,6 +407,7 @@ contains
       real, intent(in) :: rad_110um
       real, intent(in) :: rad_110um_clear
       real , intent(in) :: rad_110um_rtm_prof(:)
+      real , intent(in) :: rad_h2o_rtm_prof(:)
       real, intent(in) :: rad_h2o
       real, intent(in) :: rad_h2o_clear
       real, intent(in) :: Covar_h2o_110
@@ -434,33 +439,38 @@ contains
       if ( rad_h2o < 0 ) return
       
       if ( rad_h2o_clear - rad_h2o < RAD_067UM_THRESH ) return
-      Denominator =  rad_110um - rad_110um_clear
-      if ( Denominator < RAD_110UM_THRESH ) return      
+      
+     
+      if ( rad_110um_clear - rad_110um < RAD_110UM_THRESH ) return      
       if ( Covar_h2o_110 /= MISSING_REAL .and.  Covar_h2o_110 < BT_CH27_CH31_COVAR_CIRRUS_THRESH ) return
       
       ! - colder than tropopause
       if ( rad_110um < rad_110um_rtm_prof ( tropo_lev ) ) then
          cld_lev = tropo_lev
       else
+         Denominator =  rad_110um - rad_110um_clear
+         
          slope = (Rad_h2o - Rad_H2o_Clear) / (Denominator)
          intercept = Rad_h2o - Slope * Rad_110um
          
          cld_lev = 0
          
-         do idx_lev = tropo_lev, sfc_lev
+         do idx_lev = tropo_lev + 1, sfc_lev
+            
             rad_H2O_BB_prediction = slope * rad_110um_rtm_prof (idx_lev) + Intercept
             
             if ( rad_H2O_BB_prediction < 0 ) cycle
-            
-            if ((rad_H2O_BB_Prediction > rad_110um_rtm_prof(idx_lev-1)) .and. & 
-               ( rad_H2O_BB_Prediction <= rad_110um_rtm_prof(idx_lev))) then
+           
+            if ((rad_H2O_BB_Prediction > rad_h2o_rtm_prof(idx_lev-1)) .and. & 
+               ( rad_H2O_BB_Prediction <= rad_h2o_rtm_prof(idx_lev))) then
                cld_lev = idx_lev
                exit
           endif
          
          end do
       
-      end if   
+      end if 
+      
       
       if (cld_lev > 0 ) then
          t_opa = t_prof( cld_lev )

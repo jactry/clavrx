@@ -98,7 +98,7 @@ module cloud_type_bridge_module
       , cld_mask &
       , i_lrc, j_lrc &
       , Beta_11um_12um_Tropo_Rtm &
-      , Beta_11um_133um_Tropo_Rtm
+      , Beta_11um_133um_Tropo_Rtm 
                  
   
    use CLOUD_TYPE_ALGO_MODULE, only : &
@@ -160,11 +160,9 @@ contains
             call POPULATE_INPUT ( i, j , type_inp )
             call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
             cld_type (i,j)  = ctype
-            if ( ctype < 0 ) print*,'lrc',i,j
             
-            deallocate ( type_inp % rtm % rad_ch31_bb_prof )
-            deallocate ( type_inp % rtm % t_prof )
-            deallocate ( type_inp % rtm % z_prof )
+            
+            call deallocate_inp ( type_inp )
                     
          
          end do   line_loop
@@ -196,6 +194,7 @@ contains
                              
             call POPULATE_INPUT ( i, j , type_inp )
             call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
+            
             if ( ctype < 0 ) print*,i,j
             
             ! - compare this ctype with LRC
@@ -234,10 +233,8 @@ contains
                end if      
                
             end if
-            
-            deallocate ( type_inp % rtm % rad_ch31_bb_prof )
-            deallocate ( type_inp % rtm % t_prof )
-            deallocate ( type_inp % rtm % z_prof )
+            call deallocate_inp ( type_inp )
+           
                     
          
          end do   line_loop1
@@ -288,13 +285,16 @@ contains
       type_inp % rtm % bt_ch31_3x3_std     = Bt_Ch31_Std_3x3( i,j )
       type_inp % rtm % Beta_11um_12um_Tropo = Beta_11um_12um_Tropo_Rtm( i,j )
       type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
-      
+      type_inp % rtm % rad_ch31_atm_sfc = ch(31)%Rad_Toa_Clear(i,j)
       type_inp % rtm % Covar_Ch27_Ch31_5x5 = -999.
       
       if ( chan_on_flag_default(27) == 1 ) then
          type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
+         type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
          type_inp % sat % rad_ch27 = ch(27) % rad_toa ( i,j )
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  ( i,j )
+         allocate ( type_inp % rtm % rad_ch27_bb_prof &
+         , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
       end if   
       
       type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
@@ -312,5 +312,16 @@ contains
    
    
    end subroutine populate_input
+   
+   
+   subroutine deallocate_inp ( type_inp)
+      type ( cloud_type_input_type) :: type_inp
+       
+       deallocate ( type_inp % rtm % rad_ch31_bb_prof )
+         if ( allocated( type_inp % rtm % rad_ch27_bb_prof)) deallocate ( type_inp % rtm % rad_ch27_bb_prof )
+       deallocate ( type_inp % rtm % t_prof )
+       deallocate ( type_inp % rtm % z_prof )
+   
+   end subroutine deallocate_inp
 
 end module cloud_type_bridge_module

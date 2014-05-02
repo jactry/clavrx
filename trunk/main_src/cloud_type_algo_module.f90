@@ -18,6 +18,7 @@ module cloud_type_algo_module
    public :: cloud_type_pixel
    public :: cloud_type_input_type
    public :: ET_cloud_type
+   public :: set_cloud_phase
   
     type  et_cloudtype_class_type
       integer :: FIRST = 0 
@@ -29,11 +30,13 @@ module cloud_type_algo_module
       integer :: SUPERCOOLED = 4
       integer :: LAST_WATER = 4
       integer :: MIXED = 5
+      integer :: FIRST_ICE = 6
       integer :: OPAQUE_ICE = 6
       integer :: TICE = 6
       integer :: CIRRUS = 7
       integer :: OVERLAP = 8
       integer :: OVERSHOOTING = 9
+      integer :: LAST_ICE = 9
       integer :: UNKNOWN = 10
       integer :: DUST = 11
       integer :: SMOKE = 12
@@ -41,6 +44,19 @@ module cloud_type_algo_module
       integer :: LAST = 13
    end type    
    type ( et_cloudtype_class_type ) :: ET_cloud_type
+   
+    type  et_cloudphase_class_type
+      integer :: FIRST = 0 
+      integer :: CLEAR = 0
+      integer :: WATER = 1
+      integer :: SUPERCOOLED = 2
+      integer :: MIXED = 3
+      integer :: ICE = 4
+      integer :: UNKNOWN = 5
+      integer :: LAST = 5
+   end type    
+   type ( et_cloudphase_class_type )  :: ET_cloud_phase  
+   
    
    type cloud_type_sat_type
       logical , dimension(42) :: chan_on
@@ -526,13 +542,53 @@ contains
       real :: ref_vis_thresh
       
       is_overlap = .false.
+     
        
-      btd_thresh = 1.
+      btd_thresh = 1. 
       ref_vis_thresh = 40.                 
                         
       if (( bt_11 - bt_12 ) > btd_thresh &
          .and.  ref_vis > ref_vis_thresh ) is_overlap = .true.                 
    end subroutine overlap_test
+   
+   !-----------------------------------------------------
+   !
+   !-----------------------------------------------------
+    subroutine set_cloud_phase  ( ctype , cphase ) 
+      integer, parameter :: int1 = selected_int_kind(1)
+      integer(INT1) , intent(in) ::  ctype (:,:)
+      integer(INT1) , intent(out) :: cphase (:,:)
+      
+      cphase = ET_cloud_phase % UNKNOWN
+      
+      where ( ctype ==  ET_cloud_type % CLEAR &
+            .or. ctype ==  ET_cloud_type % PROB_CLEAR )
+         cphase = ET_cloud_phase % CLEAR 
+      end where
+      
+      where ( ctype >=  ET_cloud_type % FIRST_WATER &
+            .and.  ctype >=  ET_cloud_type % LAST_WATER )
+         cphase = ET_cloud_phase % WATER     
+      end where
+      
+      where ( ctype ==  ET_cloud_type % SUPERCOOLED )
+         cphase = ET_cloud_phase % SUPERCOOLED  
+      end where
+      
+      where ( ctype ==  ET_cloud_type % MIXED )
+         cphase = ET_cloud_phase % MIXED  
+      end where
+      
+      where ( ctype >=  ET_cloud_type % FIRST_ICE &
+            .and.  ctype >=  ET_cloud_type % LAST_ICE )
+         cphase = ET_cloud_phase % ICE
+     
+      end where
+      
+      
+   
+   end subroutine set_cloud_phase
+   
 
 end module cloud_type_algo_module
     

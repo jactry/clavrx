@@ -28,6 +28,7 @@
 !
 !  HISTORY:
 !      2014/04/30:    new interface (AW)
+!          /05/02:    add cld_phase (AW)
 !
 !  GLOBAL VARIABLES:
 !
@@ -93,6 +94,7 @@ module cloud_type_bridge_module
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
       , cld_type &
+      , cld_phase &
       , cld_mask &
       , i_lrc, j_lrc &
       , Beta_11um_12um_Tropo_Rtm &
@@ -102,7 +104,8 @@ module cloud_type_bridge_module
    use CLOUD_TYPE_ALGO_MODULE, only : &
        cloud_type_pixel &
        , cloud_type_input_type &
-       , ET_cloud_type
+       , ET_cloud_type &
+       , set_cloud_phase
        
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE, only: &
       ET_cloudiness_class
@@ -126,6 +129,8 @@ contains
       integer :: ii , jj
       real :: ice_prob 
       integer :: cld_type_lrc
+      
+      ! ------  Executable  ------------------------------------
       
       allocate ( type_inp % rtm % p_prof ,source = p_std_rtm ) 
       
@@ -241,13 +246,15 @@ contains
       
       
       deallocate ( type_inp % rtm % p_prof )
+      
+      call set_cloud_phase ( cld_type, cld_phase) 
            
       
    end subroutine cloud_type_bridge
    
+   ! --------- --------------- ---
    !
-   !
-   ! ---------
+   ! --------- ---------------
    subroutine populate_input ( i, j , type_inp)
       integer, intent(in) :: i
       integer, intent(in) :: j

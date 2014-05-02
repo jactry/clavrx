@@ -156,14 +156,14 @@ contains
       mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
       
       if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
-         print*,'Classifier file not there: '
-         print*, 'check location: '
-         print*, mask_inp % bayesian_mask_classifier
-         print*
-         print*,'stopping.........'
-      
-         stop
-      
+         mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/bayes/'//trim(Bayesian_Cloud_Mask_Name)
+         if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
+            print*,'Classifier file not there: '
+            print*, 'check location: '
+            print*, mask_inp % bayesian_mask_classifier
+            print*,'stopping.........'
+            stop
+         end if
       end if
                  
       ! -----------    loop over pixels -----   
@@ -207,8 +207,8 @@ contains
                 mask_inp % sat % emis_ch20_3x3_mean  = ems_ch20_median_3x3 ( i , j )
             end if
             
-            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )            
-            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )          	
+            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )
+            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )
             if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29 = ch(29) % bt_toa ( i , j )
             
             if ( chan_on_flag_default(31) == 1 ) then

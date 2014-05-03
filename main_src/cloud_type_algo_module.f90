@@ -19,6 +19,7 @@ module cloud_type_algo_module
    public :: cloud_type_input_type
    public :: ET_cloud_type
    public :: set_cloud_phase
+   private:: COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
   
     type  et_cloudtype_class_type
       integer :: FIRST = 0 
@@ -275,9 +276,14 @@ contains
       is_water = .false.
       is_cirrus = .false.
       
+
+      !------------------------------------------------------------------------
+      !  Determine the Cloud Height and Cloud Temperature for Typing
+      !------------------------------------------------------------------------
       t_opa = MISSING_REAL
       z_opa = MISSING_REAL
       
+      !---- if possible, use water vapor channel
       if ( inp % sat % chan_on ( 27) ) then
          call height_h2o_channel ( &
             inp % sat % rad_ch31 &
@@ -295,6 +301,7 @@ contains
             , z_opa )
       end if
      
+      !---- if no water vapor, use the atmos-corrected 11 micron
       if ( t_opa == MISSING_REAL) then
          call height_opaque ( &
             inp % sat % rad_ch31 &
@@ -307,16 +314,19 @@ contains
             , z_opa )
       end if
       
+      !--- last resort, use raw 11 micron brightness temperature
       if ( t_opa == MISSING_REAL) t_opa = inp % sat % bt_ch31    
          
-      !AW TODO- if h2o channel is available you can do this more accuate
-      
-      ice_prob = 1.0 - (T_opa-ICE_TEMP_MIN)/(ICE_TEMP_MAX - ICE_TEMP_MIN) 
-      Ice_Prob = min(1.0,Ice_Prob)
-      Ice_Prob = max(0.0,Ice_Prob) 
+
+      !--- compute the ice probabilty based on our guess of cloud temperature
+      ice_prob = COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(t_opa)
       
       
-      ! -check if water cloud      
+      !------------------------------------------------------------------------
+      ! Modify ice_prob based on spectral tests for ice and water
+      !------------------------------------------------------------------------
+
+      !--- tests for water
       if ( t_opa > 240.0 ) then
                           
          ! 1.6 spectral test
@@ -339,12 +349,13 @@ contains
             .and. inp % geo % sol_zen > 80. &          
             .and. inp % sat % ref_ch20 > 5.0 ) is_water = .true. 
          
+          !--- modify ice_prob based on water tests
          if ( is_water) ice_prob = 0.0
+
       end if
       
       
-      ! + test for cirrus +++++++
-      
+      !--- tests for ice
       if ( inp % rtm % bt_ch31_3x3_std < BT_11UM_STD_CIRRUS_THRESH ) then
       
          ! - split window test
@@ -363,7 +374,6 @@ contains
             
             if ( fmft > FMFT_CIRRUS_THRESH )   is_cirrus = .true.            
          end if
-         ! -----------
          
          ! - 6.7 covariance test
          if ( inp % sat % chan_on ( 27 ) &
@@ -372,8 +382,8 @@ contains
             if ( inp%rtm%Covar_Ch27_Ch31_5x5 > 1.5 &
                .and. inp % rtm % bt_ch31_3x3_max < 250.0) is_cirrus = .true.         
          end if 
-         ! --------------
          
+          !--- modify ice_prob based on cirrus tests
          if ( is_cirrus ) ice_prob = 1.0
       
       end if
@@ -388,13 +398,13 @@ contains
    !    Called in get_ice_probabibility
    ! ------------------------------------------------   
    subroutine height_h2o_channel ( &
-           rad_110um &
-         , rad_110um_rtm_prof &  
-         , rad_110um_clear &
+           rad_11um &
+         , rad_11um_rtm_prof &  
+         , rad_11um_clear &
          , rad_h2o &
          , rad_h2o_rtm_prof &
          , rad_h2o_clear &
-         , Covar_h2o_110 &
+         , Covar_h2o_11 &
          , tropo_lev &
          , sfc_lev &
          , t_prof &
@@ -404,13 +414,13 @@ contains
          
       implicit none      
       
-      real, intent(in) :: rad_110um
-      real, intent(in) :: rad_110um_clear
-      real , intent(in) :: rad_110um_rtm_prof(:)
+      real, intent(in) :: rad_11um
+      real, intent(in) :: rad_11um_clear
+      real , intent(in) :: rad_11um_rtm_prof(:)
       real , intent(in) :: rad_h2o_rtm_prof(:)
       real, intent(in) :: rad_h2o
       real, intent(in) :: rad_h2o_clear
-      real, intent(in) :: Covar_h2o_110
+      real, intent(in) :: Covar_h2o_11
       integer, intent(in) :: tropo_lev
       integer, intent(in) :: sfc_lev
       real, intent(in) :: t_prof(:)
@@ -418,8 +428,8 @@ contains
       real, intent(out) :: t_opa
       real, intent(out) :: z_opa
       
-      real, parameter :: RAD_110UM_THRESH = 2.0
-      real, parameter :: RAD_067UM_THRESH = 0.25
+      real, parameter :: RAD_11UM_THRESH = 2.0
+      real, parameter :: RAD_67UM_THRESH = 0.25
       real, parameter :: BT_CH27_CH31_COVAR_CIRRUS_THRESH = 1.0
       
       integer :: cld_lev
@@ -438,26 +448,25 @@ contains
       ! some tests
       if ( rad_h2o < 0 ) return
       
-      if ( rad_h2o_clear - rad_h2o < RAD_067UM_THRESH ) return
+      if ( rad_h2o_clear - rad_h2o < RAD_67UM_THRESH ) return
       
-     
-      if ( rad_110um_clear - rad_110um < RAD_110UM_THRESH ) return      
-      if ( Covar_h2o_110 /= MISSING_REAL .and.  Covar_h2o_110 < BT_CH27_CH31_COVAR_CIRRUS_THRESH ) return
+      if ( rad_11um_clear - rad_11um < RAD_11UM_THRESH ) return      
+      if ( Covar_h2o_11 /= MISSING_REAL .and.  Covar_h2o_11 < BT_CH27_CH31_COVAR_CIRRUS_THRESH ) return
       
       ! - colder than tropopause
-      if ( rad_110um < rad_110um_rtm_prof ( tropo_lev ) ) then
+      if ( rad_11um < rad_11um_rtm_prof ( tropo_lev ) ) then
          cld_lev = tropo_lev
       else
-         Denominator =  rad_110um - rad_110um_clear
+         Denominator =  rad_11um - rad_11um_clear
          
          slope = (Rad_h2o - Rad_H2o_Clear) / (Denominator)
-         intercept = Rad_h2o - Slope * Rad_110um
+         intercept = Rad_h2o - Slope * Rad_11um
          
          cld_lev = 0
          
          do idx_lev = tropo_lev + 1, sfc_lev
             
-            rad_H2O_BB_prediction = slope * rad_110um_rtm_prof (idx_lev) + Intercept
+            rad_H2O_BB_prediction = slope * rad_11um_rtm_prof (idx_lev) + Intercept
             
             if ( rad_H2O_BB_prediction < 0 ) cycle
            
@@ -598,7 +607,36 @@ contains
       
    
    end subroutine set_cloud_phase
-   
+!====================================================================
+! Function Name: Compute_Ice_Probability_Based_On_Temperature
+!
+! Function: Provide the probability that this pixel is ice
+!
+! Description:
+!    Use the cloud temperature and an assumed relationship to
+!    determine the probability that the cloud is ice phase
+!
+! Dependencies:
+!
+! Restrictions:
+!
+! Reference:
+!
+! Author: Andrew Heidinger, NOAA/NESDIS
+!
+!====================================================================
+function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(T_Opa) result(Ice_Prob)
+
+real:: T_opa
+real:: Ice_Prob
+real, parameter:: Ice_Temperature_Min = 243.0
+real, parameter:: Ice_Temperature_Max = 263.0
+
+Ice_Prob = 1.0 - (T_opa-Ice_Temperature_Min)/(Ice_Temperature_Max - Ice_Temperature_Min)
+Ice_Prob = min(1.0,Ice_Prob)
+Ice_Prob = max(0.0,Ice_Prob)
+
+end function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
 
 end module cloud_type_algo_module
     

@@ -98,9 +98,14 @@ module cloud_type_bridge_module
       , cld_mask &
       , i_lrc, j_lrc &
       , Beta_11um_12um_Tropo_Rtm &
-      , Beta_11um_133um_Tropo_Rtm 
+      , Beta_11um_133um_Tropo_Rtm &
+      , Diag_Pix_Array_1 &
+      , Diag_Pix_Array_2 &
+      , Diag_Pix_Array_3
                  
-  
+   use CONSTANTS, only : &
+        Cloud_Type_Version
+
    use CLOUD_TYPE_ALGO_MODULE, only : &
        cloud_type_pixel &
        , cloud_type_input_type &
@@ -117,9 +122,22 @@ module cloud_type_bridge_module
    implicit none
    
    public :: CLOUD_TYPE_BRIDGE  
+   public :: SET_CLOUD_TYPE_VERSION
 
 contains
-   subroutine cloud_type_bridge
+
+!====================================================================
+!  record cvs version as a global variable for output to hdf
+!====================================================================
+subroutine SET_CLOUD_TYPE_VERSION()
+   Cloud_Type_Version = "$Id$"
+end subroutine SET_CLOUD_TYPE_VERSION
+
+
+!====================================================================
+! universal cloud type bridge
+!====================================================================
+subroutine cloud_type_bridge
       implicit none
       
       type ( cloud_type_input_type) :: type_inp
@@ -135,7 +153,7 @@ contains
       allocate ( type_inp % rtm % p_prof ,source = p_std_rtm ) 
       
       
-      ice_prob = -999.
+      ice_prob = -999.0
       
       type_inp % sat % chan_on = Chan_On_Flag_Default == 1
       
@@ -309,8 +327,6 @@ contains
       !- sfc
       type_inp % sfc % emiss_ch20     = ch(20) % sfc_emiss ( i , j )
             
-   
-   
    end subroutine populate_input
    
    

@@ -125,7 +125,7 @@ contains
    !        works,  Why is there no corresponding "force_water" flag
    ! ----------------------------------------------------------------------------- 
    
-   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , ice_prob_out , force_ice  ) 
+   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , ice_prob_out , force_ice , force_water ) 
 
       implicit none
 
@@ -133,9 +133,11 @@ contains
       integer , intent ( out ) :: ctype 
       real, intent(out), optional :: ice_prob_out
       logical, intent(in), optional :: force_ice ! - this is convenient for LRC correction
+      logical, intent(in), optional :: force_water ! - this is convenient for LRC correction
       
       real :: ice_prob
       logical :: force_ice_phase 
+      logical :: force_water_phase
       logical :: is_cirrus
       logical :: is_water
       real :: t_cld
@@ -153,11 +155,16 @@ contains
          if ( force_ice ) force_ice_phase = .true.          
       end if
       
+      force_water_phase = .false.
+      if (present (force_water)) then
+         if ( force_water ) force_water_phase = .true.          
+      end if
+      
       call get_ice_probabibility (inp &
          & , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
       
       ! - compute type from ice probablity phase discrimination
-      if ( ice_prob > 0.5 .or. force_ice_phase ) then
+      if ( (ice_prob > 0.5 .or. force_ice_phase) .and. .not. force_water_phase ) then
          call determine_type_ice ( inp % Rtm % emiss_tropo_ch31 &
             , inp % sat % bt_ch31 &
             , inp % rtm % beta_11um_12um_Tropo &

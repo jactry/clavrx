@@ -126,18 +126,18 @@ module cloud_type_bridge_module
 
 contains
 
-!====================================================================
-!  record cvs version as a global variable for output to hdf
-!====================================================================
-subroutine Set_CLOUD_TYPE_VERSION()
-   Cloud_Type_Version = "$Id$"
-end subroutine Set_CLOUD_TYPE_VERSION
+   !====================================================================
+   !  record svn version as a global variable for output to hdf
+   !====================================================================
+   subroutine Set_CLOUD_TYPE_VERSION()
+      Cloud_Type_Version = "$Id$"
+   end subroutine Set_CLOUD_TYPE_VERSION
 
 
-!====================================================================
-! universal cloud type bridge
-!====================================================================
-subroutine cloud_type_bridge
+   !====================================================================
+   ! universal cloud type bridge
+   !====================================================================
+   subroutine cloud_type_bridge
       implicit none
       
       type ( cloud_type_input_type) :: type_inp
@@ -267,8 +267,6 @@ subroutine cloud_type_bridge
    
    ! --------- --------------- ---
    !
-   ! AKH - How can we use channel that may not be defined?   Don't we need to check this with Chan_On_Flag?
-   !       this is seg faulting alot
    !
    ! --------- ---------------
    subroutine POPULATE_INPUT ( i, j , type_inp)

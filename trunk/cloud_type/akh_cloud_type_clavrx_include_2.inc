@@ -32,7 +32,7 @@
   Tcld_Opa => Tc_Opaque_Cloud
   Pcld_Opa => Pc_Opaque_Cloud
   Zcld_Opa => Zc_Opaque_Cloud
-  Zcld_H2O => Zclr_H2O_Peak
+!  Zclr_H2O => Zclr_H2O_Peak
   Cloud_Phase => Cld_Phase
   Cloud_Type => Cld_Type
   Cloud_Mask => Cld_Mask

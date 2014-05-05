@@ -225,9 +225,10 @@ subroutine cloud_type_bridge
                    if (ctype == et_cloud_type%FOG .or. ctype == et_cloud_type%SUPERCOOLED) then
                       cld_type(i,j) = ctype
                    else
+                     ! - the priginal ice pixels should also be check on supercool and fog.
                      call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_water = .true. )
                      cld_type (i,j)  = ctype
-                   endif
+                   end if
                   
                ! - LRC core is ice phase
                else if ( (ctype  == et_cloud_type % FOG &
@@ -249,15 +250,9 @@ subroutine cloud_type_bridge
                     
                ! -- this is mainly cirrus / opaque ice => keep current
                else 
-
-                  cld_type (i,j)  = ctype               
-                                  
-               end if      
-               
+                  cld_type (i,j)  = ctype                                                 
+               end if                     
             end if
-
-            !--- derive near-surface (aka fog) type from very low water clouds
-            !--- this is true even if lrc is water
 
             call DEALLOCATE_INP ( type_inp )
          

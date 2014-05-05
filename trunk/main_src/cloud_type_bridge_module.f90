@@ -222,8 +222,8 @@ subroutine cloud_type_bridge
                   .and. cld_type_lrc <= et_cloud_type % LAST_WATER ) then
                
                    ! AKH says not to overwrite WATER,  FOG or SUPERCOOLED
-                   if ( cld_type >= et_cloud_type % FIRST_WATER &
-                        .and. cld_type <= et_cloud_type % LAST_WATER ) then
+                   if ( ctype >= et_cloud_type % FIRST_WATER &
+                        .and. ctype <= et_cloud_type % LAST_WATER ) then
                         
                       cld_type(i,j) = ctype
                    else

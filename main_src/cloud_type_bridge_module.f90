@@ -225,7 +225,8 @@ subroutine cloud_type_bridge
                    if (ctype == et_cloud_type%FOG .or. ctype == et_cloud_type%SUPERCOOLED) then
                       cld_type(i,j) = ctype
                    else
-                      cld_type (i,j) = cld_type_lrc
+                     call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_water = .true. )
+                     cld_type (i,j)  = ctype
                    endif
                   
                ! - LRC core is ice phase

@@ -221,11 +221,13 @@ subroutine cloud_type_bridge
                if ( cld_type_lrc >= et_cloud_type % FIRST_WATER &
                   .and. cld_type_lrc <= et_cloud_type % LAST_WATER ) then
                
-                   ! AKH says not to overwrite FOG or SUPERCOOLED
-                   if (ctype == et_cloud_type%FOG .or. ctype == et_cloud_type%SUPERCOOLED) then
+                   ! AKH says not to overwrite WATER,  FOG or SUPERCOOLED
+                   if ( cld_type >= et_cloud_type % FIRST_WATER &
+                        .and. cld_type <= et_cloud_type % LAST_WATER ) then
+                        
                       cld_type(i,j) = ctype
                    else
-                     ! - the priginal ice pixels should also be check on supercool and fog.
+                     ! - the original ice pixels should also be check on supercool, fog or water.
                      call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_water = .true. )
                      cld_type (i,j)  = ctype
                    end if

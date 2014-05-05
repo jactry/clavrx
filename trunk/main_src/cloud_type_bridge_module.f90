@@ -297,7 +297,7 @@ print *, "here 2222"
       if (chan_on_flag_default(20)) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
       type_inp % sat % diagnostic_1 = Diag_Pix_Array_1 (i,j)
       type_inp % sat % diagnostic_2 = Diag_Pix_Array_2 (i,j)
-      type_inp % sat % diagnostic_3 = Diag_Pix_Array_2 (i,j)
+      type_inp % sat % diagnostic_3 = Diag_Pix_Array_3 (i,j)
       if (chan_on_flag_default(27)) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
@@ -316,17 +316,17 @@ print *, "here 2222"
       if (chan_on_flag_default(31))  then
          allocate ( type_inp % rtm % rad_ch31_bb_prof &
               , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile)
-         type_inp % rtm % bt_ch31_3x3_max     = Bt_Ch31_Max_3x3( i,j )
-         type_inp % rtm % bt_ch31_3x3_std     = Bt_Ch31_Std_3x3( i,j )
-         type_inp % rtm % rad_ch31_atm_sfc = ch(31)%Rad_Toa_Clear(i,j)
-         type_inp % rtm % bt_ch31_atm_sfc     = ch(31)%Bt_Toa_Clear( i,j )
-         type_inp % rtm % emiss_tropo_ch31    = ch(31)%Emiss_Tropo( i,j )
+         type_inp % rtm % bt_ch31_3x3_max    = Bt_Ch31_Max_3x3( i,j )
+         type_inp % rtm % bt_ch31_3x3_std    = Bt_Ch31_Std_3x3( i,j )
+         type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)
+         type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
+         type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
          if (chan_on_flag_default(27))  then
          type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
          if (chan_on_flag_default(32))  then
-            type_inp % rtm % Beta_11um_12um_Tropo = Beta_11um_12um_Tropo_Rtm( i,j )
-            type_inp % rtm % bt_ch32_atm_sfc     = ch(32)%Bt_Toa_Clear( i,j )
+            type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )
+            type_inp % rtm % bt_ch32_atm_sfc       = ch(32)%Bt_Toa_Clear( i,j )
          endif
          if (chan_on_flag_default(33))  then
             type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )

@@ -18,8 +18,7 @@ module cloud_type_algo_module
    public :: CLOUD_TYPE_PIXEL
    public :: SET_CLOUD_PHASE
    private:: COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
-   private:: OPAQUE_CLOUD_HEIGHT
-   private:: H2O_CLOUD_HEIGHT
+  
 
    public :: cloud_type_input_type
    public :: et_cloud_type
@@ -139,8 +138,8 @@ contains
       logical :: force_ice_phase 
       logical :: is_cirrus
       logical :: is_water
-      real :: t_opa
-      real :: z_opa
+      real :: t_cld
+      real :: z_cld
       
       logical :: is_overlap
       logical :: experimental_on = .false.
@@ -155,7 +154,7 @@ contains
       end if
       
       call get_ice_probabibility (inp &
-         & , ice_prob , is_cirrus , is_water , t_opa , z_opa ) 
+         & , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
       
       ! - compute type from ice probablity phase discrimination
       if ( ice_prob > 0.5 .or. force_ice_phase ) then
@@ -165,7 +164,7 @@ contains
             , inp % rtm % beta_11um_133um_Tropo &
             , is_water, is_cirrus , ctype ) 
       else 
-         call determine_type_water ( z_opa , t_opa , ctype ) 
+         call determine_type_water ( z_cld , t_cld , ctype ) 
       end if
       
       ! - optional output of ice probability
@@ -262,14 +261,14 @@ contains
    ! -----------------------------------------------------------------------------------
    !  computes ice probability and cirrus water flag and opaque temperature and height
    ! ------------------------------------------------------------------------------------
-   subroutine get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_opa , z_opa ) 
+   subroutine get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
       implicit none
       type ( cloud_type_input_type) , intent(in) :: inp
       real , intent(out) :: ice_prob
       logical, intent(out) :: is_cirrus
       logical, intent(out) :: is_water
-      real, intent(out)    :: t_opa
-      real, intent(out)    :: z_opa
+      real, intent(out)    :: t_cld
+      real, intent(out)    :: z_cld
      
       
       real, parameter:: ICE_TEMP_MIN = 243.0
@@ -288,72 +287,50 @@ contains
       !------------------------------------------------------------------------
       !  Determine the Cloud Height and Cloud Temperature for Typing
       !------------------------------------------------------------------------
-      t_opa = MISSING_VALUE_REAL
-      z_opa = MISSING_VALUE_REAL
+      t_cld = MISSING_VALUE_REAL
+      z_cld = MISSING_VALUE_REAL
       
       !---- if possible, use water vapor channel
       if ( inp % sat % chan_on ( 27) ) then
 
-!        call height_h2o_channel ( &
-!           inp % sat % rad_ch31 &
-!           , inp % rtm % rad_ch31_bb_prof &              
-!           , inp % rtm % rad_ch31_atm_sfc &
-!           , inp % sat % rad_ch27 &
-!           , inp % rtm % rad_ch27_bb_prof & 
-!           , inp % rtm % rad_ch27_atm_sfc &
-!           , inp % rtm % Covar_Ch27_Ch31_5x5 &
-!           , inp % rtm % tropo_lev &
-!           , inp % rtm % sfc_lev &
-!           , inp % rtm % t_prof &
-!           , inp % rtm % z_prof &
-!           , t_opa &
-!           , z_opa )
+        call height_h2o_channel ( &
+           inp % sat % rad_ch31 &
+           , inp % rtm % rad_ch31_bb_prof &              
+           , inp % rtm % rad_ch31_atm_sfc &
+           , inp % sat % rad_ch27 &
+           , inp % rtm % rad_ch27_bb_prof & 
+           , inp % rtm % rad_ch27_atm_sfc &
+           , inp % rtm % Covar_Ch27_Ch31_5x5 &
+           , inp % rtm % tropo_lev &
+           , inp % rtm % sfc_lev &
+           , inp % rtm % t_prof &
+           , inp % rtm % z_prof &
+           , t_cld &
+           , z_cld )
 
-         call H2O_CLOUD_HEIGHT( &
-            inp % sat % rad_ch31 &
-            , inp % rtm % rad_ch31_bb_prof &              
-            , inp % rtm % rad_ch31_atm_sfc &
-            , inp % sat % rad_ch27 &
-            , inp % rtm % rad_ch27_bb_prof & 
-            , inp % rtm % rad_ch27_atm_sfc &
-            , inp % rtm % Covar_Ch27_Ch31_5x5 &
-            , inp % rtm % tropo_lev &
-            , inp % rtm % sfc_lev &
-            , inp % rtm % t_prof &
-            , inp % rtm % z_prof &
-            , t_opa &
-            , z_opa )
 
       end if
      
       !---- if no water vapor, use the atmos-corrected 11 micron
-      if ( t_opa == MISSING_VALUE_REAL) then
-!        call height_opaque ( &
-!           inp % sat % rad_ch31 &
-!           , inp % rtm % rad_ch31_bb_prof &
-!           , inp % rtm % tropo_lev &
-!           , inp % rtm % sfc_lev &
-!           , inp % rtm % t_prof &
-!           , inp % rtm % z_prof &
-!           , t_opa &
-!           , z_opa )
-         call OPAQUE_CLOUD_HEIGHT ( &
-              inp % sat % rad_ch31 &
-            , inp % rtm % rad_ch31_bb_prof &
-            , inp % rtm % tropo_lev &
-            , inp % rtm % sfc_lev &
-            , inp % rtm % t_prof &
-            , inp % rtm % z_prof &
-            , t_opa &
-            , z_opa)
+      if ( t_cld == MISSING_VALUE_REAL) then
+        call height_opaque ( &
+           inp % sat % rad_ch31 &
+           , inp % rtm % rad_ch31_bb_prof &
+           , inp % rtm % tropo_lev &
+           , inp % rtm % sfc_lev &
+           , inp % rtm % t_prof &
+           , inp % rtm % z_prof &
+           , t_cld &
+           , z_cld )
+ 
       end if
       
       !--- last resort, use raw 11 micron brightness temperature
-      if ( t_opa == MISSING_VALUE_REAL) t_opa = inp % sat % bt_ch31    
+      if ( t_cld == MISSING_VALUE_REAL) t_cld = inp % sat % bt_ch31    
          
 
       !--- compute the ice probabilty based on our guess of cloud temperature
-      ice_prob = COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(t_opa)
+      ice_prob = COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(t_cld)
       
       
       !------------------------------------------------------------------------
@@ -361,7 +338,7 @@ contains
       !------------------------------------------------------------------------
 
       !--- tests for water
-      if ( t_opa > 240.0 ) then
+      if ( t_cld > 240.0 ) then
                           
          ! 1.6 spectral test
          if ( inp % sat % chan_on ( 6 ) &
@@ -390,6 +367,8 @@ contains
       
       
       !--- tests for ice
+     
+      !---- don't detect cirrus if very high 11 um std deviation
       if ( inp % rtm % bt_ch31_3x3_std < BT_11UM_STD_CIRRUS_THRESH ) then
       
          ! - split window test
@@ -426,11 +405,24 @@ contains
       
           
    end subroutine get_ice_probabibility
-   
-   ! -----------------------------------------------
-   !   computes Height parameters from NWP profiles
-   !    Called in get_ice_probabibility
-   ! ------------------------------------------------   
+   !====================================================================
+   ! Function Name: H2O_CLOUD_HEIGHT
+   !
+   ! Function: estimate the cloud temperature/height/pressure
+   !
+   ! Description: Use the 11um and 6.7um obs and the RTM cloud BB profiles
+   !              to perform h2o intercept on a pixel level. Filters
+   !              restrict this to high clouds only
+   !              
+   ! Dependencies: 
+   !
+   ! Restrictions: 
+   !
+   ! Reference: 
+   !
+   ! Author: Andrew Heidinger, NOAA/NESDIS
+   !
+   !====================================================================   
    subroutine height_h2o_channel ( &
            rad_11um &
          , rad_11um_rtm_prof &  
@@ -443,8 +435,8 @@ contains
          , sfc_lev &
          , t_prof &
          , z_prof &
-         , t_opa &
-         , z_opa )
+         , t_cld &
+         , z_cld )
          
       implicit none      
       
@@ -459,8 +451,8 @@ contains
       integer, intent(in) :: sfc_lev
       real, intent(in) :: t_prof(:)
       real, intent(in) :: z_prof(:)   
-      real, intent(out) :: t_opa
-      real, intent(out) :: z_opa
+      real, intent(out) :: t_cld
+      real, intent(out) :: z_cld
       
       real, parameter :: RAD_11UM_THRESH = 2.0
       real, parameter :: RAD_67UM_THRESH = 0.25
@@ -476,8 +468,8 @@ contains
       real :: rad_H2O_BB_prediction
       
       ! -------------------------------            
-      t_opa = MISSING_VALUE_REAL
-      z_opa = MISSING_VALUE_REAL
+      t_cld = MISSING_VALUE_REAL
+      z_cld = MISSING_VALUE_REAL
             
       ! some tests
       if ( rad_h2o < 0 ) return
@@ -491,6 +483,7 @@ contains
       if ( rad_11um < rad_11um_rtm_prof ( tropo_lev ) ) then
          cld_lev = tropo_lev
       else
+         !--- determine linear regress of h2o (y)  as a function of window (x)
          Denominator =  rad_11um - rad_11um_clear
          
          slope = (Rad_h2o - Rad_H2o_Clear) / (Denominator)
@@ -514,14 +507,31 @@ contains
       
       end if 
       
-      
+      !--- adjust back to full Rtm profile indices
       if (cld_lev > 0 ) then
-         t_opa = t_prof( cld_lev )
-         z_opa = z_prof( cld_lev )
+         t_cld = t_prof( cld_lev )
+         z_cld = z_prof( cld_lev )
       end if
       
    end subroutine height_h2o_channel   
    
+   !====================================================================
+   ! Function Name: OPAQUE_CLOUD_HEIGHT
+   !
+   ! Function: estimate the cloud temperature/height/pressure
+   !
+   ! Description: Use the 11um obs and assume the cloud is back and 
+   !           estimate height from 11 um BB cloud profile
+   !              
+   ! Dependencies: 
+   !
+   ! Restrictions: 
+   !
+   ! Reference: 
+   !
+   ! Author: Andrew Heidinger, NOAA/NESDIS
+   !
+   !====================================================================
    ! -----------------------------------------------
    !   computes Height parameters from NWP profiles
    !    Called in get_ice_probabibility
@@ -555,195 +565,22 @@ contains
       if ( rad31 < rad31_rtm_prof(tropo_lev) ) then
          cld_lev = tropo_lev
       else
+         !--- restrict levels to consider between tropo level and sfc level
          do idx_lev = tropo_lev , sfc_lev
             if ( rad31 > rad31_rtm_prof ( idx_lev ) ) cld_lev = idx_lev
          end do         
       end if
       
+      !--- select opaque temperature from profile at chosen level
       if (cld_lev > 1 ) then
          t_opa = t_prof ( cld_lev)
          z_opa = z_prof (cld_lev )
       end if
         
    end subroutine height_opaque
-!====================================================================
-! Function Name: OPAQUE_CLOUD_HEIGHT
-!
-! Function: estimate the cloud temperature/height/pressure
-!
-! Description: Use the 11um obs and assume the cloud is back and 
-!           estimate height from 11 um BB cloud profile
-!              
-! Dependencies: 
-!
-! Restrictions: 
-!
-! Reference: 
-!
-! Author: Andrew Heidinger, NOAA/NESDIS
-!
-!====================================================================
- subroutine OPAQUE_CLOUD_HEIGHT(Ch31_Rad, &
-                                Rad_11um_BB_Profile, &
-                                Tropo_Level,  &
-                                Sfc_Level, &
-                                T_Prof, & 
-                                Z_Prof, & 
-                                Tc_Opa, &
-                                Zc_Opa)
-   real, intent(in):: Ch31_Rad
-   real, intent(in), dimension(:):: Rad_11um_BB_Profile
-   real, intent(in), dimension(:):: T_Prof
-   real, intent(in), dimension(:):: Z_Prof
-   integer, intent(in):: Tropo_Level
-   integer, intent(in):: Sfc_Level
-   real, intent(out):: Tc_Opa
-   real, intent(out):: Zc_Opa
-   integer:: Level_Idx
-   integer:: Level_Idx_Start
-   integer:: Level_Idx_End
-   integer:: Level_Idx_Cloud
 
-   !--- initialize
-   Tc_Opa =  MISSING_VALUE_REAL
-   Zc_Opa =  MISSING_VALUE_REAL
 
-   !--- restrict levels to consider
-   Level_Idx_Start = Tropo_Level
-   Level_Idx_End = Sfc_Level
 
-   !--- initialize levels
-   Level_Idx_Cloud = Level_Idx_Start
-
-   !--- go down from tropopause and find first level that is warmer than your radiance
-   !--- this will assumed as the opaque cloud level. This is the lowest valid height
-   level_loop: do Level_Idx = Level_Idx_Start, Level_Idx_End
-         if (Ch31_Rad > Rad_11um_BB_Profile(Level_Idx)) Level_Idx_Cloud = Level_Idx
-   end do level_loop
-
-   !--- select opaque temperature from profile at chosen level
-   Tc_Opa = T_prof(Level_Idx_Cloud)
-   Zc_Opa = Z_prof(Level_Idx_Cloud)
-
- end subroutine OPAQUE_CLOUD_HEIGHT
-!====================================================================
-! Function Name: H2O_CLOUD_HEIGHT
-!
-! Function: estimate the cloud temperature/height/pressure
-!
-! Description: Use the 11um and 6.7um obs and the RTM cloud BB profiles
-!              to perform h2o intercept on a pixel level. Filters
-!              restrict this to high clouds only
-!              
-! Dependencies: 
-!
-! Restrictions: 
-!
-! Reference: 
-!
-! Author: Andrew Heidinger, NOAA/NESDIS
-!
-!====================================================================
-subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
-                             Rad_11um_BB_Profile, &
-                             Rad_11um_Clear, &
-                             Rad_H2O, &
-                             Rad_H2O_BB_Profile,  &
-                             Rad_H2O_Clear,  &
-                             Covar_H2O_Window, &
-                             Tropo_Level, &
-                             Sfc_Level, &
-                             T_Prof, &
-                             Z_Prof, &
-                             Tc,  &
-                             Zc)
-
-  real, intent(in):: Rad_11um
-  real, intent(in):: Rad_H2O
-  real, intent(in), dimension(:):: Rad_11um_BB_Profile
-  real, intent(in):: Rad_11um_Clear
-  real, intent(in):: Rad_H2O_Clear
-  real, intent(in), dimension(:):: Rad_H2O_BB_Profile
-  real, intent(in):: Covar_H2O_Window
-  integer, intent(in):: Sfc_Level
-  integer, intent(in):: Tropo_Level
-  real, intent(in), dimension(:):: T_Prof
-  real, intent(in), dimension(:):: Z_Prof
-  real, intent(out) :: Tc
-  real, intent(out) :: Zc
-
-  real:: Rad_H2O_BB_Prediction
-  real:: Slope
-  real:: Intercept
-  real:: Denominator
-  integer:: ilev
-  integer:: ilev_h2o
-
-  real, parameter:: Rad_11um_Thresh = 2.0
-  real, parameter:: Rad_H2O_Thresh = 0.2
-  real, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
-
-  !--- initialize
-  Tc = MISSING_VALUE_REAL
-  Zc = MISSING_VALUE_REAL
-
-  !--- determine if a solution should be attempted
-  if (Rad_11um_Clear - Rad_11um < Rad_11um_Thresh) then
-      return
-  endif
-
-  if (Rad_H2O_Clear - Rad_H2O < Rad_H2O_Thresh) then
-      return
-  endif
-
-  if (Covar_H2O_Window /= MISSING_VALUE_REAL .and. Covar_H2O_Window < Bt_Ch27_Ch31_Covar_Cirrus_Thresh) then
-      return
-  endif
-
- !--- attempt a solution
-
- !--- colder than tropo
- if (Rad_11um < Rad_11um_BB_Profile(Tropo_Level)) then
-
-     ilev_h2o = Tropo_Level
-
- else   !if not, attempt solution
-
-     !--- determine linear regress of h2o (y)  as a function of window (x)
-      Denominator =  Rad_11um - Rad_11um_Clear
-
-      if (Denominator < 0.0) then
-             Slope = (Rad_H2O - Rad_H2O_Clear) / (Denominator)
-             Intercept = Rad_H2O - Slope*Rad_11um
-      else
-            return
-      endif
-
-      !--- brute force solution
-      ilev_h2o = 0
-
-      do ilev = Tropo_Level+1, Sfc_Level
-          Rad_H2O_BB_Prediction = Slope*Rad_11um_BB_Profile(ilev) + Intercept
-
-          if (Rad_H2O_BB_Prediction < 0) cycle
-
-          if ((Rad_H2O_BB_Prediction > Rad_H2O_BB_Profile(ilev-1)) .and. &
-               (Rad_H2O_BB_Prediction <= Rad_H2O_BB_Profile(ilev))) then
-               ilev_h2o = ilev
-               exit
-          endif
-
-      enddo
-
- endif    !tropopause check
-
- !--- adjust back to full Rtm profile indices
- if (ilev_h2o > 0) then
-       Tc = T_Prof(ilev_h2o)
-       Zc = Z_Prof(ilev_h2o)
-  endif
-
-end subroutine H2O_CLOUD_HEIGHT
    
    ! -----------------------------------------------------
    !   experimental code for additional overlap test
@@ -772,8 +609,11 @@ end subroutine H2O_CLOUD_HEIGHT
       real :: btd_thresh
       real :: ref_vis_thresh
       
+      real :: dum
+      
       is_overlap = .false.
-     
+      dum = sat_zen 
+      dum = sol_zen
        
       btd_thresh = 1. 
       ref_vis_thresh = 40.                 
@@ -817,36 +657,37 @@ end subroutine H2O_CLOUD_HEIGHT
       end where
    
    end subroutine SET_CLOUD_PHASE
-!====================================================================
-! Function Name: Compute_Ice_Probability_Based_On_Temperature
-!
-! Function: Provide the probability that this pixel is ice
-!
-! Description:
-!    Use the cloud temperature and an assumed relationship to
-!    determine the probability that the cloud is ice phase
-!
-! Dependencies:
-!
-! Restrictions:
-!
-! Reference:
-!
-! Author: Andrew Heidinger, NOAA/NESDIS
-!
-!====================================================================
-function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(T_Opa) result(Ice_Prob)
+   
+   !====================================================================
+   ! Function Name: Compute_Ice_Probability_Based_On_Temperature
+   !
+   ! Function: Provide the probability that this pixel is ice
+   !
+   ! Description:
+   !    Use the cloud temperature and an assumed relationship to
+   !    determine the probability that the cloud is ice phase
+   !
+   ! Dependencies:
+   !
+   ! Restrictions:
+   !
+   ! Reference:
+   !
+   ! Author: Andrew Heidinger, NOAA/NESDIS
+   !
+   !====================================================================
+   function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(T_Opa) result(Ice_Prob)
 
-real:: T_opa
-real:: Ice_Prob
-real, parameter:: Ice_Temperature_Min = 243.0
-real, parameter:: Ice_Temperature_Max = 263.0
+      real:: T_opa
+      real:: Ice_Prob
+      real, parameter:: Ice_Temperature_Min = 243.0
+      real, parameter:: Ice_Temperature_Max = 263.0
 
-Ice_Prob = 1.0 - (T_opa-Ice_Temperature_Min)/(Ice_Temperature_Max - Ice_Temperature_Min)
-Ice_Prob = min(1.0,Ice_Prob)
-Ice_Prob = max(0.0,Ice_Prob)
+      Ice_Prob = 1.0 - (T_opa-Ice_Temperature_Min)/(Ice_Temperature_Max - Ice_Temperature_Min)
+      Ice_Prob = min(1.0,Ice_Prob)
+      Ice_Prob = max(0.0,Ice_Prob)
 
-end function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
+   end function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
 
 end module cloud_type_algo_module
     

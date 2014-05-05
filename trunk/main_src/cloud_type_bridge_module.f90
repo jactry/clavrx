@@ -148,6 +148,7 @@ subroutine cloud_type_bridge
       real :: ice_prob 
       integer :: cld_type_lrc
       
+      
       ! ------  Executable  ------------------------------------
       ice_prob = -999.0
       
@@ -156,7 +157,7 @@ subroutine cloud_type_bridge
       !-----------    loop over LRC core pixels to get ice probabbilty -----         
       elem_loop: do  j = 1,num_scans_read
          line_loop: do i = 1, num_pix  
-         
+           
             if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i,j ) = et_cloud_type % CLEAR
                 cycle
@@ -173,15 +174,13 @@ subroutine cloud_type_bridge
             call POPULATE_INPUT ( i, j , type_inp )
             call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
             cld_type (i,j)  = ctype
-            
+
             call DEALLOCATE_INP ( type_inp )
          
          end do   line_loop
       end do elem_loop
 
-print *, "here 2222"
-      
-      
+ 
       ! - now loop over all non lrc-cores
       elem_loop1: do  j = 1,num_scans_read
          line_loop1: do i = 1, num_pix  
@@ -215,9 +214,7 @@ print *, "here 2222"
            
             !  - identical or lrc is not valid => take the current
             if ( ctype == cld_type_lrc .or. ii < 1 .or. jj < 1 .or. cld_type_lrc == et_cloud_type%UNKNOWN) then
-
                cld_type (i,j)  = ctype
-
             else
 
                ! - if LRC core is water phase ==> use lrc
@@ -242,7 +239,8 @@ print *, "here 2222"
                
                ! - LRC core is ice phase and current is supercooled => switch to ice
                else if ( ( cld_type_lrc == et_cloud_type % CIRRUS & 
-                         .or. cld_type_lrc == et_cloud_type % OPAQUE_ICE ) &
+                         .or. cld_type_lrc == et_cloud_type % OPAQUE_ICE &
+                         .or. cld_type_lrc == et_cloud_type % OVERLAP ) &
                         .and. ctype ==  et_cloud_type % SUPERCOOLED ) then
                   
                   call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_ice = .true. )
@@ -322,7 +320,7 @@ print *, "here 2222"
          type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
          if (chan_on_flag_default(27))  then
-         type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
+            type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
          if (chan_on_flag_default(32))  then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )

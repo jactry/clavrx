@@ -76,7 +76,10 @@ module naive_bayesian_cloud_mask_module
       integer :: land_class
       integer :: coast_mask
       integer :: snow_class
+      integer :: sfc_type
       real :: dem
+      real :: emis_ch20
+      real :: sst_anal_uni
    end type cloud_mask_sfc_type
    
    type cloud_mask_rtm_type 
@@ -206,13 +209,11 @@ contains
       
       real, parameter :: MISSING_VALUE_REAL4 = -999.
             
-      integer :: pos_info_flag , idx_info_flag
-      integer :: bits_to_add
+      integer :: pos_info_flag 
+      integer :: idx_info_flag
       real :: class_contr
-      integer :: class_contr_mask
       
-     
-           
+      ! ---    Executable  ----------------------------
       ! - read in classifer coeffiecients
       bayes_coef % file =trim(inp  % bayesian_mask_classifier ) 
       if ( .not. bayes_coef % is_read) call read_bayes_coeff ( ) 
@@ -222,7 +223,8 @@ contains
       
      
       sfc_type_number =  bayes_sfc_type ( inp% geo % lat , inp % geo % lat &
-         & , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class)
+         & , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
+         & , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
          
       allocate ( Cond_Yes ( bayes_coef % n_class ) )
@@ -393,7 +395,7 @@ contains
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
               
             Classifier_Value = inp % rtm % emis_ch31_tropo 
-            !TODO if land == deep_ocean then classifier emiss_trop_lrc
+            
             is_on_test = .true.
             pos_info_flag = 2
             idx_info_flag = 4
@@ -772,15 +774,18 @@ contains
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   function bayes_sfc_type ( lat , lon, land_class,coast,snow_class )
+   function bayes_sfc_type ( lat , lon, land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
      
        
-      real  :: lat ,lon
-      integer :: land_class,coast,snow_class
+      real  :: lat ,lon, emis_ch20 , sst_anal_uni
+      integer :: land_class,coast,snow_class , sfc_type
       
       
       integer :: bayes_sfc_type
-      
+      integer , parameter :: CLOSED_SHRUBS_SFC = 8
+      integer , parameter :: OPEN_SHRUBS_SFC = 9
+      integer , parameter :: GRASSES_SFC = 10
+      integer , parameter :: BARE_SFC = 12
      
       bayes_sfc_type = 0
      
@@ -797,6 +802,10 @@ contains
          bayes_sfc_type = 2
       end if   
      
+      if ( land_class /= ET_land_class % LAND .and. sst_anal_uni > 0.5 ) then
+         bayes_sfc_type = 2
+      end if
+     
       ! # 3 unfrozen land
       if (  land_class  == ET_land_class % LAND .or. &
                land_class  == ET_land_class % COASTLINE .or. &
@@ -805,7 +814,7 @@ contains
          bayes_sfc_type = 3
       end if
       
-      ! -TODO Sst_Back_Uni_Temp
+
      
       ! -- # 4 snow covered land
       if ( (lat > - 60.) .and.  snow_class  == ET_snow_class % SNOW )  then
@@ -840,7 +849,27 @@ contains
       !-TODO
       
       ! -- # 7 Desert
-       !-TODO
+      
+      if ( emis_ch20 < 0.90 .and. abs ( lat ) < 60.0 &
+         .and. ( sfc_type == OPEN_SHRUBS_SFC .or. sfc_type == BARE_SFC ) ) then
+      
+         bayes_sfc_type = 7
+      end if   
+      
+      if ( bayes_sfc_type == 3 .and. &
+         & emis_ch20 < 0.93 .and. &
+         & abs ( lat ) < 60.0 .and. &
+         & ( sfc_type == OPEN_SHRUBS_SFC .or. &
+            & sfc_type == CLOSED_SHRUBS_SFC .or. &
+            & sfc_type == GRASSES_SFC .or. &
+            &  sfc_type == BARE_SFC ) &
+            ) then
+            
+            bayes_sfc_type = 7
+      end if
+      
+      
+       
      
    end function bayes_sfc_type
    

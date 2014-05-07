@@ -28,6 +28,7 @@
 !  HISTORY:
 !      2014/04/06:    new interface (AW)
 !      2014/04/21:  add fire mask input
+!      2014/05/07:  added diagnostic type (DB)
 !
 !  GLOBAL VARIABLES:
 !
@@ -81,6 +82,7 @@
 !             cloud_mask_naive_bayes                     subroutine
 !                  subroutine which retrieves cloud probability
 !             cloud_mask_input_type                      type definition
+!             cloud_mask_diagnostic                      type diagnostic
 !                   structure definition of cloud_mask_naive_bayes retrieval input  
 !
 !--------------------------------------------------------------------------------------
@@ -124,13 +126,17 @@ module naive_bayesian_clavrx_bridge_module
       , cld_mask &
       , ancil_data_dir &
       , Bayesian_Cloud_Mask_Name &
-      , Solar_Contamination_Mask  
+      , Solar_Contamination_Mask &
+      , Diag_Pix_Array_1 &
+      , Diag_Pix_Array_2 &
+      , Diag_Pix_Array_3
      
       
              
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
-      &   cloud_mask_naive_bayes &
-      & , cloud_mask_input_type
+         cloud_mask_naive_bayes &
+       , cloud_mask_input_type &
+       , cloud_mask_diagnostic
       
    use FILE_TOOLS, only: &
       file_test   
@@ -151,6 +157,7 @@ contains
       
      
       type ( cloud_mask_input_type ) :: mask_inp
+      type ( cloud_mask_diagnostic ) :: diag
       ! cloud mask information mask 7 bytes ( 56 bits)    
       integer :: info_flags ( 7 )
       integer :: i , j 
@@ -173,9 +180,6 @@ contains
          elem_loop: do  j = 1,num_scans_read
             
             if ( land (i,j) < 0 ) cycle
-            
-            
-            
             
             mask_inp % geo % lat         = lat ( i , j )            
             mask_inp % geo % lon         = lon ( i , j )
@@ -238,10 +242,14 @@ contains
 
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
              
-            call cloud_mask_naive_bayes ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags )
+            call cloud_mask_naive_bayes ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags , diag )
            
-            Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
+            Bayes_Mask_Sfc_Type_Global ( i , j ) = ibits ( info_flags (3) , 0, 3 ) 
             Cld_Test_Vector_Packed ( : , i , j )  = info_flags
+
+            Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
+            Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
+            Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
             
          end do elem_loop
       end do   line_loop

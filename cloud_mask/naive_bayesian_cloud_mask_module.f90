@@ -600,11 +600,12 @@ contains
                            & + bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
     
-            if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
+            if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = &
+                            ibset ( info_flags ( idx_info_flag) , pos_info_flag )
             if ( class_contr >= 0.5 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1)
             if ( class_contr > 0.9 ) then
-                info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
-                info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1 )
+                info_flags ( idx_info_flag ) = ibset ( info_flags ( idx_info_flag ) , pos_info_flag )
+                info_flags ( idx_info_flag ) = ibset ( info_flags ( idx_info_flag ) , pos_info_flag + 1 )
             end if
            
          end if
@@ -631,8 +632,8 @@ contains
          !  case ( et_class_R_013_DAY )
          !  case ( et_class_R_016_Day )
          !     diag % diagnostic_1 = Classifier_Value  
-         !     diag % diagnostic_2 = Classifier_Value  
-         !     diag % diagnostic_3 = Classifier_Value  
+         !     diag % diagnostic_2 = class_contr
+         !     diag % diagnostic_3 = info_flags ( idx_info_flag )
          !end select
          !
                 

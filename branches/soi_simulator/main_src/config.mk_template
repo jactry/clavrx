@@ -1,0 +1,24 @@
+# This file was generated on Wed Oct 17 18:13:18 2012 by awalther with the following command-line arguments: -with-ifort -with-szip.
+# System info: Darwin luna.ssec.wisc.edu 12.2.0 Darwin Kernel Version 12.2.0: Sat Aug 25 00:48:52 PDT 2012; root:xnu-2050.18.24~1/RELEASE_X86_64 x86_64
+fc = ifort
+fflags = -O2 -assume byterecl -warn unused 
+fflags_pfast = -O2 -assume byterecl -fixed
+fflags_sasrab_f77 = -O2 -assume byterecl -fixed -save
+fflags_sasrab_f90 = -O2 -assume byterecl -save
+ldflags = -O2 -assume byterecl
+cpp = -cpp
+cppflags = 
+beconv = -convert big_endian
+hdflibs = -L/opt/hdf4/4.2.7-ifort/lib -lmfhdf -ldf -ljpeg -lz 
+hdfincs = -I/opt/hdf4/4.2.7-ifort/include
+hdf5libs = -I/opt/hdf5/1.8.9-ifort/include -L/opt/hdf5/1.8.9-ifort/lib 
+hdf5links = -lhdf5_fortran -lhdf5hl_fortran -lhdf5 -lhdf5_hl  
+export ACHA=../cloud_team_acha/
+export DCOMP=../cloud_team_dcomp/
+export CTYPE=../akh_cloud_type_repo/
+export NLCOMP=../cloud_team_nlcomp/
+export CMASK=../jpssrr_nbvcm/
+nlcomplibs = -L$(NLCOMP) -I$(NLCOMP)
+nlcomplinks = -lnlcomp
+dcomplibs = -L$(DCOMP) -I$(DCOMP)
+dcomplinks = -ldcomp

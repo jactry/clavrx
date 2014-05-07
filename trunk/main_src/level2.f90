@@ -44,7 +44,7 @@ module LEVEL2_ROUTINES
             DEFINE_PIXEL_3D_SDS
 
  !--- rtm indices
- integer, parameter, private:: Num_Rtm_Sds = 31
+ integer, parameter, private:: Num_Rtm_Sds = 29
  integer, private, save:: Sd_Id_Rtm
  integer(kind=int4), dimension(Num_Rtm_Sds), save, private:: Sds_Id_Rtm
 
@@ -638,29 +638,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "bayes_mask_sfc_type", &
                               DFNT_INT8, sym%NO_SCALING, &
                               0.0, 0.0, "none", Missing_Value_Real4, Istatus)
-
-     !--- Ref_Ch20_LRC
-     if (Chan_On_Flag_Default(20) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(30),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              "refl_3_75um_nom_lrc", &
-                              "toa_bidirectional_reflectance_3_75_micron_nominal_lrc", &
-                              "top of atmosphere reflectance at the nominal wavelength of 3.75 microns at lrc", &
-                              DFNT_INT16, sym%LINEAR_SCALING, &
-                              Min_Ref_Ch20, Max_Ref_Ch20, "%", Missing_Value_Real4, Istatus)
-       Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
-     !--- etrop_LRC
-     if (Chan_On_Flag_Default(31) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(31),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                                "emiss_11um_nom_tropopause_lrc", &
-                                "emissivity_11_0_micron_nominal_tropopause_lrc", &
-                                "emissivity at the tropopause modeled at the nominal wavelength of 11.0 microns at lrc", &
-                                DFNT_INT16, sym%LINEAR_SCALING, &
-                                Min_Etropo, Max_Etropo, "none", Missing_Value_Real4, Istatus)
-       Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
 
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
@@ -3147,21 +3124,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    !---  bayes_sfc_mask
    Istatus = sfwdata(Sds_Id_Rtm(29), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-
-   !--- Ref_Ch20 LRC
-   if (Chan_On_Flag_Default(20) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ref_Ch20_LRC,sym%LINEAR_SCALING,Min_Ref_Ch20,Max_Ref_Ch20, &
-                                Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(30), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-   endif
-
-   !--- etrop LRC
-   if (Chan_On_Flag_Default(31) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Emiss_11um_Tropo_LRC,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(31), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-   endif
 
    !--- check for and report errors
    if (Istatus /= 0) then

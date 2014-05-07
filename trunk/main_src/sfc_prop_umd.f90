@@ -438,17 +438,6 @@ i_loop:    do i = 1,num_pix
      endif
     endif
 
-    !--- define desert based on surface type
-    Desert_Mask(i,j) = sym%NO
-    if ((Sfc_Type(i,j) == 12) .and. (snow(i,j) == sym%NO_SNOW)) then
-       Desert_Mask(i,j) = sym%YES
-    endif
-    if ((Chan_On_Flag_Default(20)) .and. &
-        (ch(20)%Sfc_Emiss(i,j) < 0.90 ) .and.  &
-        (abs(Lat(i,j)) < 60.0)) then
-       Desert_Mask(i,j) = sym%YES
-    endif
-
   end do i_loop
  end do j_loop
 

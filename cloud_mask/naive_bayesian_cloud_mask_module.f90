@@ -93,12 +93,8 @@ module naive_bayesian_cloud_mask_module
       real :: bt_ch31_atm_sfc
       real :: bt_ch32_atm_sfc
       real :: bt_ch31_ch27_covar
-      
       real :: ref_ch1_clear
-         
    end type cloud_mask_rtm_type
-   
-  
    
    type cloud_mask_sat_type
       logical , dimension(42) :: chan_on
@@ -116,22 +112,26 @@ module naive_bayesian_cloud_mask_module
       real :: emis_ch20_3x3_mean
       real :: ref_ch1_3x3_std
       real :: ref_ch1_3x3_min
-      
    end type cloud_mask_sat_type
+
+   type cloud_mask_diagnostic
+      real :: diagnostic_1
+      real :: diagnostic_2
+      real :: diagnostic_3
+   end type cloud_mask_diagnostic
 
    type cloud_mask_input_type
       character ( len =256) :: bayesian_mask_classifier      
       type (cloud_mask_geo_type) :: geo
       type (cloud_mask_sfc_type) :: sfc
-      type ( cloud_mask_rtm_type) :: rtm
-      type ( cloud_mask_sat_type) :: sat
-      
-   end type cloud_mask_input_type   
+      type (cloud_mask_rtm_type) :: rtm
+      type (cloud_mask_sat_type) :: sat
+   end type cloud_mask_input_type
           
          
    type bayes_coef_type
       character (len =120) :: cvs_version
-      character ( len =1000) :: file
+      character (len =1000) :: file
       logical :: is_read = .false.
       integer :: n_class
       integer :: n_bounds
@@ -164,15 +164,14 @@ contains
    !
    !
    !
-   subroutine cloud_mask_naive_bayes (   inp , erg ,  info_flags )
+   subroutine cloud_mask_naive_bayes ( inp , erg , info_flags , diag )
           
       implicit none
             
-      type ( cloud_mask_input_type )          , intent ( in) :: inp
-      
-      real , intent ( out) :: erg
-      
-      integer , intent(out) , optional  :: info_flags ( 7 )
+      type ( cloud_mask_input_type ) , intent ( in ) :: inp
+      type ( cloud_mask_diagnostic ) , intent ( out ) :: diag
+      real , intent ( out ) :: erg
+      integer , intent ( out ) , optional :: info_flags ( 7 )
       
       integer :: sfc_type_number 
       integer :: class_idx, sfc_idx
@@ -197,7 +196,7 @@ contains
       logical :: is_fire
       logical :: is_solar_contaminated
   
-	   real, parameter :: SOLZEN_DAY_THRESH = 85.0       !was 85.0
+      real, parameter :: SOLZEN_DAY_THRESH = 85.0       !was 85.0
       real, parameter :: AIRMASS_THRESH = 5.0
       real, parameter :: SOLZEN_375UM_NIGHT_THRESH = 90.0
       real, parameter :: SOLZEN_375UM_DAY_THRESH = 85.0
@@ -218,10 +217,8 @@ contains
       bayes_coef % file =trim(inp  % bayesian_mask_classifier ) 
       if ( .not. bayes_coef % is_read) call read_bayes_coeff ( ) 
       
-	       
       ! - determine sfc type
       
-     
       sfc_type_number =  bayes_sfc_type ( inp% geo % lat , inp % geo % lat &
          & , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
          & , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
@@ -609,11 +606,36 @@ contains
                 info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag )
                 info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1 )
             end if
-            
-            
            
          end if
-       
+
+         !-----------------------------------------------------------------------
+         ! --- Diagnostic Output for debugging in CLAVR-x
+         !select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
+         !  case ( et_class_T110 )
+         !  case ( et_class_TMAX_T )
+         !  case ( et_class_T_STD )
+         !  case ( et_class_E_TROP )
+         !  case ( et_class_FMFT )
+         !  case ( et_class_BTD_110_067 )
+         !  case ( et_class_BTD_110_067_COV )
+         !  case ( et_class_BTD_110_085 )
+         !  case ( et_class_E_037 )
+         !  case ( et_class_E_037_DAY )
+         !  case ( et_class_E_037_NGT )
+         !  case ( et_class_BTD_037_110_NGT )
+         !  case ( et_class_R_006_DAY )
+         !  case ( et_class_R_006_STD )
+         !  case ( et_class_R_006_MIN_3x3_DAY )
+         !  case ( et_class_R_RATIO_DAY )
+         !  case ( et_class_R_013_DAY )
+         !  case ( et_class_R_016_Day )
+         !     diag % diagnostic_1 = Classifier_Value  
+         !     diag % diagnostic_2 = Classifier_Value  
+         !     diag % diagnostic_3 = Classifier_Value  
+         !end select
+         !
+                
       end do class_loop
                         
             ! - compute Posterior_Cld_Probability
@@ -622,7 +644,6 @@ contains
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
                   bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
-                
                   
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
@@ -679,7 +700,7 @@ contains
       read(unit=lun,fmt=*) time_diff_max, n_class, n_bounds, n_sfc_bayes
       bayes_coef % n_class = n_class
       bayes_coef % n_bounds = n_bounds
-	  
+
       call bayes_coef % alloc ( n_class, n_bounds, n_sfc_bayes )
       
       do i_sfc = 1 , n_sfc_bayes
@@ -689,7 +710,7 @@ contains
          
          do i_class = 1 , n_class
             
-				read(unit=lun,fmt=*,iostat=ios)  &
+            read(unit=lun,fmt=*,iostat=ios)  &
                             int_dummy &
                           ,  int_dummy &
                           ,  int_dummy  &

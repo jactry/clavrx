@@ -54,7 +54,6 @@
 !              snow                                      integer (:,:)
 !              zsfc                                      real (:,:)
 !        1.4 rtm / statistics 
-!              bt_ch31_lrc                               real (:,:)
 !              bt_ch31_max_3x3                           real (:,:)
 !              bt_Ch31_Std_3x3                           real (:,:)
 !              bt_Ch20_Std_3x3                           real (:,:)
@@ -107,7 +106,6 @@ module naive_bayesian_clavrx_bridge_module
       , snow &
       , zsfc &
       , sst_anal_uni &
-      , bt_ch31_lrc &
       , bt_ch31_max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Bt_Ch20_Std_3x3 &
@@ -223,7 +221,6 @@ contains
             if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29 = ch(29) % bt_toa ( i , j )
             
             if ( chan_on_flag_default(31) == 1 ) then
-               mask_inp % rtm % bt_ch31_lrc     = Bt_Ch31_LRC ( i , j )
                mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
                mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
                mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo ( i , j )

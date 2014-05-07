@@ -1024,7 +1024,11 @@
 
             !--- surface emissivity
             if (use_seebor == sym%YES) then
-               do Chan_Idx = 20, 36
+
+               !--- force channel 20 read
+               call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), lat, lon, Space_Mask, ch(20)%Sfc_Emiss)
+
+               do Chan_Idx = 21, 36
                   if (Chan_Idx == 26) cycle
                   if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                      call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), lat, lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
@@ -1084,7 +1088,6 @@
    
             !--- define binary land and coast masks (yes/no) from land and coast flags
             call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Num_Scans_Read)   
-
 
             !---- ensure missing values for space scenes
             where (Space_Mask == sym%YES) 
@@ -1185,9 +1188,16 @@
                call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Num_Scans_Read)
             end if
 
-
             !--- interpolate surface type field to each pixel in segment
             call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)   
+
+            !--- compute desert mask cloud detection
+            Desert_Mask =  DESERT_MASK_FOR_CLOUD_DETECTION(ch(20)%Sfc_Emiss,Lat, Snow, Sfc_Type)
+
+            !--- compute city mask cloud detection
+            if (Chan_On_Flag_Default(42) == sym%YES) then
+             City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(42)%Rad_Toa, Sfc_Type)
+            endif
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                         
@@ -1287,13 +1297,6 @@
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(4) =  Segment_Time_Point_Seconds(4) + &
                &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
-
-            !--- compute pseudo observations
-            if (LRC_Flag == sym%YES) then
-               if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
-                  call COMPUTE_LRC_PSEUDO_OBS(Num_Pix,Num_Scans_Read)
-               end if
-            end if
 
             !--- compute the glint mask
             call COMPUTE_GLINT()

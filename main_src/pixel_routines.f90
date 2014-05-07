@@ -89,8 +89,9 @@ MODULE PIXEL_ROUTINES
           COMPUTE_ACHA_PERFORMANCE_METRICS, &
           COMPUTE_DCOMP_PERFORMANCE_METRICS, &
           COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS, &
-          COMPUTE_LRC_PSEUDO_OBS, &
-          MODIFY_LAND_CLASS_WITH_NDVI
+          MODIFY_LAND_CLASS_WITH_NDVI, &
+          DESERT_MASK_FOR_CLOUD_DETECTION, &
+          CITY_MASK_FOR_CLOUD_DETECTION
 
   private:: REMOTE_SENSING_REFLECTANCE, &
             NORMALIZED_DIFFERENCE_VEGETATION_INDEX, &
@@ -3215,57 +3216,6 @@ subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS(Cloud_Mask_Count,Nonconfident_
 end subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS
 
 
-!-----------------------------------------------------------
-! compute LRC statistics - treat all pixels with the same
-! LRC as being one object and store some information
-!-----------------------------------------------------------
-subroutine COMPUTE_LRC_PSEUDO_OBS(Number_of_Elements,Number_of_Lines)
-
-integer, intent(in)::  Number_of_Elements, Number_of_Lines
-integer:: Elem_Idx,Line_Idx
-integer:: Elem_LRC_Idx,Line_LRC_Idx
-
-
-if (Chan_On_Flag_Default(31) == sym%YES) then
-         Bt_Ch31_LRC = ch(31)%Bt_Toa
-         Bt_Ch31_Max_LRC = ch(31)%Bt_Toa
-         Emiss_11um_Tropo_LRC = ch(31)%Emiss_Tropo
-endif
-if (Chan_On_Flag_Default(20) == sym%YES) then
-         Ref_Ch20_LRC = ch(20)%Ref_Toa
-endif
-
-element_loop: do Elem_Idx = 1, Number_of_Elements
-  line_loop: do Line_Idx = 1, Number_of_Lines
-
-      Elem_LRC_Idx = I_LRC(Elem_Idx,Line_Idx)
-      Line_LRC_Idx = J_LRC(Elem_Idx,Line_Idx)
-
-      if (Elem_LRC_Idx > 1 .and. Line_LRC_Idx > 1) then
-
-          if (Chan_On_Flag_Default(31) == sym%YES) then
-           Bt_Ch31_LRC(Elem_Idx,Line_Idx) = ch(31)%Bt_Toa(Elem_LRC_Idx,Line_LRC_Idx)
-           Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) = ch(31)%Emiss_Tropo(Elem_LRC_Idx,Line_LRC_Idx)
-          endif
-
-          if (Chan_On_Flag_Default(20) == sym%YES) then
-           Ref_Ch20_LRC(Elem_Idx,Line_Idx) = ch(20)%Ref_Toa(Elem_LRC_Idx,Line_LRC_Idx)
-          endif
-
-      endif
-  end do line_loop
-end do element_loop
-
-
-Diag_Pix_Array_1 = Emiss_11um_Tropo_LRC
-Diag_Pix_Array_2 = ch(31)%Emiss_Tropo - Emiss_11um_Tropo_LRC
-Diag_Pix_Array_3 = I_LRC
-
-
-
-
-
-end subroutine COMPUTE_LRC_PSEUDO_OBS
 !==============================================================================
 !
 ! remote sensing reflectance - for ocean applications 
@@ -3400,6 +3350,76 @@ end subroutine COMPUTE_LRC_PSEUDO_OBS
   endif
 
  end subroutine SURFACE_REMOTE_SENSING
+!==============================================================================
+! COMPUTE_DESERT_MASK_FOR_CLOUD_DETECTION
+!
+! Purpose:  Feed the location of snow-free deserts to the cloud mask
+!
+!
+!==============================================================================
+integer(kind=int1) elemental function DESERT_MASK_FOR_CLOUD_DETECTION( &
+                                       Emiss_Sfc_375um,                 &
+                                       Lat,                             &
+                                       Snow,                            &
+                                       Surface_Type)
+
+   real(kind=real4), intent(in):: Emiss_Sfc_375um
+   real(kind=real4), intent(in):: Lat
+   integer(kind=int1), intent(in):: Snow
+   integer(kind=int1), intent(in):: Surface_Type
+
+   Desert_Mask_For_Cloud_Detection = 0
+
+   if ( Snow == sym%NO_SNOW .and.  &
+        Surface_Type > 0 .and.         &
+        Emiss_Sfc_375um < 0.93  .and.  &
+        abs(Lat) < 60.0 .and. &
+        ((Surface_Type == sym%OPEN_SHRUBS_SFC) .or.  &
+         (Surface_Type == sym%CLOSED_SHRUBS_SFC) .or. &
+         (Surface_Type == sym%GRASSES_SFC) .or.  &
+         (Surface_Type == sym%BARE_SFC)) ) then
+
+         Desert_Mask_For_Cloud_Detection = 1
+
+   endif
+
+end function DESERT_MASK_FOR_CLOUD_DETECTION
+!==============================================================================
+! COMPUTE_CITY_MASK_FOR_CLOUD_DETECTION
+!
+! Purpose:  Feed the location of cities to the cloud mask
+!
+!
+!==============================================================================
+integer(kind=int1) elemental function CITY_MASK_FOR_CLOUD_DETECTION( &
+                                       Rad_Lunar,                     &
+                                       Surface_Type)
+
+   real(kind=real4), intent(in):: Rad_Lunar
+   integer(kind=int1), intent(in):: Surface_Type
+
+   real, parameter:: Radiance_Lunar_City_Thresh = 2.5e-08
+
+   City_Mask_For_Cloud_Detection = 0
+
+   !--- use surface type information
+   if (Surface_Type == sym%URBAN_SFC) then
+      City_Mask_For_Cloud_Detection = 0
+   endif
+
+   !----------------------------------------------------------------------------
+   !--- if lunar radiance is available, assume large values are cities or other
+   !--- surface surfaces of light that we treat as cities
+   !--- note, need to check if lunar radiance is available.
+   !----------------------------------------------------------------------------
+   if (allocated(ch(42)%Rad_Toa)) then
+     if (Rad_Lunar > Radiance_Lunar_City_Thresh) then
+       City_Mask_For_Cloud_Detection = 1
+     endif
+   endif
+
+
+end function CITY_MASK_FOR_CLOUD_DETECTION
 
 !-----------------------------------------------------------
 ! end of MODULE

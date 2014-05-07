@@ -427,9 +427,6 @@ module PIXEL_COMMON
 
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Rad_Ch20_ems
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_LRC
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_Max_LRC
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_Std_LRC
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Solzen
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lat
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lon
@@ -544,6 +541,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Land_Modified
   integer(kind=int1), dimension(:,:), allocatable, public:: Coast
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Desert_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: City_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Sfc_Type
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Snow
   integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Hires
@@ -715,7 +713,6 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clear_Mean_3x3
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clear_Std_3x3
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Dark_Composite
-     real (kind=real4), dimension(:,:), allocatable, public:: Ref_Ch20_LRC
      real (kind=real4), dimension(:,:), allocatable, public:: Ndvi_Sfc
      real (kind=real4), dimension(:,:), allocatable, public:: Bt_Ch31_Sfc
      real (kind=real4), dimension(:,:), allocatable, public:: Rad_Ch20_ems_Sfc
@@ -810,7 +807,6 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Solar_Rtm
   real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Clear_Solar_Sfc_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ttropo_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_Nadir_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_12um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_85um_Tropo_Rtm
@@ -896,7 +892,11 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
          endif
       endif
+
    enddo
+
+   !--- force allocation of channel 20 surface emissivity for use in mask
+   if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
 
    !--- DNB Variable
    idx = 42
@@ -1565,7 +1565,6 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Ems_Ch20_Clear_Solar_Sfc_Rtm(dim1,dim2))
        allocate(Rad_Ch20_ems_Sfc(dim1,dim2))
        allocate(Ems_Ch20_Sfc(dim1,dim2))
-       allocate(Ref_Ch20_LRC(dim1,dim2))
    endif
 
    if (Chan_On_Flag_Default(31) == sym%YES) then
@@ -1578,12 +1577,8 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
       allocate(Elem_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Line_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Emiss_11um_Tropo_Nadir_Rtm(dim1,dim2))
-      allocate(Emiss_11um_Tropo_LRC(dim1,dim2))
       allocate(Rad_Clear_Ch31_Rtm_unbiased(dim1,dim2))
       allocate(Bt_Clear_Ch31_Rtm_unbiased(dim1,dim2))
-      allocate(Bt_Ch31_LRC(dim1,dim2))
-      allocate(Bt_Ch31_Max_LRC(dim1,dim2))
-      allocate(Bt_Ch31_Std_LRC(dim1,dim2))
    endif
 
    if (Chan_On_Flag_Default(32) == sym%YES) then
@@ -1620,7 +1615,6 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Ems_Ch20_Clear_Solar_Sfc_Rtm = Missing_Value_Real4
        Rad_Ch20_ems_Sfc = Missing_Value_Real4
        Ems_Ch20_Sfc = Missing_Value_Real4
-       Ref_Ch20_LRC = Missing_Value_Real4
    endif
 
    if (Chan_On_Flag_Default(31) == sym%YES) then
@@ -1633,12 +1627,8 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
       Elem_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Line_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Emiss_11um_Tropo_Nadir_Rtm = Missing_Value_Real4
-      Emiss_11um_Tropo_LRC = Missing_Value_Real4
       Rad_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
       Bt_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
-      Bt_Ch31_LRC = Missing_Value_Real4
-      Bt_Ch31_Max_LRC = Missing_Value_Real4
-      Bt_Ch31_Std_LRC = Missing_Value_Real4
    endif
 
    if (Chan_On_Flag_Default(32) == sym%YES) then
@@ -1674,7 +1664,6 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Ems_Ch20_Clear_Solar_Sfc_Rtm)
        deallocate(Rad_Ch20_ems_Sfc)
        deallocate(Ems_Ch20_Sfc)
-       deallocate(Ref_Ch20_LRC)
    endif
    if (Chan_On_Flag_Default(31) == sym%YES) then
       deallocate(Bt_Ch31_Mean_3x3)
@@ -1686,12 +1675,8 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
       deallocate(Elem_Idx_Min_Bt_Ch31_3x3)
       deallocate(Line_Idx_Min_Bt_Ch31_3x3)
       deallocate(Emiss_11um_Tropo_Nadir_Rtm)
-      deallocate(Emiss_11um_Tropo_LRC)
       deallocate(Rad_Clear_Ch31_Rtm_unbiased)
       deallocate(Bt_Clear_Ch31_Rtm_unbiased)
-      deallocate(Bt_Ch31_LRC)
-      deallocate(Bt_Ch31_Max_LRC)
-      deallocate(Bt_Ch31_Std_LRC)
    endif
    if (Chan_On_Flag_Default(32) == sym%YES) then
      deallocate(Rad_Clear_Ch32_Rtm_unbiased)
@@ -1936,6 +1921,7 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Glint_Mask(dim1,dim2))
    allocate(Glint_Mask_Lunar(dim1,dim2))
    allocate(Desert_Mask(dim1,dim2))
+   allocate(City_Mask(dim1,dim2))
    allocate(Snow_Hires(dim1,dim2))
    allocate(Snow_Glob(dim1,dim2))
    allocate(Snow(dim1,dim2))
@@ -1957,6 +1943,7 @@ subroutine RESET_SURFACE_ARRAYS
    Glint_Mask = Missing_Value_Int1
    Glint_Mask_Lunar = Missing_Value_Int1
    Desert_Mask = Missing_Value_Int1
+   City_Mask = Missing_Value_Int1
    Snow_Hires = Missing_Value_Int1
    Snow_Glob = Missing_Value_Int1
    Snow = Missing_Value_Int1
@@ -1978,6 +1965,7 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Glint_Mask)
    deallocate(Glint_Mask_Lunar)
    deallocate(Desert_Mask)
+   deallocate(City_Mask)
    deallocate(Snow_Hires)
    deallocate(Snow_Glob)
    deallocate(Snow)

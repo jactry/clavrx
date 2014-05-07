@@ -100,9 +100,11 @@ module naive_bayesian_clavrx_bridge_module
       , scatangle &
       , glint_mask &
       , land &
+      , sfc_type &
       , coast &
       , snow &
       , zsfc &
+      , sst_anal_uni &
       , bt_ch31_lrc &
       , bt_ch31_max_3x3 &
       , Bt_Ch31_Std_3x3 &
@@ -181,12 +183,14 @@ contains
             mask_inp % geo % airmass     = airmass ( i , j )
             mask_inp % geo % scat_angle  = scatangle ( i , j )
             mask_inp % geo % glint       = glint_mask ( i ,j )
-            mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i ,j ) == 1
+            mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
             mask_inp % sfc % land_class  = land ( i , j )
             mask_inp % sfc % coast_mask  = coast ( i , j ) 
             mask_inp % sfc % snow_class  = snow ( i , j )
+            mask_inp % sfc % sfc_type    = sfc_type ( i , j ) 
             mask_inp % sfc % dem         = zsfc ( i , j )
+            mask_inp % sfc % sst_anal_uni = sst_anal_uni ( i, j )
             
             if ( chan_on_flag_default(1) == 1 ) then
                mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_toa_clear ( i , j )
@@ -206,6 +210,9 @@ contains
                 mask_inp % sat % bt_ch20         = ch(20) % bt_toa ( i , j )
                 mask_inp % sat % emis_ch20_3x3_mean  = ems_ch20_median_3x3 ( i , j )
             end if
+            
+            ! -  sfc emissivity is always on 
+            mask_inp % sfc % emis_ch20 =  ch(20) % sfc_emiss ( i , j )
             
             if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )
             if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )

@@ -32,6 +32,8 @@ module naive_bayesian_cloud_mask_module
     type ( et_snow_class_type) , public :: ET_snow_class 
    
    type et_cloudiness_class_type
+      integer :: SPACE = 10
+      integer :: MISSING = -128
       integer :: CLOUDY = 3
       integer :: PROB_CLOUDY = 2
       integer :: PROB_CLEAR = 1

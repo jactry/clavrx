@@ -127,14 +127,17 @@ module naive_bayesian_clavrx_bridge_module
       , Solar_Contamination_Mask &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
-      , Diag_Pix_Array_3
+      , Diag_Pix_Array_3 &
+      , space_mask
      
       
              
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
-         cloud_mask_naive_bayes &
-       , cloud_mask_input_type &
-       , cloud_mask_diagnostic
+      &   cloud_mask_naive_bayes &
+      & , cloud_mask_input_type &
+      & , ET_cloudiness_class &
+      & , cloud_mask_diagnostic
+
       
    use FILE_TOOLS, only: &
       file_test   
@@ -176,6 +179,9 @@ contains
       ! -----------    loop over pixels -----   
       line_loop: do i = 1, num_pix
          elem_loop: do  j = 1,num_scans_read
+            
+            
+            if ( space_mask (i,j) == 1) cycle
             
             if ( land (i,j) < 0 ) cycle
             
@@ -221,6 +227,7 @@ contains
             if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29 = ch(29) % bt_toa ( i , j )
             
             if ( chan_on_flag_default(31) == 1 ) then
+               
                mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
                mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
                mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo ( i , j )
@@ -241,7 +248,7 @@ contains
              
             call cloud_mask_naive_bayes ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags , diag )
            
-            Bayes_Mask_Sfc_Type_Global ( i , j ) = ibits ( info_flags (3) , 0, 3 ) 
+            Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
             Cld_Test_Vector_Packed ( : , i , j )  = info_flags
 
             Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
@@ -268,6 +275,14 @@ contains
         
       where ( Posterior_Cld_Probability > 0.1 .and. Posterior_Cld_Probability < 0.5 )
          cld_mask = sym % PROB_CLEAR
+      end where 
+      
+      where ( space_mask == 1) 
+         cld_mask = ET_cloudiness_class % SPACE
+      end where
+      
+      where ( land < 0 .and. space_mask /= 1)
+         cld_mask = ET_cloudiness_class % MISSING
       end where 
 
 

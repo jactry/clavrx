@@ -260,7 +260,7 @@ contains
          if ( t_opa < 273.0 .and. t_opa /= MISSING_VALUE_REAL ) then
             ctype = et_cloud_type % SUPERCOOLED
          else          
-            if (z_opa < 1.0 .and. z_opa /= MISSING_VALUE_REAL ) ctype = et_cloud_type % FOG
+            if (z_opa < 1000.0 .and. z_opa /= MISSING_VALUE_REAL ) ctype = et_cloud_type % FOG
          end if
    
    end subroutine determine_type_water

@@ -10,6 +10,7 @@
 ! DESCRIPTION: 
 !
 ! AUTHORS:
+!   Steven Miller , CIRA
 !  Andrew Heidinger, Andrew.Heidinger@noaa.gov
 !  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
 !  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
@@ -110,8 +111,10 @@ contains
       integer :: j 
       integer :: dtg_index 
       integer ::  irrad_index 
-      double precision :: denorm1 , denorm2 , denorm3 , denorm_factor
-
+      double precision :: denorm1 
+      double precision :: denorm2
+      double precision :: denorm3
+      double precision :: denorm_factor
   
       logical :: dnb_verbose = .false.
       !logical :: dnb_verbose = .true.
@@ -120,7 +123,8 @@ contains
       integer :: num_pix , num_elem
  
       
-      ! --- executable ----
+      ! --- executable --------------------------------------
+      
       lunar_irrad_file     = trim(ancil_data_dir)//'dnb_ancils/lunar_irrad_Mean_DNB.bin'
       if ( .not. file_test ( trim(lunar_irrad_file) ) ) then
          print* , 'lunar irradiance file missing ', lunar_irrad_file
@@ -143,7 +147,7 @@ contains
       allocate ( ref_chdnb_lunar(num_pix,num_elem) )
       allocate ( rad_chdnb(num_pix, num_elem))
   
-      ! - read LUT values         
+      ! - read LUT values   for Sun Earth Moon geometry      
       open (unit=1,file=trim(lunar_irrad_file),status="old",action="read",&
             access="direct",form="unformatted",recl=float_size*2*num_irrad_tabvals)
       read (unit=1,rec=1) lunar_irrad_lut
@@ -202,11 +206,11 @@ contains
       deallocate ( dist_phase_lut ) 
  
       ! b) interpolate lunar_irrad_lut() to get current mean-geometry lunar irradiance pre-convolved to dnb srf 
-      phase_fraction = curr_phase_angle - int(curr_phase_angle)
-      phase_array    = lunar_irrad_lut(1,:)
-      irrad_index    =  index_in_vector(phase_array,num_irrad_tabvals,curr_phase_angle)
+      phase_fraction  = curr_phase_angle - int(curr_phase_angle)
+      phase_array     = lunar_irrad_lut(1,:)
+      irrad_index     = index_in_vector(phase_array,num_irrad_tabvals,curr_phase_angle)
       curr_mean_irrad = lunar_irrad_lut(2,irrad_index) + &
-                 &   phase_fraction*(lunar_irrad_lut(2,irrad_index+1)-lunar_irrad_lut(2,irrad_index))
+                     &   phase_fraction*(lunar_irrad_lut(2,irrad_index+1)-lunar_irrad_lut(2,irrad_index))
 
 
       if (dnb_verbose) then
@@ -215,8 +219,9 @@ contains
          print *,'lunar_irrad_lut(:,irrad_index) = ',lunar_irrad_lut(:,irrad_index)
          print *,'lunar_irrad_lut(:,irrad_index+1) = ',lunar_irrad_lut(:,irrad_index+1)
          print *,'curr_mean_irrad = ',curr_mean_irrad
-
       end if
+      
+      deallocate ( lunar_irrad_lut )
  
       !  c) define denormalization parameters to scale irradiance to current sun/earth/moon geometry
       cos_phase_angle = cos(curr_phase_angle * DTOR)
@@ -230,7 +235,7 @@ contains
  
       !  d) denormalize mean-geometry irradiance to current geometry
       !     also, convert from mw/m^2-um to w/m^2 (divide by 1000 and multiply by srf_integ)
-      lunar_irrad_dnb = curr_mean_irrad * denorm_factor * (srf_integ * 1.0e-03)
+      lunar_irrad_dnb = curr_mean_irrad * denorm_factor * (SRF_INTEG * 1.0e-03)
 
       if (dnb_verbose) then
          print *,'curr_mean_irrad (mw/m^2-micron)= ',curr_mean_irrad

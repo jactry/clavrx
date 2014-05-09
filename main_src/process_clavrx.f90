@@ -882,7 +882,7 @@
            call COMPUTE_LUNAR_REFLECTANCE (ch(42)%Rad_Toa &
                      & , Solzen, Lunzen &
                      & , start_year, month,day_of_month,start_time &
-                     & , moon_phase_angle , moon_illum_frac &
+                     & , moon_phase_angle  &
                      & , ancil_data_dir &
                      & , Lunar_placeholder)
             

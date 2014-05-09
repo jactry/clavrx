@@ -27,89 +27,123 @@
 !
 !--------------------------------------------------------------------------------------
 module dnb_retrievals_mod
-   use FILE_UTILITY
+   use FILE_TOOLS
 
    private
    public :: compute_lunar_reflectance
-
+   
+   integer, parameter :: INT2 = selected_int_kind(3)
+   integer, parameter :: INT4 = selected_int_kind(8)
+   integer, parameter :: REAL4 = selected_real_kind(6,37)
 
 contains
-   subroutine compute_lunar_reflectance ( rad_chdnb_input &
-             & , solzen, lunzen &
-             & , start_year, month,day_of_month,start_time &
-             & , moon_phase_angle , moon_illum_frac &
+   subroutine compute_lunar_reflectance ( &
+               rad_chdnb_input &
+             & , solzen &
+             & , lunzen &
+             & , start_year &
+             & , month &
+             & , day_of_month &
+             & , start_time &
+             & , moon_phase_angle &
              & , ancil_data_dir &
              & , ref_chdnb_lunar)
+             
 
       implicit none
-  
-      integer, parameter :: int2 = selected_int_kind(3)
-      integer, parameter :: int4 = selected_int_kind(8)
-      integer, parameter:: real4 = selected_real_kind(6,37)
-
-      real , intent(in) , dimension(:,:) :: rad_chdnb_input
-      real , intent(in) , dimension(:,:) :: solzen, lunzen
-      real ( kind = real4) , intent(in) :: moon_phase_angle , moon_illum_frac
-      integer ( kind = int4 ) :: start_time
-      integer ( kind = int2) , intent(in) ::  start_year , month , day_of_month
+      
+      ! - input
+      real , intent(in) :: rad_chdnb_input(:,:)
+      real , intent(in) :: solzen(:,:)
+      real , intent(in) :: lunzen(:,:)
+      integer(INT4), intent(in) :: start_time
+      integer(INT2), intent(in) :: start_year
+      integer(INT2), intent(in) :: month
+      integer(INT2), intent(in) :: day_of_month
+      real , intent(in) :: moon_phase_angle
       character ( len = * ), intent(in) :: ancil_data_dir
+      
+      ! - output
+      real, intent ( out ) ,allocatable :: ref_chdnb_lunar(:,:)
   
-      real, intent ( out ) , dimension(:,:),allocatable :: ref_chdnb_lunar
-      real, dimension(:,:) , allocatable :: rad_chdnb
-  
+      ! - paramaters
+         ! - physical
       double precision , parameter :: MEAN_EARTH_SUN_DIST = 149598022.6071
       double precision , parameter :: MEAN_EARTH_MOON_DIST = 384400.0
       real , parameter :: EARTH_RADIUS_KM = 6378.140
+      real , parameter:: SRF_INTEG = 0.32560294 ! integral of the DNB sensor response function (micron)
+      real , parameter:: ASTRO_DARK_THRESH = 109.0 ! Sun 19 degrees or more below horizon
+      real , parameter :: MIN_LUNAR_IRRAD_DNB = 1.0e-5 ! W/m^2 = 1.0e-09 W/cm^2, threshold for doing calcs 
+      
+      
+         !- other params
+      real , parameter:: PI = 3.1415926536
+      real , parameter::  DTOR = PI / 180.
+      integer :: FLOAT_SIZE  = 4
+      integer :: DOUBLE_SIZE = 8
+      
+      
+      real, dimension(:,:) , allocatable :: rad_chdnb
 
       double precision :: yyyymmddhh
-      double precision :: curr_phase_angle, cos_phase_angle, curr_earth_sun_dist
-      double precision :: curr_earth_moon_dist,curr_mean_irrad,cos_weighted_irrad,dum
+      double precision :: curr_phase_angle
+      double precision :: cos_phase_angle
+      double precision :: curr_earth_sun_dist
+      double precision :: curr_earth_moon_dist 
+      double precision :: curr_mean_irrad
+      double precision :: cos_weighted_irrad
+      
+
+      integer( kind = 4 ) , parameter :: num_irrad_tabvals = 181
+      integer( kind = 4 ) , parameter :: num_dist_tabvals = 184080
+      real, allocatable :: lunar_irrad_lut (:,:)
+      double precision, allocatable :: dist_phase_lut(:,:)
+      double precision, allocatable :: phase_array(:)
   
-      character( len = 128 ) ::dnb_lut_file
-      integer( kind = 4 ) :: num_irrad_tabvals = 181
-      integer( kind = 4 ) :: num_dist_tabvals = 184080
-      real, dimension(:,:), allocatable :: lunar_irrad_lut
-      double precision, dimension( : , : ), allocatable :: dist_phase_lut
-      double precision, dimension( : ), allocatable :: phase_array
-  
-      integer :: float_size = 4
-      integer :: double_size = 8
-      real :: hour_fraction , phase_fraction
-      real :: minute , hour
+
+      real :: hour_fraction 
+      real :: phase_fraction
+      real :: minute 
+      real :: hour
       real :: lunar_irrad_dnb 
-      integer :: i , j , dtg_index , irrad_index , allocatestatus
+      integer :: i 
+      integer :: j 
+      integer :: dtg_index 
+      integer ::  irrad_index 
       double precision :: denorm1 , denorm2 , denorm3 , denorm_factor
-      real :: SRF_INTEG = 0.32560294 ! integral of the DNB sensor response function (micron)
-      real :: ASTRO_DARK_THRESH = 109.0 ! Sun 19 degrees or more below horizon
-      real :: MIN_LUNAR_IRRAD_DNB = 1.0e-5 ! W/m^2 = 1.0e-09 W/cm^2, threshold for doing calcs
- 
-      real , parameter:: PI = 3.14159
-      real ::  DTOR = PI / 180.
+
   
       logical :: dnb_verbose = .false.
-    ! logical :: dnb_verbose = .true.
+      !logical :: dnb_verbose = .true.
       character(len=128) :: lunar_irrad_file 
       character(len=128) :: distance_table_file
       integer :: num_pix , num_elem
  
-      ! --- executable
-      lunar_irrad_file = trim(ancil_data_dir)//'dnb_ancils/lunar_irrad_Mean_DNB.bin'
-      distance_table_file=trim(ancil_data_dir)//'dnb_ancils/DIST_2010-2030_double.bin'
       
+      ! --- executable ----
+      lunar_irrad_file     = trim(ancil_data_dir)//'dnb_ancils/lunar_irrad_Mean_DNB.bin'
+      if ( .not. file_test ( trim(lunar_irrad_file) ) ) then
+         print* , 'lunar irradiance file missing ', lunar_irrad_file
+         return
+      end if   
+      
+      distance_table_file  = trim(ancil_data_dir)//'dnb_ancils/DIST_2010-2030_double.bin'
+      if ( .not. file_test ( trim(distance_table_file) ) ) then
+         print* , 'lunar irradiance file missing ', distance_table_file
+         return
+      end if 
+      
+           
       num_pix = ubound(rad_chdnb_input,1)
       num_elem = ubound(rad_chdnb_input,2)
       
-      allocate ( lunar_irrad_LUT(2,num_irrad_tabvals),dist_phase_LUT(4,num_dist_tabvals))
+      allocate ( lunar_irrad_LUT(2,num_irrad_tabvals) )
+      allocate ( dist_phase_LUT(4,num_dist_tabvals))
       allocate ( phase_array(num_irrad_tabvals) )
-      allocate ( ref_chdnb_lunar(num_pix,num_elem),rad_chdnb(num_pix, num_elem))
+      allocate ( ref_chdnb_lunar(num_pix,num_elem) )
+      allocate ( rad_chdnb(num_pix, num_elem))
   
-      ! check if files are exist
-      if (file_exists(trim(lunar_irrad_file)) .eqv. .false. &
-         .or. file_exists(trim(distance_table_file)) .eqv. .false.) then
-         print *,'DNB Ancilary data are missing, stopping'
-         stop 88
-      endif
-         
+      ! - read LUT values         
       open (unit=1,file=trim(lunar_irrad_file),status="old",action="read",&
             access="direct",form="unformatted",recl=float_size*2*num_irrad_tabvals)
       read (unit=1,rec=1) lunar_irrad_lut
@@ -120,10 +154,8 @@ contains
       read (unit=1,rec=1) dist_phase_lut
       close (1)
 
-      !***************************************************************
-      ! 3. compute toa downwelling lunar irradiance (lunar_irrad_dnb) for current date/time
-      !***************************************************************
- 
+      
+      ! -  3. compute toa downwelling lunar irradiance (lunar_irrad_dnb) for current date/time      
       minute = mod(start_time/1000./60., 60.)
       hour_fraction = minute / 60.0
       hour = floor(start_time/1000./60./60.)
@@ -133,12 +165,20 @@ contains
       dtg_index = min(num_dist_tabvals,dtg_index)
       dtg_index = max(1,dtg_index)
 
-      curr_phase_angle    = dist_phase_lut(2,dtg_index) + &
-                       hour_fraction*(dist_phase_lut(2,dtg_index+1)-dist_phase_lut(2,dtg_index))
-      curr_earth_sun_dist  = dist_phase_lut(3,dtg_index) + &
-                       hour_fraction*(dist_phase_lut(3,dtg_index+1)-dist_phase_lut(3,dtg_index))
-      curr_earth_moon_dist = dist_phase_lut(4,dtg_index) + &
-                       hour_fraction*(dist_phase_lut(4,dtg_index+1)-dist_phase_lut(4,dtg_index))
+      curr_phase_angle    = dist_phase_lut(2,dtg_index)  &
+                        & +  hour_fraction &
+                        & * (dist_phase_lut(2,dtg_index + 1) &
+                        & - dist_phase_lut(2,dtg_index))
+                        
+      curr_earth_sun_dist  = dist_phase_lut(3,dtg_index)  &
+                        & + hour_fraction &
+                        & * (dist_phase_lut(3,dtg_index + 1) &
+                        & - dist_phase_lut(3,dtg_index))
+                        
+      curr_earth_moon_dist = dist_phase_lut(4,dtg_index)  &
+                        & + hour_fraction &
+                        & * (dist_phase_lut(4,dtg_index + 1) &
+                        & - dist_phase_lut(4,dtg_index))
 
       if (dnb_verbose) then
 
@@ -157,16 +197,19 @@ contains
          print *,''
          print *,'solar angle min max ', minval(solzen),maxval(solzen) 
       end if
+      
+      
+      deallocate ( dist_phase_lut ) 
  
       ! b) interpolate lunar_irrad_lut() to get current mean-geometry lunar irradiance pre-convolved to dnb srf 
       phase_fraction = curr_phase_angle - int(curr_phase_angle)
-      phase_array = lunar_irrad_lut(1,:)
-      irrad_index =  index_in_vector(phase_array,num_irrad_tabvals,curr_phase_angle)
+      phase_array    = lunar_irrad_lut(1,:)
+      irrad_index    =  index_in_vector(phase_array,num_irrad_tabvals,curr_phase_angle)
       curr_mean_irrad = lunar_irrad_lut(2,irrad_index) + &
                  &   phase_fraction*(lunar_irrad_lut(2,irrad_index+1)-lunar_irrad_lut(2,irrad_index))
 
-      if (dnb_verbose) then
 
+      if (dnb_verbose) then
          print *,'phase_fraction = ',phase_fraction
          print *,'irrad_index = ',irrad_index
          print *,'lunar_irrad_lut(:,irrad_index) = ',lunar_irrad_lut(:,irrad_index)
@@ -199,13 +242,13 @@ contains
       ref_chdnb_lunar = -999.0
       do i=1,num_pix
          do j=1,num_elem
-          
-            if (rad_chdnb ( i , j ) > -1.0) ref_chdnb_lunar( i , j ) = 0.0
-          
+            
             if (rad_chdnb( i , j ) < 0 .or. &
                   & solzen( i , j ) < astro_dark_thresh .or. &
                   & lunzen( i , j ) > 90.0) cycle 
-             
+          
+            if (rad_chdnb ( i , j ) > -1.0) ref_chdnb_lunar( i , j ) = 0.0
+            
             cos_weighted_irrad = cos(lunzen( i , j ) * DTOR) * lunar_irrad_dnb
              
             if (cos_weighted_irrad > MIN_LUNAR_IRRAD_DNB) then 
@@ -221,6 +264,9 @@ contains
 
          end do !j
       end do !i
+      
+      deallocate ( rad_chdnb)
+      
        
 
    contains

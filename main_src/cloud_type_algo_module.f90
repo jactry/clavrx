@@ -45,6 +45,7 @@ module cloud_type_algo_module
       integer :: SMOKE = 12
       integer :: FIRE = 13
       integer :: LAST = 13
+      integer :: MISSING = -128
    end type    
    type ( et_cloudtype_class_type ) :: et_cloud_type
    

@@ -101,7 +101,8 @@ module cloud_type_bridge_module
       , Beta_11um_133um_Tropo_Rtm &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
-      , Diag_Pix_Array_3
+      , Diag_Pix_Array_3 &
+      , bad_pixel_mask
                  
    use CONSTANTS, only : &
         Cloud_Type_Version
@@ -157,7 +158,12 @@ contains
       !-----------    loop over LRC core pixels to get ice probabbilty -----         
       elem_loop: do  j = 1,num_scans_read
          line_loop: do i = 1, num_pix  
-           
+            
+            if ( bad_pixel_mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % MISSING
+               cycle
+            end if 
+            
             if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i,j ) = et_cloud_type % CLEAR
                 cycle
@@ -184,6 +190,11 @@ contains
       ! - now loop over all non lrc-cores
       elem_loop1: do  j = 1,num_scans_read
          line_loop1: do i = 1, num_pix  
+            
+            if ( bad_pixel_mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % MISSING
+               cycle
+            end if 
             
             if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR

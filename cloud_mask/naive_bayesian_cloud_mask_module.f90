@@ -68,8 +68,10 @@ module naive_bayesian_cloud_mask_module
       real :: lon
       real :: sol_zen
       real :: sat_zen
+      real :: Lunar_zen
       real :: airmass
       real :: scat_angle
+      real :: scat_angle_lunar
       integer :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
@@ -82,6 +84,7 @@ module naive_bayesian_cloud_mask_module
       real :: dem
       real :: emis_ch20
       real :: sst_anal_uni
+      logical :: is_city
    end type cloud_mask_sfc_type
    
    type cloud_mask_rtm_type 
@@ -96,6 +99,7 @@ module naive_bayesian_cloud_mask_module
       real :: bt_ch32_atm_sfc
       real :: bt_ch31_ch27_covar
       real :: ref_ch1_clear
+      real :: ref_dnb_clear
    end type cloud_mask_rtm_type
    
    type cloud_mask_sat_type
@@ -114,6 +118,9 @@ module naive_bayesian_cloud_mask_module
       real :: emis_ch20_3x3_mean
       real :: ref_ch1_3x3_std
       real :: ref_ch1_3x3_min
+      real :: ref_dnb_3x3_std
+      real :: ref_dnb_3x3_min
+      real :: ref_dnb_lunar
    end type cloud_mask_sat_type
 
    type cloud_mask_diagnostic
@@ -153,6 +160,8 @@ module naive_bayesian_cloud_mask_module
       integer, allocatable :: Classifier_Value_Name_enum(:)
       integer, allocatable :: flag_idx(:)
       
+     
+      
    
    contains
       procedure :: alloc => alloc_bayes_coef
@@ -160,8 +169,7 @@ module naive_bayesian_cloud_mask_module
    end type bayes_coef_type
    
    type ( bayes_coef_type) , private , save :: bayes_coef
-   
-   
+  
 contains
    !
    !
@@ -171,7 +179,7 @@ contains
       implicit none
             
       type ( cloud_mask_input_type ) , intent ( in ) :: inp
-      type ( cloud_mask_diagnostic ) , intent ( out ) :: diag
+      type ( cloud_mask_diagnostic ) , intent ( inout ) :: diag
       real , intent ( out ) :: erg
       integer , intent ( out ) , optional :: info_flags ( 7 )
       
@@ -197,6 +205,7 @@ contains
       logical :: is_cloud_shadow
       logical :: is_fire
       logical :: is_solar_contaminated
+      logical :: use_lunar_refl_for_vis_tests
   
       real, parameter :: SOLZEN_DAY_THRESH = 85.0       !was 85.0
       real, parameter :: AIRMASS_THRESH = 5.0
@@ -235,6 +244,17 @@ contains
             ! - several 0/1 flags
       is_mountain =  inp % sfc % dem  > 2000.0 &
                             & .and. sfc_idx /= 6
+                            
+      use_lunar_refl_for_vis_tests = .false.
+      if ( inp % sat % chan_on(42)) then
+         if ( inp % sat % ref_dnb_lunar >= 0. .and. &
+          ( inp % geo %  scat_angle_lunar  > 80. .or. inp % geo % lunar_zen  > 95. ) .and. &
+          .not. is_mountain .and. &
+          .not. inp % sfc % coast_mask .and. &
+          .not. inp % sfc % snow_class  == ET_snow_class % SNOW )  then
+            use_lunar_refl_for_vis_tests  = .true.      
+         end if    
+      end if                       
             
       has_cold_btd = .false.
       if ( inp % sat % chan_on(31) ) then
@@ -502,47 +522,87 @@ contains
            idx_info_flag = 6
               
         case( et_class_R_006_DAY)
-           if ( .not. inp % sat % chan_on(1) ) cycle
-           if ( inp % geo % glint  )  cycle class_loop
-           if ( is_forward_scatter )  cycle class_loop
-           if ( is_mountain ) cycle class_loop
-           if ( .not. is_day_063um ) cycle
-           if ( inp % sfc % snow_class  == ET_snow_class % SNOW ) cycle
+        
+        
+            
+            
+            ! - this solar test can be also applied for lunar
+            !TODO - make own lunar visible coefficients
+            !
+            if ( use_lunar_refl_for_vis_tests ) then
+               Classifier_Value = reflectance_gross_contrast_test( &
+                       &  inp % rtm %  ref_dnb_clear &
+                       & ,   inp % sat % ref_dnb_lunar )
+               is_on_test = .true.
+               pos_info_flag = 4
+               idx_info_flag = 6   
+            else 
+               if ( .not. inp % sat % chan_on(1) ) cycle
+               if ( inp % geo % glint  )  cycle class_loop
+               if ( is_forward_scatter )  cycle class_loop
+           	   if ( is_mountain ) cycle class_loop
+               if ( .not. is_day_063um ) cycle
+               if ( inp % sfc % snow_class  == ET_snow_class % SNOW ) cycle
                             
-           Classifier_Value = reflectance_gross_contrast_test( &
+               Classifier_Value = reflectance_gross_contrast_test( &
                        &  inp % rtm %  ref_ch1_clear &
                        & ,   inp % sat % ref_ch1 )
-           is_on_test = .true.
-           pos_info_flag = 4
-           idx_info_flag = 6   
-       
+               is_on_test = .true.
+               pos_info_flag = 4
+               idx_info_flag = 6   
+            
+            end if
               
          case( et_class_R_006_STD)
-            if ( .not. inp % sat % chan_on(1) ) cycle class_loop
-            if ( .not. is_day_063um_spatial_tests ) cycle
-            if ( is_mountain  ) cycle class_loop
-            if ( inp % sfc % coast_mask   ) cycle
-            if ( .not. is_day_063um ) cycle class_loop
+            
+            if ( use_lunar_refl_for_vis_tests ) then
+              
            
-            Classifier_Value = inp % sat % ref_ch1_3x3_std 
+               Classifier_Value = inp % sat % ref_dnb_3x3_std 
            
-            is_on_test = .true.
-            pos_info_flag = 6
-            idx_info_flag = 6 
+               is_on_test = .true.
+               pos_info_flag = 6
+               idx_info_flag = 6 
+            else
+         
+               if ( .not. inp % sat % chan_on(1) ) cycle class_loop
+               if ( .not. is_day_063um_spatial_tests ) cycle
+               if ( is_mountain  ) cycle class_loop
+               if ( inp % sfc % coast_mask   ) cycle
+               if ( .not. is_day_063um ) cycle class_loop
            
+               Classifier_Value = inp % sat % ref_ch1_3x3_std 
+           
+               is_on_test = .true.
+               pos_info_flag = 6
+               idx_info_flag = 6 
+            end if
+            
          case( et_class_R_006_MIN_3x3_DAY )
-            if ( .not. inp % sat % chan_on(1) ) cycle class_loop
-            if ( .not. is_day_063um_spatial_tests ) cycle
-            if ( is_mountain  ) cycle class_loop
-            if ( inp % sfc % coast_mask   ) cycle
+         
+            if ( use_lunar_refl_for_vis_tests ) then
+               Classifier_Value = relative_visible_contrast_test ( &
+                       &  inp % sat % ref_dnb_3x3_min &
+                       & , inp % sat %ref_dnb_lunar  ) 
+                                         
+               is_on_test = .true.
+               pos_info_flag = 0
+               idx_info_flag = 7 
+            else
+                  
+               if ( .not. inp % sat % chan_on(1) ) cycle class_loop
+               if ( .not. is_day_063um_spatial_tests ) cycle
+               if ( is_mountain  ) cycle class_loop
+               if ( inp % sfc % coast_mask   ) cycle
           
-            Classifier_Value = relative_visible_contrast_test ( &
+               Classifier_Value = relative_visible_contrast_test ( &
                        &  inp % sat % ref_ch1_3x3_min &
                        & , inp % sat %ref_ch1  ) 
                                          
-            is_on_test = .true.
-            pos_info_flag = 0
-            idx_info_flag = 7    
+               is_on_test = .true.
+               pos_info_flag = 0
+               idx_info_flag = 7    
+           end if
            
         case( et_class_R_RATIO_DAY)
            if ( .not. inp %  sat % chan_on(1) ) cycle class_loop
@@ -650,6 +710,9 @@ contains
                   
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
+            
+            
+           
           
    end subroutine cloud_mask_naive_bayes
    
@@ -790,7 +853,7 @@ contains
       
          
       bayes_coef % is_read = .true.
-	   	   
+	   	   print*,' bayesdone'
    
    end subroutine read_bayes_coeff
    

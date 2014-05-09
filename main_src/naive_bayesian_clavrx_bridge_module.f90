@@ -44,15 +44,18 @@
 !              lon                                       real (:,:)
 !              lat                                       real (:,:)                        
 !              solzen                                    real (:,:)
+!              lunzen                                    real (:,:)
 !              scatangle                                 real (:,:)
 !              airmass                                   real (:,:)
-!              glint_mask                                integer (:,:)
+!              glint_mask                                integer (:,:)       
 !              Solar_Contamination_Mask                  integer (:,:)
+!              scatangle_lunar                           real (:,:)             ONLY VIIRS
 !        1.3 surface 
 !              land                                      integer (:,:)
 !              coast                                     integer (:,:)
 !              snow                                      integer (:,:)
 !              zsfc                                      real (:,:)
+!              city_mask                                 integer (:,:)
 !        1.4 rtm / statistics 
 !              bt_ch31_max_3x3                           real (:,:)
 !              bt_Ch31_Std_3x3                           real (:,:)
@@ -97,6 +100,7 @@ module naive_bayesian_clavrx_bridge_module
         lon &
       , lat &
       , solzen &
+      , lunzen &
       , airmass &
       , scatangle &
       , glint_mask &
@@ -128,7 +132,11 @@ module naive_bayesian_clavrx_bridge_module
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
-      , space_mask
+      , space_mask &
+      , city_mask &
+      , Ref_ChDNB_Lunar_Std_3x3 &
+      , Ref_ChDNB_Lunar_Min_3x3 &
+      , scatangle_lunar
      
       
              
@@ -242,6 +250,18 @@ contains
                mask_inp % rtm % emis_ch32_tropo    = ch(32) % emiss_tropo (i,j)
                mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
                mask_inp % sat % bt_ch32             = ch(32) % bt_toa ( i , j )
+            end if
+            
+            ! - dnb cloud mask addition at night
+            if ( chan_on_flag_default(42) == 1 .and. allocated( ch(42)%Ref_Lunar_Toa  )  ) then
+               mask_inp % sat % ref_dnb_lunar = ch(42)%Ref_Lunar_Toa ( i, j)
+               mask_inp % geo % lunar_zen = lunzen ( i,j )
+               mask_inp % rtm % ref_dnb_clear = ch(42)%Ref_Lunar_Toa_Clear(i,j)
+               mask_inp % sfc % is_city = city_mask (i,j) == 1
+               mask_inp % sat % ref_dnb_3x3_std = Ref_ChDNB_Lunar_Std_3x3 (i,j)
+               mask_inp % sat % ref_dnb_3x3_min = Ref_ChDNB_Lunar_Min_3x3 (i,j)
+               mask_inp % geo % scat_angle_lunar = scatangle_lunar (i,j)
+               
             end if
 
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1

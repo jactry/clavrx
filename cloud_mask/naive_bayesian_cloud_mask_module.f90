@@ -853,7 +853,7 @@ contains
       
          
       bayes_coef % is_read = .true.
-	   	   print*,' bayesdone'
+	   	   
    
    end subroutine read_bayes_coeff
    

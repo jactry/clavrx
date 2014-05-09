@@ -6,21 +6,26 @@ program test_cloud_mask
 
 
 use naive_bayesian_cloud_mask_module, only : &
-      &   cloud_mask_naive_bayes &
+       & cloud_mask_naive_bayes &
       & , cloud_mask_input_type &
       & , dust_detection &
-      & , fire_detection
+      & , fire_detection &
+      , cloud_mask_diagnostic
       
       
 type ( cloud_mask_input_type ) :: inp
 integer :: info_flags(7)
 real :: erg
 integer :: counter
+type (cloud_mask_diagnostic)  :: diag 
+
+ 
+  
 
 
-print*,dust_detection(-12.,12.,1.,1,1)
+print*,'DUST detection: ',dust_detection(-12.,12.,1.,1,1)
 
-print*,fire_detection ( 310.,312., 2., 1. ,77. )
+print*,'FIRE detection: ',fire_detection ( 310.,312., 2., 1. ,77. )
 
 
 inp % bayesian_mask_classifier = &
@@ -71,7 +76,7 @@ inp % bayesian_mask_classifier = &
                        
             inp % sat % chan_on  = .true.
                          
-            call cloud_mask_naive_bayes ( inp, erg , info_flags )      
+            call cloud_mask_naive_bayes ( inp, erg , info_flags , diag )      
             print*,'cloud probability: ',erg
             print*,'info flags: ', info_flags
             counter = 0

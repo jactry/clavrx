@@ -583,24 +583,24 @@ subroutine CONVERT_TIME(j1,j2)
    integer, intent(in):: j1,j2
    integer:: i,j
 
-!--- loop over scans
-   DO j = j1,j1+j2-1
+   !--- loop over scans
+   do j = j1,j1+j2-1
 
-!--- loop over pixels
-    DO i = 1, Num_Pix
+    !--- loop over pixels
+    do i = 1, Num_Pix
 
-!--- check for a bad pixel
+      !--- check for a bad pixel
       if (Bad_Pixel_Mask(i,j) == sym%YES) then
-        CYCLE
+        cycle
       endif
 
-!--- convert ms time in leveL1b to utc time in hours
+      !--- convert ms time in leveL1b to utc time in hours
       Utc_Scan_Time_Hours(j) = Scan_Time(j) / 60.0 / 60.0/ 1000.0
 
-!--- compute local time based on utc and longitude
+      !--- compute local time based on utc and longitude
       Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + lon(i,j) / 15.0
 
-!--- constrain local time to be between 0 and 24 
+      !--- constrain local time to be between 0 and 24 
       if (Pixel_Local_Time_Hours(i,j) > 24.0) then 
           Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) - 24.0
       endif
@@ -609,9 +609,9 @@ subroutine CONVERT_TIME(j1,j2)
           Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) + 24.0
       endif
 
-    ENDDO
+    enddo
 
-   ENDDO
+   enddo
 
 end subroutine CONVERT_TIME
 

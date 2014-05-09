@@ -1243,7 +1243,7 @@
                Segment_Time_Point_Seconds(3) =  Segment_Time_Point_Seconds(3) + &
                   &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
             end if
-   
+
             !*******************************************************************
             ! Marker: Spatial metrics processing
             !*******************************************************************
@@ -1354,9 +1354,6 @@
 
                !--- cloud type
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
-               
-
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
 
                   Cld_Type = Cld_Type_Aux
@@ -1366,8 +1363,6 @@
                else  
                   call CLOUD_TYPE_BRIDGE()
                end if
-
-        
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                   Segment_Time_Point_Seconds(7) =  Segment_Time_Point_Seconds(7) + &
@@ -1383,7 +1378,14 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
 
-               if (ACHA_Mode >= 0) then    !currently, no avhrr_1_Flag algorithm
+               call COMPUTE_OPAQUE_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
+               call COMPUTE_H2O_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
+
+               if (ACHA_Mode == 0) then
+                  call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
+               endif
+
+               if (ACHA_Mode > 0) then 
 
                   !--- AWG CLoud Height Algorithm (ACHA)
                   call AWG_CLOUD_HEIGHT_BRIDGE()
@@ -1398,6 +1400,7 @@
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
 
                end if
+               
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(8) =  Segment_Time_Point_Seconds(8) + &

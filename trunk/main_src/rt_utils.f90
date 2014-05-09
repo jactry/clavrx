@@ -482,7 +482,6 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
    integer:: Zen_Idx_prev
    real:: Lat_x
    real:: Lon_x
-   real:: Z_Sfc_km
    real:: Prof_Weight
    real:: Satzen_Mid_Bin
    integer:: Zen_Idx
@@ -724,14 +723,11 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
   ! compute clear TOA radiance
   !-----------------------------------------------------------------------------  
   
-   !--- compute pixel Level surface pressure based on pixel surface elevation
-   Z_Sfc_km = Zsfc(Elem_Idx,Line_Idx) / 1000.0   !km
-
    !---- compute the surface level for this pixel based on high-res elevation
    Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%Sfc_Level
 
    if ((Land(Elem_Idx,Line_Idx) == sym%LAND) .and. (Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4)) then
-    call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Z_Sfc_km,Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
+    call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Zsfc(Elem_Idx,Line_Idx),Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
    endif
    Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = max(1,min(NLevels_Rtm-1,Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)))
 
@@ -747,9 +743,8 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
    endif 
 
    !-- vertical interp weight
-   Prof_Weight = (Z_Sfc_km - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
+   Prof_Weight = (Zsfc(Elem_Idx,Line_Idx) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
        (Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx+1) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx))
-
 
    !--- constrain - important when high res topo differs from low res nwp topo
    Prof_Weight = max(0.0,min(1.0,Prof_Weight))

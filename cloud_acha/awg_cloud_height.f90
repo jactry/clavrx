@@ -139,7 +139,7 @@ module AWG_CLOUD_HEIGHT
   real, private:: Btd_11um_12um_Btd_11um_85um_Covar
   real, private:: Btd_11um_67um_Btd_11um_133um_Covar
 
-  real, private, PARAMETER:: Dt_Dz_Strato = -6.5 !K/km
+  real, private, PARAMETER:: Dt_Dz_Strato = -6500.0 !K/m
   real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
 
   contains 
@@ -1453,16 +1453,16 @@ if (Fail_Flag == symbol%NO) then  !successful retrieval if statement
       (Cloud_Type == sym%WATER_TYPE) .or. &
       (Cloud_Type == sym%FOG_TYPE))) then
 
-       !-- select lapse rate
-       Lapse_Rate = LAPSE_RATE_OCEAN
-
+       !-- select lapse rate  (k/km)
        Lapse_Rate =  -0.061  + &
                      1.67*Delta_Cld_Temp_Sfc_Temp   &
                      -0.124*(Delta_Cld_Temp_Sfc_Temp**2)   &
                      +0.00343*(Delta_Cld_Temp_Sfc_Temp**3)
 
+       Lapse_Rate = Lapse_Rate * 1000.0  !(K/m)
+
        !-- compute height
-       Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp /Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)/1000.0
+       Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
 
        !--- compute pressure
        call KNOWING_Z_COMPUTE_T_P(symbol,Output%Pc(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc(Elem_Idx,Line_Idx),Ilev)
@@ -1572,6 +1572,9 @@ endif     ! ---------- end of data check
  
  !-----------------------------------------------------------------------------
  !--- Cloud Base and Top
+ !---
+ !--- Note 1. Extinction values are in km^(-1)
+ !--- Note 2. All heights and thickness are converted to meters
  !-----------------------------------------------------------------------------
  if (Output%Zc(Elem_Idx,Line_Idx) /= Missing_Value_Real4 .and. &
      Output%Tau(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
@@ -1602,12 +1605,13 @@ endif     ! ---------- end of data check
           end select
        endif
 
-       Cloud_Geometrical_Thickness = Output%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction
+       Cloud_Geometrical_Thickness = Output%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction   !(km)
+       Cloud_Geometrical_Thickness = Cloud_Geometrical_Thickness * 1000.0 !(m)
 
        if (Output%Tau(Elem_Idx,Line_Idx) < 2.0) then 
-          Cloud_Geometrical_Thickness_Top_Offset = Cloud_Geometrical_Thickness/2.0
+          Cloud_Geometrical_Thickness_Top_Offset = Cloud_Geometrical_Thickness/2.0    !(m)
        else
-          Cloud_Geometrical_Thickness_Top_Offset = 1.0 / Cloud_Extinction
+          Cloud_Geometrical_Thickness_Top_Offset = 1000.0 / Cloud_Extinction !(m)
        endif
 
        Zc_Top_Max = Hght_Prof_Rtm(Tropo_Level_Rtm)
@@ -1618,11 +1622,13 @@ endif     ! ---------- end of data check
           Output%Zc_Top(Elem_Idx,Line_Idx) = Output%Zc(Elem_Idx,Line_Idx)
        else
           Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
-                                             Output%Zc(Elem_Idx,Line_Idx) + Cloud_Geometrical_Thickness_Top_Offset)
+                                             Output%Zc(Elem_Idx,Line_Idx) +  &
+                                             Cloud_Geometrical_Thickness_Top_Offset)
        endif
 
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Output%Zc(Elem_Idx,Line_Idx), &
-                                 max(Zc_Base_Min, Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
+                                           max(Zc_Base_Min,  &
+                                           Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
 
  endif
 
@@ -1719,35 +1725,6 @@ end do pass_loop
   deallocate(Sy_inv)
   deallocate(Emiss_Vector)
   deallocate(AKM)
-
-  !--------------------------------------------------------------------------
-  ! Update Global Output Variables and destroy local POINTERs and memory
-  ! Moved outside to marshaling code
-  !--------------------------------------------------------------------------
-
-
-
-  !----------------------------
-  ! scale height to be in meters for GEOCAT
-  !This ifdef needs to be removed. Move to marshalling code
-  !----------------------------
-
-
-#ifdef ISGEOCAT
- where (Output%Zc /= Missing_Value_Real4)
-    Output%Zc = 1000.0* Output%Zc
- endwhere
-#endif
-
-  !----------------------------
-  ! scale height to be in meters for GSIP
-  !This ifdef needs to be removed. Move to marshalling code
-  !----------------------------
-#ifdef ISGSIP
- where (Output%Zc /= Missing_Value_Real4)
-    Output%Zc = 1000.0* Output%Zc
- endwhere
-#endif
 
 end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
@@ -2364,7 +2341,7 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
  end subroutine COMPUTE_Sy
 
  !---------------------------------------------------------------------
- !---
+ !--- Compute the Forward Model Estimate (f) and its Kernel (df/dx)
  !---------------------------------------------------------------------
  subroutine COMPUTE_FORWARD_MODEL_AND_KERNEL( &
            symbol,Acha_Mode_Flag,  &
@@ -3781,7 +3758,7 @@ end subroutine COMPUTE_TAU_REFF_ACHA
 !        Lat - uncorrected latitude (deg)
 !        Lon  - uncorrected longitude (deg)
 !        Zsfc  - surface elevation (m)
-!        Zcld  - cloud height (km)
+!        Zcld  - cloud height (m)
 !
 ! Output
 !       Lat_Pc - corrected latitude
@@ -3804,8 +3781,8 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
    real:: Total_Displacement
    real:: Delta_Lon
    real:: Delta_Lat
-   real:: Lon_Spacing_Per_Km
-   real,parameter:: Lat_Spacing_Per_Km = 0.00909    ! ( = 1.0/110.0)
+   real:: Lon_Spacing_Per_m
+   real,parameter:: Lat_Spacing_Per_m = 9.0909   ! ( = 1000.0/110.0)
 
    Num_Elem = size(Zcld,1) 
    Num_Line = size(Zcld,2)
@@ -3824,12 +3801,12 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
 
      !--- compute correction
      Total_Displacement = max(0.0,tan(Senzen(Elem_Idx,Line_Idx)*Dtor)* &
-                                     (Zcld(Elem_Idx,Line_Idx) - Zsfc(Elem_Idx,Line_Idx)/1000.0))
+                                     (Zcld(Elem_Idx,Line_Idx) - Zsfc(Elem_Idx,Line_Idx)))
 
-     Lon_Spacing_Per_Km = Lat_Spacing_Per_Km * cos(Lat(Elem_Idx,Line_Idx)*Dtor)
+     Lon_Spacing_Per_m = Lat_Spacing_Per_m * cos(Lat(Elem_Idx,Line_Idx)*Dtor)
 
-     Delta_Lon = sin(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lon_Spacing_Per_Km
-     Delta_Lat = cos(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lat_Spacing_Per_Km
+     Delta_Lon = sin(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lon_Spacing_Per_m
+     Delta_Lat = cos(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lat_Spacing_Per_m
 
      !--- generate output positions
      Lat_Pc(Elem_Idx,Line_Idx) = Lat(Elem_Idx,Line_Idx) + Delta_Lat
@@ -3907,9 +3884,8 @@ subroutine SET_ACHA_MODE(symbol, &
 end subroutine SET_ACHA_MODE
 
 !----------------------------------------------------------------------
-!--- check that the acha mode is consistent with available channels
+!--- check that the Acha_Mode is consistent with available channels
 !--- if consistent, Acha_Mode_Error_Flag = 0, if not, flag = 1
-!----
 !----------------------------------------------------------------------
 subroutine CHECK_ACHA_MODE(symbol, &
                            Acha_Mode_Input, &
@@ -3968,7 +3944,7 @@ subroutine CHECK_ACHA_MODE(symbol, &
 end subroutine CHECK_ACHA_MODE
 
 !------------------------------------------------------------------------------
-!  
+! Null Pixel Level Pointers 
 !------------------------------------------------------------------------------
 subroutine NULL_PIX_POINTERS(Input, Acha_RTM_NWP)
 
@@ -4034,10 +4010,7 @@ subroutine NULL_PIX_POINTERS(Input, Acha_RTM_NWP)
 
 end subroutine NULL_PIX_POINTERS
 !====================================================================
-!  record cvs version as a global variable for output to hdf
-!
-!  THIS IS BROKEN- IT ONLY PASSES BRIDGE INFO - FIXME
-!
+!  record svn version as a global variable for output to hdf
 !====================================================================
 subroutine SET_ACHA_VERSION(Acha_Version)
    character(len=*):: Acha_Version

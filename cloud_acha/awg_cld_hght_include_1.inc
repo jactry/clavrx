@@ -48,8 +48,8 @@
  INTEGER(KIND=INT4), PARAMETER :: Iter_Idx_Max = 10              !maximum number of iterations
 
  !--- parameters that control the bottom-up estimation of Zc and Pc
-!REAL(KIND=REAL4), PARAMETER, PRIVATE:: Lapse_Rate_Ocean = 9.8 !dry lapse rate over ocean for height K/km
- REAL(KIND=REAL4), PARAMETER, PRIVATE:: Lapse_Rate_Ocean = 7.8 !dry lapse rate over ocean for height K/km
+!REAL(KIND=REAL4), PARAMETER, PRIVATE:: Lapse_Rate_Ocean = 9800.0 !dry lapse rate over ocean for height K/m
+ REAL(KIND=REAL4), PARAMETER, PRIVATE:: Lapse_Rate_Ocean = 7800.0 !dry lapse rate over ocean for height K/m
  REAL(KIND=REAL4), PARAMETER, PRIVATE:: Min_P_inversion = 600.0 !min pressure to look for low-level inversion
  REAL(KIND=REAL4), PARAMETER, PRIVATE:: Max_Delta_T_inversion = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion
  REAL(KIND=REAL4), PARAMETER, PRIVATE:: Delta_Psfc_Inversion = 50.0  !pressure above sfc to look for low-level inversion

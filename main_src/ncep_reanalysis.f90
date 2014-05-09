@@ -340,8 +340,7 @@ p_trop_nwp = ncep_p_trop
     enddo
   enddo
 
-!--- compute UTH
-Uth_Nwp = (rh_prof_nwp(10,:,:) + rh_prof_nwp(11,:,:))/2.0 
+
 
 !--- store 500 mb heights
 hght500_nwp = z_prof_nwp(12,:,:)  

@@ -256,13 +256,9 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Input%Surface_Emissivity_39um =>  NULL()
      Acha_Input%Elem_Idx_LRC_Input =>  NULL()
      Acha_Input%Line_Idx_LRC_Input =>   NULL()
-#if defined (ISFWAIT)
-     Acha_Input%Ctxt => NULL()   
-#endif
 
                                    
      !--- null output pointers
-
      Acha_Output%Latitude_Pc =>  NULL()
      Acha_Output%Longitude_Pc =>  NULL()
      Acha_Output%Tc =>  NULL()

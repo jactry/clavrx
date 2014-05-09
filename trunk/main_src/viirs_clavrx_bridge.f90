@@ -135,7 +135,7 @@ contains
       solzen (:,1:c_seg_lines)   = out % geo % solzen 
       ascend (1:c_seg_lines)     = out % geo % ascend
       
-
+      moon_phase_angle = out % geo % Moon_Phase_Angle
       ! rel azimuths  - these are all global variables
       call  COMPUTE_RELATIVE_AZIMUTH_VIIRS( solaz , sataz , relaz )
 

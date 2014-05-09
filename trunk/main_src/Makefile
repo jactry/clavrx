@@ -257,7 +257,7 @@ calibration_constants.o: calibration_constants.f90 constant.o
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 
-dnb_retrievals_mod.o:dnb_retrievals_mod.f90
+dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
 clavrx_message_module.o: clavrx_message_module.f90
 cgms_nav.o: cgms_nav.f90

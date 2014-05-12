@@ -1056,7 +1056,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "surface_elevation", &
                               "surface elevation above mean sea level", &
                               DFNT_INT16, sym%LINEAR_SCALING, &
-                              Min_Z, Max_Z, "meters", Missing_Value_Real4, Istatus)
+                              Min_Zsfc, Max_Zsfc, "meters", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -3346,7 +3346,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
       !--- surface elevation
       if (Sds_Num_Level2_Zsfc_Flag == sym%YES) then
-          call SCALE_VECTOR_I2_RANK2(Zsfc,sym%LINEAR_SCALING,Min_z,Max_z,Missing_Value_Real4,Two_Byte_Temp)
+          call SCALE_VECTOR_I2_RANK2(Zsfc,sym%LINEAR_SCALING,Min_Zsfc,Max_Zsfc,Missing_Value_Real4,Two_Byte_Temp)
           Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zsfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif

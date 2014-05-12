@@ -38,7 +38,6 @@ inp % bayesian_mask_classifier = &
             inp % sfc % snow_class  = 0
             inp % sfc % dem         = 4
          
-            inp % rtm % bt_ch31_lrc     =  263.4831
             inp % rtm % bt_ch31_3x3_max = 266.6003
             inp % rtm % bt_ch31_3x3_std = 1.556237
          

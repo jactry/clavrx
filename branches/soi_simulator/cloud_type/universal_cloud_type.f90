@@ -305,8 +305,6 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
   enddo Element_Loop_Height
   enddo Line_Loop_Height
-  
-  print*,'====>',Ice_Probability(21,117)
 
   !----------------------------------------------------------------------------
   ! Step #3:  spectrally detect water clouds

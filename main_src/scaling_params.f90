@@ -104,11 +104,11 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Sataz = -180.0, Max_Sataz = 180.0
  real, parameter, public:: Min_Glintzen = 0.0, Max_Glintzen = 180.0
  real, parameter, public:: Min_Scatang = 0.0, Max_Scatang = 180.0
- real, parameter, public:: Min_Z = -500, Max_Z = 10000
+ real, parameter, public:: Min_Zsfc = -500, Max_Zsfc = 10000
  real, parameter, public:: Min_Lat = -90.0, Max_Lat = 90.0
  real, parameter, public:: Min_Lon = -180, Max_Lon = 180.0
- real, parameter, public:: Min_Zc = 0.0, Max_Zc = 20.0
- real, parameter, public:: Min_Zc_Uncer = 0.0, Max_Zc_Uncer = 10.0
+ real, parameter, public:: Min_Zc = 0.0, Max_Zc = 20000.0
+ real, parameter, public:: Min_Zc_Uncer = 0.0, Max_Zc_Uncer = 10000.0
  real, parameter, public:: Min_pc = 0.0, Max_pc = 1100.0
  real, parameter, public:: Min_tc = 160.0, Max_tc = 320.0, Min_tc_std = 0.0, Max_tc_std = 40.0
  real, parameter, public:: Min_Tc_Uncer = 0.0, Max_Tc_Uncer = 100.0

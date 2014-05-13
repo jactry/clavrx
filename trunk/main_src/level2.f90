@@ -629,7 +629,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "cloud_top_height_assuming_opaque", &
                               "cloud top height assuming an opaque cloud", &
                               DFNT_INT16, sym%LINEAR_SCALING, &
-                              Min_Zc, Max_Zc, "km", Missing_Value_Real4, Istatus)
+                              Min_Zc, Max_Zc, "m", Missing_Value_Real4, Istatus)
 
      !--- Naive Bayesian Surface Type
      call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(29),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -1550,7 +1550,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "height_at_cloud_top", &
                                "cloud height computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1561,7 +1561,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "top_height_of_cloud", &
                                "estimate of actual cloud-top height computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1572,7 +1572,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "base_height_of_cloud", &
                                "estimate of actual cloud-base height computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1617,7 +1617,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "height_at_cloud_top_from_h2o_intercept", &
                                "cloud-top height computed using the two-point h2o intercept", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1628,7 +1628,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "height_at_cloud_top_assuming_opaque", &
                                "cloud-top height computed using assuming the cloud is opaque", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1662,7 +1662,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "not specified", &
                                "cloud height uncertainty computed using the AWG cloud height algorithm", &
                                DFNT_INT8, sym%LINEAR_SCALING, Min_Zc_Uncer, Max_Zc_Uncer, &
-                               "km", Missing_Value_Real4, Istatus)
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -2334,7 +2334,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "lifting_condensation_level_nwp", &
                                "lifting condensation level from NWP ancillary data", &
                                DFNT_INT8, sym%LINEAR_SCALING, &
-                               Min_Zc, Max_Zc, "km", Missing_Value_Real4, Istatus)
+                               Min_Zc, Max_Zc, "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -2345,7 +2345,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "convective_condensation_level_nwp", &
                                "convective condensation level from NWP ancillary data", &
                                DFNT_INT8, sym%LINEAR_SCALING, &
-                               Min_Zc, Max_Zc, "km", Missing_Value_Real4, Istatus)
+                               Min_Zc, Max_Zc, "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 

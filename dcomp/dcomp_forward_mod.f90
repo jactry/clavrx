@@ -1,6 +1,7 @@
 ! $Id: dcomp_forward_mod.f90 77 2014-02-13 18:55:48Z awalther $
 module dcomp_forward_mod
-   use dcomp_lut_mod
+   use dcomp_lut_def
+   use dcomp_lut_mod, only: get_lut_data
    use dcomp_tools
 
    integer, parameter, public:: int1 = selected_int_kind(1)
@@ -107,8 +108,10 @@ contains
 	   ! - executable
 	   n_channels = size ( channels )
       ! - populate lut if needed 
-	   if ( trim(sensor) /= trim(sensor_set) ) call populate_all_lut ( sensor  , channels , lut_path = lut_path)
-	   sensor_set = trim(sensor)
+!	   if ( trim(sensor) /= trim(sensor_set) ) call populate_all_lut ( sensor  , channels , lut_path = lut_path)
+!	   sensor_set = trim(sensor)
+
+
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
 	  
@@ -655,6 +658,7 @@ contains
       
       
    end function thick_cloud_cps
+
  
        
 end module dcomp_forward_mod

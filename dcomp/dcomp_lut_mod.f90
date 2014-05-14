@@ -1,108 +1,19 @@
-! $Id: dcomp_lut_mod.f90 90 2014-03-31 19:33:53Z awalther $
+! $Header: /home/repository/cloud_team_dcomp/dcomp_lut_mod.f90,v 1.2 2013/12/05 20:27:16 awalther Exp $
 module dcomp_lut_mod
 
+   use dcomp_lut_def
 
- 
    implicit  none
- 
-   private
- 
-   ! some params 
+    
    integer, parameter, private:: int1 = selected_int_kind(1)
    integer, parameter, private:: real4 = selected_real_kind(6,37)
-   character(*), parameter, private :: exe_prompt = "dcomp_lut_mod>> "
-   integer, parameter, private:: dfacc_read = 1
- 
-   integer,parameter,private::flag_yes = 1
-   integer,parameter,private::flag_no = 0
- 
-   integer(kind=int1),parameter , private:: water_phase = 1
-   integer(kind=int1),parameter , private:: ice_phase = 2
- 
-   integer(kind=int1),parameter , private:: num_phase = 2
- 
-   integer(kind=int1), parameter, private :: vis_chn_number = 1
-   integer(kind=int1), parameter, private :: ir_chn_number_3a = 2      !--- avhrr
-   integer(kind=int1), parameter, private :: ir_chn_number_3b = 3      !--- avhrr
-
-   integer (kind=int1), parameter, private :: num_sat_zen = 45              !- size of zenith dimension
-   integer (kind=int1), parameter, private :: num_sol_zen = 45              !- size of solar zenith dimension
-   integer (kind=int1), parameter, private :: num_rel_azi = 45              !- size of relative az. dimension
-   integer (kind=int1), parameter, private :: num_cod = 29
-   integer (kind=int1), parameter, private :: num_cps = 9
- 
-   ! -- look-up-tables structure for cloud parameters 
-   type :: reflectance_lookup_table
-      logical :: is_set                          !- flag whether populated or not
-	  logical :: is_alloc
-      real (kind=real4), dimension(num_sat_zen) :: sat_zen            !- satellite zenith vector
-      real (kind=real4), dimension(num_sol_zen) :: sol_zen            !- solar zenith vector
-      real (kind=real4), dimension(num_rel_azi) :: rel_azi            !- relative azimuth vector
-      real (kind=real4), dimension(num_cod) :: cod_vec                !- log10 optical depth vector
-      real (kind=real4), dimension(num_cps):: cps_vec                 !- log10 effective radius vector
-      real (kind=real4), dimension(num_cps,num_cod) :: sph_alb        !- spherical albedo
-      real (kind=real4), dimension(num_cps,num_cod,num_sol_zen) :: trans       !- flux transmission
-      real (kind=real4), dimension(num_cps,num_cod,num_sol_zen) :: cld_alb     !- cloud albedo
-      real (kind=real4), dimension(num_cps,num_cod,num_sol_zen,num_sat_zen,num_rel_azi) :: refl  !- reflectance
-   end type reflectance_lookup_table
-
-
-   type :: phase_reflectance_table
-      logical :: is_set                                !- phase flag 
-      type(reflectance_lookup_table),dimension(num_phase) :: phase  !- cloud phase
-   end type phase_reflectance_table
-
-   type :: channel_reflectance_tables1
-      logical :: is_set                              !-channel flag
-	  logical :: is_alloc
-      type(phase_reflectance_table), dimension(:) , allocatable :: channel
-   end type channel_reflectance_tables1
-  
-   type (channel_reflectance_tables1), save, target:: cld_refl_lut
-
-   !-----------------------------------------------------------------------
-   ! structures for emissivity tables
-   !-----------------------------------------------------------------------
-   type, private :: emissivity_lookup_table
-      logical :: is_set
-	  
-      real (kind=real4), dimension(num_cps,num_cod,num_sat_zen) :: trans 
-      real (kind=real4), dimension(num_cps,num_cod,num_sat_zen) :: emiss 
-   end type emissivity_lookup_table
-
-   type, private:: phase_emissivity_table
-      logical :: is_set
-      type(emissivity_lookup_table),dimension(num_phase):: phase
-   end type phase_emissivity_table
-   
-   type :: channel_emissivity_tables1
-      logical :: is_set                                  !-channel flag
-	  logical :: is_alloc
-      type(phase_emissivity_table), dimension(:) , allocatable  :: channel
-   end type channel_emissivity_tables1
-
-
-   Type (channel_Emissivity_Tables1), private, SAVE, TARGET:: cld_ems_LUT
-
-   !-- ancil data structure
-   type :: ancil_data_type
-      integer(kind=int1)::flag
-      real(kind=real4),dimension(3,3) :: gas_trans  ! -- gas transmission coefficients
-      real(kind=real4),dimension(3) :: ozone_trans        ! -- ozone transmission coefficients 
-   end type ancil_data_type
- 
-   type(ancil_data_type),save :: ancil_data
-   
-   character ( len = 1024 ) , save :: identifier_old
-   character ( len = 1024 ) :: identifier_current
-   character ( len = 20 ) :: sensor_current	  
-   
-   integer , dimension ( : ) , allocatable :: mapped_modis_channels 
- 
+   character(*), parameter :: exe_prompt = "dcomp_lut_mod>> "
+	
    public  :: populate_all_lut
    private :: populate_cloud_lut_single
    private :: populate_ancil
    public  :: get_lut_data
+   public  :: wmo_sensor_name
 
 contains
  
@@ -144,8 +55,8 @@ contains
 
 
       !-locals
-	   character ( len = 1024 ) :: lut_path_loc
-	   integer :: n_channels 
+	  character ( len = 1024 ) :: lut_path_loc
+	  integer :: n_channels 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
       character ( len = 3 ) , dimension(30) :: chan_string ='no'
 	  logical , dimension ( 30 ) :: has_ems_table = .false.
@@ -177,7 +88,7 @@ contains
 			chan_string(2) = '2'
 			chan_string(6) = '3'
 			chan_string(20) = '4'
-        case ('NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11','NOAA-12', 'NOAA-14','TIROS-N')  sensor_block
+        case ('NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11','NOAA-12', 'NOAA-14')  sensor_block
 		    has_sol_table(1) = .true.
 			
 			has_sol_table(20) = .true.
@@ -902,6 +813,71 @@ IF (present(Ozone_coeff)) THEN
  
 ENDIF
 END SUBROUTINE GET_LUT_DATA
+
+function wmo_sensor_name (sensor_wmo_id) result (sensor_name)
+      integer , intent(in) :: sensor_wmo_id
+      character ( len =20) :: Sensor_Name
+
+      select case (sensor_wmo_id)
+      case(3)
+         sensor_name = 'METOP-B'
+      case(4)
+         sensor_name = 'METOP-A'	 
+      case(55)
+         sensor_name = 'Meteosat-8' 
+      case(56)
+         sensor_name = 'Meteosat-9' 
+      case(57)
+         sensor_name = 'Meteosat-10' 
+      case(70)
+         sensor_name = 'Meteosat-11' 
+      case(171)
+         sensor_name = 'MTSAT-1R'
+      case (172)
+         sensor_name = 'MTSAT-2'  
+      case (200:204)
+         write(sensor_name, "('NOAA-',i2.2)") sensor_wmo_id - 192 
+      case (205:209)
+         write(sensor_name, "('NOAA-',i2.2)") sensor_wmo_id - 191
+      case(223)
+         sensor_name = 'NOAA-19'	  
+      case(224)
+         sensor_name = 'VIIRS'
+      case(252)
+         sensor_name = 'GOES-08'
+      case(253)
+         sensor_name = 'GOES-09'
+      case(254)
+         sensor_name = 'GOES-10'
+      case(255)
+         sensor_name = 'GOES-11'
+      case(256)
+         sensor_name = 'GOES-12'
+      case(257)
+         sensor_name = 'GOES-13'
+      case(258)
+         sensor_name = 'GOES-14'
+      case(259)
+         sensor_name = 'GOES-15'
+      case(705)
+         sensor_name = 'NOAA-05'   
+      case(706)
+         sensor_name = 'NOAA-06'   
+      case(707)
+         sensor_name = 'NOAA-07'
+      case(708)
+         sensor_name = 'TIROS-N'   
+      case(783)
+         sensor_name = 'MODIS-TERRA'
+      case(784)
+         sensor_name = 'MODIS-AQUA'
+      case(810)
+         sensor_name = 'COMS-1'   
+      case default
+         print*,'please inform  andi.walther@ssec.wisc.edu wmo id: ',  sensor_wmo_id 
+         stop
+      end select
+end function wmo_sensor_name
 
 
 END MODULE dcomp_lut_mod

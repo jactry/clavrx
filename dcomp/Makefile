@@ -28,6 +28,7 @@ M_kracken.o \
 dcomp_mod.o \
 get_planck_radiance_39um.o \
 get_rad_refl_factor.o \
+dcomp_lut_def.o \
 dcomp_lut_mod.o \
 dcomp_array.o \
 dcomp_interface_types_mod.o \
@@ -89,9 +90,9 @@ dcomp: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
-dcomp.o: dcomp.f90 dcomp_mod.o get_planck_radiance_39um.o
+dcomp.o: dcomp.f90 dcomp_mod.o get_planck_radiance_39um.o dcomp_lut_mod.o
 test_dcomp.o: test_dcomp.f90 dcomp_mod.o get_planck_radiance_39um.o
-dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o dcomp_lut_mod.o
+dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o dcomp_lut_def.o dcomp_lut_mod.o
 dcomp_tools.o: dcomp_tools.f90
 hdf_dcomp_awg.o: hdf_dcomp_awg.f90
 test_forward_computation.o:test_forward_computation.f90 dcomp_forward_mod.o
@@ -100,8 +101,9 @@ dcomp_mod.o:dcomp_mod.f90 dcomp_forward_mod.o dcomp_tools.o get_rad_refl_factor.
 get_planck_radiance_39um.o:get_planck_radiance_39um.f90
 get_rad_refl_factor.o:get_rad_refl_factor.f90
 test_new_fwd.o:test_new_fwd.f90  dcomp_fwd_mod.o
-dcomp_fwd_mod.o:dcomp_fwd_mod.f90 dcomp_lut_mod.o dcomp_tools.o get_planck_radiance_39um.o get_rad_refl_factor.o 
-dcomp_lut_mod.o:dcomp_lut_mod.f90 
+dcomp_fwd_mod.o:dcomp_fwd_mod.f90 dcomp_tools.o get_planck_radiance_39um.o get_rad_refl_factor.o 
+dcomp_lut_def.o:dcomp_lut_def.f90
+dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_lut_def.o
 test_lut_mod.o:test_lut_mod.f90 dcomp_lut_mod.o
 dcomp_array.o:dcomp_array.f90 dcomp_mod.o dcomp_interface_types_mod.o view2d.o
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90

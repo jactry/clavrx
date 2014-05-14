@@ -1459,7 +1459,7 @@ if (Fail_Flag == symbol%NO) then  !successful retrieval if statement
                      -0.124*(Delta_Cld_Temp_Sfc_Temp**2)   &
                      +0.00343*(Delta_Cld_Temp_Sfc_Temp**3)
 
-       Lapse_Rate = Lapse_Rate * 1000.0  !(K/m)
+       Lapse_Rate = Lapse_Rate / 1000.0  !(K/m)
 
        !-- compute height
        Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)

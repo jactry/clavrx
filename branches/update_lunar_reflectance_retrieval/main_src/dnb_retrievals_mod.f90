@@ -128,8 +128,8 @@ contains
       double precision :: denorm3
       double precision :: denorm_factor
   
-      !logical :: dnb_verbose = .false.
-      logical :: dnb_verbose = .true.
+      logical :: dnb_verbose = .false.
+      !logical :: dnb_verbose = .true.
       character(len=128) :: lunar_irrad_file 
       character(len=128) :: distance_table_file
       integer :: num_pix , num_elem
@@ -183,12 +183,7 @@ contains
   
       dtg_index = index_in_vector(dist_phase_lut(1,:),num_dist_tabvals,yyyymmddhh)
       
-      print*,'dtg_index: ', dtg_index
       
-      print*,dist_phase_lut(1,:),num_dist_tabvals,yyyymmddhh
-      
-      print*
-      print*,start_year,month,day_of_month,hour
       
       dtg_index = min(num_dist_tabvals,dtg_index)
       dtg_index = max(1,dtg_index)

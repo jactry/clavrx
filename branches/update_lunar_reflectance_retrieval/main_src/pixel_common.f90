@@ -403,7 +403,7 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save,target:: Lunzen
   real (kind=real4), dimension(:,:), allocatable, public, save,target:: Lunaz
   real (kind=real4), dimension(:,:), allocatable, public, save,target:: LunRelaz
-  real (kind=real4), public, save,target:: Moon_Phase_Angle
+  double precision, public, save,target:: Moon_Phase_Angle
   real (kind=real4), public, save,target:: Moon_Illum_Frac
 
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChDNB_Lunar_Mean_3x3

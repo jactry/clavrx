@@ -151,6 +151,7 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save :: Uth_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Hght500_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Ozone_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Weasd_Nwp
@@ -803,6 +804,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(T_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(P_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Rhsfc_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Uth_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(hght500_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tpw_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Ozone_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -879,6 +881,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     T_Trop_Nwp = 0
     P_Trop_Nwp = 0
     Rhsfc_Nwp = 0
+    Uth_Nwp = 0
     Hght500_Nwp = 0
     Tpw_Nwp = 0
     Ozone_Nwp = 0
@@ -985,6 +988,7 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(P_Trop_Nwp))        deallocate(P_Trop_Nwp)
     if (allocated(Rhsfc_Nwp))         deallocate(Rhsfc_Nwp)
     if (allocated(hght500_Nwp))       deallocate(hght500_Nwp)
+    if (allocated(Uth_Nwp))           deallocate(Uth_Nwp)
     if (allocated(Tpw_Nwp))           deallocate(Tpw_Nwp)
     if (allocated(Ozone_Nwp))         deallocate(Ozone_Nwp)
     if (allocated(Weasd_Nwp))         deallocate(Weasd_Nwp)

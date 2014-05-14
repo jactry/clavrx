@@ -1,11 +1,75 @@
 ! $Header$
 !
+!----------------------------------------------------------------------
+! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
+! 
+! Routines for the determination of the Naive Bayesian cloud mask
+!
+! Author: Andrew Heidinger, NOAA/NESDIS
+!
+! History:
+!      2014/04/06:  new interface (AW)
+!      2014/05/07:  added diagnostic type (Denis B)
+!      2014/05/09:  added version (Denis B)
+!
+! DEPENDENCIES: None
+!
+! SIDE EFFECTS: None
+!
+! Cld_Flags Format
+!
+! Flag Number  bit-depth    bits      byte name
+! 1            1            1         1    cloud mask attempted       
+! 2            1            2         1    day_063     
+! 3            1            3         1    day_063_spatial     
+! 4            1            4         1    day_375
+! 5            1            5         1    night_375
+! 6            1            6         1    solar contamination 
+! 7            1            7         1    coast
+! 8            1            8         1    mountain
+!----
+! 9            1            9         2    forward scattering
+! 10           1            10        2    cold scene 375
+! 11           1            11        2    cold scene btd
+! 12           1            12        2    blank
+! 13           1            13        2    smoke detected
+! 14           1            14        2    dust  detected
+! 15           1            15        2    shadow detected
+! 16           1            16        2    fire detected
+!---
+! 17           3            17-19     3    nbvcm surface type
+! 18           1            20        3    blank   
+!<-------------------- START OF CLOUD TESTS -------------------------->
+! 19           2            21-22     3    T_11           (TGCT)
+! 20           2            23-24     3    T_max-T        (RTCT)
+! ---
+! 21           2            25-26     4    T_std          (TUT)
+! 22           2            27-28     4    Emiss_tropo
+! 23           2            29-30     4    FMFT mask (Btd_11_12)
+! 24           2            31-32     4    Btd_11_67 
+!---
+! 25           2            33-34     5    Bt_11_67_Covar 
+! 26           2            35-36     5    Btd_11_85_Covar
+! 27           2            37-38     5    Emiss_375
+! 28           2            39-40     5    Emiss_375_Day
+!---
+! 29           2            41-42     6    Emiss_375_Night
+! 30           2            43-44     6    Btd_375_11_Night
+! 31           2            45-46     6    Ref_063_Day (RGCT)
+! 32           2            47-48     6    Ref_std      (RUT)
+!---
+! 33           2            49-50     7    Ref_063_Min_3x3 (RVCT)
+! 34           2            51-52     7    Ref_Ratio_Day   (RRCT)
+! 35           2            53-54     7    Ref_138_Day     (CIRREF)
+! 36           2            55-56     7    Ref_160_Day     (NIRREF)
+!
+!----------------------------------------------------------------------
 
-module naive_bayesian_cloud_mask_module
+module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
    implicit none
    
-      type et_land_class_type
+   type et_land_class_type
       integer :: FIRST = 0
       integer :: SHALLOW_OCEAN = 0
       integer :: LAND = 1
@@ -20,7 +84,6 @@ module naive_bayesian_cloud_mask_module
    
    type ( et_land_class_type) , public :: ET_land_class 
    
-   
    type et_snow_class_type
       integer :: FIRST = 1
       integer :: NO_SNOW = 1
@@ -29,7 +92,7 @@ module naive_bayesian_cloud_mask_module
       integer :: SNOW = 3
       integer :: LAST = 3   
    end type
-    type ( et_snow_class_type) , public :: ET_snow_class 
+   type ( et_snow_class_type) , public :: ET_snow_class 
    
    type et_cloudiness_class_type
       integer :: SPACE = 10
@@ -39,9 +102,8 @@ module naive_bayesian_cloud_mask_module
       integer :: PROB_CLEAR = 1
       integer :: CLEAR = 0
    end type
+
    type ( et_cloudiness_class_type) , public :: ET_cloudiness_class 
-  
-      
       integer , parameter :: et_class_FIRST = 1
       integer , parameter :: et_class_T110 = 1
       integer , parameter :: et_class_TMAX_T = 2
@@ -72,6 +134,7 @@ module naive_bayesian_cloud_mask_module
       real :: airmass
       real :: scat_angle
       real :: scat_angle_lunar
+      real :: lunar_glint_mask
       integer :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
@@ -129,14 +192,18 @@ module naive_bayesian_cloud_mask_module
       real :: diagnostic_3
    end type cloud_mask_diagnostic
 
+   type cloud_mask_version_type
+      character (len = 256) :: cloud_mask_thresh_version_id
+      character (len = 256) :: cloud_mask_version_id
+   end type cloud_mask_version_type
+
    type cloud_mask_input_type
-      character ( len =256) :: bayesian_mask_classifier      
+      character (len = 256) :: bayesian_mask_classifier      
       type (cloud_mask_geo_type) :: geo
       type (cloud_mask_sfc_type) :: sfc
       type (cloud_mask_rtm_type) :: rtm
       type (cloud_mask_sat_type) :: sat
    end type cloud_mask_input_type
-          
          
    type bayes_coef_type
       character (len =120) :: cvs_version
@@ -147,11 +214,9 @@ module naive_bayesian_cloud_mask_module
       real, allocatable :: prior_no (:)
       real, allocatable :: prior_yes (:)
       real, allocatable :: Optimal_Posterior_Prob (:)
-      
       real, allocatable :: Classifier_Bounds_Min(:,:)
       real, allocatable :: Classifier_Bounds_Max(:,:)
       real, allocatable :: Delta_Classifier_Bounds(:,:)
-     
       real, allocatable :: class_cond_no(:,:,:)
       real, allocatable :: class_cond_yes(:,:,:) 
       real, allocatable :: cond_no(:,:,:)
@@ -159,9 +224,6 @@ module naive_bayesian_cloud_mask_module
       character (len=20), allocatable :: Classifier_Value_Name(:)
       integer, allocatable :: Classifier_Value_Name_enum(:)
       integer, allocatable :: flag_idx(:)
-      
-     
-      
    
    contains
       procedure :: alloc => alloc_bayes_coef
@@ -174,12 +236,13 @@ contains
    !
    !
    !
-   subroutine cloud_mask_naive_bayes ( inp , erg , info_flags , diag )
+   subroutine CLOUD_MASK_NAIVE_BAYES ( inp , erg , info_flags , diag , vers )
           
       implicit none
             
       type ( cloud_mask_input_type ) , intent ( in ) :: inp
       type ( cloud_mask_diagnostic ) , intent ( inout ) :: diag
+      type ( cloud_mask_version_type ) , intent ( out ) :: vers
       real , intent ( out ) :: erg
       integer , intent ( out ) , optional :: info_flags ( 7 )
       
@@ -213,11 +276,12 @@ contains
       real, parameter :: SOLZEN_375UM_DAY_THRESH = 85.0
       real, parameter :: SOLZEN_063UM_DAY_THRESH = 80.0
       real, parameter :: SOLZEN_063UM_DAY_THRESH_SPATIAL_TESTS = 85.0
-      
       real, parameter :: BT_11UM_COLD_SCENE_THRESH = 220.0
       real, parameter :: BT_037UM_COLD_SCENE_THRESH = 240.0
-      
       real, parameter :: MISSING_VALUE_REAL4 = -999.
+      real, parameter :: Radiance_Lunar_City_Thresh = 2.5e-08
+      real, parameter :: Scat_Angle_Lunar_Thresh = 80.0
+      real, parameter :: Lunar_Zen_Thresh = 95.0
             
       integer :: pos_info_flag 
       integer :: idx_info_flag
@@ -225,14 +289,17 @@ contains
       
       ! ---    Executable  ----------------------------
       ! - read in classifer coeffiecients
-      bayes_coef % file =trim(inp  % bayesian_mask_classifier ) 
-      if ( .not. bayes_coef % is_read) call read_bayes_coeff ( ) 
+      bayes_coef %  file =trim(inp  %  bayesian_mask_classifier ) 
+      if ( .not. bayes_coef % is_read) call READ_BAYES_COEFF ( ) 
       
+      ! - set mask and thresholds version id
+      vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
+      vers % cloud_mask_version_id = "$Id$"
+
       ! - determine sfc type
-      
-      sfc_type_number =  bayes_sfc_type ( inp% geo % lat , inp % geo % lat &
-         & , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
-         & , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
+      sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lat &
+          , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
+          , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
          
       allocate ( Cond_Yes ( bayes_coef % n_class ) )
@@ -241,25 +308,28 @@ contains
           
       sfc_idx = sfc_type_number
            
-            ! - several 0/1 flags
+      ! - several 0/1 flags
       is_mountain =  inp % sfc % dem  > 2000.0 &
-                            & .and. sfc_idx /= 6
+                           .and. sfc_idx /= 6
                             
       use_lunar_refl_for_vis_tests = .false.
-      if ( inp % sat % chan_on(42)) then
+      if ( inp % sat % chan_on(42) ) then
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-          ( inp % geo %  scat_angle_lunar  > 80. .or. inp % geo % lunar_zen  > 95. ) .and. &
-          .not. is_mountain .and. &
-          .not. inp % sfc % coast_mask .and. &
-          .not. inp % sfc % snow_class  == ET_snow_class % SNOW )  then
-            use_lunar_refl_for_vis_tests  = .true.      
+          ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
+            inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
+            inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
+            .not. is_mountain .and. &
+            .not. inp % sfc % coast_mask .and. &
+            .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
+            inp % geo % lunar_glint_mask == 0 )  then
+              use_lunar_refl_for_vis_tests  = .true.      
          end if    
       end if                       
             
       has_cold_btd = .false.
       if ( inp % sat % chan_on(31) ) then
          if (  inp%sat %bt_ch31  < BT_11UM_COLD_SCENE_THRESH .and. &
-                     & inp%sat %bt_ch31 /= MISSING_VALUE_REAL4 ) then 
+                     inp%sat %bt_ch31 /= MISSING_VALUE_REAL4 ) then 
                   has_cold_btd = .true. 
          end if         
       end if
@@ -267,14 +337,14 @@ contains
       is_cold_375um = .false.
       if ( inp % sat % chan_on(20) ) then
          if (  inp%sat %bt_ch20 < BT_037UM_COLD_SCENE_THRESH .and. &
-                     & inp%sat %bt_ch20 /= MISSING_VALUE_REAL4 ) then 
+                     inp%sat %bt_ch20 /= MISSING_VALUE_REAL4 ) then 
             is_cold_375um = .true. 
          end if         
       end if
             
       is_day_375um = .true.
       if (( inp % geo % sol_zen  >  SOLZEN_375UM_DAY_THRESH ) .or. &
-                  &  (inp % geo %airmass > AIRMASS_THRESH  )) then           
+                    (inp % geo %airmass > AIRMASS_THRESH  )) then           
          is_day_375um = .false.
       end if   
             
@@ -286,7 +356,7 @@ contains
       is_day_063um = .true.
       info_flags(1) = ibset ( info_flags(1) , 1 )
       if (( inp % geo % sol_zen >  SOLZEN_063UM_DAY_THRESH ) .or. &
-                  &  (inp % geo %airmass > AIRMASS_THRESH  )) then           
+                    (inp % geo %airmass > AIRMASS_THRESH  )) then           
          is_day_063um = .false.
          
       end if 
@@ -297,10 +367,9 @@ contains
          is_day_063um_spatial_tests = .false.
          
       end if
-      
             
       is_forward_scatter = .false.
-      if ( inp % geo %  scat_angle  < 80. .and. inp % geo % sol_zen  < 95.) then
+      if ( inp % geo %  scat_angle < 80. .and. inp % geo % sol_zen < 95.) then
          is_forward_scatter = .true.
       end if 
       
@@ -343,10 +412,7 @@ contains
       
       is_solar_contaminated = inp % geo % solar_conta
       
-    
-      
       info_flags = 0 
-      
                                     info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
       if ( is_day_063um)            info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
       if ( is_day_063um_spatial_tests)  info_flags(1) = ibset ( info_flags ( 1 ) , 2 )
@@ -364,10 +430,8 @@ contains
       if ( is_cloud_shadow)         info_flags(2) = ibset ( info_flags ( 2 ) , 6 )
       if ( is_fire)                 info_flags(2) = ibset ( info_flags ( 2 ) , 7 )
       
-      
       ! -TODO : probably wrong
       info_flags(3) = ibits ( sfc_idx , 0 , 3 )
-      
                          
       ! - class loop 
       class_loop: do class_idx= 1,   bayes_coef % n_class
@@ -391,26 +455,26 @@ contains
             pos_info_flag = 4
             idx_info_flag = 3
                              
-         case( et_class_TMAX_T)
+         case( et_class_TMAX_T )
             if ( .not. inp%sat % chan_on(31) ) cycle class_loop
-            if ( is_mountain  ) cycle class_loop
+            if ( is_mountain ) cycle class_loop
             if ( inp % sfc % coast_mask   ) cycle
             Classifier_Value = inp % rtm % bt_ch31_3x3_max  &
-                               & -  inp % sat % bt_ch31 
+                              -  inp % sat % bt_ch31 
             is_on_test = .true.
             pos_info_flag = 6
             idx_info_flag = 3
            
-         case (et_class_T_STD)
+         case ( et_class_T_STD )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
-            if ( is_mountain  ) cycle class_loop
+            if ( is_mountain ) cycle class_loop
             if ( inp % sfc % coast_mask ) cycle
             Classifier_Value = inp % rtm % bt_ch31_3x3_std 
             is_on_test = .true.
             pos_info_flag = 0
             idx_info_flag = 4
            
-         case (et_class_E_TROP)
+         case ( et_class_E_TROP )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
               
             Classifier_Value = inp % rtm % emis_ch31_tropo 
@@ -419,33 +483,32 @@ contains
             pos_info_flag = 2
             idx_info_flag = 4
            
-         case  (et_class_FMFT)
+         case  ( et_class_FMFT )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( .not. inp % sat % chan_on(32) ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
            
-            Classifier_Value = split_window_test( inp % rtm % bt_ch31_atm_sfc  &
-                                                  , inp % rtm % bt_ch32_atm_sfc  &
-                                                  , inp % sat % bt_ch31 &
-                                                  , inp % sat % bt_ch32 )
-                                                 
+            Classifier_Value = SPLIT_WINDOW_TEST ( inp % rtm % bt_ch31_atm_sfc  &
+                                                 , inp % rtm % bt_ch32_atm_sfc  &
+                                                 , inp % sat % bt_ch31 &
+                                                 , inp % sat % bt_ch32 )
                                     
             is_on_test = .true. 
             pos_info_flag = 4
             idx_info_flag = 4
             
-         case (et_class_BTD_110_067)
+         case ( et_class_BTD_110_067 )
             if ( .not. inp % sat % chan_on(27) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
            
-            Classifier_Value = inp % sat % bt_ch31  - inp % sat % bt_ch27
+            Classifier_Value = inp % sat % bt_ch31 - inp % sat % bt_ch27
             
             is_on_test = .true.
             pos_info_flag = 6
             idx_info_flag = 4
         
-         case ( et_class_BTD_110_067_COV)
+         case ( et_class_BTD_110_067_COV )
             if ( .not. inp % sat % chan_on(27) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
@@ -454,30 +517,30 @@ contains
             pos_info_flag = 0
             idx_info_flag = 5
            
-         case( et_class_BTD_110_085)
+         case ( et_class_BTD_110_085 )
             if ( .not. inp % sat % chan_on(29) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
           
-            Classifier_Value = inp % sat % bt_ch31  - inp % sat % bt_ch29
+            Classifier_Value = inp % sat % bt_ch31 - inp % sat % bt_ch29
             is_on_test = .true.
             pos_info_flag = 2
             idx_info_flag = 5
            
-         case( et_class_E_037 )
+         case ( et_class_E_037 )
             if ( .not. inp %sat % chan_on(20) ) cycle class_loop                  
             if ( inp % geo % glint )  cycle class_loop                 
             if ( inp % sat % bt_ch20  <= 0 ) cycle class_loop
             if ( is_cold_375um ) cycle class_loop
            
-            classifier_value = emiss_375um_test( &
-                                  &  inp % sat % emis_ch20_3x3_mean  &
-                                  & , inp % rtm % emis_ch20_clear  , is_night = .false.)
+            classifier_value = EMISS_375UM_TEST ( &
+                                     inp % sat % emis_ch20_3x3_mean  &
+                                   , inp % rtm % emis_ch20_clear  , is_night = .false.)
             is_on_test = .true.
             pos_info_flag = 4
             idx_info_flag = 5
            
-         case( et_class_E_037_DAY)
+         case ( et_class_E_037_DAY )
             if ( .not. inp % sat % chan_on(20) ) cycle class_loop
             if ( is_solar_contaminated) cycle class_loop 
             if ( inp % geo % glint  )  cycle class_loop
@@ -485,34 +548,34 @@ contains
             if ( is_cold_375um ) cycle class_loop
             if ( inp % sat % bt_ch20   <= 0 ) cycle class_loop
           
-            classifier_value = emiss_375um_test( &
-                                  &   inp % sat % emis_ch20_3x3_mean  &
-                                  & , inp % rtm % emis_ch20_clear , is_night =.false.)
+            classifier_value = EMISS_375UM_TEST ( &
+                                     inp % sat % emis_ch20_3x3_mean  &
+                                   , inp % rtm % emis_ch20_clear , is_night =.false.)
             is_on_test = .true.
             pos_info_flag = 6
             idx_info_flag = 5
            
-         case( et_class_E_037_NGT)
+         case ( et_class_E_037_NGT )
             if ( .not. inp % sat % chan_on(20) ) cycle
-            if ( is_solar_contaminated) cycle class_loop 
+            if ( is_solar_contaminated ) cycle class_loop 
             if ( .not. is_night_375um ) cycle  
-            if (is_cold_375um ) cycle class_loop 
+            if ( is_cold_375um ) cycle class_loop 
             if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop
              
-            classifier_value = emiss_375um_test( &
-                                  & inp % sat % emis_ch20_3x3_mean  &
-                                  & , inp % rtm % emis_ch20_clear , is_night =.true.)
+            classifier_value = EMISS_375UM_TEST ( &
+                                     inp % sat % emis_ch20_3x3_mean  &
+                                   , inp % rtm % emis_ch20_clear , is_night =.true.)
             
             is_on_test = .true.
             pos_info_flag = 0
             idx_info_flag = 6
               
-        case( et_class_BTD_037_110_NGT)
+        case ( et_class_BTD_037_110_NGT )
            if ( .not. inp % sat % chan_on(20) ) cycle
            if ( .not. inp % sat % chan_on(31) ) cycle
-           if ( is_solar_contaminated) cycle class_loop 
+           if ( is_solar_contaminated ) cycle class_loop 
            if ( .not. is_night_375um ) cycle  
-           if (is_cold_375um ) cycle class_loop 
+           if ( is_cold_375um ) cycle class_loop 
            if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop
            
            classifier_value =  inp % sat % bt_ch20  -  inp % sat % bt_ch31
@@ -521,18 +584,14 @@ contains
            pos_info_flag = 2
            idx_info_flag = 6
               
-        case( et_class_R_006_DAY)
-        
-        
-            
-            
+        case ( et_class_R_006_DAY )
             ! - this solar test can be also applied for lunar
             !TODO - make own lunar visible coefficients
             !
             if ( use_lunar_refl_for_vis_tests ) then
-               Classifier_Value = reflectance_gross_contrast_test( &
-                       &  inp % rtm %  ref_dnb_clear &
-                       & ,   inp % sat % ref_dnb_lunar )
+               Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
+                                  inp % rtm % ref_dnb_clear &
+                                , inp % sat % ref_dnb_lunar )
                is_on_test = .true.
                pos_info_flag = 4
                idx_info_flag = 6   
@@ -540,23 +599,21 @@ contains
                if ( .not. inp % sat % chan_on(1) ) cycle
                if ( inp % geo % glint  )  cycle class_loop
                if ( is_forward_scatter )  cycle class_loop
-           	   if ( is_mountain ) cycle class_loop
+               if ( is_mountain ) cycle class_loop
                if ( .not. is_day_063um ) cycle
                if ( inp % sfc % snow_class  == ET_snow_class % SNOW ) cycle
                             
-               Classifier_Value = reflectance_gross_contrast_test( &
-                       &  inp % rtm %  ref_ch1_clear &
-                       & ,   inp % sat % ref_ch1 )
+               Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
+                                   inp % rtm % ref_ch1_clear &
+                                 , inp % sat % ref_ch1 )
                is_on_test = .true.
                pos_info_flag = 4
                idx_info_flag = 6   
-            
             end if
               
-         case( et_class_R_006_STD)
+         case ( et_class_R_006_STD )
             
             if ( use_lunar_refl_for_vis_tests ) then
-              
            
                Classifier_Value = inp % sat % ref_dnb_3x3_std 
            
@@ -578,51 +635,49 @@ contains
                idx_info_flag = 6 
             end if
             
-         case( et_class_R_006_MIN_3x3_DAY )
-         
+         case ( et_class_R_006_MIN_3x3_DAY )
             if ( use_lunar_refl_for_vis_tests ) then
-               Classifier_Value = relative_visible_contrast_test ( &
-                       &  inp % sat % ref_dnb_3x3_min &
-                       & , inp % sat %ref_dnb_lunar  ) 
+               Classifier_Value = RELATIVE_VISIBLE_CONTRAST_TEST ( &
+                                    inp % sat % ref_dnb_3x3_min &
+                                  , inp % sat % ref_dnb_lunar  ) 
                                          
                is_on_test = .true.
                pos_info_flag = 0
                idx_info_flag = 7 
             else
-                  
                if ( .not. inp % sat % chan_on(1) ) cycle class_loop
                if ( .not. is_day_063um_spatial_tests ) cycle
                if ( is_mountain  ) cycle class_loop
                if ( inp % sfc % coast_mask   ) cycle
           
-               Classifier_Value = relative_visible_contrast_test ( &
-                       &  inp % sat % ref_ch1_3x3_min &
-                       & , inp % sat %ref_ch1  ) 
+               Classifier_Value = RELATIVE_VISIBLE_CONTRAST_TEST ( &
+                                    inp % sat % ref_ch1_3x3_min &
+                                  , inp % sat % ref_ch1  ) 
                                          
                is_on_test = .true.
                pos_info_flag = 0
                idx_info_flag = 7    
            end if
            
-        case( et_class_R_RATIO_DAY)
+         case ( et_class_R_RATIO_DAY )
            if ( .not. inp %  sat % chan_on(1) ) cycle class_loop
            if ( .not. inp % sat % chan_on(2) ) cycle class_loop
            if ( .not. is_day_063um_spatial_tests ) cycle
            if ( is_mountain  ) cycle class_loop
            if ( inp % geo  % glint  )  cycle class_loop
           
-           Classifier_Value = reflectance_ratio_test (&
-                                & inp % sat % ref_ch1 &
-                                , inp % sat % ref_ch2 ) 
+           Classifier_Value = REFLECTANCE_RATIO_TEST (&
+                                   inp % sat % ref_ch1 &
+                                 , inp % sat % ref_ch2 ) 
            is_on_test = .true.
            pos_info_flag = 2
            idx_info_flag = 7  
               
-         case( et_class_R_013_DAY)
+         case ( et_class_R_013_DAY )
             if ( .not. inp %  sat % chan_on(26) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
             if ( .not. is_day_063um )  cycle class_loop
-            if ( is_mountain  ) cycle class_loop
+            if ( is_mountain ) cycle class_loop
             if ( inp % sat % ref_ch26  <= 0 ) cycle class_loop
            
             Classifier_Value = inp % sat % ref_ch26
@@ -630,11 +685,11 @@ contains
             pos_info_flag = 4
             idx_info_flag = 7    
             
-         case ( et_class_R_016_Day)
+         case ( et_class_R_016_Day )
             if ( .not. inp % sat % chan_on(6) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
             if ( .not. is_day_063um ) cycle class_loop
-            if ( inp % geo % glint  )  cycle class_loop
+            if ( inp % geo % glint )  cycle class_loop
             if ( inp % sat % ref_ch6 <= 0 ) cycle class_loop
            
             Classifier_Value = inp % sat % ref_ch6
@@ -643,12 +698,12 @@ contains
             idx_info_flag = 7  
               
          case default
-            print*,'unknown class ', bayes_coef % Classifier_Value_Name_enum (class_idx) , &
-                       &  bayes_coef % Classifier_Value_Name (class_idx)
+            print*,'unknown class ', bayes_coef % Classifier_Value_Name_enum (class_idx) &
+                                   , bayes_coef % Classifier_Value_Name (class_idx)
          end select
        
        ! --- all tests classifer
-        if ( is_on_test) then
+        if ( is_on_test ) then
             bin_idx = int (( classifier_value &
                &  -  bayes_coef % Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
                &     bayes_coef % Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
@@ -706,7 +761,7 @@ contains
             erg  = &
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
-                  bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
+                   bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
                   
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
@@ -714,14 +769,17 @@ contains
             
            
           
-   end subroutine cloud_mask_naive_bayes
+   end subroutine CLOUD_MASK_NAIVE_BAYES
    
 
    !-------------------------------------------------------------------------------------
    !   Reads the coefficients from file
    !-------------------------------------------------------------------------------------
-   subroutine read_bayes_coeff ( )
-      use file_tools , only : getlun
+   subroutine READ_BAYES_COEFF ( )
+
+      use FILE_TOOLS, only : &
+          GETLUN
+
       implicit none
       
       integer :: lun
@@ -738,14 +796,14 @@ contains
       
       integer :: int_dummy
       
-      print*,'read coeffs ..'
-      print*,trim(bayes_coef % file)
+      print*, 'read coeffs ..'
+      print*, trim(bayes_coef % file)
       
-      lun = getlun()
-      open ( unit=lun, file =  trim(bayes_coef % file) , &
-            action ="read", form="formatted",status="old",iostat=ios)
+      lun = GETLUN()
+      open (unit=lun, file = trim(bayes_coef % file) , &
+            action ="read", form="formatted", status="old", iostat=ios)
       if (ios/= 0) then
-         print*, 'no bayesain cloud mask ',trim(bayes_coef % file)
+         print*, 'no bayesain cloud mask ', trim(bayes_coef % file)
          return
       end if
       
@@ -762,98 +820,94 @@ contains
          header = first_line
       end if
       
-      read(unit=lun,fmt=*)
-      read(unit=lun,fmt=*) time_diff_max, n_class, n_bounds, n_sfc_bayes
+      read (unit=lun, fmt=*)
+      read (unit=lun, fmt=*) time_diff_max, n_class, n_bounds, n_sfc_bayes
       bayes_coef % n_class = n_class
       bayes_coef % n_bounds = n_bounds
 
       call bayes_coef % alloc ( n_class, n_bounds, n_sfc_bayes )
       
       do i_sfc = 1 , n_sfc_bayes
-         read (unit=lun,fmt=*,iostat=ios) i_sfc_file, Header
-         read(unit=lun,fmt=*,iostat=ios) bayes_coef % Prior_Yes(i_sfc), bayes_coef % Prior_No(i_sfc)
-         read(unit=lun,fmt=*,iostat=ios) bayes_coef % Optimal_Posterior_Prob(i_Sfc)
+         read (unit=lun, fmt=*, iostat=ios) i_sfc_file, Header
+         read (unit=lun, fmt=*, iostat=ios) bayes_coef % Prior_Yes(i_sfc), bayes_coef % Prior_No(i_sfc)
+         read (unit=lun, fmt=*, iostat=ios) bayes_coef % Optimal_Posterior_Prob(i_Sfc)
          
          do i_class = 1 , n_class
             
-            read(unit=lun,fmt=*,iostat=ios)  &
-                            int_dummy &
+            read (unit=lun, fmt=*, iostat=ios)  &
+                             int_dummy &
                           ,  int_dummy &
-                          ,  int_dummy  &
+                          ,  int_dummy &
                           ,  bayes_coef %Classifier_Value_Name(i_class)
            
             
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'T_11' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_T110
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_11' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_T110
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'T_max-T' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_TMAX_T
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_max-T' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_TMAX_T
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'T_std' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_T_STD
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_std' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_T_STD
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Emiss_tropo' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_E_TROP
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_tropo' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_TROP
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'FMFT' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_FMFT
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'FMFT' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_FMFT
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Btd_11_67' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_11_67' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Bt_11_67_Covar' ) &
-               &  bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067_COV
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Bt_11_67_Covar' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067_COV
                           
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Btd_11_85' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_085
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_11_85' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_085
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Emiss_375' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_E_037
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Emiss_375_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_E_037_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037_DAY
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Emiss_375_Night' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_E_037_NGT
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375_Night' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037_NGT
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Btd_375_11_Night' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_BTD_037_110_NGT
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_375_11_Night' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_037_110_NGT
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_063_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_R_006_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_063_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_006_DAY
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_std' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_R_006_STD
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_std' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_STD
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_063_Min_3x3_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_R_006_MIN_3x3_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_063_Min_3x3_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_MIN_3x3_DAY
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_Ratio_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) = et_class_R_RATIO_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_Ratio_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_RATIO_DAY
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_138_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_R_013_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_138_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_013_DAY
                
-            if ( trim(bayes_coef %Classifier_Value_Name(i_class)) == 'Ref_160_Day' ) &
-               & bayes_coef %Classifier_Value_Name_enum(i_class) =  et_class_R_016_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_160_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_016_DAY
                         
-            read(unit=lun,fmt=*,iostat=ios)  &
-                                bayes_coef % Classifier_Bounds_Min(i_class,i_sfc)  &
+            read (unit=lun, fmt=*, iostat=ios)  &
+                                 bayes_coef % Classifier_Bounds_Min(i_class,i_sfc)  &
                              ,   bayes_coef % Classifier_Bounds_Max(i_class,i_sfc)  &
                              ,   bayes_coef % Delta_Classifier_Bounds(i_class,i_sfc)
                                 
-             read(unit=lun,fmt=*,iostat=ios)  bayes_coef %Class_Cond_Yes(:,i_class,i_sfc) 
-             read(unit=lun,fmt=*,iostat=ios)  bayes_coef %Class_Cond_No(:,i_class,i_sfc)
-             
-             
+             read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_Yes (:,i_class,i_sfc) 
+             read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_No (:,i_class,i_sfc)
              
          end do
       
       end do
-      
          
       bayes_coef % is_read = .true.
-	   	   
    
    end subroutine read_bayes_coeff
    
@@ -861,11 +915,11 @@ contains
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   function bayes_sfc_type ( lat , lon, land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
+   function bayes_sfc_type ( lat , lon , land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
      
        
-      real  :: lat ,lon, emis_ch20 , sst_anal_uni
-      integer :: land_class,coast,snow_class , sfc_type
+      real  :: lat , lon , emis_ch20 , sst_anal_uni
+      integer :: land_class,coast , snow_class , sfc_type
       
       
       integer :: bayes_sfc_type
@@ -877,7 +931,7 @@ contains
       bayes_sfc_type = 0
      
       ! # deep ocean 
-      if ( land_class == ET_land_class % DEEP_OCEAN) then
+      if ( land_class == ET_land_class % DEEP_OCEAN ) then
          bayes_sfc_type = 1
       end if
       
@@ -897,7 +951,7 @@ contains
       if (  land_class  == ET_land_class % LAND .or. &
                land_class  == ET_land_class % COASTLINE .or. &
                land_class  == ET_land_class % EPHEMERAL_WATER .or. &  
-               coast  == 1  )  then
+               coast  == 1 )  then
          bayes_sfc_type = 3
       end if
       
@@ -923,12 +977,12 @@ contains
       end if
       
       ! -- #  6 greenland
-      if (   lat >= 60.0 &
-               & .and. lon > -75. &
-               & .and. lon < -10.0  &    
-               & .and. (  land_class == ET_land_class % LAND &
-                .or.  land_class  == ET_land_class % COASTLINE ) &
-               & .and.  snow_class  == ET_snow_class % SNOW ) then
+      if ( lat >= 60.0 &
+              .and. lon > -75. &
+              .and. lon < -10.0  &    
+              .and. (  land_class == ET_land_class % LAND &
+              .or.  land_class  == ET_land_class % COASTLINE ) &
+              .and.  snow_class  == ET_snow_class % SNOW ) then
                
           bayes_sfc_type = 6         
       end if     
@@ -944,69 +998,64 @@ contains
       end if   
       
       if ( bayes_sfc_type == 3 .and. &
-         & emis_ch20 < 0.93 .and. &
-         & abs ( lat ) < 60.0 .and. &
-         & ( sfc_type == OPEN_SHRUBS_SFC .or. &
-            & sfc_type == CLOSED_SHRUBS_SFC .or. &
-            & sfc_type == GRASSES_SFC .or. &
-            &  sfc_type == BARE_SFC ) &
-            ) then
+             emis_ch20 < 0.93 .and. &
+             abs ( lat ) < 60.0 .and. &
+             ( sfc_type == OPEN_SHRUBS_SFC .or. &
+             sfc_type == CLOSED_SHRUBS_SFC .or. &
+             sfc_type == GRASSES_SFC .or. &
+             sfc_type == BARE_SFC ) ) then
             
             bayes_sfc_type = 7
       end if
-      
-      
-       
      
-   end function bayes_sfc_type
+   end function BAYES_SFC_TYPE
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   subroutine alloc_bayes_coef ( this, n_class , n_bounds , n_sfc_bayes )
+   subroutine ALLOC_BAYES_COEF ( this, n_class , n_bounds , n_sfc_bayes )
       class ( bayes_coef_type ) :: this
       integer :: n_class , n_bounds , n_sfc_bayes
       
-      allocate(this%Prior_Yes(N_sfc_bayes))
-      allocate(this%Prior_No(N_sfc_bayes))
-      allocate(this%Optimal_Posterior_Prob(N_sfc_bayes))
-      allocate(this%Classifier_Bounds_Min(N_class,N_sfc_bayes))
-      allocate(this%Classifier_Bounds_Max(N_class,N_sfc_bayes))
-      allocate(this%Delta_Classifier_Bounds(N_class,N_sfc_bayes))
-      allocate(this%Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
-      allocate(this%Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
-      allocate(this%Classifier_Value_Name(N_class))
-      allocate(this%Classifier_Value_Name_enum(N_class))
-      allocate(this%Flag_Idx(N_class))
+      allocate (this % Prior_Yes(N_sfc_bayes))
+      allocate (this % Prior_No(N_sfc_bayes))
+      allocate (this % Optimal_Posterior_Prob(N_sfc_bayes))
+      allocate (this % Classifier_Bounds_Min(N_class,N_sfc_bayes))
+      allocate (this % Classifier_Bounds_Max(N_class,N_sfc_bayes))
+      allocate (this % Delta_Classifier_Bounds(N_class,N_sfc_bayes))
+      allocate (this % Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
+      allocate (this % Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
+      allocate (this % Classifier_Value_Name(N_class))
+      allocate (this % Classifier_Value_Name_enum(N_class))
+      allocate (this % Flag_Idx(N_class))
             
-   end subroutine alloc_bayes_coef
+   end subroutine ALLOC_BAYES_COEF
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   subroutine dealloc_bayes_coef ( this )
+   subroutine DEALLOC_BAYES_COEF ( this )
       class ( bayes_coef_type ) :: this
            
-      deallocate(this%Prior_Yes)
-      deallocate(this%Prior_No)
-      deallocate(this%Optimal_Posterior_Prob)
+      deallocate (this % Prior_Yes)
+      deallocate (this % Prior_No)
+      deallocate (this % Optimal_Posterior_Prob)
       
-      deallocate(this%Classifier_Bounds_Min)
-      deallocate(this%Classifier_Bounds_Max)
-      deallocate(this%Delta_Classifier_Bounds)
-      deallocate(this%Class_Cond_Yes)
-      deallocate(this%Class_Cond_No)
-      deallocate(this%Classifier_Value_Name)
-      deallocate(this%Classifier_Value_Name_enum)
-      deallocate(this%Flag_Idx)
-           
-   end subroutine dealloc_bayes_coef
-   
+      deallocate (this % Classifier_Bounds_Min)
+      deallocate (this % Classifier_Bounds_Max)
+      deallocate (this % Delta_Classifier_Bounds)
+      deallocate (this % Class_Cond_Yes)
+      deallocate (this % Class_Cond_No)
+      deallocate (this % Classifier_Value_Name)
+      deallocate (this % Classifier_Value_Name_enum)
+      deallocate (this % Flag_Idx)
+            
+   end subroutine DEALLOC_BAYES_COEF
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   real elemental function reflectance_ratio_test(ref_vis,ref_nir)
+   real elemental function REFLECTANCE_RATIO_TEST ( ref_vis , ref_nir )
       real, intent(in):: ref_vis
       real, intent(in):: ref_nir
       real, parameter :: MISSING_VALUE_REAL4 = -999.
@@ -1016,12 +1065,12 @@ contains
            reflectance_ratio_test = ref_nir / ref_vis
       end if
 
-   end function reflectance_ratio_test
+   end function REFLECTANCE_RATIO_TEST
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------   
-   real elemental function relative_visible_contrast_test(ref_min,ref)
+   real elemental function RELATIVE_VISIBLE_CONTRAST_TEST ( ref_min , ref )
       real, intent(in):: ref_min
       real, intent(in):: ref
       real, parameter :: MISSING_VALUE_REAL4 = -999.
@@ -1031,13 +1080,12 @@ contains
            relative_visible_contrast_test = ref - ref_min
       end if
 
-   end function relative_visible_contrast_test
-   
+   end function RELATIVE_VISIBLE_CONTRAST_TEST
    
    !-------------------------------------------------------------------------------------
    !
    !------------------------------------------------------------------------------------- 
-   real elemental function reflectance_gross_contrast_test(ref_clear,ref)
+   real elemental function REFLECTANCE_GROSS_CONTRAST_TEST ( ref_clear , ref )
       real, intent(in):: ref_clear
       real, intent(in):: ref
       real, parameter :: MISSING_VALUE_REAL4 = -999.
@@ -1046,12 +1094,12 @@ contains
            reflectance_gross_contrast_test = ref - ref_clear
       endif
 
-   end function reflectance_gross_contrast_test
+   end function REFLECTANCE_GROSS_CONTRAST_TEST
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   real elemental function split_window_test( t11_clear, t12_clear, t11, t12)
+   real elemental function SPLIT_WINDOW_TEST ( t11_clear, t12_clear, t11, t12)
 
       real, intent(in):: t11_clear
       real, intent(in):: t12_clear 
@@ -1064,12 +1112,12 @@ contains
 
       split_window_test = (t11 - t12) - split_window_test
 
-   end function split_window_test
+   end function SPLIT_WINDOW_TEST
   
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   real elemental function emiss_375um_test ( ems, ems_clear , is_night  )
+   real elemental function EMISS_375UM_TEST ( ems, ems_clear , is_night  )
       real, intent(in):: ems_clear
       real, intent(in):: ems
       logical ,intent(in) :: is_night
@@ -1083,12 +1131,12 @@ contains
       if ( is_night) emiss_375um_test = ems
   
   
-   end function
+   end function EMISS_375UM_TEST
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------   
-   logical elemental function fire_detection ( &
+   logical elemental function FIRE_DETECTION ( &
            bt_110 &
          , bt_037 &
          , bt_110_std &
@@ -1162,18 +1210,17 @@ contains
       if (  ( bt_037                > Bt_375um_Eumet_Fire_Thresh ) .and. &
             ( ( bt_037 - bt_110 )   > Bt_Diff_Eumet_Fire_Thresh) .and. &
             ( bt_037_std            > Stddev_375um_Eumet_Fire_Thresh) .and. &
-            ( bt_110_std            < Stddev_11um_Eumet_Fire_Thresh)  &
-               ) then
+            ( bt_110_std            < Stddev_11um_Eumet_Fire_Thresh) ) then
          Fire_detection = .true.
        endif
    
    
-   end function fire_detection
+   end function FIRE_DETECTION
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   logical elemental function  smoke_detection ( &
+   logical elemental function SMOKE_DETECTION ( &
            ref_004 &
          , ref_021 &
          , ref_006_std &
@@ -1220,18 +1267,18 @@ contains
       
       
       if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
-      if ( is_glint .and. .not. (is_water_sfc) )         st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
-      if ( .not. ( is_glint) .and. is_water_sfc )        st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
-      if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
+      if ( is_glint .and. .not. ( is_water_sfc ) )         st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
+      if ( .not. ( is_glint ) .and. is_water_sfc )        st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
+      if ( .not. ( is_glint ) .and. .not. ( is_water_sfc ) ) st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
       
-      if (  ref_006_std < st_dev_thresh_cand ) smoke_detection = .true.
+      if ( ref_006_std < st_dev_thresh_cand ) smoke_detection = .true.
       
-   end function smoke_detection
+   end function SMOKE_DETECTION
    
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   logical elemental function dust_detection ( &
+   logical elemental function DUST_DETECTION ( &
               ref_004 &
             , ref_006 &
             , ref_006_std &
@@ -1281,14 +1328,14 @@ contains
       
       if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH
       if ( is_glint .and. .not. (is_water_sfc) )         st_dev_thresh_cand = DUST_ST_DEV_LAND_GLINT_THRESH
-      if ( .not. ( is_glint) .and. is_water_sfc )        st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
+      if ( .not. (is_glint) .and. is_water_sfc )        st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
       if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
       
       if (  ref_006_std < st_dev_thresh_cand ) dust_detection = .true.
    
+   end function DUST_DETECTION
    
-   end function dust_detection
-   
-   
-   
-end module naive_bayesian_cloud_mask_module
+!-------------------------------------------------------------------------------------   
+
+end module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
+

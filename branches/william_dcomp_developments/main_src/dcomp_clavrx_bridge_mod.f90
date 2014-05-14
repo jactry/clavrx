@@ -94,6 +94,9 @@ module dcomp_clavrx_bridge_mod
       , solar_ch20_nu
      
    use dcomp_rtm_module
+   
+   use dcomp_lut_mod !-- Added to be able to read in LUT here
+
           
    implicit none
 
@@ -128,6 +131,8 @@ contains
       integer :: dcomp_possible_channels ( 5) 
       integer :: i
       integer :: CHN_VIS, CHN_NIR
+   
+      character(len=20) :: sensor !WCS3
       
       interface
          subroutine dcomp_array (a , b , debug_mode_user)
@@ -290,6 +295,17 @@ contains
       end if
       
       call dcomp_rtm % deallocate_it()
+      
+      
+      ! === LUT Tables -WCS3 ===
+      
+      sensor = trim(wmo_sensor_name(dcomp_input % sensor_wmo_id))
+      
+      call populate_all_lut ( trim(sensor)  , &
+                              dcomp_possible_channels , &
+                              lut_path = dcomp_input % lut_path )
+      
+      ! === LUT Tables End -WCS3 ===
       
       ! === THE MAIN CALL of DCOMP ===          
       debug_mode = 1

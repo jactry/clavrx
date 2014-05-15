@@ -137,7 +137,9 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_albedo = 0.0, Max_albedo = 1.0, Min_transmission = 0.0, Max_transmission = 1.0 
  real, parameter, public:: Min_dcomp_atmos_vis = 0.0,Max_dcomp_atmos_vis = 1.5, &
                            Min_dcomp_atmos_ir = 0.0, Max_dcomp_atmos_ir = 1.5 
- real, parameter, public:: Min_sfc_ems = 0.75, Max_sfc_ems = 1.0 
+ real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 
+ real, parameter, public:: Min_Trans = 0.0, Max_Trans = 1.0 
+ real, parameter, public:: Min_Ch31_Rad_Atm = 0.0, Max_Ch31_Rad_Atm = 100.0 
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 
  real, parameter, public:: Min_Cwp = 0.0, Max_Cwp = 1200.0
  real, parameter, public:: Min_Rain_Rate = 0.0, Max_Rain_Rate = 32.0

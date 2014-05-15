@@ -2175,7 +2175,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-print *, "bubba 0 : ", Istatus_Sum
      !--- ch31 atmospheric radiance
      if (Sds_Num_Level2_Ch31_Rad_Atm_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -2187,8 +2186,6 @@ print *, "bubba 0 : ", Istatus_Sum
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-print *, "bubba 1 : ", Istatus_Sum
-print *, Sds_Num_Level2_Ch31_Trans_Atm_Flag, Sds_Num_Level2_Ch31_Trans_Atm, Min_Trans, Max_Trans
      !--- ch31 atmospheric transmission
 
 
@@ -2202,7 +2199,6 @@ print *, Sds_Num_Level2_Ch31_Trans_Atm_Flag, Sds_Num_Level2_Ch31_Trans_Atm, Min_
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-print *, "bubba 2 : ", Istatus_Sum
      !--- ch31 surface emissivity
      if (Sds_Num_Level2_Ch31_Sfc_Emiss_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Sfc_Emiss),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -2214,7 +2210,6 @@ print *, "bubba 2 : ", Istatus_Sum
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-print *, "bubba 3 : ", Istatus_Sum
      !--- ch20 surface emissivity
      if (Sds_Num_Level2_Ch20_Sfc_Emiss_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch20_Sfc_Emiss),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -2225,9 +2220,6 @@ print *, "bubba 3 : ", Istatus_Sum
                                Min_Sfc_Ems, Max_Sfc_Ems, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
-
-print *, "bubba 4 : ", Istatus_Sum
-
 
      !--- surface air temperature
      if (Sds_Num_Level2_Tair_Flag == sym%YES) then

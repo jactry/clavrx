@@ -15,7 +15,7 @@
 !
 !            the only data assumed to be a on the surface grid are
 !              - surface temperature
-!              - weasd depth
+!              - Weasd depth
 !              - u and v wind speed at 10m
 !
 !           the surface and pressure level grid may be different
@@ -151,10 +151,9 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Uth_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Hght500_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Ozone_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: weasd_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save :: Weasd_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: U_Wnd_10m_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: V_Wnd_10m_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Spd_10m_Nwp
@@ -168,7 +167,6 @@ module NWP_COMMON
   integer (kind=int1), dimension(:,:), allocatable, public, save :: Sfc_Level_Nwp
   integer (kind=int1), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
   integer (kind=int4), dimension(:,:,:), allocatable, public, save :: Inversion_Level_Profile_Nwp
-  integer (kind=int4), dimension(:,:), allocatable, public, save :: Strato_Level_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Lifting_Condensation_Level_Height_Nwp !km
   real (kind=real4), dimension(:,:), allocatable, public, save :: Convective_Condensation_Level_Height_Nwp !km
   real (kind=real4), dimension(:,:), allocatable, public, save :: Freezing_Level_Height_Nwp !km
@@ -196,6 +194,11 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Clwmr_Prof_Nwp
   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: U_Wnd_Prof_Nwp
   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: V_Wnd_Prof_Nwp
+  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Iwp_Prof_Nwp
+  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Lwp_Prof_Nwp
+  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Cld_Opd_Prof_Nwp
+  integer (kind=int1), dimension(:,:,:), allocatable, target, save, public :: Cld_Phase_Prof_Nwp
+  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Cld_Reff_Prof_Nwp
   real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_1
   real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_2
   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_1
@@ -278,7 +281,6 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
   integer(kind=int4) :: Line_Idx
   real (kind=real4) :: Delta_Zsfc
   real (kind=real4) :: Delta_Tsfc
-! real (kind=real4), parameter :: Delta_Lapse_Rate = -7.0  !K/km
   real (kind=real4) :: Delta_Lapse_Rate
   real(kind=real4) :: Zsfc_Nwp_Pix
   integer(kind=int4) :: Ilev_start
@@ -339,7 +341,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
                        Lon_Nwp_fac(Elem_Idx,Line_Idx), &
                        Lat_Nwp_fac(Elem_Idx,Line_Idx))
          
-          !--- compute the near surface lapse rate (K/km) 
+          !--- compute the near surface lapse rate (K/m) 
           Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                             (Z_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) - Z_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx))
          else
@@ -347,7 +349,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
          endif
 
          !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
-         Delta_Zsfc = Zsfc(Elem_Idx,Line_Idx)/1000.0 - Zsfc_Nwp_Pix !km
+         Delta_Zsfc = Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
          Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
          Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
 
@@ -806,11 +808,10 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(T_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(P_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Rhsfc_Nwp(Nlon_Nwp, Nlat_Nwp))
-    allocate(Uth_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(hght500_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tpw_Nwp(Nlon_Nwp, Nlat_Nwp))
-    allocate(ozone_Nwp(Nlon_Nwp, Nlat_Nwp))
-    allocate(weasd_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Ozone_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Weasd_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(U_Wnd_10m_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(V_Wnd_10m_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Wnd_Spd_10m_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -818,21 +819,24 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(P_Std_Nwp(Nlevels_Nwp))
     allocate(Lat_Nwp(Nlat_Nwp))
     allocate(Lon_Nwp(Nlon_Nwp))
+
     allocate(Z_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(T_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(Ozone_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(Rh_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(Tpw_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(Clwmr_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(U_Wnd_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
-    allocate(V_Wnd_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
+
+    allocate(T_Prof_Nwp, Ozone_Prof_Nwp, Rh_Prof_Nwp, Tpw_Prof_Nwp, &
+             Clwmr_Prof_Nwp, U_Wnd_Prof_Nwp, V_Wnd_Prof_Nwp, &
+             source = Z_Prof_Nwp)
+
+    allocate(Lwp_Prof_Nwp(Nlevels_Nwp-1,Nlon_Nwp,Nlat_Nwp))
+    allocate(Iwp_Prof_Nwp, Cld_Opd_Prof_Nwp, Cld_Reff_Prof_Nwp, & 
+             source = Lwp_Prof_Nwp)
+    allocate(Cld_Phase_Prof_Nwp(Nlevels_Nwp-1,Nlon_Nwp,Nlat_Nwp))
+
     allocate(Land_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Ice_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Sfc_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tropo_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Inversion_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Inversion_Level_Profile_Nwp(Nlevels_Nwp,Nlon_Nwp, Nlat_Nwp))
-    allocate(Strato_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Lifting_Condensation_Level_Height_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Convective_Condensation_Level_Height_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Freezing_Level_Height_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -884,7 +888,6 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     T_Trop_Nwp = 0
     P_Trop_Nwp = 0
     Rhsfc_Nwp = 0
-    Uth_Nwp = 0
     Hght500_Nwp = 0
     Tpw_Nwp = 0
     Ozone_Nwp = 0
@@ -904,13 +907,17 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     Clwmr_Prof_Nwp = 0.0
     U_Wnd_Prof_Nwp = 0.0
     V_Wnd_Prof_Nwp = 0.0
+    Iwp_Prof_Nwp = 0.0
+    Lwp_Prof_Nwp = 0.0
+    Cld_Opd_Prof_Nwp = 0.0
+    Cld_Reff_Prof_Nwp = 0.0
+    Cld_Phase_Prof_Nwp = 0.0
     Land_Nwp = 0
     ice_Nwp = 0.0
     temp3d_Nwp_1 = 0
     temp3d_Nwp_2 = 0
     temp3d = 0
     Sfc_Level_Nwp = 0
-    strato_Level_Nwp = 0
     Tropo_Level_Nwp = 0
     Level850_Nwp = 0
     Level700_Nwp = 0
@@ -972,7 +979,6 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Level850_Nwp))       deallocate(Level850_Nwp)
     if (allocated(Level700_Nwp))       deallocate(Level700_Nwp)
     if (allocated(Level500_Nwp))       deallocate(Level500_Nwp)
-    if (allocated(strato_Level_Nwp))   deallocate(strato_Level_Nwp)
     if (allocated(Inversion_Level_Nwp)) deallocate(Inversion_Level_Nwp)
     if (allocated(Inversion_Level_Profile_Nwp)) deallocate(Inversion_Level_Profile_Nwp)
     if (allocated(Lifting_Condensation_Level_Height_Nwp))    deallocate(Lifting_Condensation_Level_Height_Nwp)
@@ -993,10 +999,9 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(P_Trop_Nwp))        deallocate(P_Trop_Nwp)
     if (allocated(Rhsfc_Nwp))         deallocate(Rhsfc_Nwp)
     if (allocated(hght500_Nwp))       deallocate(hght500_Nwp)
-    if (allocated(Uth_Nwp))           deallocate(Uth_Nwp)
     if (allocated(Tpw_Nwp))           deallocate(Tpw_Nwp)
-    if (allocated(ozone_Nwp))         deallocate(ozone_Nwp)
-    if (allocated(weasd_Nwp))         deallocate(weasd_Nwp)
+    if (allocated(Ozone_Nwp))         deallocate(Ozone_Nwp)
+    if (allocated(Weasd_Nwp))         deallocate(Weasd_Nwp)
     if (allocated(U_Wnd_10m_Nwp))     deallocate(U_Wnd_10m_Nwp)
     if (allocated(V_Wnd_10m_Nwp))     deallocate(V_Wnd_10m_Nwp)
     if (allocated(Wnd_Spd_10m_Nwp))   deallocate(Wnd_Spd_10m_Nwp)
@@ -1012,6 +1017,11 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Clwmr_Prof_Nwp))    deallocate(Clwmr_Prof_Nwp)
     if (allocated(U_Wnd_Prof_Nwp))    deallocate(U_Wnd_Prof_Nwp)
     if (allocated(V_Wnd_Prof_Nwp))    deallocate(V_Wnd_Prof_Nwp)
+    if (allocated(Iwp_Prof_Nwp))      deallocate(Iwp_Prof_Nwp)
+    if (allocated(Lwp_Prof_Nwp))      deallocate(Lwp_Prof_Nwp)
+    if (allocated(Cld_Opd_Prof_Nwp))  deallocate(Cld_Opd_Prof_Nwp)
+    if (allocated(Cld_Reff_Prof_Nwp)) deallocate(Cld_Reff_Prof_Nwp)
+    if (allocated(Cld_Phase_Prof_Nwp)) deallocate(Cld_Phase_Prof_Nwp)
     if (allocated(temp2d_Nwp_1))      deallocate(temp2d_Nwp_1)
     if (allocated(temp2d_Nwp_2))      deallocate(temp2d_Nwp_2)
     if (allocated(temp3d_Nwp_1))      deallocate(temp3d_Nwp_1)
@@ -1359,21 +1369,6 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
 !--- Note, no point in doing this until higher vertical resolution
 !--- profiles are used.
 !--------------------------------------------------------------------
-   Strato_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = 1
-!  tmax = -999.0   ! initialize to a smaller number than expected
-!  do k = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),1,-1
-!     if ((T_Prof_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) > tmax) .and. &
-!         (P_Std_Nwp(k) < p_Trop_Min)) then
-!          Strato_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = k
-!          tmax = T_Prof_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) 
-!      endif
-!   enddo
-
-!--- check if stratopause level found
-!   if (strato_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) == 0) then
-!      print *, "Error, stratopause level not found, stopping "
-!      stop
-!   endif
 
    !---------------------------------------------------------------------
    ! Inversion Level Profile
@@ -1559,7 +1554,12 @@ end subroutine FIND_NWP_LEVELS
                                          Mid_Cloud_Fraction_Satellite, &
                                          Low_Cloud_Fraction_Satellite, &
                                          Number_Of_Cloud_Layers, &
-                                         Cloud_Type)
+                                         Cloud_Type, &
+                                         Iwp_Profile, &
+                                         Lwp_Profile, &
+                                         Cld_Opd_Profile, &
+                                         Cld_Reff_Profile, &
+                                         Cld_Phase_Profile)
 
   integer(kind=int1), intent(in):: Tropopause_Level_Nwp
   integer(kind=int1), intent(in):: Surface_Level_Nwp
@@ -1574,6 +1574,11 @@ end subroutine FIND_NWP_LEVELS
   real, intent(out):: Cwp
   integer (kind=int1), intent(out):: Number_Of_Cloud_Layers
   integer (kind=int1), intent(out):: Cloud_Type
+  real, dimension(:), intent(out):: Lwp_Profile
+  real, dimension(:), intent(out):: Iwp_Profile
+  real, dimension(:), intent(out):: Cld_Opd_Profile
+  real, dimension(:), intent(out):: Cld_Reff_Profile
+  integer(kind=int1), dimension(:), intent(out):: Cld_Phase_Profile
 
   real, dimension(size(Clwmr_Profile)):: Cloud_Fraction_Profile
   real:: Sat_Specific_Humidity
@@ -1585,7 +1590,7 @@ end subroutine FIND_NWP_LEVELS
  
   real:: Clwmr_Min
   real, parameter:: Lwp_Threshold  = 5.0
-  real, parameter:: Iwp_Threshold  = 1.0
+  real, parameter:: Cwp_Threshold  = 1.0
   real, parameter:: Frac_Min_Threshold  = 1.0e-06
   real, parameter:: Clwmr_Min_Threshold  = 0.0
   real, parameter:: Cwp_Min_Threshold  = 2.0     !g/m^2 - arbitrary need to investigate
@@ -1593,6 +1598,9 @@ end subroutine FIND_NWP_LEVELS
   real, parameter:: Min_Temperature_Water  = 253.15
   real, parameter:: Max_Temperature_Sc_Water = 273.15
   real, parameter:: Min_Temperature_Sc_Water  = 263.15
+  real, parameter:: CLD_OPD_THRESH = 0.01
+  real, parameter:: CLD_REFF_WATER = 10.0
+  real, parameter:: CLD_REFF_ICE = 20.0
   integer:: Number_Of_Levels_In_Profile
   real:: Factor
   real:: Clwmr_Ice_Layer
@@ -1602,7 +1610,7 @@ end subroutine FIND_NWP_LEVELS
   real:: Ice_Frac_Bot
   real:: Sc_Water_Frac_Top
   real:: Sc_Water_Frac_Bot
-  integer:: Ilay
+  integer:: Lay_Idx
   integer:: Ilev
   real, parameter:: k1 = 0.25
   real, parameter:: k2 = 100
@@ -1610,6 +1618,7 @@ end subroutine FIND_NWP_LEVELS
   real:: T
   real:: e
   real:: es
+  real:: Cld_Opd_Water, Cld_Opd_Ice, Cld_Opd
 
   Number_Of_Levels_In_Profile = size(Clwmr_Profile)
 
@@ -1625,51 +1634,87 @@ end subroutine FIND_NWP_LEVELS
   Iwp = 0.0
   Cwp = 0.0
   Sc_Lwp = 0.0
-  P_Cld_Top = Missing_Value_Real4
-  T_Cld_Top = Missing_Value_Real4
+  Iwp_Profile = 0.0
+  Lwp_Profile = 0.0
 
-     do Ilay = Tropopause_Level_Nwp-1 , Surface_Level_Nwp-1
+  do Lay_Idx = Tropopause_Level_Nwp-1 , Surface_Level_Nwp-1
 
         Ice_Frac_Top  = min(1.0,max(0.0,&
-                           (Max_Temperature_Ice - Temperature_Profile(ilay))/ &
+                           (Max_Temperature_Ice - Temperature_Profile(Lay_Idx))/ &
                            (Max_Temperature_Ice-Min_Temperature_Water)))
 
         Ice_Frac_Bot  = min(1.0,max(0.0,&
-                           (Max_Temperature_Ice - Temperature_Profile(ilay+1))/ &
+                           (Max_Temperature_Ice - Temperature_Profile(Lay_Idx+1))/ &
                            (Max_Temperature_Ice-Min_Temperature_Water)))
 
-        Clwmr_Ice_Layer = 0.5 * (Ice_Frac_Top*Clwmr_Profile(ilay) +  &
-                                 Ice_Frac_Bot*Clwmr_Profile(ilay+1))
+        Clwmr_Ice_Layer = 0.5 * (Ice_Frac_Top*Clwmr_Profile(Lay_Idx) +  &
+                                 Ice_Frac_Bot*Clwmr_Profile(Lay_Idx+1))
 
-        Clwmr_Water_Layer = 0.5 * ((1.0-Ice_Frac_Top)*Clwmr_Profile(ilay) + &
-                                   (1.0-Ice_Frac_Bot)*Clwmr_Profile(ilay+1))
+        Clwmr_Water_Layer = 0.5 * ((1.0-Ice_Frac_Top)*Clwmr_Profile(Lay_Idx) + &
+                                   (1.0-Ice_Frac_Bot)*Clwmr_Profile(Lay_Idx+1))
 
         Sc_Water_Frac_Top  = min(1.0,max(0.0,&
-                           (Max_Temperature_Sc_Water - Temperature_Profile(ilay))/ &
+                           (Max_Temperature_Sc_Water - Temperature_Profile(Lay_Idx))/ &
                            (Max_Temperature_Sc_Water - Min_Temperature_Sc_Water)))
 
         Sc_Water_Frac_Bot  = min(1.0,max(0.0,&
-                           (Max_Temperature_Sc_Water - Temperature_Profile(ilay+1))/ &
+                           (Max_Temperature_Sc_Water - Temperature_Profile(Lay_Idx+1))/ &
                            (Max_Temperature_Sc_Water - Min_Temperature_Sc_Water)))
 
-        Clwmr_Sc_Water_Layer = 0.5 * (Sc_Water_Frac_Top*Clwmr_Profile(ilay) + &
-                                     Sc_Water_Frac_Bot*Clwmr_Profile(ilay+1))
+        Clwmr_Sc_Water_Layer = 0.5 * (Sc_Water_Frac_Top*Clwmr_Profile(Lay_Idx) + &
+                                     Sc_Water_Frac_Bot*Clwmr_Profile(Lay_Idx+1))
 
-        Factor = 1000.0 * 100.0 * (Pressure_Profile(ilay+1) - Pressure_Profile(ilay)) / g
+        Factor = 1000.0 * 100.0 * (Pressure_Profile(Lay_Idx+1) - Pressure_Profile(Lay_Idx)) / g
 
-        Iwp = Iwp + Clwmr_Ice_Layer * Factor
-        Lwp = Lwp + Clwmr_Water_Layer * Factor
+        Iwp_Profile(Lay_Idx) = Clwmr_Ice_Layer * Factor
+        Lwp_Profile(Lay_Idx) = Clwmr_Water_Layer * Factor
+
+        Iwp = Iwp + Iwp_Profile(Lay_Idx)
+        Lwp = Lwp + Lwp_Profile(Lay_Idx)
         Sc_Lwp = Sc_Lwp + Clwmr_Sc_Water_Layer * Factor
 
         Cwp = Lwp + Iwp
 
-        !--- compute P_Cld_Top
-        if ((Cwp >= Iwp_Threshold) .and. (P_Cld_Top == Missing_Value_Real4)) then
-            P_Cld_Top = P_Std_Nwp(ilay+1)
-            T_Cld_Top = Temperature_Profile(ilay+1)
-        endif
+  enddo
 
-      enddo
+  !---------------------------------------------------------------------------------------
+  ! optical properties profile
+  !---------------------------------------------------------------------------------------
+  Cld_Opd_Profile = 0.0
+  Cld_Reff_Profile = Missing_Value_Real4
+  Cld_Phase_Profile = sym%CLEAR_PHASE
+
+  do Lay_Idx = Tropopause_Level_Nwp-1 , Surface_Level_Nwp-1
+
+      Cld_Opd_Water =  1.5 * Lwp_Profile(Lay_Idx) / CLD_REFF_WATER
+      Cld_Opd_Ice  =  1.5 * Iwp_Profile(Lay_Idx) / CLD_REFF_ICE
+      Cld_Opd = Cld_Opd_Water + Cld_Opd_Ice
+
+      if (Cld_Opd > CLD_OPD_THRESH) then
+        Cld_Phase_Profile(Lay_Idx) = sym%WATER_PHASE
+        Cld_Reff_Profile(Lay_Idx) = CLD_REFF_WATER
+        if (Cld_Opd_Ice > Cld_Opd_Water) then
+            Cld_Phase_Profile(Lay_Idx) = sym%ICE_PHASE
+            Cld_Reff_Profile(Lay_Idx) = CLD_REFF_ICE
+        endif
+      endif
+
+  enddo
+
+
+  !-----------------------------------------------------------------------------------
+  ! Determine Effective Cloud Height (what ACHA should retrieve)
+  !-----------------------------------------------------------------------------------
+  P_Cld_Top = Missing_Value_Real4
+  T_Cld_Top = Missing_Value_Real4
+
+  do Lay_Idx = Tropopause_Level_Nwp-1 , Surface_Level_Nwp-1
+      if ((Cld_Opd >= 1.0) .and. (P_Cld_Top == Missing_Value_Real4)) then
+            P_Cld_Top = P_Std_Nwp(Lay_Idx+1)
+            T_Cld_Top = Temperature_Profile(Lay_Idx+1)
+            exit
+       endif
+  enddo
 
   !----------------------------------------------------------------------
   ! test to see if sufficient amount of cloud water was found in the 
@@ -1692,13 +1737,13 @@ end subroutine FIND_NWP_LEVELS
 
   if (P_Cld_Top /= Missing_Value_Real4) then
 
-         do ilay = 3, Surface_Level_Nwp - 1
+         do Lay_Idx = 3, Surface_Level_Nwp - 1
 
-            Clwmr_Min = 1.0e-05 * Pressure_Profile(ilay)/1000.0    !
+            Clwmr_Min = 1.0e-05 * Pressure_Profile(Lay_Idx)/1000.0    !
 
-            if (Clwmr_Profile(ilay) > Clwmr_Min .and.   &
-                Clwmr_Profile(ilay-1) < Clwmr_Min .and. &
-                Clwmr_Profile(ilay-2) < Clwmr_Min) then
+            if (Clwmr_Profile(Lay_Idx) > Clwmr_Min .and.   &
+                Clwmr_Profile(Lay_Idx-1) < Clwmr_Min .and. &
+                Clwmr_Profile(Lay_Idx-2) < Clwmr_Min) then
 
                 Number_Of_Cloud_Layers = Number_Of_Cloud_Layers + 1
 
@@ -2037,7 +2082,12 @@ SUBROUTINE COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
                                         Mid_Cloud_Fraction_Satellite_Nwp(Lon_Idx,Lat_Idx), &
                                         Low_Cloud_Fraction_Satellite_Nwp(Lon_Idx,Lat_Idx), &
                                         Ncld_Layers_Nwp(Lon_Idx,Lat_Idx), &
-                                        Cld_Type_Nwp(Lon_Idx,Lat_Idx))
+                                        Cld_Type_Nwp(Lon_Idx,Lat_Idx), &
+                                        Iwp_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
+                                        Lwp_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
+                                        Cld_Opd_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
+                                        Cld_Reff_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
+                                        Cld_Phase_Prof_Nwp(:,Lon_Idx,Lat_Idx))
 
      end do element_loop
   end do line_loop

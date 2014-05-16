@@ -68,6 +68,7 @@ module UNIVERSAL_CLOUD_TYPE_MODULE
   real(kind=real4), parameter, private:: Ice_Temperature_Max = 263.0
   real(kind=real4), parameter, private:: Rad_11um_Thresh = 2.0
   real(kind=real4), parameter, private:: Rad_H2O_Thresh = 0.25
+  real, private, parameter:: Zclr_H2O_Moist_Thresh = 8.0
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Moist_Thresh = 0.25
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
   real, private, parameter:: Bt_Ch31_Btd_Ch31_Ch32_Covar_Cirrus_Thresh = -1.0
@@ -111,9 +112,6 @@ end subroutine SET_CLOUD_TYPE_VERSION
 !
 !====================================================================
 subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
-
-  implicit none
-
   integer, intent(in):: Line_Start
   integer, intent(in):: Line_End
   integer:: Line_Idx
@@ -159,6 +157,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   real (kind=real4), dimension(:,:), pointer:: Tcld_H2O
   real (kind=real4), dimension(:,:), pointer:: Zcld_H2O
   real (kind=real4), dimension(:,:), pointer:: Pcld_H2O
+  real (kind=real4), dimension(:,:), pointer:: Zclr_H2O
   real (kind=real4), dimension(:,:), pointer:: Emiss_Window_Tropo
   real (kind=real4), dimension(:,:), pointer:: Emiss_H2O_Tropo
   real (kind=real4), dimension(:,:), pointer:: Beta_11um_85um_Tropo
@@ -180,8 +179,6 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   integer:: water_count
   integer:: ice_count
 
-  integer(kind=int1) :: smoke_pixel
-  integer(kind=int1) :: dust_pixel
 
   !--- begin executable code
 
@@ -273,6 +270,12 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
      !------------------------------------------------------------
      if (Channel_On_Flag(Chan_Idx_67um) == sym%NO) cycle
 
+     ! Determine Clear-sky Water Vapor Weighting Function Peak Height
+     call H2O_CLEAR_SKY_PEAK_HEIGHT(Bt_H2O_Clear(Elem_Idx,Line_Idx), &
+                                    Tropo_Level,  &
+                                    Sfc_Level, &
+                                    Zclr_H2O(Elem_Idx,Line_Idx))
+
      call H2O_CLOUD_HEIGHT_LOCAL(Rad_11um(Elem_Idx,Line_Idx),  &
                             Rad_11um_Clear(Elem_Idx,Line_Idx), &
                             Rad_H2O(Elem_Idx,Line_Idx), &
@@ -305,8 +308,6 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
   enddo Element_Loop_Height
   enddo Line_Loop_Height
-  
-  print*,'====>',Ice_Probability(21,117)
 
   !----------------------------------------------------------------------------
   ! Step #3:  spectrally detect water clouds
@@ -320,7 +321,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
    if (Cloud_Phase(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) cycle
 
-   if (Tcld_Opa(Elem_Idx,Line_Idx) > 240.0) then
+   if (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) > 240.0) then
 
    !---- 1.6 um Spectral Test for Water
    if (Channel_On_Flag(Chan_Idx_16um) == sym%YES) then
@@ -494,29 +495,11 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
      !-- check if indices are valid
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
-     !--- For Clear Only, Define Smoke and Dust Types based on Cloud Mask
-     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or. &
-        Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
-
-        if (ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),4,1) == 1) then
-            Cloud_Type(Elem_Idx,Line_Idx) = sym%SMOKE_TYPE
-            cycle    
-        endif
- 
-        if (ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),5,1) == 1)  then
-            Cloud_Type(Elem_Idx,Line_Idx) = sym%DUST_TYPE
-            cycle
-        endif
-
-     endif
-
-     !--- clear type
      if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
           Cloud_Type(Elem_Idx,Line_Idx) = sym%CLEAR_TYPE
           cycle
      endif
 
-     !--- prob clear type
      if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
           Cloud_Type(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE
           cycle
@@ -559,8 +542,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
            !--- allow overlap where both 11/12 shows spectral inconsistency with single layer ice
            if ((Channel_On_Flag(Chan_Idx_11um) == sym%YES) .and. (Channel_On_Flag(Chan_Idx_12um) == sym%YES)) then
-              if ((Beta_11um_12um_Tropo(Elem_Idx,Line_Idx) /= Missing_Value_Real4) .and. &
-                  (Beta_11um_12um_Tropo(Elem_Idx,Line_Idx) < Beta_11um_12um_Overlap_Thresh)) then
+              if (Beta_11um_12um_Tropo(Elem_Idx,Line_Idx) < Beta_11um_12um_Overlap_Thresh) then
                 Cloud_Type(Elem_Idx,Line_Idx) = sym%OVERLAP_TYPE
               endif
            endif
@@ -614,6 +596,7 @@ Covar_H2O_Window => null()
 Tcld_H2O => null()
 Pcld_H2O => null()
 Zcld_H2O => null()
+Zclr_H2O => null()
 Tcld_Opa => null()
 Pcld_Opa => null()
 Zcld_Opa => null()
@@ -653,12 +636,12 @@ end subroutine UNIVERSAL_CLOUD_TYPE
 !====================================================================
 function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE(T_Opa) result(Ice_Prob)
 
-   real:: T_opa
-   real:: Ice_Prob
+real:: T_opa
+real:: Ice_Prob
 
-   Ice_Prob = 1.0 - (T_opa-Ice_Temperature_Min)/(Ice_Temperature_Max - Ice_Temperature_Min)
-   Ice_Prob = min(1.0,Ice_Prob)
-   Ice_Prob = max(0.0,Ice_Prob)
+Ice_Prob = 1.0 - (T_opa-Ice_Temperature_Min)/(Ice_Temperature_Max - Ice_Temperature_Min)
+Ice_Prob = min(1.0,Ice_Prob)
+Ice_Prob = max(0.0,Ice_Prob)
 
 end function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
 
@@ -849,6 +832,46 @@ subroutine  H2O_CLOUD_HEIGHT_LOCAL(Rad_11um, &
   endif
 
 end subroutine H2O_CLOUD_HEIGHT_LOCAL
+!----------------------------------------------------------------------
+! Determine Clear-sky Water Vapor Weighting Function Peak Height
+!
+! Accomplish this by matching the compute 6.7 micron brightness
+! temperature to the temperature profile
+!----------------------------------------------------------------------
+subroutine H2O_CLEAR_SKY_PEAK_HEIGHT(Bt_67um, &
+                                    Tropo_Level,  &
+                                    Sfc_Level, &
+                                    Z_67um)
+
+   real, intent(in):: Bt_67um
+   integer (kind=int1), intent(in):: Tropo_Level
+   integer (kind=int1), intent(in):: Sfc_Level
+   real, intent(out):: Z_67um
+   integer:: ilev
+
+
+   !--- check for out-troposphere conditions
+   if (Bt_67um == Missing_Value_Real4) then
+          Z_67um = Missing_Value_Real4
+          return
+   endif
+   if (Bt_67um < T_Prof(Tropo_Level)) then
+          Z_67um = Z_Prof(Tropo_Level)
+          return
+   endif
+   if (Bt_67um > T_Prof(Sfc_Level)) then
+          Z_67um = Z_Prof(Sfc_Level)
+          return
+   endif
+
+   do ilev = Tropo_Level+1, Sfc_Level
+      if (Bt_67um <= T_Prof(ilev)) then
+          Z_67um = Z_Prof(ilev)
+          exit
+      endif
+   enddo
+
+end subroutine H2O_CLEAR_SKY_PEAK_HEIGHT
 !====================================================================
 ! Function Name: Covariance_LOCAL
 !

@@ -121,10 +121,8 @@
    use FY2_MODULE
    use SENSOR_MODULE
    use USER_OPTIONS
-   ! switch this off AW (05/05/2014) 
-  ! use UNIVERSAL_CLOUD_TYPE_MODULE
+   use UNIVERSAL_CLOUD_TYPE_MODULE
    use CLAVRX_MESSAGE_MODULE
-   use CLOUD_TYPE_BRIDGE_MODULE
    
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
@@ -1325,7 +1323,7 @@
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
-                     call AWG_CLOUD_BAYES_BRIDGE()
+                     call AWG_CLOUD_BAYES_BRIDGE(Segment_Number)
                      call COMPUTE_CLOUD_FRACTION_3x3(Line_Idx_Min_Segment,Num_Scans_Read)
                   else
                      print *, "Only the Bayesian Cloud Mask is availabe, check selection"
@@ -1361,7 +1359,14 @@
                   Phase_Called_Flag = sym%YES
 
                else  
-                  call CLOUD_TYPE_BRIDGE()
+#ifdef xlf90
+                  call CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)
+                  Phase_Called_Flag = sym%YES
+#else
+                  call UNIVERSAL_CLOUD_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)
+                  Phase_Called_Flag = sym%YES
+#endif
+
                end if
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()

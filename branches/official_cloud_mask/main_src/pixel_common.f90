@@ -427,6 +427,9 @@ module PIXEL_COMMON
 
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Rad_Ch20_ems
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_LRC
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_Max_LRC
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch31_Std_LRC
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Solzen
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lat
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lon
@@ -807,6 +810,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Solar_Rtm
   real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Clear_Solar_Sfc_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ttropo_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_Nadir_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_12um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_85um_Tropo_Rtm
@@ -1577,8 +1581,12 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
       allocate(Elem_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Line_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Emiss_11um_Tropo_Nadir_Rtm(dim1,dim2))
+      allocate(Emiss_11um_Tropo_LRC(dim1,dim2))
       allocate(Rad_Clear_Ch31_Rtm_unbiased(dim1,dim2))
       allocate(Bt_Clear_Ch31_Rtm_unbiased(dim1,dim2))
+      allocate(Bt_Ch31_LRC(dim1,dim2))
+      allocate(Bt_Ch31_Max_LRC(dim1,dim2))
+      allocate(Bt_Ch31_Std_LRC(dim1,dim2))
    endif
 
    if (Chan_On_Flag_Default(32) == sym%YES) then
@@ -1627,8 +1635,12 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
       Elem_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Line_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Emiss_11um_Tropo_Nadir_Rtm = Missing_Value_Real4
+      Emiss_11um_Tropo_LRC = Missing_Value_Real4
       Rad_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
       Bt_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
+      Bt_Ch31_LRC = Missing_Value_Real4
+      Bt_Ch31_Max_LRC = Missing_Value_Real4
+      Bt_Ch31_Std_LRC = Missing_Value_Real4
    endif
 
    if (Chan_On_Flag_Default(32) == sym%YES) then
@@ -1675,8 +1687,12 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
       deallocate(Elem_Idx_Min_Bt_Ch31_3x3)
       deallocate(Line_Idx_Min_Bt_Ch31_3x3)
       deallocate(Emiss_11um_Tropo_Nadir_Rtm)
+      deallocate(Emiss_11um_Tropo_LRC)
       deallocate(Rad_Clear_Ch31_Rtm_unbiased)
       deallocate(Bt_Clear_Ch31_Rtm_unbiased)
+      deallocate(Bt_Ch31_LRC)
+      deallocate(Bt_Ch31_Max_LRC)
+      deallocate(Bt_Ch31_Std_LRC)
    endif
    if (Chan_On_Flag_Default(32) == sym%YES) then
      deallocate(Rad_Clear_Ch32_Rtm_unbiased)

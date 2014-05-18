@@ -8,7 +8,11 @@ module SOI_SIMULATOR
 
   use CONSTANTS
   use SOI
+  use NUMERICAL_ROUTINES
+  use RTM_COMMON
+  use PIXEL_COMMON
   use NWP_COMMON
+  use PLANCK
 
   implicit none
   private:: SETUP_SINGLE_SCATTERING_PROPS
@@ -34,30 +38,56 @@ module SOI_SIMULATOR
         Qe_log10_12_coef_ice, wo_log10re_12_coef_ice, g_log10re_12_coef_ice, &
         Qe_log10_13_coef_ice, wo_log10re_13_coef_ice, g_log10re_13_coef_ice
 
-   integer, private, save:: Setup_Properies_Flag = 1
+   integer, private, save:: Setup_Properties_Flag = 1
 
 contains
 
 !----------------------------------------------------------------------------------------
 !
 !----------------------------------------------------------------------------------------
-subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI()
+subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Number_Levels)
+
+   integer, intent(in):: Number_Elements
+   integer, intent(in):: Number_Lines
+   integer, intent(in):: Number_Levels
+   integer:: Number_Levels_Rtm
+   integer:: Number_Layers
+   real, dimension(:), allocatable:: Cld_Opd_Profile, Qe_reference_Profile, Qe_Profile, &
+                                     g_Profile, wo_Profile, Opd_Profile, Gas_Opd_Profile, B_Profile 
+   integer, dimension(:), allocatable, save:: Lev_Idx_Rtm_Nwp
+   real:: Bsfc, Bspace, mu_obs
+   integer:: Elem_Idx,Line_Idx,Chan_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx,Zen_Idx,Lev_Idx,Lay_Idx
+   integer:: Number_Levels_Rtm
+   real:: Cld_Opd, Cld_wo, Rad_Toa
+   real:: Surface_Emissivity
+
+   Number_Layers = Number_Levels - 1
+   Number_Levels_Rtm = size(P_Std_Rtm)
 
    !--- compute liquid and ice water layer profiles
    if (Setup_Properties_Flag) then
       call SETUP_SINGLE_SCATTERING_PROPS()
+      allocate(Lev_Idx_Rtm_Nwp(Number_Levels_Rtm))
+      call SETUP_NWP_TO_RTM_MAPPING(Press_Std_Rtm, Press_Std_Nwp, Lev_Idx_Rtm_Nwp)
       Setup_Properties_Flag = 0
    endif
+
+
+   !---- allocate local profile vectors
+   allocate(Cld_Opd_Profile(Number_Layers))
+   allocate(Qe_reference_Profile, Qe_Profile, g_Profile, wo_Profile,  &
+            Opd_Profile, Gas_Opd_Profile, source = Cld_Opd_Profile)
+   allocate(B_Profile(Number_Levels))
 
 
    Element_Loop: do Elem_Idx = 1, Number_Elements
        Line_Loop: do Line_Idx = 1, Number_Lines
 
-          if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) cycle
+          if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) cycle
 
           Lon_Nwp_Idx = I_Nwp(Elem_Idx,Line_Idx) 
           Lat_Nwp_Idx = J_Nwp(Elem_Idx,Line_Idx) 
-          Zen_Idx = Vza_Rtm_Idx(Elem_Idx,Line_Idx) 
+          Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx) 
 
           if (Lon_Nwp_Idx < 1 .or. Lat_Nwp_Idx < 1)  cycle
 
@@ -71,16 +101,15 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI()
                 Chan_Idx /= 29 .and. & 
                 Chan_Idx /= 31 .and. & 
                 Chan_Idx /= 32 .and. & 
-                Chan_Idx /= 33)
+                Chan_Idx /= 33) then
 
                  cycle
 
              endif
 
              !--- convert trans to nwp levels
-             Trans_Gas_Profile_Rtm = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile
-
-             Gas_Opd_Profile = COMPUTE_LAYER_GAS_OPD_PROFILE()
+             Gas_Opd_Profile = COMPUTE_LAYER_GAS_OPD_PROFILE( &
+                                   Rtm(Lon_Nwp_Idx,Lat_Nwp_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile)
 
              Surface_Emissivity = ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx)
              Bsfc = PLANCK_RAD_FAST(Chan_Idx, Tsfc_Nwp_Pix(Elem_Idx,Line_Idx))
@@ -88,218 +117,59 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI()
              mu_obs = Coszen(Elem_Idx,Line_Idx)
 
              Level_Loop: do Lev_Idx = 1, Number_Levels
-                B_Profile = PLANCK_RAD_FAST(Chan_Idx, T_Profile(Elem_Idx,Line_Idx))
+                B_Profile(Lev_Idx) = PLANCK_RAD_FAST(Chan_Idx, T_Prof_Nwp(Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx))
+                Trans_Gas(Lev_Idx) = Rtm(Lon_Nwp_Idx,Lat_Nwp_Idx)%d(Zen_Idx)%ch(Chan_Idx)% &
+                                     Trans_Atm_Profile(Lev_Idx_Rtm_Nwp(Lev_Idx))
              enddo Level_Loop
 
              Layer_Loop: do Lay_Idx = 1, Number_Layers
 
-               if (Cld_Phase_Prof_Nwp(Lay_Idx) = sym%WATER_PHASE) then
-                   call COMPUTE_CLOUD_OPT_PROP(sym%WATER_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx), &
-                                Qe_ref_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),wo_Profile(Lay_Idx))
-               elseif (Cld_Phase_Prof_Nwp(Lay_Idx) = sym%ICE_PHASE) then
-                   call COMPUTE_CLOUD_OPT_PROP(sym%ICE_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx), &
-                                Qe_ref_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),wo_Profile(Lay_Idx))
+               Gas_Opd_Profile(Lay_Idx) = -1.0*log(Trans_Gas(Lay_Idx+1)/Trans_Gas(Lay_Idx)) * mu_obs
+
+               if (Cld_Phase_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) == sym%WATER_PHASE) then
+                   call COMPUTE_CLOUD_OPT_PROP(sym%WATER_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
+                                Qe_ref_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),Cld_wo)
+               elseif (Cld_Phase_Prof_Nwp(Lay_Idx) == sym%ICE_PHASE) then
+                   call COMPUTE_CLOUD_OPT_PROP(sym%ICE_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
+                                Qe_Reference_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),Cld_wo)
                else
-                   Qe_ref_Profile(Lay_Idx) = 1.0
+                   Qe_Reference_Profile(Lay_Idx) = 1.0
                    Qe_Profile(Lay_Idx) = 0.0
                    g_Profile(Lay_Idx) = 0.0
-                   wo_Profile(Lay_Idx) = 0.0
+                   Cld_wo = 0.0
                endif
 
-               Cld_Opd = Cld_Opd_Profile(Lay_Idx) * Qe_Profile(Lay_Idx) / Qe_ref_Profile(Lay_Idx)
+               Cld_Opd = Cld_Opd_Profile(Lay_Idx) * Qe_Profile(Lay_Idx) / Qe_Reference_Profile(Lay_Idx)
                Opd_Profile(Lay_Idx) = Cld_Opd + Gas_Opd_Profile(Lay_Idx)
 
                if (Opd_Profile(Lay_Idx) > 0.00) then 
-                wo_Profile(Lay_Idx) = wo_cld*Cld_Opd / Opd_Profile(Lay_Idx)
+                wo_Profile(Lay_Idx) = Cld_wo*Cld_Opd / Opd_Profile(Lay_Idx)
                else
-                wo_Profile(Lay_Idx) = wo_cld
+                wo_Profile(Lay_Idx) = Cld_wo
                endif
              enddo Layer_Loop 
 
-             call FORWARD_MODEL_SOI(Number_Layers,Opd_Profile,wo_Profile,g_Profile,B_Profile, &
-                             Surface_Emissivity,Bsfc, Bspace,mu_obs,rad_toa)
+             if (Cwp_Nwp_Pix(Elem_Idx,Line_Idx) > 1.0) then
+                call FORWARD_MODEL_SOI(Number_Layers,Opd_Profile,wo_Profile,g_Profile,B_Profile, &
+                             Surface_Emissivity,Bsfc, Bspace,mu_obs,Rad_Toa)
+
+             else
+
+                call FORWARD_MODEL_ABS_APPROX(Number_Layers,Opd_Profile,wo_Profile,g_Profile,B_Profile, &
+                             Surface_Emissivity,Bsfc, Bspace,mu_obs,Rad_Toa)
+
+             endif
         
-             ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx) = rad_toa 
+             ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx) = Rad_Toa 
+             ch(Chan_Idx)%Bt_Toa(Elem_Idx, Line_Idx) = PLANCK_TEMP_FAST(Chan_Idx, ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx)) 
 
           enddo Chan_Loop
-
-
-                
 
        enddo Line_Loop
    enddo Element_Loop
 
-     !--- compute optical properties for this channel (wo,g,tau)
-
-     !--- convert trans to nwp levels
-     trans_gas_toa = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile
-     sfc_emissivity = ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx)
-     call COMPUTE_CLOUD_OPT_PROP(iphase,re_wat,Q_ref_wat,Q_wat,g_wat,wo_wat)
-     call COMPUTE_CLOUD_OPT_PROP(iphase,re_ice,Q_ref_ice,Q_ice,g_ice,wo_ice)
-
-     !--- make profiles of layer optical properties
-     tau_wat_sum = 0.0
-     tau_ice_sum = 0.0
-
-     n = sfc_level(i,j)-1
-     do k = 1,n
-      tau_gas(k) =  -1.0*log(trans_gas_toa(k+1)/trans_gas_toa(k)) * mu_obs
-      tau_wat = (Q_wat/Q_ref) * 1.5 * lwp_nwp(i,j,k) / re_wat
-      tau_ice = (Q_ice/Q_ref) * 1.5 * iwp_nwp(i,j,k) / re_ice
-      tau_eff(k) = tau_gas(k) + tau_wat + tau_ice
-      wo_eff(k) = 0.0
-      if (tau_eff(k) > 0.0) then
-        wo_eff(k) = (wo_ice*tau_ice + wo_wat*tau_wat) / (tau_eff(k))
-      endif
-      asym_param_eff(k) = 0.0
-      tau_scat_sum = wo_ice*tau_ice + wo_wat*tau_wat
-      if (tau_scat_sum > 0.0) then
-      asym_param_eff(k) = (g_ice*wo_ice*tau_ice + g_wat*wo_wat*tau_wat) / tau_scat_sum  
-     endif
-
-     tau_wat_sum = tau_wat_sum + tau_wat
-     tau_ice_sum = tau_ice_sum + tau_ice
-
-   enddo
-
-!--- compute planck emission at surface and at each level
-
-     !--- call forward model
-
-
-   enddo
 
 end subroutine
-
-!---------------------------------------------------------------------------
-! compute cloudy radiances using GFS profiles of cloud water/ice
-! and assumed optical properties
-!---------------------------------------------------------------------------
-subroutine COMPUTE_CLOUD_RAD(i,j,i_sfc,j_sfc,c1,c2,nu_3b,a_3b,b_3b,nu_4,a_4,b_4,&
-                             nu_5,a_5,b_5)
-
-integer, intent(in):: i,j,i_sfc,j_sfc
-real, intent(in):: c1,c2,nu_3b,a_3b,b_3b,nu_4,a_4,b_4,&
-                   nu_5,a_5,b_5
-real:: B_mean, T_mean, mu_obs, tau_ice, tau_wat, re_wat, re_ice, g_ice, g_wat, tau_scat_sum, &
-       sfc_bb_emission, sfc_emissivity,nu,a,b,rad_toa,bt_toa,wo_ice,wo_wat,rad_layer,trans_toa, &
-       Q_ref,Q_ice,Q_wat,tau_wat_sum,tau_ice_sum,space_bb_emission
-integer:: k,n, ichan, lev
-
-mu_obs = cos(satzen_nwp(i,j)*dtor)
-re_ice = 30.0
-re_wat = 10.0
-Q_ref = 2.0
-
-space_bb_emission = 0.0
-
-channel_loop: do ichan = 3,5 
-
- if (ichan == 3) then
-    wo_ice = 0.68
-    wo_wat = 0.87
-    g_ice = 0.90
-    g_wat = 0.80
-    trans_gas_toa = trans_atm_ch3b_nwp(i,j,:)
-    sfc_emissivity = 0.98
-    nu = nu_3b
-    a = a_3b
-    b = b_3b
-    Q_ice = 2.2
-    Q_wat = 2.3
- endif
-
- if (ichan == 4) then
-    wo_ice = 0.48
-    wo_wat = 0.5
-    g_ice = 0.96
-    g_wat = 0.92
-    trans_gas_toa = trans_atm_ch4_nwp(i,j,:)
-    sfc_emissivity = 0.98
-    nu = nu_4
-    a = a_4
-    b = b_4
-    Q_ice = 2.11
-    Q_wat = 1.8
- endif
-
- if (ichan == 5) then
-    wo_ice = 0.50
-    wo_wat = 0.39
-    g_ice = 0.92
-    g_wat = 0.91
-    trans_gas_toa = trans_atm_ch5_nwp(i,j,:)
-    sfc_emissivity = 0.98
-    nu = nu_5
-    a = a_5
-    b = b_5
-    Q_ice = 2.3
-    Q_wat = 1.8
- endif
-
-!-------------------------------------------------
-! make profiles of layer optical properties
-!-------------------------------------------------
-tau_wat_sum = 0.0
-tau_ice_sum = 0.0
-
-n = sfc_level(i,j)-1
-do k = 1,n
-   tau_gas(k) =  -1.0*log(trans_gas_toa(k+1)/trans_gas_toa(k)) * mu_obs
-   tau_wat = (Q_wat/Q_ref) * 1.5 * lwp_nwp(i,j,k) / re_wat
-   tau_ice = (Q_ice/Q_ref) * 1.5 * iwp_nwp(i,j,k) / re_ice
-   tau_eff(k) = tau_gas(k) + tau_wat + tau_ice
-   wo_eff(k) = 0.0
-   if (tau_eff(k) > 0.0) then
-    wo_eff(k) = (wo_ice*tau_ice + wo_wat*tau_wat) / (tau_eff(k))
-   endif
-   asym_param_eff(k) = 0.0
-   tau_scat_sum = wo_ice*tau_ice + wo_wat*tau_wat
-   if (tau_scat_sum > 0.0) then
-    asym_param_eff(k) = (g_ice*wo_ice*tau_ice + g_wat*wo_wat*tau_wat) / tau_scat_sum  
-   endif
-
-   tau_wat_sum = tau_wat_sum + tau_wat
-   tau_ice_sum = tau_ice_sum + tau_ice
-
-enddo
-
-!--- compute planck emission at surface and at each level
- sfc_bb_emission =  c1*(nu**3)/(exp((c2*nu)/ &
-                        ((tmpsfc_nwp(i_sfc,j_sfc)-a)/b))-1.0)
-do lev = 1,n+1
-  planck_rad_level(lev) = c1*(nu**3)/(exp((c2*nu)/ &
-                        ((level_temperature(i,j,lev)-a)/b))-1.0)
-enddo
-
-!------------------------------------------------------------------------
-! call SOI
-!-------------------------------------------------------------------------
- if (tot_lwp_nwp(i,j) + tot_iwp_nwp(i,j) > 1.0) then
-   call FORWARD_MODEL_SOI(n,tau_eff(1:n),wo_eff(1:n),asym_param_eff(1:n),planck_rad_level(1:n+1), &
-                        sfc_emissivity,sfc_bb_emission,space_bb_emission,mu_obs,rad_toa)
-
- else
-   call FORWARD_MODEL_ABS_APPROX(n,tau_eff(1:n),wo_eff(1:n),asym_param_eff(1:n),planck_rad_level(1:n+1), &
-                       sfc_emissivity,sfc_bb_emission,space_bb_emission, mu_obs,rad_toa)
- endif
-
-bt_toa =  a + b * ((c2*nu) / log( 1.0 + (c1*(nu**3))/rad_toa))
-
-if (ichan == 3) then
-  ch3b_rad_cld_nwp(i,j) = rad_toa
-  ch3b_bt_cld_nwp(i,j) = bt_toa
-elseif (ichan == 4) then
-  ch4_rad_cld_nwp(i,j) = rad_toa
-  ch4_bt_cld_nwp(i,j) = bt_toa
-elseif (ichan == 5) then
-  ch5_rad_cld_nwp(i,j) = rad_toa
-  ch5_bt_cld_nwp(i,j) = bt_toa
-endif
-
-end do channel_loop
-
-end subroutine COMPUTE_CLOUD_RAD
 
 !-----------------------------------------------------------------
 subroutine ICE_SCATTERING_PROPERTIES(log10_re, Qe_vis,  &
@@ -368,5 +238,42 @@ subroutine SETUP_SINGLE_SCATTERING_PROPERTIES()
   g_log10re_13_coef_ice  = (/  -0.3462,   2.4821,  -1.5888,   0.3382 /)
 
 end subroutine SETUP_SINGLE_SCATTERING_PROPERTIES
+
+subroutine COMPUTE_LAYER_GAS_OPD_PROFILE(Trans_Profile_Rtm,Press_Profile_Rtm, Press_Profile_Nwp,Gas_Profile_Nwp)
+   real, dimension(:), intent(in):: Trans_Profile_Rtm
+   real, dimension(:), intent(in):: Press_Profile_Rtm
+   real, dimension(:), intent(in):: Press_Profile_Nwp
+   real, dimension(:), intent(in):: Gas_Opd_Profile_Nwp
+
+   Num_Levels_Rtm = size(Press_Profile_Rtm)
+   Num_Levels_Nwp = size(Press_Profile_Nwp)
+
+   
+end subroutine
+!------------------------------------------------------------------------------
+! Determine with RTM level is closest to an NWP level
+! assume both NWP and RTM profiles start at TOA
+!
+!------------------------------------------------------------------------------
+subroutine SETUP_NWP_TO_RTM_MAPPING(Pressure_Profile_Rtm, Pressure_Profile_Nwp, Lev_Idx_Rtm_Nwp)
+   real, intent(in), dimension(:):: Pressure_Profile_Rtm
+   real, intent(in), dimension(:):: Pressure_Profile_Nwp
+   integer, intent(in), dimension(:):: Lev_Idx_Rtm_Nwp
+   integer:: Lev_Idx_Rtm
+   integer:: Lev_Idx_Nwp
+   integer:: Number_Levels_Rtm
+   integer:: Number_Levels_Nwp
+
+   Number_Levels_Rtm = size(Pressure_Profile_Rtm)  
+   Number_Levels_Nwp= size(Pressure_Profile_Nwp)  
+
+  Nwp_Level_Loop: do Lev_Idx_Nwp = 1, Number_Levels_Nwp
+
+    call LOCATE(Pressure_Profile_Rtm, Number_Levels_Rtm, Pressure_Profile_Nwp(Lev_Idx_Nwp),  &
+                Lev_Idx_Rtm_Nwp(Lev_Idx_Nwp))
+
+  enddo  Nwp_Level_Loop
+
+end subroutine SETUP_NWP_TO_RTM_MAPPING
 
 end module SOI_SIMULATOR

@@ -1,4 +1,4 @@
-! $Header: /home/repository/cloud_team_dcomp/dcomp_lut_mod.f90,v 1.2 2013/12/05 20:27:16 awalther Exp $
+! $Header:$
 module dcomp_lut_mod
 
    use dcomp_lut_def

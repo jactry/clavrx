@@ -15,28 +15,26 @@ module SOI_SIMULATOR
   use PLANCK
 
   implicit none
-  private:: SETUP_SINGLE_SCATTERING_PROPS
-  public:: COMPUTE_CLEAR_RAD, &
-           COMPUTE_CLOUD_PROFILES_GFS,  &
-           COMPUTE_CLOUD_RAD
+  private:: SETUP_SINGLE_SCATTERING_PROPERTIES, COMPUTE_CLOUD_OPT_PROPS
+  public:: COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI
 
   real, private, save , dimension(4)::  &
-        Qe_log10_065_coef_water, wo_log10re_065_coef_water, g_log10re_065_coef_water, &
-        Qe_log10_37_coef_water, wo_log10re_37_coef_water, g_log10re_37_coef_water, &
-        Qe_log10_67_coef_water, wo_log10re_67_coef_water, g_log10re_67_coef_water, &
-        Qe_log10_85_coef_water, wo_log10re_85_coef_water, g_log10re_85_coef_water, &
-        Qe_log10_11_coef_water, wo_log10re_11_coef_water, g_log10re_11_coef_water, &
-        Qe_log10_12_coef_water, wo_log10re_12_coef_water, g_log10re_12_coef_water, &
-        Qe_log10_13_coef_water, wo_log10re_13_coef_water, g_log10re_13_coef_water
+        Qe_log10re_065_coef_water, wo_log10re_065_coef_water, g_log10re_065_coef_water, &
+        Qe_log10re_37_coef_water, wo_log10re_37_coef_water, g_log10re_37_coef_water, &
+        Qe_log10re_67_coef_water, wo_log10re_67_coef_water, g_log10re_67_coef_water, &
+        Qe_log10re_85_coef_water, wo_log10re_85_coef_water, g_log10re_85_coef_water, &
+        Qe_log10re_11_coef_water, wo_log10re_11_coef_water, g_log10re_11_coef_water, &
+        Qe_log10re_12_coef_water, wo_log10re_12_coef_water, g_log10re_12_coef_water, &
+        Qe_log10re_13_coef_water, wo_log10re_13_coef_water, g_log10re_13_coef_water
   
   real, private, save, dimension(4)::  &
-        Qe_log10_065_coef_ice, wo_log10re_065_coef_ice, g_log10re_065_coef_ice, &
-        Qe_log10_37_coef_ice, wo_log10re_37_coef_ice, g_log10re_37_coef_ice, &
-        Qe_log10_67_coef_ice, wo_log10re_67_coef_ice, g_log10re_67_coef_ice, &
-        Qe_log10_85_coef_ice, wo_log10re_85_coef_ice, g_log10re_85_coef_ice, &
-        Qe_log10_11_coef_ice, wo_log10re_11_coef_ice, g_log10re_11_coef_ice, &
-        Qe_log10_12_coef_ice, wo_log10re_12_coef_ice, g_log10re_12_coef_ice, &
-        Qe_log10_13_coef_ice, wo_log10re_13_coef_ice, g_log10re_13_coef_ice
+        Qe_log10re_065_coef_ice, wo_log10re_065_coef_ice, g_log10re_065_coef_ice, &
+        Qe_log10re_37_coef_ice, wo_log10re_37_coef_ice, g_log10re_37_coef_ice, &
+        Qe_log10re_67_coef_ice, wo_log10re_67_coef_ice, g_log10re_67_coef_ice, &
+        Qe_log10re_85_coef_ice, wo_log10re_85_coef_ice, g_log10re_85_coef_ice, &
+        Qe_log10re_11_coef_ice, wo_log10re_11_coef_ice, g_log10re_11_coef_ice, &
+        Qe_log10re_12_coef_ice, wo_log10re_12_coef_ice, g_log10re_12_coef_ice, &
+        Qe_log10re_13_coef_ice, wo_log10re_13_coef_ice, g_log10re_13_coef_ice
 
    integer, private, save:: Setup_Properties_Flag = 1
 
@@ -52,12 +50,12 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Nu
    integer, intent(in):: Number_Levels
    integer:: Number_Levels_Rtm
    integer:: Number_Layers
-   real, dimension(:), allocatable:: Cld_Opd_Profile, Qe_reference_Profile, Qe_Profile, &
-                                     g_Profile, wo_Profile, Opd_Profile, Gas_Opd_Profile, B_Profile 
+   real, dimension(:), allocatable:: Cld_Opd_Profile, Qe_Reference_Profile, Qe_Profile, &
+                                     g_Profile, wo_Profile, Opd_Profile, Gas_Opd_Profile,  &
+                                     B_Profile , Trans_Gas_Profile
    integer, dimension(:), allocatable, save:: Lev_Idx_Rtm_Nwp
    real:: Bsfc, Bspace, mu_obs
    integer:: Elem_Idx,Line_Idx,Chan_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx,Zen_Idx,Lev_Idx,Lay_Idx
-   integer:: Number_Levels_Rtm
    real:: Cld_Opd, Cld_wo, Rad_Toa
    real:: Surface_Emissivity
 
@@ -66,18 +64,19 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Nu
 
    !--- compute liquid and ice water layer profiles
    if (Setup_Properties_Flag) then
-      call SETUP_SINGLE_SCATTERING_PROPS()
+      call SETUP_SINGLE_SCATTERING_PROPERTIES()
       allocate(Lev_Idx_Rtm_Nwp(Number_Levels_Rtm))
-      call SETUP_NWP_TO_RTM_MAPPING(Press_Std_Rtm, Press_Std_Nwp, Lev_Idx_Rtm_Nwp)
+      call SETUP_NWP_TO_RTM_MAPPING(P_Std_Rtm, P_Std_Nwp, Lev_Idx_Rtm_Nwp)
       Setup_Properties_Flag = 0
    endif
 
 
    !---- allocate local profile vectors
    allocate(Cld_Opd_Profile(Number_Layers))
-   allocate(Qe_reference_Profile, Qe_Profile, g_Profile, wo_Profile,  &
+   allocate(Qe_Reference_Profile, Qe_Profile, g_Profile, wo_Profile,  &
             Opd_Profile, Gas_Opd_Profile, source = Cld_Opd_Profile)
    allocate(B_Profile(Number_Levels))
+   allocate(Trans_Gas_Profile(Number_Levels))
 
 
    Element_Loop: do Elem_Idx = 1, Number_Elements
@@ -108,9 +107,6 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Nu
              endif
 
              !--- convert trans to nwp levels
-             Gas_Opd_Profile = COMPUTE_LAYER_GAS_OPD_PROFILE( &
-                                   Rtm(Lon_Nwp_Idx,Lat_Nwp_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile)
-
              Surface_Emissivity = ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx)
              Bsfc = PLANCK_RAD_FAST(Chan_Idx, Tsfc_Nwp_Pix(Elem_Idx,Line_Idx))
              Bspace = 0.0
@@ -118,19 +114,19 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Nu
 
              Level_Loop: do Lev_Idx = 1, Number_Levels
                 B_Profile(Lev_Idx) = PLANCK_RAD_FAST(Chan_Idx, T_Prof_Nwp(Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx))
-                Trans_Gas(Lev_Idx) = Rtm(Lon_Nwp_Idx,Lat_Nwp_Idx)%d(Zen_Idx)%ch(Chan_Idx)% &
+                Trans_Gas_Profile(Lev_Idx) = Rtm(Lon_Nwp_Idx,Lat_Nwp_Idx)%d(Zen_Idx)%ch(Chan_Idx)% &
                                      Trans_Atm_Profile(Lev_Idx_Rtm_Nwp(Lev_Idx))
              enddo Level_Loop
 
              Layer_Loop: do Lay_Idx = 1, Number_Layers
 
-               Gas_Opd_Profile(Lay_Idx) = -1.0*log(Trans_Gas(Lay_Idx+1)/Trans_Gas(Lay_Idx)) * mu_obs
+               Gas_Opd_Profile(Lay_Idx) = -1.0*log(Trans_Gas_Profile(Lay_Idx+1)/Trans_Gas_Profile(Lay_Idx)) * mu_obs
 
                if (Cld_Phase_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) == sym%WATER_PHASE) then
-                   call COMPUTE_CLOUD_OPT_PROP(sym%WATER_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
-                                Qe_ref_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),Cld_wo)
-               elseif (Cld_Phase_Prof_Nwp(Lay_Idx) == sym%ICE_PHASE) then
-                   call COMPUTE_CLOUD_OPT_PROP(sym%ICE_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
+                   call COMPUTE_CLOUD_OPT_PROPS(Chan_Idx,sym%WATER_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
+                                Qe_Reference_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),Cld_wo)
+               elseif (Cld_Phase_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) == sym%ICE_PHASE) then
+                   call COMPUTE_CLOUD_OPT_PROPS(Chan_Idx,sym%ICE_PHASE,Cld_Reff_Prof_Nwp(Lay_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx), &
                                 Qe_Reference_Profile(Lay_Idx),Qe_Profile(Lay_Idx),g_Profile(Lay_Idx),Cld_wo)
                else
                    Qe_Reference_Profile(Lay_Idx) = 1.0
@@ -172,27 +168,12 @@ subroutine COMPUTE_CLOUDY_OBSERVATIONS_USING_SOI(Number_Elements,Number_Lines,Nu
 end subroutine
 
 !-----------------------------------------------------------------
-subroutine ICE_SCATTERING_PROPERTIES(log10_re, Qe_vis,  &
-                                     Qe_37, wo_37, g_37,&
-                                     Qe_67, wo_67, g_67,&
-                                     Qe_85, wo_85, g_85,&
-                                     Qe_11, wo_11, g_11,&
-                                     Qe_12, wo_12, g_12,&
-                                     Qe_13, wo_13, g_13)
-
-  real, intent(in):: log10_re
-  real, intent(out):: Qe_vis
-  real, intent(out):: Qe_37, wo_37, g_37
-  real, intent(out):: Qe_67, wo_67, g_67
-  real, intent(out):: Qe_85, wo_85, g_85
-  real, intent(out):: Qe_11, wo_11, g_11
-  real, intent(out):: Qe_12, wo_12, g_12
-  real, intent(out):: Qe_13, wo_13, g_13
-
-
+!
+!-----------------------------------------------------------------
 subroutine SETUP_SINGLE_SCATTERING_PROPERTIES()
+
   !--- ice - severly roughend agg columns b = 0.1
-  Qe_log10_065_coef_water =   (/   2.2697,  -0.3151,    0.1360,  -0.0221 /)
+  Qe_log10re_065_coef_water =   (/   2.2697,  -0.3151,    0.1360,  -0.0221 /)
   wo_log10re_065_coef_water = (/   1.0000,  -0.0000,   0.0000,  -0.0000 /)
   g_log10re_065_coef_water  = (/   0.7418,   0.0074,   0.0027,  -0.0018 /)
   Qe_log10re_37_coef_water = (/    2.2596,   0.5961,  -0.8401,   0.2461 /)
@@ -215,7 +196,7 @@ subroutine SETUP_SINGLE_SCATTERING_PROPERTIES()
   g_log10re_13_coef_water  = (/   0.3782,   1.0423,  -0.6597,   0.1408 /)
 
   !--- water - mie - spheres b = 0.1
-  Qe_log10_065_coef_ice = (/   2.4692,  -0.6383,   0.3301,  -0.0616 /)
+  Qe_log10re_065_coef_ice = (/   2.4692,  -0.6383,   0.3301,  -0.0616 /)
   wo_log10re_065_coef_ice = (/   1.0001,  -0.0002,   0.0003,  -0.0001 /)
   g_log10re_065_coef_ice  = (/   0.7283,   0.2926,  -0.2212,   0.0626 /)
   Qe_log10re_37_coef_ice = (/   4.2020,  -2.7306,   1.0465,  -0.1023 /)
@@ -239,17 +220,6 @@ subroutine SETUP_SINGLE_SCATTERING_PROPERTIES()
 
 end subroutine SETUP_SINGLE_SCATTERING_PROPERTIES
 
-subroutine COMPUTE_LAYER_GAS_OPD_PROFILE(Trans_Profile_Rtm,Press_Profile_Rtm, Press_Profile_Nwp,Gas_Profile_Nwp)
-   real, dimension(:), intent(in):: Trans_Profile_Rtm
-   real, dimension(:), intent(in):: Press_Profile_Rtm
-   real, dimension(:), intent(in):: Press_Profile_Nwp
-   real, dimension(:), intent(in):: Gas_Opd_Profile_Nwp
-
-   Num_Levels_Rtm = size(Press_Profile_Rtm)
-   Num_Levels_Nwp = size(Press_Profile_Nwp)
-
-   
-end subroutine
 !------------------------------------------------------------------------------
 ! Determine with RTM level is closest to an NWP level
 ! assume both NWP and RTM profiles start at TOA
@@ -258,7 +228,7 @@ end subroutine
 subroutine SETUP_NWP_TO_RTM_MAPPING(Pressure_Profile_Rtm, Pressure_Profile_Nwp, Lev_Idx_Rtm_Nwp)
    real, intent(in), dimension(:):: Pressure_Profile_Rtm
    real, intent(in), dimension(:):: Pressure_Profile_Nwp
-   integer, intent(in), dimension(:):: Lev_Idx_Rtm_Nwp
+   integer, intent(out), dimension(:):: Lev_Idx_Rtm_Nwp
    integer:: Lev_Idx_Rtm
    integer:: Lev_Idx_Nwp
    integer:: Number_Levels_Rtm
@@ -275,5 +245,100 @@ subroutine SETUP_NWP_TO_RTM_MAPPING(Pressure_Profile_Rtm, Pressure_Profile_Nwp, 
   enddo  Nwp_Level_Loop
 
 end subroutine SETUP_NWP_TO_RTM_MAPPING
+!--------------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------------
+subroutine COMPUTE_CLOUD_OPT_PROPS(Chan_Idx,Cloud_Phase, Cloud_Reff, Qe_065_Cld, Qe_Cld, g_Cld, wo_Cld) 
+   integer, intent(in):: Chan_Idx
+   integer(kind=int1), intent(in):: Cloud_Phase
+   real, intent(in):: Cloud_Reff
+   real, intent(out):: Qe_065_Cld, Qe_Cld, g_Cld, wo_Cld
+   real:: log10re, factor
+   integer, parameter:: m = 4
+   real, dimension(m)::Qe_log10re_065_coef, Qe_log10re_coef, g_log10re_coef, wo_log10re_coef
+   integer:: i
+
+   if (Cloud_Phase == sym%WATER_PHASE) then
+      Qe_log10re_065_coef = Qe_log10re_065_coef_water
+      select case (Chan_Idx)
+         case(1)
+            Qe_log10re_coef = Qe_log10re_065_coef_water
+            g_log10re_coef = g_log10re_065_coef_water
+            wo_log10re_coef = wo_log10re_065_coef_water
+         case(20)
+            Qe_log10re_coef = Qe_log10re_37_coef_water
+            g_log10re_coef = g_log10re_37_coef_water
+            wo_log10re_coef = wo_log10re_37_coef_water
+         case(27)
+            Qe_log10re_coef = Qe_log10re_67_coef_water
+            g_log10re_coef = g_log10re_67_coef_water
+            wo_log10re_coef = wo_log10re_67_coef_water
+         case(29)
+            Qe_log10re_coef = Qe_log10re_85_coef_water
+            g_log10re_coef = g_log10re_85_coef_water
+            wo_log10re_coef = wo_log10re_85_coef_water
+         case(31)
+            Qe_log10re_coef = Qe_log10re_11_coef_water
+            g_log10re_coef = g_log10re_11_coef_water
+            wo_log10re_coef = wo_log10re_11_coef_water
+         case(32)
+            Qe_log10re_coef = Qe_log10re_12_coef_water
+            g_log10re_coef = g_log10re_12_coef_water
+            wo_log10re_coef = wo_log10re_12_coef_water
+         case(33)
+            Qe_log10re_coef = Qe_log10re_13_coef_water
+            g_log10re_coef = g_log10re_13_coef_water
+            wo_log10re_coef = wo_log10re_13_coef_water
+      end select 
+
+   elseif (Cloud_Phase == sym%WATER_PHASE) then
+      Qe_log10re_065_coef = Qe_log10re_065_coef_ice
+      select case (Chan_Idx)
+         case(1)
+            Qe_log10re_coef = Qe_log10re_065_coef_ice
+            g_log10re_coef = g_log10re_065_coef_ice
+            wo_log10re_coef = wo_log10re_065_coef_ice
+         case(20)
+            Qe_log10re_coef = Qe_log10re_37_coef_ice
+            g_log10re_coef = g_log10re_37_coef_ice
+            wo_log10re_coef = wo_log10re_37_coef_ice
+         case(27)
+            Qe_log10re_coef = Qe_log10re_67_coef_ice
+            g_log10re_coef = g_log10re_67_coef_ice
+            wo_log10re_coef = wo_log10re_67_coef_ice
+         case(29)
+            Qe_log10re_coef = Qe_log10re_85_coef_ice
+            g_log10re_coef = g_log10re_85_coef_ice
+            wo_log10re_coef = wo_log10re_85_coef_ice
+         case(31)
+            Qe_log10re_coef = Qe_log10re_11_coef_ice
+            g_log10re_coef = g_log10re_11_coef_ice
+            wo_log10re_coef = wo_log10re_11_coef_ice
+         case(32)
+            Qe_log10re_coef = Qe_log10re_12_coef_ice
+            g_log10re_coef = g_log10re_12_coef_ice
+            wo_log10re_coef = wo_log10re_12_coef_ice
+         case(33)
+            Qe_log10re_coef = Qe_log10re_13_coef_ice
+            g_log10re_coef = g_log10re_13_coef_ice
+            wo_log10re_coef = wo_log10re_13_coef_ice
+      end select 
+
+   endif 
+
+
+   Qe_065_Cld = 0.0
+   Qe_Cld = 0.0
+   g_Cld = 0.0
+   wo_Cld = 0.0
+   do i = 1, m
+      factor = log10re**i
+      Qe_065_Cld = Qe_065_Cld + Qe_log10re_065_coef(i)*factor
+      Qe_Cld = Qe_Cld + Qe_log10re_coef(i)*factor
+      wo_Cld = wo_Cld + wo_log10re_coef(i)*factor
+      g_Cld = g_Cld + g_log10re_coef(i)*factor
+   enddo
+
+end subroutine COMPUTE_CLOUD_OPT_PROPS
 
 end module SOI_SIMULATOR

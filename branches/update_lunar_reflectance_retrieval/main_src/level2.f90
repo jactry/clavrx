@@ -2155,7 +2155,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- ndvi_sfc_from modis white sky
      if (Sds_Num_Level2_Ndvi_White_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ndvi_White),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                               "ndvi_sfc_white_sky", &
+                               "ndvi_sfc_white_sky_nwp", &
                                "normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance", &
                                "normalized difference vegetation index, atmospherically corrected, modis white sky", &
                                DFNT_INT8, sym%LINEAR_SCALING, &
@@ -2172,6 +2172,52 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "atmospherically corrected 11 micron radiance", &
                                DFNT_INT8, sym%LINEAR_SCALING, &
                                Min_Tsfc, Max_Tsfc, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- ch31 atmospheric radiance
+     if (Sds_Num_Level2_Ch31_Rad_Atm_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "atmos_rad_11_0um_nom_nwp", &
+                               "atmospheric_radiance_11_0um_nom_nwp", &
+                               "atmospheric emission 11 micron radiance at toa from nwp", &
+                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               Min_Ch31_Rad_Atm, Max_Ch31_Rad_Atm, "mW/m^2/cm^-1", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- ch31 atmospheric transmission
+
+
+     if (Sds_Num_Level2_Ch31_Trans_Atm_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Trans_Atm),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "atmos_trans_11_0um_nom_nwp", &
+                               "atmospheric_transmission_11_0um_nom_nwp", &
+                               "atmospheric tranmission 11 micron radiance at toa from nwp", &
+                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               Min_Trans, Max_Trans, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- ch31 surface emissivity
+     if (Sds_Num_Level2_Ch31_Sfc_Emiss_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Sfc_Emiss),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "sfc_emiss_11_0um_nom_nwp", &
+                               "surface_emissivity_11_0um_nom_nwp", &
+                               "surface emissivity at 11 micron from ancillary data", &
+                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               Min_Sfc_Ems, Max_Sfc_Ems, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- ch20 surface emissivity
+     if (Sds_Num_Level2_Ch20_Sfc_Emiss_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch20_Sfc_Emiss),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "sfc_emiss_3_75um_nom_nwp", &
+                               "surface_emissivity_3_75um_nom_nwp", &
+                               "surface emissivity at 3.75 micron from ancillary data", &
+                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               Min_Sfc_Ems, Max_Sfc_Ems, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -2870,6 +2916,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+
+
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
@@ -3072,7 +3120,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    endif
 
    !--- Ch20 surface emissiviy
-   call SCALE_VECTOR_I2_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_sfc_ems,Max_sfc_ems,Missing_Value_Real4,Two_Byte_Temp)
+   call SCALE_VECTOR_I2_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems,Max_Sfc_Ems,Missing_Value_Real4,Two_Byte_Temp)
    Istatus = sfwdata(Sds_Id_Rtm(21), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
@@ -4453,6 +4501,39 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI5,sym%LINEAR_SCALING,Min_Uni_Ch5, &
                                    Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+
+    !--- ch31 atmospheric radiance
+    if (Sds_Num_Level2_Ch31_Rad_Atm_Flag == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(ch(31)%Rad_Atm,sym%LINEAR_SCALING,Min_Ch31_Rad_Atm, &
+                                   Max_Ch31_Rad_Atm,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- ch31 atmospheric transmission
+    if (Sds_Num_Level2_Ch31_Trans_Atm_Flag == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(ch(31)%Trans_Atm,sym%LINEAR_SCALING,Min_Trans, &
+                                   Max_Trans,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Trans_Atm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- ch31 surface emissivity
+    if (Sds_Num_Level2_Ch31_Sfc_Emiss_Flag == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(ch(31)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems, &
+                                   Max_Sfc_Ems,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Sfc_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- ch20 surface emissivity
+    if (Sds_Num_Level2_Ch20_Sfc_Emiss_Flag == sym%YES .and. Chan_On_Flag_Default(20) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems, &
+                                   Max_Sfc_Ems,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Sfc_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

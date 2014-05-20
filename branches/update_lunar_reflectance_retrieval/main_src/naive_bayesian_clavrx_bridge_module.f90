@@ -27,8 +27,9 @@
 !
 !  HISTORY:
 !      2014/04/06:    new interface (AW)
-!      2014/04/21:  add fire mask input
-!      2014/05/07:  added diagnostic type (DB)
+!      2014/04/21:  add fire mask input (AW)
+!      2014/05/07:  added diagnostic type (Denis B)
+!      2014/05/09:  added version (Denis B)
 !
 !  GLOBAL VARIABLES:
 !
@@ -88,70 +89,68 @@
 !                   structure definition of cloud_mask_naive_bayes retrieval input  
 !
 !--------------------------------------------------------------------------------------
-module naive_bayesian_clavrx_bridge_module
 
+module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
 
    ! -- MODULES USED
 
    use CONSTANTS , only: &
-      & sym
+        Sym &
+      , Cloud_Mask_Version &
+      , Cloud_Mask_Thresholds_Version
       
    use PIXEL_COMMON, only: &
-        lon &
-      , lat &
-      , solzen &
-      , lunzen &
-      , airmass &
-      , scatangle &
-      , glint_mask &
-      , land &
-      , sfc_type &
-      , coast &
-      , snow &
-      , zsfc &
-      , sst_anal_uni &
-      , bt_ch31_max_3x3 &
+        Lon &
+      , Lat &
+      , Solzen &
+      , Airmass &
+      , Scatangle &
+      , Glint_mask &
+      , Land &
+      , Sfc_Type &
+      , Coast &
+      , Snow &
+      , Zsfc &
+      , Sst_Anal_Uni &
+      , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Bt_Ch20_Std_3x3 &
-      , ems_Ch20_Clear_Solar_Rtm &
-      , ems_ch20_median_3x3 &
+      , Ems_Ch20_Clear_Solar_Rtm &
+      , Ems_Ch20_Median_3x3 &
       , Covar_Ch27_Ch31_5x5 &
-      , ch &
+      , Ch &
       , Ref_Ch1_Std_3x3 &
       , Ref_Ch1_Min_3x3 &
       , Chan_On_Flag_Default &
       , Posterior_Cld_Probability &
       , Bayes_Mask_Sfc_Type_Global &
       , Cld_Test_Vector_Packed &
-      , num_pix &
-      , num_scans_read &
-      , cld_mask &
-      , ancil_data_dir &
+      , Num_Pix &
+      , Num_Scans_Read &
+      , Cld_Mask &
+      , Ancil_Data_Dir &
       , Bayesian_Cloud_Mask_Name &
       , Solar_Contamination_Mask &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
-      , space_mask &
-      , city_mask &
+      , Space_Mask &
+      , City_Mask &
       , Ref_ChDNB_Lunar_Std_3x3 &
       , Ref_ChDNB_Lunar_Min_3x3 &
-      , scatangle_lunar
+      , Scatangle_Lunar &
+      , Glint_Mask_Lunar &
+      , Lunzen
      
-      
-             
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
-      &   cloud_mask_naive_bayes &
-      & , cloud_mask_input_type &
-      & , ET_cloudiness_class &
-      & , cloud_mask_diagnostic
+        Cloud_Mask_Naive_Bayes &
+      , Cloud_Mask_Input_Type &
+      , ET_Cloudiness_Class &
+      , Cloud_Mask_Diagnostic &
+      , Cloud_Mask_Version_Type
 
-      
    use FILE_TOOLS, only: &
-      file_test   
-
-
-   implicit none
+        FILE_TEST
 
    public :: AWG_CLOUD_BAYES_BRIDGE
    
@@ -165,8 +164,9 @@ contains
       implicit none
       
      
-      type ( cloud_mask_input_type ) :: mask_inp
-      type ( cloud_mask_diagnostic ) :: diag
+      type ( Cloud_Mask_Input_Type ) :: mask_inp
+      type ( Cloud_Mask_Diagnostic ) :: diag
+      type ( Cloud_Mask_Version_Type ) :: vers
       ! cloud mask information mask 7 bytes ( 56 bits)    
       integer :: info_flags ( 7 )
       integer :: i , j 
@@ -188,102 +188,105 @@ contains
       line_loop: do i = 1, num_pix
          elem_loop: do  j = 1,num_scans_read
             
-            
             if ( space_mask (i,j) == 1) cycle
             
             if ( land (i,j) < 0 ) cycle
             
-            mask_inp % geo % lat         = lat ( i , j )            
-            mask_inp % geo % lon         = lon ( i , j )
-            mask_inp % geo % sol_zen     = solzen ( i , j )
-            mask_inp % geo % airmass     = airmass ( i , j )
-            mask_inp % geo % scat_angle  = scatangle ( i , j )
-            mask_inp % geo % glint       = glint_mask ( i ,j )
+            mask_inp % geo % lat         = Lat ( i , j )            
+            mask_inp % geo % lon         = Lon ( i , j )
+            mask_inp % geo % sol_zen     = Solzen ( i , j )
+            mask_inp % geo % airmass     = Airmass ( i , j )
+            mask_inp % geo % scat_angle  = Scatangle ( i , j )
+            mask_inp % geo % glint       = Glint_Mask ( i ,j )
             mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
-            mask_inp % sfc % land_class  = land ( i , j )
-            mask_inp % sfc % coast_mask  = coast ( i , j ) 
-            mask_inp % sfc % snow_class  = snow ( i , j )
-            mask_inp % sfc % sfc_type    = sfc_type ( i , j ) 
-            mask_inp % sfc % dem         = zsfc ( i , j )
-            mask_inp % sfc % sst_anal_uni = sst_anal_uni ( i, j )
+            mask_inp % sfc % land_class  = Land ( i , j )
+            mask_inp % sfc % coast_mask  = Coast ( i , j ) 
+            mask_inp % sfc % snow_class  = Snow ( i , j )
+            mask_inp % sfc % sfc_type    = Sfc_Type ( i , j ) 
+            mask_inp % sfc % dem         = Zsfc ( i , j )
+            mask_inp % sfc % sst_anal_uni = Sst_Anal_Uni ( i, j )
             
             if ( chan_on_flag_default(1) == 1 ) then
-               mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_toa_clear ( i , j )
-               mask_inp % sat % ref_ch1         = ch(1) % ref_toa ( i , j )
+               mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_Toa_Clear ( i , j )
+               mask_inp % sat % ref_ch1         = ch(1) % Ref_Toa ( i , j )
                mask_inp % sat % ref_ch1_3x3_std = Ref_Ch1_Std_3x3 ( i , j )
                mask_inp % sat % ref_ch1_3x3_min = Ref_Ch1_Min_3x3 ( i , j )
             end if
             
-            if ( chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = ch(2) % ref_toa ( i , j )
-            if ( chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = ch(6) % ref_toa ( i , j )
-            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch7 = ch(7) % ref_toa ( i , j )
-            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch8 = ch(8) % ref_toa ( i , j )
+            if ( chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = Ch (2) % Ref_Toa ( i , j )
+            if ( chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = Ch (6) % Ref_Toa ( i , j )
+            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch7 = Ch (7) % Ref_Toa ( i , j )
+            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch8 = Ch (8) % Ref_Toa ( i , j )
             
             if ( chan_on_flag_default(20) == 1 ) then 
                 mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
                 mask_inp % rtm % emis_ch20_clear = Ems_Ch20_Clear_Solar_Rtm( i , j )
-                mask_inp % sat % bt_ch20         = ch(20) % bt_toa ( i , j )
-                mask_inp % sat % emis_ch20_3x3_mean  = ems_ch20_median_3x3 ( i , j )
+                mask_inp % sat % bt_ch20         = Ch (20) % Bt_Toa ( i , j )
+                mask_inp % sat % emis_ch20_3x3_mean  = Ems_Ch20_Median_3x3 ( i , j )
             end if
             
             ! -  sfc emissivity is always on 
             mask_inp % sfc % emis_ch20 =  ch(20) % sfc_emiss ( i , j )
             
-            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = ch(26) % ref_toa ( i , j )
-            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = ch(27) % bt_toa ( i , j )
-            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29 = ch(29) % bt_toa ( i , j )
+            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = Ch (26) % Ref_Toa ( i , j )
+            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = Ch (27) % Bt_Toa ( i , j )
+            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29  = Ch (29) % Bt_Toa ( i , j )
             
             if ( chan_on_flag_default(31) == 1 ) then
                
                mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
                mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
-               mask_inp % rtm % emis_ch31_tropo = ch(31) % emiss_tropo ( i , j )
-               mask_inp % rtm % bt_ch31_atm_sfc = ch(31) % Bt_Toa_Clear( i , j )
-               mask_inp % sat % bt_ch31         = ch(31) % bt_toa ( i , j )
+               mask_inp % rtm % emis_ch31_tropo = Ch (31) % Emiss_Tropo ( i , j )
+               mask_inp % rtm % bt_ch31_atm_sfc = Ch (31) % Bt_Toa_Clear( i , j )
+               mask_inp % sat % bt_ch31         = Ch (31) % Bt_Toa ( i , j )
                if ( chan_on_flag_default(27) == 1 ) then
                   mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
                end if   
             end if   
                
             if ( chan_on_flag_default(32) == 1 ) then
-               mask_inp % rtm % emis_ch32_tropo    = ch(32) % emiss_tropo (i,j)
-               mask_inp % rtm % bt_ch32_atm_sfc    = ch(32)%Bt_Toa_Clear( i , j ) 
-               mask_inp % sat % bt_ch32             = ch(32) % bt_toa ( i , j )
+               mask_inp % rtm % emis_ch32_tropo    = Ch (32) % Emiss_Tropo ( i , j )
+               mask_inp % rtm % bt_ch32_atm_sfc    = Ch (32) % Bt_Toa_Clear( i , j ) 
+               mask_inp % sat % bt_ch32            = Ch (32) % Bt_Toa ( i , j )
             end if
             
             ! - dnb cloud mask addition at night
-            if ( chan_on_flag_default(42) == 1 .and. allocated( ch(42)%Ref_Lunar_Toa  )  ) then
-               mask_inp % sat % ref_dnb_lunar = ch(42)%Ref_Lunar_Toa ( i, j)
-               mask_inp % geo % lunar_zen = lunzen ( i,j )
-               mask_inp % rtm % ref_dnb_clear = ch(42)%Ref_Lunar_Toa_Clear(i,j)
-               mask_inp % sfc % is_city = city_mask (i,j) == 1
-               mask_inp % sat % ref_dnb_3x3_std = Ref_ChDNB_Lunar_Std_3x3 (i,j)
-               mask_inp % sat % ref_dnb_3x3_min = Ref_ChDNB_Lunar_Min_3x3 (i,j)
-               mask_inp % geo % scat_angle_lunar = scatangle_lunar (i,j)
-               
+            if ( chan_on_flag_default(42) == 1 .and. allocated( Ch (42) % Ref_Lunar_Toa ) ) then
+               mask_inp % sat % ref_dnb_lunar    = Ch (42) % Ref_Lunar_Toa ( i , j )
+               mask_inp % geo % lunar_zen        = Lunzen ( i , j )
+               mask_inp % rtm % ref_dnb_clear    = Ch (42) % Ref_Lunar_Toa_Clear( i , j )
+               mask_inp % sfc % is_city          = City_Mask ( i , j ) == 1
+               mask_inp % sat % ref_dnb_3x3_std  = Ref_ChDNB_Lunar_Std_3x3 ( i , j )
+               mask_inp % sat % ref_dnb_3x3_min  = Ref_ChDNB_Lunar_Min_3x3 ( i , j )
+               mask_inp % geo % scat_angle_lunar = Scatangle_Lunar ( i , j )
+               mask_inp % geo % lunar_glint_mask = Glint_Mask_Lunar ( i , j )
             end if
 
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
              
-            call cloud_mask_naive_bayes ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags , diag )
+            call CLOUD_MASK_NAIVE_BAYES ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags &
+                                         , diag , vers )
            
             Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
             Cld_Test_Vector_Packed ( : , i , j )  = info_flags
 
+            ! - save diagnostic pixels to global arrays
             Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
             Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
             Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
-            
+
          end do elem_loop
-      end do   line_loop
+      end do line_loop
       
+      ! - save mask and threshold version to global variables
+      Cloud_Mask_Version = vers % cloud_mask_version_id
+      Cloud_Mask_Thresholds_Version = vers % cloud_mask_thresh_version_id
        
-      
       !------------------------------------------------------------------------------------------------------------
       !--- make a cloud mask
       !------------------------------------------------------------------------------------------------------------
-      Cld_Mask(:,:) = sym%CLEAR
+      Cld_Mask ( : , : ) = sym%CLEAR
         
       where ( Posterior_Cld_Probability >= 0.9 )
          cld_mask = sym % CLOUDY
@@ -305,10 +308,10 @@ contains
          cld_mask = ET_cloudiness_class % MISSING
       end where 
 
-
    end subroutine AWG_CLOUD_BAYES_BRIDGE
 
 
+!------------------------------------------------------------------------------------------------------------
 
+end module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
 
-end module naive_bayesian_clavrx_bridge_module

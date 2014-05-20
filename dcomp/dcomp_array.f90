@@ -305,7 +305,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
       elem_loop: do elem_idx = 1,   nr_elem
          
    
-         if ( cloud_array (elem_idx,line_idx) .eqv. .false. ) cycle elem_loop
+         if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
          
          ! - set aliases
          cld_height =  input % cloud_hgt % d (elem_idx,line_idx)

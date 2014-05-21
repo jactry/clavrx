@@ -109,5 +109,5 @@ view2d.o:view2d.f90
 
 clean:
 	rm -f *.o *.mod
-	rm -f ../cr_start
+	rm -f test2 test_fwd test_fwd_new test_lut dcomp   
 	-@echo ' '

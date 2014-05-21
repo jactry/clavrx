@@ -50,35 +50,44 @@ contains
       
       implicit none 
       
-      real, dimension ( : ) :: obs_vec , obs_u , alb_sfc 
-      real, dimension ( : ) :: alb_sfc_u , air_trans_ac  
-      real, dimension ( 2 ) :: state_apr 
-      real, intent ( in ) :: sol_zen, sat_zen , rel_azi , cld_temp
+      real, intent(in) :: obs_vec ( :) 
+      real, intent(in) :: obs_u (:) 
+      real, intent(in) :: alb_sfc ( : )
+      
+      real, intent(in)  :: alb_sfc_u (:)
+      real, intent(in)  :: air_trans_ac (:) 
+      real, intent(in)  :: state_apr ( 2 )
+      real, intent ( in ) :: sol_zen
+      real, intent ( in ) :: sat_zen
+      real, intent ( in ) :: rel_azi
+      real, intent ( in ) :: cld_temp
+      
       logical, intent ( in ) :: cld_phase 
-      real, intent ( in ) ::  rad_abv_cld , rad_clear_toc
+      real, intent ( in ) :: rad_abv_cld 
+      real, intent ( in ) :: rad_clear_toc
       character ( len = * ) , intent ( in ) :: sensor
       integer , intent(in), optional :: dcomp_mode
-      integer, intent(in), optional :: debug_in
+      integer , intent(in), optional :: debug_in
       
       character (len = 1024 ), intent ( in ) , optional :: ancil_path
       
       type ( dcomp_output_structure ) , intent ( out ) :: output_str
       
       real :: cod , cps , codu , cpsu
-      real, dimension ( 2, 2 ) :: S_a , S_a_inv
-      real, dimension ( 2, 2 ) :: S_y , S_y_inv
-      real, dimension ( 2, 2 ) :: S_x , S_x_inv
-      real, dimension ( 2, 2 ) :: S_m  
-      real, dimension ( 5, 5 ) :: S_b 
-      real, dimension ( 2, 5 ) :: kernel_b
+      real :: S_a ( 2, 2 ), S_a_inv( 2, 2 )
+      real :: S_y ( 2, 2 ), S_y_inv( 2, 2 )
+      real :: S_x( 2, 2 ) , S_x_inv( 2, 2 )
+      real :: S_m ( 2, 2 ) 
+      real :: S_b (5,5) 
+      real :: kernel_b(2,5)
       real :: obs_crl
-      real, dimension ( 2 ) :: state_vec 
-      real, dimension ( 2 ) :: delta_x
-      real, dimension ( 2, 2) :: kernel
-      real, dimension ( 2 ) :: obs_fwd 
-      real, dimension ( 2 ) :: cld_trans_sol
-      real, dimension ( 2 ) :: cld_trans_sat
-      real, dimension ( 2 ) :: cld_sph_alb
+      real :: state_vec (2)
+      real :: delta_x (2)
+      real :: kernel(2,2)
+      real :: obs_fwd (2)
+      real :: cld_trans_sol(2)
+      real :: cld_trans_sat(2)
+      real :: cld_sph_alb(2)
       
       integer :: iteration_idx
       integer :: errorflag 
@@ -127,7 +136,7 @@ contains
       
       select case ( algo_mode )
          case ( 1 )
-            channels  = [ 1 , 6 ] 
+            channels = [ 1 , 6 ] 
          case(2)
             channels = [ 1 , 7 ]
          case ( 3 )
@@ -140,8 +149,8 @@ contains
       debug_mode = 0
       if ( present ( debug_in )) debug_mode = debug_in
       
-      cod = missing_real4_em
-      cps = missing_real4_em
+      cod  = missing_real4_em
+      cps  = missing_real4_em
       codu = missing_real4_em
       cpsu = missing_real4_em
       

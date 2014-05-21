@@ -27,50 +27,50 @@ subroutine dcomp_array ( input, output , debug_mode_user)
    ! - atmos correction
    integer , parameter :: N_CHAN = 40
   
-   real(kind=real4)   :: refl_toa = -999.
+   real :: refl_toa = -999.
    
-   real(kind=real4) ::calib_err ( N_CHAN ) 
+   real ::calib_err ( N_CHAN ) 
 
-   real(kind=real4),dimension(2)::obs_vec = [-999.,-999.]
-   real(kind=real4),dimension(2)::obs_unc = [-999.,-999.]
-   real(kind=real4),dimension(2)::alb_vec = [-999.,-999.]
-   real(kind=real4),dimension(2)::alb_unc = [-999.,-999.]
-	real(kind=real4),dimension(2)::trans_vec = [-999.,-999.]
+   real :: obs_vec(2)   = [-999.,-999.]
+   real :: obs_unc(2)   = [-999.,-999.]
+   real :: alb_vec(2)   = [-999.,-999.]
+   real :: alb_unc(2)   = [-999.,-999.]
+	real :: trans_vec(2) = [-999.,-999.]
  
-   real(kind=real4) :: gas_coeff (3)
+   real :: gas_coeff (3)
    
-   real( kind = real4 ) :: trans_ozone ( N_CHAN )
-   real( kind = real4 ) :: trans_unc_ozone ( N_CHAN )
-   real( kind = real4 ) :: trans_rayleigh ( N_CHAN )
-   real( kind = real4 ) :: trans_wvp ( N_CHAN )
-   real( kind = real4 ) :: trans_unc_wvp ( N_CHAN )
-   real( kind = real4 ) :: trans_total ( N_CHAN )
+   real :: trans_ozone ( N_CHAN )
+   real :: trans_unc_ozone ( N_CHAN )
+   real :: trans_rayleigh ( N_CHAN )
+   real :: trans_wvp ( N_CHAN )
+   real :: trans_unc_wvp ( N_CHAN )
+   real :: trans_total ( N_CHAN )
       
    integer , parameter :: CHN_VIS = 1
    integer  :: CHN_NIR
-   integer :: chn_idx
+   integer  :: chn_idx
 
    real( kind = real4 ) :: assumed_tpw_error 
    real( kind = real4 ) :: ozone_coeff (3)  
 
    ! -- nwp variables 
    real( kind = real4 ) :: ozone_path_nwp
-    
-       
+           
    real :: rad_clear_sky_toa_ch20 = -999.
    real :: rad_clear_sky_toc_ch20 = -999.
-   !real( kind = real4 ) :: ir_cod   later use
-   real, dimension ( : , : ) , allocatable     :: air_mass_array
-   logical , dimension  ( : , : ), allocatable :: cloud_array
-   logical , dimension  ( : , : ), allocatable :: obs_array
-   logical , dimension  ( : , : ), allocatable :: water_phase_array
+  
+   real     , allocatable :: air_mass_array (:,:)
+   logical  , allocatable :: cloud_array(:,:)
+   logical  , allocatable :: obs_array(:,:)
+   logical  , allocatable :: water_phase_array(:,:)
    
    integer ( kind = int2)  , allocatable :: info_flag ( :,:)
    integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
-   integer :: dim_1 , dim_2
+   integer :: dim_1 
+   integer :: dim_2
       
-   integer , dimension(2) :: array_dim
-   real , dimension(2) :: state_apriori
+   integer  :: array_dim (2)
+   real     :: state_apriori (2)
    
    
    integer :: debug_mode
@@ -114,7 +114,8 @@ subroutine dcomp_array ( input, output , debug_mode_user)
       end subroutine view2d
    end interface
    
-   ! - executable
+   ! - executable ---------
+   
    debug_mode = 1
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
    
@@ -133,12 +134,9 @@ subroutine dcomp_array ( input, output , debug_mode_user)
    allocate ( water_phase_array (  dim_1 , dim_2 ) )	
    allocate ( air_mass_array  ( dim_1 , dim_2 ) )		   
    
-   
-   
+      
    air_mass_array = 1.0 / cos (input % sat % d * pi / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
-   
-  
-   
+      
    obs_array = input % is_valid % d   &
                        & .and. input % sat % d <= sat_zen_max &
                        & .and. input % sol % d <= sol_zen_max &
@@ -155,8 +153,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
                         &  .or. input % cloud_type % d == EM_cloud_type % SUPERCOOLED &
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
   
-    
-  
+
    !--- select sensor name based on wmo id number
    select case (input % sensor_wmo_id)
       case(3)
@@ -247,12 +244,9 @@ subroutine dcomp_array ( input, output , debug_mode_user)
       output % cld_trn_sol % d   =  1. 
       output % cld_trn_obs % d   =  1.  
       output % cld_alb % d       =  0.
-      output % cld_sph_alb % d   =  0.
-   
-   
+      output % cld_sph_alb % d   =  0.   
    end where
-   
-  
+    
    allocate ( info_flag ( dim_1, dim_2))
    allocate ( quality_flag ( dim_1, dim_2))
    
@@ -268,8 +262,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
    
    ! - initialize
    info_flag  = 0
-   
-   
+      
    ! - check input options
    
    select case ( input % mode )
@@ -281,7 +274,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
          CHN_NIR = 20
       case default
         
-    end select
+   end select
     
    if ( input % is_channel_on (CHN_NIR) .eqv. .false.) then
       print*, 'dcomp NIR channel not set! ==> MODIS equaivalant channel: ', CHN_NIR
@@ -374,9 +367,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
             alb_sfc( chn_idx ) = max ( alb_sfc( chn_idx ) , ALBEDO_OCEAN (chn_idx) )
             
             alb_unc_sfc  (chn_idx) = 0.05
-            
-           
-            
+                        
             if ( chn_idx == 20 ) then
                chn20_block : associate ( rad_toa => input % rad (chn_idx)  % d (elem_idx, line_idx) &
                         & , sun_earth_dist => input % sun_earth_dist &
@@ -395,19 +386,14 @@ subroutine dcomp_array ( input, output , debug_mode_user)
             end if
              
          end do loop_chn
-                  
-       
 
-         ! - NIR
-                  
+         ! - NIR                
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
          obs_unc ( 1 ) =   trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
          alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
          alb_unc ( 1) = 0.05
          trans_vec ( 1) = trans_total ( CHN_VIS )
-         
-        
-         
+              
          ! - nir channel
          obs_vec( 2 ) = input % refl ( CHN_NIR)  % d (elem_idx, line_idx) /100.
          if ( input % mode == 3) obs_vec( 2 ) = refl_toc ( 20 )
@@ -426,12 +412,25 @@ subroutine dcomp_array ( input, output , debug_mode_user)
          if  (water_phase_array ( elem_idx, line_idx) ) state_apriori(2) = 1.0
          
                   
-         call dcomp_algorithm ( obs_vec , obs_unc  &
-                & , alb_vec , alb_unc  , state_apriori , trans_vec  &
-                & , sol_zen , sat_zen &
-                & , rel_azi , cld_temp , water_phase_array ( elem_idx, line_idx)  &
-                & , rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20, trim(sensor_name) &
-                & , dcomp_out , input % mode , input % lut_path,  debug_mode  )
+         call dcomp_algorithm ( &
+                &   obs_vec &
+                & , obs_unc  &
+                & , alb_vec &
+                & , alb_unc  &
+                & , state_apriori &
+                & , trans_vec  &
+                & , sol_zen &
+                & , sat_zen &
+                & , rel_azi &
+                & , cld_temp &
+                & , water_phase_array ( elem_idx, line_idx)  &
+                & , rad_clear_sky_toc_ch20 &
+                & , rad_clear_sky_toa_ch20 &
+                & , trim(sensor_name) &
+                & , dcomp_out &
+                & , input % mode &
+                & , input % lut_path &
+                & , debug_mode  )
         
         if ( debug_mode == 4 ) then
             print*,'=======================> input:'
@@ -454,8 +453,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
          
          output % cod % d (elem_idx,line_idx) = dcomp_out % cod
          output % cps % d (elem_idx, line_idx) = dcomp_out % cps 
-        
-         
+     
          output % cod_unc % d ( elem_idx, line_idx) = dcomp_out % codu
          output % ref_unc % d ( elem_idx, line_idx) = dcomp_out % cpsu
          output % cld_trn_sol % d ( elem_idx, line_idx) = dcomp_out % cloud_trans_sol_vis  
@@ -481,9 +479,6 @@ subroutine dcomp_array ( input, output , debug_mode_user)
          end if                
       end do elem_loop
    end do   line_loop 
-   
-  
-     
 
    ! DCOMP_INFO_LAND_SEA I0
    where (input % is_land % d )

@@ -32,21 +32,22 @@ module dcomp_forward_mod
 contains
    
    subroutine dcomp_forward_computation ( &
-                                                state_vec  &   ! -input
-                                              , pixel &
-                                              , sensor &
-                                              , channels &
-                                              , alb_sfc &
-                                              , air_trans_ac &
-                                              , fm_vec &         ! - output
-                                              , cld_trns_sol &
-                                              , cld_trns_sat &
-                                              , cld_sph_alb &
-                                              , kernel & 
-                                              , rad_abv_cld &
-                                              , rad_clear_toc  &
-                                              , lut_path &
-                                              , cld_albedo_vis   )  
+                                    state_vec  &   ! -input
+                                  , pixel &
+                                  , sensor &
+                                  , channels &
+                                  , alb_sfc &
+                                  , air_trans_ac &
+                                  , fm_vec &         ! - output
+                                  , cld_trns_sol &
+                                  , cld_trns_sat &
+                                  , cld_sph_alb &
+                                  , kernel & 
+                                  , rad_abv_cld &
+                                  , rad_clear_toc  &
+                                  , lut_path &
+                                  , cld_albedo_vis  )
+                                    
    
       implicit none
       
@@ -151,8 +152,7 @@ contains
              
       call Dcomp_Interpolation_Weight (cps_count , state_vec(2) &
                                   ,CPS_Vec_LUT , CPS_Wgt , CPS_Pos)   
-								  
-                         
+								                           
       call Dcomp_Interpolation_Weight (cod_count , state_vec(1) &
                                  ,COD_Vec_LUT , COD_Wgt , COD_Pos )
             

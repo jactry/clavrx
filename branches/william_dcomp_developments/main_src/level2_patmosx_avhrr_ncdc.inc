@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 193
+ integer, parameter, private:: Num_Level2_Sds = 197
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -202,4 +202,8 @@
      Sds_Num_Level2_CldInsol_Dif = 190,   Sds_Num_Level2_CldInsol_Dif_Flag = 1, &
      Sds_Num_Level2_LCL_Nwp = 191,        Sds_Num_Level2_LCL_Nwp_Flag = 0,   &
      Sds_Num_Level2_CCL_Nwp = 192,        Sds_Num_Level2_CCL_Nwp_Flag = 0, &
-     Sds_Num_Level2_Alt = 193,            Sds_Num_Level2_Alt_Flag = 0
+     Sds_Num_Level2_Alt = 193,            Sds_Num_Level2_Alt_Flag = 0, &
+     Sds_Num_Level2_Ch31_Rad_Atm = 194,   Sds_Num_Level2_Ch31_Rad_Atm_Flag = 0, &
+     Sds_Num_Level2_Ch31_Trans_Atm = 195, Sds_Num_Level2_Ch31_Trans_Atm_Flag = 0, &
+     Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 0, &
+     Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0

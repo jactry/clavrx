@@ -46,7 +46,7 @@ contains
              & , month &
              & , day_of_month &
              & , start_time &
-             & , moon_phase_angle &
+             & , lunar_phase_angle_topo &
              & , ancil_data_dir &
              & , ref_chdnb_lunar)
              
@@ -61,7 +61,7 @@ contains
       integer(INT2), intent(in) :: start_year
       integer(INT2), intent(in) :: month
       integer(INT2), intent(in) :: day_of_month
-      real , intent(in) :: moon_phase_angle
+      double precision , intent(in) :: lunar_phase_angle_topo
       character ( len = * ), intent(in) :: ancil_data_dir
       
       ! - output
@@ -77,6 +77,18 @@ contains
       real , parameter :: MIN_LUNAR_IRRAD_DNB = 1.0e-5 ! W/m^2 = 1.0e-09 W/cm^2, threshold for doing calcs 
       
       
+      !********
+      ! NEW 3/26/2014 based on Gauss curve-fits to Obs/Mod ratio data between -120(wax) and 120(wane) degrees
+      ! Note: "lpds" means "lunar phase, degrees, signed"
+      DOUBLE PRECISION ::  lpds
+ 
+      DOUBLE PRECISION :: waxp1=6.052e-12,waxp2=2.550e-9,waxp3=4.265e-7,waxp4=3.520e-5,&
+            waxp5=1.449e-3,waxp6=2.590e-2,waxp7=1.135
+     
+      DOUBLE PRECISION :: wanp1=5.119e-12,wanp2=-2.113e-9,wanp3=3.485e-7,wanp4=-2.835e-5,&
+         wanp5=1.151e-3,wanp6=-2.205e-2,wanp7=1.112
+    
+      
          !- other params
       real , parameter:: PI = 3.1415926536
       real , parameter::  DTOR = PI / 180.
@@ -87,7 +99,7 @@ contains
       real, dimension(:,:) , allocatable :: rad_chdnb
 
       double precision :: yyyymmddhh
-      double precision :: curr_phase_angle
+      double precision :: lunar_phase_angle_geo
       double precision :: cos_phase_angle
       double precision :: curr_earth_sun_dist
       double precision :: curr_earth_moon_dist 
@@ -121,6 +133,10 @@ contains
       character(len=128) :: lunar_irrad_file 
       character(len=128) :: distance_table_file
       integer :: num_pix , num_elem
+      
+      logical :: is_waning
+      real :: phase_albedo_correction_factor = 1.
+      
  
       
       ! --- executable --------------------------------------
@@ -163,13 +179,16 @@ contains
       minute = mod(start_time/1000./60., 60.)
       hour_fraction = minute / 60.0
       hour = floor(start_time/1000./60./60.)
-      yyyymmddhh = start_year * 1000000 + month*10000+ day_of_month *100 + hour
+      yyyymmddhh = start_year * 1000000 + month*10000+ day_of_month *100 + int(hour)
   
       dtg_index = index_in_vector(dist_phase_lut(1,:),num_dist_tabvals,yyyymmddhh)
+      
+      
+      
       dtg_index = min(num_dist_tabvals,dtg_index)
       dtg_index = max(1,dtg_index)
 
-      curr_phase_angle    = dist_phase_lut(2,dtg_index)  &
+      lunar_phase_angle_geo    = dist_phase_lut(2,dtg_index)  &
                         & +  hour_fraction &
                         & * (dist_phase_lut(2,dtg_index + 1) &
                         & - dist_phase_lut(2,dtg_index))
@@ -188,14 +207,14 @@ contains
 
          print *,''
          print *,'compare (these two values should be about the same):'
-         print *, 'lunar_phase (from viirs granule) = ',moon_phase_angle
-         print *, 'curr_phase_angle (from lut) = ',curr_phase_angle
+         print *, 'lunar_phase (from viirs granule) = ',lunar_phase_angle_topo
+         print *, 'lunar_phase_angle_geo (from lut) = ',lunar_phase_angle_geo
          print *,''
          print *,''
          print *,'dist_phase_lut(:,dtg_index) = ',dist_phase_lut(:,dtg_index)
          print *,'dist_phase_lut(:,dtg_index+1) = ',dist_phase_lut(:,dtg_index+1)
          print *,'hour_fraction = ',hour_fraction
-         print *,'curr_phase_angle = ',curr_phase_angle
+         print *,'lunar_phase_angle_geo = ',lunar_phase_angle_geo
          print *,'curr_earthsun_dist = ',curr_earth_sun_dist
          print *,'curr_earthmoon_dist = ',curr_earth_moon_dist
          print *,''
@@ -203,12 +222,13 @@ contains
       end if
       
       
-      deallocate ( dist_phase_lut ) 
+       
  
-      ! b) interpolate lunar_irrad_lut() to get current mean-geometry lunar irradiance pre-convolved to dnb srf 
-      phase_fraction  = curr_phase_angle - int(curr_phase_angle)
+      ! b) interpolate lunar_irrad_lut() to get current mean-geometry lunar irradiance pre-convolved to dnb srf
+      !   use topo phase angle 
+      phase_fraction  = lunar_phase_angle_topo - int(lunar_phase_angle_topo)
       phase_array     = lunar_irrad_lut(1,:)
-      irrad_index     = index_in_vector(phase_array,num_irrad_tabvals,curr_phase_angle)
+      irrad_index     = index_in_vector(phase_array,num_irrad_tabvals,lunar_phase_angle_topo)
       curr_mean_irrad = lunar_irrad_lut(2,irrad_index) + &
                      &   phase_fraction*(lunar_irrad_lut(2,irrad_index+1)-lunar_irrad_lut(2,irrad_index))
 
@@ -224,7 +244,8 @@ contains
       deallocate ( lunar_irrad_lut )
  
       !  c) define denormalization parameters to scale irradiance to current sun/earth/moon geometry
-      cos_phase_angle = cos(curr_phase_angle * DTOR)
+      !   use geo phase angle
+      cos_phase_angle = cos(lunar_phase_angle_geo * DTOR)
       denorm1 = mean_earth_sun_dist ** 2 + mean_earth_moon_dist ** 2 + &
            2.0 * mean_earth_moon_dist * mean_earth_sun_dist * cos_phase_angle
       denorm2 = curr_earth_sun_dist ** 2 + curr_earth_moon_dist ** 2 + &
@@ -242,6 +263,36 @@ contains
          print *,'denorm_factor = ',denorm_factor
          print *,'--> dnb band-integrated lunar irradiance (w/m^2)= ',lunar_irrad_dnb
       end if
+      
+      
+      !********
+      ! PHASE ANGLE BIAS CORRECTION
+      !********
+      !  e) Compute phase-angle-dependent correction term to account for albedo variation
+      !     Based on curve fits to the Obs/Modeled ratios
+      !     Make sure that we are using the appropriate set of coefficients
+      !     Expansion works on the signed lunar phase angle values (degrees)
+      
+      
+      ! 1 determine waxing or waning and adjust lunar_phase
+      
+      lpds = lunar_phase_angle_topo
+      is_waning = dist_phase_LUT(2,dtg_index ) > dist_phase_LUT(2,dtg_index + 1)      
+      if ( is_waning ) lpds = lpds * -1
+      
+      deallocate ( dist_phase_lut )
+      
+      if ( abs ( lpds ) > 120.0 ) then
+         phase_albedo_correction_factor = 1.
+      else if ( lpds < 0 ) then
+         phase_albedo_correction_factor = waxp1*lpds**6 + waxp2*lpds**5 + waxp3*lpds**4 + &
+                                          waxp4*lpds**3  +waxp5*lpds**2 + waxp6*lpds + waxp7   
+      else 
+         phase_albedo_correction_factor = wanp1*lpds**6 + wanp2*lpds**5 + wanp3*lpds**4 + &
+                                          wanp4*lpds**3  +wanp5*lpds**2 + wanp6*lpds + wanp7
+      end if
+      
+      lunar_irrad_dnb = lunar_irrad_dnb * phase_albedo_correction_factor 
 
       rad_chdnb= rad_chdnb_input  * 1.0e+04
       ref_chdnb_lunar = -999.0

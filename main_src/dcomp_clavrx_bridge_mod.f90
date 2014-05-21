@@ -201,7 +201,7 @@ contains
       
       ! === ALLOCATION
       do idx_chn = 1 , 40
-         if ( dcomp_input % is_channel_on (idx_chn) .eqv. .false.) cycle
+         if ( .not. dcomp_input % is_channel_on (idx_chn) ) cycle
         
          call  alloc_dcomp ( dcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
          call  alloc_dcomp ( dcomp_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 

@@ -1,4 +1,4 @@
-! $Header: $
+! $Header$
 module dcomp_lut_def
 
    implicit  none

@@ -3782,7 +3782,7 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
    real:: Delta_Lon
    real:: Delta_Lat
    real:: Lon_Spacing_Per_m
-   real,parameter:: Lat_Spacing_Per_m = 9.0909   ! ( = 1000.0/110.0)
+   real,parameter:: Lat_Spacing_Per_m = 9.0909e-06   ! ( = 1.0/110000.0 m )
 
    Num_Elem = size(Zcld,1) 
    Num_Line = size(Zcld,2)

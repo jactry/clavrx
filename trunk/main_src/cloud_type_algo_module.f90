@@ -82,6 +82,7 @@ module cloud_type_algo_module
       real, allocatable:: t_prof (:)
       integer :: tropo_lev
       integer :: sfc_lev
+      real :: bt_ch27_3x3_max
       real :: bt_ch31_3x3_max
       real :: bt_ch31_3x3_std
       real :: Covar_Ch27_Ch31_5x5
@@ -401,7 +402,7 @@ contains
             .and. inp % sat % chan_on ( 31 ) ) then
             
             if ( inp%rtm%Covar_Ch27_Ch31_5x5 > 1.5 &
-               .and. inp % rtm % bt_ch31_3x3_max < 250.0) is_cirrus = .true.         
+               .and. inp % rtm % bt_ch27_3x3_max < 250.0) is_cirrus = .true.         
          end if 
          
           !--- modify ice_prob based on cirrus tests

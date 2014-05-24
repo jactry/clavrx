@@ -90,6 +90,7 @@ module cloud_type_bridge_module
       , num_scans_read &
       , i_nwp &
       , j_nwp &
+      , Bt_Ch27_Max_3x3 &
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
@@ -328,6 +329,7 @@ contains
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
          if (chan_on_flag_default(27))  then
             type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
+             type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
          endif
          if (chan_on_flag_default(32))  then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )

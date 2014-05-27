@@ -3,12 +3,14 @@
 
 
 
-function lunar_phase_lut , year , month, day , hour 
+function lunar_phase_lut , year , month, day , hour ,ancil_path = ancil_path
 
 
 num_dist_tabvals = 184080L 
 
-default, ancil_path, '/DATA/Ancil_Data/clavrx_ancil_data/dnb_ancils/'
+
+homedir = getenv('HOME')
+default, ancil_path, homedir+'/Ancil_Data/clavrx_ancil_data/dnb_ancils/'
 distance_table_file= ancil_path+'DIST_2010-2030_double.bin'
 yyyymmddhh = year * 1000000 + month*10000+ day *100 + hour
 

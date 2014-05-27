@@ -60,6 +60,7 @@ echo $year $doy $hour $minu $l1b_path
 ./get_viirs_data.sh $year $doy $hour $minu $l1b_path
 filetype='GMTCO'
 ./write_filelist.sh $l1b_path $out_path $month$day e$hour$minu $filetype
+pwd
 ./clavrxorb  -dcomp_mode $dcomp_mode
  #rm -fv $l1b_path/*
 

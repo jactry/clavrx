@@ -47,11 +47,11 @@ for doy = doy0, doy1 do begin
          dnb = read_viirs(timestring , 'DNB',sol_zen = sol_zen,/dnb_flag)
          n_dnb = total (between ( lunar_zen, 0,thr) and sol_zen gt 100 and dnb gt 1.0e-8 and between(lon,lon0,lon1) and between(lat,lat0,lat1)  )
          print, 'count2: ', n_dnb, total ( sol_zen gt 100 ) , total ( dnb gt 1.0e-8 )
-         stop
+         
          if n_dnb gt 10000 then begin
             spawn,'pwd'
-            doy = 59 + d
-            unix_str = './run_viirs_exact.sh  '+year+' '+string(doy,format='(i3.3)')+' '+string(hour,format='(i2.2)') $
+            
+            unix_str = './run_viirs_exact.sh  '+string(year,format='(i4.4)')+' '+string(doy,format='(i3.3)')+' '+string(hour,format='(i2.2)') $
                             + ' '+ string ( m,form='(i2.2)') +' 0'
             print,unix_str              
             spawn,unix_str

@@ -29,15 +29,15 @@ dummy=`grep !nwp $options`
 
 nwp=${dummy:0:1}
 
-case $nwp in
-1)echo "NWP option from clavrxorb file : GFS" 
-     ./get_gfs.sh $year $doy;;
-2)echo "ncep" 
-     ./get_sfcr_data.sh $year $doy;;
-3)echo "NWP option from clavrxorb file : CFSR" 
-     ./get_cfsr.sh $year $doy;;
-esac
-echo
+#case $nwp in
+#1)echo "NWP option from clavrxorb file : GFS" 
+#     ./get_gfs.sh $year $doy;;
+#2)echo "ncep" 
+#     ./get_sfcr_data.sh $year $doy;;
+#3)echo "NWP option from clavrxorb file : CFSR" 
+#     ./get_cfsr.sh $year $doy;;
+#esac
+#echo
 
 
 pwd

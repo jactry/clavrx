@@ -40,11 +40,11 @@ for doy = doy0, doy1 do begin
                + string(hour,form='(i2.2)') $
                + string(m,form='(i2.2)')+'00'
              
-         lunar_zen = read_viirs(timestring , 'LUN_ZEN',/dnb_flag,lon=lon,lat=lat)
+         lunar_zen = read_viirs(timestring , 'LUN_ZEN',/dnb_flag)
          print,timestring+'  number of lunar zenith below 50: ' , total(between ( lunar_zen, 0,thr))
          
          if total(between ( lunar_zen, 0 , thr)) lt 300000 then continue
-         dnb = read_viirs(timestring , 'DNB',sol_zen = sol_zen,/dnb_flag)
+         dnb = read_viirs(timestring , 'DNB',sol_zen = sol_zen,lon=lon,lat=lat,/dnb_flag)
          n_dnb = total (between ( lunar_zen, 0,thr) and sol_zen gt 100 and dnb gt 1.0e-8 and between(lon,lon0,lon1) and between(lat,lat0,lat1)  )
          print, 'count2: ', n_dnb, total ( sol_zen gt 100 ) , total ( dnb gt 1.0e-8 )
          

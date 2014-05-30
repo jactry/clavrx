@@ -184,6 +184,8 @@ contains
          end if
       end if
                  
+                 
+                 
       ! -----------    loop over pixels -----   
       line_loop: do i = 1, num_pix
          elem_loop: do  j = 1,num_scans_read
@@ -197,7 +199,8 @@ contains
             mask_inp % geo % sol_zen     = Solzen ( i , j )
             mask_inp % geo % airmass     = Airmass ( i , j )
             mask_inp % geo % scat_angle  = Scatangle ( i , j )
-            mask_inp % geo % glint       = Glint_Mask ( i ,j )
+            mask_inp % geo % glint       = Glint_Mask ( i ,j ) == 1
+            
             mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
             mask_inp % sfc % land_class  = Land ( i , j )
@@ -275,7 +278,7 @@ contains
             Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
             Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
             Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
-
+           
          end do elem_loop
       end do line_loop
       

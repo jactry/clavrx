@@ -449,7 +449,7 @@ contains
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             Classifier_Value = inp % sat % bt_ch31  
             if (  inp%sfc %  land_class  == ET_land_class % DEEP_OCEAN ) then
-               Classifier_Value = inp%rtm % bt_ch31_lrc 
+             !  Classifier_Value = inp%rtm % bt_ch31_lrc 
             end if
             is_on_test = .true.
             pos_info_flag = 4
@@ -712,9 +712,9 @@ contains
             Cond_yes (class_idx) = bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )
             Cond_no (class_idx)  = bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) 
             
-            class_contr =  bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
-                           & ( bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
-                           & + bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
+            class_contr =  bayes_coef % Prior_Yes(Sfc_Idx)* bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
+                           & ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
+                           & + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
     
             if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = &
@@ -729,29 +729,31 @@ contains
 
          !-----------------------------------------------------------------------
          ! --- Diagnostic Output for debugging in CLAVR-x
-         !select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
-         !  case ( et_class_T110 )
-         !  case ( et_class_TMAX_T )
-         !  case ( et_class_T_STD )
-         !  case ( et_class_E_TROP )
-         !  case ( et_class_FMFT )
-         !  case ( et_class_BTD_110_067 )
-         !  case ( et_class_BTD_110_067_COV )
-         !  case ( et_class_BTD_110_085 )
-         !  case ( et_class_E_037 )
-         !  case ( et_class_E_037_DAY )
-         !  case ( et_class_E_037_NGT )
-         !  case ( et_class_BTD_037_110_NGT )
-         !  case ( et_class_R_006_DAY )
-         !  case ( et_class_R_006_STD )
-         !  case ( et_class_R_006_MIN_3x3_DAY )
-         !  case ( et_class_R_RATIO_DAY )
-         !  case ( et_class_R_013_DAY )
-         !  case ( et_class_R_016_Day )
-         !     diag % diagnostic_1 = Classifier_Value  
-         !     diag % diagnostic_2 = class_contr
-         !     diag % diagnostic_3 = info_flags ( idx_info_flag )
-         !end select
+         select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
+           case ( et_class_T110 )
+          !   diag % diagnostic_1 =  Cond_no (class_idx) 
+          !    diag % diagnostic_2 = class_contr
+          !    diag % diagnostic_3 =  Cond_yes (class_idx)
+              
+           case ( et_class_TMAX_T )
+           case ( et_class_T_STD )
+           case ( et_class_E_TROP )
+           case ( et_class_FMFT )
+           case ( et_class_BTD_110_067 )
+           case ( et_class_BTD_110_067_COV )
+           case ( et_class_BTD_110_085 )
+           case ( et_class_E_037 )
+           case ( et_class_E_037_DAY )
+           case ( et_class_E_037_NGT )
+           case ( et_class_BTD_037_110_NGT )
+           case ( et_class_R_006_DAY )
+           case ( et_class_R_006_STD )
+           case ( et_class_R_006_MIN_3x3_DAY )
+           case ( et_class_R_RATIO_DAY )
+           case ( et_class_R_013_DAY )
+           case ( et_class_R_016_Day )
+             
+         end select
          !
                 
       end do class_loop

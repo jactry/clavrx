@@ -135,7 +135,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: scat_angle
       real :: scat_angle_lunar
       real :: lunar_glint_mask
-      integer :: glint
+      logical :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
    
@@ -432,13 +432,18 @@ contains
       
       ! -TODO : probably wrong
       info_flags(3) = ibits ( sfc_idx , 0 , 3 )
-                         
+      
+       ! diag % diagnostic_1 = -999.
+       !  diag % diagnostic_2 = -999.
+      
+       ! diag % diagnostic_3 = -999.
+                               
       ! - class loop 
       class_loop: do class_idx= 1,   bayes_coef % n_class
          
          ! - init
          is_on_test = .false.        
-    
+         classifier_value = -999.
          cond_yes (class_idx)  = 1.0
          cond_no  (class_idx)  = 1.0  
         
@@ -447,18 +452,21 @@ contains
          case( et_class_T110 )
             
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
+            if ( inp % sat % bt_ch31 < 0. ) cycle class_loop
+            
             Classifier_Value = inp % sat % bt_ch31  
-            if (  inp%sfc %  land_class  == ET_land_class % DEEP_OCEAN ) then
-             !  Classifier_Value = inp%rtm % bt_ch31_lrc 
-            end if
+            
             is_on_test = .true.
             pos_info_flag = 4
             idx_info_flag = 3
                              
          case( et_class_TMAX_T )
             if ( .not. inp%sat % chan_on(31) ) cycle class_loop
+            if ( inp % rtm % bt_ch31_3x3_max < 0. ) cycle class_loop
+            if ( inp % sat % bt_ch31 < 0. ) cycle class_loop
             if ( is_mountain ) cycle class_loop
             if ( inp % sfc % coast_mask   ) cycle
+            
             Classifier_Value = inp % rtm % bt_ch31_3x3_max  &
                               -  inp % sat % bt_ch31 
             is_on_test = .true.
@@ -467,6 +475,7 @@ contains
            
          case ( et_class_T_STD )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
+            if ( inp % rtm % bt_ch31_3x3_std < 0. ) cycle class_loop
             if ( is_mountain ) cycle class_loop
             if ( inp % sfc % coast_mask ) cycle
             Classifier_Value = inp % rtm % bt_ch31_3x3_std 
@@ -476,7 +485,9 @@ contains
            
          case ( et_class_E_TROP )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
-              
+            
+           
+            
             Classifier_Value = inp % rtm % emis_ch31_tropo 
             
             is_on_test = .true.
@@ -486,6 +497,11 @@ contains
          case  ( et_class_FMFT )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( .not. inp % sat % chan_on(32) ) cycle class_loop
+            if ( inp % rtm % bt_ch31_atm_sfc < 0. ) cycle class_loop
+            if ( inp % rtm % bt_ch32_atm_sfc  < 0. ) cycle class_loop
+            if ( inp % sat % bt_ch31  < 0.) cycle class_loop
+            if ( inp % sat % bt_ch32  < 0. ) cycle class_loop
+            
             if ( has_cold_btd ) cycle class_loop
            
             Classifier_Value = SPLIT_WINDOW_TEST ( inp % rtm % bt_ch31_atm_sfc  &
@@ -500,8 +516,10 @@ contains
          case ( et_class_BTD_110_067 )
             if ( .not. inp % sat % chan_on(27) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
+            if ( inp % sat % bt_ch31  < 0. ) cycle class_loop
+            if ( inp % sat % bt_ch27  < 0. ) cycle class_loop            
             if ( has_cold_btd ) cycle class_loop
-           
+             
             Classifier_Value = inp % sat % bt_ch31 - inp % sat % bt_ch27
             
             is_on_test = .true.
@@ -511,6 +529,7 @@ contains
          case ( et_class_BTD_110_067_COV )
             if ( .not. inp % sat % chan_on(27) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
+            if ( inp % rtm % bt_ch31_ch27_covar < 0. ) cycle class_loop
             if ( has_cold_btd ) cycle class_loop
             Classifier_Value = inp % rtm % bt_ch31_ch27_covar
             is_on_test = .true.
@@ -520,6 +539,8 @@ contains
          case ( et_class_BTD_110_085 )
             if ( .not. inp % sat % chan_on(29) ) cycle class_loop
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
+            if ( inp % sat % bt_ch31  < 0. ) cycle class_loop
+            if ( inp % sat % bt_ch29  < 0. ) cycle class_loop     
             if ( has_cold_btd ) cycle class_loop
           
             Classifier_Value = inp % sat % bt_ch31 - inp % sat % bt_ch29
@@ -528,10 +549,13 @@ contains
             idx_info_flag = 5
            
          case ( et_class_E_037 )
+            
             if ( .not. inp %sat % chan_on(20) ) cycle class_loop                  
             if ( inp % geo % glint )  cycle class_loop                 
             if ( inp % sat % bt_ch20  <= 0 ) cycle class_loop
             if ( is_cold_375um ) cycle class_loop
+            if ( inp % sat % emis_ch20_3x3_mean < 0.) cycle class_loop
+            if ( inp % rtm % emis_ch20_clear  < 0.) cycle class_loop
            
             classifier_value = EMISS_375UM_TEST ( &
                                      inp % sat % emis_ch20_3x3_mean  &
@@ -543,10 +567,14 @@ contains
          case ( et_class_E_037_DAY )
             if ( .not. inp % sat % chan_on(20) ) cycle class_loop
             if ( is_solar_contaminated) cycle class_loop 
+            
             if ( inp % geo % glint  )  cycle class_loop
+            
             if ( .not. is_day_375um ) cycle class_loop                  
             if ( is_cold_375um ) cycle class_loop
-            if ( inp % sat % bt_ch20   <= 0 ) cycle class_loop
+            if ( inp % sat % bt_ch20   <= 0. ) cycle class_loop
+            if ( inp % sat % emis_ch20_3x3_mean < 0.) cycle class_loop
+            if ( inp % rtm % emis_ch20_clear  < 0.) cycle class_loop
           
             classifier_value = EMISS_375UM_TEST ( &
                                      inp % sat % emis_ch20_3x3_mean  &
@@ -561,6 +589,8 @@ contains
             if ( .not. is_night_375um ) cycle  
             if ( is_cold_375um ) cycle class_loop 
             if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop
+            if ( inp % sat % emis_ch20_3x3_mean < 0.) cycle class_loop
+            if ( inp % rtm % emis_ch20_clear  < 0.) cycle class_loop
              
             classifier_value = EMISS_375UM_TEST ( &
                                      inp % sat % emis_ch20_3x3_mean  &
@@ -576,7 +606,8 @@ contains
            if ( is_solar_contaminated ) cycle class_loop 
            if ( .not. is_night_375um ) cycle  
            if ( is_cold_375um ) cycle class_loop 
-           if (  inp % sat % bt_ch20  <= 0 ) cycle class_loop
+           if (  inp % sat % bt_ch20  <= 0. ) cycle class_loop
+           if (  inp % sat % bt_ch31  <= 0. ) cycle class_loop
            
            classifier_value =  inp % sat % bt_ch20  -  inp % sat % bt_ch31
            
@@ -602,6 +633,7 @@ contains
                if ( is_mountain ) cycle class_loop
                if ( .not. is_day_063um ) cycle
                if ( inp % sfc % snow_class  == ET_snow_class % SNOW ) cycle
+               
                             
                Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
                                    inp % rtm % ref_ch1_clear &
@@ -704,6 +736,7 @@ contains
        
        ! --- all tests classifer
         if ( is_on_test ) then
+            
             bin_idx = int (( classifier_value &
                &  -  bayes_coef % Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
                &     bayes_coef % Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
@@ -716,7 +749,7 @@ contains
                            & ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
                            & + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
-    
+            
             if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = &
                             ibset ( info_flags ( idx_info_flag) , pos_info_flag )
             if ( class_contr >= 0.5 )  info_flags ( idx_info_flag) = ibset ( info_flags ( idx_info_flag) , pos_info_flag + 1)
@@ -731,19 +764,26 @@ contains
          ! --- Diagnostic Output for debugging in CLAVR-x
          select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
            case ( et_class_T110 )
-          !   diag % diagnostic_1 =  Cond_no (class_idx) 
-          !    diag % diagnostic_2 = class_contr
-          !    diag % diagnostic_3 =  Cond_yes (class_idx)
+           
               
            case ( et_class_TMAX_T )
            case ( et_class_T_STD )
            case ( et_class_E_TROP )
            case ( et_class_FMFT )
            case ( et_class_BTD_110_067 )
+           
+           
+            
            case ( et_class_BTD_110_067_COV )
            case ( et_class_BTD_110_085 )
            case ( et_class_E_037 )
+            
            case ( et_class_E_037_DAY )
+               !diag % diagnostic_1 =    classifier_value
+              !diag % diagnostic_2 = class_contr
+              !diag % diagnostic_3 = 1.  
+              
+              
            case ( et_class_E_037_NGT )
            case ( et_class_BTD_037_110_NGT )
            case ( et_class_R_006_DAY )
@@ -764,7 +804,8 @@ contains
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
                    bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
-                  
+                   
+                
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
             
@@ -1227,18 +1268,18 @@ contains
          , ref_021 &
          , ref_006_std &
          , sat_zen &
-         , glint &
+         , is_glint &
          , land_class )
                
       real , intent(in) :: ref_004
       real , intent(in) :: ref_021
       real , intent(in) :: ref_006_std
       real , intent(in) :: sat_zen
-      integer , intent(in) :: glint
+      logical , intent(in) :: is_glint
       integer , intent(in) :: land_class  
       
       logical :: is_water_sfc      
-      logical :: is_glint
+     
       
       
       real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.2
@@ -1261,7 +1302,7 @@ contains
       is_water_sfc = land_class == 0 .or. &
          & land_class >= 3 .and. land_class <= 7 
          
-      is_glint = glint == 1
+      
       
       ref_ratio = ref_021 / ref_004 
       
@@ -1284,17 +1325,17 @@ contains
               ref_004 &
             , ref_006 &
             , ref_006_std &
-            , glint &
+            , is_glint &
             , land_class )
             
       real , intent(in) :: ref_004
       real , intent(in) :: ref_006
       real , intent(in) :: ref_006_std
-      integer , intent(in) :: glint
+      logical , intent(in) :: is_glint
       integer , intent(in) :: land_class  
       
       logical :: is_water_sfc      
-      logical :: is_glint
+      
               
       real, parameter :: dust_m1_refl_thresh = 0.1
       real, parameter :: dust_cand_m1m5_refl_ratio_thresh = 0.25
@@ -1324,7 +1365,7 @@ contains
          return            
       end if  
       
-      is_glint = glint == 1
+      
             
       ! adjust thresholds
       

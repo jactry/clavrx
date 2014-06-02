@@ -291,6 +291,28 @@ if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or.  &
     print *,EXE_PROMPT, "Pixel Resolution (km) = ", AREAstr%Elem_Res
 endif
 
+
+!--- set Resolution_KM for global attribute
+Sensor_Resolution_KM = -999.0
+
+if (Goes_Flag == sym%YES) then
+     Sensor_Resolution_KM = 4.0
+     if (GOES_1km_Flag == sym%YES) Sensor_Resolution_KM = 1.0
+endif
+if (MODIS_Flag == sym%YES) Sensor_Resolution_KM = 1.0
+if (VIIRS_Flag == sym%YES) Sensor_Resolution_KM = 0.75
+if (AVHRR_Flag == sym%YES) then
+     Sensor_Resolution_KM = 1.1
+     if (AVHRR_GAC_Flag == sym%YES) then
+       Sensor_Resolution_KM = 4.0
+     endif
+endif
+if (SEVIRI_Flag == sym%YES) Sensor_Resolution_KM = 3.0
+if (COMS_Flag == sym%YES) Sensor_Resolution_KM = 4.0
+if (FY2_Flag == sym%YES) Sensor_Resolution_KM = 4.0
+if (MTSAT_Flag == sym%YES) Sensor_Resolution_KM = 4.0
+if (GOES_Sndr_Flag == sym%YES) Sensor_Resolution_KM = 10.0
+
 end subroutine SET_SENSOR_CONSTANTS
 
 !--------------------------------------------------------------------------------------------------

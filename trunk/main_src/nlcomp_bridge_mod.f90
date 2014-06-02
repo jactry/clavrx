@@ -354,6 +354,8 @@ contains
       reff_nlcomp  (1:dim_1,1:dim_2) = nlcomp_output % cps % d
       tau_nlcomp_cost(1:dim_1,1:dim_2) = nlcomp_output % cod_unc % d
       reff_nlcomp_cost(1:dim_1,1:dim_2) = nlcomp_output % ref_unc % d
+      nlcomp_quality_flag(1:dim_1,1:dim_2) = nlcomp_output %  quality % d
+      nlcomp_info_flag(1:dim_1,1:dim_2) = nlcomp_output % info % d
       
       call deallocate_nlcompout ( nlcomp_output)
 #endif   

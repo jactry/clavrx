@@ -43,8 +43,9 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !--- store integer values
    Acha_Input%Number_of_Elements = Num_Pix
    Acha_Input%Number_of_Lines = Num_Scans_Read
+   Acha_Input%Number_of_Lines = Num_Scans_Per_Segment
    Acha_Input%Num_Line_Max = Num_Scans_Per_Segment
-   Acha_Input%Process_Undetected_Cloud_Flag_Local = Process_Undetected_Cloud_Flag
+   Acha_Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Acha_Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
    Acha_Input%ACHA_Mode_Flag_In = ACHA_MODE
 
@@ -73,7 +74,9 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Acha_Input%Bt_11um => ch(31)%Bt_Toa
    Acha_Input%Bt_12um => ch(32)%Bt_Toa
    Acha_Input%Bt_133um => ch(33)%Bt_Toa
+   Acha_Input%Covar_Bt_11um_67um => Covar_Ch27_Ch31_5x5
 
+   Acha_Input%Rad_67um => ch(27)%Rad_Toa
    Acha_Input%Rad_11um => ch(31)%Rad_Toa
    Acha_Input%Cosine_Zenith_Angle => Coszen
    Acha_Input%Sensor_Zenith_Angle => Satzen
@@ -90,14 +93,14 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Acha_Input%Surface_Pressure => Psfc_Nwp_Pix
 
    Acha_Input%Surface_Elevation => Zsfc
-   Acha_Input%Cloud_Mask_Local => Cld_Mask
-   Acha_Input%Cloud_Type_Local => Cld_Type
+   Acha_Input%Cloud_Mask => Cld_Mask
+   Acha_Input%Cloud_Type => Cld_Type
 
-   Acha_Input%Rad_Clear_67um_Local => ch(27)%Rad_Toa_Clear
-   Acha_Input%Rad_Clear_85um_Local => ch(29)%Rad_Toa_Clear
-   Acha_Input%Rad_Clear_11um_Local => ch(31)%Rad_Toa_Clear
-   Acha_Input%Rad_Clear_12um_Local => ch(32)%Rad_Toa_Clear
-   Acha_Input%Rad_Clear_133um_Local => ch(33)%Rad_Toa_Clear
+   Acha_Input%Rad_Clear_67um => ch(27)%Rad_Toa_Clear
+   Acha_Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
+   Acha_Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
+   Acha_Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
+   Acha_Input%Rad_Clear_133um => ch(33)%Rad_Toa_Clear
    Acha_Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
 
    Acha_Input%Elem_Idx_LRC_Input => I_LRC
@@ -190,6 +193,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    symbol%MIXED_PHASE = sym%MIXED_PHASE
    symbol%ICE_PHASE = sym%ICE_PHASE
    symbol%UNKNOWN_PHASE = sym%UNKNOWN_PHASE
+
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
@@ -215,11 +219,10 @@ module ACHA_CLAVRX_BRIDGE_MOD
  !-----------------------------------------------------------------------------
  subroutine NULL_ACHA_POINTERS(Acha_Input, Acha_Output)
 
-   type(acha_input_struct), intent(inout) :: Acha_Input
-   type(acha_output_struct), intent(inout) :: Acha_Output
+     type(acha_input_struct), intent(inout) :: Acha_Input
+     type(acha_output_struct), intent(inout) :: Acha_Output
 
      !--- null input pointers
-
      Acha_Input%Invalid_Data_Mask =>  NULL()
      Acha_Input%Elem_Idx_Nwp =>   NULL()
      Acha_Input%Line_Idx_Nwp =>  NULL()
@@ -233,6 +236,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Input%Bt_11um =>  NULL()
      Acha_Input%Bt_12um =>  NULL()
      Acha_Input%Bt_133um =>  NULL()
+     Acha_Input%Rad_67um =>  NULL()
      Acha_Input%Rad_11um =>  NULL()
      Acha_Input%Cosine_Zenith_Angle =>  NULL()
      Acha_Input%Sensor_Zenith_Angle =>  NULL()
@@ -246,18 +250,17 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Input%Tropopause_Temperature =>  NULL()
      Acha_Input%Surface_Pressure =>  NULL()
      Acha_Input%Surface_Elevation =>  NULL()
-     Acha_Input%Cloud_Mask_Local =>  NULL()
-     Acha_Input%Cloud_Type_Local =>  NULL()
-     Acha_Input%Rad_Clear_67um_Local =>  NULL()
-     Acha_Input%Rad_Clear_85um_Local =>  NULL()
-     Acha_Input%Rad_Clear_11um_Local =>  NULL()
-     Acha_Input%Rad_Clear_12um_Local =>  NULL()
-     Acha_Input%Rad_Clear_133um_Local =>  NULL()
+     Acha_Input%Cloud_Mask =>  NULL()
+     Acha_Input%Cloud_Type =>  NULL()
+     Acha_Input%Rad_Clear_67um =>  NULL()
+     Acha_Input%Rad_Clear_85um =>  NULL()
+     Acha_Input%Rad_Clear_11um =>  NULL()
+     Acha_Input%Rad_Clear_12um =>  NULL()
+     Acha_Input%Rad_Clear_133um =>  NULL()
      Acha_Input%Surface_Emissivity_39um =>  NULL()
      Acha_Input%Elem_Idx_LRC_Input =>  NULL()
      Acha_Input%Line_Idx_LRC_Input =>   NULL()
 
-                                   
      !--- null output pointers
      Acha_Output%Latitude_Pc =>  NULL()
      Acha_Output%Longitude_Pc =>  NULL()
@@ -285,8 +288,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Output%Packed_Meta_Data =>  NULL()
      Acha_Output%Processing_Order  =>  NULL()
  
- 
  end subroutine
- 
 
 end module ACHA_CLAVRX_BRIDGE_MOD

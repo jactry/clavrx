@@ -1,7 +1,10 @@
 ! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk/nlcomp_forward_mod.f90 8 2014-01-31 08:14:58Z awalther $
 module nlcomp_forward_mod
-   use nlcomp_lut_mod
-   use dcomp_tools
+   use nlcomp_lut_mod, only: &
+      populate_all_lut &
+      , get_lut_data
+   use dcomp_tools, only: &
+      dcomp_interpolation_weight
 
    integer, parameter, public:: int1 = selected_int_kind(1)
    integer, parameter, public:: int2 = selected_int_kind(3)

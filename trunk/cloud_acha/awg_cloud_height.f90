@@ -4114,8 +4114,6 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
 
 
-   print *, "in cirrus temp "
-   print *, "shape = ", shape (Temperature_Cirrus), shape(Temperature_Cloud)
    Temperature_Cirrus = Missing
 
    Num_Elements = size(Type,1)

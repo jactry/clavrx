@@ -97,6 +97,7 @@
 !  Emiss_Tropo - emissity of cloud placed at Tropopause needed to match toa  radiance
 !  Bt_Toa_Clear = Simulated Toa Reflectance under clear-sky
 !  Unc = Uncertainty Flag (relevant only to MODIS)
+!  Opd = Optical Depth
 !--------------------------------------------------------------------------------------
 module PIXEL_COMMON
 
@@ -155,6 +156,7 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Sfc_Emiss
     real, dimension(:,:), allocatable:: Emiss_Tropo
     real, dimension(:,:), allocatable:: Sfc_Ref_White_Sky
+    real, dimension(:,:), allocatable:: Opd
     integer (kind=int1), dimension(:,:), allocatable:: Unc
   end type observations
 
@@ -387,6 +389,7 @@ module PIXEL_COMMON
   integer(kind=int4), public, save:: Sc_Id_WMO_Prev
   character(len=20),public,save:: Sensor_Name_Attribute
   character(len=20),public,save:: Platform_Name_Attribute
+  real(kind=real4), public, save:: Sensor_Resolution_KM
 
   !--- instrument counts
   integer (kind=int2), dimension(:,:), allocatable, public,save:: Ch1_Counts
@@ -601,6 +604,9 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_ACHA
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Top_ACHA
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Base_ACHA
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_ACHA_km
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Top_ACHA_km
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Base_ACHA_km
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Beta_ACHA
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tau_ACHA
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Reff_ACHA
@@ -880,6 +886,9 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Ref_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
          endif
+         if (idx == 1) then 
+            allocate(Ch(idx)%Opd(dim1,dim2))
+         endif
          if (idx >= 20 .and. idx /= 26) then 
             allocate(Ch(idx)%Rad_Toa(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa(dim1,dim2))
@@ -1041,6 +1050,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Ref_Lunar_Toa)) deallocate(Ch(idx)%Ref_Lunar_Toa)
       if (allocated(Ch(idx)%Ref_Lunar_Toa_Clear)) deallocate(Ch(idx)%Ref_Lunar_Toa_Clear)
       if (allocated(Ch(idx)%Ref_Lunar_Sfc)) deallocate(Ch(idx)%Ref_Lunar_Sfc)
+      if (allocated(Ch(idx)%Opd)) deallocate(Ch(idx)%Opd)
       if (allocated(Ch(idx)%Sfc_Emiss)) deallocate(Ch(idx)%Sfc_Emiss)
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) deallocate(Ch(idx)%Sfc_Ref_White_Sky)
       if (allocated(Ch(idx)%Emiss_Tropo)) deallocate(Ch(idx)%Emiss_Tropo)
@@ -1472,6 +1482,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Ref_Lunar_Toa)) Ch(idx)%Ref_Lunar_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Lunar_Toa_Clear)) Ch(idx)%Ref_Lunar_Toa_Clear = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Lunar_Sfc)) Ch(idx)%Ref_Lunar_Sfc = Missing_Value_Real4
+      if (allocated(Ch(idx)%Opd)) Ch(idx)%Opd = Missing_Value_Real4
       if (allocated(Ch(idx)%Sfc_Emiss)) Ch(idx)%Sfc_Emiss = Missing_Value_Real4
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) Ch(idx)%Sfc_Ref_White_Sky = Missing_Value_Real4
       if (allocated(Ch(idx)%Emiss_Tropo)) Ch(idx)%Emiss_Tropo = Missing_Value_Real4

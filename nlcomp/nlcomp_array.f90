@@ -3,7 +3,7 @@
 !  HISTORY: 2014/01/12
 !         : AW first verisob of NLCOMP for arrays
 ! 
-!  TODO: Angles are wrong ( solar vs lunar
+!  TODO: Angles are wrong ( solar vs lunar )
 !
 !
 subroutine nlcomp_array ( input , output, debug_mode_user )
@@ -31,7 +31,8 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
    logical , allocatable :: is_water_phase( : , : )
    logical , allocatable :: has_city_lights(:,:)
    
-   
+   integer ( kind = int2)  , allocatable :: info_flag ( :,:)
+   integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
    ! - 
    type ( nlcomp_output_structure ) :: nlcomp_out
    
@@ -161,7 +162,22 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
    output % cld_trn_sol % d   =  MISSING_REAL4  
    output % cld_trn_obs % d   =  MISSING_REAL4   
    output % cld_alb % d       =  MISSING_REAL4  
-   output % cld_sph_alb % d   =  MISSING_REAL4  
+   output % cld_sph_alb % d   =  MISSING_REAL4 
+   
+   allocate ( info_flag ( dim_1, dim_2))
+   allocate ( quality_flag ( dim_1, dim_2))
+   
+   ! - initialize
+   quality_flag  = ibclr ( quality_flag , 0)
+   quality_flag  = ibset ( quality_flag , 1)
+   quality_flag  = ibset ( quality_flag , 2)
+   quality_flag  = ibset ( quality_flag , 3)
+   quality_flag  = ibset ( quality_flag , 4)
+   quality_flag  = ibset ( quality_flag , 5)
+   quality_flag  = ibclr ( quality_flag , 6)
+   quality_flag  = ibclr ( quality_flag , 7)
+   
+   info_flag  = 0 
 
    
    line_loop: do line_idx = 1 , nr_lines
@@ -169,6 +185,7 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
          
          
          if ( .not. is_cloud (elem_idx,line_idx)  ) cycle elem_loop
+         if ( input % refl (CHN_VIS)  % d (elem_idx, line_idx) < 0 ) cycle elem_loop 
          
          ! - set local aliases
          cld_height     = input % cloud_hgt % d (elem_idx,line_idx)
@@ -300,7 +317,10 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
                 & , lunar_rel_azi , cld_temp , is_water_phase ( elem_idx, line_idx)  &
                 & , rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20  &
                 & , nlcomp_out ,  ancil_path =  input % lut_path,  debug_in =  debug_mode  )
-                
+          
+         quality_flag (elem_idx,line_idx) = ibset ( quality_flag(elem_idx,line_idx) , 0)
+         quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 1)
+         quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 2)       
                 
          output % cod % d (elem_idx,line_idx) = nlcomp_out % cod       
          output % cps % d (elem_idx,line_idx) = nlcomp_out % cps
@@ -310,6 +330,40 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
      
       end do elem_loop
    end do   line_loop 
+   
+      ! DCOMP_INFO_LAND_SEA I0
+   where (input % is_land % d )
+      info_flag = ibset (  info_flag , 0 ) 
+   end where 
+   
+    ! - DCOMP_INFO_SNOW I3
+   where ( input % snow_class % d == EM_snow_class % SNOW )
+      info_flag = ibset ( info_flag , 3) 
+   end where 
+   
+   ! - DCOMP_INFO_SEA_ICE I4
+   where ( input % snow_class % d == EM_snow_class % SEA_ICE )
+	   info_flag = ibset ( info_flag , 4) 
+   end where
+   
+   ! -DCOMP_INFO_PHASE I5
+   where ( .not. is_water_phase)
+      info_flag = ibset ( info_flag, 5)
+   end where
+   
+    ! -DCOMP_INFO_THICK_CLOUD
+   where ( output % cod % d > 80 )
+      info_flag = ibset ( info_flag, 6)
+   end where
+   
+   ! -DCOMP_INFO_THIN_CLOUD
+   where ( output % cod % d < 4 .and. output % cod % d > 0 )
+      info_flag = ibset ( info_flag, 7)
+   end where
+   
+   output % quality % d = quality_flag
+   output % info % d = info_flag
+   
    
 
 end subroutine nlcomp_array

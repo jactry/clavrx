@@ -72,6 +72,7 @@ module AWG_CLOUD_HEIGHT
   private:: NULL_PIX_POINTERS 
   private:: H2O_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
+  private:: COMPUTE_BOX_WIDTH
 
   !--- include the non-system specific variables
   include 'awg_cld_hght_include_1.inc'
@@ -123,6 +124,7 @@ module AWG_CLOUD_HEIGHT
   real, private, PARAMETER:: Dt_Dz_Strato = -6500.0 !K/m
   real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
   real, private, PARAMETER:: MISSING_VALUE_REAL = -999.0
+  integer, private, PARAMETER:: MISSING_VALUE_INTEGER = -999
 
   contains 
 
@@ -336,9 +338,7 @@ module AWG_CLOUD_HEIGHT
   real (kind=real4), allocatable, dimension(:,:):: AKM  !Averaging Kernel Matrix
 
   real (kind=real4), allocatable, dimension(:,:):: Temperature_Cirrus
-  real (kind=real4), parameter:: EMISSIVITY_MIN_TEMPERATURE_CIRRUS = 0.7
-  integer (kind=int4), parameter:: Count_MIN_TEMPERATURE_CIRRUS = 5
-  integer (kind=int4), parameter:: BOX_WIDTH_TEMPERATURE_CIRRUS = 20
+  integer (kind=int4):: Box_Half_Width_Cirrus
 
   !--- local POINTERs to global arrays or data structures
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
@@ -415,9 +415,8 @@ module AWG_CLOUD_HEIGHT
   allocate(Line_Idx_LRC(Input%Number_of_Elements,Input%Number_of_Lines))
   allocate(Skip_LRC_Mask(Input%Number_of_Elements,Input%Number_of_Lines))
 
-allocate(Temperature_Cirrus(Input%Number_of_Elements,Input%Number_of_Lines))
-
-print *, "After allocation ", shape(Temperature_Cirrus)
+  !--- allocate array for cirrus temperature
+  allocate(Temperature_Cirrus(Input%Number_of_Elements,Input%Number_of_Lines))
 
   !--- allocate 1D-VAR arrays based on number of channels
   allocate(y(Num_Obs))
@@ -442,6 +441,10 @@ print *, "After allocation ", shape(Temperature_Cirrus)
 
   !--- set convergence criterion
   Convergence_Criteria = Num_Param - 1.0
+
+  !--- determine cirrus box width
+  call COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,BOX_WIDTH_KM, &
+                         Box_Half_Width_Cirrus)
 
   !----------- make identity matrix
   E = 0.0
@@ -983,9 +986,6 @@ print *, "After allocation ", shape(Temperature_Cirrus)
    x_Ap(1) = Tc_Ap
    x_Ap(2) = Ec_Ap
    x_Ap(3) = Beta_Ap
-
-   Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Tc_Ap
-   Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Ec_Ap
 
    if (idiag_output == symbol%YES) then
            print *, "x_Ap = ", x_Ap
@@ -1667,11 +1667,9 @@ if (Use_Cirrus_Flag == sym%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Output%Ec,          &
                  Emissivity_Min_Temperature_Cirrus, &
                  COUNT_MIN_TEMPERATURE_CIRRUS,      &
-                 BOX_WIDTH_TEMPERATURE_CIRRUS,      &
+                 Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
-Diag_Pix_Array_1  = Temperature_Cirrus
-
 endif
 
 
@@ -4267,6 +4265,27 @@ subroutine COMPUTE_PROCESSING_ORDER(symbol,Invalid_Data_Mask,Cloud_Type, &
      end do Line_Loop
 
 end subroutine COMPUTE_PROCESSING_ORDER
+!----------------------------------------------------------------------
+!--- determine cirrus box width
+!---
+!--- Sensor_Resolution_KM = the nominal resolution in kilometers
+!--- Box_Width_KM = the width of the desired box in kilometers
+!--- Box_Half_Width = the half width of the box in pixel-space
+!----------------------------------------------------------------------
+subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
+                             Box_Half_Width)
+
+   real, intent(in):: Sensor_Resolution_KM
+   integer, intent(in):: Box_Width_KM
+   integer, intent(out):: Box_Half_Width
+
+   if (Sensor_Resolution_KM <= 0.0) then
+       Box_Half_Width = 20
+   else
+       Box_Half_Width = int((Box_Width_KM / Sensor_Resolution_KM) / 2)
+   endif
+
+end subroutine COMPUTE_BOX_WIDTH
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

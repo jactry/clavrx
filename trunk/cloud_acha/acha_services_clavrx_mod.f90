@@ -26,6 +26,7 @@ implicit none
    integer (kind=int4):: Num_Line_Max
    integer (kind=int4):: Smooth_Nwp_Fields_Flag
    integer (kind=int4):: Process_Undetected_Cloud_Flag
+   real (kind=real4):: Sensor_Resolution_KM
 
    !-- local pointers that point to global variables
    integer:: Chan_Idx_67um

@@ -48,6 +48,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Acha_Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Acha_Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
    Acha_Input%ACHA_Mode_Flag_In = ACHA_MODE
+   Acha_Input%Sensor_Resolution_KM = Sensor_Resolution_KM
 
    Acha_Input%Chan_Idx_67um = 27     !channel number for 6.7
    Acha_Input%Chan_Idx_85um = 29     !channel number for 8.5

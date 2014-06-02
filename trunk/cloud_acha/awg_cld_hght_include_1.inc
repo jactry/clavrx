@@ -29,7 +29,6 @@
 
  !--- LRC Computation Parameters
  integer, private, parameter :: Use_Lrc_Flag = 1  ! (0 = sym%NO, 1 = sym%YES)
- integer, private, parameter :: Use_Cirrus_Flag = 1  ! (0 = sym%NO, 1 = sym%YES)
  integer, private, parameter :: Grad_Flag_LRC = -1
  integer, private, parameter :: Max_LRC_Distance = 10
  real, private, parameter :: Min_LRC_Jump = 0.5
@@ -37,8 +36,14 @@
  real, private, parameter :: Min_Bt_11um_LRC = 220.0
  real, private, parameter :: Max_Bt_11um_LRC = 290.0
 
+ !--- Cirrus Box Parameters
+ integer, private, parameter :: USE_CIRRUS_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
+ real (kind=real4), parameter:: EMISSIVITY_MIN_TEMPERATURE_CIRRUS = 0.7
+ integer (kind=int4), parameter:: COUNT_MIN_TEMPERATURE_CIRRUS = 5
+ integer (kind=int4), parameter:: BOX_WIDTH_KM = 150
+
  !---------------------------------------------------------------------
- ! PATMOS-x specific parameters
+ ! retrieval specific parameters
  !---------------------------------------------------------------------
  integer(kind=INT4), private, parameter :: Num_Levels_Rtm_Prof = 101
 

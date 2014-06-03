@@ -378,7 +378,7 @@ contains
           
       is_dust = .false.
       if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
-         is_dust = dust_detection ( &
+         is_dust = DUST_DETECTION ( &
               inp % sat % ref_ch1 &
             , inp % sat % ref_ch8 &
             , inp % sat % ref_ch1_3x3_std &
@@ -388,7 +388,7 @@ contains
       
       is_smoke = .false.
       if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (7) ) then
-         is_dust = smoke_detection ( &
+         is_smoke = SMOKE_DETECTION ( &
               inp % sat % ref_ch1 &
             , inp % sat % ref_ch7 &
             , inp % sat % ref_ch1_3x3_std &
@@ -402,7 +402,7 @@ contains
       
       is_fire = .false.      
       if ( inp % sat % chan_on (31) .and. inp % sat % chan_on (20) ) then
-         is_fire = fire_detection ( &
+         is_fire = FIRE_DETECTION ( &
               inp % sat % bt_ch31 &
             , inp % sat % bt_ch20 &
             , inp % rtm % bt_ch31_3x3_std &
@@ -413,29 +413,28 @@ contains
       is_solar_contaminated = inp % geo % solar_conta
       
       info_flags = 0 
-                                    info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
-      if ( is_day_063um)            info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
-      if ( is_day_063um_spatial_tests)  info_flags(1) = ibset ( info_flags ( 1 ) , 2 )
-      if ( is_day_375um)            info_flags(1) = ibset ( info_flags ( 1 ) , 3 )
-      if ( is_night_375um)          info_flags(1) = ibset ( info_flags ( 1 ) , 4 )
-      if ( is_solar_contaminated)   info_flags(1) = ibset ( info_flags ( 1 ) , 5 )
-      if ( inp % sfc % coast_mask)  info_flags(1) = ibset ( info_flags ( 1 ) , 6 )    
-      if ( is_mountain )            info_flags(1) = ibset ( info_flags ( 1 ) , 7 )
+                                        info_flags(1) = ibset ( info_flags ( 1 ) , 0 )
+      if ( is_day_063um )               info_flags(1) = ibset ( info_flags ( 1 ) , 1 )
+      if ( is_day_063um_spatial_tests ) info_flags(1) = ibset ( info_flags ( 1 ) , 2 )
+      if ( is_day_375um )               info_flags(1) = ibset ( info_flags ( 1 ) , 3 )
+      if ( is_night_375um )             info_flags(1) = ibset ( info_flags ( 1 ) , 4 )
+      if ( is_solar_contaminated )      info_flags(1) = ibset ( info_flags ( 1 ) , 5 )
+      if ( inp % sfc % coast_mask )     info_flags(1) = ibset ( info_flags ( 1 ) , 6 )    
+      if ( is_mountain )                info_flags(1) = ibset ( info_flags ( 1 ) , 7 )
       
-      if ( is_forward_scatter )     info_flags(2) = ibset ( info_flags ( 2 ) , 0 )
-      if ( is_cold_375um )          info_flags(2) = ibset ( info_flags ( 2 ) , 1 )
-      if ( has_cold_btd )           info_flags(2) = ibset ( info_flags ( 2 ) , 2 )
-      if ( is_smoke)                info_flags(2) = ibset ( info_flags ( 2 ) , 4 )
-      if ( is_dust)                 info_flags(2) = ibset ( info_flags ( 2 ) , 5 )
-      if ( is_cloud_shadow)         info_flags(2) = ibset ( info_flags ( 2 ) , 6 )
-      if ( is_fire)                 info_flags(2) = ibset ( info_flags ( 2 ) , 7 )
+      if ( is_forward_scatter )         info_flags(2) = ibset ( info_flags ( 2 ) , 0 )
+      if ( is_cold_375um )              info_flags(2) = ibset ( info_flags ( 2 ) , 1 )
+      if ( has_cold_btd )               info_flags(2) = ibset ( info_flags ( 2 ) , 2 )
+      if ( is_smoke )                   info_flags(2) = ibset ( info_flags ( 2 ) , 4 )
+      if ( is_dust )                    info_flags(2) = ibset ( info_flags ( 2 ) , 5 )
+      if ( is_cloud_shadow )            info_flags(2) = ibset ( info_flags ( 2 ) , 6 )
+      if ( is_fire )                    info_flags(2) = ibset ( info_flags ( 2 ) , 7 )
       
       ! -TODO : probably wrong
       info_flags(3) = ibits ( sfc_idx , 0 , 3 )
       
        ! diag % diagnostic_1 = -999.
-       !  diag % diagnostic_2 = -999.
-      
+       ! diag % diagnostic_2 = -999.
        ! diag % diagnostic_3 = -999.
                                
       ! - class loop 
@@ -447,9 +446,9 @@ contains
          cond_yes (class_idx)  = 1.0
          cond_no  (class_idx)  = 1.0  
         
-         select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
+         select case ( bayes_coef % Classifier_Value_Name_enum (class_idx) )
           
-         case( et_class_T110 )
+         case ( et_class_T110 )
             
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( inp % sat % bt_ch31 < 0. ) cycle class_loop
@@ -485,8 +484,6 @@ contains
            
          case ( et_class_E_TROP )
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
-            
-           
             
             Classifier_Value = inp % rtm % emis_ch31_tropo 
             
@@ -804,7 +801,6 @@ contains
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
                   (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
                    bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
-                   
                 
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
@@ -1280,9 +1276,8 @@ contains
       
       logical :: is_water_sfc      
      
-      
-      
-      real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.2
+      real, parameter :: pi = 3.14159265359
+      real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.1
       real, parameter :: SMOKE_ST_DEV_WATER_THRESH = 0.05
       real, parameter :: SMOKE_ST_DEV_LAND_GLINT_THRESH = 1.5
       real, parameter :: SMOKE_ST_DEV_WATER_GLINT_THRESH = 0.05
@@ -1290,7 +1285,6 @@ contains
       
       real :: ref_ratio
       real :: st_dev_thresh_cand 
-      
       
       smoke_detection = .false.
             
@@ -1302,16 +1296,13 @@ contains
       is_water_sfc = land_class == 0 .or. &
          & land_class >= 3 .and. land_class <= 7 
          
-      
-      
       ref_ratio = ref_021 / ref_004 
       
-      if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH * cosd (sat_zen) ) ) return
+      if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH * cos (sat_zen*pi/180.0) ) ) return
       
-      
-      if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
-      if ( is_glint .and. .not. ( is_water_sfc ) )         st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
-      if ( .not. ( is_glint ) .and. is_water_sfc )        st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
+      if ( is_glint .and. is_water_sfc )                     st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint .and. .not. ( is_water_sfc ) )           st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
+      if ( .not. ( is_glint ) .and. is_water_sfc )           st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
       if ( .not. ( is_glint ) .and. .not. ( is_water_sfc ) ) st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
       
       if ( ref_006_std < st_dev_thresh_cand ) smoke_detection = .true.
@@ -1336,15 +1327,12 @@ contains
       
       logical :: is_water_sfc      
       
-              
-      real, parameter :: dust_m1_refl_thresh = 0.1
-      real, parameter :: dust_cand_m1m5_refl_ratio_thresh = 0.25
-
-      real, parameter :: DUST_ST_DEV_LAND_THRESH = 0.2
+      real, parameter :: DUST_M1_REFL_THRESH = 0.8
+      real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
+      real, parameter :: DUST_ST_DEV_LAND_THRESH = 0.1
       real, parameter :: DUST_ST_DEV_WATER_THRESH = 0.05
       real, parameter :: DUST_ST_DEV_LAND_GLINT_THRESH = 0.7
       real, parameter :: DUST_ST_DEV_WATER_GLINT_THRESH = 0.05
-      
       
       real :: st_dev_thresh_cand   
       
@@ -1365,13 +1353,10 @@ contains
          return            
       end if  
       
-      
-            
       ! adjust thresholds
-      
       if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH
       if ( is_glint .and. .not. (is_water_sfc) )         st_dev_thresh_cand = DUST_ST_DEV_LAND_GLINT_THRESH
-      if ( .not. (is_glint) .and. is_water_sfc )        st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
+      if ( .not. (is_glint) .and. is_water_sfc )         st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
       if ( .not. (is_glint) .and. .not. (is_water_sfc) ) st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
       
       if (  ref_006_std < st_dev_thresh_cand ) dust_detection = .true.

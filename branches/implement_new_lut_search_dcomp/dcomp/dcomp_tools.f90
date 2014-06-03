@@ -1,4 +1,4 @@
-! $Id: dcomp_tools.f90 5 2014-01-21 23:42:33Z awalther $
+! $Id: dcomp_tools.f90 73 2014-02-04 23:24:30Z awalther $
 module dcomp_tools
 
    integer , public :: debug_mode
@@ -102,16 +102,18 @@ contains
 
    ! ---------------------------
 
-   subroutine dcomp_interpolation_weight ( count, value, data_in, weight, index , near_index)
+   subroutine dcomp_interpolation_weight ( count, value, data_in, weight_out, index_out , near_index)
   
       integer, intent ( in ) :: count
       real , intent ( in ) :: value
       real , dimension(:), intent( in ) :: data_in
 	  
-      real , intent( out ) :: weight
-      integer, intent ( out ) :: index 
-	  integer, intent ( out ) , optional :: near_index 
+      real , intent( out ) , optional :: weight_out
+      integer, intent ( out ) , optional :: index_out 
+	   integer, intent ( out ) , optional :: near_index 
       integer :: index2
+      real :: weight
+      integer :: index
   
       call locate (data_in, count, value, index)
        
@@ -125,7 +127,9 @@ contains
 		 weight = 0.
       end if
 	  
-	  if ( present (near_index ) ) near_index = nint ( index + weight )
+	   if ( present (near_index ) ) near_index = nint ( index + weight )
+      if ( present ( weight_out)) weight_out = weight
+      if ( present ( index_out)) index_out = index
   
    end subroutine dcomp_interpolation_weight
 
@@ -166,6 +170,54 @@ contains
       endif
 
    end subroutine LOCATE
+   
+   
+   ! ---------------------------------------------------------------------------------
+   !
+   !  INTERPOLATE_2D
+   !
+   !  Linear Interpolation for a 2 x 2 
+   ! 
+   !  Returns interpolated value of a 2D array with 2 elements for each dimension
+   !
+   !  INPUT: 
+   !     table:      3D array
+   !     Wgt_Dim1,Wgt_Dim2 : weights for each dimension
+   !
+   ! ----------------------------------------------------------------------------------
+   subroutine interpolate_2d(table,Wgt_Dim1, Wgt_Dim2 , delta_1 , delta_2, value , dval_d1, dval_d2 ) 
+      real, dimension(2,2), intent(in) :: table
+      real, intent(in) :: Wgt_Dim1 , Wgt_Dim2
+	   real, intent(in) :: delta_1 , delta_2
+      
+	   real , intent ( out )  :: value
+	   real, intent ( out ) :: dval_d1, dval_d2
+     
+
+      !- locals
+     
+      real :: r , s
+	  
+	   r = wgt_dim1
+	   s = wgt_dim2 
+
+
+      value  =     ( 1.0 - r ) * ( 1.0 - s ) * table( 1 , 1 ) &
+               & + r * ( 1.0 - s )          * table( 2 , 1 ) &
+               & + (1.0 - r ) * s           * table( 1 , 2 ) &
+				   & + r * s                    * table( 2 , 2 )
+
+      dval_d2 =  ( ( 1.0 - r ) * ( table( 1 , 2 ) - table( 1 , 1 ) )   &
+               & +  r * ( table( 2 , 2 ) - table( 2 , 1 ) ) ) /  &
+               &  delta_2
+
+      dval_d1 =   ( ( 1.0 - s ) * ( table( 2 , 1 ) - table( 1 , 1 ) )  &
+                 &    + s * ( table( 2 , 2 ) - table( 1 , 2 ) ) ) /  &
+                 &       delta_1 
+
+
+                  
+   end subroutine interpolate_2d  
 
 
 end module dcomp_tools

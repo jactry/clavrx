@@ -1,4 +1,6 @@
 ! $Id: dcomp.f90 5 2014-01-21 23:42:33Z awalther $
+!
+!
 program dcomp
 
    use dcomp_tools, only: &
@@ -12,33 +14,32 @@ program dcomp
      
 		   
    implicit none
-   real , dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac
-   real, dimension(2) ::  state_apr
-   real :: rad_abv_cld , rad_sfc
-    character( len = 2) :: color_string
+   real, dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac
+   real ::  state_apr(2)
+   real :: rad_abv_cld 
+   real :: rad_sfc
+   character( len = 2) :: color_string
    integer :: start_day
-   real :: sol_zen , sat_zen , rel_azi, cld_temp
+   real :: sol_zen 
+   real :: sat_zen 
+   real :: rel_azi
+   real :: cld_temp
    logical :: snow
    character (len = 100)  :: text
    
    character(len=20) :: sensor
-   integer :: iflen , ier
+   integer :: iflen 
+   integer :: ier
    
-   logical :: water_phase
-   
+   logical :: water_phase   
    type ( dcomp_output_structure ) :: dcomp_results
-   
-   
+
    integer :: dcomp_mode
    integer :: debug_mode
-   character ( len =20) :: host
-   
+   character ( len = 20) :: host
    character ( len = 1024 ) :: ancil_path
 
-!  dummy input
-! make cool input later
-  
-  
+   ! - executable  
    call getenv("HOST",host)
    start_day = 30
     
@@ -83,51 +84,52 @@ program dcomp
    
    if ( debug_mode == 3 ) then 
       print*, 'DCOMP stand alone processing'
-	  print*,'to switch on this information set -dbg 3'
-	  print*,'show usage set -dbg 2'
-	  print*
-	  print*,'input:   '
-	  print*,'obs: ', obs(1:2)
-	  print*,'sol, sat, rel_azi: ', sol_zen, sat_zen, rel_azi
-	  print*,'alb_sfc: ',alb_sfc(1:2)
-	  print*,'cloud top temperature: ', cld_temp,trim('K')
-	  print*,'snow: ',snow
-	  print*,'water phase: ', water_phase
+	   print*,'to switch on this information set -dbg 3'
+	   print*,'show usage set -dbg 2'
+	   print*
+	   print*,'input:   '
+	   print*,'obs: ', obs(1:2)
+	   print*,'sol, sat, rel_azi: ', sol_zen, sat_zen, rel_azi
+	   print*,'alb_sfc: ',alb_sfc(1:2)
+	   print*,'cloud top temperature: ', cld_temp,trim('K')
+	   print*,'snow: ',snow
+	   print*,'water phase: ', water_phase
       print*,'dcomp mode: ', dcomp_mode
       print*,'above cloud transmission: ', air_trans_ac(1:2)
       print*
    end if
    
    
-     if ( debug_mode == 2 ) then 
+   if ( debug_mode == 2 ) then 
       print*, 'DCOMP stand-alone processing'
-	  print*,'to switch on this information set -dbg 2'
-	  print*
-	  print*,'usage: ...'
-	  print*,' this shows the options with the default values if you do not set them: '
-	  print*
-	  print*,'./dcomp -obs1 0.5211 -obs2 0.133 -alb1 0.12 -alb2 0.12'    
+	   print*,'to switch on this information set -dbg 2'
+	   print*
+	   print*,'usage: ...'
+	   print*,' this shows the options with the default values if you do not set them: '
+	   print*
+	   print*,'./dcomp -obs1 0.5211 -obs2 0.133 -alb1 0.12 -alb2 0.12'    
       print* ,' -ctt 276. -sol 23.33 -sat 21. -azi 80 '
-	  print*,'-apr1 1.0 -apr2 1.0 -sen GOES-15'
-	  print*,'-radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 '
-	  print*,'-obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01 -dcm 3 -tnr 0.8  -qq 0.8  '
+	   print*,'-apr1 1.0 -apr2 1.0 -sen GOES-15'
+	   print*,'-radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 '
+	   print*,'-obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01 -dcm 3 -tnr 0.8  -qq 0.8  '
       print*,' boolean keywords :  -snow -wat'
-	  print*
+	   print*
    end if
    
    ancil_path = '/home/wstraka/geocat/data_algorithms/baseline_cloud_micro_day/version_1/'
+   ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
    if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
    if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-    if ( host(1:4) == 'odin' ) ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+   if ( host(1:4) == 'odin' ) ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/luts/cld/' 
    call dcomp_algorithm ( obs , obs_u , alb_sfc , alb_sfc_u , state_apr , air_trans_ac &
                               & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase &
 							  & , rad_abv_cld , rad_sfc , sensor &
 							  & , dcomp_results , dcomp_mode = dcomp_mode &
 							  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
- write(color_string,'(I2)') 43
- text = '============= DCOMP RESULTS==============='
- print*,achar(27)//'['//color_string//'m '//trim(text)//achar(27)//'[0m'
-    print*,' ' , trim(sensor), ' DCOMP output:  COD:' &
+   write(color_string,'(I2)') 43
+   text = '============= DCOMP RESULTS==============='
+   print*,achar(27)//'['//color_string//'m '//trim(text)//achar(27)//'[0m'
+   print*,' ' , trim(sensor), ' DCOMP output:  COD:' &
        ,dcomp_results%cod ,'REF: ',dcomp_results % cps &
        , 'cloud albedo: ', dcomp_results % cloud_alb_vis
 	

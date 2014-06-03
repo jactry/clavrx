@@ -321,231 +321,206 @@ contains
 	  end do loop_channel
       
 
-end subroutine populate_all_lut
+   end subroutine populate_all_lut
 
-!====================================================================
-! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE(lut_file, Idx_Chn, Idx_Phase) 
-!
-! Function: populates cloud look-up table  
-!
-! Inputs:
-!    Lut_file - file there LUT is stored
-!    Idx_Chn - channel number  in LUT
-!    Idx_Phase - phase number  in LUT
-!
-!====================================================================
+   !====================================================================
+   ! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE(lut_file, Idx_Chn, Idx_Phase) 
+   !
+   ! Function: populates cloud look-up table  
+   !
+   ! Inputs:
+   !    Lut_file - file there LUT is stored
+   !    Idx_Chn - channel number  in LUT
+   !    Idx_Phase - phase number  in LUT
+   !
+   !====================================================================
  
-SUBROUTINE POPULATE_CLOUD_LUT_SINGLE( &
+   subroutine POPULATE_CLOUD_LUT_SINGLE( &
       lut_file &    ! - input
-    , Idx_Chn   &      ! - input
-        , Idx_Phase )
+      , Idx_Chn   &      ! - input
+      , Idx_Phase )
 
-IMPLICIT NONE
+      implicit none
 
-! ---  input
-CHARACTER (LEN=*), INTENT(in) ::  Lut_file   ! - file there LUT is stored
-INTEGER , INTENT(in)  ::Idx_Chn               ! - channel number  in LUT 
-INTEGER , INTENT(in)  ::Idx_Phase             ! - phase number  in LUT 
+      ! ---  input
+      character (len=*), intent(in) ::  lut_file   ! - file there LUT is stored
+      integer , intent(in)  :: idx_chn               ! - channel number  in LUT 
+      integer , intent(in)  :: idx_phase             ! - phase number  in LUT 
 
+      ! -  hdf stuff
 
-   
-! -  hdf stuff
-
-INTEGER:: Istatus
+      INTEGER:: Istatus
  
-INTEGER:: Sfstart, Sfn2Index,  Sfendacc,Sfend,Sfrdata,Sfselect
-INTEGER:: Sd_Id
-INTEGER:: Sds_Id
+      INTEGER:: Sfstart, Sfn2Index,  Sfendacc,Sfend,Sfrdata,Sfselect
+      INTEGER:: Sd_Id
+      INTEGER:: Sds_Id
  
 
-INTEGER, PARAMETER:: Sds_Rank_1D = 1
-INTEGER, DIMENSION(Sds_Rank_1D):: Sds_Start_1D, Sds_Edge_1D, Sds_Stride_1D
+      INTEGER, PARAMETER:: Sds_Rank_1D = 1
+      INTEGER, DIMENSION(Sds_Rank_1D):: Sds_Start_1D, Sds_Edge_1D, Sds_Stride_1D
 
-INTEGER, PARAMETER:: Sds_Rank_2D = 2
-INTEGER, DIMENSION(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D, Sds_Dims_2D
+      INTEGER, PARAMETER:: Sds_Rank_2D = 2
+      INTEGER, DIMENSION(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D, Sds_Dims_2D
 
-INTEGER, PARAMETER:: Sds_Rank_3D = 3
-INTEGER, DIMENSION(Sds_Rank_3D):: Sds_Start_3D, Sds_Edge_3D, Sds_Stride_3D, Sds_Dims_3D
+      INTEGER, PARAMETER:: Sds_Rank_3D = 3
+      INTEGER, DIMENSION(Sds_Rank_3D):: Sds_Start_3D, Sds_Edge_3D, Sds_Stride_3D, Sds_Dims_3D
 
-INTEGER, PARAMETER:: Sds_Rank_5D = 5
-INTEGER, DIMENSION(Sds_Rank_5D):: Sds_Start_5D, Sds_Edge_5D, Sds_Stride_5D, Sds_Dims_5D
+      INTEGER, PARAMETER:: Sds_Rank_5D = 5
+      INTEGER, DIMENSION(Sds_Rank_5D):: Sds_Start_5D, Sds_Edge_5D, Sds_Stride_5D, Sds_Dims_5D
 
+      
+      ! -- Executable Code
 
-!----------------------------------------------------------------------------------
-! Executable Code
-!----------------------------------------------------------------------------------
- 
- 
- 
-
-Sd_Id = Sfstart( &
+      Sd_Id = Sfstart( &
                  TRIM(lut_file), &
                  DFACC_READ) 
-  
-  
-Istatus = 0
+ 
+      Istatus = 0
 
+      !--- Read in values in the table
+      Istatus = 0
 
-!--- Read in values in the table
-Istatus = 0
+      !-- read in vectors
+      Sds_Start_1D = 0
+      Sds_Stride_1D = 1
 
-!-- read in vectors
- Sds_Start_1D = 0
- Sds_Stride_1D = 1
-
-!-- sensor zenith angle   
-Sds_Edge_1D = Num_Sat_zen
-Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"sensor_zenith_angle"))
-Istatus = Sfrdata(Sds_Id,Sds_Start_1D, Sds_Stride_1D, Sds_Edge_1D, &
+      !-- sensor zenith angle   
+      Sds_Edge_1D = Num_Sat_zen
+      Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"sensor_zenith_angle"))
+      Istatus = Sfrdata(Sds_Id,Sds_Start_1D, Sds_Stride_1D, Sds_Edge_1D, &
                   Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%Sat_Zen) +  &
                   Istatus
-Istatus = Sfendacc(Sds_Id) + Istatus
+      Istatus = Sfendacc(Sds_Id) + Istatus
  
-!-- solar sensor zenith angle
-Sds_edge_1d = Num_sol_zen
-Sds_id = sfselect(sd_id,sfn2index(sd_id,"solar_zenith_angle"))
-Istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
+      !-- solar sensor zenith angle
+      Sds_edge_1d = Num_sol_zen
+      Sds_id = sfselect(sd_id,sfn2index(sd_id,"solar_zenith_angle"))
+      Istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
                   Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%sol_zen) +  &
                   istatus
-Istatus = sfendacc(sds_id) + istatus
+      Istatus = sfendacc(sds_id) + istatus
  
-!-- relative azimith angle
- 
-sds_edge_1d = Num_Rel_Azi
-sds_id = sfselect(sd_id,sfn2index(sd_id,"relative_azimuth_angle"))
-istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
+      !-- relative azimith angle
+      sds_edge_1d = Num_Rel_Azi
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"relative_azimuth_angle"))
+      istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
                   Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%Rel_Azi) +  &
                   istatus
-istatus = sfENDacc(sds_id) + istatus
+      istatus = sfENDacc(sds_id) + istatus
 
-
-!-- log10 optical depth
- 
-sds_edge_1d = NUM_COD
-sds_id = sfselect(sd_id,sfn2index(sd_id,"log10_optical_depth"))
-istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
+      !-- log10 optical depth
+      sds_edge_1d = NUM_COD
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"log10_optical_depth"))
+      istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
                   Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%COD_Vec) +  &
                   istatus
-istatus = sfENDacc(sds_id) + istatus
- 
+      istatus = sfENDacc(sds_id) + istatus
 
-!-- log10 effective radius
- 
-sds_edge_1d = NUM_CPS
-sds_id = sfselect(sd_id,sfn2index(sd_id,"log10_eff_radius"))
-istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
+      !-- log10 effective radius
+      sds_edge_1d = NUM_CPS
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"log10_eff_radius"))
+      istatus = sfrdata(sds_id,sds_start_1d, sds_stride_1d, sds_edge_1d, &
                   Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%CPS_Vec) +  &
                   istatus
-istatus = sfENDacc(sds_id) + istatus
- 
+      istatus = sfendacc(sds_id) + istatus
 
-!--- 2d arrays
-sds_start_2d = 0
-sds_stride_2d = 1
+      !--- 2d arrays
+      sds_start_2d = 0
+      sds_stride_2d = 1
 
-
-!--- spherical albedo
-sds_dims_2d(1) = NUM_CPS   ! NUM_CPS
-sds_dims_2d(2) = NUM_COD  ! NUM_COD 
-sds_edge_2d(1) = NUM_CPS
-sds_edge_2d(2) = NUM_COD
-sds_id = sfselect(sd_id,sfn2index(sd_id,"spherical_albedo"))
-istatus = sfrdata(sds_id,sds_start_2d, sds_stride_2d, sds_edge_2d, &
+      !--- spherical albedo
+      sds_dims_2d(1) = NUM_CPS   ! NUM_CPS
+      sds_dims_2d(2) = NUM_COD  ! NUM_COD 
+      sds_edge_2d(1) = NUM_CPS
+      sds_edge_2d(2) = NUM_COD
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"spherical_albedo"))
+      istatus = sfrdata(sds_id,sds_start_2d, sds_stride_2d, sds_edge_2d, &
                            Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%sph_alb) +  &
                            istatus
-istatus = sfENDacc(sds_id) + istatus
+      istatus = sfENDacc(sds_id) + istatus
  
  
-!--- 3d arrays
-sds_start_3d = 0
-sds_stride_3d = 1
+      !--- 3d arrays
+      sds_start_3d = 0
+      sds_stride_3d = 1
  
-!--- albedo
-sds_dims_3d(1) = NUM_CPS
-sds_dims_3d(2) = NUM_COD
-sds_dims_3d(3) = num_sol_zen
-sds_edge_3d(1) = NUM_CPS
-sds_edge_3d(2) = NUM_COD
-sds_edge_3d(3) = num_sol_zen
-sds_id = sfselect(sd_id,sfn2index(sd_id,"albedo"))
-istatus = sfrdata(sds_id,sds_start_3d, sds_stride_3d, sds_edge_3d, &
+      !--- albedo
+      sds_dims_3d(1) = NUM_CPS
+      sds_dims_3d(2) = NUM_COD
+      sds_dims_3d(3) = num_sol_zen
+      sds_edge_3d(1) = NUM_CPS
+      sds_edge_3d(2) = NUM_COD
+      sds_edge_3d(3) = num_sol_zen
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"albedo"))
+      istatus = sfrdata(sds_id,sds_start_3d, sds_stride_3d, sds_edge_3d, &
                            Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%Cld_Alb) +  &
                            istatus
-istatus = sfENDacc(sds_id) + istatus
- 
+      istatus = sfENDacc(sds_id) + istatus
 
- 
-!-- transmission
-sds_dims_3d(1) = NUM_CPS
-sds_dims_3d(2) = NUM_COD
-sds_dims_3d(3) = num_sol_zen
-sds_edge_3d(1) = NUM_CPS
-sds_edge_3d(2) = NUM_COD
-sds_edge_3d(3) = num_sol_zen
-sds_id = sfselect(sd_id,sfn2index(sd_id,"transmission"))
-istatus = sfrdata(sds_id,sds_start_3d, sds_stride_3d, sds_edge_3d, &
+      !-- transmission
+      sds_dims_3d(1) = NUM_CPS
+      sds_dims_3d(2) = NUM_COD
+      sds_dims_3d(3) = num_sol_zen
+      sds_edge_3d(1) = NUM_CPS
+      sds_edge_3d(2) = NUM_COD
+      sds_edge_3d(3) = num_sol_zen
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"transmission"))
+      istatus = sfrdata(sds_id,sds_start_3d, sds_stride_3d, sds_edge_3d, &
                            Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%trans) +  &
                            istatus
-istatus = sfendacc(sds_id) + istatus
- 
+      istatus = sfendacc(sds_id) + istatus
 
-!--- 5d arrays
-sds_start_5d = 0
-sds_stride_5d = 1
+      !--- 5d arrays
+      sds_start_5d = 0
+      sds_stride_5d = 1
 
+      !--- reflectance
+      sds_dims_5d(1) = NUM_CPS
+      sds_dims_5d(2) = NUM_COD
+      sds_dims_5d(3) = num_sol_zen
+      sds_dims_5d(4) = num_sat_zen
+      sds_dims_5d(5) = Num_Rel_Azi
 
-!--- reflectance
-sds_dims_5d(1) = NUM_CPS
-sds_dims_5d(2) = NUM_COD
-sds_dims_5d(3) = num_sol_zen
-sds_dims_5d(4) = num_sat_zen
-sds_dims_5d(5) = Num_Rel_Azi
+      sds_edge_5d(1) = NUM_CPS
+      sds_edge_5d(2) = NUM_COD
+      sds_edge_5d(3) = num_sol_zen
+      sds_edge_5d(4) = num_sat_zen
+      sds_edge_5d(5) = Num_Rel_Azi
 
-sds_edge_5d(1) = NUM_CPS
-sds_edge_5d(2) = NUM_COD
-sds_edge_5d(3) = num_sol_zen
-sds_edge_5d(4) = num_sat_zen
-sds_edge_5d(5) = Num_Rel_Azi
-
-sds_id = sfselect(sd_id,sfn2index(sd_id,"reflectance"))
-istatus = sfrdata(sds_id,sds_start_5d, sds_stride_5d, sds_edge_5d, &
+      sds_id = sfselect(sd_id,sfn2index(sd_id,"reflectance"))
+      istatus = sfrdata(sds_id,sds_start_5d, sds_stride_5d, sds_edge_5d, &
                            Cld_Refl_Lut%Channel(Idx_Chn)%Phase(Idx_Phase)%refl) +  &
                            istatus
-istatus = sfENDacc(sds_id) + istatus
- 
- 
-IF (istatus /= 0) THEN
-  PRINT "(a,'Error reading sds data from cloud lut files, stopping')",EXE_PROMPT
-   print*,trim(lut_file)
-  STOP
-END IF
+      istatus = sfendacc(sds_id) + istatus
 
-!--- Close the lookup table file
-istatus = sfend(sd_id) 
-IF (istatus /= 0) THEN
-  PRINT "(a,'Error closing cloud lut files ')",EXE_PROMPT
-  print*,trim(lut_file)
-END IF
+      if (istatus /= 0) then
+         print "(a,'Error reading sds data from cloud lut files, stopping')",EXE_PROMPT
+         print*,trim(lut_file)
+         stop
+      end if
+
+      !--- Close the lookup table file
+      istatus = sfend(sd_id) 
+      if (istatus /= 0) then
+         print "(a,'Error closing cloud lut files ')",EXE_PROMPT
+         print*,trim(lut_file)
+      end if
    
-Cld_Refl_Lut % channel ( Idx_Chn ) % Phase ( Idx_Phase ) % is_set = .true.
+      Cld_Refl_Lut % channel ( Idx_Chn ) % Phase ( Idx_Phase ) % is_set = .true.
 
-END SUBROUTINE POPULATE_CLOUD_LUT_SINGLE          
-
-
+   end subroutine POPULATE_CLOUD_LUT_SINGLE          
 
 
-
-!====================================================================
-! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE_EMS(lut_file,Idx_Phase) 
-!
-! Function: populate cloud look-up table 
-!
-! Inputs: 
-!     Lut_file - file there LUT is stored
-!     Idx_Phase - phase number  in LUT
-!
-!====================================================================
- 
+   !====================================================================
+   ! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE_EMS(lut_file,Idx_Phase) 
+   !
+   ! Function: populate cloud look-up table 
+   !
+   ! Inputs: 
+   !     Lut_file - file there LUT is stored
+   !     Idx_Phase - phase number  in LUT
+   !
+   !====================================================================
    subroutine populate_cloud_lut_single_ems( &
                 lut_file &    ! - input
 			  , idx_chn &	
@@ -617,129 +592,127 @@ END SUBROUTINE POPULATE_CLOUD_LUT_SINGLE
    end subroutine populate_cloud_lut_single_ems      
 
  
-!====================================================================
-! SUBROUTINE Name: HDF_DCOMP_READ_ANCIL
-!
-! Function:     Reads ancillary data from HDF file
-!
-! Description: 
-!
-! Calling Sequence:
-!
-!      CALL HDF_DCOMP_READ_ANCIL(ancil_file,ozone,gas)
-!
-! Inputs: 
-!     Ancil_file:  string which contains the ancillary HDF file
-!
-! Output:
-!
-!     Ozone : 3 ozone coefficients needed for transmission calculations in VIS channel
-!     Ozone : 3 x 3 ozone coefficients needed for transmission calculations in VIS(0.6)  and 1.6 and 3.9 channels
-!    
-!
-! History:    created April 2010
-!
-!  Global variables: 
-!
-! Local Variables:
-!    
-!     ozone_coeff
-!     gas_coeff
-!
-!====================================================================
-!
+   !====================================================================
+   ! SUBROUTINE Name: HDF_DCOMP_READ_ANCIL
+   !
+   ! Function:     Reads ancillary data from HDF file
+   !
+   ! Description: 
+   !
+   ! Calling Sequence:
+   !
+   !      CALL HDF_DCOMP_READ_ANCIL(ancil_file,ozone,gas)
+   !
+   ! Inputs: 
+   !     Ancil_file:  string which contains the ancillary HDF file
+   !
+   ! Output:
+   !
+   !     Ozone : 3 ozone coefficients needed for transmission calculations in VIS channel
+   !     Ozone : 3 x 3 ozone coefficients needed for transmission calculations in VIS(0.6)  and 1.6 and 3.9 channels
+   !    
+   !
+   ! History:    created April 2010
+   !
+   !  Global variables: 
+   !
+   !   Local Variables:
+   !    
+   !     ozone_coeff
+   !     gas_coeff
+   !
+   !====================================================================
+   SUBROUTINE POPULATE_ANCIL(ancil_file)
 
-SUBROUTINE POPULATE_ANCIL(ancil_file)
+      !- input 
+      CHARACTER (LEN=*), INTENT(in):: Ancil_file
 
-!- input 
-CHARACTER (LEN=*), INTENT(in):: Ancil_file
+      !- locals
+      REAL(KIND=real4), DIMENSION(3)::ozone_coeff
+      REAL(KIND=real4), DIMENSION(3,3)::gas_coeff
 
-!- locals
-REAL(KIND=real4), DIMENSION(3)::ozone_coeff
-REAL(KIND=real4), DIMENSION(3,3)::gas_coeff
+      !-- hdf
+      INTEGER:: Sfstart,Sfn2Index,  Sfendacc ,Sfrdata,Sfselect
+      INTEGER:: Sd_Id
+      INTEGER:: Sds_Id
+      INTEGER:: Istatus
 
-!-- hdf
-INTEGER:: Sfstart,Sfn2Index,  Sfendacc ,Sfrdata,Sfselect
-INTEGER:: Sd_Id
-INTEGER:: Sds_Id
-INTEGER:: Istatus
+      INTEGER, PARAMETER:: Sds_Rank_1D = 1
 
-INTEGER, PARAMETER:: Sds_Rank_1D = 1
+      INTEGER, PARAMETER:: Sds_Rank_2D = 2
+      INTEGER, DIMENSION(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D
 
-INTEGER, PARAMETER:: Sds_Rank_2D = 2
-INTEGER, DIMENSION(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D
+      !----------------------------------------------------------------------------------
+      ! Executable Code
+      !----------------------------------------------------------------------------------
 
-!----------------------------------------------------------------------------------
-! Executable Code
-!----------------------------------------------------------------------------------
-
-Sd_Id = Sfstart( &
+      Sd_Id = Sfstart( &
                                 TRIM(ancil_file), &
                                 DFACC_READ) 
 
-Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"Ozone_transmission"))
-Istatus = Sfrdata(Sds_Id,0, 1, 3, ozone_coeff) 
+      Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"Ozone_transmission"))
+      Istatus = Sfrdata(Sds_Id,0, 1, 3, ozone_coeff) 
 
-sds_start_2d = 0
-sds_stride_2d = 1
+      sds_start_2d = 0
+      sds_stride_2d = 1
 
-sds_edge_2d(1) = 3
-sds_edge_2d(2) = 3
+      sds_edge_2d(1) = 3
+      sds_edge_2d(2) = 3
 
-Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"Gas_transmission"))
-Istatus = Sfrdata(Sds_Id,sds_start_2d, sds_stride_2d, sds_edge_2d, gas_coeff)
-istatus = sfENDacc(sds_id)
+      Sds_Id = Sfselect(Sd_Id,Sfn2Index(Sd_Id,"Gas_transmission"))
+      Istatus = Sfrdata(Sds_Id,sds_start_2d, sds_stride_2d, sds_edge_2d, gas_coeff)
+      istatus = sfENDacc(sds_id)
 
-!--- initialize 
-Ancil_Data%Gas_Trans = 0.0
-Ancil_Data%Ozone_Trans = 0.0
+      !--- initialize 
+      Ancil_Data%Gas_Trans = 0.0
+      Ancil_Data%Ozone_Trans = 0.0
 
-!--- populate 
-Ancil_Data%Gas_Trans  =  Gas_Coeff
-Ancil_Data%Ozone_Trans  =  Ozone_Coeff
+      !--- populate 
+      Ancil_Data%Gas_Trans  =  Gas_Coeff
+      Ancil_Data%Ozone_Trans  =  Ozone_Coeff
         
-Ancil_Data%Flag = FLAG_YES
-IF (istatus /= 0) THEN
-  PRINT "(a,'Error reading sds data from ANCIL files, stopping')",EXE_PROMPT
-   print*,trim(ancil_file)
-  STOP
-END IF
- END SUBROUTINE POPULATE_ANCIL
+      Ancil_Data%Flag = FLAG_YES
+      IF (istatus /= 0) THEN
+         PRINT "(a,'Error reading sds data from ANCIL files, stopping')",EXE_PROMPT
+         print*,trim(ancil_file)
+         STOP
+      END IF
+   END SUBROUTINE POPULATE_ANCIL
  
- !====================================================================
-! SUBROUTINE Name: GET_LUT_DATA
-!
-! Function:      Interface to look-up-table data
-!
-! Description:    handles data access to LUT data. HDF read routines 
-!
-! Calling Sequence:
-!
-! Inputs: 
-!    Idx_Chn     : Channel index 
-!    Idx_Phase   : Phase index
-!
-! Output:
-!    Sat_Zen_Vec_LUT - satellite zenith angle vector
-!    Sol_Zen_Vec_LUT - solar zenith angle vector
-!    Rel_Azi_Vec_LUT - relative azimuth vector
-!    COD_Vec_LUT     - log10 optical depth vector
-!    CPS_Vec_LUT     - log10 effective radius vector
-!    Sph_Alb_2D_LUT  - spherical albedo
-!    Trans_3D_LUT    - flux transmission
-!    Cld_Alb_3D_LUT  - cloud albedo
-!    Refl_5D_LUT - reflectance
-!    Trans_Ems_3D_LUT - Transmission ems
-!    Ems_3D_LUT - reflectance
-!    Num_Sol_Zen_LUT - total # solar zeniths
-!    Num_Sat_Zen_LUT - total # satellite zeniths
-!    Num_Rel_Azi_LUT - total # relative azimuths
-!    Ozone_Coeff
-!    Gas_Coeff
-!
-! History:                   
-!
-!====================================================================
+   !====================================================================
+   ! SUBROUTINE Name: GET_LUT_DATA
+   !
+   ! Function:      Interface to look-up-table data
+   !
+   ! Description:    handles data access to LUT data. HDF read routines 
+   !
+   ! Calling Sequence:
+   !
+   ! Inputs: 
+   !    Idx_Chn     : Channel index 
+   !    Idx_Phase   : Phase index
+   !
+   ! Output:
+   !    Sat_Zen_Vec_LUT - satellite zenith angle vector
+   !    Sol_Zen_Vec_LUT - solar zenith angle vector
+   !    Rel_Azi_Vec_LUT - relative azimuth vector
+   !    COD_Vec_LUT     - log10 optical depth vector
+   !    CPS_Vec_LUT     - log10 effective radius vector
+   !    Sph_Alb_2D_LUT  - spherical albedo
+   !    Trans_3D_LUT    - flux transmission
+   !    Cld_Alb_3D_LUT  - cloud albedo
+   !    Refl_5D_LUT - reflectance
+   !    Trans_Ems_3D_LUT - Transmission ems
+   !    Ems_3D_LUT - reflectance
+   !    Num_Sol_Zen_LUT - total # solar zeniths
+   !    Num_Sat_Zen_LUT - total # satellite zeniths
+   !    Num_Rel_Azi_LUT - total # relative azimuths
+   !    Ozone_Coeff
+   !    Gas_Coeff
+   !
+   ! History:                   
+   !
+   !====================================================================
   
    subroutine get_lut_data(idx_chn,idx_phase &   
         , num_sol_zen &
@@ -770,17 +743,17 @@ END IF
       integer,intent(out), optional:: num_rel_azi           !- total number relative azimuths
  
       ! -- data 
-      real (kind=real4),intent(out),optional ,pointer, dimension(:) ::     sat_zen_vec_lut   ! - satellite zenith angle vector 
-      real (kind=real4),intent(out),optional ,pointer, dimension(:) ::     sol_zen_vec_lut   ! - solar zenith angle vector
-      real (kind=real4),intent(out),optional ,pointer, dimension(:) ::     rel_azi_vec_lut   ! - relative azimuth vector
-      real (kind=real4),intent(out),optional ,pointer, dimension(:) ::     cod_vec_lut       ! - log10 optical depth vector 
-      real (kind=real4),intent(out),optional ,pointer, dimension(:) ::     cps_vec_lut       ! - log10 effective radius vector
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:) ::   sph_alb_2d_lut    ! - spherical albedo
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:,:) :: trans_3d_lut      ! - flux transmission
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:,:) :: cld_alb_3d_lut    ! - cloud albedo
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:,:,:,:) :: refl_5d_lut   ! - reflectance
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:,:) :: trans_ems_3d_lut   ! - transmission ems
-      real (kind=real4),intent(out),optional ,pointer, dimension(:,:,:) :: ems_3d_lut   ! - reflectance
+      real (kind=real4),intent(out),optional ,pointer :: sat_zen_vec_lut  (:)       ! - satellite zenith angle vector 
+      real (kind=real4),intent(out),optional ,pointer :: sol_zen_vec_lut  (:)       ! - solar zenith angle vector
+      real (kind=real4),intent(out),optional ,pointer :: rel_azi_vec_lut  (:)       ! - relative azimuth vector
+      real (kind=real4),intent(out),optional ,pointer :: cod_vec_lut      (:)       ! - log10 optical depth vector 
+      real (kind=real4),intent(out),optional ,pointer :: cps_vec_lut      (:)       ! - log10 effective radius vector
+      real (kind=real4),intent(out),optional ,pointer :: sph_alb_2d_lut   (:,:)     ! - spherical albedo
+      real (kind=real4),intent(out),optional ,pointer :: trans_3d_lut     (:,:,:)   ! - flux transmission
+      real (kind=real4),intent(out),optional ,pointer :: cld_alb_3d_lut   (:,:,:)   ! - cloud albedo
+      real (kind=real4),intent(out),optional ,pointer :: refl_5d_lut      (:,:,:,:,:)   ! - reflectance
+      real (kind=real4),intent(out),optional ,pointer :: trans_ems_3d_lut (:,:,:)   ! - transmission ems
+      real (kind=real4),intent(out),optional ,pointer :: ems_3d_lut       (:,:,:)   ! - reflectance
   
       ! - data from ancil file 
       real(kind=real4),intent(out), optional , dimension(3)::ozone_coeff
@@ -789,12 +762,10 @@ END IF
 
       integer::idx_chn_lut  ! - substitutes sensor channel number with 1 for vis or 2 for ir 
       integer :: i_channel
-!-------------------------------------------------------------------------------
-! Executable Code
-!-------------------------------------------------------------------------------
-    
+      
+      ! ---- Executable Code
       idx_chn_lut = -1
-	  channel_loop: do i_channel = 1 , size ( mapped_modis_channels )  
+	   channel_loop: do i_channel = 1 , size ( mapped_modis_channels )  
 	     if ( idx_chn == mapped_modis_channels(i_channel) ) then
 		    idx_chn_lut = i_channel
         end if 
@@ -812,96 +783,95 @@ END IF
 		 stop
       end if 
  
- ! - populate optional output variables
-IF (present(Num_Sol_Zen)) &
-  Num_Sol_Zen = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sol_Zen)
+      ! - populate optional output variables
+      IF (present(Num_Sol_Zen)) &
+         Num_Sol_Zen = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sol_Zen)
   
-IF (present(Num_Sat_Zen)) &
-  Num_Sat_Zen = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sat_Zen)
+      IF (present(Num_Sat_Zen)) &
+         Num_Sat_Zen = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sat_Zen)
   
-IF (present(Num_Rel_Azi)) &
-  Num_Rel_Azi = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Rel_Azi)  
+      IF (present(Num_Rel_Azi)) &
+         Num_Rel_Azi = SIZE(Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Rel_Azi)  
 
-IF (present(Sat_Zen_Vec_LUT)) &
-  Sat_Zen_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sat_Zen  
+      IF (present(Sat_Zen_Vec_LUT)) &
+         Sat_Zen_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sat_Zen  
   
-IF (present(Sol_Zen_Vec_LUT)) &
-  Sol_Zen_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sol_Zen 
+      IF (present(Sol_Zen_Vec_LUT)) &
+         Sol_Zen_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sol_Zen 
   
-IF (present(Rel_Azi_Vec_LUT)) &
-  Rel_Azi_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Rel_Azi 
+      IF (present(Rel_Azi_Vec_LUT)) &
+         Rel_Azi_Vec_LUT => Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Rel_Azi 
   
-IF (present(CPS_Vec_LUT)) &
-  CPS_Vec_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%CPS_Vec  
+      IF (present(CPS_Vec_LUT)) &
+         CPS_Vec_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%CPS_Vec  
   
-IF (present(COD_Vec_LUT)) &
-  COD_Vec_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%COD_Vec 
+      IF (present(COD_Vec_LUT)) &
+         COD_Vec_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%COD_Vec 
   
-IF (present(Sph_Alb_2D_LUT)) &
-  Sph_alb_2D_LUT =>  Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sph_Alb  
+      IF (present(Sph_Alb_2D_LUT)) &
+         Sph_alb_2D_LUT =>  Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Sph_Alb  
   
-IF (present(Trans_3D_LUT)) &
-  Trans_3D_LUT =>        Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Trans 
+      IF (present(Trans_3D_LUT)) &
+         Trans_3D_LUT =>        Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Trans 
   
-IF (present(Cld_Alb_3D_LUT)) &
-  Cld_Alb_3D_LUT =>  Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Cld_Alb 
+      IF (present(Cld_Alb_3D_LUT)) &
+         Cld_Alb_3D_LUT =>  Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Cld_Alb 
   
-IF (present(Refl_5D_LUT)) &
-  Refl_5D_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Refl 
+      IF (present(Refl_5D_LUT)) &
+         Refl_5D_LUT =>         Cld_Refl_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Refl 
    
-IF (present(Trans_ems_3D_LUT)) &
-  Trans_ems_3D_LUT =>   Cld_Ems_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Trans   
+      IF (present(Trans_ems_3D_LUT)) &
+         Trans_ems_3D_LUT =>   Cld_Ems_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Trans   
  
-IF (present(Ems_3d_LUT)) &
-   Ems_3D_LUT => Cld_Ems_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Emiss 
+      IF (present(Ems_3d_LUT)) &
+         Ems_3D_LUT => Cld_Ems_Lut%Channel(Idx_Chn_LUT)%Phase(Idx_Phase)%Emiss 
 
-! - populate optional output ancil parameters
-IF (present(Gas_coeff)) &
-  Gas_coeff = Ancil_Data%Gas_Trans(Idx_Chn_LUT,:)
+      ! - populate optional output ancil parameters
+      IF (present(Gas_coeff)) &
+         Gas_coeff = Ancil_Data%Gas_Trans(Idx_Chn_LUT,:)
   
-IF (present(Ozone_coeff)) THEN
+      if (present(Ozone_coeff)) then
 
-  select case (Idx_Chn)
-   case(1) 
-      Ozone_coeff(:) = (/-0.000606266,9.77984e-05,-1.67962e-08/)
-   case(2) 
-      Ozone_coeff(:) = (/-0.000606266,9.77984e-05,-1.67962e-08/)
-   case(5) 
-      Ozone_coeff(:) = (/0.000178786,8.88510e-05,3.46661e-09/)
-   case(6) 
-      Ozone_coeff(:) = (/0.000986278,8.23759e-05,1.07635e-08/)
-   case(7) 
-      Ozone_coeff(:) = (/0.000638877,8.45589e-05,9.84943e-09/)
-   case(8) 
-      Ozone_coeff(:) = (/-2.74525e-05,9.02744e-05,2.31578e-09/)
-   case(9) 
-      Ozone_coeff(:) = (/-0.000856822,9.79630e-05,-1.48645e-08/)
-   case(10) 
-      Ozone_coeff(:) = (/0.000663486,8.40186e-05,1.07917e-08/)
-   case(11) 
-      Ozone_coeff(:) = (/0.000897866,8.26629e-05,1.45399e-08/)
-   case(12) 
-      Ozone_coeff(:) = (/0.000210246,8.78771e-05,4.71260e-09/)
-   case(13) 
-      Ozone_coeff(:) = (/0.00114584,8.06184e-05,1.62876e-08/)
-   case(14) 
-      Ozone_coeff(:) = (/-0.000665083,9.51923e-05,-8.21226e-09/)
-   case(15)
-      Ozone_coeff(:) = (/0.000898769,8.11015e-05,1.69703e-08/)
-   case(16) 
-      Ozone_coeff(:) = (/-0.000822729,9.65522e-05,-1.17455e-08/)
-   case(17)
-      Ozone_coeff(:) = (/0.000913279,8.22402e-05,1.27435e-08/)
-   case(18)
-      Ozone_coeff(:) = (/0.000258731,8.80321e-05,4.91110e-09/)
-   case default
-      Ozone_coeff(:) = (/0.000258731,8.80321e-05,4.91110e-09/)
- 
- end select 
+         select case (Idx_Chn)
+         case(1) 
+            Ozone_coeff(:) = (/-0.000606266,9.77984e-05,-1.67962e-08/)
+         case(2) 
+            Ozone_coeff(:) = (/-0.000606266,9.77984e-05,-1.67962e-08/)
+         case(5) 
+            Ozone_coeff(:) = (/0.000178786,8.88510e-05,3.46661e-09/)
+         case(6) 
+            Ozone_coeff(:) = (/0.000986278,8.23759e-05,1.07635e-08/)
+         case(7) 
+          Ozone_coeff(:) = (/0.000638877,8.45589e-05,9.84943e-09/)
+         case(8) 
+            Ozone_coeff(:) = (/-2.74525e-05,9.02744e-05,2.31578e-09/)
+         case(9) 
+          Ozone_coeff(:) = (/-0.000856822,9.79630e-05,-1.48645e-08/)
+         case(10) 
+            Ozone_coeff(:) = (/0.000663486,8.40186e-05,1.07917e-08/)
+         case(11) 
+            Ozone_coeff(:) = (/0.000897866,8.26629e-05,1.45399e-08/)
+         case(12) 
+            Ozone_coeff(:) = (/0.000210246,8.78771e-05,4.71260e-09/)
+         case(13) 
+            Ozone_coeff(:) = (/0.00114584,8.06184e-05,1.62876e-08/)
+         case(14) 
+            Ozone_coeff(:) = (/-0.000665083,9.51923e-05,-8.21226e-09/)
+         case(15)
+            Ozone_coeff(:) = (/0.000898769,8.11015e-05,1.69703e-08/)
+         case(16) 
+            Ozone_coeff(:) = (/-0.000822729,9.65522e-05,-1.17455e-08/)
+         case(17)
+            Ozone_coeff(:) = (/0.000913279,8.22402e-05,1.27435e-08/)
+         case(18)
+            Ozone_coeff(:) = (/0.000258731,8.80321e-05,4.91110e-09/)
+         case default
+            Ozone_coeff(:) = (/0.000258731,8.80321e-05,4.91110e-09/)
+         end select 
 
- 
-ENDIF
-END SUBROUTINE GET_LUT_DATA
+      end if 
+
+   end subroutine get_lut_data
 
 
 END MODULE dcomp_lut_mod

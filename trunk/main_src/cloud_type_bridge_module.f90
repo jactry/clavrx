@@ -77,49 +77,50 @@
 !
 !--------------------------------------------------------------------------------------
 
-module cloud_type_bridge_module
+module CLOUD_TYPE_BRIDGE_MODULE 
 
    
    use PIXEL_COMMON, only : &
-        solzen  &
-      , satzen &   
-      , zen_idx_rtm &
+        Solzen  &
+      , Satzen &   
+      , Zen_Idx_Rtm &
       , Chan_On_Flag_Default &
-      , ch &
-      , num_pix &
-      , num_scans_read &
-      , i_nwp &
-      , j_nwp &
+      , Ch &
+      , Num_Pix &
+      , Num_Scans_Read &
+      , I_Nwp &
+      , J_Nwp &
       , Bt_Ch27_Max_3x3 &
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
-      , cld_type &
-      , cld_phase &
-      , cld_mask &
-      , i_lrc, j_lrc &
+      , Cld_Type &
+      , Cld_Phase &
+      , Cld_Mask &
+      , Cld_Test_Vector_Packed &
+      , I_Lrc, J_Lrc &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
-      , bad_pixel_mask
+      , Bad_Pixel_Mask
                  
    use CONSTANTS, only : &
         Cloud_Type_Version
 
    use CLOUD_TYPE_ALGO_MODULE, only : &
-       cloud_type_pixel &
-       , cloud_type_input_type &
-       , et_cloud_type &
-       , set_cloud_phase
+       Cloud_Type_Pixel &
+       , Cloud_Type_Input_Type &
+       , Et_Cloud_Type &
+       , Set_Cloud_Phase
        
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE, only: &
-      et_cloudiness_class
+      Et_Cloudiness_Class
    
    use RTM_COMMON , only: &
-      p_std_rtm &
-      , rtm
+      P_Std_Rtm &
+      , Rtm
    
    implicit none
    
@@ -139,7 +140,7 @@ contains
    !====================================================================
    ! universal cloud type bridge
    !====================================================================
-   subroutine cloud_type_bridge
+   subroutine CLOUD_TYPE_BRIDGE 
       implicit none
       
       type ( cloud_type_input_type) :: type_inp
@@ -161,17 +162,38 @@ contains
          line_loop: do i = 1, num_pix  
             
             if ( bad_pixel_mask (i,j) == 1 ) then
-               cld_type (i,j ) = et_cloud_type % MISSING
+               Cld_Type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
+
+      !--- For Clear Only, Define Fire, Smoke and Dust Types based on Cloud Mask
+            if ( Cld_Mask (i,j) == et_cloudiness_class % CLEAR .or. &
+                 Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),7,1) == 1 ) then
+                  Cld_Type (i,j) = et_cloud_type % FIRE
+                  cycle
+               endif
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),4,1) == 1 ) then
+                  Cld_Type (i,j) = et_cloud_type % SMOKE
+                  cycle
+               endif
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),5,1) == 1 )  then
+                  Cld_Type (i,j) = et_cloud_type % DUST
+                  cycle
+               endif
+
+            endif
             
-            if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
-               cld_type (i,j ) = et_cloud_type % CLEAR
+            if (Cld_Mask (i,j) == et_cloudiness_class % CLEAR ) then
+               Cld_Type (i,j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (cld_mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
-               cld_type (i,j ) = et_cloud_type % PROB_CLEAR
+            if (Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+               Cld_Type (i,j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if
             
@@ -180,7 +202,7 @@ contains
                              
             call POPULATE_INPUT ( i, j , type_inp )
             call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
-            cld_type (i,j)  = ctype
+            Cld_Type (i,j)  = ctype
 
             call DEALLOCATE_INP ( type_inp )
          
@@ -196,6 +218,27 @@ contains
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
+
+      !--- For Clear Only, Define Fire, Smoke and Dust Types based on Cloud Mask
+            if ( Cld_Mask (i,j) == et_cloudiness_class % CLEAR .or. &
+                 Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),7,1) == 1 ) then
+                  Cld_Type (i,j) = et_cloud_type % FIRE
+                  cycle
+               endif
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),4,1) == 1 ) then
+                  Cld_Type (i,j) = et_cloud_type % SMOKE
+                  cycle
+               endif
+
+               if ( ibits (Cld_Test_Vector_Packed(2,i,j),5,1) == 1 )  then
+                  Cld_Type (i,j) = et_cloud_type % DUST
+                  cycle
+               endif
+
+            endif
             
             if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR
@@ -214,7 +257,7 @@ contains
             if ( i == ii .and. j == jj ) cycle
 
             call POPULATE_INPUT ( i, j , type_inp )
-            call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
+            call CLOUD_TYPE_PIXEL ( type_inp, ctype , ice_prob_out = ice_prob )
             
             !--- set lrc value
             cld_type_lrc = et_cloud_type % UNKNOWN
@@ -240,7 +283,7 @@ contains
                       cld_type(i,j) = ctype
                    else
                      ! - the original ice pixels should also be check on supercool, fog or water.
-                     call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_water = .true. )
+                     call CLOUD_TYPE_PIXEL ( type_inp, ctype , force_water = .true. )
                      cld_type (i,j)  = ctype
                    end if
                   
@@ -259,7 +302,7 @@ contains
                          .or. cld_type_lrc == et_cloud_type % OVERLAP ) &
                         .and. ctype ==  et_cloud_type % SUPERCOOLED ) then
                   
-                  call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_ice = .true. )
+                  call CLOUD_TYPE_PIXEL ( type_inp, ctype , force_ice = .true. )
                      cld_type (i,j)  = ctype
                     
                ! -- this is mainly cirrus / opaque ice => keep current
@@ -273,9 +316,9 @@ contains
          end do   line_loop1
       end do elem_loop1      
       
-      call set_cloud_phase ( cld_type, cld_phase) 
+      call SET_CLOUD_PHASE ( cld_type, cld_phase) 
       
-   end subroutine cloud_type_bridge
+   end subroutine CLOUD_TYPE_BRIDGE 
    
    ! --------- --------------- ---
    !
@@ -372,4 +415,5 @@ contains
    
    end subroutine DEALLOCATE_INP
 
-end module cloud_type_bridge_module
+end module CLOUD_TYPE_BRIDGE_MODULE 
+

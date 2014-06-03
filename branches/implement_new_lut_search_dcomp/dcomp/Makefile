@@ -16,6 +16,7 @@ HDFINC = $(HDFDIR)/include
 HDFLIB = $(HDFDIR)/lib
 ICAINC = hdf4/include
 ICALIB = hdf4/lib
+ICASRC = hdf4/src
 CFLAGS = -w -I$(ICAINC) -I$(HDFINC)
 LFLAGS = -L$(ICALIB) -L$(HDFLIB) -licaf90hdf -lmfhdf -ldf -ljpeg -lz -lm
 COMSRC = prntutil.f90
@@ -111,6 +112,7 @@ test_lut_mod: $(OBJS_TEST_LUT)
 dcomp: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Intel(R) Fortran Linker'
+	make -C $(ICASRC)
 	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp" $(OBJS)  ${hdf5libs} ${hdflibs} $(COMOBJ) $(LFLAGS)
    
 	@echo 'Finished building target: $@'

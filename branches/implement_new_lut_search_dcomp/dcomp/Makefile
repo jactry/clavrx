@@ -98,5 +98,8 @@ file_tools.o:file_tools.f90
 
 clean:
 	rm -f *.o *.mod
-	rm -f ../cr_start
+	rm -f dcomp
+	rm -f *.a
+	rm -f test_lut
+	rm -rf hdf4/lib
 	-@echo ' '

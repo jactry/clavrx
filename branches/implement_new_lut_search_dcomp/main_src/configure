@@ -349,7 +349,7 @@ if (exists($opt{'dcomp_dir'}))
    {
       print CONFIG "export DCOMP=$opt{'dcomp_dir'}\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
-      print CONFIG "dcomplinks= -ldcomp\n";
+      print CONFIG "dcomplinks= -ldcomp -licaf90hdf\n";
       
    }
    else

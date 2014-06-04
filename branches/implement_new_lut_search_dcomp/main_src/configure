@@ -347,9 +347,11 @@ if (exists($opt{'dcomp_dir'}))
 {
    if (length($opt{'dcomp_dir'}))
    {
+      print CONFIG "export DCOMP_HDF=../dcomp/hdf4/lib/\n";
       print CONFIG "export DCOMP=$opt{'dcomp_dir'}\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
       print CONFIG "dcomplinks= -ldcomp -licaf90hdf\n";
+     
       
    }
    else

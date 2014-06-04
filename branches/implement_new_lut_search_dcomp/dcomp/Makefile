@@ -26,6 +26,9 @@ NCDF_LIB = /usr/local/lib
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
+	
+
+
 #Compilation rule for f90 files
 .f90.o:
 	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${hdflibs} $(COMSRC)  $<
@@ -46,29 +49,36 @@ file_tools.o
 
 
 
+
 OBJS_TEST_LUT = dcomp_data_pool_mod.o \
 test_dcomp_lut.o \
 dcomp_tools.o \
 file_tools.o
 
-all: dcomp
+.PHONY: clean hdf4
 
-     	
+all: hdf4 dcomp 
+
+hdf4:
+	@echo 'Building target for hdf4: $@'
+	make -C $(ICASRC)	
+	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'test lut'
 	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  $(COMOBJ) $(LFLAGS)
+	
+
 
 dcomp: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Intel(R) Fortran Linker'
-	make -C $(ICASRC)
+	
 	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp" $(OBJS)  ${hdf5libs} ${hdflibs} $(COMOBJ) $(LFLAGS)
    
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
 dcomp.o: dcomp.f90  dcomp_mod.o get_planck_radiance_39um.o
-test_full.o: test_full.f90 dcomp_mod.o get_planck_radiance_39um.o
 dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o dcomp_data_pool_mod.o
 dcomp_tools.o: dcomp_tools.f90
 test_forward_computation.o:test_forward_computation.f90 dcomp_forward_mod.o
@@ -76,7 +86,6 @@ M_kracken.o:M_kracken.f90
 dcomp_mod.o:dcomp_mod.f90 dcomp_forward_mod.o dcomp_tools.o get_rad_refl_factor.o 
 get_planck_radiance_39um.o:get_planck_radiance_39um.f90
 get_rad_refl_factor.o:get_rad_refl_factor.f90
-test_new_fwd.o:test_new_fwd.f90  dcomp_fwd_mod.o
 dcomp_array.o:dcomp_array.f90 dcomp_mod.o dcomp_interface_types_mod.o view2d.o 
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90
 dcomp_data_pool_mod.o:dcomp_data_pool_mod.f90 dcomp_tools.o file_tools.o

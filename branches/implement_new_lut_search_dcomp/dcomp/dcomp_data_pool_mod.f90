@@ -83,6 +83,7 @@ module dcomp_data_pool_mod
       procedure :: set_angles => lut__set_angles
       procedure :: getProperty => lut__getProperty
       procedure :: get_data => lut__get_data
+      procedure :: thick_cloud_rfl => lut_data__thick_cloud_rfl
       procedure :: init_dims => lut__init_dims
       procedure , private :: set_filename => lut__set_filename
       
@@ -276,9 +277,10 @@ contains
    ! ----------------------------------------------------------------
    !
    ! ----------------------------------------------------------------
-   subroutine lut__initialize ( self, sensor )
+   subroutine lut__initialize ( self, sensor , ancil_path )
       class ( lut_type ) :: self
       character ( len = * ) , intent(in) :: sensor
+      character ( len = * ) , intent(in), optional :: ancil_path
       character ( len =300) :: file
       character ( len =20) :: host
       if ( self % sensor == sensor ) then
@@ -290,12 +292,10 @@ contains
       
       self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
 		if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+      if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
+      
       call self % set_filename
-      
-      
-      !self % channel ( : ) % phase (1) % file = trim(self % lut_path)//'METOP-A_ch3a_ref_lut_ice_cld.hdf'
-      
       call self % init_dims( )
       
    end subroutine lut__initialize
@@ -324,7 +324,7 @@ contains
    
    end subroutine lut__set_angles
    
-   !  --------------------
+   !  --------------------------------------------------------------------------
    !   PURPOSE : return data from LUT
    !   input: channel, phase, cod (log10 ), cps(log10)
    !   output : transmission, reflectance, cloud albedo, spherical abedo
@@ -335,7 +335,7 @@ contains
    !       drefl_dcod
    !       
    !
-   !  ---------------------------------
+   !  -------------------------------------------------------------------------
    subroutine lut__get_data ( self, idx_chn , idx_phase , cod_log10, cps_log10 &
                               & , out )
                               
@@ -388,16 +388,6 @@ contains
          & , weight_out = wgt_cps, index_out= pos_cps)
          
          
-                 
-   !   if ( cps_pos >= ubound ( cps_vec_lut , dim = 1 )) then
-   !      cps_pos = ubound ( cps_vec_lut , dim = 1 ) - 1
-   !      cps_wgt = 1.
-   !   end if
-          
-   !   if ( cod_pos >= ubound ( cod_vec_lut , dim = 1 ) ) then
-   !      cod_pos = ubound ( cod_vec_lut , dim = 1) - 1
-   !   end if
-         
       rfl_cld_2x2       = data_loc%cld_refl( pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol,self%pos_sat,self%pos_azi)
       trn_sol_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol)
       trn_sat_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)
@@ -423,15 +413,40 @@ contains
       if ( data_loc % has_ems ) then
          
          ems_cld_2x2 = data_loc%cld_ems (pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)        
-         call interpolate_2d ( ems_cld_2x2     , wgt_cps , wgt_cod , ref_diff , cod_diff , out % ems    , out % dEms_dcps      , out % dEms_dcod )
+         call interpolate_2d ( ems_cld_2x2, wgt_cps , wgt_cod , ref_diff , cod_diff &
+            , out % ems, out % dEms_dcps , out % dEms_dcod )
          
          trn_ems_cld_2x2 = data_loc%cld_trn_ems (pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)        
-         call interpolate_2d ( trn_ems_cld_2x2     , wgt_cps , wgt_cod , ref_diff , cod_diff , out % trn_ems    , out % dtrnEms_dcps      , out % dtrnEms_dcod ) 
+         call interpolate_2d ( trn_ems_cld_2x2, wgt_cps , wgt_cod , ref_diff , cod_diff &
+            , out % trn_ems, out % dtrnEms_dcps, out % dtrnEms_dcod ) 
          
       end if  
       
       cod_log10_saved = cod_log10
    end subroutine lut__get_data
+   ! ----------------------------------------------------------------
+   !
+   ! ----------------------------------------------------------------
+   subroutine lut_data__thick_cloud_rfl ( self , idx_chn , idx_phase, rfl, ems)
+      class ( lut_type ) , target :: self
+      integer , intent(in) :: idx_chn
+      integer , intent(in) :: idx_phase
+      
+      real, intent(out) :: rfl(9)
+      real, intent(out) :: ems(9)
+      
+      type (lut_data_type), pointer :: data_loc => null()
+      
+      data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
+      
+      rfl = data_loc%cld_refl( :,29,self%pos_sol,self%pos_sat,self%pos_azi)
+      if ( data_loc % has_ems ) then
+         ems = data_loc%cld_ems (:,29,self%pos_sat)
+      end if
+   
+   
+   end subroutine lut_data__thick_cloud_rfl
+   
    
    ! ----------------------------------------------------------------
    !

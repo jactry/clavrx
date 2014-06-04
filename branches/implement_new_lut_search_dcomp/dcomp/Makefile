@@ -59,25 +59,12 @@ dcomp_data_pool_mod.o \
 view2d.o  \
 file_tools.o
 
-OBJS_TEST_ARRAY = test_array.o \
-dcomp_forward_mod.o \
-dcomp_tools.o \
-M_kracken.o \
-dcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o \
-dcomp_array.o \
-dcomp_interface_types_mod.o \
-prntutil.o \
-dcomp_data_pool_mod.o \
-view2d.o  \
-file_tools.o
+
 
 
 OBJS_TEST = test_forward_computation.o \
 dcomp_forward_mod.o \
 dcomp_tools.o \
-hdf_dcomp_awg.o \
 dcomp_mod.o \
 get_planck_radiance_39um.o \
 get_rad_refl_factor.o \
@@ -100,10 +87,7 @@ test: $(OBJS_TEST)
 test_full: $(OBJS_FULL)
 	@echo 'test'
 	$(fc) ${fflags}  $(FFLAGS)    -o "test_full" $(OBJS_FULL)  ${hdf5libs} ${hdflibs}   $(COMOBJ) $(LFLAGS)
-   
-test_array: $(OBJS_TEST_ARRAY)
-	@echo 'test'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test_array" $(OBJS_TEST_ARRAY)  ${hdf5libs} ${hdflibs}   $(COMOBJ) $(LFLAGS)   
+     
 	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'test lut'
@@ -122,7 +106,6 @@ dcomp.o: dcomp.f90  dcomp_mod.o get_planck_radiance_39um.o
 test_full.o: test_full.f90 dcomp_mod.o get_planck_radiance_39um.o
 dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o dcomp_data_pool_mod.o
 dcomp_tools.o: dcomp_tools.f90
-hdf_dcomp_awg.o: hdf_dcomp_awg.f90
 test_forward_computation.o:test_forward_computation.f90 dcomp_forward_mod.o
 M_kracken.o:M_kracken.f90
 dcomp_mod.o:dcomp_mod.f90 dcomp_forward_mod.o dcomp_tools.o get_rad_refl_factor.o 

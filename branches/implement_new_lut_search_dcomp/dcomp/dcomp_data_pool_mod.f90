@@ -42,6 +42,7 @@ module dcomp_data_pool_mod
       contains
       procedure :: read_hdf => lut_data__read_hdf
       procedure :: alloc => lut_data__alloc
+      procedure :: dealloc => lut_data__dealloc
       
    end type lut_data_type
    
@@ -86,6 +87,7 @@ module dcomp_data_pool_mod
       procedure :: thick_cloud_rfl => lut_data__thick_cloud_rfl
       procedure :: init_dims => lut__init_dims
       procedure , private :: set_filename => lut__set_filename
+      procedure :: clear_lut_memory => lut__clear_lut_memory
       
    end type lut_type
    
@@ -136,10 +138,12 @@ contains
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
       integer :: n_channels = 43
+      character ( len =200) :: sensor_identifier
       
       ! mapping sensor channel emis yes/no
       
-      
+      sensor_identifier = trim(self % lut_path) & 
+                           & //  trim ( self % sensor )
      
 	   sensor_block: select case ( trim(self % sensor))
 	   case ('Meteosat-8','Meteosat-9','Meteosat-10') sensor_block
@@ -186,6 +190,8 @@ contains
 			chan_string(6) = '6'
 			chan_string(7) = '7'
 			chan_string(20) = '20'
+         sensor_identifier = trim(self % lut_path) //'MODIS' 
+                          
          
       case('GOES-16')  sensor_block
 		   has_sol_table(1) = .true.
@@ -240,27 +246,29 @@ contains
 			has_ems_table(20) = .true.
 			chan_string(1) = '1'
 			chan_string(20) = '5'  	
-         
-         
-         
+                
       case default
-          print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
+          print*,'add sensor in dcomp_data_pool_mod.f90 routine populate...', trim(self%sensor)
           stop
 	  
 	   end select sensor_block
       
+      
+      
+     
+      
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
          loop_phase: do i_phase = 1 , 2
-            self%channel(i_chn)%phase(i_phase)%file = trim(self % lut_path) & 
-                       & //  trim ( self % sensor ) &
+            self%channel(i_chn)%phase(i_phase)%file = trim(sensor_identifier) & 
+                       
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ref_lut_'//phase_string(i_phase)//'_cld.hdf'
                    
                   
             if ( has_ems_table(i_chn) ) then  
-               self%channel(i_chn)%phase(i_phase)%file_ems = trim(self % lut_path) & 
-                       & //  trim ( self % sensor ) &
+               self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
+                     
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ems_lut_'//phase_string(i_phase)//'_cld.hdf'
             end if         
@@ -283,10 +291,12 @@ contains
       character ( len = * ) , intent(in), optional :: ancil_path
       character ( len =300) :: file
       character ( len =20) :: host
+      
+      !
       if ( self % sensor == sensor ) then
-        
          return
       end if
+      
       call getenv("HOST",host)
       print*,'initialized ', sensor
       
@@ -296,6 +306,8 @@ contains
       self % sensor = trim(sensor)
       
       call self % set_filename
+      ! - clear memory for new sensor   
+      call self % clear_lut_memory
       call self % init_dims( )
       
    end subroutine lut__initialize
@@ -323,6 +335,29 @@ contains
                   
    
    end subroutine lut__set_angles
+   
+   ! --------------------------------------------------------------------------
+   !
+   !   clears memory of LUT_data object
+   !   
+   ! --------------------------------------------------------------------------   
+   subroutine lut__clear_lut_memory ( self )
+   class ( lut_type ) , target :: self
+   integer :: idx_phase , idx_chn
+   type (lut_data_type), pointer :: data_loc => null()
+   
+   
+   do idx_phase =1, NUM_PHASE
+      do idx_chn =1, NUM_CHN
+         data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
+         call data_loc % dealloc()
+         
+      end do
+   end do   
+   
+   
+   
+   end subroutine lut__clear_lut_memory
    
    !  --------------------------------------------------------------------------
    !   PURPOSE : return data from LUT
@@ -375,7 +410,7 @@ contains
        
        data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
       
-      ! test if this channel is available if not read it from hdf file
+      ! test if this channel is available if not read it from hdf file     
       if ( .not. data_loc % is_set ) then 
          call data_loc % read_hdf
          data_loc % is_set  = .true.
@@ -491,12 +526,10 @@ contains
       
       ps => sds(4); psd=>ps%data
       
-      ! have to do this for memory reasons -- stupid
+      ! reconstruct 5d array
       do i = 1 , 45 
-         
          first = (i -1 ) *  9 * 29 * 45 * 45 + 1
          last = first + (9 * 29 * 45 * 45) - 1
-         
          self % cld_refl(:,:,:,:,i) = reshape( psd%r4values(first : last  ),[9,29,45,45])
       end do 
       
@@ -532,17 +565,32 @@ contains
       allocate ( self % cld_ems (9,29,45))
       allocate ( self % cld_trn_ems (9,29,45))
    end subroutine lut_data__alloc
+   
+   ! ----------------------------------------------------------------
+   !
+   ! ----------------------------------------------------------------
+   subroutine lut_data__dealloc ( self)
+      class ( lut_data_type ) :: self
+      
+      if ( allocated (self % cld_alb) ) deallocate ( self % cld_alb )   
+      if ( allocated (self % cld_trn) ) deallocate ( self % cld_trn )
+      if ( allocated (self % cld_sph_alb) ) deallocate ( self % cld_sph_alb )
+      if ( allocated (self % cld_refl) ) deallocate ( self % cld_refl )
+      if ( allocated (self % cld_ems) ) deallocate ( self % cld_ems )
+      if ( allocated (self % cld_trn_ems) ) deallocate ( self % cld_trn_ems )
+      
+      self % is_set = .false.
+      
+   end subroutine lut_data__dealloc   
+   
+   
     
    ! ----------------------------------------------------------------
    !
    ! ----------------------------------------------------------------
-   subroutine lut__init_dims( self)
-   
-     
-         
+   subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
       character ( len = 300 )  :: hdf_file
-      
       integer :: nsds                     
 
       character(len=MAXNCNAM), dimension(:), allocatable :: &
@@ -576,8 +624,8 @@ contains
       self %  dims% n_cod = 29
       self %  dims% n_cps = 9
       
-      call  self % dims% alloc 
-      
+      call  self % dims % dealloc
+      call  self % dims % alloc 
       
       allocate ( sds_name ( 5)) 
       sds_name =['sensor_zenith_angle'  &
@@ -632,11 +680,11 @@ contains
    subroutine lut_dim__dealloc ( self )
       class ( lut_dim_type) :: self
       
-      deallocate ( self % sat_zen  )
-      deallocate ( self % sol_zen   )
-      deallocate ( self % rel_azi  )
-      deallocate ( self % cod )
-      deallocate ( self % cps  )
+      if ( allocated (self % sat_zen) ) deallocate ( self % sat_zen  )
+      if ( allocated (self % sol_zen) ) deallocate ( self % sol_zen   )
+      if ( allocated (self % rel_azi) ) deallocate ( self % rel_azi  )
+      if ( allocated (self % cod ) ) deallocate ( self % cod )
+      if ( allocated (self % cps ) ) deallocate ( self % cps  )
    end subroutine lut_dim__dealloc
    
    ! ----------------------------------------------------------------

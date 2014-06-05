@@ -130,7 +130,7 @@ contains
       integer :: CHN_VIS, CHN_NIR
       
       interface
-         subroutine dcomp_array (a , b , debug_mode_user)
+         subroutine dcomp_array_loop (a , b , debug_mode_user)
             import dcomp_in_type
             import dcomp_out_type
             type (dcomp_in_type) , intent(in) :: a
@@ -293,7 +293,7 @@ contains
       
       ! === THE MAIN CALL of DCOMP ===          
       debug_mode = 1
-      call dcomp_array ( dcomp_input , dcomp_output , debug_mode_user = debug_mode)
+      call dcomp_array_loop ( dcomp_input , dcomp_output , debug_mode_user = debug_mode)
       
       ! === DEALLOCATION
       call deallocate_dcompin ( dcomp_input )

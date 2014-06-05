@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !
 !  HISTORY: 06/05/2014: changed filename for better naming convebtion
 !
@@ -582,7 +582,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
 	  
    deallocate ( air_mass_array ) 	
    
-   output % version = '$Id:$'	  
+   output % version = '$Id$'	  
 
 end subroutine dcomp_array_loop
 

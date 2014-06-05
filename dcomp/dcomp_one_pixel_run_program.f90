@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !
 !   HISTORY: This file and program name was dcomp.f90
 !           Changed to dcomp_run_pixel

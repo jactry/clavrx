@@ -1,4 +1,4 @@
-# $Header:$
+# $Header$
 
 
 RM := rm -rf

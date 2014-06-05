@@ -1,4 +1,4 @@
-!  $Header: https://svn.ssec.wisc.edu/repos/cloud_team_dcomp/branches/snow_developments/file_tools.f90 73 2014-02-04 23:24:30Z awalther $
+!  $Header$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

@@ -1,5 +1,5 @@
 
-# $Header: /cvsroot/cloud_team_dcomp/config.mk_example,v 1.1 2013/11/05 20:19:53 awalther Exp $
+# $Header$
 
 # This file was generated on Wed Oct 19 20:37:27 2011 by heidinger with the following command-line arguments: --with-ifort -hdflib=/opt/hdf-4.2.6-intel/lib/.
 # System info: Linux tiki.ssec.wisc.edu 2.6.32-71.el6.x86_64 #1 SMP Wed Sep 1 01:33:01 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux

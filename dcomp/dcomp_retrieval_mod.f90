@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !
 !  HISTORY: This files name was dcomp_mod.f90
 !           changed filename for consistent convention

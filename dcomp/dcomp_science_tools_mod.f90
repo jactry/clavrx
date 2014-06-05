@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 
 module dcomp_science_tools_mod
 

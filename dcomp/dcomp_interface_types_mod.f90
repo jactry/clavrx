@@ -1,4 +1,4 @@
-! $Id: dcomp_interface_types_mod.f90 14 2014-01-22 15:31:39Z awalther $
+! $Id$
 module dcomp_interface_TYPEs_mod
 
 ! --  Module works as interface between CLAVR-x and DCOMP

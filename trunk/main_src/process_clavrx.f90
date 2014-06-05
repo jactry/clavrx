@@ -225,6 +225,8 @@
    TYPE (AREA_STRUCT) :: AREAstr
    TYPE (GVAR_NAV)    :: NAVstr
    
+   
+   
   
    !------------- VIIRS variables --------------
    real(kind=real4),    dimension(:,:), pointer :: lunar_ref
@@ -894,6 +896,7 @@
                   where ( Lunrelaz > 180. ) 
                      Lunrelaz = 360.0 - Lunrelaz  
                   end where
+       
             end if
          
          
@@ -1410,7 +1413,9 @@
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (viirs_flag == sym%yes .and. chan_on_flag_default(42) == sym % yes) then
-                  call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
+                  if ( count (ch(42)%Ref_Lunar_Toa > 0) > 0 ) then
+                     call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
+                  end if   
                end if   
           
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()

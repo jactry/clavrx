@@ -1,4 +1,4 @@
-# $Id: Makefile 45 2014-01-30 17:55:23Z awalther $
+# $Header:$
 
 
 RM := rm -rf
@@ -11,103 +11,105 @@ RTM_MOD = /home/awalther/SOFTWARE/RTM/RTTOV/mod
 RTM_LIB = /home/awalther/SOFTWARE/RTM/RTTOV/lib
 RTMODEL = rttov10.2.0
 
+HDFDIR = $(HOME)/lib/hdf4/
+HDFINC = $(HDFDIR)/include
+HDFLIB = $(HDFDIR)/lib
+ICAINC = hdf4/include
+ICALIB = hdf4/lib
+ICASRC = hdf4/src
+CFLAGS = -w -I$(ICAINC) -I$(HDFINC)
+LFLAGS = -L$(ICALIB) -L$(HDFLIB) -licaf90hdf -lmfhdf -ldf -ljpeg -lz -lm
+COMSRC = hdf4/src/prntutil.f90
+COMOBJ = prntutil.o
 NCDF_LIB = /usr/local/lib
+
+
+TEST_PATH = ./tests/
+SUB_PATH = ./subtools/
+PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
+	
+
+
 #Compilation rule for f90 files
 .f90.o:
-	$(fc) -c ${FFLAGS} ${fflags} ${hdf5libs} ${hdflibs}  $<
+	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${hdflibs} $(COMSRC)  $<
 	
 	
-OBJS = dcomp.o \
+OBJS = dcomp_one_pixel_run_program.o \
+dcomp_retrieval_mod.o \
+dcomp_array_loop_sub.o \
 dcomp_forward_mod.o \
-dcomp_tools.o \
+dcomp_math_tools_mod.o \
+dcomp_science_tools_mod.o \
 M_kracken.o \
-dcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o \
-dcomp_lut_mod.o \
-dcomp_array.o \
 dcomp_interface_types_mod.o \
-view2d.o
-
-
-OBJS_TEST2 = test_dcomp.o \
-dcomp_forward_mod.o \
-dcomp_tools.o \
-M_kracken.o \
-dcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o \
 dcomp_lut_mod.o \
-dcomp_array.o \
-dcomp_interface_types_mod.o
-
-OBJS_TEST = test_forward_computation.o \
-dcomp_forward_mod.o \
-dcomp_tools.o \
-hdf_dcomp_awg.o \
-dcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o
-
-OBJS_TEST_NEW = test_new_fwd.o \
-dcomp_fwd_mod.o \
-dcomp_lut_mod.o \
-dcomp_tools.o  \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o 
+view2d.o \
+file_tools.o 
 
 
-OBJS_TEST_LUT = test_lut_mod.o \
-dcomp_lut_mod.o
 
-all: dcomp
 
-test: $(OBJS_TEST)
-	@echo 'test'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test_fwd" $(OBJS_TEST)  ${hdf5libs} ${hdflibs} 
-   
-test2: $(OBJS_TEST2)
-	@echo 'test'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test2" $(OBJS_TEST2)  ${hdf5libs} ${hdflibs}   
+OBJS_TEST_LUT = dcomp_lut_mod.o \
+test_dcomp_lut.o \
+dcomp_math_tools_mod.o \
+file_tools.o
 
-test_new_fwd: $(OBJS_TEST_NEW)
-	@echo 'fwd_test'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test_fwd_new" $(OBJS_TEST_NEW)  ${hdf5libs} ${hdflibs}
-	
+.PHONY: clean hdf4
+
+all: hdf4 dcomp_one_pixel_run 
+
+hdf4:
+	@echo 'Building target for hdf4: $@'
+	make -C $(ICASRC)	
+	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'test lut'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs} 
+	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  $(COMOBJ) $(LFLAGS)
+	
 
-dcomp: $(OBJS)
+
+dcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Intel(R) Fortran Linker'
-	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp" $(OBJS)  ${hdf5libs} ${hdflibs} 
+	
+	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS)  ${hdf5libs} ${hdflibs} $(COMOBJ) $(LFLAGS) $(PATH_FLAGS)
+   
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
-dcomp.o: dcomp.f90 dcomp_mod.o get_planck_radiance_39um.o
-test_dcomp.o: test_dcomp.f90 dcomp_mod.o get_planck_radiance_39um.o
-dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o dcomp_lut_mod.o
-dcomp_tools.o: dcomp_tools.f90
-hdf_dcomp_awg.o: hdf_dcomp_awg.f90
-test_forward_computation.o:test_forward_computation.f90 dcomp_forward_mod.o
-M_kracken.o:M_kracken.f90
-dcomp_mod.o:dcomp_mod.f90 dcomp_forward_mod.o dcomp_tools.o get_rad_refl_factor.o 
-get_planck_radiance_39um.o:get_planck_radiance_39um.f90
-get_rad_refl_factor.o:get_rad_refl_factor.f90
-test_new_fwd.o:test_new_fwd.f90  dcomp_fwd_mod.o
-dcomp_fwd_mod.o:dcomp_fwd_mod.f90 dcomp_lut_mod.o dcomp_tools.o get_planck_radiance_39um.o get_rad_refl_factor.o 
-dcomp_lut_mod.o:dcomp_lut_mod.f90 
-test_lut_mod.o:test_lut_mod.f90 dcomp_lut_mod.o
-dcomp_array.o:dcomp_array.f90 dcomp_mod.o dcomp_interface_types_mod.o view2d.o
+dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
+dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
+dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dcomp_interface_types_mod.o view2d.o
+dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_science_tools_mod.o   dcomp_lut_mod.o
+dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
+dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o
+dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90
-view2d.o:view2d.f90
+
+M_kracken.o:$(SUB_PATH)/M_kracken.f90
+	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90
+
+
+test_dcomp_lut.o:$(TEST_PATH)/test_dcomp_lut.f90 dcomp_lut_mod.o
+	$(fc) -c ${fflags} ${hdflibs} $(COMOBJ) $(LFLAGS) $(TEST_PATH)/test_dcomp_lut.f90
+
+view2d.o:$(SUB_PATH)/view2d.f90
+	$(fc) -c ${fflags}  $(SUB_PATH)/view2d.f90
+   
+   
+file_tools.o:file_tools.f90
+
+
 
 clean:
 	rm -f *.o *.mod
-	rm -f test2 test_fwd test_fwd_new test_lut dcomp   
+	rm -f dcomp_one_pixel_run
+	rm -f *.a
+	rm -f test_lut
+	rm -rf hdf4/lib
 	-@echo ' '

@@ -1,14 +1,18 @@
-! $Id: dcomp.f90 5 2014-01-21 23:42:33Z awalther $
+! $Id:$
 !
+!   HISTORY: This file and program name was dcomp.f90
+!           Changed to dcomp_run_pixel
 !
-program dcomp
+!   PURPOSE :: this is a onepixel test program for DCOMP
+!
+program dcomp_one_pixel_run
 
-   use dcomp_tools, only: &
+   use dcomp_math_tools_mod, only: &
       findinv
 	  
    use M_kracken
    
-   use dcomp_mod, only: &
+   use dcomp_retrieval_mod, only: &
       dcomp_algorithm &
       , dcomp_output_structure	
      
@@ -135,4 +139,4 @@ program dcomp
 	
  ! call dcomp_array()
     
-end program dcomp
+end program dcomp_one_pixel_run

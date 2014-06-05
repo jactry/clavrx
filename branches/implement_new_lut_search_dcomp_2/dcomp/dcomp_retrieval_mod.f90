@@ -1,5 +1,9 @@
-! $Id: dcomp_mod.f90 77 2014-02-13 18:55:48Z awalther $
-module dcomp_mod
+! $Id:$
+!
+!  HISTORY: This files name was dcomp_mod.f90
+!           changed filename for consistent convention
+!
+module dcomp_retrieval_mod
 
    private
    public :: dcomp_algorithm
@@ -43,10 +47,13 @@ contains
          , debug_in ) 
    
                      
-      use dcomp_tools, only: &
+      use dcomp_math_tools_mod, only: &
          findinv , debug_mode
       
-      use dcomp_forward_mod
+      use dcomp_forward_mod, only: &
+         pixel_vec &
+         , dcomp_forward_computation &
+         , thick_cloud_cps
       
       implicit none 
       
@@ -100,6 +107,7 @@ contains
       real :: max_step_size
       integer , dimension(2) :: channels
       real :: cld_albedo_vis
+      character ( len=1024) :: dcomp_ancil_path
        
       !     --   executable
       
@@ -209,7 +217,7 @@ contains
             , kernel &
             , rad_abv_cld &
             , rad_clear_toc &
-            , lut_path = ancil_path   ) 
+            , lut_path = dcomp_ancil_path   ) 
  
          ! - define forward model vector
          ! - first dimension : the two channels
@@ -310,7 +318,7 @@ contains
             end if
             
             if ( state_vec(1) > 2.2  ) then
-             state_vec(2) = thick_cloud_cps ( obs_vec , channels, pxl, dcomp_mode ) 
+             state_vec(2) = thick_cloud_cps ( obs_vec(2) , channels(2), pxl, dcomp_mode ) 
              output_str % statusOK = .true.
              output_str % cod = 10**2.2
              output_str % codu = 1.0
@@ -327,7 +335,7 @@ contains
          end if
          
          if ( state_vec(1) > 2.0 .and. iteration_idx > 6 ) then
-            state_vec(2) = thick_cloud_cps ( obs_vec , channels, pxl ,dcomp_mode ) 
+            state_vec(2) = thick_cloud_cps ( obs_vec(2) , channels(2), pxl, dcomp_mode )  
             output_str % statusOK = .true.
             output_str % cod = 10**2.2
             output_str % codu = 1.0
@@ -343,4 +351,4 @@ contains
       
    end subroutine dcomp_algorithm
    
-end module dcomp_mod
+end module dcomp_retrieval_mod

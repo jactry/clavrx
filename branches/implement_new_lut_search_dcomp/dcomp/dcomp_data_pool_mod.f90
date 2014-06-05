@@ -1,5 +1,8 @@
-! $Id: dcomp_data_pool_mod.f90 93 2014-06-03 17:54:39Z awalther $
-module dcomp_data_pool_mod
+! $Id:$
+!
+! HISTORY: 06/05/2014: change of filename 
+!
+module dcomp_lut_mod
    
    use dcomp_tools, only:&
       dcomp_interpolation_weight &
@@ -705,4 +708,4 @@ contains
    end subroutine lut__getProperty
    
 
-end module  dcomp_data_pool_mod
+end module  dcomp_lut_mod

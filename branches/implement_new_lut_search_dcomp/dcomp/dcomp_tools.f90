@@ -1,5 +1,8 @@
-! $Id: dcomp_tools.f90 73 2014-02-04 23:24:30Z awalther $
-module dcomp_tools
+! $Id:$
+!
+!  HISTORY: 06/05/2014: change of filename 
+!
+module dcomp_math_tools_mod
 
    integer , public :: debug_mode
 contains
@@ -9,7 +12,7 @@ contains
    !Reference : Algorithm has been well explained in:
    !http://math.uww.edu/~mcfarlat/inverse.htm           
    !http://www.tutor.ms.unimelb.edu.au/matrix/matrix_inverse.html
-   SUBROUTINE FINDInv(matrix, inverse, n, errorflag)
+   SUBROUTINE findinv(matrix, inverse, n, errorflag)
 	   IMPLICIT NONE
 	   !Declarations
 	   INTEGER, INTENT(IN) :: n
@@ -220,4 +223,4 @@ contains
    end subroutine interpolate_2d  
 
 
-end module dcomp_tools
+end module dcomp_math_tools_mod

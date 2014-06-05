@@ -1,4 +1,12 @@
 ! $Id: get_planck_radiance_39um.f90 90 2014-03-31 19:33:53Z awalther $
+
+module dcomp_science_tools_mod.f90
+
+
+
+contains
+
+
 function get_planck_radiance_39um ( tmp , sensor ) result ( rad )
    implicit none
    real, intent ( in) :: tmp

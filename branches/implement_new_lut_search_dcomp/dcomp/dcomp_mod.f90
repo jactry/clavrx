@@ -1,5 +1,9 @@
-! $Id: dcomp_mod.f90 77 2014-02-13 18:55:48Z awalther $
-module dcomp_mod
+! $Id:$
+!
+!  HISTORY: This files name was dcomp_mod.f90
+!           changed filename for consistent convention
+!
+module dcomp_retrieval_mod
 
    private
    public :: dcomp_algorithm
@@ -347,4 +351,4 @@ contains
       
    end subroutine dcomp_algorithm
    
-end module dcomp_mod
+end module dcomp_retrieval_mod

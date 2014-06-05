@@ -3,7 +3,7 @@
 !  HISTORY: 06/05/2014: changed filename for better naming convebtion
 !
 !
-subroutine dcomp_array_loop_sub ( input, output , debug_mode_user)
+subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
    use dcomp_retrieval_mod
    
@@ -582,9 +582,9 @@ subroutine dcomp_array_loop_sub ( input, output , debug_mode_user)
 	  
    deallocate ( air_mass_array ) 	
    
-   output % version = '$Id: dcomp_array.f90 85 2014-02-25 17:59:58Z awalther $'	  
+   output % version = '$Id:$'	  
 
-end subroutine dcomp_array_loop_sub
+end subroutine dcomp_array_loop
 
 
 

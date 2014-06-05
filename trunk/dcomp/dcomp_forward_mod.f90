@@ -1,4 +1,4 @@
-! $Id: dcomp_forward_mod.f90 77 2014-02-13 18:55:48Z awalther $
+! $Id$
 module dcomp_forward_mod
 
    use dcomp_lut_mod , only : &

@@ -1,10 +1,7 @@
-# This file was generated on Thu May 23 16:23:29 2013 by awalther with the following command-line arguments: -with-ifort.
-# System info: Darwin luna.ssec.wisc.edu 12.3.0 Darwin Kernel Version 12.3.0: Sun Jan  6 22:37:10 PST 2013; root:xnu-2050.22.13~1/RELEASE_X86_64 x86_64
-
-fc = ifort -i-dynamic -mcmodel medium -shared-intel
-fflags =   -O0 -g -m64 -warn unused 
-
-
-hdflibs = -L/opt/hdf4/4.2.7-ifort/lib/ -lmfhdf -ldf -ljpeg -lz
-hdf5libs = -I/opt/hdf5/1.8.9-ifort/include/ -L/opt/hdf5/1.8.9-ifort/lib/
-hdf5links = -lhdf5_fortran -lhdf5hl_fortran
+# This file was generated on Thu Jun  5 12:17:00 2014 by awalther with the following command-line arguments: -hdf5root=/Users/awalther/lib/hdf5/ -with-ifort -hdflib=/Users/awalther/lib/hdf4//lib.
+# System info: Darwin luna.ssec.wisc.edu 13.2.0 Darwin Kernel Version 13.2.0: Thu Apr 17 23:03:13 PDT 2014; root:xnu-2422.100.13~1/RELEASE_X86_64 x86_64
+fc = ifort
+fflags = -O2 -assume byterecl
+hdflibs = -L/Users/awalther/lib/hdf4//lib -lmfhdf -ldf -ljpeg -lz
+hdf5libs = -I/Users/awalther/lib/hdf5/include/ -L/Users/awalther/lib/hdf5/lib/
+hdf5links = -lhdf5_fortran -lhdf5 -lz

@@ -255,11 +255,7 @@ contains
           stop
 	  
 	   end select sensor_block
-      
-      
-      
      
-      
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
          loop_phase: do i_phase = 1 , 2
@@ -295,7 +291,7 @@ contains
       character ( len =300) :: file
       character ( len =20) :: host
       
-      !
+      ! - check if sensor is already initialized
       if ( self % sensor == sensor ) then
          return
       end if
@@ -303,11 +299,13 @@ contains
       call getenv("HOST",host)
       print*,'initialized ', sensor
       
+      ! - some lut paths
       self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
 		if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
       
+      ! - set filenames
       call self % set_filename
       ! - clear memory for new sensor   
       call self % clear_lut_memory
@@ -497,9 +495,8 @@ contains
       character(len =MAXNCNAM), allocatable :: sds_name(:)
       type(hdf_sds) , allocatable, target :: sds(:)
       character(len =MAXNCNAM), allocatable :: sds_name_ems(:)
-      type(hdf_sds) , allocatable, target :: sds_ems(:)
-      type(hdf_sds) , pointer :: ps 
-      type(hdf_data), pointer :: psd
+      type(hdf_sds) , pointer :: ps => null()
+      type(hdf_data), pointer :: psd => null()
       integer , parameter :: N_PARAMS = 4
       integer , parameter :: N_PARAMS_EMS = 2
       integer :: i , last , first
@@ -535,7 +532,7 @@ contains
          last = first + (9 * 29 * 45 * 45) - 1
          self % cld_refl(:,:,:,:,i) = reshape( psd%r4values(first : last  ),[9,29,45,45])
       end do 
-      
+       
       if ( self % has_ems ) then
          allocate ( sds_name_ems ( N_PARAMS_EMS) )
          sds_name_ems = [ 'cloud_emissivity' , 'cloud_transmission' ]
@@ -551,6 +548,8 @@ contains
          
       end if
       
+      ps => null()
+      psd => null()
       
      
    end subroutine lut_data__read_hdf

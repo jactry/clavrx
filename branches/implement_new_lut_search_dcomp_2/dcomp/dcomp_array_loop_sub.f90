@@ -1,7 +1,12 @@
-! $Id: dcomp_array.f90 85 2014-02-25 17:59:58Z awalther $
-subroutine dcomp_array ( input, output , debug_mode_user)
+! $Id:$
+!
+!  HISTORY: 06/05/2014: changed filename for better naming convebtion
+!
+!
+subroutine dcomp_array_loop_sub ( input, output , debug_mode_user)
 
-   use dcomp_mod
+   use dcomp_retrieval_mod
+   
    use dcomp_interface_types_mod, only: &
       dcomp_in_type &
       , dcomp_out_type &
@@ -579,7 +584,7 @@ subroutine dcomp_array ( input, output , debug_mode_user)
    
    output % version = '$Id: dcomp_array.f90 85 2014-02-25 17:59:58Z awalther $'	  
 
-end subroutine dcomp_array
+end subroutine dcomp_array_loop_sub
 
 
 

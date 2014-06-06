@@ -146,21 +146,21 @@ contains
 			   air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
 			   trans_abv_cld = air_trans_ac(i_channel) ** air_mass_sat
                                    
-            fm_nir_terr =  rad_to_refl * (rad_abv_cld * lut_data % ems &
+            fm_nir_terr =   (rad_abv_cld * lut_data % ems &
                   + trans_abv_cld * lut_data %  ems * planck_rad &
 				  + lut_data % trn_ems * rad_clear_toc )
             
-            kernel_nir_terr_cod = rad_to_refl * (rad_abv_cld * lut_data %  Dems_Dcod & 
+            kernel_nir_terr_cod =  (rad_abv_cld * lut_data %  Dems_Dcod & 
                + trans_abv_cld * Planck_Rad * lut_data % Dems_Dcod  &
                + rad_clear_toc *lut_data % Dtrnems_Dcod)
              
-            kernel_nir_terr_cps  =  rad_to_refl * (rad_abv_cld * lut_data % Dems_Dcps & 
+            kernel_nir_terr_cps  =   (rad_abv_cld * lut_data % Dems_Dcps & 
                 + trans_abv_cld * Planck_Rad * lut_data % Dems_Dcps  &
                 + rad_clear_toc  *lut_data %Dtrnems_Dcps )
                        
-            fm_vec(i_channel) = fm_vec(i_channel) + fm_nir_terr
-            kernel ( i_channel, 1) = kernel ( i_channel , 1)   + kernel_nir_terr_cod 
-            kernel ( i_channel, 2) = kernel ( i_channel , 2 )  + kernel_nir_terr_cps 
+            fm_vec(i_channel) = fm_nir_terr
+            kernel ( i_channel, 1) = kernel_nir_terr_cod 
+            kernel ( i_channel, 2) = kernel_nir_terr_cps 
             
          end if       
 	   end do

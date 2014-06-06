@@ -21,35 +21,17 @@ NCDF_LIB = /usr/local/lib
 	$(fc) -c ${FFLAGS} ${fflags} ${hdf5libs} ${hdflibs}  $<
 	
 	
-OBJS = nlcomp.o \
+OBJS = nlcomp_one_pixel_run_program.o \
+nlcomp_retrieval_mod.o \
+nlcomp_array_llop_sub.o \
 nlcomp_forward_mod.o \
-dcomp_tools.o \
+dcomp_math_tools_mod.o \
+dcomp_science_tools_mod.o \
 M_kracken.o \
-nlcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o \
 nlcomp_lut_mod.o \
-nlcomp_array.o \
 nlcomp_interface_def_mod.o
 
-OBJS_TEST = test_forward_computation.o \
-nlcomp_forward_mod.o \
-dcomp_tools.o \
-hdf_nlcomp_awg.o \
-nlcomp_mod.o \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o
 
-OBJS_TEST_NEW = test_new_fwd.o \
-nlcomp_fwd_mod.o \
-nlcomp_lut_mod.o \
-nlcomp_tools.o  \
-get_planck_radiance_39um.o \
-get_rad_refl_factor.o 
-
-
-OBJS_TEST_LUT = test_lut_mod.o \
-nlcomp_lut_mod.o
 
 all: nlcomp
 
@@ -72,7 +54,7 @@ nlcomp: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
-nlcomp.o: nlcomp.f90  nlcomp_mod.o get_planck_radiance_39um.o nlcomp_interface_def_mod.o
+nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_mod.o get_planck_radiance_39um.o nlcomp_interface_def_mod.o
 nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_tools.o  M_kracken.o get_rad_refl_factor.o nlcomp_lut_mod.o
 dcomp_tools.o: dcomp_tools.f90
 hdf_dcomp_awg.o: hdf_dcomp_awg.f90

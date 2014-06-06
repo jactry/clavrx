@@ -492,9 +492,6 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
    real(kind=real4),save :: Segment_Time_Point_Seconds_Temp = 0
    real(kind=real4) :: Start_Time_Point_Hours_Temp
    real(kind=real4) :: End_Time_Point_Hours_Temp
-   
-   real , save :: time1,time2,time3,time4,time5,time7,time8
-   real , save :: time12, time23, time34, time45,time78
 
    !--------------------------------------------------------------------------
    ! Compute Gamma_Trans_Factor for radiance bias
@@ -516,51 +513,51 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
 
    !--- loop over pixels in segment
    line_loop: do Line_Idx = Line_Idx_Min, Num_Lines + Line_Idx_Min - 1
-      element_loop: do Elem_Idx = 1, Num_Pix
+     element_loop: do Elem_Idx = 1, Num_Pix
                                                                        
-         !--- check for bad scans
-         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-            cycle
-         endif
+      !--- check for bad scans
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+        cycle
+      endif
 
-         !--- check for space views
-         if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-            cycle
-         endif
+      !--- check for space views
+      if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+        cycle
+      endif
 
-         !--- compute viewing zenith bin for Rtm calculation
-         Zen_Idx_Rtm(Elem_Idx,Line_Idx) =  &
+     !--- compute viewing zenith bin for Rtm calculation
+     Zen_Idx_Rtm(Elem_Idx,Line_Idx) =  &
               max(1,min(Rtm_Nvzen,ceiling(Coszen(Elem_Idx,Line_Idx)/Rtm_Vza_Binsize)))
 
-         !--- store cell and angular indices
-         Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
-         Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
-         Lon_Idx_x = I_Nwp_X(Elem_Idx,Line_Idx)
-         Lat_Idx_x = J_Nwp_X(Elem_Idx,Line_Idx)
-         Lon_x = Lon_Nwp_Fac(Elem_Idx,Line_Idx)
-         Lat_x = Lat_Nwp_Fac(Elem_Idx,Line_Idx)
-         Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+     !--- store cell and angular indices
+     Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Lon_Idx_x = I_Nwp_X(Elem_Idx,Line_Idx)
+     Lat_Idx_x = J_Nwp_X(Elem_Idx,Line_Idx)
+     Lon_x = Lon_Nwp_Fac(Elem_Idx,Line_Idx)
+     Lat_x = Lat_Nwp_Fac(Elem_Idx,Line_Idx)
+     Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
 
 
-         !--- if this is the first time this nwp cell is being processed do the following
-         if (Rtm(Lon_Idx,Lat_Idx)%Flag == 0) then
-            call cpu_time(time1)
-            !--- allocate Rtm arrays
-            call ALLOCATE_RTM_CELL(Lon_Idx,Lat_Idx,Rtm_Nvzen)
+     !--- if this is the first time this nwp cell is being processed do the following
+     if (Rtm(Lon_Idx,Lat_Idx)%Flag == 0) then
 
-            !--- compute mixing ratio profile
-            call COMPUTE_WVMR_PROFILE_NWP(P_Std_Nwp, &
+       !--- allocate Rtm arrays
+       call ALLOCATE_RTM_CELL(Lon_Idx,Lat_Idx,Rtm_Nvzen)
+
+       !--- compute mixing ratio profile
+       call COMPUTE_WVMR_PROFILE_NWP(P_Std_Nwp, &
                                      T_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
                                      Rh_Prof_Nwp(:,Lon_Idx,Lat_Idx), &
                                      Wvmr_Nwp)
 
-            !--- compute tpw profiles
-            call COMPUTE_TPW_PROFILE_NWP(P_Std_Nwp, &
+       !--- compute tpw profiles
+       call COMPUTE_TPW_PROFILE_NWP(P_Std_Nwp, &
                                     Wvmr_Nwp,  &
                                     Tpw_Prof_Nwp(:,Lon_Idx,Lat_Idx))
 
-            !--- convert the atmospheric profiles from nwp to Rtm pressure coords
-            call CONVERT_ATMOS_PROF_NWP_RTM(NLevels_NWP, &
+       !--- convert the atmospheric profiles from nwp to Rtm pressure coords
+       call CONVERT_ATMOS_PROF_NWP_RTM(NLevels_NWP, &
                                        Sfc_Level_Nwp(Lon_Idx,Lat_Idx), &
                                        Tmpair_Nwp(Lon_Idx,Lat_Idx), &
                                        Rhsfc_Nwp(Lon_Idx,Lat_Idx), &
@@ -580,208 +577,199 @@ end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
                                        Wvmr_Std_Rtm, &
                                        Ozmr_Std_Rtm)
 
-            !--- compute tpw profiles
-            call COMPUTE_TPW_PROFILE_NWP(P_Std_Rtm, &
+       !--- compute tpw profiles
+       call COMPUTE_TPW_PROFILE_NWP(P_Std_Rtm, &
                                     Wvmr_Prof_Rtm,  &
                                     Tpw_Prof_Rtm)
 
-            !--- store in Rtm structures
-            Rtm(Lon_Idx,Lat_Idx)%T_Prof = T_Prof_Rtm
-            Rtm(Lon_Idx,Lat_Idx)%Z_Prof = Z_Prof_Rtm
-            Rtm(Lon_Idx,Lat_Idx)%Wvmr_Prof = Wvmr_Prof_Rtm
-            Rtm(Lon_Idx,Lat_Idx)%Ozmr_Prof = Ozmr_Prof_Rtm
-            Rtm(Lon_Idx,Lat_Idx)%Tpw_Prof = Tpw_Prof_Rtm
+       !--- store in Rtm structures
+       Rtm(Lon_Idx,Lat_Idx)%T_Prof = T_Prof_Rtm
+       Rtm(Lon_Idx,Lat_Idx)%Z_Prof = Z_Prof_Rtm
+       Rtm(Lon_Idx,Lat_Idx)%Wvmr_Prof = Wvmr_Prof_Rtm
+       Rtm(Lon_Idx,Lat_Idx)%Ozmr_Prof = Ozmr_Prof_Rtm
+       Rtm(Lon_Idx,Lat_Idx)%Tpw_Prof = Tpw_Prof_Rtm
 
-            !--- find key Levels (sfc, tropo, Inversions) for future processing
-            call FIND_RTM_LEVELS(Lon_Idx,Lat_Idx)
-            call cpu_time ( time2)
-            time12 = time12 + time2-time1
-            print*,time12
-            !--- set flag so not done again
-            Rtm(Lon_Idx,Lat_Idx)%Flag = 1
+       !--- find key Levels (sfc, tropo, Inversions) for future processing
+       call FIND_RTM_LEVELS(Lon_Idx,Lat_Idx)
 
+       !--- set flag so not done again
+       Rtm(Lon_Idx,Lat_Idx)%Flag = 1
+
+     endif
+
+     !--- determine if RTM needs to be called for this pixel, if not do the following
+     if (Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%Flag == 0) then   !check for existing RTM results
+
+        call ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT(Lon_Idx,Lat_Idx,Zen_Idx)
+
+        !--- determine the zenith angle for the RTM
+        Satzen_Mid_Bin = acos((Zen_Idx-1)*Rtm_Vza_Binsize + Rtm_Vza_Binsize/2.0) / DTOR
+
+        !--- store structures into RTM arguments
+        T_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%T_Prof
+        Tpw_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Tpw_Prof
+        Wvmr_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Wvmr_Prof
+        Ozmr_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Ozmr_Prof
+
+        !--------------------------------------------------------------
+        ! Call Sensor Specific Fast IR RTM  
+        !--------------------------------------------------------------
+
+        !--- decide if this can be skipped
+        if ((Lon_Idx_prev == 0) .or. (abs(Lon_Idx-Lon_Idx_prev) >= Ilon_Stride) .or. &
+            (Lat_Idx_prev == 0) .or. (abs(Lat_Idx-Lat_Idx_prev) >= Ilat_Stride) .or. &
+            (Zen_Idx_prev == 0) .or. (abs(Zen_Idx - Zen_Idx_prev) >= Ivza_Stride)) then  
+
+        Start_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
+
+        !--------------------------------------------------------------
+        !  Call PFAAST Routines for IR channel Transmission Profiles
+        !--------------------------------------------------------------
+        do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
+
+         if (Chan_Idx < 20) cycle
+         if (Chan_Idx == 26) cycle
+         if (Chan_Idx == 42) cycle
+         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+
+         if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
+
+
+         call PFAAST_CALLER(Chan_Idx,Satzen_Mid_Bin,Error_Status)
+
+         if (Error_Status == sym%YES) then
+            print *, "Error running PFAAST "
+            stop
          endif
 
-         !--- determine if RTM needs to be called for this pixel, if not do the following
-         if (Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%Flag == 0) then   !check for existing RTM results
-            call cpu_time ( time3)
-            call ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT(Lon_Idx,Lat_Idx,Zen_Idx)
+         !---- Copy the output to appropriate channel's tranmission vector
+         Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
+        enddo
 
-            !--- determine the zenith angle for the RTM
-            Satzen_Mid_Bin = acos((Zen_Idx-1)*Rtm_Vza_Binsize + Rtm_Vza_Binsize/2.0) / DTOR
+        !--------------------------------------------------------------
+        ! compute transmission profiles for solar channels
+        !--------------------------------------------------------------
+        do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
 
-            !--- store structures into RTM arguments
-            T_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%T_Prof
-            Tpw_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Tpw_Prof
-            Wvmr_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Wvmr_Prof
-            Ozmr_Prof_Rtm = Rtm(Lon_Idx,Lat_Idx)%Ozmr_Prof
+         if (Chan_Idx >= 20 .and. Chan_Idx /= 26) cycle
 
-            !--------------------------------------------------------------
-            ! Call Sensor Specific Fast IR RTM  
-            !--------------------------------------------------------------
+         call SOLAR_TRANS(Chan_Idx,Satzen_Mid_Bin,Error_Status) 
 
-            !--- decide if this can be skipped
-            if ((Lon_Idx_prev == 0) .or. (abs(Lon_Idx-Lon_Idx_prev) >= Ilon_Stride) .or. &
-               (Lat_Idx_prev == 0) .or. (abs(Lat_Idx-Lat_Idx_prev) >= Ilat_Stride) .or. &
-               (Zen_Idx_prev == 0) .or. (abs(Zen_Idx - Zen_Idx_prev) >= Ivza_Stride)) then  
+         !---- Copy the output to appropriate channel's tranmission vector
+         Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
 
-               Start_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
-
-               !--------------------------------------------------------------
-               !  Call PFAAST Routines for IR channel Transmission Profiles
-               !--------------------------------------------------------------
-               
-                call cpu_time ( time7)
-               do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
-
-                  if (Chan_Idx < 20) cycle
-                  if (Chan_Idx == 26) cycle
-                  if (Chan_Idx == 42) cycle
-                  if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
-
-                  if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
-
-
-                  call PFAAST_CALLER(Chan_Idx,Satzen_Mid_Bin,Error_Status)
-
-                  if (Error_Status == sym%YES) then
-                     print *, "Error running PFAAST "
-                     stop
-                  endif
-
-                  !---- Copy the output to appropriate channel's tranmission vector
-                  Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
-               enddo
-               call cpu_time ( time8)
-               time78 = time78 + time8-time7
-            print*,'t78: ',time78
-               !--------------------------------------------------------------
-               ! compute transmission profiles for solar channels
-               !--------------------------------------------------------------
-               do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
-
-                  if (Chan_Idx >= 20 .and. Chan_Idx /= 26) cycle
-
-                  call SOLAR_TRANS(Chan_Idx,Satzen_Mid_Bin,Error_Status) 
-
-                  !---- Copy the output to appropriate channel's tranmission vector
-                  Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
-
-               enddo
+        enddo
          
-               End_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
+        End_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
 
-               Segment_Time_Point_Seconds_Temp =  Segment_Time_Point_Seconds_Temp + &
-                  60.0*60.0*(End_Time_Point_Hours_Temp - Start_Time_Point_Hours_Temp)
+        Segment_Time_Point_Seconds_Temp =  Segment_Time_Point_Seconds_Temp + &
+           60.0*60.0*(End_Time_Point_Hours_Temp - Start_Time_Point_Hours_Temp)
         
-               !----------------------------------------------------------------------
-               ! Manipulate Transmission Profiles
-               !----------------------------------------------------------------------
+        !----------------------------------------------------------------------
+        ! Manipulate Transmission Profiles
+        !----------------------------------------------------------------------
  
-               !----------------------------------------------------------------------
-               ! Apply Gamma Scaling
-               !----------------------------------------------------------------------
-               do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-                  if (Chan_On_Flag_Default(Chan_Idx) == sym%YES .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
-                     Trans_Atm_Prof(:,Chan_Idx)  = Trans_Atm_Prof(:,Chan_Idx) ** Gamma_Trans_Factor(Chan_Idx)
-                  endif
-               enddo
+        !----------------------------------------------------------------------
+        ! Apply Gamma Scaling
+        !----------------------------------------------------------------------
+        do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
+          if (Chan_On_Flag_Default(Chan_Idx) == sym%YES .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
+             Trans_Atm_Prof(:,Chan_Idx)  = Trans_Atm_Prof(:,Chan_Idx) ** Gamma_Trans_Factor(Chan_Idx)
+          endif
+        enddo
 
-               !----------------------------------------------------------------------
-               ! Compute Tranmissions along solar and total (two-way) paths
-               !----------------------------------------------------------------------
-               do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-                  if (Chan_Idx > 21 .and. Chan_Idx /= 26) cycle
+        !----------------------------------------------------------------------
+        ! Compute Tranmissions along solar and total (two-way) paths
+        !----------------------------------------------------------------------
+        do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
+            if (Chan_Idx > 21 .and. Chan_Idx /= 26) cycle
 
-                  Trans_Atm_Total_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
+            Trans_Atm_Total_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
                                                (1.0/Cossolzen(Elem_Idx,Line_Idx))
 
-                  Trans_Atm_Solar_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
+            Trans_Atm_Solar_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
                                                (Coszen(Elem_Idx,Line_Idx)/Cossolzen(Elem_Idx,Line_Idx))
 
-               enddo
+        enddo
 
-               Lon_Idx_prev = Lon_Idx
-               Lat_Idx_prev = Lat_Idx
-               Zen_Idx_prev = Zen_Idx
-               Trans_Atm_Prof_Prev = Trans_Atm_Prof
-               Trans_Atm_Solar_Prof_Prev = Trans_Atm_Solar_Prof
-               Trans_Atm_Total_Prof_Prev = Trans_Atm_Total_Prof
+       Lon_Idx_prev = Lon_Idx
+       Lat_Idx_prev = Lat_Idx
+       Zen_Idx_prev = Zen_Idx
+       Trans_Atm_Prof_Prev = Trans_Atm_Prof
+       Trans_Atm_Solar_Prof_Prev = Trans_Atm_Solar_Prof
+       Trans_Atm_Total_Prof_Prev = Trans_Atm_Total_Prof
 
-            else
+     else
 
-               print *, "Skipped an RTM Call"
-               Trans_Atm_Prof = Trans_Atm_Prof_Prev
-               Trans_Atm_Solar_Prof = Trans_Atm_Solar_Prof_Prev
-               Trans_Atm_Total_Prof = Trans_Atm_Total_Prof_Prev
+       print *, "Skipped an RTM Call"
+       Trans_Atm_Prof = Trans_Atm_Prof_Prev
+       Trans_Atm_Solar_Prof = Trans_Atm_Solar_Prof_Prev
+       Trans_Atm_Total_Prof = Trans_Atm_Total_Prof_Prev
 
-            endif    !skip rtm if statement
+     endif    !skip rtm if statement
 
-            !--- compute profiles of radiance (atm and bb cloud)
-            call COMPUTE_CLEAR_RAD_PROFILES_RTM()
+     !--- compute profiles of radiance (atm and bb cloud)
+     call COMPUTE_CLEAR_RAD_PROFILES_RTM()
 
-            !--- copy local rtm profiles back into global rtm structure
-            call COPY_LOCAL_RTM_TO_GLOBAL_RTM_STRUCTURE(Lon_Idx,Lat_Idx,Zen_Idx)
+     !--- copy local rtm profiles back into global rtm structure
+     call COPY_LOCAL_RTM_TO_GLOBAL_RTM_STRUCTURE(Lon_Idx,Lat_Idx,Zen_Idx)
 
-            !---   set mask  to indicate this bin or this cell has been computed
-            Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%Flag = 1
-            call cpu_time(time4)
-            
-            time34 = time34 + time4-time3
-            print*,'t34: ',time34
-         endif  !end check for previous RTM run
+     !---   set mask  to indicate this bin or this cell has been computed
+     Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%Flag = 1
+
+  endif  !end check for previous RTM run
  
-         !-----------------------------------------------------------------------------
-         ! compute clear TOA radiance
-         !-----------------------------------------------------------------------------  
+  !-----------------------------------------------------------------------------
+  ! compute clear TOA radiance
+  !-----------------------------------------------------------------------------  
   
-         !---- compute the surface level for this pixel based on high-res elevation
-         Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%Sfc_Level
+   !---- compute the surface level for this pixel based on high-res elevation
+   Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%Sfc_Level
 
-         if ((Land(Elem_Idx,Line_Idx) == sym%LAND) .and. (Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4)) then
-            call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Zsfc(Elem_Idx,Line_Idx),Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
-         endif
-         Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = max(1,min(NLevels_Rtm-1,Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)))
+   if ((Land(Elem_Idx,Line_Idx) == sym%LAND) .and. (Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4)) then
+    call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Zsfc(Elem_Idx,Line_Idx),Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
+   endif
+   Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = max(1,min(NLevels_Rtm-1,Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)))
 
-         !--- use this scalar for visual clarity
-         Sfc_Level_Idx = Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)
+   !--- use this scalar for visual clarity
+   Sfc_Level_Idx = Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)
 
-         !--- if an sst analysis is available, use that
-         if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
-            (Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
-            (Use_Sst_Anal == sym%YES) .and.  &
-            (Sst_Anal(Elem_Idx,Line_Idx) > 270.0 )) then
-            Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Sst_Anal(Elem_Idx,Line_Idx)
-         endif 
+   !--- if an sst analysis is available, use that
+   if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
+       (Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
+       (Use_Sst_Anal == sym%YES) .and.  &
+       (Sst_Anal(Elem_Idx,Line_Idx) > 270.0 )) then
+       Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Sst_Anal(Elem_Idx,Line_Idx)
+   endif 
 
-         !-- vertical interp weight
-         Prof_Weight = (Zsfc(Elem_Idx,Line_Idx) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
-            ( Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx+1) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx))
+   !-- vertical interp weight
+   Prof_Weight = (Zsfc(Elem_Idx,Line_Idx) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
+       (Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx+1) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx))
 
-         !--- constrain - important when high res topo differs from low res nwp topo
-         Prof_Weight = max(0.0,min(1.0,Prof_Weight))
+   !--- constrain - important when high res topo differs from low res nwp topo
+   Prof_Weight = max(0.0,min(1.0,Prof_Weight))
 
-         !--- call routine to compute radiative transfer terms such as Rad_Atm
-         !--- Trans_Atm, and clear-sky radinace and brightness temperature
-         !--- map global to local to allow for efficient looping
-         call COMPUTE_CHANNEL_RT(Sfc_Level_Idx,Prof_Weight,Lon_Idx,Lat_Idx,Elem_Idx,Line_Idx,Zen_Idx)
+   !--- call routine to compute radiative transfer terms such as Rad_Atm
+   !--- Trans_Atm, and clear-sky radinace and brightness temperature
+   !--- map global to local to allow for efficient looping
+   call COMPUTE_CHANNEL_RT(Sfc_Level_Idx,Prof_Weight,Lon_Idx,Lat_Idx,Elem_Idx,Line_Idx,Zen_Idx)
 
-         !--- compute Ch20 Emissivities
-         call COMPUTE_CH20_EMISSIVITY(Elem_Idx,Line_Idx)
+   !--- compute Ch20 Emissivities
+   call COMPUTE_CH20_EMISSIVITY(Elem_Idx,Line_Idx)
 
-         !--- compute Emissivity at tropopause
-         call COMPUTE_TROPOPAUSE_EMISSIVITIES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
+   !--- compute Emissivity at tropopause
+   call COMPUTE_TROPOPAUSE_EMISSIVITIES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
 
-         !--- compute split-window beta ratio at tropopause
-         call COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
+  !--- compute split-window beta ratio at tropopause
+  call COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
 
-         !--- compute split-window beta ratio at tropopause
-         call COMPUTE_SPLIT_WINDOW_BIAS(Elem_Idx,Line_Idx)
+  !--- compute split-window beta ratio at tropopause
+  call COMPUTE_SPLIT_WINDOW_BIAS(Elem_Idx,Line_Idx)
 
-      end do element_loop
-   end do line_loop
+ end do element_loop
+end do line_loop
 
-   return
+return
 
 end subroutine GET_PIXEL_NWP_RTM
 

@@ -180,8 +180,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
   integer:: water_count
   integer:: ice_count
 
-  integer(kind=int1) :: smoke_pixel
-  integer(kind=int1) :: dust_pixel
+ 
 
   !--- begin executable code
 

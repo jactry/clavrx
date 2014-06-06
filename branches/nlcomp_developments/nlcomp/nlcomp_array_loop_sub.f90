@@ -3,11 +3,10 @@
 !  HISTORY: 2014/01/12
 !         : AW first verisob of NLCOMP for arrays
 ! 
-!  TODO: Angles are wrong ( solar vs lunar )
 !
 !
-subroutine nlcomp_array ( input , output, debug_mode_user )
-   use nlcomp_mod
+subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
+   use nlcomp_retrieval_mod
    use nlcomp_interface_def_mod
    implicit none
    
@@ -366,4 +365,4 @@ subroutine nlcomp_array ( input , output, debug_mode_user )
    
    
 
-end subroutine nlcomp_array
+end subroutine nlcomp_array_loop_sub

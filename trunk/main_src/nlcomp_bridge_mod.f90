@@ -114,67 +114,10 @@ module nlcomp_bridge_mod
 #endif
    private
 
-   
-             
-      
+
    !--- module main subroutine 
    public:: awg_cloud_nlcomp_algorithm
-   
-   !---------------------------------------------------------------
-   !  --- module-level variables
-   !---------------------------------------------------------------
- 
-  
 
-   ! -- other cloud products 
-   ! - scalras of cloud products which are used module-wide
-   integer(kind=int4) :: cld_phase_loc
-   real(kind=real4)   :: cld_temp_loc
-   real(kind=real4)   :: cld_press_loc
-   real(kind=real4)   :: cld_height_loc
-   
-   integer(kind=int4) :: cld_msk_loc 
-   real(kind=real4)   :: rad_to_refl_fac
-
-   integer::satellite_id
-   ! -  aux data
-
-   integer, parameter :: num_chn = 2.
-   integer, parameter :: num_obs = 2.
-   integer, parameter :: num_phase = 2 ! -- number of  phases
-
-   logical :: debug_on   
-   
-
-   integer(kind=int4) :: line_idx              !- line index   loop variable
-   integer(kind=int4) :: elem_idx              !- element index  loop variable 
-
-   real(kind=real4) :: rtm_rad_ac_ir
-   
-   ! -- modi
-   
-   integer::vis_chn 
-   integer::nir_chn
-
- 
-   integer :: x_nwp
-   integer :: y_nwp
-
-   integer(kind=int1), pointer, dimension(:):: chan_on
-   character(len=20) :: sensor_name
-
- 
-   integer(kind=int4), private, parameter :: num_levels_rtm_prof = nlevels_rtm
-
-   real, private, dimension(num_levels_rtm_prof):: clear_trans_prof_rtm
-   real, private, dimension(num_levels_rtm_prof):: clear_rad_prof_rtm
-
-   real , parameter :: ocean_albedo_vis = 0.03
-   real , parameter :: ocean_albedo_nir = 0.03
-   integer::apriori_cod_mode
-   integer::apriori_ref_mode
-  
-   
 contains
 
    !----------------------------------------------------------------------
@@ -186,19 +129,14 @@ contains
  
       !--- input
       integer, intent(in),optional:: iseg_in
-      
-   
 
-      
-     
-     
       integer :: dim_1, dim_2
       integer :: idx_chn
       
       integer :: nlcomp_possible_channels ( 2 ) 
       integer :: i
       
-      real , parameter :: PI = 3.14
+      real , parameter :: PI = 3.1415927
       real, parameter :: DTOR = PI/180.
      
 #ifdef HDF5LIBS    

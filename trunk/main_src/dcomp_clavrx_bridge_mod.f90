@@ -156,7 +156,7 @@ contains
       if ( iseg_in == 1 ) then
         call mesg ('dcomp start ', color=43 , level = -1 ) 
       end if
-      print*,count ( solzen < 65 .and. solzen >= 0 .and. satzen < 65. )
+      
       
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( dcomp_rtm ) 

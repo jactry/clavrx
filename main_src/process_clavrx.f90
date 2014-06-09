@@ -225,6 +225,8 @@
    TYPE (AREA_STRUCT) :: AREAstr
    TYPE (GVAR_NAV)    :: NAVstr
    
+   logical :: dcomp_run
+   
    
    
   
@@ -1427,12 +1429,14 @@
     
                if (Dcomp_Mode > 0) then
         
-                  call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number)
+                  call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)
                   call SET_DCOMP_VERSION()
-                  call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Num_Scans_Read)
-                  call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Num_Scans_Read,Sun_Earth_Distance)
-                  call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
-
+                  if ( dcomp_run ) then
+                     call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Num_Scans_Read)
+                     call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Num_Scans_Read,Sun_Earth_Distance)
+                     call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
+                  end if
+                  
                end if
     
                !--- compute precipation from optical properties

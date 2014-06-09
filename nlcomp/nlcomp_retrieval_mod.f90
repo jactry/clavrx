@@ -1,5 +1,5 @@
 ! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk/nlcomp_mod.f90 8 2014-01-31 08:14:58Z awalther $
-module nlcomp_mod
+module nlcomp_retrieval_mod
    private
    public :: nlcomp_algorithm
    
@@ -38,10 +38,12 @@ contains
                       & , debug_in  &
                       & , ancil_path ) 
                         			 
-      use dcomp_tools, only: &
+      use dcomp_math_tools_mod, only: &
          findinv , debug_mode
          
-      use nlcomp_forward_mod
+      use nlcomp_forward_mod, only : &
+        nlcomp_forward_computation &
+        , pixel_vec
    
       implicit none 
       
@@ -265,4 +267,4 @@ contains
       nlcomp_out % cps = cps
       
    end subroutine nlcomp_algorithm
-end module nlcomp_mod
+end module nlcomp_retrieval_mod

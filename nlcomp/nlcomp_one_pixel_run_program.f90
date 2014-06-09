@@ -1,16 +1,13 @@
 ! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk/nlcomp.f90 8 2014-01-31 08:14:58Z awalther $
-program dcomp
+program nlcomp_one_pixel_run
 
-   use dcomp_tools, only: &
-      findinv
-	  
    use M_kracken
    
-   use nlcomp_mod, only: &
+   use nlcomp_retrieval_mod, only: &
       nlcomp_algorithm	&
       ,  nlcomp_output_structure
    
-   use  nlcomp_interface_def_mod    
+   use  nlcomp_interface_def_mod  , only:  
 		   
    implicit none
    real , dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac
@@ -130,4 +127,4 @@ program dcomp
 	
   
     
-end program dcomp
+end program nlcomp_one_pixel_run

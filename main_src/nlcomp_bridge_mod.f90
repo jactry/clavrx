@@ -163,9 +163,7 @@ module nlcomp_bridge_mod
    integer(kind=int1), pointer, dimension(:):: chan_on
    character(len=20) :: sensor_name
 
-   include 'dcomp_user_params.inc'
-   
-  
+ 
    integer(kind=int4), private, parameter :: num_levels_rtm_prof = nlevels_rtm
 
    real, private, dimension(num_levels_rtm_prof):: clear_trans_prof_rtm

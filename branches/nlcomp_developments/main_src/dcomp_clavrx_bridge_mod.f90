@@ -110,12 +110,15 @@ contains
    !  AWG_CLOUD_DCOMP_ALGORITHM
    !    This is the DCOMP bridge from CLAVR-x
    !---------------------------------------------------------------------- 
-   subroutine awg_cloud_dcomp_algorithm (  iseg_in  )   
+   subroutine awg_cloud_dcomp_algorithm (  iseg_in , dcomp_run )   
        
       implicit none
  
       !--- input
       integer, intent(in),optional:: iseg_in
+      
+      ! - output 
+      logical , intent(out) :: dcomp_run
       
       type(dcomp_rtm_type) :: dcomp_rtm
       type(dcomp_in_type)  :: dcomp_input
@@ -143,9 +146,17 @@ contains
       
       ! ----- executable  --------------------------------------------------- !
             
+      dcomp_run = .false.
+      
+      ! - do we need to run dcomp at all? ( night  etc..)
+      if ( count ( solzen < 65 .and. solzen >= 0 .and. satzen < 65. ) < 1 ) return
+      dcomp_run = .true.
+      
+      
       if ( iseg_in == 1 ) then
         call mesg ('dcomp start ', color=43 , level = -1 ) 
       end if
+      print*,count ( solzen < 65 .and. solzen >= 0 .and. satzen < 65. )
       
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( dcomp_rtm ) 

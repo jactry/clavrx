@@ -62,7 +62,7 @@ file_tools.o
 .PHONY: clean hdf4
 
 all: hdf4 dcomp_one_pixel_run 
-
+	@echo  'kkf'$(LFLAGS)
 hdf4:
 	@echo 'Building target for hdf4: $@'
 	make -C $(ICASRC)	

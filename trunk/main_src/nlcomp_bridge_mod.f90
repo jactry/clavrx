@@ -210,7 +210,7 @@ contains
       type(nlcomp_out_type) :: nlcomp_output
       
       interface
-         subroutine nlcomp_array ( a, b, debug_mode_user)
+         subroutine nlcomp_array_loop_sub ( a, b, debug_mode_user)
             import nlcomp_in_type
             import nlcomp_out_type
             type ( nlcomp_in_type ), intent(in) :: a
@@ -345,7 +345,7 @@ contains
          nlcomp_input % solar_irradiance ( 20) = solar_ch20_nu
       end if
       
-      call nlcomp_array (nlcomp_input,nlcomp_output )
+      call nlcomp_array_loop_sub (nlcomp_input,nlcomp_output )
        
      
       

@@ -133,7 +133,7 @@ contains
       integer :: dim_1, dim_2
       integer :: idx_chn
       
-      integer :: nlcomp_possible_channels ( 2 ) 
+      integer :: nlcomp_possible_channels ( 4 ) 
       integer :: i
       
       real , parameter :: PI = 3.1415927
@@ -173,7 +173,7 @@ contains
       ! - which channels do we need? possibles are 
       nlcomp_input % is_channel_on = .false.
       
-      nlcomp_possible_channels = [  20 , 42 ]
+      nlcomp_possible_channels = [  20 , 31, 32, 42 ]
       do i = 1 , size ( nlcomp_possible_channels )   
          if ( Chan_On_Flag_Default ( nlcomp_possible_channels ( i) ) == 1 ) then
             nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
@@ -184,7 +184,7 @@ contains
       
        ! === ALLOCATION
       do idx_chn = 1 , 42
-         if ( nlcomp_input % is_channel_on (idx_chn) .eqv. .false.) cycle
+         if ( .not. nlcomp_input % is_channel_on (idx_chn) ) cycle
         
          call  alloc_nlcomp ( nlcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
          call  alloc_nlcomp ( nlcomp_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
@@ -229,6 +229,9 @@ contains
       
      
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
+      if ( nlcomp_input % is_channel_on (31)) nlcomp_input % rad ( 31 ) % d = ch(31)%rad_toa
+      if ( nlcomp_input % is_channel_on (32)) nlcomp_input % rad ( 32 ) % d = ch(32)%rad_toa
+      
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa
       
@@ -257,6 +260,13 @@ contains
 
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    !check this AKH
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
+      
+      if ( nlcomp_input % is_channel_on (31)) nlcomp_input % alb_sfc ( 31) % d = 100.0*(1.0 - ch(31)%sfc_emiss)    !check this AKH
+      if ( nlcomp_input % is_channel_on (31)) nlcomp_input % emiss_sfc ( 31) % d = ch(31)%sfc_emiss
+      
+      if ( nlcomp_input % is_channel_on (32)) nlcomp_input % alb_sfc ( 32) % d = 100.0*(1.0 - ch(32)%sfc_emiss)    !check this AKH
+      if ( nlcomp_input % is_channel_on (32)) nlcomp_input % emiss_sfc ( 32) % d = ch(32)%sfc_emiss
+      
       nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp
       nlcomp_input % snow_class % d = snow
             

@@ -9,6 +9,7 @@ module nlcomp_forward_mod
       get_planck_radiance_39um  &
       , get_rad_refl_factor                
    
+    use clavrx_planck_mod
    private
    public :: thick_cloud_cps
    
@@ -22,6 +23,8 @@ module nlcomp_forward_mod
       real :: sol_zen
 	   real :: sat_zen
 	   real :: rel_azi
+      real :: lun_zen
+      real :: lun_rel_azi
 	   real :: ctt
       logical :: is_water_phase
    end type pixel_vec
@@ -38,7 +41,7 @@ contains
                                     state_vec  &   ! -input
                                   , pixel &
                                   , sensor &
-                                  , channels &
+                                  
                                   , alb_sfc &
                                   , air_trans_ac &
                                   , fm_vec &         ! - output
@@ -58,7 +61,7 @@ contains
       
       real , intent(in) :: state_vec (2)
       type ( pixel_vec ) , intent ( in ) :: pixel
-      integer , intent ( in ) :: channels ( :)
+      
       real,  intent ( in ) :: air_trans_ac ( : )   
       character ( len = * ) , intent (in ) :: sensor     
       real, intent(in) ::  alb_sfc (2)  
@@ -66,8 +69,8 @@ contains
       real, optional, intent ( in ) ::   rad_clear_toc 
       character ( len = 1024 ) , intent ( in ) , optional :: lut_path  
          
-      real , intent ( out ) :: fm_vec ( 2 )
-      real , intent ( out ) :: kernel( 2 , 2 )
+      real , intent ( out ) :: fm_vec ( 4 )
+      real , intent ( out ) :: kernel( 4 , 2 )
       real , intent ( out ) :: cld_trns_sol( 2 ) 
       real , intent ( out ) :: cld_trns_sat( 2 )
       real , intent ( out ) :: cld_sph_alb( 2 )
@@ -84,13 +87,17 @@ contains
       real :: air_mass_sat
       real :: trans_abv_cld
          
-	   type ( lut_output) :: lut_data
+	   type ( lut_output) :: lut_data , lut_data31, lut_data32 , lut_data20
 
-      integer :: i_channel 
+     
       
       integer :: MODIS_EQUIVALENT_39_CHN = 20
 	   real :: Alb_Sfc_Term
       
+      integer , parameter :: VIS_CHN = 42
+      real :: bt31, bt32, bt20
+      real :: rad31, rad32, rad20
+      real :: planck_rad31, planck_rad32, planck_rad20
       
       
      
@@ -98,72 +105,104 @@ contains
       
       
       ! initialize lut object
-      call lut_obj % initialize ( sensor , ancil_path = lut_path)
-      call lut_obj % set_angles ( pixel % sat_zen , pixel % sol_zen, pixel % rel_azi )
+      call lut_obj % initialize ( 'VIIRS' , ancil_path = lut_path)
+      call lut_obj % set_angles ( pixel % sat_zen , pixel % lun_zen, pixel % lun_rel_azi )
+      
+      
       
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
-	                                                                      
-      air_mass_two_way = ( 1. / cos (pixel % Sol_zen * DTOR ) + 1./ cos ( pixel % Sat_zen * DTOR ) )
-	  
-	   do i_channel = 1 , size ( channels )
- 
-         call lut_obj % get_data ( channels ( i_channel )  , phase_num , state_vec(1), state_vec(2) , lut_data)
-         
-         cld_trns_sol (i_channel ) = lut_data % trn_sol
-         cld_trns_sat (i_channel ) = lut_data % trn_sat
-         cld_sph_alb (i_channel )  = lut_data % albsph
-         
-         if ( present ( cld_albedo_vis ) .and. i_channel == 1 ) then
-            cld_albedo_vis =  lut_data % alb     
-         end if 
-        
-         Alb_Sfc_Term = max (0. , Alb_Sfc( i_channel ) / (1.0 - Alb_Sfc( i_channel ) * lut_data % albsph )) 
-         fm_vec(i_channel) = lut_data% Refl + Alb_Sfc_Term * lut_data%Trn_sol * lut_data%Trn_sat 
-            
-         kernel(i_channel,1) = lut_data%dRefl_dcod &
+      
+      
+      air_mass_two_way = ( 1. / cos (pixel % lun_zen * DTOR ) + 1./ cos ( pixel % Sat_zen * DTOR ) )
+      
+      ! forward element1
+      
+      call lut_obj % get_data ( 1 , phase_num , state_vec(1), state_vec(2) , lut_data)
+     
+      cld_trns_sol ( 1 ) = lut_data % trn_sol
+      cld_trns_sat ( 1 ) = lut_data % trn_sat
+      cld_sph_alb  ( 1 )  = lut_data % albsph
+      !cld_albedo_vis  =  lut_data % alb
+      
+      Alb_Sfc_Term = max (0. , Alb_Sfc( 1 ) / (1.0 - Alb_Sfc(1 ) * lut_data % albsph )) 
+      fm_vec(1) = lut_data% Refl + Alb_Sfc_Term * lut_data%Trn_sol * lut_data%Trn_sat 
+        print*,lut_data% Refl , Alb_Sfc_Term , lut_data%Trn_sol , lut_data%Trn_sat , air_mass_two_way, air_trans_ac( 1 )
+      kernel(1,1) = lut_data%dRefl_dcod &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcod &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcod &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) * lut_data%Dsph_alb_Dcod) &
-                    /(( 1 - Alb_Sfc( i_channel ) * lut_data%albsph)**2))  
-                                             
-         kernel(i_channel,2) = lut_data%dRefl_dcps &
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( 1 ) * Alb_Sfc( 1 ) * lut_data%Dsph_alb_Dcod) &
+                    /(( 1 - Alb_Sfc(1 ) * lut_data%albsph)**2))  
+                                           
+      kernel(1,2) = lut_data%dRefl_dcps &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcps &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcps &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) * lut_data%Dsph_alb_Dcps) &
-                    /(( 1 - Alb_Sfc( i_channel ) * lut_data%albsph)**2))  
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( 1 ) * Alb_Sfc( 1 ) * lut_data%Dsph_alb_Dcps) &
+                    /(( 1 - Alb_Sfc(1 ) * lut_data%albsph)**2))  
                     
-         trans_two_way = air_trans_ac( i_channel ) ** air_mass_two_way           
-         fm_vec(i_channel) = fm_vec(i_channel) * trans_two_way
-	      kernel(i_channel,1) = kernel(i_channel,1) * trans_two_way
-         kernel(i_channel,2) = kernel(i_channel,2) * trans_two_way
-        		 
-		   ! - the only emis channel is channel 20
-		   if ( channels ( i_channel ) == MODIS_EQUIVALENT_39_CHN ) then
-		      planck_rad = get_planck_radiance_39um ( pixel % ctt  , trim(sensor) )
-			
-            rad_to_refl = get_rad_refl_factor ( trim ( sensor ) , pixel % sol_zen ) 
-			   air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
-			   trans_abv_cld = air_trans_ac(i_channel) ** air_mass_sat
+      trans_two_way = air_trans_ac( 1 ) ** air_mass_two_way   
+      print*,        trans_two_way  
+      fm_vec(1) = fm_vec(1) * trans_two_way
+	   kernel(1,1) = kernel(1,1) * trans_two_way
+      kernel(1,2) = kernel(1,2) * trans_two_way
+      
+      ! - forward element2
+     
+      call lut_obj % get_data ( 20, phase_num , state_vec(1), state_vec(2) , lut_data20)
+     
+      planck_rad = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
+
+	   air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
+		trans_abv_cld = air_trans_ac(2) ** air_mass_sat
                                    
-            fm_nir_terr =   (rad_abv_cld * lut_data % ems &
-                  + trans_abv_cld * lut_data %  ems * planck_rad &
-				  + lut_data % trn_ems * rad_clear_toc )
+      fm_nir_terr =   (rad_abv_cld * lut_data20 % ems &
+                  + trans_abv_cld * lut_data20 %  ems * planck_rad &
+				  + lut_data20 % trn_ems * rad_clear_toc )
             
-            kernel_nir_terr_cod =  (rad_abv_cld * lut_data %  Dems_Dcod & 
-               + trans_abv_cld * Planck_Rad * lut_data % Dems_Dcod  &
-               + rad_clear_toc *lut_data % Dtrnems_Dcod)
+      kernel_nir_terr_cod =  (rad_abv_cld * lut_data20 %  Dems_Dcod & 
+               + trans_abv_cld * Planck_Rad * lut_data20 % Dems_Dcod  &
+               + rad_clear_toc *lut_data20 % Dtrnems_Dcod)
              
-            kernel_nir_terr_cps  =   (rad_abv_cld * lut_data % Dems_Dcps & 
-                + trans_abv_cld * Planck_Rad * lut_data % Dems_Dcps  &
-                + rad_clear_toc  *lut_data %Dtrnems_Dcps )
+      kernel_nir_terr_cps  =   (rad_abv_cld * lut_data20 % Dems_Dcps & 
+                + trans_abv_cld * Planck_Rad * lut_data20 % Dems_Dcps  &
+                + rad_clear_toc  *lut_data20 %Dtrnems_Dcps )
                        
-            fm_vec(i_channel) = fm_nir_terr
-            kernel ( i_channel, 1) = kernel_nir_terr_cod 
-            kernel ( i_channel, 2) = kernel_nir_terr_cps 
+      fm_vec(2) = fm_nir_terr
+      kernel ( 2, 1) = kernel_nir_terr_cod 
+      kernel ( 2, 2) = kernel_nir_terr_cps 
             
-         end if       
-	   end do
+      ! element 3
+      
+      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
+      
+      call lut_obj % get_data ( 32, phase_num , state_vec(1), state_vec(2) , lut_data32)
+      planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
+      planck_rad32 = planck_tmp2rad ( pixel % ctt, trim(sensor), 32)
+      
+      rad31 = lut_data31 %  ems * planck_rad31
+      rad32 = lut_data32 %  ems * planck_rad31
+      
+      bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
+      bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32)  
+      fm_vec(3) = bt31 - bt32
+      
+      ! element 4
+      
+      
+      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
+     
+      planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
+      planck_rad20 = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
+      
+      rad31 = lut_data31 %  ems * planck_rad31
+      rad20 = lut_data20 %  ems * planck_rad20
+      
+      bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
+      bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)  
+      fm_vec(4) = bt20 - bt31
+           print*,'hallo'
+      print*,fm_vec,'==='     
+	   stop
         
    end subroutine nlcomp_forward_computation
     

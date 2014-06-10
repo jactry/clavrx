@@ -127,7 +127,7 @@ contains
       
       Alb_Sfc_Term = max (0. , Alb_Sfc( 1 ) / (1.0 - Alb_Sfc(1 ) * lut_data % albsph )) 
       fm_vec(1) = lut_data% Refl + Alb_Sfc_Term * lut_data%Trn_sol * lut_data%Trn_sat 
-        print*,lut_data% Refl , Alb_Sfc_Term , lut_data%Trn_sol , lut_data%Trn_sat , air_mass_two_way, air_trans_ac( 1 )
+       
       kernel(1,1) = lut_data%dRefl_dcod &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcod &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcod &
@@ -141,7 +141,7 @@ contains
                     /(( 1 - Alb_Sfc(1 ) * lut_data%albsph)**2))  
                     
       trans_two_way = air_trans_ac( 1 ) ** air_mass_two_way   
-      print*,        trans_two_way  
+      
       fm_vec(1) = fm_vec(1) * trans_two_way
 	   kernel(1,1) = kernel(1,1) * trans_two_way
       kernel(1,2) = kernel(1,2) * trans_two_way
@@ -172,18 +172,19 @@ contains
       kernel ( 2, 2) = kernel_nir_terr_cps 
             
       ! element 3
-      
+      print*,'state vec ctt: ', state_vec,  pixel % ctt
       call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
-      
       call lut_obj % get_data ( 32, phase_num , state_vec(1), state_vec(2) , lut_data32)
       planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
       planck_rad32 = planck_tmp2rad ( pixel % ctt, trim(sensor), 32)
-      
+      print*,'cloud bb rad: ',planck_rad31,planck_rad32
       rad31 = lut_data31 %  ems * planck_rad31
-      rad32 = lut_data32 %  ems * planck_rad31
-      
+      rad32 = lut_data32 %  ems * planck_rad32
+      print*,'ems: ',lut_data31 %  ems, lut_data32 %  ems
+      print*,'rad: ',rad31,rad32
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32)  
+      print*,'bt: ',bt31,bt32
       fm_vec(3) = bt31 - bt32
       
       ! element 4
@@ -193,12 +194,15 @@ contains
      
       planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
       planck_rad20 = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
-      
+      print*,'cloud bb rad: ',planck_rad20,planck_rad31
       rad31 = lut_data31 %  ems * planck_rad31
       rad20 = lut_data20 %  ems * planck_rad20
+      print*,'ems: ',lut_data20 %  ems, lut_data31 %  ems
+      print*,'rad: ',rad20,rad31
       
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)  
+       print*,'bt: ',bt20,bt31
       fm_vec(4) = bt20 - bt31
            print*,'hallo'
       print*,fm_vec,'==='     

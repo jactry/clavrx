@@ -151,6 +151,8 @@ contains
       
       obs_vec ( 3 ) = bt_31 - bt_32
       obs_vec ( 4 ) = bt_20 - bt_31
+      print*,'rad measured: ', inp % chn ( 20 ) % rad,inp % chn ( 31 ) % rad,inp % chn ( 32 ) % rad
+      print*,'obs_vec: ',obs_vec
       
       obs_u ( 1 ) = inp % chn ( 42 ) % rfl_u
       obs_u ( 2 ) = inp % chn ( 20 ) % rad_u
@@ -171,6 +173,9 @@ contains
       S_m (2,1) =  ( obs_u(2) * obs_vec(2) ) * (obs_u(1) * obs_vec(1) ) * obs_crl
       
       ! - a_priori 
+      
+      state_apr = inp % state % a_priori
+      
       S_a = 0.0
       S_a(1,1)  =  inp % state % a_priori (1) ** 2 
       S_a(1,1)  = 0.8 ** 2
@@ -208,7 +213,7 @@ contains
       alb_sfc ( 1) = inp % chn ( 42 ) % alb_sfc 
       alb_sfc ( 2) = inp % chn ( 20 ) % alb_sfc
       
-      debug_mode = 5
+      debug_mode = 1
       
       cod   = MISSING_REAL4_EM
       cps   = MISSING_REAL4_EM

@@ -53,7 +53,7 @@ module AWG_CLOUD_HEIGHT
   private:: KNOWING_T_COMPUTE_P_Z
   private:: KNOWING_Z_COMPUTE_T_P
   private:: GENERIC_PROFILE_INTERPOLATION
-  private:: OPTIMAL_ESTIMATION_ACHA
+  private:: OPTIMAL_ESTIMATION
   private:: COMPUTE_FORWARD_MODEL_AND_KERNEL
   private:: COMPUTE_APRIORI_BASED_ON_TYPE
   private:: COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO
@@ -224,7 +224,6 @@ module AWG_CLOUD_HEIGHT
   integer:: Line_Idx
   integer:: Param_Idx
   integer:: i
-  integer:: Fail_Flag
   integer:: Singular_Flag
   integer:: Ilev
   integer:: Inwp
@@ -243,7 +242,8 @@ module AWG_CLOUD_HEIGHT
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
   real:: Lapse_Rate
-  real:: Lapse_Rate_dP_dZ
+  real:: Abs_Lapse_Rate
+  real:: Abs_Lapse_Rate_dP_dZ
   real:: Delta_Cld_Temp_Sfc_Temp
 
   real:: Convergence_Criteria
@@ -315,7 +315,6 @@ module AWG_CLOUD_HEIGHT
   integer:: Cloud_Type
   integer:: Cloud_Phase
   integer:: Undetected_Cloud
-  integer:: Converged_Flag
   integer:: Sfc_Type_Forward_Model
   integer(kind=int1), dimension(NUM_META_DATA):: Meta_Data_Flags
 
@@ -337,6 +336,8 @@ module AWG_CLOUD_HEIGHT
   real (kind=real4), allocatable, dimension(:):: Emiss_Vector
   real (kind=real4), allocatable, dimension(:,:):: AKM  !Averaging Kernel Matrix
 
+  integer(kind=int4), dimension(:,:), allocatable:: Fail_Flag
+  integer(kind=int4), dimension(:,:), allocatable:: Converged_Flag
   real (kind=real4), allocatable, dimension(:,:):: Temperature_Cirrus
   integer (kind=int4):: Box_Half_Width_Cirrus
 
@@ -359,7 +360,6 @@ module AWG_CLOUD_HEIGHT
   real (kind=real4):: Zc_Base_Min
 ! real (kind=real4):: Tc_H2O
 ! real (kind=real4):: Zc_H2O
-  real (kind=real4):: Cost
 
   integer (kind=int4):: NWP_Profile_Inversion_Flag
   integer (kind=int4):: Itemp
@@ -416,6 +416,8 @@ module AWG_CLOUD_HEIGHT
   allocate(Skip_LRC_Mask(Input%Number_of_Elements,Input%Number_of_Lines))
 
   !--- allocate array for cirrus temperature
+  allocate(Fail_Flag(Input%Number_of_Elements,Input%Number_of_Lines))
+  allocate(Converged_Flag(Input%Number_of_Elements,Input%Number_of_Lines))
   allocate(Temperature_Cirrus(Input%Number_of_Elements,Input%Number_of_Lines))
 
   !--- allocate 1D-VAR arrays based on number of channels
@@ -599,7 +601,12 @@ module AWG_CLOUD_HEIGHT
     if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == sym%YES) then
         if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. &
             Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
-           cycle
+
+           !--- don't redo cirrus with valid lrc values
+           if (ilrc > 0 .and. jlrc > 0 .and. Output%Ec(ilrc,jlrc) > 0.7) then 
+              cycle
+           endif
+
         endif
     endif
 
@@ -1047,7 +1054,7 @@ module AWG_CLOUD_HEIGHT
   if (Singular_Flag == 1) then
     print *, "Cloud Height warning ==> Singular Sa in Split Window", &
            Elem_Idx,Line_Idx, Cloud_Type
-    Fail_Flag = symbol%YES
+    Fail_Flag(Elem_Idx,Line_Idx) = symbol%YES
     exit
   endif
 
@@ -1154,46 +1161,48 @@ Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Inpu
 
 !----------------------------------------------------------------
 ! if no inversion is present, check to see if clear radiance
-! is warmer than observed radiance, if not then do not proceed
+! is much warmer than observed radiance, if not then do not proceed
 !----------------------------------------------------------------
-if (( Inver_Level_RTM == 0) .and. (Rad_Clear_11um < Input%Rad_11um(Elem_Idx,Line_Idx))) then
+!if (( Inver_Level_RTM == 0) .and. (Rad_Clear_11um - Input%Rad_11um(Elem_Idx,Line_Idx) < -10.0)) then
 
-   !-- consider this pixel a failed retrieval
-   Fail_Flag = symbol%YES
-
-   Meta_Data_Flags(1) = symbol%NO
-
-   !--- assign default values for this result
-   Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL
-   Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL
-   Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL
-   Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
-   Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
-   Output%Qf(Elem_Idx,Line_Idx) = 1
-
-   call KNOWING_T_COMPUTE_P_Z(symbol, &
-                              Cloud_Type, &
-                              Output%Pc(Elem_Idx,Line_Idx), &
-                              Output%Tc(Elem_Idx,Line_Idx), &
-                              Output%Zc(Elem_Idx,Line_Idx), &
-                              Ilev,ierror,NWP_Profile_Inversion_Flag)
-   if (ierror == 0) then
-    Output%Zc(Elem_Idx,Line_Idx) = max(0.0,Output%Zc(Elem_Idx,Line_Idx))
-    Output%Pc(Elem_Idx,Line_Idx) = min(Input%Surface_Pressure(Elem_Idx,Line_Idx), &
-                                Output%Pc(Elem_Idx,Line_Idx))
-   endif
-   
-   !-- go to next pixel
-   cycle
-
-endif
+!   !-- consider this pixel a failed retrieval
+!   Fail_Flag(Elem_Idx,Line_Idx) = symbol%YES
+!
+!   Meta_Data_Flags(1) = symbol%NO
+!
+!   !--- assign default values for this result
+!   Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL
+!   Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL
+!   Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL
+!   Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
+!   Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
+!   Output%Qf(Elem_Idx,Line_Idx) = 1
+!
+!   call KNOWING_T_COMPUTE_P_Z(symbol, &
+!                              Cloud_Type, &
+!                              Output%Pc(Elem_Idx,Line_Idx), &
+!                              Output%Tc(Elem_Idx,Line_Idx), &
+!                              Output%Zc(Elem_Idx,Line_Idx), &
+!                              Ilev,ierror,NWP_Profile_Inversion_Flag)
+!   if (ierror == 0) then
+!    Output%Zc(Elem_Idx,Line_Idx) = max(0.0,Output%Zc(Elem_Idx,Line_Idx))
+!    Output%Pc(Elem_Idx,Line_Idx) = min(Input%Surface_Pressure(Elem_Idx,Line_Idx), &
+!                                Output%Pc(Elem_Idx,Line_Idx))
+!   endif
+!   
+!   !-- go to next pixel
+!   print *, "Removed a pixel ", Rad_Clear_11um, Input%Rad_11um(Elem_Idx,Line_Idx)
+!   Diag_Pix_Array_3(Elem_Idx,Line_Idx) = 1.0
+!   cycle
+!
+!endif
 
 !-----------------------------------------------------------------
 ! start of retrieval loop
 !-----------------------------------------------------------------
 Iter_Idx = 0
-Converged_Flag = symbol%NO
-Fail_Flag = symbol%NO
+Converged_Flag(Elem_Idx,Line_Idx) = symbol%NO
+Fail_Flag(Elem_Idx,Line_Idx) = symbol%NO
 
 !---- assign x to the first guess
 x = x_Ap
@@ -1309,13 +1318,19 @@ Retrieval_Loop: do
   !--------------------------------------------------
   ! call OE routine to advance the Iteration
   !--------------------------------------------------
-  call OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,Num_Param,Num_Obs, &
+  call OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,Num_Param,Num_Obs, &
                          Convergence_Criteria,Delta_X_Max, &
                          y,f,x,x_Ap,K,Sy,Sa_inv, &
-                         Sx,AKM,Delta_X,Cost,Converged_Flag,Fail_Flag, &
+                         Sx,AKM,Delta_X, &
+                         Output%Cost(Elem_Idx,Line_Idx), &
+                         Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx), &
                          idiag_output)
 
-! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Cost
+
+! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Output%Cost
+! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Converged_Flag
+! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Fail_Flag
+
 ! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
 ! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = f(1) - y(1)
 
@@ -1332,7 +1347,7 @@ Retrieval_Loop: do
 ! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = x(1) - x_ap(1)
 
   !--- check for a failed Iteration
-  if (Fail_Flag == symbol%YES) then
+  if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
      exit
   endif
 
@@ -1348,7 +1363,7 @@ Retrieval_Loop: do
   !--------------------------------------------------------
   ! exit retrieval loop if converged
   !--------------------------------------------------------
-  if (Converged_Flag == symbol%YES) then
+  if (Converged_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
        if (idiag_output==symbol%YES) then  
              print *, "convergence acheived ", Iter_Idx, x
              print *, '  '
@@ -1372,9 +1387,9 @@ end do Retrieval_Loop
 !-----------------------------------------------------------------
 ! Successful Retrieval Post Processing
 !-----------------------------------------------------------------
-if (Fail_Flag == symbol%NO) then  !successful retrieval if statement
+if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if statement
 
- !--- save retrieved vOutput%Ector into its output variables
+ !--- save retrievals into the output variables
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
 
@@ -1451,26 +1466,29 @@ if (Fail_Flag == symbol%NO) then  !successful retrieval if statement
 
  endif
 
-
+ !-----------------------------------------------------------------------------
  !--- compute height and pressure uncertainties 
+ !-----------------------------------------------------------------------------
 
  !--- compute lapse rate as dT/dZ
- Lapse_Rate =  (Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)) / &
-               (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev))
+ Abs_Lapse_Rate =  ABS((Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)) / &
+               (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
+
+ if (Abs_Lapse_Rate < ABS_LAPSE_RATE_UNCER_MIN) Abs_Lapse_Rate = ABS_LAPSE_RATE_UNCER_MIN
 
  !--- compute lapse rate as dP/dZ
- Lapse_Rate_dP_dZ =  (Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)) / &
-                     (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev))
+ Abs_Lapse_Rate_dP_dZ =  ABS((Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)) / &
+                     (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
+
+ if (Abs_Lapse_Rate_dP_dZ < ABS_LAPSE_RATE_DP_DZ_UNCER_MIN) Abs_Lapse_Rate_dP_dZ = ABS_LAPSE_RATE_DP_DZ_UNCER_MIN
+
  !-- Compute Height Uncertainty
- if (Lapse_Rate /= 0.0) THEN
-      Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) / ABS(Lapse_Rate)
- endif
+ Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) / Abs_Lapse_Rate
 
  !-- Compute Pressure Uncertainty
- if (Lapse_Rate /= 0.0 .and. Lapse_Rate_dP_dZ /= 0.0) THEN
-     Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) * ABS(Lapse_Rate_dP_dZ)
+ if (Abs_Lapse_Rate_dP_dZ /= 0.0) THEN
+     Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) * Abs_Lapse_Rate_dP_dZ
  endif
- 
 
  !--- quality flags of the retrieved parameters
  do Param_Idx = 1,Num_Param    !loop over parameters
@@ -1690,6 +1708,8 @@ end do pass_loop
   if (allocated(Line_Idx_LRC)) deallocate(Line_Idx_LRC)
   if (allocated(Skip_LRC_Mask)) deallocate(Skip_LRC_Mask)
   if (allocated(Temperature_Cirrus)) deallocate(Temperature_Cirrus)
+  if (allocated(Fail_Flag)) deallocate(Fail_Flag)
+  if (allocated(Converged_Flag)) deallocate(Converged_Flag)
 
   !--- deallocate 1D-VAR arrays
   deallocate(y)
@@ -2112,7 +2132,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 ! Delta_X_distance - the total length in x-space of Delta_X
 ! Delta_X_constrained - the values of Delta_X after being constrained
 !-----------------------------------------------------------------------
-subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
+subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
                               Convergence_Criteria,Delta_X_Max, &
                               y,f,x,x_Ap,K,Sy,Sa_inv, &
                               Sx,AKM,Delta_X,Conv_Test,Converged_Flag,Fail_Flag, &
@@ -2154,6 +2174,7 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   p = size(Sx,1)
 
   Converged_Flag = symbol%NO
+  Fail_Flag = symbol%NO
   Delta_X = MISSING_VALUE_REAL
   Sx = MISSING_VALUE_REAL
 
@@ -2161,6 +2182,7 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Singular_Flag == symbol%YES) then
    print *, "Cloud Height warning ==> Singular Sy in ACHA "
    Fail_Flag = symbol%YES
+   Converged_Flag = symbol%NO
    print *, "y = ", y
    print *, "Sy = ", Sy
   !stop
@@ -2180,6 +2202,7 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    print *, "Sa_Inv = ", Sa_Inv
    print *, "Sy_Inv = ", Sy_Inv
    print *, "K = ", K
+   Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
    return
   endif
@@ -2223,10 +2246,10 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   endif
 
   !--- check for non-traditional convergence
-  if ((abs(Delta_X(1)) < 0.1) .and. (Iter_Idx > 1)) then
-    Converged_Flag = symbol%YES
-    Fail_Flag = symbol%NO
-  endif
+! if ((abs(Delta_X(1)) < 0.1) .and. (Iter_Idx > 1)) then
+!   Converged_Flag = symbol%YES
+!   Fail_Flag = symbol%NO
+! endif
 
   !--- check for traditional convergence
   if (Conv_Test < Convergence_Criteria) then
@@ -2240,7 +2263,7 @@ subroutine OPTIMAL_ESTIMATION_ACHA(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
       Fail_Flag = symbol%YES
   endif
 
-  end subroutine OPTIMAL_ESTIMATION_ACHA
+  end subroutine OPTIMAL_ESTIMATION
 
   !----------------------------------------------------------------------
   !---
@@ -4126,9 +4149,9 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    mask = .false.
 
    where( (Type == sym%CIRRUS_TYPE .or. &
-           Type == sym%OVERLAP_TYPE .or. &
-           Type == sym%OPAQUE_ICE_TYPE .or. &
-           Type == sym%OVERSHOOTING_TYPE) .and. &
+           Type == sym%OVERLAP_TYPE) .and.  &
+!          Type == sym%OPAQUE_ICE_TYPE .or. &
+!          Type == sym%OVERSHOOTING_TYPE) .and. &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud > Emissivity_Thresh)
 
@@ -4181,12 +4204,12 @@ end subroutine COMPUTE_TEMPERATURE_CIRRUS
 !
 ! Processing Order Description
 !
-! pass 0 = treat all pixels as single layer lrc pixels (only done if Use_Lrc_Flag=no)
+! pass 0 = Not Processed
 ! pass 1 = non-multi-layer ncc pixels
 ! pass 2 = single layer water cloud pixels
 ! pass 3 = lrc multi-layer clouds
 ! pass 4 = all remaining clouds
-! pass 4 = if Use_Cirrus_Flag is set on, redo all thin cirrus using a priori
+! pass 5 = if Use_Cirrus_Flag is set on, redo all thin cirrus using a priori
 !          temperature from thicker cirrus.
 !--------------------------------------------------------------------------
 subroutine COMPUTE_PROCESSING_ORDER(symbol,Invalid_Data_Mask,Cloud_Type, &
@@ -4224,6 +4247,13 @@ subroutine COMPUTE_PROCESSING_ORDER(symbol,Invalid_Data_Mask,Cloud_Type, &
 
         !--- skip data marked as bad
         if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
+            cycle
+        endif
+
+        !--- skip data marked as bad
+        if (Cloud_Type(Elem_Idx,Line_Idx) == symbol%CLEAR_TYPE .or. & 
+            Cloud_Type(Elem_Idx,Line_Idx) == symbol%PROB_CLEAR_TYPE) then
+            Processing_Order(Elem_Idx,Line_Idx) = 0
             cycle
         endif
 

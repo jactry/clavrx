@@ -9,6 +9,7 @@ contains
 
 
    function get_rad_refl_factor ( sensor , sol_zen  ) result ( rad_to_refl )
+   
       implicit none
       character (len =  * )  :: sensor
       real, intent ( in ) :: sol_zen
@@ -45,65 +46,65 @@ contains
          solar = 4.204
          ew = 270.43962  
       case ( 'GOES-13')
-      solar = 3.2502353
-      ew = 222.80349
-   case ( 'GOES-14')
-      solar = 3.4876949 
-      ew = 237.43905 
-   case ( 'GOES-15')
-      solar = 3.5111240
-      ew = 241.02064
-   case ( 'MODIS-AQUA' , 'MODIS-TERRA')
-       solar = 1.9553725
-       ew = 127.12892
-   case ( 'VIIRS')
-      solar = 2.2671891
-      ew = 140.86442
-    case ('NOAA-05','TIROS-N')
-      solar =  4.1604741 
-      ew = 267.14124
-   case ( 'NOAA-06')
-      solar = 3.9980827
-      ew = 254.00470
-   case ('NOAA-07')
-      solar =  4.5634907 
-      ew = 287.01810
-   case ( 'NOAA-08')
-      solar = 4.0794900
-      ew = 262.90717
-   case ( 'NOAA-09')
-      solar = 4.611
-      ew = 288.84289   
-   case ('NOAA-10')
-      solar =  4.2889941 
-	  ew = 272.12618
-   case ( 'NOAA-11')
-      solar = 4.448
-	  ew = 278.85792	  	   
-   case ( 'NOAA-12')
-      solar = 4.204
-	  ew = 270.43962
-   case ('NOAA-14')
-      solar =  4.448 
-	  ew = 284.69366
-   case ( 'NOAA-15')
-      solar = 3.781
-	  ew = 236.53016    
-   case ( 'NOAA-16')
-      solar = 3.7372757
-	  ew = 236.38144
-   case ( 'NOAA-17')
-      solar = 4.2443861
-	  ew = 269.79606	  	  	   
-   case ( 'NOAA-18')
-      solar = 4.0620453
-	  ew = 259.57508 
-   case ( 'NOAA-19')
-      solar = 4.1725582
-	  ew = 265.07816   
-   case ('MTSAT-2') 
-      solar = 5.1190589
-	  ew = 322.06623 
+         solar = 3.2502353
+         ew = 222.80349
+      case ( 'GOES-14')
+         solar = 3.4876949 
+         ew = 237.43905 
+      case ( 'GOES-15')
+         solar = 3.5111240
+         ew = 241.02064
+      case ( 'MODIS-AQUA' , 'MODIS-TERRA')
+         solar = 1.9553725
+         ew = 127.12892
+      case ( 'VIIRS')
+         solar = 2.2671891
+         ew = 140.86442
+      case ('NOAA-05','TIROS-N')
+         solar =  4.1604741 
+         ew = 267.14124
+      case ( 'NOAA-06')
+         solar = 3.9980827
+         ew = 254.00470
+      case ('NOAA-07')
+         solar =  4.5634907 
+         ew = 287.01810
+      case ( 'NOAA-08')
+         solar = 4.0794900
+         ew = 262.90717
+      case ( 'NOAA-09')
+         solar = 4.611
+         ew = 288.84289   
+      case ('NOAA-10')
+         solar =  4.2889941 
+	      ew = 272.12618
+      case ( 'NOAA-11')
+         solar = 4.448
+	      ew = 278.85792	  	   
+      case ( 'NOAA-12')
+         solar = 4.204
+	      ew = 270.43962
+      case ('NOAA-14')
+         solar =  4.448 
+	      ew = 284.69366
+      case ( 'NOAA-15')
+         solar = 3.781
+	      ew = 236.53016    
+      case ( 'NOAA-16')
+         solar = 3.7372757
+	      ew = 236.38144
+      case ( 'NOAA-17')
+         solar = 4.2443861
+	      ew = 269.79606	  	  	   
+      case ( 'NOAA-18')
+         solar = 4.0620453
+	      ew = 259.57508 
+      case ( 'NOAA-19')
+         solar = 4.1725582
+	      ew = 265.07816   
+      case ('MTSAT-2') 
+         solar = 5.1190589
+	      ew = 322.06623 
    case ('MTSAT-1R')
       solar = 4.3693553
 	  ew = 280.93528
@@ -140,20 +141,17 @@ contains
    rad_to_refl    = PI / cos (sol_zen * DTOR )/ solar_rad_20 / sun_earth_distance ** 2
 
 
+   end function get_rad_refl_factor
 
-
-
-end function get_rad_refl_factor
-
-
+   !
+   !
+   !
    function get_planck_radiance_39um ( tmp , sensor ) result ( rad )
       implicit none
       real, intent ( in) :: tmp
       character (len =  * ) :: sensor
       !real, intent ( out), optional :: db_dt
-   
-   
-   
+
       character(len = 20 ) ,save :: sensor_saved
       real :: rad
 	  
@@ -220,117 +218,117 @@ end function get_rad_refl_factor
             nu_20 = 2708.3865
 	         a1_20 = -0.59392036
 	         a2_20 = 1.0006466	
-      case ( 'NOAA-05','TIROS-N')
-      nu_20 = 2655.7409
-	  a1_20 = -1.6485446
-	  a2_20 = 1.0020894      
-   case ( 'NOAA-06')
-      nu_20 = 2671.5433
-	  a1_20 = -1.7667110
-	  a2_20 = 1.0024428	      
-   case ( 'NOAA-07')
-      nu_20 = 2684.5233
-	  a1_20 = -1.9488269
-	  a2_20 = 1.0029260	      
-   case ( 'NOAA-08')
-      nu_20 = 2651.3776
-	  a1_20 = -1.7764105
-	  a2_20 = 1.0024260	  
-   case ( 'NOAA-09')
-      nu_20 = 2690.0451
-	  a1_20 = -1.8832662
-	  a2_20 = 1.0028978	      
-   case ( 'NOAA-10')
-      nu_20 = 2672.6164
-	  a1_20 = -1.7986926
-	  a2_20 = 1.0026426	      
-   case ( 'NOAA-11')
-      nu_20 = 2680.05
-	  a1_20 = -1.738973
-	  a2_20 = 1.003354 	  
-   case ( 'NOAA-12')
-      nu_20 = 2651.7708
-	  a1_20 = -1.9052739
-	  a2_20 = 1.003010	        
-   case ( 'NOAA-14')
-      nu_20 = 2654.25
-	  a1_20 = -1.885330
-	  a2_20 = 1.003839	
-   case ( 'NOAA-15')
-      nu_20 = 2695.9743
-	  a1_20 = -1.624481
-	  a2_20 = 1.001989		 
-   case ( 'NOAA-16')
-      nu_20 = 2681.2540
-	  a1_20 = -1.6774586
-	  a2_20 = 1.0017316 	 
-   case ( 'NOAA-17')
-      nu_20 = 2669.1414
-	  a1_20 = -1.7002941
-	  a2_20 = 1.0026724 	   
-   case ( 'NOAA-18')
-      nu_20 = 2660.6468
-	  a1_20 = -1.7222650
-	  a2_20 = 1.0028633	 
-   case ( 'NOAA-19')
-      nu_20 = 2670.2425
-	  a1_20 = -1.6863857
-	  a2_20 = 1.0025955		     
-	case ('MTSAT-1R')
-	  nu_20 = 2647.9998
-	  a1_20 = -2.455206
-	  a2_20 = 1.0042972 
-      case ('MTSAT-2')
-	      nu_20 = 2680.1828
-	      a1_20 = -2.3876343
-	      a2_20 = 1.0042061   
-      case ('METOP-A')
-	      nu_20 = 2687.0392
-	      a1_20 = -2.0653147
-	      a2_20 = 1.0034418   
-      case ('METOP-B')
-	      nu_20 = 2664.3384
-	      a1_20 = -1.7711318
-	      a2_20 = 1.0029931   
-      case ('Meteosat-8')
-	      nu_20 = 2561.4547
-	      a1_20 = -3.2692076
-	      a2_20 = 1.0056489   
-      case ('Meteosat-9')
-	      nu_20 = 2562.2502
-	      a1_20 = -3.2790754
-	      a2_20 = 1.0059926   
-      case ('Meteosat-10')
-	      nu_20 = 2560.1576
-	      a1_20 = -3.2146560
-	      a2_20 = 1.0058230  
-      case ('GOES-16','ABI')
-	      nu_20 = 2562.1383 ! faked from goes-15
-         a1_20 = -1.661627 ! faked from goes-15
-         a2_20 = 1.0023207 ! faked from goes-15
-	   case('COMS-1')
-         nu_20 = 2675.0265
-	      a1_20 = -2.2829416
-	      a2_20 = 1.0037865   
+         case ( 'NOAA-05','TIROS-N')
+            nu_20 = 2655.7409
+	         a1_20 = -1.6485446
+	         a2_20 = 1.0020894      
+         case ( 'NOAA-06')
+            nu_20 = 2671.5433
+	         a1_20 = -1.7667110
+	         a2_20 = 1.0024428	      
+         case ( 'NOAA-07')
+            nu_20 = 2684.5233
+	         a1_20 = -1.9488269
+	         a2_20 = 1.0029260	      
+         case ( 'NOAA-08')
+            nu_20 = 2651.3776
+	         a1_20 = -1.7764105
+	         a2_20 = 1.0024260	  
+         case ( 'NOAA-09')
+            nu_20 = 2690.0451
+	         a1_20 = -1.8832662
+	         a2_20 = 1.0028978	      
+         case ( 'NOAA-10')
+            nu_20 = 2672.6164
+	         a1_20 = -1.7986926
+	         a2_20 = 1.0026426	      
+         case ( 'NOAA-11')
+            nu_20 = 2680.05
+	         a1_20 = -1.738973
+	         a2_20 = 1.003354 	  
+         case ( 'NOAA-12')
+            nu_20 = 2651.7708
+	         a1_20 = -1.9052739
+	         a2_20 = 1.003010	        
+         case ( 'NOAA-14')
+            nu_20 = 2654.25
+	         a1_20 = -1.885330
+	         a2_20 = 1.003839	
+         case ( 'NOAA-15')
+            nu_20 = 2695.9743
+	         a1_20 = -1.624481
+	         a2_20 = 1.001989		 
+         case ( 'NOAA-16')
+            nu_20 = 2681.2540
+	         a1_20 = -1.6774586
+	         a2_20 = 1.0017316 	 
+         case ( 'NOAA-17')
+            nu_20 = 2669.1414
+	         a1_20 = -1.7002941
+	         a2_20 = 1.0026724 	   
+         case ( 'NOAA-18')
+            nu_20 = 2660.6468
+	         a1_20 = -1.7222650
+	         a2_20 = 1.0028633	 
+         case ( 'NOAA-19')
+            nu_20 = 2670.2425
+	         a1_20 = -1.6863857
+	         a2_20 = 1.0025955		     
+	      case ('MTSAT-1R')
+	         nu_20 = 2647.9998
+	         a1_20 = -2.455206
+	         a2_20 = 1.0042972 
+         case ('MTSAT-2')
+	         nu_20 = 2680.1828
+	         a1_20 = -2.3876343
+	         a2_20 = 1.0042061   
+         case ('METOP-A')
+	         nu_20 = 2687.0392
+	         a1_20 = -2.0653147
+	         a2_20 = 1.0034418   
+         case ('METOP-B')
+	         nu_20 = 2664.3384
+	         a1_20 = -1.7711318
+	         a2_20 = 1.0029931   
+         case ('Meteosat-8')
+	         nu_20 = 2561.4547
+	         a1_20 = -3.2692076
+	         a2_20 = 1.0056489   
+         case ('Meteosat-9')
+	         nu_20 = 2562.2502
+	         a1_20 = -3.2790754
+	         a2_20 = 1.0059926   
+         case ('Meteosat-10')
+	         nu_20 = 2560.1576
+	         a1_20 = -3.2146560
+	         a2_20 = 1.0058230  
+         case ('GOES-16','ABI')
+	         nu_20 = 2562.1383 ! faked from goes-15
+            a1_20 = -1.661627 ! faked from goes-15
+            a2_20 = 1.0023207 ! faked from goes-15
+	      case('COMS-1')
+            nu_20 = 2675.0265
+	         a1_20 = -2.2829416
+	         a2_20 = 1.0037865   
     
 	  
-      case default
-         print*,'missing sensor calibration for sensor ', sensor
-	      print*, 'add to get_planck_radiance_39um'
+         case default
+            print*,'missing sensor calibration for sensor ', sensor
+	         print*, 'add to get_planck_radiance_39um'
             stop
-      end select 	
+         end select 	
 	  
     
-      c1_times_nu_20__3 =  c1 * nu_20 ** 3
-      c2_times_nu_20 = c2 * nu_20
+         c1_times_nu_20__3 =  c1 * nu_20 ** 3
+         c2_times_nu_20 = c2 * nu_20
    
-      do i = 1 , nplanck 
-         t_planck(i) = T_planck_min + ( i - 1 ) * delta_T_planck
-         B20(i) = c1_times_nu_20__3  / ( exp ( ( c2_times_nu_20 ) / &
+         do i = 1 , nplanck 
+            t_planck(i) = T_planck_min + ( i - 1 ) * delta_T_planck
+            B20(i) = c1_times_nu_20__3  / ( exp ( ( c2_times_nu_20 ) / &
               (( T_planck(i) - a1_20 ) / a2_20 ) ) - 1.0) 
-      end do
+         end do
       
-      sensor_saved = sensor 
+         sensor_saved = sensor 
          
    end if
    

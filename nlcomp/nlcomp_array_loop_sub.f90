@@ -4,6 +4,7 @@
 !         : AW first verisob of NLCOMP for arrays
 ! 
 !
+!    06/10/2014: start adding more channels and channel cmbinations as input for retrieval (AW)
 !
 subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    use nlcomp_retrieval_mod
@@ -30,10 +31,10 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    logical , allocatable :: is_water_phase( : , : )
    logical , allocatable :: has_city_lights(:,:)
    
-   integer ( kind = int2)  , allocatable :: info_flag ( :,:)
-   integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
+   integer ( kind = int2)  , allocatable :: info_flag ( : , :)
+   integer ( kind = int2)  , allocatable :: quality_flag ( : , :)
    ! - 
-   type ( nlcomp_output_structure ) :: nlcomp_out
+   type ( nlcomp_output_type ) :: nlcomp_out
    
    integer :: debug_mode
    
@@ -44,11 +45,11 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    integer :: nr_elem
    
    
-   real ::calib_err ( N_CHAN )
+   real :: calib_err ( N_CHAN )
    
    
    
-    real :: cld_height
+   real :: cld_height
    real :: cld_press
    real :: cld_temp
    
@@ -58,7 +59,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    
    integer :: chn_idx
    integer , parameter :: CHN_VIS = 42
-   integer ,parameter  :: CHN_NIR = 20
+   integer , parameter :: CHN_NIR = 20
    real(kind=real4) :: gas_coeff (3)
    
    real( kind = real4 ) :: trans_ozone ( N_CHAN )
@@ -69,22 +70,25 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real( kind = real4 ) :: trans_total ( N_CHAN )
    
    real( kind = real4 ) :: assumed_tpw_error 
-   real( kind = real4 ), parameter :: ozone_coeff (3)    = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ]
+   real( kind = real4 ), parameter :: OZONE_COEFF (3)    = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ]
    
    real ( kind = real4 ) :: refl_toc(40)
    real ( kind = real4 ) :: alb_sfc(40)
    real ( kind = real4 ) :: alb_unc_sfc(40)
    real ( kind = real4 ) :: rad_to_refl_factor
-   real(kind=real4)   :: refl_toa = -999.
+   real (kind = real4)   :: refl_toa = -999.
    
    real :: rad_clear_sky_toa_ch20 = -999.
    real :: rad_clear_sky_toc_ch20 = -999.
    
-   real :: obs_vec(2) = [-999.,-999.]
-   real :: obs_unc(2) = [-999.,-999.]
+   real :: obs_vec(3) = [-999.,-999.,-999.]
+   real :: obs_unc(3) = [-999.,-999.,-999.]
    real :: alb_vec(2) = [-999.,-999.]
    real :: alb_unc(2) = [-999.,-999.]
 	real :: trans_vec(2) = [-999.,-999.]
+   
+   
+   type ( nlcomp_input_type ) :: inp_retr
    
   
    real , dimension(2) :: state_apriori
@@ -196,13 +200,12 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          rel_azi        = input % azi % d (elem_idx,line_idx)
          lunar_rel_azi  = input % azi_lunar % d (elem_idx,line_idx)
          ozone_path_nwp = input % ozone_nwp % d (elem_idx,line_idx)
-         
-         
+            
          ! - compute transmission 
               
          loop_chn: do chn_idx = 1 , 42
            
-            if ( input % is_channel_on (chn_idx) .eqv. .false.) cycle  loop_chn
+            if ( .not. input % is_channel_on (chn_idx) ) cycle  loop_chn
             
             trans_block : associate ( tpw_ac => input % tpw_ac % d (elem_idx,line_idx)  , &
                       & press_sfc => input % press_sfc  % d (elem_idx,line_idx) , &
@@ -279,43 +282,56 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
              
          end do loop_chn
          
-          ! - NIR
+         inp_retr % conf % ancil_path = trim(input % lut_path)
+         
+         inp_retr % conf % debug_in = debug_mode  
               
-              
-             
-         obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
-         obs_unc ( 1 ) =   trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
-         alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
-        
-         alb_unc ( 1) = 0.05
-        
-         trans_vec ( 1) = trans_total ( CHN_VIS )
-        
+         inp_retr % geo % sol_zen = sol_zen   
+         inp_retr % geo % lun_zen = lunar_zen   
+         inp_retr % geo % sat_zen = sat_zen
+         inp_retr % geo % rel_azi = rel_azi
+         inp_retr % geo % lun_rel_azi = lunar_rel_azi
          
-         
-         ! - nir channel
-         obs_vec( 2 ) = input % rad ( CHN_NIR)  % d (elem_idx, line_idx)
-         
-         
-         obs_unc( 2 ) = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
-         
-         alb_vec( 2 ) = alb_sfc ( CHN_NIR)
-         alb_unc( 2 ) = 0.05
-         
-         trans_vec ( 2) = trans_total ( CHN_NIR )
+         inp_retr % prd % ctt = cld_temp  
+         inp_retr % prd % cph = is_water_phase(elem_idx, line_idx)
              
          ! - apriori
-         state_apriori (1) = 0.7 * ( 100. * obs_vec(1) ) ** (0.9)
-         state_apriori(1) = log10 ( max ( 0.1 , state_apriori(1) ) ) 
-         state_apriori (2) = 1.3
-         if  (is_water_phase ( elem_idx, line_idx) ) state_apriori(2) = 1.0
+         inp_retr % state % a_priori (1) = 0.7 * ( 100. * input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100. ) ** (0.9)
+         inp_retr % state % a_priori (1) = log10 ( max ( 0.1 , inp_retr % state % a_priori (1) ) ) 
+         inp_retr % state % a_priori (2) = 1.3
+         if  (is_water_phase ( elem_idx, line_idx) ) inp_retr % state % a_priori (2)  = 1.0
          
-         call nlcomp_algorithm ( obs_vec , obs_unc  &
-                & , alb_vec , alb_unc  , state_apriori , trans_vec  &
-                & , lunar_zen , sat_zen &
-                & , lunar_rel_azi , cld_temp , is_water_phase ( elem_idx, line_idx)  &
-                & , rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20  &
-                & , nlcomp_out ,  ancil_path =  input % lut_path,  debug_in =  debug_mode  )
+    
+         inp_retr % chn ( 20 ) % rad = input % rad ( CHN_NIR)  % d (elem_idx, line_idx)
+         inp_retr % chn ( 20 ) % rad_u = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
+         inp_retr % chn ( 20 ) % alb_sfc = alb_sfc ( CHN_NIR)
+         inp_retr % chn ( 20 ) % alb_sfc_u = 0.05
+         inp_retr % chn ( 20 ) % trans_air_abvcld = trans_total ( CHN_NIR )
+         inp_retr % chn ( 20 ) % rad_abvcld_nwp = rad_clear_sky_toc_ch20
+         inp_retr % chn ( 20 ) % rad_sfc_nwp = rad_clear_sky_toa_ch20
+         
+         inp_retr % chn ( 31 ) % rad = input % rad ( 31)  % d (elem_idx, line_idx)
+         inp_retr % chn ( 31 ) % rad_u = max ( trans_unc_wvp  ( 31 ) , 0.01 )  + calib_err (31)
+         inp_retr % chn ( 31 ) % alb_sfc = alb_sfc ( 31 )
+         inp_retr % chn ( 31 ) % alb_sfc_u = 0.05
+         
+         inp_retr % chn ( 32 ) % rad = input % rad ( 32)  % d (elem_idx, line_idx)
+         inp_retr % chn ( 32 ) % rad_u = max ( trans_unc_wvp  ( 32 ) , 0.01 )  + calib_err (32)
+         inp_retr % chn ( 32 ) % alb_sfc = alb_sfc ( 32 )
+         inp_retr % chn ( 32 ) % alb_sfc_u = 0.05
+                  
+         inp_retr % chn ( 42 ) % rfl   = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
+         inp_retr % chn ( 42 ) % rfl_u = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         inp_retr % chn ( 42 ) % alb_sfc = alb_sfc ( CHN_VIS)
+         inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
+         inp_retr % chn ( 42 ) % trans_air_abvcld = trans_total ( CHN_VIS )
+         
+         
+         
+         
+         
+         call nlcomp_algorithm ( inp_retr  &
+                & , nlcomp_out )
           
          quality_flag (elem_idx,line_idx) = ibset ( quality_flag(elem_idx,line_idx) , 0)
          quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 1)

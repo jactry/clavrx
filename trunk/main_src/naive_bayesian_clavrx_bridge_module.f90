@@ -170,6 +170,11 @@ contains
       ! cloud mask information mask 7 bytes ( 56 bits)    
       integer :: info_flags ( 7 )
       integer :: i , j 
+      ! --- set cloud mask probability thresholds based on sfc type
+      real, dimension (7) :: cld_mask_probab_thresh_lo = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      real, dimension (7) :: cld_mask_probab_thresh_mi = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+      real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+      real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, cld_mask_probab_thresh_hi_tmp
       
       mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
       
@@ -185,14 +190,13 @@ contains
       end if
                  
                  
-                 
       ! -----------    loop over pixels -----   
       line_loop: do i = 1, num_pix
          elem_loop: do  j = 1,num_scans_read
             
-            if ( space_mask (i,j) == 1) cycle
+            if ( Space_Mask (i,j) == 1) cycle
             
-            if ( land (i,j) < 0 ) cycle
+            if ( Land (i,j) < 0 ) cycle
             
             mask_inp % geo % lat         = Lat ( i , j )            
             mask_inp % geo % lon         = Lon ( i , j )
@@ -278,7 +282,41 @@ contains
             Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
             Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
             Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
-           
+
+            !--------------------------------------------------------------------------------------------
+            !--- make a cloud mask
+            !--------------------------------------------------------------------------------------------
+            Cld_Mask ( i , j ) = sym%CLEAR
+
+            ! - based on type of srfc could be different thresholds
+            if (Bayes_Mask_Sfc_Type_Global (  i , j ) > 0) then
+               cld_mask_probab_thresh_lo_tmp = cld_mask_probab_thresh_lo (Bayes_Mask_Sfc_Type_Global (  i , j ))
+               cld_mask_probab_thresh_mi_tmp = cld_mask_probab_thresh_mi (Bayes_Mask_Sfc_Type_Global (  i , j ))
+               cld_mask_probab_thresh_hi_tmp = cld_mask_probab_thresh_hi (Bayes_Mask_Sfc_Type_Global (  i , j ))
+
+               if ( Posterior_Cld_Probability ( i , j ) >= cld_mask_probab_thresh_hi_tmp ) then
+                  Cld_Mask ( i , j ) = sym % CLOUDY
+               end if
+
+               if ( Posterior_Cld_Probability ( i , j ) >= cld_mask_probab_thresh_mi_tmp &
+              .and. Posterior_Cld_Probability ( i , j ) < cld_mask_probab_thresh_hi_tmp ) then
+                  Cld_Mask ( i , j ) = sym % PROB_CLOUDY
+               end if
+
+               if ( Posterior_Cld_Probability ( i , j ) > cld_mask_probab_thresh_lo_tmp &
+              .and. Posterior_Cld_Probability ( i , j ) < cld_mask_probab_thresh_mi_tmp ) then
+                  Cld_Mask ( i , j ) = sym % PROB_CLEAR
+               end if
+            end if
+
+            if ( Space_Mask ( i , j ) == 1) then
+               Cld_Mask ( i , j ) = ET_cloudiness_class % SPACE
+            end if
+
+            if ( Land ( i , j ) < 0 .and. Space_Mask ( i , j ) /= 1) then
+               Cld_Mask ( i , j ) = ET_cloudiness_class % MISSING
+            end if
+
          end do elem_loop
       end do line_loop
       
@@ -286,31 +324,6 @@ contains
       Cloud_Mask_Version = vers % cloud_mask_version_id
       Cloud_Mask_Thresholds_Version = vers % cloud_mask_thresh_version_id
        
-      !------------------------------------------------------------------------------------------------------------
-      !--- make a cloud mask
-      !------------------------------------------------------------------------------------------------------------
-      Cld_Mask ( : , : ) = sym%CLEAR
-        
-      where ( Posterior_Cld_Probability >= 0.9 )
-         cld_mask = sym % CLOUDY
-      end where
-      
-      where ( Posterior_Cld_Probability >= 0.5 .and. Posterior_Cld_Probability < 0.9 )
-         cld_mask = sym % PROB_CLOUDY
-      end where
-        
-      where ( Posterior_Cld_Probability > 0.1 .and. Posterior_Cld_Probability < 0.5 )
-         cld_mask = sym % PROB_CLEAR
-      end where 
-      
-      where ( space_mask == 1) 
-         cld_mask = ET_cloudiness_class % SPACE
-      end where
-      
-      where ( land < 0 .and. space_mask /= 1)
-         cld_mask = ET_cloudiness_class % MISSING
-      end where 
-
    end subroutine AWG_CLOUD_BAYES_BRIDGE
 
 

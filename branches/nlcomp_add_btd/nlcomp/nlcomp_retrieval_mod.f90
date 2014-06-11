@@ -73,7 +73,7 @@ contains
          
       use nlcomp_forward_mod, only : &
         nlcomp_forward_computation &
-        , pixel_vec
+        , pixel_vec, thick_cloud_cps
         
       use clavrx_planck_mod    
    
@@ -91,8 +91,8 @@ contains
       real  :: state_apr (2)
       real  :: sol_zen, sat_zen , rel_azi , cld_temp
       logical :: cld_phase 
-      real :: rad_abv_cld 
-      real :: rad_clear_toc
+      real :: rad_abv_cld (42)
+      real :: rad_clear_toc (42)
       
       
       real :: cod, cps, codu, cpsu
@@ -126,18 +126,25 @@ contains
       type ( pixel_vec ) :: pxl
 	
       real :: max_step_size
-      integer , dimension(2) :: channels
+     
       
       real :: bt_20
       real :: bt_31
       real :: bt_32
 
       ! - executable
-      
-      
-      
+
       
       ! - okay lets start
+      
+      rad_abv_cld (20)  = inp % chn ( 20 ) % rad_abvcld_nwp
+      rad_abv_cld (31)  = inp % chn ( 31 ) % rad_abvcld_nwp
+      rad_abv_cld (32)  = inp % chn ( 32 ) % rad_abvcld_nwp
+      
+      rad_clear_toc(20) = inp % chn ( 20 ) % rad_sfc_nwp
+      rad_clear_toc(31) = inp % chn ( 31 ) % rad_sfc_nwp
+      rad_clear_toc(32) = inp % chn ( 32 ) % rad_sfc_nwp
+      
       ! - first define the observation vector
       
       ! -  observation vector
@@ -151,8 +158,7 @@ contains
       
       obs_vec ( 3 ) = bt_31 - bt_32
       obs_vec ( 4 ) = bt_20 - bt_31
-      print*,'rad measured: ', inp % chn ( 20 ) % rad,inp % chn ( 31 ) % rad,inp % chn ( 32 ) % rad
-      print*,'obs_vec: ',obs_vec
+     
       
       obs_u ( 1 ) = inp % chn ( 42 ) % rfl_u
       obs_u ( 2 ) = inp % chn ( 20 ) % rad_u
@@ -165,8 +171,8 @@ contains
       S_m = 0.
       S_m (1,1) = ( max ( obs_u(1) * obs_vec(1) , 0.01 ) ) ** 2
       S_m (2,2) = ( max ( obs_u(2) * obs_vec(2) , 0.01 ) ) ** 2
-      S_m (3,3) = ( max ( obs_u(3) * obs_vec(3) , 0.01 ) ) ** 2
-      S_m (4,4) = ( max ( obs_u(4) * obs_vec(4) , 0.01 ) ) ** 2
+      S_m (3,3) = ( 1. ) ** 2
+      S_m (4,4) = ( 1. ) ** 2
       
       
       S_m (1,2) =  ( obs_u(2) * obs_vec(2) ) * (obs_u(1) * obs_vec(1) ) * obs_crl
@@ -184,7 +190,7 @@ contains
       call findinv ( S_a , S_a_inv , 2 , errorflag)
       
       
-      ! = forward model components vector TODO
+      ! = forward model components vector TOADD
       S_b = 0.
 
       S_b(1,1) = ( alb_sfc_u(1) ) ** 2 
@@ -192,8 +198,6 @@ contains
       S_b(3,3) =  1.
       S_b(4,4) =  1.
       S_b(5,5) =  1.
-      
-      
 
       pxl % sol_zen = inp % geo %sol_zen
       pxl % lun_zen = inp % geo %lun_zen
@@ -202,11 +206,9 @@ contains
       pxl % lun_rel_azi = inp % geo %lun_rel_azi
       pxl % ctt = inp % prd %ctt
       pxl % is_water_phase = inp % prd %cph
-     
-     
+       
       dcomp_ancil_path = trim ( inp % conf % ancil_path )
-      
-      
+            
       air_trans_ac ( 1 ) = inp % chn ( 42 ) % trans_air_abvcld
       air_trans_ac ( 2 ) = inp % chn ( 20 ) % trans_air_abvcld
       
@@ -222,6 +224,7 @@ contains
 
 
       state_vec = state_apr
+      
 
       iteration_idx = 0
 
@@ -243,7 +246,7 @@ contains
          iteration_Idx = iteration_Idx + 1
 	   	
 		   sensor ='VIIRS'
-         channels = [1, 20   ]
+         
         ! Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
          call  nlcomp_forward_computation  ( &
                state_vec  &
@@ -261,7 +264,7 @@ contains
             , rad_clear_toc &
             , lut_path = dcomp_ancil_path   ) 
             
-            	stop 
+            	 
 		   ! - define forward model vector
 		   ! - first dimesnion : the two channels
 		   ! - 1 sfc albedo vis ; 2 -  sfc albedo ir ; 3- rtm error in vis  4 - rtm error in nir 
@@ -288,7 +291,7 @@ contains
              
          ! - calculate observation error covariance 
          S_y = S_m + matmul (kernel_b, matmul (S_b, transpose (Kernel_B) ) )
-         call findinv ( S_y , S_y_inv , 2 , errorflag)
+         call findinv ( S_y , S_y_inv , 4 , errorflag)
   
 		   !--compute Sx error covariance of solution x 
          S_x_inv = S_a_inv + matmul ( transpose ( Kernel ) , matmul ( S_y_inv , Kernel ) )
@@ -300,12 +303,14 @@ contains
                 &  (matmul( transpose ( kernel ), &
                 &   matmul ( S_y_inv , ( obs_vec - obs_fwd ) ) ) +  &
                 &   matmul ( S_a_inv , state_apr - state_vec ) ) )
-		 
+       
 		   ! - check for convergence
          Conv_Test = abs ( sum (delta_X * matmul ( S_x_inv , Delta_X ) ) )	
-		
+         
+        debug_mode = 1
 		
          if ( debug_mode > 4 ) then 
+            
             print*
             print*,'iter = ',iteration_idx
             print*, 'f = ', obs_fwd
@@ -314,8 +319,12 @@ contains
             print*,'delta x =', delta_x
             print*, ' new x =', state_vec + delta_x
             print*, 'conv test = ', conv_test
+            print*,'obs_vec: ', obs_vec
+            print*,'obs_fwd: ', obs_fwd
+            print*,'state vec: ',state_vec
+            print*
          end if
-         
+           
          max_step_size = 0.5
          delta_dstnc = sqrt ( sum ( delta_x ** 2 ) )
          
@@ -354,6 +363,17 @@ contains
             exit retrieval_loop
 		 
          end if
+         
+          if ( state_vec(1) > 2.0 .and. iteration_idx > 6 ) then
+            state_vec(2) = thick_cloud_cps ( obs_vec(2) , pxl )  
+             nlcomp_out % statusOK = .true.
+             nlcomp_out % cod = 10**2.2
+            nlcomp_out % codu = 1.0
+             nlcomp_out % cps = 10 ** state_vec(2)
+             nlcomp_out % cpsu = 1.0
+            
+            exit
+         end if
 		 
          if ( iteration_idx > 20 ) then
             cod = -999.
@@ -365,6 +385,7 @@ contains
       
       nlcomp_out % cod = cod
       nlcomp_out % cps = cps
+    !  print*,nlcomp_out % cod, nlcomp_out % cps
       
    end subroutine nlcomp_algorithm
 end module nlcomp_retrieval_mod

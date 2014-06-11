@@ -102,6 +102,7 @@ module cloud_type_bridge_module
    use CLOUD_TYPE_ALGO_MODULE, only : &
        cloud_type_pixel &
        , cloud_type_input_type &
+       , cloud_type_diag_type &
        , ET_cloud_type
        
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE, only: &
@@ -153,7 +154,7 @@ contains
             if ( i /= i_lrc (i,j) .or. j /= j_lrc (i,j) ) cycle
                              
             call POPULATE_INPUT ( i, j , type_inp )
-            call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
+            call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, ice_prob_out = ice_prob )
             cld_type (i,j)  = ctype
             if ( ctype < 0 ) print*,'lrc',i,j
             
@@ -190,7 +191,7 @@ contains
             cld_type_lrc = cld_type (ii , jj )
                              
             call POPULATE_INPUT ( i, j , type_inp )
-            call CLOUD_TYPE_PIXEL  ( type_inp, ctype , ice_prob_out = ice_prob )
+            call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, ice_prob_out = ice_prob )
             if ( ctype < 0 ) print*,i,j
             
             ! - compare this ctype with LRC
@@ -219,7 +220,7 @@ contains
                          .or. cld_type_lrc == ET_cloud_type % OPAQUE_ICE ) &
                         .and. ctype ==  ET_cloud_type % SUPERCOOLED ) then
                   
-                  call CLOUD_TYPE_PIXEL  ( type_inp, ctype , force_ice = .true. )
+                  call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, force_ice = .true. )
                      cld_type (i,j)  = ctype
                     
                ! -- this is mainly cirrus / opaque ice => keep current

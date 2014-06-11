@@ -56,8 +56,16 @@ module dcomp_rtm_module
       real (kind= REAL4), allocatable :: trans_ir_ac_nadir ( : , : )
       real (kind= REAL4), allocatable :: tpw_ac ( : , : ) 
       real (kind= REAL4), allocatable :: sfc_nwp ( : , : )  
-      real (kind= REAL4), allocatable :: rad_clear_sky_toc_ch20  ( : , : )
+      real (kind= REAL4), allocatable :: rad_clear_sky_toc_ch20 ( : , : )
       real (kind= REAL4), allocatable :: rad_clear_sky_toa_ch20 ( : , : )
+      real (kind= REAL4), allocatable :: rad_clear_sky_toc_ch31 ( : , : )
+      real (kind= REAL4), allocatable :: rad_clear_sky_toa_ch31 ( : , : )      
+      real (kind= REAL4), allocatable :: rad_clear_sky_toc_ch32 ( : , : )
+      real (kind= REAL4), allocatable :: rad_clear_sky_toa_ch32 ( : , : )     
+      real (kind= REAL4), allocatable :: trans_ir_ac_ch31 ( : , : )
+      real (kind= REAL4), allocatable :: trans_ir_ac_nadir_ch31 ( : , : )
+      real (kind= REAL4), allocatable :: trans_ir_ac_ch32 ( : , : )
+      real (kind= REAL4), allocatable :: trans_ir_ac_nadir_ch32 ( : , : )      
       real (kind= REAL4), allocatable :: ozone_path ( : , : )
       contains
       procedure :: deallocate_it
@@ -86,7 +94,9 @@ module dcomp_rtm_module
          , num_scans_read &
          , num_pix &
          , bad_pixel_mask &
-         , Rad_Clear_Ch20_Solar_Rtm
+         , Rad_Clear_Ch20_Solar_Rtm &
+         , Rad_Clear_Ch31_Rtm_unbiased &
+         , Rad_Clear_Ch32_Rtm_unbiased
         
       use nwp_common, only: &
            t_prof_nwp &
@@ -216,9 +226,44 @@ module dcomp_rtm_module
             clear_trans_prof_rtm = rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile
             clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % rad_atm_profile
 
-            dcomp_rtm % rad_clear_sky_toc_ch20 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)
-        !-->dcomp_rtm % rad_clear_sky_toa_ch20 (elem_idx,line_idx) = ch(20)%rad_toa_clear(elem_idx,line_idx)             
+            dcomp_rtm % rad_clear_sky_toc_ch20 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)           
             dcomp_rtm % rad_clear_sky_toa_ch20 (elem_idx,line_idx) = Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx)
+            
+            
+            ! - channel 31
+            dcomp_rtm % trans_ir_ac_ch31(elem_idx,line_idx) =  &
+                                  & rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % trans_atm_profile(idx_lev_rtm) +    &
+                                  & prof_wgt_rtm * ( rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % trans_atm_profile(idx_lev_rtm+1) -  &
+                                  & rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % trans_atm_profile(idx_lev_rtm))
+                  
+            dcomp_rtm % trans_ir_ac_nadir_ch31(elem_idx,line_idx) = &
+                                 & dcomp_rtm % trans_ir_ac_ch31(elem_idx,line_idx) ** (cos ( satzen(elem_idx, line_idx) * PI / 180.  ))
+            
+            dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
+            
+            clear_trans_prof_rtm = rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % trans_atm_profile
+            clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % rad_atm_profile
+
+            dcomp_rtm % rad_clear_sky_toc_ch31 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)           
+            dcomp_rtm % rad_clear_sky_toa_ch31 (elem_idx,line_idx) = Rad_Clear_Ch31_Rtm_unbiased (Elem_Idx,Line_Idx)
+            
+            
+            ! - channel 32
+            dcomp_rtm % trans_ir_ac_ch32(elem_idx,line_idx) =  &
+                                  & rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % trans_atm_profile(idx_lev_rtm) +    &
+                                  & prof_wgt_rtm * ( rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile(idx_lev_rtm+1) -  &
+                                  & rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % trans_atm_profile(idx_lev_rtm))
+                  
+            dcomp_rtm % trans_ir_ac_nadir_ch32(elem_idx,line_idx) = &
+                                 & dcomp_rtm % trans_ir_ac_ch32(elem_idx,line_idx) ** (cos ( satzen(elem_idx, line_idx) * PI / 180.  ))
+            
+            dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
+            
+            clear_trans_prof_rtm = rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % trans_atm_profile
+            clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % rad_atm_profile
+
+            dcomp_rtm % rad_clear_sky_toc_ch32 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)           
+            dcomp_rtm % rad_clear_sky_toa_ch32 (elem_idx,line_idx) = Rad_Clear_Ch32_Rtm_unbiased(Elem_Idx,Line_Idx)
          
          end do element_loop
       end do line_loop
@@ -237,6 +282,15 @@ module dcomp_rtm_module
       allocate ( dcomp_rtm % sfc_nwp (x_dim , y_dim))
       allocate ( dcomp_rtm % rad_clear_sky_toc_ch20 (x_dim , y_dim))
       allocate ( dcomp_rtm % rad_clear_sky_toa_ch20 (x_dim , y_dim))
+      allocate ( dcomp_rtm % rad_clear_sky_toc_ch31 (x_dim , y_dim))
+      allocate ( dcomp_rtm % rad_clear_sky_toa_ch31 (x_dim , y_dim))      
+      allocate ( dcomp_rtm % rad_clear_sky_toc_ch32 (x_dim , y_dim))
+      allocate ( dcomp_rtm % rad_clear_sky_toa_ch32 (x_dim , y_dim))      
+      allocate ( dcomp_rtm % trans_ir_ac_ch31 (x_dim , y_dim))
+      allocate ( dcomp_rtm % trans_ir_ac_nadir_ch31(x_dim , y_dim))
+      allocate ( dcomp_rtm % trans_ir_ac_ch32 (x_dim , y_dim))
+      allocate ( dcomp_rtm % trans_ir_ac_nadir_ch32(x_dim , y_dim))   
+         
       allocate ( dcomp_rtm % ozone_path (x_dim , y_dim))
       
    end subroutine allocate_dcomp_rtm
@@ -251,6 +305,15 @@ module dcomp_rtm_module
       deallocate ( self % sfc_nwp )
       deallocate ( self % rad_clear_sky_toc_ch20 )
       deallocate ( self % rad_clear_sky_toa_ch20 )
+      deallocate ( self % rad_clear_sky_toc_ch31 )
+      deallocate ( self % rad_clear_sky_toa_ch31 )
+      deallocate ( self % rad_clear_sky_toc_ch32 )
+      deallocate ( self % rad_clear_sky_toa_ch32 )      
+      deallocate ( self % trans_ir_ac_ch31 )
+      deallocate ( self % trans_ir_ac_nadir_ch31)
+      deallocate ( self % trans_ir_ac_ch32 )
+      deallocate ( self % trans_ir_ac_nadir_ch32)
+      
       deallocate ( self % ozone_path )
    
    end subroutine deallocate_it

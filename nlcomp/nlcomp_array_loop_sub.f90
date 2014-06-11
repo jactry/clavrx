@@ -78,8 +78,6 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real ( kind = real4 ) :: rad_to_refl_factor
    real (kind = real4)   :: refl_toa = -999.
    
-   real :: rad_clear_sky_toa_ch20 = -999.
-   real :: rad_clear_sky_toc_ch20 = -999.
    
    real :: obs_vec(3) = [-999.,-999.,-999.]
    real :: obs_unc(3) = [-999.,-999.,-999.]
@@ -275,9 +273,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
                   
                end associate chn20_block
                
-               rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( 20) % d (elem_idx, line_idx) 
-               rad_clear_sky_toa_ch20 = input % rad_clear_sky_toa ( 20) % d (elem_idx, line_idx)
-               
+              
             end if
              
          end do loop_chn
@@ -307,18 +303,24 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 20 ) % alb_sfc = alb_sfc ( CHN_NIR)
          inp_retr % chn ( 20 ) % alb_sfc_u = 0.05
          inp_retr % chn ( 20 ) % trans_air_abvcld = trans_total ( CHN_NIR )
-         inp_retr % chn ( 20 ) % rad_abvcld_nwp = rad_clear_sky_toc_ch20
-         inp_retr % chn ( 20 ) % rad_sfc_nwp = rad_clear_sky_toa_ch20
+         inp_retr % chn ( 20 ) % rad_abvcld_nwp = input % rad_clear_sky_toc ( 20) % d (elem_idx, line_idx)
+         inp_retr % chn ( 20 ) % rad_sfc_nwp = input % rad_clear_sky_toa ( 20) % d (elem_idx, line_idx)
          
          inp_retr % chn ( 31 ) % rad = input % rad ( 31)  % d (elem_idx, line_idx)
          inp_retr % chn ( 31 ) % rad_u = max ( trans_unc_wvp  ( 31 ) , 0.01 )  + calib_err (31)
          inp_retr % chn ( 31 ) % alb_sfc = alb_sfc ( 31 )
          inp_retr % chn ( 31 ) % alb_sfc_u = 0.05
+         inp_retr % chn ( 31 ) % rad_abvcld_nwp = input % rad_clear_sky_toc ( 31) % d (elem_idx, line_idx)
+         inp_retr % chn ( 31 ) % rad_sfc_nwp =  input % rad_clear_sky_toa ( 31) % d (elem_idx, line_idx)
+         
          
          inp_retr % chn ( 32 ) % rad = input % rad ( 32)  % d (elem_idx, line_idx)
          inp_retr % chn ( 32 ) % rad_u = max ( trans_unc_wvp  ( 32 ) , 0.01 )  + calib_err (32)
          inp_retr % chn ( 32 ) % alb_sfc = alb_sfc ( 32 )
          inp_retr % chn ( 32 ) % alb_sfc_u = 0.05
+         inp_retr % chn ( 32 ) % rad_abvcld_nwp = input % rad_clear_sky_toc ( 32) % d (elem_idx, line_idx)
+         inp_retr % chn ( 32 ) % rad_sfc_nwp =  input % rad_clear_sky_toa ( 32) % d (elem_idx, line_idx)
+         
                   
          inp_retr % chn ( 42 ) % rfl   = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
          inp_retr % chn ( 42 ) % rfl_u = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
@@ -328,7 +330,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          
          
          
-         
+        
          
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )

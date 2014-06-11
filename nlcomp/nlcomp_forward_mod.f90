@@ -32,7 +32,7 @@ module nlcomp_forward_mod
    public :: nlcomp_forward_computation
    public :: compute_cld_albedo_vis
    
-   real , save :: planck_rad
+   real , save :: planck_rad20
    real , save :: rad_to_refl 
    
 contains
@@ -65,8 +65,8 @@ contains
       real,  intent ( in ) :: air_trans_ac ( : )   
       character ( len = * ) , intent (in ) :: sensor     
       real, intent(in) ::  alb_sfc (2)  
-      real, optional, intent ( in ) ::   rad_abv_cld 
-      real, optional, intent ( in ) ::   rad_clear_toc 
+      real, optional, intent ( in ) ::   rad_abv_cld (42)
+      real, optional, intent ( in ) ::   rad_clear_toc(42) 
       character ( len = 1024 ) , intent ( in ) , optional :: lut_path  
          
       real , intent ( out ) :: fm_vec ( 4 )
@@ -97,7 +97,7 @@ contains
       integer , parameter :: VIS_CHN = 42
       real :: bt31, bt32, bt20
       real :: rad31, rad32, rad20
-      real :: planck_rad31, planck_rad32, planck_rad20
+      real :: planck_rad31, planck_rad32
       
       
      
@@ -115,6 +115,10 @@ contains
       
       
       air_mass_two_way = ( 1. / cos (pixel % lun_zen * DTOR ) + 1./ cos ( pixel % Sat_zen * DTOR ) )
+      planck_rad20 = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
+      planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
+      planck_rad32 = planck_tmp2rad ( pixel % ctt, trim(sensor), 32)
+      
       
       ! forward element1
       
@@ -150,76 +154,112 @@ contains
      
       call lut_obj % get_data ( 20, phase_num , state_vec(1), state_vec(2) , lut_data20)
      
-      planck_rad = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
+      
 
 	   air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
 		trans_abv_cld = air_trans_ac(2) ** air_mass_sat
                                    
-      fm_nir_terr =   (rad_abv_cld * lut_data20 % ems &
-                  + trans_abv_cld * lut_data20 %  ems * planck_rad &
-				  + lut_data20 % trn_ems * rad_clear_toc )
+      fm_nir_terr =   (rad_abv_cld(20) * lut_data20 % ems &
+                  + trans_abv_cld * lut_data20 %  ems * planck_rad20 &
+				  + lut_data20 % trn_ems * rad_clear_toc(20) )
             
-      kernel_nir_terr_cod =  (rad_abv_cld * lut_data20 %  Dems_Dcod & 
-               + trans_abv_cld * Planck_Rad * lut_data20 % Dems_Dcod  &
-               + rad_clear_toc *lut_data20 % Dtrnems_Dcod)
+      kernel_nir_terr_cod =  (rad_abv_cld(20) * lut_data20 %  Dems_Dcod & 
+               + trans_abv_cld * Planck_Rad20 * lut_data20 % Dems_Dcod  &
+               + rad_clear_toc(20) *lut_data20 % Dtrnems_Dcod)
              
-      kernel_nir_terr_cps  =   (rad_abv_cld * lut_data20 % Dems_Dcps & 
-                + trans_abv_cld * Planck_Rad * lut_data20 % Dems_Dcps  &
-                + rad_clear_toc  *lut_data20 %Dtrnems_Dcps )
+      kernel_nir_terr_cps  =   (rad_abv_cld(20) * lut_data20 % Dems_Dcps & 
+                + trans_abv_cld * Planck_Rad20 * lut_data20 % Dems_Dcps  &
+                + rad_clear_toc(20)  *lut_data20 % Dtrnems_Dcps )
                        
       fm_vec(2) = fm_nir_terr
       kernel ( 2, 1) = kernel_nir_terr_cod 
       kernel ( 2, 2) = kernel_nir_terr_cps 
             
-      ! element 3
-      print*,'state vec ctt: ', state_vec,  pixel % ctt
+     
+  
       call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
-      call lut_obj % get_data ( 32, phase_num , state_vec(1), state_vec(2) , lut_data32)
-      planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
-      planck_rad32 = planck_tmp2rad ( pixel % ctt, trim(sensor), 32)
-      print*,'cloud bb rad: ',planck_rad31,planck_rad32
-      rad31 = lut_data31 %  ems * planck_rad31
-      rad32 = lut_data32 %  ems * planck_rad32
-      print*,'ems: ',lut_data31 %  ems, lut_data32 %  ems
-      print*,'rad: ',rad31,rad32
+      call lut_obj % get_data ( 32, phase_num , state_vec(1), state_vec(2) , lut_data32)  
+      call lut_obj % get_data ( 20, phase_num , state_vec(1), state_vec(2) , lut_data20)
+      rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)            
+      rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
+      rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32)  
+      bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)    
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32)  
-      print*,'bt: ',bt31,bt32
+      
+      
+       ! element 3
+   
       fm_vec(3) = bt31 - bt32
+      rad20_dcod = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)
+      bt20_dum =  planck_rad2tmp ( rad20 + , trim(sensor), 20)
+      bt31_dum =  planck_rad2tmp ( rad31, trim(sensor), 31)
+            
+      kernel ( 3,1) = (fm_vec(3) - ( bt31 - bt32) ) / 0.01
+      
+      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) + 0.01 , lut_data31)
+      call lut_obj % get_data ( 32, phase_num , state_vec(1), state_vec(2) + 0.01 , lut_data32)
+      
+      rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
+      rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32)
+    
+      bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
+      bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32) 
+                         
+      kernel ( 3,2) =   (fm_vec(3) - ( bt31 - bt32) ) / 0.01                   
+                          
       
       ! element 4
       
       
-      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
-     
-      planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
-      planck_rad20 = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
-      print*,'cloud bb rad: ',planck_rad20,planck_rad31
-      rad31 = lut_data31 %  ems * planck_rad31
-      rad20 = lut_data20 %  ems * planck_rad20
-      print*,'ems: ',lut_data20 %  ems, lut_data31 %  ems
-      print*,'rad: ',rad20,rad31
       
+     
+      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2) , lut_data31)
+      
+      rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
+            
+      bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
+      
+   
+      fm_vec(4) = bt20 - bt31
+      
+      call lut_obj % get_data ( 31, phase_num , state_vec(1)+0.01, state_vec(2) , lut_data31)
+      call lut_obj % get_data ( 20, phase_num , state_vec(1)+0.01, state_vec(2) , lut_data20)
+      rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
+      rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20) 
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)  
-       print*,'bt: ',bt20,bt31
-      fm_vec(4) = bt20 - bt31
-           print*,'hallo'
-      print*,fm_vec,'==='     
-	   stop
+      
+      kernel ( 4,1) = fm_vec(4) - ( bt20 - bt31 ) / 0.01 
+      
+      call lut_obj % get_data ( 31, phase_num , state_vec(1), state_vec(2)+0.01 , lut_data31)
+      call lut_obj % get_data ( 20, phase_num , state_vec(1), state_vec(2)+0.01 , lut_data20)
+      rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
+      rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20) 
+      bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
+      bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)  
+                         
+      kernel ( 4,2) = fm_vec(4) - ( bt20 - bt31 ) / 0.01 
+      
+           
+        
+	   
         
    end subroutine nlcomp_forward_computation
     
    !------------------------------------------------------------------------------
    !
    !------------------------------------------------------------------------------
-   function thick_cloud_cps ( rfl_nir_obs, channel_nir, pixel , dcomp_mode ) result ( cps)
+   function thick_cloud_cps ( rfl_nir_obs,  pixel  ) result ( cps)
       implicit none
    
       real,  intent(in) :: rfl_nir_obs
       type ( pixel_vec) , intent(in) :: pixel
-      integer , intent ( in ) :: channel_nir
-      integer , intent ( in ) :: dcomp_mode
+      
+      
+      
+      
+      integer :: channel_nir = 20
       real :: cps
       
       ! -- local
@@ -248,11 +288,11 @@ contains
       call lut_obj % thick_cloud_rfl ( channel_nir  , phase_num  , rfl_lut, ems_lut )
    
       rfl = rfl_lut  
-      if ( dcomp_mode == 3 ) then      
-         rad =  ems_lut * Planck_Rad 
+           
+         rad =  ems_lut * Planck_Rad20 
          rfl_terr = rad * Rad_To_Refl
          rfl = rfl +  rfl_terr
-      end if
+     
       
       cps_pos = -999
       cps = -999.

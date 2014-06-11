@@ -288,8 +288,25 @@ contains
          nlcomp_input % rad_clear_sky_toc (20) % d = nlcomp_rtm % rad_clear_sky_toc_ch20
          nlcomp_input % rad_clear_sky_toa (20) % d = nlcomp_rtm % rad_clear_sky_toa_ch20
          ! -- Solar irradiance in channel 20
-         nlcomp_input % solar_irradiance ( 20) = solar_ch20_nu
+         nlcomp_input % solar_irradiance ( 20 ) = solar_ch20_nu
       end if
+      
+               ! -- transmission above the cloud in channel 31 (10.8) from RTM  
+      if ( nlcomp_input % is_channel_on (31)) then       
+         nlcomp_input % trans_ac_nadir (31) % d = nlcomp_rtm % trans_ir_ac_nadir_ch31
+         nlcomp_input % rad_clear_sky_toc (31) % d = nlcomp_rtm % rad_clear_sky_toc_ch31
+         nlcomp_input % rad_clear_sky_toa (31) % d = nlcomp_rtm % rad_clear_sky_toa_ch31
+        
+      end if
+      
+                ! -- transmission above the cloud in channel 32 (12) from RTM  
+      if ( nlcomp_input % is_channel_on (32)) then       
+         nlcomp_input % trans_ac_nadir (32) % d = nlcomp_rtm % trans_ir_ac_nadir_ch32
+         nlcomp_input % rad_clear_sky_toc (32) % d = nlcomp_rtm % rad_clear_sky_toc_ch32
+         nlcomp_input % rad_clear_sky_toa (32) % d = nlcomp_rtm % rad_clear_sky_toa_ch32
+        
+      end if  
+      
       
       call nlcomp_array_loop_sub (nlcomp_input,nlcomp_output )
        

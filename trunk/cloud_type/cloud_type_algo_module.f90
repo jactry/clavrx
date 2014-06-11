@@ -21,6 +21,7 @@ module CLOUD_TYPE_ALGO_MODULE
   
 
    public :: cloud_type_input_type
+   public :: cloud_type_diag_type
    public :: et_cloud_type
   
    type  et_cloudtype_class_type
@@ -70,10 +71,13 @@ module CLOUD_TYPE_ALGO_MODULE
       real :: rad_ch31 
       real :: bt_ch31 
       real :: bt_ch32   
+   end type cloud_type_sat_type
+
+   type cloud_type_diag_type
       real :: diagnostic_1  
       real :: diagnostic_2  
       real :: diagnostic_3  
-   end type cloud_type_sat_type
+   end type cloud_type_diag_type
    
    type cloud_type_rtm_type
       real, allocatable:: rad_ch31_bb_prof (:)
@@ -127,12 +131,13 @@ contains
    !        works,  Why is there no corresponding "force_water" flag
    ! ----------------------------------------------------------------------------- 
    
-   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , ice_prob_out , force_ice , force_water ) 
+   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , diag_out, ice_prob_out , force_ice , force_water ) 
 
       implicit none
 
       type ( cloud_type_input_type) , intent(in) :: inp
       integer , intent ( out ) :: ctype 
+      type ( cloud_type_diag_type) , intent(out) :: diag_out
       real, intent(out), optional :: ice_prob_out
       logical, intent(in), optional :: force_ice ! - this is convenient for LRC correction
       logical, intent(in), optional :: force_water ! - this is convenient for LRC correction

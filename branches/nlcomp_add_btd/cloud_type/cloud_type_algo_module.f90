@@ -1,4 +1,4 @@
-! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk/main_src/cloud_type_algo_module.f90 311 2014-05-24 02:54:07Z awalther $
+! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk/main_src/cloud_type_algo_module.f90 260 2014-05-09 18:20:18Z heidinger $
 !
 !
 !  cloud type algorithm
@@ -10,7 +10,7 @@
 !
 
 
-module CLOUD_TYPE_ALGO_MODULE 
+module cloud_type_algo_module
 
    implicit none
    
@@ -22,6 +22,7 @@ module CLOUD_TYPE_ALGO_MODULE
 
    public :: cloud_type_input_type
    public :: et_cloud_type
+   public :: cloud_type_diag_type
   
    type  et_cloudtype_class_type
       integer :: FIRST = 0 
@@ -70,10 +71,13 @@ module CLOUD_TYPE_ALGO_MODULE
       real :: rad_ch31 
       real :: bt_ch31 
       real :: bt_ch32   
+   end type cloud_type_sat_type
+
+   type cloud_type_diag_type
       real :: diagnostic_1  
       real :: diagnostic_2  
       real :: diagnostic_3  
-   end type cloud_type_sat_type
+   end type cloud_type_diag_type
    
    type cloud_type_rtm_type
       real, allocatable:: rad_ch31_bb_prof (:)
@@ -127,12 +131,13 @@ contains
    !        works,  Why is there no corresponding "force_water" flag
    ! ----------------------------------------------------------------------------- 
    
-   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , ice_prob_out , force_ice , force_water ) 
+   subroutine CLOUD_TYPE_PIXEL ( inp , ctype , diag_out, ice_prob_out , force_ice , force_water ) 
 
       implicit none
 
-      type ( cloud_type_input_type) , intent(in) :: inp
+      type (cloud_type_input_type) , intent(in) :: inp
       integer , intent ( out ) :: ctype 
+      type (cloud_type_diag_type) , intent(in) :: diag_out
       real, intent(out), optional :: ice_prob_out
       logical, intent(in), optional :: force_ice ! - this is convenient for LRC correction
       logical, intent(in), optional :: force_water ! - this is convenient for LRC correction
@@ -162,18 +167,18 @@ contains
          if ( force_water ) force_water_phase = .true.          
       end if
       
-      call GET_ICE_PROBABILITY (inp &
+      call get_ice_probabibility (inp &
          & , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
       
       ! - compute type from ice probablity phase discrimination
       if ( (ice_prob > 0.5 .or. force_ice_phase) .and. .not. force_water_phase ) then
-         call DETERMINE_TYPE_ICE ( inp % Rtm % emiss_tropo_ch31 &
+         call determine_type_ice ( inp % Rtm % emiss_tropo_ch31 &
             , inp % sat % bt_ch31 &
             , inp % rtm % beta_11um_12um_Tropo &
             , inp % rtm % beta_11um_133um_Tropo &
             , is_water, is_cirrus , ctype ) 
       else 
-         call DETERMINE_TYPE_WATER ( z_cld , t_cld , ctype ) 
+         call determine_type_water ( z_cld , t_cld , ctype ) 
       end if
       
       ! - optional output of ice probability
@@ -191,12 +196,18 @@ contains
                         , is_overlap ) 
          
       end if   
+
+      !--- set diagnostic output (note this impacts global diag variales)
+      !diag_out % diagnostic_1 = ice_prob
+      !diag_out % diagnostic_2 = is_cirrus
+      !diag_out % diagnostic_3 = is_overlap
+
    end subroutine CLOUD_TYPE_PIXEL
    
    ! ---------------------------------------------------------------
    !  returns type for ice phase pixels ( ice_probability gt 0.5)
    ! ---------------------------------------------------------------
-   subroutine DETERMINE_TYPE_ICE ( emiss_tropo_11 &
+   subroutine determine_type_ice ( emiss_tropo_11 &
       , bt_11 &
       , beta_11_12 &
       , beta_11_13 &
@@ -247,12 +258,12 @@ contains
          ctype = et_cloud_type % OVERSHOOTING
       end if
    
-   end subroutine DETERMINE_TYPE_ICE
+   end subroutine determine_type_ice
    
    ! ---------------------------------------------------------------
    !  returns type for water phase pixels ( ice_probability lt 0.5)
    ! ---------------------------------------------------------------
-   subroutine DETERMINE_TYPE_WATER ( z_opa, t_opa , ctype )
+   subroutine determine_type_water ( z_opa, t_opa , ctype )
       real, intent (in ) :: z_opa
       real, intent ( in) :: t_opa
       integer, intent(out) :: ctype
@@ -264,12 +275,13 @@ contains
             if (z_opa < 1000.0 .and. z_opa /= MISSING_VALUE_REAL ) ctype = et_cloud_type % FOG
          end if
    
-   end subroutine DETERMINE_TYPE_WATER
+   end subroutine determine_type_water
+   
    
    ! -----------------------------------------------------------------------------------
    !  computes ice probability and cirrus water flag and opaque temperature and height
    ! ------------------------------------------------------------------------------------
-   subroutine GET_ICE_PROBABILITY (inp , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
+   subroutine get_ice_probabibility (inp , ice_prob , is_cirrus , is_water , t_cld , z_cld ) 
       implicit none
       type ( cloud_type_input_type) , intent(in) :: inp
       real , intent(out) :: ice_prob
@@ -301,7 +313,7 @@ contains
       !---- if possible, use water vapor channel
       if ( inp % sat % chan_on ( 27) ) then
 
-        call HEIGHT_H2O_CHANNEL ( &
+        call height_h2o_channel ( &
            inp % sat % rad_ch31 &
            , inp % rtm % rad_ch31_bb_prof &              
            , inp % rtm % rad_ch31_atm_sfc &
@@ -321,7 +333,7 @@ contains
      
       !---- if no water vapor, use the atmos-corrected 11 micron
       if ( t_cld == MISSING_VALUE_REAL) then
-        call HEIGHT_OPAQUE ( &
+        call height_opaque ( &
            inp % sat % rad_ch31 &
            , inp % rtm % rad_ch31_bb_prof &
            , inp % rtm % tropo_lev &
@@ -401,7 +413,7 @@ contains
             .and. inp % sat % chan_on ( 31 ) ) then
             
             if ( inp%rtm%Covar_Ch27_Ch31_5x5 > 1.5 &
-               .and. inp % rtm % bt_ch27_3x3_max < 250.0) is_cirrus = .true.         
+               .and. inp % rtm % bt_ch31_3x3_max < 250.0) is_cirrus = .true.         
          end if 
          
           !--- modify ice_prob based on cirrus tests
@@ -412,7 +424,7 @@ contains
       ! ++++++++++++++
       
           
-   end subroutine GET_ICE_PROBABILITY
+   end subroutine get_ice_probabibility
    !====================================================================
    ! Function Name: H2O_CLOUD_HEIGHT
    !
@@ -431,7 +443,7 @@ contains
    ! Author: Andrew Heidinger, NOAA/NESDIS
    !
    !====================================================================   
-   subroutine HEIGHT_H2O_CHANNEL ( &
+   subroutine height_h2o_channel ( &
            rad_11um &
          , rad_11um_rtm_prof &  
          , rad_11um_clear &
@@ -521,7 +533,7 @@ contains
          z_cld = z_prof( cld_lev )
       end if
       
-   end subroutine HEIGHT_H2O_CHANNEL
+   end subroutine height_h2o_channel   
    
    !====================================================================
    ! Function Name: OPAQUE_CLOUD_HEIGHT
@@ -544,7 +556,7 @@ contains
    !   computes Height parameters from NWP profiles
    !    Called in get_ice_probabibility
    ! ------------------------------------------------
-   subroutine HEIGHT_OPAQUE ( &
+   subroutine height_opaque ( &
         rad31 &
       , rad31_rtm_prof &
       , tropo_lev &
@@ -585,7 +597,10 @@ contains
          z_opa = z_prof (cld_lev )
       end if
         
-   end subroutine HEIGHT_OPAQUE
+   end subroutine height_opaque
+
+
+
    
    ! -----------------------------------------------------
    !   experimental code for additional overlap test
@@ -694,5 +709,5 @@ contains
 
    end function COMPUTE_ICE_PROBABILITY_BASED_ON_TEMPERATURE
 
-end module CLOUD_TYPE_ALGO_MODULE 
+end module cloud_type_algo_module
     

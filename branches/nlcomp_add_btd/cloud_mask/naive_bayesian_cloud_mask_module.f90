@@ -373,9 +373,6 @@ contains
          is_forward_scatter = .true.
       end if 
       
-      is_smoke = .false.
-      ! - TO ADD 
-          
       is_dust = .false.
       if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
          is_dust = DUST_DETECTION ( &

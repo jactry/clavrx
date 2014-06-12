@@ -356,14 +356,14 @@ if (exists($opt{'dcomp_dir'}))
    }
    else
    {
-      print CONFIG "export DCOMP=../aw_dcomp/\n";
+      print CONFIG "export DCOMP=../dcomp/\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
       print CONFIG "dcomplinks= -ldcomp\n";
    }
 }
 else
 {
-      print CONFIG "export DCOMP=../aw_dcomp/\n";
+      print CONFIG "export DCOMP=../dcomp/\n";
       print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
       print CONFIG "dcomplinks= -ldcomp\n";
 
@@ -380,7 +380,7 @@ if (exists($opt{'nlcomp_dir'}))
    }
    else
    {
-      print CONFIG "export NLCOMP=../aw_nlcomp/\n";
+      print CONFIG "export NLCOMP=../nlcomp/\n";
       print CONFIG "nlcomplibs=-L\$\(NLCOMP) -I\$\(NLCOMP)\n";
       print CONFIG "nlcomplinks= -lnlcomp\n";
    }

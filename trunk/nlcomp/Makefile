@@ -31,6 +31,11 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
+
+	ifdef COMP1
+		$(fc)=COMP1
+	endif   
+
 #Compilation rule for f90 files
 .f90.o:
 	$(fc) -c ${CFLAGS} ${fflags} ${hdf5libs} ${hdflibs}  $(COMSRC)  $<

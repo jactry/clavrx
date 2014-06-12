@@ -31,8 +31,9 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
-	
-
+	ifdef COMP1
+		$(fc)=COMP1 
+	endif   
 
 #Compilation rule for f90 files
 .f90.o:
@@ -65,7 +66,7 @@ all: hdf4 dcomp_one_pixel_run
 	@echo  'kkf'$(LFLAGS)
 hdf4:
 	@echo 'Building target for hdf4: $@'
-	make -C $(ICASRC)	
+	make COMP1="$(fc)" -C $(ICASRC)	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'test lut'
@@ -112,4 +113,5 @@ clean:
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib
+	make clean  -C $(ICASRC)
 	-@echo ' '

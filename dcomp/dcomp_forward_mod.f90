@@ -124,13 +124,15 @@ contains
          kernel(i_channel,1) = lut_data%dRefl_dcod &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcod &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcod &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) * lut_data%Dsph_alb_Dcod) &
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) &
+                     &   * lut_data%Dsph_alb_Dcod) &
                     /(( 1 - Alb_Sfc( i_channel ) * lut_data%albsph)**2))  
                                              
          kernel(i_channel,2) = lut_data%dRefl_dcps &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcps &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcps &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) * lut_data%Dsph_alb_Dcps) &
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) & 
+                     & * lut_data%Dsph_alb_Dcps) &
                     /(( 1 - Alb_Sfc( i_channel ) * lut_data%albsph)**2))  
                     
          trans_two_way = air_trans_ac( i_channel ) ** air_mass_two_way           

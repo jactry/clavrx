@@ -540,8 +540,14 @@ contains
             stop
          end if
   
-         allocate ( sds_name ( N_PARAMS) )
-         sds_name = [ 'albedo' , 'transmission' , 'spherical_albedo', 'reflectance'  ]
+      allocate ( sds_name ( N_PARAMS) )
+      sds_name = (/ character (len =20) :: 'albedo' , 'transmission' , 'spherical_albedo', 'reflectance'  /)
+      
+      if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) then
+         print*,'hdf file not readable'
+         stop
+      end if   
+      deallocate ( sds_name )
       
          if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) stop
          deallocate ( sds_name )
@@ -574,9 +580,12 @@ contains
          end if
          
          allocate ( sds_name_ems ( N_PARAMS_EMS) )
-         sds_name_ems = [ 'cloud_emissivity' , 'cloud_transmission' ]
+         sds_name_ems = (/ character(len=20) :: 'cloud_emissivity' , 'cloud_transmission' /)
          
-         if ( hdf_get_file_sds ( self%file_ems, nsds , sds , nsdsn = N_PARAMS_EMS, sds_name = sds_name_ems ) < 0 ) stop
+         if ( hdf_get_file_sds ( self%file_ems, nsds , sds , nsdsn = N_PARAMS_EMS, sds_name = sds_name_ems ) < 0 ) then
+            print*,'hdf file not readable'
+            stop
+         end if   
          deallocate ( sds_name_ems )
          ps => sds(1); psd=> ps%data
          self % cld_ems = reshape(psd%r4values,[9,29,45])
@@ -647,7 +656,7 @@ contains
        ps                           ! Pointeur sur la structure du SDS courant 
       
       type(hdf_data), pointer                          :: &
-       psd                        ! Pointeur sur les données du SDS courant
+       psd                        ! Pointeur sur les donnï¿½es du SDS courant
             
       
            
@@ -669,15 +678,18 @@ contains
       call  self % dims % alloc 
       
       allocate ( sds_name ( 5)) 
-      sds_name =['sensor_zenith_angle'  &
+      sds_name =(/ character(len=30) :: 'sensor_zenith_angle'  &
             , 'solar_zenith_angle' &
             , 'relative_azimuth_angle' &
             , 'log10_optical_depth' &
-            , 'log10_eff_radius']
+            , 'log10_eff_radius'/)
       
        
-      if (hdf_get_file_sds(hdf_file, nsds, sds, nsdsn = 5, sds_name = sds_name) < 0) stop  
-         
+      if (hdf_get_file_sds(hdf_file, nsds, sds, nsdsn = 5, sds_name = sds_name) < 0) then
+         print*,'hdf file not readable ', trim(hdf_file)
+         stop  
+      end if 
+        
       ps => sds(1); psd=> ps%data
       self %  dims% sat_zen = psd%r4values 
        

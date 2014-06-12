@@ -86,4 +86,8 @@ M_kracken.o:$(SUB_PATH)/M_kracken.f90
 clean:
 	rm -f *.o *.mod
 	rm -f nlcomp_one_pixel_run
+	rm -f *.a
+	rm -rf hdf4/lib   
+	make clean  -C $(ICASRC)
+   
 	-@echo ' '

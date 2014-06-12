@@ -31,7 +31,6 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
-	
 
 
 #Compilation rule for f90 files

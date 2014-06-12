@@ -31,6 +31,11 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 .SUFFIXES:
 .SUFFIXES: .f90 .F .o
 
+
+	ifdef COMP1
+		$(fc)=COMP1
+	endif   
+
 #Compilation rule for f90 files
 .f90.o:
 	$(fc) -c ${CFLAGS} ${fflags} ${hdf5libs} ${hdflibs}  $(COMSRC)  $<
@@ -83,4 +88,8 @@ M_kracken.o:$(SUB_PATH)/M_kracken.f90
 clean:
 	rm -f *.o *.mod
 	rm -f nlcomp_one_pixel_run
+	rm -f *.a
+	rm -rf hdf4/lib   
+	make clean  -C $(ICASRC)
+   
 	-@echo ' '

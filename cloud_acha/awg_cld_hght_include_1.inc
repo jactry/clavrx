@@ -40,7 +40,7 @@
  integer, private, parameter :: USE_CIRRUS_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
  real (kind=real4), parameter:: EMISSIVITY_MIN_TEMPERATURE_CIRRUS = 0.7
  integer (kind=int4), parameter:: COUNT_MIN_TEMPERATURE_CIRRUS = 5
- integer (kind=int4), parameter:: BOX_WIDTH_KM = 150
+ integer (kind=int4), parameter:: BOX_WIDTH_KM = 200
 
  !---------------------------------------------------------------------
  ! retrieval specific parameters
@@ -54,9 +54,8 @@
  integer(kind=INT4), parameter :: Iter_Idx_Max = 10              !maximum number of iterations
 
  !--- parameters that control the bottom-up estimation of Zc and Pc
-
-!real(kind=real4), parameter, private:: Lapse_Rate_Ocean = 9800.0 !dry lapse rate over ocean for height K/m
-!real(kind=real4), parameter, private:: Lapse_Rate_Ocean = 7800.0 !dry lapse rate over ocean for height K/m
+ real(kind=real4), parameter, private:: ABS_LAPSE_RATE_UNCER_MIN = 0.0005 !K/m smallest lapse rate over height uncertainty calc
+ real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DP_DZ_UNCER_MIN = 0.00005 !K/hPa smallest lapse rate over height uncertainty calc
 
  real(kind=real4), parameter, private:: Min_P_inversion = 600.0 !min pressure to look for low-level inversion
  real(kind=real4), parameter, private:: Max_Delta_T_inversion = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion

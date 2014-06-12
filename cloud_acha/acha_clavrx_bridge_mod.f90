@@ -133,6 +133,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Acha_Output%Packed_Qf => Acha_Packed_Quality_Flags
    Acha_Output%Packed_Meta_Data => Acha_Packed_Meta_Data_Flags
    Acha_Output%Processing_Order  => Acha_Processing_Order_Global
+   Acha_Output%Cost  => Cost_Acha
   
 
    !----set symbols to local values

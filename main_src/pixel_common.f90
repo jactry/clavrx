@@ -622,6 +622,7 @@ module PIXEL_COMMON
 
      !--- Converted pressure to altitude heights.
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Alt_Acha
+     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cost_Acha
 
      !--- h2o heights
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_H2O
@@ -2017,6 +2018,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
       allocate(Meta_Data_ACHA(dim1,dim2))
       allocate(ACHA_OE_Quality_Flags(3,dim1,dim2))
       allocate(Alt_Acha(dim1,dim2))
+      allocate(Cost_Acha(dim1,dim2))
    endif
 end subroutine CREATE_ACHA_ARRAYS
 subroutine RESET_ACHA_ARRAYS()
@@ -2044,6 +2046,7 @@ subroutine RESET_ACHA_ARRAYS()
       Meta_Data_ACHA = 0
       ACHA_OE_Quality_Flags = 0
       Alt_Acha = Missing_Value_Real4
+      Cost_Acha = Missing_Value_Real4
    endif
 end subroutine RESET_ACHA_ARRAYS
 subroutine DESTROY_ACHA_ARRAYS()
@@ -2071,6 +2074,7 @@ subroutine DESTROY_ACHA_ARRAYS()
       deallocate(Meta_Data_ACHA)
       deallocate(ACHA_OE_Quality_Flags)
       deallocate(Alt_Acha)
+      deallocate(Cost_Acha)
    endif
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------

@@ -121,8 +121,6 @@
    use FY2_MODULE
    use SENSOR_MODULE
    use USER_OPTIONS
-   ! switch this off AW (05/05/2014) 
-  ! use UNIVERSAL_CLOUD_TYPE_MODULE
    use CLAVRX_MESSAGE_MODULE
    use CLOUD_TYPE_BRIDGE_MODULE
    
@@ -1367,6 +1365,7 @@
 
                else  
                   call CLOUD_TYPE_BRIDGE()
+                  Phase_Called_Flag = sym%YES
                end if
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()

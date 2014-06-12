@@ -145,6 +145,7 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Cloud_Height
    real, dimension(:,:), pointer:: Zc_Top
    real, dimension(:,:), pointer:: Zc_Base
+   real, dimension(:,:), pointer:: Cost
 
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf

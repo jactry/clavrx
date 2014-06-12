@@ -646,7 +646,8 @@ contains
       if (hdf_get_file_sds(hdf_file, nsds, sds, nsdsn = 5, sds_name = sds_name) < 0) then
          print*,'hdf file not readable ', trim(hdf_file)
          stop  
-      end if   
+      end if 
+        
       ps => sds(1); psd=> ps%data
       self %  dims% sat_zen = psd%r4values 
        

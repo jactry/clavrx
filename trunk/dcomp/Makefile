@@ -113,4 +113,5 @@ clean:
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib
+	make clean  -C $(ICASRC)
 	-@echo ' '

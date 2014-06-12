@@ -14,6 +14,10 @@ LIBSRC = ica_f90_hdf_sds.f90 ica_f90_hdf_dim_sds.f90
 LIBOBJ = ica_f90_hdf_sds.o   ica_f90_hdf_dim_sds.o
 LIBMOD = ica_f90_hdf_sds.mod ica_f90_hdf_dim_sds.mod
 
+	ifdef COMP1
+		$(COMP)=COMP1 
+	endif  
+
 all: lib
 
 lib: $(LIBSRC)

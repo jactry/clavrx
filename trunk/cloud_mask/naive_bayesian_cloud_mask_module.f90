@@ -165,6 +165,23 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: ref_dnb_clear
    end type cloud_mask_rtm_type
    
+   
+   type cloud_mask_sat_viirs_iband_stats_type
+      logical :: is_set
+      real :: min
+      real :: max
+      real :: mean
+      real :: std   
+   end type cloud_mask_sat_viirs_iband_stats_type
+   
+   type cloud_mask_sat_viirs_iband_type
+      logical :: is_set
+      type ( cloud_mask_sat_viirs_iband_stats_type ) :: bt
+      type ( cloud_mask_sat_viirs_iband_stats_type ) :: ref
+   
+   end type cloud_mask_sat_viirs_iband_type
+   
+   
    type cloud_mask_sat_type
       logical , dimension(42) :: chan_on
       real :: bt_ch20
@@ -184,6 +201,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: ref_dnb_3x3_std
       real :: ref_dnb_3x3_min
       real :: ref_dnb_lunar
+      type ( cloud_mask_sat_viirs_iband_type ) :: iband(5)
    end type cloud_mask_sat_type
 
    type cloud_mask_diagnostic

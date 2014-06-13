@@ -275,7 +275,7 @@ contains
       dcomp_input % alb_sfc ( 1 ) % d = ch(1) % sfc_ref_white_sky
       if ( dcomp_input % is_channel_on (6 )) dcomp_input % alb_sfc ( 6 ) % d = ch(6) % sfc_ref_white_sky
       if ( dcomp_input % is_channel_on (7 )) dcomp_input % alb_sfc ( 7 ) % d = ch(7) % sfc_ref_white_sky
-      if ( dcomp_input % is_channel_on (20)) dcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    !check this AKH
+      if ( dcomp_input % is_channel_on (20)) dcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    
       if ( dcomp_input % is_channel_on (20)) dcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
       dcomp_input % press_sfc % d =  dcomp_rtm % sfc_nwp
       dcomp_input % snow_class % d = snow

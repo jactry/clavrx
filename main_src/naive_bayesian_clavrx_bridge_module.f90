@@ -140,7 +140,19 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
       , Ref_ChDNB_Lunar_Min_3x3 &
       , Scatangle_Lunar &
       , Glint_Mask_Lunar &
-      , Lunzen
+      , Lunzen  &
+      , ref_min_chi1 &
+      , ref_max_chi1 &
+      , ref_mean_chi1 &
+      , ref_uni_chi1 &
+      , ref_min_chi2 &
+      , ref_max_chi2 &
+      , ref_mean_chi2 &
+      , ref_uni_chi2 & 
+      , bt_min_chi5 &
+      , bt_max_chi5 &
+      , bt_mean_chi5 &
+      , bt_uni_chi5
      
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
         Cloud_Mask_Naive_Bayes &
@@ -257,6 +269,31 @@ contains
                mask_inp % rtm % bt_ch32_atm_sfc    = Ch (32) % Bt_Toa_Clear( i , j ) 
                mask_inp % sat % bt_ch32            = Ch (32) % Bt_Toa ( i , j )
             end if
+            
+            ! - ibands of viirs
+            
+            if ( chan_on_flag_default(37) == 1 ) then
+               mask_inp % sat % iband(1) % ref % min =   ref_min_chI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % max =   ref_max_chI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % mean =  ref_mean_chI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % std =   ref_uni_chI1 ( i , j )
+            end if
+            
+            if ( chan_on_flag_default(38) == 1 ) then
+               mask_inp % sat % iband(2) % ref % min =   ref_min_chI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % max =   ref_max_chI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % mean =  ref_mean_chI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % std =   ref_uni_chI2 ( i , j )
+            end if
+            
+            if ( chan_on_flag_default(41) == 1 ) then
+               mask_inp % sat % iband(5) % bt % min =   bt_min_chI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % max =   bt_max_chI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % mean =  bt_mean_chI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % std =   bt_uni_chI5 ( i , j )
+            end if
+            
+            
             
             ! - dnb cloud mask addition at night
             if ( chan_on_flag_default(42) == 1 .and. allocated( Ch (42) % Ref_Lunar_Toa ) ) then

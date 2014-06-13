@@ -57,8 +57,63 @@
 !--------------------------------------------------------------------------------------
 
 module viirs_clavrx_bridge
-   use pixel_common
-   use constants
+
+
+   use pixel_common , only : &
+      chan_on_flag_default &
+      , chan_on_flag &
+      , num_scans_per_segment &
+      , num_scans &
+      , num_scans_read &
+      , num_pix &
+      , scan_number &
+      , dir_1b &
+      , ancil_data_dir & 
+      , cloud_mask_aux_flag &
+      , cloud_mask_aux_read_flag &
+      , cld_mask_aux &
+      , cld_type_aux &
+      , cld_phase_aux &
+      , lat_1b &
+      , lon_1b &
+      , scan_time &
+      , sataz &
+      , satzen &
+      , solaz &
+      , solzen &
+      , ascend &
+      , moon_phase_angle &
+      , relaz &
+      , glintzen &
+      , lunzen &
+      , lunaz &
+      , lunrelaz &
+      , scatangle_lunar &
+      , scatangle &
+      , glintzen_lunar &
+      , gap_pixel_mask &
+      , ch &
+      , Ref_Chi1 &
+      , Ref_chi2 &
+      , Ref_chi3 &
+      , Bt_chi4 &
+      , Bt_chi5 &
+      , ref_min_chi1 &
+      , ref_max_chi1 &
+      , ref_mean_chi1 &
+      , ref_uni_chi1 &
+      , ref_min_chi2 &
+      , ref_max_chi2 &
+      , ref_mean_chi2 &
+      , ref_uni_chi2 & 
+      , bt_min_chi5 &
+      , bt_max_chi5 &
+      , bt_mean_chi5 &
+      , bt_uni_chi5
+      
+
+   use constants, only: &
+      int4
    
 contains
    
@@ -84,10 +139,10 @@ contains
       
       type ( viirs_data_config )  :: v_conf
       type ( viirs_data_out )  :: out
-      integer , dimension(16) :: modis_chn_list 
-      integer , dimension(5) :: modis_chn_list_iband 
-      logical, dimension(16) :: is_mband_on
-      logical, dimension(5) :: is_iband_on
+      integer :: modis_chn_list (16)
+      integer :: modis_chn_list_iband (5)
+      logical :: is_mband_on (16)
+      logical :: is_iband_on (5)
       integer :: i_mband , i_iband
       integer :: y_start , c_seg_lines , c_seg_lines_iband
       integer :: i

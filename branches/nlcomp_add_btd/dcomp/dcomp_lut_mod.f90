@@ -73,7 +73,7 @@ module dcomp_lut_mod
        
    end type lut_dim_type
    
-   type :: lut_type
+   type , public :: lut_type
       logical :: is_set
       type ( lut_chn_type ) , dimension ( NUM_CHN ) :: channel 
       type ( lut_dim_type ) ::  dims

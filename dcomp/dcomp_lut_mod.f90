@@ -533,27 +533,23 @@ contains
       integer :: i , last , first
       
       
-       call self % alloc 
+      call self % alloc 
       if ( self % has_sol ) then
          if ( .not. file_test ( self % file )) then 
             print*, 'file not available channel' ,  self % file
             stop
          end if
   
-      allocate ( sds_name ( N_PARAMS) )
-      sds_name = (/ character (len =20) :: 'albedo' , 'transmission' , 'spherical_albedo', 'reflectance'  /)
+         allocate ( sds_name ( N_PARAMS) )
+         sds_name = (/ character (len =20) :: 'albedo' , 'transmission' , 'spherical_albedo', 'reflectance'  /)
       
-      if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) then
-         print*,'hdf file not readable'
-         stop
-      end if   
-      deallocate ( sds_name )
-      
-         if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) stop
+         if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) then
+            print*,'hdf file not readable'
+            stop
+         end if  
+          
          deallocate ( sds_name )
-         
-      
-        
+ 
          ps => sds(1); psd=> ps%data
          self % cld_alb = reshape(psd%r4values,[9,29,45])
       
@@ -587,6 +583,7 @@ contains
             stop
          end if   
          deallocate ( sds_name_ems )
+         
          ps => sds(1); psd=> ps%data
          self % cld_ems = reshape(psd%r4values,[9,29,45])
          

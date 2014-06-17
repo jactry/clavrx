@@ -1,5 +1,5 @@
-#FC=ifort
-FC=gfortran
+FC=ifort
+#FC=gfortran
    ifdef COMP1
 		$(fc)=COMP1 
 	endif  

@@ -138,17 +138,17 @@ module viirs_read_mod
    end type
   
    type, public :: viirs_data_out
-      type ( mband_str ), dimension(16) :: mband
-      type ( iband_str ), dimension(5) :: iband    
-      type ( geo_str ) :: geo
-      type ( dnb_str ) :: dnb
+      type (mband_str), dimension(16) :: mband
+      type  (iband_str), dimension(5) :: iband    
+      type ( geo_str) :: geo
+      type (dnb_str) :: dnb
       type ( dnb_on_mband_str ) :: dnb_mgrid
-      type ( cloud_products_str ) :: prd
+      type ( cloud_products_str) :: prd
       type ( gap_str ) :: gap
       type ( viirs_file_exists ) :: file_exists
      
       contains
-      procedure  :: dealloc => dealloc_viirs_data_out
+      procedure  :: dealloc =>dealloc_viirs_data_out
    end type viirs_data_out
    
 contains
@@ -210,7 +210,7 @@ contains
       character (len=100), dimension ( 7 ) :: setname_gmtco_list = [ &
                            'All_Data/VIIRS-MOD-GEO-TC_All/Latitude             ' & ! 1
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/Longitude            ' & ! 2
-                         , 'All_Data/VIIRS-MOD-GEO-TC_All/StartTime            ' & ! 3
+                         , 'All_Data/VIIRS-MOD-GEO-TC_All/StartTime              ' & ! 3
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteAzimuthAngle' & ! 4
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteZenithAngle ' & ! 5
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarAzimuthAngle    ' & ! 6
@@ -261,7 +261,7 @@ contains
       integer(kind=int4) , dimension(2) :: dim_seg_dnb
       ! - this is to delete
       integer :: i
-      integer , dimension (:) , allocatable:: time_msec_day
+      integer , dimension (: ) , allocatable:: time_msec_day
       integer (kind = int8) , parameter :: microsec_per_day =  86400000000
       integer, dimension(2)::shape_buffer
       
@@ -342,7 +342,7 @@ contains
       is_mband_on = config %  chan_on_rfl_mband
       
       data_scaled_mband = .true.
-      out % file_exists % svm_file_exists (:) = .true.
+      out % file_exists % svm_file_exists (:) = sym%YES
       
       ! - channel 13 is the only without Factors in VIRRS file
       data_scaled_mband(13) = .false.
@@ -366,7 +366,7 @@ contains
      
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVM'//trim(band_nr_file)//'_*'//trim(orbit_identifier) , n_files  ) 
       
-         if ( n_files == 0 ) out % file_exists % svm_file_exists (i_mband) = .false.
+         if ( n_files == 0 ) out % file_exists % svm_file_exists (i_mband) = sym%NO
          if ( n_files == 0 ) cycle
          
          file_mband = file_arr_dummy(1)
@@ -422,13 +422,13 @@ contains
       nx_start_iband = 1
       ny_start_iband = ny_start * 2 - 1
       offset_iband = [ nx_start_iband -1 , ny_start_iband - 1 ]
-      out % file_exists % svi_file_exists (:) = .true.
+      out % file_exists % svi_file_exists (:) = sym%YES
       do i_iband = 1 , 5
          if ( .not. is_iband_on(i_iband) ) cycle
          write ( band_nr_file , '(i2.2)'  )  i_iband
          write ( band_nr_var , '(i1)' )       i_iband
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVI'//trim(band_nr_file)//'_*'//trim(orbit_identifier) , n_files  )
-         if ( n_files == 0 ) out % file_exists % svi_file_exists (i_iband) = .false.
+         if ( n_files == 0 ) out % file_exists % svi_file_exists (i_iband) = sym%NO
          if ( n_files == 0 ) cycle
          file_iband = file_arr_dummy(1)
 
@@ -478,7 +478,7 @@ contains
          close (unit = lun)
          
          !- gdnbo products
-         out % file_exists % gdnbo_file_exists = .true.
+         out % file_exists % gdnbo_file_exists = sym%YES
          file_arr_dummy => file_search (trim(config %dir_1b), 'GDNBO*'//trim(orbit_identifier) , n_files )
          if ( n_files > 0 ) then
             file_gdnbo = file_arr_dummy(1)
@@ -507,10 +507,10 @@ contains
             
             call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonPhaseAngle', out % geo % Moon_Phase_Angle )
          else
-            out % file_exists % gdnbo_file_exists = .false.
+            out % file_exists % gdnbo_file_exists = sym%NO
          end if
 
-         out % file_exists % svdnb_file_exists = .true.
+         out % file_exists % svdnb_file_exists = sym%YES 
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVDNB*'//trim(orbit_identifier) , n_files  )
          if ( n_files > 0 ) then
             file_svdnb = file_arr_dummy(1)
@@ -533,7 +533,7 @@ contains
                                 , missing_value_real4 &
                                 , out % dnb_mgrid % ref )
          else
-            out % file_exists % svdnb_file_exists = .false.
+            out % file_exists % svdnb_file_exists = sym%NO
          end if
       end if
       
@@ -542,7 +542,7 @@ contains
       ! - goal is to populate cld_mask_aux , cld_phase_aux and cld_type_aux
      
       if ( config %  viirs_cloud_mask_on ) then 
-         out % file_exists % iicmo_file_exists = .true.
+         out % file_exists % iicmo_file_exists = sym%YES
          file_arr_dummy => file_search (trim(config %dir_1b), 'IICMO*'//trim(orbit_identifier) , n_files  )
          allocate ( out % prd % cld_phase ( dim_seg(1) , dim_seg(2) ) )
          allocate ( out % prd % cld_mask ( dim_seg (1), dim_seg(2) ) )
@@ -655,7 +655,7 @@ contains
             deallocate ( i2d_buffer )
             
          else 
-            out % file_exists % iicmo_file_exists = .false.
+            out % file_exists % iicmo_file_exists = sym%NO
             print*,'IICMO file not found , cld_mask_aux and cld_type_aux are set to missing'
             
          end if  
@@ -872,20 +872,20 @@ contains
                
                do i_mband = 1 , 11
                   if ( .not. allocated( out % mband(i_mband) % ref ) &
-                       .or. .not. out % file_exists % svm_file_exists (i_mband) ) cycle
+                       .or. out % file_exists % svm_file_exists (i_mband) == sym%NO ) cycle
                   out % mband (i_mband) % ref (elem_idx , line_in_segment) = out%mband(i_mband)%ref(elem_idx,line_idx)
                end do 
                
                do i_mband = 12,16 
                   if ( .not. allocated (out % mband(i_mband) % rad ) &
-                       .or. .not. out % file_exists % svm_file_exists (i_mband) ) cycle
+                       .or. out % file_exists % svm_file_exists (i_mband) == sym%NO ) cycle
                   out % mband(i_mband) % rad (elem_idx,line_in_segment) = out % mband(i_mband)%rad(elem_idx,line_idx)
                end do
                
-               if ( allocated (out % prd % cld_mask) .and. out % file_exists % iicmo_file_exists ) then 
+               if ( allocated (out % prd % cld_mask) .and. out % file_exists % iicmo_file_exists == sym%YES ) then 
                   out % prd % cld_type(elem_idx,line_in_segment) = out % prd % cld_type(elem_idx,line_idx)
                   out % prd % cld_phase(elem_idx,line_in_segment) = out % prd % cld_phase(elem_idx,line_idx)
-                  out % prd % cld_mask(Elem_Idx,Line_in_Segment) = out % prd % cld_mask(Elem_Idx,Line_Idx)
+                  out % prd % cld_mask(Elem_Idx,Line_in_Segment) = out % prd %  cld_mask(Elem_Idx,Line_Idx)
                end if
                
             end if
@@ -894,7 +894,7 @@ contains
       end do
       
       
-      if ( allocated ( out % prd % cld_mask ) .and. out % file_exists % iicmo_file_exists ) then
+      if ( allocated ( out % prd % cld_mask ) .and. out % file_exists % iicmo_file_exists == sym%YES ) then
          where( out % prd % cld_mask == Missing_Value_Int1) 
             Gap_Pixel_Mask = sym%YES
          end where
@@ -1148,7 +1148,7 @@ contains
    !  history: 04/30/2013 AW
    ! 
    subroutine dealloc_viirs_data_out ( this )
-      class ( viirs_data_out ) :: this
+      class ( viirs_data_out) :: this
       integer :: m 
       
       

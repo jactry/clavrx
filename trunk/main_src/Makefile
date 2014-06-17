@@ -180,8 +180,7 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 dcomp:
 	$(MAKE) COMP1="$(fc)" -C $(DCOMP) 
 	rm -fv $(DCOMP)libdcomp.a
-	#xiar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
-	ar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
+	xiar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
 	
 	
    
@@ -189,8 +188,7 @@ nlcomp_module:
 ifdef nlcomplibs
 	$(MAKE) COMP1="$(fc)" -C $(NLCOMP)   
 	rm -fv $(NLCOMP)libnlcomp.a  
-	#xiar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
-	ar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
+	xiar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
 endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs

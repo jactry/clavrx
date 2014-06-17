@@ -105,7 +105,7 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
       , Solzen &
       , Airmass &
       , Scatangle &
-      , Glint_Mask &
+      , Glint_mask &
       , Land &
       , Sfc_Type &
       , Coast &
@@ -215,7 +215,7 @@ contains
             mask_inp % geo % sol_zen     = Solzen ( i , j )
             mask_inp % geo % airmass     = Airmass ( i , j )
             mask_inp % geo % scat_angle  = Scatangle ( i , j )
-            mask_inp % geo % glint       = Glint_Mask ( i ,j )
+            mask_inp % geo % glint       = Glint_Mask ( i ,j ) == 1
             
             mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
@@ -300,7 +300,7 @@ contains
                mask_inp % sat % ref_dnb_lunar    = Ch (42) % Ref_Lunar_Toa ( i , j )
                mask_inp % geo % lunar_zen        = Lunzen ( i , j )
                mask_inp % rtm % ref_dnb_clear    = Ch (42) % Ref_Lunar_Toa_Clear( i , j )
-               mask_inp % sfc % is_city          = City_Mask ( i , j )
+               mask_inp % sfc % is_city          = City_Mask ( i , j ) == 1
                mask_inp % sat % ref_dnb_3x3_std  = Ref_ChDNB_Lunar_Std_3x3 ( i , j )
                mask_inp % sat % ref_dnb_3x3_min  = Ref_ChDNB_Lunar_Min_3x3 ( i , j )
                mask_inp % geo % scat_angle_lunar = Scatangle_Lunar ( i , j )

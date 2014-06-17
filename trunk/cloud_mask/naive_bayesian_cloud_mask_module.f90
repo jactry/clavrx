@@ -135,7 +135,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: scat_angle
       real :: scat_angle_lunar
       real :: lunar_glint_mask
-      integer :: glint
+      logical :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
    
@@ -147,7 +147,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: dem
       real :: emis_ch20
       real :: sst_anal_uni
-      real :: is_city
+      logical :: is_city
    end type cloud_mask_sfc_type
    
    type cloud_mask_rtm_type 
@@ -214,13 +214,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       character (len = 256) :: cloud_mask_thresh_version_id
       character (len = 256) :: cloud_mask_version_id
    end type cloud_mask_version_type
-
-   type :: syms
-       integer :: NO  = 0
-       integer :: YES = 1
-   end type syms
-   type(syms) , private , save :: sym
-
 
    type cloud_mask_input_type
       character (len = 256) :: bayesian_mask_classifier      
@@ -344,7 +337,7 @@ contains
             inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
             inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
             .not. is_mountain .and. &
-            inp % sfc % coast_mask == sym % NO .and. &
+            .not. inp % sfc % coast_mask .and. &
             .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
             inp % geo % lunar_glint_mask == 0 )  then
               use_lunar_refl_for_vis_tests  = .true.      
@@ -441,8 +434,7 @@ contains
       if ( is_day_375um )               info_flags(1) = ibset ( info_flags ( 1 ) , 3 )
       if ( is_night_375um )             info_flags(1) = ibset ( info_flags ( 1 ) , 4 )
       if ( is_solar_contaminated )      info_flags(1) = ibset ( info_flags ( 1 ) , 5 )
-      if ( inp % sfc % coast_mask == sym % YES) &
-                                        info_flags(1) = ibset ( info_flags ( 1 ) , 6 )    
+      if ( inp % sfc % coast_mask )     info_flags(1) = ibset ( info_flags ( 1 ) , 6 )    
       if ( is_mountain )                info_flags(1) = ibset ( info_flags ( 1 ) , 7 )
       
       if ( is_forward_scatter )         info_flags(2) = ibset ( info_flags ( 2 ) , 0 )
@@ -487,7 +479,7 @@ contains
             if ( inp % rtm % bt_ch31_3x3_max < 0. ) cycle class_loop
             if ( inp % sat % bt_ch31 < 0. ) cycle class_loop
             if ( is_mountain ) cycle class_loop
-            if ( inp % sfc % coast_mask == sym % YES ) cycle
+            if ( inp % sfc % coast_mask   ) cycle
             
             Classifier_Value = inp % rtm % bt_ch31_3x3_max  &
                               -  inp % sat % bt_ch31 
@@ -499,7 +491,7 @@ contains
             if ( .not. inp % sat % chan_on(31) ) cycle class_loop
             if ( inp % rtm % bt_ch31_3x3_std < 0. ) cycle class_loop
             if ( is_mountain ) cycle class_loop
-            if ( inp % sfc % coast_mask == sym % YES ) cycle
+            if ( inp % sfc % coast_mask ) cycle
             Classifier_Value = inp % rtm % bt_ch31_3x3_std 
             is_on_test = .true.
             pos_info_flag = 0
@@ -571,7 +563,7 @@ contains
          case ( et_class_E_037 )
             
             if ( .not. inp %sat % chan_on(20) ) cycle class_loop                  
-            if ( inp % geo % glint == sym % YES )  cycle class_loop                 
+            if ( inp % geo % glint )  cycle class_loop                 
             if ( inp % sat % bt_ch20  <= 0 ) cycle class_loop
             if ( is_cold_375um ) cycle class_loop
             if ( inp % sat % emis_ch20_3x3_mean < 0.) cycle class_loop
@@ -588,7 +580,7 @@ contains
             if ( .not. inp % sat % chan_on(20) ) cycle class_loop
             if ( is_solar_contaminated) cycle class_loop 
             
-            if ( inp % geo % glint == sym % YES )  cycle class_loop
+            if ( inp % geo % glint  )  cycle class_loop
             
             if ( .not. is_day_375um ) cycle class_loop                  
             if ( is_cold_375um ) cycle class_loop
@@ -648,7 +640,7 @@ contains
                idx_info_flag = 6   
             else 
                if ( .not. inp % sat % chan_on(1) ) cycle
-               if ( inp % geo % glint == sym % YES )  cycle class_loop
+               if ( inp % geo % glint  )  cycle class_loop
                if ( is_forward_scatter )  cycle class_loop
                if ( is_mountain ) cycle class_loop
                if ( .not. is_day_063um ) cycle
@@ -677,7 +669,7 @@ contains
                if ( .not. inp % sat % chan_on(1) ) cycle class_loop
                if ( .not. is_day_063um_spatial_tests ) cycle
                if ( is_mountain  ) cycle class_loop
-               if ( inp % sfc % coast_mask == sym % YES ) cycle
+               if ( inp % sfc % coast_mask   ) cycle
                if ( .not. is_day_063um ) cycle class_loop
            
                Classifier_Value = inp % sat % ref_ch1_3x3_std 
@@ -700,7 +692,7 @@ contains
                if ( .not. inp % sat % chan_on(1) ) cycle class_loop
                if ( .not. is_day_063um_spatial_tests ) cycle
                if ( is_mountain  ) cycle class_loop
-               if ( inp % sfc % coast_mask == sym % YES ) cycle
+               if ( inp % sfc % coast_mask   ) cycle
           
                Classifier_Value = RELATIVE_VISIBLE_CONTRAST_TEST ( &
                                     inp % sat % ref_ch1_3x3_min &
@@ -716,7 +708,7 @@ contains
            if ( .not. inp % sat % chan_on(2) ) cycle class_loop
            if ( .not. is_day_063um_spatial_tests ) cycle
            if ( is_mountain  ) cycle class_loop
-           if ( inp % geo  % glint == sym % YES )  cycle class_loop
+           if ( inp % geo  % glint  )  cycle class_loop
           
            Classifier_Value = REFLECTANCE_RATIO_TEST (&
                                    inp % sat % ref_ch1 &
@@ -741,7 +733,7 @@ contains
             if ( .not. inp % sat % chan_on(6) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
             if ( .not. is_day_063um ) cycle class_loop
-            if ( inp % geo % glint == sym % YES )  cycle class_loop
+            if ( inp % geo % glint )  cycle class_loop
             if ( inp % sat % ref_ch6 <= 0 ) cycle class_loop
            
             Classifier_Value = inp % sat % ref_ch6
@@ -1287,18 +1279,17 @@ contains
          , ref_021 &
          , ref_006_std &
          , sat_zen &
-         , glint &
+         , is_glint &
          , land_class )
                
       real , intent(in) :: ref_004
       real , intent(in) :: ref_021
       real , intent(in) :: ref_006_std
       real , intent(in) :: sat_zen
-      integer , intent(in) :: glint
+      logical , intent(in) :: is_glint
       integer , intent(in) :: land_class  
       
-      logical :: is_water_sfc
-      logical :: is_glint
+      logical :: is_water_sfc      
      
       real, parameter :: pi = 3.14159265359
       real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.1
@@ -1320,7 +1311,6 @@ contains
       is_water_sfc = land_class == 0 .or. &
          & land_class >= 3 .and. land_class <= 7 
          
-      is_glint = glint == 1
       ref_ratio = ref_021 / ref_004 
       
       if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH * cos (sat_zen*pi/180.0) ) ) return
@@ -1341,17 +1331,16 @@ contains
               ref_004 &
             , ref_006 &
             , ref_006_std &
-            , glint &
+            , is_glint &
             , land_class )
             
       real , intent(in) :: ref_004
       real , intent(in) :: ref_006
       real , intent(in) :: ref_006_std
-      integer , intent(in) :: glint
+      logical , intent(in) :: is_glint
       integer , intent(in) :: land_class  
       
-      logical :: is_water_sfc
-      logical :: is_glint
+      logical :: is_water_sfc      
       
       real, parameter :: DUST_M1_REFL_THRESH = 0.8
       real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
@@ -1378,8 +1367,6 @@ contains
                .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
          return            
       end if  
-
-      is_glint = glint == 1
       
       ! adjust thresholds
       if ( is_glint .and. is_water_sfc )                 st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH

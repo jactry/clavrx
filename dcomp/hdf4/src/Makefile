@@ -1,7 +1,8 @@
-HDFDIR = $(HOME)/lib/hdf4
+HDFDIR = $(HOME)/lib/hdf4_gcc
 #COMP   = g95
 #COMP   = lf95
-COMP   = ifort
+#COMP   = ifort
+COMP   = gfortran
 
 HDFINC = $(HDFDIR)/include
 ICAINC = ../include

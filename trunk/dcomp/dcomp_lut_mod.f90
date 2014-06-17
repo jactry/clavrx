@@ -10,13 +10,9 @@ module dcomp_lut_mod
       
 	use file_tools, only: &
       file_test
+   use dcomp_lut_hdf_mod
    
    
-    use ica_f90_hdf_sds , only : &
-         & hdf_sds &
-         , hdf_data &
-         , hdf_get_file_sds &
-         , MAXNCNAM
    
    implicit none
  
@@ -129,6 +125,34 @@ module dcomp_lut_mod
    real, save :: azi_m
       
 contains
+
+   ! ------------------------------------------------------------
+   !  This is to populate the tables outside dcomp if wished.
+   ! ------------------------------------------------------------
+   
+   subroutine lut__populate_all_at_once (self , sensor , ancil_path)
+      implicit none
+      class ( lut_type ) , target :: self
+      character ( len = * ) , intent(in) :: sensor
+      character ( len = * ) , intent(in) :: ancil_path
+      integer :: idx_chn, idx_phase
+      type (lut_data_type), pointer :: data_loc => null()
+      
+      
+      call self % initialize ( sensor, ancil_path)
+      
+      do idx_chn = 1 , 42 
+         do idx_phase = 1, 2 
+            data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
+            if ( .not. data_loc % is_set ) then   
+               call data_loc % read_hdf
+               data_loc % is_set  = .true.
+            end if   
+         end do
+      end do   
+   end subroutine lut__populate_all_at_once
+   
+   
    ! ----------------------------------------------------------------
    !
    ! ----------------------------------------------------------------
@@ -482,81 +506,36 @@ contains
    
    
    end subroutine lut_data__thick_cloud_rfl
-   
-   
+      
    ! ----------------------------------------------------------------
    !
    ! ----------------------------------------------------------------
    subroutine lut_data__read_hdf ( self )
       
       class ( lut_data_type ) :: self
-      
-      integer :: nsds
-      character(len =MAXNCNAM), allocatable :: sds_name(:)
-      type(hdf_sds) , allocatable, target :: sds(:)
-      character(len =MAXNCNAM), allocatable :: sds_name_ems(:)
-      type(hdf_sds) , pointer :: ps => null()
-      type(hdf_data), pointer :: psd => null()
-      integer , parameter :: N_PARAMS = 4
-      integer , parameter :: N_PARAMS_EMS = 2
-      integer :: i , last , first
-      
-     
+         
       if ( .not. file_test ( self % file )) then 
          print*, 'file not available channel' 
          stop
       end if
-   
-      allocate ( sds_name ( N_PARAMS) )
-      sds_name = (/ character (len =20) :: 'albedo' , 'transmission' , 'spherical_albedo', 'reflectance'  /)
-      
-      if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) then
-         print*,'hdf file not readable'
-         stop
-      end if   
-      deallocate ( sds_name )
-      
       
       call self % alloc 
-      ps => sds(1); psd=> ps%data
-      self % cld_alb = reshape(psd%r4values,[9,29,45])
       
-      ps => sds(2); psd=>ps%data
-      self % cld_trn =reshape (psd%r4values,[9,29,45])
-      
-      ps => sds(3); psd=> ps%data
-      self % cld_sph_alb = reshape ( psd%r4values, [9,29] )
-      
-      ps => sds(4); psd=>ps%data
-      
-      ! reconstruct 5d array
-      do i = 1 , 45 
-         first = (i -1 ) *  9 * 29 * 45 * 45 + 1
-         last = first + (9 * 29 * 45 * 45) - 1
-         self % cld_refl(:,:,:,:,i) = reshape( psd%r4values(first : last  ),[9,29,45,45])
-      end do 
-       
+      if ( self % has_sol ) then         
+         call read_hdf_dcomp_data_rfl ( &
+              self % file &              ! - input
+            , self % cld_alb &            
+            , self % cld_trn &
+            , self % cld_sph_alb &
+            , self % cld_refl )
+      end if 
+        
       if ( self % has_ems ) then
-         allocate ( sds_name_ems ( N_PARAMS_EMS) )
-         sds_name_ems = (/ character(len=20) :: 'cloud_emissivity' , 'cloud_transmission' /)
-      
-         if ( hdf_get_file_sds ( self%file_ems, nsds , sds , nsdsn = N_PARAMS_EMS, sds_name = sds_name_ems ) < 0 ) then
-            print*,'hdf file not readable'
-            stop
-         end if   
-         deallocate ( sds_name_ems )
-         ps => sds(1); psd=> ps%data
-         self % cld_ems = reshape(psd%r4values,[9,29,45])
-         
-         ps => sds(2); psd=> ps%data
-         self % cld_trn_ems = reshape(psd%r4values,[9,29,45])
-         
-         
-      end if
-      
-      ps => null()
-      psd => null()
-      
+         call read_hdf_dcomp_data_ems ( &
+                  self%file_ems &       ! - input
+               , self % cld_ems &        ! - output 
+               , self % cld_trn_ems)         
+      end if    
      
    end subroutine lut_data__read_hdf
    
@@ -599,25 +578,7 @@ contains
    subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
       character ( len = 300 )  :: hdf_file
-      integer :: nsds                     
-
-      character(len=MAXNCNAM), dimension(:), allocatable :: &
-       sds_name
-
-      type(hdf_sds), dimension(:), allocatable, target :: &
-       sds                          ! Tableau des structures des SDS extraits
-
-      integer :: isds
-      integer  :: i                                      
-       
-      type(hdf_sds), pointer                           :: &
-       ps                           ! Pointeur sur la structure du SDS courant 
-      
-      type(hdf_data), pointer                          :: &
-       psd                        ! Pointeur sur les données du SDS courant
-            
-      
-           
+    
       hdf_file = self % channel ( 1) % phase (1 ) % file
     
 		if ( .not. file_test(hdf_file) ) then
@@ -632,40 +593,18 @@ contains
       self %  dims% n_cod = 29
       self %  dims% n_cps = 9
       
-      call  self % dims % dealloc
+     
       call  self % dims % alloc 
       
-      allocate ( sds_name ( 5)) 
-      sds_name =(/ character(len=30) :: 'sensor_zenith_angle'  &
-            , 'solar_zenith_angle' &
-            , 'relative_azimuth_angle' &
-            , 'log10_optical_depth' &
-            , 'log10_eff_radius'/)
       
-       
-      if (hdf_get_file_sds(hdf_file, nsds, sds, nsdsn = 5, sds_name = sds_name) < 0) then
-         print*,'hdf file not readable ', trim(hdf_file)
-         stop  
-      end if 
-        
-      ps => sds(1); psd=> ps%data
-      self %  dims% sat_zen = psd%r4values 
-       
-      ps => sds(2); psd=> ps%data
-      self %  dims% sol_zen = psd%r4values 
+      call read_hdf_dcomp_dims ( hdf_file &
+                        , self %  dims% sat_zen &
+                        , self %  dims% sol_zen &
+                        , self %  dims% rel_azi &
+                        , self %  dims% cod &
+                        , self %  dims% cps )
       
-      ps => sds(3); psd=> ps%data
-      self %  dims% rel_azi = psd%r4values 
       
-      ps => sds(4); psd=> ps%data
-      self %  dims% cod = psd%r4values 
-      
-      ps => sds(5); psd=> ps%data      
-      self %  dims% cps = psd%r4values 
-      
-      psd => null()
-      
-      deallocate ( sds_name)
             
    end subroutine lut__init_dims
    
@@ -674,7 +613,7 @@ contains
    ! ----------------------------------------------------------------
    subroutine lut_dim__alloc ( self )
       class ( lut_dim_type) :: self
-      
+       call  self  % dealloc
       allocate ( self % sat_zen (self % n_sat_zen)  )
       allocate ( self % sol_zen (self % n_sol_zen)  )
       allocate ( self % rel_azi (self % n_rel_azi)  )

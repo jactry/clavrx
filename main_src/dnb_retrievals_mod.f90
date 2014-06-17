@@ -278,7 +278,7 @@ contains
       
       lpds = lunar_phase_angle_topo
       is_waning = dist_phase_LUT(2,dtg_index ) > dist_phase_LUT(2,dtg_index + 1)      
-      if ( is_waning ) lpds = lpds * -1
+      if ( is_waning ) lpds = lpds * (-1)
       
       deallocate ( dist_phase_lut )
       

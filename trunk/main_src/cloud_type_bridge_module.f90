@@ -75,38 +75,42 @@
 !     NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 !              et_cloudiness_class                type with enumerators for cloud mask
 !
+!     FROM CONSTANT
+!              sym                                type ( NO = 0, YES = 1)
+!
 !--------------------------------------------------------------------------------------
 
 module cloud_type_bridge_module
 
    
    use PIXEL_COMMON, only : &
-        solzen  &
-      , satzen &   
-      , zen_idx_rtm &
+        Solzen  &
+      , Satzen &   
+      , Zen_Idx_Rtm &
       , Chan_On_Flag_Default &
-      , ch &
-      , num_pix &
-      , num_scans_read &
-      , i_nwp &
-      , j_nwp &
+      , Ch &
+      , Num_Pix &
+      , Num_Scans_Read &
+      , I_Nwp &
+      , J_Nwp &
       , Bt_Ch27_Max_3x3 &
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
-      , cld_type &
-      , cld_phase &
-      , cld_mask &
-      , i_lrc, j_lrc &
+      , Cld_Type &
+      , Cld_Phase &
+      , Cld_Mask &
+      , I_Lrc, J_Lrc &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
-      , bad_pixel_mask
+      , Bad_Pixel_Mask
                  
    use CONSTANTS, only : &
-        Cloud_Type_Version
+        Cloud_Type_Version &
+      , Sym
 
    use CLOUD_TYPE_ALGO_MODULE, only : &
        cloud_type_pixel &
@@ -116,11 +120,11 @@ module cloud_type_bridge_module
        , set_cloud_phase
        
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE, only: &
-      et_cloudiness_class
+       et_cloudiness_class
    
    use RTM_COMMON , only: &
-      p_std_rtm &
-      , rtm
+       P_Std_Rtm &
+       , Rtm
    
    implicit none
    
@@ -194,18 +198,18 @@ contains
       elem_loop1: do  j = 1,num_scans_read
          line_loop1: do i = 1, num_pix  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
-               cld_type (i,j ) = et_cloud_type % MISSING
+            if ( bad_pixel_mask ( i , j ) == 1 ) then
+               Cld_Type ( i , j ) = et_cloud_type % MISSING
                cycle
             end if 
             
-            if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
-               cld_type (i , j ) = et_cloud_type % CLEAR
-                cycle
+            if ( Cld_Mask ( i , j ) == et_cloudiness_class % CLEAR ) then
+               Cld_Type ( i , j ) = et_cloud_type % CLEAR
+               cycle
             end if
                 
-            if (cld_mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
-               cld_type (i , j ) = et_cloud_type % PROB_CLEAR
+            if ( Cld_Mask ( i , j ) == et_cloudiness_class % PROB_CLEAR ) then
+               Cld_Type ( i , j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if   
             
@@ -220,15 +224,15 @@ contains
             
             !--- set lrc value
             cld_type_lrc = et_cloud_type % UNKNOWN
-            if ( ii > 0 .and. jj > 0) then
-               cld_type_lrc = cld_type (ii , jj )
+            if ( ii > 0 .and. jj > 0 ) then
+               Cld_Type_Lrc = Cld_Type ( ii , jj )
             endif
 
             ! - compare this ctype with LRC
            
             !  - identical or lrc is not valid => take the current
             if ( ctype == cld_type_lrc .or. ii < 1 .or. jj < 1 .or. cld_type_lrc == et_cloud_type%UNKNOWN) then
-               cld_type (i,j)  = ctype
+               Cld_Type (i,j)  = ctype
             else
 
                ! - if LRC core is water phase ==> use lrc
@@ -239,11 +243,11 @@ contains
                    if ( ctype >= et_cloud_type % FIRST_WATER &
                         .and. ctype <= et_cloud_type % LAST_WATER ) then
                         
-                      cld_type(i,j) = ctype
+                      Cld_Type (i,j) = ctype
                    else
                      ! - the original ice pixels should also be check on supercool, fog or water.
                      call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, force_water = .true. )
-                     cld_type (i,j)  = ctype
+                     Cld_Type (i,j)  = ctype
                    end if
                   
                ! - LRC core is ice phase
@@ -253,7 +257,7 @@ contains
                   .or. cld_type_lrc == et_cloud_type % OVERLAP &
                   .or. cld_type_lrc == et_cloud_type % OPAQUE_ICE)) then
                   
-                     cld_type (i , j ) = et_cloud_type % CIRRUS
+                     Cld_Type ( i , j ) = et_cloud_type % CIRRUS
                
                ! - LRC core is ice phase and current is supercooled => switch to ice
                else if ( ( cld_type_lrc == et_cloud_type % CIRRUS & 
@@ -262,11 +266,11 @@ contains
                         .and. ctype ==  et_cloud_type % SUPERCOOLED ) then
                   
                   call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, force_ice = .true. )
-                     cld_type (i,j)  = ctype
+                     Cld_Type (i,j)  = ctype
                     
                ! -- this is mainly cirrus / opaque ice => keep current
                else 
-                  cld_type (i,j)  = ctype                                                 
+                  Cld_Type (i,j)  = ctype                                                 
                end if                     
             end if
 
@@ -275,21 +279,22 @@ contains
          end do   line_loop1
       end do elem_loop1      
       
-      call set_cloud_phase ( cld_type, cld_phase) 
+      call SET_CLOUD_PHASE ( cld_type, cld_phase ) 
       
-   end subroutine cloud_type_bridge
+   end subroutine CLOUD_TYPE_BRIDGE
    
    ! --------- --------------- ---
    !
    !
    ! --------- ---------------
-   subroutine POPULATE_INPUT ( i, j , type_inp)
+   subroutine POPULATE_INPUT ( i, j , type_inp )
       integer, intent(in) :: i
       integer, intent(in) :: j
-      type ( cloud_type_input_type) :: type_inp
+      type ( cloud_type_input_type ) :: type_inp
       
       integer :: nwp_lon_idx , nwp_lat_idx
       integer :: vza_idx
+      integer :: dimen
       
       Nwp_Lon_Idx = I_Nwp( i , j )
       Nwp_Lat_Idx = J_Nwp( i , j )
@@ -298,13 +303,13 @@ contains
       !-----------------------------------------------------------------------------------
       ! - sat
       !-----------------------------------------------------------------------------------
-      if (chan_on_flag_default(31)) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
-      if (chan_on_flag_default(31)) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
-      if (chan_on_flag_default(32)) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
-      if (chan_on_flag_default(6)) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
-      if (chan_on_flag_default(20)) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
+      if (chan_on_flag_default(31) == sym%YES) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
+      if (chan_on_flag_default(31) == sym%YES) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
+      if (chan_on_flag_default(32) == sym%YES) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
+      if (chan_on_flag_default(6)  == sym%YES) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa ( i,j )
+      if (chan_on_flag_default(20) == sym%YES) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
 
-      if (chan_on_flag_default(27)) then
+      if (chan_on_flag_default(27) == sym%YES) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
       end if   
@@ -312,38 +317,52 @@ contains
       !-----------------------------------------------------------------------------------
       ! - rtm
       !-----------------------------------------------------------------------------------
-      allocate ( type_inp % rtm % t_prof , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%T_prof )
-      allocate ( type_inp % rtm % z_prof , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%z_prof )
-      type_inp % rtm % tropo_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
-      type_inp % rtm % sfc_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%sfc_Level
-      if (chan_on_flag_default(6))  then
-         type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
+      !!!!! ATTN: variable dimen and strange allocation is because of bugs in
+      !!!!! GFORTRAN 4.7 it should be changed back to desabled lines when new
+      !!!!! gfortran would be fixed and work as it should (Denis B, June 2014)
+
+      !allocate ( type_inp % rtm % t_prof , source = rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % T_prof )
+      !allocate ( type_inp % rtm % z_prof , source = rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % z_prof )
+      dimen = size (rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % T_prof)
+      allocate ( type_inp % rtm % t_prof(dimen) , source = rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % T_prof )
+      dimen = size (rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % z_prof)
+      allocate ( type_inp % rtm % z_prof(dimen) , source = rtm ( Nwp_Lon_Idx,Nwp_Lat_Idx) % z_prof )
+      type_inp % rtm % tropo_lev = rtm (Nwp_Lon_Idx,Nwp_Lat_Idx) % Tropo_Level
+      type_inp % rtm % sfc_lev = rtm (Nwp_Lon_Idx,Nwp_Lat_Idx) % sfc_Level
+      if (chan_on_flag_default(6) == sym%YES) then
+         type_inp % rtm % ref_ch6_clear      = ch(6)%Ref_Toa_Clear( i,j )
       endif
-      if (chan_on_flag_default(31))  then
-         allocate ( type_inp % rtm % rad_ch31_bb_prof &
-              , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile)
+      if (chan_on_flag_default(31) == sym%YES) then
+         !allocate ( type_inp % rtm % rad_ch31_bb_prof &
+         !  , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile )
+         dimen = size (Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile )
+         allocate ( type_inp % rtm % rad_ch31_bb_prof (dimen) &
+           , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile )
          type_inp % rtm % bt_ch31_3x3_max    = Bt_Ch31_Max_3x3( i,j )
          type_inp % rtm % bt_ch31_3x3_std    = Bt_Ch31_Std_3x3( i,j )
-         type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)
+         type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear( i,j )
          type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
-         if (chan_on_flag_default(27))  then
+         if (chan_on_flag_default(27) == sym%YES) then
             type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
-         if (chan_on_flag_default(32))  then
+         if (chan_on_flag_default(32) == sym%YES) then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )
             type_inp % rtm % bt_ch32_atm_sfc       = ch(32)%Bt_Toa_Clear( i,j )
          endif
-         if (chan_on_flag_default(33))  then
+         if (chan_on_flag_default(33) == sym%YES) then
             type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
          endif
       endif
       
-      if (chan_on_flag_default(27)) then
+      if (chan_on_flag_default(27) == sym%YES) then
          type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
          type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
-         allocate ( type_inp % rtm % rad_ch27_bb_prof &
-         , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
+         !allocate ( type_inp % rtm % rad_ch27_bb_prof &
+         !  , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
+         dimen = size (Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
+         allocate ( type_inp % rtm % rad_ch27_bb_prof(dimen) &
+           , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
       end if   
       
       !-----------------------------------------------------------------------------------

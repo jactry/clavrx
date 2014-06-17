@@ -87,6 +87,7 @@ module dcomp_lut_mod
       procedure :: init_dims => lut__init_dims
       procedure , private :: set_filename => lut__set_filename
       procedure :: clear_lut_memory => lut__clear_lut_memory
+      procedure :: populate_all_at_once => lut__populate_all_at_once
       
    end type lut_type
    
@@ -138,18 +139,22 @@ contains
       integer :: idx_chn, idx_phase
       type (lut_data_type), pointer :: data_loc => null()
       
-      
-      call self % initialize ( sensor, ancil_path)
-      
+     
+      call self % initialize ( trim(sensor), trim(ancil_path))
+       
       do idx_chn = 1 , 42 
          do idx_phase = 1, 2 
             data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
-            if ( .not. data_loc % is_set ) then   
+            if ( .not. data_loc % is_set ) then 
+               
                call data_loc % read_hdf
                data_loc % is_set  = .true.
             end if   
          end do
       end do   
+      
+      self % sensor = trim(sensor)
+     
    end subroutine lut__populate_all_at_once
    
    
@@ -300,6 +305,7 @@ contains
       
       do i =1,2 
          self % channel(:) % phase(i) % has_ems = has_ems_table
+         self % channel(:) % phase(i) % has_sol = has_sol_table
 	  end do
    
    end subroutine lut__set_filename
@@ -440,15 +446,16 @@ contains
          call data_loc % read_hdf
          data_loc % is_set  = .true.
       end if
-      
+     
       call dcomp_interpolation_weight(self%dims%n_cod, cod_log10,self%dims%cod &
          & , weight_out = wgt_cod, index_out= pos_cod)
       
       call dcomp_interpolation_weight(self%dims%n_cps, cps_log10,self%dims%cps &
          & , weight_out = wgt_cps, index_out= pos_cps)
-         
+        
          
       rfl_cld_2x2       = data_loc%cld_refl( pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol,self%pos_sat,self%pos_azi)
+     
       trn_sol_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol)
       trn_sat_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)
       albsph_cld_2x2    = data_loc%cld_sph_alb(pos_cps:pos_cps+1,pos_cod:pos_cod+1)
@@ -457,7 +464,7 @@ contains
       ! - parameter for kernel computation  
       ref_diff = 0.2
 	   cod_diff = 0.1
-      
+       
 	   call interpolate_2d ( rfl_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % refl    &
          & , out % dRefl_dcps      , out % dRefl_dcod ) 
 	   call interpolate_2d ( trn_sol_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % trn_sol  &
@@ -481,6 +488,8 @@ contains
             , out % trn_ems, out % dtrnEms_dcps, out % dtrnEms_dcod ) 
          
       end if  
+      
+      
       
       cod_log10_saved = cod_log10
    end subroutine lut__get_data
@@ -514,14 +523,16 @@ contains
       
       class ( lut_data_type ) :: self
          
-      if ( .not. file_test ( self % file )) then 
-         print*, 'file not available channel' 
-         stop
+      
+      if ( self % has_sol .or. self % has_ems ) then
+         call self % alloc 
       end if
       
-      call self % alloc 
-      
-      if ( self % has_sol ) then         
+      if ( self % has_sol ) then 
+         if ( .not. file_test ( self % file )) then 
+            print*, 'file not available channel ', self % file
+            stop
+         end if        
          call read_hdf_dcomp_data_rfl ( &
               self % file &              ! - input
             , self % cld_alb &            
@@ -531,6 +542,10 @@ contains
       end if 
         
       if ( self % has_ems ) then
+         if ( .not. file_test ( self % file_ems )) then 
+            print*, 'file ems not available channel ',  self % file_ems
+            stop
+         end if
          call read_hdf_dcomp_data_ems ( &
                   self%file_ems &       ! - input
                , self % cld_ems &        ! - output 

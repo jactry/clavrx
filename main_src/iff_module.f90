@@ -228,12 +228,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
       real(kind=int4), dimension( : , : , : ) , allocatable :: r3d_buffer
       character (len=100), dimension ( 7 ) :: setname_geo_list = [ &
-                           'Latitude     '       & ! 1
-                         , 'Longitude    '        & ! 2
+                           'Latitude'            & ! 1
+                         , 'Longitude'           & ! 2
                          , 'SensorAzimuth'       & ! 3
-                         , 'SensorZenith '        & ! 4
-                         , 'SolarAzimuth '        & ! 5
-                         , 'SolarZenith  '        & ! 6
+                         , 'SensorZenith'        & ! 4
+                         , 'SolarAzimuth'        & ! 5
+                         , 'SolarZenith'         & ! 6
                          , 'ScanStartTime'       ] ! 7
       character (len = 150) :: setname_band
       character (len = 255) , pointer , dimension (:) :: file_arr_dummy
@@ -546,7 +546,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             out % prd % cld_mask = 3 - out % prd % cld_mask
 
             ! set pixels where cloud mask wasn't determind to missing
-            where ( .not. btest ( i3d_buffer ( : , : , 1 ), 0 ) )
+            where ( btest ( i3d_buffer ( : , : , 1 ), 0 ) == 0 )
                out % prd % cld_mask  = missing_value 
             end where
 

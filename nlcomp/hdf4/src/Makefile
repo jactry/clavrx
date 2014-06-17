@@ -1,5 +1,5 @@
 HDFDIR = $(HOME)/lib/hdf4
-#COMP   = gfortran
+#COMP   = g95
 #COMP   = lf95
 COMP   = ifort
 

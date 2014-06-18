@@ -201,7 +201,11 @@ contains
       scatangle = scattering_angle( solzen , satzen , relaz )
 
       ! gap
-      gap_pixel_mask( : ,1:c_seg_lines) = out % gap % mask
+      gap_pixel_mask( : ,1:c_seg_lines) = 0
+      where ( out % gap % mask )
+         gap_pixel_mask( : ,1:c_seg_lines) = 1
+      end where 
+      
       
       ! - m-bands
       do i_mband = 1 , 16

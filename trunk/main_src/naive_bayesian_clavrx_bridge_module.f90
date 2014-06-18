@@ -220,7 +220,7 @@ contains
             mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
             mask_inp % sfc % land_class  = Land ( i , j )
-            mask_inp % sfc % coast_mask  = Coast ( i , j ) 
+            mask_inp % sfc % coast_mask  = Coast ( i , j ) == 1 
             mask_inp % sfc % snow_class  = Snow ( i , j )
             mask_inp % sfc % sfc_type    = Sfc_Type ( i , j ) 
             mask_inp % sfc % dem         = Zsfc ( i , j )
@@ -304,7 +304,7 @@ contains
                mask_inp % sat % ref_dnb_3x3_std  = Ref_ChDNB_Lunar_Std_3x3 ( i , j )
                mask_inp % sat % ref_dnb_3x3_min  = Ref_ChDNB_Lunar_Min_3x3 ( i , j )
                mask_inp % geo % scat_angle_lunar = Scatangle_Lunar ( i , j )
-               mask_inp % geo % lunar_glint_mask = Glint_Mask_Lunar ( i , j )
+               mask_inp % geo % lunar_glint_mask = Glint_Mask_Lunar ( i , j ) == 1 
             end if
 
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1

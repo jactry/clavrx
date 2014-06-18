@@ -298,13 +298,13 @@ contains
       !-----------------------------------------------------------------------------------
       ! - sat
       !-----------------------------------------------------------------------------------
-      if (chan_on_flag_default(31)) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
-      if (chan_on_flag_default(31)) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
-      if (chan_on_flag_default(32)) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
-      if (chan_on_flag_default(6)) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
-      if (chan_on_flag_default(20)) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
+      if (type_inp % sat % chan_on (31) ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
+      if (type_inp % sat % chan_on (31)) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
+      if (type_inp % sat % chan_on (32)) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
+      if (type_inp % sat % chan_on (6)) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
+      if (type_inp % sat % chan_on (20)) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
 
-      if (chan_on_flag_default(27)) then
+      if (type_inp % sat % chan_on (27)) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
       end if   
@@ -312,37 +312,39 @@ contains
       !-----------------------------------------------------------------------------------
       ! - rtm
       !-----------------------------------------------------------------------------------
-      allocate ( type_inp % rtm % t_prof , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%T_prof )
-      allocate ( type_inp % rtm % z_prof , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%z_prof )
+      allocate ( type_inp % rtm % t_prof (size (rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%T_prof) ) &
+          , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%T_prof )
+      allocate ( type_inp % rtm % z_prof (size (rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%z_prof)  ) &
+         , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%z_prof )
       type_inp % rtm % tropo_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
       type_inp % rtm % sfc_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%sfc_Level
-      if (chan_on_flag_default(6))  then
+      if (type_inp % sat % chan_on (6))  then
          type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
       endif
-      if (chan_on_flag_default(31))  then
-         allocate ( type_inp % rtm % rad_ch31_bb_prof &
+      if (type_inp % sat % chan_on (31))  then
+         allocate ( type_inp % rtm % rad_ch31_bb_prof (size (Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile) ) &
               , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile)
          type_inp % rtm % bt_ch31_3x3_max    = Bt_Ch31_Max_3x3( i,j )
          type_inp % rtm % bt_ch31_3x3_std    = Bt_Ch31_Std_3x3( i,j )
          type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)
          type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
-         if (chan_on_flag_default(27))  then
+         if (type_inp % sat % chan_on (27))  then
             type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
-         if (chan_on_flag_default(32))  then
+         if (type_inp % sat % chan_on (32))  then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )
             type_inp % rtm % bt_ch32_atm_sfc       = ch(32)%Bt_Toa_Clear( i,j )
          endif
-         if (chan_on_flag_default(33))  then
+         if (type_inp % sat % chan_on (33))  then
             type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
          endif
       endif
       
-      if (chan_on_flag_default(27)) then
+      if (type_inp % sat % chan_on (27)) then
          type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
          type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
-         allocate ( type_inp % rtm % rad_ch27_bb_prof &
+         allocate ( type_inp % rtm % rad_ch27_bb_prof (size (Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile) ) &
          , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
       end if   
       

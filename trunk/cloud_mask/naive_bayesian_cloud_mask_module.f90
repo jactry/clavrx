@@ -134,14 +134,14 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: airmass
       real :: scat_angle
       real :: scat_angle_lunar
-      real :: lunar_glint_mask
+      logical :: lunar_glint_mask
       logical :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
    
    type cloud_mask_sfc_type
       integer :: land_class
-      integer :: coast_mask
+      logical :: coast_mask
       integer :: snow_class
       integer :: sfc_type
       real :: dem
@@ -333,13 +333,13 @@ contains
       use_lunar_refl_for_vis_tests = .false.
       if ( inp % sat % chan_on(42) ) then
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-          ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-            inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-            inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
+          !( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
+           ! inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
+           ! inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
             .not. is_mountain .and. &
-            .not. inp % sfc % coast_mask .and. &
-            .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
-            inp % geo % lunar_glint_mask == 0 )  then
+           ! .not. inp % sfc % coast_mask .and. &
+          !  .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
+            inp % geo % lunar_glint_mask  )  then
               use_lunar_refl_for_vis_tests  = .true.      
          end if    
       end if                       
@@ -973,8 +973,8 @@ contains
      
        
       real  :: lat , lon , emis_ch20 , sst_anal_uni
-      integer :: land_class,coast , snow_class , sfc_type
-      
+      integer :: land_class , snow_class , sfc_type
+      logical :: coast
       
       integer :: bayes_sfc_type
       integer , parameter :: CLOSED_SHRUBS_SFC = 8
@@ -1005,7 +1005,7 @@ contains
       if (  land_class  == ET_land_class % LAND .or. &
                land_class  == ET_land_class % COASTLINE .or. &
                land_class  == ET_land_class % EPHEMERAL_WATER .or. &  
-               coast  == 1 )  then
+               coast  )  then
          bayes_sfc_type = 3
       end if
       

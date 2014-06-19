@@ -2306,9 +2306,11 @@ subroutine COMPUTE_CHANNEL_RT(Sfc_Level_Idx,Prof_Weight,Lon_Idx,Lat_Idx,Elem_Idx
    select case (Chan_Idx)
       case (1,2,5,6,7,42)
       if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
-        ch(Chan_Idx)%Trans_Atm_Total(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx) +  &
+         if (allocated(  Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile )) then
+            ch(Chan_Idx)%Trans_Atm_Total(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx) +  &
                  (Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx+1) -  &
                   Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx)) * Prof_Weight
+         end if         
       endif
    end select
 

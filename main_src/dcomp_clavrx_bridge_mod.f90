@@ -149,7 +149,7 @@ contains
       dcomp_run = .false.
       
       ! - do we need to run dcomp at all? ( night  etc..)
-      if ( count ( solzen < 65 .and. solzen >= 0 .and. satzen < 65. ) < 1 ) return
+      if ( count ( solzen < 75. .and. solzen >= 0 .and. satzen < 75. ) < 1 ) return
       dcomp_run = .true.
       
       

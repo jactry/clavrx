@@ -160,6 +160,7 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Cloud_Height
    real, dimension(:,:), pointer:: Zc_Top
    real, dimension(:,:), pointer:: Zc_Base
+   real, dimension(:,:), pointer:: Cost
 
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
@@ -278,13 +279,12 @@ end type acha_rtm_nwp_struct
 
    Ctxt => Acha_Input%Ctxt
 
-   CALL NFIP_NWP_SfcLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%Sfc_Level_RTM)
-   CALL NFIP_NWP_TropoLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%Tropo_Level_RTM)  
+   CALL NFIP_NWP_SfcLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%Sfc_Level)
+   CALL NFIP_NWP_TropoLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%Tropo_Level)
    
    
    !--- do various 101 level NWP Profiles
-   Acha_RTM_NWP%P_Prof = P_Std_Rtm ! make sure this works for Framework
-   
+   CALL NFIA_NWP_PressProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%P_prof)   
    CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%T_prof)
    CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_RTM_NWP%Z_prof)   
    
@@ -294,23 +294,15 @@ end type acha_rtm_nwp_struct
    ! rtm profiles are populated, if not, skip smoothing
    !------------------------------------------------------
    
-   !--- have to figure this out for the framework - WCS3
-
-   if ((Rtm(Inwp,Jnwp)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp_x,Jnwp)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp,Jnwp_x)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp_x,Jnwp_x)%Flag == symbol%YES)) then
-
+    if (Inwp_x  /= MISSING_VALUE_INT4 .and. Jnwp_x /= MISSING_VALUE_INT4) then
         Acha_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%YES
-        
-        Acha_RTM_NWP%T_prof_1 => Rtm(Inwp_x,Jnwp)%T_prof 
-        Acha_RTM_NWP%T_prof_2 => Rtm(Inwp,Jnwp_x)%T_prof 
-        Acha_RTM_NWP%T_prof_3 => Rtm(Inwp_x,Jnwp_x)%T_prof 
 
-        Acha_RTM_NWP%Z_prof_1 => Rtm(Inwp_x,Jnwp)%Z_prof 
-        Acha_RTM_NWP%Z_prof_2 => Rtm(Inwp,Jnwp_x)%Z_prof 
-        Acha_RTM_NWP%Z_prof_3 => Rtm(Inwp_x,Jnwp_x)%Z_prof
-        
+        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_RTM_NWP%T_prof_1)
+        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_RTM_NWP%T_prof_2)
+        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_RTM_NWP%T_prof_3)
+        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_RTM_NWP%Z_prof_1)
+        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_RTM_NWP%Z_prof_2)
+        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_RTM_NWP%Z_prof_3)
    endif
    
    !---- RTM profiles

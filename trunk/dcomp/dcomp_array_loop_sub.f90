@@ -94,8 +94,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real ( kind = real4 ) :: rad_to_refl_factor
    
    
-   real, parameter :: SAT_ZEN_MAX = 80.
-   real, parameter :: SOL_ZEN_MAX = 80.
+   real, parameter :: SAT_ZEN_MAX = 75.
+   real, parameter :: SOL_ZEN_MAX = 75.
    real, parameter :: PI = 3.14159265359
    
    real ( kind = real4) :: ALBEDO_OCEAN (40)

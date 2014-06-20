@@ -337,8 +337,9 @@ subroutine READ_INSTR_CONSTANTS()
    if (Coms_Flag == sym%YES) call READ_COMS_INSTR_CONSTANTS(trim(Instr_Const_File))
 
    if (Viirs_Flag == sym%YES) then
-
-#ifdef HDF5LIBS !--- read in Viirs Instrument Constants from appropriate file
+   
+!--- read in Viirs Instrument Constants from appropriate file
+#ifdef HDF5LIBS 
      call READ_VIIRS_INSTR_CONSTANTS(trim(Instr_Const_File))
 #else
        print *, "No HDF5 library installed, stopping"

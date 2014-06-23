@@ -77,33 +77,34 @@
 !
 !--------------------------------------------------------------------------------------
 
-module cloud_type_bridge_module
+module CLOUD_TYPE_BRIDGE_MODULE 
 
    
    use PIXEL_COMMON, only : &
-        solzen  &
-      , satzen &   
-      , zen_idx_rtm &
+        Solzen  &
+      , Satzen &   
+      , Zen_Idx_Rtm &
       , Chan_On_Flag_Default &
-      , ch &
-      , num_pix &
-      , num_scans_read &
-      , i_nwp &
-      , j_nwp &
+      , Ch &
+      , Num_Pix &
+      , Num_Scans_Read &
+      , I_Nwp &
+      , J_Nwp &
       , Bt_Ch27_Max_3x3 &
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
       , Covar_Ch27_Ch31_5x5 &
-      , cld_type &
-      , cld_phase &
-      , cld_mask &
-      , i_lrc, j_lrc &
+      , Cld_Type &
+      , Cld_Phase &
+      , Cld_Mask &
+      , Cld_Test_Vector_Packed &
+      , I_Lrc, J_Lrc &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
       , Diag_Pix_Array_1 &
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
-      , bad_pixel_mask
+      , Bad_Pixel_Mask
                  
    use CONSTANTS, only : &
         Cloud_Type_Version
@@ -119,8 +120,8 @@ module cloud_type_bridge_module
       et_cloudiness_class
    
    use RTM_COMMON , only: &
-      p_std_rtm &
-      , rtm
+      P_Std_Rtm &
+      , Rtm
    
    implicit none
    
@@ -140,7 +141,7 @@ contains
    !====================================================================
    ! universal cloud type bridge
    !====================================================================
-   subroutine cloud_type_bridge
+   subroutine CLOUD_TYPE_BRIDGE 
       implicit none
       
       type ( cloud_type_input_type) :: type_inp
@@ -162,18 +163,22 @@ contains
       elem_loop: do  j = 1,num_scans_read
          line_loop: do i = 1, num_pix  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
-               cld_type (i,j ) = et_cloud_type % MISSING
+            
+            !--- skip bad pixels
+            if ( Bad_Pixel_Mask (i,j) == 1 ) then
+               Cld_Type (i,j) = et_cloud_type % MISSING
                cycle
             end if 
-            
-            if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
-               cld_type (i,j ) = et_cloud_type % CLEAR
+
+            !--- clear type
+            if (Cld_Mask (i,j) == et_cloudiness_class % CLEAR ) then
+               Cld_Type (i,j) = et_cloud_type % CLEAR
                 cycle
             end if
-                
-            if (cld_mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
-               cld_type (i,j ) = et_cloud_type % PROB_CLEAR
+
+            !--- prob clear type
+            if (Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+               Cld_Type (i,j) = et_cloud_type % PROB_CLEAR
                cycle
             end if
             
@@ -182,7 +187,7 @@ contains
                              
             call POPULATE_INPUT ( i, j , type_inp )
             call CLOUD_TYPE_PIXEL  ( type_inp, ctype , diag_out, ice_prob_out = ice_prob )
-            cld_type (i,j)  = ctype
+            Cld_Type (i,j)  = ctype
 
             call DEALLOCATE_INP ( type_inp )
          
@@ -194,16 +199,40 @@ contains
       elem_loop1: do  j = 1,num_scans_read
          line_loop1: do i = 1, num_pix  
             
+            !--- skip bad pixels
             if ( bad_pixel_mask (i,j) == 1 ) then
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
+
+            !--- For Clear & Prob. Clear Only, 
+            !Define Smoke and Dust Types based on Cloud Mask
+            if (Cld_Mask(i,j) == et_cloudiness_class % CLEAR .or. &
+              Cld_Mask(i,j) == et_cloudiness_class % PROB_CLEAR) then
+
+               if (ibits(Cld_Test_Vector_Packed(2,i,j),4,1) == 1) then
+                 Cld_Type(i,j) = et_cloud_type % SMOKE
+                  cycle
+               end if
+
+               if (ibits(Cld_Test_Vector_Packed(2,i,j),5,1) == 1) then
+                 Cld_Type(i,j) = et_cloud_type % DUST
+                  cycle
+               end if
+
+               if (ibits(Cld_Test_Vector_Packed(2,i,j),7,1) == 1) then
+                 Cld_Type(i,j) = et_cloud_type % FIRE
+                  cycle
+               end if
+            end if
             
+            !--- clear type
             if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR
                 cycle
             end if
-                
+
+            !--- prob clear type   
             if (cld_mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i , j ) = et_cloud_type % PROB_CLEAR
                cycle
@@ -298,10 +327,10 @@ contains
       !-----------------------------------------------------------------------------------
       ! - sat
       !-----------------------------------------------------------------------------------
-      if (type_inp % sat % chan_on (31) ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
-      if (type_inp % sat % chan_on (31)) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
-      if (type_inp % sat % chan_on (32)) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
-      if (type_inp % sat % chan_on (6)) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
+      if (type_inp % sat % chan_on (31)) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
+      if (type_inp % sat % chan_on (31)) type_inp % sat % bt_ch31  = ch(31) % bt_toa  ( i,j )
+      if (type_inp % sat % chan_on (32)) type_inp % sat % bt_ch32  = ch(32) % bt_toa  ( i,j )
+      if (type_inp % sat % chan_on (6))  type_inp % sat % ref_ch6  = ch(6)  % ref_toa ( i,j )
       if (type_inp % sat % chan_on (20)) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
 
       if (type_inp % sat % chan_on (27)) then
@@ -342,7 +371,7 @@ contains
       endif
       
       if (type_inp % sat % chan_on (27)) then
-         type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
+         type_inp % rtm % bt_ch27_3x3_max  = Bt_Ch27_Max_3x3( i,j )
          type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
          allocate ( type_inp % rtm % rad_ch27_bb_prof (size (Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile) ) &
          , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(27)%Rad_BB_Cloud_Profile)
@@ -374,4 +403,7 @@ contains
    
    end subroutine DEALLOCATE_INP
 
-end module cloud_type_bridge_module
+!-----------------------------------------------------------------------------------
+
+end module CLOUD_TYPE_BRIDGE_MODULE 
+

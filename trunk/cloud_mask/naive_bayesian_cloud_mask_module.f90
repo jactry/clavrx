@@ -315,7 +315,7 @@ contains
       vers % cloud_mask_version_id = "$Id$"
 
       ! - determine sfc type
-      sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lat &
+      sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lon &
           , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
           , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
@@ -391,32 +391,75 @@ contains
          is_forward_scatter = .true.
       end if 
       
+      ! --- check if DUST only for day time
+      ! --- use VIIRS I1 band (ch37) if available 
       is_dust = .false.
-      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
-         is_dust = DUST_DETECTION ( &
-              inp % sat % ref_ch1 &
-            , inp % sat % ref_ch8 &
-            , inp % sat % ref_ch1_3x3_std &
-            , inp % geo % glint &
-            , inp % sfc % land_class ) 
+      if ( inp % geo % sol_zen <= 85. ) then
+         if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) &
+              .and. inp % sat % chan_on (37) ) then
+            is_dust = DUST_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch1 &
+               , inp % sat % iband(1) % ref % std &
+               , inp % geo % glint &
+               , inp % sfc % land_class )
+         else if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) &
+             .and. .not. inp % sat % chan_on (37) ) then
+            is_dust = DUST_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch1 &
+               , inp % sat % ref_ch1_3x3_std &
+               , inp % geo % glint &
+               , inp % sfc % land_class ) 
+         end if
       end if
       
       is_smoke = .false.
-      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (7) ) then
-         is_smoke = SMOKE_DETECTION ( &
-              inp % sat % ref_ch1 &
-            , inp % sat % ref_ch7 &
-            , inp % sat % ref_ch1_3x3_std &
-            , inp % geo % sat_zen &
-            , inp % geo % glint &
-            , inp % sfc % land_class ) 
+      ! --- check if SMOKE only for day time
+      ! --- use VIIRS I1 band (ch37) if available
+      is_smoke = .false.
+      if ( inp % geo % sol_zen <= 85. ) then
+         if ( inp % sat % chan_on (8) .and. inp % sat % chan_on (7) &
+              .and. inp % sat % chan_on (37) ) then
+            is_smoke = SMOKE_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch7 &
+               , inp % sat % iband(1) % ref % std &
+               , inp % geo % sat_zen &
+               , inp % geo % glint &
+               , inp % sfc % land_class ) 
+         else if ( inp % sat % chan_on (8) .and. inp % sat % chan_on (7) &
+             .and. inp % sat % chan_on (1) .and. .not. inp % sat % chan_on (37)) then
+            is_smoke = SMOKE_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch7 &
+               , inp % sat % ref_ch1_3x3_std &
+               , inp % geo % sat_zen &
+               , inp % geo % glint &
+               , inp % sfc % land_class )
+         end if
       end if
-            
+             
+      ! --- check if CLOUD SHADOW
       is_cloud_shadow = .false.
       ! - TO ADD
       
+      ! --- check if FIRE
       is_fire = .false.      
-      if ( inp % sat % chan_on (31) .and. inp % sat % chan_on (20) ) then
+      if ( inp % sat % chan_on (31) &
+           .and. inp % sat % chan_on (20) &
+           .and. inp % sat % chan_on (41) &
+           .and. inp % sat % chan_on (40) ) then
+         is_fire = FIRE_DETECTION ( &
+              inp % sat % bt_ch31 &
+            , inp % sat % bt_ch20 &
+            , inp % sat % iband(5) % ref % std &
+            , inp % sat % iband(4) % ref % std &
+            , inp % geo % sol_zen )
+      else if ( inp % sat % chan_on (31) &
+           .and. inp % sat % chan_on (20) &
+           .and. .not. inp % sat % chan_on (41) &
+           .and. .not. inp % sat % chan_on (40) ) then
          is_fire = FIRE_DETECTION ( &
               inp % sat % bt_ch31 &
             , inp % sat % bt_ch20 &
@@ -424,7 +467,8 @@ contains
             , inp % rtm % bt_ch20_3x3_std &
             , inp % geo % sol_zen )
       end if
-      
+
+      ! --- set some flags
       is_solar_contaminated = inp % geo % solar_conta
       
       info_flags = 0 
@@ -776,26 +820,18 @@ contains
          ! --- Diagnostic Output for debugging in CLAVR-x
          select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
            case ( et_class_T110 )
-           
-              
            case ( et_class_TMAX_T )
            case ( et_class_T_STD )
            case ( et_class_E_TROP )
            case ( et_class_FMFT )
            case ( et_class_BTD_110_067 )
-           
-           
-            
            case ( et_class_BTD_110_067_COV )
            case ( et_class_BTD_110_085 )
            case ( et_class_E_037 )
-            
            case ( et_class_E_037_DAY )
-               !diag % diagnostic_1 =    classifier_value
+              !diag % diagnostic_1 =    classifier_value
               !diag % diagnostic_2 = class_contr
               !diag % diagnostic_3 = 1.  
-              
-              
            case ( et_class_E_037_NGT )
            case ( et_class_BTD_037_110_NGT )
            case ( et_class_R_006_DAY )
@@ -820,11 +856,7 @@ contains
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
             
-            
-           
-          
    end subroutine CLOUD_MASK_NAIVE_BAYES
-   
 
    !-------------------------------------------------------------------------------------
    !   Reads the coefficients from file
@@ -963,13 +995,13 @@ contains
          
       bayes_coef % is_read = .true.
    
-   end subroutine read_bayes_coeff
+   end subroutine READ_BAYES_COEFF
    
    !  7 sfc bayesian surface  types 
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   function bayes_sfc_type ( lat , lon , land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
+   function BAYES_SFC_TYPE ( lat , lon , land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
      
        
       real  :: lat , lon , emis_ch20 , sst_anal_uni

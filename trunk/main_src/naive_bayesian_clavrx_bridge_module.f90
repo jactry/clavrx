@@ -141,18 +141,26 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
       , Scatangle_Lunar &
       , Glint_Mask_Lunar &
       , Lunzen  &
-      , ref_min_chi1 &
-      , ref_max_chi1 &
-      , ref_mean_chi1 &
-      , ref_uni_chi1 &
-      , ref_min_chi2 &
-      , ref_max_chi2 &
-      , ref_mean_chi2 &
-      , ref_uni_chi2 & 
-      , bt_min_chi5 &
-      , bt_max_chi5 &
-      , bt_mean_chi5 &
-      , bt_uni_chi5
+      , Ref_Min_ChI1 &
+      , Ref_Max_ChI1 &
+      , Ref_Mean_ChI1 &
+      , Ref_Uni_ChI1 &
+      , Ref_Min_ChI2 &
+      , Ref_Max_ChI2 &
+      , Ref_Mean_ChI2 &
+      , Ref_Uni_ChI2 & 
+      , Ref_Min_ChI3 &
+      , Ref_Max_ChI3 &
+      , Ref_Mean_ChI3 &
+      , Ref_Uni_ChI3 &
+      , Bt_Min_ChI4 &
+      , Bt_Max_ChI4 &
+      , Bt_Mean_ChI4 &
+      , Bt_Uni_ChI4 &
+      , Bt_Min_ChI5 &
+      , Bt_Max_ChI5 &
+      , Bt_Mean_ChI5 &
+      , Bt_Uni_ChI5
      
    use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
         Cloud_Mask_Naive_Bayes &
@@ -273,24 +281,38 @@ contains
             ! - ibands of viirs
             
             if ( chan_on_flag_default(37) == 1 ) then
-               mask_inp % sat % iband(1) % ref % min =   ref_min_chI1 ( i , j )
-               mask_inp % sat % iband(1) % ref % max =   ref_max_chI1 ( i , j )
-               mask_inp % sat % iband(1) % ref % mean =  ref_mean_chI1 ( i , j )
-               mask_inp % sat % iband(1) % ref % std =   ref_uni_chI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % min =   Ref_Min_ChI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % max =   Ref_Max_ChI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % mean =  Ref_Mean_ChI1 ( i , j )
+               mask_inp % sat % iband(1) % ref % std =   Ref_Uni_ChI1 ( i , j )
             end if
             
             if ( chan_on_flag_default(38) == 1 ) then
-               mask_inp % sat % iband(2) % ref % min =   ref_min_chI2 ( i , j )
-               mask_inp % sat % iband(2) % ref % max =   ref_max_chI2 ( i , j )
-               mask_inp % sat % iband(2) % ref % mean =  ref_mean_chI2 ( i , j )
-               mask_inp % sat % iband(2) % ref % std =   ref_uni_chI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % min =   Ref_Min_ChI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % max =   Ref_Max_ChI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % mean =  Ref_Mean_ChI2 ( i , j )
+               mask_inp % sat % iband(2) % ref % std =   Ref_Uni_ChI2 ( i , j )
+            end if
+
+            if ( chan_on_flag_default(39) == 1 ) then
+               mask_inp % sat % iband(3) % ref % min =   Ref_Min_ChI3 ( i , j )
+               mask_inp % sat % iband(3) % ref % max =   Ref_Max_ChI3 ( i , j )
+               mask_inp % sat % iband(3) % ref % mean =  Ref_Mean_ChI3 ( i , j )
+               mask_inp % sat % iband(3) % ref % std =   Ref_Uni_ChI3 ( i , j )
+            end if
+
+            if ( chan_on_flag_default(40) == 1 ) then
+               mask_inp % sat % iband(4) % bt % min =   Bt_Min_ChI4 ( i , j )
+               mask_inp % sat % iband(4) % bt % max =   Bt_Max_ChI4 ( i , j )
+               mask_inp % sat % iband(4) % bt % mean =  Bt_Mean_ChI4 ( i , j )
+               mask_inp % sat % iband(4) % bt % std =   Bt_Uni_ChI4 ( i , j )
             end if
             
             if ( chan_on_flag_default(41) == 1 ) then
-               mask_inp % sat % iband(5) % bt % min =   bt_min_chI5 ( i , j )
-               mask_inp % sat % iband(5) % bt % max =   bt_max_chI5 ( i , j )
-               mask_inp % sat % iband(5) % bt % mean =  bt_mean_chI5 ( i , j )
-               mask_inp % sat % iband(5) % bt % std =   bt_uni_chI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % min =   Bt_Min_ChI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % max =   Bt_Max_ChI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % mean =  Bt_Mean_ChI5 ( i , j )
+               mask_inp % sat % iband(5) % bt % std =   Bt_Uni_ChI5 ( i , j )
             end if
             
             

@@ -40,7 +40,19 @@ module naive_bayesian_clavrx_bridge_module
    implicit none
 
    public :: AWG_CLOUD_BAYES_BRIDGE
-   private :: covariance_local
+   private :: COVARIANCE_LOCAL
+   private :: SET_SYMBOL
+   private :: SET_INPUT
+   private :: SET_OUTPUT
+   private :: SET_DIAG
+   private :: NULL_INPUT
+   private :: NULL_OUTPUT
+   private :: NULL_DIAG
+
+   type(mask_input), private :: Input   
+   type(mask_output), private :: Output   
+   type(diag_output), private :: Diag  
+   type(symbol_naive_bayesian),private :: symbol
    
    
 contains
@@ -58,7 +70,6 @@ contains
    integer:: Num_Elem
    integer:: Num_Line
    integer:: Num_Line_Max
-   type(symbol_naive_bayesian) :: symbol
 
    integer:: Chan_On_063um
    integer:: Chan_On_086um
@@ -71,7 +82,6 @@ contains
    integer:: Chan_On_12um
    integer:: Chan_On_DNB
    
-   
    !Initialize local pointers to global variables
 
    Ancil_Data_Path = Ancil_Data_Dir
@@ -79,133 +89,19 @@ contains
    Num_Elem = Num_Pix
    Num_Line = Num_Scans_Read
    Num_Line_Max = Num_Scans_Per_Segment
-   
-   
-   !----set symbols to local values
-   symbol%CLOUDY = sym%CLOUDY
-   symbol%PROB_CLOUDY = sym%PROB_CLOUDY
-   symbol%PROB_CLEAR = sym%PROB_CLEAR
-   symbol%CLEAR = sym%CLEAR
 
-   symbol%NO = sym%NO
-   symbol%YES = sym%YES
+   call SET_SYMBOL()
+   call SET_INPUT()
+   call SET_OUTPUT()
+   call SET_DIAG()
 
-   symbol%WATER_SFC = sym%WATER_SFC
-   symbol%EVERGREEN_NEEDLE_SFC = sym%EVERGREEN_NEEDLE_SFC
-   symbol%EVERGREEN_BROAD_SFC = sym%EVERGREEN_BROAD_SFC
-   symbol%DECIDUOUS_NEEDLE_SFC = sym%DECIDUOUS_NEEDLE_SFC
-   symbol%DECIDUOUS_BROAD_SFC = sym%DECIDUOUS_BROAD_SFC
-   symbol%MIXED_FORESTS_SFC = sym%MIXED_FORESTS_SFC
-   symbol%WOODLANDS_SFC = sym%WOODLANDS_SFC
-   symbol%WOODED_GRASS_SFC = sym%WOODED_GRASS_SFC
-   symbol%CLOSED_SHRUBS_SFC = sym%CLOSED_SHRUBS_SFC
-   symbol%OPEN_SHRUBS_SFC = sym%OPEN_SHRUBS_SFC
-   symbol%GRASSES_SFC = sym%GRASSES_SFC
-   symbol%CROPLANDS_SFC = sym%CROPLANDS_SFC
-   symbol%BARE_SFC = sym%BARE_SFC
-   symbol%URBAN_SFC = sym%URBAN_SFC
-
-   symbol%SHALLOW_OCEAN = sym%SHALLOW_OCEAN
-   symbol%LAND = sym%LAND
-   symbol%COASTLINE = sym%COASTLINE
-   symbol%SHALLOW_INLAND_WATER = sym%SHALLOW_INLAND_WATER
-   symbol%EPHEMERAL_WATER = sym%EPHEMERAL_WATER
-   symbol%DEEP_INLAND_WATER = sym%DEEP_INLAND_WATER
-   symbol%MODERATE_OCEAN = sym%MODERATE_OCEAN
-   symbol%DEEP_OCEAN = sym%DEEP_OCEAN
-
-   symbol%NO_SNOW = sym%NO_SNOW
-   symbol%SEA_ICE = sym%SEA_ICE
-   symbol%SNOW = sym%SNOW   
-
-   !------------------------------------------------------------------
-   ! store channel mappings into flags sent through bridge
-   ! clavrx uses the MODIS channel mapping
-   !------------------------------------------------------------------
-   Chan_On_063um = Chan_On_Flag_Default(1)
-   Chan_On_086um = Chan_On_Flag_Default(2)
-   Chan_On_138um = Chan_On_Flag_Default(26)
-   Chan_On_160um = Chan_On_Flag_Default(6)
-   Chan_On_375um = Chan_On_Flag_Default(20)
-   Chan_On_67um = Chan_On_Flag_Default(27)
-   Chan_On_85um = Chan_On_Flag_Default(29)
-   Chan_On_11um = Chan_On_Flag_Default(31)
-   Chan_On_12um = Chan_On_Flag_Default(32)
-   Chan_On_DNB = Chan_On_Flag_Default(42)
-   
-   !Call Naive bayesian routine
-   
+   !---Call Naive bayesian routine
    call CLOUD_MASK_NAIVE_BAYES(Ancil_Data_Path,  &
                                Naive_Bayes_File_Name, &
-                               symbol,  &
-                               Num_Elem,  &
-                               Num_Line, &
-                               Num_Line_Max, &
-                               Bad_Pixel_Mask,  &
-                               Cld_Test_Vector_Packed, &
-                               Chan_On_063um,  &
-                               Chan_On_086um,  &
-                               Chan_On_138um,  &
-                               Chan_On_160um,  &
-                               Chan_On_375um,  &
-                               Chan_On_67um,  &
-                               Chan_On_85um,  &
-                               Chan_On_11um,  &
-                               Chan_On_12um,  &
-                               Chan_On_DNB,  &
-                               Snow,  &
-                               Land, &
-                               Glint_Mask,  &
-                               Glint_Mask_Lunar,  &
-                               Coast_Mask, &
-                               Solzen,  &
-                               Scatangle, &
-                               Scatangle_Lunar, &
-                               Satzen, &
-                               Lunzen, &
-                               Lat,  &
-                               Lon, &
-                               ch(1)%Ref_Toa, &
-                               ch(1)%Ref_Toa_Clear, &
-                               Ref_Ch1_Std_3x3,  &
-                               Ref_Ch1_Min_3x3, &
-                               ch(2)%Ref_Toa, &
-                               ch(26)%Ref_Toa, &
-                               ch(6)%Ref_Toa, &
-                               ch(6)%Ref_Toa_Clear, &
-                               ch(20)%Bt_Toa,  &
-                               Bt_Ch20_Std_3x3,  &
-                               Ems_Ch20_Median_3x3,  &    !needed?
-                               Ems_Ch20_Clear_Solar_Rtm, &
-                               ch(27)%Bt_Toa,  &
-                               ch(29)%Bt_Toa, &
-                               ch(31)%Bt_Toa,  &
-                               Bt_Ch31_Std_3x3, &
-                               Bt_Ch31_Max_3x3,  &
-                               ch(31)%Bt_Toa_Clear,  &
-                               Bt_Ch31_LRC,  &
-                               ch(31)%Emiss_Tropo, &
-                               Emiss_11um_Tropo_LRC,  &
-                               ch(32)%Bt_Toa, &
-                               ch(32)%Bt_Toa_Clear,  &
-                               Covar_Ch27_Ch31_5x5, &
-                               Sst_Anal_Uni, &
-                               ch(20)%Sfc_Emiss, &
-                               ch(42)%Rad_Toa, &
-                               ch(42)%Ref_Lunar_Toa, &
-                               Ref_ChDNB_Lunar_Min_3x3, &
-                               Ref_ChDNB_Lunar_Std_3x3, &
-                               ch(42)%Ref_Lunar_Toa_Clear, &
-                               Zsfc,  &
-                               Num_Segments, &
-                               Solar_Contamination_Mask,  &
-                               Sfc_Type,  &
-                               Cld_Mask, &
-                               Cloud_Mask_Bayesian_Flag, &      !REMOVE
-                               Posterior_Cld_Probability, &
-                               Diag_Pix_Array_1, &
-                               Diag_Pix_Array_2, &
-                               Diag_Pix_Array_3)
+                               Symbol,  &
+                               Input, &
+                               Output, &
+                               Diag)
 
    
    !--- unpack elements of the cloud test vector into clavr-x global arrays
@@ -218,48 +114,52 @@ contains
      call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
    endif
 
+   call NULL_INPUT()
+   call NULL_OUTPUT()
+   call NULL_Diag()
+
    end subroutine AWG_CLOUD_BAYES_BRIDGE
 
-!====================================================================
-! Function Name: Covariance_LOCAL
-!
-! Function:
-!    Compute the Covariance for two mxn arrays
-!
-! Description: Covariance = E(XY) - E(X)*E(Y)
-!   
-! Calling Sequence: BT_WV_BT_Window_Covar(Elem_Idx,Line_Idx) = Covariance( &
-!                       sat%bt10(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
-!                       sat%bt14(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
-!                      Array_Width, Array_Hgt)
-!   
-!
-! Inputs:
-!   Array 1 - the first array (X)
-!   Array 2 - the second array (Y)
-!   Elem_size
-!   Line_size
-!
-! Outputs: 
-!   Covariance of X and Y
-!
-! Dependencies:
-!        none
-!
-! Restrictions:  None
-!
-! Reference: Standard definition for the Covariance Computation
-!
-!====================================================================
-function covariance_local &
+   !====================================================================
+   ! Function Name: Covariance_LOCAL
+   !
+   ! Function:
+   !    Compute the Covariance for two mxn arrays
+   !
+   ! Description: Covariance = E(XY) - E(X)*E(Y)
+   !   
+   ! Calling Sequence: BT_WV_BT_Window_Covar(Elem_Idx,Line_Idx) = Covariance( &
+   !                       sat%bt10(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
+   !                       sat%bt14(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
+   !                      Array_Width, Array_Hgt)
+   !   
+   !
+   ! Inputs:
+   !   Array 1 - the first array (X)
+   !   Array 2 - the second array (Y)
+   !   Elem_size
+   !   Line_size
+   !
+   ! Outputs: 
+   !   Covariance of X and Y
+   !
+   ! Dependencies:
+   !        none
+   !
+   ! Restrictions:  None
+   !
+   ! Reference: Standard definition for the Covariance Computation
+   !
+   !====================================================================
+   function COVARIANCE_LOCAL &
         (Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask) &
          RESULT(Covar_Array_One_Array_Two)
 
    real(kind=real4), intent(in), dimension(:,:):: Array_One
    real(kind=real4), intent(in), dimension(:,:):: Array_Two
-   INTEGER(kind=INT4), intent(in):: Array_Width
-   INTEGER(kind=INT4), intent(in):: Array_Hght
-   INTEGER(kind=INT1), intent(in), dimension(:,:):: Invalid_Data_Mask
+   integer(kind=INT4), intent(in):: Array_Width
+   integer(kind=INT4), intent(in):: Array_Hght
+   integer(kind=INT1), intent(in), dimension(:,:):: Invalid_Data_Mask
 
    real(kind=real8):: Mean_Array_One
    real(kind=real8):: Mean_Array_Two
@@ -287,8 +187,202 @@ function covariance_local &
    Covar_Array_One_Array_Two  = Mean_Array_One_x_Array_Two - &
                                 Mean_Array_One * Mean_Array_Two 
    
- end function covariance_local
+   end function COVARIANCE_LOCAL
 
+   !============================================================================
+   ! set symbols
+   !============================================================================
+   subroutine SET_SYMBOL()
 
+      symbol%CLOUDY = sym%CLOUDY
+      symbol%PROB_CLOUDY = sym%PROB_CLOUDY
+      symbol%PROB_CLEAR = sym%PROB_CLEAR
+      symbol%CLEAR = sym%CLEAR
+
+      symbol%NO = sym%NO
+      symbol%YES = sym%YES
+
+      symbol%WATER_SFC = sym%WATER_SFC
+      symbol%EVERGREEN_NEEDLE_SFC = sym%EVERGREEN_NEEDLE_SFC
+      symbol%EVERGREEN_BROAD_SFC = sym%EVERGREEN_BROAD_SFC
+      symbol%DECIDUOUS_NEEDLE_SFC = sym%DECIDUOUS_NEEDLE_SFC
+      symbol%DECIDUOUS_BROAD_SFC = sym%DECIDUOUS_BROAD_SFC
+      symbol%MIXED_FORESTS_SFC = sym%MIXED_FORESTS_SFC
+      symbol%WOODLANDS_SFC = sym%WOODLANDS_SFC
+      symbol%WOODED_GRASS_SFC = sym%WOODED_GRASS_SFC
+      symbol%CLOSED_SHRUBS_SFC = sym%CLOSED_SHRUBS_SFC
+      symbol%OPEN_SHRUBS_SFC = sym%OPEN_SHRUBS_SFC
+      symbol%GRASSES_SFC = sym%GRASSES_SFC
+      symbol%CROPLANDS_SFC = sym%CROPLANDS_SFC
+      symbol%BARE_SFC = sym%BARE_SFC
+      symbol%URBAN_SFC = sym%URBAN_SFC
+
+      symbol%SHALLOW_OCEAN = sym%SHALLOW_OCEAN
+      symbol%LAND = sym%LAND
+      symbol%COASTLINE = sym%COASTLINE
+      symbol%SHALLOW_INLAND_WATER = sym%SHALLOW_INLAND_WATER
+      symbol%EPHEMERAL_WATER = sym%EPHEMERAL_WATER
+      symbol%DEEP_INLAND_WATER = sym%DEEP_INLAND_WATER
+      symbol%MODERATE_OCEAN = sym%MODERATE_OCEAN
+      symbol%DEEP_OCEAN = sym%DEEP_OCEAN
+
+      symbol%NO_SNOW = sym%NO_SNOW
+      symbol%SEA_ICE = sym%SEA_ICE
+      symbol%SNOW = sym%SNOW   
+   end subroutine SET_SYMBOL
+
+   !============================================================================
+   ! set input pointers
+   !============================================================================
+   subroutine SET_INPUT()
+      Input%Bt_11um => ch(31)%Bt_Toa 
+      Input%Num_Elem = Num_Pix
+      Input%Num_Line = Num_Scans_Read
+      Input%Num_Line_Max = Num_Scans_Per_Segment
+      Input%Invalid_Data_Mask => Bad_Pixel_Mask
+      Input%Chan_On_063um = Chan_On_Flag_Default(1)
+      Input%Chan_On_086um = Chan_On_Flag_Default(2)
+      Input%Chan_On_138um = Chan_On_Flag_Default(26)
+      Input%Chan_On_160um = Chan_On_Flag_Default(6)
+      Input%Chan_On_375um =Chan_On_Flag_Default(20)
+      Input%Chan_On_67um = Chan_On_Flag_Default(27)
+      Input%Chan_On_85um = Chan_On_Flag_Default(29)
+      Input%Chan_On_11um =Chan_On_Flag_Default(31)
+      Input%Chan_On_12um = Chan_On_Flag_Default(32)
+      Input%Chan_On_DNB = Chan_On_Flag_Default(42)
+      Input%Snow_Class => Snow
+      Input%Land_Class => Land
+      Input%Oceanic_Glint_Mask => Glint_Mask
+      Input%Lunar_Oceanic_Glint_Mask => Glint_Mask_Lunar
+      Input%Coastal_Mask => Coast_Mask
+      Input%Solzen => Solzen
+      Input%Scatzen => Scatangle
+      Input%Lunscatzen => Scatangle_Lunar
+      Input%Senzen => Satzen
+      Input%Lunzen => Lunzen
+      Input%Lat => Lat
+      Input%Lon => Lon
+      Input%Ref_063um => ch(1)%Ref_Toa
+      Input%Ref_063um_Clear => ch(1)%Ref_Toa_Clear
+      Input%Ref_063um_Std => Ref_Ch1_Std_3x3
+      Input%Ref_063um_Min => Ref_Ch1_Min_3x3
+      Input%Ref_086um => ch(2)%Ref_Toa
+      Input%Ref_138um => ch(26)%Ref_Toa
+      Input%Ref_160um => ch(6)%Ref_Toa
+      Input%Ref_160um_Clear => ch(6)%Ref_Toa_Clear
+      Input%Bt_375um => ch(20)%Bt_Toa
+      Input%Bt_375um_Std => Bt_Ch20_Std_3x3
+      Input%Emiss_375um =>  Ems_Ch20_Median_3x3
+      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm
+      Input%Bt_67um => ch(27)%Bt_Toa 
+      Input%Bt_85um => ch(29)%Bt_Toa
+      Input%Bt_11um => ch(31)%Bt_Toa
+      Input%Bt_11um_Std => Bt_Ch31_Std_3x3
+      Input%Bt_11um_Max => Bt_Ch31_Max_3x3
+      Input%Bt_11um_Clear => ch(31)%Bt_Toa_Clear
+      Input%Bt_11um_LRC => Bt_Ch31_LRC
+      Input%Emiss_11um_Tropo_Rtm => ch(31)%Emiss_Tropo
+      Input%Emiss_11um_Tropo_LRC => Emiss_11um_Tropo_LRC
+      Input%Bt_12um => ch(32)%Bt_Toa
+      Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear
+      Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5
+      Input%Sst_Anal_Uni => Sst_Anal_Uni
+      Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss
+      Input%Rad_Lunar => ch(42)%Rad_Toa
+      Input%Ref_Lunar => ch(42)%Ref_Lunar_Toa
+      Input%Ref_Lunar_Min => Ref_ChDNB_Lunar_Min_3x3
+      Input%Ref_Lunar_Std => Ref_ChDNB_Lunar_Std_3x3
+      Input%Ref_Lunar_Clear => ch(42)%Ref_Lunar_Toa_Clear
+      Input%Zsfc => Zsfc
+      Input%Num_Segments = Num_Segments
+      Input%Solar_Contamination_Mask => Solar_Contamination_Mask
+      Input%Sfc_Type => Sfc_Type
+   end subroutine SET_INPUT
+
+   subroutine SET_OUTPUT()
+    Output%Cld_Flags_Packed => Cld_Test_Vector_Packed
+    Output%Cld_Mask_Bayes => Cld_Mask
+    Output%Posterior_Cld_Probability => Posterior_Cld_Probability
+   end subroutine SET_OUTPUT
+
+   subroutine SET_DIAG()
+    Diag%Array_1 => Diag_Pix_Array_1
+    Diag%Array_2 => Diag_Pix_Array_2
+    Diag%Array_3 => Diag_Pix_Array_3
+   end subroutine SET_DIAG
+
+   !============================================================================
+   ! nullify input pointers
+   !============================================================================
+   subroutine NULL_INPUT()
+      Input%Bt_11um => null()
+      Input%Invalid_Data_Mask => null()
+      Input%Snow_Class => null()
+      Input%Land_Class => null() 
+      Input%Oceanic_Glint_Mask => null() 
+      Input%Lunar_Oceanic_Glint_Mask => null()
+      Input%Coastal_Mask => null()
+      Input%Solzen => null()
+      Input%Scatzen => null()
+      Input%Lunscatzen => null()
+      Input%Senzen => null()
+      Input%Lunzen => null()
+      Input%Lat => null()
+      Input%Lon => null()
+      Input%Ref_063um => null()
+      Input%Ref_063um_Clear => null()
+      Input%Ref_063um_Std => null()
+      Input%Ref_063um_Min => null()
+      Input%Ref_086um => null()
+      Input%Ref_138um => null()
+      Input%Ref_160um => null()
+      Input%Ref_160um_Clear => null()
+      Input%Bt_375um =>  null()
+      Input%Bt_375um_Std => null()
+      Input%Emiss_375um => null()
+      Input%Emiss_375um_Clear => null()
+      Input%Bt_67um => null()
+      Input%Bt_85um => null()
+      Input%Bt_11um => null()
+      Input%Bt_11um_Std => null()
+      Input%Bt_11um_Max => null()
+      Input%Bt_11um_Clear => null()
+      Input%Bt_11um_LRC => null()
+      Input%Emiss_11um_Tropo_Rtm => null()
+      Input%Emiss_11um_Tropo_LRC => null()
+      Input%Bt_12um => null()
+      Input%Bt_12um_Clear => null()
+      Input%Bt_11um_Bt_67um_Covar => null() 
+      Input%Sst_Anal_Uni => null()
+      Input%Emiss_Sfc_375um => null()
+      Input%Rad_Lunar => null()
+      Input%Ref_Lunar => null()
+      Input%Ref_Lunar_Min => null()
+      Input%Ref_Lunar_Std => null()
+      Input%Ref_Lunar_Clear => null()
+      Input%Zsfc => null()
+      Input%Solar_Contamination_Mask => null()
+      Input%Sfc_Type => null()
+   end subroutine NULL_INPUT
+
+   !============================================================================
+   ! nullify output pointers
+   !============================================================================
+   subroutine NULL_OUTPUT()
+    Output%Cld_Flags_Packed => null()
+    Output%Cld_Mask_Bayes => null()
+    Output%Posterior_Cld_Probability => null()
+   end subroutine NULL_OUTPUT
+
+   !============================================================================
+   ! nullify diag pointers
+   !============================================================================
+   subroutine NULL_DIAG()
+      Diag%Array_1 => null()
+      Diag%Array_2 => null()
+      Diag%Array_3 => null()
+   end subroutine NULL_DIAG
+
+   !============================================================================
 
 end module naive_bayesian_clavrx_bridge_module

@@ -1,4 +1,4 @@
-!$Id: naive_bayesian_cloud_mask_module.f90 86 2014-02-28 23:24:12Z heidinger $
+!$Id:$
 !----------------------------------------------------------------------
 ! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
 ! 
@@ -182,10 +182,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
     real(kind=real4), dimension(:,:), pointer:: Bt_11um_Std                  !11 um toa brightness temp 3x3 Std Dev (K)
     real(kind=real4), dimension(:,:), pointer:: Bt_11um_Max                 !11 um toa brightness temp 3x3 Max (K)
     real(kind=real4), dimension(:,:), pointer:: Bt_11um_Clear               !11 um toa brightness temperature (K)
-    real(kind=real4), dimension(:,:), pointer:: Bt_11um_LRC                 !11 um toa bt at local radiative center (K)
-    real(kind=real4), dimension(:,:), pointer:: Emiss_11um_Tropo_Rtm         !11 um tropo emiss
-    real(kind=real4), dimension(:,:), pointer:: Emiss_11um_Tropo_LRC        !11 um tropo emiss at lrc
-    real(kind=real4), dimension(:,:), pointer:: Bt_12um                      !12 um toa brightness temperature (K)
+    real(kind=real4), dimension(:,:), pointer:: Emiss_11um_Tropo            !11 um tropo emiss
+    real(kind=real4), dimension(:,:), pointer:: Bt_12um                     !12 um toa brightness temperature (K)
     real(kind=real4), dimension(:,:), pointer:: Bt_12um_Clear               !12 um toa bright temp clear-sky (K)
     real(kind=real4), dimension(:,:), pointer:: Bt_11um_Bt_67um_Covar        !covariance of 11 and 6.7 um bright temp.
     real(kind=real4), dimension(:,:), pointer:: Sst_Anal_Uni                 !3x3 std of background sst field (K)
@@ -792,7 +790,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
                     case("Emiss_tropo") 
                        if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
                        if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo_Rtm(Elem_Idx,Line_Idx)
+                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx)
                        endif
 
                     case("FMFT") 

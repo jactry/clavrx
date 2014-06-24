@@ -25,13 +25,16 @@ type (Cloud_Mask_Version_Type) :: vers
   
 
 
-print*,'DUST detection: ',dust_detection(-12.,12.,1.,1,1)
+print*,'DUST detection: ',dust_detection(-12.,12.,1.,.true.,1)
 
 print*,'FIRE detection: ',fire_detection ( 310.,312., 2., 1. ,77. )
 
 
 inp % bayesian_mask_classifier = &
    &  '/DATA/Ancil_Data/clavrx_ancil_data/naive_bayes_mask/viirs_default_bayes_mask.txt'
+	
+inp % bayesian_mask_classifier = &
+   &  '/data/Ancil_Data/clavrx_ancil_data/bayes/viirs_default_bayes_mask.txt'	
             
             inp % geo % lat         = 60.            
             inp % geo % lon         = 20.

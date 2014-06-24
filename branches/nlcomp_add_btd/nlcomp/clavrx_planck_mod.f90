@@ -119,8 +119,11 @@ contains
       real :: dB_dT_tmp
       
       !
+     
       call main % sensor % read_coeffs ( sensor )
+      
       call main % sensor % chn(chn_idx) % populate_tbl()
+      
       
       b_vec = main % sensor % chn ( chn_idx ) % tbl % b_vec
       t_vec = main % sensor % chn ( chn_idx ) % tbl % t_planck

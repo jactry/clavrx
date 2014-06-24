@@ -466,7 +466,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
    character (len=120), intent(in) :: Ancil_Data_Path
    character (len=120), intent(in) :: Naive_Bayes_File_Name
-   type(symbol_naive_bayesian), intent(inout) :: Symbol
+   type(symbol_naive_bayesian), intent(in) :: Symbol
    type(mask_input), intent(in) :: Input
    type(mask_output), intent(out) :: Output
    type(diag_output), intent(out), Optional :: Diag
@@ -1287,10 +1287,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
          
          !Day
          if (Solzen < EumetCAST_Fire_Day_Solzen_Thresh) then 
-            Bt_375um_Eumet_Fire_Thresh = bt_375um_Eumet_Fire_day_Thresh
-            Bt_Diff_Eumet_Fire_Thresh = bt_Diff_Eumet_Fire_day_Thresh
-            Stddev_11um_Eumet_Fire_Thresh = stddev_11um_Eumet_Fire_day_Thresh
-            Stddev_375um_Eumet_Fire_Thresh = stddev_375um_Eumet_Fire_day_Thresh
+            Bt_375um_Eumet_Fire_Thresh = Bt_375um_Eumet_Fire_day_Thresh
+            Bt_Diff_Eumet_Fire_Thresh = Bt_Diff_Eumet_Fire_day_Thresh
+            Stddev_11um_Eumet_Fire_Thresh = Stddev_11um_Eumet_Fire_Day_Thresh
+            Stddev_375um_Eumet_Fire_Thresh = Stddev_375um_Eumet_Fire_Day_Thresh
          endif
          
          !Night
@@ -1305,8 +1305,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
              (Solzen <= EumetCAST_Fire_Night_Solzen_Thresh)) then
              
              !linear fit day -> night
-             Bt_375um_Eumet_Fire_Thresh = ((-1.0)* solzen) + 380.0
-             Bt_Diff_Eumet_Fire_Thresh = ((-0.4)* solzen) + 36.0
+             Bt_375um_Eumet_Fire_Thresh = ((-1.0)* Solzen) + 380.0
+             Bt_Diff_Eumet_Fire_Thresh = ((-0.4)* Solzen) + 36.0
              
              !These two don't change, but 
              Stddev_11um_Eumet_Fire_Thresh = ((0.0)* solzen) + 1.0

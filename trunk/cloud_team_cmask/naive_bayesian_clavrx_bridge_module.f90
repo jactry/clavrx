@@ -1,4 +1,4 @@
-!$Id: naive_bayesian_clavrx_bridge_module.f90 112 2014-03-14 17:01:28Z awalther $
+!$Id:$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -273,16 +273,14 @@ contains
       Input%Bt_375um => ch(20)%Bt_Toa
       Input%Bt_375um_Std => Bt_Ch20_Std_3x3
       Input%Emiss_375um =>  Ems_Ch20_Median_3x3
-      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm
+      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar
       Input%Bt_67um => ch(27)%Bt_Toa 
       Input%Bt_85um => ch(29)%Bt_Toa
       Input%Bt_11um => ch(31)%Bt_Toa
       Input%Bt_11um_Std => Bt_Ch31_Std_3x3
       Input%Bt_11um_Max => Bt_Ch31_Max_3x3
       Input%Bt_11um_Clear => ch(31)%Bt_Toa_Clear
-      Input%Bt_11um_LRC => Bt_Ch31_LRC
-      Input%Emiss_11um_Tropo_Rtm => ch(31)%Emiss_Tropo
-      Input%Emiss_11um_Tropo_LRC => Emiss_11um_Tropo_LRC
+      Input%Emiss_11um_Tropo => ch(31)%Emiss_Tropo
       Input%Bt_12um => ch(32)%Bt_Toa
       Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear
       Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5
@@ -347,9 +345,7 @@ contains
       Input%Bt_11um_Std => null()
       Input%Bt_11um_Max => null()
       Input%Bt_11um_Clear => null()
-      Input%Bt_11um_LRC => null()
-      Input%Emiss_11um_Tropo_Rtm => null()
-      Input%Emiss_11um_Tropo_LRC => null()
+      Input%Emiss_11um_Tropo => null()
       Input%Bt_12um => null()
       Input%Bt_12um_Clear => null()
       Input%Bt_11um_Bt_67um_Covar => null() 

@@ -428,7 +428,7 @@ contains
       
       type (lut_data_type), pointer :: data_loc => null()
       
-      
+     
       out % ems = -999.
        
        data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
@@ -439,7 +439,7 @@ contains
          call data_loc % read_hdf
          data_loc % is_set  = .true.
       end if
-     
+   
       call dcomp_interpolation_weight(self%dims%n_cod, cod_log10,self%dims%cod &
          & , weight_out = wgt_cod, index_out= pos_cod)
      
@@ -532,7 +532,7 @@ contains
       integer , parameter :: N_PARAMS_EMS = 2
       integer :: i , last , first
       
-      
+    
        call self % alloc  
       if ( self % has_sol ) then
          if ( .not. file_test ( self % file )) then 
@@ -549,8 +549,7 @@ contains
       end if   
       deallocate ( sds_name )
       
-         if ( hdf_get_file_sds ( self%file, nsds , sds , nsdsn = N_PARAMS, sds_name = sds_name ) < 0 ) stop
-         deallocate ( sds_name )
+        
          
       
         
@@ -572,7 +571,7 @@ contains
             self % cld_refl(:,:,:,:,i) = reshape( psd%r4values(first : last  ),[9,29,45,45])
          end do 
       end if
-       
+      
       if ( self % has_ems ) then
          if ( .not. file_test ( self % file_ems )) then 
             print*, 'file ems not available channel' ,  self % file_ems

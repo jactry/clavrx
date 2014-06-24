@@ -9,7 +9,9 @@ module nlcomp_forward_mod
       get_planck_radiance_39um  &
       , get_rad_refl_factor                
    
-    use clavrx_planck_mod
+    use clavrx_planck_mod, only: &
+      planck_tmp2rad &
+      , planck_rad2tmp
    private
    public :: thick_cloud_cps
    
@@ -125,13 +127,15 @@ real :: bt32_dcps
       call lut_obj % initialize ( 'VIIRS' , ancil_path = lut_path)
       call lut_obj % set_angles ( pixel % sat_zen , pixel % lun_zen, pixel % lun_rel_azi )
       
-      
+    
       
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
       
       
       air_mass_two_way = ( 1. / cos (pixel % lun_zen * DTOR ) + 1./ cos ( pixel % Sat_zen * DTOR ) )
+      
+      
       planck_rad20 = planck_tmp2rad ( pixel % ctt, trim(sensor), 20)
       planck_rad31 = planck_tmp2rad ( pixel % ctt, trim(sensor), 31)
       planck_rad32 = planck_tmp2rad ( pixel % ctt, trim(sensor), 32)
@@ -145,21 +149,23 @@ real :: bt32_dcps
       cld_trns_sat ( 1 ) = lut_data % trn_sat
       cld_sph_alb  ( 1 )  = lut_data % albsph
       !cld_albedo_vis  =  lut_data % alb
-      
+       
       Alb_Sfc_Term = max (0. , Alb_Sfc( 1 ) / (1.0 - Alb_Sfc(1 ) * lut_data % albsph )) 
       fm_vec(1) = lut_data% Refl + Alb_Sfc_Term * lut_data%Trn_sol * lut_data%Trn_sat 
        
       kernel(1,1) = lut_data%dRefl_dcod &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcod &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcod &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) &
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( 1 ) * Alb_Sfc( 1) &
                      & * lut_data%Dsph_alb_Dcod) &
-                    /(( 1 - Alb_Sfc( i_channel ) * lut_data%albsph)**2))  
+                    /(( 1 - Alb_Sfc( 1 ) * lut_data%albsph)**2))  
                                              
-         kernel(i_channel,2) = lut_data%dRefl_dcps &
+         kernel(1,2) = lut_data%dRefl_dcps &
                      & +  Alb_Sfc_Term * lut_data%Trn_sol *  lut_data % dTrans_sat_dcps &
                      & + Alb_Sfc_Term * lut_data%Trn_sat  * lut_data%Dtrans_sol_Dcps &
-                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( i_channel ) * Alb_Sfc( i_channel ) &
+                     & +  ((lut_data%Trn_sol * lut_data%Trn_sat  * Alb_Sfc( 1 ) * Alb_Sfc( 1 ) &
+                     & * lut_data%Dsph_alb_Dcps) &
+                    /(( 1 - Alb_Sfc( 1) * lut_data%albsph)**2))  
                     
       trans_two_way = air_trans_ac( 1 ) ** air_mass_two_way   
       
@@ -229,13 +235,9 @@ real :: bt32_dcps
       kernel ( 3,1) = (fm_vec(3) - ( bt31_dcod - bt32_dcod) ) / 0.1
       kernel ( 3,2) =   (fm_vec(3) - ( bt31_dcps - bt32_dcps) ) / 0.1                   
                           
-      
+     
       ! element 4
-      
-      
-      
-     
-     
+  
    
       fm_vec(4) = bt20 - bt31
       

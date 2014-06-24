@@ -273,7 +273,7 @@ contains
       Input%Bt_375um => ch(20)%Bt_Toa
       Input%Bt_375um_Std => Bt_Ch20_Std_3x3
       Input%Emiss_375um =>  Ems_Ch20_Median_3x3
-      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar
+      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm
       Input%Bt_67um => ch(27)%Bt_Toa 
       Input%Bt_85um => ch(29)%Bt_Toa
       Input%Bt_11um => ch(31)%Bt_Toa

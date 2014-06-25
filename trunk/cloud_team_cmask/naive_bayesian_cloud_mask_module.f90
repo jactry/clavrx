@@ -484,7 +484,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    integer:: Fire_Flag
    integer:: Shadow_Flag
    integer:: Dust_Flag
-   integer:: Turn_Off_This_Test
    integer:: City_Flag
 
    integer, save:: Segment_Number_Local = 1
@@ -614,9 +613,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           Oceanic_Glint_Flag = Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
           Lunar_Oceanic_Glint_Flag = Input%Lunar_Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
           Coastal_Flag = Input%Coastal_Mask(Elem_Idx,Line_Idx)
-          Solar_Contam_Flag = Input%Solar_Contamination_Mask(Elem_Idx,Line_Idx)   !AVAILABLE?
+          Solar_Contam_Flag = Input%Solar_Contamination_Mask(Elem_Idx,Line_Idx)  
 
+          !--- compute airmass
           AirMass = 1.0/cos(Input%Solzen(Elem_Idx,Line_Idx)*dtor) + 1.0 / cos(Input%Senzen(Elem_Idx,Line_Idx)*dtor)
+
+          !--- set day flag for 0.63 micron reflectance gross test
           if ((Input%Solzen(Elem_Idx,Line_Idx) > Reflectance_Gross_Solzen_Thresh) .or.  &
               (AirMass > Reflectance_Gross_Airmass_Thresh)) then
               Day_063_Flag = symbol%NO
@@ -624,6 +626,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
               Day_063_Flag = symbol%YES
           endif
 
+          !--- set day flag for 0.63 micron reflectance spatial test
           if (Input%Solzen(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
               Day_063_Spatial_Flag = symbol%NO
           else
@@ -737,236 +740,196 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
           class_loop: do Class_Idx = 1, N_class
 
-             Turn_Off_This_Test = symbol%NO
              Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Cond_Yes(Class_Idx) = 1.0 
+             Cond_No(Class_Idx) =  1.0
 
              select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
 
                     case("T_11") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_max-T") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max(Elem_Idx,Line_Idx) - Input%Bt_11um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Coastal_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Max(Elem_Idx,Line_Idx) - Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_std") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Input%Bt_11um_Std(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Coastal_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Std(Elem_Idx,Line_Idx)
 
                     case("Emiss_tropo") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx)
 
                     case("FMFT") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_12um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) =  &
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_12um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) =  &
                            split_window_test(Input%Bt_11um_Clear(Elem_Idx,Line_Idx), Input%Bt_12um_Clear(Elem_Idx,Line_Idx), &
                                              Input%Bt_11um(Elem_Idx,Line_Idx), Input%Bt_12um(Elem_Idx,Line_Idx))
-                       endif
 
                     case("Btd_11_67") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_67um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_67um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_67um(Elem_Idx,Line_Idx)
 
                     case("Bt_11_67_Covar") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_67um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx)
 
                     case("Btd_11_85") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_85um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_85um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_85um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_85um(Elem_Idx,Line_Idx)
 
                     case("Emiss_375") 
-                       if (Input%Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = emiss_375um_test( &
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = emiss_375um_test( &
                                          Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
-                       endif
 
                     case("Emiss_375_Day") 
-
-                       if (Input%Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Day_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
-                       endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = emiss_375um_day_test( &
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                      endif
+                      Classifier_Value(Class_Idx) = emiss_375um_day_test( &
                                          Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
-                       endif
 
                     case("Emiss_375_Night") 
-                       if (Input%Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Night_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Night_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
                        Classifier_Value(Class_Idx) = emiss_375um_night_test( &
                                         Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
                      case("Btd_375_11_Night") 
-                       if (Input%Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Night_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Night_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Input%Chan_On_375um == symbol%YES) then
-                         if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                         if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Bt_375um(Elem_Idx,Line_Idx) - &
-                                                      Input%Bt_11um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Bt_375um(Elem_Idx,Line_Idx) - &
+                                                     Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("Ref_063_Day")
 
                        if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
 
-                         if (Input%Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Sfc_Idx == 4) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) =  &
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Oceanic_Glint_Flag == symbol%YES) cycle
+                         if (Forward_Scattering_Flag == symbol%YES) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Day_063_Flag == symbol%NO) cycle
+                         if (Sfc_Idx == 4) cycle
+                         Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_063um_Clear(Elem_Idx,Line_Idx), &
                                                              Input%Ref_063um(Elem_Idx,Line_Idx))
-                         endif
 
                        else
 
-                         if (Input%Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Night_Lunar_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Sfc_Idx == 4) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) =  &
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
+                         if (Lunar_Forward_Scattering_Flag == symbol%YES) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Night_Lunar_Flag == symbol%NO) cycle
+                         if (City_Flag == symbol%YES) cycle
+                         if (Sfc_Idx == 4) cycle
+                         Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_Lunar_Clear(Elem_Idx,Line_Idx), &
                                                              Input%Ref_Lunar(Elem_Idx,Line_Idx))
-                         endif
 
                        endif
 
                     case("Ref_std")
                        if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
-                         if (Input%Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                          Classifier_Value(Class_Idx) = Input%Ref_063um_Std(Elem_Idx,Line_Idx)
-                         endif
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Day_063_Spatial_Flag == symbol%NO) cycle 
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         Classifier_Value(Class_Idx) = Input%Ref_063um_Std(Elem_Idx,Line_Idx)
                        else
-                         if (Input%Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Turn_Off_This_Test == symbol%NO) then
-                          Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std(Elem_Idx,Line_Idx)
-                         endif
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Spatial_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         if (City_Flag == symbol%YES) cycle  
+                         Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std(Elem_Idx,Line_Idx)
                        endif
 
                     case("Ref_063_Min_3x3_Day")
                        if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
-                         if (Input%Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Day_063_Spatial_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_063um_Min(Elem_Idx,Line_Idx),Input%Ref_063um(Elem_Idx,Line_Idx))
-                         endif
                        else
-                         if (Input%Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Night_Lunar_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Spatial_Flag == symbol%NO) cycle
+                         if (Night_Lunar_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         if (City_Flag == symbol%YES) cycle  
+                         Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_Lunar_Min(Elem_Idx,Line_Idx),Input%Ref_Lunar(Elem_Idx,Line_Idx))
-                         endif
                        endif
 
                     case("Ref_Ratio_Day")
-                       if (Input%Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Input%Chan_On_086um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = reflectance_ratio_test( &
+                       if (Input%Chan_On_063um == symbol%NO) cycle
+                       if (Input%Chan_On_086um == symbol%NO) cycle
+                       if (Day_063_Spatial_Flag == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = reflectance_ratio_test( &
                                          Input%Ref_063um(Elem_Idx,Line_Idx),Input%Ref_086um(Elem_Idx,Line_Idx))
-                       endif
 
                     case("Ref_138_Day")
-                       if (Input%Chan_On_138um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_138um == symbol%NO) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
+                       if (Day_063_Flag == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Chan_On_138um == symbol%YES) then
-                         if (Input%Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                         if (Input%Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Ref_138um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Ref_138um(Elem_Idx,Line_Idx)
 
                     case("Ref_160_Day")
-                       if (Input%Chan_On_160um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_160um == symbol%NO) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
+                       if (Day_063_Flag == symbol%NO) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Input%Chan_On_160um == symbol%YES) then
-                         if (Input%Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                         if (Input%Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Input%Ref_160um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Ref_160um(Elem_Idx,Line_Idx)
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
@@ -975,27 +938,17 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
              !--- Turn off Classifiers if Chosen Metric is Missing
              if (Classifier_Value(Class_Idx) == Missing_Value_Real4) then
-                Turn_Off_This_Test = symbol%YES
+                cycle
              endif
 
 
-             !---- interpolate class conditional values
-             if (Turn_Off_This_Test == symbol%NO) then
-
-               !--- if classifier not off, compute needed conditional values
-               Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
+             !--- interpolate class conditional values
+             Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
                            Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
-               Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
+             Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
 
-               Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
-               Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
-
-             else
-
-               Cond_Yes(Class_Idx) = 1.0 
-               Cond_No(Class_Idx) =  1.0
-
-             endif
+             Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
+             Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
 
         enddo  class_loop 
 

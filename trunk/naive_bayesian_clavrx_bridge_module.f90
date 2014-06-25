@@ -40,6 +40,7 @@ module naive_bayesian_clavrx_bridge_module
    implicit none
 
    public :: AWG_CLOUD_BAYES_BRIDGE
+
    private :: COVARIANCE_LOCAL
    private :: SET_SYMBOL
    private :: SET_INPUT
@@ -64,31 +65,14 @@ contains
    implicit none
 
    integer, intent(in):: Segment_Number
+
    character (len=120):: Ancil_Data_Path
    character (len=120):: Naive_Bayes_File_Name
 
-   integer:: Num_Elem
-   integer:: Num_Line
-   integer:: Num_Line_Max
-
-   integer:: Chan_On_063um
-   integer:: Chan_On_086um
-   integer:: Chan_On_138um
-   integer:: Chan_On_160um
-   integer:: Chan_On_375um
-   integer:: Chan_On_67um
-   integer:: Chan_On_85um
-   integer:: Chan_On_11um
-   integer:: Chan_On_12um
-   integer:: Chan_On_DNB
-   
    !Initialize local pointers to global variables
 
    Ancil_Data_Path = Ancil_Data_Dir
    Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
-   Num_Elem = Num_Pix
-   Num_Line = Num_Scans_Read
-   Num_Line_Max = Num_Scans_Per_Segment
 
    call SET_SYMBOL()
    call SET_INPUT()

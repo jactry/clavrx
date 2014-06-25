@@ -28,18 +28,15 @@
 !--------------------------------------------------------------------------------------
 module naive_bayesian_clavrx_bridge_module
 
-
    ! -- MODULES USED
-
    use CONSTANTS
    use PIXEL_COMMON
    use NUMERICAL_ROUTINES
    use NAIVE_BAYESIAN_CLOUD_MASK
 
-
    implicit none
 
-   public :: AWG_CLOUD_BAYES_BRIDGE
+   public :: CLOUD_MASK_NAIVE_BAYES_BRIDGE
 
    private :: COVARIANCE_LOCAL
    private :: SET_SYMBOL
@@ -50,17 +47,19 @@ module naive_bayesian_clavrx_bridge_module
    private :: NULL_OUTPUT
    private :: NULL_DIAG
 
+   !--- define these structure as module wide
    type(mask_input), private :: Input   
    type(mask_output), private :: Output   
    type(diag_output), private :: Diag  
    type(symbol_naive_bayesian),private :: symbol
    
-   
 contains
 !----------------------------------------------------------------------
+! Bridge Routine
 !
+! Note, the Diag argument is optional
 !---------------------------------------------------------------------- 
- subroutine AWG_CLOUD_BAYES_BRIDGE(Segment_Number)
+ subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE(Segment_Number)
  
    implicit none
 
@@ -69,17 +68,17 @@ contains
    character (len=120):: Ancil_Data_Path
    character (len=120):: Naive_Bayes_File_Name
 
-   !Initialize local pointers to global variables
-
+   !---- set paths and mask classifier file name to their values in this framework
    Ancil_Data_Path = Ancil_Data_Dir
    Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
 
+   !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
    call SET_INPUT()
    call SET_OUTPUT()
    call SET_DIAG()
 
-   !---Call Naive bayesian routine
+   !---call cloud mask routine
    call CLOUD_MASK_NAIVE_BAYES(Ancil_Data_Path,  &
                                Naive_Bayes_File_Name, &
                                Symbol,  &
@@ -87,7 +86,15 @@ contains
                                Output, &
                                Diag)
 
+   !--- nullify pointers within these data structures
+   call NULL_INPUT()
+   call NULL_OUTPUT()
+   call NULL_DIAG()
    
+   !-----------------------------------------------------------------------
+   ! CLAVR-x specific processing
+   !-----------------------------------------------------------------------
+
    !--- unpack elements of the cloud test vector into clavr-x global arrays
    Bayes_Mask_Sfc_Type_Global = ibits(Cld_Test_Vector_Packed(3,:,:),0,3)
 
@@ -98,11 +105,7 @@ contains
      call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
    endif
 
-   call NULL_INPUT()
-   call NULL_OUTPUT()
-   call NULL_Diag()
-
-   end subroutine AWG_CLOUD_BAYES_BRIDGE
+   end subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE
 
    !====================================================================
    ! Function Name: Covariance_LOCAL

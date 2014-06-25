@@ -96,7 +96,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  real, parameter, private:: dtor = pi/180.0
 
 
- !--- store table values as module-wide arrays
+ !--------------------------------------------------------------------------------
+ ! store table values as module-wide arrays
+ !--------------------------------------------------------------------------------
  integer, private, save:: N_class
  integer, private, save:: N_sfc_bayes 
  integer, private, save:: N_bounds
@@ -119,23 +121,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  real, dimension(:), allocatable, private, save:: Posterior_Cld_Probability_By_Class
  real, dimension(:), allocatable, private, save:: Classifier_Value
 
- real, parameter, private:: Reflectance_Gross_Solzen_Thresh = 80.0     !was 70.0
- real, parameter, private:: Reflectance_Spatial_Solzen_Thresh = 85.0
- real, parameter, private:: Reflectance_Gross_Airmass_Thresh = 5.0     
- real, parameter, private:: Reflectance_Gross_Lunzen_Thresh = 80.0
- real, parameter, private:: Radiance_Lunar_City_Thresh = 2.5e-08
- real, parameter, private:: Emiss_375um_Day_Solzen_Thresh = 85.0       !was 85.0
- real, parameter, private:: Emiss_375um_Night_Solzen_Thresh = 90.0     !was 80.0
- real, parameter, private:: Bt_11um_Cold_Scene_Thresh = 220.0    
- real, parameter, private:: Bt_375um_Cold_Scene_Thresh = 240.0    
- integer, parameter, private:: Do_By_Class_Flag = 1
- real, parameter, private:: EumetCAST_Fire_Day_Solzen_Thresh = 70.0
- real, parameter, private:: EumetCAST_Fire_Night_Solzen_Thresh = 90.0
- 
- character(120), private, save :: Cloud_Mask_Thresholds_Version
- character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask>> "
-
-
+ !-----------------------------------------------------------------------------
+ ! Input Structure
  !-----------------------------------------------------------------------------
  type, public :: mask_input
     integer:: Num_Elem      !x-dimension of data arrays
@@ -198,7 +185,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
     integer(kind=int1), dimension(:,:), pointer:: Solar_Contamination_Mask    !binary mask of solar contamination (0=no,1=yes)
     integer(kind=int1), dimension(:,:), pointer:: Sfc_Type 
  end type mask_input 
-
+ !-----------------------------------------------------------------------------
+ ! Output Structure
+ !-----------------------------------------------------------------------------
  type, public :: mask_output
     integer(kind=int1), dimension(:,:,:), pointer:: Cld_Flags_Packed         !array of packed results 
     integer(kind=int1), dimension(:,:), pointer:: Cld_Mask_Bayes             !Derived 4-level cloud mask
@@ -206,14 +195,18 @@ module NAIVE_BAYESIAN_CLOUD_MASK
     real(kind=real4), dimension(:,:), pointer:: Posterior_Cld_Probability    !posterior cloud probability (0-1)
  end type mask_output 
 
+ !-----------------------------------------------------------------------------
+ ! Diagnostic Output Structure
+ !-----------------------------------------------------------------------------
  type, public :: diag_output
     real(kind=real4), dimension(:,:), pointer:: Array_1    !first diagnostic array
     real(kind=real4), dimension(:,:), pointer:: Array_2    !first diagnostic array
     real(kind=real4), dimension(:,:), pointer:: Array_3    !first diagnostic array
  end type diag_output 
  
- !Symbol structure for internal use
- 
+ !-----------------------------------------------------------------------------
+ ! Symbol Structure
+ !-----------------------------------------------------------------------------
  type, public :: symbol_naive_bayesian
     integer(kind=int1) :: CLOUDY
     integer(kind=int1) :: PROB_CLOUDY
@@ -253,25 +246,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  end type symbol_naive_bayesian
 
  !--------------------------------------------------------------
- integer, parameter, private:: NUMBER_OF_FLAGS = 36
- integer, parameter, private:: NUMBER_OF_FLAG_BYTES = 7
- integer, parameter, private:: NUMBER_OF_NONCLOUD_FLAGS = 18
-
- !---- fire detetion parameters
- real, private, parameter:: bt_375um_Fire_Thresh = 300.0
- real, private, parameter:: bt_Diff_Fire_Thresh = 5.0
- real, private, parameter:: stddev_11um_Fire_Thresh = 10.0   !not used, unsure of role
- real, private, parameter:: stddev_Diff_Fire_Thresh = 10.0
-
- !---- EUMETCAST fire detection parameters
- real, private, parameter::bt_375um_Eumet_Fire_day_Thresh = 310.0
- real, private, parameter::bt_Diff_Eumet_Fire_day_Thresh = 8.0
- real, private, parameter::stddev_11um_Eumet_Fire_day_Thresh = 1.0 
- real, private, parameter::stddev_375um_Eumet_Fire_day_Thresh = 4.0
- real, private, parameter::bt_375um_Eumet_Fire_night_Thresh = 290.0
- real, private, parameter::bt_Diff_Eumet_Fire_night_Thresh = 0.0
- real, private, parameter::stddev_11um_Eumet_Fire_night_Thresh = 1.0 
- real, private, parameter::stddev_375um_Eumet_Fire_night_Thresh = 4.0
+ !
+ !--------------------------------------------------------------
+ include 'naive_bayesian_cloud_mask.inc'
 
  contains
 !====================================================================

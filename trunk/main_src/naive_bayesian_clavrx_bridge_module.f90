@@ -345,7 +345,7 @@ contains
             !--------------------------------------------------------------------------------------------
             !--- make a cloud mask
             !--------------------------------------------------------------------------------------------
-            Cld_Mask ( i , j ) = sym%CLEAR
+            Cld_Mask ( i , j ) =  ET_cloudiness_class % %CLEAR
 
             ! - based on type of srfc could be different thresholds
             if (Bayes_Mask_Sfc_Type_Global (  i , j ) > 0) then
@@ -354,17 +354,17 @@ contains
                cld_mask_probab_thresh_hi_tmp = cld_mask_probab_thresh_hi (Bayes_Mask_Sfc_Type_Global (  i , j ))
 
                if ( Posterior_Cld_Probability ( i , j ) >= cld_mask_probab_thresh_hi_tmp ) then
-                  Cld_Mask ( i , j ) = sym % CLOUDY
+                  Cld_Mask ( i , j ) =  ET_cloudiness_class %  CLOUDY
                end if
 
                if ( Posterior_Cld_Probability ( i , j ) >= cld_mask_probab_thresh_mi_tmp &
               .and. Posterior_Cld_Probability ( i , j ) < cld_mask_probab_thresh_hi_tmp ) then
-                  Cld_Mask ( i , j ) = sym % PROB_CLOUDY
+                  Cld_Mask ( i , j ) =  ET_cloudiness_class %  PROB_CLOUDY
                end if
 
                if ( Posterior_Cld_Probability ( i , j ) > cld_mask_probab_thresh_lo_tmp &
               .and. Posterior_Cld_Probability ( i , j ) < cld_mask_probab_thresh_mi_tmp ) then
-                  Cld_Mask ( i , j ) = sym % PROB_CLEAR
+                  Cld_Mask ( i , j ) =  ET_cloudiness_class % PROB_CLEAR
                end if
             end if
 

@@ -345,7 +345,7 @@ contains
             !--------------------------------------------------------------------------------------------
             !--- make a cloud mask
             !--------------------------------------------------------------------------------------------
-            Cld_Mask ( i , j ) =  ET_cloudiness_class % %CLEAR
+            Cld_Mask ( i , j ) =  ET_cloudiness_class % CLEAR
 
             ! - based on type of srfc could be different thresholds
             if (Bayes_Mask_Sfc_Type_Global (  i , j ) > 0) then

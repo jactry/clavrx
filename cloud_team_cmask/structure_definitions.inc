@@ -1,6 +1,15 @@
  !-----------------------------------------------------------------------------
  ! Input Structure
  !-----------------------------------------------------------------------------
+ type, public :: et_cloudiness_class_type
+      integer :: SPACE 
+      integer :: MISSING
+      integer :: CLOUDY
+      integer :: PROB_CLOUDY
+      integer :: PROB_CLEAR
+      integer :: CLEAR
+ end type
+
  type, public :: mask_input
     integer:: Num_Elem      !x-dimension of data arrays
     integer:: Num_Line      !number of lines of arrays with data

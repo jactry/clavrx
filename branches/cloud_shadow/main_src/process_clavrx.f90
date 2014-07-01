@@ -1407,8 +1407,8 @@
                   
                   call CLOUD_SHADOW_RETR ( zc_acha , solaz, solzen, lat, lon, lat_pc,lon_pc , cloud_shadow)
                   
-                  where ( cloud_shadow )  
-                     cld_mask = 14
+                  where ( cloud_shadow .and. cld_mask == 0 )  
+                     cld_mask = 4
                   end where
                end if
                

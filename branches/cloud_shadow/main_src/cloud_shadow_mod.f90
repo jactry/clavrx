@@ -49,7 +49,7 @@ contains
       
       i_dim = size ( cloud_height, dim=1)
       j_dim = size ( cloud_height, dim=2)
-      print*,i_dim,j_dim
+      
          do i = 2 , i_dim - 1
             do j = 2 ,j_dim - 1
                if ( cloud_height (i,j) <= 0. ) cycle

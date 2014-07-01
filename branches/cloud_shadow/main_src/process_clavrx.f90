@@ -126,6 +126,8 @@
    
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
+      
+   use cloud_shadow_mod   
      
    implicit none
  
@@ -1402,6 +1404,8 @@
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
+                  
+                  call CLOUD_SHADOW_RETR ( zc_acha , solaz, solzen, lat, lon, lat_pc,lon_pc , cloud_shadow)
 
                end if
                

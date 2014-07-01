@@ -93,10 +93,10 @@ contains
       
    
       
-      delta_lat_ii = lat(2,2) - lat(1,2)
-      delta_lon_ii = lon(2,2) - lon(1,2)
-      delta_lat_jj = lat(2,2) - lat(2,1)
-      delta_lon_jj = lon(2,2) - lon(2,1)
+      delta_lat_ii = lat(i,j) - lat(i-1,j)
+      delta_lon_ii = lon(i,j) - lon(i-1,j)
+      delta_lat_jj = lat(i,j) - lat(i,j-1)
+      delta_lon_jj = lon(i,j) - lon(i,j-1)
       
       diff_lat = lat(i,j) -lat1
       diff_lon = lon(i,j) -lon1

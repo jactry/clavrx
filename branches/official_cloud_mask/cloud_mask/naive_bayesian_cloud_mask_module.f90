@@ -590,7 +590,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
              if (   Input%Chan_On_063um == symbol%YES &
               .and. Input%Chan_On_041um == symbol%YES &
-              .and. Input%Chan_On_I1_064um ) then
+              .and. Input%Chan_On_I1_064um == symbol%YES ) then
                 Dust_Flag = DUST_DETECTION ( &
                     Input%Ref_041um(Elem_Idx,Line_Idx) &
                   , Input%Ref_063um(Elem_Idx,Line_Idx) &
@@ -615,7 +615,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
              if (   Input%Chan_On_041um == symbol%YES &
               .and. Input%Chan_On_213um == symbol%YES &
-              .and. Input%Chan_On_I1_064um ) then
+              .and. Input%Chan_On_I1_064um == symbol%YES ) then
                 Smoke_Flag = SMOKE_DETECTION ( &
                     Input%Ref_041um(Elem_Idx,Line_Idx) &
                   , Input%Ref_213um(Elem_Idx,Line_Idx) &

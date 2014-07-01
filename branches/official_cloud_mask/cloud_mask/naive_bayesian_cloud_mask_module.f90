@@ -78,7 +78,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  private:: emiss_375um_day_test
  private:: emiss_375um_night_test
  private:: PACK_BITS_INTO_BYTES
- private:: fire_test
+ private:: FIRE_TEST
+ private:: SMOKE_DETECTION
+ private:: DUST_DETECTION
  public:: CLOUD_MASK_NAIVE_BAYES
  public:: SET_CLOUD_MASK_VERSION
  public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
@@ -91,12 +93,16 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  integer, parameter, private:: real4 = selected_real_kind(6,37)
  integer, parameter, private:: real8 = selected_real_kind(15,307)
  integer, parameter, private:: ipre = real4
- real, parameter, private :: MISSING_VALUE_real4 = -999.0       !Make an argument?
- real, parameter, private:: pi = 3.14159265
- real, parameter, private:: dtor = pi/180.0
 
+ !--- string to hold version id
+ character(120), private, save :: Cloud_Mask_Thresholds_Version
 
- !--- store table values as module-wide arrays
+ !--- string to control on-screen prompts
+ character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask>> "
+
+ !--------------------------------------------------------------------------------
+ ! store table values as module-wide arrays
+ !--------------------------------------------------------------------------------
  integer, private, save:: N_class
  integer, private, save:: N_sfc_bayes 
  integer, private, save:: N_bounds
@@ -119,82 +125,11 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  real, dimension(:), allocatable, private, save:: Posterior_Cld_Probability_By_Class
  real, dimension(:), allocatable, private, save:: Classifier_Value
 
- real, parameter, private:: Reflectance_Gross_Solzen_Thresh = 80.0     !was 70.0
- real, parameter, private:: Reflectance_Spatial_Solzen_Thresh = 85.0
- real, parameter, private:: Reflectance_Gross_Airmass_Thresh = 5.0     
- real, parameter, private:: Reflectance_Gross_Lunzen_Thresh = 80.0
- real, parameter, private:: Radiance_Lunar_City_Thresh = 2.5e-08
- real, parameter, private:: Emiss_375um_Day_Solzen_Thresh = 85.0       !was 85.0
- real, parameter, private:: Emiss_375um_Night_Solzen_Thresh = 90.0     !was 80.0
- real, parameter, private:: Bt_11um_Cold_Scene_Thresh = 220.0    
- real, parameter, private:: Bt_375um_Cold_Scene_Thresh = 240.0    
- integer, parameter, private:: Do_By_Class_Flag = 1
- real, parameter, private:: EumetCAST_Fire_Day_Solzen_Thresh = 70.0
- real, parameter, private:: EumetCAST_Fire_Night_Solzen_Thresh = 90.0
- 
- character(120), private, save :: Cloud_Mask_Thresholds_Version
- character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask>> "
- 
- !Symbol structure for internal use
- 
- type, public :: symbol_naive_bayesian
-    integer(kind=int1) :: CLOUDY
-    integer(kind=int1) :: PROB_CLOUDY
-    integer(kind=int1) :: PROB_CLEAR
-    integer(kind=int1) :: CLEAR
+ !--- define strucutres
+ include 'structure_definitions.inc'
 
-    integer(kind=int1) :: NO
-    integer(kind=int1) :: YES
-
-    integer(kind=int1) :: WATER_SFC
-    integer(kind=int1) :: EVERGREEN_NEEDLE_SFC
-    integer(kind=int1) :: EVERGREEN_BROAD_SFC
-    integer(kind=int1) :: DECIDUOUS_NEEDLE_SFC
-    integer(kind=int1) :: DECIDUOUS_BROAD_SFC
-    integer(kind=int1) :: MIXED_FORESTS_SFC
-    integer(kind=int1) :: WOODLANDS_SFC
-    integer(kind=int1) :: WOODED_GRASS_SFC
-    integer(kind=int1) :: CLOSED_SHRUBS_SFC
-    integer(kind=int1) :: OPEN_SHRUBS_SFC
-    integer(kind=int1) :: GRASSES_SFC
-    integer(kind=int1) :: CROPLANDS_SFC
-    integer(kind=int1) :: BARE_SFC
-    integer(kind=int1) :: URBAN_SFC
-
-    integer(kind=int1) :: SHALLOW_OCEAN
-    integer(kind=int1) :: LAND
-    integer(kind=int1) :: COASTLINE
-    integer(kind=int1) :: SHALLOW_INLAND_WATER
-    integer(kind=int1) :: EPHEMERAL_WATER
-    integer(kind=int1) :: DEEP_INLAND_WATER
-    integer(kind=int1) :: MODERATE_OCEAN
-    integer(kind=int1) :: DEEP_OCEAN
-
-    integer(kind=int1) :: NO_SNOW
-    integer(kind=int1) :: SEA_ICE
-    integer(kind=int1) :: SNOW
- end type symbol_naive_bayesian
-
- !--------------------------------------------------------------
- integer, parameter, private:: NUMBER_OF_FLAGS = 36
- integer, parameter, private:: NUMBER_OF_FLAG_BYTES = 7
- integer, parameter, private:: NUMBER_OF_NONCLOUD_FLAGS = 18
-
- !---- fire detetion parameters
- real, private, parameter:: bt_375um_Fire_Thresh = 300.0
- real, private, parameter:: bt_Diff_Fire_Thresh = 5.0
- real, private, parameter:: stddev_11um_Fire_Thresh = 10.0   !not used, unsure of role
- real, private, parameter:: stddev_Diff_Fire_Thresh = 10.0
-
- !---- EUMETCAST fire detection parameters
- real, private, parameter::bt_375um_Eumet_Fire_day_Thresh = 310.0
- real, private, parameter::bt_Diff_Eumet_Fire_day_Thresh = 8.0
- real, private, parameter::stddev_11um_Eumet_Fire_day_Thresh = 1.0 
- real, private, parameter::stddev_375um_Eumet_Fire_day_Thresh = 4.0
- real, private, parameter::bt_375um_Eumet_Fire_night_Thresh = 290.0
- real, private, parameter::bt_Diff_Eumet_Fire_night_Thresh = 0.0
- real, private, parameter::stddev_11um_Eumet_Fire_night_Thresh = 1.0 
- real, private, parameter::stddev_375um_Eumet_Fire_night_Thresh = 4.0
+ !--- set thresholds and algorithm specific constants
+ include 'naive_bayesian_cloud_mask.inc'
 
  contains
 !====================================================================
@@ -295,7 +230,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    Skip_Sfc_Type_Flag = 0
    First_valid_Classifier_Bounds = 0
    Last_valid_Classifier_Bounds = 0
-  
+
    do Sfc_Idx = 1, N_sfc_bayes
 
    read (unit=lun,fmt=*,iostat=ios) Sfc_Idx_file, Header
@@ -381,157 +316,23 @@ module NAIVE_BAYESIAN_CLOUD_MASK
  subroutine CLOUD_MASK_NAIVE_BAYES( &
             Ancil_Data_Path,  &             !path to ancillary data
             Naive_Bayes_File_Name, &        !name of nb classifer data file
-            symbol, &                       !local copy of sym structure
-            Num_Elem_In,  &                 !x-dimension of data arrays
-            Num_Line_In, &                  !number of lines of arrays with data
-            Num_Line_Max_In, &              !y-dimension of data arrays
-            Invalid_Data_Mask,  &           !bad data mask (0=good,1=bad)
-            Cld_Flags_Packed, &             !array of packed results 
-            Chan_On_063um,  &               !flag if 0.63um channel on (0=no,1=yes)
-            Chan_On_086um,  &               !flag if 0.86um channel on (0=no,1=yes)
-            Chan_On_138um,  &               !flag if 1.38um channel on (0=no,1=yes)
-            Chan_On_160um,  &               !flag if 1.60um channel on (0=no,1=yes)
-            Chan_On_375um,  &               !flag if 3.75um channel on (0=no,1=yes)
-            Chan_On_67um,  &                !flag if 6.7um channel on (0=no,1=yes)
-            Chan_On_85um,  &                !flag if 8.5um channel on (0=no,1=yes)
-            Chan_On_11um,  &                !flag if 11.0um channel on (0=no,1=yes)
-            Chan_On_12um,  &                !flag if 12.0um channel on (0=no,1=yes)
-            Chan_On_DNB,  &                 !flag if DNB channel on (0=no,1=yes)
-            Snow_Class,  &                  !Snow Classification 
-            Land_Class, &                   !Land Classification
-            Oceanic_Glint_Mask,  &          !Mask of oceanic solar glint (0=no,1=yes)
-            Lunar_Oceanic_Glint_Mask,  &    !Mask of oceanic lunar glint (0=no,1=yes)
-            Coastal_Mask, &                 !binary coast mask (0=no,1=yes)
-            Solzen_Local, &                 !Solar zenith angle (degrees)
-            Scatzen_Local, &                !Solar Scattering angle (degrees)
-            Lunscatzen_Local, &             !Lunar Scattering angle (degrees)
-            Senzen_Local, &                 !Sensor viewing zenith angle (degrees)
-            Lunzen_Local, &                 !Lunar viewing zenith angle (degrees)
-            Lat_Local,  &                   !Latitude (degrees)
-            Lon_Local, &                    !Longitude (degrees)
-            Ref_063um, &                    !0.63 um toa reflectance (%)
-            Ref_063um_Clear, &              !0.63 um toa reflectance for clear-sky (%)
-            Ref_063um_Std,  &               !0.63 um toa reflectance 3x3 Std. Dev. (%)
-            Ref_063um_Min,  &               !Min 0.63 um toa reflectance over 3x3 (%)
-            Ref_086um, &                    !0.86 um toa reflectance (%)
-            Ref_138um,  &                   !1.38 um toa reflectance (%)
-            Ref_160um,  &                   !1.60 um toa reflectance (%)
-            Ref_160um_Clear,  &             !1.60 um toa reflectance for clear-sky (%)
-            Bt_375um,  &                    !3.75 um toa brightness temp (K)
-            Bt_375um_Std,  &                !3.75 um toa brightness temp 3x3 Std. Dev. (K)
-            Emiss_375um,  &                 !3.75 um pseudo toa emissivity
-            Emiss_375um_Clear, &            !3.75 um pseudo toa emissivity clear-sky
-            Bt_67um,  &                     !6.7 um toa brightness temperature (K)
-            Bt_85um, &                      !8.5 um toa brightness temperature (K)
-            Bt_11um,  &                     !11 um toa brightness temperature (K)
-            Bt_11um_Std, &                  !11 um toa brightness temp 3x3 Std Dev (K)
-            Bt_11um_Max,  &                 !11 um toa brightness temp 3x3 Max (K)
-            Bt_11um_Clear,  &               !11 um toa brightness temperature (K)
-            Bt_11um_LRC,  &                 !11 um toa bt at local radiative center (K)
-            Emiss_11um_Tropo_Rtm, &         !11 um tropo emiss
-            Emiss_11um_Tropo_LRC,  &        !11 um tropo emiss at lrc
-            Bt_12um, &                      !12 um toa brightness temperature (K)
-            Bt_12um_Clear,  &               !12 um toa bright temp clear-sky (K)
-            Bt_11um_Bt_67um_Covar, &        !covariance of 11 and 6.7 um bright temp.
-            Sst_Anal_Uni, &                 !3x3 std of background sst field (K)
-            Emiss_Sfc_375um,  &             !the surface emissivity at 3.75 um
-            Rad_Lunar, &                    !Lunar toa radiance from DNB
-            Ref_Lunar, &                    !Lunar reflectance from DNB (%)
-            Ref_Lunar_Min, &                !Min lunar reflectance over 3x3 (%)
-            Ref_Lunar_Std, &                !3x3 std dev of lunar ref from DNB (%)
-            Ref_Lunar_Clear, &              !Lunar reflectance for clear-skies (%)
-            Zsfc,  &                        !surface altitude (km)
-            Num_Segments, &                 !number of segments in this data 
-            Solar_Contamination_Mask,  &    !binary mask of solar contamination (0=no,1=yes)
-            Sfc_Type,  &                    !surface type based on UMD classification
-            Cld_Mask_Bayes, &               !Derived 4-level cloud mask
-            Cloud_Mask_Bayesian_Flag, &     !flag to tell if code should run
-            Posterior_Cld_Probability, &    !posterior cloud probability (0-1)
-            Diagnostic_Array_1, &           !diagnostic array #1 for testing
-            Diagnostic_Array_2, &           !diagnostic array #2 for testing
-            Diagnostic_Array_3)             !diagnostic array #3 for testing
+            Symbol, &                       !local copy of sym structure
+            Input,  &
+            Output,  &
+            Diag)
 
 
    character (len=120), intent(in) :: Ancil_Data_Path
    character (len=120), intent(in) :: Naive_Bayes_File_Name
-
-   integer, intent(in) :: Num_Elem_In
-   integer, intent(in) :: Num_Line_In
-   integer, intent(in) :: Num_Line_Max_In
-   integer, intent(in) :: Num_Segments
+   type(symbol_naive_bayesian), intent(in) :: Symbol
+   type(mask_input), intent(in) :: Input
+   type(mask_output), intent(out) :: Output
+   type(diag_output), intent(out), Optional :: Diag
 
    !-- local pointers that point to global variables
-   integer (kind=INT1), dimension(:,:), intent(in) :: Invalid_Data_Mask
    integer (kind=INT1), dimension(NUMBER_OF_FLAGS):: Cld_Flags
    integer (kind=INT1), dimension(NUMBER_OF_FLAGS):: Cld_Flag_Bit_Depth
-   integer (kind=INT1), dimension(:,:,:), intent(out) :: Cld_Flags_Packed
-   integer, intent(in) :: Chan_On_063um
-   integer, intent(in) :: Chan_On_086um
-   integer, intent(in) :: Chan_On_138um
-   integer, intent(in) :: Chan_On_160um
-   integer, intent(in) :: Chan_On_375um
-   integer, intent(in) :: Chan_On_67um
-   integer, intent(in) :: Chan_On_85um
-   integer, intent(in) :: Chan_On_11um
-   integer, intent(in) :: Chan_On_12um
-   integer, intent(in) :: Chan_On_DNB
-   integer (kind=INT1), dimension(:,:), intent(in) :: Snow_Class
-   integer (kind=INT1), dimension(:,:), intent(in) :: Land_Class
-   integer (kind=INT1), dimension(:,:), intent(in) :: Oceanic_Glint_Mask
-   integer (kind=INT1), dimension(:,:), intent(in) :: Lunar_Oceanic_Glint_Mask
-   integer (kind=INT1), dimension(:,:), intent(in) :: Coastal_Mask
-   real (kind=real4), dimension(:,:), intent(in) :: Solzen_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Scatzen_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Lunscatzen_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Senzen_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Lunzen_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Lat_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Lon_Local
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_375um
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_375um_Std
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_Std
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_Max
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_12um
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_12um_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_063um
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Std
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Min
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_086um
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_160um
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_138um
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_063um_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_160um_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_67um
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_85um
-   real (kind=real4), dimension(:,:), intent(in) :: Emiss_375um
-   real (kind=real4), dimension(:,:), intent(in) :: Emiss_375um_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_Bt_67um_Covar
-   real (kind=real4), dimension(:,:), intent(in) :: Bt_11um_LRC
-   real (kind=real4), dimension(:,:), intent(in) :: Emiss_11um_Tropo_Rtm
-   real (kind=real4), dimension(:,:), intent(in) :: Emiss_11um_Tropo_LRC
-   real (kind=real4), dimension(:,:), intent(in) :: Sst_Anal_Uni
-   real (kind=real4), dimension(:,:), intent(in) :: Emiss_Sfc_375um
-   real (kind=real4), dimension(:,:), intent(in) :: Rad_Lunar
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_Lunar
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_Lunar_Min
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_Lunar_Std
-   real (kind=real4), dimension(:,:), intent(in) :: Ref_Lunar_Clear
-   real (kind=real4), dimension(:,:), intent(in) :: Zsfc
-   integer (kind=INT1), dimension(:,:), intent(in) ::Solar_Contamination_Mask 
-   integer(kind=int1), dimension(:,:), intent(in):: Sfc_Type
-   TYPE(symbol_naive_bayesian), intent(inout) :: symbol
-!   TYPE(symbol_naive_bayesian) :: symbol
 
-   !--------
-   integer, intent(out):: Cloud_Mask_Bayesian_Flag 
-   integer (kind=INT1), dimension(:,:), intent(out) :: Cld_Mask_Bayes
-   real (kind=int4),dimension(:,:), intent(out) :: Posterior_Cld_Probability
-   real (kind=real4), dimension(:,:), intent(out) :: Diagnostic_Array_1
-   real (kind=real4), dimension(:,:), intent(out) :: Diagnostic_Array_2
-   real (kind=real4), dimension(:,:), intent(out) :: Diagnostic_Array_3
-   
    !internal variables
    integer :: Line_Start
    integer :: Line_End
@@ -564,27 +365,32 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    integer:: Fire_Flag
    integer:: Shadow_Flag
    integer:: Dust_Flag
-   integer:: Turn_Off_This_Test
    integer:: City_Flag
 
    integer, save:: Segment_Number_Local = 1
-   real (kind=real4):: Airmass_Local
+   real (kind=real4):: Airmass
    integer, parameter:: Spare_Value = 0
    
+   ! --- set cloud mask probability thresholds based on sfc type
+   real, dimension (7) :: cld_mask_probab_thresh_lo = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+   real, dimension (7) :: cld_mask_probab_thresh_mi = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+   real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+   real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, &
+           cld_mask_probab_thresh_hi_tmp
+
    !------------------------------------------------------------------------------------------
    !---  begin executable code
    !------------------------------------------------------------------------------------------
-   Num_Elem = Num_Elem_In
-   Num_Line = Num_Line_In
-   Num_Line_Max = Num_Line_Max_In
+   Num_Elem = Input%Num_Elem
+   Num_Line = Input%Num_Line
+   Num_Line_Max = Input%Num_Line_Max
    
-
    !------------------------------------------------------------------------------------------
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (Segment_Number_Local == 1) then
        call READ_NAIVE_BAYES(Ancil_Data_Path,Naive_Bayes_File_Name, &
-                             symbol, Cloud_Mask_Bayesian_Flag)
+                             symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !---set up Classifier to Test Mapping
         do Class_Idx = 1, N_Class
@@ -656,6 +462,11 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    Cld_Flags = 0
    Cld_Flag_Bit_Depth = 2     ! needs to be 2 for reserving space for missing tests
 
+   !--- initialize diagnostic output
+   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+
    !------------------------------------------------------------------------------------------
    !  MAIN LOOP
    !------------------------------------------------------------------------------------------
@@ -664,20 +475,20 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
           Cld_Flags(1) = symbol%YES          ;    Cld_Flag_Bit_Depth(1) = 1
           !--- check for a bad pixel
-          if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
+          if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
               Cld_Flags(1) = symbol%NO
               cycle
           endif
 
           !---  COMPUTE SURFACE TYPE
-          Sfc_Idx = COMPUTE_BAYES_SFC_TYPE(Land_Class(Elem_Idx,Line_Idx), &
-                                           Coastal_Mask(Elem_Idx,Line_Idx), &
-                                           Snow_Class(Elem_Idx,Line_Idx), &
-                                           Sfc_Type(Elem_Idx,Line_Idx), &
-                                           Lat_Local(Elem_Idx,Line_Idx), &
-                                           Lon_Local(Elem_Idx,Line_Idx), &
-                                           Sst_Anal_Uni(Elem_Idx,Line_Idx), &
-                                           Emiss_Sfc_375um(Elem_Idx,Line_Idx), &
+          Sfc_Idx = COMPUTE_BAYES_SFC_TYPE(Input%Land_Class(Elem_Idx,Line_Idx), &
+                                           Input%Coastal_Mask(Elem_Idx,Line_Idx), &
+                                           Input%Snow_Class(Elem_Idx,Line_Idx), &
+                                           Input%Sfc_Type(Elem_Idx,Line_Idx), &
+                                           Input%Lat(Elem_Idx,Line_Idx), &
+                                           Input%Lon(Elem_Idx,Line_Idx), &
+                                           Input%Sst_Anal_Uni(Elem_Idx,Line_Idx), &
+                                           Input%Emiss_Sfc_375um(Elem_Idx,Line_Idx), &
                                            symbol)
 
           !--- check for a surface types without sufficient training for processing
@@ -687,20 +498,24 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           endif
 
           !--- set some flags to control processing
-          Oceanic_Glint_Flag = Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
-          Lunar_Oceanic_Glint_Flag = Lunar_Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
-          Coastal_Flag = Coastal_Mask(Elem_Idx,Line_Idx)
-          Solar_Contam_Flag = Solar_Contamination_Mask(Elem_Idx,Line_Idx)   !AVAILABLE?
+          Oceanic_Glint_Flag = Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
+          Lunar_Oceanic_Glint_Flag = Input%Lunar_Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
+          Coastal_Flag = Input%Coastal_Mask(Elem_Idx,Line_Idx)
+          Solar_Contam_Flag = Input%Solar_Contamination_Mask(Elem_Idx,Line_Idx)  
 
-          AirMass_Local = 1.0/cos(Solzen_Local(Elem_Idx,Line_Idx)*dtor) + 1.0 / cos(Senzen_Local(Elem_Idx,Line_Idx)*dtor)
-          if ((Solzen_Local(Elem_Idx,Line_Idx) > Reflectance_Gross_Solzen_Thresh) .or.  &
-              (AirMass_Local > Reflectance_Gross_Airmass_Thresh)) then
+          !--- compute airmass
+          AirMass = 1.0/cos(Input%Solzen(Elem_Idx,Line_Idx)*dtor) + 1.0 / cos(Input%Senzen(Elem_Idx,Line_Idx)*dtor)
+
+          !--- set day flag for 0.63 micron reflectance gross test
+          if ((Input%Solzen(Elem_Idx,Line_Idx) > Reflectance_Gross_Solzen_Thresh) .or.  &
+              (AirMass > Reflectance_Gross_Airmass_Thresh)) then
               Day_063_Flag = symbol%NO
           else
               Day_063_Flag = symbol%YES
           endif
 
-          if (Solzen_Local(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
+          !--- set day flag for 0.63 micron reflectance spatial test
+          if (Input%Solzen(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
               Day_063_Spatial_Flag = symbol%NO
           else
               Day_063_Spatial_Flag = symbol%YES
@@ -710,81 +525,151 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           Night_Lunar_Flag = symbol%NO
           Lunar_Forward_Scattering_Flag = symbol%NO
 
-          if (Chan_On_DNB == symbol%YES) then
+          if (Input%Chan_On_DNB == symbol%YES) then
              Lunar_Spatial_Flag = symbol%YES
-             if (Lunzen_Local(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
+             if (Input%Lunzen(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
                Lunar_Spatial_Flag = symbol%NO
              endif
 
              Night_Lunar_Flag = symbol%YES
-             if (Lunzen_Local(Elem_Idx,Line_Idx) > Reflectance_Gross_Lunzen_Thresh) then
+             if (Input%Lunzen(Elem_Idx,Line_Idx) > Reflectance_Gross_Lunzen_Thresh) then
                Night_Lunar_Flag = symbol%NO
              endif
 
              Lunar_Forward_Scattering_Flag = symbol%NO
-             if (Lunscatzen_Local(Elem_Idx,Line_Idx) < 80.0 .and.  Lunzen_Local(Elem_Idx,Line_Idx) < 95.0) then
+             if (Input%Lunscatzen(Elem_Idx,Line_Idx) < 80.0 .and. Input%Lunzen(Elem_Idx,Line_Idx) < 95.0) then
                Lunar_Forward_Scattering_Flag = symbol%YES
              endif
 
           endif
 
-          if ((Solzen_Local(Elem_Idx,Line_Idx) > Emiss_375um_Day_Solzen_Thresh) .or. &
-              (AirMass_Local > Reflectance_Gross_Airmass_Thresh)) then
+          if ((Input%Solzen(Elem_Idx,Line_Idx) > Emiss_375um_Day_Solzen_Thresh) .or. &
+              (AirMass > Reflectance_Gross_Airmass_Thresh)) then
               Day_375_Flag = symbol%NO
           else
               Day_375_Flag = symbol%YES
           endif
 
-          if (Solzen_Local(Elem_Idx,Line_Idx) < Emiss_375um_Night_Solzen_Thresh) then
+          if (Input%Solzen(Elem_Idx,Line_Idx) < Emiss_375um_Night_Solzen_Thresh) then
               Night_375_Flag = symbol%NO
           else
               Night_375_Flag = symbol%YES
           endif
 
-          if (Sfc_Idx /= 6 .and. Zsfc(Elem_Idx,Line_Idx) > 2000.0) then
+          if (Sfc_Idx /= 6 .and. Input%Zsfc(Elem_Idx,Line_Idx) > 2000.0) then
               Mountain_Flag = symbol%YES
           else
               Mountain_Flag = symbol%NO
           endif
 
-          if (Scatzen_Local(Elem_Idx,Line_Idx) < 80.0 .and.  Solzen_Local(Elem_Idx,Line_Idx) < 95.0) then
+          if (Input%Scatzen(Elem_Idx,Line_Idx) < 80.0 .and. Input%Solzen(Elem_Idx,Line_Idx) < 95.0) then
               Forward_Scattering_Flag = symbol%YES
           else
               Forward_Scattering_Flag = symbol%NO
           endif
 
           Cold_Scene_375um_Flag = symbol%NO
-          if (Chan_On_375um == symbol%YES) then
-           if (Bt_375um(Elem_Idx,Line_Idx) < Bt_375um_Cold_Scene_Thresh .and. Bt_375um(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+          if (Input%Chan_On_375um == symbol%YES) then
+           if (Input%Bt_375um(Elem_Idx,Line_Idx) < Bt_375um_Cold_Scene_Thresh .and.  &
+               Input%Bt_375um(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Cold_Scene_375um_Flag = symbol%YES
            endif
           endif
 
           Cold_Scene_Btd_Flag = symbol%NO
-          if (Chan_On_11um == symbol%YES) then
-           if (Bt_11um(Elem_Idx,Line_Idx) < Bt_11um_Cold_Scene_Thresh .and. Bt_11um(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+          if (Input%Chan_On_11um == symbol%YES) then
+           if (Input%Bt_11um(Elem_Idx,Line_Idx) < Bt_11um_Cold_Scene_Thresh .and.  &
+               Input%Bt_11um(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Cold_Scene_Btd_Flag = symbol%YES
            endif
           endif
 
-
-          Smoke_Flag = symbol%NO
+          ! --- check if DUST only for day time
+          ! --- use VIIRS I1 band (ch37) if available
           Dust_Flag = symbol%NO
-          Shadow_Flag = symbol%NO
-          Fire_Flag = symbol%NO
+          if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
+             if (   Input%Chan_On_063um == symbol%YES &
+              .and. Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_I1_064um ) then
+                Dust_Flag = DUST_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_I1_064um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            else if ( Input%Chan_On_063um == symbol%YES &
+             .and. Input%Chan_On_041um == symbol%YES &
+             .and. Input%Chan_On_I1_064um == symbol%NO ) then
+                Dust_Flag = DUST_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )                                                                                                                
+            end if
+          end if
 
-          if (Chan_On_11um == symbol%YES .and. Chan_On_375um == symbol%YES) then
-             Fire_Flag = fire_test(Bt_11um(Elem_Idx,Line_Idx), &
-                                   Bt_375um(Elem_Idx,Line_Idx), &
-                                   Bt_11um_Std(Elem_Idx,Line_Idx), &
-                                   Bt_375um_Std(Elem_Idx,Line_Idx), &
-                                   Solzen_Local(Elem_Idx,Line_Idx))
+          ! --- check if SMOKE only for day time
+          ! --- use VIIRS I1 band (ch37) if available
+          Smoke_Flag = symbol%NO
+          if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
+             if (   Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_213um == symbol%YES &
+              .and. Input%Chan_On_I1_064um ) then
+                Smoke_Flag = SMOKE_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_213um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_I1_064um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Senzen(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            else if ( Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_213um == symbol%YES &
+              .and. Input%Chan_On_063um == symbol%YES &
+              .and. Input%Chan_On_I1_064um == symbol%NO ) then
+                Smoke_Flag = SMOKE_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_213um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Senzen(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            end if
+          end if
+
+          ! --- check if CLOUD SHADOW
+          ! - TO ADD
+          Shadow_Flag = symbol%NO
+
+          ! --- check if FIRE
+          ! --- use VIIRS I4 & I5 band (ch40 & 41) if available
+          Fire_Flag = symbol%NO
+          if (   Input%Chan_On_11um == symbol%YES &
+           .and. Input%Chan_On_375um == symbol%YES &
+           .and. Input%Chan_On_I4_374um == symbol%YES &
+           .and. Input%Chan_On_I5_114um == symbol%YES ) then
+             Fire_Flag = FIRE_TEST ( &
+                   Input%Bt_11um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_I5_114um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Bt_I4_374um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Solzen(Elem_Idx,Line_Idx) )
+          else if ( Input%Chan_On_11um == symbol%YES &
+           .and. Input%Chan_On_375um == symbol%YES &
+           .and. Input%Chan_On_I4_374um == symbol%NO &
+           .and. Input%Chan_On_I5_114um == symbol%NO ) then
+             Fire_Flag = FIRE_TEST ( &
+                   Input%Bt_11um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_11um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Solzen(Elem_Idx,Line_Idx) )
           endif
 
           !--- City Flag of DNB Lunar Tests
           City_Flag = symbol%NO 
-          if (Chan_On_DNB == symbol%YES) then
-            if (Rad_Lunar(Elem_Idx,Line_Idx) > Radiance_Lunar_City_Thresh) City_Flag = symbol%YES
+          if (Input%Chan_On_DNB == symbol%YES) then
+            if (Input%Rad_Lunar(Elem_Idx,Line_Idx) > Radiance_Lunar_City_Thresh) City_Flag = symbol%YES
           endif
 
           !----------------------------------------------------------------------------------
@@ -811,241 +696,196 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
           class_loop: do Class_Idx = 1, N_class
 
-             Turn_Off_This_Test = symbol%NO
              Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Cond_Yes(Class_Idx) = 1.0 
+             Cond_No(Class_Idx) =  1.0
 
              select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
 
                     case("T_11") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Bt_11um(Elem_Idx,Line_Idx)
-                     !  if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
-                     !     Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-                     !     Classifier_Value(Class_Idx) = Bt_11um_LRC(Elem_Idx,Line_Idx)
-                     !  endif
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_max-T") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Bt_11um_Max(Elem_Idx,Line_Idx) - Bt_11um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Coastal_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Max(Elem_Idx,Line_Idx) - Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_std") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Bt_11um_Std(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Coastal_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Std(Elem_Idx,Line_Idx)
 
                     case("Emiss_tropo") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Emiss_11um_Tropo_Rtm(Elem_Idx,Line_Idx)
-                     !  if(Land_Class(Elem_Idx,Line_Idx) == symbol%DEEP_OCEAN .and.  &
-                     !     Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-                     !     Classifier_Value(Class_Idx) = Emiss_11um_Tropo_LRC(Elem_Idx,Line_Idx)
-                     !  endif
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx)
 
                     case("FMFT") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_12um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) =  &
-                           split_window_test(Bt_11um_Clear(Elem_Idx,Line_Idx), Bt_12um_Clear(Elem_Idx,Line_Idx), &
-                                             Bt_11um(Elem_Idx,Line_Idx), Bt_12um(Elem_Idx,Line_Idx))
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_12um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) =  &
+                           split_window_test(Input%Bt_11um_Clear(Elem_Idx,Line_Idx), Input%Bt_12um_Clear(Elem_Idx,Line_Idx), &
+                                             Input%Bt_11um(Elem_Idx,Line_Idx), Input%Bt_12um(Elem_Idx,Line_Idx))
 
                     case("Btd_11_67") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_67um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Bt_11um(Elem_Idx,Line_Idx) - Bt_67um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_67um(Elem_Idx,Line_Idx)
 
                     case("Bt_11_67_Covar") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_67um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                         Classifier_Value(Class_Idx) = Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx)
 
                     case("Btd_11_85") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_85um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_Btd_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Bt_11um(Elem_Idx,Line_Idx) - Bt_85um(Elem_Idx,Line_Idx)
-                       endif
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_85um == symbol%NO) cycle
+                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_85um(Elem_Idx,Line_Idx)
 
                     case("Emiss_375") 
-                       if (Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_375um == symbol%YES) then
-                          if (Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_375um == symbol%YES) then
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = emiss_375um_test( &
-                                         Emiss_375um(Elem_Idx,Line_Idx),Emiss_375um_Clear(Elem_Idx,Line_Idx))
-                       endif
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = emiss_375um_test( &
+                                         Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
                     case("Emiss_375_Day") 
-
-                       if (Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_375um == symbol%YES) then
-                          if (Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
-                       endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = emiss_375um_day_test( &
-                                         Emiss_375um(Elem_Idx,Line_Idx),Emiss_375um_Clear(Elem_Idx,Line_Idx))
-                       endif
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Day_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_375um == symbol%YES) then
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                      endif
+                      Classifier_Value(Class_Idx) = emiss_375um_day_test( &
+                                         Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
                     case("Emiss_375_Night") 
-                       if (Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Night_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_375um == symbol%YES) then
-                          if (Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Night_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_375um == symbol%YES) then
+                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
                        Classifier_Value(Class_Idx) = emiss_375um_night_test( &
-                                        Emiss_375um(Elem_Idx,Line_Idx),Emiss_375um_Clear(Elem_Idx,Line_Idx))
+                                        Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
                      case("Btd_375_11_Night") 
-                       if (Chan_On_11um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_375um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Solar_Contam_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Night_375_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Cold_Scene_375um_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_375um == symbol%YES) then
-                         if (Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (Solar_Contam_Flag == symbol%YES) cycle
+                       if (Night_375_Flag == symbol%NO) cycle
+                       if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_375um == symbol%YES) then
+                         if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Bt_375um(Elem_Idx,Line_Idx) - Bt_11um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Bt_375um(Elem_Idx,Line_Idx) - &
+                                                     Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("Ref_063_Day")
 
-                       if (Solzen_Local(Elem_Idx,Line_Idx) < 90.0) then
+                       if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
 
-                         if (Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Sfc_Idx == 4) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) =  &
-                             reflectance_gross_contrast_test(Ref_063um_Clear(Elem_Idx,Line_Idx),Ref_063um(Elem_Idx,Line_Idx))
-                         endif
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Oceanic_Glint_Flag == symbol%YES) cycle
+                         if (Forward_Scattering_Flag == symbol%YES) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Day_063_Flag == symbol%NO) cycle
+                         if (Sfc_Idx == 4) cycle
+                         Classifier_Value(Class_Idx) =  &
+                             reflectance_gross_contrast_test(Input%Ref_063um_Clear(Elem_Idx,Line_Idx), &
+                                                             Input%Ref_063um(Elem_Idx,Line_Idx))
 
                        else
 
-                         if (Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Night_Lunar_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Sfc_Idx == 4) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) =  &
-                             reflectance_gross_contrast_test(Ref_Lunar_Clear(Elem_Idx,Line_Idx),Ref_Lunar(Elem_Idx,Line_Idx))
-                         endif
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
+                         if (Lunar_Forward_Scattering_Flag == symbol%YES) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Night_Lunar_Flag == symbol%NO) cycle
+                         if (City_Flag == symbol%YES) cycle
+                         if (Sfc_Idx == 4) cycle
+                         Classifier_Value(Class_Idx) =  &
+                             reflectance_gross_contrast_test(Input%Ref_Lunar_Clear(Elem_Idx,Line_Idx), &
+                                                             Input%Ref_Lunar(Elem_Idx,Line_Idx))
 
                        endif
 
                     case("Ref_std")
-                       if (Solzen_Local(Elem_Idx,Line_Idx) < 90.0) then
-                         if (Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                          Classifier_Value(Class_Idx) = Ref_063um_Std(Elem_Idx,Line_Idx)
-                         endif
+                       if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Day_063_Spatial_Flag == symbol%NO) cycle 
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         Classifier_Value(Class_Idx) = Input%Ref_063um_Std(Elem_Idx,Line_Idx)
                        else
-                         if (Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Turn_Off_This_Test == symbol%NO) then
-                          Classifier_Value(Class_Idx) = Ref_Lunar_Std(Elem_Idx,Line_Idx)
-                         endif
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Spatial_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         if (City_Flag == symbol%YES) cycle  
+                         Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std(Elem_Idx,Line_Idx)
                        endif
 
                     case("Ref_063_Min_3x3_Day")
-                       if (Solzen_Local(Elem_Idx,Line_Idx) < 90.0) then
-                         if (Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
-                                       Ref_063um_Min(Elem_Idx,Line_Idx),Ref_063um(Elem_Idx,Line_Idx))
-                         endif
+                       if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
+                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (Day_063_Spatial_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
+                                       Input%Ref_063um_Min(Elem_Idx,Line_Idx),Input%Ref_063um(Elem_Idx,Line_Idx))
                        else
-                         if (Chan_On_DNB == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Lunar_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Night_Lunar_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                         if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (Coastal_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                         if (City_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES  
-                         if (Turn_Off_This_Test == symbol%NO) then
-                             Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
-                                       Ref_Lunar_Min(Elem_Idx,Line_Idx),Ref_Lunar(Elem_Idx,Line_Idx))
-                         endif
+                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (Lunar_Spatial_Flag == symbol%NO) cycle
+                         if (Night_Lunar_Flag == symbol%NO) cycle
+                         if (Mountain_Flag == symbol%YES) cycle
+                         if (Coastal_Flag == symbol%YES) cycle
+                         if (City_Flag == symbol%YES) cycle  
+                         Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
+                                       Input%Ref_Lunar_Min(Elem_Idx,Line_Idx),Input%Ref_Lunar(Elem_Idx,Line_Idx))
                        endif
 
                     case("Ref_Ratio_Day")
-                       if (Chan_On_063um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_086um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Spatial_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = reflectance_ratio_test( &
-                                         Ref_063um(Elem_Idx,Line_Idx),Ref_086um(Elem_Idx,Line_Idx))
-                       endif
+                       if (Input%Chan_On_063um == symbol%NO) cycle
+                       if (Input%Chan_On_086um == symbol%NO) cycle
+                       if (Day_063_Spatial_Flag == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = reflectance_ratio_test( &
+                                         Input%Ref_063um(Elem_Idx,Line_Idx),Input%Ref_086um(Elem_Idx,Line_Idx))
 
                     case("Ref_138_Day")
-                       if (Chan_On_138um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Mountain_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_138um == symbol%YES) then
-                         if (Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_138um == symbol%NO) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
+                       if (Day_063_Flag == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_138um == symbol%YES) then
+                         if (Input%Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Ref_138um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Ref_138um(Elem_Idx,Line_Idx)
 
                     case("Ref_160_Day")
-                       if (Chan_On_160um == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Forward_Scattering_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Day_063_Flag == symbol%NO) Turn_Off_This_Test = symbol%YES
-                       if (Oceanic_Glint_Flag == symbol%YES) Turn_Off_This_Test = symbol%YES
-                       if (Chan_On_160um == symbol%YES) then
-                         if (Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) Turn_Off_This_Test = symbol%YES
+                       if (Input%Chan_On_160um == symbol%NO) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
+                       if (Day_063_Flag == symbol%NO) cycle
+                       if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Input%Chan_On_160um == symbol%YES) then
+                         if (Input%Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        endif
-                       if (Turn_Off_This_Test == symbol%NO) then
-                        Classifier_Value(Class_Idx) = Ref_160um(Elem_Idx,Line_Idx)
-                       endif
+                       Classifier_Value(Class_Idx) = Input%Ref_160um(Elem_Idx,Line_Idx)
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
@@ -1054,27 +894,17 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
              !--- Turn off Classifiers if Chosen Metric is Missing
              if (Classifier_Value(Class_Idx) == Missing_Value_Real4) then
-                Turn_Off_This_Test = symbol%YES
+                cycle
              endif
 
 
-             !---- interpolate class conditional values
-             if (Turn_Off_This_Test == symbol%NO) then
-
-               !--- if classifier not off, compute needed conditional values
-               Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
+             !--- interpolate class conditional values
+             Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
                            Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
-               Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
+             Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
 
-               Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
-               Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
-
-             else
-
-               Cond_Yes(Class_Idx) = 1.0 
-               Cond_No(Class_Idx) =  1.0
-
-             endif
+             Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
+             Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
 
         enddo  class_loop 
 
@@ -1083,16 +913,16 @@ module NAIVE_BAYESIAN_CLOUD_MASK
         !--- compute prosterior probabilites for each pixel
         !-----------------------------------------------------------------------------------------------------------
         if (Prior_Yes(Sfc_Idx) == Missing_Value_Real4) then
-          Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
+          Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
           Posterior_Cld_Probability_By_Class = Missing_Value_Real4
         endif
 
         if (minval(Cond_Yes) == 0.0) then
-          Posterior_Cld_Probability(Elem_Idx,Line_Idx) = 0.0
+          Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) = 0.0
         elseif (minval(Cond_No) == 0.0) then
-          Posterior_Cld_Probability(Elem_Idx,Line_Idx) = 1.0
+          Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) = 1.0
         else
-          Posterior_Cld_Probability(Elem_Idx,Line_Idx) = &
+          Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) = &
                  (Prior_Yes(Sfc_Idx)*product(Cond_Yes)) / &
                  (Prior_Yes(Sfc_Idx)*product(Cond_Yes) +  &        
                  Prior_No(Sfc_Idx)*product(Cond_No))
@@ -1101,19 +931,25 @@ module NAIVE_BAYESIAN_CLOUD_MASK
         !------------------------------------------------------------------------------------------------------------
         !--- make a cloud mask
         !------------------------------------------------------------------------------------------------------------
-        Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLEAR
-        if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.9) then
-                Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLOUDY 
-        endif
-        if ((Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.5) .and. &
-            (Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.9)) then
-                Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLOUDY 
-        endif
-        if ((Posterior_Cld_Probability(Elem_Idx,Line_Idx) > 0.1) .and. &
-            (Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.5)) then
-                Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLEAR
-        endif
+        ! - based on type of srfc could be different thresholds
+        if (Sfc_Idx > 0) then
+           cld_mask_probab_thresh_lo_tmp = cld_mask_probab_thresh_lo ( Sfc_Idx )
+           cld_mask_probab_thresh_mi_tmp = cld_mask_probab_thresh_mi ( Sfc_Idx )
+           cld_mask_probab_thresh_hi_tmp = cld_mask_probab_thresh_hi ( Sfc_Idx )
 
+           Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLEAR
+           if (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= cld_mask_probab_thresh_hi_tmp) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLOUDY
+           endif
+           if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= cld_mask_probab_thresh_mi_tmp) .and. &
+               (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < cld_mask_probab_thresh_hi_tmp)) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLOUDY
+           endif
+           if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) > cld_mask_probab_thresh_lo_tmp) .and. &
+               (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < cld_mask_probab_thresh_mi_tmp)) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLEAR
+           endif
+        endif
 
         !------------------------------------------------------------------------------------------------------------
         !--- compute probabilities for each class alone - used for flags - not
@@ -1138,15 +974,15 @@ module NAIVE_BAYESIAN_CLOUD_MASK
           !-- set cloud flags
           Cld_Flag_Bit_Depth(Class_To_Test_Idx(Class_Idx)) = 2
           Cld_Flags(Class_To_Test_Idx(Class_Idx)) = symbol%CLOUDY
-          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.1) then
+          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_lo_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > 0.1 .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.5) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_lo_tmp .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_mi_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > 0.5 .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.9) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_mi_tmp .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_hi_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLOUDY
           endif
 
@@ -1170,17 +1006,17 @@ module NAIVE_BAYESIAN_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_std") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
-         !    Diagnostic_Array_1(Elem_Idx,Line_Idx) = Classifier_Value(Class_Idx)
-         !    Diagnostic_Array_2(Elem_Idx,Line_Idx) = Posterior_Cld_Probability_By_Class(Class_Idx)
-         !    Diagnostic_Array_3(Elem_Idx,Line_Idx) = Cld_Flags(Class_To_Test_Idx(Class_Idx))
-         !endif
+         !     if (present(Diag)) Diag%Array_1(Elem_Idx,Line_Idx) = Classifier_Value(Class_Idx)
+         !     if (present(Diag)) Diag%Array_2(Elem_Idx,Line_Idx) = Posterior_Cld_Probability_By_Class(Class_Idx)
+         !     if (present(Diag)) Diag%Array_3(Elem_Idx,Line_Idx) = Cld_Flags(Class_To_Test_Idx(Class_Idx))
+         ! endif
 
          enddo
 
          !-------------------------------------------------------------------
          ! Pack Bytes
          !-------------------------------------------------------------------
-         call PACK_BITS_INTO_BYTES(Cld_Flags,Cld_Flag_Bit_Depth,Cld_Flags_Packed(:,Elem_Idx,Line_Idx))
+         call PACK_BITS_INTO_BYTES(Cld_Flags,Cld_Flag_Bit_Depth,Output%Cld_Flags_Packed(:,Elem_Idx,Line_Idx))
 
         endif   !Do_By_Class_Loop
 
@@ -1190,7 +1026,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    enddo line_loop
 
    !--- on last segment, deallocate arrays
-   if (Segment_Number_Local == Num_Segments) then
+   if (Segment_Number_Local == Input%Num_Segments) then
 
        deallocate(Prior_Yes)
        deallocate(Prior_No)
@@ -1209,7 +1045,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
     endif
 
     !--- increment segment number
-    if (Segment_Number_Local == Num_Segments) then
+    if (Segment_Number_Local == Input%Num_Segments) then
        Segment_Number_Local = 1
     else
        Segment_Number_Local = Segment_Number_Local + 1
@@ -1323,7 +1159,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 !-----------------------------------------------------------------------------
 ! EUMETCAST Fire detection algorithm
 !-----------------------------------------------------------------------------
-  integer elemental function fire_test( t11, t375, t11_std, t375_std, solzen)
+  integer elemental function FIRE_TEST ( t11, t375, t11_std, t375_std, solzen)
 
      real, intent(in):: T11
      real, intent(in):: T375
@@ -1343,10 +1179,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
          
          !Day
          if (Solzen < EumetCAST_Fire_Day_Solzen_Thresh) then 
-            Bt_375um_Eumet_Fire_Thresh = bt_375um_Eumet_Fire_day_Thresh
-            Bt_Diff_Eumet_Fire_Thresh = bt_Diff_Eumet_Fire_day_Thresh
-            Stddev_11um_Eumet_Fire_Thresh = stddev_11um_Eumet_Fire_day_Thresh
-            Stddev_375um_Eumet_Fire_Thresh = stddev_375um_Eumet_Fire_day_Thresh
+            Bt_375um_Eumet_Fire_Thresh = Bt_375um_Eumet_Fire_day_Thresh
+            Bt_Diff_Eumet_Fire_Thresh = Bt_Diff_Eumet_Fire_day_Thresh
+            Stddev_11um_Eumet_Fire_Thresh = Stddev_11um_Eumet_Fire_Day_Thresh
+            Stddev_375um_Eumet_Fire_Thresh = Stddev_375um_Eumet_Fire_Day_Thresh
          endif
          
          !Night
@@ -1361,8 +1197,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
              (Solzen <= EumetCAST_Fire_Night_Solzen_Thresh)) then
              
              !linear fit day -> night
-             Bt_375um_Eumet_Fire_Thresh = ((-1.0)* solzen) + 380.0
-             Bt_Diff_Eumet_Fire_Thresh = ((-0.4)* solzen) + 36.0
+             Bt_375um_Eumet_Fire_Thresh = ((-1.0)* Solzen) + 380.0
+             Bt_Diff_Eumet_Fire_Thresh = ((-0.4)* Solzen) + 36.0
              
              !These two don't change, but 
              Stddev_11um_Eumet_Fire_Thresh = ((0.0)* solzen) + 1.0
@@ -1380,12 +1216,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK
          
      endif
 
-  end function fire_test
+  end function FIRE_TEST
 
   !-------------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------------
-  real elemental function split_window_test( t11_clear, t12_clear, t11, t12)
+  real elemental function SPLIT_WINDOW_TEST ( t11_clear, t12_clear, t11, t12)
 
      real, intent(in):: t11_clear
      real, intent(in):: t12_clear 
@@ -1398,9 +1234,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
      split_window_test = (t11 - t12) - split_window_test
 
-  end function split_window_test
+  end function SPLIT_WINDOW_TEST
 
-  real elemental function reflectance_gross_contrast_test(ref_clear,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function REFLECTANCE_GROSS_CONTRAST_TEST (ref_clear,ref)
      real, intent(in):: ref_clear
      real, intent(in):: ref
 
@@ -1409,9 +1246,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            reflectance_gross_contrast_test = ref - ref_clear
      endif
 
-  end function reflectance_gross_contrast_test
+  end function REFLECTANCE_GROSS_CONTRAST_TEST
 
-  real elemental function relative_visible_contrast_test(ref_min,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function RELATIVE_VISIBLE_CONTRAST_TEST (ref_min,ref)
      real, intent(in):: ref_min
      real, intent(in):: ref
 
@@ -1420,9 +1258,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            relative_visible_contrast_test = ref - ref_min
      endif
 
-  end function relative_visible_contrast_test
+  end function RELATIVE_VISIBLE_CONTRAST_TEST
 
-  real elemental function reflectance_ratio_test(ref_vis,ref_nir)
+  !-------------------------------------------------------------------------------------
+  real elemental function REFLECTANCE_RATIO_TEST (ref_vis,ref_nir)
      real, intent(in):: ref_vis
      real, intent(in):: ref_nir
 
@@ -1431,9 +1270,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            reflectance_ratio_test = ref_nir / ref_vis
      endif
 
-  end function reflectance_ratio_test
+  end function REFLECTANCE_RATIO_TEST
 
-  real elemental function nir_reflectance_gross_contrast_test(ref_clear,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function NIR_REFLECTANCE_GROSS_CONTRAST_TEST (ref_clear,ref)
      real, intent(in):: ref_clear
      real, intent(in):: ref
 
@@ -1442,9 +1282,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            nir_reflectance_gross_contrast_test = ref- ref_clear
      endif
 
-  end function nir_reflectance_gross_contrast_test
+  end function NIR_REFLECTANCE_GROSS_CONTRAST_TEST
 
-  real elemental function emiss_375um_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1453,9 +1294,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            emiss_375um_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_test
+  end function EMISS_375UM_TEST
 
-  real elemental function emiss_375um_day_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_DAY_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1464,9 +1306,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            emiss_375um_day_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_day_test
+  end function EMISS_375UM_DAY_TEST
 
-  real elemental function emiss_375um_night_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_NIGHT_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1476,7 +1319,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK
          ! emiss_375um_night_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_night_test
+  end function EMISS_375UM_NIGHT_TEST
+
 !------------------------------------------------------------------------
 ! subroutine PACK_BITS_INTO_BYTES(input_bits,bit_depth,output_bytes)
 !
@@ -1522,7 +1366,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 !-----------------------------------------------------------------------------------
 
 !--- This Version packs into one byte words
-   subroutine PACK_BITS_INTO_BYTES(input_bits,bit_depth,output_bytes)
+   subroutine PACK_BITS_INTO_BYTES (input_bits,bit_depth,output_bytes)
     integer(kind=int1), dimension(:), intent(in):: input_bits
     integer(kind=int1), dimension(:), intent(in):: bit_depth
     integer(kind=int1), dimension(:), intent(out):: output_bytes
@@ -1580,4 +1424,119 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
   end subroutine  PACK_BITS_INTO_BYTES
 
+!-----------------------------------------------------------------------------------
+   integer elemental function SMOKE_DETECTION ( &
+           ref_004 &
+         , ref_021 &
+         , ref_006_std &
+         , sat_zen &
+         , is_glint &
+         , land_class )
+
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_021
+      real , intent(in) :: ref_006_std
+      real , intent(in) :: sat_zen
+      integer(kind=INT1) , intent(in) :: is_glint
+      integer(kind=INT1) , intent(in) :: land_class
+
+      logical :: is_water_sfc
+
+      real, parameter :: pi = 3.14159265359
+      real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.1
+      real, parameter :: SMOKE_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: SMOKE_ST_DEV_LAND_GLINT_THRESH = 1.5
+      real, parameter :: SMOKE_ST_DEV_WATER_GLINT_THRESH = 0.05
+      real, parameter :: SMOKE_CAND_M11M1_REF_RATIO_THRESH = 0.25
+
+      real :: ref_ratio                                                                                                                                            
+      real :: st_dev_thresh_cand
+
+      smoke_detection = 0
+
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_021 < 0. .or. ref_006_std < 0.) then
+         return
+      end if
+
+      is_water_sfc = land_class == 0 .or. &
+         land_class >= 3 .and. land_class <= 7
+
+      ref_ratio = ref_021 / ref_004
+
+      if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH &
+                             * cos (sat_zen*pi/180.0) ) ) return
+
+      if ( is_glint == 1 .and. is_water_sfc )  &
+                st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint == 1 .and. .not. ( is_water_sfc ) ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
+      if ( is_glint == 0 .and. is_water_sfc ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
+      if ( is_glint == 0 .and. .not. ( is_water_sfc ) ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
+
+      if ( ref_006_std < st_dev_thresh_cand ) smoke_detection = 1
+
+   end function SMOKE_DETECTION
+
+!-----------------------------------------------------------------------------------
+   integer elemental function DUST_DETECTION ( &
+              ref_004 &
+            , ref_006 &
+            , ref_006_std &
+            , is_glint &
+            , land_class )
+
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_006
+      real , intent(in) :: ref_006_std
+      integer(kind=INT1) , intent(in) :: is_glint
+      integer(kind=INT1) , intent(in) :: land_class
+
+      logical :: is_water_sfc
+
+      real, parameter :: DUST_M1_REFL_THRESH = 0.8
+      real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
+      real, parameter :: DUST_ST_DEV_LAND_THRESH = 0.1
+      real, parameter :: DUST_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: DUST_ST_DEV_LAND_GLINT_THRESH = 0.7
+      real, parameter :: DUST_ST_DEV_WATER_GLINT_THRESH = 0.05
+
+      real :: st_dev_thresh_cand
+
+      dust_detection = 0
+
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_006 < 0. .or. ref_006_std <= 0.) then                                                                                             
+         return
+      end if
+
+      ! -- exclude water 
+      is_water_sfc = land_class == 0 .or. &
+         land_class >= 3 .and. land_class <= 7
+
+
+      if ( is_water_sfc .and. ( ref_004 >= DUST_M1_REFL_THRESH &
+        .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
+         return
+      end if
+
+      ! adjust thresholds
+      if ( is_glint == 1 .and. is_water_sfc ) &
+           st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint == 1 .and. .not. (is_water_sfc) ) &
+           st_dev_thresh_cand = DUST_ST_DEV_LAND_GLINT_THRESH
+      if ( is_glint == 0 .and. is_water_sfc ) &
+           st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
+      if ( is_glint == 0 .and. .not. (is_water_sfc) ) &
+           st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
+
+      if ( ref_006_std < st_dev_thresh_cand ) dust_detection = 1
+
+   end function DUST_DETECTION
+
+!-----------------------------------------------------------------------------------
+
 end module
+

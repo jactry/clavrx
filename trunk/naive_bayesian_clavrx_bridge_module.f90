@@ -85,7 +85,6 @@ contains
                                Input, &
                                Output, &
                                Diag)
-
    !--- nullify pointers within these data structures
    call NULL_INPUT()
    call NULL_OUTPUT()
@@ -222,7 +221,6 @@ contains
    ! set input pointers
    !============================================================================
    subroutine SET_INPUT()
-      Input%Bt_11um => ch(31)%Bt_Toa 
       Input%Num_Elem = Num_Pix
       Input%Num_Line = Num_Scans_Read
       Input%Num_Line_Max = Num_Scans_Per_Segment
@@ -300,7 +298,6 @@ contains
    ! nullify input pointers
    !============================================================================
    subroutine NULL_INPUT()
-      Input%Bt_11um => null()
       Input%Invalid_Data_Mask => null()
       Input%Snow_Class => null()
       Input%Land_Class => null() 

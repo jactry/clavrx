@@ -61,7 +61,7 @@ contains
                Delta_Lat = cos(Solar_azi(i,j)*Dtor)*distance_km (i,j) * Lat_Spacing_Per_m
                      
                call shadow_ind ( lat_pc(i,j) + delta_lat, lon_pc(i,j) + delta_lon , lat, lon , i,j, cloud_shadow) 
-               print*,i,j,count(cloud_shadow)
+               
             end do
          end do   
          
@@ -109,7 +109,7 @@ contains
       
       long_idx   = maxval (abs([ii,jj]))
       short_idx  = minval (ABS([ii,jj]))
-      print*,'===> ',ii,jj, diff_lat,diff_lon
+      
       do k = 1 , long_idx      
          
          

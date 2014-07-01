@@ -3798,7 +3798,7 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
      Total_Displacement = max(0.0,tan(Senzen(Elem_Idx,Line_Idx)*Dtor)* &
                                      (Zcld(Elem_Idx,Line_Idx) - Zsfc(Elem_Idx,Line_Idx)))
 
-     Lon_Spacing_Per_m = Lat_Spacing_Per_m * cos(Lat(Elem_Idx,Line_Idx)*Dtor)
+     Lon_Spacing_Per_m = Lat_Spacing_Per_m / cos(Lat(Elem_Idx,Line_Idx)*Dtor)
 
      Delta_Lon = sin(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lon_Spacing_Per_m
      Delta_Lat = cos(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lat_Spacing_Per_m

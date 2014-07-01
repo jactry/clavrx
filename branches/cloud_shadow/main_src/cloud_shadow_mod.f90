@@ -101,12 +101,16 @@ contains
       diff_lat = lat(i,j) -lat1
       diff_lon = lon(i,j) -lon1
       
+      ! diff_lon = ii * delta_lon_ii + jj * delta_lon_jj
+      ! diff_lat = ii * delta_lat_ii + jj * delta_lat_jj
+      !   solve for ii=> 
+      
       ii = (  diff_lon - ( delta_lon_jj * diff_lat /delta_lat_jj ) ) / &
           ( delta_lon_ii - (delta_lon_jj * delta_lat_ii / delta_lat_jj) )
       
       jj = ( diff_lat - ii * delta_lat_ii) / delta_lat_jj
       
-      
+      ! - find longer dim
       long_idx   = maxval (abs([ii,jj]))
       short_idx  = minval (ABS([ii,jj]))
       

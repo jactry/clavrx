@@ -135,7 +135,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 !====================================================================
  subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
    character(len=*), intent(out):: Cloud_Mask_Version
-   Cloud_Mask_Version = "$Id: naive_bayesian_cloud_mask_module.f90 86 2014-02-28 23:24:12Z heidinger $"
+   Cloud_Mask_Version = "$Id: $"
  end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================
@@ -575,7 +575,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK
            endif
           endif
 
-
           Smoke_Flag = symbol%NO
           Dust_Flag = symbol%NO
           Shadow_Flag = symbol%NO
@@ -623,7 +622,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK
              Cond_Yes(Class_Idx) = 1.0 
              Cond_No(Class_Idx) =  1.0
 
-             select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
+             select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("T_11") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -831,7 +830,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
         enddo  class_loop 
 
-
         !------------------------------------------------------------------------------------------------------------
         !--- compute prosterior probabilites for each pixel
         !-----------------------------------------------------------------------------------------------------------
@@ -937,8 +935,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
         endif   !Do_By_Class_Loop
 
-
-        
       enddo elem_loop
    enddo line_loop
 

@@ -1406,7 +1406,10 @@
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
                   
                   call CLOUD_SHADOW_RETR ( zc_acha , solaz, solzen, lat, lon, lat_pc,lon_pc , cloud_shadow)
-
+                  
+                  where ( cloud_shadow )  
+                     cld_mask = 14
+                  end where
                end if
                
 

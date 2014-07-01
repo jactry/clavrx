@@ -35,6 +35,9 @@ contains
       
       integer :: i,j
       real :: delta_lon, delta_lat
+      integer :: i_dim, j_dim
+      
+     
       
       cloud_shadow = .false.
       allocate ( distance_km, source = cloud_height) 
@@ -42,40 +45,87 @@ contains
       
       distance_km = cloud_height * tan (solar_zenith * PI/180.)
       
-      Lon_Spacing_Per_m = LAT_SPACING_PER_M * cos ( Lat_pc * PI/180. )
+      Lon_Spacing_Per_m = LAT_SPACING_PER_M / cos ( Lat_pc * PI/180. )
       
-      
-         do i = 1, 100
-            do j = 1,100
+      i_dim = size ( cloud_height, dim=1)
+      j_dim = size ( cloud_height, dim=2)
+         do i = 2 , i_dim - 1
+            do j = 2 ,j_dim - 1
                if ( cloud_height (i,j) <= 0. ) cycle
-               print*,'===================  ',i,j,'  ===================='   
-               print*,distance_km(i,j), solar_zenith (i,j), cloud_height(i,j)
-              
+               
+               ! are there clear pixels around at all?
+               if ( count ( cloud_height (i-1:i+1,j-1:j+1) > 0. ) == 9 ) cycle
+
                Delta_Lon = sin(Solar_azi(i,j)*Dtor)*distance_km(i,j) * Lon_Spacing_Per_m (i,j)
                Delta_Lat = cos(Solar_azi(i,j)*Dtor)*distance_km (i,j) * Lat_Spacing_Per_m
-               print*,delta_lon,delta_lat
-               print*,lat(i,j),lat_pc(i,j),lat_pc(i,j) + delta_lat
-               print*,lon(i,j),lon_pc(i,j),lon_pc(i,j) + delta_lon
-               !print*,lon(i-5:i+5,j-5:j+5)
-               !print*,lat(i-5:i+5,j-5:j+5)
+                     
+               call shadow_ind ( lat_pc(i,j) + delta_lat, lon_pc(i,j) + delta_lon , lat, lon , i,j, cloud_shadow) 
+             
             end do
          end do   
-      stop
+         
+         deallocate ( distance_km)
+         deallocate ( lon_spacing_per_m)
+      
    
    end subroutine cloud_shadow_retr
    
    
-   function latlon2pixel ( lat0,lon0,lat , lon , i, j )
-      real, intent(in) :: lat0
-      real, intent(in) :: lon0
+   subroutine shadow_ind ( lat1,lon1, lat , lon , i, j, shad_arr )
+      real, intent(in) :: lat1
+      real, intent(in) :: lon1
       real, intent(in) :: lat(:,:)
       real, intent(in) :: lon(:,:)
-      integer, intent(out) :: i
-      integer, intent(out) :: j
       
+      logical, intent(out) ::shad_arr (:,:)
+      integer :: i
+      integer :: j
+      
+      real :: pixel_size_lat (2)
+      real :: pixel_size_lon (2)
+      integer :: ii,jj
+      real :: diff_lat , diff_lon
+      real :: delta_lat_ii , delta_lat_jj
+      real :: delta_lon_ii , delta_lon_jj
+      real :: long_idx,short_idx
+      integer :: short_idx_arr
       
    
-   end function latlon2pixel
+      
+      delta_lat_ii = lat(2,2) - lat(1,2)
+      delta_lon_ii = lon(2,2) - lon(1,2)
+      delta_lat_jj = lat(2,2) - lat(2,1)
+      delta_lon_jj = lon(2,2) - lon(2,1)
+      
+      diff_lat = lat(i,j) -lat1
+      diff_lon = lon(i,j) -lon1
+      
+      ii = (  diff_lon - ( delta_lon_jj * diff_lat /delta_lat_jj ) ) / &
+          ( delta_lon_ii - (delta_lon_jj * delta_lat_ii / delta_lat_jj) )
+      
+      jj = ( diff_lat - ii * delta_lat_ii) / delta_lat_jj
+      
+      
+      long_idx   = maxval ([ii,jj])
+      short_idx  = minval ([ii,jj])
+      do k = 1 , long_idx      
+         short_idx_arr = NINT ( short_idx * k / long_idx  ) 
+         
+         if (ii == long_idx ) then
+            shad_arr(i+ k, j+ short_idx_arr) = .true.
+         else 
+            shad_arr(i+short_idx_arr,j+k) = .true.
+         endif      
+      end do
+      
+      
+    
+      
+   
+   end subroutine  shadow_ind
+   
+   
+   
    
 
 end module cloud_shadow_mod

@@ -49,6 +49,7 @@ contains
       
       i_dim = size ( cloud_height, dim=1)
       j_dim = size ( cloud_height, dim=2)
+      print*,i_dim,j_dim
          do i = 2 , i_dim - 1
             do j = 2 ,j_dim - 1
                if ( cloud_height (i,j) <= 0. ) cycle
@@ -60,7 +61,7 @@ contains
                Delta_Lat = cos(Solar_azi(i,j)*Dtor)*distance_km (i,j) * Lat_Spacing_Per_m
                      
                call shadow_ind ( lat_pc(i,j) + delta_lat, lon_pc(i,j) + delta_lon , lat, lon , i,j, cloud_shadow) 
-             
+               print*,i,j,count(cloud_shadow)
             end do
          end do   
          
@@ -77,7 +78,7 @@ contains
       real, intent(in) :: lat(:,:)
       real, intent(in) :: lon(:,:)
       
-      logical, intent(out) ::shad_arr (:,:)
+      logical, intent(inout) ::shad_arr (:,:)
       integer :: i
       integer :: j
       
@@ -106,15 +107,20 @@ contains
       jj = ( diff_lat - ii * delta_lat_ii) / delta_lat_jj
       
       
-      long_idx   = maxval ([ii,jj])
-      short_idx  = minval ([ii,jj])
+      long_idx   = maxval (abs([ii,jj]))
+      short_idx  = minval (ABS([ii,jj]))
+      print*,'===> ',ii,jj, diff_lat,diff_lon
       do k = 1 , long_idx      
-         short_idx_arr = NINT ( short_idx * k / long_idx  ) 
          
-         if (ii == long_idx ) then
-            shad_arr(i+ k, j+ short_idx_arr) = .true.
+         
+         if (abs(ii) == long_idx ) then
+            short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
+            shad_arr(i+ sign(k,ii), j+ short_idx_arr) = .true.
+            shad_arr(i+ sign(k,ii), j+ short_idx_arr-1) = .true.
          else 
-            shad_arr(i+short_idx_arr,j+k) = .true.
+            short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
+            shad_arr(i+short_idx_arr,j + sign ( k,jj) )= .true.
+            shad_arr(i+short_idx_arr-1,j + sign(k,jj) )= .true.
          endif      
       end do
       

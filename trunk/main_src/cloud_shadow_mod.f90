@@ -1,7 +1,8 @@
 ! $Header:$
 !
+!
+!
 module cloud_shadow_mod
-
 
 contains
 
@@ -43,9 +44,9 @@ contains
       allocate ( distance_km, source = cloud_height) 
       allocate (    Lon_Spacing_Per_m, source = cloud_height)
       
-      distance_km = cloud_height * tan (solar_zenith * PI/180.)
+      distance_km = cloud_height * tan (solar_zenith * DTOR )
       
-      Lon_Spacing_Per_m = LAT_SPACING_PER_M / cos ( Lat_pc * PI/180. )
+      Lon_Spacing_Per_m = LAT_SPACING_PER_M / cos ( Lat_pc * DTOR )
       
       i_dim = size ( cloud_height, dim=1)
       j_dim = size ( cloud_height, dim=2)
@@ -71,16 +72,27 @@ contains
    
    end subroutine cloud_shadow_retr
    
-   
+   !  
+   !  input:
+   !     lat1,lon1 : the lon/lat values of maximal shadow
+   !
+   !     lat , lon : lon/lat coordinate array
+   !    
+   !      i , j : the cloud pixel for lat/lon array
+   !
+   !  output : 
+   !      shad_arr: logical array with same size as lat, lon
+   !
+   !
    subroutine shadow_ind ( lat1,lon1, lat , lon , i, j, shad_arr )
       real, intent(in) :: lat1
       real, intent(in) :: lon1
       real, intent(in) :: lat(:,:)
       real, intent(in) :: lon(:,:)
       
-      logical, intent(inout) ::shad_arr (:,:)
-      integer :: i
-      integer :: j
+      logical , intent(inout) ::shad_arr (:,:)
+      integer , intent(in) :: i
+      integer , intent(in) :: j
       
       real :: pixel_size_lat (2)
       real :: pixel_size_lon (2)
@@ -101,9 +113,10 @@ contains
       diff_lat = lat(i,j) -lat1
       diff_lon = lon(i,j) -lon1
       
+      !     use of these equations:
       ! diff_lon = ii * delta_lon_ii + jj * delta_lon_jj
       ! diff_lat = ii * delta_lat_ii + jj * delta_lat_jj
-      !   solve for ii=> 
+      !   solve for ii => 
       
       ii = (  diff_lon - ( delta_lon_jj * diff_lat /delta_lat_jj ) ) / &
           ( delta_lon_ii - (delta_lon_jj * delta_lat_ii / delta_lat_jj) )
@@ -111,31 +124,26 @@ contains
       jj = ( diff_lat - ii * delta_lat_ii) / delta_lat_jj
       
       ! - find longer dim
-      long_idx   = maxval (abs([ii,jj]))
+      !
+      long_idx   = maxval (ABS([ii,jj]))
       short_idx  = minval (ABS([ii,jj]))
       
-      do k = 1 , long_idx      
-         
-         
+      ! - this fills all pixel from lat1 to lat(i,j)/lon(i,j)  
+      do k = 1 , long_idx        
          if (abs(ii) == long_idx ) then
             short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
-            shad_arr(i+ sign(k,ii), j+ short_idx_arr) = .true.
-            shad_arr(i+ sign(k,ii), j+ short_idx_arr-1) = .true.
+            shad_arr(i + sign(k,ii), j + short_idx_arr)   = .true.
+            shad_arr(i + sign(k,ii), j + short_idx_arr-1) = .true.
          else 
             short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
-            shad_arr(i+short_idx_arr,j + sign ( k,jj) )= .true.
-            shad_arr(i+short_idx_arr-1,j + sign(k,jj) )= .true.
+            shad_arr(i+short_idx_arr,j + sign ( k,jj) ) = .true.
+            shad_arr(i+short_idx_arr-1,j + sign(k,jj) ) = .true.
          endif      
       end do
       
-      
-    
-      
+
    
    end subroutine  shadow_ind
-   
-   
-   
    
 
 end module cloud_shadow_mod

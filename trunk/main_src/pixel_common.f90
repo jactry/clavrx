@@ -583,6 +583,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
+  logical, allocatable, public :: cloud_shadow ( :,:)
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
@@ -1963,6 +1964,7 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Coast_Mask(dim1,dim2))
    allocate(Coast_Mask_Nwp(dim1,dim2))
    allocate(Glint_Mask(dim1,dim2))
+   allocate ( cloud_shadow (dim1,dim2))
    allocate(Glint_Mask_Lunar(dim1,dim2))
    allocate(Desert_Mask(dim1,dim2))
    allocate(City_Mask(dim1,dim2))
@@ -1984,6 +1986,7 @@ subroutine RESET_SURFACE_ARRAYS
    Coast = Missing_Value_Int1
    Coast_Mask = Missing_Value_Int1
    Coast_Mask_Nwp = Missing_Value_Int1
+   cloud_shadow = .false.
    Glint_Mask = Missing_Value_Int1
    Glint_Mask_Lunar = Missing_Value_Int1
    Desert_Mask = Missing_Value_Int1
@@ -2006,6 +2009,7 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Coast)
    deallocate(Coast_Mask)
    deallocate(Coast_Mask_Nwp)
+   deallocate ( Cloud_Shadow)
    deallocate(Glint_Mask)
    deallocate(Glint_Mask_Lunar)
    deallocate(Desert_Mask)

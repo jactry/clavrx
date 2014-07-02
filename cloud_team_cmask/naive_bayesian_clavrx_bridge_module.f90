@@ -225,15 +225,20 @@ contains
       Input%Num_Line = Num_Scans_Read
       Input%Num_Line_Max = Num_Scans_Per_Segment
       Input%Invalid_Data_Mask => Bad_Pixel_Mask
+      Input%Chan_On_041um = Chan_On_Flag_Default(8)
       Input%Chan_On_063um = Chan_On_Flag_Default(1)
       Input%Chan_On_086um = Chan_On_Flag_Default(2)
       Input%Chan_On_138um = Chan_On_Flag_Default(26)
       Input%Chan_On_160um = Chan_On_Flag_Default(6)
-      Input%Chan_On_375um =Chan_On_Flag_Default(20)
+      Input%Chan_On_213um = Chan_On_Flag_Default(7)
+      Input%Chan_On_375um = Chan_On_Flag_Default(20)
       Input%Chan_On_67um = Chan_On_Flag_Default(27)
       Input%Chan_On_85um = Chan_On_Flag_Default(29)
-      Input%Chan_On_11um =Chan_On_Flag_Default(31)
+      Input%Chan_On_11um = Chan_On_Flag_Default(31)
       Input%Chan_On_12um = Chan_On_Flag_Default(32)
+      Input%Chan_On_I1_064um = Chan_On_Flag_Default(37)
+      Input%Chan_On_I4_374um = Chan_On_Flag_Default(40)
+      Input%Chan_On_I5_114um = Chan_On_Flag_Default(41)
       Input%Chan_On_DNB = Chan_On_Flag_Default(42)
       Input%Snow_Class => Snow
       Input%Land_Class => Land
@@ -247,6 +252,7 @@ contains
       Input%Lunzen => Lunzen
       Input%Lat => Lat
       Input%Lon => Lon
+      Input%Ref_041um => ch(8)%Ref_Toa
       Input%Ref_063um => ch(1)%Ref_Toa
       Input%Ref_063um_Clear => ch(1)%Ref_Toa_Clear
       Input%Ref_063um_Std => Ref_Ch1_Std_3x3
@@ -255,6 +261,7 @@ contains
       Input%Ref_138um => ch(26)%Ref_Toa
       Input%Ref_160um => ch(6)%Ref_Toa
       Input%Ref_160um_Clear => ch(6)%Ref_Toa_Clear
+      Input%Ref_213um => ch(7)%Ref_Toa
       Input%Bt_375um => ch(20)%Bt_Toa
       Input%Bt_375um_Std => Bt_Ch20_Std_3x3
       Input%Emiss_375um =>  Ems_Ch20_Median_3x3
@@ -268,6 +275,9 @@ contains
       Input%Emiss_11um_Tropo => ch(31)%Emiss_Tropo
       Input%Bt_12um => ch(32)%Bt_Toa
       Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear
+      Input%Ref_I1_064um_Std => Ref_Uni_ChI1
+      Input%Bt_I4_374um_Std => Bt_Uni_ChI4
+      Input%Bt_I5_114um_Std => Bt_Uni_ChI5
       Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5
       Input%Sst_Anal_Uni => Sst_Anal_Uni
       Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss
@@ -311,6 +321,7 @@ contains
       Input%Lunzen => null()
       Input%Lat => null()
       Input%Lon => null()
+      Input%Ref_041um => null()
       Input%Ref_063um => null()
       Input%Ref_063um_Clear => null()
       Input%Ref_063um_Std => null()
@@ -319,6 +330,7 @@ contains
       Input%Ref_138um => null()
       Input%Ref_160um => null()
       Input%Ref_160um_Clear => null()
+      Input%Ref_213um => null()
       Input%Bt_375um =>  null()
       Input%Bt_375um_Std => null()
       Input%Emiss_375um => null()
@@ -332,6 +344,9 @@ contains
       Input%Emiss_11um_Tropo => null()
       Input%Bt_12um => null()
       Input%Bt_12um_Clear => null()
+      Input%Ref_I1_064um_Std => null()
+      Input%Bt_I4_374um_Std => null()
+      Input%Bt_I5_114um_Std => null()
       Input%Bt_11um_Bt_67um_Covar => null() 
       Input%Sst_Anal_Uni => null()
       Input%Emiss_Sfc_375um => null()

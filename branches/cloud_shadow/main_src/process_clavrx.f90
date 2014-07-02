@@ -1408,7 +1408,7 @@
                   call CLOUD_SHADOW_RETR ( zc_acha , solaz, solzen, lat, lon, lat_pc,lon_pc , cloud_shadow)
                   
                   where ( cloud_shadow .and. cld_mask == 0 )  
-                     cld_mask = 4
+                     Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (  Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
                   end where
                end if
                

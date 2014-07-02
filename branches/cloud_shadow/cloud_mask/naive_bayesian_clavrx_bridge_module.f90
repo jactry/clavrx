@@ -1,9 +1,9 @@
-!$Id$
+!$Id: naive_bayesian_clavrx_bridge_module.f90 472 2014-06-30 14:54:15Z awalther $
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
 ! NAME: naive_bayesian_clavrx_bridge_module.f90 (src)
-!       AWG_CLOUD_BAYES_BRIDGE (program)
+!       CLOUD_MASK_NAIVE_BAYES_BRIDGE (program)
 !
 ! PURPOSE: 
 !
@@ -172,17 +172,18 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
    use FILE_TOOLS, only: &
         FILE_TEST
 
-   public :: AWG_CLOUD_BAYES_BRIDGE
+   public :: CLOUD_MASK_NAIVE_BAYES_BRIDGE
    
 
 contains
    !----------------------------------------------------------------------
    !
    !---------------------------------------------------------------------- 
-   subroutine AWG_CLOUD_BAYES_BRIDGE()
+   subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE(segment_number)
  
       implicit none
-      
+     
+      integer, intent(in), optional:: segment_number 
      
       type ( Cloud_Mask_Input_Type ) :: mask_inp
       type ( Cloud_Mask_Diagnostic ) :: diag
@@ -383,7 +384,7 @@ contains
       Cloud_Mask_Version = vers % cloud_mask_version_id
       Cloud_Mask_Thresholds_Version = vers % cloud_mask_thresh_version_id
        
-   end subroutine AWG_CLOUD_BAYES_BRIDGE
+   end subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE
 
 
 !------------------------------------------------------------------------------------------------------------

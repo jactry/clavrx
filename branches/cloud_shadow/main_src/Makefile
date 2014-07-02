@@ -325,7 +325,7 @@ sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes
 endif
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o naive_bayesian_cloud_mask_module.o
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
-naive_bayesian_clavrx_bridge_module.o: naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o file_tools.o
+naive_bayesian_clavrx_bridge_module.o: $(CMASK)/naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o file_tools.o
 
 naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/naive_bayesian_cloud_mask_module.f90

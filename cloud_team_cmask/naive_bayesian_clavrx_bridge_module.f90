@@ -32,7 +32,7 @@ module naive_bayesian_clavrx_bridge_module
    use CONSTANTS
    use PIXEL_COMMON
    use NUMERICAL_ROUTINES
-   use NAIVE_BAYESIAN_CLOUD_MASK
+   use NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
    implicit none
 
@@ -52,7 +52,6 @@ module naive_bayesian_clavrx_bridge_module
    type(mask_output), private :: Output   
    type(diag_output), private :: Diag  
    type(symbol_naive_bayesian),private :: symbol
-   type ( et_cloudiness_class_type), public :: ET_cloudiness_class
    
 contains
 !----------------------------------------------------------------------
@@ -74,7 +73,6 @@ contains
    Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
 
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
-   call SET_ET_CLOUDINESS_CLASS()
    call SET_SYMBOL()
    call SET_INPUT()
    call SET_OUTPUT()
@@ -177,23 +175,15 @@ contains
    
    end function COVARIANCE_LOCAL
 
-   subroutine SET_ET_CLOUDINESS_CLASS()
-      et_cloudiness_class%SPACE = 10
-      et_cloudiness_class%MISSING = -128
-      et_cloudiness_class%CLOUDY = 3
-      et_cloudiness_class%PROB_CLOUDY = 2
-      et_cloudiness_class%PROB_CLEAR = 1
-      et_cloudiness_class%CLEAR = 0
-   end subroutine SET_ET_CLOUDINESS_CLASS
    !============================================================================
    ! set symbols
    !============================================================================
    subroutine SET_SYMBOL()
 
-      symbol%CLOUDY = et_cloudiness_class%CLOUDY
-      symbol%PROB_CLOUDY = et_cloudiness_class%PROB_CLOUDY
-      symbol%PROB_CLEAR = et_cloudiness_class%PROB_CLEAR
-      symbol%CLEAR = et_cloudiness_class%CLEAR
+      symbol%CLOUDY = sym%CLOUDY
+      symbol%PROB_CLOUDY = sym%PROB_CLOUDY
+      symbol%PROB_CLEAR = sym%PROB_CLEAR
+      symbol%CLEAR = sym%CLEAR
 
       symbol%NO = sym%NO
       symbol%YES = sym%YES

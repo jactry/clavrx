@@ -63,7 +63,7 @@
 ! 36           2            55-56     7    Ref_160_Day     (NIRREF)
 !
 !----------------------------------------------------------------------
-module NAIVE_BAYESIAN_CLOUD_MASK
+module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
  implicit none
  private
@@ -128,6 +128,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK
 
  !--- set thresholds and algorithm specific constants
  include 'naive_bayesian_cloud_mask.inc'
+
+
+ type ( ET_cloudiness_class_type), public :: ET_cloudiness_class
 
  contains
 !====================================================================
@@ -382,6 +385,14 @@ module NAIVE_BAYESIAN_CLOUD_MASK
    if (Segment_Number_Local == 1) then
        call READ_NAIVE_BAYES(Ancil_Data_Path,Naive_Bayes_File_Name, &
                              symbol,Output%Cloud_Mask_Bayesian_Flag)
+
+        !--- set up enumerated types for cloud mask values
+        ET_cloudiness_class%SPACE = 10
+        ET_cloudiness_class%MISSING = -128
+        ET_cloudiness_class%CLOUDY = symbol%CLOUDY
+        ET_cloudiness_class%PROB_CLOUDY = symbol%PROB_CLOUDY
+        ET_cloudiness_class%PROB_CLEAR = symbol%PROB_CLEAR
+        ET_cloudiness_class%CLEAR = symbol%CLEAR
 
         !---set up Classifier to Test Mapping
         do Class_Idx = 1, N_Class
@@ -854,15 +865,15 @@ module NAIVE_BAYESIAN_CLOUD_MASK
         !------------------------------------------------------------------------------------------------------------
         Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLEAR
         if (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.9) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLOUDY 
+                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%CLOUDY 
         endif
         if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.5) .and. &
             (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.9)) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLOUDY 
+                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%PROB_CLOUDY 
         endif
         if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) > 0.1) .and. &
             (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.5)) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLEAR
+                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%PROB_CLEAR
         endif
 
 

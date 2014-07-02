@@ -171,7 +171,8 @@ clavrxorb_objs = process_clavrx.o \
                  fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
-                 viewing_geometry_module.o 
+                 viewing_geometry_module.o \
+                 cloud_shadow_mod.o 
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -309,6 +310,7 @@ sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
+cloud_shadow_mod.o:cloud_shadow_mod.f90
 rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o
 
 ifdef hdf5libs
@@ -334,7 +336,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               land_sfc_properties.o file_utility.o level2.o \
               awg_cloud_height.o cloud_height_routines.o dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
-              sort_module.o calibration_constants.o algorithm_constants.o acha_clavrx_bridge_mod.o naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
+              sort_module.o calibration_constants.o algorithm_constants.o acha_clavrx_bridge_mod.o cloud_shadow_mod.o naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \

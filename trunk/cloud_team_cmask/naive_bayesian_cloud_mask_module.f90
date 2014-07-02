@@ -1,4 +1,4 @@
-!$Id:$
+!$Id: naive_bayesian_cloud_mask_module.f90 482 2014-07-01 20:18:37Z dbotambekov $
 !----------------------------------------------------------------------
 ! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
 ! 
@@ -78,7 +78,9 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
  private:: emiss_375um_day_test
  private:: emiss_375um_night_test
  private:: PACK_BITS_INTO_BYTES
- private:: fire_test
+ private:: FIRE_TEST
+ private:: SMOKE_DETECTION
+ private:: DUST_DETECTION
  public:: CLOUD_MASK_NAIVE_BAYES
  public:: SET_CLOUD_MASK_VERSION
  public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
@@ -138,7 +140,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 !====================================================================
  subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
    character(len=*), intent(out):: Cloud_Mask_Version
-   Cloud_Mask_Version = "$Id: $"
+   Cloud_Mask_Version = "$Id: naive_bayesian_cloud_mask_module.f90 482 2014-07-01 20:18:37Z dbotambekov $"
  end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================
@@ -372,6 +374,13 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
    real (kind=real4):: Airmass
    integer, parameter:: Spare_Value = 0
    
+   ! --- set cloud mask probability thresholds based on sfc type
+   real, dimension (7) :: cld_mask_probab_thresh_lo = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+   real, dimension (7) :: cld_mask_probab_thresh_mi = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+   real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+   real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, &
+           cld_mask_probab_thresh_hi_tmp
+
    !------------------------------------------------------------------------------------------
    !---  begin executable code
    !------------------------------------------------------------------------------------------
@@ -586,17 +595,86 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            endif
           endif
 
-          Smoke_Flag = symbol%NO
+          ! --- check if DUST only for day time
+          ! --- use VIIRS I1 band (ch37) if available
           Dust_Flag = symbol%NO
-          Shadow_Flag = symbol%NO
-          Fire_Flag = symbol%NO
+          if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
+             if (   Input%Chan_On_063um == symbol%YES &
+              .and. Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_I1_064um == symbol%YES ) then
+                Dust_Flag = DUST_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_I1_064um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            else if ( Input%Chan_On_063um == symbol%YES &
+             .and. Input%Chan_On_041um == symbol%YES &
+             .and. Input%Chan_On_I1_064um == symbol%NO ) then
+                Dust_Flag = DUST_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )                                                                                                                
+            end if
+          end if
 
-          if (Input%Chan_On_11um == symbol%YES .and. Input%Chan_On_375um == symbol%YES) then
-             Fire_Flag = fire_test(Input%Bt_11um(Elem_Idx,Line_Idx), &
-                                   Input%Bt_375um(Elem_Idx,Line_Idx), &
-                                   Input%Bt_11um_Std(Elem_Idx,Line_Idx), &
-                                   Input%Bt_375um_Std(Elem_Idx,Line_Idx), &
-                                   Input%Solzen(Elem_Idx,Line_Idx))
+          ! --- check if SMOKE only for day time
+          ! --- use VIIRS I1 band (ch37) if available
+          Smoke_Flag = symbol%NO
+          if ( Input%Solzen(Elem_Idx,Line_Idx) <= 85. ) then
+             if (   Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_213um == symbol%YES &
+              .and. Input%Chan_On_I1_064um == symbol%YES ) then
+                Smoke_Flag = SMOKE_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_213um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_I1_064um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Senzen(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            else if ( Input%Chan_On_041um == symbol%YES &
+              .and. Input%Chan_On_213um == symbol%YES &
+              .and. Input%Chan_On_063um == symbol%YES &
+              .and. Input%Chan_On_I1_064um == symbol%NO ) then
+                Smoke_Flag = SMOKE_DETECTION ( &
+                    Input%Ref_041um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_213um(Elem_Idx,Line_Idx) &
+                  , Input%Ref_063um_Std(Elem_Idx,Line_Idx) &
+                  , Input%Senzen(Elem_Idx,Line_Idx) &
+                  , Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx) &
+                  , Input%Land_Class(Elem_Idx,Line_Idx) )
+            end if
+          end if
+
+          ! --- check if CLOUD SHADOW
+          ! - TO ADD
+          Shadow_Flag = symbol%NO
+
+          ! --- check if FIRE
+          ! --- use VIIRS I4 & I5 band (ch40 & 41) if available
+          Fire_Flag = symbol%NO
+          if (   Input%Chan_On_11um == symbol%YES &
+           .and. Input%Chan_On_375um == symbol%YES &
+           .and. Input%Chan_On_I4_374um == symbol%YES &
+           .and. Input%Chan_On_I5_114um == symbol%YES ) then
+             Fire_Flag = FIRE_TEST ( &
+                   Input%Bt_11um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_I5_114um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Bt_I4_374um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Solzen(Elem_Idx,Line_Idx) )
+          else if ( Input%Chan_On_11um == symbol%YES &
+           .and. Input%Chan_On_375um == symbol%YES &
+           .and. Input%Chan_On_I4_374um == symbol%NO &
+           .and. Input%Chan_On_I5_114um == symbol%NO ) then
+             Fire_Flag = FIRE_TEST ( &
+                   Input%Bt_11um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um(Elem_Idx,Line_Idx) &
+                 , Input%Bt_11um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Bt_375um_Std(Elem_Idx,Line_Idx) &
+                 , Input%Solzen(Elem_Idx,Line_Idx) )
           endif
 
           !--- City Flag of DNB Lunar Tests
@@ -633,7 +711,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
              Cond_Yes(Class_Idx) = 1.0 
              Cond_No(Class_Idx) =  1.0
 
-             select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
+             select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
 
                     case("T_11") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -841,6 +919,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
         enddo  class_loop 
 
+
         !------------------------------------------------------------------------------------------------------------
         !--- compute prosterior probabilites for each pixel
         !-----------------------------------------------------------------------------------------------------------
@@ -863,19 +942,25 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
         !------------------------------------------------------------------------------------------------------------
         !--- make a cloud mask
         !------------------------------------------------------------------------------------------------------------
-        Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLEAR
-        if (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.9) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%CLOUDY 
-        endif
-        if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= 0.5) .and. &
-            (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.9)) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%PROB_CLOUDY 
-        endif
-        if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) > 0.1) .and. &
-            (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < 0.5)) then
-                Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = ET_cloudiness_class%PROB_CLEAR
-        endif
+        ! - based on type of srfc could be different thresholds
+        if (Sfc_Idx > 0) then
+           cld_mask_probab_thresh_lo_tmp = cld_mask_probab_thresh_lo ( Sfc_Idx )
+           cld_mask_probab_thresh_mi_tmp = cld_mask_probab_thresh_mi ( Sfc_Idx )
+           cld_mask_probab_thresh_hi_tmp = cld_mask_probab_thresh_hi ( Sfc_Idx )
 
+           Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLEAR
+           if (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= cld_mask_probab_thresh_hi_tmp) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%CLOUDY
+           endif
+           if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) >= cld_mask_probab_thresh_mi_tmp) .and. &
+               (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < cld_mask_probab_thresh_hi_tmp)) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLOUDY
+           endif
+           if ((Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) > cld_mask_probab_thresh_lo_tmp) .and. &
+               (Output%Posterior_Cld_Probability(Elem_Idx,Line_Idx) < cld_mask_probab_thresh_mi_tmp)) then
+                   Output%Cld_Mask_Bayes(Elem_Idx,Line_Idx) = symbol%PROB_CLEAR
+           endif
+        endif
 
         !------------------------------------------------------------------------------------------------------------
         !--- compute probabilities for each class alone - used for flags - not
@@ -900,15 +985,15 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
           !-- set cloud flags
           Cld_Flag_Bit_Depth(Class_To_Test_Idx(Class_Idx)) = 2
           Cld_Flags(Class_To_Test_Idx(Class_Idx)) = symbol%CLOUDY
-          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.1) then
+          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_lo_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > 0.1 .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.5) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_lo_tmp .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_mi_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > 0.5 .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= 0.9) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_mi_tmp .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_hi_tmp) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLOUDY
           endif
 
@@ -931,11 +1016,11 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_tropo") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_std") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_max-T") then
-          if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
-              if (present(Diag)) Diag%Array_1(Elem_Idx,Line_Idx) = Classifier_Value(Class_Idx)
-              if (present(Diag)) Diag%Array_2(Elem_Idx,Line_Idx) = Posterior_Cld_Probability_By_Class(Class_Idx)
-              if (present(Diag)) Diag%Array_3(Elem_Idx,Line_Idx) = Cld_Flags(Class_To_Test_Idx(Class_Idx))
-          endif
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
+         !     if (present(Diag)) Diag%Array_1(Elem_Idx,Line_Idx) = Classifier_Value(Class_Idx)
+         !     if (present(Diag)) Diag%Array_2(Elem_Idx,Line_Idx) = Posterior_Cld_Probability_By_Class(Class_Idx)
+         !     if (present(Diag)) Diag%Array_3(Elem_Idx,Line_Idx) = Cld_Flags(Class_To_Test_Idx(Class_Idx))
+         ! endif
 
          enddo
 
@@ -946,6 +1031,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
         endif   !Do_By_Class_Loop
 
+
+        
       enddo elem_loop
    enddo line_loop
 
@@ -1083,7 +1170,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 !-----------------------------------------------------------------------------
 ! EUMETCAST Fire detection algorithm
 !-----------------------------------------------------------------------------
-  integer elemental function fire_test( t11, t375, t11_std, t375_std, solzen)
+  integer elemental function FIRE_TEST ( t11, t375, t11_std, t375_std, solzen)
 
      real, intent(in):: T11
      real, intent(in):: T375
@@ -1140,12 +1227,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
          
      endif
 
-  end function fire_test
+  end function FIRE_TEST
 
   !-------------------------------------------------------------------------------------
   !
   !-------------------------------------------------------------------------------------
-  real elemental function split_window_test( t11_clear, t12_clear, t11, t12)
+  real elemental function SPLIT_WINDOW_TEST ( t11_clear, t12_clear, t11, t12)
 
      real, intent(in):: t11_clear
      real, intent(in):: t12_clear 
@@ -1158,9 +1245,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
      split_window_test = (t11 - t12) - split_window_test
 
-  end function split_window_test
+  end function SPLIT_WINDOW_TEST
 
-  real elemental function reflectance_gross_contrast_test(ref_clear,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function REFLECTANCE_GROSS_CONTRAST_TEST (ref_clear,ref)
      real, intent(in):: ref_clear
      real, intent(in):: ref
 
@@ -1169,9 +1257,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            reflectance_gross_contrast_test = ref - ref_clear
      endif
 
-  end function reflectance_gross_contrast_test
+  end function REFLECTANCE_GROSS_CONTRAST_TEST
 
-  real elemental function relative_visible_contrast_test(ref_min,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function RELATIVE_VISIBLE_CONTRAST_TEST (ref_min,ref)
      real, intent(in):: ref_min
      real, intent(in):: ref
 
@@ -1180,9 +1269,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            relative_visible_contrast_test = ref - ref_min
      endif
 
-  end function relative_visible_contrast_test
+  end function RELATIVE_VISIBLE_CONTRAST_TEST
 
-  real elemental function reflectance_ratio_test(ref_vis,ref_nir)
+  !-------------------------------------------------------------------------------------
+  real elemental function REFLECTANCE_RATIO_TEST (ref_vis,ref_nir)
      real, intent(in):: ref_vis
      real, intent(in):: ref_nir
 
@@ -1191,9 +1281,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            reflectance_ratio_test = ref_nir / ref_vis
      endif
 
-  end function reflectance_ratio_test
+  end function REFLECTANCE_RATIO_TEST
 
-  real elemental function nir_reflectance_gross_contrast_test(ref_clear,ref)
+  !-------------------------------------------------------------------------------------
+  real elemental function NIR_REFLECTANCE_GROSS_CONTRAST_TEST (ref_clear,ref)
      real, intent(in):: ref_clear
      real, intent(in):: ref
 
@@ -1202,9 +1293,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            nir_reflectance_gross_contrast_test = ref- ref_clear
      endif
 
-  end function nir_reflectance_gross_contrast_test
+  end function NIR_REFLECTANCE_GROSS_CONTRAST_TEST
 
-  real elemental function emiss_375um_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1213,9 +1305,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            emiss_375um_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_test
+  end function EMISS_375UM_TEST
 
-  real elemental function emiss_375um_day_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_DAY_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1224,9 +1317,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
            emiss_375um_day_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_day_test
+  end function EMISS_375UM_DAY_TEST
 
-  real elemental function emiss_375um_night_test(ems,ems_clear)
+  !-------------------------------------------------------------------------------------
+  real elemental function EMISS_375UM_NIGHT_TEST (ems,ems_clear)
      real, intent(in):: ems_clear
      real, intent(in):: ems
 
@@ -1236,7 +1330,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
          ! emiss_375um_night_test = (ems- ems_clear) / ems_clear
      endif
 
-  end function emiss_375um_night_test
+  end function EMISS_375UM_NIGHT_TEST
+
 !------------------------------------------------------------------------
 ! subroutine PACK_BITS_INTO_BYTES(input_bits,bit_depth,output_bytes)
 !
@@ -1282,7 +1377,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 !-----------------------------------------------------------------------------------
 
 !--- This Version packs into one byte words
-   subroutine PACK_BITS_INTO_BYTES(input_bits,bit_depth,output_bytes)
+   subroutine PACK_BITS_INTO_BYTES (input_bits,bit_depth,output_bytes)
     integer(kind=int1), dimension(:), intent(in):: input_bits
     integer(kind=int1), dimension(:), intent(in):: bit_depth
     integer(kind=int1), dimension(:), intent(out):: output_bytes
@@ -1340,4 +1435,119 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
   end subroutine  PACK_BITS_INTO_BYTES
 
+!-----------------------------------------------------------------------------------
+   integer elemental function SMOKE_DETECTION ( &
+           ref_004 &
+         , ref_021 &
+         , ref_006_std &
+         , sat_zen &
+         , is_glint &
+         , land_class )
+
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_021
+      real , intent(in) :: ref_006_std
+      real , intent(in) :: sat_zen
+      integer(kind=INT1) , intent(in) :: is_glint
+      integer(kind=INT1) , intent(in) :: land_class
+
+      logical :: is_water_sfc
+
+      real, parameter :: pi = 3.14159265359
+      real, parameter :: SMOKE_ST_DEV_LAND_THRESH = 0.1
+      real, parameter :: SMOKE_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: SMOKE_ST_DEV_LAND_GLINT_THRESH = 1.5
+      real, parameter :: SMOKE_ST_DEV_WATER_GLINT_THRESH = 0.05
+      real, parameter :: SMOKE_CAND_M11M1_REF_RATIO_THRESH = 0.25
+
+      real :: ref_ratio                                                                                                                                            
+      real :: st_dev_thresh_cand
+
+      smoke_detection = 0
+
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_021 < 0. .or. ref_006_std < 0.) then
+         return
+      end if
+
+      is_water_sfc = land_class == 0 .or. &
+         land_class >= 3 .and. land_class <= 7
+
+      ref_ratio = ref_021 / ref_004
+
+      if ( is_water_sfc .and. ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH &
+                             * cos (sat_zen*pi/180.0) ) ) return
+
+      if ( is_glint == 1 .and. is_water_sfc )  &
+                st_dev_thresh_cand = SMOKE_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint == 1 .and. .not. ( is_water_sfc ) ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_LAND_GLINT_THRESH
+      if ( is_glint == 0 .and. is_water_sfc ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_WATER_THRESH
+      if ( is_glint == 0 .and. .not. ( is_water_sfc ) ) &
+                st_dev_thresh_cand = SMOKE_ST_DEV_LAND_THRESH
+
+      if ( ref_006_std < st_dev_thresh_cand ) smoke_detection = 1
+
+   end function SMOKE_DETECTION
+
+!-----------------------------------------------------------------------------------
+   integer elemental function DUST_DETECTION ( &
+              ref_004 &
+            , ref_006 &
+            , ref_006_std &
+            , is_glint &
+            , land_class )
+
+      real , intent(in) :: ref_004
+      real , intent(in) :: ref_006
+      real , intent(in) :: ref_006_std
+      integer(kind=INT1) , intent(in) :: is_glint
+      integer(kind=INT1) , intent(in) :: land_class
+
+      logical :: is_water_sfc
+
+      real, parameter :: DUST_M1_REFL_THRESH = 0.8
+      real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
+      real, parameter :: DUST_ST_DEV_LAND_THRESH = 0.1
+      real, parameter :: DUST_ST_DEV_WATER_THRESH = 0.05
+      real, parameter :: DUST_ST_DEV_LAND_GLINT_THRESH = 0.7
+      real, parameter :: DUST_ST_DEV_WATER_GLINT_THRESH = 0.05
+
+      real :: st_dev_thresh_cand
+
+      dust_detection = 0
+
+      ! - check if valid
+      if ( ref_004 < 0. .or. ref_006 < 0. .or. ref_006_std <= 0.) then                                                                                             
+         return
+      end if
+
+      ! -- exclude water 
+      is_water_sfc = land_class == 0 .or. &
+         land_class >= 3 .and. land_class <= 7
+
+
+      if ( is_water_sfc .and. ( ref_004 >= DUST_M1_REFL_THRESH &
+        .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
+         return
+      end if
+
+      ! adjust thresholds
+      if ( is_glint == 1 .and. is_water_sfc ) &
+           st_dev_thresh_cand = DUST_ST_DEV_WATER_GLINT_THRESH
+      if ( is_glint == 1 .and. .not. (is_water_sfc) ) &
+           st_dev_thresh_cand = DUST_ST_DEV_LAND_GLINT_THRESH
+      if ( is_glint == 0 .and. is_water_sfc ) &
+           st_dev_thresh_cand = DUST_ST_DEV_WATER_THRESH
+      if ( is_glint == 0 .and. .not. (is_water_sfc) ) &
+           st_dev_thresh_cand = DUST_ST_DEV_LAND_THRESH
+
+      if ( ref_006_std < st_dev_thresh_cand ) dust_detection = 1
+
+   end function DUST_DETECTION
+
+!-----------------------------------------------------------------------------------
+
 end module
+

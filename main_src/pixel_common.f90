@@ -464,7 +464,7 @@ module PIXEL_COMMON
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Err
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Uni
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Sst_Anal_Uni
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Cice
   real (kind=real4), dimension(:,:), allocatable, public, save:: Tsfc_Retrieved
   real (kind=real4), dimension(:,:), allocatable, public, save:: Trad_Retrieved
@@ -560,7 +560,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public:: Dust
   integer(kind=int1), dimension(:,:), allocatable, public:: Smoke
   integer(kind=int1), dimension(:,:), allocatable, public:: Fire
-  integer(kind=int1), dimension(:,:), allocatable, public:: Solar_Contamination_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Ch6_On_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Volcano_Mask
@@ -585,12 +585,12 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
 
   !--- cloud Mask arrays
-  integer (kind=int1), dimension(:,:,:), allocatable, public, save:: Cld_Test_Vector_Packed
+  integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Adj_Pix_Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Qf
-  real (kind=int4),dimension(:,:),allocatable, public, save:: &
+  real (kind=int4),dimension(:,:),allocatable, public, save, target:: &
                                                        Posterior_Cld_Probability
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type

@@ -428,6 +428,9 @@ subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM()
   real:: T_mean
   real:: B_mean
   real:: B_Level
+  real:: Opd_Layer
+  real:: Trans_Layer
+  real:: Trans_Total
 
 
  !--- upwelling profiles
@@ -468,11 +471,24 @@ subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM()
    if (Chan_Idx /= 31) cycle
    if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
-   do Lev_Idx = NLevels_Rtm-1,1,-1
-     T_mean = 0.5*(T_Prof_Rtm(Lev_Idx) + T_Prof_Rtm(Lev_Idx+1))
+   Trans_Total = 1.0
+   Rad_Atm_Dwn_Prof(1,Chan_Idx) = 0.0
+
+   do Lev_Idx = 2, Nlevels_Rtm
+
+     T_mean = 0.5*(T_Prof_Rtm(Lev_Idx) + T_Prof_Rtm(Lev_Idx-1))
      B_mean = PLANCK_RAD_FAST(Chan_Idx,T_mean)
-     Rad_Atm_Dwn_Prof(Lev_Idx,Chan_Idx) = Rad_Atm_Dwn_Prof(Lev_Idx,Chan_Idx) +  &
-              (Trans_Atm_Prof(Lev_Idx,Chan_Idx) - Trans_Atm_Prof(Lev_Idx+1,Chan_Idx)) * B_mean
+
+     Opd_Layer = -1.0*log(Trans_Atm_Prof(Lev_Idx,Chan_Idx)/Trans_Atm_Prof(Lev_Idx-1,Chan_Idx)) 
+     Opd_Layer = max(0.0,Opd_Layer)
+
+     Trans_Layer = exp(-1.0*Opd_Layer)
+
+     Rad_Atm_Dwn_Prof(Lev_Idx,Chan_Idx) = Trans_Total * Rad_Atm_Dwn_Prof(Lev_Idx-1,Chan_Idx) +  &
+                                          (1.0-Trans_Layer) * B_mean
+
+     Trans_Total = Trans_Total * Trans_Layer
+
    enddo
 
  enddo

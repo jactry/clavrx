@@ -877,8 +877,9 @@ j_loop:    DO j = j1,j2
   integer:: ynwp
 
   real:: Rad11
-  real:: Rad11_atm
+  real:: Rad11_Atm
   real:: Trans11_Atm
+  real:: Rad11_Atm_Dwn_Sfc
   real:: Emiss_Sfc11
   real:: Rad11_Sfc
   real:: B11_Sfc
@@ -907,14 +908,16 @@ j_loop:    DO j = j1,j2
 
       !--- aliases for visual convenience
       Rad11 = ch(31)%Rad_Toa(Elem_Idx,Line_Idx)
-      Xnwp = i_nwp(Elem_Idx,Line_Idx)                    !nwp latitude cell
-      Ynwp = j_nwp(Elem_Idx,Line_Idx)                    !nwp longitude cell
-      Rad11_atm = ch(31)%Rad_Atm(Elem_Idx,Line_Idx)     !11 micron atmospheric radiance
-      Trans11_Atm = ch(31)%Trans_Atm(Elem_Idx,Line_Idx) !11 micron atmospheric transmittance
+      Xnwp = i_nwp(Elem_Idx,Line_Idx)                         !nwp latitude cell
+      Ynwp = j_nwp(Elem_Idx,Line_Idx)                         !nwp longitude cell
+      Rad11_Atm = ch(31)%Rad_Atm(Elem_Idx,Line_Idx)           !11 micron atmospheric radiance
+      Trans11_Atm = ch(31)%Trans_Atm(Elem_Idx,Line_Idx)       !11 micron atmospheric transmittance
       Emiss_Sfc11 = ch(31)%Sfc_Emiss(Elem_Idx,Line_Idx)       !11 micron surface emissivity
+      Rad11_Atm_Dwn_Sfc = ch(31)%Rad_Atm_Dwn_Sfc(Elem_Idx,Line_Idx)  !11 micron atmospheric radiance down at sfc
 
       !--- compute the radiance coming off the surface
-      Rad11_Sfc = (Rad11 - Rad11_atm) / Trans11_Atm
+      Rad11_Sfc = (Rad11 - Rad11_Atm) / Trans11_Atm - &
+                  (1.0-Emiss_Sfc11)*Rad11_Atm_Dwn_Sfc
 
       !--- compute to a temperature
       Trad_Retrieved(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,Rad11_Sfc)

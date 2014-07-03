@@ -72,6 +72,7 @@ module RT_UTILITIES
 
    private:: COMPUTE_CHANNEL_ATM_SFC_RAD_BT, &
              COMPUTE_CHANNEL_RT, &
+             COMPUTE_CHANNEL_ATM_DWN_SFC_RAD, &
              COMPUTE_CH20_EMISSIVITY, &
              COMPUTE_TROPOPAUSE_EMISSIVITIES, &
              COMPUTE_BETA_RATIOES, &
@@ -115,6 +116,7 @@ module RT_UTILITIES
     real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Solar_Prof_Prev
     real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Total_Prof_Prev
     real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_Atm_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_Atm_Dwn_Prof
     real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_BB_Cloud_Prof
 
     integer, parameter:: Ilon_Stride = 0
@@ -428,6 +430,7 @@ subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM()
   real:: B_Level
 
 
+ !--- upwelling profiles
  Rad_Atm_Prof = Missing_Value_Real4
  Rad_BB_Cloud_Prof = Missing_Value_Real4
 
@@ -456,6 +459,22 @@ subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM()
                                           (Trans_Atm_Prof(Lev_Idx,Chan_Idx) * B_Level)
 
    enddo
+ enddo
+
+ !--- downwelling profiles
+ Rad_Atm_Dwn_Prof = Missing_Value_Real4
+
+ do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
+   if (Chan_Idx /= 31) cycle
+   if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+
+   do Lev_Idx = NLevels_Rtm-1,1,-1
+     T_mean = 0.5*(T_Prof_Rtm(Lev_Idx) + T_Prof_Rtm(Lev_Idx+1))
+     B_mean = PLANCK_RAD_FAST(Chan_Idx,T_mean)
+     Rad_Atm_Dwn_Prof(Lev_Idx,Chan_Idx) = Rad_Atm_Dwn_Prof(Lev_Idx,Chan_Idx) +  &
+              (Trans_Atm_Prof(Lev_Idx,Chan_Idx) - Trans_Atm_Prof(Lev_Idx+1,Chan_Idx)) * B_mean
+   enddo
+
  enddo
 
 end subroutine COMPUTE_CLEAR_RAD_PROFILES_RTM
@@ -1074,6 +1093,9 @@ subroutine DEALLOCATE_RTM_VARS(Lon_Idx,Lat_Idx,Zen_Idx)
 
    if (allocated(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Profile)) &
        deallocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Profile, stat=Alloc_Status)
+
+   if (allocated(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile)) &
+       deallocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile, stat=Alloc_Status)
 
    if (allocated(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_BB_Cloud_Profile)) &
        deallocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_BB_Cloud_Profile, stat=Alloc_Status)
@@ -2270,6 +2292,45 @@ subroutine COMPUTE_CHANNEL_ATM_SFC_RAD_BT( &
 
 end subroutine COMPUTE_CHANNEL_ATM_SFC_RAD_BT
 
+!------------------------------------------------------------------------------
+! Routine to compute some needed radiative transfer terms for the IR channels
+!
+! Input:  Sfc_Idx - level of the surface in the profiles
+!         Profile_Weight - interpolation weight for estimated the surface in the 
+!                          profiles
+!         Rad_Atm_Dwn_Profile - profile of radiance emitted from level to space
+!
+! Output: Rad_Atm_Dwn_Sfc - total radiance due to atmospheric emission at surface
+!------------------------------------------------------------------------------
+subroutine COMPUTE_CHANNEL_ATM_DWN_SFC_RAD( &
+                Sfc_Idx, &
+                Profile_Weight, &
+                Rad_Atm_Dwn_Profile, &
+                Rad_Atm_Dwn_Sfc)
+
+   integer, intent(in):: Sfc_Idx
+   real, intent(in):: Profile_Weight
+   real, intent(in), dimension(:):: Rad_Atm_Dwn_Profile
+   real, intent(out):: Rad_Atm_Dwn_Sfc
+  
+   Rad_Atm_Dwn_Sfc = Rad_Atm_Dwn_Profile(Sfc_Idx) +  &
+                    (Rad_Atm_Dwn_Profile(Sfc_Idx+1) - Rad_Atm_Dwn_Profile(Sfc_Idx)) * Profile_Weight
+
+end subroutine COMPUTE_CHANNEL_ATM_DWN_SFC_RAD
+
+!----------------------------------------------------------------------------------------
+! This routine computes radiative transfer terms such as Rad_Atm
+! Trans_Atm, and clear-sky radinace and brightness temperature
+!
+! Input:  Sfc_Level_Idx - level just above the surface in the profiles
+!         Prof_Weight - interpolation weight for interpolating to surface level
+!         Lon_Idx = longitude index of NWP cell
+!         Lat_Idx = latitude index of NWP cell
+!         Zen_Idx = zenith angle index of RTM profile
+!
+! Output:  (note this passed through global arrays) 
+!         Rad_Atm_ChX_Rtm = Radiance Emitted by Atmosphere in Channel X
+
 !----------------------------------------------------------------------------------------
 ! This routine computes radiative transfer terms such as Rad_Atm
 ! Trans_Atm, and clear-sky radinace and brightness temperature
@@ -2318,6 +2379,8 @@ subroutine COMPUTE_CHANNEL_RT(Sfc_Level_Idx,Prof_Weight,Lon_Idx,Lat_Idx,Elem_Idx
    !--------------------------------------------------------------
    ! IR-only channels, 20-36
    !--------------------------------------------------------------
+
+   !--- upwelling
    do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
       if (Chan_Idx < 20) cycle    
       if (Chan_Idx == 26) cycle    
@@ -2335,6 +2398,18 @@ subroutine COMPUTE_CHANNEL_RT(Sfc_Level_Idx,Prof_Weight,Lon_Idx,Lat_Idx,Elem_Idx
                 ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx))
+   enddo
+
+   !--- downwelling (only channel 31) 
+   do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
+      if (Chan_Idx /= 31) cycle    
+      if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+
+      call COMPUTE_CHANNEL_ATM_DWN_SFC_RAD( &
+                Sfc_Level_Idx, &
+                Prof_Weight, &
+                Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile, &
+                ch(Chan_Idx)%Rad_Atm_Dwn_Sfc(Elem_Idx,Line_Idx))
    enddo
 
    !--------------------------------------------------------------
@@ -2630,6 +2705,11 @@ subroutine COPY_LOCAL_RTM_TO_GLOBAL_RTM_STRUCTURE(Lon_Idx,Lat_Idx,Zen_Idx)
       Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_BB_Cloud_Profile = Rad_BB_Cloud_Prof(:,Chan_Idx)
    enddo
 
+   Chan_Idx = 31
+   if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile = Rad_Atm_Dwn_Prof(:,Chan_Idx)
+   endif
+
 end subroutine COPY_LOCAL_RTM_TO_GLOBAL_RTM_STRUCTURE
 !==============================================================================
 !
@@ -2652,6 +2732,10 @@ subroutine ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT(Lon_Idx,Lat_Idx,Zen_Idx)
       endif
    enddo
 
+   Chan_Idx = 31
+   if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile(NLevels_Rtm),stat=Alloc_Status)
+   endif
 end subroutine ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT
 
 !

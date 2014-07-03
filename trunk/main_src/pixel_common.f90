@@ -83,6 +83,7 @@
 !  Bt_Toa = Observed Top of Atmosphere Brightness Temperature
 !  Rad_Toa_Clear = Simulated Top of Atmosphere Radiance under clear-sky
 !  Rad_Atm = Simulated Radiance at Toa from atmospheric cloud-free emission
+!  Rad_Atm_Dwn_Sfc = Simulated Downward Radiance at Sfc from atmospheric cloud-free emission
 !  Trans_Atm = Simulated Transmission from Surface to Toa for cloud-free atmosphere
 !              along viewing zenith angle path
 !  Trans_Atm_Total = Simulated Transmission from Toa to Surface to Toa for cloud-free atmosphere
@@ -141,6 +142,7 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Bt_Toa
     real, dimension(:,:), allocatable:: Rad_Toa_Clear
     real, dimension(:,:), allocatable:: Rad_Atm
+    real, dimension(:,:), allocatable:: Rad_Atm_Dwn_Sfc
     real, dimension(:,:), allocatable:: Trans_Atm
     real, dimension(:,:), allocatable:: Trans_Atm_Total
     real, dimension(:,:), allocatable:: Bt_Toa_Clear
@@ -910,6 +912,10 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Trans_Atm(dim1,dim2))
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
          endif
+         !-- at present only 11 micron downward atm emission needed
+         if (idx == 31) then 
+            allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
+         endif
       endif
 
    enddo
@@ -1051,6 +1057,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Rad_Sfc)) deallocate(Ch(idx)%Rad_Sfc)
       if (allocated(Ch(idx)%Bt_Sfc)) deallocate(Ch(idx)%Bt_Sfc)
       if (allocated(Ch(idx)%Rad_Atm)) deallocate(Ch(idx)%Rad_Atm)
+      if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) deallocate(Ch(idx)%Rad_Atm_Dwn_Sfc)
       if (allocated(Ch(idx)%Trans_Atm)) deallocate(Ch(idx)%Trans_Atm)
       if (allocated(Ch(idx)%Trans_Atm_Total)) deallocate(Ch(idx)%Trans_Atm_Total)
       if (allocated(Ch(idx)%Ref_Toa)) deallocate(Ch(idx)%Ref_Toa)
@@ -1484,6 +1491,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Bt_Sfc)) Ch(idx)%Bt_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Sfc)) Ch(idx)%Rad_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Atm)) Ch(idx)%Rad_Atm = Missing_Value_Real4
+      if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) Ch(idx)%Rad_Atm_Dwn_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Trans_Atm)) Ch(idx)%Trans_Atm = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Toa)) Ch(idx)%Ref_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Toa_Unnorm)) Ch(idx)%Ref_Toa_Unnorm = Missing_Value_Real4

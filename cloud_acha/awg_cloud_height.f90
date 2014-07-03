@@ -603,8 +603,8 @@ module AWG_CLOUD_HEIGHT
             Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
 
            !--- don't redo cirrus with valid lrc values
-           if (ilrc > 0 .and. jlrc > 0 .and. Output%Ec(ilrc,jlrc) > 0.7) then 
-              cycle
+           if (ilrc > 0 .and. jlrc > 0) then 
+            if (Output%Ec(ilrc,jlrc) > 0.7) cycle
            endif
 
         endif
@@ -1064,7 +1064,7 @@ module AWG_CLOUD_HEIGHT
 
  !---------------------------------------------------------------------------
  !--- modify clear radiances to simulate that from an opaque cloud at 200 mb
- !--- above the surface when a multi-layer situation is suspOutput%Ected
+ !--- above the surface when a multi-layer situation is suspected
  !---------------------------------------------------------------------------
  if (Cloud_Type == symbol%OVERLAP_TYPE .and.  &
     Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then

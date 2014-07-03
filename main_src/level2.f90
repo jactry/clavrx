@@ -2199,6 +2199,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- ch31 atmospheric radiance downwelling surface
+     if (Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm_Dwn),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "atmos_rad_dwn_11_0um_nom_nwp", &
+                               "atmospheric_radiance_downwelling_11_0um_nom_nwp", &
+                               "atmospheric emission 11 micron radiance downward at sfc from nwp", &
+                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               Min_Ch31_Rad_Atm_Dwn, Max_Ch31_Rad_Atm_Dwn, "mW/m^2/cm^-1", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
      !--- ch31 surface emissivity
      if (Sds_Num_Level2_Ch31_Sfc_Emiss_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Sfc_Emiss),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -4518,6 +4530,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I1_RANK2(ch(31)%Trans_Atm,sym%LINEAR_SCALING,Min_Trans, &
                                    Max_Trans,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Trans_Atm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- ch31 downward atmospheric radiance
+    if (Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(ch(31)%Rad_Atm_Dwn_Sfc,sym%LINEAR_SCALING,Min_Ch31_Rad_Atm_Dwn, &
+                                   Max_Ch31_Rad_Atm_Dwn,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm_Dwn), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

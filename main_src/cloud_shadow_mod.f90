@@ -141,17 +141,17 @@ contains
             short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
        
             idx_2 = j + short_idx_arr
-            if ( idx_2 > 0 .and. idx_2 =< dim_2 ) shad_arr( idx_1 , idx_2 )   = .true.
+            if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , idx_2 )   = .true.
             idx_2 = j + short_idx_arr - 1
-            if ( idx_2 > 0 .and. idx_2 =< dim_2 ) shad_arr( idx_1 , j + short_idx_arr-1) = .true.
+            if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , j + short_idx_arr-1) = .true.
          else 
             idx_2 = j + sign(k,jj)
             if (idx_2 < 1 .or. idx_2 > dim_2 ) cycle
             short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
             idx_1 = i + short_idx_arr
-            if ( idx_1 > 0 .and. idx_1 =< dim_1 ) shad_arr(i+short_idx_arr,idx_2 ) = .true.
+            if ( idx_1 > 0 .and. idx_1 <= dim_1 ) shad_arr(i+short_idx_arr,idx_2 ) = .true.
             idx_1 = i + short_idx_arr - 1
-            if ( idx_1 > 0 .and. idx_1 =< dim_1 ) shad_arr(i+short_idx_arr-1, idx_2) = .true.
+            if ( idx_1 > 0 .and. idx_1 <= dim_1 ) shad_arr(i+short_idx_arr-1, idx_2) = .true.
          endif      
       end do
       

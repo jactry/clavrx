@@ -103,7 +103,11 @@ contains
       real :: long_idx,short_idx
       integer :: short_idx_arr
       
-   
+      integer :: dim_1 , dim_2
+      integer :: idx_1 , idx_2
+      
+      dim_1 = size ( shad_arr, 1 )
+      dim_2 = size ( shad_arr, 2 )
       
       delta_lat_ii = lat(i,j) - lat(i-1,j)
       delta_lon_ii = lon(i,j) - lon(i-1,j)
@@ -131,13 +135,23 @@ contains
       ! - this fills all pixel from lat1 to lat(i,j)/lon(i,j)  
       do k = 1 , long_idx        
          if (abs(ii) == long_idx ) then
+            idx_1 = i + sign(k,ii)
+            if (idx_1 < 1 .or. idx_1 > dim_1 ) cycle
+             
             short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
-            shad_arr(i + sign(k,ii), j + short_idx_arr)   = .true.
-            shad_arr(i + sign(k,ii), j + short_idx_arr-1) = .true.
+       
+            idx_2 = j + short_idx_arr
+            if ( idx_2 > 0 .and. idx_2 =< dim_2 ) shad_arr( idx_1 , idx_2 )   = .true.
+            idx_2 = j + short_idx_arr - 1
+            if ( idx_2 > 0 .and. idx_2 =< dim_2 ) shad_arr( idx_1 , j + short_idx_arr-1) = .true.
          else 
+            idx_2 = j + sign(k,jj)
+            if (idx_2 < 1 .or. idx_2 > dim_2 ) cycle
             short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
-            shad_arr(i+short_idx_arr,j + sign ( k,jj) ) = .true.
-            shad_arr(i+short_idx_arr-1,j + sign(k,jj) ) = .true.
+            idx_1 = i + short_idx_arr
+            if ( idx_1 > 0 .and. idx_1 =< dim_1 ) shad_arr(i+short_idx_arr,idx_2 ) = .true.
+            idx_1 = i + short_idx_arr - 1
+            if ( idx_1 > 0 .and. idx_1 =< dim_1 ) shad_arr(i+short_idx_arr-1, idx_2) = .true.
          endif      
       end do
       

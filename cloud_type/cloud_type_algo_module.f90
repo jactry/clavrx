@@ -48,7 +48,7 @@ module CLOUD_TYPE_ALGO_MODULE
       integer :: LAST = 13
       integer :: MISSING = -128
    end type    
-   type ( et_cloudtype_class_type ) :: et_cloud_type
+   type ( et_cloudtype_class_type ), save :: et_cloud_type
    
    type  et_cloudphase_class_type
       integer :: FIRST = 0 
@@ -60,7 +60,7 @@ module CLOUD_TYPE_ALGO_MODULE
       integer :: UNKNOWN = 5
       integer :: LAST = 5
    end type    
-   type ( et_cloudphase_class_type )  :: et_cloud_phase  
+   type ( et_cloudphase_class_type ),save  :: et_cloud_phase  
    
    type cloud_type_sat_type
       logical , dimension(42) :: chan_on

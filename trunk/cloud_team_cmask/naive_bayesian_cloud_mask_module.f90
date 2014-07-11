@@ -704,39 +704,53 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
           Cld_Flags(17) = Sfc_Idx              ;    Cld_Flag_Bit_Depth(17) = 3
           Cld_Flags(18) = Spare_Value          ;    Cld_Flag_Bit_Depth(18) = 1
 
-
+!print *,Elem_Idx,Line_Idx
+!print *,'!!! BEFORE LOOP !!!'
           class_loop: do Class_Idx = 1, N_class
 
              Classifier_Value(Class_Idx) = Missing_Value_Real4
              Cond_Yes(Class_Idx) = 1.0 
              Cond_No(Class_Idx) =  1.0
 
+!print *,Classifier_Value_Name(Class_Idx,Sfc_Idx)
+!print *,Input%Bt_375um(Elem_Idx,Line_Idx),Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx)
+!print *,Input%Chan_On_375um,Solar_Contam_Flag,Oceanic_Glint_Flag,Day_375_Flag,Cold_Scene_375um_Flag,Input%Bt_375um(Elem_Idx,Line_Idx)
+
              select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
 
                     case("T_11") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_max-T") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_11um_Max(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max(Elem_Idx,Line_Idx) - Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("T_std") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um_Std(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std(Elem_Idx,Line_Idx)
 
                     case("Emiss_tropo") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo(Elem_Idx,Line_Idx)
 
                     case("FMFT") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_12um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_11um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_12um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_12um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) =  &
                            split_window_test(Input%Bt_11um_Clear(Elem_Idx,Line_Idx), Input%Bt_12um_Clear(Elem_Idx,Line_Idx), &
                                              Input%Bt_11um(Elem_Idx,Line_Idx), Input%Bt_12um(Elem_Idx,Line_Idx))
@@ -745,28 +759,34 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_67um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_67um(Elem_Idx,Line_Idx)
 
                     case("Bt_11_67_Covar") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar(Elem_Idx,Line_Idx)
 
                     case("Btd_11_85") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_85um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_85um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um(Elem_Idx,Line_Idx) - Input%Bt_85um(Elem_Idx,Line_Idx)
 
                     case("Emiss_375") 
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                       endif
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
                        Classifier_Value(Class_Idx) = emiss_375um_test( &
                                          Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
@@ -776,10 +796,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Day_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                      endif
-                      Classifier_Value(Class_Idx) = emiss_375um_day_test( &
+                       if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+!print *,'IN Emiss_375_Day',Input%Bt_375um(Elem_Idx,Line_Idx),Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx)
+!print *,'IN ',Input%Chan_On_375um,Solar_Contam_Flag,Oceanic_Glint_Flag,Day_375_Flag,Cold_Scene_375um_Flag,Input%Bt_375um(Elem_Idx,Line_Idx)
+                       Classifier_Value(Class_Idx) = emiss_375um_day_test( &
                                          Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
                     case("Emiss_375_Night") 
@@ -787,9 +809,10 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_375um == symbol%YES) then
-                          if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                       endif
+                       if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Emiss_375um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+!print *,'IN Emiss_375_Night',Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx)
                        Classifier_Value(Class_Idx) = emiss_375um_night_test( &
                                         Input%Emiss_375um(Elem_Idx,Line_Idx),Input%Emiss_375um_Clear(Elem_Idx,Line_Idx))
 
@@ -799,28 +822,26 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_375um == symbol%YES) then
-                         if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                       endif
+                       if (Input%Bt_375um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Bt_11um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_375um(Elem_Idx,Line_Idx) - &
                                                      Input%Bt_11um(Elem_Idx,Line_Idx)
 
                     case("Ref_063_Day")
-
                        if (Input%Solzen(Elem_Idx,Line_Idx) < 90.0) then
-
                          if (Input%Chan_On_063um == symbol%NO) cycle
                          if (Oceanic_Glint_Flag == symbol%YES) cycle
                          if (Forward_Scattering_Flag == symbol%YES) cycle
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Day_063_Flag == symbol%NO) cycle
                          if (Sfc_Idx == 4) cycle
+                         if (Input%Ref_063um_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                         if (Input%Ref_063um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_063um_Clear(Elem_Idx,Line_Idx), &
                                                              Input%Ref_063um(Elem_Idx,Line_Idx))
 
                        else
-
                          if (Input%Chan_On_DNB == symbol%NO) cycle
                          if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
                          if (Lunar_Forward_Scattering_Flag == symbol%YES) cycle
@@ -828,6 +849,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                          if (Night_Lunar_Flag == symbol%NO) cycle
                          if (City_Flag == symbol%YES) cycle
                          if (Sfc_Idx == 4) cycle
+                         if (Input%Ref_Lunar_Clear(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                         if (Input%Ref_Lunar(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_Lunar_Clear(Elem_Idx,Line_Idx), &
                                                              Input%Ref_Lunar(Elem_Idx,Line_Idx))
@@ -840,6 +863,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                          if (Day_063_Spatial_Flag == symbol%NO) cycle 
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
+                         if (Input%Ref_063um_Std(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_063um_Std(Elem_Idx,Line_Idx)
                        else
                          if (Input%Chan_On_DNB == symbol%NO) cycle
@@ -847,6 +871,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
                          if (City_Flag == symbol%YES) cycle  
+                         if (Input%Ref_Lunar_Std(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std(Elem_Idx,Line_Idx)
                        endif
 
@@ -856,6 +881,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                          if (Day_063_Spatial_Flag == symbol%NO) cycle
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
+                         if (Input%Ref_063um_Min(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                         if (Input%Ref_063um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_063um_Min(Elem_Idx,Line_Idx),Input%Ref_063um(Elem_Idx,Line_Idx))
                        else
@@ -865,6 +892,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
                          if (City_Flag == symbol%YES) cycle  
+                         if (Input%Ref_Lunar(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                         if (Input%Ref_Lunar_Min(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_Lunar_Min(Elem_Idx,Line_Idx),Input%Ref_Lunar(Elem_Idx,Line_Idx))
                        endif
@@ -875,6 +904,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Day_063_Spatial_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Input%Ref_063um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+                       if (Input%Ref_086um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = reflectance_ratio_test( &
                                          Input%Ref_063um(Elem_Idx,Line_Idx),Input%Ref_086um(Elem_Idx,Line_Idx))
 
@@ -883,9 +914,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_138um == symbol%YES) then
-                         if (Input%Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                       endif
+                       if (Input%Ref_138um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um(Elem_Idx,Line_Idx)
 
                     case("Ref_160_Day")
@@ -893,15 +922,14 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
-                       if (Input%Chan_On_160um == symbol%YES) then
-                         if (Input%Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-                       endif
+                       if (Input%Ref_160um(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_160um(Elem_Idx,Line_Idx)
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
  
              end select
+!print *,'END SELECT'
 
              !--- Turn off Classifiers if Chosen Metric is Missing
              if (Classifier_Value(Class_Idx) == Missing_Value_Real4) then
@@ -918,6 +946,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
              Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
 
         enddo  class_loop 
+!print *,'!!! AFTER LOOP !!!'
 
 
         !------------------------------------------------------------------------------------------------------------

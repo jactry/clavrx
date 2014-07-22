@@ -1711,9 +1711,12 @@ end subroutine READ_GOES_SNDR
 
  last_line_in_Segment = min(AREAstr%Num_Line,Segment_Number*Num_Lines_Per_Segment)
 
+!---stw  First_Byte_In_Segment = AREAstr%pri_key_nav + &
+!---stw                          Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line + &
+!---stw                          Bytes_Per_Pixel 
+
  First_Byte_In_Segment = AREAstr%pri_key_nav + &
-                         Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line + &
-                         Bytes_Per_Pixel 
+                         Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line
 
  Number_Of_Words_In_Segment = Words_Per_Line * Num_Lines_Per_Segment
 

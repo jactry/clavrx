@@ -121,6 +121,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_iwp = 0.0, Max_iwp = 2000.0, Min_iwp_std = 0.0, Max_iwp_std = 100.0
  real, parameter, public:: Min_frac = 0.0, Max_frac = 1.0
  real, parameter, public:: Min_tpw = 0.0, Max_tpw = 10.0
+ real, parameter, public:: Min_Ozone = 100.0, Max_Ozone = 550.0
  real, parameter, public:: Min_rh = 0.0, Max_rh = 110.0
  real, parameter, public:: Min_hght500 = 4500.0, Max_hght500 = 6500.0
  real, parameter, public:: Min_aot = -0.2, Max_aot = 5.0, Min_aot_std = 0.0, Max_aot_std = 1.0

@@ -2485,6 +2485,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !---  total ozone
+     if (Sds_Num_Level2_Ozone_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ozone),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "total_column_ozone_nwp", &
+                              "total_column_ozone_nwp", &
+                              "total ozone amount integrated over column from nwp ancillary data", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Ozone, Max_Ozone, "DU", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- channel 20 reflectance atmospherically corrected
      if (Sds_Num_Level2_Ref_Ch20_Sfc_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Ch20_Sfc),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -4232,6 +4243,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     if (Sds_Num_Level2_Tpw_Flag == sym%YES) then
       call SCALE_VECTOR_I1_RANK2(Tpw_Nwp_Pix,sym%LINEAR_SCALING,Min_Tpw,Max_Tpw,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tpw), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- ozone
+    if (Sds_Num_Level2_Ozone_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Ozone_Nwp_Pix,sym%LINEAR_SCALING,Min_Ozone,Max_Ozone,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ozone), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

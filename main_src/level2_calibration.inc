@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 198
+ integer, parameter, private:: Num_Level2_Sds = 199
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -26,8 +26,8 @@
      Sds_Num_Level2_Packed_Land = 14,    Sds_Num_Level2_Packed_Land_Flag = 0, &
      Sds_Num_Level2_Ch1 = 15 ,           Sds_Num_Level2_Ch1_Flag = 1, &         !critical for level2b
      Sds_Num_Level2_Ch2 = 16 ,           Sds_Num_Level2_Ch2_Flag = 1, &
-     Sds_Num_Level2_Ch3 = 17 ,           Sds_Num_Level2_Ch3_Flag = 0, &
-     Sds_Num_Level2_Ch4 = 18 ,           Sds_Num_Level2_Ch4_Flag = 0, &
+     Sds_Num_Level2_Ch3 = 17 ,           Sds_Num_Level2_Ch3_Flag = 1, &
+     Sds_Num_Level2_Ch4 = 18 ,           Sds_Num_Level2_Ch4_Flag = 1, &
      Sds_Num_Level2_Ch5 = 19 ,           Sds_Num_Level2_Ch5_Flag = 0, &
      Sds_Num_Level2_Ch6 = 20 ,           Sds_Num_Level2_Ch6_Flag = 1, &
      Sds_Num_Level2_Ch7 = 21 ,           Sds_Num_Level2_Ch7_Flag = 0, &
@@ -79,7 +79,7 @@
      Sds_Num_Level2_Ceps = 67,           Sds_Num_Level2_Ceps_Flag = 0, &
      Sds_Num_Level2_Cldalb = 68,         Sds_Num_Level2_Cldalb_Flag = 0, &
      Sds_Num_Level2_Cldtrn = 69,         Sds_Num_Level2_Cldtrn_Flag = 0, &
-     Sds_Num_Level2_Cldfrac = 70,        Sds_Num_Level2_Cldfrac_Flag = 0, &
+     Sds_Num_Level2_Cldfrac = 70,        Sds_Num_Level2_Cldfrac_Flag = 1, &
      Sds_Num_Level2_Cldfrac_Uncer = 71,  Sds_Num_Level2_Cldfrac_Uncer_Flag = 0, &
      Sds_Num_Level2_Etrop = 72,          Sds_Num_Level2_Etrop_Flag = 0, &
      Sds_Num_Level2_Aot1 = 73,           Sds_Num_Level2_Aot1_Flag = 0, & !off for GOES
@@ -207,4 +207,5 @@
      Sds_Num_Level2_Ch31_Trans_Atm = 195, Sds_Num_Level2_Ch31_Trans_Atm_Flag = 0, &
      Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 0, &
      Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0, &
-     Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0
+     Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
+     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 0

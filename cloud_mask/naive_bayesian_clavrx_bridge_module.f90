@@ -338,10 +338,10 @@ contains
             Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
             Cld_Test_Vector_Packed ( : , i , j )  = info_flags
 
-            ! - save diagnostic pixels to global arrays
-            Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
-            Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
-            Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
+            ! - save diagnostic pixels to global arrays (ONLY IF ACTIVELY DIAGNOSING)
+!           Diag_Pix_Array_1 ( i , j ) = diag % diagnostic_1
+!           Diag_Pix_Array_2 ( i , j ) = diag % diagnostic_2
+!           Diag_Pix_Array_3 ( i , j ) = diag % diagnostic_3
 
             !--------------------------------------------------------------------------------------------
             !--- make a cloud mask

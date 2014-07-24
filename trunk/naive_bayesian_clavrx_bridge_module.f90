@@ -83,8 +83,8 @@ contains
                                Naive_Bayes_File_Name, &
                                Symbol,  &
                                Input, &
-                               Output, &
-                               Diag)
+                               Output)
+                              ! Diag)   !optional
    !--- nullify pointers within these data structures
    call NULL_INPUT()
    call NULL_OUTPUT()

@@ -160,22 +160,9 @@ module RT_UTILITIES
       , ozmr_std_rtm 
 
    implicit none
+   
    private
-   private:: COMPUTE_CHANNEL_ATM_SFC_RAD_BT, &
-             COMPUTE_CHANNEL_RT, &
-             COMPUTE_CHANNEL_ATM_DWN_SFC_RAD, &
-             COMPUTE_CH20_EMISSIVITY, &
-             COMPUTE_TROPOPAUSE_EMISSIVITIES, &
-             COMPUTE_BETA_RATIOES, &
-             COMPUTE_SPLIT_WINDOW_BIAS, &
-             BETA_RATIO, &
-             EMISSIVITY, &
-             NADIR_EMISSIVITY, &
-             COPY_LOCAL_RTM_TO_GLOBAL_RTM_STRUCTURE, &
-             ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT, &
-             PFAAST_CALLER, &
-             ALLOCATE_RTM_CELL, &
-             SOLAR_TRANS
+   
 
    public:: SETUP_PFAAST, &
             SETUP_SOLAR_RTM, &

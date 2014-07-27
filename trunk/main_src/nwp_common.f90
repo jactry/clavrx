@@ -66,13 +66,13 @@
 !   CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY
 !--------------------------------------------------------------------------------------
 module NWP_COMMON
-
+   
   use CONSTANTS
   use PIXEL_COMMON
   use NUMERICAL_ROUTINES
 
   implicit none
-
+   private
   private:: FIND_NWP_LEVELS, &
             COMPUTE_NWP_CLOUD_PARAMETERS, &
             CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY

@@ -109,17 +109,17 @@
       , setup_pfaast &
       , setup_solar_rtm &
       , map_nwp_rtm  &
-      , create_temp_nwp_vectoRS  &
-      , destroy_temp_nwp_vectORS &
+      , create_temp_nwp_vectors  &
+      , destroy_temp_nwp_vectors &
       , get_pixel_nwp_rtm &
       , allocate_rtm &
       , deallocate_rtm &
       , deallocate_rtm_vars &
       , deallocate_rtm_cell &
-      , find_rtm_levels &
       , nlevels_rtm
       
-   use RTM_COMMON
+   !use RTM_COMMON,only:
+   
    use NWP_COMMON
    use SCALING_PARAMETERS
    use SFC_EMISS

@@ -153,7 +153,7 @@ module RT_UTILITIES
    
    
    use RTM_COMMON, only: &
-      nlevels_rtm &
+       nlevels_rtm &
       , rtm &
       , p_std_rtm &
       , t_std_rtm &
@@ -164,46 +164,43 @@ module RT_UTILITIES
    
    private
    
-
+    
    public:: SETUP_PFAAST, &
             SETUP_SOLAR_RTM, &
             MAP_NWP_RTM,  &
-             CREATE_TEMP_NWP_VECTORS,  &
-            DESTROY_TEMP_NWP_VECTORS, &
-       !     CONVERT_ATMOS_PROF_NWP_RTM,  &
-       !     COMPUTE_CLEAR_RAD_PROFILES_RTM, &
+            CREATE_TEMP_NWP_VECTORS,  &
+            DESTROY_TEMP_NWP_VECTORS, &      
             GET_PIXEL_NWP_RTM, &
-       !     COMPUTE_WVMR_PROFILE_NWP, &
-       !     COMPUTE_TPW_PROFILE_NWP, &
             ALLOCATE_RTM, &
             DEALLOCATE_RTM, &
             DEALLOCATE_RTM_VARS, &
-            DEALLOCATE_RTM_CELL, &
-            FIND_RTM_LEVELS
+            DEALLOCATE_RTM_CELL
+            
+    integer, parameter, public:: Rtm_Nvzen = 50       
 
-    real, parameter, private:: Co2_Ratio = 380.0 !in ppmv
+    real, parameter :: Co2_Ratio = 380.0 !in ppmv
 
-    integer, parameter, private:: Chan_Idx_Min = 1
-    integer, parameter, private:: Chan_Idx_Max = 42
+    integer, parameter :: Chan_Idx_Min = 1
+    integer, parameter :: Chan_Idx_Max = 42
 
-    real(kind=real4), private, save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
+    real(kind=real4),  save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
 
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Prof
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Solar_Prof
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Total_Prof
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Prof_Prev
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Solar_Prof_Prev
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Trans_Atm_Total_Prof_Prev
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_Atm_Prof
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_Atm_Dwn_Prof
-    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max), private, save:: Rad_BB_Cloud_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Solar_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Total_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Prof_Prev
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Solar_Prof_Prev
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Trans_Atm_Total_Prof_Prev
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Rad_Atm_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Rad_Atm_Dwn_Prof
+    real, dimension(NLevels_Rtm,Chan_Idx_Min:Chan_Idx_Max),  save:: Rad_BB_Cloud_Prof
 
     integer, parameter:: Ilon_Stride = 0
     integer, parameter:: Ilat_Stride = 0
     integer, parameter::  Ivza_Stride = 0
-    integer, dimension(NLevels_Rtm), public:: k_Rtm_Nwp
-    real, dimension(NLevels_Rtm), public:: x_Rtm_Nwp
-    real, dimension(NLevels_Rtm), private, save::  &
+    integer, dimension(NLevels_Rtm) :: k_Rtm_Nwp
+    real, dimension(NLevels_Rtm) :: x_Rtm_Nwp
+    real, dimension(NLevels_Rtm),  save::  &
                      T_Prof_Rtm,  &
                      Z_Prof_Rtm,  &
                      Wvmr_Prof_Rtm,  &
@@ -211,21 +208,17 @@ module RT_UTILITIES
                      Tpw_Prof_Rtm, &
                      Trans_Prof_Rtm
 
-    integer, dimension(:), allocatable, save, private:: k_Nwp_Rtm
-    real, dimension(:), allocatable, save, private:: x_Nwp_Rtm
-    real, dimension(:), allocatable, private, save:: Wvmr_Nwp
+    integer, dimension(:), allocatable, save:: k_Nwp_Rtm
+    real, dimension(:), allocatable, save:: x_Nwp_Rtm
+    real, dimension(:), allocatable,  save:: Wvmr_Nwp
 
     !----- PFAAST Specific Settings (all private to this module)
-    integer, dimension(Chan_Idx_Min:Chan_Idx_Max), private, save:: Rtm_Chan_Idx
-    character(len=20), dimension(Chan_Idx_Min:Chan_Idx_Max), private, save:: Pfaast_Name
-    integer, private, save:: Sc_Id_Rtm
-    character(len=10), private, save:: Sc_Name_Rtm
-
-    !---------------------------------------------------------------------
-    !  Determine angular resolution and range
-    !---------------------------------------------------------------------
-    integer, parameter, public:: Rtm_Nvzen = 50
-    real, parameter, public::  Rtm_Vza_Binsize = 0.02
+    integer, dimension(Chan_Idx_Min:Chan_Idx_Max),  save:: Rtm_Chan_Idx
+    character(len=20), dimension(Chan_Idx_Min:Chan_Idx_Max),  save:: Pfaast_Name
+    integer,  save:: Sc_Id_Rtm
+    character(len=10),  save:: Sc_Name_Rtm
+   
+    real, parameter::  Rtm_Vza_Binsize = 0.02
 
 contains
 
@@ -1291,8 +1284,7 @@ contains
       integer, intent(in):: WMO_Id
 
 
-!     !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-      Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+      Rtm_Chan_Idx = 0
 
       !----------------------------------------------------------------
       ! set channel mapping and pfaast routine name
@@ -1301,24 +1293,57 @@ contains
 
       case(3:5) !AVHRR (METOP-A,B,C)
          Pfaast_Name(:) = "tranmavhrr"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         Rtm_Chan_Idx (20) = 3
+         Rtm_Chan_Idx (31) = 4
+         Rtm_Chan_Idx (32) = 5
+         
 
       case(55:57) !MSG
          Pfaast_Name(:) = "tranmetsg101"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
-
+         Rtm_Chan_Idx (20) = 4        
+         Rtm_Chan_Idx (27) = 5
+         Rtm_Chan_Idx (28) = 6
+         Rtm_Chan_Idx (29) = 7
+         Rtm_Chan_Idx (30) = 8
+         Rtm_Chan_Idx (31) = 9
+         Rtm_Chan_Idx (32) = 10 
+         Rtm_Chan_Idx (33) = 11
+         
       case(252:259)    !GOES
          Pfaast_Name(:) = "goestran"
+
          if (Goes_Sndr_Flag == sym%NO) then
-            Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
-         else
-            Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0/)
-         endif
+            Rtm_Chan_Idx (20) = 22
+            Rtm_Chan_Idx (27) = 23
+            Rtm_Chan_Idx (31) = 24
+            Rtm_Chan_Idx (32) = 25 
+            Rtm_Chan_Idx (33) = 26
+         else 
+            Rtm_Chan_Idx (20) = 18            
+            Rtm_Chan_Idx (21) = 17            
+         
+            Rtm_Chan_Idx (23) = 16
+            Rtm_Chan_Idx (24) = 14
+            Rtm_Chan_Idx (25) = 13 
+            Rtm_Chan_Idx (27) = 12
+            Rtm_Chan_Idx (28) = 10
+         
+            Rtm_Chan_Idx (30) = 9
+            Rtm_Chan_Idx (31) = 8
+            Rtm_Chan_Idx (32) = 7 
+            Rtm_Chan_Idx (33) = 5
+            Rtm_Chan_Idx (34) = 4
+            Rtm_Chan_Idx (35) = 3
+            Rtm_Chan_Idx (36) = 2 
+         end if
 
       case(171:172) !MTSAT
          Pfaast_Name(:) = "tranmts101"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
-
+         Rtm_Chan_Idx (20) = 5
+         Rtm_Chan_Idx (27) = 4
+         Rtm_Chan_Idx (31) = 2
+         Rtm_Chan_Idx (32) = 3
+         
       case(200:209,223,706:708) !AVHRR 
          Pfaast_Name(:) = "tranmavhrr"
          Rtm_Chan_Idx (20) = 3
@@ -1327,25 +1352,57 @@ contains
 
       case(224) !VIIRS
          Pfaast_Name(:) = "tran_viirsm"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         Rtm_Chan_Idx (20) = 1
+         Rtm_Chan_Idx (22) = 2
+         Rtm_Chan_Idx (29) = 3
+         Rtm_Chan_Idx (31) = 4
+         Rtm_Chan_Idx (32) = 5
 
          if (Iff_Viirs_Flag == sym%YES) then
-          Pfaast_Name(27:28) = "tran_modisd101"
-          Pfaast_Name(33:36) = "tran_modisd101"
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+            Pfaast_Name(27:28) = "tran_modisd101"
+            Pfaast_Name(33:36) = "tran_modisd101"
+            Rtm_Chan_Idx (27) = 27
+            Rtm_Chan_Idx (28) = 28
+            Rtm_Chan_Idx (33) = 33
+            Rtm_Chan_Idx (34) = 34
+            Rtm_Chan_Idx (35) = 35
+            Rtm_Chan_Idx (36) = 36 
          endif
 
       case(783:784) !MODIS
          Pfaast_Name(:) = "tran_modisd101"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0/) 
+         Rtm_Chan_Idx (20) = 20
+         Rtm_Chan_Idx (21) = 21
+         Rtm_Chan_Idx (22) = 22
+         Rtm_Chan_Idx (23) = 23
+         Rtm_Chan_Idx (24) = 24
+         Rtm_Chan_Idx (25) = 25 
+         Rtm_Chan_Idx (27) = 27
+         Rtm_Chan_Idx (28) = 28
+         Rtm_Chan_Idx (29) = 29
+         Rtm_Chan_Idx (30) = 30
+         Rtm_Chan_Idx (31) = 31
+         Rtm_Chan_Idx (32) = 32 
+         Rtm_Chan_Idx (33) = 33
+         Rtm_Chan_Idx (34) = 34
+         Rtm_Chan_Idx (35) = 35
+         Rtm_Chan_Idx (36) = 36 
+          
 
       case(810) !COMS
          Pfaast_Name(:) = "fy2_coms_trn101"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)  
+         Rtm_Chan_Idx (20) = 2
+         Rtm_Chan_Idx (27) = 3
+         Rtm_Chan_Idx (31) = 4
+         Rtm_Chan_Idx (32) = 5
+          
 
       case(514:515) !FY2D/E
          Pfaast_Name(:) = "fy2_coms_trn101"
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)  
+         Rtm_Chan_Idx (20) = 2
+         Rtm_Chan_Idx (27) = 3
+         Rtm_Chan_Idx (31) = 4
+         Rtm_Chan_Idx (32) = 5
 
       case default
          print *, "Instrument not supported by PFAAST in CLAVR-x "
@@ -1598,7 +1655,7 @@ contains
    !==============================================================================
    !
    !==============================================================================
-   subroutine SETUP_SOLAR_RTM(WMO_Id)
+   subroutine SETUP_SOLAR_RTM ( WMO_Id )
 
       integer, intent(in):: WMO_Id
 

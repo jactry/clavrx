@@ -180,13 +180,13 @@ module RT_UTILITIES
    public:: SETUP_PFAAST, &
             SETUP_SOLAR_RTM, &
             MAP_NWP_RTM,  &
-            CREATE_TEMP_NWP_VECTORS,  &
+             CREATE_TEMP_NWP_VECTORS,  &
             DESTROY_TEMP_NWP_VECTORS, &
-            CONVERT_ATMOS_PROF_NWP_RTM,  &
-            COMPUTE_CLEAR_RAD_PROFILES_RTM, &
+       !     CONVERT_ATMOS_PROF_NWP_RTM,  &
+       !     COMPUTE_CLEAR_RAD_PROFILES_RTM, &
             GET_PIXEL_NWP_RTM, &
-            COMPUTE_WVMR_PROFILE_NWP, &
-            COMPUTE_TPW_PROFILE_NWP, &
+       !     COMPUTE_WVMR_PROFILE_NWP, &
+       !     COMPUTE_TPW_PROFILE_NWP, &
             ALLOCATE_RTM, &
             DEALLOCATE_RTM, &
             DEALLOCATE_RTM_VARS, &

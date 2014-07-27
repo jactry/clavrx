@@ -140,7 +140,8 @@ module RT_UTILITIES
       
    use NUMERICAL_ROUTINES , only: &
          vapor &
-       , compute_time_hours 
+       , compute_time_hours &
+       , locate
       
    use PLANCK, only: &
         PLANCK_RAD_FAST &
@@ -280,13 +281,14 @@ contains
       integer:: k
       integer:: k_temp
     
-
+     
       !--- map NWP Levels to RTM Levels
       do k = 1, Num_Levels_Nwp_Profile
-      
+     
          !--- locate the nwp Level within the Rtm Levels 
          !--- P_Std_Nwp(k) should fall between Rtm Levels k_temp and k_temp +1
          call LOCATE(Press_Profile_Rtm, Num_Levels_Rtm_Profile, Press_Profile_Nwp(k), k_temp)
+        
          k_Nwp_Rtm(k) = min(Num_Levels_Rtm_Profile-1,max(1,k_temp))
 
          !-- compute linear weighting factor

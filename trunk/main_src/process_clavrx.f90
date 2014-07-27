@@ -103,7 +103,22 @@
    use GLOBSNOW_READ_ROUTINES
    use GFS
    use NCEP_REANALYSIS
-   use RT_UTILITIES
+   
+   use RT_UTILITIES, only: &
+        rtm_nvzen &
+      , setup_pfaast &
+      , setup_solar_rtm &
+      , map_nwp_rtm  &
+      , create_temp_nwp_vectoRS  &
+      , destroy_temp_nwp_vectORS &
+      , get_pixel_nwp_rtm &
+      , allocate_rtm &
+      , deallocate_rtm &
+      , deallocate_rtm_vars &
+      , deallocate_rtm_cell &
+      , find_rtm_levels &
+      , nlevels_rtm
+      
    use RTM_COMMON
    use NWP_COMMON
    use SCALING_PARAMETERS
@@ -747,22 +762,23 @@
       if (Nwp_Flag == 4) then
          call READ_GFS_DATA(Nwp_Flag, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
       endif
-   
+     
       !---- if NWP is being read in, then proceeed in allocating RTM, NWP arrays
       if (Nwp_Flag /= 0) then
-
+         
          !--- Quality control NWP fields
          call QC_NWP()
-
+        
          !--- create temporary NWP vectors needed for RTM
          call CREATE_TEMP_NWP_VECTORS()
 
+ 
          !--- Compute mappings for NWP and RTM vertical coordinates
          call MAP_NWP_RTM(NLevels_Nwp, &
                           P_Std_Nwp, &
                           NLevels_Rtm, &
                           P_Std_Rtm)
-
+         
          !--- allocate RTM structures
          call ALLOCATE_RTM(nlon_Nwp,nlat_Nwp)
 

@@ -115,10 +115,10 @@
       , allocate_rtm &
       , deallocate_rtm &
       , deallocate_rtm_vars &
-      , deallocate_rtm_cell &
-      , nlevels_rtm
+      , deallocate_rtm_cell  
       
-   !use RTM_COMMON,only:
+   use RTM_COMMON,only: &
+      nlevels_rtm
    
    use NWP_COMMON
    use SCALING_PARAMETERS

@@ -194,8 +194,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
   blank_real4 = 0.0
   blank_char = " "
 
-  !--- make a file name for output
-  File_1b_Root = trim(file_1b)
+  !--- make a file name base for output
+  File_1b_Root = trim (file_1b)
 
   !--- special processing for modis - remove hdf suffix
   if (Modis_Flag == sym%YES) then
@@ -205,12 +205,14 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
     endif
   endif
 
-  !--- special processing for viirs - remove hdf suffix - this hard coded for GRAVITE files
+  !--- special processing for viirs - remove hdf suffix - this hard coded for
+  !GRAVITE files
   if (Viirs_Flag == sym%YES) then
     File_1b_Root = File_1b_Root(7:len_trim(File_1b_Root)-34)
   endif
 
-  !--- special processing for IFF - remove hdf suffix - this hard coded for PEATE files
+  !--- special processing for IFF - remove hdf suffix - this hard coded for
+  !PEATE files
   if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES) then
     File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-29)
   endif
@@ -225,7 +227,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-5)
     endif
     !-- remove channel number
-    if (trim(l1b_ext) == "area") then    
+    if (trim(l1b_ext) == "area") then
         ipos = index(File_1b_Root, "_1_")
         ilen = len(File_1b_Root)
         File_1b_Root = File_1b_Root(1:ipos-1) // "_"//File_1b_Root(ipos+3:ilen)
@@ -237,6 +239,9 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
     File_1b_Root = trim(File_1b_Root)//".1km"
   endif
 
+  !--- add 'clavrx_' to the file name output
+  File_1b_Root = 'clavrx_' // File_1b_Root
+
   !--- set Resolution_KM for global attribute
   Resolution_KM = -999.0
 
@@ -244,8 +249,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      Resolution_KM = 4.0
      if (GOES_1km_Flag == sym%YES) Resolution_KM = 1.0
   endif
-  if (MODIS_Flag == sym%YES) Resolution_KM = 1.0
-  if (VIIRS_Flag == sym%YES) Resolution_KM = 0.75
+  if (MODIS_Flag == sym%YES .or. IFF_MODIS_Flag == sym%YES) Resolution_KM = 1.0
+  if (VIIRS_Flag == sym%YES .or. IFF_VIIRS_Flag == sym%YES) Resolution_KM = 0.75
   if (AVHRR_Flag == sym%YES) then
      Resolution_KM = 1.1
      if (AVHRR_GAC_Flag == sym%YES) then
@@ -651,7 +656,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 !-- define level2 file structure
 !---------------------------------------------------------
   if (Level2_File_Flag == sym%YES) then
-     file_Level2= trim(File_1b_Root)//".level2.hdf"
+     File_Level2= trim(File_1b_Root)//".level2.hdf"
      print *, EXE_PROMPT, MOD_PROMPT, "creating level-2 file ", trim(file_Level2)
      Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
      if (Sd_Id_Level2 < 0) then
@@ -661,7 +666,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
     !--- write attributes
-    call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",file_Level2,File_1b_Root, &
+    call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
                            Resolution_KM, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
@@ -5179,4 +5184,8 @@ end subroutine CLOSE_PIXEL_HDF_FILES
 
   end subroutine WRITE_ALGORITHM_ATTRIBUTES
 
+!============================================================================
+
 end module LEVEL2_ROUTINES
+
+

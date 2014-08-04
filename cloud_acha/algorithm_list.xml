@@ -123,6 +123,8 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
+                        <sds_item name="Acha_Cost">
+                        </sds_item>
                 </sds_list>
 
                 <channels values="14,15" />
@@ -207,6 +209,8 @@ Basic layout, including all optional tags
                         <sds_item name="Acha_Packed_Meta_Data_Flags">
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Cost">
                         </sds_item>
                 </sds_list>
 
@@ -296,6 +300,8 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
+                        <sds_item name="Acha_Cost">
+                        </sds_item>
                 </sds_list>
 
                 <channels values="14,15,16" />
@@ -380,6 +386,8 @@ Basic layout, including all optional tags
                         <sds_item name="Acha_Packed_Meta_Data_Flags">
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Cost">
                         </sds_item>
                 </sds_list>
 
@@ -466,6 +474,8 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
+                        <sds_item name="Acha_Cost">
+                        </sds_item>
                 </sds_list>
 
                 <channels values="9,14,15" />
@@ -551,6 +561,8 @@ Basic layout, including all optional tags
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
                         </sds_item>
+                        <sds_item name="Acha_Cost">
+                        </sds_item>
                 </sds_list>
 
                 <channels values="8,14,16" />
@@ -635,6 +647,8 @@ Basic layout, including all optional tags
                         <sds_item name="Acha_Packed_Meta_Data_Flags">
                         </sds_item>
                         <sds_item name="Acha_Packed_Quality_Flags">
+                        </sds_item>
+                        <sds_item name="Acha_Cost">
                         </sds_item>
                 </sds_list>
 

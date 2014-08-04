@@ -1711,12 +1711,8 @@ end subroutine READ_GOES_SNDR
 
  last_line_in_Segment = min(AREAstr%Num_Line,Segment_Number*Num_Lines_Per_Segment)
 
-!---stw  First_Byte_In_Segment = AREAstr%pri_key_nav + &
-!---stw                          Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line + &
-!---stw                          Bytes_Per_Pixel 
-
  First_Byte_In_Segment = AREAstr%pri_key_nav + &
-                         Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line
+                         (First_Line_In_Segment - 1)*(bytes_per_line)
 
  Number_Of_Words_In_Segment = Words_Per_Line * Num_Lines_Per_Segment
 
@@ -1749,7 +1745,7 @@ end subroutine READ_GOES_SNDR
                  bytes_per_pixel, &
                  Number_Of_Words_In_Segment, &
                  Number_Of_Words_Read,Word_Buffer)
-
+     
    case default
 
      print *, EXE_PROMPT, "Unsupported Bytes_Per_Pixel Value in GET_IMAGE_FROM AREAFILE, stopping"
@@ -1759,14 +1755,14 @@ end subroutine READ_GOES_SNDR
 
  !--- update number of scans read
  Num_Lines_Read = Number_Of_Words_Read / Words_Per_Line
-
+ 
  do Line_Idx = 1, Num_Lines_Read
      Word_Start = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + Words_In_Prefix + 1
 !    Word_End = min(Word_Start + AREAstr%Num_Elem,Number_Of_Words_In_Segment)
      Word_End = min(Word_Start + (AREAstr%Num_Elem-1),Number_Of_Words_In_Segment)
      Nwords = int(Word_End - Word_Start)/Xstride + 1
      image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
-
+     
     Word_Start_Prefix = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + 1
 
     if (allocated(Scan_Time)) then
@@ -3321,15 +3317,16 @@ subroutine PRINT_PREFIX(buf, ms_Time)
   integer (kind=int4), INTENT(out) :: ms_Time
   real (kind=real4):: frac_Hours
   integer ITIMES(16)
-  integer year,dayofyr,Hour,min,sec,msec
+  integer year,dayofyr,Hour,minute,sec,msec
   real (kind=real4) :: Minute_Time
   integer (kind=int2), dimension(128) :: buf2
   logical*1 :: ldoc(256)
 
 !  integer, parameter :: LOC = 4  ! imager value, from mcidas code
-   integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
+!  integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
 !  integer, parameter :: LOC = 0  ! sounder value, from mcidas code
- 
+  integer, parameter :: LOC = 1   ! value experimentally determined to work for CLAVRx.
+
   equivalence(buf2, ldoc)
   
   buf2(:) = buf(:128)
@@ -3339,19 +3336,19 @@ subroutine PRINT_PREFIX(buf, ms_Time)
   year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
   dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
   Hour = itimes(8)*10 + itimes(9)
-  min  = itimes(10)*10 + itimes(11)
+  minute  = itimes(10)*10 + itimes(11)
   sec  = itimes(12)*10 + itimes(13)
   msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
-  
+
 ! PRINT STATEMENT KEPT for verification
-!      write (6,6005) year,dayofyr,Hour,min,sec,msec
+!      write (6,6005) year,dayofyr,Hour,minute,sec,msec
 !6005  FORMAT ('time: year',i5,' day of year',i4,' hh:mm:ss ',i2,1h:,i2,1h:,i2,' msec',i4)
 
   !Calculate miliseconds since midnight of current day
-   ms_Time = (((Hour * 60 * 60) + (min * 60) + sec) * 1000) + msec
+   ms_Time = (((Hour * 60 * 60) + (minute * 60) + sec) * 1000) + msec
  
   !Calculates fractions of an Hour since midnight of current day
-  Minute_Time = min + (((msec / 1000.0) + sec) / 60.0 )
+  Minute_Time = minute + (((msec / 1000.0) + sec) / 60.0 )
   frac_Hours = Hour + (Minute_Time / 60.0)
 
 

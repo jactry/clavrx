@@ -33,6 +33,7 @@ module IFF_CLAVRX_BRIDGE
    use PIXEL_COMMON, only: &
        Iff_Viirs_Flag &
        , Iff_Modis_Flag &
+       , Iff_Avhrr_Flag &
        , Iff_Gap_Mask &
        , Cld_Mask_Aux &
        , Cloud_Mask_Aux_Flag &
@@ -343,7 +344,55 @@ contains
    end subroutine READ_IFF_VIIRS_INSTR_CONSTANTS
 
 !---------------------------------------------------------------------- 
+! read the IFF AVHRR + HIRS constants into memory
+!----------------------------------------------------------------------
+   subroutine READ_IFF_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
+      use calibration_constants
+      use file_tools , only: getlun
 
+      implicit none
+
+      character(len=*), intent(in):: Instr_Const_file
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
+
+      Instr_Const_lun = GETLUN()
+
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+      print *, "opening ", trim(Instr_Const_file)
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening IFF AVHRR constants file, ios0 = ", ios0
+         stop 19
+      end if
+
+      read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+      read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+      read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+      read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20, nu_20
+      read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31, nu_31
+      read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32, nu_32
+      read(unit=Instr_Const_lun,fmt=*) a1_36, a2_36, nu_36
+      read(unit=Instr_Const_lun,fmt=*) a1_35, a2_35, nu_35
+      read(unit=Instr_Const_lun,fmt=*) a1_34, a2_34, nu_34
+      read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33, nu_33
+      read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30, nu_30
+      read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28, nu_28
+      read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27, nu_27
+      read(unit=Instr_Const_lun,fmt=*) a1_25, a2_25, nu_25
+      read(unit=Instr_Const_lun,fmt=*) a1_24, a2_24, nu_24
+      read(unit=Instr_Const_lun,fmt=*) a1_23, a2_23, nu_23
+      read(unit=Instr_Const_lun,fmt=*) a1_21, a2_21, nu_21
+      read(unit=Instr_Const_lun,fmt=*) b1_day_mask, b2_day_mask, b3_day_mask, b4_day_mask
+      close(unit=Instr_Const_lun)
+
+      !-- convert solar flux in channel 20 & 21 to mean with units mW/m^2/cm^-1
+      Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+   end subroutine READ_IFF_AVHRR_INSTR_CONSTANTS
+
+!----------------------------------------------------------------------
 
 end module IFF_CLAVRX_BRIDGE
 

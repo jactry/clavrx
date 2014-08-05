@@ -215,6 +215,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
   !PEATE files
   if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES) then
     File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-29)
+  elseif (Iff_Avhrr_Flag == sym%YES) then
+    File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-20)
   endif
 
   !--- do this for GOES names which are named goesxx_1_year_jday_hour.area
@@ -251,7 +253,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
   endif
   if (MODIS_Flag == sym%YES .or. IFF_MODIS_Flag == sym%YES) Resolution_KM = 1.0
   if (VIIRS_Flag == sym%YES .or. IFF_VIIRS_Flag == sym%YES) Resolution_KM = 0.75
-  if (AVHRR_Flag == sym%YES) then
+  if (AVHRR_Flag == sym%YES .or. IFF_AVHRR_Flag == sym%YES) then
      Resolution_KM = 1.1
      if (AVHRR_GAC_Flag == sym%YES) then
        Resolution_KM = 4.0

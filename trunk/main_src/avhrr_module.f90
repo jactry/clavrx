@@ -448,7 +448,8 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 ! the data format for subsequent read statements
 ! note, data_type and ver_1b are read in again later
 !-------------------------------------------------------
-   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag,ver_1b,data_type,Byte_Swap_1b)
+   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
+                                        ver_1b,data_type,Byte_Swap_1b)
 
     character(len=*), intent(in):: file_1b_local
     integer(kind=int4), intent(out):: AVHRR_GAC_Flag

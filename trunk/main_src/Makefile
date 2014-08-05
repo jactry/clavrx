@@ -129,6 +129,7 @@ clavrxorb_objs = process_clavrx.o \
 	         Compare_Float_Numbers.o \
 	         hdf_read_module.o \
                  tranmavhrr.o \
+                 hirstran_101.o \
                  tran_viirsm.o \
                  irtsubn101.o \
                  flip_rtc.o \
@@ -311,7 +312,7 @@ scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
 cloud_shadow_mod.o:cloud_shadow_mod.f90
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
@@ -380,6 +381,9 @@ get_lun.o : get_lun.f90
 
 tranmavhrr.o : tranmavhrr.f getnumsc.o get_lun.o
 	$(fc) -c $(fflags_pfast) tranmavhrr.f 
+
+hirstran_101.o : hirstran_101.f getnumsc.o get_lun.o
+	$(fc) -c $(fflags_pfast) hirstran_101.f 
 
 getnumsc.o : getnumsc.f
 	$(fc) -c $(fflags_pfast) getnumsc.f

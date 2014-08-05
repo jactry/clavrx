@@ -445,7 +445,7 @@ module AWG_CLOUD_HEIGHT
   Convergence_Criteria = Num_Param - 1.0
 
   !--- determine cirrus box width
-  call COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,BOX_WIDTH_KM, &
+  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,BOX_WIDTH_KM, &
                          Box_Half_Width_Cirrus)
 
   !----------- make identity matrix

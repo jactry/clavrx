@@ -224,6 +224,7 @@ module PIXEL_COMMON
   integer,public, save:: Viirs_Flag
   integer,public, save:: Iff_Viirs_Flag
   integer,public, save:: Iff_Modis_Flag
+  integer,public, save:: Iff_Avhrr_Flag
   integer,public, save:: Seviri_Flag
   integer,public, save:: Mtsat_Flag
   integer,public, save:: FY2_Flag

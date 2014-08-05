@@ -25,7 +25,7 @@ c THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 c SUPPORT TO USERS.
 c
 c--------------------------------------------------------------------------
-	subroutine tran_viirsm(ancil_data_path,temp,wvmr,ozmr,theta, 
+      subroutine tran_viirsm(ancil_data_path,temp,wvmr,ozmr,theta, 
      &                      rco2,kban,taut,*)
 c * VIIRS -- calculate transmittances
 c .... version of 12.09.01

@@ -61,87 +61,86 @@
 module RT_UTILITIES
  
    use CONSTANTS, only: &
-      real4 &
-      , int4 &
-      , int1 &
-      , sym &
-      , DTOR &
-      , MISSING_VALUE_REAL4  &
-      , EXE_PROMPT &
-      , g &
+      Real4 &
+      , Int4 &
+      , Int1 &
+      , Sym &
+      , Dtor &
+      , Missing_Value_Real4  &
+      , Exe_Prompt &
+      , G &
       , PI
       
    use NWP_COMMON, only : &
-        nlevels_nwp &
-      , t_prof_nwp &
-      , p_std_nwp &
-      , rh_prof_nwp &
-      , tpw_prof_nwp &
-      , sfc_level_nwp &
-      , tmpair_nwp &
-      , rhsfc_nwp &
-      , psfc_nwp &
-      , z_prof_nwp &
-      , ozone_prof_nwp &
+        Nlevels_Nwp &
+      , T_Prof_Nwp &
+      , P_Std_Nwp &
+      , Rh_Prof_Nwp &
+      , Tpw_Prof_Nwp &
+      , Sfc_Level_Nwp &
+      , Tmpair_Nwp &
+      , Rhsfc_Nwp &
+      , Psfc_Nwp &
+      , Z_Prof_Nwp &
+      , Ozone_Prof_Nwp &
       , Delta_T_Inversion &
-      , p_inversion_min &     
-      , p_trop_nwp &
-      , p_trop_nwp 
+      , P_Inversion_Min &     
+      , P_Trop_Nwp &
+      , P_Trop_Nwp 
       
    use PIXEL_COMMON, only: &
-      nwp_flag &
-      , CHAN_ON_FLAG_DEFAULT &
-      , num_pix &
-      , bad_pixel_mask &
-      , zen_idx_rtm &
-      , coszen &
-      , i_nwp &
-      , j_nwp &
-      , i_nwp_x &
-      , j_nwp_x &
-      , lon_nwp_fac &
-      , lat_nwp_fac &
-      , chan_on_flag_default &
-      , cossolzen &
-      , sfc_level_rtm_pixel &
-      , land &
-      , zsfc &
-      , sfc_level_rtm_pixel &
-      , land_mask &
-      , solar_rtm &
-      , ch &
-      , sfc_type &
-      , space_mask &
-      , snow &
-      , use_sst_anal &
-      , sst_anal &
-      , tsfc_nwp_pix &
-      , sc_id_wmo &
-      , goes_sndr_flag &
-      , iff_viirs_flag &
-      , trans_atm_ch20_solar_rtm &
-      , trans_atm_ch20_solar_total_rtm &
-      , rad_clear_ch20_solar_rtm &
-      , bt_clear_ch20_solar_rtm &
-      , bt_clear_ch31_rtm_unbiased &
-      , bt_clear_ch32_rtm_unbiased &
-      , rad_clear_ch31_rtm_unbiased &
-      , rad_clear_ch32_rtm_unbiased &
-      , ems_ch20_clear_solar_rtm &
-      , ems_ch20_clear_rtm &
-      , ems_ch20_clear_solar_sfc_rtm &
-      , num_scans_per_segment &
-      , beta_11um_12um_tropo_rtm &
-      , beta_11um_85um_tropo_rtm &
-      , beta_11um_67um_tropo_rtm &
-      , beta_11um_133um_tropo_rtm &
-      , pixel_local_time_hours &
-      , ancil_data_dir
+      Nwp_Flag &
+      , Num_Pix &
+      , Bad_Pixel_Mask &
+      , Zen_Idx_Rtm &
+      , Coszen &
+      , I_Nwp &
+      , J_Nwp &
+      , I_Nwp_X &
+      , J_Nwp_X &
+      , Lon_Nwp_Fac &
+      , Lat_Nwp_Fac &
+      , Chan_On_Flag_Default &
+      , Cossolzen &
+      , Sfc_Level_Rtm_Pixel &
+      , Land &
+      , Zsfc &
+      , Land_Mask &
+      , Solar_Rtm &
+      , Ch &
+      , Sfc_Type &
+      , Space_Mask &
+      , Snow &
+      , Use_Sst_Anal &
+      , Sst_Anal &
+      , Tsfc_Nwp_Pix &
+      , Sc_Id_Wmo &
+      , Goes_Sndr_Flag &
+      , Iff_Viirs_Flag &
+      , Iff_Avhrr_Flag &
+      , Trans_Atm_Ch20_Solar_Rtm &
+      , Trans_Atm_Ch20_Solar_Total_Rtm &
+      , rad_clear_Ch20_Solar_Rtm &
+      , Bt_Clear_Ch20_Solar_Rtm &
+      , Bt_Clear_Ch31_Rtm_Unbiased &
+      , Bt_Clear_Ch32_Rtm_Unbiased &
+      , Rad_Clear_Ch31_Rtm_Unbiased &
+      , Rad_Clear_Ch32_Rtm_Unbiased &
+      , Ems_Ch20_Clear_Solar_Rtm &
+      , Ems_Ch20_Clear_Rtm &
+      , Ems_Ch20_Clear_Solar_Sfc_Rtm &
+      , Num_Scans_Per_Segment &
+      , Beta_11um_12um_Tropo_Rtm &
+      , Beta_11um_85um_Tropo_Rtm &
+      , Beta_11um_67um_Tropo_Rtm &
+      , Beta_11um_133um_Tropo_Rtm &
+      , Pixel_Local_Time_Hours &
+      , Ancil_Data_Dir
       
    use NUMERICAL_ROUTINES , only: &
-         vapor &
-       , compute_time_hours &
-       , locate
+         VAPOR &
+       , COMPUTE_TIME_HOURS &
+       , LOCATE
       
    use PLANCK, only: &
         PLANCK_RAD_FAST &
@@ -150,15 +149,13 @@ module RT_UTILITIES
       
    ! use SURFACE_PROPERTIES, only: 
    
-   
-   
    use RTM_COMMON, only: &
-       nlevels_rtm &
-      , rtm &
-      , p_std_rtm &
-      , t_std_rtm &
-      , wvmr_std_rtm &
-      , ozmr_std_rtm 
+       Nlevels_Rtm &
+      , Rtm &
+      , P_Std_Rtm &
+      , T_Std_Rtm &
+      , Wvmr_Std_Rtm &
+      , Ozmr_Std_Rtm 
 
    implicit none
    
@@ -1298,7 +1295,13 @@ contains
          Rtm_Chan_Idx (32) = 5
          
 
-      case(55:57) !MSG
+         if (Iff_Avhrr_Flag == sym%YES) then
+          Pfaast_Name(21:30) = "hirstran_101"
+          Pfaast_Name(33:36) = "hirstran_101"
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,21, 0,23,24,25, 0,27,28, 0,30, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         endif
+
+        case(55:57) !MSG
          Pfaast_Name(:) = "tranmetsg101"
          Rtm_Chan_Idx (20) = 4        
          Rtm_Chan_Idx (27) = 5
@@ -1350,7 +1353,13 @@ contains
          Rtm_Chan_Idx (31) = 4
          Rtm_Chan_Idx (32) = 5
 
-      case(224) !VIIRS
+         if (Iff_Avhrr_Flag == sym%YES) then
+          Pfaast_Name(21:30) = "hirstran_101"
+          Pfaast_Name(33:36) = "hirstran_101"
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,21, 0,23,24,25, 0,27,28, 0,30, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         endif
+
+        case(224) !VIIRS
          Pfaast_Name(:) = "tran_viirsm"
          Rtm_Chan_Idx (20) = 1
          Rtm_Chan_Idx (22) = 2
@@ -1550,26 +1559,37 @@ contains
 
       select case (trim(Pfaast_Name(Chan_Idx)))
 
-      case("tranmavhrr")
-         call tranmavhrr(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+    case("tranmavhrr")
+       call tranmavhrr(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
+                       Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
-      case("goestran") 
-         call goestran(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
+    case("hirstran_101")
+       call hirstran_101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
+                     Sc_Name_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-      case("tranmts101") 
-         call tranmts101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
+    case("goestran") 
+       call goestran(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+                     Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-      case("tranmetsg101")
-         call tranmetsg101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
+    case("tranmts101") 
+       call tranmts101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+                       Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-      case("tran_modisd101")
-         call tran_modisd101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm,Rtm_Chan_Idx(Chan_Idx),0,Trans_Prof_Rtm,Error_Status) 
+    case("tranmetsg101")
+       call tranmetsg101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-      case("fy2_coms_trn101")
-         call fy2_coms_trn101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_RTM,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+    case("tran_modisd101")
+       call tran_modisd101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
+                           Rtm_Chan_Idx(Chan_Idx),0,Trans_Prof_Rtm,Error_Status) 
 
-      case("tran_viirsm") 
-          call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+    case("fy2_coms_trn101")
+       call fy2_coms_trn101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_RTM, &
+                            Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+
+    case("tran_viirsm") 
+       call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
+                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
       case default
 

@@ -500,8 +500,13 @@
       ! lines in the file
       ! for AVHRR, determine file type and some record lengths
       !-----------------------------------------------------------------------
-      call  SET_FILE_DIMENSIONS(File_1b_Full,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start) 
+      call  SET_FILE_DIMENSIONS(File_1b_Full,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
  
+      if (Ierror == sym%YES) then
+         print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "
+         cycle file_loop
+      end if
+
       if (Num_Scans <= 0) then
          cycle file_loop    
       end if
@@ -534,7 +539,7 @@
                                           Goes_Flag, Goes_Mop_Flag, &
                                           Goes_Sndr_Flag,Seviri_Flag,  &
                                           Mtsat_Flag, Viirs_Flag,  &
-                                          Iff_Viirs_Flag, &
+                                          Iff_Viirs_Flag, Iff_Avhrr_flag, &
                                           FY2_Flag, COMS_Flag)
    
       !------------------------------------------------------------------
@@ -1197,7 +1202,7 @@
             end if
 
             !--- if not viirs, normalize reflectances by the Solar zenith angle
-            if (Viirs_Flag == sym%NO .and. Iff_Viirs_Flag == sym%NO) then
+            if (Viirs_Flag == sym%NO .and. Iff_Viirs_Flag == sym%NO .and. Iff_Avhrr_Flag == sym%NO) then
                call NORMALIZE_REFLECTANCES(Sun_Earth_Distance,Line_Idx_Min_Segment,Num_Scans_Read)
             end if
    

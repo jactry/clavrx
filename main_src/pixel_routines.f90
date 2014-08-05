@@ -107,6 +107,7 @@ subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
                                               Goes_Sndr_Flag, &
                                               Seviri_Flag, Mtsat_Flag, &
                                               Viirs_Flag, Iff_Viirs_Flag, &
+                                              Iff_Avhrr_flag, &
                                               FY2_Flag, COMS_Flag)
 
    integer, intent(in):: Avhrr_Flag
@@ -117,6 +118,7 @@ subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
    integer, intent(in):: Seviri_Flag
    integer, intent(in):: Mtsat_Flag
    integer, intent(in):: Iff_Viirs_Flag
+   integer, intent(in):: Iff_Avhrr_Flag
    integer, intent(in):: FY2_Flag
    integer, intent(in):: Viirs_Flag
    integer, intent(in):: COMS_Flag
@@ -126,10 +128,10 @@ subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
       Chan_On_Flag_Default(7:19) = sym%NO
       Chan_On_Flag_Default(21:30) = sym%NO
       Chan_On_Flag_Default(33:36) = sym%NO
-       if (Avhrr_1_Flag == sym%YES) then
-             Chan_On_Flag_Default(32) = sym%NO
-       endif
-       Chan_On_Flag_Default(37:42) = sym%NO
+      if (Avhrr_1_Flag == sym%YES) then
+            Chan_On_Flag_Default(32) = sym%NO
+      endif
+      Chan_On_Flag_Default(37:42) = sym%NO
    endif 
 
   !GOES
@@ -204,6 +206,16 @@ subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
        Chan_On_Flag_Default(27:28) = sym%NO
        Chan_On_Flag_Default(30) = sym%NO
   ENDIF
+
+   ! AVHRR + HIRS in IFF
+   ! note HIRS uses 21,23:25,27:30,33:36
+   if (Iff_Avhrr_Flag == sym%YES) then
+      Chan_On_Flag_Default(3:5) = sym%NO
+      Chan_On_Flag_Default(7:19) = sym%NO
+      Chan_On_Flag_Default(22) = sym%NO
+      Chan_On_Flag_Default(26) = sym%NO
+      Chan_On_Flag_Default(37:42) = sym%NO
+   endif
   
   !COMS
   if (COMS_Flag == sym%YES) then

@@ -208,4 +208,4 @@
      Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 0, &
      Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0, &
      Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
-     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 0
+     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 1

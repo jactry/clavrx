@@ -183,104 +183,29 @@ contains
 
          if ( .not. is_band_on(i_band) .or. (size(out % band (i_band) % ref) < 1 &
               .and. size(out % band (i_band) % rad) < 1) ) cycle
-         select case(i_band)
-          case(1)
-            ch(1)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(2)
-            ch(2)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(3)
-            ch(3)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(4)
-            ch(4)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(5)
-            ch(5)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(6)
-            ch(6)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(7)
-            ch(7)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(8)
-            ch(8)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(9)
-            ch(9)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(10)
-            ch(10)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(11)
-            ch(11)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(12) 
-            ch(12)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(13) 
-            ch(13)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(14) 
-            ch(14)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(15) 
-            ch(15)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(16) 
-            ch(16)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(17) 
-            ch(17)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(18) 
-            ch(18)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(19) 
-            ch(19)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(20) 
-            ch(20)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(20)%Bt_Toa , ch(20)%Rad_Toa , 20 , missing_value_real4 )
-          case(21)
-            ch(21)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(21)%Bt_Toa , ch(21)%Rad_Toa , 21 , missing_value_real4 )
-          case(22)
-            ch(22)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(22)%Bt_Toa , ch(22)%Rad_Toa , 22 , missing_value_real4 )
-          case(23)
-            ch(23)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(23)%Bt_Toa , ch(23)%Rad_Toa , 23 , missing_value_real4 )
-          case(24)
-            ch(24)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(24)%Bt_Toa , ch(24)%Rad_Toa , 24 , missing_value_real4 )
-          case(25)
-            ch(25)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(25)%Bt_Toa , ch(25)%Rad_Toa , 25 , missing_value_real4 )
-          case(26)
-            ch(26)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(27)
-            ch(27)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(27)%Bt_Toa , ch(27)%Rad_Toa , 27 , missing_value_real4 )
-          case(28)
-            ch(28)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(28)%Bt_Toa , ch(28)%Rad_Toa , 28 , missing_value_real4 )
-          case(29)
-            ch(29)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(29)%Bt_Toa , ch(29)%Rad_Toa , 29 , missing_value_real4 )
-          case(30)
-            ch(30)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(30)%Bt_Toa , ch(30)%Rad_Toa , 30 , missing_value_real4 )
-          case(31)
-            ch(31)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(31)%Bt_Toa , ch(31)%Rad_Toa , 31 , missing_value_real4 )
-          case(32)
-            ch(32)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(32)%Bt_Toa , ch(32)%Rad_Toa , 32 , missing_value_real4 )
-          case(33)
-            ch(33)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(33)%Bt_Toa , ch(33)%Rad_Toa , 33 , missing_value_real4 )
+
+         ! - ref channels
+         if (i_band < 20 .or. i_band == 26) then
+            ch(i_band)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
+
+         ! - rad/bt channels
+         elseif ((i_band >= 20 .and. i_band < 26) &
+            .or. (i_band > 26 .and. i_band <=36)) then
+            ch(i_band)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
+            call COMPUTE_BT_ARRAY ( ch(i_band)%Bt_Toa , ch(i_band)%Rad_Toa , i_band , missing_value_real4 )
             ! --- make Iff_Gap_Mask out of CRIS channel
             ! --- 0 = data in 13.3, 1=no data in 13.3
-            if (Iff_Viirs_Flag == sym%YES) then
+            if (Iff_Viirs_Flag == sym%YES .and. i_band == 33) then
                IFF_Gap_Mask = 0
                where (ch(33)%Bt_Toa == missing_value_real4) 
                   IFF_Gap_Mask = 1
                endwhere
             endif
-          case(34)
-            ch(34)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(34)%Bt_Toa , ch(34)%Rad_Toa , 34 , missing_value_real4 )
-          case(35)
-            ch(35)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(35)%Bt_Toa , ch(35)%Rad_Toa , 35 , missing_value_real4 )
-          case(36)
-            ch(36)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(36)%Bt_Toa , ch(36)%Rad_Toa , 36 , missing_value_real4 )
-         end select
+
+         ! - skip all not listed channels
+         else
+            cycle
+         endif 
       end do
 
       ! --- check if we need to read cloud mask aux

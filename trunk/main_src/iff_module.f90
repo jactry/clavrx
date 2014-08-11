@@ -489,7 +489,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             setname_band = 'EmissiveBands'
 
             ! find what current channel has array number
-            do ii = 1, num_ref_ch
+            do ii = 1, num_rad_ch
                if ( config % chan_list(i_band) == band_names_int_rad(ii) ) then
                   iband_sds = ii
                endif
@@ -518,8 +518,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             where(r3d_buffer .LT. 0.)
                r3d_buffer = missing_value
             endwhere
-!if (i_band == 1) print *,r3d_buffer(100:120,100:110,1)
-!print *,i_band,r3d_buffer
             if (.not. allocated ( out % band ( i_band ) % ref ) ) &
                       allocate (out % band ( i_band ) % ref (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % ref =  r3d_buffer(:,:,1)
@@ -528,6 +526,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             if (.not. allocated ( out % band ( i_band ) % rad ) ) &
                      allocate (out % band ( i_band ) % rad (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % rad =  r3d_buffer(:,:,1)
+
          endif
             
          out % band (i_band) % is_read = .true.

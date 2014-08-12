@@ -510,7 +510,6 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
 
           !--- set some flags to control processing
           Oceanic_Glint_Flag = Input%Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
-          Lunar_Oceanic_Glint_Flag = Input%Lunar_Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
           Coastal_Flag = Input%Coastal_Mask(Elem_Idx,Line_Idx)
           Solar_Contam_Flag = Input%Solar_Contamination_Mask(Elem_Idx,Line_Idx)  
 
@@ -537,6 +536,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
           Lunar_Forward_Scattering_Flag = symbol%NO
 
           if (Input%Chan_On_DNB == symbol%YES) then
+             Lunar_Oceanic_Glint_Flag = Input%Lunar_Oceanic_Glint_Mask(Elem_Idx,Line_Idx)
              Lunar_Spatial_Flag = symbol%YES
              if (Input%Lunzen(Elem_Idx,Line_Idx) > Reflectance_Spatial_Solzen_Thresh) then
                Lunar_Spatial_Flag = symbol%NO

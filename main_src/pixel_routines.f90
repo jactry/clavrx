@@ -1036,6 +1036,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        Tau_Aer = Solar_Rtm%Tau_Aer(Chan_Idx)
        Wo_Aer = Solar_Rtm%Wo_Aer(Chan_Idx)
        G_Aer = Solar_Rtm%G_Aer(Chan_Idx)
+       Tau_Ray = Solar_Rtm%Tau_Ray(Chan_Idx)
 
        !------------------------------------------------------------------------
        ! select gas and surface reflectance parameters

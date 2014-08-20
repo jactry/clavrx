@@ -40,6 +40,7 @@
 ! COMPUTE_INOUE_CLOUD_TYPE - compute cloud type based on Toshiro Inoue's scheme
 ! COMPUTE_CLOUD_WATER_PATH - compute cloud water path
 ! COMPUTE_PRECIPITATION - compute precipitation using KNMI approach
+! COMPUTE_ADIABATIC_CLOUD_PROPS - compute precipitation using KNMI approach
 !
 ! DETERMINE_LEVEL1B_COMPRESSION
 !
@@ -81,6 +82,7 @@ MODULE PIXEL_ROUTINES
           DETERMINE_LEVEL1B_COMPRESSION, &
           COMPUTE_CLOUD_WATER_PATH, &
           COMPUTE_PRECIPITATION, &
+          COMPUTE_ADIABATIC_CLOUD_PROPS, &
           COMPUTE_DCOMP_INSOLATION, &
           TERM_REFL_NORM, &
           MERGE_NWP_HIRES_ZSFC, &
@@ -323,7 +325,7 @@ subroutine QC_MODIS(jmin,nj)
      if (maxval(lat_1b(:,Line_Idx)) < -100.0) then
         Bad_Pixel_Mask(:,Line_Idx) = sym%YES
      endif
-  ENDDO line_loop
+  enddo line_loop
 
 end subroutine QC_MODIS
  
@@ -576,9 +578,9 @@ subroutine QUALITY_CONTROL_ANCILLARY_DATA (j1,nj)
         endif
 
 
-      ENDDO
+      enddo
 
-   ENDDO
+   enddo
 
 end subroutine QUALITY_CONTROL_ANCILLARY_DATA
 
@@ -966,8 +968,8 @@ end subroutine COMPUTE_TSFC
 !-----------------------------------------------------------
 subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
 
-   integer, intent(IN):: Line_Idx_Min
-   integer, intent(IN):: Num_Lines
+   integer, intent(in):: Line_Idx_Min
+   integer, intent(in):: Num_Lines
    integer:: Line_Idx
    integer:: Elem_Idx
    integer:: Line_Idx_Max
@@ -1202,8 +1204,8 @@ end subroutine ATMOS_CORR
 !------------------------------------------------------------------
  subroutine COMPUTE_ERB(Line_Idx_Min,Num_Lines)
 
-  integer, intent(IN):: Line_Idx_Min
-  integer, intent(IN):: Num_Lines
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
   integer:: Line_Idx_Max
 
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
@@ -1251,7 +1253,7 @@ end subroutine ATMOS_CORR
   real(kind=real4), intent(in):: Sun_Earth_Distance
   integer, intent(in):: j1
   integer, intent(in):: nj
-  integer:: i,j,j2
+  integer:: i,j,j2, Chan_Idx
 
   j2 = j1 + nj - 1
 
@@ -1261,8 +1263,10 @@ end subroutine ATMOS_CORR
 
       if (Bad_Pixel_Mask(i,j) == sym%NO .and. Cossolzen(i,j) > 0.0) then
 
-       if (Chan_On_Flag_Default(1) == sym%YES)  &
-           ch(1)%Ref_Toa(i,j) = (ch(1)%Ref_Toa(i,j) / Cossolzen(i,j)) 
+       do Chan_Idx = 1,19
+          if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) ch(Chan_Idx)%Ref_Toa(i,j) = ch(Chan_Idx)%Ref_Toa(i,j) / Cossolzen(i,j)
+       enddo
+       if (Chan_On_Flag_Default(26) == sym%YES) ch(26)%Ref_Toa(i,j) = ch(26)%Ref_Toa(i,j) / Cossolzen(i,j)
 
        if ((Chan_On_Flag_Default(1) == sym%YES)) then
          if (Ref_Ch1_Dark_Composite(i,j) /= Missing_Value_Real4) then
@@ -1270,65 +1274,10 @@ end subroutine ATMOS_CORR
          endif
        endif
 
-       if (Chan_On_Flag_Default(2) == sym%YES)  &
-           ch(2)%Ref_Toa(i,j) = (ch(2)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(3) == sym%YES)  &
-           ch(3)%Ref_Toa(i,j) = (ch(3)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(4) == sym%YES)  &
-           ch(4)%Ref_Toa(i,j) = (ch(4)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(5) == sym%YES)  &
-           ch(5)%Ref_Toa(i,j) = (ch(5)%Ref_Toa(i,j) / Cossolzen(i,j))
-
        if (Chan_On_Flag_Default(6) == sym%YES) then
-           ch(6)%Ref_Toa(i,j) = (ch(6)%Ref_Toa(i,j) / Cossolzen(i,j))
            if (ch(6)%Ref_Toa(i,j) < 0) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
            if (AVHRR_Flag == sym%YES .and. Ch3a_On_Avhrr(j) /= sym%YES) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
        endif
-
-       if (Chan_On_Flag_Default(7) == sym%YES)  &
-               ch(7)%Ref_Toa(i,j) = (ch(7)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(8) == sym%YES)  &
-               ch(8)%Ref_Toa(i,j) = (ch(8)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(9) == sym%YES)  &
-               ch(9)%Ref_Toa(i,j) = (ch(9)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(10) == sym%YES)  &
-               ch(10)%Ref_Toa(i,j) = (ch(10)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(11) == sym%YES)  &
-               ch(11)%Ref_Toa(i,j) = (ch(11)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(12) == sym%YES)  &
-               ch(12)%Ref_Toa(i,j) = (ch(12)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(13) == sym%YES)  &
-               ch(13)%Ref_Toa(i,j) = (ch(13)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(14) == sym%YES)  &
-               ch(14)%Ref_Toa(i,j) = (ch(14)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(15) == sym%YES)  &
-               ch(15)%Ref_Toa(i,j) = (ch(15)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(16) == sym%YES)  &
-               ch(16)%Ref_Toa(i,j) = (ch(16)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(17) == sym%YES)  &
-               ch(17)%Ref_Toa(i,j) = (ch(17)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(18) == sym%YES)  &
-               ch(18)%Ref_Toa(i,j) = (ch(18)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(19) == sym%YES)  &
-               ch(19)%Ref_Toa(i,j) = (ch(19)%Ref_Toa(i,j) / Cossolzen(i,j))
-
-       if (Chan_On_Flag_Default(26) == sym%YES)  &
-               ch(26)%Ref_Toa(i,j) = (ch(26)%Ref_Toa(i,j) / Cossolzen(i,j))
 
        if (Avhrr_Flag == sym%YES ) then
         if (Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(i,j) = ch(1)%Ref_Toa(i,j) * (Sun_Earth_Distance**2)
@@ -1348,7 +1297,7 @@ end subroutine ATMOS_CORR
        endif
 
 
-       !--- in terminator region, renormalize
+       !--- in terminator region, renormalize Channel 1 (maybe extend to all?)
        if (Solzen(i,j) > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) then
           if (Chan_On_Flag_Default(1) == sym%YES)  &
               ch(1)%Ref_Toa(i,j) = TERM_REFL_NORM(Cossolzen(i,j),ch(1)%Ref_Toa(i,j))
@@ -1373,56 +1322,18 @@ end subroutine ATMOS_CORR
           endif
         endif
 
-      ELSE
+      else
 
-       if (Chan_On_Flag_Default(1) == sym%YES)  &
-              ch(1)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(2) == sym%YES)  &
-             ch(2)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(3) == sym%YES)  &
-             ch(3)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(4) == sym%YES)  &
-             ch(4)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(5) == sym%YES)  &
-             ch(5)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(6) == sym%YES)  &
-             ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(7) == sym%YES)  &
-             ch(7)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(8) == sym%YES)  &
-             ch(8)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(9) == sym%YES)  &
-             ch(9)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(10) == sym%YES)  &
-             ch(10)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(11) == sym%YES)  &
-             ch(11)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(12) == sym%YES)  &
-             ch(12)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(13) == sym%YES)  &
-             ch(13)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(14) == sym%YES)  &
-             ch(14)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(15) == sym%YES)  &
-             ch(15)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(16) == sym%YES)  &
-             ch(16)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(17) == sym%YES)  &
-             ch(17)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(18) == sym%YES)  &
-             ch(18)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(19) == sym%YES)  &
-             ch(19)%Ref_Toa(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(26) == sym%YES)  &
-             ch(26)%Ref_Toa(i,j) = Missing_Value_Real4
+       !--- set to missing
+       do Chan_Idx = 1,19
+          if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) ch(Chan_Idx)%Ref_Toa(i,j) = Missing_Value_Real4
+       enddo
+       if (Chan_On_Flag_Default(26) == sym%YES) ch(26)%Ref_Toa(i,j) = Missing_Value_Real4
 
        !--- un-normalized refs for AWIPS
-       if (Chan_On_Flag_Default(1) == sym%YES)  &
-              ch(1)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(2) == sym%YES)  &
-              ch(2)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(6) == sym%YES)  &
-              ch(6)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
 
 
       endif
@@ -1501,7 +1412,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
               ch(20)%Ref_Toa(i,j) = max(-50.0,min(100.0,ch(20)%Ref_Toa(i,j)))
         endif
 
-      ENDDO
+      enddo
 
      endif   !--end of Ch3a_on check
 
@@ -1548,9 +1459,9 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         endif
 
-      ENDDO
+      enddo
 
-    ENDDO
+    enddo
     
 end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 
@@ -2322,8 +2233,8 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
            Cloud_Fraction_Uncer_3x3(i,j) = Cloud_Fraction_Uncer_3x3(i,j) +   &
                                            Cloud_Fraction_Uncer_Temp
 
-         ENDDO
-      ENDDO
+         enddo
+      enddo
 
       Cloud_Fraction_Uncer_3x3(i,j) = Cloud_Fraction_Uncer_3x3(i,j)  / Ngood
 
@@ -2567,36 +2478,161 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
      Cwp_Water_Layer_Dcomp(Elem_Idx,Line_Idx) = Water_Layer_Fraction * Cwp_Dcomp(Elem_Idx,Line_Idx)
      Cwp_Scwater_Layer_Dcomp(Elem_Idx,Line_Idx) = Scwater_Layer_Fraction * Cwp_Dcomp(Elem_Idx,Line_Idx)
 
-    ENDDO element_loop
-  ENDDO line_loop
+    enddo element_loop
+  enddo line_loop
 
 
 end subroutine COMPUTE_CLOUD_WATER_PATH
+!-----------------------------------------------------------------------------
+!--- compute Number concentration and Geometrical Height
+!-----------------------------------------------------------------------------
+subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
+
+  !--- local parameters used in lwp, iwp, N and H computation
+  real(kind=real4), parameter:: Rho_Water = 1000.0    !kg/m^3
+  real(kind=real4), parameter:: Q_Eff_Sca  = 2.0
+  real(kind=real4), parameter:: Drop_Dis_Width  = 0.8
+  real(kind=real4):: Condensation_Rate
+  real(kind=real4):: Water_Path_Cloud
+  integer:: Elem_Idx, Line_Idx, Elem_Idx_Min, Elem_Idx_Max, Line_Idx_Max, Num_Elements
+
+  real(kind=real4)::  T_Cloud, Reff_Cloud, Tau_Cloud
+
+  Elem_Idx_Min = 1
+  Num_Elements = Num_Pix
+  Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
+  Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
+
+  H_Dcomp = Missing_Value_Real4
+  N_Dcomp = Missing_Value_Real4
+
+  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
+
+    element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
+
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+      !--- skip non cloud pixels
+      if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) then
+          H_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          N_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          cycle
+      endif
+
+      !--- skip ice
+      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%WATER_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%SUPERCOOLED_TYPE) then
+          cycle
+      endif
+
+      !--- make local aliases of global variables
+      Water_Path_Cloud = Cwp_Dcomp(Elem_Idx,Line_Idx) / 1000.0   !kg/m^2
+      T_Cloud = Tc_Acha(Elem_Idx,Line_Idx)
+      Reff_Cloud = Reff_Dcomp(Elem_Idx,Line_Idx)
+      Tau_Cloud = Tau_Dcomp(Elem_Idx,Line_Idx)
+
+     !--- compute Number concentration and Geometrical Height
+     !--- filter for the clouds where this is applicable
+     if (T_cloud > 268.0 .and. T_cloud < 300.0 .and. &
+         Reff_Cloud > 5.0 .and. Reff_Cloud < 35.0 .and. &
+         Tau_Cloud > 5 .and. Tau_Cloud < 50.0) then
+
+         !-- condensation rate (kg/m^3/m)
+         Condensation_Rate = exp(-21.0553+T_cloud*0.0536887) / 1000.0
+
+         !geometrical height (meters)
+         H_Dcomp(Elem_Idx,Line_Idx)  =  &
+                    ( 2.0 / Condensation_Rate * Water_Path_Cloud )**0.5
+
+         !Number concentration (cm-3)
+         N_Dcomp(Elem_Idx,Line_Idx) = 2.0**(-5.0/2.0)/Drop_Dis_Width *   &
+                             Tau_Cloud**3.0 * Water_Path_Cloud**(-5.0/2.0) *  &
+                            (3.0/5.0*Q_eff_sca*pi)**(-3.0) *  &
+                            (3.0*Condensation_Rate/4.0/pi/rho_water)**(-2.0) * &
+                             Condensation_Rate**(5.0/2.0)/ 1.0E6
+
+     endif
+
+    end do element_loop
+  end do line_loop
+
+  Diag_Pix_Array_1 = N_Dcomp
+  Diag_Pix_Array_2 = H_Dcomp
+
+end subroutine COMPUTE_ADIABATIC_CLOUD_PROPS
+
 !---------------------------------------------------------------------------------------
 ! compute precipitation from the KNMI approach
 !
 ! Citation: Roebeling, R. A., and I. Holleman (2009), 
 !           SEVIRI rainfall retrieval and validation using weather radar observations, 
 !           J. Geophys. Res., 114, D21202, doi:10.1029/2009JD012102.
+!
+! /***************** PROCEDURE Calculate_Precip
+!! *********************************
+! * Procedure    : Calculate_Precip
+! * Description  : Retrieves Precip
+!
+! * Author       : Rob Roebeling
+! * Calls                :
+!
+!******************************************************************************/
+!void Calculate_PRECIP( float *precip, float tau, float reff, int phase, int cch
+!)
+!{
+!  /* - Declarations */
+!  float precip_temp, precip_max, lwp_p,dprecip;
+!
+!  /* Start Sub-Routine */
+!
+!  /* Parameterization based on Akos Horvarh and Roger Davies, 2007 */
+!  lwp_p = tau * reff * 2.0/3.0;
+!
+!  if (lwp_p >= 150.0 && ((reff >= 15.0 && phase == J_LIQ) || phase == J_ICE) )
+!  {
+!
+!    dprecip    = (float)cch;
+!    if ((float)cch > 7000.0)  dprecip  = 7000.0;
+!
+!    precip_temp = pow((lwp_p/120.0-1.0),1.6)/(dprecip/1000.0);
+!    precip_max  = 5.0+pow((float)cch/1000.0,1.6);
+!
+!    if (precip_temp >= precip_max) precip_temp = precip_max;
+!
+!    *precip     = precip_temp;
+!  }
+!  else
+!  {
+!      *precip  = J_NCL;
+!  }
+!}
+!/* ------------------------------------------------------------------------- */
 !---------------------------------------------------------------------------------------
 subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
-  integer, intent(IN):: Line_Idx_Min
-  integer, intent(IN):: Num_Lines
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
 
   real (kind=real4), parameter:: dH_0 = 0.6 !km
   real (kind=real4), parameter:: CWP_0 = 120.0 !g/m^2
   real (kind=real4), parameter:: Lapse_Rate = 6.5 !K/km
   real (kind=real4), parameter:: Alpha = 1.6 !dimensionless
   real (kind=real4), parameter:: C = 1.0 !mm / hour
-  real (kind=real4), parameter:: CWP_T = 160.0 !g/m^2
+  real (kind=real4), parameter:: CWP_T = 150.0 !g/m^2
   real (kind=real4), parameter:: Ceps_T = 15.0 !micron
   integer, parameter:: N_box = 100
+  real (kind=real4), parameter:: dH_Max = 7.0  !km
   real (kind=real4) :: CTT_Max
   real (kind=real4) :: CTT_Pix
   real (kind=real4) :: Reff_Pix
   real (kind=real4) :: CWP_Pix
   real (kind=real4) :: dH
+  real (kind=real4) :: Rain_Rate_Max
   integer:: Line_Idx_Max
   integer:: Elem_Idx_Max
   integer:: Elem_Idx_Min
@@ -2623,33 +2659,62 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
     element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
-      CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
 
+      !--- skip non cloud pixels
+      if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) then
+          Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          cycle
+      endif
+
+      CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
+      CTT_Pix = Tc_Acha(Elem_Idx,Line_Idx)
       Reff_Pix = Reff_Dcomp(Elem_Idx,Line_Idx)
+
       if (Solzen(Elem_Idx,Line_Idx) > 90.0) then
         Reff_Pix = Reff_Nlcomp(Elem_Idx,Line_Idx)
       endif
 
+      !--- skip bad pixels
+      if (Reff_Pix <= 0.0) cycle
 
-      if (Reff_Pix < Ceps_T) cycle
-      if (CWP_Pix < CWP_T) cycle
+      !--- screen low water path clouds
+      if (CWP_Pix < CWP_T) then
+        Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+        cycle
+      endif
 
+      !--- screen small particle size liquid water clouds
+      if (Cld_Type(Elem_Idx,Line_Idx) == sym%FOG_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%WATER_TYPE .or. &
+          Cld_Type(Elem_Idx,Line_Idx) == sym%SUPERCOOLED_TYPE) then
+         if (Reff_Pix < Ceps_T) then
+            Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+            cycle
+         endif
+      endif
+
+     !--- define box to look for maximum cloud temperature
       Line_Idx_1  = min(Line_Idx_Max-1,max(1,Line_Idx - N_box /2))
       Line_Idx_2  = min(Line_Idx_Max,max(2,Line_Idx + N_box /2))
-
       Elem_Idx_1  = min(Elem_Idx_Max-1,max(1,Elem_Idx - N_box /2))
       Elem_Idx_2  = min(Elem_Idx_Max,max(2,Elem_Idx + N_box /2))
-
       CTT_Max = maxval(Tc_Acha(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))  
-      CTT_Pix = Tc_Acha(Elem_Idx,Line_Idx)
-      CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
-
-      dH = (CTT_Max - CTT_Pix) / Lapse_Rate + dH_0 
-      Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = (1.0/dH) * ((CWP_Pix - CWP_T)/CWP_T)**Alpha
 
 
-    ENDDO element_loop
-  ENDDO line_loop
+      !--- compute precip height
+      dH = min(dH_Max,(CTT_Max - CTT_Pix) / Lapse_Rate + dH_0)
+
+      !--- compute rain rate
+      Rain_Rate_Max = 5.0 + dH**Alpha
+      Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = (((CWP_Pix - CWP_0)/CWP_0)**Alpha) / dH
+      Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = min(Rain_Rate_Max,Rain_Rate_Dcomp(Elem_Idx,Line_Idx))
+
+
+    enddo element_loop
+  enddo line_loop
 
 end subroutine COMPUTE_PRECIPITATION
 !---------------------------------------------------------------------------------------
@@ -2676,9 +2741,9 @@ end subroutine COMPUTE_PRECIPITATION
 !---------------------------------------------------------------------------------------
 subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
 
-  integer, intent(IN):: Line_Idx_Min
-  integer, intent(IN):: Num_Lines
-  real, intent(IN):: Sun_Earth_Distance
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
+  real, intent(in):: Sun_Earth_Distance
 
   real (kind=real4), parameter:: SOLAR_CONSTANT = 1356.0 !W/m^2
   real (kind=real4) :: Cloud_Spherical_Albedo
@@ -2806,8 +2871,8 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       !--- combine
       Insolation_Dcomp(Elem_Idx,Line_Idx) = Insolation_Dcomp_Direct + Insolation_Dcomp_Diffuse
 
-    ENDDO element_loop
-  ENDDO line_loop
+    enddo element_loop
+  enddo line_loop
 
 end subroutine COMPUTE_DCOMP_INSOLATION
 
@@ -2821,8 +2886,8 @@ end subroutine COMPUTE_DCOMP_INSOLATION
 !====================================================================
 subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
 
-  integer, intent(IN):: Line_Idx_Min
-  integer, intent(IN):: Num_Lines
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
 
   integer:: Line_Idx_Max
   integer:: Elem_Idx_Max
@@ -2896,8 +2961,8 @@ end subroutine MODIFY_LAND_CLASS_WITH_NDVI
  FUNCTION TERM_REFL_NORM(Cos_Sol_Zen,Reflectance)  &
           RESULT(Reflectance_Normalized)
 
-   real(kind=real4), intent(IN):: Cos_Sol_Zen
-   real(kind=real4), intent(IN):: Reflectance
+   real(kind=real4), intent(in):: Cos_Sol_Zen
+   real(kind=real4), intent(in):: Reflectance
    real(kind=real4):: Reflectance_Normalized
    real(kind=real4):: Norm_Param
 
@@ -2926,8 +2991,8 @@ end subroutine MODIFY_LAND_CLASS_WITH_NDVI
 !====================================================================
 subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
 
-  integer, intent(IN):: Line_Idx_Min
-  integer, intent(IN):: Num_Lines
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
   integer:: Num_Elements
   integer:: Line_Idx
   integer:: Elem_Idx
@@ -2979,8 +3044,8 @@ subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
 
       endif
           
-    ENDDO element_loop
-  ENDDO line_loop
+    enddo element_loop
+  enddo line_loop
 
 end subroutine MERGE_NWP_HIRES_ZSFC
 

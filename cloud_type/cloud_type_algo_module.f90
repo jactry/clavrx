@@ -653,7 +653,7 @@ contains
       end where
       
       where ( ctype >=  et_cloud_type % FIRST_WATER &
-            .and.  ctype >=  et_cloud_type % LAST_WATER )
+            .and.  ctype <=  et_cloud_type % LAST_WATER )
          cphase = et_cloud_phase % WATER     
       end where
       
@@ -666,7 +666,7 @@ contains
       end where
       
       where ( ctype >=  et_cloud_type % FIRST_ICE &
-            .and.  ctype >=  et_cloud_type % LAST_ICE )
+            .and.  ctype <=  et_cloud_type % LAST_ICE )
          cphase = et_cloud_phase % ICE
      
       end where

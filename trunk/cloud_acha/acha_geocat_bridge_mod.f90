@@ -14,6 +14,8 @@ module ACHA_GEOCAT_BRIDGE_MOD
  implicit none
 
  public :: AWG_CLOUD_HEIGHT_BRIDGE
+ private :: NULL_ACHA_POINTERS
+ private :: WMO_Sensor_KM
 
  contains
 
@@ -34,12 +36,13 @@ module ACHA_GEOCAT_BRIDGE_MOD
    type(acha_output_struct) :: Acha_Output
 
    INTEGER(KIND=Int4) :: Num_lines, Num_Elems
+   INTEGER(KIND=Int4) :: wmo_id
 
    !---null pointers before filling them
    call NULL_ACHA_POINTERS(Acha_Input, Acha_Output)
 
    !-----------------------------------------------------------------------
-   !---  CLAVR-x Bridge Section
+   !---  GEOCAT Bridge Section
    !-----------------------------------------------------------------------
    !--- initialize Input structure pointers
 
@@ -47,10 +50,12 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Input%Number_of_Elements = sat%nx
    Acha_Input%Number_of_Lines = sat%nscans_per_segment
    Acha_Input%Num_Line_Max = sat%nscans_per_segment
-   Acha_Input%Process_Undetected_Cloud_Flag_Local = sym%NO
+   Acha_Input%Process_Undetected_Cloud_Flag = sym%NO
    Acha_Input%Smooth_Nwp_Fields_Flag = sym%NO
    Acha_Input%ACHA_Mode_Flag_In = -1
-
+   !Sensor resolution
+   Acha_Input%Sensor_Resolution_KM = WMO_Sensor_KM(scinfo(sc_ind)%WMO_Sc_Id)
+   
    Acha_Input%Chan_Idx_67um = 9     !channel number for 6.7
    Acha_Input%Chan_Idx_85um = 11     !channel number for 8.5
    Acha_Input%Chan_Idx_11um = 14     !channel number for 11
@@ -72,7 +77,7 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Input%Bt_85um => sat%bt11
    Acha_Input%Bt_11um => sat%bt14
    Acha_Input%Bt_12um => sat%bt15
-   Acha_Input%Bt_133um => sat%bt14
+   Acha_Input%Bt_133um => sat%bt16
 
    Acha_Input%Rad_11um => sat%rad14
    Acha_Input%Cosine_Zenith_Angle => sat%cos_satzen
@@ -85,14 +90,14 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Input%Surface_Type => sat%sfc_type
 
    Acha_Input%Surface_Elevation => sat%Zsfc
-   Acha_Input%Cloud_Mask_Local => sat%cldmask
-   Acha_Input%Cloud_Type_Local => sat%Cldtype
+   Acha_Input%Cloud_Mask => sat%cldmask
+   Acha_Input%Cloud_Type => sat%Cldtype
 
-   Acha_Input%Rad_Clear_67um_Local => sat%rad_clr9
-   Acha_Input%Rad_Clear_85um_Local => sat%rad_clr11
-   Acha_Input%Rad_Clear_11um_Local => sat%rad_clr14
-   Acha_Input%Rad_Clear_12um_Local => sat%rad_clr15
-   Acha_Input%Rad_Clear_133um_Local => sat%rad_clr16
+   Acha_Input%Rad_Clear_67um => sat%rad_clr9
+   Acha_Input%Rad_Clear_85um => sat%rad_clr11
+   Acha_Input%Rad_Clear_11um => sat%rad_clr14
+   Acha_Input%Rad_Clear_12um => sat%rad_clr15
+   Acha_Input%Rad_Clear_133um => sat%rad_clr16
    Acha_Input%Surface_Emissivity_39um => sat%sfc_emiss7
    
    !GEOCAT is special, where we have to allocate the pixel level data
@@ -115,6 +120,7 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Input%Line_Idx_Opposite_Corner_NWP = MISSING_VALUE_INT4
    Acha_Input%Longitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
    Acha_Input%Latitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
+   
 
 
       
@@ -154,6 +160,7 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Output%Packed_Qf => out2(Ialgo)%Acha_Packed_Quality_Flags
    Acha_Output%Packed_Meta_Data => out2(Ialgo)%Acha_Packed_Meta_Data_Flags
    Acha_Output%Processing_Order  => out2(Ialgo)%Processing_Order
+   Acha_Output%Cost  => out2(Ialgo)%Acha_Cost
   
 
    !----set symbols to local values
@@ -260,22 +267,22 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Input%Snow_Class =>  NULL()
      Acha_Input%Surface_Type =>  NULL()
      Acha_Input%Surface_Elevation =>  NULL()
-     Acha_Input%Cloud_Mask_Local =>  NULL()
-     Acha_Input%Cloud_Type_Local =>  NULL()
-     Acha_Input%Rad_Clear_67um_Local =>  NULL()
-     Acha_Input%Rad_Clear_85um_Local =>  NULL()
-     Acha_Input%Rad_Clear_11um_Local =>  NULL()
-     Acha_Input%Rad_Clear_12um_Local =>  NULL()
-     Acha_Input%Rad_Clear_133um_Local =>  NULL()
+     Acha_Input%Cloud_Mask =>  NULL()
+     Acha_Input%Cloud_Type =>  NULL()
+     Acha_Input%Rad_Clear_67um =>  NULL()
+     Acha_Input%Rad_Clear_85um =>  NULL()
+     Acha_Input%Rad_Clear_11um =>  NULL()
+     Acha_Input%Rad_Clear_12um =>  NULL()
+     Acha_Input%Rad_Clear_133um =>  NULL()
      Acha_Input%Surface_Emissivity_39um =>  NULL()
      Acha_Input%Elem_Idx_LRC_Input =>  NULL()
      Acha_Input%Line_Idx_LRC_Input =>   NULL()
      
       ! deallocate NWP pixel vars
       If(allocated(Acha_Input%Surface_Temperature) ) deallocate (Acha_Input%Surface_Temperature)
-      If(allocated(Acha_Input%Surface_Temperature) ) deallocate (Acha_Input%Surface_Air_Temperature)
-      If(allocated(Acha_Input%Surface_Temperature) ) deallocate (Acha_Input%Tropopause_Temperature)
-      If(allocated(Acha_Input%Surface_Temperature) ) deallocate (Acha_Input%Surface_Pressure)
+      If(allocated(Acha_Input%Surface_Air_Temperature) ) deallocate (Acha_Input%Surface_Air_Temperature)
+      If(allocated(Acha_Input%Tropopause_Temperature) ) deallocate (Acha_Input%Tropopause_Temperature)
+      If(allocated(Acha_Input%Surface_Pressure) ) deallocate (Acha_Input%Surface_Pressure)
 
       If(allocated(Acha_Input%Elem_Idx_Opposite_Corner_NWP) ) deallocate (Acha_Input%Elem_Idx_Opposite_Corner_NWP)
       If(allocated(Acha_Input%Line_Idx_Opposite_Corner_NWP) ) deallocate (Acha_Input%Line_Idx_Opposite_Corner_NWP)
@@ -310,9 +317,69 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Output%Packed_Qf =>  NULL()
      Acha_Output%Packed_Meta_Data =>  NULL()
      Acha_Output%Processing_Order  =>  NULL()
+     Acha_Output%Cost  => NULL()
  
  
  end subroutine
  
+ !-----------------------------------------------------------------------------
+ !
+ !-----------------------------------------------------------------------------
+ function WMO_Sensor_KM(wmo_id) result (Sensor_KM)
+      integer , intent(in) :: wmo_id
+      real :: Sensor_KM
+
+      select case (WMO_id)
+      case(3)   ! Metop-01
+            Sensor_KM = 1.0
+      case(4)   ! Metop-02
+            Sensor_KM = 1.0
+      case(55)  ! Meteosat-08
+             Sensor_KM = 3.0
+      case(56)  ! Meteosat-09
+             Sensor_KM = 3.0
+      case(57)  ! Meteosat-10
+             Sensor_KM = 3.0
+      case(70)  ! Meteosat-11
+             Sensor_KM = 3.0
+      case(171) ! MTSAT-1R
+             Sensor_KM = 4.0
+      case(172) ! MTSAT-2
+             Sensor_KM = 4.0
+      case(200:209) ! NOAA-08 - NOAA-18
+             Sensor_KM = 1.0
+      case(223) ! NOAA-19
+             Sensor_KM = 1.0
+      case(224) ! NPP
+             Sensor_KM = 0.75
+      case(252) ! GOES-08
+             Sensor_KM = 4.0
+      case(253) ! GOES-09
+             Sensor_KM = 4.0
+      case(254) ! GOES-10
+             Sensor_KM = 4.0
+      case(255) ! GOES-11
+             Sensor_KM = 4.0
+      case(256) ! GOES-12
+             Sensor_KM = 4.0
+      case(257) ! GOES-13
+             Sensor_KM = 4.0
+      case(258) ! GOES-14
+             Sensor_KM = 4.0
+      case(259) ! GOES-15
+             Sensor_KM = 4.0
+      case(152) ! GMS-5
+             Sensor_KM = 2.0
+      case(783) ! MODIS Terra
+             Sensor_KM = 1.0
+      case(784) ! MODIS Aqua
+             Sensor_KM = 1.0
+      case default
+             print*,'This sensor is missing a wmo id: ', wmo_id 
+             stop
+      end select
+
+
+ end function WMO_Sensor_KM
 
 end module ACHA_GEOCAT_BRIDGE_MOD

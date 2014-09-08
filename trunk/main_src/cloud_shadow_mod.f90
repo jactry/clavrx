@@ -53,16 +53,20 @@ contains
       
          do i = 2 , i_dim - 1
             do j = 2 ,j_dim - 1
+               if ( solar_zenith (i,j) > 85. ) cycle
                if ( cloud_height (i,j) <= 0. ) cycle
+               
+               
                
                ! are there clear pixels around at all?
                if ( count ( cloud_height (i-1:i+1,j-1:j+1) > 0. ) == 9 ) cycle
 
-               Delta_Lon = sin(Solar_azi(i,j)*Dtor)*distance_km(i,j) * Lon_Spacing_Per_m (i,j)
-               Delta_Lat = cos(Solar_azi(i,j)*Dtor)*distance_km (i,j) * Lat_Spacing_Per_m
-                     
-               call shadow_ind ( lat_pc(i,j) + delta_lat, lon_pc(i,j) + delta_lon , lat, lon , i,j, cloud_shadow) 
+               Delta_Lon = -1.* sin(Solar_azi(i,j) * DTOR ) * distance_km(i,j) * Lon_Spacing_Per_m (i,j)
+               Delta_Lat = -1. * cos(Solar_azi(i,j) * DTOR ) * distance_km(i,j) * Lat_Spacing_Per_m
+                
                
+               call shadow_ind ( lat_pc(i,j) + delta_lat, lon_pc(i,j) + delta_lon , lat, lon , i,j, cloud_shadow) 
+              
             end do
          end do   
          
@@ -113,20 +117,25 @@ contains
       delta_lon_ii = lon(i,j) - lon(i-1,j)
       delta_lat_jj = lat(i,j) - lat(i,j-1)
       delta_lon_jj = lon(i,j) - lon(i,j-1)
+     
+      diff_lat = lat1 - lat(i,j)
+      diff_lon = lon1 - lon(i,j) 
       
-      diff_lat = lat(i,j) -lat1
-      diff_lon = lon(i,j) -lon1
       
       !     use of these equations:
       ! diff_lon = ii * delta_lon_ii + jj * delta_lon_jj
       ! diff_lat = ii * delta_lat_ii + jj * delta_lat_jj
       !   solve for ii => 
       
-      ii = (  diff_lon - ( delta_lon_jj * diff_lat /delta_lat_jj ) ) / &
-          ( delta_lon_ii - (delta_lon_jj * delta_lat_ii / delta_lat_jj) )
+      
+      
+      
+      ii = ( diff_lat * delta_lon_jj - diff_lon * delta_lat_jj) / &
+         (delta_lat_ii * delta_lon_jj - delta_lon_ii * delta_lat_jj)
+      
       
       jj = ( diff_lat - ii * delta_lat_ii) / delta_lat_jj
-      
+     
       ! - find longer dim
       !
       long_idx   = maxval (ABS([ii,jj]))
@@ -138,7 +147,7 @@ contains
             idx_1 = i + sign(k,ii)
             if (idx_1 < 1 .or. idx_1 > dim_1 ) cycle
              
-            short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
        
             idx_2 = j + short_idx_arr
             if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , idx_2 )   = .true.
@@ -146,9 +155,13 @@ contains
             if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , j + short_idx_arr-1) = .true.
          else 
             idx_2 = j + sign(k,jj)
+          
             if (idx_2 < 1 .or. idx_2 > dim_2 ) cycle
-            short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
+            
             idx_1 = i + short_idx_arr
+           
+            
             if ( idx_1 > 0 .and. idx_1 <= dim_1 ) shad_arr(i+short_idx_arr,idx_2 ) = .true.
             idx_1 = i + short_idx_arr - 1
             if ( idx_1 > 0 .and. idx_1 <= dim_1 ) shad_arr(i+short_idx_arr-1, idx_2) = .true.

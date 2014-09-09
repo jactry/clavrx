@@ -1083,7 +1083,9 @@
             end if
 
             !--- merge with nwp surface elevation
-            call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (Nwp_Flag /= 0) then
+                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Num_Scans_Read)
+            endif
 
             !--- read coast mask
             if (Read_Coast_Mask == sym%YES) then
@@ -1527,8 +1529,9 @@
             end if
 
             !--- generated cloud masked sst field
-            call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Num_Scans_Read)
-
+            if (Nwp_Flag > 0) then
+                call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Num_Scans_Read)
+            end if
 
             !  endif   !end Skip_Processing_Flag condition
 
@@ -1538,7 +1541,7 @@
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
             call WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
-
+            
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)

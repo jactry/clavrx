@@ -2356,6 +2356,11 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
      allocate(Posterior_Cld_Probability(dim1,dim2))
      allocate(Bayes_Mask_Sfc_Type_Global(dim1,dim2))
   endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     if (.not. allocated(Cld_Mask_Aux)) allocate(Cld_Mask_Aux(dim1,dim2))  
+  endif
+  
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
   Cld_Mask_Qf = Missing_Value_Int1
@@ -2367,6 +2372,10 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
      Cld_Test_Vector_Packed = 0
      Bayes_Mask_Sfc_Type_Global = Missing_Value_Int1
   endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     Cld_Mask_Aux = Missing_Value_Int1
+  endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(Cld_Mask_Qf)
@@ -2377,6 +2386,10 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
      deallocate(Adj_Pix_Cld_Mask)
      deallocate(Posterior_Cld_Probability)
      deallocate(Bayes_Mask_Sfc_Type_Global)
+  endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     if (allocated(Cld_Mask_Aux)) deallocate(Cld_Mask_Aux)  
   endif
 end subroutine DESTROY_CLOUD_MASK_ARRAYS
 !-----------------------------------------------------------

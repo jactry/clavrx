@@ -743,6 +743,7 @@ contains
 
                      !---- Copy the output to appropriate channel's tranmission vector
                      Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
+
                   end do
 
                   !--------------------------------------------------------------
@@ -1288,130 +1289,79 @@ contains
       !----------------------------------------------------------------
       select case(WMO_Id)
 
+      !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
       case(3:5) !AVHRR (METOP-A,B,C)
          Pfaast_Name(:) = "tranmavhrr"
-         Rtm_Chan_Idx (20) = 3
-         Rtm_Chan_Idx (31) = 4
-         Rtm_Chan_Idx (32) = 5
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
 
          if (Iff_Avhrr_Flag == sym%YES) then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,21, 0,23,24,25, 0,27,28, 0,30, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(55:57) !MSG
          Pfaast_Name(:) = "tranmetsg101"
-         Rtm_Chan_Idx (20) = 4        
-         Rtm_Chan_Idx (27) = 5
-         Rtm_Chan_Idx (28) = 6
-         Rtm_Chan_Idx (29) = 7
-         Rtm_Chan_Idx (30) = 8
-         Rtm_Chan_Idx (31) = 9
-         Rtm_Chan_Idx (32) = 10 
-         Rtm_Chan_Idx (33) = 11
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
       case(252:259)    !GOES
          Pfaast_Name(:) = "goestran"
-
          if (Goes_Sndr_Flag == sym%NO) then
-            Rtm_Chan_Idx (20) = 22
-            Rtm_Chan_Idx (27) = 23
-            Rtm_Chan_Idx (31) = 24
-            Rtm_Chan_Idx (32) = 25 
-            Rtm_Chan_Idx (33) = 26
-         else 
-            Rtm_Chan_Idx (20) = 18            
-            Rtm_Chan_Idx (21) = 17            
-         
-            Rtm_Chan_Idx (23) = 16
-            Rtm_Chan_Idx (24) = 14
-            Rtm_Chan_Idx (25) = 13 
-            Rtm_Chan_Idx (27) = 12
-            Rtm_Chan_Idx (28) = 10
-         
-            Rtm_Chan_Idx (30) = 9
-            Rtm_Chan_Idx (31) = 8
-            Rtm_Chan_Idx (32) = 7 
-            Rtm_Chan_Idx (33) = 5
-            Rtm_Chan_Idx (34) = 4
-            Rtm_Chan_Idx (35) = 3
-            Rtm_Chan_Idx (36) = 2 
-         end if
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         else
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0/)
+         endif
 
       case(171:172) !MTSAT
          Pfaast_Name(:) = "tranmts101"
-         Rtm_Chan_Idx (20) = 5
-         Rtm_Chan_Idx (27) = 4
-         Rtm_Chan_Idx (31) = 2
-         Rtm_Chan_Idx (32) = 3
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
       case(200:209,223,706:708) !AVHRR 
          Pfaast_Name(:) = "tranmavhrr"
-         Rtm_Chan_Idx (20) = 3
-         Rtm_Chan_Idx (31) = 4
-         Rtm_Chan_Idx (32) = 5
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
          if (Iff_Avhrr_Flag == sym%YES) then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,21, 0,23,24,25, 0,27,28, 0,30, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(224) !VIIRS
          Pfaast_Name(:) = "tran_viirsm"
-         Rtm_Chan_Idx (20) = 1
-         Rtm_Chan_Idx (22) = 2
-         Rtm_Chan_Idx (29) = 3
-         Rtm_Chan_Idx (31) = 4
-         Rtm_Chan_Idx (32) = 5
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
          if (Iff_Viirs_Flag == sym%YES) then
-            Pfaast_Name(27:28) = "tran_modisd101"
-            Pfaast_Name(33:36) = "tran_modisd101"
-            Rtm_Chan_Idx (27) = 27
-            Rtm_Chan_Idx (28) = 28
-            Rtm_Chan_Idx (33) = 33
-            Rtm_Chan_Idx (34) = 34
-            Rtm_Chan_Idx (35) = 35
-            Rtm_Chan_Idx (36) = 36 
+          Pfaast_Name(27:28) = "tran_modisd101"
+          Pfaast_Name(33:36) = "tran_modisd101"
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
          endif
 
       case(783:784) !MODIS
          Pfaast_Name(:) = "tran_modisd101"
-         Rtm_Chan_Idx (20) = 20
-         Rtm_Chan_Idx (21) = 21
-         Rtm_Chan_Idx (22) = 22
-         Rtm_Chan_Idx (23) = 23
-         Rtm_Chan_Idx (24) = 24
-         Rtm_Chan_Idx (25) = 25 
-         Rtm_Chan_Idx (27) = 27
-         Rtm_Chan_Idx (28) = 28
-         Rtm_Chan_Idx (29) = 29
-         Rtm_Chan_Idx (30) = 30
-         Rtm_Chan_Idx (31) = 31
-         Rtm_Chan_Idx (32) = 32 
-         Rtm_Chan_Idx (33) = 33
-         Rtm_Chan_Idx (34) = 34
-         Rtm_Chan_Idx (35) = 35
-         Rtm_Chan_Idx (36) = 36 
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0/)
           
 
       case(810) !COMS
          Pfaast_Name(:) = "fy2_coms_trn101"
-         Rtm_Chan_Idx (20) = 2
-         Rtm_Chan_Idx (27) = 3
-         Rtm_Chan_Idx (31) = 4
-         Rtm_Chan_Idx (32) = 5
-          
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/) 
 
       case(514:515) !FY2D/E
          Pfaast_Name(:) = "fy2_coms_trn101"
-         Rtm_Chan_Idx (20) = 2
-         Rtm_Chan_Idx (27) = 3
-         Rtm_Chan_Idx (31) = 4
-         Rtm_Chan_Idx (32) = 5
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
       case default
          print *, "Instrument not supported by PFAAST in CLAVR-x "
@@ -2543,6 +2493,20 @@ contains
                 ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx))
+
+!       print *, "After compute ", Chan_Idx, &
+!               ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx), &
+!               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx), &
+!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Profile, &
+!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile, &
+!               ch(Chan_Idx)%Rad_Atm(Elem_Idx,Line_Idx), &
+!               ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx), &
+!               ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+!               ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
+
+!      print *, "---------------------"
+
+
       end do
 
       !--- downwelling (only channel 31) 

@@ -1,4 +1,4 @@
-! $Id$
+AVHRR! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -400,6 +400,11 @@ module PIXEL_COMMON
   integer (kind=int2), dimension(:,:), allocatable, public,save:: Ch6_Counts
   real (kind=real4), dimension(:,:), allocatable, public,save:: Ch20_Counts_Filtered
 
+  !--- sounder brightness temperatures  
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_375um_Sounder
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_11um_Sounder
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_12um_Sounder
+   
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI2
@@ -655,8 +660,8 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Water_Layer_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Scwater_Layer_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Rain_Rate_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public,target, save:: H_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public,target, save:: N_DCOMP
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Hcld_DCOMP
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cdnc_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_Cost
      real (kind=real4), dimension(:,:), allocatable, public, target, save:: Reff_DCOMP_Cost
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_Qf
@@ -1719,6 +1724,13 @@ end subroutine DESTROY_THERM_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
+   if (Iff_Viirs_Flag == sym%YES .or. 
+       Iff_AVHRR_Flag == sym%YES .or. 
+       Iff_MODIS_Flag == sym%YES) then
+           allocate(Bt_375um_Sounder(dim1,dim2))
+           allocate(Bt_11um_Sounder(dim1,dim2))
+           allocate(Bt_12um_Sounder(dim1,dim2))
+   endif
    if (Chan_On_Flag_Default(37) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
@@ -1792,6 +1804,13 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
+      if (Iff_Viirs_Flag == sym%YES .or. 
+          Iff_AVHRR_Flag == sym%YES .or. 
+          Iff_MODIS_Flag == sym%YES) then
+          Bt_375um_Sounder = Missing_Value_Real4
+          Bt_11um_Sounder = Missing_Value_Real4
+          Bt_12um_Sounder = Missing_Value_Real4
+      endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
 subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
@@ -1824,6 +1843,9 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Ref_ChDNB_Lunar_Min_3x3)) deallocate(Ref_ChDNB_Lunar_Min_3x3)
   if (allocated(Ref_ChDNB_Lunar_Max_3x3)) deallocate(Ref_ChDNB_Lunar_Max_3x3)
   if (allocated(Ref_ChDNB_Lunar_Std_3x3)) deallocate(Ref_ChDNB_Lunar_Std_3x3)
+  if (allocated(Bt_375um_Sounder)) deallocate(Bt_375um_Sounder)
+  if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
+  if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2140,8 +2162,8 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Cwp_Water_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Scwater_Layer_DCOMP(dim1,dim2))
       allocate(Rain_Rate_DCOMP(dim1,dim2))
-      allocate(H_DCOMP(dim1,dim2))
-      allocate(N_DCOMP(dim1,dim2))
+      allocate(Hcld_DCOMP(dim1,dim2))
+      allocate(Cdnc_DCOMP(dim1,dim2))
       allocate(Tau_DCOMP_Cost(dim1,dim2))
       allocate(Reff_DCOMP_Cost(dim1,dim2))
       allocate(Tau_DCOMP_Qf(dim1,dim2))
@@ -2185,8 +2207,8 @@ subroutine RESET_DCOMP_ARRAYS()
       Cwp_Water_Layer_DCOMP = Missing_Value_Real4
       Cwp_Scwater_Layer_DCOMP = Missing_Value_Real4
       Rain_Rate_DCOMP = Missing_Value_Real4
-      H_DCOMP = Missing_Value_Real4
-      N_DCOMP = Missing_Value_Real4
+      Hcld_DCOMP = Missing_Value_Real4
+      Cdnc_DCOMP = Missing_Value_Real4
       Tau_DCOMP_Cost = Missing_Value_Real4
       Reff_DCOMP_Cost = Missing_Value_Real4
       Tau_DCOMP_Qf = Missing_Value_Int1
@@ -2230,8 +2252,8 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Cwp_Water_Layer_DCOMP)
       deallocate(Cwp_Scwater_Layer_DCOMP)
       deallocate(Rain_Rate_DCOMP)
-      deallocate(H_DCOMP)
-      deallocate(N_DCOMP)
+      deallocate(Hcld_DCOMP)
+      deallocate(Cdnc_DCOMP)
       deallocate(Tau_DCOMP_Cost)
       deallocate(Reff_DCOMP_Cost)
       deallocate(Tau_DCOMP_Qf)

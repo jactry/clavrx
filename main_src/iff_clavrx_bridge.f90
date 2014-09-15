@@ -60,7 +60,10 @@ module IFF_CLAVRX_BRIDGE
        , Glintzen &
        , Scatangle &
        , Ascend &
-       , ch
+       , ch &
+       , Bt_375um_Sounder &
+       , Bt_11um_Sounder &
+       , Bt_12um_Sounder
    use CONSTANTS
    use IFF_MODULE
 
@@ -191,8 +194,22 @@ contains
          ! - rad/bt channels
          elseif ((i_band >= 20 .and. i_band < 26) &
             .or. (i_band > 26 .and. i_band <=36)) then
-            ch(i_band)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(i_band)%Bt_Toa , ch(i_band)%Rad_Toa , i_band , missing_value_real4 )
+
+            !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS (SPECIAL CASE) !!!
+            if (Iff_Avhrr_Flag == sym%YES .and. i_band == 21) then ! 3.75um 
+               call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
+                                       20 , missing_value_real4 )
+            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 22) then ! 11um
+               call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (22) % rad , &
+                                       31 , missing_value_real4 )
+            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 29) then ! 12um
+               call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (29) % rad , &
+                                       32 , missing_value_real4 )
+            else ! the rest of channels are normal
+               ch(i_band)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
+               call COMPUTE_BT_ARRAY ( ch(i_band)%Bt_Toa , ch(i_band)%Rad_Toa , &
+                                       i_band , missing_value_real4 )
+            endif
             ! --- make Iff_Gap_Mask out of CRIS channel
             ! --- 0 = data in 13.3, 1=no data in 13.3
             if (Iff_Viirs_Flag == sym%YES .and. i_band == 33) then

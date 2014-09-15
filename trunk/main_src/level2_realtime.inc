@@ -1,6 +1,6 @@
 !$Id: level2_all_on.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 199
+ integer, parameter, private:: Num_Level2_Sds = 205
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -208,4 +208,10 @@
      Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 0, &
      Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0, &
      Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
-     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 0
+     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 0, &
+     Sds_Num_Level2_Acha_Cost = 200,      Sds_Num_Level2_Acha_Cost_Flag = 0, &
+     Sds_Num_Level2_Hcld_Dcomp = 201,     Sds_Num_Level2_Hcld_Dcomp_Flag = 0, &
+     Sds_Num_Level2_Cdnc_Dcomp = 202,     Sds_Num_Level2_Cdnc_Dcomp_Flag = 0, &
+     Sds_Num_Level2_Bt375_Snd = 203,      Sds_Num_Level2_Bt375_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt11_Snd = 204,       Sds_Num_Level2_Bt11_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt12_Snd = 205,       Sds_Num_Level2_Bt12_Snd_Flag = 0

@@ -1673,7 +1673,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- cloud-top height uncertainty from acha
+     !--- cloud-top temperature uncertainty from acha
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctt_Acha_Uncer_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctt_Acha_Uncer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "cld_temp_uncer_acha", &
@@ -1780,6 +1780,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "none", No_Attribute_Missing_Value, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
+
+     !--- acha O.E. cost
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Cost_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Acha_Cost),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cost_acha", &
+                               "cost_acha", &
+                               "final cost function value from acha optimal estimation", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Acha_Cost, Max_Acha_Cost, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
 
      !--- cloud optical depth from DCOMP
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Flag == sym%YES) then
@@ -1913,6 +1925,31 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                Min_Insol, Max_Insol, "W m-2", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
+
+     !--- cloud droplet number concentration
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cdnc_Dcomp_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cdnc_Dcomp),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cdnc_dcomp", &
+                              "cloud_droplet_number_concentration", &
+                              "cloud_droplet_number_concentration from DCOMP algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
+                               Min_Cdnc, Max_Cdnc, "cm-3", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud geomterical thickness from DCOMP for adiabatic water clouds
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Hcld_Dcomp_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Hcld_Dcomp),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hcld_dcomp", &
+                              "geometrical_thickness_of_liquid_clouds", &
+                              "geometrical_thickness_of_liquid_clouds based on DCOMP", &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
+                               Min_Hcld, Max_Hcld, "m", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+     !--- cloud optical depth from NLCOMP
 
      !--- cloud optical depth from NLCOMP
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Nlcomp_Flag == sym%YES) then
@@ -2946,7 +2983,41 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- 3.75 micron BT from Sounder
+     if (Sds_Num_Level2_Bt375_Snd_Flag == sym%YES .and. &
+         (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt375_Snd),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_75um_nom_sounder", &
+                              "temp_3_75um_nom_sounder", &
+                              "3.75 micron brightness temperature observed by the sounder", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
 
+     !--- 11 micron BT from Sounder
+     if (Sds_Num_Level2_Bt11_Snd_Flag == sym%YES .and. &
+         (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt11_Snd),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_11_0um_nom_sounder", &
+                              "temp_11_0um_nom_sounder", &
+                              "11 micron brightness temperature observed by the sounder", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- 12 micron BT from Sounder
+     if (Sds_Num_Level2_Bt12_Snd_Flag == sym%YES .and. &
+         (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_12_0um_nom_sounder", &
+                              "temp_12_0um_nom_sounder", &
+                              "12 micron brightness temperature observed by the sounder", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt32, Max_Bt32, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
 
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
@@ -3863,6 +3934,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- Acha Cost
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Cost_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(Cost_Acha,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld optical depth from dcomp
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(Tau_Dcomp,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
@@ -3932,6 +4010,22 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I2_RANK2(Insolation_Dcomp_Diffuse, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CldInsol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cdnc from dcomp
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cdnc_Dcomp_Flag == sym%YES) then
+        call SCALE_VECTOR_I2_RANK2(Cdnc_Dcomp, &
+                                 sym%LINEAR_SCALING,Min_Cdnc,Max_Cdnc,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cdnc_Dcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cloud geo height from  dcomp
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Hcld_Dcomp_Flag == sym%YES) then
+        call SCALE_VECTOR_I2_RANK2(Hcld_Dcomp, &
+                                 sym%LINEAR_SCALING,Min_Hcld,Max_Hcld,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Hcld_Dcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
@@ -4580,6 +4674,32 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                                    Max_Sfc_Ems,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Sfc_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- 3.75 micron BT for Sounder
+    if (Sds_Num_Level2_Bt375_Snd_Flag == sym%YES .and. &
+        (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+        call SCALE_VECTOR_I2_RANK2(Bt_375um_Sounder,sym%LINEAR_SCALING,Min_Bt20, &
+                                   Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt375_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- 11 micron BT for Sounder
+    if (Sds_Num_Level2_Bt11_Snd_Flag == sym%YES .and. &
+        (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+        call SCALE_VECTOR_I2_RANK2(Bt_11um_Sounder,sym%LINEAR_SCALING,Min_Bt31, &
+                                   Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt11_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- 12 micron BT for Sounder
+    if (Sds_Num_Level2_Bt12_Snd_Flag == sym%YES .and. &
+        (Iff_VIIRS_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES)) then
+        call SCALE_VECTOR_I2_RANK2(Bt_12um_Sounder,sym%LINEAR_SCALING,Min_Bt32, &
+                                   Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
     !--- check for and report errors

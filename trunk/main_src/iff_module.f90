@@ -266,8 +266,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! set nu numbes for radiance conversion
       nu_list = 0
-      nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
-      nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      if (Iff_Avhrr_Flag == sym%YES) then
+         nu_list(20:25) = [Nu_20, Nu_20, Nu_31, Nu_23, Nu_24, Nu_25]
+         nu_list(27:36) = [Nu_27, Nu_28, Nu_32, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      else
+         nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
+         nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      endif
 
       ! open file
       Status = OPEN_FILE_HDF_READ ( TRIM( config % iff_file ), Id ) + Status
@@ -436,12 +441,14 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 34
                      case (17) ! HIRS-7
                         band_names_int_rad(ii) = 33
-                     !case (18) ! HIRS-8 ! same as AVHRR ch4
-                     !   band_names_int_rad(ii) = 31
+                     ! Attn: Use unused ch. to save HIRS 11um
+                     case (18) ! HIRS-8 ! same as AVHRR ch4
+                        band_names_int_rad(ii) = 22
                      case (19) ! HIRS-9
                         band_names_int_rad(ii) = 30
-                     !case (110) ! HIRS-10  ! same as AVHRR ch5
-                     !   band_names_int_rad(ii) = 32 ! early 29, latter 32
+                     ! Attn: Use ch. 29 to save either HIRS 12um or 8.55um
+                     case (110) ! HIRS-10  ! same as AVHRR ch5
+                        band_names_int_rad(ii) = 29 ! early 29, latter 32
                      case (111) ! HIRS-11
                         band_names_int_rad(ii) = 28
                      case (112) ! HIRS-12
@@ -452,7 +459,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 24
                      case (118) ! HIRS-18
                         band_names_int_rad(ii) = 23
-                     case (119) ! HIRS-19
+                     ! Attn: Use unused ch. to save HIRS 3.75um
+                     case (119) ! HIRS-19 ! same as AVHRR ch3
                         band_names_int_rad(ii) = 21
                   end select
                enddo

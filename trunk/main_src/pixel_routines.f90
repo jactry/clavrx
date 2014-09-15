@@ -214,7 +214,6 @@ subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
    if (Iff_Avhrr_Flag == sym%YES) then
       Chan_On_Flag_Default(3:5) = sym%NO
       Chan_On_Flag_Default(7:19) = sym%NO
-      Chan_On_Flag_Default(22) = sym%NO
       Chan_On_Flag_Default(26) = sym%NO
       Chan_On_Flag_Default(37:42) = sym%NO
    endif

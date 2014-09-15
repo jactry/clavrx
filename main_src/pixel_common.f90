@@ -1,4 +1,4 @@
-AVHRR! $Id$
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -1724,8 +1724,8 @@ end subroutine DESTROY_THERM_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Iff_Viirs_Flag == sym%YES .or. 
-       Iff_AVHRR_Flag == sym%YES .or. 
+   if (Iff_Viirs_Flag == sym%YES .or. &
+       Iff_AVHRR_Flag == sym%YES .or. &
        Iff_MODIS_Flag == sym%YES) then
            allocate(Bt_375um_Sounder(dim1,dim2))
            allocate(Bt_11um_Sounder(dim1,dim2))
@@ -1804,8 +1804,8 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
-      if (Iff_Viirs_Flag == sym%YES .or. 
-          Iff_AVHRR_Flag == sym%YES .or. 
+      if (Iff_Viirs_Flag == sym%YES .or. &
+          Iff_AVHRR_Flag == sym%YES .or. &
           Iff_MODIS_Flag == sym%YES) then
           Bt_375um_Sounder = Missing_Value_Real4
           Bt_11um_Sounder = Missing_Value_Real4

@@ -2505,8 +2505,8 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  H_Dcomp = Missing_Value_Real4
-  N_Dcomp = Missing_Value_Real4
+  Hcld_Dcomp = Missing_Value_Real4
+  Cdnc_Dcomp = Missing_Value_Real4
 
   line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
@@ -2518,15 +2518,15 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
       !--- skip non cloud pixels
       if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
           Cld_Type(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) then
-          H_Dcomp(Elem_Idx,Line_Idx) = 0.0
-          N_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          Hcld_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          Cdnc_Dcomp(Elem_Idx,Line_Idx) = 0.0
           cycle
       endif
 
       !--- skip ice
-      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .or. &
-          Cld_Type(Elem_Idx,Line_Idx) == sym%WATER_TYPE .or. &
-          Cld_Type(Elem_Idx,Line_Idx) == sym%SUPERCOOLED_TYPE) then
+      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .and. &
+          Cld_Type(Elem_Idx,Line_Idx) /= sym%WATER_TYPE .and. &
+          Cld_Type(Elem_Idx,Line_Idx) /= sym%SUPERCOOLED_TYPE) then
           cycle
       endif
 
@@ -2546,23 +2546,19 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
          Condensation_Rate = exp(-21.0553+T_cloud*0.0536887) / 1000.0
 
          !geometrical height (meters)
-         H_Dcomp(Elem_Idx,Line_Idx)  =  &
+         Hcld_Dcomp(Elem_Idx,Line_Idx)  =  &
                     ( 2.0 / Condensation_Rate * Water_Path_Cloud )**0.5
 
          !Number concentration (cm-3)
-         N_Dcomp(Elem_Idx,Line_Idx) = 2.0**(-5.0/2.0)/Drop_Dis_Width *   &
+         Cdnc_Dcomp(Elem_Idx,Line_Idx) = 2.0**(-5.0/2.0)/Drop_Dis_Width *   &
                              Tau_Cloud**3.0 * Water_Path_Cloud**(-5.0/2.0) *  &
                             (3.0/5.0*Q_eff_sca*pi)**(-3.0) *  &
                             (3.0*Condensation_Rate/4.0/pi/rho_water)**(-2.0) * &
                              Condensation_Rate**(5.0/2.0)/ 1.0E6
-
      endif
 
     end do element_loop
   end do line_loop
-
-  Diag_Pix_Array_1 = N_Dcomp
-  Diag_Pix_Array_2 = H_Dcomp
 
 end subroutine COMPUTE_ADIABATIC_CLOUD_PROPS
 

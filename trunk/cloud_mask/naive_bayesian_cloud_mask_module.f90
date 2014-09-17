@@ -239,6 +239,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real, allocatable :: class_cond_yes(:,:,:) 
       real, allocatable :: cond_no(:,:,:)
       real, allocatable :: cond_yes(:,:,:)
+      logical, allocatable :: do_this_classifier (:,:)
       character (len=20), allocatable :: Classifier_Value_Name(:)
       integer, allocatable :: Classifier_Value_Name_enum(:)
       integer, allocatable :: flag_idx(:)
@@ -790,6 +791,10 @@ contains
                                    , bayes_coef % Classifier_Value_Name (class_idx)
          end select
        
+       ! - AW 09/172014 
+       ! - test can be switched off in bayesian file  
+       if ( .not. bayes_coef % do_this_classifier (Class_Idx,Sfc_Idx) )  is_on_test = .false.
+       
        ! --- all tests classifer
         if ( is_on_test ) then
             
@@ -881,6 +886,8 @@ contains
       integer :: i_sfc_file  ! number of surface in file
       
       integer :: int_dummy
+      integer :: index_start
+      integer :: index_end
       
       print*, 'read coeffs ..'
       print*, trim(bayes_coef % file)
@@ -913,6 +920,8 @@ contains
 
       call bayes_coef % alloc ( n_class, n_bounds, n_sfc_bayes )
       
+      bayes_coef % do_this_classifier (:,:) = .true. 
+      
       do i_sfc = 1 , n_sfc_bayes
          read (unit=lun, fmt=*, iostat=ios) i_sfc_file, Header
          read (unit=lun, fmt=*, iostat=ios) bayes_coef % Prior_Yes(i_sfc), bayes_coef % Prior_No(i_sfc)
@@ -922,8 +931,8 @@ contains
             
             read (unit=lun, fmt=*, iostat=ios)  &
                              int_dummy &
-                          ,  int_dummy &
-                          ,  int_dummy &
+                          ,  index_start &
+                          ,  index_end &
                           ,  bayes_coef %Classifier_Value_Name(i_class)
            
             
@@ -989,9 +998,21 @@ contains
              read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_Yes (:,i_class,i_sfc) 
              read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_No (:,i_class,i_sfc)
              
+             ! --   AW 09/17/2014
+             ! -- to switch off this class for this surface do set the start_index in the bayesian file to a 
+             ! -- higher value than end_index
+             ! -- There should be better ways to do this, but we have to adjust this first in the program (IDL) where we create 
+             ! -- the bayesian files
+             ! --  
+            
+             if ( index_start >= index_end) then
+               bayes_coef % do_this_classifier (i_class,i_sfc) = .false.               
+             end if
+             
          end do
       
       end do
+      
          
       bayes_coef % is_read = .true.
    
@@ -1109,6 +1130,7 @@ contains
       allocate (this % Classifier_Bounds_Min(N_class,N_sfc_bayes))
       allocate (this % Classifier_Bounds_Max(N_class,N_sfc_bayes))
       allocate (this % Delta_Classifier_Bounds(N_class,N_sfc_bayes))
+      allocate ( this % do_this_classifier(N_class,N_sfc_bayes))
       allocate (this % Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Classifier_Value_Name(N_class))
@@ -1126,7 +1148,7 @@ contains
       deallocate (this % Prior_Yes)
       deallocate (this % Prior_No)
       deallocate (this % Optimal_Posterior_Prob)
-      
+      deallocate (this % do_this_classifier)
       deallocate (this % Classifier_Bounds_Min)
       deallocate (this % Classifier_Bounds_Max)
       deallocate (this % Delta_Classifier_Bounds)

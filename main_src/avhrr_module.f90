@@ -57,6 +57,7 @@ module AVHRR_MODULE
   use PLANCK
 
   implicit none
+  private
 
   public:: WRITE_HEADER_1BX,&
            ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL, &

@@ -10,9 +10,9 @@ module ACHA_SERVICES_MOD
 
 implicit none
 
-  public:: ACHA_Fetch_Pixel_NWP_RTM 
+  public:: ACHA_FETCH_PIXEL_NWP_RTM 
 
- integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Rtm_Prof = 101
+ integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Prof = 101
 
 !ACHA input structure
 ! input structure
@@ -23,7 +23,8 @@ implicit none
    integer (kind=int4):: Number_Of_Lines
    integer (kind=int4):: Num_Line_Max
    integer (kind=int4):: Smooth_Nwp_Fields_Flag
-   integer (kind=int4):: Process_Undetected_Cloud_Flag_Local
+   integer (kind=int4):: Process_Undetected_Cloud_Flag
+   real (kind=real4):: Sensor_Resolution_KM
 
    !-- local pointers that point to global variables
    integer:: Chan_Idx_67um
@@ -54,16 +55,16 @@ implicit none
    real, dimension(:,:), pointer:: Surface_Elevation
    real, dimension(:,:), pointer:: Latitude
    real, dimension(:,:), pointer:: Longitude
-   real, dimension(:,:), pointer:: Rad_Clear_67um_Local
-   real, dimension(:,:), pointer:: Rad_Clear_85um_Local
-   real, dimension(:,:), pointer:: Rad_Clear_11um_Local
-   real, dimension(:,:), pointer:: Rad_Clear_12um_Local
-   real, dimension(:,:), pointer:: Rad_Clear_133um_Local
+   real, dimension(:,:), pointer:: Rad_Clear_67um
+   real, dimension(:,:), pointer:: Rad_Clear_85um
+   real, dimension(:,:), pointer:: Rad_Clear_11um
+   real, dimension(:,:), pointer:: Rad_Clear_12um
+   real, dimension(:,:), pointer:: Rad_Clear_133um
    real, dimension(:,:), pointer:: Surface_Emissivity_39um 
    integer (kind=int1),dimension(:,:), pointer:: Snow_Class
    integer (kind=int1),dimension(:,:), pointer:: Surface_Type
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask_Local
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Type_Local
+   integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
+   integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
    integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
    integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
    integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
@@ -72,10 +73,11 @@ implicit none
    real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
    real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
 
-!optional variables
+   !--- optional variables
    integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
    integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
  
+  
  end type acha_input_struct
 
 
@@ -90,21 +92,22 @@ implicit none
    integer:: Tropo_Level
 
 !RTM profiles
-   real, dimension(:), pointer :: Atm_Rad_Prof_67um_Rtm
-   real, dimension(:), pointer :: Atm_Rad_Prof_85um_Rtm
-   real, dimension(:), pointer :: Atm_Rad_Prof_11um_Rtm
-   real, dimension(:), pointer :: Atm_Rad_Prof_12um_Rtm
-   real, dimension(:), pointer :: Atm_Rad_Prof_133um_Rtm
-   real, dimension(:), pointer :: Atm_Trans_Prof_67um_Rtm
-   real, dimension(:), pointer :: Atm_Trans_Prof_85um_Rtm
-   real, dimension(:), pointer :: Atm_Trans_Prof_11um_Rtm
-   real, dimension(:), pointer :: Atm_Trans_Prof_12um_Rtm
-   real, dimension(:), pointer :: Atm_Trans_Prof_133um_Rtm
-   real, dimension(:), pointer :: Black_Body_Rad_Prof_11um_Rtm
+   real, dimension(:), pointer :: Atm_Rad_Prof_67um
+   real, dimension(:), pointer :: Atm_Rad_Prof_85um
+   real, dimension(:), pointer :: Atm_Rad_Prof_11um
+   real, dimension(:), pointer :: Atm_Rad_Prof_12um
+   real, dimension(:), pointer :: Atm_Rad_Prof_133um
+   real, dimension(:), pointer :: Atm_Trans_Prof_67um
+   real, dimension(:), pointer :: Atm_Trans_Prof_85um
+   real, dimension(:), pointer :: Atm_Trans_Prof_11um
+   real, dimension(:), pointer :: Atm_Trans_Prof_12um
+   real, dimension(:), pointer :: Atm_Trans_Prof_133um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
 
 !NWP profiles
    real, dimension(:), pointer :: T_prof
-   real, dimension(Num_Levels_Rtm_Prof) :: P_Prof
+   real, dimension(Num_Levels_Prof) :: P_Prof
    real, dimension(:), pointer :: Z_prof
 
 !Off axis NWP profiles
@@ -139,6 +142,7 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Cloud_Height
    real, dimension(:,:), pointer:: Zc_Top
    real, dimension(:,:), pointer:: Zc_Base
+   real, dimension(:,:), pointer:: Cost
 
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
@@ -216,7 +220,7 @@ end type acha_rtm_nwp_struct
 ! This subroutine gathers the necessary NWP and RTM profiles used for a given
 ! pixel for ACHA. 
 !----------------------------------------------------------------------
- subroutine  ACHA_Fetch_Pixel_NWP_RTM(Acha_Input, symbol, &
+ subroutine  ACHA_FETCH_PIXEL_NWP_RTM(Acha_Input, symbol, &
                                       Elem_Idx, Line_Idx, Acha_RTM_NWP)
                                       
    type(acha_input_struct), intent(inout) :: Acha_Input
@@ -292,37 +296,38 @@ end type acha_rtm_nwp_struct
  
    !--- populate radiance and transmission profiles
    if (Acha_Input%Chan_On_67um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_67um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch9
+     Acha_RTM_NWP%Atm_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch9
      
-     Acha_RTM_NWP%Atm_Trans_Prof_67um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch9
+     Acha_RTM_NWP%Atm_Trans_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch9
      
+     Acha_RTM_NWP%Black_Body_Rad_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch9
    endif
    if (Acha_Input%Chan_On_85um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_85um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch11
+     Acha_RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch11
      
-     Acha_RTM_NWP%Atm_Trans_Prof_85um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch11
+     Acha_RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch11
    endif
    
    if (Acha_Input%Chan_On_11um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_11um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch14
+      Acha_RTM_NWP%Atm_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch14
       
-      Acha_RTM_NWP%Atm_Trans_Prof_11um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch14
+      Acha_RTM_NWP%Atm_Trans_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch14
       
-      Acha_RTM_NWP%Black_Body_Rad_Prof_11um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch14
+      Acha_RTM_NWP%Black_Body_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch14
    endif
    
    if (Acha_Input%Chan_On_12um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_12um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch15
+      Acha_RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch15
       
-      Acha_RTM_NWP%Atm_Trans_Prof_12um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch15
+      Acha_RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch15
    endif
    if (Acha_Input%Chan_On_133um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_133um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch16
+      Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch16
       
-      Acha_RTM_NWP%Atm_Trans_Prof_133um_RTM => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch16
+      Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch16
    endif
     
- end subroutine ACHA_Fetch_Pixel_NWP_RTM
+ end subroutine ACHA_FETCH_PIXEL_NWP_RTM
 
 
 end module ACHA_SERVICES_MOD

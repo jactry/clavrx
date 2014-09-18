@@ -55,11 +55,13 @@ module ACHA_GSIP_BRIDGE_MOD
 
    !--- store integer values
    Acha_Input%Number_of_Elements = sat%nx
-   Acha_Input%Number_of_Lines = sat%ny
+   Acha_Input%Number_of_Lines = Num_Scans_Per_Segment
    Acha_Input%Num_Line_Max = Num_Scans_Per_Segment
-   Acha_Input%Process_Undetected_Cloud_Flag_Local = sym%NO
+   Acha_Input%Process_Undetected_Cloud_Flag = sym%NO
    Acha_Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
    Acha_Input%ACHA_Mode_Flag_In = sat_info_gsip(1)%acha_mode
+   !Sensor resolution
+   Acha_Input%Sensor_Resolution_KM = WMO_Sensor_KM(sat_info_gsip(1)%WMO_Sc_Id)
 
    Acha_Input%Chan_Idx_67um = 9     !channel number for 6.7
    Acha_Input%Chan_Idx_85um = 11     !channel number for 8.5
@@ -105,14 +107,14 @@ module ACHA_GSIP_BRIDGE_MOD
    Acha_Input%Surface_Pressure => Psfc_Nwp_Pix
 
    Acha_Input%Surface_Elevation => Zsfc
-   Acha_Input%Cloud_Mask_Local => gsip_pix_prod%cldmask
-   Acha_Input%Cloud_Type_Local => gsip_pix_prod%Cldtype
+   Acha_Input%Cloud_Mask => gsip_pix_prod%cldmask
+   Acha_Input%Cloud_Type => gsip_pix_prod%Cldtype
 
-   Acha_Input%Rad_Clear_67um_Local => Rad_Clear_Ch9_Rtm
-   Acha_Input%Rad_Clear_85um_Local => Rad_Clear_Ch11_Rtm
-   Acha_Input%Rad_Clear_11um_Local => Rad_Clear_Ch14_Rtm
-   Acha_Input%Rad_Clear_12um_Local => Rad_Clear_Ch15_Rtm
-   Acha_Input%Rad_Clear_133um_Local => Rad_Clear_Ch16_Rtm
+   Acha_Input%Rad_Clear_67um => Rad_Clear_Ch9_Rtm
+   Acha_Input%Rad_Clear_85um => Rad_Clear_Ch11_Rtm
+   Acha_Input%Rad_Clear_11um => Rad_Clear_Ch14_Rtm
+   Acha_Input%Rad_Clear_12um => Rad_Clear_Ch15_Rtm
+   Acha_Input%Rad_Clear_133um => Rad_Clear_Ch16_Rtm
    Acha_Input%Surface_Emissivity_39um => sfc_emiss_7
 
    Acha_Input%Elem_Idx_LRC_Input => null()
@@ -144,6 +146,7 @@ module ACHA_GSIP_BRIDGE_MOD
    Acha_Output%Packed_Qf => gsip_pix_prod%Acha_Packed_Quality_Flags
    Acha_Output%Packed_Meta_Data => gsip_pix_prod%Acha_Packed_Meta_Data_Flags
    Acha_Output%Processing_Order  => gsip_pix_prod%Processing_Order
+   Acha_Output%Cost  => gsip_pix_prod%r4_generic2
   
 
    !----set symbols to local values
@@ -257,13 +260,13 @@ module ACHA_GSIP_BRIDGE_MOD
      Acha_Input%Tropopause_Temperature =>  NULL()
      Acha_Input%Surface_Pressure =>  NULL()
      Acha_Input%Surface_Elevation =>  NULL()
-     Acha_Input%Cloud_Mask_Local =>  NULL()
-     Acha_Input%Cloud_Type_Local =>  NULL()
-     Acha_Input%Rad_Clear_67um_Local =>  NULL()
-     Acha_Input%Rad_Clear_85um_Local =>  NULL()
-     Acha_Input%Rad_Clear_11um_Local =>  NULL()
-     Acha_Input%Rad_Clear_12um_Local =>  NULL()
-     Acha_Input%Rad_Clear_133um_Local =>  NULL()
+     Acha_Input%Cloud_Mask =>  NULL()
+     Acha_Input%Cloud_Type =>  NULL()
+     Acha_Input%Rad_Clear_67um =>  NULL()
+     Acha_Input%Rad_Clear_85um =>  NULL()
+     Acha_Input%Rad_Clear_11um =>  NULL()
+     Acha_Input%Rad_Clear_12um =>  NULL()
+     Acha_Input%Rad_Clear_133um =>  NULL()
      Acha_Input%Surface_Emissivity_39um =>  NULL()
      Acha_Input%Elem_Idx_LRC_Input =>  NULL()
      Acha_Input%Line_Idx_LRC_Input =>   NULL()
@@ -299,9 +302,70 @@ module ACHA_GSIP_BRIDGE_MOD
      Acha_Output%Packed_Qf =>  NULL()
      Acha_Output%Packed_Meta_Data =>  NULL()
      Acha_Output%Processing_Order  =>  NULL()
+     Acha_Output%Cost  => NULL()
  
  
  end subroutine
+
+ !-----------------------------------------------------------------------------
+ !
+ !-----------------------------------------------------------------------------
+ function WMO_Sensor_KM(wmo_id) result (Sensor_KM)
+      integer , intent(in) :: wmo_id
+      real :: Sensor_KM
+
+      select case (WMO_id)
+      case(3)
+	     Sensor_KM = 1.0
+	   case(4)
+	     Sensor_KM = 1.0
+      case(55)
+	     Sensor_KM = 3.0
+      case(56)
+	     Sensor_KM = 3.0
+      case(57)
+	     Sensor_KM = 3.0
+      case(70)
+	     Sensor_KM = 3.0
+      case(171)
+	     Sensor_KM = 4.0
+	  case (172)
+	     Sensor_KM = 13.0
+	  case (200:209)
+	     Sensor_KM = 1.0
+	  case(223)
+	     Sensor_KM = 1.0
+      case(224)
+	     Sensor_KM = 0.75
+      case(252)
+	     Sensor_KM = 4.0
+      case(253)
+	     Sensor_KM = 4.0
+      case(254)
+	     Sensor_KM = 4.0
+      case(255)
+	     Sensor_KM = 4.0
+      case(256)
+	     Sensor_KM = 4.0
+      case(257)
+	     Sensor_KM = 4.0
+      case(258)
+	     Sensor_KM = 4.0
+      case(259)
+	     Sensor_KM = 4.0
+      case(152)
+	     Sensor_KM = 2.0
+      case(783)
+	     Sensor_KM = 1.0
+      case(784)
+	     Sensor_KM = 1.0
+	  case default
+	     print*,'Please inform William that this sensor is missing in ACHA! ( william.straka@ssec.wisc.edu) wmo id: ', wmo_id 
+		 stop	 
+      end select
+
+
+ end function WMO_Sensor_KM
  
 
 end module ACHA_GSIP_BRIDGE_MOD

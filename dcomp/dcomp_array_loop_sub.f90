@@ -15,20 +15,15 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       , EM_snow_class
    
    implicit none
-   type (dcomp_in_type) , intent(in) :: input
-   type (dcomp_out_type), intent(out) :: output
-   integer , intent(in) , optional :: debug_mode_user
+   type (dcomp_in_type)  , intent(in)  :: input
+   type (dcomp_out_type) , intent(out) :: output
+   integer , intent(in)  , optional    :: debug_mode_user
    
-   integer, parameter :: real4 = selected_real_kind(6,37)
-   integer, parameter :: int4 = selected_int_kind(8)
-   integer, parameter :: int1 = selected_int_kind(1)
-   integer, parameter :: int2 = selected_int_kind(2)  
-   integer :: nr_lines, nr_elem
+   integer, parameter :: REAL4 = selected_real_kind(6,37)
+   integer, parameter :: INT4 = selected_int_kind(8)
+   integer, parameter :: INT1 = selected_int_kind(1)
+   integer, parameter :: INT2 = selected_int_kind(2)  
    
-  
-    !- scalar local variables
-
-
    ! - atmos correction
    integer , parameter :: N_CHAN = 40
   
@@ -51,7 +46,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real :: trans_unc_wvp ( N_CHAN )
    real :: trans_total ( N_CHAN )
       
-   integer , parameter :: CHN_VIS = 1
+   integer, parameter :: CHN_VIS = 1
    integer  :: CHN_NIR
    integer  :: chn_idx
 
@@ -69,7 +64,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    logical  , allocatable :: obs_array(:,:)
    logical  , allocatable :: water_phase_array(:,:)
    
-   integer ( kind = int2)  , allocatable :: info_flag ( :,:)
+   integer ( kind = int2)  , allocatable :: info_flag   ( :,:)
    integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
    integer :: dim_1 
    integer :: dim_2
@@ -98,7 +93,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real, parameter :: SOL_ZEN_MAX = 75.
    real, parameter :: PI = 3.14159265359
    
-   real ( kind = real4) :: ALBEDO_OCEAN (40)
+   real ( kind = real4) :: albedo_ocean (40)
       
    type ( dcomp_output_structure ) :: dcomp_out
       
@@ -125,14 +120,13 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
    
    array_dim = shape ( input % sat % d )
-   dim_1 = array_dim (1) 
-   dim_2 = array_dim (2)
-   nr_lines = array_dim(2)
-   nr_elem = array_dim(1)
-      
-   ALBEDO_OCEAN (:) = 0.03
-   calib_err ( : ) = 0.03
-   
+   dim_1 = array_dim ( 1 ) 
+   dim_2 = array_dim ( 2 )
+
+
+   ! - set values to default
+   albedo_ocean ( : ) = 0.03
+   calib_err ( : )    = 0.03
    
    allocate ( obs_array ( dim_1 , dim_2 ) &
                   ,  cloud_array ( dim_1 , dim_2 ) )
@@ -158,7 +152,6 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                         &  .or. input % cloud_type % d == EM_cloud_type % SUPERCOOLED &
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
   
-
    !--- select sensor name based on wmo id number
    select case (input % sensor_wmo_id)
       case(3)
@@ -235,7 +228,6 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    allocate ( output % lwp % d         ( dim_1 , dim_2))
    allocate ( output % iwp % d         ( dim_1 , dim_2))
    
-   
    output % cod % d           =  MISSING_REAL4 
    output % cps % d           =  MISSING_REAL4 
    output % cod_unc % d       =  MISSING_REAL4
@@ -299,8 +291,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       call view2d ( input % cloud_press % d ,0., 1200., 'Cloud_press')
    end if
    
-   line_loop: do line_idx = 1 , nr_lines
-      elem_loop: do elem_idx = 1,   nr_elem
+   line_loop: do line_idx = 1 , dim_2
+      elem_loop: do elem_idx = 1,   dim_1
          
    
          if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
@@ -314,17 +306,16 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          rel_azi    =  input % azi % d (elem_idx,line_idx)
          ozone_path_nwp = input % ozone_nwp % d (elem_idx,line_idx)
                   
-         ! - compute transmission 
-              
+         ! - prepare dcomp retrieval input for each channel             
          loop_chn: do chn_idx = 1 , 40
-       
+            
+            ! - transmission
             if ( input % is_channel_on (chn_idx) .eqv. .false.) cycle  loop_chn
             
-            trans_block : associate ( tpw_ac => input % tpw_ac % d (elem_idx,line_idx)  , &
-                     
-                     press_sfc => input % press_sfc  % d (elem_idx,line_idx) , &
-                     trans_chn20_ac_nadir => input % trans_ac_nadir(20) % d , & 
-                     refl_toa => input % refl (chn_idx)  % d (elem_idx, line_idx))
+            trans_block : associate ( tpw_ac => input % tpw_ac % d (elem_idx,line_idx)  , &                     
+                      & press_sfc => input % press_sfc  % d (elem_idx,line_idx) , &
+                      & trans_chn20_ac_nadir => input % trans_ac_nadir(20) % d , & 
+                      & refl_toa => input % refl (chn_idx)  % d (elem_idx, line_idx))
                      
                gas_coeff = input % gas_coeff ( chn_idx) % d  
                trans_ozone( chn_idx ) = 1.
@@ -372,6 +363,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             alb_sfc( chn_idx ) = max ( alb_sfc( chn_idx ) , ALBEDO_OCEAN (chn_idx) )
             
             alb_unc_sfc  (chn_idx) = 0.05
+            
+            obs_vec ( chn_idx ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
                         
             if ( chn_idx == 20 ) then
                chn20_block : associate ( rad_toa => input % rad (chn_idx)  % d (elem_idx, line_idx) &
@@ -391,6 +384,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             end if
              
          end do loop_chn
+         
+         
 
          ! - NIR                
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
@@ -435,9 +430,10 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , dcomp_out &
                 & , input % mode &
                 & , input % lut_path &
-                & , debug_mode  )
-        
-        if ( debug_mode == 4 ) then
+                & , debug_mode &
+                & , is_snow_in =  input % snow_class % d (elem_idx, line_idx) == 1 )
+        debug_mode = 4
+        if ( debug_mode == 4 .and. dcomp_out % cod > 150.) then
             print*,'=======================> input:'
             print*,'Elem Line: ', elem_idx,line_idx
             print*,' Obs vector: ',obs_vec
@@ -448,6 +444,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             print*, 'Angles: ',sol_zen,sat_zen,rel_azi
             print*, 'Cloud temp mask: ',cld_temp,water_phase_array( elem_idx, line_idx)
             print*, 'Ch20 rtm: ', rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20
+            print*, 'snow: ', input % snow_class % d (elem_idx, line_idx)
             print*, 'output: '
             print*, dcomp_out % cod, dcomp_out % cps
             print*

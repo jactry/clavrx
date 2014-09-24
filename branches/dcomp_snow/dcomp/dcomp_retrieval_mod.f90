@@ -29,8 +29,8 @@ contains
    subroutine dcomp_algorithm ( &
            obs_vec &
          , obs_u  &
-         , alb_sfc & 
-         , alb_sfc_u  &
+         , alb_sfc_in & 
+         , alb_sfc_u_in  &
          , state_apr &
          , air_trans_ac   &
          , sol_zen &
@@ -44,7 +44,8 @@ contains
          , output_str &
          , dcomp_mode &
          , ancil_path  &
-         , debug_in ) 
+         , debug_in &
+         , is_snow_in ) 
    
                      
       use dcomp_math_tools_mod, only: &
@@ -59,9 +60,9 @@ contains
       
       real, intent(in) :: obs_vec ( :) 
       real, intent(in) :: obs_u (:) 
-      real, intent(in) :: alb_sfc ( : )
+      real, intent(in) :: alb_sfc_in ( : )
       
-      real, intent(in)  :: alb_sfc_u (:)
+      real, intent(in)  :: alb_sfc_u_in (:)
       real, intent(in)  :: air_trans_ac (:) 
       real, intent(in)  :: state_apr ( 2 )
       real, intent ( in ) :: sol_zen
@@ -75,6 +76,7 @@ contains
       character ( len = * ) , intent ( in ) :: sensor
       integer , intent(in), optional :: dcomp_mode
       integer , intent(in), optional :: debug_in
+      logical , intent(in), optional :: is_snow_in
       
       character (len = 1024 ), intent ( in ) , optional :: ancil_path
       
@@ -108,7 +110,10 @@ contains
       integer , dimension(2) :: channels
       real :: cld_albedo_vis
       character ( len=1024) :: dcomp_ancil_path
-       
+      
+      logical :: is_snow
+      real :: alb_sfc ( 43)
+      real :: alb_sfc_u ( 43) 
       !     --   executable
       
       ! - initialize output
@@ -132,11 +137,23 @@ contains
       pxl % rel_azi = rel_azi
       pxl % ctt = cld_temp
       pxl % is_water_phase = cld_phase
-
+      
+      alb_sfc = alb_sfc_in
+      alb_sfc_u = alb_sfc_u_in
+      
       if ( present ( ancil_path )) then
          dcomp_ancil_path = trim ( ancil_path )
       else
          dcomp_ancil_path = '/data/Ancil_Data/clavrx_ancil_data/'
+      end if
+      
+      is_snow = .false.
+      if ( present (is_snow_in) ) is_snow = is_snow_in
+      
+      
+      if (is_snow) then
+         alb_sfc(1:2) = 0.6
+         alb_sfc_u(1:2) = 0.5
       end if
       
       algo_mode = 3

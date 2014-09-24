@@ -139,7 +139,7 @@ program dcomp_one_pixel_run
                               & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase &
 							  & , rad_abv_cld , rad_sfc , sensor &
 							  & , dcomp_results , dcomp_mode = dcomp_mode &
-							  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
+							  & , debug_in = debug_mode , ancil_path = ancil_path ,is_snow_in = snow )   ! - output
    write(color_string,'(I2)') 43
    text = '============= DCOMP RESULTS==============='
    print*,achar(27)//'['//color_string//'m '//trim(text)//achar(27)//'[0m'

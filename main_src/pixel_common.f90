@@ -233,6 +233,7 @@ module PIXEL_COMMON
   integer,public, save:: Goes_Mop_Flag
   integer,public, save:: Goes_Sndr_Flag
   integer,public, save:: Goes_1km_Flag
+  integer,public, save:: Goes_Scan_Line_Flag
   integer,public, save:: Modis_Flag
   integer,public, save:: Modis_5km_Flag
   integer,public, save:: Modis_1km_Flag

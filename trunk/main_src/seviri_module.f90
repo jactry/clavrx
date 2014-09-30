@@ -308,7 +308,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
        Ch1_Counts = Two_Byte_Temp
 
@@ -355,7 +356,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
        Ch2_Counts = Two_Byte_Temp
                                     
@@ -396,7 +398,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
        
 !----- How to do Ref % utilizing EUMETSAT values. Solar constant is 19.85 for 1.64
 
@@ -438,7 +441,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MSG_RAD_BT(4, 20, Two_Byte_Temp, ch(20)%Bt_Toa, ch(20)%Rad_Toa)
 
@@ -463,7 +467,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
        call MSG_RAD_BT(5, 27, Two_Byte_Temp, ch(27)%Bt_Toa, ch(27)%Rad_Toa)
 
@@ -487,7 +492,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
        call MSG_RAD_BT(6, 28, Two_Byte_Temp, ch(28)%Bt_Toa, ch(28)%Rad_Toa)
 
@@ -511,7 +517,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
        call MSG_RAD_BT(7, 29, Two_Byte_Temp, ch(29)%Bt_Toa, ch(29)%Rad_Toa)
 
@@ -535,7 +542,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MSG_RAD_BT(8, 30, Two_Byte_Temp, ch(30)%Bt_Toa, ch(30)%Rad_Toa)
 
@@ -560,7 +568,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
        
       call MSG_RAD_BT(9, 31, Two_Byte_Temp, ch(31)%Bt_Toa, ch(31)%Rad_Toa)
 
@@ -584,7 +593,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MSG_RAD_BT(10, 32, Two_Byte_Temp, ch(32)%Bt_Toa, ch(32)%Rad_Toa)
 
@@ -609,7 +619,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MSG_RAD_BT(11, 33, Two_Byte_Temp, ch(33)%Bt_Toa, ch(33)%Rad_Toa)
       

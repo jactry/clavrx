@@ -631,7 +631,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
      !--- calibrate
      call CALIBRATE_GOES_REFLECTANCE(Two_Byte_Temp,Ch1_Dark_Count,Time_Since_Launch,ch(1)%Ref_Toa)
@@ -659,7 +660,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(20)%Rad_Toa = (Two_Byte_Temp - Goes_Ch2_Thermal_Intercept)/Goes_Ch2_Thermal_Slope
 
    endif
@@ -682,7 +685,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(27)%Rad_Toa = (Two_Byte_Temp - Goes_Ch3_Thermal_Intercept)/Goes_Ch3_Thermal_Slope
 
    endif
@@ -705,7 +710,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
         ch(31)%Rad_Toa = (Two_Byte_Temp - Goes_Ch4_Thermal_Intercept)/Goes_Ch4_Thermal_Slope
 
    endif
@@ -728,7 +735,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(32)%Rad_Toa = (Two_Byte_Temp - Goes_Ch5_Thermal_Intercept)/Goes_Ch5_Thermal_Slope
 
@@ -752,7 +760,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(33)%Rad_Toa = (Two_Byte_Temp - Goes_Ch6_Thermal_Intercept)/Goes_Ch6_Thermal_Slope
 
@@ -941,7 +950,6 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    endif
 
-
    !---   read channel 36 (GOES Sounder channel 2)
    if (Chan_On_Flag_Default(36) == sym%YES) then
 
@@ -960,7 +968,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(36)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(36)%Rad_Toa = (ch(36)%Rad_Toa - Goes_Ch2_Thermal_Intercept)/Goes_Ch2_Thermal_Slope
@@ -986,7 +995,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(35)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(35)%Rad_Toa = (ch(35)%Rad_Toa - Goes_Ch3_Thermal_Intercept)/Goes_Ch3_Thermal_Slope
@@ -1011,7 +1021,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(34)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(34)%Rad_Toa = (ch(34)%Rad_Toa - Goes_Ch4_Thermal_Intercept)/Goes_Ch4_Thermal_Slope
@@ -1036,7 +1047,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(33)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(33)%Rad_Toa = (ch(33)%Rad_Toa - Goes_Ch5_Thermal_Intercept)/Goes_Ch5_Thermal_Slope
@@ -1062,7 +1074,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(32)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(32)%Rad_Toa = (ch(32)%Rad_Toa - Goes_Ch7_Thermal_Intercept)/Goes_Ch7_Thermal_Slope
@@ -1088,7 +1101,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(31)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(31)%Rad_Toa = (ch(31)%Rad_Toa - Goes_Ch8_Thermal_Intercept)/Goes_Ch8_Thermal_Slope
@@ -1114,7 +1128,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(30)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(30)%Rad_Toa = (ch(30)%Rad_Toa - Goes_Ch9_Thermal_Intercept)/Goes_Ch9_Thermal_Slope
@@ -1139,7 +1154,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(28)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(28)%Rad_Toa = (ch(28)%Rad_Toa - Goes_Ch10_Thermal_Intercept)/Goes_Ch10_Thermal_Slope
@@ -1164,7 +1180,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(27)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(27)%Rad_Toa = (ch(27)%Rad_Toa - Goes_Ch12_Thermal_Intercept)/Goes_Ch12_Thermal_Slope
@@ -1189,7 +1206,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
        
       ch(25)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(25)%Rad_Toa = (ch(25)%Rad_Toa - Goes_Ch13_Thermal_Intercept)/Goes_Ch13_Thermal_Slope
@@ -1215,7 +1233,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(24)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(24)%Rad_Toa = (ch(24)%Rad_Toa - Goes_Ch14_Thermal_Intercept)/Goes_Ch14_Thermal_Slope
@@ -1240,7 +1259,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(23)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(23)%Rad_Toa = (ch(23)%Rad_Toa - Goes_Ch16_Thermal_Intercept)/Goes_Ch16_Thermal_Slope
@@ -1265,7 +1285,9 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(21)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(21)%Rad_Toa = (ch(21)%Rad_Toa - Goes_Ch17_Thermal_Intercept)/Goes_Ch17_Thermal_Slope
 
@@ -1290,7 +1312,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(20)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(20)%Rad_Toa = (ch(20)%Rad_Toa - Goes_Ch18_Thermal_Intercept)/Goes_Ch18_Thermal_Slope
@@ -1317,7 +1340,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       Ch1_Counts = UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(1)%Ref_Toa = Missing_Value_Real4
@@ -1656,12 +1680,14 @@ end subroutine READ_GOES_SNDR
 ! Words_In_Prefix = number of words in header on each scan line
 ! Words_Per_Line = number of words in a line (similar to record length)
 ! First_Line_In_Segment = first data line for this segment
+! Goes_Scan_Line_Flag = Set this flag after band 1 scan line time reads
 !---------------------------------------------------------------------------
  subroutine GET_IMAGE_FROM_AREAFILE(filename,Byte_Shift, &
                                     AREAstr, XStride, &
                                     Segment_Number, &
                                     Num_Lines_Per_Segment, &
-                                    Num_Lines_Read, image)
+                                    Num_Lines_Read, image, &
+                                    Goes_Scan_Line_Flag)
 
  character(len=*), intent(in):: filename 
  integer(kind=int4), intent(in):: Byte_Shift 
@@ -1690,7 +1716,8 @@ end subroutine READ_GOES_SNDR
  integer:: Nwords
  INTEGER(kind=int4), DIMENSION(64) :: i4buf_temp
  integer(kind=int4):: dummy
-  
+ integer(kind=int4), intent(inout):: Goes_Scan_Line_Flag
+
  ! get number of bytes per pixel and num bytes per line for current file
  ! this is needed because the 0.64 and other channels have different values
  ! in the MTSAT HIRID format.
@@ -1766,15 +1793,20 @@ end subroutine READ_GOES_SNDR
     Word_Start_Prefix = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + 1
 
     if (allocated(Scan_Time)) then
-      if (Words_In_Prefix .LT. 128) then
+      if (Words_In_Prefix .LT. 116 .AND. Goes_Scan_Line_Flag==sym%NO) then
         Scan_Time(Line_Idx) = 0
       else
-        call PRINT_PREFIX(Word_Buffer(Word_Start_Prefix:Word_Start_Prefix+Words_In_Prefix), &
+        if (Goes_Scan_Line_Flag==sym%NO) then
+          call PRINT_PREFIX(Word_Buffer(Word_Start_Prefix:Word_Start_Prefix+Words_In_Prefix), &
                         Scan_Time(Line_Idx))
-      end if
+        endif
+      endif
     endif
-
  enddo
+
+ !--- we don't want to fill the scan line array after the first time through.
+ !--- fixes the issue with missing scan line times for goes 1km processing.
+ Goes_Scan_Line_Flag=sym%YES
 
  !--- deallocate allocated arrays
  deallocate(Word_Buffer, imgbuf)

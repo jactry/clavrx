@@ -273,7 +273,8 @@ end subroutine READ_MTSAT_INSTR_CONSTANTS
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
         call MTSAT_REFLECTANCE(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
 
@@ -299,7 +300,8 @@ end subroutine READ_MTSAT_INSTR_CONSTANTS
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MTSAT_RADIANCE_BT(5_int1, Two_Byte_Temp, ch(20)%Rad_Toa, ch(20)%Bt_Toa)
 
@@ -324,7 +326,8 @@ end subroutine READ_MTSAT_INSTR_CONSTANTS
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MTSAT_RADIANCE_BT(4_int1, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
 
@@ -350,7 +353,8 @@ end subroutine READ_MTSAT_INSTR_CONSTANTS
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MTSAT_RADIANCE_BT(2_int1, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
 
@@ -375,7 +379,8 @@ end subroutine READ_MTSAT_INSTR_CONSTANTS
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       call MTSAT_RADIANCE_BT(3_int1, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
 

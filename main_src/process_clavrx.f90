@@ -874,6 +874,9 @@
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
 
+         !--- reset Goes_Scan_Line_Flag
+         Goes_Scan_Line_Flag = sym%NO
+
          !--- reset pixel arrays to missing for this segment
          call RESET_PIXEL_ARRAYS_TO_MISSING()
 

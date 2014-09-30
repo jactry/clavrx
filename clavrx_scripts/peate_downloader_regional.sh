@@ -36,6 +36,8 @@ END=$4
 shift 4
 TYPES=$*
 
+echo "lldlld"$LON$LAT
+
 # Make sure start, end, and at least one file type are provided
 if [[ -z $START ]] || [[ -z $END ]] || [[ -z $TYPES ]]; then
   usage

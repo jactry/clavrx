@@ -1,8 +1,14 @@
-pro run_nlcomp , year = year , doy0 = doy0 , doy1 = doy1 , ancil_path
+pro run_nlcomp $
+	, year = year $
+	, doy0 = doy0 $
+	, doy1 = doy1 $
+	, ancil_path = ancil_path $
+	, region = region 
 
 default, year, 2013
 default,doy0, 1
 default,doy1, 366
+default,region,'global'
 default, ancil_path, '/data3/Ancil_Data/clavrx_ancil_data/dnb_ancils/'
 
 month = 3
@@ -11,11 +17,33 @@ month = 3
 lunar_irrad_file = ancil_path+'dnb_ancils/lunar_irrad_Mean_DNB.bin'
 distance_table_file= ancil_path+'dnb_ancils/DIST_2010-2030_double.bin'
 
-lon0 = -180
-lon1 = 180
-lat0 = -90
-lat1 = 90.
+
+case region of
+	'global': begin
+		lon0 = -180
+		lon1 = 180
+		lat0 = -90
+		lat1 = 90.
+	end
+	
+	'south_amer': begin
+			lon0 = -100
+			lon1 = -40
+			lat0 = -50
+			lat1 = 10.
+	end
+	
+	else: begin
+		print,'region is wrong!'
+    end
+
+
+endcase
+
+
 thr  = 60.
+
+
 
 
 

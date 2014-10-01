@@ -58,6 +58,13 @@ while :; do
       ;;
       --radius)
          RAD=$2
+         
+         if [ "$RAD" -le 0 ] || [ "$RAD" -gt 5000 ];  
+            then
+               echo 'WARNING: Radius not in the correct range; set to 2000 '
+               RAD=500
+            fi
+         
          shift 2
          continue
       ;;
@@ -79,7 +86,7 @@ while :; do
 done
 
 
-if ([ $LON ] && [ ! $LAT]) || ([ ! $LON ] && [ $LAT ]); 
+if ([ $LON ] && [ ! $LAT ]) || ([ ! $LON ] && [ $LAT ]); 
 then
   echo 'ERROR: Both, LAT and LON must be set '
   usage
@@ -107,7 +114,7 @@ if [ $LON ];
       then
       URL="$URL&radius=$RAD"
    else
-      URL="$URL&radius=2000"   
+      URL="$URL&radius=500"   
    fi
 fi  
 

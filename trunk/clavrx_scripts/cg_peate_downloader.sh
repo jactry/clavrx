@@ -5,7 +5,8 @@ function usage() {
 cat<< EOF
 
 
-need help? bad luck sorry!
+need help? bad luck,  sorry!
+ask denis.botambekov@ssec.wisc.edu or andi.walther@ssec.wisc.edu 
 
 EOF
 
@@ -68,6 +69,35 @@ while :; do
          shift 2
          continue
       ;;
+      --ll)
+         LL_LAT=$2
+         LL_LON=$3
+         
+         if [ "$LL_LAT" -le -90 ] || [ "$LL_LAT" -gt 90 ] || [ "$LL_LON" -lt -180 ] || [ "$LL_LON" -gt 180 ];  
+            then
+               echo 'WARNING: Box not in the correct range; set to 2000 '
+               usage
+               exit 1
+            fi
+         
+         shift 3
+         continue
+      ;;
+      --ur)
+         UR_LAT=$2
+         UR_LON=$3
+         
+         if [ "$UR_LAT" -le -90 ] || [ "$UR_LAT" -gt 90 ] || [ "$UR_LON" -lt -180 ] || [ "$UR_LON" -gt 180 ];  
+            then
+               echo 'WARNING: Box not in the correct range; set to 2000 '
+               usage
+               exit 1
+            fi
+         
+         shift 3
+         continue
+      ;;
+      
       --day)
          DAY='1'
          
@@ -118,6 +148,12 @@ if [ $LON ];
    fi
 fi  
 
+
+if [ $UR_LAT ] && [ $LL_LAT ];
+   then
+   URL="$URL&ll=$LL_LAT,$LL_LON&ur=$UR_LAT,$UR_LON"
+fi
+
 if [ $DAY ];
    then
    URL="$URL&tod=D"
@@ -135,6 +171,13 @@ echo $URL
 SCRIPT=downloader.sh
 
 wget -q -O $SCRIPT ${URL}
+
+# make wget look if data exist
+old_strg="-q"
+new_strg="-q -nc"
+sed "s/$old_strg/$new_strg/g"<$SCRIPT >'tmp.txt'
+mv 'tmp.txt' $SCRIPT
+
 bash $SCRIPT
 
 echo "sucess"

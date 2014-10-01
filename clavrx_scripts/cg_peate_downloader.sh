@@ -23,6 +23,14 @@ while :; do
          if [ "$2" ]; then
             LON=$2
             echo $LON
+            
+            if [ "$LON" -lt -180 ] || [ "$LON" -gt 180 ]; 
+            then
+               echo 'ERROR: Longitude not set or in wrong range! '
+               usage
+               exit 1
+            fi 
+            
             shift 2
             continue 
          else
@@ -34,6 +42,13 @@ while :; do
          if [ "$2" ]; then
             LAT=$2 
             
+            if [ "$LAT" -lt -90 ] || [ "$LAT" -gt 90 ];  
+            then
+               echo 'ERROR: Latitude not set or in wrong range! '
+               usage
+               exit 1
+            fi
+            
             shift 2
             continue 
          else
@@ -41,8 +56,8 @@ while :; do
             exit 1
          fi       
       ;;
-      --region)
-         REG=$2
+      --radius)
+         RAD=$2
          shift 2
          continue
       ;;
@@ -63,6 +78,14 @@ while :; do
    shift
 done
 
+
+if ([ $LON ] && [ ! $LAT]) || ([ ! $LON ] && [ $LAT ]); 
+then
+  echo 'ERROR: Both, LAT and LON must be set '
+  usage
+  exit 1
+fi
+
 START=$1
 END=$2
 shift 2
@@ -80,9 +103,9 @@ done
 if [ $LON ];
    then
    URL="$URL&loc=$LAT,$LON"
-   if [ $REG ];
+   if [ $RAD ];
       then
-      URL="$URL&radius=$REG"
+      URL="$URL&radius=$RAD"
    else
       URL="$URL&radius=2000"   
    fi

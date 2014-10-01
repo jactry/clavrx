@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# $Id:$
+#
 
 function usage() {
 
@@ -72,10 +74,8 @@ while :; do
       --ll)
          LL_LAT=$2
          LL_LON=$3
-         echo "  ==> ll < ==="
-         echo $LL_LAT
-         echo $LL_LON
-         if [ "$LL_LAT" -le -90 ] || [ "$LL_LAT" -gt 90 ] || [ "$LL_LON" -lt -180 ] || [ "$LL_LON" -gt 180 ];  
+       
+         if [ "$LL_LAT" -lt -90 ] || [ "$LL_LAT" -gt 90 ] || [ "$LL_LON" -lt -180 ] || [ "$LL_LON" -gt 180 ];  
             then
                echo 'WARNING: Box not in the correct range; set to 2000 '
                usage
@@ -89,9 +89,7 @@ while :; do
          UR_LAT=$2
          UR_LON=$3
          
-         echo "ur "
-         echo $UR_LAT
-         echo $UR_LON
+       
          
          if [ "$UR_LAT" -le -90 ] || [ "$UR_LAT" -gt 90 ] || [ "$UR_LON" -lt -180 ] || [ "$UR_LON" -gt 180 ];  
             then
@@ -114,6 +112,12 @@ while :; do
          
       ;;
       
+      --path)
+         L1B_PATH=$2
+         shift 2
+         continue      
+      ;;
+      
       
       *)
       break
@@ -134,7 +138,7 @@ END=$2
 shift 2
 TYPES=$*
 
-echo $TYPES
+
 
 OUTPUT=wget
 URL="http://peate.ssec.wisc.edu/flo/api/find?start=$START&end=$END&output=$OUTPUT"
@@ -173,18 +177,28 @@ fi
 
 
 echo $URL
+echo
+echo
 
+if [ ! $L1B_PATH ]; then
+   L1B_PATH=$HOME/Satellite_Input/viirs/tmp/
+   mkdir -p $L1B_PATH
+fi
+
+
+echo $L1B_PATH
 SCRIPT=downloader.sh
-
 wget -q -O $SCRIPT ${URL}
 
 # make wget look if data exist
 old_strg="-q"
 new_strg="-q -nc"
 sed "s/$old_strg/$new_strg/g"<$SCRIPT >'tmp.txt'
-mv 'tmp.txt' $SCRIPT
-
+mv 'tmp.txt' $L1B_PATH/$SCRIPT
+CURR_PATH=${PWD}
+cd $L1B_PATH
 bash $SCRIPT
+cd $CURR_PATH
 
 echo "sucess"
 exit

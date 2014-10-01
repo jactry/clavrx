@@ -47,7 +47,7 @@ do
 		cp cg_peate_downloader.sh $l1b_path
       cd $l1b_path
       echo $l1b_path
-		sh -c './cg_peate_downloader.sh '$YEAR0'-'$MONTH0'-'$DAY0'+'$hhh':00:00 '$YEAR0'-'$MONTH0'-'$DAY0'+'$hhh':00:00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
+		./cg_get_viirs_data.sh --reg spc 20140312
       cd $PWD_LOC
       echo ${PWD}
 		./write_filelist.sh $l1b_path $out_path GMTC

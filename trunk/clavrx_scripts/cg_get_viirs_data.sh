@@ -13,6 +13,12 @@ EOF
 
 }
 
+
+
+
+BASE_PATH=$HOME"/Satellite_Input/viirs/"
+satname='viirs'
+
 while :; do 
    case $1 in
    
@@ -23,76 +29,67 @@ while :; do
          continue
       fi
       ;;
+   --path)
+      if [ "$2" ]; then
+         BASE_PATH=$2
+         shift 2
+         continue
+      fi
+   ;;   
       *)
       break
    esac
 done
 
 n=$#
-echo "==> "$n
-TIME0=$1
 
-length0=$(echo ${#TIME0})
-echo $length
+YEARDOY=$1
 
-YEAR0=${TIME0:0:4}
-MONTH0=${TIME0:4:2}
-
-DAY0='01'
-if [ $length0 -gt 6 ]; then 
-   DAY0=${TIME0:6:2}
-fi   
+YEAR=${YEARDOY:0:4}
+DOY=${YEARDOY:4:3}
 
 HOUR0='00'
-if [ $length0 -gt 8 ]; then
- HOUR0=${TIME0:8:2}
+MINU0='00'
+
+
+if [ $n -gt 1 ]; then
+   TIME0=$2 
+   length0=$(echo ${#TIME0}) 
+   HOUR0=${TIME0:0:2}
+   if [ $length0 -gt 2 ]; then 
+      MINU0=${TIME0:2:2}
+   fi   
 fi 
 
-MINU0='00'
-if [ $length0 -gt 10 ]; then 
-   MINU0=${TIME0:10:2}
-fi
-
-YEAR1=$YEAR0
-MONTH1=$MONTH0
-DAY1=$DAY0
-if [ $length0 -le 6 ]; then 
-   DAY1='31'
-fi
-
-
 HOUR1=$HOUR0
-if [ $length0 -le 8 ]; then 
-   HOUR1='23'
-fi
-
-
 MINU1=$MINU0
-if [ $length0 -le 10 ]; then 
-   MINU1='59'
-fi
 
-if [ $n -eq 2 ]; then
-   TIME1=$2
-   length1=$(echo ${#TIME1})
-   YEAR1=${TIME1:0:4}
-   MONTH1=${TIME1:4:2}
-   DAY1='31'
-   if [ $length1 -gt 6 ]; then 
-      DAY1=${TIME1:6:2}
-   fi
-      
+if [ $n -gt 2 ]; then
+   TIME1=$3 
    HOUR1='23'
-   if [ $length1 -gt 8 ]; then 
-      HOUR1=${TIME1:8:2}
-   fi
-      
    MINU1='59'
-   if [ $length1 -gt 10 ]; then 
-      MINU1=${TIME1:10:2}
+   length1=$(echo ${#TIME1}) 
+   HOUR1=${TIME1:0:2}
+   if [ $length1 -gt 2 ]; then 
+      MINU1=${TIME1:2:2}
    fi   
+fi 
+
+
+
+if date -v 1d > /dev/null 2>&1; then
+  doy_dum=`expr ${DOY0} - 1` 
+  DAY_OBS=$(./shift_date.sh ${YEAR}0101 +${DOY})
+  MONTH=${DAY_OBS:4:2}
+  DAY=${DAY_OBS:6:2}
+else
+  MONTH=$(date -d "01/01/${year} +${DOY0} days -1 day" "+%m")
+  DAY=$(date -d "01/01/${year} +${DOY0} days -1 day" "+%d") 
 fi
 
+
+
+mkdir -p $l1b_path
 
 
 if  [ $REG ]; then
@@ -100,26 +97,44 @@ if  [ $REG ]; then
 
    case $REG in
       spc)
-         echo "south america"
+         echo "south america pacific"
          ll_lat=-45
          ll_lon=-100
          ur_lat=15
          ur_lon=-60
       ;;
+      kzn)
+         echo "kazachstan"
+         ll_lat=20
+         ll_lon=90
+         ur_lat=50
+         ur_lon=130
+         
       *)
       echo "unknown area"
    
    esac
    
-   
-   
-   sh -c './cg_peate_downloader.sh --ll '$ll_lat' '$ll_lon' --ur '$ur_lat' '$ur_lon' '$YEAR0'-'$MONTH0'-'$DAY0'+'$HOUR0':'$MINU0':00 '$YEAR0'-'$MONTH0'-'$DAY1'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
-   
 else
-   echo "global: "  
-   sh -c './cg_peate_downloader.sh '$YEAR0'-'$MONTH0'-'$DAY0'+'$HOUR0':'$MINU0':00 '$YEAR0'-'$MONTH0'-'$DAY1'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01' 
+
+   echo "global: " 
+   
+         ll_lat=-80
+         ll_lon=-170
+         ur_lat=80
+         ur_lon=170
+         
+         
+      REG='global'
+  
 fi
+l1b_path=$HOME'/Satellite_Input/'$satname'/'$YEAR'/'$DOY'/'$REG
+
+mkdir -p $l1b_path
+echo $l1b_path
 
 
+
+      sh -c './cg_peate_downloader.sh --path '$l1b_path' --ll '$ll_lat' '$ll_lon' --ur '$ur_lat' '$ur_lon' '$YEAR'-'$MONTH'-'$DAY'+'$HOUR0':'$MINU0':00 '$YEAR'-'$MONTH'-'$DAY'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
 
 

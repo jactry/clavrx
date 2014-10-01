@@ -72,7 +72,9 @@ while :; do
       --ll)
          LL_LAT=$2
          LL_LON=$3
-         
+         echo "  ==> ll < ==="
+         echo $LL_LAT
+         echo $LL_LON
          if [ "$LL_LAT" -le -90 ] || [ "$LL_LAT" -gt 90 ] || [ "$LL_LON" -lt -180 ] || [ "$LL_LON" -gt 180 ];  
             then
                echo 'WARNING: Box not in the correct range; set to 2000 '
@@ -86,6 +88,10 @@ while :; do
       --ur)
          UR_LAT=$2
          UR_LON=$3
+         
+         echo "ur "
+         echo $UR_LAT
+         echo $UR_LON
          
          if [ "$UR_LAT" -le -90 ] || [ "$UR_LAT" -gt 90 ] || [ "$UR_LON" -lt -180 ] || [ "$UR_LON" -gt 180 ];  
             then

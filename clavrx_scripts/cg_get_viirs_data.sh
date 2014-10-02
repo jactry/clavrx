@@ -78,13 +78,13 @@ fi
 
 
 if date -v 1d > /dev/null 2>&1; then
-  doy_dum=`expr ${DOY0} - 1` 
+  doy_dum=`expr ${DOY} - 1` 
   DAY_OBS=$(./shift_date.sh ${YEAR}0101 +${DOY})
   MONTH=${DAY_OBS:4:2}
   DAY=${DAY_OBS:6:2}
 else
-  MONTH=$(date -d "01/01/${year} +${DOY0} days -1 day" "+%m")
-  DAY=$(date -d "01/01/${year} +${DOY0} days -1 day" "+%d") 
+  MONTH=$(date -d "01/01/${YEAR} +${DOY} days -1 day" "+%m")
+  DAY=$(date -d "01/01/${YEAR} +${DOY} days -1 day" "+%d") 
 fi
 
 

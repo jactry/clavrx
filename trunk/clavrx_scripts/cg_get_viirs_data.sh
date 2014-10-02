@@ -103,13 +103,14 @@ if  [ $REG ]; then
          ur_lat=15
          ur_lon=-60
       ;;
+      
       kzn)
          echo "kazachstan"
          ll_lat=20
          ll_lon=90
          ur_lat=50
          ur_lon=130
-         
+      ;;   
       *)
       echo "unknown area"
    

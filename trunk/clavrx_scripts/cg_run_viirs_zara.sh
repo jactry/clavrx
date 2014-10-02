@@ -119,8 +119,8 @@ do
 
    		echo "echo 'Getting l1b data'" >> $tmp_script
    		echo "cd $tmp_work_dir" >> $tmp_script
-   		echo "cp peate_downloader.sh $l1b_path" >> $tmp_script
-   		echo "./get_viirs_data_zara.sh $year $doy $hhh $l1b_path" >> $tmp_script
+   		
+   		echo "./cg_get_viirs_data.sh --path $l1b_path $year$doy $hhh " >> $tmp_script
    		echo "echo 'Making sure all files are there, running sync_viirs_zara.sh'" >> $tmp_script
    		echo "./sync_viirs_zara.sh $l1b_path" >> $tmp_script
 

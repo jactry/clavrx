@@ -31,7 +31,7 @@ while :; do
       ;;
    --path)
       if [ "$2" ]; then
-         BASE_PATH=$2
+         L1B_PATH=$2
          shift 2
          continue
       fi
@@ -129,9 +129,14 @@ else
       REG='global'
   
 fi
-l1b_path=$HOME'/Satellite_Input/'$satname'/'$YEAR'/'$DOY'/'$REG
 
-mkdir -p $l1b_path
+if [ ! $L1B_PATH ];
+then
+
+	L1B_PATH=$HOME'/Satellite_Input/'$satname'/'$YEAR'/'$DOY'/'$REG
+fi
+
+mkdir -p $L1B_PATH
 echo $l1b_path
 
 

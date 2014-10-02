@@ -8,7 +8,7 @@ module dcomp_lut_mod
       dcomp_interpolation_weight &
       , interpolate_2d
       
-	use file_tools, only: &
+   use file_tools, only: &
       file_test
    use dcomp_lut_hdf_mod
    
@@ -177,113 +177,114 @@ contains
       sensor_identifier = trim(self % lut_path) & 
                            & //  trim ( self % sensor )
      
-	   sensor_block: select case ( trim(self % sensor))
-	   case ('Meteosat-8','Meteosat-9','Meteosat-10') sensor_block
-		   has_sol_table(1:2) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(2) = '2'
-			chan_string(6) = '3'
-			chan_string(20) = '4'
+   sensor_block: select case ( trim(self % sensor))
+      case ('Meteosat-8','Meteosat-9','Meteosat-10') sensor_block
+         has_sol_table(1:2) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(2) = '2'
+         chan_string(6) = '3'
+         chan_string(20) = '4'
       
-      case ('NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11','NOAA-12', 'NOAA-14')  sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(20) = '3b'
+      case ('TIROS-N','NOAA-05','NOAA-06','NOAA-07','NOAA-08','NOAA-09', 'NOAA-10','NOAA-11', &
+                                'NOAA-12', 'NOAA-14')  sensor_block
+         has_sol_table(1) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(20) = '3b'
         
-		case ('NOAA-15','NOAA-16', 'NOAA-17','NOAA-18','NOAA-19','METOP-A','METOP-B')  sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(6) = '3a'
-			chan_string(20) = '3b'		
+      case ('NOAA-15','NOAA-16', 'NOAA-17','NOAA-18','NOAA-19','METOP-A','METOP-B')  sensor_block
+         has_sol_table(1) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(6) = '3a'
+         chan_string(20) = '3b'
       
-      case ('GOES-08','GOES-09','GOES-10', 'GOES-11' , 'GOES-12' , 'GOES-13',  'GOES-14', 'GOES-15','COMS-1'  )   sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(20) = '2'
+      case ('GOES-08','GOES-09','GOES-10', 'GOES-11' , 'GOES-12' , 'GOES-13',  'GOES-14', &
+                                   'GOES-15','COMS-1'  )   sensor_block
+         has_sol_table(1) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(20) = '2'
       
       case ('MODIS-AQUA', 'MODIS-TERRA')    sensor_block
          has_sol_table(1:2) = .true.
-			has_sol_table(5:7) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(2) = '2'
-			chan_string(5) = '5'
-			chan_string(6) = '6'
-			chan_string(7) = '7'
-			chan_string(20) = '20'
+         has_sol_table(5:7) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(2) = '2'
+         chan_string(5) = '5'
+         chan_string(6) = '6'
+         chan_string(7) = '7'
+         chan_string(20) = '20'
          sensor_identifier = trim(self % lut_path) //'MODIS' 
-                          
          
       case('GOES-16')  sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '2'
-			chan_string(6) = '5'
-			chan_string(20) = '7'
+         has_sol_table(1) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '2'
+         chan_string(6) = '5'
+         chan_string(20) = '7'
          
       case('ABI') sensor_block
          has_sol_table(1) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '2'
-			chan_string(6) = '5'
-			chan_string(20) = '7'
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '2'
+         chan_string(6) = '5'
+         chan_string(20) = '7'
             
       case ('AATSR')   sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(6) = '6'
-			chan_string(20) = '20'
+         has_sol_table(1) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(6) = '6'
+         chan_string(20) = '20'
              
       case ('VIIRS')   sensor_block
-		   has_sol_table(1) = .true.
-			has_sol_table(5) = .true.
-			has_sol_table(6) = .true.
-			has_sol_table(7) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '5'
-			chan_string(5) = '8'
-			chan_string(6) = '10'
-			chan_string(7) = '11'
-			chan_string(20) ='12'
+         has_sol_table(1) = .true.
+         has_sol_table(5) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(7) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '5'
+         chan_string(5) = '8'
+         chan_string(6) = '10'
+         chan_string(7) = '11'
+         chan_string(20) ='12'
          
       case ('MTSAT-1R')   sensor_block
          has_sol_table(1) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(20) = '5'  
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(20) = '5'  
          
       case ('MTSAT-2')   sensor_block
          has_sol_table(1) = .true.
-			has_sol_table(20) = .true.
-			has_ems_table(20) = .true.
-			chan_string(1) = '1'
-			chan_string(20) = '5'  	
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '1'
+         chan_string(20) = '5'  
                 
       case default
-          print*,'add sensor in dcomp_data_pool_mod.f90 routine populate...', trim(self%sensor)
+          print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
           stop
-	  
-	   end select sensor_block
+  
+      end select sensor_block
      
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
@@ -306,7 +307,7 @@ contains
       do i =1,2 
          self % channel(:) % phase(i) % has_ems = has_ems_table
          self % channel(:) % phase(i) % has_sol = has_sol_table
-	  end do
+      end do
    
    end subroutine lut__set_filename
    
@@ -331,7 +332,7 @@ contains
       
       ! - some lut paths
       self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
-		if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
       
@@ -463,15 +464,15 @@ contains
       
       ! - parameter for kernel computation  
       ref_diff = 0.2
-	   cod_diff = 0.1
+   cod_diff = 0.1
        
-	   call interpolate_2d ( rfl_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % refl    &
+      call interpolate_2d ( rfl_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % refl    &
          & , out % dRefl_dcps      , out % dRefl_dcod ) 
-	   call interpolate_2d ( trn_sol_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % trn_sol  &
+      call interpolate_2d ( trn_sol_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % trn_sol  &
          & , out % dtrans_sol_dcps , out % dtrans_sol_dcod)
       call interpolate_2d ( trn_sat_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % trn_sat &
          & , out % dTrans_sat_dcod , out % dTrans_sat_dcps )
-	   call interpolate_2d ( albsph_cld_2x2  , wgt_cps , wgt_cod , ref_diff , cod_diff , out % albsph &
+      call interpolate_2d ( albsph_cld_2x2  , wgt_cps , wgt_cod , ref_diff , cod_diff , out % albsph &
          & , out % dsph_alb_dcod   , out % dSph_alb_dcps) 
       call interpolate_2d ( alb_cld_2x2  , wgt_cps , wgt_cod , ref_diff , cod_diff , out % alb &
          & , out % dalb_dcod   , out % dalb_dcps) 
@@ -596,11 +597,11 @@ contains
     
       hdf_file = self % channel ( 1) % phase (1 ) % file
     
-		if ( .not. file_test(hdf_file) ) then
-			print*,'lut file not existing! ==> ', trim(hdf_file)
-			stop
-		end if
-		
+      if ( .not. file_test(hdf_file) ) then
+         print*,'lut file not existing! ==> ', trim(hdf_file)
+         stop
+      end if
+
       ! this should be read from file, but this is also possible
       self %  dims% n_sat_zen = 45
       self %  dims% n_sol_zen = 45

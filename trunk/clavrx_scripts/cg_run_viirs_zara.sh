@@ -41,12 +41,12 @@ year=$1
 doy_start=$2
 doy_end=$3
 
-hour0=23
+hour0=0
 hour1=23
 
 # definitions 
 satname='viirs'
-data_root_path='/fjord/jgs/personal/awalther/patmosx/'
+data_root_path='/fjord/jgs/patmosx/'
 work_dir='/fjord/jgs/personal/awalther/patmosx_processing/scripts/'
 mkdir -p $work_dir
 
@@ -74,15 +74,15 @@ do
    month=$(date -d "01/01/${year} +${doy_str} days -1 day" "+%m")
    day=$(date -d "01/01/${year} +${doy_str} days -1 day" "+%d")
 
-   echo 'Processing DOY: ' $doy_str,$month,$day
+   echo 'Processing DOY: ' $doy_str,$month$day
    
    # loop hours
     for (( hhh = $hour0; hhh <= $hour1; hhh ++ ))
 	do
    		hhh_str=$(printf "%.2d" ${hhh} )
    		
-		l1b_path=$data_root_path'/Satellite_Input/'$satname'/'$region'/'$year'/'$doy_str'/'
-  		out_path=$data_root_path'/Satellite_Output/'$satname'/'$region'/'$year'/'$doy_str'/'
+		l1b_path=$data_root_path'/Satellite_Input/'$satname'/'$region'/'$year'/'$doy_str'/'$hhh_str'/'
+  		out_path=$data_root_path'/Satellite_Output/'$satname'/'$region'/'$year'/'$doy_str'/'$hhh_str'/'
 		
 		# !!!!!!!!! CREATE A NEW TEMP SCRIPT TO SUBMIT IT TO ZARA
    		tmp_script=$work_dir'npp_'$year'_'$doy_str'_'$hhh_str'_'$region'_patmosx.sh'
@@ -120,16 +120,16 @@ do
    		echo "echo 'Getting l1b data'" >> $tmp_script
    		echo "cd $tmp_work_dir" >> $tmp_script
    		
-   		echo "./cg_get_viirs_data.sh --path $l1b_path $year$doy $hhh " >> $tmp_script
+   		echo "./cg_get_viirs_data.sh --path $l1b_path --reg $region $year$doy_str $hhh " >> $tmp_script
    		echo "echo 'Making sure all files are there, running sync_viirs_zara.sh'" >> $tmp_script
-   		echo "./sync_viirs_zara.sh $l1b_path" >> $tmp_script
+   		#echo "./sync_viirs_zara.sh $l1b_path" >> $tmp_script
 
-   		echo "echo 'Writing files to the filelist'" >> $tmp_script
-   		echo "./write_filelist_zara.sh $l1b_path $out_path $filetype d$year$month$day t$hhh_str" >> $tmp_script
+   		#echo "echo 'Writing files to the filelist'" >> $tmp_script
+   		echo "./write_filelist.sh $l1b_path $out_path $filetype d$year$month$day t$hhh_str" >> $tmp_script
    		echo "echo 'Checking files, if already processed delete them from the filelist'" >> $tmp_script
-   		echo "./check_filelist_zara.sh $filelist $filetype" >> $tmp_script
+   		#echo "./check_filelist_zara.sh $filelist $filetype" >> $tmp_script
    		echo "echo 'Starting CLAVR-x'" >> $tmp_script
-   		#echo "./clavrxorb_trunk  -default $options -lines_per_seg 400" >> $tmp_script
+   		echo "./clavrxorb  -default $options -lines_per_seg 400" >> $tmp_script
    		echo "echo 'Finished, Deleting All Temp Data'" >> $tmp_script
 		qsub -q r720.q -l vf=4G -S /bin/bash -l matlab=0 -l friendly=1 -p -200 -o $logs_path -e $logs_path -l h_rt=06:00:00 $tmp_script
    done

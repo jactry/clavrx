@@ -44,13 +44,16 @@ done
 n=$#
 
 YEARDOY=$1
-
+echo $YEARDOY
 YEAR=${YEARDOY:0:4}
 DOY=${YEARDOY:4:3}
 
+echo $YEAR,$DOY' <===='
+
+
 HOUR0='00'
 MINU0='00'
-
+ MINU1='59'
 
 if [ $n -gt 1 ]; then
    TIME0=$2 
@@ -58,11 +61,12 @@ if [ $n -gt 1 ]; then
    HOUR0=${TIME0:0:2}
    if [ $length0 -gt 2 ]; then 
       MINU0=${TIME0:2:2}
+	  MINU1=$MINU0
    fi   
 fi 
 
 HOUR1=$HOUR0
-MINU1=$MINU0
+
 
 if [ $n -gt 2 ]; then
    TIME1=$3 
@@ -89,7 +93,7 @@ fi
 
 
 
-mkdir -p $l1b_path
+
 
 
 if  [ $REG ]; then
@@ -104,7 +108,7 @@ if  [ $REG ]; then
          ur_lon=-60
       ;;
       
-      kzn)
+      kaz)
          echo "kazachstan"
          ll_lat=20
          ll_lon=90
@@ -137,10 +141,10 @@ then
 fi
 
 mkdir -p $L1B_PATH
-echo $l1b_path
+echo $L1B_PATH
 
 
 
-      sh -c './cg_peate_downloader.sh --path '$l1b_path' --ll '$ll_lat' '$ll_lon' --ur '$ur_lat' '$ur_lon' '$YEAR'-'$MONTH'-'$DAY'+'$HOUR0':'$MINU0':00 '$YEAR'-'$MONTH'-'$DAY'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
+      sh -c './cg_peate_downloader.sh --path '$L1B_PATH' --ll '$ll_lat' '$ll_lon' --ur '$ur_lat' '$ur_lon' '$YEAR'-'$MONTH'-'$DAY'+'$HOUR0':'$MINU0':00 '$YEAR'-'$MONTH'-'$DAY'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
 
 

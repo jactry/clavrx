@@ -14,6 +14,10 @@ path=${args[4]}
   DAY_OBS=$(./shift_date.sh ${year}0101 +${doy_dum})
   month=${DAY_OBS:4:2}
   day=${DAY_OBS:6:2}
+  echo $doy_dum
+  echo {01..100}
+  seq -w 8 10
+  exit 1
 else
   month=$(date -d "01/01/${year} +${doy} days -1 day" "+%m")
   day=$(date -d "01/01/${year} +${doy} days -1 day" "+%d")

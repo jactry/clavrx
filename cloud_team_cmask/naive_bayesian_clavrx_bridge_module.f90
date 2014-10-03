@@ -65,8 +65,8 @@ contains
 
    integer, intent(in):: Segment_Number
 
-   character (len=120):: Ancil_Data_Path
-   character (len=120):: Naive_Bayes_File_Name
+   character (len=355):: Ancil_Data_Path
+   character (len=255):: Naive_Bayes_File_Name
 
    !---- set paths and mask classifier file name to their values in this framework
    Ancil_Data_Path = Ancil_Data_Dir

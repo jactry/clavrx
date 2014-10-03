@@ -72,7 +72,7 @@ private
  integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
  integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
  real, private, save:: Scan_rate    !scan rate in millsec / line
- character(len=120), save, public:: Dark_Comp_Data_Dir_Temp
+ character(len=355), save, public:: Dark_Comp_Data_Dir_Temp
  integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
  integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
  real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
@@ -863,10 +863,10 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    integer(kind=int4), intent(in):: image_Time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=255):: Channel_X_Filename
+   character(len=255):: Channel_X_Filename_Full
+   character(len=255):: Channel_X_Filename_Full_uncompressed
+   character(len=355):: System_String
 
    integer:: ipos
    integer:: ilen
@@ -2364,45 +2364,45 @@ end subroutine GET_GOES_NAVIGATION
 !
 !     Computes change in the IMC_active longitude from the reference.
 !
-        LAM = LAM + ( NAVstr%ref_long_change(1) * 1.0D-7 ) +             &
-      	    ( ( NAVstr%ref_long_change(2) * 1.0D-7 ) +             &
-      	      ( NAVstr%ref_long_change(3) * 1.0D-7 ) * W ) * W +             &
-              ( NAVstr%ref_long_change(10) * 1.0D-7 ) * SW1 +             &
-      	      ( NAVstr%ref_long_change(11) * 1.0D-7 ) * CW1 +             &
-      	    ( ( NAVstr%ref_long_change(4) * 1.0D-7 )  * SW  +             &
-      	      ( NAVstr%ref_long_change(5) * 1.0D-7 ) * CW +             &
-              ( NAVstr%ref_long_change(6) * 1.0D-7 ) * S2W +             &
-      	      ( NAVstr%ref_long_change(7) * 1.0D-7 ) * C2W +             &
-      	      ( NAVstr%ref_long_change(8) * 1.0D-7 ) * SW3 +             &
-      	      ( NAVstr%ref_long_change(9) * 1.0D-7 ) * CW3 +             &
+        LAM = LAM + ( NAVstr%ref_long_change(1) * 1.0D-7 ) +                   &
+                  ( ( NAVstr%ref_long_change(2) * 1.0D-7 ) +                   &
+                    ( NAVstr%ref_long_change(3) * 1.0D-7 ) * W ) * W +         &
+                    ( NAVstr%ref_long_change(10) * 1.0D-7 ) * SW1 +            &
+                    ( NAVstr%ref_long_change(11) * 1.0D-7 ) * CW1 +            &
+                  ( ( NAVstr%ref_long_change(4) * 1.0D-7 )  * SW  +            &
+                    ( NAVstr%ref_long_change(5) * 1.0D-7 ) * CW +              &
+                    ( NAVstr%ref_long_change(6) * 1.0D-7 ) * S2W +             &
+                    ( NAVstr%ref_long_change(7) * 1.0D-7 ) * C2W +             &
+                    ( NAVstr%ref_long_change(8) * 1.0D-7 ) * SW3 +             &
+                    ( NAVstr%ref_long_change(9) * 1.0D-7 ) * CW3 +             &
               W * ( ( NAVstr%ref_long_change(12) * 1.0D-7 ) * SW +             &
-      	      ( NAVstr%ref_long_change(13) * 1.0D-7 ) * CW ) ) * 2.0D0
+                    ( NAVstr%ref_long_change(13) * 1.0D-7 ) * CW ) ) * 2.0D0
 !
 !       Computes change in radial distance from the reference (km)
 !
-        DR = DR + ( NAVstr%ref_rad_dist_change(1) * 1.0D-7 ) +             &
-      		  ( NAVstr%ref_rad_dist_change(2) * 1.0D-7 ) * CW  +             &
-      		  ( NAVstr%ref_rad_dist_change(3) * 1.0D-7 ) * SW  +             &
-           	  ( NAVstr%ref_rad_dist_change(4) * 1.0D-7 ) * C2W +             &
-      		  ( NAVstr%ref_rad_dist_change(5) * 1.0D-7 ) * S2W +             &
-      		  ( NAVstr%ref_rad_dist_change(6) * 1.0D-7 ) * CW3 +             &
-      		  ( NAVstr%ref_rad_dist_change(7) * 1.0D-7 ) * SW3 +             &
-      		  ( NAVstr%ref_rad_dist_change(8) * 1.0D-7 ) * CW1 +             &
-      		  ( NAVstr%ref_rad_dist_change(9) * 1.0D-7 ) * SW1 +             &
-      		  W * ( ( NAVstr%ref_rad_dist_change(10) * 1.0D-7 ) * CW +             &
-      		  ( NAVstr%ref_rad_dist_change(11) * 1.0D-7 ) * SW )
+        DR = DR + ( NAVstr%ref_rad_dist_change(1) * 1.0D-7 ) +                 &
+                  ( NAVstr%ref_rad_dist_change(2) * 1.0D-7 ) * CW  +           &
+                  ( NAVstr%ref_rad_dist_change(3) * 1.0D-7 ) * SW  +           &
+                  ( NAVstr%ref_rad_dist_change(4) * 1.0D-7 ) * C2W +           &
+                  ( NAVstr%ref_rad_dist_change(5) * 1.0D-7 ) * S2W +           &
+                  ( NAVstr%ref_rad_dist_change(6) * 1.0D-7 ) * CW3 +           &
+                  ( NAVstr%ref_rad_dist_change(7) * 1.0D-7 ) * SW3 +           &
+                  ( NAVstr%ref_rad_dist_change(8) * 1.0D-7 ) * CW1 +           &
+                  ( NAVstr%ref_rad_dist_change(9) * 1.0D-7 ) * SW1 +           &
+            W * ( ( NAVstr%ref_rad_dist_change(10) * 1.0D-7 ) * CW +           &
+                  ( NAVstr%ref_rad_dist_change(11) * 1.0D-7 ) * SW )
 !
 !       Computes the sine of the change in the geocentric latitude.
 !
-        DLAT = ( NAVstr%sine_lat(1) * 1.0D-7 ) +             &
-      	       ( NAVstr%sine_lat(2) * 1.0D-7 ) * CW  +             &
-      	       ( NAVstr%sine_lat(3) * 1.0D-7 ) * SW  +             &
-      	       ( NAVstr%sine_lat(4) * 1.0D-7 ) * C2W +             &
-      	       ( NAVstr%sine_lat(5) * 1.0D-7 ) * S2W +             &
-      	       W * ( ( NAVstr%sine_lat(6) * 1.0D-7 ) * CW +             &
-      	       ( NAVstr%sine_lat(7) * 1.0D-7 ) * SW ) +             &
-      	       ( NAVstr%sine_lat(8) * 1.0D-7 ) * CW1 +             &
-      	       ( NAVstr%sine_lat(9) * 1.0D-7 ) * SW1
+        DLAT = ( NAVstr%sine_lat(1) * 1.0D-7 ) +                   &
+               ( NAVstr%sine_lat(2) * 1.0D-7 ) * CW  +             &
+               ( NAVstr%sine_lat(3) * 1.0D-7 ) * SW  +             &
+               ( NAVstr%sine_lat(4) * 1.0D-7 ) * C2W +             &
+               ( NAVstr%sine_lat(5) * 1.0D-7 ) * S2W +             &
+         W * ( ( NAVstr%sine_lat(6) * 1.0D-7 ) * CW +              &
+               ( NAVstr%sine_lat(7) * 1.0D-7 ) * SW ) +            &
+               ( NAVstr%sine_lat(8) * 1.0D-7 ) * CW1 +             &
+               ( NAVstr%sine_lat(9) * 1.0D-7 ) * SW1
 !
 !	Computes geocentric latitude by using an expansion for arcsine.
 !
@@ -2410,15 +2410,15 @@ end subroutine GET_GOES_NAVIGATION
 !
 !	Computes sine of the change in the orbit yaw.
 !
-        DYAW = ( NAVstr%sine_orb_yaw(1) * 1.0D-7 ) +             &
-      	       ( NAVstr%sine_orb_yaw(2) * 1.0D-7 ) * SW  +             &
-      	       ( NAVstr%sine_orb_yaw(3) * 1.0D-7 ) * CW  +             &
-      	       ( NAVstr%sine_orb_yaw(4) * 1.0D-7 ) * S2W +             &
-      	       ( NAVstr%sine_orb_yaw(5) * 1.0D-7 ) * C2W +             &
-      	       W * ( ( NAVstr%sine_orb_yaw(6) * 1.0D-7 ) * SW +             &
-      	       ( NAVstr%sine_orb_yaw(7) * 1.0D-7 ) * CW ) +             &
-      	       ( NAVstr%sine_orb_yaw(8) * 1.0D-7 ) * SW1 +             &
-      	       ( NAVstr%sine_orb_yaw(9) * 1.0D-7 ) * CW1
+        DYAW = ( NAVstr%sine_orb_yaw(1) * 1.0D-7 ) +               &
+               ( NAVstr%sine_orb_yaw(2) * 1.0D-7 ) * SW  +         &
+               ( NAVstr%sine_orb_yaw(3) * 1.0D-7 ) * CW  +         &
+               ( NAVstr%sine_orb_yaw(4) * 1.0D-7 ) * S2W +         &
+               ( NAVstr%sine_orb_yaw(5) * 1.0D-7 ) * C2W +         &
+         W * ( ( NAVstr%sine_orb_yaw(6) * 1.0D-7 ) * SW +          &
+               ( NAVstr%sine_orb_yaw(7) * 1.0D-7 ) * CW ) +        &
+               ( NAVstr%sine_orb_yaw(8) * 1.0D-7 ) * SW1 +         &
+               ( NAVstr%sine_orb_yaw(9) * 1.0D-7 ) * CW1
 !
 !	Computes the orbit yaw by using an expansion for arcsine.
 !
@@ -2964,19 +2964,19 @@ end subroutine GET_GOES_NAVIGATION
 !                                                                               
 !     CALLING PARAMETERS                                                        
 !                                                                               
-      real*8   RLAT	! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
-      real*8   RLON	! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
-      real*8   ALF	! ELEVATION ANGLE IN RADIANS (OUTPUT)               
-      real*8   GAM	! SCAN ANGLE IN RADIANS (OUTPUT)                    
-      integer IERR	! OUTPUT STATUS
+      real*8   RLAT    ! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
+      real*8   RLON    ! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
+      real*8   ALF     ! ELEVATION ANGLE IN RADIANS (OUTPUT)               
+      real*8   GAM     ! SCAN ANGLE IN RADIANS (OUTPUT)                    
+      integer IERR     ! OUTPUT STATUS
 !                             0 - SUCCESSFUL COMPLETION,         
 !                             1 - POINT WITH GIVEN LAT/LON IS INVISIBLE         
 !
 !     LOCAL VARIABLES                                                           
 !
-      real*8 F(3)	! POINTING VECTOR IN EARTH CENTERED COORDINATES
-      real*8 FT(3)	! POINTING VECTOR IN INSTRUMENT COORDINATES
-      real*8 U(3)	! COORDINATES OF THE EARTH POINT (KM)
+      real*8 F(3)      ! POINTING VECTOR IN EARTH CENTERED COORDINATES
+      real*8 FT(3)     ! POINTING VECTOR IN INSTRUMENT COORDINATES
+      real*8 U(3)      ! COORDINATES OF THE EARTH POINT (KM)
       real*8 SING,SLAT,W1,W2  ! WORK SPACE
 !                                                                               
 !     INCLUDE FILES                                                             

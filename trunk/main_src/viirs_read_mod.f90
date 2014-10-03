@@ -67,12 +67,12 @@ module viirs_read_mod
       logical :: chan_on_dnb 
       logical :: viirs_cloud_mask_on
       logical :: viirs_cloud_type_on
-      character ( len = 256 ) :: gmtco_file
+      character ( len = 255 ) :: gmtco_file
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count 
-      character ( len =255 ) :: dir_1b
+      character ( len =355 ) :: dir_1b
       character ( len =255 ) :: file_gmtco_base
-      character (len = 200 ) :: Ancil_Data_Dir
+      character (len = 355 ) :: Ancil_Data_Dir
    end type viirs_data_config
    
    type :: geo_str

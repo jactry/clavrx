@@ -61,11 +61,11 @@ program COMPILE_ASC_DES
 
 !------
  integer, parameter:: n_files_max = 100
- character(len=100), dimension(n_files_max):: file_in
+ character(len=255), dimension(n_files_max):: file_in
  integer, dimension(n_files_max):: sd_id
 
 !----
- character(len=100)::  dir_in, dir_out, file_out, file_temp
+ character(len=355)::  dir_in, dir_out, file_out, file_temp
  integer:: ios
  integer(kind=int1):: asc_des_node  !(0=asc,1=des)
  integer(kind=int2):: year
@@ -100,7 +100,7 @@ program COMPILE_ASC_DES
        a_31_comp, b_31_comp, nu_31_comp, a_32_comp, b_32_comp, nu_32_comp, &
        solar_Ch20_nu_comp,timerr_seconds_comp
                                                                                                                                                          
- character(len=100):: file_name_comp, file_1b_comp, creator_comp,   &
+ character(len=255):: file_name_comp, file_1b_comp, creator_comp,   &
                       plang_comp, hdf_ver_comp, hdf_timestamp_comp, data_type_comp,grid_format_comp
  character(len=20):: sensor_name_attribute_comp
  character(len=120):: dark_name_comp
@@ -124,7 +124,7 @@ program COMPILE_ASC_DES
        a_31_orbit, b_31_orbit, nu_31_orbit, a_32_orbit, b_32_orbit, nu_32_orbit, &
        solar_Ch20_nu_orbit, timerr_seconds_orbit
                                                                                                                                                          
- character(len=100):: file_name_orbit, file_1b_orbit, creator_orbit,  &
+ character(len=255):: file_name_orbit, file_1b_orbit, creator_orbit,  &
                     plang_orbit, hdf_ver_orbit, hdf_timestamp_orbit, data_type_orbit,grid_format_orbit
  character(len=20):: sensor_name_attribute_orbit
  character(len=120):: dark_name_orbit

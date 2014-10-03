@@ -211,12 +211,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
    end type cloud_mask_diagnostic
 
    type cloud_mask_version_type
-      character (len = 256) :: cloud_mask_thresh_version_id
-      character (len = 256) :: cloud_mask_version_id
+      character (len = 355) :: cloud_mask_thresh_version_id
+      character (len = 355) :: cloud_mask_version_id
    end type cloud_mask_version_type
 
    type cloud_mask_input_type
-      character (len = 256) :: bayesian_mask_classifier      
+      character (len = 355) :: bayesian_mask_classifier      
       type (cloud_mask_geo_type) :: geo
       type (cloud_mask_sfc_type) :: sfc
       type (cloud_mask_rtm_type) :: rtm
@@ -791,7 +791,7 @@ contains
                                    , bayes_coef % Classifier_Value_Name (class_idx)
          end select
        
-       ! - AW 09/172014 
+       ! - AW 09/17/2014 
        ! - test can be switched off in bayesian file  
        if ( .not. bayes_coef % do_this_classifier (Class_Idx,Sfc_Idx) )  is_on_test = .false.
        
@@ -1130,7 +1130,7 @@ contains
       allocate (this % Classifier_Bounds_Min(N_class,N_sfc_bayes))
       allocate (this % Classifier_Bounds_Max(N_class,N_sfc_bayes))
       allocate (this % Delta_Classifier_Bounds(N_class,N_sfc_bayes))
-      allocate ( this % do_this_classifier(N_class,N_sfc_bayes))
+      allocate (this % do_this_classifier(N_class,N_sfc_bayes))
       allocate (this % Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Classifier_Value_Name(N_class))

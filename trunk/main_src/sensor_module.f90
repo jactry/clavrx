@@ -763,7 +763,7 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
   INTEGER(kind=int4), intent(out) :: Ierror
 
   INTEGER(kind=int4) :: Ierror_Viirs_Nscans
-  CHARACTER(len=150) :: Dir_File
+  CHARACTER(len=355) :: Dir_File
 
    Ierror = sym%NO
    if ((Modis_1km_Flag == sym%YES) .or. (Modis_5km_Flag == sym%YES) )then

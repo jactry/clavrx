@@ -72,8 +72,8 @@ module IFF_MODULE
       logical :: chan_on ( 36 )
       logical :: iff_cloud_mask_on
       character ( len = 255 ) :: iff_file
-      character ( len = 255 ) :: dir_1b
-      character (len = 255 ) :: Ancil_Data_Dir
+      character ( len = 355 ) :: dir_1b
+      character (len = 355 ) :: Ancil_Data_Dir
    end type iff_data_config
 
    type :: geo_str

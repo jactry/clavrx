@@ -55,7 +55,7 @@ contains
 ! history:                              added  Jan 2013 (AW)
  function file_test (file) result (existence)
    implicit none
-   character ( *), intent(in) :: file
+   character (*), intent(in) :: file
    logical :: existence
    inquire ( FILE = file, EXIST = existence ) 
   end function file_test
@@ -111,8 +111,8 @@ contains
 ! history:                              added  Jan 2013 (AW)
   function file_basename(file) result(return_string)
     implicit none
-    character(255) , intent(in) :: file
-    character(255) :: return_string
+    character(355) , intent(in) :: file
+    character(355) :: return_string
     character :: sep = '/'
     integer :: kdot
     logical , parameter :: backward = .true.
@@ -134,8 +134,8 @@ contains
 ! history:                              added  Jan 2013 (AW)
   function file_dirname(file) result(return_string)
     implicit none
-    character(255) , intent(in) :: file
-    character(255) :: return_string
+    character(355) , intent(in) :: file
+    character(355) :: return_string
     character :: sep = '/'
     integer :: kdot
     logical , parameter :: backward = .true.
@@ -167,8 +167,8 @@ contains
       character(*) , intent(in) :: path
       integer , intent(out), optional :: count
       logical , intent(in) , optional :: rel_path
-      character(255), pointer, dimension(:) :: return_string
-      character(255) :: cfile
+      character(355), pointer, dimension(:) :: return_string
+      character(355) :: cfile
       integer :: nr , ii
       integer :: lun
       

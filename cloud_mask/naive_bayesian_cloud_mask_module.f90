@@ -333,15 +333,16 @@ contains
                             
       use_lunar_refl_for_vis_tests = .false.
       if ( inp % sat % chan_on(42) ) then
+			
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-          !( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-           ! inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-           ! inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
+           ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
+             inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
+             inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
             .not. is_mountain .and. &
-           ! .not. inp % sfc % coast_mask .and. &
-          !  .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
-            inp % geo % lunar_glint_mask  )  then
-              use_lunar_refl_for_vis_tests  = .true.      
+            .not. inp % sfc % coast_mask .and. &
+            .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
+            .not. inp % geo % lunar_glint_mask  )  then
+             use_lunar_refl_for_vis_tests  = .true.      
          end if    
       end if                       
             
@@ -676,6 +677,7 @@ contains
             ! - this solar test can be also applied for lunar
             !TODO - make own lunar visible coefficients
             !
+			
             if ( use_lunar_refl_for_vis_tests ) then
                Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
                                   inp % rtm % ref_dnb_clear &

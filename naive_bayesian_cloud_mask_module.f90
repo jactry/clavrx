@@ -95,7 +95,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
  integer, parameter, private:: ipre = real4
 
  !--- string to hold version id
- character(120), private, save :: Cloud_Mask_Thresholds_Version
+ character(225), private, save :: Cloud_Mask_Thresholds_Version
 
  !--- string to control on-screen prompts
  character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask>> "
@@ -325,8 +325,8 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
             Diag)
 
 
-   character (len=120), intent(in) :: Ancil_Data_Path
-   character (len=120), intent(in) :: Naive_Bayes_File_Name
+   character (len=355), intent(in) :: Ancil_Data_Path
+   character (len=255), intent(in) :: Naive_Bayes_File_Name
    type(symbol_naive_bayesian), intent(in) :: Symbol
    type(mask_input), intent(in) :: Input
    type(mask_output), intent(out) :: Output

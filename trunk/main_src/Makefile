@@ -111,6 +111,7 @@ clavrxorb_objs = process_clavrx.o \
                  calibration_constants.o \
                  algorithm_constants.o \
                  awg_cloud_height.o \
+                 acha_shadow_module.o \
 	         cloud_height_routines.o \
 	         file_tools.o \
 	         clavrx_message_module.o \
@@ -142,11 +143,14 @@ clavrxorb_objs = process_clavrx.o \
                  tranmetsg101.o\
                  tranmts101.o\
                  seviri_module.o \
+                 ahi_transm.o \
 	         reposnx.o \
                  reposition_module.o \
 		 acha_services_clavrx_mod.o \
-		 acha_clavrx_bridge_mod.o \
-                 naive_bayesian_cloud_mask_module.o \
+		 acha_clavrx_bridge_mod.o\
+		 cloud_cover_layers_module.o \
+		 dcomp_derived_products_module.o \
+		 naive_bayesian_cloud_mask_module.o \
                  naive_bayesian_clavrx_bridge_module.o \
                  move_bytes.o \
 	         mreadf.o \
@@ -167,13 +171,13 @@ clavrxorb_objs = process_clavrx.o \
                  sasrab.o \
                  getmod.o \
                  sensor_module.o \
+                 simple_cod_module.o \
                  level2b.o \
                  user_options.o \
                  fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
-                 viewing_geometry_module.o \
-                 cloud_shadow_mod.o 
+                 viewing_geometry_module.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -258,13 +262,18 @@ acha_services_clavrx_mod.o: acha_services_clavrx_mod.f90 pixel_common.o nwp_comm
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_services_clavrx_mod.f90                    
 
 
-acha_clavrx_bridge_mod.o: acha_clavrx_bridge_mod.f90  awg_cloud_height.o acha_services_clavrx_mod.o 
+acha_clavrx_bridge_mod.o: acha_clavrx_bridge_mod.f90  awg_cloud_height.o acha_shadow_module.o acha_services_clavrx_mod.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_mod.f90                    
 
 awg_cloud_height.o: awg_cloud_height.f90 acha_services_clavrx_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/awg_cloud_height.f90
 
+acha_shadow_module.o: acha_shadow_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_shadow_module.f90
 
+
+cloud_cover_layers_module.o: cloud_cover_layers_module.f90 constant.o pixel_common.o algorithm_constants.o
+dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
@@ -311,8 +320,8 @@ sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
-cloud_shadow_mod.o:cloud_shadow_mod.f90
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o
+simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o ahi_transm.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
@@ -335,14 +344,15 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o \
-              awg_cloud_height.o cloud_height_routines.o dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
+              awg_cloud_height.o acha_shadow_module.o cloud_height_routines.o dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
-              sort_module.o calibration_constants.o algorithm_constants.o acha_clavrx_bridge_mod.o cloud_shadow_mod.o naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
+              sort_module.o calibration_constants.o algorithm_constants.o acha_clavrx_bridge_mod.o  \
+              naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \
-              seviri_module.o mtsat_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o
+              seviri_module.o mtsat_module.o simple_cod_module.o \
+              coms_module.o level2b.o dcomp_rtm_module.o cloud_cover_layers_module.o dcomp_derived_products_module.o
 
 
 
@@ -366,6 +376,9 @@ conver.o : conver.f90
 
 getmod.o : getmod.f90
 	        $(fc) -c $(fflags_sasrab_f90) getmod.f90
+
+ahi_transm.o : ahi_transm.f get_lun.o
+	        $(fc) -c $(fflags_pfast) ahi_transm.f 
 
 goestran.o : goestran.f get_lun.o
 	        $(fc) -c $(fflags_pfast) goestran.f 

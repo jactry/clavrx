@@ -2072,6 +2072,43 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- high cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_High_Cld_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_High_Cld),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "high_cloud_fraction", &
+                              "high_cloud_area_fraction", &
+                              "high cloud fraction computed over a 3x3 pixel array at the native resolution "// &
+                              "centered on this pixel. High clouds have pressures less than 440 hPa.", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Frac, Max_Frac, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- mid cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Mid_Cld_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Mid_Cld),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "mid_cloud_fraction", &
+                              "mid_cloud_area_fraction", &
+                              "mid cloud fraction computed over a 3x3 pixel array at the native resolution "// &
+                              "centered on this pixel. Mid clouds have pressures greater than 440 and "// &
+                              "less than 680 hPa", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Frac, Max_Frac, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- low cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Low_Cld_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Low_Cld),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "low_cloud_fraction", &
+                              "low_cloud_area_fraction", &
+                              "low cloud fraction computed over a 3x3 pixel array at the native resolution "// &
+                              "centered on this pixel. Low clouds have pressures greater than 680 hPa", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Frac, Max_Frac, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud fraction uncertainity
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldfrac_Uncer_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cldfrac_Uncer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -4100,6 +4137,30 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       call SCALE_VECTOR_I1_RANK2(Cloud_Fraction_Uncer_3x3, &
                                  sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldfrac_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- high cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_High_Cld_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(High_Cloud_Fraction_3x3, &
+                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_High_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- mid cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Mid_Cld_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(Mid_Cloud_Fraction_3x3, &
+                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Mid_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- low cloud fraction
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Low_Cld_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(Low_Cloud_Fraction_3x3, &
+                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Low_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

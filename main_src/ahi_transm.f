@@ -1,4 +1,5 @@
-	subroutine ahi_transm(temp,wvmr,ozmr,theta,clbl,kban, taut,*)
+	subroutine ahi_transm(ancil_data_path,temp,wvmr,ozmr,
+     &             theta,clbl,kban, taut,*)
 ! * GOES-AHI: dry/wet/ozo transmittance at 101 AIRS levels
 ! .... version of 19.11.08
 !
@@ -42,22 +43,29 @@
 	dimension xdry(nxd,nm),xozo(nxo,nm),xcon(nxc,nm),xwet(nxw,nm)
 	character*32 cpath/'/home/chial/AHI/101_levels/coef/'/
 	character*13 cfile/'ahixxx101.dat'/
+        character*72 ancil_data_path,pfast_path !akh
 	character*3 comp(nk)/'dry','ozo','wco','wtl','wts'/
 !	character*3 clblrtm(6:11)/'612','704','830','9xx','10x','113'/
 	character*2 clbl
-	integer*4 iuc(nk)/11,12,13,14,15/
+!	integer*4 iuc(nk)/11,12,13,14,15/
+ 	integer*4 iuc(nk)
 	integer*4 lengcf(nk)/lencdb,lencob,lenccb,lenclb,lencsb/
 	logical big_endian,newang,newatm
 	data init/1/,tlas/nl*0./,wlas/nl*0./,olas/nl*0./,zlas/-999./
 	secant(z)=1./cos(0.01745329*z)
+
+        pfast_path = trim(ancil_data_path)//"pfast/" !akh
 
 	if(init.ne.0) then
 	   read(clbl,*) lbl
 	   do l=1,nk
 	      cfile(4:6)=comp(l)
 	      lencf=lengcf(l)
-	      open(iuc(l),file=cpath//cfile,recl=lencf,access='direct',status='old',
-     +		    err=200)
+
+           iuc(l)=get_lun() !akh
+           open(iuc(l),file=trim(pfast_path)//cfile,recl=lencf,
+     +             access='direct', status='old',err=200)
+
 	   enddo
 	   do k=1,nr
   	      read(iuc(1),rec=k) ((coefd(i,j,k),i=1,ncd),j=1,nm)

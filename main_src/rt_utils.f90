@@ -159,7 +159,8 @@ module RT_UTILITIES
 
    implicit none
    
-   private
+   private:: EMISSIVITY, &
+             BETA_RATIO
    
     
    public:: SETUP_PFAAST, &
@@ -1322,6 +1323,11 @@ contains
          Pfaast_Name(:) = "tranmts101"
          !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+
+      case(173:174) !HIMAWARI-8/9
+         Pfaast_Name(:) = "ahi_transm"
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 9,10,11,12,14,15,16, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
       case(200:209,223,706:708) !AVHRR 
          Pfaast_Name(:) = "tranmavhrr"
@@ -1539,6 +1545,10 @@ contains
 
     case("tran_viirsm") 
        call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
+                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+
+    case("ahi_transm") 
+       call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
       case default
@@ -2725,7 +2735,7 @@ contains
    end subroutine COMPUTE_SPLIT_WINDOW_BIAS
 
    !====================================================================
-   ! FUNCTION Name: calculate_cloud_beta
+   ! FUNCTION Name: BETA_RATIO
    !
    ! Function:
    !  Computes the beta ratio for two Emissivities. 
@@ -2741,7 +2751,7 @@ contains
       real(kind=real4), intent(in) :: Emiss_bot
       real(kind=real4) :: beta
 
-    beta = Missing_Value_Real4
+      beta = Missing_Value_Real4
 
       if (Emiss_top > 0.0 .and. Emiss_top < 1.0 .and. &
             Emiss_bot > 0.0 .and. Emiss_bot < 1.0) then
@@ -2754,7 +2764,7 @@ contains
    end function BETA_RATIO
 
    !====================================================================
-   ! Function Name: calculate_cloud_beta
+   ! Function Name: EMISSIVITY
    !
    ! Function:
    !  Computes the  effective emissivity

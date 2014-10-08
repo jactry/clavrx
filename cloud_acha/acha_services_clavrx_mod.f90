@@ -80,9 +80,9 @@ implicit none
    !--- optional variables
    integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
    integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+   real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
  end type acha_input_struct
-
 
  !---RTM and NWP pixel level structure
  type, public :: acha_rtm_nwp_struct
@@ -139,7 +139,6 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Beta_Uncertainty
    real, dimension(:,:), pointer:: Pc_Uncertainty
    real, dimension(:,:), pointer:: Zc_Uncertainty
-   integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
    real, dimension(:,:), pointer:: Lower_Cloud_Pressure
    real, dimension(:,:), pointer:: Lower_Cloud_Temperature
    real, dimension(:,:), pointer:: Lower_Cloud_Height

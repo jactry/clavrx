@@ -11,7 +11,7 @@ module ACHA_GEOCAT_BRIDGE_MOD
  use ACHA_SERVICES_MOD
  use AWG_CLOUD_HEIGHT
    
- implicit none
+ Implicit none
 
  public :: AWG_CLOUD_HEIGHT_BRIDGE
  private :: NULL_ACHA_POINTERS
@@ -147,7 +147,6 @@ module ACHA_GEOCAT_BRIDGE_MOD
    Acha_Output%Beta_Uncertainty => out2(Ialgo)%beta1112_error
    Acha_Output%Pc_Uncertainty => out2(Ialgo)%pc_error
    Acha_Output%Zc_Uncertainty => out2(Ialgo)%zc_error
-   Acha_Output%Cloud_Layer => out2(Ialgo)%Cld_Layer
    Acha_Output%Lower_Cloud_Pressure => out2(Ialgo)%Pc_Lower_Cloud
    Acha_Output%Lower_Cloud_Temperature => out2(Ialgo)%Tc_Lower_Cloud
    Acha_Output%Lower_Cloud_Height => out2(Ialgo)%Zc_Lower_Cloud
@@ -306,7 +305,6 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()

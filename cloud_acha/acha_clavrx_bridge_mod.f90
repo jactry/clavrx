@@ -151,7 +151,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()
@@ -243,7 +242,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Acha_Output%Beta_Uncertainty => Beta_Acha_Uncertainty
    Acha_Output%Pc_Uncertainty => Pc_Acha_Uncertainty
    Acha_Output%Zc_Uncertainty => Zc_Acha_Uncertainty
-   Acha_Output%Cloud_Layer => Cld_Layer_Acha
    Acha_Output%Lower_Cloud_Pressure => Pc_Lower_Cloud
    Acha_Output%Lower_Cloud_Temperature => Tc_Lower_Cloud
    Acha_Output%Lower_Cloud_Height => Zc_Lower_Cloud

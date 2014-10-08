@@ -103,6 +103,8 @@
    use GLOBSNOW_READ_ROUTINES
    use GFS
    use NCEP_REANALYSIS
+   use CLOUD_COVER_LAYERS
+   use DCOMP_DERIVED_PRODUCTS_MODULE
    
    use RT_UTILITIES, only: &
         rtm_nvzen &
@@ -138,12 +140,11 @@
    use USER_OPTIONS
    use CLAVRX_MESSAGE_MODULE
    use CLOUD_TYPE_BRIDGE_MODULE
-   
+   use SIMPLE_COD
+ 
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
-   use cloud_shadow_mod   
-     
    implicit none
  
    !***********************************************************************
@@ -1353,13 +1354,16 @@
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
+               !--- simple cloud optical depth
+!              call COMPUTE_SIMPLE_COD(Num_Pix,Num_Scans_Read)               
+
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call CLOUD_MASK_NAIVE_BAYES_BRIDGE(Segment_Number)
                      call COMPUTE_CLOUD_FRACTION_3x3(Line_Idx_Min_Segment,Num_Scans_Read)
                   else
-                     print *, "Only the Bayesian Cloud Mask is availabe, check selection"
+                     print *, "Only the Bayesian Cloud Mask is available, check selection"
                      stop 
                   end if
                end if
@@ -1413,6 +1417,15 @@
                call COMPUTE_OPAQUE_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
                call COMPUTE_H2O_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
 
+               if (IFF_VIIRS_FLAG == sym%YES .or. &
+                   IFF_AVHRR_FLAG == sym%YES .or. &
+                   IFF_MODIS_FLAG == sym%YES) then
+
+                   call CO2_SLICING_CLOUD_HEIGHT(Num_Pix,Line_Idx_Min_Segment,Num_Scans_Read, &
+                                    P_Std_Rtm,Cld_Type, &
+                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2)
+               endif
+
                if (ACHA_Mode == 0) then
                   call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
                endif
@@ -1430,14 +1443,16 @@
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
-                  
-                  call CLOUD_SHADOW_RETR ( zc_acha , solaz, solzen, lat, lon, lat_pc,lon_pc , cloud_shadow)
-                  
-                  where ( cloud_shadow .and. cld_mask == 0 )  
-                     Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (  Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
-                  end where
+
+!                 call CLOUD_SHADOW_RETR(Zc_Acha,Solaz,Solzen,Lat,Lon,Lat_Pc,Lon_Pc,Cloud_Shadow)
+!                 where (Cloud_Shadow .and. Cld_Mask == 0 )  
+!                    Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (  Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
+!                 end where
+
+                  !--- cloud cover layers
+                  call COMPUTE_CLOUD_COVER_LAYERS(Line_Idx_Min_Segment,Num_Scans_Read)
+
                end if
-               
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(8) =  Segment_Time_Point_Seconds(8) + &
@@ -1466,6 +1481,7 @@
                   if ( dcomp_run ) then
                      call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Num_Scans_Read)
                      call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Num_Scans_Read,Sun_Earth_Distance)
+                     call  COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Num_Scans_Read)
                      call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
                   end if
                   

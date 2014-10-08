@@ -538,6 +538,9 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_Uncer_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, save:: High_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, save:: Mid_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, save:: Low_Cloud_Fraction_3x3
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 
@@ -566,9 +569,6 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Snow
   integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Hires
   integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Glob
-  integer(kind=int1), dimension(:,:), allocatable, public:: Dust
-  integer(kind=int1), dimension(:,:), allocatable, public:: Smoke
-  integer(kind=int1), dimension(:,:), allocatable, public:: Fire
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Ch6_On_Pixel_Mask
@@ -592,7 +592,10 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
-  logical, allocatable, public :: cloud_shadow ( :,:)
+  integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public:: Dust_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public:: Smoke_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public:: Fire_Mask
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
@@ -851,6 +854,9 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Lower_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Lower_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Lower_Cloud
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
 
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
@@ -970,9 +976,10 @@ subroutine CREATE_PIXEL_ARRAYS()
    endif
 
    allocate(   &
-          Dust(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Smoke(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Fire(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Dust_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Smoke_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Fire_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Shadow_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal_Err(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal_Cice(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
@@ -1122,9 +1129,10 @@ subroutine DESTROY_PIXEL_ARRAYS()
   deallocate(Volcano_Mask)
   deallocate(Space_Mask)
   deallocate(Sfc_Level_Rtm_Pixel)
-  deallocate(Fire)
-  deallocate(Dust)
-  deallocate(Smoke)
+  deallocate(Fire_Mask)
+  deallocate(Dust_Mask)
+  deallocate(Smoke_Mask)
+  deallocate(Shadow_Mask)
 
   deallocate(Sst_Anal)
   deallocate(Sst_Anal_Err)
@@ -1996,7 +2004,6 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Coast_Mask(dim1,dim2))
    allocate(Coast_Mask_Nwp(dim1,dim2))
    allocate(Glint_Mask(dim1,dim2))
-   allocate ( cloud_shadow (dim1,dim2))
    allocate(Glint_Mask_Lunar(dim1,dim2))
    allocate(Desert_Mask(dim1,dim2))
    allocate(City_Mask(dim1,dim2))
@@ -2018,7 +2025,6 @@ subroutine RESET_SURFACE_ARRAYS
    Coast = Missing_Value_Int1
    Coast_Mask = Missing_Value_Int1
    Coast_Mask_Nwp = Missing_Value_Int1
-   cloud_shadow = .false.
    Glint_Mask = Missing_Value_Int1
    Glint_Mask_Lunar = Missing_Value_Int1
    Desert_Mask = Missing_Value_Int1
@@ -2041,7 +2047,6 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Coast)
    deallocate(Coast_Mask)
    deallocate(Coast_Mask_Nwp)
-   deallocate ( Cloud_Shadow)
    deallocate(Glint_Mask)
    deallocate(Glint_Mask_Lunar)
    deallocate(Desert_Mask)
@@ -2547,6 +2552,12 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Zclr_H2O_Peak(dim1,dim2))
     allocate(Cloud_Fraction_3x3(dim1,dim2))
     allocate(Cloud_Fraction_Uncer_3x3(dim1,dim2))
+    allocate(High_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Mid_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Tc_Cirrus_Co2(dim1,dim2))
+    allocate(Pc_Cirrus_Co2(dim1,dim2))
+    allocate(Ec_Cirrus_Co2(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
 subroutine RESET_CLOUD_PROD_ARRAYS()
@@ -2563,6 +2574,12 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Zclr_H2O_Peak = Missing_Value_Real4
      Cloud_Fraction_3x3 = Missing_Value_Real4
      Cloud_Fraction_Uncer_3x3 = Missing_Value_Real4
+     High_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Mid_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Low_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Tc_Cirrus_Co2 = Missing_Value_Real4
+     Pc_Cirrus_Co2 = Missing_Value_Real4
+     Ec_Cirrus_Co2 = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
 subroutine DESTROY_CLOUD_PROD_ARRAYS()
@@ -2579,6 +2596,12 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Zclr_H2O_Peak)
      deallocate(Cloud_Fraction_3x3)
      deallocate(Cloud_Fraction_Uncer_3x3)
+     deallocate(High_Cloud_Fraction_3x3)
+     deallocate(Mid_Cloud_Fraction_3x3)
+     deallocate(Low_Cloud_Fraction_3x3)
+     deallocate(Tc_Cirrus_Co2)
+     deallocate(Pc_Cirrus_Co2)
+     deallocate(Ec_Cirrus_Co2)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS
 !-----------------------------------------------------------

@@ -135,7 +135,6 @@ module ACHA_GSIP_BRIDGE_MOD
    Acha_Output%Beta_Uncertainty => gsip_pix_prod%beta1112_error
    Acha_Output%Pc_Uncertainty => gsip_pix_prod%pc_error
    Acha_Output%Zc_Uncertainty => gsip_pix_prod%zc_error
-   Acha_Output%Cloud_Layer => gsip_pix_prod%cldlayer
    Acha_Output%Lower_Cloud_Pressure =>  gsip_pix_prod%Pc_Lower_Cloud
    Acha_Output%Lower_Cloud_Temperature => gsip_pix_prod%Tc_Lower_Cloud
    Acha_Output%Lower_Cloud_Height => gsip_pix_prod%Zc_Lower_Cloud
@@ -291,7 +290,6 @@ module ACHA_GSIP_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()

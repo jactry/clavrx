@@ -199,8 +199,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
      
      CALL NFIA_CloudHeight_ZcError(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Zc_Uncertainty)
      
-     CALL NFIA_CloudHeight_CldLayer(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Cloud_Layer)
-     
      CALL NFIA_CloudHeight_TcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Temperature)
           
      CALL NFIA_CloudHeight_PcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Pressure)
@@ -365,7 +363,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()

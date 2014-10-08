@@ -17,7 +17,6 @@ module ACHA_SERVICES_MOD
   use RT_UTILITIES
 #elif defined (ISFWAIT)
  use PCF_AWG_CLX_CLOUD_HEIGHT_Mod
-!
  use type_KINDS_AIT
  use Convert_Char
  use Error_Messaging_Module
@@ -186,7 +185,6 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Beta_Uncertainty
    real, dimension(:,:), pointer:: Pc_Uncertainty
    real, dimension(:,:), pointer:: Zc_Uncertainty
-   integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
    real, dimension(:,:), pointer:: Lower_Cloud_Pressure
    real, dimension(:,:), pointer:: Lower_Cloud_Temperature
    real, dimension(:,:), pointer:: Lower_Cloud_Height

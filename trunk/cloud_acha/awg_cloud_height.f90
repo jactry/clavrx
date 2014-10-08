@@ -24,7 +24,7 @@ module AWG_CLOUD_HEIGHT
 ! 3 - Ice Cloud Retrieval (0 = no / 1 = yes)
 ! 4 - Local Radiatve Center Processing Used (0 = no / 1 = yes)
 ! 5 - Multi-layer Retrieval (0 = no / 1 = yes)
-! 6 - Lower Cloud Interpolation Used (0 = no / 1 = yes)
+! 6 - Lower Cloud InterpoLation Used (0 = no / 1 = yes)
 ! 7 - Boundary Layer Inversion Assumed  (0 = no / 1 = yes)
 ! 8 - NWP Profile Inversion Assumed (0 = no / 1 = yes)
 !
@@ -77,7 +77,7 @@ module AWG_CLOUD_HEIGHT
   !--- include the non-system specific variables
   include 'awg_cld_hght_include_1.inc'
 
-  !--- interpolated profiles
+  !--- interpoLated profiles
   real, private, dimension(Num_Levels_RTM_Prof) :: Temp_Prof_RTM
   real, private, dimension(Num_Levels_RTM_Prof) :: Press_Prof_RTM
   real, private, dimension(Num_Levels_RTM_Prof) :: Hght_Prof_RTM
@@ -178,7 +178,7 @@ module AWG_CLOUD_HEIGHT
 ! 3 - Ice Cloud Retrieval (0 = no / 1 = yes)
 ! 4 - Local Radiatve Center Processing Used (0 = no / 1 = yes)
 ! 5 - Multi-layer Retrieval (0 = no / 1 = yes)
-! 6 - Lower Cloud Interpolation Used (0 = no / 1 = ! yes)
+! 6 - Lower Cloud InterpoLation Used (0 = no / 1 = ! yes)
 ! 7 - Boundary Layer Inversion Assumed  (0 = ! no / 1 = yes)
 !
 ! Processing Order Description
@@ -193,7 +193,7 @@ module AWG_CLOUD_HEIGHT
 ! modification history
 !
 ! July 2006 - Added beta as an element of x
-! October 2006 - Added cloud lapse rate to make Tc more related to true 
+! October 2006 - Added cloud lapse rate to make Tc more reLated to true 
 !                cloud-top temperature
 !
 !
@@ -462,7 +462,6 @@ module AWG_CLOUD_HEIGHT
   Output%Zc =  MISSING_VALUE_REAL
   Output%OE_Qf = 0
   Output%Qf = 0
-  Output%Cloud_Layer = 0
   Meta_Data_Flags = 0
   Bc_67um = 0
   Bc_85um = 0
@@ -515,9 +514,6 @@ module AWG_CLOUD_HEIGHT
     endif
   endif
 
-! where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
-!       Input%Cloud_Type = symbol%OVERLAP_TYPE
-!  endwhere
   !--------------------------------------------------------------------------
   ! determine processing order of pixels
   !--------------------------------------------------------------------------
@@ -534,7 +530,7 @@ module AWG_CLOUD_HEIGHT
   pass_loop: do Pass_Idx = Pass_Idx_min, Pass_Idx_Max
   
    !--------------------------------------------------------------------------
-   ! on the third pass, spatially interpolate water cloud temperature
+   ! on the third pass, spatially interpoLate water cloud temperature
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
      call SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION(symbol, &
@@ -728,7 +724,6 @@ module AWG_CLOUD_HEIGHT
      Output%Pc(Elem_Idx,Line_Idx) =  MISSING_VALUE_REAL
      Output%Zc(Elem_Idx,Line_Idx) =  MISSING_VALUE_REAL
      Output%Qf(Elem_Idx,Line_Idx) = 0
-     Output%Cloud_Layer(Elem_Idx,Line_Idx) = 0
 
    else  !if passed data check then proceed with retrieval
 
@@ -768,7 +763,7 @@ module AWG_CLOUD_HEIGHT
    else
        Meta_Data_Flags(5) = symbol%NO
    endif
-   Meta_Data_Flags(6) = symbol%NO     !lower cloud interpolation
+   Meta_Data_Flags(6) = symbol%NO     !lower cloud interpoLation
    Meta_Data_Flags(7) = symbol%NO     !low level inversion
    Meta_Data_Flags(8) = symbol%NO     !NWP profile inversion
    
@@ -888,7 +883,7 @@ module AWG_CLOUD_HEIGHT
    call SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
 
    !-------------------------------------------------------------------
-   ! These values are used in the baseline code.  In the latest
+   ! These values are used in the baseline code.  In the Latest
    ! code, the values from SET_CLEAR_SKY_COVARIANCE_TERMS are used
    !
    ! these are based on patmos-x clear data and are the 
@@ -980,15 +975,21 @@ module AWG_CLOUD_HEIGHT
                        Beta_Ap,Beta_Ap_Uncer)
 
   !------------------------------------------------------------------------
-  !  
+  ! Set Apriori to predetermined cirrus value if Use_Cirrus_Flag = Yes 
   !------------------------------------------------------------------------
   if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == sym%YES .and. &
       Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
+  if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
+      (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
+      Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+  endif
+
+
   !------------------------------------------------------------------------
-  !  
+  ! fill x_ap vector with a priori values  
   !------------------------------------------------------------------------
    x_Ap(1) = Tc_Ap
    x_Ap(2) = Ec_Ap
@@ -1063,7 +1064,7 @@ module AWG_CLOUD_HEIGHT
 !-----------------------------------------------------------------------------
 
  !---------------------------------------------------------------------------
- !--- modify clear radiances to simulate that from an opaque cloud at 200 mb
+ !--- modify clear radiances to simuLate that from an opaque cloud at 200 mb
  !--- above the surface when a multi-layer situation is suspected
  !---------------------------------------------------------------------------
  if (Cloud_Type == symbol%OVERLAP_TYPE .and.  &
@@ -1530,20 +1531,9 @@ else
 
 endif                              !end successful retrieval if statement
 
-!------- determine cloud layer based on pressure
-Output%Cloud_Layer(Elem_Idx,Line_Idx) = 0
-if (Output%Pc(Elem_Idx,Line_Idx) <= 440.0) then
-   Output%Cloud_Layer(Elem_Idx,Line_Idx) = 3
-elseif (Output%Pc(Elem_Idx,Line_Idx) < 680.0) then
-   Output%Cloud_Layer(Elem_Idx,Line_Idx) = 2
-else
-   Output%Cloud_Layer(Elem_Idx,Line_Idx) = 1
-endif
-
 !--- if retrieval done for an undetected pixel, label the Output%Qf
 if (Undetected_Cloud == symbol%YES) then
  Output%Qf(Elem_Idx,Line_Idx) = 2
- Output%Cloud_Layer(Elem_Idx,Line_Idx) = 0
 endif
 
 !-----------------------------------------------------------------
@@ -1672,7 +1662,6 @@ endif     ! ---------- end of data check
  end do Element_Loop
 
 end do Line_Loop
-
 
 !---------------------------------------------------------------------------
 ! if selected, compute a background cirrus temperature and use for last pass
@@ -1810,7 +1799,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
        end do Line_loop_1
 
 
-      else    !if Interp_Flag > 0 then do a spatial interpolation
+      else    !if Interp_Flag > 0 then do a spatial interpoLation
 
         !--- set box width
         delem = 1
@@ -1907,7 +1896,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
    end subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION
 
    !-----------------------------------------------------------------
-   ! Interpolate within profiles knowing P to determine T and Z
+   ! InterpoLate within profiles knowing P to determine T and Z
    !-----------------------------------------------------------------
    subroutine KNOWING_P_COMPUTE_T_Z(symbol,P,T,Z,Ilev)
 
@@ -1920,7 +1909,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      real:: dt
      real:: dz
 
-     !--- interpolate pressure profile
+     !--- interpoLate pressure profile
      call LOCATE(Press_Prof_RTM,Num_Levels_RTM_Prof,P,Ilev)
      Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
 
@@ -1928,7 +1917,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
      dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
 
-     !--- perform interpolation
+     !--- perform interpoLation
        if (dp /= 0.0) then
            T = Temp_Prof_RTM(Ilev) + dt/dp * (P - Press_Prof_RTM(Ilev))
            Z = Hght_Prof_RTM(Ilev) + dz/dp * (P - Press_Prof_RTM(Ilev))
@@ -1939,7 +1928,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
    end subroutine KNOWING_P_COMPUTE_T_Z
 
    !-----------------------------------------------------------------
-   ! Interpolate within profiles knowing Z to determine T and P
+   ! InterpoLate within profiles knowing Z to determine T and P
    !-----------------------------------------------------------------
    subroutine KNOWING_Z_COMPUTE_T_P(symbol,P,T,Z,Ilev)
 
@@ -1952,7 +1941,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      real:: dt
      real:: dz
 
-     !--- interpolate pressure profile
+     !--- interpoLate pressure profile
      call LOCATE(Hght_Prof_RTM,Num_Levels_RTM_Prof,Z,Ilev)
      Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
 
@@ -1960,7 +1949,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
      dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
 
-     !--- perform interpolation
+     !--- perform interpoLation
      if (dz /= 0.0) then
            T = Temp_Prof_RTM(Ilev) + dt/dz * (Z - Hght_Prof_RTM(Ilev))
            P = Press_Prof_RTM(Ilev) + dp/dz * (Z - Hght_Prof_RTM(Ilev))
@@ -1972,7 +1961,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
    end subroutine KNOWING_Z_COMPUTE_T_P
 
    !-----------------------------------------------------------------
-   ! Interpolate within profiles knowing T to determine P and Z
+   ! InterpoLate within profiles knowing T to determine P and Z
    !-----------------------------------------------------------------
    subroutine KNOWING_T_COMPUTE_P_Z(symbol,Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
 
@@ -2012,7 +2001,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      endif
 
      !--- check to see if colder than min, than assume above tropopause
-     !--- and either limit height to tropopause or extrapolate in stratosphere
+     !--- and either limit height to tropopause or extrapoLate in stratosphere
      if ((T < minval(Temp_Prof_RTM(kstart:kend))) .or. (klev < Tropo_Level_RTM)) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
 !--->      if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
@@ -2066,7 +2055,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
    end subroutine KNOWING_T_COMPUTE_P_Z
 
    !-----------------------------------------------------------------
-   ! Interpolate within profiles knowing Z to determine above cloud
+   ! InterpoLate within profiles knowing Z to determine above cloud
    ! radiative terms used in forward model
    !-----------------------------------------------------------------
    function GENERIC_PROFILE_INTERPOLATION(X_value,X_Profile,Y_Profile)  &
@@ -2083,13 +2072,13 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
      nlevels = size(X_Profile)
 
-     !--- interpolate pressure profile
+     !--- interpoLate pressure profile
      call LOCATE(X_Profile,nlevels,X_value,Ilev)
      Ilev = max(1,min(nlevels-1,Ilev))
 
      dx = X_Profile(Ilev+1) - X_Profile(Ilev)
 
-     !--- perform interpolation
+     !--- perform interpoLation
      if (dx /= 0.0) then
         Y_value = Y_Profile(Ilev) +  &
                  (X_value - X_Profile(Ilev))  * &
@@ -2826,7 +2815,7 @@ endif
 end subroutine DETERMINE_SFC_TYPE_FORWARD_MODEL
 
 !----------------------------------------------------------------------
-! Compute Sy based on the clear-sky error covariance calculations.
+! Compute Sy based on the clear-sky error covariance calcuLations.
 ! Using Andy's simpler expression
 !
 ! This assumes that 
@@ -2960,7 +2949,7 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
 end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 
 !----------------------------------------------------------------------
-! Compute Sy based on the clear-sky error covariance calculations.
+! Compute Sy based on the clear-sky error covariance calcuLations.
 ! This assumes that 
 ! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
 !                 5=11+6.7+13.3um
@@ -3250,69 +3239,69 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
 !----------------------------------------------------------------------------
 ! Function INTERPOLATE_PROFILE_ACHA
 !
-! general interpolation routine for profiles
+! general interpoLation routine for profiles
 !
 ! input:
 ! lonx - longitude weighting factor
-! latx = latitude weighting factor
-! z1 = data(ilon, ilat)
-! z2 = data(ilonx,ilat)
-! z3 = data(ilon,ilatx)
-! z4 = data(ilonx,ilatx)
+! Latx = Latitude weighting factor
+! z1 = data(ilon, iLat)
+! z2 = data(ilonx,iLat)
+! z3 = data(ilon,iLatx)
+! z4 = data(ilonx,iLatx)
 !
 ! output:
-! z = interpolated profile
+! z = interpoLated profile
 !
 !
 !---------------------------------------------------------------------------
- function INTERPOLATE_PROFILE_ACHA(z1,z2,z3,z4,lonx,latx) result(z)
+ function INTERPOLATE_PROFILE_ACHA(z1,z2,z3,z4,lonx,Latx) result(z)
 
   real, dimension(:), intent(in):: z1
   real, dimension(:), intent(in):: z2
   real, dimension(:), intent(in):: z3
   real, dimension(:), intent(in):: z4
   real, intent(in):: lonx
-  real, intent(in):: latx
+  real, intent(in):: Latx
   real, dimension(size(z1)):: z
 
-  !--- linear inteprpolation scheme
-  z =  (1.0-lonx) * ((1.0-latx) * z1 + (latx)* z3) + &
-           (lonx) * ((1.0-latx) * z2 + (latx)* z4)
+  !--- linear inteprpoLation scheme
+  z =  (1.0-lonx) * ((1.0-Latx) * z1 + (Latx)* z3) + &
+           (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
 
  end function INTERPOLATE_PROFILE_ACHA
 
 !----------------------------------------------------------------------------
 ! Function INTERPOLATE_NWP_ACHA
 !
-! general interpolation routine for nwp fields
+! general interpoLation routine for nwp fields
 !
 ! description of arguments
-! ilon, ilat - nwp indices of closest nwp cell
-! ilonx,ilatx - nwp indices of nwp cells of diagnoal of bounding box
+! ilon, iLat - nwp indices of closest nwp cell
+! ilonx,iLatx - nwp indices of nwp cells of diagnoal of bounding box
 ! lonx - longitude weighting factor
-! latx = latitude weighting factor
-! z1 = data(ilon, ilat)
-! z2 = data(ilonx,ilat)
-! z3 = data(ilon,ilatx)
-! z4 = data(ilonx,ilatx)
+! Latx = Latitude weighting factor
+! z1 = data(ilon, iLat)
+! z2 = data(ilonx,iLat)
+! z3 = data(ilon,iLatx)
+! z4 = data(ilonx,iLatx)
 !
 ! output:
-! z = interpolated data point
+! z = interpoLated data point
 !
 !---------------------------------------------------------------------------
- function INTERPOLATE_NWP_ACHA(z1,z2,z3,z4,lonx,latx) result(z)
+ function INTERPOLATE_NWP_ACHA(z1,z2,z3,z4,lonx,Latx) result(z)
 
   real, intent(in):: z1
   real, intent(in):: z2
   real, intent(in):: z3
   real, intent(in):: z4
   real, intent(in):: lonx
-  real, intent(in):: latx
+  real, intent(in):: Latx
   real:: z
 
-  !--- linear inteprpolation scheme
-  z =  (1.0-lonx) * ((1.0-latx) * z1 + (latx)* z3) + &
-           (lonx) * ((1.0-latx) * z2 + (latx)* z4)
+  !--- linear inteprpoLation scheme
+  z =  (1.0-lonx) * ((1.0-Latx) * z1 + (Latx)* z3) + &
+           (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
 
  end function INTERPOLATE_NWP_ACHA
 
@@ -3745,18 +3734,18 @@ end subroutine COMPUTE_TAU_REFF_ACHA
 !---------------------------------------------------------------------------
 ! Compute Parallax Correction
 !
-! This routine generates new lat and lon arrays that are parallax
+! This routine generates new Lat and Lon arrays that are parallax
 ! corrected based on the cloud height
 !
 ! Input: Senzen - sensor viewing zenith angle (deg) 
 !        Senaz  - sensor azimuth angle (deg)
-!        Lat - uncorrected latitude (deg)
+!        Lat - uncorrected Latitude (deg)
 !        Lon  - uncorrected longitude (deg)
 !        Zsfc  - surface elevation (m)
 !        Zcld  - cloud height (m)
 !
 ! Output
-!       Lat_Pc - corrected latitude
+!       Lat_Pc - corrected Latitude
 !       Lon_Pc - corrected longitude
 !
 !---------------------------------------------------------------------------
@@ -4128,34 +4117,28 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
    real(kind=real4), intent(out), dimension(:,:):: Temperature_Cirrus
-   real(kind=real4), allocatable, dimension(:,:):: Temperature_Cirrus_Temporary
-   logical, dimension(:,:), allocatable:: mask
+   logical, dimension(:,:), allocatable:: Mask
 
    integer:: Num_Elements
    integer:: Num_Lines
    integer:: Line_Idx, Elem_Idx, i1, i2, j1, j2
    real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
 
-
    Temperature_Cirrus = Missing
 
    Num_Elements = size(Type,1)
    Num_Lines = size(Type,2)
 
-   allocate(mask(Num_Elements,Num_Lines))
-   allocate(Temperature_Cirrus_Temporary(Num_Elements,Num_Lines))
+   allocate(Mask(Num_Elements,Num_Lines))
 
-   Temperature_Cirrus_Temporary = Missing
    mask = .false.
 
    where( (Type == sym%CIRRUS_TYPE .or. &
            Type == sym%OVERLAP_TYPE) .and.  &
-!          Type == sym%OPAQUE_ICE_TYPE .or. &
-!          Type == sym%OVERSHOOTING_TYPE) .and. &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud > Emissivity_Thresh)
 
-      mask = .true.
+      Mask = .true.
 
    end where
 
@@ -4168,9 +4151,8 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
           j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
           j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
-
-          Count_Temporary = count(mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2),mask(i1:i2,j1:j2))
+          Count_Temporary = count(Mask(i1:i2,j1:j2))
+          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
           if (Count_Temporary > Count_Thresh) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary
           else
@@ -4178,21 +4160,9 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
           endif
 
           if (Temperature_Temporary /= Missing) then
-
-!            where(Temperature_Cirrus(i1:i2,j1:j2) == Missing .or. &
-!                  Temperature_Cirrus(i1:i2,j1:j2) >  &
-!                  Temperature_Temporary)
-!                  Temperature_Cirrus(i1:i2,j1:j2) = Temperature_Temporary
-!            endwhere
-
-!            where(Temperature_Cirrus(i1:i2,j1:j2) == Missing)
-!                  Temperature_Cirrus(i1:i2,j1:j2) = Temperature_Temporary
-!            endwhere
              Temperature_Cirrus(i1:i2,j1:j2) = Temperature_Temporary
-
           endif
          
-
       enddo
    enddo   
 
@@ -4314,6 +4284,7 @@ subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
    endif
 
 end subroutine COMPUTE_BOX_WIDTH
+
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-! $Id: pixel_routines.f90 538 2014-09-15 20:30:48Z dbotambekov $
+! $Id:$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

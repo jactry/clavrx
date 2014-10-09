@@ -10,7 +10,6 @@ module load bundle/basic-1
 module load bundle/basic-1 hdf5
 
 
-
 while :; do 
    case $1 in
    
@@ -131,6 +130,9 @@ do
    		echo "echo 'Starting CLAVR-x'" >> $tmp_script
    		echo "./clavrxorb  -default $options -lines_per_seg 400" >> $tmp_script
    		echo "echo 'Finished, Deleting All Temp Data'" >> $tmp_script
+		
+		
+		
 		qsub -q r720.q -l vf=4G -S /bin/bash -l matlab=0 -l friendly=1 -p -00 -o $logs_path -e $logs_path -l h_rt=01:00:00 $tmp_script
    done
 done

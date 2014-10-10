@@ -15,6 +15,55 @@ EOF
 
 
 
+function redo_it () {
+#  echo "Check files again"
+
+sch_path=$l1b_path'*h5'
+num_real_files=`ls -1 $sch_path | wc -l`
+echo "Real $num_real_files"
+
+if [ "$num_real_files" -ne "$num_need_files" ]
+then
+   echo "Not enough files"
+   cd $l1b_path
+   bash $down_file
+   stat=1
+else
+   stat=0
+fi
+return $stat
+}
+
+function check_download() {
+args=("$@") 
+l1b_path=${args[0]}
+down_file=$l1b_path'downloader.sh'
+curr_dir=`pwd`
+#echo $down_file
+
+tmp=`grep "files" $down_file`
+#echo $tmp
+
+if [ -f $down_file ] ; then
+  num_need_files=`echo $tmp |awk -F " " '{print $2}'`
+  echo "Need $num_need_files"
+  sed -e 's/-q/-q -nc/g' <$down_file >temp.txt
+  cp temp.txt $down_file
+  rm temp.txt
+  stat=1
+fi
+
+while [ $stat -eq 1 ]
+do
+   redo_it
+done
+
+cd $curr_dir
+echo "All files are there"
+
+}
+
+
 
 BASE_PATH=$HOME"/Satellite_Input/viirs/"
 satname='viirs'
@@ -107,13 +156,21 @@ if  [ $REG ]; then
          ur_lat=15
          ur_lon=-60
       ;;
+	  
+	  sal)
+	     echo "south atlantic"
+         ll_lat=-45
+         ll_lon=-30
+         ur_lat=15
+         ur_lon=15
+      ;;	
       
       kaz)
          echo "kazachstan"
-         ll_lat=20
-         ll_lon=90
-         ur_lat=50
-         ur_lon=130
+         ll_lat=40
+         ll_lon=40
+         ur_lat=55
+         ur_lon=90
       ;;   
       *)
       echo "unknown area"
@@ -147,4 +204,4 @@ echo $L1B_PATH
 
       sh -c './cg_peate_downloader.sh --path '$L1B_PATH' --ll '$ll_lat' '$ll_lon' --ur '$ur_lat' '$ur_lon' '$YEAR'-'$MONTH'-'$DAY'+'$HOUR0':'$MINU0':00 '$YEAR'-'$MONTH'-'$DAY'+'$HOUR1':'$MINU1':00 SVDNB GMTCO GITCO GDNBO SVM01 SVM02 SVM03 SVM04 SVM05 SVM06 SVM07 SVM08 SVM09 SVM10 SVM11 SVM12 SVM13 SVM14 SVM15 SVM16 IICMO SVI01'
 
-
+check_download $L1B_PATH

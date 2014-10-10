@@ -128,7 +128,7 @@ do
    		echo "echo 'Checking files, if already processed delete them from the filelist'" >> $tmp_script
    		#echo "./check_filelist_zara.sh $filelist $filetype" >> $tmp_script
    		echo "echo 'Starting CLAVR-x'" >> $tmp_script
-   		echo "./clavrxorb  -default $options -lines_per_seg 400" >> $tmp_script
+   		echo "./clavrxorb  -default $options -lines_per_seg 400 -dcomp_mode 3 " >> $tmp_script
    		echo "echo 'Finished, Deleting All Temp Data'" >> $tmp_script
 		
 		

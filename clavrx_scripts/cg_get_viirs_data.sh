@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-
+#
+#  $Id:$
+#
 function usage() {
 
 cat<< EOF
@@ -13,8 +15,7 @@ EOF
 
 }
 
-
-
+# calles by check_download
 function redo_it () {
 #  echo "Check files again"
 
@@ -34,15 +35,15 @@ fi
 return $stat
 }
 
+#
+#this is needed because peate scripts sometimes doesn't download all files
 function check_download() {
 args=("$@") 
 l1b_path=${args[0]}
 down_file=$l1b_path'downloader.sh'
 curr_dir=`pwd`
-#echo $down_file
 
 tmp=`grep "files" $down_file`
-#echo $tmp
 
 if [ -f $down_file ] ; then
   num_need_files=`echo $tmp |awk -F " " '{print $2}'`

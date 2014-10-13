@@ -348,86 +348,87 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
       Bad_Pixel_Mask(:,Line_Idx) = sym%NO
       Space_Mask(:,Line_Idx) = sym%NO_SPACE
 
-     !--- check for a bad scan
-     if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
+      !--- check for a bad scan
+      if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
 
-       Bad_Pixel_Mask(:,Line_Idx) = sym%YES
-       Space_Mask(:,Line_Idx) = sym%SPACE
+         Bad_Pixel_Mask(:,Line_Idx) = sym%YES
+         Space_Mask(:,Line_Idx) = sym%SPACE
 
-     else
+      else
 
-      !--- if not a bad scan, check pixels on this scan
-      element_loop: DO Elem_Idx = 1, Number_of_Elements
-
-        !--- missing geolocation
-        if ((Lat(Elem_Idx,Line_Idx) == Missing_Value_Real4) .or.  &
-            (Lon(Elem_Idx,Line_Idx) == Missing_Value_Real4)) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
-
-        !--- NaN checks on geolocation and geometry
-        if (isnan(Lat(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Lon(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Satzen(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Solzen(Elem_Idx,Line_Idx))) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
-
-        !--- Satzen limit
-        if (Satzen(Elem_Idx,Line_Idx) >= Satzen_Thresh_Processing) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
+         !--- if not a bad scan, check pixels on this scan
+         element_loop: DO Elem_Idx = 1, Number_of_Elements
+            
+            !--- missing geolocation
+            if ((Lat(Elem_Idx,Line_Idx) == Missing_Value_Real4) .or.  &
+               (Lon(Elem_Idx,Line_Idx) == Missing_Value_Real4)) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+            endif
+           
+            !--- NaN checks on geolocation and geometry
+            if (isnan(Lat(Elem_Idx,Line_Idx)) .or.  &
+                  isnan(Lon(Elem_Idx,Line_Idx)) .or.  &
+                  isnan(Satzen(Elem_Idx,Line_Idx)) .or.  &
+                  isnan(Solzen(Elem_Idx,Line_Idx))) then
+            
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+            endif
+             
+            !--- Satzen limit
+            if (Satzen(Elem_Idx,Line_Idx) >= Satzen_Thresh_Processing) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
  
-        !--- Satzen limit
-        if (Satzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
+            !--- Satzen limit
+            if (Satzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
 
-        !--- Relaz limit
-        if (Relaz(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
+            !--- Relaz limit
+            if (Relaz(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
 
-        !--- Solzen limit
-        if (Solzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
+            !--- Solzen limit
+            if (Solzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
+            
+            if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
+                  (Chan_On_Flag_Default(32) == sym%YES)) then
 
-        if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(32) == sym%YES)) then
+               !--- CALL any scan with a ridiculous pixel as bad 
+               !--- this is attempt data like NOAA-16 2004 023 where
+               !--- large fractions of scans are bad but not flagged as so
+               if (abs(ch(31)%Bt_Toa(Elem_Idx,Line_Idx) - ch(32)%Bt_Toa(Elem_Idx,Line_Idx)) > 20.0) then
+                  Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif
 
-          !--- CALL any scan with a ridiculous pixel as bad 
-          !--- this is attempt data like NOAA-16 2004 023 where
-          !--- large fractions of scans are bad but not flagged as so
-          if (abs(ch(31)%Bt_Toa(Elem_Idx,Line_Idx) - ch(32)%Bt_Toa(Elem_Idx,Line_Idx)) > 20.0) then
-              Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-          endif
+            endif
 
-        endif
+            !--- space views for considered as bad pixels
+            if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
 
-        !--- space views for considered as bad pixels
-        if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
+            !--- missing 11 um observations
+            if (Chan_On_Flag_Default(31) == sym%YES) then
 
-        !--- missing 11 um observations
-        if (Chan_On_Flag_Default(31) == sym%YES) then
+               if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 150.0) then
+                  Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif
 
-         if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 150.0) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-         endif
+               if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) > 350.0) then
+                  Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif
 
-         if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) > 350.0) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-         endif
+               if (isnan(ch(31)%Bt_Toa(Elem_Idx,Line_Idx))) then
+                  Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif
 
-         if (isnan(ch(31)%Bt_Toa(Elem_Idx,Line_Idx))) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-         endif
-
-        endif
+            endif
 
         !--- AVHRR/3 Wedge Filter
         !--- for AVHRR/3, consider region where Ch3a is on but seeing night
@@ -444,84 +445,84 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
 !           endif
 !       endif
         
-
-        !--- check for solar zenith angle limits
-        if ((Solzen(Elem_Idx,Line_Idx) < Solzen_Min_limit) .or. (Solzen(Elem_Idx,Line_Idx) > Solzen_Max_limit)) then
-             Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- check for solar contamination of nighttime data in AVHRR
-        if (Chan_On_Flag_Default(1) == sym%YES) then
-
-          if (AVHRR_Flag == sym%YES) then
-
-            if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-              if (therm_cal_1b == sym%NO) then
-!               if (Ch1_Counts(Elem_Idx,Line_Idx) - Scan_Space_Counts_Avhrr(1,Line_Idx) > 2) then 
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif
-             else
-               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-               endif 
-             endif
+            
+            !--- check for solar zenith angle limits
+            if ((Solzen(Elem_Idx,Line_Idx) < Solzen_Min_limit) .or. (Solzen(Elem_Idx,Line_Idx) > Solzen_Max_limit)) then
+               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
             endif
+         
+            !--- check for solar contamination of nighttime data in AVHRR
+            if (Chan_On_Flag_Default(1) == sym%YES) then
+
+               if (AVHRR_Flag == sym%YES) then
+
+                  if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+                     if (therm_cal_1b == sym%NO) then
+
+                        if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                           Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                        endif
+                     else
+                        if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                           Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                        endif 
+                     endif
+                  endif
   
-          endif
+               endif
 
-          !--- check for solar contamination of nighttime data in GOES
-          if (GOES_Flag == sym%YES) then
-             if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif 
-             endif
-          endif
+               !--- check for solar contamination of nighttime data in GOES
+               if (GOES_Flag == sym%YES) then
+                  if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+                     if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+                        Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                     endif 
+                  endif
+               endif
 
-        endif
-
-        !--- CALL any bad pixel as being space (for ancil data interp)
-        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
-
-        !--- check for solar contamination of nighttime data in GOES
-        if (GOES_Flag == sym%YES) then
-          if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
-            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
             endif
-          endif
-        endif
 
-        !--- NWP
-        if (Nwp_Flag /= 0) then
-            Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
-            Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
-            if (Lon_Nwp_Idx < 1 .or. Lat_Nwp_Idx < 1) then
-                 Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-            else
-                 if (Bad_Nwp_Mask(Lon_Nwp_Idx, Lat_Nwp_Idx) == sym%YES) Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+            !--- CALL any bad pixel as being space (for ancil data interp)
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+               Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
             endif
-        endif
+         
+            !--- check for solar contamination of nighttime data in GOES
+            if (GOES_Flag == sym%YES) then
+               if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
+                  if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+                     Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                  endif
+               endif
+            endif
 
-      end do element_loop
+            !--- NWP
+            if (Nwp_Flag /= 0) then
+               Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
+               Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
+               if (Lon_Nwp_Idx < 1 .or. Lat_Nwp_Idx < 1) then
+                  Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               else
+                  if (Bad_Nwp_Mask(Lon_Nwp_Idx, Lat_Nwp_Idx) == sym%YES) Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif
+            endif
 
-     endif
+         end do element_loop
 
-     !------ if 90% of pixels on a line are bad, mark the whole scan line as bad (if not already)
-     if (Bad_Scan_Flag(Line_Idx) == Missing_Value_Int1) then
+      endif
+
+      !------ if 90% of pixels on a line are bad, mark the whole scan line as bad (if not already)
+      if (Bad_Scan_Flag(Line_Idx) == Missing_Value_Int1) then
          Number_Bad_Pixels = sum(Bad_Pixel_Mask(:,Line_Idx),Bad_Pixel_Mask(:,Line_Idx)==sym%YES)
          if (Number_Bad_Pixels > Number_Bad_Pixels_Thresh) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+            Bad_Scan_Flag(Line_Idx) = sym%YES
          else
-           Bad_Scan_Flag(Line_Idx) = sym%NO
+            Bad_Scan_Flag(Line_Idx) = sym%NO
          endif
-     endif
+      endif
 
 
-     !---- consider any scanline with any solar contamination as a bad line
+      !---- consider any scanline with any solar contamination as a bad line
 !    if (maxval(Solar_Contamination_Mask(:,Line_Idx)) == sym%YES) then
 !        Bad_Scan_Flag(Line_Idx) = sym%YES
 !        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
@@ -530,22 +531,22 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
 
    end do line_loop
 
-  !-----------------------------------------------------------------------------------
-  ! if the IDPS cloud mask is to be used for product generation, make sure that
-  ! pixels within the gaps are considered bad
-  !-----------------------------------------------------------------------------------
-  if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
+   !-----------------------------------------------------------------------------------
+   ! if the IDPS cloud mask is to be used for product generation, make sure that
+   ! pixels within the gaps are considered bad
+   !-----------------------------------------------------------------------------------
+   if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
       where(Gap_Pixel_Mask == sym%YES)
          Bad_Pixel_Mask = sym%YES
-      endwhere
-  endif
+      end where
+   endif
 
   !---------------------------------------------------------------------------------------
   ! Compute the fraction of the segment covered by valid data
   !---------------------------------------------------------------------------------------
   Segment_Valid_Fraction = 1.0 - sum(float(Bad_Pixel_Mask(:,1:Number_of_Lines))) /  &
                                 float(Number_of_Elements * Number_of_Lines)
-
+   
 end subroutine SET_BAD_PIXEL_MASK
 !--------------------------------------------------------------------------
 !QUALITY_CONTROL_ANCILLARY_DATA

@@ -323,6 +323,100 @@
    
    Ancil_Data_Dir = trim(conf % ancil_path)//'clavrx_ancil_data/' 
    Temporary_Data_Dir =  trim(conf % temp_path)
+   num_scans_per_segment = 240
+   
+   Read_Surface_Elevation  = 1
+   Read_Coast_Mask = sym%YES
+   Read_Hires_sfc_type = sym%YES
+   Read_Land_Mask = sym%YES
+   
+   Solzen_Min_limit = 0.
+   Solzen_Max_limit = 180.
+   
+   nwp_flag = 1
+   
+   !------------------------------------------------------------------------------
+   !--- Read elevation data 
+   !------------------------------------------------------------------------------
+   if (Read_Surface_Elevation /= 0) then
+      print *, EXE_PROMPT,"Opening surface elevation file"
+      Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
+     
+      !--- read in which elevation type that is specified.
+      if (Read_Surface_Elevation == 1) then
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+                                      "GLOBE_1km_digelev.hdf", &
+                                      grid_Str=Surface_Elev_Str)
+      else ! low resolution, Read_Surface_Elevation = 2
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+                                     "GLOBE_8km_digelev.hdf", &
+                                      grid_Str=Surface_Elev_Str)
+      end if
+
+   endif
+
+   !------------------------------------------------------------------
+   ! Open coast mask file
+   !------------------------------------------------------------------
+   if (Read_Coast_Mask == sym%YES) then
+      print *, EXE_PROMPT,"Opening coast file"
+      Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
+      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+                                      "coast_mask_1km.hdf", &
+                                      grid_Str=Coast_Mask_Str)
+   end if
+
+   !------------------------------------------------------------------
+   ! Open land surface type file
+   !------------------------------------------------------------------
+   print *, EXE_PROMPT, "Opening land surface type file"
+   Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
+
+   if (Read_Hires_sfc_type == sym%YES) then
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+                                     "gl-latlong-1km-landcover.hdf", &
+                                      grid_Str=Sfc_Type_Str)
+   else
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+                                     "gl-latlong-8km-landcover.hdf", &
+                                      grid_Str=Sfc_Type_Str)
+   end if
+
+   !------------------------------------------------------------------
+   ! Open land mask file
+   !------------------------------------------------------------------
+   if (Read_Land_Mask == sym%YES) then
+      print *, EXE_PROMPT, "Opening land mask file"
+      Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
+      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+                                    "lw_geo_2001001_v03m.hdf", &
+                                     grid_Str=Land_Mask_Str)
+   end if
+ 
+   !------------------------------------------------------------------
+   ! Open volcano mask file
+   !------------------------------------------------------------------
+   if (Read_Volcano_Mask == sym%YES) then
+      print *, EXE_PROMPT, "Opening volcano mask file"
+      Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
+      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+                                        "volcano_mask_1km.hdf", &
+                                        grid_Str=Volcano_Mask_Str)
+    end if
+
+    !-----------------------------------------------------------------------
+    !--- set up surface radiative properties 
+    !-----------------------------------------------------------------------
+    call SETUP_UMD_PROPS()
+ 
+    !--------------------------------------------------------------------
+    !--- setup clock corrections in memory
+    !--------------------------------------------------------------------
+    if (Nav_Flag == 2) then
+      call SETUP_CLOCK_CORRECTIONS()
+    endif
+
+   
   
     !-----------------------------------------------------------------------
     !--- set up surface radiative properties 
@@ -784,9 +878,9 @@
          !---- Marker: Read level-1b data
          !-----------------------------------------------------------------
          Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-         print*,'ddd'
+        
          call READ_LEVEL1B_DATA(File_1b_Full,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
-print*,'dddeee'
+
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
@@ -936,7 +1030,7 @@ print*,'dddeee'
 
             end if
 
-   
+            print*,Num_Pix,Num_Scans_Read
             !--- determine a pixel-level mask to exclude bad or unprocessible data
             call SET_BAD_PIXEL_MASK(Num_Pix,Num_Scans_Read)
 
@@ -1140,7 +1234,7 @@ print*,'dddeee'
             !*******************************************************************
             ! Marker: Compute nwp mapping and rtm values for each pixel in segment
             !*******************************************************************
-
+            print*,nwp_flag
             !--- needs an NWP to run.
             if (Nwp_Flag /= 0) then
 

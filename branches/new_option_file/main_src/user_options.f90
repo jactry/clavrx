@@ -453,7 +453,7 @@ print *, "Acha Mode = ", Acha_Mode
   
 
   if(Use_Default == sym%YES)  then
-     call READ_CLAVRXORB_DEFAULT_OPTIONS(Default_Temp)
+    ! call READ_CLAVRXORB_DEFAULT_OPTIONS(Default_Temp)
   endif
   if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"

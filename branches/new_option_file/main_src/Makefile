@@ -144,6 +144,8 @@ clavrxorb_objs = process_clavrx.o \
                  tranmts101.o\
                  seviri_module.o \
                  ahi_transm.o \
+                 config_mod.o \
+                 area_file_mod.o \
 	         reposnx.o \
                  reposition_module.o \
 		 acha_services_clavrx_mod.o \
@@ -271,7 +273,8 @@ awg_cloud_height.o: awg_cloud_height.f90 acha_services_clavrx_mod.o
 acha_shadow_module.o: acha_shadow_module.f90
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_shadow_module.f90
 
-
+config_mod.o:config_mod.f90 area_file_mod.o file_tools.o
+area_file_mod.o:area_file_mod.f90 
 cloud_cover_layers_module.o: cloud_cover_layers_module.f90 constant.o pixel_common.o algorithm_constants.o
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 
@@ -351,7 +354,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o \
+              seviri_module.o mtsat_module.o simple_cod_module.o config_mod.o \
               coms_module.o level2b.o dcomp_rtm_module.o cloud_cover_layers_module.o dcomp_derived_products_module.o
 
 

@@ -85,6 +85,9 @@
 !*****************************************************************************
 ! Marker: ACCESS MODULES 
 !******************************************************************************
+
+   use CONFIG_MOD
+   
    use CONSTANTS
    use HDF
    use PIXEL_COMMON
@@ -188,7 +191,7 @@
    INTEGER(kind=int4), parameter:: One = 1
  
    INTEGER(kind=int4):: ios
-   INTEGER(kind=int4):: File_Number
+   
    INTEGER(kind=int4):: Ierror_Level1b
    INTEGER(kind=int4):: ierror_Nwp
    INTEGER(kind=int4):: iperiod16   
@@ -243,7 +246,8 @@
    
    logical :: dcomp_run
    
-   
+   ! -- helds all configuartion informations
+   type (conf_user_opt_type) :: conf
    
   
    !------------- VIIRS variables --------------
@@ -256,16 +260,23 @@
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
    integer, dimension(20:36), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0,10,10,11,12,14,15,16,16,16,16/)
    integer:: Chan_Idx
+   
+   integer :: i_file
 
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
+   print*
    print "(a,'<----------  Start of CLAVRXORB ---------->')",EXE_PROMPT
 
-#ifdef HDF5LIBS
-   PRINT *, "HDF5 USED"
-#endif
+
+   !  read in users configuration
+   !
+   ! 
    
+   call conf % set_config ()
+   call conf % print_it ()
+
    !----------------------------------------------------------------------------
    ! Initialize some flags
    !----------------------------------------------------------------------------
@@ -303,81 +314,16 @@
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
   
-   call SETUP_USER_DEFINED_OPTIONS()
+  ! call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
    ! Marker: Open hgh spatial resolution ancillary data files
    !*************************************************************************
- 
-   !------------------------------------------------------------------------------
-   !--- Read elevation data 
-   !------------------------------------------------------------------------------
-   if (Read_Surface_Elevation /= 0) then
-      print *, EXE_PROMPT,"Opening surface elevation file"
-      Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
-     
-      !--- read in which elevation type that is specified.
-      if (Read_Surface_Elevation == 1) then
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
-                                      "GLOBE_1km_digelev.hdf", &
-                                      grid_Str=Surface_Elev_Str)
-      else ! low resolution, Read_Surface_Elevation = 2
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
-                                     "GLOBE_8km_digelev.hdf", &
-                                      grid_Str=Surface_Elev_Str)
-      end if
-
-   endif
-
-   !------------------------------------------------------------------
-   ! Open coast mask file
-   !------------------------------------------------------------------
-   if (Read_Coast_Mask == sym%YES) then
-      print *, EXE_PROMPT,"Opening coast file"
-      Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
-      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
-                                      "coast_mask_1km.hdf", &
-                                      grid_Str=Coast_Mask_Str)
-   end if
-
-   !------------------------------------------------------------------
-   ! Open land surface type file
-   !------------------------------------------------------------------
-   print *, EXE_PROMPT, "Opening land surface type file"
-   Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
-
-   if (Read_Hires_sfc_type == sym%YES) then
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
-                                     "gl-latlong-1km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   else
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
-                                     "gl-latlong-8km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   end if
-
-   !------------------------------------------------------------------
-   ! Open land mask file
-   !------------------------------------------------------------------
-   if (Read_Land_Mask == sym%YES) then
-      print *, EXE_PROMPT, "Opening land mask file"
-      Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
-      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
-                                    "lw_geo_2001001_v03m.hdf", &
-                                     grid_Str=Land_Mask_Str)
-   end if
- 
-   !------------------------------------------------------------------
-   ! Open volcano mask file
-   !------------------------------------------------------------------
-   if (Read_Volcano_Mask == sym%YES) then
-      print *, EXE_PROMPT, "Opening volcano mask file"
-      Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
-      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
-                                        "volcano_mask_1km.hdf", &
-                                        grid_Str=Volcano_Mask_Str)
-    end if
-
+   
+   
+   Ancil_Data_Dir = trim(conf % ancil_path)//'clavrx_ancil_data/' 
+   Temporary_Data_Dir =  trim(conf % temp_path)
+  
     !-----------------------------------------------------------------------
     !--- set up surface radiative properties 
     !-----------------------------------------------------------------------
@@ -395,60 +341,26 @@
    !**********************************************************************
 
    !--- print to screen which file list is used
-   print *, EXE_PROMPT, "CLAVR-x FILE LIST FILE USED: ", trim(File_list)
+   print *, EXE_PROMPT, "CLAVR-x FILE LIST FILE USED: ", trim(conf % file % l1b_path)
 
-   !--- open file containing list of level1b data to process
-   File_list_lun = GET_LUN()
-   open(unit=File_list_lun,file = trim(File_list),status="old",action="read",iostat=ios)
-   if (ios /= 0) then
-      print *, EXE_PROMPT, "ERROR: Opening clavrxorb_File_list, iostat = ", ios
-      stop
-   end if
+   Dir_1b = conf % file % l1b_path
+   Dir_Level2 = conf % file % out_path
 
-   !--- read directories from clavrxorb_input_Files
-   read(unit=File_List_Lun,fmt="(a)") Dir_1b
-   read(unit=File_List_Lun,fmt="(a)") Dir_1bx
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_in
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_Out
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cmr
-   read(unit=File_List_Lun,fmt="(a)") Dir_Sst
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cld
-   read(unit=File_List_Lun,fmt="(a)") Dir_Obs
-   read(unit=File_List_Lun,fmt="(a)") Dir_Geo
-   read(unit=File_List_Lun,fmt="(a)") Dir_Rtm
-   read(unit=File_List_Lun,fmt="(a)") Dir_Ash
-   read(unit=File_List_Lun,fmt="(a)") Dir_Level2
-   read(unit=File_List_Lun,fmt="(a)") Dir_Level3
-
-   !--- reset file counter
-   File_Number = 1
-
+  
    !----------------------------------------------------------------------
    ! Marker: BEGIN LOOP OVER FILES
    !----------------------------------------------------------------------
    
-   File_loop: do
- 
-      !----------------------------------------------------------------------
-      ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
-      !----------------------------------------------------------------------
-      read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
-      if (ios /= 0) then
-         if (ios /= -1) then
-            !-- non eof error
-            erstat = 8
-            print *, EXE_PROMPT, "ERROR: Problem reading orbit names from control file, ios = ",ios
-            stop 8
-         else
-            !-- end of orbits
-            if (File_Number == 1) then
-               print *, EXE_PROMPT, "ERROR: No orbits to process, stopping"
-               stop
-            end if
-            exit
-         end if
-      end if
- 
+   loop_file: do i_file = 1 , conf % n_files
+
+      file_1b_temp = conf % file % infile ( i_file)
+      
+            !--- print to screen the file name
+      print *,EXE_PROMPT
+      print *,EXE_PROMPT, "<------------- Next Orbit ---------------> "
+      print *,EXE_PROMPT, "file name = ", trim(File_1b_temp)
+      print *, EXE_PROMPT, " sensor is ", trim(conf % file % sensor_name (i_file))
+      
       !----------------------------------------------------------------------------
       ! Determine time of the start of the processing of this orbit
       !----------------------------------------------------------------------------
@@ -466,7 +378,7 @@
       Level1b_Exists = File_exists(trim(Dir_1b)//trim(File_1b_Temp))
       if (Level1b_Exists .eqv. .FALSE.) then
          print *, EXE_PROMPT, "ERROR: Level-1b file not found, skipping"
-         cycle file_loop
+         cycle loop_file
       end if
 
       !--------------------------------------------------------------
@@ -474,7 +386,7 @@
       !  is gzipped. Announce this fact thru a boolean var.
       !--------------------------------------------------------------
       call DETERMINE_LEVEL1B_COMPRESSION(File_1b_Temp,L1b_Gzip,L1b_Bzip2,File_1b_Full)
-
+     
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
       !------------------------------------------------------------------------
@@ -482,18 +394,8 @@
 
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
-         cycle file_loop
+         cycle loop_file
       end if
-
-      !--- print to screen the file name
-      print *,EXE_PROMPT
-      print *,EXE_PROMPT, "<------------- Next Orbit ---------------> "
-      print *,EXE_PROMPT, "file name = ", trim(File_1b)
-
-      !-------------------------------------------------------
-      ! reset record counters
-      !-------------------------------------------------------
-      File_Number = File_Number + 1
 
 
       !-----------------------------------------------------------------------
@@ -502,21 +404,18 @@
       ! for AVHRR, determine file type and some record lengths
       !-----------------------------------------------------------------------
       call  SET_FILE_DIMENSIONS(File_1b_Full,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
- 
+      
+     
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "
-         cycle file_loop
+         cycle loop_file
       end if
 
       if (Num_Scans <= 0) then
-         cycle file_loop    
+         cycle loop_file    
       end if
   
-      !-----------------------------------------------------------------------
-      !--- Compute the time stamp for use in all generated HDF output files
-      !-----------------------------------------------------------------------
-      call HDF_TSTAMP()
-   
+      
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
@@ -532,7 +431,7 @@
       ! Knowing the sensor, setup internal parameters needed for processing
       !----------------------------------------------------------------------
       call SET_SENSOR_CONSTANTS ( AREAstr)
-
+      
       !------------------------------------------------------------------
       ! Turn off selected channels based on sensor
       !------------------------------------------------------------------
@@ -858,7 +757,7 @@
       print *,EXE_PROMPT
       print *,EXE_PROMPT, "Started Processing All Orbital Segments"
 
-
+      print*,num_Scans_Per_Segment
       !--- compute number of segments in this orbit 
       if (mod(Num_Scans,Num_Scans_Per_Segment) == 0) then
          Num_Segments = Num_Scans / Num_Scans_Per_Segment
@@ -885,9 +784,9 @@
          !---- Marker: Read level-1b data
          !-----------------------------------------------------------------
          Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
+         print*,'ddd'
          call READ_LEVEL1B_DATA(File_1b_Full,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
-
+print*,'dddeee'
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
@@ -1702,7 +1601,7 @@
       ! Marker: End loop over files
       !*************************************************************************
  
-   end do File_Loop
+   end do Loop_file
 
    !*************************************************************************
    ! Marker: Close FILELIST

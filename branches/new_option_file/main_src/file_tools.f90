@@ -39,6 +39,8 @@ module file_tools
   public :: file_search
   public :: file_test
   public :: getlun
+  public :: file_nr_lines
+  public :: uncompress_file
 
 contains
 
@@ -232,5 +234,57 @@ contains
     END DO lun_search
 
   END FUNCTION getlun
+  
+
+   !
+   !
+   !
+   subroutine uncompress_file ( file_original ,   file_unzipped , dir_in,  tmp_dir_in)
+      character ( len = * ) , intent(in) :: file_original
+      character ( len = * ) , intent(in) , optional :: dir_in
+      character ( len = * ) , intent(out) :: file_unzipped
+      character ( len = * ) , intent(in), optional :: tmp_dir_in
+      
+      character ( len = 100) :: dir
+      character ( len =100) :: tmp_dir
+      
+      character ( len = 200 ) :: system_string
+      integer :: len_orig
+      character ( len = 3) :: last_3_ch
+      
+      tmp_dir = "./temp/"
+      dir ="./"
+      if (  present ( tmp_dir_in )) tmp_dir = tmp_dir_in
+      if (  present ( dir_in )) dir = dir_in
+      
+      len_orig = len_trim ( file_original)
+      last_3_ch = file_original ( len_orig -2 : len_orig)
+      
+      select case ( last_3_ch ) 
+      
+      case ( '.gz')     
+         file_unzipped = file_original ( 1:len_orig-3)
+         system_string = "gunzip -c "//trim(dir)//trim(file_original)// &
+            " > "//trim(tmp_dir)//trim(file_unzipped)  
+            
+            CALL SYSTEM(System_String)
+         file_unzipped=trim(tmp_dir)//trim(file_unzipped) 
+            
+      case ('bz2')
+         file_unzipped = file_original ( 1:len_orig-4)
+         system_string = "bunzip2 -c "//trim(dir)//trim(file_original)// &
+            " > "//trim(tmp_dir)//trim(file_unzipped)   
+            CALL SYSTEM(System_String)
+         file_unzipped=trim(tmp_dir)//trim(file_unzipped)
+      case default
+         file_unzipped = trim(dir)//trim(file_original)
+      
+      end select
+      
+       
+   
+   end subroutine uncompress_file
+  
+  
 
 end module file_tools

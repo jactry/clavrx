@@ -37,6 +37,7 @@ module viirs_read_mod
    
    private
    public :: get_viirs_data
+   public :: READ_NUMBER_OF_SCANS_FROM_VIIRS
   
    integer, parameter, public:: int1 = selected_int_kind(1)
    integer, parameter, public:: int2 = selected_int_kind(3)
@@ -1012,9 +1013,11 @@ contains
    end subroutine read_viirs_date_time
 
 
-!  this is called from outside, why is this needed?
 !---------------------------------------------------------------------------------
-   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS(Infile,Number_Of_Viirs_Lines,Error_Out)
+!  subroutine READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile, Number_Of_Viirs_Lines, Error_Out )
+!  to read number of scans,  called from the bridge
+!---------------------------------------------------------------------------------
+   SUBROUTINE READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile, Number_Of_Viirs_Lines, Error_Out )
    
       CHARACTER(Len=*), INTENT(IN) :: Infile  
       INTEGER(kind=int4), INTENT(OUT) :: Error_Out
@@ -1025,11 +1028,11 @@ contains
 
       error_out = 0
       Setname = 'All_Data/VIIRS-MOD-GEO-TC_All/NumberOfScans'
-      call H5ReadDataset( infile ,setname, test)
+      call H5ReadDataset( infile, setname, test )
      
-      Number_of_Viirs_Lines = test(1)
+      Number_of_Viirs_Lines = sum(test)
    
-   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS
+   END SUBROUTINE READ_NUMBER_OF_SCANS_FROM_VIIRS
 
    !====================================================================
    ! Function Name: CONVERT_VIIRS_RADIANCE

@@ -507,24 +507,22 @@ contains
       
    end subroutine READ_VIIRS_DATE_TIME 
 
-!  this is called from outside, why is this needed?
 !---------------------------------------------------------------------------------
-   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS ( Infile , Number_Of_Viirs_Lines , Error_Out )
-      use READH5DATASET
+!  subroutine GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE ( Infile , Number_Of_Viirs_Lines , Error_Out )
+!  it's asking to read number of scans in the viirs_read_mod
+!---------------------------------------------------------------------------------
+   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE ( Infile , Number_Of_Viirs_Lines , Error_Out )
+      use viirs_read_mod , only : &
+          READ_NUMBER_OF_SCANS_FROM_VIIRS
    
       CHARACTER(Len=*), INTENT(IN) :: Infile  
       INTEGER(kind=int4), INTENT(OUT) :: Error_Out
       INTEGER(KIND=INT4), INTENT(OUT):: Number_of_Viirs_Lines
-      CHARACTER(Len=100) :: Setname
-      integer ,dimension(:), pointer ::test
 
       error_out = 0
-      Setname = 'All_Data/VIIRS-MOD-GEO-TC_All/NumberOfScans'
-      call H5READDATASET ( infile , setname , test )
+      call READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile , Number_of_Viirs_Lines , Error_Out )
      
-      Number_of_Viirs_Lines = test(1)
-   
-   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS
+   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE
    
 !-------------------------------------------------
 ! subroutine JULIAN(iday,imonth,iyear,jday)

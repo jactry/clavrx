@@ -61,7 +61,7 @@ module SENSOR_MODULE
    use VIIRS_CLAVRX_BRIDGE , only : &
        READ_VIIRS_DATE_TIME &
        , READ_VIIRS_DATA &
-       , GET_NUMBER_OF_SCANS_FROM_VIIRS &
+       , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
 #endif
 
@@ -779,7 +779,7 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
       Num_Pix = 3200
       Dir_File = trim(Dir_1b) // trim(File_1b)
 #ifdef HDF5LIBS
-      call GET_NUMBER_OF_SCANS_FROM_VIIRS(trim(Dir_File),Num_Scans,Ierror_Viirs_Nscans)
+      call GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE (trim(Dir_File),Num_Scans,Ierror_Viirs_Nscans)
 
       ! If error reading, then go to next file
       if (ierror_viirs_nscans /= 0) then
@@ -788,7 +788,7 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
       endif
 
       ! Check if VIIRS Number of scans is regular (48) and calculate Number of y pixels
-      if (Num_Scans == 48) then
+      if (Num_Scans .ge. 48) then
          Num_Scans = Num_Scans * 16      !16pix per Scan
       elseif (Num_Scans == 47) then
          Num_Scans = (Num_Scans+1) * 16

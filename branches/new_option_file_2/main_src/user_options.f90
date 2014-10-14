@@ -265,11 +265,9 @@ print *, "Acha Mode = ", Acha_Mode
       read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
       read(unit=Default_Lun,fmt=*) Acha_Mode
       read(unit=Default_Lun,fmt=*) Nlcomp_Mode
-      read(unit=Default_Lun,fmt=*) Sst_File_Flag
+      read(unit=Default_Lun,fmt=*) Level2_File_Flag
+      read(unit=Default_Lun,fmt=*) Rtm_File_Flag
       read(unit=Default_Lun,fmt=*) Cld_Flag
-      read(unit=Default_Lun,fmt=*) Aer_Flag
-      read(unit=Default_Lun,fmt=*) Erb_Flag
-      read(unit=Default_Lun,fmt=*) Ash_Flag
       read(unit=Default_Lun,fmt=*) Nwp_Flag
       read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Rtm_Flag

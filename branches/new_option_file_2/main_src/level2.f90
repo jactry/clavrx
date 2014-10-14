@@ -312,7 +312,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      file_Rtm = trim(file_1b_root)//".rtm.hdf"
      print *, EXE_PROMPT, MOD_PROMPT, "creating RTM file ", trim(file_Rtm)
 
-     Sd_Id_Rtm = sfstart(trim(dir_Rtm)//trim(file_Rtm),DFACC_CREATE)
+     Sd_Id_Rtm = sfstart(trim(dir_Level2)//trim(file_Rtm),DFACC_CREATE)
 
      if (Sd_Id_Rtm < 0) then
         print *, EXE_PROMPT, MOD_PROMPT, "Creation of RTM product file failed.  Exiting..."

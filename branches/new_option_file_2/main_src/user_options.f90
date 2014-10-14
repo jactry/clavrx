@@ -43,6 +43,7 @@ module USER_OPTIONS
             QC_CLAVRXORB_OPTIONS
 
   character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
+  character ( len = 50 ) :: data_base_path
   integer :: Dcomp_Mode_User_Set
   contains
 !------------------------------------------------------------------
@@ -239,6 +240,7 @@ print *, "Acha Mode = ", Acha_Mode
     integer::ios0
     integer::erstat
     integer:: Default_Lun
+    integer :: expert_mode
     
     print *, EXE_PROMPT, "DEFAULT FILE READ IN"
     print *, EXE_PROMPT, "Default file to be read in: ", trim(File_Default)
@@ -257,62 +259,44 @@ print *, "Acha Mode = ", Acha_Mode
       print *, EXE_PROMPT, "error opening AVHRR default control file, ios0 = ", ios0
       stop 1
    else
-      read(unit=Default_Lun,fmt=*) Ref_Cal_1b
-      read(unit=Default_Lun,fmt=*) Therm_Cal_1b
-      read(unit=Default_Lun,fmt=*) Bx_File_Flag
-      read(unit=Default_Lun,fmt=*) Nav_Flag
-      read(unit=Default_Lun,fmt=*) Nav_File_Flag
-      read(unit=Default_Lun,fmt=*) Cmr_File_Flag
-      read(unit=Default_Lun,fmt=*) Obs_File_Flag
-      read(unit=Default_Lun,fmt=*) Geo_File_Flag
-      read(unit=Default_Lun,fmt=*) Cld_File_Flag
-      read(unit=Default_Lun,fmt=*) Sst_File_Flag
-      read(unit=Default_Lun,fmt=*) Rtm_File_Flag
-      read(unit=Default_Lun,fmt=*) Ash_File_Flag
-      read(unit=Default_Lun,fmt=*) Level2_File_Flag
-      read(unit=Default_Lun,fmt=*) Level3_Flag
-      read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
+      read(unit=Default_Lun,fmt="(a)") Data_base_path
+      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
       read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
-      read(unit=Default_Lun,fmt=*) Blank_Flag
+      read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
+      read(unit=Default_Lun,fmt=*) Acha_Mode
+      read(unit=Default_Lun,fmt=*) Nlcomp_Mode
+      read(unit=Default_Lun,fmt=*) Sst_File_Flag
       read(unit=Default_Lun,fmt=*) Cld_Flag
       read(unit=Default_Lun,fmt=*) Aer_Flag
       read(unit=Default_Lun,fmt=*) Erb_Flag
       read(unit=Default_Lun,fmt=*) Ash_Flag
-      read(unit=Default_Lun,fmt=*) Use_Sst_Anal_Default
-      read(unit=Default_Lun,fmt=*) Sst_Anal_Opt
-      read(unit=Default_Lun,fmt=*) Dlat
-      read(unit=Default_Lun,fmt=*) Level3_Format
-      read(unit=Default_Lun,fmt=*) Data_Comp_Flag
-      read(unit=Default_Lun,fmt=*) Subset_Pixel_Hdf_Flag
       read(unit=Default_Lun,fmt=*) Nwp_Flag
+      read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Rtm_Flag
-      read(unit=Default_Lun,fmt=*) Modis_Clr_Alb_Flag
+      read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
+      read(unit=Default_Lun,fmt=*) Compress_Flag
+      read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
       read(unit=Default_Lun,fmt=*) Prob_Clear_Res_Flag
       read(unit=Default_Lun,fmt=*) Lrc_Flag
-      read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
+      read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
       read(unit=Default_Lun,fmt=*) Diag_Flag
       read(unit=Default_Lun,fmt=*) ASc_Flag_Diag
       read(unit=Default_Lun,fmt=*) Lat_Min_Limit
       read(unit=Default_Lun,fmt=*) Lat_Max_Limit
-      read(unit=Default_Lun,fmt="(a)") Ancil_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Gfs_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Ncep_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Cfsr_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Oisst_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Snow_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") GlobSnow_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Dark_Comp_Data_Dir
-      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
-      read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
+      read(unit=Default_Lun,fmt=*) Sst_Anal_Opt
       read(unit=Default_Lun,fmt=*) Use_Seebor
       read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
       read(unit=Default_Lun,fmt=*) Read_Land_Mask
       read(unit=Default_Lun,fmt=*) Read_Coast_Mask
       read(unit=Default_Lun,fmt=*) Read_Surface_Elevation
       read(unit=Default_Lun,fmt=*) Read_Volcano_Mask
-      read(unit=Default_Lun,fmt=*) Solzen_min_limit, Solzen_max_limit
       read(unit=Default_Lun,fmt=*) Read_Snow_Mask
       read(unit=Default_Lun,fmt=*) Read_Dark_Comp
+      read(unit=Default_Lun,fmt=*) Ref_Cal_1b
+      read(unit=Default_Lun,fmt=*) Therm_Cal_1b
+      read(unit=Default_Lun,fmt=*) Bx_File_Flag
+      read(unit=Default_Lun,fmt=*) Nav_Flag
+      read(unit=Default_Lun,fmt=*) expert_mode
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
@@ -320,11 +304,11 @@ print *, "Acha Mode = ", Acha_Mode
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
-      read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
-      read(unit=Default_Lun,fmt=*) Acha_Mode
-      read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
     endif
     close(unit=Default_Lun)
+    
+    
+    Modis_Clr_Alb_Flag = 1
 
  end subroutine READ_CLAVRXORB_DEFAULT_OPTIONS
  
@@ -349,8 +333,8 @@ print *, "Acha Mode = ", Acha_Mode
   !---- SET DEFAULT OPTIONS
   
   use_Default = sym%YES
-  default_temp="./clavrxorb_default_options"
-  file_list = "./clavrxorb_file_list"
+  default_temp="./clavrx_options"
+  file_list = "./file_list"
   
   !--- set yes/no options to no as default
   Ref_Cal_1b = sym%NO
@@ -411,13 +395,6 @@ print *, "Acha Mode = ", Acha_Mode
   Nwp_Flag = 1     !--- use GFS
   Rtm_Flag = 1     !--- use PFAST
   
-  !--- default ancillary data directory
-  ancil_data_dir = './data/'
-  gfs_data_dir = './data/gfs_archive/'
-  ncep_data_dir = './data/ncep-reanalysis/'
-  cfsr_data_dir = './data/cfsr/'
-  oisst_data_dir = './data/oisst_archive/'
-  snow_data_dir = './data/snow/'
  
   fargc = iargc()
   
@@ -653,6 +630,17 @@ print *, "Acha Mode = ", Acha_Mode
        file_list=trim(file_list)
     endif
   enddo
+  
+  
+  
+   
+  !--- default ancillary data directory
+  ancil_data_dir = trim(data_base_path)//'/clavrx_ancil_data/'
+  gfs_data_dir = trim(data_base_path)//'gfs/'
+  ncep_data_dir = trim(data_base_path)//'/clavrx_ancil_data/ncep-reanalysis/'
+  cfsr_data_dir = trim(data_base_path)//'/cfsr/'
+  oisst_data_dir = trim(data_base_path)//'/clavrx_ancil_data/oisst/'
+  snow_data_dir = './data/snow/'
 
  end subroutine READ_CLAVRXORB_COMMANDLINE_OPTIONS
 

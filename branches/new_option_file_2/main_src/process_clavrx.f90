@@ -407,18 +407,8 @@
 
    !--- read directories from clavrxorb_input_Files
    read(unit=File_List_Lun,fmt="(a)") Dir_1b
-   read(unit=File_List_Lun,fmt="(a)") Dir_1bx
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_in
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_Out
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cmr
-   read(unit=File_List_Lun,fmt="(a)") Dir_Sst
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cld
-   read(unit=File_List_Lun,fmt="(a)") Dir_Obs
-   read(unit=File_List_Lun,fmt="(a)") Dir_Geo
-   read(unit=File_List_Lun,fmt="(a)") Dir_Rtm
-   read(unit=File_List_Lun,fmt="(a)") Dir_Ash
    read(unit=File_List_Lun,fmt="(a)") Dir_Level2
-   read(unit=File_List_Lun,fmt="(a)") Dir_Level3
+  
 
    !--- reset file counter
    File_Number = 1
@@ -871,7 +861,7 @@
       Segment_Time_Point_Seconds_temp = 0.0
 
       Segment_loop: do Segment_Number = 1,Num_Segments
-   
+        
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
 

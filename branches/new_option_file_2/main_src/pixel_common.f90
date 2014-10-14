@@ -203,6 +203,8 @@ module PIXEL_COMMON
   integer,public, save:: Process_Undetected_Cloud_Flag
   integer,public, save:: DCOMP_Mode
   integer,public, save:: ACHA_Mode
+  integer,public, save:: NLCOMP_Mode
+  integer,public, save:: Mask_Mode
   integer,public, save:: Cld_Flag
   integer,public, save:: Blank_Flag
   integer,public, save:: Aer_Flag
@@ -214,7 +216,7 @@ module PIXEL_COMMON
   integer,public, save:: Rtm_Flag
   integer,public, save:: Prob_Clear_Res_Flag
   integer,public, save:: Smooth_Nwp_Flag
-
+  integer,public, save:: compress_flag
   !---------------------------------------------------------------------------------
   ! Flags Computed within CLAVR-x that describe the sensor data
   !---------------------------------------------------------------------------------

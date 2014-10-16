@@ -1,0 +1,222 @@
+The NEW Way (post 20141009)
+==================================
+
+These are sample data for the file dark_ch1_start_file
+----begin---------------------------------------------
+/data1/Satellite_Input/GOESE1km/CONUS/                                          
+y
+/data1/Ancil_Data/goes_dark_sky_composites/goes131km/CONUS/                     
+n
+area
+        2014
+          82
+          28
+        2002
+east1km
+goes13
+----end-----------------------------------------------
+
+Explanation
+Line 1 (1) Directory holding the area files.  Area files, regardless of day
+ or year should be in this directory or its subdirectories.
+Line 2 (1b) option to have all files in one directory (named in Line 1) or yyyy_ddd sub-directories
+of that Line 1 directory. "y"=yes, all input files are in one directory, "n"=no, they 
+are in yyyy_ddd subdirectories.  Area files can be either uncompressed, or compressed 
+with gzip or bzip2.
+Line 3 (2) Directory where the dark sky composite output files should go.  All 
+ files go here, regardless of year or day.
+Line 4 (2b) option to compress output files: "y" for yes compress output files with gzip,
+"n" for no don't compress
+Line 5 (2c) output format, "dat"=the old binary format, "area"=true area file format.
+Line 6 (3) 4 digit year
+Line 7 (4) 1-to-3 digit day of year
+Line 8 (5) Number of days to composite other than current day.  A positive
+ number means all days used in the composite will be in the past.  A negative
+ number means this many days (absolute value) will be used before the
+ current day and the same number after the current day.  You must use
+ a positive number for real time processing.  You should use a negative number
+ for retrospective processing.  28 and -14 are recommended, respectively.
+Line 9 (6) 4 digit image time, e.g., 0315
+Line 10 (7) image coverage (so program knows what the number of scan lines
+ and elements should be.  These are hardwired in the code at this time.
+Line 11 (8) SSEC id name for the satellite.  They are found in this list
+ if (satname = "goes08") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes09") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes10") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes11") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes12") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes13") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes14") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "goes15") then
+     space_count = 25
+     byte_shift = -5
+ elseif (satname = "met8") then
+     space_count = 0
+     byte_shift = 0
+ elseif (satname = "met9") then
+     space_count = 0
+     byte_shift = 0
+ elseif (satname = "met10") then
+     space_count = 0
+     byte_shift = 0
+ elseif (satname = "mtsat-1r") then
+     space_count = 0
+     byte_shift = 0
+ elseif (satname = "mtsat-2") then
+     space_count = 0
+     byte_shift = 0
+ elseif (satname = "coms-1") then
+     space_count = 0
+     byte_shift = 0
+ else
+     print *,"Unable to process this GOES satellite, stopping"
+ endif
+
+These are the read commands
+ open(unit=8,file=trim(home_path)//"dark_ch1_start_file",status="old",action="read")
+!Line 1) root directory for image files
+ read(unit=8,fmt="(a)") data_path
+!Line 1b) option to have all files in one directory or yyyy_ddd sub-directories
+!"y"=yes, all input files are in one directory, "n"=no, they are in yyyy_doy subdirectories
+ read(unit=8,fmt="(a)") data_path_option
+!Line 2) root directory for output files
+ read(unit=8,fmt="(a)") output_path
+!Line 2b) option to compress output files: "y" for yes compress, "n" for no don't
+ read(unit=8,fmt="(a)") output_gzip_option
+!Line 2c) output format: "dat"=old format, "area"=true area file format
+ read(unit=8,fmt="(a)") output_format
+!Line 3) 4 digit year for image
+ read(unit=8,fmt=*) year
+!Line 4) 1-to-3 digit day-of-year for image
+ read(unit=8,fmt=*) jday
+!Line 5) number of composite days; use 28 for real time or -14 for retro processing
+ read(unit=8,fmt=*) nday_input              !number of days to use in composite
+!Line 6) 4 digit time for image
+ read(unit=8,fmt=*) itime
+!Line 7)
+ read(unit=8,fmt="(a)") domain
+!Line 8) satellite name, up to 10 characters.  Must match list options exactly.
+ read(unit=8,fmt="(a)") satname 
+
+
+
+
+============================================================================
+
+
+
+
+
+The Old Way (pre 20141008)
+==================================
+These are the read commands
+ open(unit=8,file=trim(home_path)//"dark_ch1_start_file",status="old",action="read")
+ read(unit=8,fmt="(a)") data_path
+ read(unit=8,fmt="(a)") output_path
+ read(unit=8,fmt=*) year
+ read(unit=8,fmt=*) jday
+ read(unit=8,fmt=*) nday_input              !number of days to use in composite
+ read(unit=8,fmt=*) itime
+ read(unit=8,fmt="(a)") domain
+ read(unit=8,fmt=*) ssec_id 
+
+These are sample data for the file
+/data1/Satellite_Input/GOESE1km/CONUS/                                          
+/data1/Ancil_Data/goes_dark_sky_composites/goes131km/CONUS/                     
+        2014
+          82
+          28
+        2002
+east1km
+         180
+
+Explanation
+Line 1) Directory holding the area files.  Area files, regardless of day
+ or year should be in this directory.
+Line 2) Directory where the dark sky composite output files should go.  All 
+ files go here, regardless of year or day.
+Line 3) 4 digit year
+Line 4) 1-to-3 digit day of year
+Line 5) Number of days to composite other than current day.  A positive
+ number means all days used in the composite will be in the past.  A negative
+ number means this many days (absolute value) will be used before the
+ current day and the same number after the current day.  You can only use
+ a positive number for real time processing.  You should use a negative number
+ for retrospective processing.  28 and -14 are recommended, respectively.
+Line 6) 4 digit image time
+Line 7) image coverage (so program knows what the number of scan lines
+ and elements should be.
+Line 8) SSEC id number for the satellite.  They are found in this list
+ if (ssec_id == 70) then
+     satname = "goes08"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 72) then
+     satname = "goes09"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 74) then
+     satname = "goes10"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 76) then
+     satname = "goes11"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 78) then
+     satname = "goes12"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 180) then
+     satname = "goes13"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 182) then
+     satname = "goes14"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 184) then
+     satname = "goes15"
+     space_count = 25
+     byte_shift = -5
+ elseif (ssec_id == 51) then
+     satname = "met8"
+     space_count = 0
+     byte_shift = 0
+ elseif (ssec_id == 52) then
+     satname = "met9"
+     space_count = 0
+     byte_shift = 0
+ elseif (ssec_id == 53) then
+     satname = "met10"
+     space_count = 0
+     byte_shift = 0
+ elseif (ssec_id == 84) then
+     satname = "mtsat-1r"
+     space_count = 0
+     byte_shift = 0
+ elseif (ssec_id == 85) then
+     satname = "mtsat-2"
+     space_count = 0
+     byte_shift = 0
+ elseif (ssec_id == 250) then
+     satname = "coms-1"
+     space_count = 0
+     byte_shift = 0
+ else
+     print *,"Unable to process this GOES satellite, stopping"
+ endif

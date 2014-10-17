@@ -173,6 +173,16 @@ if  [ $REG ]; then
          ur_lat=55
          ur_lon=90
       ;;   
+	  
+	  bal)
+         echo "baltic"
+         ll_lat=55
+         ll_lon=5
+         ur_lat=65
+         ur_lon=25
+      ;;   
+	  
+	  
       *)
       echo "unknown area"
    

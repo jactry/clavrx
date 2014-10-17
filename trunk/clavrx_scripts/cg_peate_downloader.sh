@@ -192,7 +192,7 @@ wget -q -O $SCRIPT ${URL}
 
 # make wget look if data exist
 old_strg="-q"
-new_strg="-q -nc"
+new_strg="-q -nc --wait=30 --random-wait "
 sed "s/$old_strg/$new_strg/g"<$SCRIPT >'tmp.txt'
 mv 'tmp.txt' $L1B_PATH/$SCRIPT
 CURR_PATH=${PWD}

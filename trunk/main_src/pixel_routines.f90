@@ -1392,7 +1392,9 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
          !  Rad_obs = Rad_sol + ( 1 - R ) Rad_ch20_ems
          !  Rad_obs = (R * F_0 * mu) / PI + ( 1 - R ) Rad_ch20_ems
          !  == >   R = ( PI (Rad_obs - Rad_ch20_ems )) / ( F_o * mu - PI * Rad_ch20_ems )
-         !
+         !     see Kaufman and Remer IEEE 1994:
+         !   "Detection of  Forests Using Mid-IR Reflectance: An  Application for Aerosol Studies"
+         !   http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=297984
          !
         if ((Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
             solar_irradiance = max ( 0., (Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2))

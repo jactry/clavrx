@@ -1360,6 +1360,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
   real(kind=real4), intent(in):: Sun_Earth_Distance
   integer, intent(in):: j1, j2
   integer:: i,j
+  real :: solar_irradiance
 
   DO j = j1,j1+j2-1
 
@@ -1385,17 +1386,21 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
            Rad_Ch20_ems(i,j) = Missing_Value_Real4
            Ems_Ch20(i,j) = Missing_Value_Real4
         endif
-
-        if ((Solzen(i,j)<90.0).and.(Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
+         
+         ! --->    AW 10/20/2014
+         ! ch(20) %ref_toa is the pseudo solar reflectance in 3.9 channels
+         !  Rad_obs = Rad_sol + ( 1 - R ) Rad_ch20_ems
+         !  Rad_obs = (R * F_0 * mu) / PI + ( 1 - R ) Rad_ch20_ems
+         !  == >   R = ( PI (Rad_obs - Rad_ch20_ems )) / ( F_o * mu - PI * Rad_ch20_ems )
+         !
+         !
+        if ((Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
+            solar_irradiance = max ( 0., (Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2))
            ch(20)%Ref_Toa(i,j) = 100.0*pi*(ch(20)%Rad_Toa(i,j)-Rad_Ch20_ems(i,j)) /  &
-                        ((Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2) - &
-                          pi*Rad_Ch20_ems(i,j) )
+                        ( solar_irradiance - pi*Rad_Ch20_ems(i,j) )
         endif
 
-         !---- at night, compute albeDO as 1 - emissivity
-        if ((Solzen(i,j)>=90.0).and.(Ems_Ch20(i,j)/=Missing_Value_Real4)) then
-          ch(20)%Ref_Toa(i,j) = 100.0*(1.0-Ems_Ch20(i,j))
-        endif
+        
 
         !--- constrain values
         if (ch(20)%Ref_Toa(i,j) /= Missing_Value_Real4) then

@@ -198,25 +198,25 @@ module AWG_CLOUD_HEIGHT
 !
 !
 !------------------------------------------------------------------------------
-  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, symbol, Output)
+   subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, symbol, Output)
 
-  !===============================================================================
-  !  Argument Declaration
-  !==============================================================================
+      !===============================================================================
+      !  Argument Declaration
+      !==============================================================================
 
-  type(symbol_acha), intent(inout) :: symbol
-  type(acha_input_struct), intent(inout) :: Input
-  type(acha_output_struct), intent(inout) :: Output
+      type(symbol_acha), intent(inout) :: symbol
+      type(acha_input_struct), intent(inout) :: Input
+      type(acha_output_struct), intent(inout) :: Output
 
-  !===============================================================================
-  !  Pixel level RTM structure
-  !===============================================================================
+      !===============================================================================
+      !  Pixel level RTM structure
+      !===============================================================================
  
-  type(acha_rtm_nwp_struct) :: ACHA_RTM_NWP
+      type(acha_rtm_nwp_struct) :: ACHA_RTM_NWP
 
-  !===============================================================================
-  !  Local Variable Declaration
-  !===============================================================================
+      !===============================================================================
+      !  Local Variable Declaration
+      !===============================================================================
 
   integer (kind=int4):: Smooth_Nwp_Fields_Flag_Temp
   integer :: ACHA_Mode_Flag
@@ -361,7 +361,7 @@ module AWG_CLOUD_HEIGHT
 ! real (kind=real4):: Tc_H2O
 ! real (kind=real4):: Zc_H2O
 
-  integer (kind=int4):: NWP_Profile_Inversion_Flag
+   integer (kind=int4):: NWP_Profile_Inversion_Flag
   integer (kind=int4):: Itemp
 
 !-----------------------------------------------------------------------

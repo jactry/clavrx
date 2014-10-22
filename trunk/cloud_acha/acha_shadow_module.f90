@@ -74,13 +74,15 @@ subroutine CLOUD_SHADOW_RETR (  &
       integer :: i,j
       real :: delta_lon, delta_Lat
       integer :: i_dim, j_dim
+      integer :: dim_cloud_height ( 2)
       
       !--- initialize output
       cloud_shadow = 0
 
       !--- allocate local memory
-      allocate ( Distance_km, source = Cloud_Height) 
-      allocate ( Lon_Spacing_Per_m, source = Cloud_Height)
+      dim_cloud_height = size ( cloud_height)
+      allocate ( Distance_km ( dim_cloud_height(1) ,  dim_cloud_height(2)) , source = Cloud_Height) 
+      allocate ( Lon_Spacing_Per_m (  dim_cloud_height(1) ,  dim_cloud_height(2)) , source = Cloud_Height)
       
       Distance_km = Cloud_Height * tan (Solar_Zenith * DTOR )
       
@@ -139,7 +141,7 @@ subroutine CLOUD_SHADOW_RETR (  &
       real :: diff_Lat , diff_lon
       real :: delta_Lat_ii , delta_Lat_jj
       real :: delta_lon_ii , delta_lon_jj
-      real :: long_idx,short_idx
+      integer :: long_idx,short_idx
       integer :: short_idx_arr
       
       integer :: dim_1 , dim_2
@@ -178,7 +180,7 @@ subroutine CLOUD_SHADOW_RETR (  &
             idx_1 = i + sign(k,ii)
             if (idx_1 < 1 .or. idx_1 > dim_1 ) cycle
              
-            short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,jj) / (1.* long_idx ) ) 
        
             idx_2 = j + short_idx_arr
             if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , idx_2 )   = 1
@@ -188,7 +190,7 @@ subroutine CLOUD_SHADOW_RETR (  &
             idx_2 = j + sign(k,jj)
           
             if (idx_2 < 1 .or. idx_2 > dim_2 ) cycle
-            short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,ii) / ( 1.* long_idx)  ) 
             
             idx_1 = i + short_idx_arr
             

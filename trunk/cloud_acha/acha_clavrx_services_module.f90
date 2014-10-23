@@ -77,8 +77,6 @@ module ACHA_SERVICES_MOD
  integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
  real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
  real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
-
- !--- optional variables
  integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
  integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
  real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
@@ -150,7 +148,6 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Mid_Cloud_Fraction
    real, dimension(:,:), pointer:: Low_Cloud_Fraction
    integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
-
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf

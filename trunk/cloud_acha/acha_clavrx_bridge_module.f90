@@ -6,7 +6,7 @@
 !  the CLAVR-x processing system and the ACHA code.
 !
 !------------------------------------------------------------------------------
-module ACHA_CLAVRX_BRIDGE_MOD
+module ACHA_CLAVRX_BRIDGE
 
  use AWG_CLOUD_HEIGHT
  use ACHA_COMP
@@ -70,21 +70,20 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !-----------------------------------------------------------------------
    !--- Call to Geometrical Shadow Algorithm
    !-----------------------------------------------------------------------
-   call CLOUD_SHADOW_RETR (  &
-           Zc_Acha &
-         , SolAz &
-         , Solzen &
-         , Lat &
-         , Lon &
-         , Lat_Pc &
-         , Lon_Pc &
-         , Shadow_Mask ) 
+!  call CLOUD_SHADOW_RETR (  &
+!          Zc_Acha &
+!        , SolAz &
+!        , Solzen &
+!        , Lat &
+!        , Lon &
+!        , Lat_Pc &
+!        , Lon_Pc &
+!        , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
    where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  
            Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
    end where
-
 
    !--- cloud cover layers
    call COMPUTE_CLOUD_COVER_LAYERS(Input,Symbol, Output)
@@ -100,7 +99,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !-----------------------------------------------------------------------
    call SET_ACHA_VERSION(Acha_Version)
 
-
  end subroutine AWG_CLOUD_HEIGHT_BRIDGE
 
  !-----------------------------------------------------------------------------
@@ -108,13 +106,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
  !-----------------------------------------------------------------------------
  subroutine NULL_INPUT()
      Input%Invalid_Data_Mask =>  null()
-     Input%Elem_Idx_Nwp =>   null()
-     Input%Line_Idx_Nwp =>  null()
-     Input%Elem_Idx_Opposite_Corner_NWP =>  null()
-     Input%Line_Idx_Opposite_Corner_NWP =>  null()
-     Input%Longitude_Interp_Weight_NWP =>  null()
-     Input%Latitude_Interp_Weight_NWP =>  null()
-     Input%Viewing_Zenith_Angle_Idx_Rtm =>  null()
      Input%Bt_67um =>  null()
      Input%Bt_85um =>  null()
      Input%Bt_11um =>  null()
@@ -122,27 +113,35 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Input%Bt_133um =>  null()
      Input%Rad_67um =>  null()
      Input%Rad_11um =>  null()
+     Input%Covar_Bt_11um_67um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
      Input%Sensor_Zenith_Angle =>  null()
      Input%Sensor_Azimuth_Angle =>  null()
-     Input%Latitude =>  null()
-     Input%Longitude =>  null()
-     Input%Snow_Class =>  null()
-     Input%Surface_Type =>  null()
      Input%Surface_Temperature => null()
      Input%Surface_Air_Temperature =>  null()
      Input%Tropopause_Temperature =>  null()
      Input%Surface_Pressure =>  null()
      Input%Surface_Elevation =>  null()
-     Input%Cloud_Mask =>  null()
-     Input%Cloud_Probability => null()
-     Input%Cloud_Type =>  null()
+     Input%Latitude =>  null()
+     Input%Longitude =>  null()
      Input%Rad_Clear_67um =>  null()
      Input%Rad_Clear_85um =>  null()
      Input%Rad_Clear_11um =>  null()
      Input%Rad_Clear_12um =>  null()
      Input%Rad_Clear_133um =>  null()
      Input%Surface_Emissivity_39um =>  null()
+     Input%Snow_Class =>  null()
+     Input%Surface_Type =>  null()
+     Input%Cloud_Mask =>  null()
+     Input%Cloud_Probability => null()
+     Input%Cloud_Type =>  null()
+     Input%Elem_Idx_Nwp =>   null()
+     Input%Line_Idx_Nwp =>  null()
+     Input%Elem_Idx_Opposite_Corner_NWP =>  null()
+     Input%Line_Idx_Opposite_Corner_NWP =>  null()
+     Input%Viewing_Zenith_Angle_Idx_Rtm =>  null()
+     Input%Latitude_Interp_Weight_NWP =>  null()
+     Input%Longitude_Interp_Weight_NWP =>  null()
      Input%Elem_Idx_LRC_Input =>  null()
      Input%Line_Idx_LRC_Input =>   null()
      Input%Tc_Cirrus_Sounder =>   null()
@@ -168,19 +167,18 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Output%Lower_Cloud_Pressure =>  null()
      Output%Lower_Cloud_Temperature =>  null()
      Output%Lower_Cloud_Height =>  null()
-     Output%Qf =>  null()
-     Output%OE_Qf =>  null()
-     Output%Packed_Qf =>  null()
-     Output%Packed_Meta_Data =>  null()
-     Output%Processing_Order  =>  null()
      Output%Cost =>  null()
-     Output%Cloud_Layer =>  null()
      Output%Total_Cloud_Fraction =>  null()
      Output%Total_Cloud_Fraction_Uncer =>  null()
      Output%High_Cloud_Fraction =>  null()
      Output%Mid_Cloud_Fraction =>  null()
      Output%Low_Cloud_Fraction =>  null()
- 
+     Output%Cloud_Layer =>  null()
+     Output%Qf =>  null()
+     Output%OE_Qf =>  null()
+     Output%Packed_Qf =>  null()
+     Output%Packed_Meta_Data =>  null()
+     Output%Processing_Order  =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -348,4 +346,4 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Co2
  end subroutine SET_INPUT
 
-end module ACHA_CLAVRX_BRIDGE_MOD
+end module ACHA_CLAVRX_BRIDGE

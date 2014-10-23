@@ -20,8 +20,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  ! define structures that will be arguments 
  !--------------------------------------------------------------------
  type(Symbol_acha), private :: Symbol
- type(acha_input_struct), private :: Base_Input
- type(acha_output_struct), private :: Base_Output
+ type(acha_input_struct), private :: Input
+ type(acha_output_struct), private :: Output
 
  contains
 
@@ -53,9 +53,9 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
    !-----------------------------------------------------------------------
-   call CLOUD_BASE_ALGORITHM(Base_Input, &
+   call CLOUD_BASE_ALGORITHM(Input, &
                              Symbol, &
-                             Base_Output)
+                             Output)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -69,82 +69,49 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  ! Nullify the pointers holding input to ACHA
  !-----------------------------------------------------------------------------
  subroutine NULL_INPUT_POINTERS()
-     Base_Input%Invalid_Data_Mask =>  null()
-     Base_Input%Elem_Idx_Nwp =>   null()
-     Base_Input%Line_Idx_Nwp =>  null()
-     Base_Input%Elem_Idx_Opposite_Corner_NWP =>  null()
-     Base_Input%Line_Idx_Opposite_Corner_NWP =>  null()
-     Base_Input%Longitude_Interp_Weight_NWP =>  null()
-     Base_Input%Latitude_Interp_Weight_NWP =>  null()
-     Base_Input%Viewing_Zenith_Angle_Idx_Rtm =>  null()
-     Base_Input%Bt_67um =>  null()
-     Base_Input%Bt_85um =>  null()
-     Base_Input%Bt_11um =>  null()
-     Base_Input%Bt_12um =>  null()
-     Base_Input%Bt_133um =>  null()
-     Base_Input%Rad_67um =>  null()
-     Base_Input%Rad_11um =>  null()
-     Base_Input%Cosine_Zenith_Angle =>  null()
-     Base_Input%Sensor_Zenith_Angle =>  null()
-     Base_Input%Sensor_Azimuth_Angle =>  null()
-     Base_Input%Latitude =>  null()
-     Base_Input%Longitude =>  null()
-     Base_Input%Snow_Class =>  null()
-     Base_Input%Surface_Type =>  null()
-     Base_Input%Surface_Temperature => null()
-     Base_Input%Surface_Air_Temperature =>  null()
-     Base_Input%Tropopause_Temperature =>  null()
-     Base_Input%Surface_Pressure =>  null()
-     Base_Input%Surface_Elevation =>  null()
-     Base_Input%Cloud_Mask =>  null()
-     Base_Input%Cloud_Probability => null()
-     Base_Input%Cloud_Type =>  null()
-     Base_Input%Rad_Clear_67um =>  null()
-     Base_Input%Rad_Clear_85um =>  null()
-     Base_Input%Rad_Clear_11um =>  null()
-     Base_Input%Rad_Clear_12um =>  null()
-     Base_Input%Rad_Clear_133um =>  null()
-     Base_Input%Surface_Emissivity_39um =>  null()
-     Base_Input%Elem_Idx_LRC_Input =>  null()
-     Base_Input%Line_Idx_LRC_Input =>   null()
-     Base_Input%Tc_Cirrus_Sounder =>   null()
+     Input%Invalid_Data_Mask =>  null()
+     Input%Elem_Idx_Nwp =>   null()
+     Input%Line_Idx_Nwp =>  null()
+     Input%Elem_Idx_Opposite_Corner_NWP =>  null()
+     Input%Line_Idx_Opposite_Corner_NWP =>  null()
+     Input%Longitude_Interp_Weight_NWP =>  null()
+     Input%Latitude_Interp_Weight_NWP =>  null()
+     Input%Viewing_Zenith_Angle_Idx_Rtm =>  null()
+     Input%Cosine_Zenith_Angle =>  null()
+     Input%Sensor_Zenith_Angle =>  null()
+     Input%Latitude =>  null()
+     Input%Longitude =>  null()
+     Input%Surface_Type =>  null()
+     Input%Surface_Elevation =>  null()
+     Input%Cloud_Mask =>  null()
+     Input%Cloud_Probability => null()
+     Input%Cloud_Type =>  null()
+     Input%Elem_Idx_LRC_Input =>  null()
+     Input%Line_Idx_LRC_Input =>   null()
+     Input%Latitude_Pc =>  null()
+     Input%Longitude_Pc =>  null()
+     Input%Tc =>  null()
+     Input%Ec =>  null()
+     Input%Beta =>  null()
+     Input%Pc =>  null()
+     Input%Zc =>  null()
+     Input%Tau =>  null()
+     Input%Reff =>  null()
+     Input%Tc_Uncertainty =>  null()
+     Input%Ec_Uncertainty =>  null()
+     Input%Beta_Uncertainty =>  null()
+     Input%Pc_Uncertainty =>  null()
+     Input%Zc_Uncertainty =>  null()
+     Input%Lower_Cloud_Pressure =>  null()
+     Input%Lower_Cloud_Temperature =>  null()
+     Input%Lower_Cloud_Height =>  null()
  end subroutine NULL_INPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output to ACHA
  !-----------------------------------------------------------------------------
  subroutine NULL_OUTPUT_POINTERS()
-     Base_Output%Latitude_Pc =>  null()
-     Base_Output%Longitude_Pc =>  null()
-     Base_Output%Tc =>  null()
-     Base_Output%Ec =>  null()
-     Base_Output%Beta =>  null()
-     Base_Output%Pc =>  null()
-     Base_Output%Zc =>  null()
-     Base_Output%Tau =>  null()
-     Base_Output%Reff =>  null()
-     Base_Output%Tc_Uncertainty =>  null()
-     Base_Output%Ec_Uncertainty =>  null()
-     Base_Output%Beta_Uncertainty =>  null()
-     Base_Output%Pc_Uncertainty =>  null()
-     Base_Output%Zc_Uncertainty =>  null()
-     Base_Output%Lower_Cloud_Pressure =>  null()
-     Base_Output%Lower_Cloud_Temperature =>  null()
-     Base_Output%Lower_Cloud_Height =>  null()
-     Base_Output%Zc_Top =>  null()
-     Base_Output%Zc_Base =>  null()
-     Base_Output%Qf =>  null()
-     Base_Output%OE_Qf =>  null()
-     Base_Output%Packed_Qf =>  null()
-     Base_Output%Packed_Meta_Data =>  null()
-     Base_Output%Processing_Order  =>  null()
-     Base_Output%Cost =>  null()
-     Base_Output%Cloud_Layer =>  null()
-     Base_Output%Total_Cloud_Fraction =>  null()
-     Base_Output%Total_Cloud_Fraction_Uncer =>  null()
-     Base_Output%High_Cloud_Fraction =>  null()
-     Base_Output%Mid_Cloud_Fraction =>  null()
-     Base_Output%Low_Cloud_Fraction =>  null()
- 
+     Output%Zc_Top =>  null()
+     Output%Zc_Base =>  null()
  end subroutine NULL_OUTPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -211,107 +178,70 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
-   Base_Output%Latitude_Pc => Lat_Pc
-   Base_Output%Longitude_Pc => Lon_Pc
-   Base_Output%Tc => Tc_Acha
-   Base_Output%Ec => Ec_Acha
-   Base_Output%Beta => Beta_Acha
-   Base_Output%Pc => Pc_Acha
-   Base_Output%Zc => Zc_Acha
-   Base_Output%Tau => Tau_Acha
-   Base_Output%Reff => Reff_Acha
-   Base_Output%Tc_Uncertainty => Tc_Acha_Uncertainty
-   Base_Output%Ec_Uncertainty => Ec_Acha_Uncertainty
-   Base_Output%Beta_Uncertainty => Beta_Acha_Uncertainty
-   Base_Output%Pc_Uncertainty => Pc_Acha_Uncertainty
-   Base_Output%Zc_Uncertainty => Zc_Acha_Uncertainty
-   Base_Output%Lower_Cloud_Pressure => Pc_Lower_Cloud
-   Base_Output%Lower_Cloud_Temperature => Tc_Lower_Cloud
-   Base_Output%Lower_Cloud_Height => Zc_Lower_Cloud
-   Base_Output%Zc_Top => Zc_Top_Acha
-   Base_Output%Zc_Base => Zc_Base_Acha
-   Base_Output%Qf => Acha_Quality_Flag
-   Base_Output%OE_Qf => Acha_OE_Quality_Flags
-   Base_Output%Packed_Qf => Acha_Packed_Quality_Flags
-   Base_Output%Packed_Meta_Data => Acha_Packed_Meta_Data_Flags
-   Base_Output%Processing_Order  => Acha_Processing_Order_Global
-   Base_Output%Cost  => Cost_Acha
-   Base_Output%Cloud_Layer  => Cld_Layer_Acha
-   Base_Output%Total_Cloud_Fraction => Cloud_Fraction_3x3
-   Base_Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer_3x3
-   Base_Output%High_Cloud_Fraction => High_Cloud_Fraction_3x3
-   Base_Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction_3x3
-   Base_Output%Low_Cloud_Fraction => Low_Cloud_Fraction_3x3
+   Output%Zc_Top => Zc_Top_Acha
+   Output%Zc_Base => Zc_Base_Acha
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()
-   Base_Input%Number_of_Elements = Num_Pix
-   Base_Input%Number_of_Lines = Num_Scans_Read
-   Base_Input%Number_of_Lines = Num_Scans_Per_Segment
-   Base_Input%Num_Line_Max = Num_Scans_Per_Segment
-   Base_Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
-   Base_Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
-   Base_Input%ACHA_Mode_Flag_In = ACHA_MODE
-   Base_Input%Sensor_Resolution_KM = Sensor_Resolution_KM
+   Input%Number_of_Elements = Num_Pix
+   Input%Number_of_Lines = Num_Scans_Read
+   Input%Number_of_Lines = Num_Scans_Per_Segment
+   Input%Num_Line_Max = Num_Scans_Per_Segment
 
-   Base_Input%Chan_Idx_67um = 27     !channel number for 6.7
-   Base_Input%Chan_Idx_85um = 29     !channel number for 8.5
-   Base_Input%Chan_Idx_11um = 31     !channel number for 11
-   Base_Input%Chan_Idx_12um = 32     !channel number for 12
-   Base_Input%Chan_Idx_133um = 33  !channel number for 13.3
+   Input%Chan_Idx_67um = 27     !channel number for 6.7
+   Input%Chan_Idx_85um = 29     !channel number for 8.5
+   Input%Chan_Idx_11um = 31     !channel number for 11
+   Input%Chan_Idx_12um = 32     !channel number for 12
+   Input%Chan_Idx_133um = 33  !channel number for 13.3
 
-   Base_Input%Chan_On_67um = Chan_On_Flag_Default(27)
-   Base_Input%Chan_On_85um = Chan_On_Flag_Default(29)
-   Base_Input%Chan_On_11um = Chan_On_Flag_Default(31)
-   Base_Input%Chan_On_12um = Chan_On_Flag_Default(32)
-   Base_Input%Chan_On_133um = Chan_On_Flag_Default(33)
+   Input%Chan_On_67um = Chan_On_Flag_Default(27)
+   Input%Chan_On_85um = Chan_On_Flag_Default(29)
+   Input%Chan_On_11um = Chan_On_Flag_Default(31)
+   Input%Chan_On_12um = Chan_On_Flag_Default(32)
+   Input%Chan_On_133um = Chan_On_Flag_Default(33)
 
-   Base_Input%Invalid_Data_Mask => Bad_Pixel_Mask
-   Base_Input%Elem_Idx_Nwp =>  I_Nwp
-   Base_Input%Line_Idx_Nwp => J_Nwp
-   Base_Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
-   Base_Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
-   Base_Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
-   Base_Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
-   Base_Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
-   Base_Input%Bt_67um => ch(27)%Bt_Toa
-   Base_Input%Bt_85um => ch(29)%Bt_Toa
-   Base_Input%Bt_11um => ch(31)%Bt_Toa
-   Base_Input%Bt_12um => ch(32)%Bt_Toa
-   Base_Input%Bt_133um => ch(33)%Bt_Toa
-   Base_Input%Covar_Bt_11um_67um => Covar_Ch27_Ch31_5x5
+   Input%Invalid_Data_Mask => Bad_Pixel_Mask
+   Input%Elem_Idx_Nwp =>  I_Nwp
+   Input%Line_Idx_Nwp => J_Nwp
+   Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
+   Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
+   Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
+   Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
+   Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
 
-   Base_Input%Rad_67um => ch(27)%Rad_Toa
-   Base_Input%Rad_11um => ch(31)%Rad_Toa
-   Base_Input%Cosine_Zenith_Angle => Coszen
-   Base_Input%Sensor_Zenith_Angle => Satzen
-   Base_Input%Sensor_Azimuth_Angle => Sataz
-   Base_Input%Latitude => Lat
-   Base_Input%Longitude => Lon
+   Input%Cosine_Zenith_Angle => Coszen
+   Input%Sensor_Zenith_Angle => Satzen
+   Input%Latitude => Lat
+   Input%Longitude => Lon
 
-   Base_Input%Snow_Class => Snow
-   Base_Input%Surface_Type => Sfc_Type
+   Input%Surface_Type => Sfc_Type
 
-   Base_Input%Surface_Temperature =>Tsfc_Nwp_Pix
-   Base_Input%Surface_Air_Temperature => Tair_Nwp_Pix
-   Base_Input%Tropopause_Temperature => Ttropo_Nwp_Pix
-   Base_Input%Surface_Pressure => Psfc_Nwp_Pix
+   Input%Surface_Elevation => Zsfc
+   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Type => Cld_Type
+   Input%Cloud_Probability => Posterior_Cld_Probability
 
-   Base_Input%Surface_Elevation => Zsfc
-   Base_Input%Cloud_Mask => Cld_Mask
-   Base_Input%Cloud_Type => Cld_Type
-   Base_Input%Cloud_Probability => Posterior_Cld_Probability
+   Input%Elem_Idx_LRC_Input => I_LRC
+   Input%Line_Idx_LRC_Input =>  J_LRC
 
-   Base_Input%Rad_Clear_67um => ch(27)%Rad_Toa_Clear
-   Base_Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
-   Base_Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
-   Base_Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
-   Base_Input%Rad_Clear_133um => ch(33)%Rad_Toa_Clear
-   Base_Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
+   Input%Latitude_Pc => Lat_Pc
+   Input%Longitude_Pc => Lon_Pc
+   Input%Tc => Tc_Acha
+   Input%Ec => Ec_Acha
+   Input%Beta => Beta_Acha
+   Input%Pc => Pc_Acha
+   Input%Zc => Zc_Acha
+   Input%Tau => Tau_Acha
+   Input%Reff => Reff_Acha
+   Input%Tc_Uncertainty => Tc_Acha_Uncertainty
+   Input%Ec_Uncertainty => Ec_Acha_Uncertainty
+   Input%Beta_Uncertainty => Beta_Acha_Uncertainty
+   Input%Pc_Uncertainty => Pc_Acha_Uncertainty
+   Input%Zc_Uncertainty => Zc_Acha_Uncertainty
+   Input%Lower_Cloud_Pressure => Pc_Lower_Cloud
+   Input%Lower_Cloud_Temperature => Tc_Lower_Cloud
+   Input%Lower_Cloud_Height => Zc_Lower_Cloud
 
-   Base_Input%Elem_Idx_LRC_Input => I_LRC
-   Base_Input%Line_Idx_LRC_Input =>  J_LRC
-   Base_Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Co2
  end subroutine SET_INPUT
 
 end module CLOUD_BASE_CLAVRX_BRIDGE

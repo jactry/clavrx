@@ -14,7 +14,7 @@ module CLOUD_BASE
 
   public:: CLOUD_BASE_ALGORITHM
 
-  private:: INTERPOLATE_PROFILE_ACHA
+  private:: INTERPOLATE_PROFILE_LOCAL
   private:: NULL_PIX_POINTERS 
 
   !--- include the non-system specific variables
@@ -70,7 +70,7 @@ module CLOUD_BASE
   !  Pixel level RTM structure
   !===============================================================================
  
-  type(acha_rtm_nwp_struct) :: ACHA_RTM_NWP
+  type(acha_rtm_nwp_struct) :: RTM_NWP
 
   !===============================================================================
   !  Local Variable Declaration
@@ -110,49 +110,55 @@ module CLOUD_BASE
 
     Element_Loop:   do Elem_Idx = 1, Input%Number_of_Elements
 
+     if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) cycle
+     if ((Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0) .or. &
+         (Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) <= 0)) then
+         cycle
+    endif
+
     !---- null profile pointers each time - WCS3
-    call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+    call NULL_PIX_POINTERS(Input, RTM_NWP)
 
     !--- for convenience, save nwp indices to local variables
     Inwp_Weight = Input%Longitude_Interp_Weight_NWP(Elem_Idx,Line_Idx)
     Jnwp_Weight = Input%Latitude_Interp_Weight_NWP(Elem_Idx,Line_Idx)
     Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
-    
+
     !-----------------------------------------------------------------------
     ! include code to setup local profiles correctly 
     !-----------------------------------------------------------------------
     
     !Call Services module
-    call ACHA_FETCH_PIXEL_NWP_RTM(Input, symbol, &
-                                  Elem_Idx,Line_Idx, ACHA_RTM_NWP)
+    call FETCH_PIXEL_RTM_NWP(Input, Symbol, &
+                             Elem_Idx,Line_Idx, RTM_NWP)
     
-    Sfc_Level_RTM = ACHA_RTM_NWP%Sfc_Level
-    Tropo_Level_RTM = ACHA_RTM_NWP%Tropo_Level
+    Sfc_Level_RTM = RTM_NWP%Sfc_Level
+    Tropo_Level_RTM = RTM_NWP%Tropo_Level
     
-    Press_Prof_RTM =  ACHA_RTM_NWP%P_Prof
+    Press_Prof_RTM =  RTM_NWP%P_Prof
 
     !do smoothing routines here - WCS3
-    if (ACHA_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp == symbol%YES) then
+    if (RTM_NWP%Smooth_Nwp_Fields_Flag_Temp == symbol%YES) then
 
        !--- height profile       
-       Hght_Prof_RTM = INTERPOLATE_PROFILE_ACHA( ACHA_RTM_NWP%Z_Prof, &
-                                                 ACHA_RTM_NWP%Z_Prof_1, &
-                                                 ACHA_RTM_NWP%Z_Prof_2, &
-                                                 ACHA_RTM_NWP%Z_Prof_3, &
-                                                 Inwp_Weight,Jnwp_Weight)
+       Hght_Prof_RTM = INTERPOLATE_PROFILE_LOCAL( RTM_NWP%Z_Prof, &
+                                            RTM_NWP%Z_Prof_1, &
+                                            RTM_NWP%Z_Prof_2, &
+                                            RTM_NWP%Z_Prof_3, &
+                                            Inwp_Weight,Jnwp_Weight)
 
       !--- temperature profile
-      Temp_Prof_RTM = INTERPOLATE_PROFILE_ACHA( ACHA_RTM_NWP%T_Prof, &
-                                                ACHA_RTM_NWP%T_Prof_1, &
-                                                ACHA_RTM_NWP%T_Prof_2, &
-                                                ACHA_RTM_NWP%T_Prof_3, &
-                                                Inwp_Weight,Jnwp_Weight)
+      Temp_Prof_RTM = INTERPOLATE_PROFILE_LOCAL( RTM_NWP%T_Prof, &
+                                           RTM_NWP%T_Prof_1, &
+                                           RTM_NWP%T_Prof_2, &
+                                           RTM_NWP%T_Prof_3, &
+                                           Inwp_Weight,Jnwp_Weight)
 
     
     else
 
-       Hght_Prof_RTM = ACHA_RTM_NWP%Z_Prof
-       Temp_Prof_RTM = ACHA_RTM_NWP%T_Prof
+       Hght_Prof_RTM = RTM_NWP%Z_Prof
+       Temp_Prof_RTM = RTM_NWP%T_Prof
     
     endif
 
@@ -162,41 +168,39 @@ module CLOUD_BASE
     !--- Note 1. Extinction values are in km^(-1)
     !--- Note 2. All heights and thickness are converted to meters
     !-----------------------------------------------------------------------------
-    Output%Zc_Top = MISSING_VALUE_REAL
-    Output%Zc_Base = MISSING_VALUE_REAL
-    if (Output%Zc(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
-        Output%Tau(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
+    if (Input%Zc(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
+        Input%Tau(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
 
        Cloud_Extinction = WATER_EXTINCTION
 
-       if(Cloud_Type == symbol%OPAQUE_ICE_TYPE .or. &
-          Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
-          select case (Itemp)
+       if (Cloud_Type == symbol%OPAQUE_ICE_TYPE .or. &
+           Cloud_Type == symbol%OVERSHOOTING_TYPE) then
+           Itemp = int(Input%Tc(Elem_Idx,Line_Idx))
+           select case (Itemp)
             case (:199)    ; Cloud_Extinction = ICE_EXTINCTION1
             case (200:219) ; Cloud_Extinction = ICE_EXTINCTION2
             case (220:239) ; Cloud_Extinction = ICE_EXTINCTION3
             case (240:259) ; Cloud_Extinction = ICE_EXTINCTION4
             case (260:)    ; Cloud_Extinction = ICE_EXTINCTION5
-          end select
+           end select
        endif
 
-       if(Cloud_Type == symbol%CIRRUS_TYPE .or. &
-          Cloud_Type == symbol%OVERLAP_TYPE) then
-          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
-          select case (Itemp)
+       if (Cloud_Type == symbol%CIRRUS_TYPE .or. &
+           Cloud_Type == symbol%OVERLAP_TYPE) then
+           Itemp = int(Input%Tc(Elem_Idx,Line_Idx))
+           select case (Itemp)
             case (:199)    ; Cloud_Extinction = CIRRUS_EXTINCTION1
             case (200:219) ; Cloud_Extinction = CIRRUS_EXTINCTION2
             case (220:239) ; Cloud_Extinction = CIRRUS_EXTINCTION3
             case (240:259) ; Cloud_Extinction = CIRRUS_EXTINCTION4
-            case (260:)    ; Cloud_Extinction = CIRRUS_EXTINCTION5
+             case (260:)    ; Cloud_Extinction = CIRRUS_EXTINCTION5
           end select
        endif
 
-       Cloud_Geometrical_Thickness = Output%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction   !(km)
+       Cloud_Geometrical_Thickness = Input%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction   !(km)
        Cloud_Geometrical_Thickness = Cloud_Geometrical_Thickness * 1000.0 !(m)
 
-       if (Output%Tau(Elem_Idx,Line_Idx) < 2.0) then 
+       if (Input%Tau(Elem_Idx,Line_Idx) < 2.0) then 
           Cloud_Geometrical_Thickness_Top_Offset = Cloud_Geometrical_Thickness/2.0    !(m)
        else
           Cloud_Geometrical_Thickness_Top_Offset = 1000.0 / Cloud_Extinction !(m)
@@ -206,15 +210,15 @@ module CLOUD_BASE
        Zc_Base_Min = Hght_Prof_RTM(Sfc_Level_RTM)
 
        !-- new code
-       if (Output%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-          Output%Zc_Top(Elem_Idx,Line_Idx) = Output%Zc(Elem_Idx,Line_Idx)
+       if (Input%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
+          Output%Zc_Top(Elem_Idx,Line_Idx) = Input%Zc(Elem_Idx,Line_Idx)
        else
           Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
-                                             Output%Zc(Elem_Idx,Line_Idx) +  &
+                                             Input%Zc(Elem_Idx,Line_Idx) +  &
                                              Cloud_Geometrical_Thickness_Top_Offset)
        endif
 
-       Output%Zc_Base(Elem_Idx,Line_Idx) = min(Output%Zc(Elem_Idx,Line_Idx), &
+       Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
 
@@ -222,7 +226,7 @@ module CLOUD_BASE
 
 
  !---- null profile pointers each time  - REALLY?
- CALL NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+ CALL NULL_PIX_POINTERS(Input, RTM_NWP)
 
  end do Element_Loop
 
@@ -231,7 +235,7 @@ end do Line_Loop
 end subroutine CLOUD_BASE_ALGORITHM
 
 !----------------------------------------------------------------------------
-! Function INTERPOLATE_PROFILE_ACHA
+! Function INTERPOLATE_PROFILE_LOCAL
 !
 ! general interpoLation routine for profiles
 !
@@ -248,7 +252,7 @@ end subroutine CLOUD_BASE_ALGORITHM
 !
 !
 !---------------------------------------------------------------------------
- function INTERPOLATE_PROFILE_ACHA(z1,z2,z3,z4,lonx,Latx) result(z)
+ function INTERPOLATE_PROFILE_LOCAL(z1,z2,z3,z4,lonx,Latx) result(z)
 
   real, dimension(:), intent(in):: z1
   real, dimension(:), intent(in):: z2
@@ -262,48 +266,48 @@ end subroutine CLOUD_BASE_ALGORITHM
   z =  (1.0-lonx) * ((1.0-Latx) * z1 + (Latx)* z3) + &
            (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
 
- end function INTERPOLATE_PROFILE_ACHA
+ end function INTERPOLATE_PROFILE_LOCAL
+
 
 !------------------------------------------------------------------------------
 ! Null Pixel Level Pointers 
 !------------------------------------------------------------------------------
-subroutine NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+subroutine NULL_PIX_POINTERS(Input, RTM_NWP)
 
    type(acha_input_struct), intent(inout) :: Input
-   type(acha_rtm_nwp_struct), intent(inout) :: ACHA_RTM_NWP
+   type(acha_rtm_nwp_struct), intent(inout) :: RTM_NWP
 
-   ACHA_RTM_NWP%T_Prof => NULL()
-   ACHA_RTM_NWP%T_Prof_1 => NULL() 
-   ACHA_RTM_NWP%T_Prof_2 => NULL() 
-   ACHA_RTM_NWP%T_Prof_3 => NULL()
+   RTM_NWP%T_Prof => null()
+   RTM_NWP%T_Prof_1 => null() 
+   RTM_NWP%T_Prof_2 => null() 
+   RTM_NWP%T_Prof_3 => null()
 
-   ACHA_RTM_NWP%Z_Prof => NULL() 
-   ACHA_RTM_NWP%Z_Prof_1 => NULL() 
-   ACHA_RTM_NWP%Z_Prof_2 => NULL() 
-   ACHA_RTM_NWP%Z_Prof_3 => NULL() 
+   RTM_NWP%Z_Prof => null() 
+   RTM_NWP%Z_Prof_1 => null() 
+   RTM_NWP%Z_Prof_2 => null() 
+   RTM_NWP%Z_Prof_3 => null() 
 
    if (Input%Chan_On_67um == sym%YES) then
-     ACHA_RTM_NWP%Atm_Rad_Prof_67um =>  NULL()
-     ACHA_RTM_NWP%Atm_Trans_Prof_67um =>  NULL()
-     ACHA_RTM_NWP%Black_Body_Rad_Prof_67um => NULL()
+     RTM_NWP%Atm_Rad_Prof_67um =>  null()
+     RTM_NWP%Atm_Trans_Prof_67um =>  null()
+     RTM_NWP%Black_Body_Rad_Prof_67um => null()
    endif
    if (Input%Chan_On_85um == sym%YES) then
-     ACHA_RTM_NWP%Atm_Rad_Prof_85um =>  NULL()
-     ACHA_RTM_NWP%Atm_Trans_Prof_85um =>  NULL()
+     RTM_NWP%Atm_Rad_Prof_85um =>  null()
+     RTM_NWP%Atm_Trans_Prof_85um =>  null()
    endif
-     
    if (Input%Chan_On_11um == sym%YES) then
-      ACHA_RTM_NWP%Atm_Rad_Prof_11um => NULL()
-      ACHA_RTM_NWP%Atm_Trans_Prof_11um => NULL()
-      ACHA_RTM_NWP%Black_Body_Rad_Prof_11um => NULL()
+     RTM_NWP%Atm_Rad_Prof_11um => null()
+     RTM_NWP%Atm_Trans_Prof_11um => null()
+     RTM_NWP%Black_Body_Rad_Prof_11um => null()
    endif
    if (Input%Chan_On_12um == sym%YES) then
-      ACHA_RTM_NWP%Atm_Rad_Prof_12um => NULL()
-      ACHA_RTM_NWP%Atm_Trans_Prof_12um => NULL()
+     RTM_NWP%Atm_Rad_Prof_12um => null()
+     RTM_NWP%Atm_Trans_Prof_12um => null()
    endif
    if (Input%Chan_On_133um == sym%YES) then
-      ACHA_RTM_NWP%Atm_Rad_Prof_133um => NULL()
-      ACHA_RTM_NWP%Atm_Trans_Prof_133um => NULL()
+     RTM_NWP%Atm_Rad_Prof_133um => null()
+     RTM_NWP%Atm_Trans_Prof_133um => null()
    endif
  
 end subroutine NULL_PIX_POINTERS

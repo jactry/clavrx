@@ -1024,7 +1024,8 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
 
        Tau_H2O = Solar_Rtm%Tau_H2O_Coef(Chan_Idx,1) + Solar_Rtm%Tau_H2O_Coef(Chan_Idx,2)*Tpw_Nwp_Pix(Elem_Idx,Line_Idx) +  &
                    Solar_Rtm%Tau_H2O_Coef(Chan_Idx,3)*(Tpw_Nwp_Pix(Elem_Idx,Line_Idx)**2)
-       Tau_Gas = max(0.0,Tau_H2O) + Solar_Rtm%Tau_O3(Chan_Idx) + Solar_Rtm%Tau_O2(Chan_Idx) + Solar_Rtm%Tau_CO2(Chan_Idx) + Solar_Rtm%Tau_CH4(Chan_Idx)
+       Tau_Gas = max(0.0,Tau_H2O) + Solar_Rtm%Tau_O3(Chan_Idx) + Solar_Rtm%Tau_O2(Chan_Idx) &
+               + Solar_Rtm%Tau_CO2(Chan_Idx) + Solar_Rtm%Tau_CH4(Chan_Idx)
        Tau_Aer = Solar_Rtm%Tau_Aer(Chan_Idx)
        Wo_Aer = Solar_Rtm%Wo_Aer(Chan_Idx)
        G_Aer = Solar_Rtm%G_Aer(Chan_Idx)
@@ -1086,13 +1087,15 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          endif
 
        case(42)  !DNB - use mean of ch1 and ch2 for sfc reflectance
-         if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+         if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 &
+            .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = 0.5*(ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)+ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)) / 100.0
          else 
               Albedo_View = 0.5*(Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif 
          if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
+              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) &
+               + Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif
        end select
 
@@ -1165,7 +1168,8 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
          Ems_Ch20_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
        endif
-       if ((Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0).and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
+       if ((Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0) &
+         .and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
          ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*pi*(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)-Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)) /  &
                   ((Solar_Ch20_Nu*Cossolzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2) - &
                   pi*Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) )

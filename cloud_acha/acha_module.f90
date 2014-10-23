@@ -575,10 +575,10 @@ module AWG_CLOUD_HEIGHT
     jlrc = Line_Idx_LRC(Elem_Idx,Line_Idx)
     Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
     
-    !--- Qc indices (check how Framework handles it)
-    if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) == Missing_Value_Int4 .or. &
-        Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) == Missing_Value_Int4 .or. &
-        Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx) == Missing_Value_Int4) then 
+    !--- Qc indices
+    if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
+        Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
+        Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx) <= 0) then 
           Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
           Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
          cycle 

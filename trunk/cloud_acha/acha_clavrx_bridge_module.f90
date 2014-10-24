@@ -70,15 +70,15 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to Geometrical Shadow Algorithm
    !-----------------------------------------------------------------------
-!  call CLOUD_SHADOW_RETR (  &
-!          Zc_Acha &
-!        , SolAz &
-!        , Solzen &
-!        , Lat &
-!        , Lon &
-!        , Lat_Pc &
-!        , Lon_Pc &
-!        , Shadow_Mask ) 
+   call CLOUD_SHADOW_RETR (  &
+           Zc_Acha &
+         , Solaz &
+         , Solzen &
+         , Lat &
+         , Lon &
+         , Lat_Pc &
+         , Lon_Pc &
+         , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
    where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  

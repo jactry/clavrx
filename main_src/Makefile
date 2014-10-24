@@ -206,7 +206,7 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 dcomp:
 	$(MAKE)  -C $(DCOMP) 
 	rm -fv $(DCOMP)libdcomp.a
-	xiar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
+	ar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
 	
 	
    
@@ -214,7 +214,7 @@ nlcomp_module:
 ifdef nlcomplibs
 	$(MAKE)  -C $(NLCOMP)   
 	rm -fv $(NLCOMP)libnlcomp.a  
-	xiar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
+	ar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
 endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
@@ -297,7 +297,7 @@ user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx
 pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
 calibration_constants.o: calibration_constants.f90 constant.o 
-dcomp_clavrx_bridge_module.o:dcomp_clavrx_bridge_module.f90  dcomp_rtm_module.o
+dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o

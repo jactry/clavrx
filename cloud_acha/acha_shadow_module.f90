@@ -74,22 +74,19 @@ subroutine CLOUD_SHADOW_RETR (  &
       integer :: i,j
       real :: delta_lon, delta_Lat
       integer :: i_dim, j_dim
-      integer :: dim_cloud_height ( 2)
       
       !--- initialize output
       cloud_shadow = 0
 
       !--- allocate local memory
-      dim_cloud_height = size ( cloud_height)
-      allocate ( Distance_km ( dim_cloud_height(1) ,  dim_cloud_height(2)) , source = Cloud_Height) 
-      allocate ( Lon_Spacing_Per_m (  dim_cloud_height(1) ,  dim_cloud_height(2)) , source = Cloud_Height)
-      
+      i_dim = size ( Cloud_Height, dim=1)
+      j_dim = size ( Cloud_Height, dim=2)
+      allocate ( Distance_km (i_dim, j_dim))
+      allocate ( Lon_Spacing_Per_m (i_dim, j_dim))
+
       Distance_km = Cloud_Height * tan (Solar_Zenith * DTOR )
       
       Lon_Spacing_Per_m = LAT_SPACING_PER_M / cos ( Lat_Pc * DTOR )
-      
-      i_dim = size ( Cloud_Height, dim=1)
-      j_dim = size ( Cloud_Height, dim=2)
       
          do i = 2 , i_dim - 1
             do j = 2 ,j_dim - 1
@@ -108,8 +105,8 @@ subroutine CLOUD_SHADOW_RETR (  &
          end do   
          
          !--- destroy local memory
-         deallocate ( distance_km)
-         deallocate ( lon_spacing_per_m)
+         deallocate ( Distance_km)
+         deallocate ( Lon_Spacing_Per_m)
 
    end subroutine CLOUD_SHADOW_RETR
    !================================================================================================================ 

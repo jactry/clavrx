@@ -1482,14 +1482,18 @@
                   call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Num_Scans_Read)
                end if
 
-               !--- CLoud Base Height Algorithm if ACHA was executed
-               if (ACHA_Mode > 0) then 
-                 call CLOUD_BASE_BRIDGE()
-               endif
-
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(9) =  Segment_Time_Point_Seconds(9) + &
                   &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
+
+               !--- CLoud Base Height Algorithm if ACHA was executed
+               Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
+               if (ACHA_Mode > 0) then 
+                 call CLOUD_BASE_BRIDGE()
+               endif
+               End_Time_Point_Hours = COMPUTE_TIME_HOURS()
+               Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &
+                   60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
             end if
 
@@ -1502,7 +1506,7 @@
                !-->        call SMOKE_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Num_Scans_Read)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &
+               Segment_Time_Point_Seconds(11) =  Segment_Time_Point_Seconds(11) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
             end if
 
@@ -1682,7 +1686,7 @@
       print *, EXE_PROMPT, "Time for Cloud Height (sec) = ", Segment_Time_Point_Seconds(8)
       print *, EXE_PROMPT, "Time for Cloud Opt/Micro (sec) = ", Segment_Time_Point_Seconds(9)
       print *, EXE_PROMPT, "Time for NL-COMP (sec) = ", Segment_Time_Point_Seconds(15)
-      print *, EXE_PROMPT, "Time for Dust/Smoke Detection (sec) = ", Segment_Time_Point_Seconds(10)
+      print *, EXE_PROMPT, "Time for Cloud Base (sec) = ", Segment_Time_Point_Seconds(10)
       print *, EXE_PROMPT, "Time for Volcanic Ash (sec) = ", Segment_Time_Point_Seconds(11)
       print *, EXE_PROMPT, "Time for Earth Radiation Budget (sec) = ", Segment_Time_Point_Seconds(12)
       print *, EXE_PROMPT, "Time for Pixel-HDF Write (sec) = ", Segment_Time_Point_Seconds(13)

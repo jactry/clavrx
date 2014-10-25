@@ -1442,9 +1442,6 @@
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
 
-                  !--- CLoud Base Height Algorithm
-                  call CLOUD_BASE_BRIDGE()
-
                end if
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1484,6 +1481,11 @@
                if (Dcomp_Mode > 0 ) then
                   call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Num_Scans_Read)
                end if
+
+               !--- CLoud Base Height Algorithm if ACHA was executed
+               if (ACHA_Mode > 0) then 
+                 call CLOUD_BASE_BRIDGE()
+               endif
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(9) =  Segment_Time_Point_Seconds(9) + &

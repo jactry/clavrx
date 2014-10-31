@@ -29,7 +29,7 @@
 
 module clavrx_message_module
 
-typeverbose_type
+type verbose_type
    integer :: QUIET   =  0
    integer :: ERROR =  1
    integer :: MINIMAL =  2

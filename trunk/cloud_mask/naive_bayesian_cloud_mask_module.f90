@@ -891,7 +891,7 @@ contains
       integer :: index_start
       integer :: index_end
       
-      print*, 'read coeffs ..'
+      
       print*, trim(bayes_coef % file)
       
       lun = GETLUN()

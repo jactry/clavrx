@@ -892,7 +892,7 @@ contains
       integer :: index_end
       
       
-      print*, trim(bayes_coef % file)
+      
       
       lun = GETLUN()
       open (unit=lun, file = trim(bayes_coef % file) , &

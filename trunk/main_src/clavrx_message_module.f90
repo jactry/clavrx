@@ -88,8 +88,8 @@ contains
       
       lev = verb_lev % DEFAULT
       if ( present (level)) lev = level
-
-      write(color_string,'(I2)') color 
+      color_string=''  
+      if (present(color)) write(color_string,'(I2)') color 
       
       call do_it ( text, color_string , lev ) 
       
@@ -114,8 +114,8 @@ contains
       lev = verb_lev % DEFAULT
       if ( present (level)) lev = level
       text_1 = text//trim(string_100)
- 
-      write(color_string,'(I2)') color 
+      color_string=''  
+      if (present(color)) write(color_string,'(I2)') color 
       
       call do_it ( text_1, color_string, lev ) 
       

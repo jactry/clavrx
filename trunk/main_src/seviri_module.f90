@@ -332,9 +332,10 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                          Offset_Sev(1))/ Solar_Const_Sev(1)
            
            
-           
-           end DO 
-       end DO 
+          
+!---- KNMI---> ch(1)%Ref_Toa(Elem_Idx,Line_Idx) = ch(1)%Ref_Toa(Elem_Idx,Line_Idx) / 0.92 
+           enddo 
+       enddo 
    endif
    
 
@@ -375,8 +376,8 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
            ch(2)%Ref_Toa(Elem_Idx,Line_Idx) = 100.0 * ((Slope_Sev(2) * &
                          Two_Byte_Temp(Elem_Idx,Line_Idx)) + &
                          Offset_Sev(2))/ Solar_Const_Sev(2)
-           end DO 
-       end DO 
+           enddo 
+       enddo 
 
    endif
 
@@ -418,8 +419,11 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
            ch(6)%Ref_Toa(Elem_Idx,Line_Idx) = 100.0 * ((Slope_Sev(3) * &
                          Two_Byte_Temp(Elem_Idx,Line_Idx)) + &
                          Offset_Sev(3))/ Solar_Const_Sev(3)
-           end DO 
-       end DO 
+
+!---- KNMI--->           ch(6)%Ref_Toa(Elem_Idx,Line_Idx) = ch(6)%Ref_Toa(Elem_Idx,Line_Idx) / 1.035 
+
+           enddo 
+       enddo 
    endif
 
    
@@ -703,8 +707,8 @@ end subroutine READ_SEVIRI
 
         endif 
    
-      end DO
-    end DO
+      enddo
+    enddo
     
      
   end subroutine MSG_RAD_BT 

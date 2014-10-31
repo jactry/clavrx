@@ -31,6 +31,8 @@ module LEVEL2_ROUTINES
    use HDF
    use SCALING_PARAMETERS
    use HDF_PARAMS
+   
+   use clavrx_message_module
 
    implicit none
    private
@@ -310,7 +312,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  if (Rtm_File_Flag == sym%YES) then
 
      file_Rtm = trim(file_1b_root)//".rtm.hdf"
-     print *, EXE_PROMPT, MOD_PROMPT, "creating RTM file ", trim(file_Rtm)
+     call mesg ("creating RTM file "//trim(file_Rtm))
 
      Sd_Id_Rtm = sfstart(trim(dir_Rtm)//trim(file_Rtm),DFACC_CREATE)
 
@@ -659,7 +661,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 !---------------------------------------------------------
   if (Level2_File_Flag == sym%YES) then
      File_Level2= trim(File_1b_Root)//".level2.hdf"
-     print *, EXE_PROMPT, MOD_PROMPT, "creating level-2 file ", trim(file_Level2)
+     call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
      Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
      if (Sd_Id_Level2 < 0) then
        erstat = 68

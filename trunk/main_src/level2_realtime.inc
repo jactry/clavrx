@@ -1,6 +1,6 @@
 !$Id: level2_all_on.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 212
+ integer, parameter, private:: Num_Level2_Sds = 213
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -221,4 +221,5 @@
      Sds_Num_Level2_Dust = 209,           Sds_Num_Level2_Dust_Flag = 0, &
      Sds_Num_Level2_Smoke = 210,          Sds_Num_Level2_Smoke_Flag = 0, &
      Sds_Num_Level2_Shadow = 211,         Sds_Num_Level2_Shadow_Flag = 0, &
-     Sds_Num_Level2_Fire = 212,           Sds_Num_Level2_Fire_Flag = 0
+     Sds_Num_Level2_Fire = 212,           Sds_Num_Level2_Fire_Flag = 0, &
+     Sds_Num_Level2_Zc_Lower = 213,       Sds_Num_Level2_Zc_Lower_Flag = 0

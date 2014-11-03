@@ -148,6 +148,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 
  real, parameter, public:: Min_Cwp = 0.0, Max_Cwp = 1200.0
  real, parameter, public:: Min_Rain_Rate = 0.0, Max_Rain_Rate = 32.0
+ real, parameter, public:: Min_Binary_Mask = 0.0, Max_Binary_Mask = 1.0
  real, parameter, public:: Min_Cld_Mask = 0.0, Max_Cld_Mask = 3.0
  real, parameter, public:: Min_Cld_Type = 0.0, Max_Cld_Type = 13.0
  real, parameter, public:: Min_Sfc_Type = 0.0, Max_Sfc_Type = 13.0

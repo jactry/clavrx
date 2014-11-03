@@ -64,7 +64,7 @@ module SIMPLE_COD
       Element_Loop: do Elem_Idx = 1, Number_Elements
          Line_Loop: do Line_Idx = 1, Number_Lines
 
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) cycle
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == 1) cycle
             if (Solzen(Elem_Idx,Line_Idx) > SOLZEN_LIMIT) cycle
             if (Chan_On_Flag_Default(1) == sym%NO)  cycle
 

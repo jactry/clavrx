@@ -31,6 +31,8 @@ module LEVEL2_ROUTINES
    use HDF
    use SCALING_PARAMETERS
    use HDF_PARAMS
+   
+   use clavrx_message_module
 
    implicit none
    private
@@ -310,7 +312,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  if (Rtm_File_Flag == sym%YES) then
 
      file_Rtm = trim(file_1b_root)//".rtm.hdf"
-     print *, EXE_PROMPT, MOD_PROMPT, "creating RTM file ", trim(file_Rtm)
+     call mesg ("creating RTM file "//trim(file_Rtm))
 
      Sd_Id_Rtm = sfstart(trim(dir_Level2)//trim(file_Rtm),DFACC_CREATE)
 
@@ -659,7 +661,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 !---------------------------------------------------------
   if (Level2_File_Flag == sym%YES) then
      File_Level2= trim(File_1b_Root)//".level2.hdf"
-     print *, EXE_PROMPT, MOD_PROMPT, "creating level-2 file ", trim(file_Level2)
+     call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
      Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
      if (Sd_Id_Level2 < 0) then
        erstat = 68
@@ -1490,6 +1492,50 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+      
+     !--- dust mask
+     if (Sds_Num_Level2_Dust_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Dust),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "dust_mask", &
+                               "not specified", &
+                               "integer classification of the presence of dust (0=no,1=yes)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- smoke mask
+     if (Sds_Num_Level2_Smoke_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Smoke),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "smoke_mask", &
+                               "not specified", &
+                               "integer classification of the presence of smoke (0=no,1=yes)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- shadow mask
+     if (Sds_Num_Level2_Shadow_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Shadow),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "shadow_mask", &
+                               "not specified", &
+                               "integer classification of the presence of shadow (0=no,1=yes)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- fire mask
+     if (Sds_Num_Level2_Fire_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Fire),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "fire_mask", &
+                               "not specified", &
+                               "integer classification of the presence of fire (0=no,1=yes)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
 
      !--- cloud type
      if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then
@@ -1578,6 +1624,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "cld_height_base_acha", &
                                "base_height_of_cloud", &
                                "estimate of actual cloud-base height computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
+                               "m", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud height of lower cloud from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Zc_Lower_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Zc_Lower),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_height_lower_acha", &
+                               "height_of_lower_cloud", &
+                               "estimate of actual cloud height of lower cloud computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
                                "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
@@ -3806,16 +3863,40 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- dust mask
+     if (Sds_Num_Level2_Dust_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Dust), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Dust_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- smoke mask
+     if (Sds_Num_Level2_Smoke_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Smoke), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Smoke_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- shadow mask
+     if (Sds_Num_Level2_Shadow_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Shadow), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Shadow_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- fire mask
+     if (Sds_Num_Level2_Fire_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Fire), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Fire_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld type
      if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        cld_type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Cld_Type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld phase
      if (Sds_Num_Level2_Cld_Phase_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        cld_phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Cld_Phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld type
@@ -3856,6 +3937,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(Zc_Base_Acha,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- lower cld height
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Zc_Lower_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(Zc_Lower_Cloud,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zc_Lower), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

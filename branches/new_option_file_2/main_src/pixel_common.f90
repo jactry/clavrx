@@ -538,11 +538,11 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Min_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Std_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_Uncer_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: High_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Mid_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Low_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 

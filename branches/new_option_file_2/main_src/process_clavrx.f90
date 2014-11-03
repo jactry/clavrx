@@ -92,9 +92,9 @@
    use LEVEL2_ROUTINES
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
-   use AWG_CLOUD_HEIGHT
    use CLOUD_HEIGHT_ROUTINES
-   use ACHA_CLAVRX_BRIDGE_MOD
+   use ACHA_CLAVRX_BRIDGE
+   use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
    use NLCOMP_BRIDGE_MOD
    use AEROSOL_PROPERTIES
@@ -103,7 +103,6 @@
    use GLOBSNOW_READ_ROUTINES
    use GFS
    use NCEP_REANALYSIS
-   use CLOUD_COVER_LAYERS
    use DCOMP_DERIVED_PRODUCTS_MODULE
    
    use RT_UTILITIES, only: &
@@ -138,7 +137,9 @@
    use FY2_MODULE
    use SENSOR_MODULE
    use USER_OPTIONS
-   use CLAVRX_MESSAGE_MODULE
+   use CLAVRX_MESSAGE_MODULE, only: &
+      mesg &
+      , verb_lev
    use CLOUD_TYPE_BRIDGE_MODULE
    use SIMPLE_COD
  
@@ -176,7 +177,7 @@
 
    REAL(kind=REAL4) :: Total_Processing_Start_Time_Hours
    REAL(kind=REAL4) :: Total_Processing_End_Time_Hours
-   REAL(kind=REAL8) :: Total_Processing_Time_seconds
+   REAL(kind=REAL4) :: Total_Processing_Time_seconds
    REAL(kind=REAL4) :: Orbital_Processing_Start_Time_Hours
    REAL(kind=REAL4) :: Orbital_Processing_End_Time_Hours
    REAL(kind=REAL4) :: Orbital_Processing_Time_Seconds
@@ -243,6 +244,8 @@
    
    logical :: dcomp_run
    
+   character ( len = 30) :: string_30
+   character ( len = 100) :: string_100
    
    
   
@@ -256,14 +259,16 @@
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
    integer, dimension(20:36), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0,10,10,11,12,14,15,16,16,16,16/)
    integer:: Chan_Idx
+   
+   
 
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
-   print "(a,'<----------  Start of CLAVRXORB ---------->')",EXE_PROMPT
+   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' , level = verb_lev % MINIMAL , color = 43 )
 
 #ifdef HDF5LIBS
-   PRINT *, "HDF5 USED"
+   call mesg ( "HDF5 USED" , level = verb_lev % VERBOSE )
 #endif
    
    !----------------------------------------------------------------------------
@@ -313,7 +318,7 @@
    !--- Read elevation data 
    !------------------------------------------------------------------------------
    if (Read_Surface_Elevation /= 0) then
-      print *, EXE_PROMPT,"Opening surface elevation file"
+      call mesg  ( "Opening surface elevation file", level = verb_lev % VERBOSE)
       Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
      
       !--- read in which elevation type that is specified.
@@ -333,7 +338,7 @@
    ! Open coast mask file
    !------------------------------------------------------------------
    if (Read_Coast_Mask == sym%YES) then
-      print *, EXE_PROMPT,"Opening coast file"
+      call mesg ( "Opening coast file", level = verb_lev % VERBOSE)
       Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
       Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
                                       "coast_mask_1km.hdf", &
@@ -343,7 +348,7 @@
    !------------------------------------------------------------------
    ! Open land surface type file
    !------------------------------------------------------------------
-   print *, EXE_PROMPT, "Opening land surface type file"
+   call mesg ( "Opening land surface type file", level = verb_lev % VERBOSE)
    Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
 
    if (Read_Hires_sfc_type == sym%YES) then
@@ -360,7 +365,7 @@
    ! Open land mask file
    !------------------------------------------------------------------
    if (Read_Land_Mask == sym%YES) then
-      print *, EXE_PROMPT, "Opening land mask file"
+      call mesg  ( "Opening land mask file" ,level = verb_lev % VERBOSE )
       Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
       Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
                                     "lw_geo_2001001_v03m.hdf", &
@@ -371,7 +376,7 @@
    ! Open volcano mask file
    !------------------------------------------------------------------
    if (Read_Volcano_Mask == sym%YES) then
-      print *, EXE_PROMPT, "Opening volcano mask file"
+      call mesg  ( "Opening volcano mask file",level = verb_lev % VERBOSE )
       Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
       Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
                                         "volcano_mask_1km.hdf", &
@@ -395,13 +400,14 @@
    !**********************************************************************
 
    !--- print to screen which file list is used
-   print *, EXE_PROMPT, "CLAVR-x FILE LIST FILE USED: ", trim(File_list)
+   call mesg ( "CLAVR-x FILE LIST FILE USED: "//trim(File_list)  ) 
 
    !--- open file containing list of level1b data to process
    File_list_lun = GET_LUN()
    open(unit=File_list_lun,file = trim(File_list),status="old",action="read",iostat=ios)
    if (ios /= 0) then
-      print *, EXE_PROMPT, "ERROR: Opening clavrxorb_File_list, iostat = ", ios
+      write ( string_30, '(i8)') ios
+      call mesg ("ERROR: Opening clavrxorb_File_list, iostat = "//trim(string_30) , level = verb_lev % ERROR) 
       stop
    end if
 
@@ -427,7 +433,8 @@
          if (ios /= -1) then
             !-- non eof error
             erstat = 8
-            print *, EXE_PROMPT, "ERROR: Problem reading orbit names from control file, ios = ",ios
+            call mesg ( "ERROR: Problem reading orbit names from control file" &
+               , level = verb_lev % QUIET) 
             stop 8
          else
             !-- end of orbits
@@ -476,9 +483,9 @@
       end if
 
       !--- print to screen the file name
-      print *,EXE_PROMPT
-      print *,EXE_PROMPT, "<------------- Next Orbit ---------------> "
-      print *,EXE_PROMPT, "file name = ", trim(File_1b)
+      call mesg (" " )
+      call mesg ("<------------- Next Orbit ---------------> ",level = verb_lev % DEFAULT )
+      call mesg ("file name = "//trim(File_1b) , level = verb_lev % MINIMAL )
 
       !-------------------------------------------------------
       ! reset record counters
@@ -573,11 +580,14 @@
       Day_Of_Month = COMPUTE_DAY(int(Start_Day, kind=int4), int(ileap, kind=int4))
 
       !--- continue output to screen
-      print *,EXE_PROMPT, "start year, day, time = ",Start_Year,Start_Day, &
+      write ( string_30, '(I4,X,I3,X,F9.5)') Start_Year,Start_Day, &
              Start_Time/60.0/60.0/1000.0
-      print *,EXE_PROMPT, "end year, day, time = ", End_Year,End_Day, &
+      call mesg ("start year, day, time = "//string_30 ) 
+      write ( string_30, '(I4,X,I3,X,F9.5)') End_Year,End_Day, &
              End_Time/60.0/60.0/1000.0
-      print *,EXE_PROMPT, "number of scans = ", Num_Scans
+      call mesg ("End year, day, time = "//string_30 ) 
+      
+      
 
       !*************************************************************************
       ! Marker:  READ IN SENSOR-SPECIFIC CONSTANTS
@@ -611,7 +621,7 @@
                if (trim(OiSst_File_Name) == "no_file") then
                   ! insert temp sst flag off here
                   Use_Sst_Anal = sym%NO
-                  print *, EXE_PROMPT, "WARNING: Could not find daily OISST file"
+                  call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
                else
                   call READ_OISST_ANALYSIS_MAP(oiSst_File_Name)
                end if
@@ -634,7 +644,7 @@
       !----------------------------------------------------------------------
       if (Modis_Clr_Alb_Flag == sym%YES) then
 
-         print *,EXE_PROMPT, "Opening Modis clear albedo map"
+         call mesg ("Opening Modis clear albedo map")
 
          !--- determine 16 day period and its string value
          iperiod16 = 16 * ((Start_Day-1) / 16) + 1 
@@ -704,8 +714,8 @@
                                                  trim(Snow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") then
             Failed_Hires_Snow_Mask_Flag = sym%YES
-            print *, EXE_PROMPT, "WARNING: Could not find Snow mask file ==> ", &
-              Snow_Mask_File_Name
+            call mesg ( "WARNING: Could not find Snow mask file ==> "// &
+              Snow_Mask_File_Name, level = verb_lev % WARNING)
          else
             Snow_Mask_Id = OPEN_LAND_SFC_HDF(trim(Snow_Data_Dir), &
                                       Snow_Mask_File_Name, &
@@ -728,7 +738,7 @@
                                                  trim(GlobSnow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") THEN
             Failed_Glob_Snow_Mask_Flag = sym%YES
-            print *, EXE_PROMPT, "WARNING:  Could not find GlobSnow mask file, using NWP "
+            call mesg ( "WARNING:  Could not find GlobSnow mask file, using NWP ", level = verb_lev % WARNING )
          else
             CALL READ_GLOBSNOW_ANALYSIS_MAP(trim(GlobSnow_Data_Dir)//Snow_Mask_File_Name)
          end if
@@ -845,8 +855,8 @@
       !-------------------------------------------------------------------------------------------
       ! Marker: Begin loop over orbit segments
       !-------------------------------------------------------------------------------------------
-      print *,EXE_PROMPT
-      print *,EXE_PROMPT, "Started Processing All Orbital Segments"
+      call mesg ( " ")
+      call mesg ("Started Processing All Orbital Segments")
 
 
       !--- compute number of segments in this orbit 
@@ -1351,7 +1361,6 @@
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call CLOUD_MASK_NAIVE_BAYES_BRIDGE(Segment_Number)
-                     call COMPUTE_CLOUD_FRACTION_3x3(Line_Idx_Min_Segment,Num_Scans_Read)
                   else
                      print *, "Only the Bayesian Cloud Mask is available, check selection"
                      stop 
@@ -1422,7 +1431,7 @@
 
                if (ACHA_Mode > 0) then 
 
-                  !--- AWG CLoud Height Algorithm (ACHA)
+                  !--- AWG CLoud Height Algorithm (ACHA) and associated products
                   call AWG_CLOUD_HEIGHT_BRIDGE()
 
                   !--- interpolate NWP wind profiles at cloud-top level
@@ -1433,14 +1442,6 @@
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
-
-!                 call CLOUD_SHADOW_RETR(Zc_Acha,Solaz,Solzen,Lat,Lon,Lat_Pc,Lon_Pc,Cloud_Shadow)
-!                 where (Cloud_Shadow .and. Cld_Mask == 0 )  
-!                    Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (  Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
-!                 end where
-
-                  !--- cloud cover layers
-                  call COMPUTE_CLOUD_COVER_LAYERS(Line_Idx_Min_Segment,Num_Scans_Read)
 
                end if
 
@@ -1486,6 +1487,15 @@
                Segment_Time_Point_Seconds(9) =  Segment_Time_Point_Seconds(9) + &
                   &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
+               !--- CLoud Base Height Algorithm if ACHA was executed
+               Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
+               if (ACHA_Mode > 0) then 
+                 call CLOUD_BASE_BRIDGE()
+               endif
+               End_Time_Point_Hours = COMPUTE_TIME_HOURS()
+               Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &
+                   60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
+
             end if
 
             !--- Non-cloud Detection
@@ -1497,7 +1507,7 @@
                !-->        call SMOKE_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Num_Scans_Read)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &
+               Segment_Time_Point_Seconds(11) =  Segment_Time_Point_Seconds(11) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
             end if
 
@@ -1602,8 +1612,9 @@
             end if
 
             !--- screen output to mark progress through orbit
-            print *, EXE_PROMPT, "processed segment #",Segment_Number," scanlines = ",  &
+           write ( string_100, '(A22, I2, A16, I3 , 4X , I3)')  "processed segment #",Segment_Number," scanlines = ",  &
                         Scan_Number(Line_Idx_Min_Segment), Scan_Number(Num_Scans_Read)
+           call mesg  ( string_100 )
 
          end if   !end Skip_Processing_Flag condition
         !*************************************************************************
@@ -1612,8 +1623,8 @@
 
       end do Segment_loop
 
-      print *,EXE_PROMPT, "Finished Processing All Orbital Segments"
-      print *,EXE_PROMPT
+      call mesg ( "Finished Processing All Orbital Segments")
+      call mesg ( " ")
 
 
       !*************************************************************************
@@ -1666,23 +1677,23 @@
       call CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
 
       !--- diagnostic screen output
-      print *, EXE_PROMPT, "<----- Timing Results ----->"
-      print *, EXE_PROMPT, "Time for Level-1b Processing (sec) = ", Segment_Time_Point_Seconds(1)
-      print *, EXE_PROMPT, "Time for Ancil. Data Processing (sec) = ", Segment_Time_Point_Seconds(2)
-      print *, EXE_PROMPT, "Time for RTM Processing (sec) = ", Segment_Time_Point_Seconds(3)
-      print *, EXE_PROMPT, "Time for Spatial Processing (sec) = ", Segment_Time_Point_Seconds(4)
-      print *, EXE_PROMPT, "Time for Aerosol Retrieval (sec) = ", Segment_Time_Point_Seconds(5)
-      print *, EXE_PROMPT, "Time for Cloud Mask (sec) = ", Segment_Time_Point_Seconds(6)
-      print *, EXE_PROMPT, "Time for Cloud Type (sec) = ", Segment_Time_Point_Seconds(7)
-      print *, EXE_PROMPT, "Time for Cloud Height (sec) = ", Segment_Time_Point_Seconds(8)
-      print *, EXE_PROMPT, "Time for Cloud Opt/Micro (sec) = ", Segment_Time_Point_Seconds(9)
-      print *, EXE_PROMPT, "Time for NL-COMP (sec) = ", Segment_Time_Point_Seconds(15)
-      print *, EXE_PROMPT, "Time for Dust/Smoke Detection (sec) = ", Segment_Time_Point_Seconds(10)
-      print *, EXE_PROMPT, "Time for Volcanic Ash (sec) = ", Segment_Time_Point_Seconds(11)
-      print *, EXE_PROMPT, "Time for Earth Radiation Budget (sec) = ", Segment_Time_Point_Seconds(12)
-      print *, EXE_PROMPT, "Time for Pixel-HDF Write (sec) = ", Segment_Time_Point_Seconds(13)
-      !  print *, EXE_PROMPT, "Time for Grid-cell Compilation (sec) = ", Segment_Time_Point_Seconds(14)
-      print *, EXE_PROMPT, "Total Time for Processing This Orbit (sec) = ", Orbital_Processing_Time_Seconds
+      call mesg ("<----- Timing Results ----->")
+      call mesg ("Time for Level-1b Processing (sec) = ", Segment_Time_Point_Seconds(1))
+      call mesg ("Time for Ancil. Data Processing (sec) = ", Segment_Time_Point_Seconds(2))
+      call mesg ("Time for RTM Processing (sec) = ", Segment_Time_Point_Seconds(3))
+      call mesg ("Time for Spatial Processing (sec) = ", Segment_Time_Point_Seconds(4))
+      call mesg ("Time for Aerosol Retrieval (sec) = ", Segment_Time_Point_Seconds(5))
+      call mesg ("Time for Cloud Mask (sec) = ", Segment_Time_Point_Seconds(6))
+      call mesg ("Time for Cloud Type (sec) = ", Segment_Time_Point_Seconds(7))
+      call mesg ("Time for Cloud Height (sec) = ", Segment_Time_Point_Seconds(8))
+      call mesg ("Time for Cloud Opt/Micro (sec) = ", Segment_Time_Point_Seconds(9))
+      call mesg ("Time for NL-COMP (sec) = ", Segment_Time_Point_Seconds(15))
+      call mesg ("Time for Cloud Base (sec) = ", Segment_Time_Point_Seconds(10))
+      call mesg ("Time for Volcanic Ash (sec) = ", Segment_Time_Point_Seconds(11))
+      call mesg ("Time for Earth Radiation Budget (sec) = ", Segment_Time_Point_Seconds(12))
+      call mesg ("Time for Pixel-HDF Write (sec) = ", Segment_Time_Point_Seconds(13))
+      !  call mesg ("Time for Grid-cell Compilation (sec) = ", Segment_Time_Point_Seconds(14)
+      call mesg ("Total Time for Processing This Orbit (sec) = ", Orbital_Processing_Time_Seconds,level=verb_lev % MINIMAL)
       !  print *, EXE_PROMPT, "Temp Time for Processing This Orbit (sec) = ", Segment_Time_Point_Seconds_temp
 
       !--- add processing time to global attributes
@@ -1723,10 +1734,10 @@
    Total_Processing_End_Time_Hours = COMPUTE_TIME_HOURS()
    Total_Processing_Time_seconds = 60.0*60.0*(Total_Processing_End_Time_Hours -  &
                                               Total_Processing_Start_Time_Hours)
-   print *, EXE_PROMPT, "Total Time for All Processing (sec) = ", Total_Processing_Time_seconds
+    call mesg ( "Total Time for All Processing (sec) = ", Total_Processing_Time_seconds,level=verb_lev % MINIMAL)
 
    !---- print to screen that processing is done
-   print *, EXE_PROMPT, "<--------- End of CLAVRXORB ---------->"
+   call mesg (  "<--------- End of CLAVRXORB ---------->",level=verb_lev % MINIMAL)
 
    stop
 !--------- PFAST error statements

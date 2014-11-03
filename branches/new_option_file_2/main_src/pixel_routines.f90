@@ -1024,7 +1024,8 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
 
        Tau_H2O = Solar_Rtm%Tau_H2O_Coef(Chan_Idx,1) + Solar_Rtm%Tau_H2O_Coef(Chan_Idx,2)*Tpw_Nwp_Pix(Elem_Idx,Line_Idx) +  &
                    Solar_Rtm%Tau_H2O_Coef(Chan_Idx,3)*(Tpw_Nwp_Pix(Elem_Idx,Line_Idx)**2)
-       Tau_Gas = max(0.0,Tau_H2O) + Solar_Rtm%Tau_O3(Chan_Idx) + Solar_Rtm%Tau_O2(Chan_Idx) + Solar_Rtm%Tau_CO2(Chan_Idx) + Solar_Rtm%Tau_CH4(Chan_Idx)
+       Tau_Gas = max(0.0,Tau_H2O) + Solar_Rtm%Tau_O3(Chan_Idx) + Solar_Rtm%Tau_O2(Chan_Idx) &
+               + Solar_Rtm%Tau_CO2(Chan_Idx) + Solar_Rtm%Tau_CH4(Chan_Idx)
        Tau_Aer = Solar_Rtm%Tau_Aer(Chan_Idx)
        Wo_Aer = Solar_Rtm%Wo_Aer(Chan_Idx)
        G_Aer = Solar_Rtm%G_Aer(Chan_Idx)
@@ -1086,13 +1087,15 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          endif
 
        case(42)  !DNB - use mean of ch1 and ch2 for sfc reflectance
-         if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+         if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 &
+            .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = 0.5*(ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)+ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)) / 100.0
          else 
               Albedo_View = 0.5*(Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif 
          if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
+              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) &
+               + Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif
        end select
 
@@ -1165,7 +1168,8 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
          Ems_Ch20_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
        endif
-       if ((Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0).and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
+       if ((Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0) &
+         .and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
          ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*pi*(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)-Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)) /  &
                   ((Solar_Ch20_Nu*Cossolzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2) - &
                   pi*Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) )
@@ -1360,6 +1364,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
   real(kind=real4), intent(in):: Sun_Earth_Distance
   integer, intent(in):: j1, j2
   integer:: i,j
+  real :: solar_irradiance
 
   DO j = j1,j1+j2-1
 
@@ -1385,17 +1390,23 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
            Rad_Ch20_ems(i,j) = Missing_Value_Real4
            Ems_Ch20(i,j) = Missing_Value_Real4
         endif
-
-        if ((Solzen(i,j)<90.0).and.(Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
+         
+         ! --->    AW 10/20/2014
+         ! ch(20) %ref_toa is the pseudo solar reflectance in 3.9 channels
+         !  Rad_obs = Rad_sol + ( 1 - R ) Rad_ch20_ems
+         !  Rad_obs = (R * F_0 * mu) / PI + ( 1 - R ) Rad_ch20_ems
+         !  == >   R = ( PI (Rad_obs - Rad_ch20_ems )) / ( F_o * mu - PI * Rad_ch20_ems )
+         !     see Kaufman and Remer IEEE 1994:
+         !   "Detection of  Forests Using Mid-IR Reflectance: An  Application for Aerosol Studies"
+         !   http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=297984
+         !
+        if ((Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
+            solar_irradiance = max ( 0., (Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2))
            ch(20)%Ref_Toa(i,j) = 100.0*pi*(ch(20)%Rad_Toa(i,j)-Rad_Ch20_ems(i,j)) /  &
-                        ((Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2) - &
-                          pi*Rad_Ch20_ems(i,j) )
+                        ( solar_irradiance - pi*Rad_Ch20_ems(i,j) )
         endif
 
-         !---- at night, compute albeDO as 1 - emissivity
-        if ((Solzen(i,j)>=90.0).and.(Ems_Ch20(i,j)/=Missing_Value_Real4)) then
-          ch(20)%Ref_Toa(i,j) = 100.0*(1.0-Ems_Ch20(i,j))
-        endif
+        
 
         !--- constrain values
         if (ch(20)%Ref_Toa(i,j) /= Missing_Value_Real4) then

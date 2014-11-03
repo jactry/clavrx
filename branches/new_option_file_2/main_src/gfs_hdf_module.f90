@@ -40,6 +40,8 @@ module GFS
   use Sort_Module
   use NWP_COMMON
   use HDF
+  
+  use clavrx_message_module
 
   implicit none
 
@@ -313,13 +315,13 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
 !--- Does before file exist?
     inquire(file = Nwp_Name_Before, exist = file_exists)
     if (.not. file_exists) then
-       write (*,*) EXE_PROMPT, MODULE_PROMPT, "WARNING: Missing data file " // trim(Nwp_Name_Before)
-       write (*,*) EXE_PROMPT, MODULE_PROMPT, "WARNING: Setting GFS before to GFS after"
+       call mesg ("WARNING: Missing data file " //trim(Nwp_Name_Before))
+       call mesg ("WARNING: Setting GFS before to GFS after")
        Nwp_Name_Before = Nwp_Name_After
        !stop 402
     endif
 
-    print *, EXE_PROMPT, MODULE_PROMPT, " NWP name before = ", trim(Nwp_Name_Before)
+    call mesg ( " NWP name before = "//trim(Nwp_Name_Before))
 
 !--- Does after file exist?
     inquire(file = Nwp_Name_After, exist = file_exists)
@@ -329,12 +331,12 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
            write (*,*) EXE_PROMPT, MODULE_PROMPT, "ERROR: Neither GFS data files are present, processing stopped "
            stop 403
        endif  
-       write (*,*) EXE_PROMPT, MODULE_PROMPT, "WARNING: Missing data file " // trim(Nwp_Name_After)
-       write (*,*) EXE_PROMPT, MODULE_PROMPT, "WARNING: Setting GFS after to GFS before"
+       call mesg ("WARNING: Missing data file " // trim(Nwp_Name_After))
+       call mesg ("WARNING: Setting GFS after to GFS before")
        Nwp_Name_After = Nwp_Name_Before
     endif
 
-    print *, EXE_PROMPT, MODULE_PROMPT, "NWP name after = ", trim(Nwp_Name_After)
+    call mesg ("NWP name after = "//trim(Nwp_Name_After))
 !--------------------------------------------------------------
 ! open before file and read contents from file data before this time
 !--------------------------------------------------------------

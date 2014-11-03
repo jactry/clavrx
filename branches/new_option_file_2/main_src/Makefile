@@ -64,7 +64,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(CTYPE):$(CMASK)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK)
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -110,8 +110,15 @@ clavrxorb_objs = process_clavrx.o \
                  constant.o \
                  calibration_constants.o \
                  algorithm_constants.o \
-                 awg_cloud_height.o \
+                 acha_module.o \
+		 acha_clavrx_services_module.o \
+		 acha_clavrx_bridge_module.o \
+                 acha_comp_module.o \
                  acha_shadow_module.o \
+                 acha_cloud_cover_layers_module.o \
+                 cloud_base_module.o \
+		 cloud_base_clavrx_bridge_module.o \
+		 cloud_base_clavrx_services_module.o \
 	         cloud_height_routines.o \
 	         file_tools.o \
 	         clavrx_message_module.o \
@@ -146,9 +153,6 @@ clavrxorb_objs = process_clavrx.o \
                  ahi_transm.o \
 	         reposnx.o \
                  reposition_module.o \
-		 acha_services_clavrx_mod.o \
-		 acha_clavrx_bridge_mod.o\
-		 cloud_cover_layers_module.o \
 		 dcomp_derived_products_module.o \
 		 naive_bayesian_cloud_mask_module.o \
                  naive_bayesian_clavrx_bridge_module.o \
@@ -202,7 +206,7 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 dcomp:
 	$(MAKE)  -C $(DCOMP) 
 	rm -fv $(DCOMP)libdcomp.a
-	xiar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
+	ar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
 	
 	
    
@@ -210,7 +214,7 @@ nlcomp_module:
 ifdef nlcomplibs
 	$(MAKE)  -C $(NLCOMP)   
 	rm -fv $(NLCOMP)libnlcomp.a  
-	xiar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
+	ar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
 endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
@@ -256,23 +260,36 @@ constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o
 avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_utility.o
 
-
-acha_services_clavrx_mod.o: acha_services_clavrx_mod.f90 pixel_common.o nwp_common.o \
+acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \
                      rtm_common.o constant.o planck.o rtm_common.o 
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_services_clavrx_mod.f90                    
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_services_module.f90                    
 
+acha_clavrx_bridge_module.o: acha_clavrx_bridge_module.f90 acha_module.o acha_comp_module.o \
+                  acha_cloud_cover_layers_module.o acha_shadow_module.o acha_clavrx_services_module.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_module.f90                    
 
-acha_clavrx_bridge_mod.o: acha_clavrx_bridge_mod.f90  awg_cloud_height.o acha_shadow_module.o acha_services_clavrx_mod.o 
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_mod.f90                    
+acha_module.o: acha_module.f90 acha_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_module.f90
 
-awg_cloud_height.o: awg_cloud_height.f90 acha_services_clavrx_mod.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/awg_cloud_height.f90
+acha_comp_module.o: acha_comp_module.f90 acha_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_comp_module.f90
 
 acha_shadow_module.o: acha_shadow_module.f90
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_shadow_module.f90
 
+acha_cloud_cover_layers_module.o: acha_cloud_cover_layers_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_cloud_cover_layers_module.f90
 
-cloud_cover_layers_module.o: cloud_cover_layers_module.f90 constant.o pixel_common.o algorithm_constants.o
+cloud_base_clavrx_bridge_module.o: cloud_base_clavrx_bridge_module.f90  cloud_base_module.o cloud_base_clavrx_services_module.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_clavrx_bridge_module.f90                    
+
+cloud_base_clavrx_services_module.o: cloud_base_clavrx_services_module.f90 pixel_common.o nwp_common.o \
+                     rtm_common.o constant.o planck.o rtm_common.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_clavrx_services_module.f90                    
+
+cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_module.f90
+
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
@@ -280,12 +297,12 @@ user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx
 pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
 calibration_constants.o: calibration_constants.f90 constant.o 
-dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o
+dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
-nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 
+nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
-clavrx_message_module.o: clavrx_message_module.f90
+clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
@@ -294,10 +311,10 @@ file_utility.o: file_utility.f90 constant.o
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o constant.o file_utility.o avhrr_module.o
 Message_Handler.o: Message_Handler.f90 file_utility.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
-gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o
+gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o file_utility.o
 hdf.o: hdf.f90
-hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o
+hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
@@ -311,7 +328,7 @@ ncep_reanalysis.o: ncep_reanalysis.f90 constant.o hdf.o nwp_common.o sort_module
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
-level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o
+level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o clavrx_message_module.o
 level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
 planck.o: planck.f90 constant.o calibration_constants.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
@@ -330,7 +347,7 @@ viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o naive_bayesian_cloud_mask_module.o
@@ -343,16 +360,17 @@ naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f9
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
-              land_sfc_properties.o file_utility.o level2.o \
-              awg_cloud_height.o acha_shadow_module.o cloud_height_routines.o dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
+              land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
+              dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
-              sort_module.o calibration_constants.o algorithm_constants.o acha_clavrx_bridge_mod.o  \
+              sort_module.o calibration_constants.o algorithm_constants.o  \
+              acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
               naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o cloud_cover_layers_module.o dcomp_derived_products_module.o
+              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
+              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o
 
 
 

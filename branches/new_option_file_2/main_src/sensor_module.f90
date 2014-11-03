@@ -65,6 +65,8 @@ module SENSOR_MODULE
        , READ_VIIRS_INSTR_CONSTANTS
 #endif
 
+   use clavrx_message_module
+
   implicit none
 
   public:: SET_SENSOR_CONSTANTS
@@ -77,6 +79,8 @@ module SENSOR_MODULE
   character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
   character(38) :: orbit_identifier
   
+  character ( len = 3) :: string_3
+  character ( len = 6) :: string_6
   contains
 !==============================================================================
 !
@@ -422,11 +426,15 @@ if (Goes_Flag == sym%YES .OR. Goes_Sndr_Flag == sym%YES .OR. &
 endif
 
 !--- screen output
-print *, EXE_PROMPT, "Satellite : Sensor = ", Platform_Name_Attribute, ' : ',Sensor_Name_Attribute
-print *,EXE_PROMPT, "Spacecraft WMO number = ", Sc_Id_WMO
-print *,EXE_PROMPT, "Start Day of Year= ", Start_Day
-print *,EXE_PROMPT, "Start Time of Day = ", Start_Time / 1000.0 / 60.0 / 60.0
-print *,EXE_PROMPT, "Number of Scans = ", Num_Scans
+call mesg ( "Satellite : Sensor = "//Platform_Name_Attribute//' : '//Sensor_Name_Attribute)
+write(string_3,'(i3)' ) sc_id_wmo
+call mesg ( "Spacecraft WMO number = "//trim(string_3) , level = verb_lev % DEFAULT)
+write(string_3,'(i3)' ) start_day
+call mesg ("Start Day of Year= "//trim(string_3))
+
+call mesg ( "Start Time of Day = ", Start_Time / 1000.0 / 60.0 / 60.0 )
+write(string_3,'(i3)') num_scans
+call mesg ( "Number of Scans = "//string_3)
 
 if (Avhrr_Flag == sym%YES) then
     print *,EXE_PROMPT, "Sensor = AVHRR"

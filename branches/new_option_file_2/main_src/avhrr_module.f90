@@ -3224,9 +3224,11 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
      if (Ch3a_On_AVHRR(j) == sym%YES) then
 
         if (Chan_Counts_Avhrr(3,i,j) < Ch3a_Switch_Count) then
-           Chan_Counts_Avhrr_Sg(3,i,j) = Scan_Space_Counts_Avhrr(3,j) + 0.25*(Chan_Counts_Avhrr(3,i,j) - Scan_Space_Counts_Avhrr(3,j))
+           Chan_Counts_Avhrr_Sg(3,i,j) = Scan_Space_Counts_Avhrr(3,j) &
+               + 0.25*(Chan_Counts_Avhrr(3,i,j) - Scan_Space_Counts_Avhrr(3,j))
         else
-           Chan_Counts_Avhrr_Sg(3,i,j) = (Scan_Space_Counts_Avhrr(3,j) + 0.25*(Ch3a_Switch_Count - Scan_Space_Counts_Avhrr(3,j))) + &
+           Chan_Counts_Avhrr_Sg(3,i,j) = (Scan_Space_Counts_Avhrr(3,j) + 0.25*(Ch3a_Switch_Count &
+               - Scan_Space_Counts_Avhrr(3,j))) + &
                                  1.75*(Chan_Counts_Avhrr(3,i,j) - Ch3a_Switch_Count)
         endif
 

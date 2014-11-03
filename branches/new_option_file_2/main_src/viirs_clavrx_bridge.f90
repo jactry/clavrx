@@ -127,6 +127,8 @@ module VIIRS_CLAVRX_BRIDGE
 
    use constants, only: &
       int4
+      
+   use clavrx_message_module   
    
 contains
    
@@ -392,7 +394,7 @@ contains
       Instr_Const_lun = GETLUN()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
-      print *, "opening ", trim(Instr_Const_file)
+      call mesg ("opening "//trim(Instr_Const_file), level = verb_lev % VERBOSE) 
       erstat = 0
       if (ios0 /= 0) then
          erstat = 19

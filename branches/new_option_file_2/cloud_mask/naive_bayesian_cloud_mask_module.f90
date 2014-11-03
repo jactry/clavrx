@@ -337,7 +337,7 @@ contains
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
            ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
              inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-             inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
+             inp % sfc % is_city  .and. &
             .not. is_mountain .and. &
             .not. inp % sfc % coast_mask .and. &
             .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
@@ -891,8 +891,8 @@ contains
       integer :: index_start
       integer :: index_end
       
-      print*, 'read coeffs ..'
-      print*, trim(bayes_coef % file)
+      
+      
       
       lun = GETLUN()
       open (unit=lun, file = trim(bayes_coef % file) , &

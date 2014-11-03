@@ -328,7 +328,7 @@ contains
       end if
       
       call getenv("HOST",host)
-      print*,'initialized ', sensor
+     
       
       ! - some lut paths
       self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'

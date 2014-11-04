@@ -117,7 +117,7 @@ contains
       color_string=''  
       if (present(color)) write(color_string,'(I2)') color 
       
-      call do_it ( text_1, color_string, lev ) 
+      call do_it ( trim(text_1), color_string, lev ) 
       
     
  

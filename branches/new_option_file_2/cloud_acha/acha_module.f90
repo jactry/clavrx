@@ -1,4 +1,4 @@
-! $Id$
+! $Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
 module AWG_CLOUD_HEIGHT
 !---------------------------------------------------------------------
 ! This module houses the routines associated with...
@@ -68,14 +68,13 @@ module AWG_CLOUD_HEIGHT
   private:: DETERMINE_OPAQUE_LEVEL
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
-  private:: COMPUTE_TAU_REFF_ACHA 
   private:: NULL_PIX_POINTERS 
   private:: H2O_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
 
   !--- include the non-system specific variables
-  include 'awg_cld_hght_include_1.inc'
+  include 'acha_parameters.inc'
 
   !--- interpoLated profiles
   real, private, dimension(Num_Levels_RTM_Prof) :: Temp_Prof_RTM
@@ -198,25 +197,25 @@ module AWG_CLOUD_HEIGHT
 !
 !
 !------------------------------------------------------------------------------
-   subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, symbol, Output)
+  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, symbol, Output)
 
-      !===============================================================================
-      !  Argument Declaration
-      !==============================================================================
+  !===============================================================================
+  !  Argument Declaration
+  !==============================================================================
 
-      type(symbol_acha), intent(inout) :: symbol
-      type(acha_input_struct), intent(inout) :: Input
-      type(acha_output_struct), intent(inout) :: Output
+  type(symbol_acha), intent(inout) :: symbol
+  type(acha_input_struct), intent(inout) :: Input
+  type(acha_output_struct), intent(inout) :: Output
 
-      !===============================================================================
-      !  Pixel level RTM structure
-      !===============================================================================
+  !===============================================================================
+  !  Pixel level RTM structure
+  !===============================================================================
  
-      type(acha_rtm_nwp_struct) :: ACHA_RTM_NWP
+  type(acha_rtm_nwp_struct) :: ACHA_RTM_NWP
 
-      !===============================================================================
-      !  Local Variable Declaration
-      !===============================================================================
+  !===============================================================================
+  !  Local Variable Declaration
+  !===============================================================================
 
   integer (kind=int4):: Smooth_Nwp_Fields_Flag_Temp
   integer :: ACHA_Mode_Flag
@@ -353,15 +352,7 @@ module AWG_CLOUD_HEIGHT
 
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
-  real (kind=real4):: Cloud_Extinction
-  real (kind=real4):: Cloud_Geometrical_Thickness
-  real (kind=real4):: Cloud_Geometrical_Thickness_Top_Offset
-  real (kind=real4):: Zc_Top_Max
-  real (kind=real4):: Zc_Base_Min
-! real (kind=real4):: Tc_H2O
-! real (kind=real4):: Zc_H2O
-
-   integer (kind=int4):: NWP_Profile_Inversion_Flag
+  integer (kind=int4):: NWP_Profile_Inversion_Flag
   integer (kind=int4):: Itemp
 
 !-----------------------------------------------------------------------
@@ -584,10 +575,10 @@ module AWG_CLOUD_HEIGHT
     jlrc = Line_Idx_LRC(Elem_Idx,Line_Idx)
     Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
     
-    !--- Qc indices (check how Framework handles it)
-    if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) == Missing_Value_Int4 .or. &
-        Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) == Missing_Value_Int4 .or. &
-        Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx) == Missing_Value_Int4) then 
+    !--- Qc indices
+    if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
+        Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
+        Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx) <= 0) then 
           Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
           Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
          cycle 
@@ -1392,29 +1383,8 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
  !--- save retrievals into the output variables
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
+ Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
-
- !--- save nadir adjusted emissivity and optical depth
- if (x(2) < 1.00) then
-
-   call COMPUTE_TAU_REFF_ACHA(symbol, &
-                              Output%Beta(Elem_Idx,Line_Idx), &
-                              Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
-                              Cloud_Phase, &
-                              x(2), &
-                              Output%Ec(Elem_Idx,Line_Idx), &
-                              Output%Tau(Elem_Idx,Line_Idx), &
-                              Output%Reff(Elem_Idx,Line_Idx))
-
- else
-
-   Output%Tau(Elem_Idx,Line_Idx) = 20.0
-   Output%Ec(Elem_Idx,Line_Idx) = 1.0
-   Output%Beta(Elem_Idx,Line_Idx) = 1.3
-   Output%Reff(Elem_Idx,Line_Idx) = 20.0
-
- endif
-
 
  !--- save uncertainty estimates
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
@@ -1423,7 +1393,6 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
-
 
  !---  for low clouds over water, force fixed lapse rate estimate of height
  Delta_Cld_Temp_Sfc_Temp = Input%Surface_Temperature(Elem_Idx,Line_Idx) - Output%Tc(Elem_Idx,Line_Idx)
@@ -1543,68 +1512,6 @@ endif
 endif     ! ---------- end of data check
  
  
- !-----------------------------------------------------------------------------
- !--- Cloud Base and Top
- !---
- !--- Note 1. Extinction values are in km^(-1)
- !--- Note 2. All heights and thickness are converted to meters
- !-----------------------------------------------------------------------------
- if (Output%Zc(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
-     Output%Tau(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
-
-       Cloud_Extinction = WATER_EXTINCTION
-
-       if(Cloud_Type == symbol%OPAQUE_ICE_TYPE .or. &
-          Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
-          select case (Itemp)
-            case (:199)    ; Cloud_Extinction = ICE_EXTINCTION1
-            case (200:219) ; Cloud_Extinction = ICE_EXTINCTION2
-            case (220:239) ; Cloud_Extinction = ICE_EXTINCTION3
-            case (240:259) ; Cloud_Extinction = ICE_EXTINCTION4
-            case (260:)    ; Cloud_Extinction = ICE_EXTINCTION5
-          end select
-       endif
-
-       if(Cloud_Type == symbol%CIRRUS_TYPE .or. &
-          Cloud_Type == symbol%OVERLAP_TYPE) then
-          Itemp = int(Output%Tc(Elem_Idx,Line_Idx))
-          select case (Itemp)
-            case (:199)    ; Cloud_Extinction = CIRRUS_EXTINCTION1
-            case (200:219) ; Cloud_Extinction = CIRRUS_EXTINCTION2
-            case (220:239) ; Cloud_Extinction = CIRRUS_EXTINCTION3
-            case (240:259) ; Cloud_Extinction = CIRRUS_EXTINCTION4
-            case (260:)    ; Cloud_Extinction = CIRRUS_EXTINCTION5
-          end select
-       endif
-
-       Cloud_Geometrical_Thickness = Output%Tau(Elem_Idx,Line_Idx) / Cloud_Extinction   !(km)
-       Cloud_Geometrical_Thickness = Cloud_Geometrical_Thickness * 1000.0 !(m)
-
-       if (Output%Tau(Elem_Idx,Line_Idx) < 2.0) then 
-          Cloud_Geometrical_Thickness_Top_Offset = Cloud_Geometrical_Thickness/2.0    !(m)
-       else
-          Cloud_Geometrical_Thickness_Top_Offset = 1000.0 / Cloud_Extinction !(m)
-       endif
-
-       Zc_Top_Max = Hght_Prof_RTM(Tropo_Level_RTM)
-       Zc_Base_Min = Hght_Prof_RTM(Sfc_Level_RTM)
-
-       !-- new code
-       if (Output%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-          Output%Zc_Top(Elem_Idx,Line_Idx) = Output%Zc(Elem_Idx,Line_Idx)
-       else
-          Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
-                                             Output%Zc(Elem_Idx,Line_Idx) +  &
-                                             Cloud_Geometrical_Thickness_Top_Offset)
-       endif
-
-       Output%Zc_Base(Elem_Idx,Line_Idx) = min(Output%Zc(Elem_Idx,Line_Idx), &
-                                           max(Zc_Base_Min,  &
-                                           Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
-
- endif
-
  !------------------------------------------------------------------------
  ! Pack Quality Flags Output
  !------------------------------------------------------------------------
@@ -3628,110 +3535,6 @@ function COMPUTE_STANDARD_DEVIATION(Data_Array,Invalid_Mask) Result(Stddev_of_Ar
 end function
 
 !---------------------------------------------------------------------------
-!
-!---------------------------------------------------------------------------
-subroutine COMPUTE_TAU_REFF_ACHA(symbol,  &
-                                 Beta, &
-                                 Cosine_Zenith_Angle, &
-                                 Cloud_Phase, &
-                                 Ec_Slant, & 
-                                 Ec, &
-                                 Tau, &
-                                 Reff)
-
-   type(symbol_acha), intent(in) :: symbol
-   real(kind=real4), intent(in):: Beta
-   real(kind=real4), intent(in):: Cosine_Zenith_Angle
-   real(kind=real4), intent(in):: Ec_Slant
-   integer(kind=int4), intent(in):: Cloud_Phase
-   real(kind=real4), intent(out):: Ec
-   real(kind=real4), intent(out):: Tau
-   real(kind=real4), intent(out):: Reff
-   real(kind=real4):: Qe_vis
-   real(kind=real4):: Qe_11um
-   real(kind=real4):: wo_11um
-   real(kind=real4):: g_11um
-   real(kind=real4):: Tau_Abs_11um
-   real(kind=real4):: Temp_R4
-   real(kind=real4):: log10_Reff
-
-   Tau = MISSING_VALUE_REAL
-   Reff = MISSING_VALUE_REAL
-   Ec = MISSING_VALUE_REAL
-
-   if (Cloud_Phase == symbol%ICE_PHASE) then
-    Temp_R4 = A_Re_Beta_FIT_ICE +  &
-              B_Re_Beta_FIT_ICE*Beta + &
-              C_Re_Beta_FIT_ICE*Beta**2 + &
-              D_Re_Beta_FIT_ICE*Beta**3
-   else
-    Temp_R4 = A_Re_Beta_FIT_WATER +  &
-              B_Re_Beta_FIT_WATER*Beta + &
-              C_Re_Beta_FIT_WATER*Beta**2 + &
-              D_Re_Beta_FIT_WATER*Beta**3
-   endif
-
-   Reff = 10.0**(1.0/Temp_R4)
-
-   if (Reff > 0.0) then
-     log10_Reff = alog10(Reff)
-   else
-     return
-   endif
-
-   if (Cloud_Phase == symbol%ICE_PHASE) then
-
-     Qe_Vis = A_Qe_065um_FIT_ICE +  &
-              B_Qe_065um_FIT_ICE*log10_Reff + &
-              C_Qe_065um_FIT_ICE*log10_Reff**2
-
-     Qe_11um = A_Qe_11um_FIT_ICE +  &
-               B_Qe_11um_FIT_ICE*log10_Reff + &
-               C_Qe_11um_FIT_ICE*log10_Reff**2
-
-     wo_11um = A_wo_11um_FIT_ICE +  &
-               B_wo_11um_FIT_ICE*log10_Reff + &
-               C_wo_11um_FIT_ICE*log10_Reff**2
-
-     g_11um =  A_g_11um_FIT_ICE +  &
-               B_g_11um_FIT_ICE*log10_Reff + &
-               C_g_11um_FIT_ICE*log10_Reff**2
-
-   else
-
-     Qe_Vis = A_Qe_065um_FIT_WATER +  &
-              B_Qe_065um_FIT_WATER*log10_Reff + &
-              C_Qe_065um_FIT_WATER*log10_Reff**2
-
-     Qe_11um = A_Qe_11um_FIT_WATER +  &
-               B_Qe_11um_FIT_WATER*log10_Reff + &
-               C_Qe_11um_FIT_WATER*log10_Reff**2
-
-     wo_11um = A_wo_11um_FIT_WATER +  &
-               B_wo_11um_FIT_WATER*log10_Reff + &
-               C_wo_11um_FIT_WATER*log10_Reff**2
-
-     g_11um =  A_g_11um_FIT_WATER +  &
-               B_g_11um_FIT_WATER*log10_Reff + &
-               C_g_11um_FIT_WATER*log10_Reff**2
-
-   endif
-
-   Tau_Abs_11um = -Cosine_Zenith_Angle*alog(1.0 - Ec_Slant) 
-
-   Ec = 1.0 - exp(-Tau_Abs_11um)
-   
-   Tau = (Qe_vis / Qe_11um) * Tau_Abs_11um / (1.0 - wo_11um * g_11um)
-
-   !--- set negative values to be missing - added by Y Li
-   if (Tau < 0) then
-      Tau = MISSING_VALUE_REAL
-      Reff= MISSING_VALUE_REAL
-   endif
-
-end subroutine COMPUTE_TAU_REFF_ACHA 
-
-!---------------------------------------------------------------------------
 ! Compute Parallax Correction
 !
 ! This routine generates new Lat and Lon arrays that are parallax
@@ -4095,7 +3898,7 @@ end subroutine NULL_PIX_POINTERS
 !====================================================================
 subroutine SET_ACHA_VERSION(Acha_Version)
    character(len=*):: Acha_Version
-   Acha_Version = "$Id$"
+   Acha_Version = "$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $"
 end subroutine SET_ACHA_VERSION
 !====================================================================
 ! 

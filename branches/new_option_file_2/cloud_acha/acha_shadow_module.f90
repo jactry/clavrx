@@ -79,15 +79,14 @@ subroutine CLOUD_SHADOW_RETR (  &
       cloud_shadow = 0
 
       !--- allocate local memory
-      allocate ( Distance_km, source = Cloud_Height) 
-      allocate ( Lon_Spacing_Per_m, source = Cloud_Height)
-      
+      i_dim = size ( Cloud_Height, dim=1)
+      j_dim = size ( Cloud_Height, dim=2)
+      allocate ( Distance_km (i_dim, j_dim))
+      allocate ( Lon_Spacing_Per_m (i_dim, j_dim))
+
       Distance_km = Cloud_Height * tan (Solar_Zenith * DTOR )
       
       Lon_Spacing_Per_m = LAT_SPACING_PER_M / cos ( Lat_Pc * DTOR )
-      
-      i_dim = size ( Cloud_Height, dim=1)
-      j_dim = size ( Cloud_Height, dim=2)
       
          do i = 2 , i_dim - 1
             do j = 2 ,j_dim - 1
@@ -106,8 +105,8 @@ subroutine CLOUD_SHADOW_RETR (  &
          end do   
          
          !--- destroy local memory
-         deallocate ( distance_km)
-         deallocate ( lon_spacing_per_m)
+         deallocate ( Distance_km)
+         deallocate ( Lon_Spacing_Per_m)
 
    end subroutine CLOUD_SHADOW_RETR
    !================================================================================================================ 
@@ -139,7 +138,7 @@ subroutine CLOUD_SHADOW_RETR (  &
       real :: diff_Lat , diff_lon
       real :: delta_Lat_ii , delta_Lat_jj
       real :: delta_lon_ii , delta_lon_jj
-      real :: long_idx,short_idx
+      integer :: long_idx,short_idx
       integer :: short_idx_arr
       
       integer :: dim_1 , dim_2
@@ -178,7 +177,7 @@ subroutine CLOUD_SHADOW_RETR (  &
             idx_1 = i + sign(k,ii)
             if (idx_1 < 1 .or. idx_1 > dim_1 ) cycle
              
-            short_idx_arr = CEILING ( short_idx * sign(k,jj) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,jj) / (1.* long_idx ) ) 
        
             idx_2 = j + short_idx_arr
             if ( idx_2 > 0 .and. idx_2 <= dim_2 ) shad_arr( idx_1 , idx_2 )   = 1
@@ -188,7 +187,7 @@ subroutine CLOUD_SHADOW_RETR (  &
             idx_2 = j + sign(k,jj)
           
             if (idx_2 < 1 .or. idx_2 > dim_2 ) cycle
-            short_idx_arr = CEILING ( short_idx * sign(k,ii) / long_idx  ) 
+            short_idx_arr = CEILING ( short_idx * sign(k,ii) / ( 1.* long_idx)  ) 
             
             idx_1 = i + short_idx_arr
             

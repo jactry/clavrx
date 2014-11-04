@@ -433,8 +433,8 @@ write(string_3,'(i3)' ) start_day
 call mesg ("Start Day of Year= "//trim(string_3))
 
 call mesg ( "Start Time of Day = ", Start_Time / 1000.0 / 60.0 / 60.0 )
-write(string_3,'(i3)') num_scans
-call mesg ( "Number of Scans = "//string_3)
+write(string_6,'(i5)') num_scans
+call mesg ( "Number of Scans = "//string_6)
 
 if (Avhrr_Flag == sym%YES) then
     print *,EXE_PROMPT, "Sensor = AVHRR"

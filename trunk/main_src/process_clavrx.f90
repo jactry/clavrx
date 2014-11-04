@@ -1542,7 +1542,7 @@
 
                !--- don't run if not a geostationary satellite
                if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or. SEVIRI_Flag == sym%YES) then
-                  call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
+                  !call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
                end if
 
             end if
@@ -1622,7 +1622,7 @@
             end if
 
             !--- screen output to mark progress through orbit
-           write ( string_100, '(A22, I2, A16, I3 , 4X , I3)')  "processed segment #",Segment_Number," scanlines = ",  &
+           write ( string_100, '(A22, I2, A16, I3 , 4X , I4)')  "processed segment #",Segment_Number," scanlines = ",  &
                         Scan_Number(Line_Idx_Min_Segment), Scan_Number(Num_Scans_Read)
            call mesg  ( string_100 )
 

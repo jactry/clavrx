@@ -1542,7 +1542,7 @@
 
                !--- don't run if not a geostationary satellite
                if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or. SEVIRI_Flag == sym%YES) then
-                  !call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
+                  call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
                end if
 
             end if

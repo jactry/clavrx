@@ -479,11 +479,7 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
         elseif(trim(fargv) == "-no_rtm_file") then
           rtm_file_Flag = sym%NO
 
-        !Change ash output flag
-        elseif(trim(fargv) == "-ash_file") then
-          ash_file_Flag = sym%YES
-        elseif(trim(fargv) == "-no_ash_file") then
-          ash_file_Flag = sym%NO
+       
 
         !Change level2 output flag
         elseif(trim(fargv) == "-level2_file") then
@@ -928,13 +924,6 @@ subroutine HELPER()
   print *,"  -no_erb_Flag"
   print *, "   Don't run radiative flux algorithms. "
   print *," "
-
-!  print *,"  -ash_Flag"
-!  print *, "   Run Vol Ash algorithms. "
-!  print *," "
-!  print *,"  -no_ash_Flag"
-!  print *, "   Don't run Vol Ash algorithms. "
-!  print *," "
 
   print *,"  -use_sst_anal"
   print *, "   Use OISST analysis. "

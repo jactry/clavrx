@@ -281,6 +281,7 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
       read(unit=Default_Lun,fmt=*) Level2_File_Flag
       read(unit=Default_Lun,fmt=*) Rtm_File_Flag
       read(unit=Default_Lun,fmt=*) Cld_Flag
+      read(unit=Default_Lun,fmt=*) Erb_Flag
       read(unit=Default_Lun,fmt=*) Nwp_Flag
       read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Rtm_Flag

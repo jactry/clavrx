@@ -429,6 +429,7 @@
       ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
       !----------------------------------------------------------------------
       read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
+      if ( file_1b_temp == "") exit
       if (ios /= 0) then
          if (ios /= -1) then
             !-- non eof error

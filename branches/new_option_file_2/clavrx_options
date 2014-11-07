@@ -7,6 +7,7 @@
 1   !OUTPUT Level-2  file output flag (0= no, 1 = yes)
 0   !OUTPUT RTM  file output flag (0= no, 1 = yes)
 1   !PRC Cloud flag  
+1   !FLUX parameters ( former erb_flag)
 1   !NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
 0   !NWP smooth nwp flag (0=no, 1=yes)
 1   !RTM rtm flag  (0=crtm,1=pfast, (2=rttov))

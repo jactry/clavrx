@@ -593,9 +593,9 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
   integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Dust_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Smoke_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Fire_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Smoke_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed

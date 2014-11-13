@@ -154,8 +154,10 @@ clavrxorb_objs = process_clavrx.o \
 	         reposnx.o \
                  reposition_module.o \
 		 dcomp_derived_products_module.o \
-		 naive_bayesian_cloud_mask_module.o \
-                 naive_bayesian_clavrx_bridge_module.o \
+                 nb_cloud_mask_clavrx_bridge_module.o \
+                 nb_cloud_mask_clavrx_services_module.o \
+		 nb_cloud_mask_module.o \
+                 nb_cloud_mask_addons_module.o \
                  move_bytes.o \
 	         mreadf.o \
 	         modis_module.o \
@@ -350,12 +352,16 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
-cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o naive_bayesian_cloud_mask_module.o
+cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
-naive_bayesian_clavrx_bridge_module.o: $(CMASK)/naive_bayesian_clavrx_bridge_module.f90 constant.o pixel_common.o num_mod.o naive_bayesian_cloud_mask_module.o file_tools.o
+nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90 pixel_common.o num_mod.o nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_module.o nb_cloud_mask_addons_module.o file_tools.o
+nb_cloud_mask_clavrx_services_module.o: $(CMASK)/nb_cloud_mask_clavrx_services_module.f90
 
-naive_bayesian_cloud_mask_module.o: $(CMASK)/naive_bayesian_cloud_mask_module.f90 constant.o pixel_common.o num_mod.o file_utility.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/naive_bayesian_cloud_mask_module.f90
+nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_module.f90
+
+nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud_mask_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_addons_module.f90
 
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
@@ -365,7 +371,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              naive_bayesian_clavrx_bridge_module.o ncep_reanalysis.o \
+              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \

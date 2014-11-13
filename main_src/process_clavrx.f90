@@ -126,7 +126,7 @@
    use SFC_EMISS
    use PLANCK
    use AVHRR_REPOSITION_ROUTINES
-   use NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
+   use NB_CLOUD_MASK_CLAVRX_BRIDGE
    use MODIS_MODULE
    use IFF_CLAVRX_BRIDGE
    use GOES_MODULE
@@ -1370,7 +1370,7 @@
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
-                     call CLOUD_MASK_NAIVE_BAYES_BRIDGE(Segment_Number)
+                     call NB_CLOUD_MASK_BRIDGE(Segment_Number)
                   else
                      print *, "Only the Bayesian Cloud Mask is available, check selection"
                      stop 

@@ -115,7 +115,7 @@ module cloud_type_bridge_module
        , et_cloud_type &
        , set_cloud_phase
        
-   use NAIVE_BAYESIAN_CLOUD_MASK_MODULE, only: &
+   use NB_CLOUD_MASK, only: &
       et_cloudiness_class
    
    use RTM_COMMON , only: &

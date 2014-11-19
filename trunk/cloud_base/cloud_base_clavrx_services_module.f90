@@ -57,23 +57,27 @@ module CLOUD_BASE_SERVICES
  real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
  integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
  integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
- real, dimension(:,:), pointer:: Latitude_Pc
- real, dimension(:,:), pointer:: Longitude_Pc
- real, dimension(:,:), pointer:: Tc
- real, dimension(:,:), pointer:: Ec
- real, dimension(:,:), pointer:: Beta
- real, dimension(:,:), pointer:: Pc
- real, dimension(:,:), pointer:: Zc
- real, dimension(:,:), pointer:: Tau
- real, dimension(:,:), pointer:: Reff
- real, dimension(:,:), pointer:: Tc_Uncertainty
- real, dimension(:,:), pointer:: Ec_Uncertainty
- real, dimension(:,:), pointer:: Beta_Uncertainty
- real, dimension(:,:), pointer:: Pc_Uncertainty
- real, dimension(:,:), pointer:: Zc_Uncertainty
- real, dimension(:,:), pointer:: Lower_Cloud_Pressure
- real, dimension(:,:), pointer:: Lower_Cloud_Temperature
- real, dimension(:,:), pointer:: Lower_Cloud_Height
+ real, dimension(:,:), pointer:: Latitude_Pc                         !parallax corrected lat
+ real, dimension(:,:), pointer:: Longitude_Pc                        !parallax corrected lon
+ real, dimension(:,:), pointer:: Tc                                  !cloud temperature
+ real, dimension(:,:), pointer:: Ec                                  !cloud emissivity
+ real, dimension(:,:), pointer:: Beta                                !cloud beta
+ real, dimension(:,:), pointer:: Pc                                  !cloud pressure
+ real, dimension(:,:), pointer:: Zc                                  !cloud height
+ real, dimension(:,:), pointer:: Tau                                 !cloud optical depth
+ real, dimension(:,:), pointer:: Reff                                !cloud effective particle size
+ real, dimension(:,:), pointer:: Tc_Uncertainty                      !uncertainty in cloud temperature
+ real, dimension(:,:), pointer:: Ec_Uncertainty                      !uncertainty in cloud emissivity
+ real, dimension(:,:), pointer:: Beta_Uncertainty                    !uncertainty in cloud beta
+ real, dimension(:,:), pointer:: Pc_Uncertainty                      !uncertainty in cloud pressure
+ real, dimension(:,:), pointer:: Zc_Uncertainty                      !uncertainty in cloud height
+ real, dimension(:,:), pointer:: Lower_Cloud_Pressure                !pressure of lower cloud layer (if present)
+ real, dimension(:,:), pointer:: Lower_Cloud_Temperature             !temperature of lower cloud layer (if present)
+ real, dimension(:,:), pointer:: Lower_Cloud_Height                  !height of lower cloud layer (if present)
+ real, dimension(:,:), pointer:: Cdnc                                !cloud droplet number concentration
+ real, dimension(:,:), pointer:: Hcld                                !cloud geometrical thickness
+ real, dimension(:,:), pointer:: LCL                                 !lifting condensation level
+ real, dimension(:,:), pointer:: CCL                                 !convective condensation level
 
  end type acha_input_struct
 

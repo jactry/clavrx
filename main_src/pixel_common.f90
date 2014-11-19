@@ -817,8 +817,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Iwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Pc_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: LCL_Height_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: CCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: LCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: CCL_Height_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cfrac_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Ncld_Layers_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Cld_Type_Nwp_Pix

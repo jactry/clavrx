@@ -38,7 +38,7 @@ module AWG_CLOUD_HEIGHT
 ! 7 - degraded beta Retrieval (0 = no, 1 = yes)
 !
 !----------------------------------------------------------------------
-  use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
+  use ACHA_GEOCAT_SERVICES_MODULE !acha_geocat_services_module.f90 in akh_clavrx_src
 
   implicit none
 
@@ -982,9 +982,11 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-  if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
+  if (associated(Input%Tc_Cirrus_Sounder)) then
+    if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
       Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+    endif
   endif
 
 

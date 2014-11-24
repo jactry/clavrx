@@ -67,8 +67,16 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
    character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
+   !Make Iband and DNB flag
+   integer (kind=INT1), DIMENSION(5), PRIVATE :: IBand_Flag
+   integer (kind=INT1), PRIVATE :: DNB_Flag
+   
    !allocatable
    integer (kind=INT1), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Solar_Contamination_Mask
+
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_1
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_2
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_3
 
    integer (kind=INT1), TARGET, PRIVATE :: Glint_Mask
    REAL(SINGLE), TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
@@ -165,9 +173,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Dust_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Smoke_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Fire_Mask
-
-
-   
+      
    
 contains
 !----------------------------------------------------------------------
@@ -206,6 +212,12 @@ contains
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
+   !Set global Ctxt pointer
+   Ctxt_NBCM => Ctxt
+   
+   !allocate local arrays
+   
+   
    allocate(Bt_Ch31_LRC(num_elem,num_line))
    
    allocate(Diag_Pix_Array_1(num_elem,num_line))
@@ -222,6 +234,9 @@ contains
    allocate(Bt_Uni_ChI4(num_elem,num_line))
    allocate(Bt_Uni_ChI5(num_elem,num_line))
 
+   allocate(Diag_Pix_Array_1(num_elem,num_line))
+   allocate(Diag_Pix_Array_2(num_elem,num_line))
+   allocate(Diag_Pix_Array_3(num_elem,num_line))
 
 
    
@@ -323,17 +338,25 @@ contains
    
 
    !--- Calculate I-Band Uniformity
-   VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
-
-
-   CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, VIIRS_375M_res_indx, CHN_VIIRS1, ChnI1Refl)
-   CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, VIIRS_375M_res_indx, CHN_VIIRS4, ChnI4BT)
-   CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, VIIRS_375M_res_indx, CHN_VIIRS5, ChnI5BT)
-
-
-
+   IBand_Flag(:) = sym%NO
+   
    
    if (IBand) ! FIXME - Check if I-Band is available
+
+       VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
+
+       IBand_Flag(1) = sym%YES
+       IBand_Flag(4) = sym%YES
+       IBand_Flag(5) = sym%YES
+
+
+       CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, &
+                                  VIIRS_375M_res_indx, CHN_VIIRS1, ChnI1Refl)
+       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
+                                   VIIRS_375M_res_indx, CHN_VIIRS4, ChnI4BT)
+       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
+                                   VIIRS_375M_res_indx, CHN_VIIRS5, ChnI5BT)
+
        COMPUTE_IBAND_STATISTICS ( ChnI1Refl , Dummy_IBand, Dummy_IBand , &
                                   Dummy_IBand, Ref_Uni_ChI1 ) 
 
@@ -345,6 +368,8 @@ contains
    
    ENDIF
 
+   !--- DNB reflectance 
+   DNB_Flag = sym%NO
 
 
 
@@ -427,7 +452,7 @@ contains
          ! Set inputs
          
          
-         call SET_INPUT(Elem_Idx,Line_Idx)
+         call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)
          call SET_OUTPUT(Elem_Idx,Line_Idx)
          call SET_DIAG(Elem_Idx,Line_Idx)
 
@@ -452,13 +477,6 @@ contains
          call NULL_OUTPUT()
          call NULL_DIAG()
    
-         !-----------------------------------------------------------------------
-         ! CLAVR-x specific processing
-         !-----------------------------------------------------------------------
-
-         !--- unpack elements of the cloud test vector into clavr-x global arrays
-         Bayes_Mask_Sfc_Type_Global(i,j) = ibits(Cld_Test_Vector_Packed(3,i,j),0,3)
-
       end do elem_loop
    end do line_loop
 
@@ -491,6 +509,12 @@ contains
    if (allocated(Bt_Ch31_Max_3x3)) deallocate(Bt_Ch31_Max_3x3)
    if (allocated(Bt_Ch31_Min_3x3)) deallocate(Bt_Ch31_Min_3x3)
    if (allocated(Bt_Ch31_Stddev_3x3)) deallocate(Bt_Ch31_Stddev_3x3)
+
+
+
+   deallocate(Diag_Pix_Array_1)
+   deallocate(Diag_Pix_Array_2)
+   deallocate(Diag_Pix_Array_3)
       
    !Pointers
    CHN_FLG => null()
@@ -672,10 +696,10 @@ contains
       Input%Chan_On_85um = CHN_FLG(11)
       Input%Chan_On_11um = CHN_FLG(14)
       Input%Chan_On_12um = CHN_FLG(15)
-      Input%Chan_On_I1_064um = 0
-      Input%Chan_On_I4_374um = 0
-      Input%Chan_On_I5_114um = 0
-      Input%Chan_On_DNB = 0
+      Input%Chan_On_I1_064um = IBand_Flag(1)
+      Input%Chan_On_I4_374um = IBand_Flag(4)
+      Input%Chan_On_I5_114um = IBand_Flag(5)
+      Input%Chan_On_DNB = DNB_Flag
       Input%Snow_Class => SnowMask(i,j)
       Input%Land_Class => LandMask(i,j)
       Input%Oceanic_Glint_Mask => Glint_Mask

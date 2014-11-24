@@ -38,7 +38,7 @@ module AWG_CLOUD_HEIGHT
 ! 7 - degraded beta Retrieval (0 = no, 1 = yes)
 !
 !----------------------------------------------------------------------
-  use ACHA_GEOCAT_SERVICES_MODULE !acha_geocat_services_module.f90 in akh_clavrx_src
+  use ACHA_SERVICES_MOD !acha_geocat_services_module.f90 in akh_clavrx_src
 
   implicit none
 

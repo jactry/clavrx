@@ -2,7 +2,7 @@
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
-module ACHA_GEOCAT_SERVICES_MODULE
+module ACHA_SERVICES_MOD
 
  use ALGORITHM_MODULE_USAGE
 
@@ -375,4 +375,4 @@ end type acha_rtm_nwp_struct
 
 
 
-end module ACHA_GEOCAT_SERVICES_MODULE
+end module ACHA_SERVICES_MOD

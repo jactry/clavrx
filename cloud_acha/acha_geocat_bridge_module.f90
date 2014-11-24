@@ -8,7 +8,7 @@
 !------------------------------------------------------------------------------
 module ACHA_GEOCAT_BRIDGE_MODULE
 
- use ACHA_GEOCAT_SERVICES_MODULE
+ use ACHA_SERVICES_MOD
  use AWG_CLOUD_HEIGHT
    
  implicit none

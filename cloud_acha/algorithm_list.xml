@@ -46,7 +46,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode_1" keyword="ACHA_mode_1">
                 <comment value="New ACHA Mode 1" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -133,7 +133,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode_2" keyword="ACHA_mode_2">
                 <comment value="New ACHA Mode 2" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -221,7 +221,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode_3" keyword="ACHA_mode_3">
                 <comment value="New ACHA Mode 3" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -310,7 +310,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode4" keyword="ACHA_mode_4">
                 <comment value="New ACHA Mode 4" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -397,7 +397,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode5" keyword="ACHA_mode_5">
                 <comment value="New ACHA Mode 5" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -484,7 +484,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode6_msg" keyword="ACHA_mode_6_msg">
                 <comment value="New ACHA Mode 6 for MSG " />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 
@@ -571,7 +571,7 @@ Basic layout, including all optional tags
         <algorithm name="New_ACHA_Mode6_GOES" keyword="ACHA_mode_6_goes">
                 <comment value="New ACHA Mode 6 for GOES" />
                 <function value="awg_cloud_height_bridge" /> 
-                <module value="acha_geocat_services_module+awg_cloud_height+acha_geocat_bridge_module" />
+                <module value="acha_geocat_services_module+acha_module+acha_geocat_bridge_module" />
                 <reference value="TBD" />
                 <ancil_subdir value="cloud_acha_svn" />
 

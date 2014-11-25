@@ -201,6 +201,7 @@ contains
    integer:: Line_Idx_width
    integer:: Line_Idx_segment_max
    integer:: VIIRS_375M_res_indx
+   integer :: McIDAS_ID
 
 
 
@@ -340,8 +341,12 @@ contains
    !--- Calculate I-Band Uniformity
    IBand_Flag(:) = sym%NO
    
+   ! McIDAS sensor ID
+   CALL NFIP_Sat_Sat_ID(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, McIDAS_ID)
    
-   if (IBand) ! FIXME - Check if I-Band is available
+   !Use sensor ID to determin if I and DNB are available
+   
+   if (McIDAS_ID == 300) ! FIXME - Really need a way other than magic numbers to indentify VIIRS
 
        VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
 
@@ -703,13 +708,13 @@ contains
       Input%Snow_Class => SnowMask(i,j)
       Input%Land_Class => LandMask(i,j)
       Input%Oceanic_Glint_Mask => Glint_Mask
-      Input%Lunar_Oceanic_Glint_Mask => null() !No DNB in Framework
+      Input%Lunar_Oceanic_Glint_Mask => null() !No DNB in Framework now
       Input%Coastal_Mask => CoastMask(i,j)
       Input%Solzen => SolZen(i,j)
       Input%Scatzen => ScatAng(i,j)
-      Input%Lunscatzen => null() !No DNB in Framework
+      Input%Lunscatzen => null() !No DNB in Framework now
       Input%Senzen => Satzen(i,j)
-      Input%Lunzen => null() !No DNB in Framework
+      Input%Lunzen => null() !No DNB in Framework now
       Input%Lat => Latitude(i,j)
       Input%Lon => Longitude(i,j)
       Input%Ref_041um => Chn1Refl(i,j)
@@ -722,7 +727,7 @@ contains
       Input%Ref_160um => Chn5Refl(i,j)
       Input%Ref_160um_Clear => Ref_Ch5_Clear(i,j)
       Input%Ref_375um => Chn7Refl(i,j)
-      Input%Ref_375um_Clear => ch(20)%Ref_Toa_Clear(i,j) !NEED
+      Input%Ref_375um_Clear => null() !Not filled or used for now
       Input%Ref_213um => Chn6Refl(i,j)
       Input%Bt_375um => Chn7BT(i,j)
       Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)

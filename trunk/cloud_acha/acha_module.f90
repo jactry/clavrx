@@ -973,11 +973,12 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-  if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
+  if (associated(Input%Tc_Cirrus_Sounder)) then
+    if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
       Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+    endif
   endif
-
 
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  

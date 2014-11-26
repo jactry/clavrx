@@ -38,6 +38,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    USE RTM_Access_Mod
    !USE RTM_MODULE
    USE Planck_Module
+   USE NF_PARM
    ! -- MODULES USED
    use NB_CLOUD_MASK
    use CLOUD_MASK_ADDONS
@@ -346,7 +347,7 @@ contains
    
    !Use sensor ID to determin if I and DNB are available
    
-   if (McIDAS_ID == 300) ! FIXME - Really need a way other than magic numbers to indentify VIIRS
+   if (McIDAS_ID == NPP_VIIRS_MCIDAS_ID) 
 
        VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
 

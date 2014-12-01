@@ -1,3 +1,8 @@
+ !-----------------------------------------------------------------------------
+ ! Input Structure
+ !-----------------------------------------------------------------------------
+ module NB_CLOUD_MASK_SERVICES
+
  use PCF_NPP_BAYES_CLOUD_MASK_Mod
  use CloudMask_Access_Mod
  use type_KINDS_AIT
@@ -19,10 +24,7 @@
  use Numerical_Routines
  use RTM_MODULE
 
-!-----------------------------------------------------------------------------
- ! Input Structure
- !-----------------------------------------------------------------------------
- module NB_CLOUD_MASK_SERVICES
+
 
  implicit none
 

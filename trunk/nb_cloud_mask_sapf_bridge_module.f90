@@ -73,30 +73,35 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer (kind=INT1), PRIVATE :: DNB_Flag
    
    !allocatable
-   integer (kind=INT1), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Solar_Contamination_Mask
+   integer (kind=INT1), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Solar_Contamination_Mask
 
-   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_1
-   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_2
-   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, PRIVATE :: Diag_Pix_Array_3
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Diag_Pix_Array_1
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Diag_Pix_Array_2
+   REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Diag_Pix_Array_3
 
    integer (kind=INT1), TARGET, PRIVATE :: Glint_Mask
    REAL(SINGLE), TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
    
    
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch1_Mean_3X3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch1_Max_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch1_Min_3X3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch1_Stddev_3X3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Mean_3X3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Max_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Min_3X3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Stddev_3X3
 
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Mean_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Max_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Min_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Stddev_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Mean_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Max_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Min_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Stddev_3x3
 
 
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_Ch20_Median_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_Ch20_Std_Median_3x3
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_3_75_Clear_Solar_Rtm
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ems_Ch20_Median_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ems_Ch20_Std_Median_3x3
+
+
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch20_Stddev_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch20_Mean_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch20_Max_3x3
+   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch20_Min_3x3
 
 
    !I-Band uniformity
@@ -145,7 +150,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Sst_Anal_Uni
 
 !   INTEGER(LONG) :: Sfc_Idx_NWP
-!   REAL(SINGLE) :: Chn7_Sol_Energy
+   REAL(SINGLE), PRIVATE :: Chn7_Sol_Energy
 
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn1Refl
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn2Refl
@@ -159,14 +164,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI1Refl
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI4BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI5BT
-   
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_3_75_Clear_Solar_Rtm11
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_Ch20_Median_3x311
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_Ch20_Std_Median_3x311
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Glint_Mask11
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Stddev_3x311
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Ch31_Max_3x311
-   
+      
    !Outputs
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Cld_Mask
    real (SINGLE),dimension(:,:), POINTER, PRIVATE  :: Posterior_Cld_Probability
@@ -203,32 +201,26 @@ contains
    integer:: Line_Idx_segment_max
    integer:: VIIRS_375M_res_indx
    integer :: McIDAS_ID
+   REAL(SINGLE) :: Glint_Zen_Thresh=40.0
 
 
 
 
    !---- set paths and mask classifier file name to their values in this framework
    Ancil_Data_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
-   Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
+!   Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
    
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
-   !Set global Ctxt pointer
-   Ctxt_NBCM => Ctxt
-   
    !allocate local arrays
-   
-   
-   allocate(Bt_Ch31_LRC(num_elem,num_line))
-   
+      
    allocate(Diag_Pix_Array_1(num_elem,num_line))
    allocate(Diag_Pix_Array_2(num_elem,num_line))
    allocate(Diag_Pix_Array_3(num_elem,num_line))
    allocate(Emiss_11um_Tropo_Rtm(num_elem,num_line))
    allocate(Ems_Ch20_Median_3x3(num_elem,num_line))
    allocate(Ems_Ch20_Std_Median_3x3(num_elem,num_line))
-   allocate(Ems_3_75_Clear_Solar_Rtm(num_elem,num_line))
 
 
    allocate(Dummy_IBand(num_elem,num_line))
@@ -325,10 +317,18 @@ contains
 
    
    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn14BT, Bt_Ch31_Mean_3x3, &
-                                   Bt_Ch31_Max_3x3, Bt_Ch31_Min_3x3, Bt_Ch31_Stddev_3x3)
+                                   Bt_Ch31_Max_3x3, Bt_Ch31_Min_3x3, &
+                                    Bt_Ch31_Stddev_3x3)
                                    
    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn2Refl, Ref_Ch1_Mean_3X3, &
-                                   Ref_Ch1_Max_3x3, Ref_Ch1_Min_3X3, Ref_Ch1_Stddev_3X3)
+                                   Ref_Ch1_Max_3x3, Ref_Ch1_Min_3X3, &
+                                   Ref_Ch1_Stddev_3X3)
+
+
+   CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn7BT, Bt_Ch31_Mean_3x3, &
+                                   Bt_Ch20_Max_3x3, Bt_Ch20_Min_3x3, &
+                                   Bt_Ch20_Stddev_3x3)
+
 
    !--- apply median filter to 3.75um Emissivity
    !rchen replace Num_Scans_Read with Num_line
@@ -343,36 +343,36 @@ contains
    IBand_Flag(:) = sym%NO
    
    ! McIDAS sensor ID
-   CALL NFIP_Sat_Sat_ID(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, McIDAS_ID)
+   CALL NFIP_Sat_Sat_ID(Ctxt%SATELLITE_DATA_Src1_T00, McIDAS_ID)
    
    !Use sensor ID to determin if I and DNB are available
    
-   if (McIDAS_ID == NPP_VIIRS_MCIDAS_ID) 
+   if (McIDAS_ID == NPP_VIIRS_MCIDAS_ID) then
 
-       VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
+!       VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
 
        IBand_Flag(1) = sym%YES
        IBand_Flag(4) = sym%YES
        IBand_Flag(5) = sym%YES
 
+!       CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, &
+!                                  VIIRS_375M_res_indx, CHN_VIIRS1, ChnI1Refl)
+!       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
+!                                   VIIRS_375M_res_indx, CHN_VIIRS4, ChnI4BT)
+!       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
+!                                   VIIRS_375M_res_indx, CHN_VIIRS5, ChnI5BT)
 
-       CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, &
-                                  VIIRS_375M_res_indx, CHN_VIIRS1, ChnI1Refl)
-       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
-                                   VIIRS_375M_res_indx, CHN_VIIRS4, ChnI4BT)
-       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
-                                   VIIRS_375M_res_indx, CHN_VIIRS5, ChnI5BT)
+!       COMPUTE_IBAND_STATISTICS ( ChnI1Refl , Dummy_IBand, Dummy_IBand , &
+!                                  Dummy_IBand, Ref_Uni_ChI1 ) 
 
-       COMPUTE_IBAND_STATISTICS ( ChnI1Refl , Dummy_IBand, Dummy_IBand , &
-                                  Dummy_IBand, Ref_Uni_ChI1 ) 
+!       COMPUTE_IBAND_STATISTICS ( ChnI4BT , Dummy_IBand, Dummy_IBand , &
+!                                  Dummy_IBand, Bt_Uni_ChI4 ) 
 
-       COMPUTE_IBAND_STATISTICS ( ChnI4BT , Dummy_IBand, Dummy_IBand , &
-                                  Dummy_IBand, Bt_Uni_ChI4 ) 
-
-       COMPUTE_IBAND_STATISTICS ( ChnI5BT , Dummy_IBand, Dummy_IBand , &
-                                  Dummy_IBand, Bt_Uni_ChI5 ) 
+!       COMPUTE_IBAND_STATISTICS ( ChnI5BT , Dummy_IBand, Dummy_IBand , &
+!                                  Dummy_IBand, Bt_Uni_ChI5 ) 
    
    ENDIF
+   IBand_Flag(:) = sym%NO
 
    !--- DNB reflectance 
    DNB_Flag = sym%NO
@@ -405,7 +405,7 @@ contains
             !--- assume to be glint if in geometric zone
                 Glint_Mask = sym%YES
 
-                IF (Chan_On_11um == sym%YES) then
+                IF (CHN_FLG(14) == sym%YES) then
 
                 !--- exclude pixels colder than the freezing temperature
                     IF (Chn14BT(Elem_Idx,Line_Idx) < 273.15) then
@@ -420,7 +420,7 @@ contains
                 endif
 
           !-turn off if non-uniform in reflectance
-                IF (Chan_On_063um == sym%YES) then
+                IF (CHN_FLG(2) == sym%YES) then
                     !rchen
                     IF (Ref_Ch1_Stddev_3x3(Elem_Idx,Line_Idx) > 1.0) then
                         Glint_Mask = sym%NO
@@ -485,25 +485,15 @@ contains
    
       end do elem_loop
    end do line_loop
-
-   !--- grab version tags for output as attributes in level2
-   !--- only need to do this once, so do on first segment
-   if (Segment_Number == 1) then
-     call SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
-     call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
-   endif
    
    
    !Deallocate arrays
-   deallocate(Covar_Ch27_Ch31_5x5)
-   deallocate(Glint_Mask)
    deallocate(Diag_Pix_Array_1)
    deallocate(Diag_Pix_Array_2)
    deallocate(Diag_Pix_Array_3)
    deallocate(Emiss_11um_Tropo_Rtm)
    deallocate(Ems_Ch20_Median_3x3)
    deallocate(Ems_Ch20_Std_Median_3x3)
-   deallocate(Ems_3_75_Clear_Solar_Rtm)
    deallocate(Solar_Contamination_Mask)
    
    if (allocated(Ref_Ch1_Mean_3X3)) deallocate(Ref_Ch1_Mean_3X3)
@@ -515,6 +505,11 @@ contains
    if (allocated(Bt_Ch31_Max_3x3)) deallocate(Bt_Ch31_Max_3x3)
    if (allocated(Bt_Ch31_Min_3x3)) deallocate(Bt_Ch31_Min_3x3)
    if (allocated(Bt_Ch31_Stddev_3x3)) deallocate(Bt_Ch31_Stddev_3x3)
+
+   if (allocated(Bt_Ch20_Mean_3x3)) deallocate(Bt_Ch20_Mean_3x3)
+   if (allocated(Bt_Ch20_Max_3x3)) deallocate(Bt_Ch20_Max_3x3)
+   if (allocated(Bt_Ch20_Min_3x3)) deallocate(Bt_Ch20_Min_3x3)
+   if (allocated(Bt_Ch20_Stddev_3x3)) deallocate(Bt_Ch20_Stddev_3x3)
 
 
 
@@ -721,7 +716,7 @@ contains
       Input%Ref_041um => Chn1Refl(i,j)
       Input%Ref_063um => Chn2Refl(i,j)
       Input%Ref_063um_Clear => Ref_Ch2_Clear(i,j)
-      Input%Ref_063um_Std => Ref_Ch1_Std_3x3(i,j)
+      Input%Ref_063um_Std => Ref_Ch1_Stddev_3X3(i,j)
       Input%Ref_063um_Min => Ref_Ch1_Min_3x3(i,j)
       Input%Ref_086um => Chn3Refl(i,j)
       Input%Ref_138um => Chn4Refl(i,j)
@@ -731,13 +726,13 @@ contains
       Input%Ref_375um_Clear => null() !Not filled or used for now
       Input%Ref_213um => Chn6Refl(i,j)
       Input%Bt_375um => Chn7BT(i,j)
-      Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)
+      Input%Bt_375um_Std => Bt_Ch20_Stddev_3x3(i,j)
       Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
       Input%Emiss_375um_Clear => EmsCh7ClSlr(i,j)
       Input%Bt_67um => Chn9BT(i,j)
       Input%Bt_85um => Chn11BT(i,j)
       Input%Bt_11um => Chn14BT(i,j)
-      Input%Bt_11um_Std => Bt_Ch31_Std_3x3(i,j)
+      Input%Bt_11um_Std => Bt_Ch31_Stddev_3x3(i,j)
       Input%Bt_11um_Max => Bt_Ch31_Max_3x3(i,j)
       Input%Bt_11um_Clear => Chn14ClrBT(i,j)
       Input%Emiss_11um_Tropo => Emiss_11um_Tropo_Rtm(i,j)

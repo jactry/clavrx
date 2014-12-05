@@ -2,21 +2,6 @@
  ! parameter used in naive_bayesian_cloud_mask
  !--------------------------------------------------------------
 
- integer, parameter, private:: int1 = selected_int_kind(1)
- integer, parameter, private:: int2 = selected_int_kind(3)
- integer, parameter, private:: int4 = selected_int_kind(8)
- integer, parameter, private:: int8 = selected_int_kind(10)
- integer, parameter, private:: real4 = selected_real_kind(6,37)
- integer, parameter, private:: real8 = selected_real_kind(15,307)
-
- !--- missing value
- real, parameter, private :: MISSING_VALUE_REAL4 = -999.0  
- real, parameter, private :: MISSING_VALUE_INT1 = -128          
-
- !--- numerical constants
- real, parameter, private:: pi = 3.14159265
- real, parameter, private:: dtor = pi/180.0
-
  !--- Set this to 1 to peform diagnostic calculations
  integer, parameter, private:: Do_By_Class_Flag = 1
 

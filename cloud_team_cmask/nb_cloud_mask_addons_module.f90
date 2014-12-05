@@ -36,7 +36,7 @@ module CLOUD_MASK_ADDONS
            VCM_SMOKE_TEST, &
            VCM_DUST_TEST, &
            IR_DUST_TEST, &
-           MEDIAN_FILTER
+           MEDIAN_FILTER_MASK
 
 !!--- define structures
  include 'nb_cloud_mask.inc'
@@ -244,7 +244,7 @@ module CLOUD_MASK_ADDONS
 !     i2 = min(Num_Elem,Elem_Idx+N_Median)   !right index of local array
 !
 !     !--- compute median
-!     call MEDIAN_FILTER(Median_Input(i1:i2,j1:j2),Median_Mask(i1:i2,j1:j2),Median_Output(Elem_Idx,Line_Idx))
+!     call MEDIAN_FILTER_MASK(Median_Input(i1:i2,j1:j2),Median_Mask(i1:i2,j1:j2),Median_Output(Elem_Idx,Line_Idx))
 !!    print *, "median filter test ", Elem_Idx, Line_Idx, i1, i2, j1,j2
 !!    print *, "input = ", Median_Input(i1:i2,j1:j2)
 !!    print *, "mask = ", Median_Mask(i1:i2,j1:j2)
@@ -529,7 +529,7 @@ module CLOUD_MASK_ADDONS
 !
 ! mask = 0 means use median, mask = 1 mean ignore
 !==============================================================
-subroutine MEDIAN_FILTER(z,mask,z_median)
+subroutine MEDIAN_FILTER_MASK(z,mask,z_median)
 
 ! The purpose of this function is to find 
 ! median (emed), minimum (emin) and maximum (emax)
@@ -589,7 +589,7 @@ subroutine MEDIAN_FILTER(z,mask,z_median)
 
   if (allocated(x)) deallocate(x)
 
-end subroutine MEDIAN_FILTER
+end subroutine MEDIAN_FILTER_MASK
 !-----------------------------------------------------------
 ! end of module
 !-----------------------------------------------------------

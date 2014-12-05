@@ -156,11 +156,11 @@ module NB_CLOUD_MASK
 !   Allocate and Read in the LUTs needed for Bayesian cloud mask tables
 !
 !====================================================================
- subroutine READ_NAIVE_BAYES(Ancil_Data_Path, Naive_Bayes_File_Name, &
-                             symbol, Cloud_Mask_Bayesian_Flag)
+ subroutine READ_NAIVE_BAYES( Naive_Bayes_File_Name_Full_Path &
+                              , Symbol &
+                              , Cloud_Mask_Bayesian_Flag)
 
-   character(len=*), intent(in):: Ancil_Data_Path
-   character(len=*), intent(in):: Naive_Bayes_File_Name
+   character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
    ! Need a method to flag things
    TYPE(symbol_naive_bayesian), intent(in) :: symbol
    integer, intent(out):: Cloud_Mask_Bayesian_Flag 
@@ -180,8 +180,8 @@ module NB_CLOUD_MASK
    lun = GET_LUN()
    ios_sum = 0
    
-   open(unit=lun,file=trim(Ancil_Data_Path)//"bayes/"//trim(Naive_Bayes_File_Name), &
-        action="read",form="formatted",status="old",iostat=ios)
+   open(unit=lun, file=trim(Naive_Bayes_File_Name_Full_Path), &
+        action="read", form="formatted", status="old", iostat=ios)
    if (ios /= 0) then
      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
      print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
@@ -315,16 +315,14 @@ module NB_CLOUD_MASK
 !
 !====================================================================
  subroutine NB_CLOUD_MASK_ALGORITHM( &
-            Ancil_Data_Path,  &             !path to ancillary data
-            Naive_Bayes_File_Name, &        !name of nb classifer data file
-            Symbol, &                       !local copy of sym structure
+            Naive_Bayes_File_Name_Full_Path, &       !full path & name of nb classifer data file
+            Symbol, &                                !local copy of sym structure
             Input,  &
             Output,  &
             Diag)
 
 
-   character (len=355), intent(in) :: Ancil_Data_Path
-   character (len=255), intent(in) :: Naive_Bayes_File_Name
+   character (len=*), intent(in) :: Naive_Bayes_File_Name_Full_Path
    type(symbol_naive_bayesian), intent(in) :: Symbol
    type(mask_input), intent(in) :: Input
    type(mask_output), intent(out) :: Output
@@ -375,7 +373,7 @@ module NB_CLOUD_MASK
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
-       call READ_NAIVE_BAYES(Ancil_Data_Path,Naive_Bayes_File_Name, &
+       call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
                              symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !--- set up enumerated types for cloud mask values

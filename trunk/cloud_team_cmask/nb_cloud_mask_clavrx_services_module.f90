@@ -7,6 +7,21 @@
 
  include 'nb_cloud_mask.inc'
 
+ integer, parameter, public:: int1 = selected_int_kind(1)
+ integer, parameter, public:: int2 = selected_int_kind(3)
+ integer, parameter, public:: int4 = selected_int_kind(8)
+ integer, parameter, public:: int8 = selected_int_kind(10)
+ integer, parameter, public:: real4 = selected_real_kind(6,37)
+ integer, parameter, public:: real8 = selected_real_kind(15,307)
+
+ !--- missing value
+ real, parameter, public :: MISSING_VALUE_REAL4 = -999.0
+ real, parameter, public :: MISSING_VALUE_INT1 = -128
+
+ !--- numerical constants
+ real, parameter, public:: pi = 3.14159265
+ real, parameter, public:: dtor = pi/180.0
+
  type, public :: et_cloudiness_class_type
       integer :: SPACE 
       integer :: MISSING
@@ -89,6 +104,7 @@
     integer(kind=int1), pointer:: Solar_Contamination_Mask             !binary mask of solar contamination (0=no,1=yes)
     integer(kind=int1), pointer:: Sfc_Type                             !surface type based on UMD classification
  end type mask_input 
+
  !-----------------------------------------------------------------------------
  ! Output Structure
  !-----------------------------------------------------------------------------

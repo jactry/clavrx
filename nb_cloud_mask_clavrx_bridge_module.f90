@@ -30,7 +30,12 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
    ! -- MODULES USED
    use PIXEL_COMMON
-   use NUMERICAL_ROUTINES
+!   use NUMERICAL_ROUTINES, only:
+   use CONSTANTS, only: &
+       sym, &
+       CLOUD_MASK_VERSION, & 
+       Cloud_Mask_Thresholds_Version
+       
    use NB_CLOUD_MASK
    use CLOUD_MASK_ADDONS
    use NB_CLOUD_MASK_SERVICES
@@ -67,12 +72,10 @@ contains
    integer, intent(in):: Segment_Number
 
    integer :: i, j
-   character (len=355):: Ancil_Data_Path
-   character (len=255):: Naive_Bayes_File_Name
+   character (len=555):: Naive_Bayes_File_Name_Full_Path
 
    !---- set paths and mask classifier file name to their values in this framework
-   Ancil_Data_Path = Ancil_Data_Dir
-   Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
+   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)//"bayes/"//trim(Bayesian_Cloud_Mask_Name)
 
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
@@ -85,8 +88,8 @@ contains
          call SET_DIAG(i,j)
 
          !---call cloud mask routine
-         call NB_CLOUD_MASK_ALGORITHM(Ancil_Data_Path,  &
-                      Naive_Bayes_File_Name, &
+         call NB_CLOUD_MASK_ALGORITHM(  &
+                      Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
                       Input, &
                       Output)

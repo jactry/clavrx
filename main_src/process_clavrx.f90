@@ -1424,9 +1424,9 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
 
-               call COMPUTE_OPAQUE_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
-               call COMPUTE_H2O_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
-
+               !-------------------------------------------------------------------
+               ! make co2 slicing height from sounder with using sounder/imager IFF
+               !-------------------------------------------------------------------
                if (IFF_VIIRS_FLAG == sym%YES .or. &
                    IFF_AVHRR_FLAG == sym%YES .or. &
                    IFF_MODIS_FLAG == sym%YES) then

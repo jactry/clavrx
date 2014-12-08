@@ -150,7 +150,6 @@ module ACHA_BRIDGE_MOD
    Acha_Output%Beta_Uncertainty => Beta_Acha_Uncertainty
    Acha_Output%Pc_Uncertainty => Pc_Acha_Uncertainty
    Acha_Output%Zc_Uncertainty => Zc_Acha_Uncertainty
-   Acha_Output%Cloud_Layer => Cld_Layer_Acha
    Acha_Output%Lower_Cloud_Pressure => Pc_Lower_Cloud
    Acha_Output%Lower_Cloud_Temperature => Tc_Lower_Cloud
    Acha_Output%Lower_Cloud_Height => Zc_Lower_Cloud
@@ -309,7 +308,6 @@ module ACHA_BRIDGE_MOD
    Acha_Output%Beta_Uncertainty => gsip_pix_prod%beta1112_error
    Acha_Output%Pc_Uncertainty => gsip_pix_prod%pc_error
    Acha_Output%Zc_Uncertainty => gsip_pix_prod%zc_error
-   Acha_Output%Cloud_Layer => gsip_pix_prod%cldlayer
    Acha_Output%Lower_Cloud_Pressure =>  gsip_pix_prod%Pc_Lower_Cloud
    Acha_Output%Lower_Cloud_Temperature => gsip_pix_prod%Tc_Lower_Cloud
    Acha_Output%Lower_Cloud_Height => gsip_pix_prod%Zc_Lower_Cloud
@@ -533,8 +531,6 @@ module ACHA_BRIDGE_MOD
      
      CALL NFIA_CloudHeight_ZcError(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Zc_Uncertainty)
      
-     CALL NFIA_CloudHeight_CldLayer(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Cloud_Layer)
-     
      CALL NFIA_CloudHeight_PcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Pressure)
      
      CALL NFIA_CloudHeight_PcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Pressure)
@@ -708,7 +704,6 @@ module ACHA_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()

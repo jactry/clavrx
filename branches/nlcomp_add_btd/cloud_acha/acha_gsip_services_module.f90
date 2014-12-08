@@ -1,17 +1,18 @@
-!$Id: acha_services_clavrx_mod.f90 9 2014-01-31 08:19:35Z awalther $
+!$Id: acha_services_gsip_mod.f90 582 2014-10-08 03:40:18Z heidinger $
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
 module ACHA_SERVICES_MOD
 
- use ALGORITHM_MODULE_USAGE
+  use ALGORITHM_MODULE_USAGE
+  use RT_UTILITIES
 
-Implicit none
 
-  public:: ACHA_Fetch_Pixel_NWP_RTM, &
-           ACHA_NWP_Fill
+implicit none
 
- integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Rtm_Prof = 101
+  public:: ACHA_FETCH_PIXEL_NWP_RTM 
+
+ integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Prof = 101
 
 !ACHA input structure
 ! input structure
@@ -47,10 +48,10 @@ Implicit none
    real, dimension(:,:), pointer:: Cosine_Zenith_Angle
    real, dimension(:,:), pointer:: Sensor_Zenith_Angle
    real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
-   real, dimension(:,:), allocatable:: Surface_Temperature
-   real, dimension(:,:), allocatable:: Surface_Air_Temperature
-   real, dimension(:,:), allocatable:: Tropopause_Temperature
-   real, dimension(:,:), allocatable:: Surface_Pressure
+   real, dimension(:,:), pointer:: Surface_Temperature
+   real, dimension(:,:), pointer:: Surface_Air_Temperature
+   real, dimension(:,:), pointer:: Tropopause_Temperature
+   real, dimension(:,:), pointer:: Surface_Pressure
    real, dimension(:,:), pointer:: Surface_Elevation
    real, dimension(:,:), pointer:: Latitude
    real, dimension(:,:), pointer:: Longitude
@@ -66,16 +67,17 @@ Implicit none
    integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
    integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
    integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
-   integer (kind=int4), dimension(:,:), allocatable:: Elem_Idx_Opposite_Corner_NWP 
-   integer (kind=int4), dimension(:,:), allocatable:: Line_Idx_Opposite_Corner_NWP 
+   integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
+   integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
    integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
-   real (kind=real4), dimension(:,:), allocatable:: Latitude_Interp_Weight_NWP
-   real (kind=real4), dimension(:,:), allocatable:: Longitude_Interp_Weight_NWP
+   real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
+   real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
 
    !--- optional variables
    integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
    integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
  
+  
  end type acha_input_struct
 
 
@@ -104,18 +106,18 @@ Implicit none
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
 
 !NWP profiles
-   real, dimension(:), pointer :: T_Prof
-   real, dimension(Num_Levels_Rtm_Prof) :: P_Prof
-   real, dimension(:), pointer :: Z_Prof
+   real, dimension(:), pointer :: T_prof
+   real, dimension(Num_Levels_Prof) :: P_Prof
+   real, dimension(:), pointer :: Z_prof
 
 !Off axis NWP profiles
-   real, dimension(:), pointer :: T_Prof_1
-   real, dimension(:), pointer :: T_Prof_2
-   real, dimension(:), pointer :: T_Prof_3
+   real, dimension(:), pointer :: T_prof_1
+   real, dimension(:), pointer :: T_prof_2
+   real, dimension(:), pointer :: T_prof_3
    
-   real, dimension(:), pointer :: Z_Prof_1
-   real, dimension(:), pointer :: Z_Prof_2
-   real, dimension(:), pointer :: Z_Prof_3
+   real, dimension(:), pointer :: Z_prof_1
+   real, dimension(:), pointer :: Z_prof_2
+   real, dimension(:), pointer :: Z_prof_3
 end type acha_rtm_nwp_struct
 
 !output structure
@@ -145,8 +147,8 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
-   integer(kind=int1), dimension(:,:), pointer :: Processing_Order
- end type acha_output_struct
+   integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
+  end type acha_output_struct
   
 !Symbol stucture
 
@@ -217,7 +219,7 @@ end type acha_rtm_nwp_struct
 ! This subroutine gathers the necessary NWP and RTM profiles used for a given
 ! pixel for ACHA. 
 !----------------------------------------------------------------------
- subroutine  ACHA_Fetch_Pixel_NWP_RTM(Acha_Input, symbol, &
+ subroutine  ACHA_FETCH_PIXEL_NWP_RTM(Acha_Input, symbol, &
                                       Elem_Idx, Line_Idx, Acha_RTM_NWP)
                                       
    type(acha_input_struct), intent(inout) :: Acha_Input
@@ -235,47 +237,57 @@ end type acha_rtm_nwp_struct
 
    Inwp = Acha_Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx)
    Jnwp = Acha_Input%Line_Idx_Nwp(Elem_Idx,Line_Idx)
+   
    Inwp_x = Acha_Input%Elem_Idx_Opposite_Corner_NWP(Elem_Idx,Line_Idx)
-   Jnwp_x = Acha_Input%Line_Idx_Opposite_Corner_NWP(Elem_Idx,Line_Idx)  
+   Jnwp_x = Acha_Input%Line_Idx_Opposite_Corner_NWP(Elem_Idx,Line_Idx)
+   
    Inwp_Weight = Acha_Input%Longitude_Interp_Weight_NWP(Elem_Idx,Line_Idx)
-   Jnwp_Weight = Acha_Input%Latitude_Interp_Weight_NWP(Elem_Idx,Line_Idx)   
+   Jnwp_Weight = Acha_Input%Latitude_Interp_Weight_NWP(Elem_Idx,Line_Idx)
    Ivza =  Acha_Input%Viewing_Zenith_Angle_Idx_Rtm(Elem_Idx,Line_Idx)
 
 
    !--- populate height and temperature profiles
    if (Inwp <= 0 .or. Jnwp <= 0) then
      print *, "bad nwp indices in awg"
-     return
+   endif
+   if (Allocated(Rtm(Inwp,Jnwp)%T_Prof) .eqv. .false.) then
+      print *, "error, T_prof not allocated"
    endif
 
    !initialize smooth NWP flag 
+   Acha_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%NO
     
-   Acha_RTM_NWP%Sfc_Level =nwp%dat(Inwp,Jnwp)%sfc_level
-   Acha_RTM_NWP%Tropo_Level = nwp%dat(Inwp,Jnwp)%Tropo_Level
-     
+   Acha_RTM_NWP%Sfc_Level = Rtm(Inwp,Jnwp)%Sfc_Level
+   Acha_RTM_NWP%Tropo_Level = Rtm(Inwp,Jnwp)%Tropo_Level
+   
+   
    Acha_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%NO
    
    !--- do various 101 level NWP Profiles
-   Acha_RTM_NWP%P_Prof =  nwp%dat(Inwp,Jnwp)%plev
+   Acha_RTM_NWP%P_Prof = P_Std_Rtm
 
-   Acha_RTM_NWP%T_Prof => NWP%Dat(Inwp,Jnwp)%Tlev 
-   Acha_RTM_NWP%Z_Prof =>NWP%Dat(Inwp,Jnwp)%Zlev
+   Acha_RTM_NWP%T_prof => Rtm(Inwp,Jnwp)%T_prof 
+   Acha_RTM_NWP%Z_prof => Rtm(Inwp,Jnwp)%Z_prof 
 
    !------------------------------------------------------
    ! Before smoothing profiles, ensure that all required
    ! rtm profiles are populated, if not, skip smoothing
    !------------------------------------------------------
-   if ((Inwp_x /= MISSING_VALUE_INT4) .AND. (Jnwp_x /= MISSING_VALUE_INT4)) then
+
+   if ((Rtm(Inwp,Jnwp)%Flag == symbol%YES) .and. &
+       (Rtm(Inwp_x,Jnwp)%Flag == symbol%YES) .and. &
+       (Rtm(Inwp,Jnwp_x)%Flag == symbol%YES) .and. &
+       (Rtm(Inwp_x,Jnwp_x)%Flag == symbol%YES)) then
 
         Acha_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%YES
         
-        Acha_RTM_NWP%T_Prof_1 => NWP%Dat(Inwp_x,Jnwp)%Tlev
-        Acha_RTM_NWP%T_Prof_2 => NWP%Dat(Inwp,Jnwp_x)%Tlev
-        Acha_RTM_NWP%T_Prof_3 => NWP%Dat(Inwp_x,Jnwp_x)%Tlev
+        Acha_RTM_NWP%T_prof_1 => Rtm(Inwp_x,Jnwp)%T_prof 
+        Acha_RTM_NWP%T_prof_2 => Rtm(Inwp,Jnwp_x)%T_prof 
+        Acha_RTM_NWP%T_prof_3 => Rtm(Inwp_x,Jnwp_x)%T_prof 
 
-        Acha_RTM_NWP%Z_Prof_1 => NWP%Dat(Inwp_x,Jnwp)%Zlev
-        Acha_RTM_NWP%Z_Prof_2 => NWP%Dat(Inwp,Jnwp_x)%Zlev
-        Acha_RTM_NWP%Z_Prof_3 => NWP%Dat(Inwp_x,Jnwp_x)%Zlev
+        Acha_RTM_NWP%Z_prof_1 => Rtm(Inwp_x,Jnwp)%Z_prof 
+        Acha_RTM_NWP%Z_prof_2 => Rtm(Inwp,Jnwp_x)%Z_prof 
+        Acha_RTM_NWP%Z_prof_3 => Rtm(Inwp_x,Jnwp_x)%Z_prof
         
    endif
    
@@ -283,95 +295,38 @@ end type acha_rtm_nwp_struct
  
    !--- populate radiance and transmission profiles
    if (Acha_Input%Chan_On_67um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%rad_atm_clr9
+     Acha_RTM_NWP%Atm_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch9
      
-     Acha_RTM_NWP%Atm_Trans_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%trans_atm_clr9
-
-     Acha_RTM_NWP%Black_Body_Rad_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%cloud_prof9
+     Acha_RTM_NWP%Atm_Trans_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch9
      
+     Acha_RTM_NWP%Black_Body_Rad_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch9
    endif
    if (Acha_Input%Chan_On_85um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_85um => rtm(Inwp,Jnwp)%d(Ivza)%rad_atm_clr11
+     Acha_RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch11
      
-     Acha_RTM_NWP%Atm_Trans_Prof_85um => rtm(Inwp,Jnwp)%d(Ivza)%trans_atm_clr11
+     Acha_RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch11
    endif
    
    if (Acha_Input%Chan_On_11um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_11um => rtm(Inwp,Jnwp)%d(Ivza)%rad_atm_clr14
+      Acha_RTM_NWP%Atm_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch14
       
-      Acha_RTM_NWP%Atm_Trans_Prof_11um => rtm(Inwp,Jnwp)%d(Ivza)%trans_atm_clr14
+      Acha_RTM_NWP%Atm_Trans_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch14
       
-      Acha_RTM_NWP%Black_Body_Rad_Prof_11um => rtm(Inwp,Jnwp)%d(Ivza)%cloud_prof14
+      Acha_RTM_NWP%Black_Body_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch14
    endif
    
    if (Acha_Input%Chan_On_12um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_12um => rtm(Inwp,Jnwp)%d(Ivza)%rad_atm_clr15
+      Acha_RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch15
       
-      Acha_RTM_NWP%Atm_Trans_Prof_12um => rtm(Inwp,Jnwp)%d(Ivza)%trans_atm_clr15
+      Acha_RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch15
    endif
    if (Acha_Input%Chan_On_133um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_133um => rtm(Inwp,Jnwp)%d(Ivza)%rad_atm_clr16
+      Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch16
       
-      Acha_RTM_NWP%Atm_Trans_Prof_133um => rtm(Inwp,Jnwp)%d(Ivza)%trans_atm_clr16
+      Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch16
    endif
     
- end subroutine ACHA_Fetch_Pixel_NWP_RTM
-
-
-!-----------------------------------------------------------------------------
-!
-! This subroutine is needed to fill the pixel level NWP data for ACHA.
-! It is done once at the beginning of each segment of data.
-!
-!-----------------------------------------------------------------------------
-
-   SUBROUTINE ACHA_NWP_Fill(ACHA_Input)
-      TYPE(acha_input_struct), INTENT(INOUT) :: ACHA_Input
-
-      ! Loop and RTM/NWP indicees
-      INTEGER(KIND=Int4) :: Elem, Line
-      INTEGER(KIND=Int4) :: Xnwp
-      INTEGER(KIND=Int4) :: Ynwp
-      REAL(KIND=Real4):: Temp_sfc 
-
-      !------------------------------------------------------------------
-      ! Loop over pixels
-      !------------------------------------------------------------------
-      Line_Loop: DO Line=1, ACHA_Input%Number_of_Lines
-         Elem_Loop: DO Elem=1, ACHA_Input%Number_of_Elements
-         
-
-            Xnwp = ACHA_Input%Elem_Idx_NWP(Elem,Line)
-            Ynwp = ACHA_Input%Line_Idx_NWP(Elem,Line) 
-
-            IF ((ACHA_Input%Latitude(Elem,Line) == Missing_Value_Real4) .OR. &
-                (ACHA_Input%Longitude(Elem,Line) == Missing_Value_Real4) .OR. &
-                Ynwp == Missing_Value_Real4 .OR. &
-                Xnwp== Missing_Value_Real4 ) THEN
-
-               CYCLE
-            ENDIF
-
-!  Surface temperature           
-            ACHA_Input%Surface_Temperature(Elem,Line)  = NWP%Dat(Xnwp,Ynwp)%Tsfc
-!  Tropopause temperature           
-            ACHA_Input%Tropopause_Temperature(Elem,Line)  = nwp%dat(Xnwp,Ynwp)%ttropo
-
-!Surface Pressure
-            ACHA_Input%Surface_Pressure(Elem,Line)  = nwp%dat(Xnwp,Ynwp)%psfc
-
-!Surface Pressure
-            ACHA_Input%Surface_Air_Temperature(Elem,Line)  = nwp%dat(Xnwp,Ynwp)%t2m 
-
-         !------------------------------------------------
-         ! END loop over pixels in segment
-         !------------------------------------------------
-         END DO Elem_Loop
-      END DO Line_Loop
-      
-      
-   END SUBROUTINE ACHA_NWP_Fill
-
+ end subroutine ACHA_FETCH_PIXEL_NWP_RTM
 
 
 end module ACHA_SERVICES_MOD

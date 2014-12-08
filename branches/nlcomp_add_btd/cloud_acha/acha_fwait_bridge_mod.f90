@@ -90,12 +90,15 @@ module ACHA_CLAVRX_BRIDGE_MOD
      CALL NFIA_NWP_Y_NWP(Ctxt%NWP_DATA_Src1_T00, Acha_Input%Line_Idx_NWP)
 
 !----- NEED TO ADD THESE ---------------     
-     Acha_Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
-     Acha_Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
-     Acha_Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
-     Acha_Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
-     Acha_Input%Viewing_Zenith_Angle_Idx_Rtm => Ivza_Rtm
-!---------------------------------------
+     Acha_Input%Elem_Idx_Opposite_Corner_NWP
+     Acha_Input%Line_Idx_Opposite_Corner_NWP
+     Acha_Input%Longitude_Interp_Weight_NWP
+     Acha_Input%Latitude_Interp_Weight_NWP
+     Acha_Input%Longitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
+     Acha_Input%Latitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
+ 
+      CALL NFIA_RTM_ViewZenAngIndex(Ctxt%RTM_Src1_T00, Acha_Input%Viewing_Zenith_Angle_Idx_Rtm)
+      !---------------------------------------
 
      if (Chan_On_Flag_Default(Chan_Idx_67um) == sym%YES) then
          CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9,  Acha_Input%Bt_67um)
@@ -130,7 +133,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
      CALL NFIA_Sat_Nav_SatZen(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, Acha_Input%Sensor_Zenith_Angle)
      
 !----- NEED TO ADD THIS TO FRAMEWORK ---------------     
-     Acha_Input%Sensor_Azimuth_Angle => NULL()
+     CALL NFIA_Sat_Nav_SatAzi(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, Acha_Input%Sensor_Azimuth_Angle)
 !--------------------------------------     
 
      CALL NFIA_Sat_Nav_Lat(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, Acha_Input%Latitude)
@@ -145,11 +148,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
      CALL NFIP_NWP_TempSfc(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_Input%Surface_Temperature)
      !------------------!
     
-!----- NEED TO ADD THIS TO FRAMEWORK ---------------     
-     Acha_Input%Surface_Air_Temperature => NULL()
-!---------------------------------------
+     CALL NFIA_NWP_Temp2M(Ctxt%NWP_DATA_Src1_T00, Acha_Input%Surface_Air_Temperature)
 
-     !NEED 2D array call for framework - WCS3!
      CALL NFIP_NWP_TempTropo(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Acha_Input%Tropopause_Temperature)
      !------------------!
 
@@ -172,10 +172,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
 !---- initalize Output structure
 
-!----- NEED TO ADD THESE ---------------     
-     Acha_Output%Latitude_Pc => Lat_Pc
-     Acha_Output%Longitude_Pc => Lon_Pc
-!---------------------------------------
+     CALL NFIA_CloudHeight_Latitude_Pc(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Latitude_Pc)
+     CALL NFIA_CloudHeight_Longitude_Pc(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Longitude_Pc)
 
      CALL NFIA_CloudHeight_CldTopTemp(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Tc)
      
@@ -201,18 +199,14 @@ module ACHA_CLAVRX_BRIDGE_MOD
      
      CALL NFIA_CloudHeight_ZcError(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Zc_Uncertainty)
      
-     CALL NFIA_CloudHeight_CldLayer(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Cloud_Layer)
-     
-     CALL NFIA_CloudHeight_PcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Pressure)
-     
+     CALL NFIA_CloudHeight_TcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Temperature)
+          
      CALL NFIA_CloudHeight_PcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Pressure)
      
      CALL NFIA_CloudHeight_ZcLowerCld(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Lower_Cloud_Height)
 
-!----- NEED TO ADD THESE ---------------
-     Acha_Output%Zc_Top => Zc_Top_Acha
-     Acha_Output%Zc_Base => Zc_Base_Acha
-!---------------------------------------
+     CALL NFIA_CloudHeight_Zc_Top(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Zc_Top)
+     CALL NFIA_CloudHeight_Zc_Base(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Zc_Base)
 
      CALL NFIA_CloudHeight_CldHgtQF(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Qf)
      CALL NFIA_CloudHeight_Flag(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%OE_Qf)
@@ -224,6 +218,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
      CALL NFIA_CloudHeight_ProcOrder(Ctxt%CLOUD_HEIGHT_Src1_T00, Acha_Output%Processing_Order)
 
+!----- NEED TO ADD THIS ---------------     
+   Acha_Output%Cost  => Cost_Acha
 
    !----set symbols to local values
    symbol%CLOUDY = sym%CLOUDY
@@ -367,7 +363,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Output%Beta_Uncertainty =>  NULL()
      Acha_Output%Pc_Uncertainty =>  NULL()
      Acha_Output%Zc_Uncertainty =>  NULL()
-     Acha_Output%Cloud_Layer =>  NULL()
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()
@@ -378,6 +373,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Acha_Output%Packed_Qf =>  NULL()
      Acha_Output%Packed_Meta_Data =>  NULL()
      Acha_Output%Processing_Order  =>  NULL()
+     Acha_Output%Cost  =>  NULL()
  
  
  end subroutine

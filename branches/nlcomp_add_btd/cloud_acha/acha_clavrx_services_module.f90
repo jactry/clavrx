@@ -1,87 +1,89 @@
-!$Id$
+!$Id: acha_services_clavrx_mod.f90 581 2014-10-08 03:39:08Z heidinger $
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
 module ACHA_SERVICES_MOD
 
-  use ALGORITHM_MODULE_USAGE
-  use RT_UTILITIES
+ use PLANCK
+ use CONSTANTS
+ use PIXEL_COMMON
+ use NWP_COMMON
+ use RTM_COMMON
 
+ implicit none
 
-implicit none
+ public:: ACHA_FETCH_PIXEL_NWP_RTM 
 
-  public:: ACHA_FETCH_PIXEL_NWP_RTM 
-
- integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Prof = 101
+ integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Rtm_Prof = 101
 
 !ACHA input structure
 ! input structure
 
  type, public :: acha_input_struct
-   integer :: ACHA_Mode_Flag_In
-   integer (kind=int4):: Number_of_Elements
-   integer (kind=int4):: Number_Of_Lines
-   integer (kind=int4):: Num_Line_Max
-   integer (kind=int4):: Smooth_Nwp_Fields_Flag
-   integer (kind=int4):: Process_Undetected_Cloud_Flag
-   real (kind=real4):: Sensor_Resolution_KM
+ integer :: ACHA_Mode_Flag_In
+ integer (kind=int4):: Number_of_Elements
+ integer (kind=int4):: Number_Of_Lines
+ integer (kind=int4):: Num_Line_Max
+ integer (kind=int4):: Smooth_Nwp_Fields_Flag
+ integer (kind=int4):: Process_Undetected_Cloud_Flag
+ real (kind=real4):: Sensor_Resolution_KM
 
-   !-- local pointers that point to global variables
-   integer:: Chan_Idx_67um
-   integer:: Chan_Idx_85um
-   integer:: Chan_Idx_11um
-   integer:: Chan_Idx_12um
-   integer:: Chan_Idx_133um 
-   integer:: Chan_On_67um
-   integer:: Chan_On_85um
-   integer:: Chan_On_11um
-   integer:: Chan_On_12um
-   integer:: Chan_On_133um
+ !-- local pointers that point to global variables
+ integer:: Chan_Idx_67um
+ integer:: Chan_Idx_85um
+ integer:: Chan_Idx_11um
+ integer:: Chan_Idx_12um
+ integer:: Chan_Idx_133um 
+ integer:: Chan_On_67um
+ integer:: Chan_On_85um
+ integer:: Chan_On_11um
+ integer:: Chan_On_12um
+ integer:: Chan_On_133um
 
-   integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
-   real, dimension(:,:), pointer:: Bt_67um
-   real, dimension(:,:), pointer:: Bt_85um
-   real, dimension(:,:), pointer:: Bt_11um
-   real, dimension(:,:), pointer:: Bt_12um
-   real, dimension(:,:), pointer:: Bt_133um
-   real, dimension(:,:), pointer:: Rad_11um
-   real, dimension(:,:), pointer:: Cosine_Zenith_Angle
-   real, dimension(:,:), pointer:: Sensor_Zenith_Angle
-   real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
-   real, dimension(:,:), pointer:: Surface_Temperature
-   real, dimension(:,:), pointer:: Surface_Air_Temperature
-   real, dimension(:,:), pointer:: Tropopause_Temperature
-   real, dimension(:,:), pointer:: Surface_Pressure
-   real, dimension(:,:), pointer:: Surface_Elevation
-   real, dimension(:,:), pointer:: Latitude
-   real, dimension(:,:), pointer:: Longitude
-   real, dimension(:,:), pointer:: Rad_Clear_67um
-   real, dimension(:,:), pointer:: Rad_Clear_85um
-   real, dimension(:,:), pointer:: Rad_Clear_11um
-   real, dimension(:,:), pointer:: Rad_Clear_12um
-   real, dimension(:,:), pointer:: Rad_Clear_133um
-   real, dimension(:,:), pointer:: Surface_Emissivity_39um 
-   integer (kind=int1),dimension(:,:), pointer:: Snow_Class
-   integer (kind=int1),dimension(:,:), pointer:: Surface_Type
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
-   integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
-   real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
-   real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
-
-   !--- optional variables
-   integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
-   integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+ integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ real, dimension(:,:), pointer:: Bt_67um
+ real, dimension(:,:), pointer:: Bt_85um
+ real, dimension(:,:), pointer:: Bt_11um
+ real, dimension(:,:), pointer:: Bt_12um
+ real, dimension(:,:), pointer:: Bt_133um
+ real, dimension(:,:), pointer:: Rad_67um
+ real, dimension(:,:), pointer:: Rad_11um
+ real, dimension(:,:), pointer:: Covar_Bt_11um_67um
+ real, dimension(:,:), pointer:: Cosine_Zenith_Angle
+ real, dimension(:,:), pointer:: Sensor_Zenith_Angle
+ real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
+ real, dimension(:,:), pointer:: Surface_Temperature
+ real, dimension(:,:), pointer:: Surface_Air_Temperature
+ real, dimension(:,:), pointer:: Tropopause_Temperature
+ real, dimension(:,:), pointer:: Surface_Pressure
+ real, dimension(:,:), pointer:: Surface_Elevation
+ real, dimension(:,:), pointer:: Latitude
+ real, dimension(:,:), pointer:: Longitude
+ real, dimension(:,:), pointer:: Rad_Clear_67um
+ real, dimension(:,:), pointer:: Rad_Clear_85um
+ real, dimension(:,:), pointer:: Rad_Clear_11um
+ real, dimension(:,:), pointer:: Rad_Clear_12um
+ real, dimension(:,:), pointer:: Rad_Clear_133um
+ real, dimension(:,:), pointer:: Surface_Emissivity_39um 
+ integer (kind=int1),dimension(:,:), pointer:: Snow_Class
+ integer (kind=int1),dimension(:,:), pointer:: Surface_Type
+ integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
+ real, dimension(:,:), pointer:: Cloud_Probability
+ integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
+ real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
+ real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
+ integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
+ integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+ real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
-  
  end type acha_input_struct
 
-
-!RTM and NWP pixel level structure
+ !---RTM and NWP pixel level structure
  type, public :: acha_rtm_nwp_struct
 
    !-- Smooth NWP Fields flag
@@ -91,7 +93,7 @@ implicit none
    integer:: Sfc_Level
    integer:: Tropo_Level
 
-!RTM profiles
+   !-- RTM profiles
    real, dimension(:), pointer :: Atm_Rad_Prof_67um
    real, dimension(:), pointer :: Atm_Rad_Prof_85um
    real, dimension(:), pointer :: Atm_Rad_Prof_11um
@@ -105,19 +107,19 @@ implicit none
    real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
 
-!NWP profiles
-   real, dimension(:), pointer :: T_prof
-   real, dimension(Num_Levels_Prof) :: P_Prof
-   real, dimension(:), pointer :: Z_prof
+   !-- NWP profiles
+   real, dimension(:), pointer :: T_Prof
+   real, dimension(Num_Levels_Rtm_Prof) :: P_Prof
+   real, dimension(:), pointer :: Z_Prof
 
-!Off axis NWP profiles
-   real, dimension(:), pointer :: T_prof_1
-   real, dimension(:), pointer :: T_prof_2
-   real, dimension(:), pointer :: T_prof_3
+   !-- NWP profiles used for spatial interpolation
+   real, dimension(:), pointer :: T_Prof_1
+   real, dimension(:), pointer :: T_Prof_2
+   real, dimension(:), pointer :: T_Prof_3
    
-   real, dimension(:), pointer :: Z_prof_1
-   real, dimension(:), pointer :: Z_prof_2
-   real, dimension(:), pointer :: Z_prof_3
+   real, dimension(:), pointer :: Z_Prof_1
+   real, dimension(:), pointer :: Z_Prof_2
+   real, dimension(:), pointer :: Z_Prof_3
 end type acha_rtm_nwp_struct
 
 !output structure
@@ -139,10 +141,13 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Cloud_Pressure
    real, dimension(:,:), pointer:: Lower_Cloud_Temperature
    real, dimension(:,:), pointer:: Lower_Cloud_Height
-   real, dimension(:,:), pointer:: Zc_Top
-   real, dimension(:,:), pointer:: Zc_Base
    real, dimension(:,:), pointer:: Cost
-
+   real, dimension(:,:), pointer:: Total_Cloud_Fraction
+   real, dimension(:,:), pointer:: Total_Cloud_Fraction_Uncer
+   real, dimension(:,:), pointer:: High_Cloud_Fraction
+   real, dimension(:,:), pointer:: Mid_Cloud_Fraction
+   real, dimension(:,:), pointer:: Low_Cloud_Fraction
+   integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
@@ -251,7 +256,7 @@ end type acha_rtm_nwp_struct
      print *, "bad nwp indices in awg"
    endif
    if (Allocated(Rtm(Inwp,Jnwp)%T_Prof) .eqv. .false.) then
-      print *, "error, T_prof not allocated"
+      print *, "error, T_Prof not allocated"
    endif
 
    !initialize smooth NWP flag 
@@ -266,14 +271,13 @@ end type acha_rtm_nwp_struct
    !--- do various 101 level NWP Profiles
    Acha_RTM_NWP%P_Prof = P_Std_Rtm
 
-   Acha_RTM_NWP%T_prof => Rtm(Inwp,Jnwp)%T_prof 
-   Acha_RTM_NWP%Z_prof => Rtm(Inwp,Jnwp)%Z_prof 
+   Acha_RTM_NWP%T_Prof => Rtm(Inwp,Jnwp)%T_Prof 
+   Acha_RTM_NWP%Z_Prof => Rtm(Inwp,Jnwp)%Z_Prof 
 
    !------------------------------------------------------
    ! Before smoothing profiles, ensure that all required
    ! rtm profiles are populated, if not, skip smoothing
    !------------------------------------------------------
-
    if ((Rtm(Inwp,Jnwp)%Flag == symbol%YES) .and. &
        (Rtm(Inwp_x,Jnwp)%Flag == symbol%YES) .and. &
        (Rtm(Inwp,Jnwp_x)%Flag == symbol%YES) .and. &
@@ -281,13 +285,13 @@ end type acha_rtm_nwp_struct
 
         Acha_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%YES
         
-        Acha_RTM_NWP%T_prof_1 => Rtm(Inwp_x,Jnwp)%T_prof 
-        Acha_RTM_NWP%T_prof_2 => Rtm(Inwp,Jnwp_x)%T_prof 
-        Acha_RTM_NWP%T_prof_3 => Rtm(Inwp_x,Jnwp_x)%T_prof 
+        Acha_RTM_NWP%T_Prof_1 => Rtm(Inwp_x,Jnwp)%T_Prof 
+        Acha_RTM_NWP%T_Prof_2 => Rtm(Inwp,Jnwp_x)%T_Prof 
+        Acha_RTM_NWP%T_Prof_3 => Rtm(Inwp_x,Jnwp_x)%T_Prof 
 
-        Acha_RTM_NWP%Z_prof_1 => Rtm(Inwp_x,Jnwp)%Z_prof 
-        Acha_RTM_NWP%Z_prof_2 => Rtm(Inwp,Jnwp_x)%Z_prof 
-        Acha_RTM_NWP%Z_prof_3 => Rtm(Inwp_x,Jnwp_x)%Z_prof
+        Acha_RTM_NWP%Z_Prof_1 => Rtm(Inwp_x,Jnwp)%Z_Prof 
+        Acha_RTM_NWP%Z_Prof_2 => Rtm(Inwp,Jnwp_x)%Z_Prof 
+        Acha_RTM_NWP%Z_Prof_3 => Rtm(Inwp_x,Jnwp_x)%Z_Prof
         
    endif
    
@@ -295,35 +299,30 @@ end type acha_rtm_nwp_struct
  
    !--- populate radiance and transmission profiles
    if (Acha_Input%Chan_On_67um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch9
-     
-     Acha_RTM_NWP%Atm_Trans_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch9
-     
-     Acha_RTM_NWP%Black_Body_Rad_Prof_67um => rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch9
+     Acha_RTM_NWP%Atm_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Rad_Atm_Profile
+     Acha_RTM_NWP%Atm_Trans_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Trans_Atm_Profile
+     Acha_RTM_NWP%Black_Body_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Rad_BB_Cloud_Profile
    endif
+
    if (Acha_Input%Chan_On_85um == sym%YES) then
-     Acha_RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch11
-     
-     Acha_RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch11
+     Acha_RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Rad_Atm_Profile
+     Acha_RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Trans_Atm_Profile
    endif
-   
+
    if (Acha_Input%Chan_On_11um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch14
-      
-      Acha_RTM_NWP%Atm_Trans_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch14
-      
-      Acha_RTM_NWP%Black_Body_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%Cloud_Prof_Ch14
+      Acha_RTM_NWP%Atm_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Trans_Atm_Profile
+      Acha_RTM_NWP%Black_Body_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Rad_BB_Cloud_Profile
    endif
    
    if (Acha_Input%Chan_On_12um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch15
-      
-      Acha_RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch15
+      Acha_RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Trans_Atm_Profile
    endif
+
    if (Acha_Input%Chan_On_133um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Rad_Atm_Clr_Ch16
-      
-      Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%Trans_Atm_Clr_Ch16
+      Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
    endif
     
  end subroutine ACHA_FETCH_PIXEL_NWP_RTM

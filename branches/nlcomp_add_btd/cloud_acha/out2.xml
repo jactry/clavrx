@@ -90,5 +90,16 @@
              max="-999.0"
              numtype="real4">
    </out_var>    
+
+   <out_var sdsname="Acha_Cost" 
+            varname="Acha_Cost" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
     </out_list>
 </geocat_out2>

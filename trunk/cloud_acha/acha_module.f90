@@ -1678,6 +1678,10 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Line_Idx_2
       integer:: count_Valid
       integer, dimension(:,:), allocatable:: mask
+      !---STW Debug
+      integer, dimension(:,:), allocatable:: mask2
+      integer:: count_Valid2
+      !---STW End Debug
 
       Num_Elem = size(Cloud_Type,1)      !-----
       num_Line = size(Cloud_Type,2)      !-----
@@ -1710,12 +1714,24 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       else    !if Interp_Flag > 0 then do a spatial interpoLation
 
         !--- set box width
-        delem = 1
-        dline = 1
+        !---STW Debug
+        !delem = 1
+        !dline = 1
+        delem = 5
+        dline = 5
+        !---STW End Debug
 
         allocate(mask(Num_Elem,num_line))
 
+        !---STW Debug
+        allocate(mask2(Num_Elem,num_line))
+        !---STW End Debug
+
          mask = 0
+
+         !---STW Debug
+         mask2 = 0
+         !---STW End Debug
 
          where((Cloud_Type == symbol%FOG_TYPE .or. &
              Cloud_Type == symbol%WATER_TYPE .or. &
@@ -1723,6 +1739,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
              Cloud_Pressure /= MISSING_VALUE_REAL)
              mask = 1
          endwhere
+
+         !---STW Debug
+         where(Cloud_Pressure >= 700.0)
+           mask2 = 1
+         endwhere
+         !---STW End Debug
 
          Line_loop_2: do Line_Idx = Line_start, Line_end 
              Element_Loop_2: do Elem_Idx = 1, Num_Elem 
@@ -1738,10 +1760,24 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
              count_Valid = sum(mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
 
-             if (count_Valid > 0) then 
+             !---STW Debug
+             count_Valid2 = sum(mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+             !---STW End Debug
+
+             !---STW if (count_Valid > 0) then
+             if (count_Valid2 > 0) then
+
+                 !---STW Debug
+                 !---STWLower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
+                 !---STW             sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                 !---STW                     mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid
+
                  Lower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
-                              sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* & 
-                                  mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid
+                              sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                                  mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                                  mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid2
+                 !---STW End Debug
+
              endif
          
              end do Element_Loop_2

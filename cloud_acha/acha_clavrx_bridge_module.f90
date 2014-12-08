@@ -113,7 +113,6 @@ module ACHA_CLAVRX_BRIDGE
      Input%Bt_133um =>  null()
      Input%Rad_67um =>  null()
      Input%Rad_11um =>  null()
-     Input%Covar_Bt_11um_67um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
      Input%Sensor_Zenith_Angle =>  null()
      Input%Sensor_Azimuth_Angle =>  null()
@@ -179,6 +178,12 @@ module ACHA_CLAVRX_BRIDGE
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+     Output%Pc_Opaque =>  null()
+     Output%Tc_Opaque =>  null()
+     Output%Zc_Opaque =>  null()
+     Output%Pc_H2O =>  null()
+     Output%Tc_H2O =>  null()
+     Output%Zc_H2O =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -274,6 +279,12 @@ module ACHA_CLAVRX_BRIDGE
    Output%High_Cloud_Fraction => High_Cloud_Fraction_3x3
    Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction_3x3
    Output%Low_Cloud_Fraction => Low_Cloud_Fraction_3x3
+   Output%Pc_Opaque => Pc_Opaque_Cloud
+   Output%Tc_Opaque => Tc_Opaque_Cloud
+   Output%Zc_Opaque => Zc_Opaque_Cloud
+   Output%Pc_H2O => Pc_H2O
+   Output%Tc_H2O => Tc_H2O
+   Output%Zc_H2O => Tc_H2O
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -311,7 +322,6 @@ module ACHA_CLAVRX_BRIDGE
    Input%Bt_11um => ch(31)%Bt_Toa
    Input%Bt_12um => ch(32)%Bt_Toa
    Input%Bt_133um => ch(33)%Bt_Toa
-   Input%Covar_Bt_11um_67um => Covar_Ch27_Ch31_5x5
 
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa

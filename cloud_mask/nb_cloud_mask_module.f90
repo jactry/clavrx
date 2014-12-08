@@ -1,4 +1,4 @@
-! $Header$
+! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk/cloud_mask/naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $
 !
 !----------------------------------------------------------------------
 ! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
@@ -65,7 +65,9 @@
 !
 !----------------------------------------------------------------------
 
-module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
+module NB_CLOUD_MASK
+
+ use NB_CLOUD_MASK_SERVICES
 
    implicit none
    
@@ -134,14 +136,14 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: airmass
       real :: scat_angle
       real :: scat_angle_lunar
-      real :: lunar_glint_mask
+      logical :: lunar_glint_mask
       logical :: glint
       logical :: solar_conta
    end type cloud_mask_geo_type
    
    type cloud_mask_sfc_type
       integer :: land_class
-      integer :: coast_mask
+      logical :: coast_mask
       integer :: snow_class
       integer :: sfc_type
       real :: dem
@@ -165,6 +167,23 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: ref_dnb_clear
    end type cloud_mask_rtm_type
    
+   
+   type cloud_mask_sat_viirs_iband_stats_type
+      logical :: is_set
+      real :: min
+      real :: max
+      real :: mean
+      real :: std   
+   end type cloud_mask_sat_viirs_iband_stats_type
+   
+   type cloud_mask_sat_viirs_iband_type
+      logical :: is_set
+      type ( cloud_mask_sat_viirs_iband_stats_type ) :: bt
+      type ( cloud_mask_sat_viirs_iband_stats_type ) :: ref
+   
+   end type cloud_mask_sat_viirs_iband_type
+   
+   
    type cloud_mask_sat_type
       logical , dimension(42) :: chan_on
       real :: bt_ch20
@@ -184,6 +203,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real :: ref_dnb_3x3_std
       real :: ref_dnb_3x3_min
       real :: ref_dnb_lunar
+      type ( cloud_mask_sat_viirs_iband_type ) :: iband(5)
    end type cloud_mask_sat_type
 
    type cloud_mask_diagnostic
@@ -193,12 +213,12 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
    end type cloud_mask_diagnostic
 
    type cloud_mask_version_type
-      character (len = 256) :: cloud_mask_thresh_version_id
-      character (len = 256) :: cloud_mask_version_id
+      character (len = 355) :: cloud_mask_thresh_version_id
+      character (len = 355) :: cloud_mask_version_id
    end type cloud_mask_version_type
 
    type cloud_mask_input_type
-      character (len = 256) :: bayesian_mask_classifier      
+      character (len = 355) :: bayesian_mask_classifier      
       type (cloud_mask_geo_type) :: geo
       type (cloud_mask_sfc_type) :: sfc
       type (cloud_mask_rtm_type) :: rtm
@@ -221,6 +241,7 @@ module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
       real, allocatable :: class_cond_yes(:,:,:) 
       real, allocatable :: cond_no(:,:,:)
       real, allocatable :: cond_yes(:,:,:)
+      logical, allocatable :: do_this_classifier (:,:)
       character (len=20), allocatable :: Classifier_Value_Name(:)
       integer, allocatable :: Classifier_Value_Name_enum(:)
       integer, allocatable :: flag_idx(:)
@@ -236,7 +257,7 @@ contains
    !
    !
    !
-   subroutine CLOUD_MASK_NAIVE_BAYES ( inp , erg , info_flags , diag , vers )
+   subroutine NB_CLOUD_MASK_ALGORITHM ( inp , erg , info_flags , diag , vers )
           
       implicit none
             
@@ -294,10 +315,10 @@ contains
       
       ! - set mask and thresholds version id
       vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
-      vers % cloud_mask_version_id = "$Id$"
+      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $"
 
       ! - determine sfc type
-      sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lat &
+      sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lon &
           , inp % sfc % land_class , inp % sfc % coast_mask, inp % sfc % snow_class , inp % sfc % sfc_type &
           , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
@@ -314,15 +335,16 @@ contains
                             
       use_lunar_refl_for_vis_tests = .false.
       if ( inp % sat % chan_on(42) ) then
+
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-          ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-            inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-            inp % sfc % is_city <= Radiance_Lunar_City_Thresh .and. &
+           ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
+             inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
+             inp % sfc % is_city  .and. &
             .not. is_mountain .and. &
             .not. inp % sfc % coast_mask .and. &
             .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &
-            inp % geo % lunar_glint_mask == 0 )  then
-              use_lunar_refl_for_vis_tests  = .true.      
+            .not. inp % geo % lunar_glint_mask  )  then
+             use_lunar_refl_for_vis_tests  = .true.      
          end if    
       end if                       
             
@@ -373,32 +395,75 @@ contains
          is_forward_scatter = .true.
       end if 
       
+      ! --- check if DUST only for day time
+      ! --- use VIIRS I1 band (ch37) if available 
       is_dust = .false.
-      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) ) then
-         is_dust = DUST_DETECTION ( &
-              inp % sat % ref_ch1 &
-            , inp % sat % ref_ch8 &
-            , inp % sat % ref_ch1_3x3_std &
-            , inp % geo % glint &
-            , inp % sfc % land_class ) 
+      if ( inp % geo % sol_zen <= 85. ) then
+         if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) &
+              .and. inp % sat % chan_on (37) ) then
+            is_dust = DUST_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch1 &
+               , inp % sat % iband(1) % ref % std &
+               , inp % geo % glint &
+               , inp % sfc % land_class )
+         else if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (8) &
+             .and. .not. inp % sat % chan_on (37) ) then
+            is_dust = DUST_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch1 &
+               , inp % sat % ref_ch1_3x3_std &
+               , inp % geo % glint &
+               , inp % sfc % land_class ) 
+         end if
       end if
       
       is_smoke = .false.
-      if ( inp % sat % chan_on (1) .and. inp % sat % chan_on (7) ) then
-         is_smoke = SMOKE_DETECTION ( &
-              inp % sat % ref_ch1 &
-            , inp % sat % ref_ch7 &
-            , inp % sat % ref_ch1_3x3_std &
-            , inp % geo % sat_zen &
-            , inp % geo % glint &
-            , inp % sfc % land_class ) 
+      ! --- check if SMOKE only for day time
+      ! --- use VIIRS I1 band (ch37) if available
+      is_smoke = .false.
+      if ( inp % geo % sol_zen <= 85. ) then
+         if ( inp % sat % chan_on (8) .and. inp % sat % chan_on (7) &
+              .and. inp % sat % chan_on (37) ) then
+            is_smoke = SMOKE_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch7 &
+               , inp % sat % iband(1) % ref % std &
+               , inp % geo % sat_zen &
+               , inp % geo % glint &
+               , inp % sfc % land_class ) 
+         else if ( inp % sat % chan_on (8) .and. inp % sat % chan_on (7) &
+             .and. inp % sat % chan_on (1) .and. .not. inp % sat % chan_on (37)) then
+            is_smoke = SMOKE_DETECTION ( &
+                 inp % sat % ref_ch8 &
+               , inp % sat % ref_ch7 &
+               , inp % sat % ref_ch1_3x3_std &
+               , inp % geo % sat_zen &
+               , inp % geo % glint &
+               , inp % sfc % land_class )
+         end if
       end if
-            
+             
+      ! --- check if CLOUD SHADOW
       is_cloud_shadow = .false.
       ! - TO ADD
       
+      ! --- check if FIRE
       is_fire = .false.      
-      if ( inp % sat % chan_on (31) .and. inp % sat % chan_on (20) ) then
+      if ( inp % sat % chan_on (31) &
+           .and. inp % sat % chan_on (20) &
+           .and. inp % sat % chan_on (41) &
+           .and. inp % sat % chan_on (40) ) then
+         is_fire = FIRE_DETECTION ( &
+              inp % sat % bt_ch31 &
+            , inp % sat % bt_ch20 &
+            , inp % sat % iband(5) % ref % std &
+            , inp % sat % iband(4) % ref % std &
+            , inp % geo % sol_zen )
+      else if ( inp % sat % chan_on (31) &
+           .and. inp % sat % chan_on (20) &
+           .and. .not. inp % sat % chan_on (41) &
+           .and. .not. inp % sat % chan_on (40) ) then
          is_fire = FIRE_DETECTION ( &
               inp % sat % bt_ch31 &
             , inp % sat % bt_ch20 &
@@ -406,7 +471,8 @@ contains
             , inp % rtm % bt_ch20_3x3_std &
             , inp % geo % sol_zen )
       end if
-      
+
+      ! --- set some flags
       is_solar_contaminated = inp % geo % solar_conta
       
       info_flags = 0 
@@ -613,6 +679,7 @@ contains
             ! - this solar test can be also applied for lunar
             !TODO - make own lunar visible coefficients
             !
+
             if ( use_lunar_refl_for_vis_tests ) then
                Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
                                   inp % rtm % ref_dnb_clear &
@@ -728,6 +795,10 @@ contains
                                    , bayes_coef % Classifier_Value_Name (class_idx)
          end select
        
+       ! - AW 09/17/2014 
+       ! - test can be switched off in bayesian file  
+       if ( .not. bayes_coef % do_this_classifier (Class_Idx,Sfc_Idx) )  is_on_test = .false.
+       
        ! --- all tests classifer
         if ( is_on_test ) then
             
@@ -758,26 +829,18 @@ contains
          ! --- Diagnostic Output for debugging in CLAVR-x
          select case (  bayes_coef % Classifier_Value_Name_enum (class_idx))
            case ( et_class_T110 )
-           
-              
            case ( et_class_TMAX_T )
            case ( et_class_T_STD )
            case ( et_class_E_TROP )
            case ( et_class_FMFT )
            case ( et_class_BTD_110_067 )
-           
-           
-            
            case ( et_class_BTD_110_067_COV )
            case ( et_class_BTD_110_085 )
            case ( et_class_E_037 )
-            
            case ( et_class_E_037_DAY )
-               !diag % diagnostic_1 =    classifier_value
+              !diag % diagnostic_1 =    classifier_value
               !diag % diagnostic_2 = class_contr
               !diag % diagnostic_3 = 1.  
-              
-              
            case ( et_class_E_037_NGT )
            case ( et_class_BTD_037_110_NGT )
            case ( et_class_R_006_DAY )
@@ -802,11 +865,7 @@ contains
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
             
-            
-           
-          
-   end subroutine CLOUD_MASK_NAIVE_BAYES
-   
+   end subroutine NB_CLOUD_MASK_ALGORITHM
 
    !-------------------------------------------------------------------------------------
    !   Reads the coefficients from file
@@ -831,9 +890,11 @@ contains
       integer :: i_sfc_file  ! number of surface in file
       
       integer :: int_dummy
+      integer :: index_start
+      integer :: index_end
       
-      print*, 'read coeffs ..'
-      print*, trim(bayes_coef % file)
+      
+      
       
       lun = GETLUN()
       open (unit=lun, file = trim(bayes_coef % file) , &
@@ -863,6 +924,8 @@ contains
 
       call bayes_coef % alloc ( n_class, n_bounds, n_sfc_bayes )
       
+      bayes_coef % do_this_classifier (:,:) = .true. 
+      
       do i_sfc = 1 , n_sfc_bayes
          read (unit=lun, fmt=*, iostat=ios) i_sfc_file, Header
          read (unit=lun, fmt=*, iostat=ios) bayes_coef % Prior_Yes(i_sfc), bayes_coef % Prior_No(i_sfc)
@@ -872,8 +935,8 @@ contains
             
             read (unit=lun, fmt=*, iostat=ios)  &
                              int_dummy &
-                          ,  int_dummy &
-                          ,  int_dummy &
+                          ,  index_start &
+                          ,  index_end &
                           ,  bayes_coef %Classifier_Value_Name(i_class)
            
             
@@ -939,24 +1002,36 @@ contains
              read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_Yes (:,i_class,i_sfc) 
              read (unit=lun, fmt=*, iostat=ios)  bayes_coef % Class_Cond_No (:,i_class,i_sfc)
              
+             ! --   AW 09/17/2014
+             ! -- to switch off this class for this surface do set the start_index in the bayesian file to a 
+             ! -- higher value than end_index
+             ! -- There should be better ways to do this, but we have to adjust this first in the program (IDL) where we create 
+             ! -- the bayesian files
+             ! --  
+            
+             if ( index_start >= index_end) then
+               bayes_coef % do_this_classifier (i_class,i_sfc) = .false.               
+             end if
+             
          end do
       
       end do
+      
          
       bayes_coef % is_read = .true.
    
-   end subroutine read_bayes_coeff
+   end subroutine READ_BAYES_COEFF
    
    !  7 sfc bayesian surface  types 
    !-------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------
-   function bayes_sfc_type ( lat , lon , land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
+   function BAYES_SFC_TYPE ( lat , lon , land_class , coast , snow_class , sfc_type , emis_ch20 , sst_anal_uni)
      
        
       real  :: lat , lon , emis_ch20 , sst_anal_uni
-      integer :: land_class,coast , snow_class , sfc_type
-      
+      integer :: land_class , snow_class , sfc_type
+      logical :: coast
       
       integer :: bayes_sfc_type
       integer , parameter :: CLOSED_SHRUBS_SFC = 8
@@ -987,7 +1062,7 @@ contains
       if (  land_class  == ET_land_class % LAND .or. &
                land_class  == ET_land_class % COASTLINE .or. &
                land_class  == ET_land_class % EPHEMERAL_WATER .or. &  
-               coast  == 1 )  then
+               coast  )  then
          bayes_sfc_type = 3
       end if
       
@@ -1059,6 +1134,7 @@ contains
       allocate (this % Classifier_Bounds_Min(N_class,N_sfc_bayes))
       allocate (this % Classifier_Bounds_Max(N_class,N_sfc_bayes))
       allocate (this % Delta_Classifier_Bounds(N_class,N_sfc_bayes))
+      allocate (this % do_this_classifier(N_class,N_sfc_bayes))
       allocate (this % Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Classifier_Value_Name(N_class))
@@ -1076,7 +1152,7 @@ contains
       deallocate (this % Prior_Yes)
       deallocate (this % Prior_No)
       deallocate (this % Optimal_Posterior_Prob)
-      
+      deallocate (this % do_this_classifier)
       deallocate (this % Classifier_Bounds_Min)
       deallocate (this % Classifier_Bounds_Max)
       deallocate (this % Delta_Classifier_Bounds)
@@ -1362,5 +1438,5 @@ contains
    
 !-------------------------------------------------------------------------------------   
 
-end module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
+end module NB_CLOUD_MASK
 

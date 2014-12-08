@@ -75,6 +75,7 @@ Implicit none
    !--- optional variables
    integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
    integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+   real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
  end type acha_input_struct
 

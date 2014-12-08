@@ -1,4 +1,4 @@
-!$Id: ACHA_GEOCAT_BRIDGE_MOD.f90 9 2014-01-31 08:19:35Z awalther $
+!$Id: acha_gsip_bridge_mod.f90 582 2014-10-08 03:40:18Z heidinger $
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !
@@ -6,27 +6,34 @@
 !  processing systems and the ACHA code.
 !
 !------------------------------------------------------------------------------
-module ACHA_GEOCAT_BRIDGE_MOD
+module ACHA_GSIP_BRIDGE_MOD
 
- use ACHA_SERVICES_MOD
  use AWG_CLOUD_HEIGHT
+ use ACHA_SERVICES_MOD
    
- Implicit none
+ implicit none
 
  public :: AWG_CLOUD_HEIGHT_BRIDGE
- private :: NULL_ACHA_POINTERS
- private :: WMO_Sensor_KM
-
+   
  contains
+
+ !====================================================================
+ !  record cvs version as a global variable for output to hdf
+ !
+ !  THIS IS BROKEN- IT ONLY PASSES BRIDGE INFO - FIXME
+ !
+ !====================================================================
+! subroutine SET_ACHA_VERSION()
+!   Acha_Version = "$Id: acha_gsip_bridge_mod.f90 582 2014-10-08 03:40:18Z heidinger $"
+! end subroutine SET_ACHA_VERSION
 
 
 !----------------------------------------------------------------------
 ! BEGINNING OF ACHA SUBROUTINE
 !---------------------------------------------------------------------- 
- subroutine AWG_CLOUD_HEIGHT_BRIDGE(Ialgo)
+ subroutine AWG_CLOUD_HEIGHT_BRIDGE()
  
    implicit none
-   INTEGER(KIND=Int4), INTENT(IN) :: Ialgo
 
    !--------------------------------------------------------------------
    ! define structures that will be arguments to ACHA
@@ -35,131 +42,114 @@ module ACHA_GEOCAT_BRIDGE_MOD
    type(acha_input_struct) :: Acha_Input
    type(acha_output_struct) :: Acha_Output
 
-   INTEGER(KIND=Int4) :: Num_lines, Num_Elems
-   INTEGER(KIND=Int4) :: wmo_id
-
    !---null pointers before filling them
    call NULL_ACHA_POINTERS(Acha_Input, Acha_Output)
 
    !-----------------------------------------------------------------------
-   !---  GEOCAT Bridge Section
+   !---  GSIP Bridge Section
    !-----------------------------------------------------------------------
    !--- initialize Input structure pointers
 
    !--- store integer values
    Acha_Input%Number_of_Elements = sat%nx
-   Acha_Input%Number_of_Lines = sat%nscans_per_segment
-   Acha_Input%Num_Line_Max = sat%nscans_per_segment
+   Acha_Input%Number_of_Lines = Num_Scans_Per_Segment
+   Acha_Input%Num_Line_Max = Num_Scans_Per_Segment
    Acha_Input%Process_Undetected_Cloud_Flag = sym%NO
-   Acha_Input%Smooth_Nwp_Fields_Flag = sym%NO
-   Acha_Input%ACHA_Mode_Flag_In = -1
+   Acha_Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
+   Acha_Input%ACHA_Mode_Flag_In = sat_info_gsip(1)%acha_mode
    !Sensor resolution
-   Acha_Input%Sensor_Resolution_KM = WMO_Sensor_KM(scinfo(sc_ind)%WMO_Sc_Id)
-   
+   Acha_Input%Sensor_Resolution_KM = WMO_Sensor_KM(sat_info_gsip(1)%WMO_Sc_Id)
+
    Acha_Input%Chan_Idx_67um = 9     !channel number for 6.7
    Acha_Input%Chan_Idx_85um = 11     !channel number for 8.5
    Acha_Input%Chan_Idx_11um = 14     !channel number for 11
    Acha_Input%Chan_Idx_12um = 15     !channel number for 12
    Acha_Input%Chan_Idx_133um = 16  !channel number for 13.3
 
-   Acha_Input%Chan_On_67um = out2(Ialgo)%ch_flg(9)
-   Acha_Input%Chan_On_85um = out2(Ialgo)%ch_flg(11)
-   Acha_Input%Chan_On_11um = out2(Ialgo)%ch_flg(14)
-   Acha_Input%Chan_On_12um = out2(Ialgo)%ch_flg(15)
-   Acha_Input%Chan_On_133um = out2(Ialgo)%ch_flg(16)
+   Acha_Input%Chan_On_67um = sat_info_gsip(1)%chanon(9)
+   Acha_Input%Chan_On_85um = sat_info_gsip(1)%chanon(11)
+   Acha_Input%Chan_On_11um = sat_info_gsip(1)%chanon(14)
+   Acha_Input%Chan_On_12um = sat_info_gsip(1)%chanon(15)
+   Acha_Input%Chan_On_133um = sat_info_gsip(1)%chanon(16)
 
-   Acha_Input%Invalid_Data_Mask => sat%bad_pixel_mask(14,:,:)
-   Acha_Input%Elem_Idx_Nwp =>  sat%x_nwp
-   Acha_Input%Line_Idx_Nwp => sat%y_nwp      
- 
-   Acha_Input%Viewing_Zenith_Angle_Idx_Rtm => sat%ivza
-   Acha_Input%Bt_67um => sat%bt9
-   Acha_Input%Bt_85um => sat%bt11
-   Acha_Input%Bt_11um => sat%bt14
-   Acha_Input%Bt_12um => sat%bt15
-   Acha_Input%Bt_133um => sat%bt16
+   Acha_Input%Invalid_Data_Mask => bad_pix_mask(14,:,:)
 
-   Acha_Input%Rad_11um => sat%rad14
-   Acha_Input%Cosine_Zenith_Angle => sat%cos_satzen
-   Acha_Input%Sensor_Zenith_Angle => sat%satzen
-   Acha_Input%Sensor_Azimuth_Angle => sat%sataz
-   Acha_Input%Latitude => sat%lat
-   Acha_Input%Longitude => sat%lon
+   Acha_Input%Elem_Idx_Nwp =>  I_Nwp
+   Acha_Input%Line_Idx_Nwp => J_Nwp
+   Acha_Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
+   Acha_Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
+   Acha_Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
+   Acha_Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
+   Acha_Input%Viewing_Zenith_Angle_Idx_Rtm => Ivza_Rtm
 
-   Acha_Input%Snow_Class => sat%snow_mask
-   Acha_Input%Surface_Type => sat%sfc_type
+   if (Acha_Input%Chan_On_67um  == sym%YES) Acha_Input%Bt_67um => bt9
+   if (Acha_Input%Chan_On_85um  == sym%YES) Acha_Input%Bt_85um => bt11
+   if (Acha_Input%Chan_On_11um  == sym%YES) Acha_Input%Bt_11um => bt14
+   if (Acha_Input%Chan_On_12um  == sym%YES) Acha_Input%Bt_12um => bt15
+   if (Acha_Input%Chan_On_133um  == sym%YES) Acha_Input%Bt_133um => bt16
 
-   Acha_Input%Surface_Elevation => sat%Zsfc
-   Acha_Input%Cloud_Mask => sat%cldmask
-   Acha_Input%Cloud_Type => sat%Cldtype
+   if (Acha_Input%Chan_On_11um  == sym%YES) Acha_Input%Rad_11um => rad14
+   Acha_Input%Cosine_Zenith_Angle => Coszen
+   Acha_Input%Sensor_Zenith_Angle => Satzen
+   Acha_Input%Sensor_Azimuth_Angle => Sataz
+   Acha_Input%Latitude => Lat
+   Acha_Input%Longitude => Lon
 
-   Acha_Input%Rad_Clear_67um => sat%rad_clr9
-   Acha_Input%Rad_Clear_85um => sat%rad_clr11
-   Acha_Input%Rad_Clear_11um => sat%rad_clr14
-   Acha_Input%Rad_Clear_12um => sat%rad_clr15
-   Acha_Input%Rad_Clear_133um => sat%rad_clr16
-   Acha_Input%Surface_Emissivity_39um => sat%sfc_emiss7
-   
-   !GEOCAT is special, where we have to allocate the pixel level data
-   ! instead of pointing to it
+   Acha_Input%Snow_Class => snow_mask
+   Acha_Input%Surface_Type => Sfc_Type
 
-   Num_lines = Acha_Input%Number_of_Lines
-   Num_Elems = Acha_Input%Number_of_Elements
+   Acha_Input%Surface_Temperature =>Tsfc_Nwp_Pix
+   Acha_Input%Surface_Air_Temperature => Tair_Nwp_Pix
+   Acha_Input%Tropopause_Temperature => Ttropo_Nwp_Pix
+   Acha_Input%Surface_Pressure => Psfc_Nwp_Pix
 
-   allocate (Acha_Input%Surface_Temperature(Num_Elems,Num_lines))
-   allocate (Acha_Input%Surface_Air_Temperature(Num_Elems,Num_lines))
-   allocate (Acha_Input%Tropopause_Temperature(Num_Elems,Num_lines))
-   allocate (Acha_Input%Surface_Pressure(Num_Elems,Num_lines))
-   allocate (Acha_Input%Elem_Idx_Opposite_Corner_NWP(Num_Elems,Num_lines))
-   allocate (Acha_Input%Line_Idx_Opposite_Corner_NWP(Num_Elems,Num_lines))
-   allocate (Acha_Input%Longitude_Interp_Weight_NWP(Num_Elems,Num_lines))
-   allocate (Acha_Input%Latitude_Interp_Weight_NWP(Num_Elems,Num_lines))
+   Acha_Input%Surface_Elevation => Zsfc
+   Acha_Input%Cloud_Mask => gsip_pix_prod%cldmask
+   Acha_Input%Cloud_Type => gsip_pix_prod%Cldtype
 
+   Acha_Input%Rad_Clear_67um => Rad_Clear_Ch9_Rtm
+   Acha_Input%Rad_Clear_85um => Rad_Clear_Ch11_Rtm
+   Acha_Input%Rad_Clear_11um => Rad_Clear_Ch14_Rtm
+   Acha_Input%Rad_Clear_12um => Rad_Clear_Ch15_Rtm
+   Acha_Input%Rad_Clear_133um => Rad_Clear_Ch16_Rtm
+   Acha_Input%Surface_Emissivity_39um => sfc_emiss_7
 
-   Acha_Input%Elem_Idx_Opposite_Corner_NWP = MISSING_VALUE_INT4
-   Acha_Input%Line_Idx_Opposite_Corner_NWP = MISSING_VALUE_INT4
-   Acha_Input%Longitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
-   Acha_Input%Latitude_Interp_Weight_NWP = MISSING_VALUE_REAL4
-   
-
-
-      
-   CALL ACHA_NWP_Fill(ACHA_Input)
-   
-   !LRC will be done inside the science code
-   
    Acha_Input%Elem_Idx_LRC_Input => null()
    Acha_Input%Line_Idx_LRC_Input =>  null()
      
    !---- initalize Output structure
-   Acha_Output%Latitude_Pc => out2(Ialgo)%Lat_Pc
-   Acha_Output%Longitude_Pc => out2(Ialgo)%Lon_Pc
-
-   Acha_Output%Tc => out2(Ialgo)%Cldt
-   Acha_Output%Ec => out2(Ialgo)%cldemiss
-   Acha_Output%Beta => out2(Ialgo)%cldbeta1112
-   Acha_Output%Pc =>  out2(Ialgo)%Cldp
-   Acha_Output%Zc => out2(Ialgo)%cldz
-   Acha_Output%Tau => out2(Ialgo)%cod_vis
-   Acha_Output%Reff => out2(Ialgo)%cldreff
-   Acha_Output%Tc_Uncertainty => out2(Ialgo)%Tc_error
-   Acha_Output%Ec_Uncertainty => out2(Ialgo)%ec_error
-   Acha_Output%Beta_Uncertainty => out2(Ialgo)%beta1112_error
-   Acha_Output%Pc_Uncertainty => out2(Ialgo)%pc_error
-   Acha_Output%Zc_Uncertainty => out2(Ialgo)%zc_error
-   Acha_Output%Lower_Cloud_Pressure => out2(Ialgo)%Pc_Lower_Cloud
-   Acha_Output%Lower_Cloud_Temperature => out2(Ialgo)%Tc_Lower_Cloud
-   Acha_Output%Lower_Cloud_Height => out2(Ialgo)%Zc_Lower_Cloud
-  
-   Acha_Output%Zc_Top => out2(Ialgo)%Zc_Top_Acha
-   Acha_Output%Zc_Base => out2(Ialgo)%Zc_Base_Acha
-  
-   Acha_Output%Qf => out2(Ialgo)%Cloud_Height_QF
-   Acha_Output%OE_Qf => out2(Ialgo)%qcflg1
-   Acha_Output%Packed_Qf => out2(Ialgo)%Acha_Packed_Quality_Flags
-   Acha_Output%Packed_Meta_Data => out2(Ialgo)%Acha_Packed_Meta_Data_Flags
-   Acha_Output%Processing_Order  => out2(Ialgo)%Processing_Order
-   Acha_Output%Cost  => out2(Ialgo)%Acha_Cost
+   Acha_Output%Latitude_Pc => gsip_pix_prod%Lat_Pc
+   Acha_Output%Longitude_Pc => gsip_pix_prod%Lon_Pc
+   Acha_Output%Tc => gsip_pix_prod%ctt
+   Acha_Output%Ec => gsip_pix_prod%cldemiss
+   Acha_Output%Beta => gsip_pix_prod%r4_generic1
+   Acha_Output%Pc => gsip_pix_prod%Cldp
+   Acha_Output%Zc => gsip_pix_prod%cldz
+   Acha_Output%Tau => gsip_pix_prod%cod_acha
+   Acha_Output%Reff => gsip_pix_prod%r4_generic1
+   Acha_Output%Tc_Uncertainty =>  gsip_pix_prod%Tc_error
+   Acha_Output%Ec_Uncertainty => gsip_pix_prod%ec_error
+   Acha_Output%Beta_Uncertainty => gsip_pix_prod%beta1112_error
+   Acha_Output%Pc_Uncertainty => gsip_pix_prod%pc_error
+   Acha_Output%Zc_Uncertainty => gsip_pix_prod%zc_error
+   Acha_Output%Lower_Cloud_Pressure =>  gsip_pix_prod%Pc_Lower_Cloud
+   Acha_Output%Lower_Cloud_Temperature => gsip_pix_prod%Tc_Lower_Cloud
+   Acha_Output%Lower_Cloud_Height => gsip_pix_prod%Zc_Lower_Cloud
+   Acha_Output%Qf => gsip_pix_prod%Cloud_Height_QF
+   Acha_Output%OE_Qf => gsip_pix_prod%qcflg1
+   Acha_Output%Packed_Qf => gsip_pix_prod%Acha_Packed_Quality_Flags
+   Acha_Output%Packed_Meta_Data => gsip_pix_prod%Acha_Packed_Meta_Data_Flags
+   Acha_Output%Processing_Order  => gsip_pix_prod%Processing_Order
+   Acha_Output%Cost  => gsip_pix_prod%r4_generic2
+   !-------------------------------------------------------------------------
+   ! Fix Me
+   !-------------------------------------------------------------------------
+   Acha_Output%Cloud_Layer =>  null()
+   Acha_Output%Total_Cloud_Fraction =>  null()
+   Acha_Output%Total_Cloud_Fraction_Uncer =>  null()
+   Acha_Output%High_Cloud_Fraction =>  null()
+   Acha_Output%Mid_Cloud_Fraction =>  null()
+   Acha_Output%Low_Cloud_Fraction =>  null()
   
 
    !----set symbols to local values
@@ -200,20 +190,20 @@ module ACHA_GEOCAT_BRIDGE_MOD
    symbol%SNOW = sym%SNOW
 
    symbol%CLEAR_TYPE = sym%CLEAR_TYPE
-   symbol%PROB_CLEAR_TYPE = sym%CLEAR_TYPE
+   symbol%PROB_CLEAR_TYPE = sym%PROB_CLEAR_TYPE
    symbol%FOG_TYPE = sym%FOG_TYPE
    symbol%WATER_TYPE = sym%WATER_TYPE
    symbol%SUPERCOOLED_TYPE = sym%SUPERCOOLED_TYPE
    symbol%MIXED_TYPE = sym%MIXED_TYPE
-   symbol%OPAQUE_ICE_TYPE = sym%TICE_TYPE
+   symbol%OPAQUE_ICE_TYPE = sym%OPAQUE_ICE_TYPE
    symbol%TICE_TYPE = sym%TICE_TYPE
    symbol%CIRRUS_TYPE = sym%CIRRUS_TYPE
    symbol%OVERLAP_TYPE = sym%OVERLAP_TYPE
    symbol%OVERSHOOTING_TYPE = sym%OVERSHOOTING_TYPE
    symbol%UNKNOWN_TYPE = sym%UNKNOWN_TYPE
-   symbol%DUST_TYPE = 11
-   symbol%SMOKE_TYPE = 12
-   symbol%FIRE_TYPE = 13
+   symbol%DUST_TYPE = sym%DUST_TYPE
+   symbol%SMOKE_TYPE = sym%SMOKE_TYPE
+   symbol%FIRE_TYPE = sym%FIRE_TYPE
 
    symbol%CLEAR_PHASE = sym%CLEAR_PHASE
    symbol%WATER_PHASE = sym%WATER_PHASE
@@ -221,10 +211,10 @@ module ACHA_GEOCAT_BRIDGE_MOD
    symbol%MIXED_PHASE = sym%MIXED_PHASE
    symbol%ICE_PHASE = sym%ICE_PHASE
    symbol%UNKNOWN_PHASE = sym%UNKNOWN_PHASE
+
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   
    call AWG_CLOUD_HEIGHT_ALGORITHM(Acha_Input, &
                                    symbol, &
                                    Acha_Output)
@@ -250,8 +240,11 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Input%Invalid_Data_Mask =>  NULL()
      Acha_Input%Elem_Idx_Nwp =>   NULL()
      Acha_Input%Line_Idx_Nwp =>  NULL()
+     Acha_Input%Elem_Idx_Opposite_Corner_NWP =>  NULL()
+     Acha_Input%Line_Idx_Opposite_Corner_NWP =>  NULL()
+     Acha_Input%Longitude_Interp_Weight_NWP =>  NULL()
+     Acha_Input%Latitude_Interp_Weight_NWP =>  NULL()
      Acha_Input%Viewing_Zenith_Angle_Idx_Rtm =>  NULL()
-
      Acha_Input%Bt_67um =>  NULL()
      Acha_Input%Bt_85um =>  NULL()
      Acha_Input%Bt_11um =>  NULL()
@@ -265,6 +258,10 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Input%Longitude =>  NULL()
      Acha_Input%Snow_Class =>  NULL()
      Acha_Input%Surface_Type =>  NULL()
+     Acha_Input%Surface_Temperature => NULL()
+     Acha_Input%Surface_Air_Temperature =>  NULL()
+     Acha_Input%Tropopause_Temperature =>  NULL()
+     Acha_Input%Surface_Pressure =>  NULL()
      Acha_Input%Surface_Elevation =>  NULL()
      Acha_Input%Cloud_Mask =>  NULL()
      Acha_Input%Cloud_Type =>  NULL()
@@ -276,19 +273,11 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Input%Surface_Emissivity_39um =>  NULL()
      Acha_Input%Elem_Idx_LRC_Input =>  NULL()
      Acha_Input%Line_Idx_LRC_Input =>   NULL()
-     
-      ! deallocate NWP pixel vars
-      If(allocated(Acha_Input%Surface_Temperature) ) deallocate (Acha_Input%Surface_Temperature)
-      If(allocated(Acha_Input%Surface_Air_Temperature) ) deallocate (Acha_Input%Surface_Air_Temperature)
-      If(allocated(Acha_Input%Tropopause_Temperature) ) deallocate (Acha_Input%Tropopause_Temperature)
-      If(allocated(Acha_Input%Surface_Pressure) ) deallocate (Acha_Input%Surface_Pressure)
+#if defined (ISFWAIT)
+     Acha_Input%Ctxt => NULL()   
+#endif
 
-      If(allocated(Acha_Input%Elem_Idx_Opposite_Corner_NWP) ) deallocate (Acha_Input%Elem_Idx_Opposite_Corner_NWP)
-      If(allocated(Acha_Input%Line_Idx_Opposite_Corner_NWP) ) deallocate (Acha_Input%Line_Idx_Opposite_Corner_NWP)
-      If(allocated(Acha_Input%Longitude_Interp_Weight_NWP) ) deallocate (Acha_Input%Longitude_Interp_Weight_NWP)
-      If(allocated(Acha_Input%Latitude_Interp_Weight_NWP) ) deallocate (Acha_Input%Latitude_Interp_Weight_NWP)
-      
-                                  
+                                   
      !--- null output pointers
 
      Acha_Output%Latitude_Pc =>  NULL()
@@ -308,18 +297,21 @@ module ACHA_GEOCAT_BRIDGE_MOD
      Acha_Output%Lower_Cloud_Pressure =>  NULL()
      Acha_Output%Lower_Cloud_Temperature =>  NULL()
      Acha_Output%Lower_Cloud_Height =>  NULL()
-     Acha_Output%Zc_Top =>  NULL()
-     Acha_Output%Zc_Base =>  NULL()
      Acha_Output%Qf =>  NULL()
      Acha_Output%OE_Qf =>  NULL()
      Acha_Output%Packed_Qf =>  NULL()
      Acha_Output%Packed_Meta_Data =>  NULL()
      Acha_Output%Processing_Order  =>  NULL()
      Acha_Output%Cost  => NULL()
- 
+     Acha_Output%Cloud_Layer =>  null()
+     Acha_Output%Total_Cloud_Fraction =>  null()
+     Acha_Output%Total_Cloud_Fraction_Uncer =>  null()
+     Acha_Output%High_Cloud_Fraction =>  null()
+     Acha_Output%Mid_Cloud_Fraction =>  null()
+     Acha_Output%Low_Cloud_Fraction =>  null()
  
  end subroutine
- 
+
  !-----------------------------------------------------------------------------
  !
  !-----------------------------------------------------------------------------
@@ -328,56 +320,57 @@ module ACHA_GEOCAT_BRIDGE_MOD
       real :: Sensor_KM
 
       select case (WMO_id)
-      case(3)   ! Metop-01
-            Sensor_KM = 1.0
-      case(4)   ! Metop-02
-            Sensor_KM = 1.0
-      case(55)  ! Meteosat-08
-             Sensor_KM = 3.0
-      case(56)  ! Meteosat-09
-             Sensor_KM = 3.0
-      case(57)  ! Meteosat-10
-             Sensor_KM = 3.0
-      case(70)  ! Meteosat-11
-             Sensor_KM = 3.0
-      case(171) ! MTSAT-1R
-             Sensor_KM = 4.0
-      case(172) ! MTSAT-2
-             Sensor_KM = 4.0
-      case(200:209) ! NOAA-08 - NOAA-18
-             Sensor_KM = 1.0
-      case(223) ! NOAA-19
-             Sensor_KM = 1.0
-      case(224) ! NPP
-             Sensor_KM = 0.75
-      case(252) ! GOES-08
-             Sensor_KM = 4.0
-      case(253) ! GOES-09
-             Sensor_KM = 4.0
-      case(254) ! GOES-10
-             Sensor_KM = 4.0
-      case(255) ! GOES-11
-             Sensor_KM = 4.0
-      case(256) ! GOES-12
-             Sensor_KM = 4.0
-      case(257) ! GOES-13
-             Sensor_KM = 4.0
-      case(258) ! GOES-14
-             Sensor_KM = 4.0
-      case(259) ! GOES-15
-             Sensor_KM = 4.0
-      case(152) ! GMS-5
-             Sensor_KM = 2.0
-      case(783) ! MODIS Terra
-             Sensor_KM = 1.0
-      case(784) ! MODIS Aqua
-             Sensor_KM = 1.0
-      case default
-             print*,'This sensor is missing a wmo id: ', wmo_id 
-             stop
+      case(3)
+	     Sensor_KM = 1.0
+	   case(4)
+	     Sensor_KM = 1.0
+      case(55)
+	     Sensor_KM = 3.0
+      case(56)
+	     Sensor_KM = 3.0
+      case(57)
+	     Sensor_KM = 3.0
+      case(70)
+	     Sensor_KM = 3.0
+      case(171)
+	     Sensor_KM = 4.0
+	  case (172)
+	     Sensor_KM = 13.0
+	  case (200:209)
+	     Sensor_KM = 1.0
+	  case(223)
+	     Sensor_KM = 1.0
+      case(224)
+	     Sensor_KM = 0.75
+      case(252)
+	     Sensor_KM = 4.0
+      case(253)
+	     Sensor_KM = 4.0
+      case(254)
+	     Sensor_KM = 4.0
+      case(255)
+	     Sensor_KM = 4.0
+      case(256)
+	     Sensor_KM = 4.0
+      case(257)
+	     Sensor_KM = 4.0
+      case(258)
+	     Sensor_KM = 4.0
+      case(259)
+	     Sensor_KM = 4.0
+      case(152)
+	     Sensor_KM = 2.0
+      case(783)
+	     Sensor_KM = 1.0
+      case(784)
+	     Sensor_KM = 1.0
+	  case default
+	     print*,'Please inform William that this sensor is missing in ACHA! ( william.straka@ssec.wisc.edu) wmo id: ', wmo_id 
+		 stop	 
       end select
 
 
  end function WMO_Sensor_KM
+ 
 
-end module ACHA_GEOCAT_BRIDGE_MOD
+end module ACHA_GSIP_BRIDGE_MOD

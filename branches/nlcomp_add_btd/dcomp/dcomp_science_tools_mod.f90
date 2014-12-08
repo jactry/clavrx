@@ -159,7 +159,7 @@ end function get_rad_refl_factor
 	  
       real :: db_dt_tmp
       integer, parameter:: nplanck = 161
-      real, dimension(nplanck) :: B20
+      real, dimension(nplanck), save :: B20
       real, parameter :: T_planck_min = 180.0  
       real, parameter :: delta_T_planck = 1.0
       real, dimension(nplanck) , save :: T_planck

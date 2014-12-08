@@ -60,7 +60,7 @@ all: hdf4 nlcomp_one_pixel_run
 hdf4:
 	@echo  'kkf'$(LFLAGS)
 	@echo 'Building target for hdf4: $@'
-	make -C $(ICASRC)	
+	make COMP1="$(fc)" -C $(ICASRC)	
 
 nlcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'

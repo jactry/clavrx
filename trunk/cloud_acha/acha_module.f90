@@ -65,7 +65,7 @@ module AWG_CLOUD_HEIGHT
   private:: INTERPOLATE_PROFILE_ACHA
   private:: INTERPOLATE_NWP_ACHA
   private:: DETERMINE_INVERSION_LEVEL
-  private:: DETERMINE_OPAQUE_LEVEL
+  private:: DETERMINE_OPAQUE_CLOUD_HEIGHT
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
   private:: NULL_PIX_POINTERS 
@@ -290,9 +290,6 @@ module AWG_CLOUD_HEIGHT
   real:: a_Beta_11um_67um_fit
   real:: b_Beta_11um_67um_fit
 
-  real:: Tc_Opaque_Level
-  real:: Pc_Opaque_Level
-  real:: Zc_Opaque_Level
   real:: Tsfc_Est
   real:: Tc_temp
   real:: Pc_temp
@@ -627,8 +624,6 @@ module AWG_CLOUD_HEIGHT
                                                 ACHA_RTM_NWP%T_Prof_2, &
                                                 ACHA_RTM_NWP%T_Prof_3, &
                                                 Inwp_Weight,Jnwp_Weight)
-
-    
     else
 
        Hght_Prof_RTM = ACHA_RTM_NWP%Z_Prof
@@ -637,23 +632,45 @@ module AWG_CLOUD_HEIGHT
     endif
 
    !-----------------------------------------------------------------------
-   !  find opaque levels
+   !  find opaque cloud height
    !-----------------------------------------------------------------------
-   CALL DETERMINE_OPAQUE_LEVEL(Input%Rad_11um(Elem_Idx,Line_Idx), &
+   call DETERMINE_OPAQUE_CLOUD_HEIGHT( &
+                                Input%Rad_11um(Elem_Idx,Line_Idx), &
                                 ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
                                 Press_Prof_RTM, &
                                 Hght_Prof_RTM, &
                                 Temp_Prof_RTM, &
                                 Tropo_Level_RTM, &
                                 Sfc_Level_RTM, &
-                                Pc_Opaque_Level, &
-                                Tc_Opaque_Level, &
-                                Zc_Opaque_Level)
+                                Output%Pc_Opaque(Elem_Idx,Line_Idx), &
+                                Output%Tc_Opaque(Elem_Idx,Line_Idx), &
+                                Output%Zc_Opaque(Elem_Idx,Line_Idx))
 
-   !-------------------------------------------------------------------
-   ! Apply Opaque Retrieval for Acha_Mode_Flag = 0, then cycle
-   !-------------------------------------------------------------------
-   if (Acha_Mode_Flag == 0) then
+   !-----------------------------------------------------------------------
+   !  find h2o cloud height
+   !-----------------------------------------------------------------------
+   if (Input%Chan_On_67um == symbol%YES) then
+       call H2O_CLOUD_HEIGHT ( &
+           Input%Rad_11um(Elem_Idx,Line_Idx), &
+           ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
+           Input%Rad_Clear_11um(Elem_Idx,Line_Idx), &
+           Input%Rad_67um(Elem_Idx,Line_Idx), &
+           ACHA_RTM_NWP%Black_Body_Rad_Prof_67um, &
+           Input%Rad_Clear_67um(Elem_Idx,Line_Idx), &
+           Tropo_Level_RTM, &
+           Sfc_Level_RTM, &
+           Press_Prof_RTM, &
+           Temp_Prof_RTM, &
+           Hght_Prof_RTM, &
+           Output%Pc_H2O(Elem_Idx,Line_Idx), & 
+           Output%Tc_H2O(Elem_Idx,Line_Idx), & 
+           Output%Zc_H2O(Elem_Idx,Line_Idx) )
+  endif
+
+  !-------------------------------------------------------------------
+  ! Apply Opaque Retrieval for Acha_Mode_Flag = 0, then cycle
+  !-------------------------------------------------------------------
+  if (Acha_Mode_Flag == 0) then
         if (((Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%CLEAR) .or.  &
             (Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLEAR)) .and. &
             (Input%Process_Undetected_Cloud_Flag == symbol%NO)) then
@@ -663,9 +680,9 @@ module AWG_CLOUD_HEIGHT
           Output%Ec(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
         else
-          Output%Tc(Elem_Idx,Line_Idx) = Tc_Opaque_Level
-          Output%Pc(Elem_Idx,Line_Idx) = Pc_Opaque_Level
-          Output%Zc(Elem_Idx,Line_Idx) = Zc_Opaque_Level
+          Output%Tc(Elem_Idx,Line_Idx) = Output%Tc_Opaque(Elem_Idx,Line_Idx)
+          Output%Pc(Elem_Idx,Line_Idx) = Output%Pc_Opaque(Elem_Idx,Line_Idx)
+          Output%Zc(Elem_Idx,Line_Idx) = Output%Zc_Opaque(Elem_Idx,Line_Idx)
           Output%Ec(Elem_Idx,Line_Idx) = 1.0
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
         endif
@@ -906,35 +923,13 @@ module AWG_CLOUD_HEIGHT
 
   !--- logic for unmasked or untyped pixels (UndetOutput%Ected cloud)
   if (Undetected_Cloud == symbol%YES) then
-         if (Tc_Opaque_Level < 260.0 .and.  &
-             Tc_Opaque_Level /= MISSING_VALUE_REAL) then
+         if (Output%Tc_Opaque(Elem_Idx,Line_Idx) < 260.0 .and.  &
+             Output%Tc_Opaque(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
              Cloud_Type = symbol%CIRRUS_TYPE
          else
              Cloud_Type = symbol%FOG_TYPE
          endif
   endif
-
-!-------------------------------------------------------------------
-! if (Input%Chan_On_67um == symbol%YES) then
-!       call H2O_CLOUD_HEIGHT ( &
-!          Input % Rad_11um(Elem_Idx,Line_Idx), &
-!          ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
-!          Input % Rad_Clear_11um(Elem_Idx,Line_Idx), &
-!          Input % Rad_67um(Elem_Idx,Line_Idx), &
-!          ACHA_RTM_NWP%Black_Body_Rad_Prof_67um, &
-!          Input % Rad_Clear_67um(Elem_Idx,Line_Idx), &
-!          Input % Covar_Bt_11um_67um(Elem_Idx,Line_Idx), &
-!          Tropo_Level_RTM, &
-!          Sfc_Level_RTM, &
-!          ACHA_RTM_NWP%T_Prof, &
-!          ACHA_RTM_NWP%Z_Prof, &
-!          Tc_H2O, & 
-!          Zc_H2O )
-! else
-!          Tc_H2O = MISSING_VALUE_REAL
-!          Zc_H2O = MISSING_VALUE_REAL
-! endif
-!-------------------------------------------------------------------
 
   !---- Compute 11um emissivity referenced to tropopause
   Emiss_11um_Tropo = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( &
@@ -959,7 +954,7 @@ module AWG_CLOUD_HEIGHT
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
                        Bt_11um_Lrc, &
-                       Tc_Opaque_Level, &
+                       Output%Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
@@ -1565,7 +1560,7 @@ endif     ! ---------- end of data check
 
 
  !---- null profile pointers each time  - REALLY?
- CALL NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+ call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
 
  end do Element_Loop
 
@@ -3273,16 +3268,17 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
  !---------------------------------------------------------------------
  ! Find Opaque Cloud Level - highest Level Inversion below trop
  !---------------------------------------------------------------------
- subroutine DETERMINE_OPAQUE_LEVEL(Radiance_11um, &
+ subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT( &
+                                   Radiance_11um, &
                                    Black_Body_Rad_Prof_11um, &
                                    Press_Prof, &
                                    Height_Prof, &
                                    Temp_Prof, &
                                    Tropo_Level, &
                                    Sfc_Level, &
-                                   Pc_Opaque_Level, &
-                                   Tc_Opaque_Level, &
-                                   Zc_Opaque_Level)
+                                   Pc_Opaque, &
+                                   Tc_Opaque, &
+                                   Zc_Opaque)
                              
    real(kind=real4), intent(in):: Radiance_11um
    real(kind=real4), intent(in), dimension(:):: Black_Body_Rad_Prof_11um
@@ -3291,17 +3287,17 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
    real(kind=real4), intent(in), dimension(:):: Temp_Prof
    integer(kind=int4), intent(in):: Tropo_Level
    integer(kind=int4), intent(in):: Sfc_Level
-   real(kind=real4), intent(out):: Pc_Opaque_Level
-   real(kind=real4), intent(out):: Tc_Opaque_Level
-   real(kind=real4), intent(out):: Zc_Opaque_Level
+   real(kind=real4), intent(out):: Pc_Opaque
+   real(kind=real4), intent(out):: Tc_Opaque
+   real(kind=real4), intent(out):: Zc_Opaque
    integer:: Ilev
    integer:: Ilev_Start
    integer:: Ilev_End
 
    !--- initialize
-   Pc_Opaque_Level =  MISSING_VALUE_REAL
-   Zc_Opaque_Level =  MISSING_VALUE_REAL
-   Tc_Opaque_Level =  MISSING_VALUE_REAL
+   Pc_Opaque =  MISSING_VALUE_REAL
+   Zc_Opaque =  MISSING_VALUE_REAL
+   Tc_Opaque =  MISSING_VALUE_REAL
 
    !--- restrict levels to consider
    Ilev_Start = Tropo_Level 
@@ -3309,15 +3305,15 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
 
    !--- loop through levels
    level_loop: do Ilev = Ilev_Start, Ilev_End
-      Pc_Opaque_Level = Press_Prof(Ilev-1)
-      Zc_Opaque_Level = Height_Prof(Ilev-1)
-      Tc_Opaque_Level = Temp_Prof(Ilev-1)
+      Pc_Opaque = Press_Prof(Ilev-1)
+      Zc_Opaque = Height_Prof(Ilev-1)
+      Tc_Opaque = Temp_Prof(Ilev-1)
      if (Black_Body_Rad_Prof_11um(Ilev) > Radiance_11um) then
          exit
      endif
    end do Level_Loop
 
- end subroutine DETERMINE_OPAQUE_LEVEL
+ end subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT
  !----------------------------------------------------------------------
  !
  ! Compute the IR Emissivity at a Reference Level
@@ -3791,11 +3787,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
                              Rad_H2O, &
                              Rad_H2O_BB_Profile,  &
                              Rad_H2O_Clear,  &
-                             Covar_H2O_Window, &
                              Tropo_Level, &
                              Sfc_Level, &
+                             P_Prof, &
                              T_Prof, &
                              Z_Prof, &
+                             Pc,  &
                              Tc,  &
                              Zc)
 
@@ -3805,11 +3802,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
   real, intent(in):: Rad_11um_Clear
   real, intent(in):: Rad_H2O_Clear
   real, intent(in), dimension(:):: Rad_H2O_BB_Profile
-  real, intent(in):: Covar_H2O_Window
   integer, intent(in):: Sfc_Level
   integer, intent(in):: Tropo_Level
+  real, intent(in), dimension(:):: P_Prof
   real, intent(in), dimension(:):: T_Prof
   real, intent(in), dimension(:):: Z_Prof
+  real, intent(out) :: Pc
   real, intent(out) :: Tc
   real, intent(out) :: Zc
 
@@ -3822,9 +3820,9 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
 
   real, parameter:: Rad_11um_Thresh = 2.0
   real, parameter:: Rad_H2O_Thresh = 0.20
-  real, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 0.5
 
   !--- initialize
+  Pc = MISSING_VALUE_REAL
   Tc = MISSING_VALUE_REAL
   Zc = MISSING_VALUE_REAL
 
@@ -3834,10 +3832,6 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
   endif
 
   if (Rad_H2O_Clear - Rad_H2O < Rad_H2O_Thresh) then
-      return
-  endif
-
-  if (Covar_H2O_Window /= MISSING_VALUE_REAL .and. Covar_H2O_Window < Bt_Ch27_Ch31_Covar_Cirrus_Thresh) then
       return
   endif
 
@@ -3880,6 +3874,7 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
 
  !--- adjust back to full Rtm profile indices
  if (ilev_h2o > 0) then
+       Pc = P_Prof(ilev_h2o)
        Tc = T_Prof(ilev_h2o)
        Zc = Z_Prof(ilev_h2o)
   endif

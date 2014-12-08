@@ -4,8 +4,11 @@
 
   include 'icadffunc.f90'
   include 'hdf.f90'
-  include 'netcdf.f90'
-
+ ! include 'netcdf.f90'
+   
+  integer MAXNCDIM 
+  integer MAXNCNAM
+   
   integer, parameter :: &
        UNCLBRTD = -1, &
        DECLBRTD =  0, &
@@ -15,7 +18,10 @@
        clbrstat = (/'SDS non calibré', 'SDS décalibré  ', 'SDS calibré    '/)
 
   ! Déclaration du nouveau type de donnée hdf_att
-
+   
+   parameter(MAXNCDIM = 32)
+   parameter(MAXNCNAM = 128)
+   
   type hdf_data
 
      integer                                    :: &

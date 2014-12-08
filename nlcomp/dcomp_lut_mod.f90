@@ -147,8 +147,6 @@ contains
       sensor_identifier = trim(self % lut_path) & 
                            & //  trim ( self % sensor )
      
-      
-     
 	   sensor_block: select case ( trim(self % sensor))
 	   case ('Meteosat-8','Meteosat-9','Meteosat-10') sensor_block
 		   has_sol_table(1:2) = .true.

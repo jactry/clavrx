@@ -33,6 +33,7 @@ module IFF_CLAVRX_BRIDGE
    use PIXEL_COMMON, only: &
        Iff_Viirs_Flag &
        , Iff_Modis_Flag &
+       , Iff_Avhrr_Flag &
        , Iff_Gap_Mask &
        , Cld_Mask_Aux &
        , Cloud_Mask_Aux_Flag &
@@ -59,7 +60,10 @@ module IFF_CLAVRX_BRIDGE
        , Glintzen &
        , Scatangle &
        , Ascend &
-       , ch
+       , ch &
+       , Bt_375um_Sounder &
+       , Bt_11um_Sounder &
+       , Bt_12um_Sounder
    use CONSTANTS
    use IFF_MODULE
 
@@ -182,104 +186,43 @@ contains
 
          if ( .not. is_band_on(i_band) .or. (size(out % band (i_band) % ref) < 1 &
               .and. size(out % band (i_band) % rad) < 1) ) cycle
-         select case(i_band)
-          case(1)
-            ch(1)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(2)
-            ch(2)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(3)
-            ch(3)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(4)
-            ch(4)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(5)
-            ch(5)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(6)
-            ch(6)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(7)
-            ch(7)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(8)
-            ch(8)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(9)
-            ch(9)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(10)
-            ch(10)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(11)
-            ch(11)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(12) 
-            ch(12)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(13) 
-            ch(13)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(14) 
-            ch(14)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(15) 
-            ch(15)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(16) 
-            ch(16)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(17) 
-            ch(17)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(18) 
-            ch(18)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(19) 
-            ch(19)%Ref_Toa( : ,1:c_seg_lines) = out % band (i_band) % ref
-          case(20) 
-            ch(20)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(20)%Bt_Toa , ch(20)%Rad_Toa , 20 , missing_value_real4 )
-          case(21)
-            ch(21)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(21)%Bt_Toa , ch(21)%Rad_Toa , 21 , missing_value_real4 )
-          case(22)
-            ch(22)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(22)%Bt_Toa , ch(22)%Rad_Toa , 22 , missing_value_real4 )
-          case(23)
-            ch(23)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(23)%Bt_Toa , ch(23)%Rad_Toa , 23 , missing_value_real4 )
-          case(24)
-            ch(24)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(24)%Bt_Toa , ch(24)%Rad_Toa , 24 , missing_value_real4 )
-          case(25)
-            ch(25)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(25)%Bt_Toa , ch(25)%Rad_Toa , 25 , missing_value_real4 )
-          case(26)
-            ch(26)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
-          case(27)
-            ch(27)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(27)%Bt_Toa , ch(27)%Rad_Toa , 27 , missing_value_real4 )
-          case(28)
-            ch(28)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(28)%Bt_Toa , ch(28)%Rad_Toa , 28 , missing_value_real4 )
-          case(29)
-            ch(29)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(29)%Bt_Toa , ch(29)%Rad_Toa , 29 , missing_value_real4 )
-          case(30)
-            ch(30)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(30)%Bt_Toa , ch(30)%Rad_Toa , 30 , missing_value_real4 )
-          case(31)
-            ch(31)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(31)%Bt_Toa , ch(31)%Rad_Toa , 31 , missing_value_real4 )
-          case(32)
-            ch(32)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(32)%Bt_Toa , ch(32)%Rad_Toa , 32 , missing_value_real4 )
-          case(33)
-            ch(33)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(33)%Bt_Toa , ch(33)%Rad_Toa , 33 , missing_value_real4 )
+
+         ! - ref channels
+         if (i_band < 20 .or. i_band == 26) then
+            ch(i_band)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
+
+         ! - rad/bt channels
+         elseif ((i_band >= 20 .and. i_band < 26) &
+            .or. (i_band > 26 .and. i_band <=36)) then
+
+            !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS (SPECIAL CASE) !!!
+            if (Iff_Avhrr_Flag == sym%YES .and. i_band == 21) then ! 3.75um 
+               call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
+                                       20 , missing_value_real4 )
+            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 22) then ! 11um
+               call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (22) % rad , &
+                                       31 , missing_value_real4 )
+            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 29) then ! 12um
+               call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (29) % rad , &
+                                       32 , missing_value_real4 )
+            else ! the rest of channels are normal
+               ch(i_band)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
+               call COMPUTE_BT_ARRAY ( ch(i_band)%Bt_Toa , ch(i_band)%Rad_Toa , &
+                                       i_band , missing_value_real4 )
+            endif
             ! --- make Iff_Gap_Mask out of CRIS channel
             ! --- 0 = data in 13.3, 1=no data in 13.3
-            if (Iff_Viirs_Flag == sym%YES) then
+            if (Iff_Viirs_Flag == sym%YES .and. i_band == 33) then
                IFF_Gap_Mask = 0
                where (ch(33)%Bt_Toa == missing_value_real4) 
                   IFF_Gap_Mask = 1
                endwhere
             endif
-          case(34)
-            ch(34)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(34)%Bt_Toa , ch(34)%Rad_Toa , 34 , missing_value_real4 )
-          case(35)
-            ch(35)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(35)%Bt_Toa , ch(35)%Rad_Toa , 35 , missing_value_real4 )
-          case(36)
-            ch(36)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-            call COMPUTE_BT_ARRAY ( ch(36)%Bt_Toa , ch(36)%Rad_Toa , 36 , missing_value_real4 )
-         end select
+
+         ! - skip all not listed channels
+         else
+            cycle
+         endif 
       end do
 
       ! --- check if we need to read cloud mask aux
@@ -343,7 +286,55 @@ contains
    end subroutine READ_IFF_VIIRS_INSTR_CONSTANTS
 
 !---------------------------------------------------------------------- 
+! read the IFF AVHRR + HIRS constants into memory
+!----------------------------------------------------------------------
+   subroutine READ_IFF_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
+      use calibration_constants
+      use file_tools , only: getlun
 
+      implicit none
+
+      character(len=*), intent(in):: Instr_Const_file
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
+
+      Instr_Const_lun = GETLUN()
+
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+      print *, "opening ", trim(Instr_Const_file)
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening IFF AVHRR constants file, ios0 = ", ios0
+         stop 19
+      end if
+
+      read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+      read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+      read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+      read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20, nu_20
+      read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31, nu_31
+      read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32, nu_32
+      read(unit=Instr_Const_lun,fmt=*) a1_36, a2_36, nu_36
+      read(unit=Instr_Const_lun,fmt=*) a1_35, a2_35, nu_35
+      read(unit=Instr_Const_lun,fmt=*) a1_34, a2_34, nu_34
+      read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33, nu_33
+      read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30, nu_30
+      read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28, nu_28
+      read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27, nu_27
+      read(unit=Instr_Const_lun,fmt=*) a1_25, a2_25, nu_25
+      read(unit=Instr_Const_lun,fmt=*) a1_24, a2_24, nu_24
+      read(unit=Instr_Const_lun,fmt=*) a1_23, a2_23, nu_23
+      read(unit=Instr_Const_lun,fmt=*) a1_21, a2_21, nu_21
+      read(unit=Instr_Const_lun,fmt=*) b1_day_mask, b2_day_mask, b3_day_mask, b4_day_mask
+      close(unit=Instr_Const_lun)
+
+      !-- convert solar flux in channel 20 & 21 to mean with units mW/m^2/cm^-1
+      Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+   end subroutine READ_IFF_AVHRR_INSTR_CONSTANTS
+
+!----------------------------------------------------------------------
 
 end module IFF_CLAVRX_BRIDGE
 

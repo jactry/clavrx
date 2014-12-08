@@ -72,7 +72,7 @@ private
  integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
  integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
  real, private, save:: Scan_rate    !scan rate in millsec / line
- character(len=120), save, public:: Dark_Comp_Data_Dir_Temp
+ character(len=355), save, public:: Dark_Comp_Data_Dir_Temp
  integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
  integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
  real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
@@ -631,7 +631,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
      !--- calibrate
      call CALIBRATE_GOES_REFLECTANCE(Two_Byte_Temp,Ch1_Dark_Count,Time_Since_Launch,ch(1)%Ref_Toa)
@@ -659,7 +660,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(20)%Rad_Toa = (Two_Byte_Temp - Goes_Ch2_Thermal_Intercept)/Goes_Ch2_Thermal_Slope
 
    endif
@@ -682,7 +685,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(27)%Rad_Toa = (Two_Byte_Temp - Goes_Ch3_Thermal_Intercept)/Goes_Ch3_Thermal_Slope
 
    endif
@@ -705,7 +710,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
         ch(31)%Rad_Toa = (Two_Byte_Temp - Goes_Ch4_Thermal_Intercept)/Goes_Ch4_Thermal_Slope
 
    endif
@@ -728,7 +735,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(32)%Rad_Toa = (Two_Byte_Temp - Goes_Ch5_Thermal_Intercept)/Goes_Ch5_Thermal_Slope
 
@@ -752,7 +760,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(33)%Rad_Toa = (Two_Byte_Temp - Goes_Ch6_Thermal_Intercept)/Goes_Ch6_Thermal_Slope
 
@@ -854,10 +863,10 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    integer(kind=int4), intent(in):: image_Time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=255):: Channel_X_Filename
+   character(len=255):: Channel_X_Filename_Full
+   character(len=255):: Channel_X_Filename_Full_uncompressed
+   character(len=355):: System_String
 
    integer:: ipos
    integer:: ilen
@@ -941,7 +950,6 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    endif
 
-
    !---   read channel 36 (GOES Sounder channel 2)
    if (Chan_On_Flag_Default(36) == sym%YES) then
 
@@ -960,7 +968,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(36)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(36)%Rad_Toa = (ch(36)%Rad_Toa - Goes_Ch2_Thermal_Intercept)/Goes_Ch2_Thermal_Slope
@@ -986,7 +995,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(35)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(35)%Rad_Toa = (ch(35)%Rad_Toa - Goes_Ch3_Thermal_Intercept)/Goes_Ch3_Thermal_Slope
@@ -1011,7 +1021,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(34)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(34)%Rad_Toa = (ch(34)%Rad_Toa - Goes_Ch4_Thermal_Intercept)/Goes_Ch4_Thermal_Slope
@@ -1036,7 +1047,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(33)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(33)%Rad_Toa = (ch(33)%Rad_Toa - Goes_Ch5_Thermal_Intercept)/Goes_Ch5_Thermal_Slope
@@ -1062,7 +1074,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(32)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(32)%Rad_Toa = (ch(32)%Rad_Toa - Goes_Ch7_Thermal_Intercept)/Goes_Ch7_Thermal_Slope
@@ -1088,7 +1101,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(31)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(31)%Rad_Toa = (ch(31)%Rad_Toa - Goes_Ch8_Thermal_Intercept)/Goes_Ch8_Thermal_Slope
@@ -1114,7 +1128,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(30)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(30)%Rad_Toa = (ch(30)%Rad_Toa - Goes_Ch9_Thermal_Intercept)/Goes_Ch9_Thermal_Slope
@@ -1139,7 +1154,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(28)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(28)%Rad_Toa = (ch(28)%Rad_Toa - Goes_Ch10_Thermal_Intercept)/Goes_Ch10_Thermal_Slope
@@ -1164,7 +1180,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(27)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(27)%Rad_Toa = (ch(27)%Rad_Toa - Goes_Ch12_Thermal_Intercept)/Goes_Ch12_Thermal_Slope
@@ -1189,7 +1206,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
        
       ch(25)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(25)%Rad_Toa = (ch(25)%Rad_Toa - Goes_Ch13_Thermal_Intercept)/Goes_Ch13_Thermal_Slope
@@ -1215,7 +1233,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(24)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(24)%Rad_Toa = (ch(24)%Rad_Toa - Goes_Ch14_Thermal_Intercept)/Goes_Ch14_Thermal_Slope
@@ -1240,7 +1259,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(23)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(23)%Rad_Toa = (ch(23)%Rad_Toa - Goes_Ch16_Thermal_Intercept)/Goes_Ch16_Thermal_Slope
@@ -1265,7 +1285,9 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
+
       ch(21)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(21)%Rad_Toa = (ch(21)%Rad_Toa - Goes_Ch17_Thermal_Intercept)/Goes_Ch17_Thermal_Slope
 
@@ -1290,7 +1312,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       ch(20)%Rad_Toa= UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(20)%Rad_Toa = (ch(20)%Rad_Toa - Goes_Ch18_Thermal_Intercept)/Goes_Ch18_Thermal_Slope
@@ -1317,7 +1340,8 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
 
       Ch1_Counts = UNSIGNED_TO_REAL4(Two_Byte_Temp)
       ch(1)%Ref_Toa = Missing_Value_Real4
@@ -1656,12 +1680,14 @@ end subroutine READ_GOES_SNDR
 ! Words_In_Prefix = number of words in header on each scan line
 ! Words_Per_Line = number of words in a line (similar to record length)
 ! First_Line_In_Segment = first data line for this segment
+! Goes_Scan_Line_Flag = Set this flag after band 1 scan line time reads
 !---------------------------------------------------------------------------
  subroutine GET_IMAGE_FROM_AREAFILE(filename,Byte_Shift, &
                                     AREAstr, XStride, &
                                     Segment_Number, &
                                     Num_Lines_Per_Segment, &
-                                    Num_Lines_Read, image)
+                                    Num_Lines_Read, image, &
+                                    Goes_Scan_Line_Flag)
 
  character(len=*), intent(in):: filename 
  integer(kind=int4), intent(in):: Byte_Shift 
@@ -1690,7 +1716,8 @@ end subroutine READ_GOES_SNDR
  integer:: Nwords
  INTEGER(kind=int4), DIMENSION(64) :: i4buf_temp
  integer(kind=int4):: dummy
-  
+ integer(kind=int4), intent(inout):: Goes_Scan_Line_Flag
+
  ! get number of bytes per pixel and num bytes per line for current file
  ! this is needed because the 0.64 and other channels have different values
  ! in the MTSAT HIRID format.
@@ -1712,8 +1739,7 @@ end subroutine READ_GOES_SNDR
  last_line_in_Segment = min(AREAstr%Num_Line,Segment_Number*Num_Lines_Per_Segment)
 
  First_Byte_In_Segment = AREAstr%pri_key_nav + &
-                         Bytes_Per_Pixel*(First_Line_In_Segment-1) * Words_Per_Line + &
-                         Bytes_Per_Pixel 
+                         (First_Line_In_Segment - 1)*(bytes_per_line)
 
  Number_Of_Words_In_Segment = Words_Per_Line * Num_Lines_Per_Segment
 
@@ -1746,7 +1772,7 @@ end subroutine READ_GOES_SNDR
                  bytes_per_pixel, &
                  Number_Of_Words_In_Segment, &
                  Number_Of_Words_Read,Word_Buffer)
-
+     
    case default
 
      print *, EXE_PROMPT, "Unsupported Bytes_Per_Pixel Value in GET_IMAGE_FROM AREAFILE, stopping"
@@ -1756,26 +1782,31 @@ end subroutine READ_GOES_SNDR
 
  !--- update number of scans read
  Num_Lines_Read = Number_Of_Words_Read / Words_Per_Line
-
+ 
  do Line_Idx = 1, Num_Lines_Read
      Word_Start = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + Words_In_Prefix + 1
 !    Word_End = min(Word_Start + AREAstr%Num_Elem,Number_Of_Words_In_Segment)
      Word_End = min(Word_Start + (AREAstr%Num_Elem-1),Number_Of_Words_In_Segment)
      Nwords = int(Word_End - Word_Start)/Xstride + 1
      image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
-
+     
     Word_Start_Prefix = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + 1
 
     if (allocated(Scan_Time)) then
-      if (Words_In_Prefix .LT. 128) then
+      if (Words_In_Prefix .LT. 116 .AND. Goes_Scan_Line_Flag==sym%NO) then
         Scan_Time(Line_Idx) = 0
       else
-        call PRINT_PREFIX(Word_Buffer(Word_Start_Prefix:Word_Start_Prefix+Words_In_Prefix), &
+        if (Goes_Scan_Line_Flag==sym%NO) then
+          call PRINT_PREFIX(Word_Buffer(Word_Start_Prefix:Word_Start_Prefix+Words_In_Prefix), &
                         Scan_Time(Line_Idx))
-      end if
+        endif
+      endif
     endif
-
  enddo
+
+ !--- we don't want to fill the scan line array after the first time through.
+ !--- fixes the issue with missing scan line times for goes 1km processing.
+ Goes_Scan_Line_Flag=sym%YES
 
  !--- deallocate allocated arrays
  deallocate(Word_Buffer, imgbuf)
@@ -2333,45 +2364,45 @@ end subroutine GET_GOES_NAVIGATION
 !
 !     Computes change in the IMC_active longitude from the reference.
 !
-        LAM = LAM + ( NAVstr%ref_long_change(1) * 1.0D-7 ) +             &
-      	    ( ( NAVstr%ref_long_change(2) * 1.0D-7 ) +             &
-      	      ( NAVstr%ref_long_change(3) * 1.0D-7 ) * W ) * W +             &
-              ( NAVstr%ref_long_change(10) * 1.0D-7 ) * SW1 +             &
-      	      ( NAVstr%ref_long_change(11) * 1.0D-7 ) * CW1 +             &
-      	    ( ( NAVstr%ref_long_change(4) * 1.0D-7 )  * SW  +             &
-      	      ( NAVstr%ref_long_change(5) * 1.0D-7 ) * CW +             &
-              ( NAVstr%ref_long_change(6) * 1.0D-7 ) * S2W +             &
-      	      ( NAVstr%ref_long_change(7) * 1.0D-7 ) * C2W +             &
-      	      ( NAVstr%ref_long_change(8) * 1.0D-7 ) * SW3 +             &
-      	      ( NAVstr%ref_long_change(9) * 1.0D-7 ) * CW3 +             &
+        LAM = LAM + ( NAVstr%ref_long_change(1) * 1.0D-7 ) +                   &
+                  ( ( NAVstr%ref_long_change(2) * 1.0D-7 ) +                   &
+                    ( NAVstr%ref_long_change(3) * 1.0D-7 ) * W ) * W +         &
+                    ( NAVstr%ref_long_change(10) * 1.0D-7 ) * SW1 +            &
+                    ( NAVstr%ref_long_change(11) * 1.0D-7 ) * CW1 +            &
+                  ( ( NAVstr%ref_long_change(4) * 1.0D-7 )  * SW  +            &
+                    ( NAVstr%ref_long_change(5) * 1.0D-7 ) * CW +              &
+                    ( NAVstr%ref_long_change(6) * 1.0D-7 ) * S2W +             &
+                    ( NAVstr%ref_long_change(7) * 1.0D-7 ) * C2W +             &
+                    ( NAVstr%ref_long_change(8) * 1.0D-7 ) * SW3 +             &
+                    ( NAVstr%ref_long_change(9) * 1.0D-7 ) * CW3 +             &
               W * ( ( NAVstr%ref_long_change(12) * 1.0D-7 ) * SW +             &
-      	      ( NAVstr%ref_long_change(13) * 1.0D-7 ) * CW ) ) * 2.0D0
+                    ( NAVstr%ref_long_change(13) * 1.0D-7 ) * CW ) ) * 2.0D0
 !
 !       Computes change in radial distance from the reference (km)
 !
-        DR = DR + ( NAVstr%ref_rad_dist_change(1) * 1.0D-7 ) +             &
-      		  ( NAVstr%ref_rad_dist_change(2) * 1.0D-7 ) * CW  +             &
-      		  ( NAVstr%ref_rad_dist_change(3) * 1.0D-7 ) * SW  +             &
-           	  ( NAVstr%ref_rad_dist_change(4) * 1.0D-7 ) * C2W +             &
-      		  ( NAVstr%ref_rad_dist_change(5) * 1.0D-7 ) * S2W +             &
-      		  ( NAVstr%ref_rad_dist_change(6) * 1.0D-7 ) * CW3 +             &
-      		  ( NAVstr%ref_rad_dist_change(7) * 1.0D-7 ) * SW3 +             &
-      		  ( NAVstr%ref_rad_dist_change(8) * 1.0D-7 ) * CW1 +             &
-      		  ( NAVstr%ref_rad_dist_change(9) * 1.0D-7 ) * SW1 +             &
-      		  W * ( ( NAVstr%ref_rad_dist_change(10) * 1.0D-7 ) * CW +             &
-      		  ( NAVstr%ref_rad_dist_change(11) * 1.0D-7 ) * SW )
+        DR = DR + ( NAVstr%ref_rad_dist_change(1) * 1.0D-7 ) +                 &
+                  ( NAVstr%ref_rad_dist_change(2) * 1.0D-7 ) * CW  +           &
+                  ( NAVstr%ref_rad_dist_change(3) * 1.0D-7 ) * SW  +           &
+                  ( NAVstr%ref_rad_dist_change(4) * 1.0D-7 ) * C2W +           &
+                  ( NAVstr%ref_rad_dist_change(5) * 1.0D-7 ) * S2W +           &
+                  ( NAVstr%ref_rad_dist_change(6) * 1.0D-7 ) * CW3 +           &
+                  ( NAVstr%ref_rad_dist_change(7) * 1.0D-7 ) * SW3 +           &
+                  ( NAVstr%ref_rad_dist_change(8) * 1.0D-7 ) * CW1 +           &
+                  ( NAVstr%ref_rad_dist_change(9) * 1.0D-7 ) * SW1 +           &
+            W * ( ( NAVstr%ref_rad_dist_change(10) * 1.0D-7 ) * CW +           &
+                  ( NAVstr%ref_rad_dist_change(11) * 1.0D-7 ) * SW )
 !
 !       Computes the sine of the change in the geocentric latitude.
 !
-        DLAT = ( NAVstr%sine_lat(1) * 1.0D-7 ) +             &
-      	       ( NAVstr%sine_lat(2) * 1.0D-7 ) * CW  +             &
-      	       ( NAVstr%sine_lat(3) * 1.0D-7 ) * SW  +             &
-      	       ( NAVstr%sine_lat(4) * 1.0D-7 ) * C2W +             &
-      	       ( NAVstr%sine_lat(5) * 1.0D-7 ) * S2W +             &
-      	       W * ( ( NAVstr%sine_lat(6) * 1.0D-7 ) * CW +             &
-      	       ( NAVstr%sine_lat(7) * 1.0D-7 ) * SW ) +             &
-      	       ( NAVstr%sine_lat(8) * 1.0D-7 ) * CW1 +             &
-      	       ( NAVstr%sine_lat(9) * 1.0D-7 ) * SW1
+        DLAT = ( NAVstr%sine_lat(1) * 1.0D-7 ) +                   &
+               ( NAVstr%sine_lat(2) * 1.0D-7 ) * CW  +             &
+               ( NAVstr%sine_lat(3) * 1.0D-7 ) * SW  +             &
+               ( NAVstr%sine_lat(4) * 1.0D-7 ) * C2W +             &
+               ( NAVstr%sine_lat(5) * 1.0D-7 ) * S2W +             &
+         W * ( ( NAVstr%sine_lat(6) * 1.0D-7 ) * CW +              &
+               ( NAVstr%sine_lat(7) * 1.0D-7 ) * SW ) +            &
+               ( NAVstr%sine_lat(8) * 1.0D-7 ) * CW1 +             &
+               ( NAVstr%sine_lat(9) * 1.0D-7 ) * SW1
 !
 !	Computes geocentric latitude by using an expansion for arcsine.
 !
@@ -2379,15 +2410,15 @@ end subroutine GET_GOES_NAVIGATION
 !
 !	Computes sine of the change in the orbit yaw.
 !
-        DYAW = ( NAVstr%sine_orb_yaw(1) * 1.0D-7 ) +             &
-      	       ( NAVstr%sine_orb_yaw(2) * 1.0D-7 ) * SW  +             &
-      	       ( NAVstr%sine_orb_yaw(3) * 1.0D-7 ) * CW  +             &
-      	       ( NAVstr%sine_orb_yaw(4) * 1.0D-7 ) * S2W +             &
-      	       ( NAVstr%sine_orb_yaw(5) * 1.0D-7 ) * C2W +             &
-      	       W * ( ( NAVstr%sine_orb_yaw(6) * 1.0D-7 ) * SW +             &
-      	       ( NAVstr%sine_orb_yaw(7) * 1.0D-7 ) * CW ) +             &
-      	       ( NAVstr%sine_orb_yaw(8) * 1.0D-7 ) * SW1 +             &
-      	       ( NAVstr%sine_orb_yaw(9) * 1.0D-7 ) * CW1
+        DYAW = ( NAVstr%sine_orb_yaw(1) * 1.0D-7 ) +               &
+               ( NAVstr%sine_orb_yaw(2) * 1.0D-7 ) * SW  +         &
+               ( NAVstr%sine_orb_yaw(3) * 1.0D-7 ) * CW  +         &
+               ( NAVstr%sine_orb_yaw(4) * 1.0D-7 ) * S2W +         &
+               ( NAVstr%sine_orb_yaw(5) * 1.0D-7 ) * C2W +         &
+         W * ( ( NAVstr%sine_orb_yaw(6) * 1.0D-7 ) * SW +          &
+               ( NAVstr%sine_orb_yaw(7) * 1.0D-7 ) * CW ) +        &
+               ( NAVstr%sine_orb_yaw(8) * 1.0D-7 ) * SW1 +         &
+               ( NAVstr%sine_orb_yaw(9) * 1.0D-7 ) * CW1
 !
 !	Computes the orbit yaw by using an expansion for arcsine.
 !
@@ -2757,9 +2788,9 @@ end subroutine GET_GOES_NAVIGATION
 ! ECEF TO INSTRUMENT COORDINATES TRANSFORMATION
       REAL*8 Q3
 ! USED IN SUBROUTINE LPOINT
-      REAL*4 PITCH,ROLL,YAW
+      REAL*8 PITCH,ROLL,YAW
 ! PITCH,ROLL,YAW ANGLES OF INSTRUMENT (RAD)
-      REAL*4 PMA,RMA
+      REAL*8 PMA,RMA
 ! PITCH,ROLL MISALIGNMENTS OF INSTRUMENT (RAD)
       COMMON /ELCOMM/ XS,BT,Q3,PITCH,ROLL,YAW,PMA,RMA
 !***********************************************************************
@@ -2933,19 +2964,19 @@ end subroutine GET_GOES_NAVIGATION
 !                                                                               
 !     CALLING PARAMETERS                                                        
 !                                                                               
-      real*8   RLAT	! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
-      real*8   RLON	! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
-      real*8   ALF	! ELEVATION ANGLE IN RADIANS (OUTPUT)               
-      real*8   GAM	! SCAN ANGLE IN RADIANS (OUTPUT)                    
-      integer IERR	! OUTPUT STATUS
+      real*8   RLAT    ! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
+      real*8   RLON    ! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
+      real*8   ALF     ! ELEVATION ANGLE IN RADIANS (OUTPUT)               
+      real*8   GAM     ! SCAN ANGLE IN RADIANS (OUTPUT)                    
+      integer IERR     ! OUTPUT STATUS
 !                             0 - SUCCESSFUL COMPLETION,         
 !                             1 - POINT WITH GIVEN LAT/LON IS INVISIBLE         
 !
 !     LOCAL VARIABLES                                                           
 !
-      real*8 F(3)	! POINTING VECTOR IN EARTH CENTERED COORDINATES
-      real*8 FT(3)	! POINTING VECTOR IN INSTRUMENT COORDINATES
-      real*8 U(3)	! COORDINATES OF THE EARTH POINT (KM)
+      real*8 F(3)      ! POINTING VECTOR IN EARTH CENTERED COORDINATES
+      real*8 FT(3)     ! POINTING VECTOR IN INSTRUMENT COORDINATES
+      real*8 U(3)      ! COORDINATES OF THE EARTH POINT (KM)
       real*8 SING,SLAT,W1,W2  ! WORK SPACE
 !                                                                               
 !     INCLUDE FILES                                                             
@@ -3318,15 +3349,16 @@ subroutine PRINT_PREFIX(buf, ms_Time)
   integer (kind=int4), INTENT(out) :: ms_Time
   real (kind=real4):: frac_Hours
   integer ITIMES(16)
-  integer year,dayofyr,Hour,min,sec,msec
+  integer year,dayofyr,Hour,minute,sec,msec
   real (kind=real4) :: Minute_Time
   integer (kind=int2), dimension(128) :: buf2
   logical*1 :: ldoc(256)
 
 !  integer, parameter :: LOC = 4  ! imager value, from mcidas code
-   integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
+!  integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
 !  integer, parameter :: LOC = 0  ! sounder value, from mcidas code
- 
+  integer, parameter :: LOC = 1   ! value experimentally determined to work for CLAVRx.
+
   equivalence(buf2, ldoc)
   
   buf2(:) = buf(:128)
@@ -3336,19 +3368,19 @@ subroutine PRINT_PREFIX(buf, ms_Time)
   year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
   dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
   Hour = itimes(8)*10 + itimes(9)
-  min  = itimes(10)*10 + itimes(11)
+  minute  = itimes(10)*10 + itimes(11)
   sec  = itimes(12)*10 + itimes(13)
   msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
-  
+
 ! PRINT STATEMENT KEPT for verification
-!      write (6,6005) year,dayofyr,Hour,min,sec,msec
+!      write (6,6005) year,dayofyr,Hour,minute,sec,msec
 !6005  FORMAT ('time: year',i5,' day of year',i4,' hh:mm:ss ',i2,1h:,i2,1h:,i2,' msec',i4)
 
   !Calculate miliseconds since midnight of current day
-   ms_Time = (((Hour * 60 * 60) + (min * 60) + sec) * 1000) + msec
+   ms_Time = (((Hour * 60 * 60) + (minute * 60) + sec) * 1000) + msec
  
   !Calculates fractions of an Hour since midnight of current day
-  Minute_Time = min + (((msec / 1000.0) + sec) / 60.0 )
+  Minute_Time = minute + (((msec / 1000.0) + sec) / 60.0 )
   frac_Hours = Hour + (Minute_Time / 60.0)
 
 

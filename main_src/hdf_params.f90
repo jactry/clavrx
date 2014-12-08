@@ -169,7 +169,7 @@ contains
  character(len=100):: Status_String
  character(len=100):: Institution_String
  character(len=100):: Program_String
- character(len=300):: Summary_String 
+ character(len=500):: Summary_String 
  character(len=200):: Variable_String
  character(len=500):: Keywords_String
  character(len=200):: Keywords_Vocabulary_String

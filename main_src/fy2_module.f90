@@ -266,7 +266,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
      
        
 !       call GET_MTSAT_IMAGE(trim(channel_x_filename_full), &
@@ -301,7 +302,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
      
        
        
@@ -329,7 +331,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
      
        
       call FY_RADIANCE_BT(4_int1, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
@@ -353,7 +356,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
      
        
          call FY_RADIANCE_BT(2_int1, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
@@ -380,7 +384,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     Segment_Number, &
                                     Num_Scans_Per_Segment, &
                                     Num_Scans_Read,   &
-                                    Two_Byte_Temp)
+                                    Two_Byte_Temp, &
+                                    Goes_Scan_Line_Flag)
      
          call FY_RADIANCE_BT(3_int1, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
     

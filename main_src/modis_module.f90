@@ -1119,6 +1119,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       character(len=15):: Temp_Char
       character(len=15):: Temp_5km_Char
       integer(kind=int4) :: String_Index
+      integer(kind=int4) :: Num_Char, i
       logical :: File_5km_Test
 
       Status_Flag = 0
@@ -1171,11 +1172,23 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       ! The issue with this method is if there are less than 1000 Scans for 
       ! a 1km pass, in which case this will fail. This is a possiblity (though
       ! has never been seen) for DB data if less than 5min of data is downloaded
+      Num_Char = 0
+      do i = 1, len(Temp_Char)
+        if (Temp_Char(i:i) .ge. '0' .and. Temp_Char(i:i) .le. '9') then
+          Num_Char = Num_Char + 1
+        endif
+      enddo
       
-      IF (File_5km_Test .eqv. .TRUE.) THEN
+      IF (Num_Char .eq. 1) THEN
+        read(Temp_Char, fmt="(I1)") Num_Lines
+      ELSEIF (Num_Char .eq. 2) THEN
+        read(Temp_Char, fmt="(I2)") Num_Lines   
+      ELSEIF (Num_Char .eq. 3) THEN
         read(Temp_Char, fmt="(I3)") Num_Lines
-      ELSE
-        read(Temp_Char, fmt="(I4)") Num_Lines   
+      ELSEIF (Num_Char .eq. 4) THEN
+        read(Temp_Char, fmt="(I4)") Num_Lines
+      ELSEIF (Num_Char .eq. 5) THEN
+        read(Temp_Char, fmt="(I5)") Num_Lines
       ENDIF
       
       
@@ -1183,11 +1196,23 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       String_Index=index(Metadata_Temp, 'Max_EV_frames')
       Temp_Char = Metadata_Temp(String_Index+24:String_Index+24+5)
 
-      IF (File_5km_Test .eqv. .TRUE.) THEN
+      Num_Char = 0
+      do i = 1, len(Temp_Char) 
+        if (Temp_Char(i:i) .ge. '0' .and. Temp_Char(i:i) .le. '9') then
+          Num_Char = Num_Char + 1
+        endif
+      enddo
+
+      IF (Num_Char .eq. 1) THEN
+        read(Temp_Char, fmt="(I1)") Num_Elements
+      ELSEIF (Num_Char .eq. 2) THEN
+        read(Temp_Char, fmt="(I2)") Num_Elements
+      ELSEIF (Num_Char .eq. 3) THEN
         read(Temp_Char, fmt="(I3)") Num_Elements
-      ELSE
+      ELSEIF (Num_Char .eq. 4) THEN
         read(Temp_Char, fmt="(I4)") Num_Elements
-      
+      ELSEIF (Num_Char .eq. 5) THEN
+        read(Temp_Char, fmt="(I5)") Num_Elements
       ENDIF
 
     end subroutine READ_MODIS_SIZE_ATTR

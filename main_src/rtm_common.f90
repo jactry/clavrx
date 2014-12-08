@@ -52,6 +52,8 @@
 !                             space for both solar and view zenith paths (aka two-way trans)
 !   Rad_Atm_Profile = Profile of atmospheric emitted radiance from level to space
 !                     along the viewing zenith path
+!   Rad_Atm_Dwn_Profile = Profile of atmospheric emitted radiance from level to surface
+!                     along the viewing zenith path
 !   Rad_BB_Cloud_Profile = Profile ot atmospheric emitted radiance and black-body cloud
 !                          emitted radaince from level to space along the viewing zenith path
 !--------------------------------------------------------------------------------------
@@ -135,11 +137,12 @@ module RTM_COMMON
     real, dimension(:), allocatable :: Trans_Atm_Solar_Profile
     real, dimension(:), allocatable :: Trans_Atm_Total_Profile
     real, dimension(:), allocatable :: Rad_Atm_Profile
+    real, dimension(:), allocatable :: Rad_Atm_Dwn_Profile
     real, dimension(:), allocatable :: Rad_BB_Cloud_Profile
   end type Rtm_Prof
 
   type, public :: Chan_Rtm_Prof
-     integer (kind=int1) :: Flag
+     integer (kind=int1) :: Flag = 0
      type(Rtm_Prof):: ch(42)
   end type Chan_Rtm_Prof
 

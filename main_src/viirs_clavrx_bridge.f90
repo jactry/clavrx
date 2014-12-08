@@ -34,31 +34,101 @@
 !                                computation for global pixel_common variable
 !
 ! NOTES:
-!    VIIRS  -   MODIS(CLAVRX) mapping
-!
-!    M1     8     
-!    M2     9     
-!    M3     3
-!    M4     4
-!    M5     1
-!    M6    15
-!    M7     2
-!    M8     5
-!    M9    26
-!    M10    6
-!    M11    7
-!    M12   20
-!    M13   22
-!    M14   29
-!    M15   31
-!    M16   32
-
+!  VIIRS  MODIS(CLAVRX)  Wavelength
+!           mapping
+!    M1    -     8    -    0.412
+!    M2    -     9    -    0.445
+!    M3    -     3    -    0.488
+!    M4    -     4    -    0.555
+!    M5    -     1    -    0.672
+!    M6    -    15    -    0.746
+!    M7    -     2    -    0.865
+!    M8    -     5    -    1.240
+!    M9    -    26    -    1.378
+!    M10   -     6    -    1.610
+!    M11   -     7    -    2.250
+!    M12   -    20    -    3.700
+!    M13   -    22    -    4.050
+!    M14   -    29    -    8.550
+!    M15   -    31    -   10.763
+!    M16   -    32    -   12.013
+!    I1    -    37    -    0.640
+!    I2    -    38    -    0.865
+!    I3    -    39    -    1.610
+!    I4    -    40    -    3.740
+!    I5    -    41    -   11.450
+!    DNB   -    42    -    0.700
 !
 !--------------------------------------------------------------------------------------
 
-module viirs_clavrx_bridge
-   use pixel_common
-   use constants
+module VIIRS_CLAVRX_BRIDGE 
+
+
+   use Pixel_Common , only : &
+      Chan_On_Flag_Default &
+      , Chan_On_Flag &
+      , Num_Scans_Per_Segment &
+      , Num_Scans &
+      , Num_Scans_Read &
+      , Num_Pix &
+      , Scan_Number &
+      , Dir_1b &
+      , Ancil_Data_Dir & 
+      , Cloud_Mask_Aux_Flag &
+      , Cloud_Mask_Aux_Read_Flag &
+      , Cld_Mask_Aux &
+      , Cld_Type_Aux &
+      , Cld_Phase_Aux &
+      , Lat_1b &
+      , Lon_1b &
+      , Scan_Time &
+      , Sataz &
+      , Satzen &
+      , Solaz &
+      , Solzen &
+      , Ascend &
+      , Moon_Phase_Angle &
+      , Relaz &
+      , Glintzen &
+      , Lunzen &
+      , Lunaz &
+      , Lunrelaz &
+      , Scatangle_Lunar &
+      , Scatangle &
+      , Glintzen_Lunar &
+      , Gap_Pixel_Mask &
+      , Ch &
+      , Ref_ChI1 &
+      , Ref_ChI2 &
+      , Ref_ChI3 &
+      , Bt_ChI4 &
+      , Bt_ChI5 &
+      , Ref_Min_ChI1 &
+      , Ref_Max_ChI1 &
+      , Ref_Mean_ChI1 &
+      , Ref_Uni_ChI1 &
+      , Ref_Min_ChI2 &
+      , Ref_Max_ChI2 &
+      , Ref_Mean_ChI2 &
+      , Ref_Uni_ChI2 & 
+      , Ref_Min_ChI3 &
+      , Ref_Max_ChI3 &
+      , Ref_Mean_ChI3 &
+      , Ref_Uni_ChI3 & 
+      , Bt_Min_ChI4 &
+      , Bt_Max_ChI4 &
+      , Bt_Mean_ChI4 &
+      , Bt_Uni_ChI4 &
+      , Bt_Min_ChI5 &
+      , Bt_Max_ChI5 &
+      , Bt_Mean_ChI5 &
+      , Bt_Uni_ChI5
+      
+
+   use constants, only: &
+      int4
+      
+   use clavrx_message_module   
    
 contains
    
@@ -84,10 +154,10 @@ contains
       
       type ( viirs_data_config )  :: v_conf
       type ( viirs_data_out )  :: out
-      integer , dimension(16) :: modis_chn_list 
-      integer , dimension(5) :: modis_chn_list_iband 
-      logical, dimension(16) :: is_mband_on
-      logical, dimension(5) :: is_iband_on
+      integer :: modis_chn_list (16)
+      integer :: modis_chn_list_iband (5)
+      logical :: is_mband_on (16)
+      logical :: is_iband_on (5)
       integer :: i_mband , i_iband
       integer :: y_start , c_seg_lines , c_seg_lines_iband
       integer :: i
@@ -146,7 +216,11 @@ contains
       scatangle = scattering_angle( solzen , satzen , relaz )
 
       ! gap
-      gap_pixel_mask( : ,1:c_seg_lines) = out % gap % mask
+      gap_pixel_mask( : ,1:c_seg_lines) = 0
+      where ( out % gap % mask )
+         gap_pixel_mask( : ,1:c_seg_lines) = 1
+      end where 
+      
       
       ! - m-bands
       do i_mband = 1 , 16
@@ -217,19 +291,17 @@ contains
          scan_number(i) = y_start + i - 1
       end do
       
-      !
       !- ascending  (global varaibel )
       ascend = 0  
       do i = 1 , Num_Scans_Read - 1
          if ( lat_1b(num_pix / 2 , i + 1) <= lat_1b( num_pix / 2 , i ) ) ascend ( i )  = 1
       end do
       
-      !
-      !  statistics I-Band on M-band grid
-      !
-
+      !---  statistics I-Band on M-band grid
       if ( is_iband_on( 1 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI1 , Ref_Min_ChI1 , Ref_Max_ChI1 , Ref_Mean_ChI1 , Ref_Uni_ChI1)
       if ( is_iband_on( 2 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI2 , Ref_Min_ChI2 , Ref_Max_ChI2 , Ref_Mean_ChI2 , Ref_Uni_ChI2) 
+      if ( is_iband_on( 3 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI3 , Ref_Min_ChI3 , Ref_Max_ChI3 , Ref_Mean_ChI3 , Ref_Uni_ChI3) 
+      if ( is_iband_on( 4 ) ) call COMPUTE_IBAND_STATISTICS (Bt_ChI4  , Bt_Min_ChI4  , Bt_Max_ChI4  , Bt_Mean_ChI4  , Bt_Uni_ChI4 )
       if ( is_iband_on( 5 ) ) call COMPUTE_IBAND_STATISTICS (Bt_ChI5  , Bt_Min_ChI5  , Bt_Max_ChI5  , Bt_Mean_ChI5  , Bt_Uni_ChI5 )
   
 
@@ -248,8 +320,10 @@ contains
       call out % dealloc ()
     
    end subroutine READ_VIIRS_DATA
-   
-    !  this routine should be at a different place
+
+   !----------------------------------------------------------------   
+   !  this routine should be at a different place
+   !----------------------------------------------------------------
    subroutine  COMPUTE_RELATIVE_AZIMUTH_VIIRS( ang1 , ang2, rel_az_out )
       real , dimension(:,:), intent(in) :: ang1
       real , dimension(:,:), intent(in) :: ang2
@@ -262,13 +336,12 @@ contains
       rel_az_out = 180.0 - rel_az_out
      
    end subroutine COMPUTE_RELATIVE_AZIMUTH_VIIRS
-   !
-   !
-   !
+   
+   !----------------------------------------------------------------
    ! - iband has full file dimension of 6400 x1536
    ! - mband 3200 x 768
    !  - output of min_val ... is 3200 768
-   !
+   !----------------------------------------------------------------
    subroutine COMPUTE_IBAND_STATISTICS ( iband_array , out_min_val, out_max_val , out_mean_val, out_std_val )
       implicit none
       real, dimension(:,:) , intent(in) :: iband_array
@@ -305,7 +378,6 @@ contains
    
    end subroutine COMPUTE_IBAND_STATISTICS
 
-
    !----------------------------------------------------------------
    ! read the VIIRS constants into memory
    !-----------------------------------------------------------------
@@ -322,7 +394,7 @@ contains
       Instr_Const_lun = GETLUN()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
-      print *, "opening ", trim(Instr_Const_file)
+      call mesg ("opening "//trim(Instr_Const_file), level = verb_lev % VERBOSE) 
       erstat = 0
       if (ios0 /= 0) then
          erstat = 19
@@ -353,7 +425,7 @@ contains
    !   assumingly called from outside  ...
    !-----------------------------------------------------------------------------------------
   
-   subroutine read_viirs_date_time(infile &
+   subroutine READ_VIIRS_DATE_TIME ( infile &
                 , year , doy , start_time , end_time , orbit , orbit_identifier , end_year, end_doy )
       ! Get the date & time from the file's name
       implicit none
@@ -365,22 +437,22 @@ contains
       integer, intent(out)  , optional:: end_time    !millisec
       integer, intent(out)  , optional:: orbit
       character(38), intent(out) , optional :: orbit_identifier
-	  integer , intent(out) , optional :: end_year
+      integer , intent(out) , optional :: end_year
       integer, intent(out)  , optional:: end_doy    !day of year
-	  
+  
       integer :: month
       integer :: day
       integer :: start_hour
       integer :: start_minute
       integer :: start_sec
-	
-	  integer :: days_of_year
+
+      integer :: days_of_year
       integer :: end_hour
       integer :: end_minute
       integer :: end_sec
       integer:: year_loc
       integer:: doy_loc    !day of year
-	  integer:: end_year_loc
+      integer:: end_year_loc
       integer:: end_doy_loc    !day of year
       integer :: start_time_loc  !millisec
       integer:: end_time_loc    !millisec
@@ -409,23 +481,22 @@ contains
 
       !--- compute day of year
       call JULIAN(day,month,year_loc,doy_loc)
-	 
 
       ! --- Calculate start and end time
       start_time_loc = ((start_hour * 60 + start_minute) * 60 + start_sec) * 1000
       end_time_loc = ((end_hour * 60 + end_minute) * 60 + end_sec) * 1000
-	  
-	  end_doy_loc = doy_loc
-	  end_year_loc = year_loc
-	  if ( end_time_loc <= start_time_loc) then
-	  		 end_doy_loc = end_doy_loc + 1
-			 days_of_year = 365
-			 if ( modulo(year_loc,4) == 0)  days_of_year = 366
-			 if ( end_doy_loc > days_of_year) then
-			 	end_doy_loc = 1
-				end_year_loc = end_year_loc + 1
-			 end if	  
-	  end if
+  
+      end_doy_loc = doy_loc
+      end_year_loc = year_loc
+      if ( end_time_loc <= start_time_loc) then
+         end_doy_loc = end_doy_loc + 1
+         days_of_year = 365
+         if ( modulo(year_loc,4) == 0)  days_of_year = 366
+         if ( end_doy_loc > days_of_year) then
+            end_doy_loc = 1
+            end_year_loc = end_year_loc + 1
+         end if  
+      end if
       
       if ( present ( year)) year = year_loc
       if ( present ( doy)) doy = doy_loc
@@ -436,30 +507,26 @@ contains
       if ( present ( end_year)) end_year = end_year_loc
       if ( present ( end_doy)) end_doy = end_doy_loc
       
-   end subroutine read_viirs_date_time
+   end subroutine READ_VIIRS_DATE_TIME 
 
-
-!  this is called from outside, why is this needed?
 !---------------------------------------------------------------------------------
-   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS(Infile,Number_Of_Viirs_Lines,Error_Out)
-      use readh5dataset
+!  subroutine GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE ( Infile , Number_Of_Viirs_Lines , Error_Out )
+!  it's asking to read number of scans in the viirs_read_mod
+!---------------------------------------------------------------------------------
+   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE ( Infile , Number_Of_Viirs_Lines , Error_Out )
+      use viirs_read_mod , only : &
+          READ_NUMBER_OF_SCANS_FROM_VIIRS
    
       CHARACTER(Len=*), INTENT(IN) :: Infile  
       INTEGER(kind=int4), INTENT(OUT) :: Error_Out
       INTEGER(KIND=INT4), INTENT(OUT):: Number_of_Viirs_Lines
-      CHARACTER(Len=100) :: Setname
-      integer ,dimension(:), pointer ::test
-
 
       error_out = 0
-      Setname = 'All_Data/VIIRS-MOD-GEO-TC_All/NumberOfScans'
-      call H5ReadDataset( infile ,setname, test)
+      call READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile , Number_of_Viirs_Lines , Error_Out )
      
-      Number_of_Viirs_Lines = test(1)
+   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE
    
-   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS
-   
-   !-------------------------------------------------
+!-------------------------------------------------
 ! subroutine JULIAN(iday,imonth,iyear,jday)
 ! compute julian day
 ! input:
@@ -490,8 +557,5 @@ contains
 
    end subroutine JULIAN
 
-
-
-
-
 end module viirs_clavrx_bridge
+

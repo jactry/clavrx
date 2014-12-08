@@ -83,6 +83,7 @@
 !  Bt_Toa = Observed Top of Atmosphere Brightness Temperature
 !  Rad_Toa_Clear = Simulated Top of Atmosphere Radiance under clear-sky
 !  Rad_Atm = Simulated Radiance at Toa from atmospheric cloud-free emission
+!  Rad_Atm_Dwn_Sfc = Simulated Downward Radiance at Sfc from atmospheric cloud-free emission
 !  Trans_Atm = Simulated Transmission from Surface to Toa for cloud-free atmosphere
 !              along viewing zenith angle path
 !  Trans_Atm_Total = Simulated Transmission from Toa to Surface to Toa for cloud-free atmosphere
@@ -141,6 +142,7 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Bt_Toa
     real, dimension(:,:), allocatable:: Rad_Toa_Clear
     real, dimension(:,:), allocatable:: Rad_Atm
+    real, dimension(:,:), allocatable:: Rad_Atm_Dwn_Sfc
     real, dimension(:,:), allocatable:: Trans_Atm
     real, dimension(:,:), allocatable:: Trans_Atm_Total
     real, dimension(:,:), allocatable:: Bt_Toa_Clear
@@ -222,6 +224,7 @@ module PIXEL_COMMON
   integer,public, save:: Viirs_Flag
   integer,public, save:: Iff_Viirs_Flag
   integer,public, save:: Iff_Modis_Flag
+  integer,public, save:: Iff_Avhrr_Flag
   integer,public, save:: Seviri_Flag
   integer,public, save:: Mtsat_Flag
   integer,public, save:: FY2_Flag
@@ -230,6 +233,7 @@ module PIXEL_COMMON
   integer,public, save:: Goes_Mop_Flag
   integer,public, save:: Goes_Sndr_Flag
   integer,public, save:: Goes_1km_Flag
+  integer,public, save:: Goes_Scan_Line_Flag
   integer,public, save:: Modis_Flag
   integer,public, save:: Modis_5km_Flag
   integer,public, save:: Modis_1km_Flag
@@ -280,43 +284,43 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
-  character(len=128),public,save::File_1b
-  character(len=128),public,save::File_1bx
-  character(len=128),public,save::File_cmr
-  character(len=128),public,save::File_sst
-  character(len=128),public,save::File_1b_root
-  character(len=128),public,save:: Ancil_Data_Dir
-  character(len=128),public,save:: Gfs_Data_Dir
-  character(len=128),public,save:: Ncep_Data_Dir
-  character(len=128),public,save:: Cfsr_Data_Dir
-  character(len=128),public,save:: Oisst_Data_Dir
-  character(len=256),public,save:: Snow_Data_Dir
-  character(len=256),public,save:: GlobSnow_Data_Dir
-  character(len=128),public,save:: Dark_Comp_Data_Dir
-  character(len=128),public,save:: Temporary_Data_Dir
-  character(len=128),public,save:: Dir_1b
-  character(len=128),public,save:: Dir_1bx
-  character(len=128),public,save:: File_nav
-  character(len=128),public,save:: Instr_Const_File
-  character(len=128),public,save:: Algo_Const_File
-  character(len=128),public,save:: Dir_cmr
-  character(len=128),public,save:: Dir_sst
-  character(len=128),public,save:: Dir_Level3
-  character(len=128),public,save:: Dir_nav_in
-  character(len=128),public,save:: Dir_nav_out
-  character(len=128),public,save:: Dir_cld
-  character(len=128),public,save:: Dir_obs
-  character(len=128),public,save:: Dir_geo
-  character(len=128),public,save:: Dir_Rtm
-  character(len=128),public,save:: Dir_ash
-  character(len=128),public,save:: Dir_Level2
-  character(len=128),public,save:: Bayesian_Cloud_Mask_Name
-  character(len=128),public,save:: Modis_Geo_Name
-  character(len=128),public,save:: Modis_Cloud_Mask_Name
-  character(len=128),public,save:: Dark_Composite_Name
+  character(len=255),public,save::File_1b
+  character(len=255),public,save::File_1bx
+  character(len=255),public,save::File_cmr
+  character(len=255),public,save::File_sst
+  character(len=255),public,save::File_1b_root
+  character(len=355),public,save:: Ancil_Data_Dir
+  character(len=355),public,save:: Gfs_Data_Dir
+  character(len=355),public,save:: Ncep_Data_Dir
+  character(len=355),public,save:: Cfsr_Data_Dir
+  character(len=355),public,save:: Oisst_Data_Dir
+  character(len=355),public,save:: Snow_Data_Dir
+  character(len=355),public,save:: GlobSnow_Data_Dir
+  character(len=355),public,save:: Dark_Comp_Data_Dir
+  character(len=355),public,save:: Temporary_Data_Dir
+  character(len=355),public,save:: Dir_1b
+  character(len=355),public,save:: Dir_1bx
+  character(len=255),public,save:: File_nav
+  character(len=255),public,save:: Instr_Const_File
+  character(len=255),public,save:: Algo_Const_File
+  character(len=355),public,save:: Dir_cmr
+  character(len=355),public,save:: Dir_sst
+  character(len=355),public,save:: Dir_Level3
+  character(len=355),public,save:: Dir_nav_in
+  character(len=355),public,save:: Dir_nav_out
+  character(len=355),public,save:: Dir_cld
+  character(len=355),public,save:: Dir_obs
+  character(len=355),public,save:: Dir_geo
+  character(len=355),public,save:: Dir_Rtm
+  character(len=355),public,save:: Dir_ash
+  character(len=355),public,save:: Dir_Level2
+  character(len=355),public,save:: Bayesian_Cloud_Mask_Name
+  character(len=355),public,save:: Modis_Geo_Name
+  character(len=355),public,save:: Modis_Cloud_Mask_Name
+  character(len=355),public,save:: Dark_Composite_Name
 
   !----- IFF data files
-  character(len=128),public,save:: IFF_File
+  character(len=255),public,save:: IFF_File
 
   real(kind=real4), public, save:: Dlat
   real(kind=real4), public, save:: Lat_Min_Limit
@@ -397,6 +401,11 @@ module PIXEL_COMMON
   integer (kind=int2), dimension(:,:), allocatable, public,save:: Ch6_Counts
   real (kind=real4), dimension(:,:), allocatable, public,save:: Ch20_Counts_Filtered
 
+  !--- sounder brightness temperatures  
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_375um_Sounder
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_11um_Sounder
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_12um_Sounder
+   
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI2
@@ -422,6 +431,14 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Min_ChI2
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Uni_ChI2
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Mean_ChI2
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Max_ChI3
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Min_ChI3
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Mean_ChI3
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Uni_ChI3
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Max_ChI4
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Min_ChI4
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Uni_ChI4
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Mean_ChI4
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Max_ChI5
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Min_ChI5
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Uni_ChI5
@@ -456,7 +473,7 @@ module PIXEL_COMMON
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Err
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Uni
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Sst_Anal_Uni
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Cice
   real (kind=real4), dimension(:,:), allocatable, public, save:: Tsfc_Retrieved
   real (kind=real4), dimension(:,:), allocatable, public, save:: Trad_Retrieved
@@ -519,8 +536,11 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Min_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Std_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Cloud_Fraction_Uncer_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 
@@ -549,10 +569,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Snow
   integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Hires
   integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Glob
-  integer(kind=int1), dimension(:,:), allocatable, public:: Dust
-  integer(kind=int1), dimension(:,:), allocatable, public:: Smoke
-  integer(kind=int1), dimension(:,:), allocatable, public:: Fire
-  integer(kind=int1), dimension(:,:), allocatable, public:: Solar_Contamination_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Ch6_On_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Volcano_Mask
@@ -575,14 +592,18 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
+  integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Smoke_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
 
   !--- cloud Mask arrays
-  integer (kind=int1), dimension(:,:,:), allocatable, public, save:: Cld_Test_Vector_Packed
+  integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Adj_Pix_Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Qf
-  real (kind=int4),dimension(:,:),allocatable, public, save:: &
+  real (kind=int4),dimension(:,:),allocatable, public, save, target:: &
                                                        Posterior_Cld_Probability
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
@@ -643,8 +664,8 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Water_Layer_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Scwater_Layer_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Rain_Rate_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public,target, save:: H_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public,target, save:: N_DCOMP
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Hcld_DCOMP
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cdnc_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_Cost
      real (kind=real4), dimension(:,:), allocatable, public, target, save:: Reff_DCOMP_Cost
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_Qf
@@ -796,8 +817,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Iwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Pc_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: LCL_Height_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: CCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: LCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: CCL_Height_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cfrac_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Ncld_Layers_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Cld_Type_Nwp_Pix
@@ -833,6 +854,9 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Lower_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Lower_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Lower_Cloud
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
 
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
@@ -901,6 +925,10 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Trans_Atm(dim1,dim2))
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
          endif
+         !-- at present only 11 micron downward atm emission needed
+         if (idx == 31) then 
+            allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
+         endif
       endif
 
    enddo
@@ -948,9 +976,10 @@ subroutine CREATE_PIXEL_ARRAYS()
    endif
 
    allocate(   &
-          Dust(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Smoke(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Fire(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Dust_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Smoke_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Fire_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
+          Shadow_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal_Err(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
           Sst_Anal_Cice(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
@@ -1042,6 +1071,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Rad_Sfc)) deallocate(Ch(idx)%Rad_Sfc)
       if (allocated(Ch(idx)%Bt_Sfc)) deallocate(Ch(idx)%Bt_Sfc)
       if (allocated(Ch(idx)%Rad_Atm)) deallocate(Ch(idx)%Rad_Atm)
+      if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) deallocate(Ch(idx)%Rad_Atm_Dwn_Sfc)
       if (allocated(Ch(idx)%Trans_Atm)) deallocate(Ch(idx)%Trans_Atm)
       if (allocated(Ch(idx)%Trans_Atm_Total)) deallocate(Ch(idx)%Trans_Atm_Total)
       if (allocated(Ch(idx)%Ref_Toa)) deallocate(Ch(idx)%Ref_Toa)
@@ -1099,9 +1129,10 @@ subroutine DESTROY_PIXEL_ARRAYS()
   deallocate(Volcano_Mask)
   deallocate(Space_Mask)
   deallocate(Sfc_Level_Rtm_Pixel)
-  deallocate(Fire)
-  deallocate(Dust)
-  deallocate(Smoke)
+  deallocate(Fire_Mask)
+  deallocate(Dust_Mask)
+  deallocate(Smoke_Mask)
+  deallocate(Shadow_Mask)
 
   deallocate(Sst_Anal)
   deallocate(Sst_Anal_Err)
@@ -1475,6 +1506,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Bt_Sfc)) Ch(idx)%Bt_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Sfc)) Ch(idx)%Rad_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Atm)) Ch(idx)%Rad_Atm = Missing_Value_Real4
+      if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) Ch(idx)%Rad_Atm_Dwn_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Trans_Atm)) Ch(idx)%Trans_Atm = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Toa)) Ch(idx)%Ref_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Ref_Toa_Unnorm)) Ch(idx)%Ref_Toa_Unnorm = Missing_Value_Real4
@@ -1701,6 +1733,13 @@ end subroutine DESTROY_THERM_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
+   if (Iff_Viirs_Flag == sym%YES .or. &
+       Iff_AVHRR_Flag == sym%YES .or. &
+       Iff_MODIS_Flag == sym%YES) then
+           allocate(Bt_375um_Sounder(dim1,dim2))
+           allocate(Bt_11um_Sounder(dim1,dim2))
+           allocate(Bt_12um_Sounder(dim1,dim2))
+   endif
    if (Chan_On_Flag_Default(37) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
@@ -1717,9 +1756,17 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    endif
    if (Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI3(2*dim1,2*dim2))
+           allocate(Ref_Max_ChI3(dim1,dim2))
+           allocate(Ref_Min_ChI3(dim1,dim2))
+           allocate(Ref_Uni_ChI3(dim1,dim2))
+           allocate(Ref_Mean_ChI3(dim1,dim2))
    endif
    if (Chan_On_Flag_Default(40) == sym%YES) then
            allocate(Bt_ChI4(2*dim1,2*dim2))
+           allocate(Bt_Max_ChI4(dim1,dim2))
+           allocate(Bt_Min_ChI4(dim1,dim2))
+           allocate(Bt_Uni_ChI4(dim1,dim2))
+           allocate(Bt_Mean_ChI4(dim1,dim2))
    endif
    if (Chan_On_Flag_Default(41) == sym%YES) then
            allocate(Bt_ChI5(2*dim1,2*dim2))
@@ -1748,7 +1795,15 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
       if (Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
+      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
       if (Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
@@ -1758,6 +1813,13 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
       if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
+      if (Iff_Viirs_Flag == sym%YES .or. &
+          Iff_AVHRR_Flag == sym%YES .or. &
+          Iff_MODIS_Flag == sym%YES) then
+          Bt_375um_Sounder = Missing_Value_Real4
+          Bt_11um_Sounder = Missing_Value_Real4
+          Bt_12um_Sounder = Missing_Value_Real4
+      endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
 subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
@@ -1772,7 +1834,15 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Ref_Uni_ChI2)) deallocate(Ref_Uni_ChI2)
   if (allocated(Ref_Mean_ChI2)) deallocate(Ref_Mean_ChI2)
   if (allocated(Ref_ChI3)) deallocate(Ref_ChI3)
+  if (allocated(Ref_Max_ChI3)) deallocate(Ref_Max_ChI3)
+  if (allocated(Ref_Min_ChI3)) deallocate(Ref_Min_ChI3)
+  if (allocated(Ref_Uni_ChI3)) deallocate(Ref_Uni_ChI3)
+  if (allocated(Ref_Mean_ChI3)) deallocate(Ref_Mean_ChI3)
   if (allocated(Bt_ChI4)) deallocate(Bt_ChI4)
+  if (allocated(Bt_Max_ChI4)) deallocate(Bt_Max_ChI4)
+  if (allocated(Bt_Min_ChI4)) deallocate(Bt_Min_ChI4)
+  if (allocated(Bt_Uni_ChI4)) deallocate(Bt_Uni_ChI4)
+  if (allocated(Bt_Mean_ChI4)) deallocate(Bt_Mean_ChI4)
   if (allocated(Bt_ChI5)) deallocate(Bt_ChI5)
   if (allocated(Bt_Max_ChI5)) deallocate(Bt_Max_ChI5)
   if (allocated(Bt_Min_ChI5)) deallocate(Bt_Min_ChI5)
@@ -1782,6 +1852,9 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Ref_ChDNB_Lunar_Min_3x3)) deallocate(Ref_ChDNB_Lunar_Min_3x3)
   if (allocated(Ref_ChDNB_Lunar_Max_3x3)) deallocate(Ref_ChDNB_Lunar_Max_3x3)
   if (allocated(Ref_ChDNB_Lunar_Std_3x3)) deallocate(Ref_ChDNB_Lunar_Std_3x3)
+  if (allocated(Bt_375um_Sounder)) deallocate(Bt_375um_Sounder)
+  if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
+  if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2095,8 +2168,8 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Cwp_Water_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Scwater_Layer_DCOMP(dim1,dim2))
       allocate(Rain_Rate_DCOMP(dim1,dim2))
-      allocate(H_DCOMP(dim1,dim2))
-      allocate(N_DCOMP(dim1,dim2))
+      allocate(Hcld_DCOMP(dim1,dim2))
+      allocate(Cdnc_DCOMP(dim1,dim2))
       allocate(Tau_DCOMP_Cost(dim1,dim2))
       allocate(Reff_DCOMP_Cost(dim1,dim2))
       allocate(Tau_DCOMP_Qf(dim1,dim2))
@@ -2140,8 +2213,8 @@ subroutine RESET_DCOMP_ARRAYS()
       Cwp_Water_Layer_DCOMP = Missing_Value_Real4
       Cwp_Scwater_Layer_DCOMP = Missing_Value_Real4
       Rain_Rate_DCOMP = Missing_Value_Real4
-      H_DCOMP = Missing_Value_Real4
-      N_DCOMP = Missing_Value_Real4
+      Hcld_DCOMP = Missing_Value_Real4
+      Cdnc_DCOMP = Missing_Value_Real4
       Tau_DCOMP_Cost = Missing_Value_Real4
       Reff_DCOMP_Cost = Missing_Value_Real4
       Tau_DCOMP_Qf = Missing_Value_Int1
@@ -2185,8 +2258,8 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Cwp_Water_Layer_DCOMP)
       deallocate(Cwp_Scwater_Layer_DCOMP)
       deallocate(Rain_Rate_DCOMP)
-      deallocate(H_DCOMP)
-      deallocate(N_DCOMP)
+      deallocate(Hcld_DCOMP)
+      deallocate(Cdnc_DCOMP)
       deallocate(Tau_DCOMP_Cost)
       deallocate(Reff_DCOMP_Cost)
       deallocate(Tau_DCOMP_Qf)
@@ -2311,6 +2384,11 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
      allocate(Posterior_Cld_Probability(dim1,dim2))
      allocate(Bayes_Mask_Sfc_Type_Global(dim1,dim2))
   endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     if (.not. allocated(Cld_Mask_Aux)) allocate(Cld_Mask_Aux(dim1,dim2))  
+  endif
+  
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
   Cld_Mask_Qf = Missing_Value_Int1
@@ -2322,6 +2400,10 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
      Cld_Test_Vector_Packed = 0
      Bayes_Mask_Sfc_Type_Global = Missing_Value_Int1
   endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     Cld_Mask_Aux = Missing_Value_Int1
+  endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(Cld_Mask_Qf)
@@ -2332,6 +2414,10 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
      deallocate(Adj_Pix_Cld_Mask)
      deallocate(Posterior_Cld_Probability)
      deallocate(Bayes_Mask_Sfc_Type_Global)
+  endif
+  !Fix needed to get around issue when GFS turned off for AVHRR
+  if (Avhrr_Flag == sym%YES) then
+     if (allocated(Cld_Mask_Aux)) deallocate(Cld_Mask_Aux)  
   endif
 end subroutine DESTROY_CLOUD_MASK_ARRAYS
 !-----------------------------------------------------------
@@ -2466,6 +2552,12 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Zclr_H2O_Peak(dim1,dim2))
     allocate(Cloud_Fraction_3x3(dim1,dim2))
     allocate(Cloud_Fraction_Uncer_3x3(dim1,dim2))
+    allocate(High_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Mid_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Tc_Cirrus_Co2(dim1,dim2))
+    allocate(Pc_Cirrus_Co2(dim1,dim2))
+    allocate(Ec_Cirrus_Co2(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
 subroutine RESET_CLOUD_PROD_ARRAYS()
@@ -2482,6 +2574,12 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Zclr_H2O_Peak = Missing_Value_Real4
      Cloud_Fraction_3x3 = Missing_Value_Real4
      Cloud_Fraction_Uncer_3x3 = Missing_Value_Real4
+     High_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Mid_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Low_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Tc_Cirrus_Co2 = Missing_Value_Real4
+     Pc_Cirrus_Co2 = Missing_Value_Real4
+     Ec_Cirrus_Co2 = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
 subroutine DESTROY_CLOUD_PROD_ARRAYS()
@@ -2498,6 +2596,12 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Zclr_H2O_Peak)
      deallocate(Cloud_Fraction_3x3)
      deallocate(Cloud_Fraction_Uncer_3x3)
+     deallocate(High_Cloud_Fraction_3x3)
+     deallocate(Mid_Cloud_Fraction_3x3)
+     deallocate(Low_Cloud_Fraction_3x3)
+     deallocate(Tc_Cirrus_Co2)
+     deallocate(Pc_Cirrus_Co2)
+     deallocate(Ec_Cirrus_Co2)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS
 !-----------------------------------------------------------

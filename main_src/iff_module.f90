@@ -29,6 +29,7 @@ module IFF_MODULE
  use PIXEL_COMMON, only: &
      Iff_Viirs_Flag  &
      , Iff_Modis_Flag &
+     , Iff_Avhrr_Flag &
      , Num_Scans_Per_Segment
  use CONSTANTS, only: &
      sym &
@@ -71,8 +72,8 @@ module IFF_MODULE
       logical :: chan_on ( 36 )
       logical :: iff_cloud_mask_on
       character ( len = 255 ) :: iff_file
-      character ( len = 255 ) :: dir_1b
-      character (len = 255 ) :: Ancil_Data_Dir
+      character ( len = 355 ) :: dir_1b
+      character (len = 355 ) :: Ancil_Data_Dir
    end type iff_data_config
 
    type :: geo_str
@@ -177,6 +178,9 @@ end subroutine GET_IFF_DATA
       if (Iff_Modis_Flag == sym%YES) then
          if ( config % count (1) <= 0 )  config % count (1) = 1354
       endif
+      if (Iff_Avhrr_Flag == sym%YES) then
+         if ( config % count (1) <= 0 )  config % count (1) = 409
+      endif
       if ( config % count (2) <= 0 )  config % count (2)  = Num_Scans_Per_Segment
 
    end subroutine CHECK_INPUT
@@ -227,14 +231,14 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       real(kind=int8), dimension( : ) , allocatable :: r1d_buffer
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
       real(kind=int4), dimension( : , : , : ) , allocatable :: r3d_buffer
-      character (len=100), dimension ( 7 ) :: setname_geo_list = [ &
+      character (len=100), dimension ( 7 ) :: setname_geo_list = (/ character(len=40) :: &
                            'Latitude'            & ! 1
                          , 'Longitude'           & ! 2
                          , 'SensorAzimuth'       & ! 3
                          , 'SensorZenith'        & ! 4
                          , 'SolarAzimuth'        & ! 5
                          , 'SolarZenith'         & ! 6
-                         , 'ScanStartTime'       ] ! 7
+                         , 'ScanStartTime'      /) ! 7
       character (len = 150) :: setname_band
       character (len = 255) , pointer , dimension (:) :: file_arr_dummy
       character (len = 250) :: file_cld_mask
@@ -262,8 +266,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! set nu numbes for radiance conversion
       nu_list = 0
-      nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
-      nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      if (Iff_Avhrr_Flag == sym%YES) then
+         nu_list(20:25) = [Nu_20, Nu_20, Nu_31, Nu_23, Nu_24, Nu_25]
+         nu_list(27:36) = [Nu_27, Nu_28, Nu_32, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      else
+         nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
+         nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+      endif
 
       ! open file
       Status = OPEN_FILE_HDF_READ ( TRIM( config % iff_file ), Id ) + Status
@@ -280,7 +289,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             out % geo % lat = r2d_buffer
          case(2)
             if (.not. allocated ( out % geo % lon ) ) allocate ( out % geo % lon (dim_seg(1), dim_seg(2)) )
-            out % geo %lon = r2d_buffer
+            out % geo % lon = r2d_buffer
          case(3)
             if (.not. allocated ( out % geo % sataz ) ) allocate ( out % geo % sataz (dim_seg(1), dim_seg(2)) )
             out % geo % sataz = r2d_buffer
@@ -329,7 +338,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          Status = SPLIT_STRING (band_names_char, ',', num_char_band_names, band_names_char_arr) + Status
 
          ! delete all unuseful characters from the string
-         ! for CrIS and AIRS channels add 1 (131 - 136)
+         ! for CrIS, HIRS and AIRS channels add 1 (131 - 136)
          ! for MODIS set low 13 & 14 channels to 913 and 914 to ignore it
          do ii = 1, num_char_band_names
             Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'-','1','before') + Status
@@ -338,6 +347,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             elseif (Iff_Modis_Flag == sym%YES) then
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status
+            elseif (Iff_Avhrr_Flag == sym%YES) then
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'a',' ','after') + Status
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status
             endif
          enddo ! loop over band names
 
@@ -354,7 +366,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                     case (2)
                        band_names_int_ref(ii) = 9
                     case (3)
-                      band_names_int_ref(ii) = 3
+                       band_names_int_ref(ii) = 3
                     case (4)
                        band_names_int_ref(ii) = 4
                     case (5)
@@ -371,6 +383,17 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                        band_names_int_ref(ii) = 6
                     case (11)
                        band_names_int_ref(ii) = 7
+                 end select
+               enddo
+            elseif (Iff_Avhrr_Flag == sym%YES) then
+               do ii = 1, num_char_band_names
+                 select case ( band_names_int_ref(ii) )
+                    case (1)
+                       band_names_int_ref(ii) = 1
+                    case (2)
+                       band_names_int_ref(ii) = 2
+                    case (3)
+                       band_names_int_ref(ii) = 6
                  end select
                enddo
             endif
@@ -399,6 +422,46 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 35
                      case (136)
                         band_names_int_rad(ii) = 36
+                  end select
+               enddo
+            elseif (Iff_Avhrr_Flag == sym%YES) then
+               do ii = 1, num_char_band_names
+                  select case ( band_names_int_rad(ii) )
+                     case (3)
+                        band_names_int_rad(ii) = 20
+                     case (4)
+                        band_names_int_rad(ii) = 31
+                     case (5)
+                        band_names_int_rad(ii) = 32
+                     case (14) ! HIRS-4
+                        band_names_int_rad(ii) = 36
+                     case (15) ! HIRS-5
+                        band_names_int_rad(ii) = 35
+                     case (16) ! HIRS-6
+                        band_names_int_rad(ii) = 34
+                     case (17) ! HIRS-7
+                        band_names_int_rad(ii) = 33
+                     ! Attn: Use unused ch. to save HIRS 11um
+                     case (18) ! HIRS-8 ! same as AVHRR ch4
+                        band_names_int_rad(ii) = 22
+                     case (19) ! HIRS-9
+                        band_names_int_rad(ii) = 30
+                     ! Attn: Use ch. 29 to save either HIRS 12um or 8.55um
+                     case (110) ! HIRS-10  ! same as AVHRR ch5
+                        band_names_int_rad(ii) = 29 ! early 29, latter 32
+                     case (111) ! HIRS-11
+                        band_names_int_rad(ii) = 28
+                     case (112) ! HIRS-12
+                        band_names_int_rad(ii) = 27
+                     case (114) ! HIRS-14
+                        band_names_int_rad(ii) = 25
+                     case (116) ! HIRS-16
+                        band_names_int_rad(ii) = 24
+                     case (118) ! HIRS-18
+                        band_names_int_rad(ii) = 23
+                     ! Attn: Use unused ch. to save HIRS 3.75um
+                     case (119) ! HIRS-19 ! same as AVHRR ch3
+                        band_names_int_rad(ii) = 21
                   end select
                enddo
             endif
@@ -434,7 +497,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             setname_band = 'EmissiveBands'
 
             ! find what current channel has array number
-            do ii = 1, num_ref_ch
+            do ii = 1, num_rad_ch
                if ( config % chan_list(i_band) == band_names_int_rad(ii) ) then
                   iband_sds = ii
                endif
@@ -451,6 +514,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          Status = READ_HDF_SDS_FLOAT32_3D(Id,TRIM(setname_band),start_3d, &
                      stride_3d,edge_3d,r3d_buffer) + Status
 
+         ! change fill values to missing
          where(r3d_buffer == fill_value)
             r3d_buffer = missing_value
          endwhere
@@ -470,8 +534,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             if (.not. allocated ( out % band ( i_band ) % rad ) ) &
                      allocate (out % band ( i_band ) % rad (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % rad =  r3d_buffer(:,:,1)
-         endif
 
+         endif
+            
          out % band (i_band) % is_read = .true.
 
          ! --- dealocate variables
@@ -546,7 +611,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             out % prd % cld_mask = 3 - out % prd % cld_mask
 
             ! set pixels where cloud mask wasn't determind to missing
-            where ( btest ( i3d_buffer ( : , : , 1 ), 0 ) == 0 )
+            where ( btest ( i3d_buffer ( : , : , 1 ), 0 ) .eqv. .false. )
                out % prd % cld_mask  = missing_value 
             end where
 
@@ -604,6 +669,7 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
 !1234567890123456789012345678901234567890123456789012345678901234567890
 !IFFCMO_aqua_d20130806_t100000_c20140207033616_ssec_dev.hdf
 !IFFCMO_npp_d20130806_t100000_c20140207034800_ssec_dev.hdf
+!IFF_noaa19_avhrr_nss_d20120929_t153700_e161100_c20140722185339.hdf
 
 ! --- Read data from the file name
 if (Iff_Viirs_Flag == sym%YES) then
@@ -620,6 +686,13 @@ elseif (Iff_Modis_Flag == sym%YES) then
   read(Infile(24:25), fmt="(I2)") start_hour
   read(Infile(26:27), fmt="(I2)") start_minute
   read(Infile(28:29), fmt="(I2)") start_sec
+elseif (Iff_Avhrr_Flag == sym%YES) then
+  read(Infile(23:26), fmt="(I4)") year
+  read(Infile(27:28), fmt="(I2)") month
+  read(Infile(29:30), fmt="(I2)") day
+  read(Infile(33:34), fmt="(I2)") start_hour
+  read(Infile(35:36), fmt="(I2)") start_minute
+  read(Infile(37:38), fmt="(I2)") start_sec
 endif
 
 ! --- Calculate the date of year
@@ -656,8 +729,10 @@ endif
 
 end subroutine READ_IFF_DATE_TIME
 
-!----------------------------------------------------------------------                                                                      
+!----------------------------------------------------------------------
 !  Convert radiances based on channel 
+! from NASA standad (W m-2 um-1 sr-1) in IFF
+! to NOAA standard (mW/cm^2/cm^-1/str)
 !
 
 subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
@@ -675,8 +750,6 @@ subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
 end subroutine CONVERT_RADIANCE
 
 !----------------------------------------------------------------------
-
-   !
    !  public routine to deallocate output structure
    !  history: 11/14/2013 Denis B.
    ! 

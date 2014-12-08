@@ -37,6 +37,7 @@ module viirs_read_mod
    
    private
    public :: get_viirs_data
+   public :: READ_NUMBER_OF_SCANS_FROM_VIIRS
   
    integer, parameter, public:: int1 = selected_int_kind(1)
    integer, parameter, public:: int2 = selected_int_kind(3)
@@ -49,7 +50,7 @@ module viirs_read_mod
    ! - bowtie gaps values
    integer, parameter :: Ny_Pattern = 48
    integer, parameter :: Nx_Pattern = 3200
-   integer(kind=int1), dimension(:,:), allocatable, public:: Gap_Pixel_Mask_pattern
+   logical, dimension(:,:), allocatable, public:: Gap_Pixel_Mask_pattern
    integer(kind=int4), dimension(:,:), allocatable, public:: Gap_Line_Idx_pattern
     
    type :: syms
@@ -67,12 +68,12 @@ module viirs_read_mod
       logical :: chan_on_dnb 
       logical :: viirs_cloud_mask_on
       logical :: viirs_cloud_type_on
-      character ( len = 256 ) :: gmtco_file
+      character ( len = 255 ) :: gmtco_file
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count 
-      character ( len =255 ) :: dir_1b
+      character ( len =355 ) :: dir_1b
       character ( len =255 ) :: file_gmtco_base
-      character (len = 200 ) :: Ancil_Data_Dir
+      character (len = 355 ) :: Ancil_Data_Dir
    end type viirs_data_config
    
    type :: geo_str
@@ -125,7 +126,7 @@ module viirs_read_mod
    end type cloud_products_str
    
    type :: gap_str
-      integer(kind = int1) , dimension ( : , : ) , allocatable :: mask
+      logical , dimension ( : , : ) , allocatable :: mask
        
    end type gap_str
 
@@ -207,15 +208,15 @@ contains
       integer, dimension ( :, :), allocatable :: cld_type_idps
       character ( len = 255 ) , pointer , dimension ( :) :: file_arr_dummy 
       
-      character (len=100), dimension ( 7 ) :: setname_gmtco_list = [ &
-                           'All_Data/VIIRS-MOD-GEO-TC_All/Latitude             ' & ! 1
+      character (len=100), dimension ( 7 ) :: setname_gmtco_list = (/ character (len =300) :: &
+                          'All_Data/VIIRS-MOD-GEO-TC_All/Latitude             ' & ! 1
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/Longitude            ' & ! 2
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/StartTime              ' & ! 3
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteAzimuthAngle' & ! 4
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteZenithAngle ' & ! 5
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarAzimuthAngle    ' & ! 6
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarZenithAngle     ' & ! 7
-                                                    ]                            
+                                                    /)                            
       integer :: i_gmtco
       character ( len =150 ) :: file_gmtco
       
@@ -342,7 +343,7 @@ contains
       is_mband_on = config %  chan_on_rfl_mband
       
       data_scaled_mband = .true.
-      out % file_exists % svm_file_exists (:) = sym%YES
+      out % file_exists % svm_file_exists (:) = .true.
       
       ! - channel 13 is the only without Factors in VIRRS file
       data_scaled_mband(13) = .false.
@@ -366,7 +367,7 @@ contains
      
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVM'//trim(band_nr_file)//'_*'//trim(orbit_identifier) , n_files  ) 
       
-         if ( n_files == 0 ) out % file_exists % svm_file_exists (i_mband) = sym%NO
+         if ( n_files == 0 ) out % file_exists % svm_file_exists (i_mband) = .false.
          if ( n_files == 0 ) cycle
          
          file_mband = file_arr_dummy(1)
@@ -422,13 +423,13 @@ contains
       nx_start_iband = 1
       ny_start_iband = ny_start * 2 - 1
       offset_iband = [ nx_start_iband -1 , ny_start_iband - 1 ]
-      out % file_exists % svi_file_exists (:) = sym%YES
+      out % file_exists % svi_file_exists (:) = .true.
       do i_iband = 1 , 5
          if ( .not. is_iband_on(i_iband) ) cycle
          write ( band_nr_file , '(i2.2)'  )  i_iband
          write ( band_nr_var , '(i1)' )       i_iband
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVI'//trim(band_nr_file)//'_*'//trim(orbit_identifier) , n_files  )
-         if ( n_files == 0 ) out % file_exists % svi_file_exists (i_iband) = sym%NO
+         if ( n_files == 0 ) out % file_exists % svi_file_exists (i_iband) = .false.
          if ( n_files == 0 ) cycle
          file_iband = file_arr_dummy(1)
 
@@ -478,7 +479,7 @@ contains
          close (unit = lun)
          
          !- gdnbo products
-         out % file_exists % gdnbo_file_exists = sym%YES
+         out % file_exists % gdnbo_file_exists = .true.
          file_arr_dummy => file_search (trim(config %dir_1b), 'GDNBO*'//trim(orbit_identifier) , n_files )
          if ( n_files > 0 ) then
             file_gdnbo = file_arr_dummy(1)
@@ -507,10 +508,10 @@ contains
             
             call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonPhaseAngle', out % geo % Moon_Phase_Angle )
          else
-            out % file_exists % gdnbo_file_exists = sym%NO
+            out % file_exists % gdnbo_file_exists = .false.
          end if
 
-         out % file_exists % svdnb_file_exists = sym%YES 
+         out % file_exists % svdnb_file_exists = .true.
          file_arr_dummy => file_search (trim(config %dir_1b), 'SVDNB*'//trim(orbit_identifier) , n_files  )
          if ( n_files > 0 ) then
             file_svdnb = file_arr_dummy(1)
@@ -533,7 +534,7 @@ contains
                                 , missing_value_real4 &
                                 , out % dnb_mgrid % ref )
          else
-            out % file_exists % svdnb_file_exists = sym%NO
+            out % file_exists % svdnb_file_exists = .false.
          end if
       end if
       
@@ -542,7 +543,7 @@ contains
       ! - goal is to populate cld_mask_aux , cld_phase_aux and cld_type_aux
      
       if ( config %  viirs_cloud_mask_on ) then 
-         out % file_exists % iicmo_file_exists = sym%YES
+         out % file_exists % iicmo_file_exists = .true.
          file_arr_dummy => file_search (trim(config %dir_1b), 'IICMO*'//trim(orbit_identifier) , n_files  )
          allocate ( out % prd % cld_phase ( dim_seg(1) , dim_seg(2) ) )
          allocate ( out % prd % cld_mask ( dim_seg (1), dim_seg(2) ) )
@@ -655,7 +656,7 @@ contains
             deallocate ( i2d_buffer )
             
          else 
-            out % file_exists % iicmo_file_exists = sym%NO
+            out % file_exists % iicmo_file_exists = .false.
             print*,'IICMO file not found , cld_mask_aux and cld_type_aux are set to missing'
             
          end if  
@@ -746,75 +747,75 @@ contains
       do iline = 1 , Ny_Pattern
 
          Gap_Line_Idx_Pattern( : , iline ) =  -999 
-         Gap_Pixel_Mask_Pattern( : , iline ) = sym%NO
+         Gap_Pixel_Mask_Pattern( : , iline ) = .false.
 
          if (line_Type(iline) == 1) then
             
             i1 = 1
             i2 = Ngap_1 
             Gap_Line_Idx_Pattern( i1 : i2 , iline) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline) = .true.
 
             i1 = Nx_Pattern - Ngap_1 + 1
             i2 = Nx_Pattern
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
          end if
 
          if (Line_Type(iline) == 2) then 
             i1 = 1
             i2 = Ngap_1
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 2
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
 
             i1 = Ngap_1 + 1
             i2 = Ngap_2
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
 
             i1 = Nx_Pattern - Ngap_1 + 1
             i2 = Nx_Pattern
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 2
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
 
             i1 = Nx_Pattern - Ngap_2 + 1
             i2 = i1  + (Ngap_2 - Ngap_1)
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = sym%YES
+            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
          end if
 
          if (Line_Type(iline) == 3) then
             i1 = 1
             i2 = Ngap_4
             Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 2
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
 
             i1 = Ngap_4 + 1
             i2 = Ngap_3
             Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
 
             i1 = Nx_Pattern - Ngap_4 + 1
             i2 = Nx_Pattern
             Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 2
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
 
             i1 = Nx_Pattern - Ngap_3 + 1
             i2 = i1 + (Ngap_3 - Ngap_4)
             Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
          end if
 
          if (Line_Type(iline) ==  4) then
             i1 = 1
             i2 = Ngap_4
             Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
 
             i1 = Nx_Pattern - Ngap_4 + 1
             i2 = Nx_Pattern
             Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = sym%YES
+            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
          end if
        
       end do    
@@ -837,7 +838,7 @@ contains
       integer :: Num_Pix = 3200
 
       integer , dimension(:,: ) , allocatable  :: gap_line_idx
-      integer( kind = int1) , dimension(:,: ) , allocatable  :: gap_pixel_mask
+      logical , dimension(:,: ) , allocatable  :: gap_pixel_mask
      
       integer :: i_mband
       integer :: missing_value_int1 = -999
@@ -867,22 +868,22 @@ contains
          Gap_Pixel_Mask(:,Line_in_Segment) = Gap_Pixel_Mask_Pattern(:,Line_in_Pattern)
       
          do Elem_Idx = 1, Num_Pix
-            if (Gap_Pixel_Mask(Elem_Idx,Line_in_Segment)== sym%YES) then
+            if (Gap_Pixel_Mask(Elem_Idx,Line_in_Segment) ) then
                Line_Idx = Gap_Line_Idx(Elem_Idx,Line_in_Segment)
                
                do i_mband = 1 , 11
                   if ( .not. allocated( out % mband(i_mband) % ref ) &
-                       .or. out % file_exists % svm_file_exists (i_mband) == sym%NO ) cycle
+                       .or.  .not. out % file_exists % svm_file_exists (i_mband)   ) cycle
                   out % mband (i_mband) % ref (elem_idx , line_in_segment) = out%mband(i_mband)%ref(elem_idx,line_idx)
                end do 
                
                do i_mband = 12,16 
                   if ( .not. allocated (out % mband(i_mband) % rad ) &
-                       .or. out % file_exists % svm_file_exists (i_mband) == sym%NO ) cycle
+                       .or. .not. out % file_exists % svm_file_exists (i_mband) ) cycle
                   out % mband(i_mband) % rad (elem_idx,line_in_segment) = out % mband(i_mband)%rad(elem_idx,line_idx)
                end do
                
-               if ( allocated (out % prd % cld_mask) .and. out % file_exists % iicmo_file_exists == sym%YES ) then 
+               if ( allocated (out % prd % cld_mask) .and. out % file_exists % iicmo_file_exists ) then 
                   out % prd % cld_type(elem_idx,line_in_segment) = out % prd % cld_type(elem_idx,line_idx)
                   out % prd % cld_phase(elem_idx,line_in_segment) = out % prd % cld_phase(elem_idx,line_idx)
                   out % prd % cld_mask(Elem_Idx,Line_in_Segment) = out % prd %  cld_mask(Elem_Idx,Line_Idx)
@@ -894,9 +895,9 @@ contains
       end do
       
       
-      if ( allocated ( out % prd % cld_mask ) .and. out % file_exists % iicmo_file_exists == sym%YES ) then
+      if ( allocated ( out % prd % cld_mask ) .and. out % file_exists % iicmo_file_exists  ) then
          where( out % prd % cld_mask == Missing_Value_Int1) 
-            Gap_Pixel_Mask = sym%YES
+            Gap_Pixel_Mask = .true.
          end where
       end if
       
@@ -1012,9 +1013,11 @@ contains
    end subroutine read_viirs_date_time
 
 
-!  this is called from outside, why is this needed?
 !---------------------------------------------------------------------------------
-   SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS(Infile,Number_Of_Viirs_Lines,Error_Out)
+!  subroutine READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile, Number_Of_Viirs_Lines, Error_Out )
+!  to read number of scans,  called from the bridge
+!---------------------------------------------------------------------------------
+   SUBROUTINE READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile, Number_Of_Viirs_Lines, Error_Out )
    
       CHARACTER(Len=*), INTENT(IN) :: Infile  
       INTEGER(kind=int4), INTENT(OUT) :: Error_Out
@@ -1025,11 +1028,11 @@ contains
 
       error_out = 0
       Setname = 'All_Data/VIIRS-MOD-GEO-TC_All/NumberOfScans'
-      call H5ReadDataset( infile ,setname, test)
+      call H5ReadDataset( infile, setname, test )
      
-      Number_of_Viirs_Lines = test(1)
+      Number_of_Viirs_Lines = sum(test)
    
-   END SUBROUTINE GET_NUMBER_OF_SCANS_FROM_VIIRS
+   END SUBROUTINE READ_NUMBER_OF_SCANS_FROM_VIIRS
 
    !====================================================================
    ! Function Name: CONVERT_VIIRS_RADIANCE

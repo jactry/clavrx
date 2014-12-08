@@ -50,7 +50,8 @@ M_kracken.o \
 dcomp_interface_types_mod.o \
 dcomp_lut_mod.o \
 view2d.o \
-file_tools.o 
+file_tools.o \
+dcomp_lut_hdf_mod.o
 
 
 
@@ -88,9 +89,10 @@ dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_too
 dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dcomp_interface_types_mod.o view2d.o
 dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_science_tools_mod.o   dcomp_lut_mod.o
 dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
-dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o
+dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_hdf_mod.o
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90
+dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
 
 M_kracken.o:$(SUB_PATH)/M_kracken.f90
 	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90

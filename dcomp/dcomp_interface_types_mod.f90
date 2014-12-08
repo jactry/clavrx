@@ -249,7 +249,7 @@ contains
       integer :: i
         
         
-      do i = 1, 40 
+      do i = 1, N_CHN 
          if ( allocated (dcomp_str % refl(i) % d) ) deallocate ( dcomp_str % refl(i) % d )
 			if ( allocated (dcomp_str % alb_sfc(i) % d) ) deallocate ( dcomp_str % alb_sfc(i) % d )
          if ( allocated (dcomp_str % rad(i) % d) ) deallocate ( dcomp_str % rad(i) % d )

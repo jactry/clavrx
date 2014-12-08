@@ -7,6 +7,7 @@ fc = ifort
 fflags =  -O0 -g -m64 -warn unused 
 
 
+
 hdflibs = -L/usr/local/hdf4/lib/ -lmfhdf -ldf -ljpeg -lz -lsz
 hdf5libs = -I/usr/local/hdf5/include/ -L/usr/local/hdf5/lib/
 hdf5links = -lhdf5_fortran -lhdf5hl_fortran -lhdf5 -lz -lsz

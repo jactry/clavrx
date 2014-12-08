@@ -32,6 +32,10 @@ module USER_OPTIONS
  use PIXEL_COMMON
  use CONSTANTS
  use FILE_UTILITY
+ 
+  use  clavrx_message_module, only: &
+    mesg &
+    , verb_lev
 
   implicit none
 
@@ -59,20 +63,21 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
   !----------------------------------------------------------------------------
   !
   !----------------------------------------------------------------------------
-  subroutine CHECK_ALGORITHM_CHOICES()
+   subroutine CHECK_ALGORITHM_CHOICES()
      
-   use  clavrx_message_module, only: mesg
+     
+      
+      character ( len = 1 ) :: string_1
  
  
- 
-     !------------------------------------------------------------------------
-     !--- ACHA MODE Check
-     !         (0=11; 1 = 11/12; 2 = 11/13.3; 
-     !---       3 = 11,12,13; 4=8.5/11/12; 
-     !---       5=11/12/6.7; 6=11/13.3/6.7; 7=11/6.7 )
-     !------------------------------------------------------------------------
+      !------------------------------------------------------------------------
+      !--- ACHA MODE Check
+      !         (0=11; 1 = 11/12; 2 = 11/13.3; 
+      !---       3 = 11,12,13; 4=8.5/11/12; 
+      !---       5=11/12/6.7; 6=11/13.3/6.7; 7=11/6.7 )
+      !------------------------------------------------------------------------
 
-     if (Avhrr_Flag == sym%YES) then 
+      if (Avhrr_Flag == sym%YES) then 
          if (Avhrr_1_Flag == sym%NO) then 
              if (Acha_Mode > 1) then
                      print *, EXE_PROMPT, &
@@ -92,7 +97,9 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
          endif
      endif
 
-print *, "Acha Mode = ", Acha_Mode
+               write (string_1,'(I1)') acha_mode
+     
+               call mesg ("Acha Mode = "//string_1)
      if (Goes_Flag == sym%YES) then 
 
           if (Goes_Mop_Flag == sym%NO) then 
@@ -115,7 +122,10 @@ print *, "Acha Mode = ", Acha_Mode
                      print *, EXE_PROMPT, &
                      "Changing to default for GOES-MP"
                      Acha_Mode = Acha_Mode_Default_Goes_MP
-print *, "Acha Mode = ", Acha_Mode
+                     
+               write (string_1,'(I1)') acha_mode
+     
+               call mesg ("Acha Mode = "//string_1 )
              endif
 
           endif
@@ -186,7 +196,8 @@ print *, "Acha Mode = ", Acha_Mode
      !-------------------------------------------------------------------------------------
 
      !- dcomp mode 9 is Andys test code
-     print*,'dcomp user set:   ===================> ', dcomp_mode_user_set
+      write (string_1,'(I1)') dcomp_mode_user_set
+     call mesg ('dcomp user set:   ===================>  '//string_1 ,level = 5 )
      dcomp_mode = dcomp_mode_user_set
    
      if (AVHRR_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
@@ -203,9 +214,11 @@ print *, "Acha Mode = ", Acha_Mode
         Dcomp_Mode = 3
      endif
      if  ( Dcomp_Mode_user_set .ne. Dcomp_Mode) then
-	   call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level =-1)
+	   call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
      endif 
-     print*,'dcomp mode used for this file: ' , dcomp_mode
+     
+     write (string_1,'(i1)') dcomp_mode
+     call mesg ('dcomp mode used for this file: '//string_1)
 
 
      !--- check based on available channels
@@ -240,8 +253,8 @@ print *, "Acha Mode = ", Acha_Mode
     integer::erstat
     integer:: Default_Lun
     
-    print *, EXE_PROMPT, "DEFAULT FILE READ IN"
-    print *, EXE_PROMPT, "Default file to be read in: ", trim(File_Default)
+    call mesg ("DEFAULT FILE READ IN",level = 5 )
+    call mesg ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
 
     Default_Lun = GET_LUN()
 
@@ -671,13 +684,13 @@ print *, "Acha Mode = ", Acha_Mode
        stop "6-Nwp_Flag"
     endif
     if (Nwp_Flag == 1) then
-       print *,  EXE_PROMPT, "GFS data will be used"
+       call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
     else if (Nwp_Flag == 2) then
-       print *,  EXE_PROMPT, "NCEP Reanalysis data will be used"
+       call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
     else if (Nwp_Flag == 3) then
-       print *,  EXE_PROMPT, "NCEP Climate Forecast System Reanalysis data will be used"
+       call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
     else if (Nwp_Flag == 4) then
-       print *,  EXE_PROMPT, "GDAS Reanalysis data will be used"
+       call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
     endif
     
     if (Nwp_Flag == 0) then
@@ -697,45 +710,31 @@ print *, "Acha Mode = ", Acha_Mode
     endif
 
     if (cloud_mask_bayesian_Flag == sym%YES) then
-       print *, EXE_PROMPT, "Bayesian cloud mask will be generated"
+       call mesg  ("Bayesian cloud mask will be generated")
     endif
 
     if (Ref_Cal_1b == sym%YES) then
-       print *, EXE_PROMPT, "Reflectance Calibration within 1b will be used"
+       call mesg ("Reflectance Calibration within 1b will be used")
     endif
 
     if (therm_Cal_1b == sym%YES) then
-       print *, EXE_PROMPT, "Thermal Calibration within 1b will be used"
+       call mesg ("Thermal Calibration within 1b will be used")
     endif
 
     if (nav_Flag == 1) then
-        print *,  EXE_PROMPT, "CLEVERNAV geolocation no longer supported, using REPOSNX"
+        call mesg ("CLEVERNAV geolocation no longer supported, using REPOSNX")
         nav_Flag = 2
     endif
 
     if (nav_Flag == 2) then
-          print *,  EXE_PROMPT, "REPOSNX geolocation adjustment done"
+         call mesg( "REPOSNX geolocation adjustment done")
     endif
 
-    if (nav_file_Flag == sym%YES) then
-        print *,  EXE_PROMPT, "nav file will be created"
-    endif
+   
 
-    if (cld_file_Flag == sym%YES) then
-        print *,  EXE_PROMPT, "cld file will be created"
-    endif
+   
 
-    if (cmr_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "cmr file will be created"
-    endif
-
-    if (sst_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "sst file will be created"
-    endif
-
-    if (ash_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "vol ash file will be created"
-    endif
+    
 
     if (cld_Flag == sym%NO) then
         print *, EXE_PROMPT, "Cloud products will not be created"
@@ -748,22 +747,13 @@ print *, "Acha Mode = ", Acha_Mode
     if (erb_Flag == sym%NO) then
         print *, EXE_PROMPT, "Radiative Flux products will not be created"
     endif
-      
-    if (obs_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "obs file will be created"
-    endif
 
-    if (geo_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "geo file will be created"
-    endif
 
     if (rtm_file_Flag == sym%YES) then
-        print *, EXE_PROMPT, "rtm file will be created"
+        call mesg( "rtm file will be created")
     endif
 
-    if (level3_Flag == sym%YES) then
-        print *, EXE_PROMPT, "level3 file will be created"
-    endif
+   
 
     if (Cloud_Mask_Aux_Flag == sym%YES) then
        print *,  EXE_PROMPT, "Cloud mask results will be read in from precomputed 1bx file"
@@ -791,7 +781,7 @@ print *, "Acha Mode = ", Acha_Mode
     endif
 
 
-    print *, EXE_PROMPT, "Temporary Files will be written to ", trim(Temporary_Data_Dir)
+    call mesg ("Temporary Files will be written to "//trim(Temporary_Data_Dir),level = verb_lev % VERBOSE )
 
  end subroutine QC_CLAVRXORB_OPTIONS
  

@@ -29,30 +29,99 @@
 
 module clavrx_message_module
 
-integer , parameter :: QUIET_LEV = 0
-integer , parameter :: DEBUG_LEV =9
+type verbose_type
+   integer :: QUIET   =  0
+   integer :: ERROR =  1
+   integer :: MINIMAL =  2
+   
+   integer :: WARNING =  4
+   integer :: DEFAULT =  5
+   integer :: VERBOSE =  9 
+end type verbose_type
+
+type (verbose_type ) , save :: verb_lev 
+
 
 character(len = *) , parameter :: PROMPT = 'CLAVR-x>>'
-integer :: VERBOSE_LEVEL = QUIET_LEV ! from quiet (0) to verbose(10)
+integer :: VERBOSE_LEVEL = 5  ! from quiet (0) to verbose(10)
 
 public :: mesg
 
+interface mesg
+   module procedure mesg_pure
+   module procedure mesg_1r
+end interface mesg
+
+
 contains
 
-subroutine mesg ( text, level , color , stop_evt )
-  character (len = *) , intent(in) :: text
-  integer, optional, intent(in) :: level
-  integer, optional, intent(in) :: color
-  logical, optional, intent(in) :: stop_evt
-  character( len = 2) :: color_string
+
+   subroutine do_it ( text, color_string , message_level  )
+      use file_tools, only: file_test
+      character ( len = * ) , intent (in) :: text 
+      character ( len = 2 ) , intent (in) :: color_string 
+      integer , intent ( in ) :: message_level
+      integer :: verbose_level
+      
+      verbose_level = verb_lev % DEFAULT
+      if ( file_test ( 'verbose_level.txt') ) then
+         open ( 37, file = 'verbose_level.txt' )
+         read (37,'(i1)'),verbose_level
+         close (37)
+      end if
+      
+   
+      
+      if ( message_level <= verbose_level ) then
+         print*,PROMPT//achar(27)//'['//color_string//'m '//text//achar(27)//'[0m'      
+      end if
+
+   end subroutine do_it
+
+   subroutine mesg_pure ( text, level , color , stop_evt )
+      character (len = *) , intent(in) :: text
+      integer, optional, intent(in) :: level
+      integer, optional, intent(in) :: color
+      logical, optional, intent(in) :: stop_evt
+      character( len = 2) :: color_string
+      integer :: lev
+      
+      lev = verb_lev % DEFAULT
+      if ( present (level)) lev = level
+      color_string=''  
+      if (present(color)) write(color_string,'(I2)') color 
+      
+      call do_it ( trim(text), color_string , lev ) 
+      
+     
+ 
+   end subroutine mesg_pure
+
+   subroutine mesg_1r ( text,  param_r, level , color , stop_evt )
+      character (len = *) , intent(in) :: text
+      real, intent(in) :: param_r
+      integer, optional, intent(in) :: level
+      integer, optional, intent(in) :: color
+      logical, optional, intent(in) :: stop_evt
+      character( len = 2) :: color_string
+      integer :: lev
+      character ( len =100 ) :: string_100
+      character ( len =200) :: text_1
+ 
   
+      write ( string_100, '(f20.4)') param_r
+  
+      lev = verb_lev % DEFAULT
+      if ( present (level)) lev = level
+      text_1 = text//trim(string_100)
+      color_string=''  
+      if (present(color)) write(color_string,'(I2)') color 
+      
+      call do_it ( trim(text_1), color_string, lev ) 
+      
+    
  
-  write(color_string,'(I2)') color 
- 
-  if ( level .LE. VERBOSE_LEVEL) then
-   print*,PROMPT//achar(27)//'['//color_string//'m '//text//achar(27)//'[0m'
-  end if
-end subroutine mesg
+   end subroutine mesg_1r
 
 
 end module clavrx_message_module

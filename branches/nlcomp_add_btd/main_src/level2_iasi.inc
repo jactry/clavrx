@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 197
+ integer, parameter, private:: Num_Level2_Sds = 214
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -206,4 +206,21 @@
      Sds_Num_Level2_Ch31_Rad_Atm = 194,   Sds_Num_Level2_Ch31_Rad_Atm_Flag = 0, &
      Sds_Num_Level2_Ch31_Trans_Atm = 195, Sds_Num_Level2_Ch31_Trans_Atm_Flag = 0, &
      Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 0, &
-     Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0
+     Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 0, &
+     Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
+     Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 0, &
+     Sds_Num_Level2_Acha_Cost = 200,      Sds_Num_Level2_Acha_Cost_Flag = 0, &
+     Sds_Num_Level2_Hcld_Dcomp = 201,     Sds_Num_Level2_Hcld_Dcomp_Flag = 0, &
+     Sds_Num_Level2_Cdnc_Dcomp = 202,     Sds_Num_Level2_Cdnc_Dcomp_Flag = 0, &
+     Sds_Num_Level2_Bt375_Snd = 203,      Sds_Num_Level2_Bt375_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt11_Snd = 204,       Sds_Num_Level2_Bt11_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt12_Snd = 205,       Sds_Num_Level2_Bt12_Snd_Flag = 0, &
+     Sds_Num_Level2_High_Cld = 206,       Sds_Num_Level2_High_Cld_Flag = 0, &
+     Sds_Num_Level2_Mid_Cld = 207,        Sds_Num_Level2_Mid_Cld_Flag = 0, &
+     Sds_Num_Level2_Low_Cld = 208,        Sds_Num_Level2_Low_Cld_Flag = 0, &
+     Sds_Num_Level2_Dust = 209,           Sds_Num_Level2_Dust_Flag = 0, &
+     Sds_Num_Level2_Smoke = 210,          Sds_Num_Level2_Smoke_Flag = 0, &
+     Sds_Num_Level2_Shadow = 211,         Sds_Num_Level2_Shadow_Flag = 0, &
+     Sds_Num_Level2_Fire = 212,           Sds_Num_Level2_Fire_Flag = 0, &
+     Sds_Num_Level2_Zc_Lower = 213,       Sds_Num_Level2_Zc_Lower_Flag = 0, &
+     Sds_Num_Level2_Pc_Lower = 214,       Sds_Num_Level2_Pc_Lower_Flag = 0

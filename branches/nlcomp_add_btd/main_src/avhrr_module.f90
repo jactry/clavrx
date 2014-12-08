@@ -183,63 +183,63 @@ module AVHRR_MODULE
        Sc_Id_WMO = 708
        Sc_Id_Char = 'tirosn'
        Platform_Name_Attribute = 'TIROS-N'
-       Sensor_Name_Attribute = 'AVHRR/1'
+       Sensor_Name_Attribute = 'AVHRR-1'
     endif
     if(Sc_Id == 2 .and. avhrr_1_Flag == sym%YES) then  !NOAA-6
        Avhrr_Number = 6
        Sc_Id_WMO = 706
        Sc_Id_Char = 'noaa06'
        Platform_Name_Attribute = 'NOAA-6'
-       Sensor_Name_Attribute = 'AVHRR/1'
+       Sensor_Name_Attribute = 'AVHRR-1'
     endif
     if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
        Avhrr_Number = 7
        Sc_Id_WMO = 707
        Sc_Id_Char = 'noaa07'
        Platform_Name_Attribute = 'NOAA-7'
-       Sensor_Name_Attribute = 'AVHRR/2'
+       Sensor_Name_Attribute = 'AVHRR-2'
     endif
     if(Sc_Id == 6 .and. avhrr_1_Flag == sym%YES) then  !NOAA-8
        Avhrr_Number = 8
        Sc_Id_WMO = 200
        Sc_Id_Char = 'noaa08'
        Platform_Name_Attribute = 'NOAA-8'
-       Sensor_Name_Attribute = 'AVHRR/1'
+       Sensor_Name_Attribute = 'AVHRR-1'
     endif
     if(Sc_Id == 7 .and. avhrr_1_Flag == sym%NO) then  !NOAA-9
        Avhrr_Number = 9
        Sc_Id_WMO = 201
        Sc_Id_Char = 'noaa09'
        Platform_Name_Attribute = 'NOAA-9'
-       Sensor_Name_Attribute = 'AVHRR/2'
+       Sensor_Name_Attribute = 'AVHRR-2'
     endif
     if(Sc_Id == 8 .and. avhrr_1_Flag == sym%YES) then  !NOAA-10
        Avhrr_Number = 10
        Sc_Id_WMO = 202
        Sc_Id_Char = 'noaa10'
        Platform_Name_Attribute = 'NOAA-10'
-       Sensor_Name_Attribute = 'AVHRR/1'
+       Sensor_Name_Attribute = 'AVHRR-1'
     endif
     if(Sc_Id == 1 .and. avhrr_1_Flag == sym%NO) then  !NOAA-11
        Avhrr_Number = 11
        Sc_Id_WMO = 203
        Sc_Id_Char = 'noaa11'
        Platform_Name_Attribute = 'NOAA-11'
-       Sensor_Name_Attribute = 'AVHRR/2'
+       Sensor_Name_Attribute = 'AVHRR-2'
     endif
     if(Sc_Id == 5 .and. AVHRR_KLM_Flag==sym%NO) then             !NOAA-12
        Avhrr_Number = 12
        Sc_Id_WMO = 204
        Sc_Id_Char = 'noaa12'
        Platform_Name_Attribute = 'NOAA-12'
-       Sensor_Name_Attribute = 'AVHRR/2'
+       Sensor_Name_Attribute = 'AVHRR-2'
     endif
     if(Sc_Id == 3 .and. AVHRR_KLM_Flag == sym%NO) then           !NOAA-14
        Avhrr_Number = 14
        Sc_Id_WMO = 205
        Sc_Id_Char = 'noaa14'
        Platform_Name_Attribute = 'NOAA-14'
-       Sensor_Name_Attribute = 'AVHRR/2'
+       Sensor_Name_Attribute = 'AVHRR-2'
     endif
   else
     if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-15
@@ -247,42 +247,42 @@ module AVHRR_MODULE
        Sc_Id_WMO = 206
        Sc_Id_Char = 'noaa15'
        Platform_Name_Attribute = 'NOAA-15'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
     if(Sc_Id == 2 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-16
        Avhrr_Number = 16
        Sc_Id_WMO = 207
        Sc_Id_Char = 'noaa16'
        Platform_Name_Attribute = 'NOAA-16'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
     if(Sc_Id == 6 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-17
        Avhrr_Number = 17
        Sc_Id_WMO = 208
        Sc_Id_Char = 'noaa17'
        Platform_Name_Attribute = 'NOAA-17'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
     if(Sc_Id == 7 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-18
        Avhrr_Number = 18
        Sc_Id_WMO = 209
        Sc_Id_Char = 'noaa18'
        Platform_Name_Attribute = 'NOAA-18'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
     if(Sc_Id == 8 .and. AVHRR_KLM_Flag == sym%YES) then         !NOAA-19
        Avhrr_Number = 19
        Sc_Id_WMO = 223
        Sc_Id_Char = 'noaa19'
        Platform_Name_Attribute = 'NOAA-19'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
     if(Sc_Id == 12 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-A
        Avhrr_Number =  2
        Sc_Id_WMO = 4
        Sc_Id_Char = 'metopa'
        Platform_Name_Attribute = 'METOP-A'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
 
     if(Sc_Id == 11 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-B
@@ -290,17 +290,15 @@ module AVHRR_MODULE
        Sc_Id_WMO = 3
        Sc_Id_Char = 'metopb'
        Platform_Name_Attribute = 'METOP-B'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
-    !----
     !------- Metop-C Sc_Id numbers are not unknown at this time
-    !----
     if(Sc_Id == 13 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-C
        Avhrr_Number =  4
        Sc_Id_WMO = 5
        Sc_Id_Char = 'metopc'
        Platform_Name_Attribute = 'METOP-C'
-       Sensor_Name_Attribute = 'AVHRR/3'
+       Sensor_Name_Attribute = 'AVHRR-3'
     endif
 
   endif
@@ -450,7 +448,8 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 ! the data format for subsequent read statements
 ! note, data_type and ver_1b are read in again later
 !-------------------------------------------------------
-   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag,ver_1b,data_type,Byte_Swap_1b)
+   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
+                                        ver_1b,data_type,Byte_Swap_1b)
 
     character(len=*), intent(in):: file_1b_local
     integer(kind=int4), intent(out):: AVHRR_GAC_Flag
@@ -3225,9 +3224,11 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
      if (Ch3a_On_AVHRR(j) == sym%YES) then
 
         if (Chan_Counts_Avhrr(3,i,j) < Ch3a_Switch_Count) then
-           Chan_Counts_Avhrr_Sg(3,i,j) = Scan_Space_Counts_Avhrr(3,j) + 0.25*(Chan_Counts_Avhrr(3,i,j) - Scan_Space_Counts_Avhrr(3,j))
+           Chan_Counts_Avhrr_Sg(3,i,j) = Scan_Space_Counts_Avhrr(3,j) &
+               + 0.25*(Chan_Counts_Avhrr(3,i,j) - Scan_Space_Counts_Avhrr(3,j))
         else
-           Chan_Counts_Avhrr_Sg(3,i,j) = (Scan_Space_Counts_Avhrr(3,j) + 0.25*(Ch3a_Switch_Count - Scan_Space_Counts_Avhrr(3,j))) + &
+           Chan_Counts_Avhrr_Sg(3,i,j) = (Scan_Space_Counts_Avhrr(3,j) + 0.25*(Ch3a_Switch_Count &
+               - Scan_Space_Counts_Avhrr(3,j))) + &
                                  1.75*(Chan_Counts_Avhrr(3,i,j) - Ch3a_Switch_Count)
         endif
 

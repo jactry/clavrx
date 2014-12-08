@@ -109,18 +109,22 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Lon = -180, Max_Lon = 180.0
  real, parameter, public:: Min_Zc = 0.0, Max_Zc = 20000.0
  real, parameter, public:: Min_Zc_Uncer = 0.0, Max_Zc_Uncer = 10000.0
- real, parameter, public:: Min_pc = 0.0, Max_pc = 1100.0
- real, parameter, public:: Min_tc = 160.0, Max_tc = 320.0, Min_tc_std = 0.0, Max_tc_std = 40.0
+ real, parameter, public:: Min_Pc = 0.0, Max_Pc = 1100.0
+ real, parameter, public:: Min_Tc = 160.0, Max_Tc = 320.0, Min_Tc_Std = 0.0, Max_Tc_Std = 40.0
  real, parameter, public:: Min_Tc_Uncer = 0.0, Max_Tc_Uncer = 100.0
  real, parameter, public:: Min_ec = 0.0, Max_ec = 1.0, Min_ec_std = 0.0, Max_ec_std = 1.0
  real, parameter, public:: Min_Beta = 0.0, Max_Beta = 2.0, Min_Beta_std = 0.0, Max_Beta_std = 2.0
  real, parameter, public:: Min_Tau = -0.2, Max_Tau = 160.0, Min_Tau_std = 0.0, Max_Tau_std = 100.0
  real, parameter, public:: Min_Tau_Acha = -0.2, Max_Tau_Acha = 8.0
+ real, parameter, public:: Min_Acha_Cost = 0.0, Max_Acha_Cost = 18.0
  real, parameter, public:: Min_Reff = 0.0, Max_Reff = 160.0, Min_Reff_std = 0.0, Max_Reff_std = 100.0
+ real, parameter, public:: Min_Hcld = 0.0, Max_Hcld = 4000.0
+ real, parameter, public:: Min_Cdnc = 0.0, Max_Cdnc = 1000.0
  real, parameter, public:: Min_lwp = 0.0, Max_lwp = 2000.0, Min_lwp_std = 0.0, Max_lwp_std = 100.0
  real, parameter, public:: Min_iwp = 0.0, Max_iwp = 2000.0, Min_iwp_std = 0.0, Max_iwp_std = 100.0
  real, parameter, public:: Min_frac = 0.0, Max_frac = 1.0
  real, parameter, public:: Min_tpw = 0.0, Max_tpw = 10.0
+ real, parameter, public:: Min_Ozone = 100.0, Max_Ozone = 550.0
  real, parameter, public:: Min_rh = 0.0, Max_rh = 110.0
  real, parameter, public:: Min_hght500 = 4500.0, Max_hght500 = 6500.0
  real, parameter, public:: Min_aot = -0.2, Max_aot = 5.0, Min_aot_std = 0.0, Max_aot_std = 1.0
@@ -140,9 +144,11 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 
  real, parameter, public:: Min_Trans = 0.0, Max_Trans = 1.0 
  real, parameter, public:: Min_Ch31_Rad_Atm = 0.0, Max_Ch31_Rad_Atm = 100.0 
+ real, parameter, public:: Min_Ch31_Rad_Atm_Dwn = 0.0, Max_Ch31_Rad_Atm_Dwn = 50.0 
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 
  real, parameter, public:: Min_Cwp = 0.0, Max_Cwp = 1200.0
  real, parameter, public:: Min_Rain_Rate = 0.0, Max_Rain_Rate = 32.0
+ real, parameter, public:: Min_Binary_Mask = 0.0, Max_Binary_Mask = 1.0
  real, parameter, public:: Min_Cld_Mask = 0.0, Max_Cld_Mask = 3.0
  real, parameter, public:: Min_Cld_Type = 0.0, Max_Cld_Type = 13.0
  real, parameter, public:: Min_Sfc_Type = 0.0, Max_Sfc_Type = 13.0

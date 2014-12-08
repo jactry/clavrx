@@ -66,13 +66,13 @@
 !   CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY
 !--------------------------------------------------------------------------------------
 module NWP_COMMON
-
+   
   use CONSTANTS
   use PIXEL_COMMON
   use NUMERICAL_ROUTINES
 
   implicit none
-
+  private
   private:: FIND_NWP_LEVELS, &
             COMPUTE_NWP_CLOUD_PARAMETERS, &
             CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY
@@ -338,8 +338,10 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
                        Lat_Nwp_fac(Elem_Idx,Line_Idx))
          
           !--- compute the near surface lapse rate (K/m) 
-          Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
-                            (Z_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) - Z_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx))
+          Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
+                              - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
+                            (Z_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
+                            - Z_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx))
          else
           Delta_Lapse_Rate = 0
          endif
@@ -1460,7 +1462,8 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
    ! Find the Height above which to consider CWP to be 100% ice in the NWP Profiles
    ! Start at the Tropopause and work down
    !-------------------------------------------------------------------
-   Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Z_Prof_Nwp(Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Lon_Nwp_Idx,Lat_Nwp_Idx)
+   Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) &
+      = Z_Prof_Nwp(Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Lon_Nwp_Idx,Lat_Nwp_Idx)
 
    do k = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-1
 
@@ -1540,6 +1543,7 @@ end subroutine FIND_NWP_LEVELS
                                          Low_Cloud_Fraction_Satellite, &
                                          Number_Of_Cloud_Layers, &
                                          Cloud_Type)
+   implicit none                                      
 
   integer(kind=int1), intent(in):: Tropopause_Level_Nwp
   integer(kind=int1), intent(in):: Surface_Level_Nwp
@@ -1775,7 +1779,8 @@ end subroutine FIND_NWP_LEVELS
           elseif (Pressure_Profile(Ilev) > 440.0 .and. Pressure_Profile(Ilev) <= 680.0) then
                Mid_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite - High_Cloud_Fraction_Satellite
           else
-               Low_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite - High_Cloud_Fraction_Satellite - Mid_Cloud_Fraction_Satellite
+               Low_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite &
+                     - High_Cloud_Fraction_Satellite - Mid_Cloud_Fraction_Satellite
           endif
 
           if (Cloud_Fraction_Satellite == 1.0) then

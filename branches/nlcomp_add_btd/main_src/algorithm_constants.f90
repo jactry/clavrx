@@ -51,6 +51,10 @@ module ALGORITHM_CONSTANTS
   !--- Outgoing Longwave Radiation (OLR)
   real(kind=real4),save,public:: win_0,win_1,win_2,win_3,olr_0,olr_1,olr_2,olr_3,olr_4
 
+  !--- cloud cover layers
+  real, parameter, public:: HIGH_CLOUD_MAX_PRESSURE_THRESH = 440.0
+  real, parameter, public:: LOW_CLOUD_MIN_PRESSURE_THRESH = 680.0
+
 !--- End of module
 
 end module ALGORITHM_CONSTANTS

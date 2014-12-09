@@ -37,6 +37,16 @@ module AWG_CLOUD_HEIGHT
 ! 6 - degraded ec Retrieval (0 = no, 1 = yes)
 ! 7 - degraded beta Retrieval (0 = no, 1 = yes)
 !
+! Modes
+! 0 - Use this mode to not call ACHA from the framework
+! 1 - 11 um             
+! 2 - 11 + 6.7 um
+! 3 - 11 + 12 um
+! 4 - 11 + 13.3 um
+! 5 - 11 + 8.5 + 12 um
+! 6 - 11 + 6.7 + 12 um
+! 7 - 11 + 6.7 + 13.3 um
+! 8 - 11 + 12 + 13.3 um
 !----------------------------------------------------------------------
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
 
@@ -380,22 +390,22 @@ module AWG_CLOUD_HEIGHT
 
   !--- determine number of channels
   select case(Acha_Mode_Flag)
-     case(0)  !11 avhrr/1
+     case(1)  !11 avhrr/1
        Num_Obs = 1
-     case(1)  !11,12 avhrr/2/3
+     case(2)  !11,6.7
        Num_Obs = 2
-     case(2)  !11,13.3 goes-nop
+     case(3)  !11,12 avhrr/2/3
        Num_Obs = 2
-     case(3)  !11,12,13.3 goes-r
-       Num_Obs = 3
-     case(4)  !11,12,8.5 viirs 
-       Num_Obs = 3
-     case(5)  !11,12,6.7
-       Num_Obs = 3
-     case(6)  !11,13.3,6.7
-       Num_Obs = 3
-     case(7)  !11,6.7
+     case(4)  !11,13.3 goes-nop
        Num_Obs = 2
+     case(5)  !11,12,8.5 viirs 
+       Num_Obs = 3
+     case(6)  !11,12,6.7
+       Num_Obs = 3
+     case(7)  !11,13.3,6.7
+       Num_Obs = 3
+     case(8)  !11,12,13.3 goes-r
+       Num_Obs = 3
   end select
 
   !--- allocate needed 2d arrays for processing this segment
@@ -668,9 +678,9 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !-------------------------------------------------------------------
-  ! Apply Opaque Retrieval for Acha_Mode_Flag = 0, then cycle
+  ! Apply Opaque Retrieval for Acha_Mode_Flag = 1, then cycle
   !-------------------------------------------------------------------
-  if (Acha_Mode_Flag == 0) then
+  if (Acha_Mode_Flag == 1) then
         if (((Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%CLEAR) .or.  &
             (Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLEAR)) .and. &
             (Input%Process_Undetected_Cloud_Flag == symbol%NO)) then
@@ -785,22 +795,22 @@ module AWG_CLOUD_HEIGHT
 
    Bt_11um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2),Input%Invalid_Data_Mask(i1:i2,j1:j2))
 
-   if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
     Btd_11um_67um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_67um(i1:i2,j1:j2),&
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
-   if (Acha_Mode_Flag == 4) then
+   if (Acha_Mode_Flag == 5) then
     Btd_11um_85um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_85um(i1:i2,j1:j2), &
                                                   Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or.  &
-       Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
+       Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
     Btd_11um_12um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_12um(i1:i2,j1:j2), &
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Btd_11um_133um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_133um(i1:i2,j1:j2), &
                                                     Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
@@ -811,52 +821,52 @@ module AWG_CLOUD_HEIGHT
 
    !--- y - the observation vOutput%Ector
    select case(Acha_Mode_Flag)
-     case(0)
+     case(1)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
-     case(1)
+     case(2)
+       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
+       y_variance(1) =  Bt_11um_Std**2
+       y_variance(2) = Btd_11um_67um_Std**2 
+     case(3)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
-     case(2)
+     case(4)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
-     case(3)
-       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
-       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
-       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
-       y_variance(2) = Btd_11um_12um_Std**2 
-       y_variance(3) = Btd_11um_133um_Std**2 
-     case(4)
+     case(5)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_85um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_85um_Std**2 
-     case(5)
+     case(6)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(3) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
-     case(6)
+     case(7)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
-     case(7)
+     case(8)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
-       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
+       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
-       y_variance(2) = Btd_11um_67um_Std**2 
+       y_variance(2) = Btd_11um_12um_Std**2 
+       y_variance(3) = Btd_11um_133um_Std**2 
      case DEFAULT
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
@@ -1068,7 +1078,7 @@ module AWG_CLOUD_HEIGHT
     Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
     Rad_Clear_11um = Rad_Ac_11um + Trans_Ac_11um*Bc_11um
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1078,7 +1088,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_12um = Rad_Ac_12um + Trans_Ac_12um*Bc_12um
   endif
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1089,7 +1099,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_133um = Rad_Ac_133um + Trans_Ac_133um*Bc_133um
   endif
 
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
      Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
@@ -1100,7 +1110,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_85um = Rad_Ac_85um + Trans_Ac_85um*Bc_85um
   endif
 
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
      Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
@@ -1122,16 +1132,16 @@ module AWG_CLOUD_HEIGHT
 
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
   Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag ==3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
       Rad_Clear_12um = Input%Rad_Clear_12um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
       Rad_Clear_133um = Input%Rad_Clear_133um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
       Rad_Clear_85um = Input%Rad_Clear_85um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
       Rad_Clear_67um = Input%Rad_Clear_67um(Elem_Idx,Line_Idx)
   endif
 
@@ -1213,7 +1223,7 @@ Retrieval_Loop: do
   Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 6) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1221,7 +1231,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
   endif
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1229,7 +1239,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
   endif
 
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
     Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
@@ -1237,7 +1247,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
   endif
 
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
@@ -2803,41 +2813,36 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
  !--- forward model error due to sub-pixel heterogeneity
  !----------------------------------------------------------------
  Sub_Pixel_Uncer(1) = max(0.5,y_variance(1)/4.0)
- if (Acha_Mode_Flag > 0) then
+ if (Acha_Mode_Flag > 1) then
     Sub_Pixel_Uncer(2) = max(0.25,y_variance(2)/4.0)
  endif
- if (Acha_Mode_Flag >= 3 .and. Acha_Mode_Flag /=7) then
+ if (Acha_Mode_Flag >= 5) then
     Sub_Pixel_Uncer(3) = max(0.25,y_variance(3)/4.0)
  endif
 
- if (Acha_Mode_Flag == 0) then
+ select case(Acha_Mode_Flag)
+  case(1) 
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
- endif
- if (Acha_Mode_Flag == 1) then
+
+  case(2) 
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_67um_Covar
+    Sy(2,1) = Sy(1,2)
+    Sy(2,2) = T11um_67um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_67um_Btd_11um_67um_Covar
+
+  case(3)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(2,1) = Sy(1,2)
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
- endif
- if (Acha_Mode_Flag == 2) then
+
+  case(4) 
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(2,1) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(2,2) = T11um_133um_Cal_Uncer**2 +  Sub_Pixel_Uncer(2)+ Trans2*Btd_11um_133um_Btd_11um_133um_Covar
- endif
- if (Acha_Mode_Flag == 3) then
-    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
-    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
-    Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
-    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + &
-              Trans2*Btd_11um_12um_Btd_11um_12um_Covar
-    Sy(2,1) = Sy(1,2)
-    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
-    Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
-    Sy(3,1) = Sy(1,3)
-    Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 4) then
+
+  case(5)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_85um_Covar
@@ -2849,9 +2854,8 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_85um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_85um_Btd_11um_85um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
 
- if (Acha_Mode_Flag == 5) then
+  case(6)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_67um_Covar
@@ -2863,8 +2867,8 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 6) then
+
+  case(7)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_67um_Covar
@@ -2876,14 +2880,20 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 7) then
-    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
-    Sy(1,2) = Trans2*Bt_11um_Btd_11um_67um_Covar
-    Sy(2,1) = Sy(1,2)
-    Sy(2,2) = T11um_67um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_67um_Btd_11um_67um_Covar
- endif
 
+  case(8) 
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
+    Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
+    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + &
+              Trans2*Btd_11um_12um_Btd_11um_12um_Covar
+    Sy(2,1) = Sy(1,2)
+    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
+    Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
+    Sy(3,1) = Sy(1,3)
+    Sy(3,2) = Sy(2,3)
+
+  end select
 
 end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 
@@ -3153,26 +3163,36 @@ subroutine DETERMINE_ACHA_MODE_BASED_ON_CHANNELS(symbol, &
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_11um == symbol%YES .and. Chan_On_12um == symbol%YES) then
         if (Chan_On_133um == symbol%YES) then
-            Acha_Mode_Flag = 3          ! 11/12/13.3 um
+            Acha_Mode_Flag = 8          ! 11/12/13.3 um
         elseif (Chan_On_85um == symbol%YES) then
-            Acha_Mode_Flag = 4          ! 8.5/11/12 um
+            Acha_Mode_Flag = 5          ! 8.5/11/12 um
         elseif (Chan_On_67um == symbol%YES) then
-            Acha_Mode_Flag = 5          ! 6.7/11/12 um
+            Acha_Mode_Flag = 6          ! 6.7/11/12 um
         else
-            Acha_Mode_Flag = 1          ! 11/12 um
+            Acha_Mode_Flag = 3          ! 11/12 um
         endif
      endif
   endif
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_12um == symbol%NO) then
         if (Chan_On_67um == symbol%YES .and. Chan_On_133um == symbol%YES) then
-              Acha_Mode_Flag = 6       !6.7/11/13.3
+              Acha_Mode_Flag = 7       !6.7/11/13.3
         endif
         if (Chan_On_67um == symbol%NO .and. Chan_On_133um == symbol%YES) then
-              Acha_Mode_Flag = 2       !11/13.3
+              Acha_Mode_Flag = 4       !11/13.3
+        endif
+        if (Chan_On_67um == symbol%YES .and. Chan_On_133um == symbol%NO) then
+              Acha_Mode_Flag = 2       !11/6.7
         endif
      endif
   endif
+  if (Acha_Mode_Flag == -1) then
+     if (Chan_On_11um == symbol%YES) then
+              Acha_Mode_Flag = 1       !11
+     endif
+  endif
+   
+   
 end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
 
 !----------------------------------------------------------------------------

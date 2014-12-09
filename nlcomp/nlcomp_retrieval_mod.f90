@@ -246,7 +246,7 @@ contains
          iteration_Idx = iteration_Idx + 1
 	   	
 		   sensor ='VIIRS'
-         
+        
         ! Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
          call  nlcomp_forward_computation  ( &
                state_vec  &
@@ -264,7 +264,8 @@ contains
             , rad_clear_toc &
             , lut_path = dcomp_ancil_path   ) 
             
-            	 
+            
+           
 		   ! - define forward model vector
 		   ! - first dimesnion : the two channels
 		   ! - 1 sfc albedo vis ; 2 -  sfc albedo ir ; 3- rtm error in vis  4 - rtm error in nir 
@@ -292,7 +293,7 @@ contains
          ! - calculate observation error covariance 
          S_y = S_m + matmul (kernel_b, matmul (S_b, transpose (Kernel_B) ) )
          call findinv ( S_y , S_y_inv , 4 , errorflag)
-  
+ 
 		   !--compute Sx error covariance of solution x 
          S_x_inv = S_a_inv + matmul ( transpose ( Kernel ) , matmul ( S_y_inv , Kernel ) )
          
@@ -306,8 +307,8 @@ contains
        
 		   ! - check for convergence
          Conv_Test = abs ( sum (delta_X * matmul ( S_x_inv , Delta_X ) ) )	
-         
-        debug_mode = 1
+      
+        debug_mode = 5
 		
          if ( debug_mode > 4 ) then 
             
@@ -331,14 +332,14 @@ contains
          if ( maxval ( abs(delta_x))   >  MAX_STEP_SIZE  ) then
             delta_x = delta_x * max_step_size / delta_dstnc 
          end if
-         
+        
          if ( debug_mode > 4 ) then
             print*,'real delta: ', delta_x
             print*,'new x = ', state_Vec + delta_X
          end if
          
          state_Vec = state_Vec + delta_x
-         
+        
          if ( conv_test < 0.2 ) then
 	
             cod = 10 ** state_vec(1)
@@ -363,7 +364,7 @@ contains
             exit retrieval_loop
 		 
          end if
-         
+        
           if ( state_vec(1) > 2.0 .and. iteration_idx > 6 ) then
             state_vec(2) = thick_cloud_cps ( obs_vec(2) , pxl )  
              nlcomp_out % statusOK = .true.
@@ -374,7 +375,7 @@ contains
             
             exit
          end if
-		 
+		
          if ( iteration_idx > 20 ) then
             cod = -999.
             cps = -999.
@@ -382,10 +383,11 @@ contains
          end if
 
       end do Retrieval_Loop
-      
+     
       nlcomp_out % cod = cod
       nlcomp_out % cps = cps
-    !  print*,nlcomp_out % cod, nlcomp_out % cps
-      
+      print*,cod,cps
+      stop
+     
    end subroutine nlcomp_algorithm
 end module nlcomp_retrieval_mod

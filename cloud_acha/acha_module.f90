@@ -52,9 +52,8 @@ module AWG_CLOUD_HEIGHT
 
   implicit none
 
-  public::  AWG_CLOUD_HEIGHT_ALGORITHM
-  public::  SET_ACHA_MODE
-  public::  CHECK_ACHA_MODE
+  public:: AWG_CLOUD_HEIGHT_ALGORITHM
+  public:: CHECK_ACHA_MODE
   public:: SET_ACHA_VERSION
   public:: LOCAL_LINEAR_RADIATIVE_CENTER
 
@@ -3658,77 +3657,6 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
    enddo element_loop
 
 end subroutine PARALLAX_ACHA 
-
-
-!----------------------------------------------------------------------
-!---   ACHA MODE Check
-!---
-!--- Input:
-!---        Chan_On_67um = channel on/off setting for 6.7 micron channel
-!---        Chan_On_85um = channel on/off setting for 8.5 micron channel
-!---        Chan_On_11um = channel on/off setting for 11 micron channel
-!---        Chan_On_12um = channel on/off setting for 12 micron channel
-!---        Chan_On_133um = channel on/off setting for 13.3 micron channel
-!---
-!---  Output:
-!---        Acha_Mode_Output = a mode for ACHA that works for available 
-!---                           channels. Will be set to 0-7 if success
-!---                           -1 is no option is possible
-!---
-!--- Mode Definition
-!---     1 = 11um only 
-!---     2 = 6.7um and 11 um 
-!---     3 = 11um and 12um 
-!---     4 = 11um and 13.3um 
-!---     5 = 8.5um, 11um and 12um; 
-!---     6 = 6.7um, 11um and 12um 
-!---     7 = 6.7um, 11um and 13.3um
-!---     8 = 11um, 12um and 13
-!----------------------------------------------------------------------
-subroutine SET_ACHA_MODE(symbol, &
-                         Chan_On_67um, &
-                         Chan_On_85um, &
-                         Chan_On_11um, &
-                         Chan_On_12um, &
-                         Chan_On_133um, &
-                         Acha_Mode_Output)
-
-   type(symbol_acha), intent(in) :: symbol
-   integer, intent(in) :: Chan_On_67um
-   integer, intent(in) :: Chan_On_85um
-   integer, intent(in) :: Chan_On_11um
-   integer, intent(in) :: Chan_On_12um
-   integer, intent(in) :: Chan_On_133um
-   integer, intent(out) :: Acha_Mode_Output
-
-   if (Chan_On_11um == symbol%NO) then
-      Acha_Mode_Output = -1
-      return
-   endif
-
-   Acha_Mode_Output = 1
-
-   if (Chan_On_12um == symbol%YES) then
-      Acha_Mode_Output = 3
-   endif
-
-   if (Chan_On_85um == symbol%YES) then
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 5
-   endif
-
-   if (Chan_On_67um == symbol%YES) then
-      Acha_Mode_Output = 2
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 6
-      if (Chan_On_133um == symbol%YES) Acha_Mode_Output = 7
-   endif
-
-   if (Chan_On_133um == symbol%YES) then
-      if (Chan_On_67um == symbol%NO) Acha_Mode_Output = 4
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 8
-   endif
-
-end subroutine SET_ACHA_MODE
-
 !----------------------------------------------------------------------
 !--- check that the Acha_Mode is consistent with available channels
 !--- if consistent, Acha_Mode_Error_Flag = 0, if not, flag = 1

@@ -260,11 +260,15 @@ contains
          has_sol_table(7) = .true.
          has_sol_table(20) = .true.
          has_ems_table(20) = .true.
+            has_ems_table(31) = .true.
+         has_ems_table(32) = .true.
          chan_string(1) = '5'
          chan_string(5) = '8'
          chan_string(6) = '10'
          chan_string(7) = '11'
          chan_string(20) ='12'
+          chan_string(31) ='15'
+         chan_string(32) ='16'
          
       case ('MTSAT-1R')   sensor_block
          has_sol_table(1) = .true.
@@ -295,14 +299,22 @@ contains
                        & //'_ref_lut_'//phase_string(i_phase)//'_cld.hdf'
                    
                   
-            if ( has_ems_table(i_chn) ) then  
-               self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
+                 
+         end do loop_phase
+      end do loop_channel
+      
+            do i_chn = 1 , n_channels
+         if ( .not. has_ems_table ( i_chn ) )  cycle
+         do i_phase = 1 , 2      
+            self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
                      
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ems_lut_'//phase_string(i_phase)//'_cld.hdf'
-            end if         
-         end do loop_phase
-      end do loop_channel
+                     
+         end do           
+      end do    
+      
+      
       
       do i =1,2 
          self % channel(:) % phase(i) % has_ems = has_ems_table
@@ -444,6 +456,7 @@ contains
       
       ! test if this channel is available if not read it from hdf file     
       if ( .not. data_loc % is_set ) then 
+        
          call data_loc % read_hdf
          data_loc % is_set  = .true.
       end if
@@ -495,6 +508,7 @@ contains
       
       
       cod_log10_saved = cod_log10
+     
       
    end subroutine lut__get_data
    ! ----------------------------------------------------------------
@@ -527,10 +541,11 @@ contains
       
       class ( lut_data_type ) :: self
          
-      
+     
       if ( self % has_sol .or. self % has_ems ) then
          call self % alloc 
       end if
+      
       
       if ( self % has_sol ) then 
          if ( .not. file_test ( self % file )) then 
@@ -544,7 +559,7 @@ contains
             , self % cld_sph_alb &
             , self % cld_refl )
       end if 
-        
+      
       if ( self % has_ems ) then
          if ( .not. file_test ( self % file_ems )) then 
             print*, 'file ems not available channel ',  self % file_ems

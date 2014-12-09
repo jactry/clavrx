@@ -39,14 +39,14 @@ module AWG_CLOUD_HEIGHT
 !
 ! Modes
 ! 0 - Use this mode to not call ACHA from the framework
-! 1 - 11 um             
-! 2 - 11 + 6.7 um
-! 3 - 11 + 12 um
-! 4 - 11 + 13.3 um
-! 5 - 11 + 8.5 + 12 um
-! 6 - 11 + 6.7 + 12 um
-! 7 - 11 + 6.7 + 13.3 um
-! 8 - 11 + 12 + 13.3 um
+! 1 - 11 um                          0           
+! 2 - 11 + 6.7 um                    7
+! 3 - 11 + 12 um                     1
+! 4 - 11 + 13.3 um                   2
+! 5 - 11 + 8.5 + 12 um               4
+! 6 - 11 + 6.7 + 12 um               5
+! 7 - 11 + 6.7 + 13.3 um             6
+! 8 - 11 + 12 + 13.3 um              3
 !----------------------------------------------------------------------
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
 
@@ -1296,8 +1296,7 @@ Retrieval_Loop: do
   !--------------------------------------------------
   ! compute the Sy convariance matrix
   !--------------------------------------------------
-
-   Call COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(  &
+  Call COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(  &
                                                  symbol, &
                                                  Emiss_Vector, &
                                                  Acha_Mode_Flag, &
@@ -2447,7 +2446,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
 
  !--- forward model for 11um - 12um
- if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+ if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6) then
    Rad_12um = Emiss_12um*Rad_Ac_12um + Trans_Ac_12um * Emiss_12um * Bc_12um +  Trans_12um * Rad_Clear_12um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_12um,Rad_12um,dB_dT = dB_dT_12um)
    K(2,1) = K(1,1) - Trans_Ac_12um * Emiss_12um * dB_dTc_12um / dB_dT_12um   
@@ -2457,7 +2456,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
             dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
  endif
  !--- forward model for 11um - 133um
- if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6) then
+ if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
    K(2,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
@@ -2466,7 +2465,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
  endif
- if (Acha_Mode_Flag == 3) then
+ if (Acha_Mode_Flag == 8) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
    K(3,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
@@ -2475,7 +2474,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
  endif
- if (Acha_Mode_Flag == 4) then
+ if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_85um,Rad_85um,dB_dT = dB_dT_85um)
    K(3,1) = K(1,1) - Trans_Ac_85um*Emiss_85um*dB_dTc_85um/dB_dT_85um
@@ -2484,7 +2483,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
  endif
- if (Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6) then
+ if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
    K(3,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
@@ -2493,7 +2492,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
  endif
- if (Acha_Mode_Flag == 7) then
+ if (Acha_Mode_Flag == 2) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
    K(2,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
@@ -2505,33 +2504,33 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
 
  !--- determine number of channels
   select case(Acha_Mode_Flag)
-     case(0)  !avhrr, goes-im
-       Emiss_Vector(1) = Emiss_11um
      case(1)  !avhrr, goes-im
        Emiss_Vector(1) = Emiss_11um
+     case(2)  !goes-np 3 chan
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_67um
+     case(3)  !avhrr, goes-im
+       Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_12um
-     case(2)  !goes-nop
+     case(4)  !goes-nop
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_133um
-     case(3)  !goes-r
-       Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_12um
-       Emiss_Vector(3) = Emiss_133um
-     case(4)  !viirs
+     case(5)  !viirs
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_12um
        Emiss_Vector(3) = Emiss_85um
-     case(5)  !goes-im 3 chan
+     case(6)  !goes-im 3 chan
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_67um
        Emiss_Vector(3) = Emiss_12um
-     case(6)  !goes-np 3 chan
-       Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_67um
-       Emiss_Vector(3) = Emiss_133um
      case(7)  !goes-np 3 chan
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_67um
+       Emiss_Vector(3) = Emiss_133um
+     case(8)  !goes-r
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_133um
   end select
 
  if (idiag_output == symbol%YES) then
@@ -2813,7 +2812,7 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
  !--- forward model error due to sub-pixel heterogeneity
  !----------------------------------------------------------------
  Sub_Pixel_Uncer(1) = max(0.5,y_variance(1)/4.0)
- if (Acha_Mode_Flag > 1) then
+ if (Acha_Mode_Flag >= 2) then
     Sub_Pixel_Uncer(2) = max(0.25,y_variance(2)/4.0)
  endif
  if (Acha_Mode_Flag >= 5) then

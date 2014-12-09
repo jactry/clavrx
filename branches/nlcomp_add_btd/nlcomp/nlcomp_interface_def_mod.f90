@@ -100,8 +100,8 @@ module nlcomp_interface_def_mod
       
       ! - coeffecients,params
       real :: sun_earth_dist
-      TYPE ( gas_coeff_type ), dimension(40) :: gas_coeff
-      real :: solar_irradiance(40)
+      TYPE ( gas_coeff_type ) :: gas_coeff (N_CHN )
+      real :: solar_irradiance( N_CHN)
          
    end type nlcomp_in_type
    

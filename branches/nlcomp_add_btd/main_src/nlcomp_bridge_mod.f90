@@ -278,7 +278,7 @@ contains
            
          ! - RTM coeffeicience to compute transmission in non-IR channels
       nlcomp_input % gas_coeff(1) % d = solar_rtm % tau_h2o_coef(1,:)
-      
+      nlcomp_input % gas_coeff(42) % d = solar_rtm % tau_h2o_coef(1,:)
       nlcomp_input % gas_coeff(6) % d = solar_rtm % tau_h2o_coef(6,:)
       nlcomp_input % gas_coeff(7) % d = solar_rtm % tau_h2o_coef(7,:)
       
@@ -306,11 +306,11 @@ contains
          nlcomp_input % rad_clear_sky_toa (32) % d = nlcomp_rtm % rad_clear_sky_toa_ch32
         
       end if  
-      
+     
       
       call nlcomp_array_loop_sub (nlcomp_input,nlcomp_output )
        
-     
+   
       
       ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
       tau_nlcomp (1:dim_1,1:dim_2)   = nlcomp_output % cod % d

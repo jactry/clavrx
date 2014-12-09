@@ -1223,7 +1223,7 @@ Retrieval_Loop: do
   Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 

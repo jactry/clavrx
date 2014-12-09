@@ -3172,6 +3172,7 @@ subroutine DETERMINE_ACHA_MODE_BASED_ON_CHANNELS(symbol, &
         endif
      endif
   endif
+
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_12um == symbol%NO) then
         if (Chan_On_67um == symbol%YES .and. Chan_On_133um == symbol%YES) then
@@ -3185,6 +3186,8 @@ subroutine DETERMINE_ACHA_MODE_BASED_ON_CHANNELS(symbol, &
         endif
      endif
   endif
+
+  !--- if unsuccessful, resort to mode 1
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_11um == symbol%YES) then
               Acha_Mode_Flag = 1       !11
@@ -3673,14 +3676,14 @@ end subroutine PARALLAX_ACHA
 !---                           -1 is no option is possible
 !---
 !--- Mode Definition
-!---     0 = 11um only 
-!---     1 = 11um and 12um 
-!---     2 = 11um and 13.3um 
-!---     3 = 11um, 12um and 13
-!---     4 = 8.5um, 11um and 12um; 
-!---     5 = 6.7um, 11um and 12um 
-!---     6 = 6.7um, 11um and 13.3um
-!---     7 = 6.7um and 11 um 
+!---     1 = 11um only 
+!---     2 = 6.7um and 11 um 
+!---     3 = 11um and 12um 
+!---     4 = 11um and 13.3um 
+!---     5 = 8.5um, 11um and 12um; 
+!---     6 = 6.7um, 11um and 12um 
+!---     7 = 6.7um, 11um and 13.3um
+!---     8 = 11um, 12um and 13
 !----------------------------------------------------------------------
 subroutine SET_ACHA_MODE(symbol, &
                          Chan_On_67um, &
@@ -3703,21 +3706,25 @@ subroutine SET_ACHA_MODE(symbol, &
       return
    endif
 
-   Acha_Mode_Output = 0
+   Acha_Mode_Output = 1
+
+   if (Chan_On_12um == symbol%YES) then
+      Acha_Mode_Output = 3
+   endif
 
    if (Chan_On_85um == symbol%YES) then
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 4
+      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 5
    endif
 
    if (Chan_On_67um == symbol%YES) then
-      Acha_Mode_Output = 7
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 5
-      if (Chan_On_133um == symbol%YES) Acha_Mode_Output = 6
+      Acha_Mode_Output = 2
+      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 6
+      if (Chan_On_133um == symbol%YES) Acha_Mode_Output = 7
    endif
 
    if (Chan_On_133um == symbol%YES) then
-      if (Chan_On_67um == symbol%NO) Acha_Mode_Output = 2
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 3
+      if (Chan_On_67um == symbol%NO) Acha_Mode_Output = 4
+      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 8
    endif
 
 end subroutine SET_ACHA_MODE

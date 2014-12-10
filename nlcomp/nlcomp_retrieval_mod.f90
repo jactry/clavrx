@@ -158,13 +158,14 @@ contains
       
       obs_vec ( 3 ) = bt_31 - bt_32
       obs_vec ( 4 ) = bt_20 - bt_31
+      
      
       
       obs_u ( 1 ) = inp % chn ( 42 ) % rfl_u
       obs_u ( 2 ) = inp % chn ( 20 ) % rad_u
-      obs_u ( 3 ) = obs_vec ( 3 ) * 0.04
-      obs_u ( 4 ) = obs_vec ( 4 ) * 0.04
-            
+      obs_u ( 3 ) = obs_vec ( 3 ) * 0.4
+      obs_u ( 4 ) = obs_vec ( 4 ) * 0.4
+      if ( obs_vec(1) > 1.1 ) obs_u(1) = 100000.    
       ! - observation error cov
         
       obs_crl = 0.7  ! correlation between channel 42 and 20 
@@ -227,7 +228,7 @@ contains
       
 
       iteration_idx = 0
-
+         debug_mode = 1
       IF (debug_mode > 4 ) THEN
          PRINT *, "<--- Begin New Retrieval for pixel = "
          PRINT *, "cloud type, phase = ", cld_phase
@@ -308,7 +309,7 @@ contains
 		   ! - check for convergence
          Conv_Test = abs ( sum (delta_X * matmul ( S_x_inv , Delta_X ) ) )	
       
-        debug_mode = 5
+        debug_mode = 0
 		
          if ( debug_mode > 4 ) then 
             
@@ -386,8 +387,8 @@ contains
      
       nlcomp_out % cod = cod
       nlcomp_out % cps = cps
-      print*,cod,cps
-      stop
+      
+      
      
    end subroutine nlcomp_algorithm
 end module nlcomp_retrieval_mod

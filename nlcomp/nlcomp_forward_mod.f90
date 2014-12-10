@@ -209,51 +209,53 @@ real :: bt32_dcps
      
       rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)            
       rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
-      rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32)  
+      rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32) 
      
       bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)    
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32)  
       
-      rad20_dcod = ( lut_data20 %  ems + lut_data20 % Dems_Dcod) * planck_rad20 + (  lut_data20 % trn_ems + lut_data20 % Dtrnems_Dcod)  * rad_clear_toc(20)
-      rad31_dcod = ( lut_data31 %  ems + lut_data31 % Dems_Dcod) * planck_rad31 + (  lut_data31 % trn_ems + lut_data31 % Dtrnems_Dcod)  * rad_clear_toc(31)
-      rad32_dcod = ( lut_data32 %  ems + lut_data32 % Dems_Dcod) * planck_rad32 + (  lut_data32 % trn_ems + lut_data32 % Dtrnems_Dcod)  * rad_clear_toc(32)
+    
+      rad20_dcod = lut_data20 % Dems_Dcod * planck_rad20 + lut_data20 % Dtrnems_Dcod  * rad_clear_toc(20)
+      rad31_dcod = lut_data31 % Dems_Dcod * planck_rad31 + lut_data31 % Dtrnems_Dcod  * rad_clear_toc(31)
+      rad32_dcod = lut_data32 % Dems_Dcod * planck_rad32 + lut_data32 % Dtrnems_Dcod  * rad_clear_toc(32)
      
-      rad20_dcps = ( lut_data20 %  ems + lut_data20 % Dems_Dcps) * planck_rad20 + (  lut_data20 % trn_ems + lut_data20 % Dtrnems_Dcps)  * rad_clear_toc(20)
-      rad31_dcps = ( lut_data31 %  ems + lut_data31 % Dems_Dcps) * planck_rad31 + (  lut_data31 % trn_ems + lut_data31 % Dtrnems_Dcps)  * rad_clear_toc(31)
-      rad32_dcps = ( lut_data32 %  ems + lut_data32 % Dems_Dcps) * planck_rad32 + (  lut_data32 % trn_ems + lut_data32 % Dtrnems_Dcps)  * rad_clear_toc(32)
+      rad20_dcps = lut_data20 % Dems_Dcps * planck_rad20 + lut_data20 % Dtrnems_Dcps  * rad_clear_toc(20)
+      rad31_dcps = lut_data31 % Dems_Dcps * planck_rad31 + lut_data31 % Dtrnems_Dcps  * rad_clear_toc(31)
+      rad32_dcps = lut_data32 % Dems_Dcps * planck_rad32 + lut_data32 % Dtrnems_Dcps  * rad_clear_toc(32)
+   
       
-      bt20_dcod =  planck_rad2tmp ( rad20_dcod , trim(sensor), 20)
-      bt31_dcod=  planck_rad2tmp ( rad31_dcod, trim(sensor), 31)
-      bt32_dcod =  planck_rad2tmp ( rad32_dcod, trim(sensor), 32)
+      
+      bt20_dcod =  100.* (planck_rad2tmp ( rad20 + rad20_dcod/100. , trim(sensor), 20) - bt20)
+      bt31_dcod =  100.* (planck_rad2tmp ( rad31 + rad31_dcod/100., trim(sensor), 31)  - bt31)
+      bt32_dcod =  100.* (planck_rad2tmp ( rad32 + rad32_dcod/100., trim(sensor), 32) - bt32)
      
       
-      bt20_dcps =  planck_rad2tmp ( rad20_dcps , trim(sensor), 20)
-      bt31_dcps=  planck_rad2tmp ( rad31_dcps, trim(sensor), 31)
-      bt32_dcps =  planck_rad2tmp ( rad32_dcps, trim(sensor), 32)
-       
+      bt20_dcps =  100.*(planck_rad2tmp ( rad20 + rad20_dcps/100., trim(sensor), 20)- bt20)
+      bt31_dcps =  100.* (planck_rad2tmp (  rad31 + rad31_dcps/100., trim(sensor), 31)-bt31)
+      bt32_dcps =  100.* (planck_rad2tmp ( rad32 + rad32_dcps/100., trim(sensor), 32) - bt32)
+      
+   
    
       fm_vec(3) = bt31 - bt32
 
       
             
-      kernel ( 3,1) = (fm_vec(3) - ( bt31_dcod - bt32_dcod) ) / 0.1
-      kernel ( 3,2) =   (fm_vec(3) - ( bt31_dcps - bt32_dcps) ) / 0.1                   
+      kernel ( 3,1) = bt31_dcod - bt32_dcod
+      kernel ( 3,2) = bt31_dcps - bt32_dcps                    
                           
      
       ! element 4
   
    
       fm_vec(4) = bt20 - bt31
-      
+     
      
       
-      kernel ( 4,1) = fm_vec(4) - ( bt20_dcod - bt31_dcod ) / 0.01                          
-      kernel ( 4,2) = fm_vec(4) - ( bt20_dcps - bt31_dcps ) / 0.01 
+      kernel ( 4,1) =   bt20_dcod - bt31_dcod                     
+      kernel ( 4,2) =  bt20_dcps - bt31_dcps
       
-           
-       
-	   
+      
         
    end subroutine nlcomp_forward_computation
     

@@ -32,6 +32,8 @@ module clavrx_planck_mod
    end type planck_channel_type
    
    type planck_sensor_type
+      logical :: is_set = .false.
+      character (len=10):: sensor_set
       type ( planck_channel_type ) :: chn (42) 
       contains
       procedure :: read_coeffs        
@@ -51,6 +53,10 @@ module clavrx_planck_mod
    real, parameter :: delta_T_planck = 1.0
         
 contains
+
+   !
+   !
+   !
    subroutine populate_tbl ( self )
       implicit none
       class ( planck_channel_type ) :: self
@@ -73,7 +79,9 @@ contains
      
    end subroutine populate_tbl 
    
-   
+   !
+   !
+   !
    subroutine read_coeffs ( self , sensor )
       class ( planck_sensor_type ) :: self
       character ( len = * ) :: sensor
@@ -90,6 +98,7 @@ contains
       
       do 
          read(unit, * , end =1 ) name , chn_idx,  a1, a2, nu
+        
          if ( trim(name) == trim(sensor)) then   
             self % chn(chn_idx) % coef % a1 = a1
             self % chn(chn_idx) % coef % a2 = a2

@@ -74,6 +74,7 @@ module viirs_read_mod
       character ( len =355 ) :: dir_1b
       character ( len =255 ) :: file_gmtco_base
       character (len = 355 ) :: Ancil_Data_Dir
+      real, dimension(16) :: Nu_List
    end type viirs_data_config
    
    type :: geo_str
@@ -209,9 +210,9 @@ contains
       character ( len = 255 ) , pointer , dimension ( :) :: file_arr_dummy 
       
       character (len=100), dimension ( 7 ) :: setname_gmtco_list = (/ character (len =300) :: &
-                          'All_Data/VIIRS-MOD-GEO-TC_All/Latitude             ' & ! 1
+                          'All_Data/VIIRS-MOD-GEO-TC_All/Latitude              ' & ! 1
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/Longitude            ' & ! 2
-                         , 'All_Data/VIIRS-MOD-GEO-TC_All/StartTime              ' & ! 3
+                         , 'All_Data/VIIRS-MOD-GEO-TC_All/StartTime            ' & ! 3
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteAzimuthAngle' & ! 4
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SatelliteZenithAngle ' & ! 5
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarAzimuthAngle    ' & ! 6
@@ -241,14 +242,6 @@ contains
       integer :: lun
       integer :: n_files
       integer :: k
-      
-       ! - IR channel wavenumbers
-      real , parameter ::  nu_12 = 2708.3865
-      real , parameter ::  nu_13 = 2460.8193
-      real , parameter  :: nu_14 = 1166.1845
-      real , parameter ::  nu_15 = 935.10476
-      real , parameter ::  nu_16 = 845.79752
-      real, dimension(16) :: nu_list
       
       character ( len = 2 ) :: band_nr_file
       character ( len = 2 ) :: band_nr_var
@@ -348,12 +341,6 @@ contains
       ! - channel 13 is the only without Factors in VIRRS file
       data_scaled_mband(13) = .false.
       
-      
-      ! IR channels wavenumbers
-      ! updated on 2013/03/20 AW
-      nu_list = 0
-      nu_list(12:16) = [nu_12 , nu_13 , nu_14 , nu_15 , nu_16 ]
-        
       do i_mband = 1 , 16
          
          out % mband (i_mband) % is_read = .false.
@@ -405,7 +392,7 @@ contains
             where ( invalid_pixel )  out % mband ( i_mband) % ref  = missing_value_real4
             
          else
-            call convert_viirs_radiance ( r2d_data , nu_list(i_mband) , missing_value_real4 )
+            call convert_viirs_radiance ( r2d_data , config % Nu_List(i_mband) , missing_value_real4 )
             if (.not. allocated ( out % mband (i_mband) % rad) ) allocate ( out % mband (i_mband) % rad(dim_seg(1), dim_seg(2)) )
             out % mband ( i_mband) % rad =  r2d_data 
             where ( invalid_pixel ) out % mband ( i_mband) % rad  = missing_value_real4

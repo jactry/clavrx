@@ -143,6 +143,13 @@ contains
           glint_angle &
           , scattering_angle  &
           , relative_azimuth
+
+      use calibration_constants, only: &
+          Nu_20 &
+          , Nu_22 &
+          , Nu_29 &
+          , Nu_31 &
+          , Nu_32
       
       
       implicit none
@@ -190,6 +197,10 @@ contains
       
       v_conf % Ancil_Data_Dir = trim(Ancil_Data_Dir)
       v_conf % file_gmtco_base =  trim(file_gmtco_base)
+
+      v_conf % Nu_List = 0.0
+      v_conf % Nu_List(12:16) = [Nu_20 , Nu_22 , Nu_29 , Nu_31 , Nu_32]
+
       ! - read the data 
       call get_viirs_data ( v_conf, out )
      

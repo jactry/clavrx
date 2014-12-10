@@ -308,6 +308,7 @@ print*,'start'
          ! - apriori
          inp_retr % state % a_priori (1) = 0.7 * ( 100. * input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100. ) ** (0.9)
          inp_retr % state % a_priori (1) = log10 ( max ( 0.1 , inp_retr % state % a_priori (1) ) ) 
+         inp_retr % state % a_priori (1) = 1.
          inp_retr % state % a_priori (2) = 1.3
          if  (is_water_phase ( elem_idx, line_idx) ) inp_retr % state % a_priori (2)  = 1.0
          

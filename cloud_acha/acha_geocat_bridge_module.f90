@@ -115,6 +115,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Input%Bt_11um =>  null()
      Input%Bt_12um =>  null()
      Input%Bt_133um =>  null()
+     Input%Rad_67um =>  null()
      Input%Rad_11um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
      Input%Sensor_Zenith_Angle =>  null()
@@ -182,6 +183,12 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
      Output%Cost  => null()
+     Output%Pc_Opaque =>  null()
+     Output%Tc_Opaque =>  null()
+     Output%Zc_Opaque =>  null()
+     Output%Pc_H2O =>  null()
+     Output%Tc_H2O =>  null()
+     Output%Zc_H2O =>  null()
 !---stw     Output%Cloud_Layer =>  null()
 !---stw     Output%Total_Cloud_Fraction =>  null()
 !---stw     Output%Total_Cloud_Fraction_Uncer =>  null()
@@ -291,6 +298,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Input%Bt_12um => sat%bt15
      Input%Bt_133um => sat%bt16
 
+     Input%Rad_67um => sat%rad9
      Input%Rad_11um => sat%rad14
      Input%Cosine_Zenith_Angle => sat%cos_satzen
      Input%Sensor_Zenith_Angle => sat%satzen
@@ -341,6 +349,12 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      out2(Ialgo)%Zc_Base_Acha = MISSING_VALUE_REAL4
      out2(Ialgo)%Processing_Order = MISSING_VALUE_INT4
      out2(Ialgo)%Acha_Cost = MISSING_VALUE_REAL4
+     out2(Ialgo)%Pc_Opaque_Cloud = MISSING_VALUE_REAL4
+     out2(Ialgo)%Tc_Opaque_Cloud = MISSING_VALUE_REAL4
+     out2(Ialgo)%Zc_Opaque_Cloud = MISSING_VALUE_REAL4
+     out2(Ialgo)%Pc_H2O_Cloud = MISSING_VALUE_REAL4
+     out2(Ialgo)%Tc_H2O_Cloud = MISSING_VALUE_REAL4
+     out2(Ialgo)%Zc_H2O_Cloud = MISSING_VALUE_REAL4
      !---STW End Debug
 
      Output%Latitude_Pc => out2(Ialgo)%Lat_Pc
@@ -371,6 +385,12 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Output%Packed_Meta_Data => out2(Ialgo)%Acha_Packed_Meta_Data_Flags
      Output%Processing_Order  => out2(Ialgo)%Processing_Order
      Output%Cost  => out2(Ialgo)%Acha_Cost
+     Output%Pc_Opaque => out2(Ialgo)%Pc_Opaque_Cloud
+     Output%Tc_Opaque => out2(Ialgo)%Tc_Opaque_Cloud
+     Output%Zc_Opaque => out2(Ialgo)%Zc_Opaque_Cloud
+     Output%Pc_H2O => out2(Ialgo)%Pc_H2O_Cloud
+     Output%Tc_H2O => out2(Ialgo)%Tc_H2O_Cloud
+     Output%Zc_H2O => out2(Ialgo)%Zc_H2O_Cloud
 
      !-------------------------------------------
      ! FIXME

@@ -1,6 +1,8 @@
 ! $Id:$
 !
 !
+!    All Planck routines 
+!   
 module clavrx_planck_mod
    private
    public :: planck_tmp2rad
@@ -14,8 +16,7 @@ module clavrx_planck_mod
       real :: nu
       real :: a1
       real :: a2
-      logical :: is_set
-      
+      logical :: is_set      
    end type 
    
    type planck_tbl_type
@@ -36,13 +37,11 @@ module clavrx_planck_mod
       character (len=10):: sensor_set
       type ( planck_channel_type ) :: chn (42) 
       contains
-      procedure :: read_coeffs        
-      
+      procedure :: read_coeffs              
    end type
    
    type planck_main_type
-      type ( planck_sensor_type ) :: sensor  
-        
+      type ( planck_sensor_type ) :: sensor          
    end type
    
    type ( planck_main_type ) :: main
@@ -57,9 +56,10 @@ contains
    !
    !
    !
-   subroutine populate_tbl ( self )
+   subroutine populate_tbl ( self, sensor )
       implicit none
       class ( planck_channel_type ) :: self
+      character ( len = * ) :: sensor
       real :: c1_times_nu__3
       real :: c2_times_nu
             
@@ -67,6 +67,7 @@ contains
       
       if (self % tbl % is_set) return
       
+      call main % sensor % read_coeffs ( sensor )
       c1_times_nu__3 =  c1 * self%coef%nu ** 3
       c2_times_nu = c2 * self%coef%nu
       
@@ -129,9 +130,9 @@ contains
       
       !
      
-      call main % sensor % read_coeffs ( sensor )
       
-      call main % sensor % chn(chn_idx) % populate_tbl()
+      
+      call main % sensor % chn(chn_idx) % populate_tbl(sensor)
       
       
       b_vec = main % sensor % chn ( chn_idx ) % tbl % b_vec
@@ -157,8 +158,8 @@ contains
       real :: dB_dT_tmp
       
       !
-      call main % sensor % read_coeffs ( sensor )
-      call main % sensor % chn(chn_idx) % populate_tbl()
+      
+      call main % sensor % chn(chn_idx) % populate_tbl(sensor)
       
       b_vec = main % sensor % chn ( chn_idx ) % tbl % b_vec
       t_vec = main % sensor % chn ( chn_idx ) % tbl % t_planck

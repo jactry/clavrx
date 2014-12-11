@@ -103,6 +103,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
    
    array_dim = shape ( input % sat % d )
+   
+  
+   
    dim_1 = array_dim (1) 
    dim_2 = array_dim (2)
    nr_lines = array_dim(2)
@@ -121,7 +124,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    ! - flag masks
    air_mass_array = 1.0 / cos (input % sat % d * pi / 180. ) &
                 & + 1.0 / cos ( input % zen_lunar % d * pi / 180.)
-   
+  
   
    is_obs = input % is_valid % d   &
                        & .and. input % sat % d <= SAT_ZEN_MAX &
@@ -133,6 +136,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    has_city_lights = input % rad (42) % d > 1.E-06
    
     
+  
    is_cloud =  is_obs &
                         & .and. ( input % cloud_mask % d == EM_cloud_mask % CLOUDY &
                         & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) &
@@ -181,12 +185,10 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    quality_flag  = ibclr ( quality_flag , 7)
    
    info_flag  = 0 
-print*,'start'
-   
+
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
          
-        
          if ( .not. is_cloud (elem_idx,line_idx)  ) cycle elem_loop
          if ( input % refl (CHN_VIS)  % d (elem_idx, line_idx) < 0 ) cycle elem_loop 
          
@@ -288,10 +290,6 @@ print*,'start'
             
          end do loop_chn
          
-       
-     
-         
-        
          inp_retr % conf % ancil_path = trim(input % lut_path)
          
          inp_retr % conf % debug_in = debug_mode  
@@ -342,16 +340,11 @@ print*,'start'
          inp_retr % chn ( 42 ) % alb_sfc = alb_sfc ( CHN_VIS)
          inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
          inp_retr % chn ( 42 ) % trans_air_abvcld = trans_total ( CHN_VIS )
-        
          
-        
-        
          
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )
-                
-       
-          
+                         
         ! quality_flag (elem_idx,line_idx) = ibset ( quality_flag(elem_idx,line_idx) , 0)
         ! quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 1)
        !  quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 2)       
@@ -364,7 +357,7 @@ print*,'start'
         
       end do elem_loop
    end do   line_loop 
-     print*,'end'       
+          
       ! DCOMP_INFO_LAND_SEA I0
    where (input % is_land % d )
       info_flag = ibset (  info_flag , 0 ) 

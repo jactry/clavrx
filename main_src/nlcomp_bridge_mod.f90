@@ -215,7 +215,7 @@ contains
       call  alloc_nlcomp ( nlcomp_input % azi,          dim_1,dim_2 )
       call  alloc_nlcomp ( nlcomp_input % zen_lunar,          dim_1,dim_2 )
       call  alloc_nlcomp ( nlcomp_input % azi_lunar,          dim_1,dim_2 )
-      
+     
       ! -- configure
       
            ! - ancil/lut path
@@ -228,29 +228,30 @@ contains
      
       
      
-      if ( nlcomp_input % is_channel_on (20)) nlcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
-      if ( nlcomp_input % is_channel_on (31)) nlcomp_input % rad ( 31 ) % d = ch(31)%rad_toa
-      if ( nlcomp_input % is_channel_on (32)) nlcomp_input % rad ( 32 ) % d = ch(32)%rad_toa
+      if ( nlcomp_input % is_channel_on (20)) nlcomp_input % rad ( 20 ) % d = ch(20)%rad_toa(1:dim_1,1:dim_2)
+      if ( nlcomp_input % is_channel_on (31)) nlcomp_input % rad ( 31 ) % d = ch(31)%rad_toa(1:dim_1,1:dim_2)
+      if ( nlcomp_input % is_channel_on (32)) nlcomp_input % rad ( 32 ) % d = ch(32)%rad_toa(1:dim_1,1:dim_2)
       
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa
+      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa(1:dim_1,1:dim_2)
+      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa(1:dim_1,1:dim_2)
       
-      nlcomp_input % sat % d = satzen
-      nlcomp_input % sol % d = solzen
-      nlcomp_input % azi % d = relaz
-      nlcomp_input % zen_lunar % d = lunzen
-      nlcomp_input % azi_lunar % d = lunrelaz
-              
+      nlcomp_input % sat % d = satzen(1:dim_1,1:dim_2)
+      nlcomp_input % sol % d = solzen(1:dim_1,1:dim_2)
+      nlcomp_input % azi % d = relaz(1:dim_1,1:dim_2)
+      nlcomp_input % zen_lunar % d = lunzen(1:dim_1,1:dim_2)
+      nlcomp_input % azi_lunar % d = lunrelaz(1:dim_1,1:dim_2)
+             
+             
          ! - Cloud products
-      nlcomp_input % cloud_press % d = pc_acha
-      nlcomp_input % cloud_temp % d  = tc_acha
-      nlcomp_input % tau_acha % d    = tau_acha
-      nlcomp_input % cloud_mask % d  = cld_mask
-      nlcomp_input % cloud_type % d  = cld_type
+      nlcomp_input % cloud_press % d = pc_acha(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_temp % d  = tc_acha(1:dim_1,1:dim_2)
+      nlcomp_input % tau_acha % d    = tau_acha(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_mask % d  = cld_mask(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
                   
          ! - Flags
-      nlcomp_input % is_land % d = land_mask == 1 
-      nlcomp_input % is_valid % d = bad_pixel_mask /= 1
+      nlcomp_input % is_land % d = land_mask(1:dim_1,1:dim_2) == 1 
+      nlcomp_input % is_valid % d = bad_pixel_mask(1:dim_1,1:dim_2) /= 1
       
             
          ! - Surface  
@@ -267,14 +268,14 @@ contains
       if ( nlcomp_input % is_channel_on (32)) nlcomp_input % alb_sfc ( 32) % d = 100.0*(1.0 - ch(32)%sfc_emiss)    !check this AKH
       if ( nlcomp_input % is_channel_on (32)) nlcomp_input % emiss_sfc ( 32) % d = ch(32)%sfc_emiss
       
-      nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp
-      nlcomp_input % snow_class % d = snow
+      nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp(1:dim_1,1:dim_2)
+      nlcomp_input % snow_class % d = snow(1:dim_1,1:dim_2)
             
          ! - Atmospheric contents
          ! ozone column in Dobson
-      nlcomp_input % ozone_nwp % d = nlcomp_rtm % ozone_path
+      nlcomp_input % ozone_nwp % d = nlcomp_rtm % ozone_path(1:dim_1,1:dim_2)
          ! Total water Vapour above the cloud
-      nlcomp_input % tpw_ac % d = nlcomp_rtm % tpw_ac
+      nlcomp_input % tpw_ac % d = nlcomp_rtm % tpw_ac(1:dim_1,1:dim_2)
            
          ! - RTM coeffeicience to compute transmission in non-IR channels
       nlcomp_input % gas_coeff(1) % d = solar_rtm % tau_h2o_coef(1,:)

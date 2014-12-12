@@ -10,6 +10,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
 
  use ACHA_SERVICES_MOD
  use AWG_CLOUD_HEIGHT
+ use ACHA_COMP
    
  implicit none
 
@@ -88,6 +89,13 @@ module ACHA_GEOCAT_BRIDGE_MODULE
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
                                    Symbol, &
                                    Output)
+
+   !-----------------------------------------------------------------------
+   !--- Call algorithm to make ACHA optical and microphysical properties
+   !-----------------------------------------------------------------------
+   call ACHA_COMP_ALGORITHM(Input, &
+                            Symbol, &
+                            Output)
     
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished

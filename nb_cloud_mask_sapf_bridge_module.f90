@@ -202,14 +202,14 @@ contains
    integer:: VIIRS_375M_res_indx
    integer :: McIDAS_ID
    REAL(SINGLE) :: Glint_Zen_Thresh=40.0
+   character (len=555):: Naive_Bayes_File_Name_Full_Path
 
 
 
 
    !---- set paths and mask classifier file name to their values in this framework
-   Ancil_Data_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
-!   Naive_Bayes_File_Name = Bayesian_Cloud_Mask_Name
-   
+   Naive_Bayes_File_Name_Full_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
+      
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
@@ -227,11 +227,6 @@ contains
    allocate(Ref_Uni_ChI1(num_elem,num_line))
    allocate(Bt_Uni_ChI4(num_elem,num_line))
    allocate(Bt_Uni_ChI5(num_elem,num_line))
-
-   allocate(Diag_Pix_Array_1(num_elem,num_line))
-   allocate(Diag_Pix_Array_2(num_elem,num_line))
-   allocate(Diag_Pix_Array_3(num_elem,num_line))
-
 
    
    !Solar Contamination
@@ -463,8 +458,8 @@ contains
          call SET_DIAG(Elem_Idx,Line_Idx)
 
          !---call cloud mask routine
-         call NB_CLOUD_MASK_ALGORITHM(Ancil_Data_Path,  &
-                      Naive_Bayes_File_Name, &
+         call NB_CLOUD_MASK_ALGORITHM( &
+                      Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
                       Input, &
                       Output)
@@ -511,11 +506,6 @@ contains
    if (allocated(Bt_Ch20_Min_3x3)) deallocate(Bt_Ch20_Min_3x3)
    if (allocated(Bt_Ch20_Stddev_3x3)) deallocate(Bt_Ch20_Stddev_3x3)
 
-
-
-   deallocate(Diag_Pix_Array_1)
-   deallocate(Diag_Pix_Array_2)
-   deallocate(Diag_Pix_Array_3)
       
    !Pointers
    CHN_FLG => null()

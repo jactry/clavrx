@@ -395,9 +395,9 @@ module NB_CLOUD_MASK
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
-       call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
-!       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
-                             symbol,Output%Cloud_Mask_Bayesian_Flag)
+!      call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
+       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
+                                symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !--- set up enumerated types for cloud mask values
         ET_cloudiness_class%SPACE = 10
@@ -415,7 +415,7 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 1
                     case("T_Max-T") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 2
-                    case("T_std") 
+                    case("T_Std") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 3
                     case("Emiss_Tropo") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 4
@@ -437,7 +437,7 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 12
                     case("Ref_063_Day")
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 13
-                    case("Ref_std")
+                    case("Ref_Std")
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 14
                     case("Ref_063_Min_3x3_Day")
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 15

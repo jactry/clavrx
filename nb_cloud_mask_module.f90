@@ -39,10 +39,10 @@
 ! 18           1            20        3    blank   
 !<-------------------- START OF CLOUD TESTS -------------------------->
 ! 19           2            21-22     3    T_11           (TGCT)
-! 20           2            23-24     3    T_max-T        (RTCT)
+! 20           2            23-24     3    T_Max-T        (RTCT)
 ! ---
 ! 21           2            25-26     4    T_std          (TUT)
-! 22           2            27-28     4    Emiss_tropo
+! 22           2            27-28     4    Emiss_Tropo
 ! 23           2            29-30     4    FMFT mask (Btd_11_12)
 ! 24           2            31-32     4    Btd_11_67 
 !---
@@ -65,6 +65,7 @@
 module NB_CLOUD_MASK
 
  use NB_CLOUD_MASK_SERVICES
+ use NETCDF
 
  implicit none
 
@@ -79,6 +80,14 @@ module NB_CLOUD_MASK
  private:: emiss_375um_day_test
  private:: emiss_375um_night_test
  private:: PACK_BITS_INTO_BYTES
+
+ private:: READ_NAIVE_BAYES_NC
+ private:: read_netcdf_1d_real
+ private:: read_netcdf_1d_int
+ private:: read_netcdf_2d_real
+ private:: read_netcdf_2d_int
+ private:: read_netcdf_2d_char
+ private:: read_netcdf_3d
 
  public:: NB_CLOUD_MASK_ALGORITHM
  public:: SET_CLOUD_MASK_VERSION
@@ -118,7 +127,7 @@ module NB_CLOUD_MASK
  integer, dimension(:,:), allocatable, private, save:: Last_valid_Classifier_Bounds
  real, dimension(:,:,:), allocatable, private, save:: Class_Cond_Yes
  real, dimension(:,:,:), allocatable, private, save:: Class_Cond_No 
- character (len=20), dimension(:,:), allocatable, private, save:: Classifier_Value_Name
+ character (len=30), dimension(:,:), allocatable, private, save:: Classifier_Value_Name
  integer, dimension(:), allocatable,private,save:: Class_To_Test_Idx
 
  real, dimension(:), allocatable, private, save:: Cond_Yes
@@ -129,6 +138,19 @@ module NB_CLOUD_MASK
  logical, private, save:: Is_Classifiers_Read = .false.
 
  type ( ET_cloudiness_class_type), public :: ET_cloudiness_class
+
+ ! netCDF parameters
+   integer, parameter, private :: sds_rank_1d = 1
+   integer, dimension(sds_rank_1d), private :: sds_start_1d, sds_edge_1d, &
+          sds_stride_1d
+
+   integer, parameter, private :: sds_rank_2d = 2
+   integer, dimension(sds_rank_2d), private :: sds_start_2d, sds_edge_2d, &
+          sds_stride_2d, sds_dims_2d
+
+   integer, parameter, private :: sds_rank_3d = 3
+   integer, dimension(sds_rank_3d), private :: sds_start_3d, sds_edge_3d, &
+          sds_stride_3d, sds_dims_3d
 
  contains
 !====================================================================
@@ -374,6 +396,7 @@ module NB_CLOUD_MASK
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
        call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
+!       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
                              symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !--- set up enumerated types for cloud mask values
@@ -388,14 +411,13 @@ module NB_CLOUD_MASK
         do Class_Idx = 1, N_Class
 
           select case (Classifier_Value_Name(Class_Idx,1))
-
                     case("T_11") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 1
-                    case("T_max-T") 
+                    case("T_Max-T") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 2
                     case("T_std") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 3
-                    case("Emiss_tropo") 
+                    case("Emiss_Tropo") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 4
                     case("FMFT") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 5
@@ -608,7 +630,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um
 
-                    case("T_max-T") 
+                    case("T_Max-T") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
@@ -623,7 +645,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std
 
-                    case("Emiss_tropo") 
+                    case("Emiss_Tropo") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
@@ -810,7 +832,6 @@ module NB_CLOUD_MASK
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
- 
              end select
 
              !--- Turn off Classifiers if Chosen Metric is Missing
@@ -923,9 +944,9 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_375_Night") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Bt_11_67_Covar") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_11_85_Covar") then
-         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_tropo") then
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_Tropo") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_std") then
-         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_max-T") then
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
          !     if (present(Diag)) Diag%Array_1 = Classifier_Value(Class_Idx)
          !     if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
@@ -1342,6 +1363,344 @@ module NB_CLOUD_MASK
     enddo
 
   end subroutine  PACK_BITS_INTO_BYTES
+
+!-------------------------------------------------------------------------------
+! NetCDF LUT routines:
+!-------------------------------------------------------------------------------
+
+!====================================================================
+! SUBROUTINE Name: READ_NAIVE_BAYES_NC
+!
+! Function:
+!   Allocate and Read in the LUTs needed for Bayesian cloud mask tables
+!
+!====================================================================
+ subroutine READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
+                             symbol, Cloud_Mask_Bayesian_Flag)
+
+   character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
+   ! Need a method to flag things
+   TYPE(symbol_naive_bayesian), intent(in) :: symbol
+   integer, intent(out):: Cloud_Mask_Bayesian_Flag
+
+   !local variables
+   integer:: ncid
+   integer:: status
+   character(30):: var_name
+
+   Is_Classifiers_Read = .FALSE.
+
+   status = nf90_open(Naive_Bayes_File_Name_Full_Path, mode = nf90_nowrite, ncid = ncid)
+   if (status /= nf90_noerr) then
+      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
+      print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
+      cloud_mask_bayesian_flag = symbol%NO
+      return
+   endif
+
+!   status = nf90_get_att(ncid, nf90_global, "Cloud_Mask_Thresholds_Version", &
+!                        Cloud_Mask_Thresholds_Version)
+!  if (status /= nf90_noerr) then
+!      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Version Read Failed'
+!      return
+!  endif
+
+   status = nf90_get_att(ncid, nf90_global, "n_class", N_Class)
+   status = nf90_get_att(ncid, nf90_global, "n_bounds_reg", N_bounds)
+   status = nf90_get_att(ncid, nf90_global, "n_sfc_type", N_sfc_bayes)
+
+   !--- allocate
+   allocate(Prior_Yes(N_sfc_bayes))
+   allocate(Prior_No(N_sfc_bayes))
+   allocate(Optimal_Posterior_Prob(N_sfc_bayes))
+   allocate(Skip_Sfc_Type_Flag(N_sfc_bayes))
+   allocate(Classifier_Bounds_Min(N_class,N_sfc_bayes))
+   allocate(Classifier_Bounds_Max(N_class,N_sfc_bayes))
+   allocate(Delta_Classifier_Bounds(N_class,N_sfc_bayes))
+   allocate(First_valid_Classifier_Bounds(N_class,N_sfc_bayes))
+   allocate(Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
+   allocate(Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
+   allocate(Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
+   allocate(Classifier_Value_Name(N_class,N_sfc_bayes))
+   allocate(Class_To_Test_Idx(N_class))
+
+   !--- initialize
+   Prior_Yes = Missing_Value_Real4
+   Prior_No = Missing_Value_Real4
+   Optimal_Posterior_Prob = Missing_Value_Real4
+   First_valid_Classifier_Bounds = 0
+   Last_valid_Classifier_Bounds = 0
+
+
+   !Now read in to the 1D variables
+
+   var_name="prior_yes"
+   call read_netcdf_1d_real( ncid,N_sfc_bayes,var_name,Prior_Yes)
+
+   var_name="prior_no"
+   call read_netcdf_1d_real( ncid,N_sfc_bayes,var_name,Prior_No)
+
+   var_name="optimal_posterior_prob"
+   call read_netcdf_1d_real( ncid, N_sfc_bayes, var_name, Optimal_Posterior_Prob)
+
+   !Now the 2D variables
+
+   sds_start_2d = 1
+   sds_edge_2d(1) = N_class
+   sds_edge_2d(2) = N_sfc_bayes
+
+   var_name="bin_start"
+   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, &
+                              var_name,Classifier_Bounds_Min)
+
+   var_name="bin_end" !real
+   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, & 
+                              var_name,Classifier_Bounds_Max)
+
+   var_name="delta_bin" !real
+   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, &
+                              var_name,Delta_Classifier_Bounds)
+
+   var_name="first_valid_bounds" !integer
+   call read_netcdf_2d_int(ncid, sds_start_2d, sds_edge_2d, &
+                              var_name, First_valid_Classifier_Bounds)
+
+   var_name="last_valid_bounds" !integer
+   call read_netcdf_2d_int(ncid, sds_start_2d, sds_edge_2d, &
+                              var_name, Last_valid_Classifier_Bounds)
+
+   var_name="classifier_names" !character
+   call read_netcdf_2d_char(ncid, sds_start_2d, sds_edge_2d, &
+                              var_name, Classifier_Value_Name)
+
+   !finally 3D variables
+   sds_start_3d = 1
+   sds_edge_3d(1) = N_bounds-1
+   sds_edge_3d(2) = N_class
+   sds_edge_3d(3) = N_sfc_bayes
+
+   var_name="class_cond_yes_reg" !real
+   call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
+                              var_name,Class_Cond_Yes)
+   var_name="class_cond_no_reg" !real
+   call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
+                              var_name,Class_Cond_No)
+
+
+   status = nf90_close(ncid)
+
+   Is_Classifiers_Read = .true.
+
+ end subroutine READ_NAIVE_BAYES_NC
+
+
+   ! ----------------------------------------------------------
+   ! Read in 1D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_1d_real (nc_file_id, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: var_dim
+      character(30), intent(in) :: var_name
+      real, intent(out), dimension(:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      Sds_Start_1D = 1
+      Sds_Stride_1D = 1
+      Sds_Edge_1D = var_dim
+
+      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
+      if (status /= nf90_noerr) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+   end subroutine read_netcdf_1d_real                                                                                                                           
+
+   ! ----------------------------------------------------------
+   ! Read in 1D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_1d_int (nc_file_id, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: var_dim
+      character(len=*), intent(in) :: var_name
+      integer, intent(out), dimension(:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      Sds_Start_1D = 1
+      Sds_Stride_1D = 1
+      Sds_Edge_1D = var_dim
+
+      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then 
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
+      if (status /= nf90_noerr) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+   end subroutine read_netcdf_1d_int
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays (used code from DCOMP reader)
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_2d_real (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      real, intent(out), dimension(:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+   end subroutine read_netcdf_2d_real
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays Integers
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_2d_int (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      integer , intent(out), dimension(:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+   end subroutine read_netcdf_2d_int
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays Characters
+   ! ----------------------------------------------------------
+
+   subroutine read_netcdf_2d_char (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      character(len=30) , intent(out), dimension(:,:) :: var_output
+      character(len=30), allocatable, dimension(:,:) :: var
+
+      integer :: nc_var_id
+      integer :: status, tmp1, tmp2, i, j
+      integer, dimension(2) ::dimIDs
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !find dimentions
+      status = nf90_inquire_variable(nc_file_id, nc_var_id, dimids = dimIDs)
+      status = nf90_inquire_dimension(nc_file_id, dimIDs(1), len = tmp1)
+      status = nf90_inquire_dimension(nc_file_id, dimIDs(2), len = tmp2)
+      allocate (var(tmp1,tmp2))
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var, start=(/1,1/), count=(/tmp1,tmp2/) )
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+      !extract and save classifier names to the final array
+      do i = 1, tmp2
+        if ((var(i,1) .ge. 'a' .and. var(i,1) .le. 'z') &
+        .or.(var(i,1) .ge. 'A' .and. var(i,1) .le. 'Z')) then 
+           var_output(i,:) = trim(var(i,1))
+        endif
+      enddo
+
+      if (allocated(var)) deallocate (var)
+
+
+   end subroutine read_netcdf_2d_char
+
+   ! ----------------------------------------------------------
+   ! Read in 3D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_3d (nc_file_id, start_var, var_dim, var_name, var_output)
+         implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=30), intent(in) :: var_name
+      real, intent(out), dimension(:,:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status = 0
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            stop
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            stop
+      ENDIF
+
+
+   end subroutine read_netcdf_3d
+
+
+
 
 !-----------------------------------------------------------------------------------
 

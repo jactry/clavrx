@@ -1396,12 +1396,11 @@ module NB_CLOUD_MASK
       return
    endif
 
-!   status = nf90_get_att(ncid, nf90_global, "Cloud_Mask_Thresholds_Version", &
-!                        Cloud_Mask_Thresholds_Version)
-!  if (status /= nf90_noerr) then
-!      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Version Read Failed'
-!      return
-!  endif
+   status = nf90_get_att(ncid, nf90_global, "data_file", Cloud_Mask_Thresholds_Version)
+   if (status /= nf90_noerr) then
+      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Version Read Failed'
+      return
+   endif
 
    status = nf90_get_att(ncid, nf90_global, "n_class", N_Class)
    status = nf90_get_att(ncid, nf90_global, "n_bounds_reg", N_bounds)

@@ -51,7 +51,8 @@ M_kracken.o \
 dcomp_lut_mod.o \
 nlcomp_interface_def_mod.o \
 file_tools.o \
-clavrx_planck_mod.o
+clavrx_planck_mod.o  \
+dcomp_lut_hdf_mod.o
 
 .PHONY: clean hdf4
 
@@ -74,10 +75,11 @@ nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_
 nlcomp_array_loop_sub.o:nlcomp_array_loop_sub.f90 
 nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_math_tools_mod.o  M_kracken.o dcomp_lut_mod.o dcomp_science_tools_mod.o clavrx_planck_mod.o
 dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
-dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o
+dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_hdf_mod.o
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 nlcomp_interface_def_mod.o:nlcomp_interface_def_mod.f90
 clavrx_planck_mod.o:clavrx_planck_mod.f90
+dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
 
 file_tools.o:file_tools.f90
 

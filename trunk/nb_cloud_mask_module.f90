@@ -395,8 +395,8 @@ module NB_CLOUD_MASK
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
-!      call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
-       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
+       call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
+!      call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
                                 symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !--- set up enumerated types for cloud mask values
@@ -410,7 +410,7 @@ module NB_CLOUD_MASK
         !---set up Classifier to Test Mapping
         do Class_Idx = 1, N_Class
 
-          select case (Classifier_Value_Name(Class_Idx,1))
+          select case (trim(Classifier_Value_Name(Class_Idx,1)))
                     case("T_11") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 1
                     case("T_Max-T") 
@@ -449,6 +449,7 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 18
                     case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
+                       stop
            end select
 
          end do
@@ -638,7 +639,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um_Max == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max - Input%Bt_11um
 
-                    case("T_std") 
+                    case("T_Std") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
@@ -706,8 +707,6 @@ module NB_CLOUD_MASK
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um_Clear == Missing_Value_Real4) cycle
-!print *,'IN Emiss_375_Day',Input%Bt_375um,Input%Emiss_375um,Input%Emiss_375um_Clear
-!print *,'IN ',Input%Chan_On_375um,Solar_Contam_Flag,Oceanic_Glint_Flag,Day_375_Flag,Cold_Scene_375um_Flag,Input%Bt_375um
                        Classifier_Value(Class_Idx) = emiss_375um_day_test( &
                                          Input%Emiss_375um,Input%Emiss_375um_Clear)
 
@@ -719,7 +718,6 @@ module NB_CLOUD_MASK
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um_Clear == Missing_Value_Real4) cycle
-!print *,'IN Emiss_375_Night',Input%Emiss_375um,Input%Emiss_375um_Clear
                        Classifier_Value(Class_Idx) = emiss_375um_night_test( &
                                         Input%Emiss_375um,Input%Emiss_375um_Clear)
 
@@ -759,10 +757,9 @@ module NB_CLOUD_MASK
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_Lunar_Clear, &
                                                              Input%Ref_Lunar)
-
                        endif
 
-                    case("Ref_std")
+                    case("Ref_Std")
                        if (Input%Solzen < 90.0) then
                          if (Input%Chan_On_063um == symbol%NO) cycle
                          if (Day_063_Spatial_Flag == symbol%NO) cycle 
@@ -832,6 +829,7 @@ module NB_CLOUD_MASK
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
+                       stop
              end select
 
              !--- Turn off Classifiers if Chosen Metric is Missing

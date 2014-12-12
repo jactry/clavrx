@@ -36,6 +36,7 @@ GetOptions(
    'hdflib=s',
    'hdfinc=s',
    'hdf5root=s',
+   'netcdflib=s',
    'cmask_dir=s',
    'ctype_dir=s',
    'acha_dir=s',
@@ -131,6 +132,10 @@ $opt{hdfinc} = abs_path($opt{hdfinc}) if $opt{hdfinc} =~ /^\./;
 $opt{hdfinc} =~ s/^~/$ENV{HOME}/;
 -d $opt{hdfinc} or die "Doesn't exist or not a directory: $opt{hdfinc}\n";
 
+$opt{netcdflib} = abs_path($opt{netcdflib}) if $opt{netcdflib} =~ /^\./;
+$opt{netcdflib} =~ s/^~/$ENV{HOME}/;                                                                                                                                                    
+-d $opt{netcdflib} or die "Doesn't exist or not a directory: $opt{netcdflib}\n";
+
 # Check the HDF5 directory.
 if (exists($opt{'hdf5root'})) {
     $opt{hdf5root} = abs_path($opt{hdf5root}) if $opt{hdf5root} =~ /^\./;
@@ -154,6 +159,8 @@ my $hdflibs = "-L$opt{hdflib}"
    . " -lz";
 
 my $hdfincs = "-I$opt{hdfinc}";
+
+my $netcdflibs = "-L$opt{netcdflib}lib -I$opt{netcdflib}include -lnetcdf";
 
 # Inform about HDF5 libraries
 if (exists($opt{'hdf5root'}) || exists($opt{'hdf5-default'})) {
@@ -267,6 +274,7 @@ else
 }
 print CONFIG "hdflibs = $hdflibs\n";
 print CONFIG "hdfincs = $hdfincs\n";
+print CONFIG "netcdflibs = $netcdflibs\n";
 
 if (exists($opt{'hdf5root'})) {
     print CONFIG "hdf5libs = -I$opt{hdf5root}include/ -L$opt{hdf5root}lib/\n";
@@ -302,6 +310,7 @@ if (exists($opt{'cmask_dir'}))
    else
    {
       print CONFIG "export CMASK=../cloud_mask/\n";
+      print CONFIG "#export CMASK=../cloud_team_cmask/\n";
    }
 }
 else
@@ -450,6 +459,10 @@ Command line options:
   --hdf5root=<directory>
          Path to the directory where HDF5 lib and include directories are.
          Default is /usr/local/hdf5/.
+
+   --netcdflib=<directory>                                                                                                                                                              
+         Path to the directory where NetCDF library files are stored.                                                                                                                   
+         Default is /usr/local/netcdf/lib.
 
   --cmask_dir=<directory>
          Path to the directory where cloud mask files are stored.

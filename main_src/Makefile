@@ -221,12 +221,12 @@ endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
    ifdef nlcomplibs
-	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o  ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks} ${nlcomplibs} ${nlcomplinks}
+	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks} ${nlcomplibs} ${nlcomplinks}
    else
-		$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o  viirs_read_mod.o   ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks}
+		$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o  viirs_read_mod.o   $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks}
    endif   
 else
-	$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) $(hdflibs) ${dcomplibs} ${dcomplinks}  
+	$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) $(netcdflibs) $(hdflibs) ${dcomplibs} ${dcomplinks}  
 endif
 
 comp_asc_des_level2b: $(comp_asc_des_level2b_objs) bindir
@@ -352,16 +352,19 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
+#cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)   $(CTYPE)/cloud_type_bridge_module.f90
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
 nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90 pixel_common.o num_mod.o nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_module.o nb_cloud_mask_addons_module.o file_tools.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)  $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
 nb_cloud_mask_clavrx_services_module.o: $(CMASK)/nb_cloud_mask_clavrx_services_module.f90
 
 nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_module.f90
 
 nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud_mask_clavrx_services_module.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_addons_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_addons_module.f90
 
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
@@ -385,7 +388,7 @@ ifdef hdf5libs
 endif
 
 process_clavrx.o: process_clavrx.f90 $(sub_routine)
-	$(fc) -c $(fflags) $(cppflags) $(fflags_clavr) $(cppflags_vcld) $(cpp) ${hdf5libs} process_clavrx.f90 
+	$(fc) -c $(fflags) $(cppflags) $(fflags_clavr) $(cppflags_vcld) $(cpp) ${hdf5libs} $(netcdflibs) process_clavrx.f90 
 
 
 ######### .o files that depend on .inc files ########

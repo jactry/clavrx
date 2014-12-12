@@ -104,23 +104,22 @@ contains
       
       
       real :: rad20_dcod
-real :: rad31_dcod
-real :: rad32_dcod
+      real :: rad31_dcod
+      real :: rad32_dcod
 
-real :: rad20_dcps
-real :: rad31_dcps
-real :: rad32_dcps
+      real :: rad20_dcps
+      real :: rad31_dcps
+      real :: rad32_dcps
 
-real :: bt20_dcod
-real :: bt31_dcod
-real :: bt32_dcod
+      real :: bt20_dcod
+      real :: bt31_dcod
+      real :: bt32_dcod
 
-
-real :: bt20_dcps
-real :: bt31_dcps
-real :: bt32_dcps
+      real :: bt20_dcps
+      real :: bt31_dcps
+      real :: bt32_dcps
       
-     
+    
 	   ! - executable
       
       

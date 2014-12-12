@@ -151,7 +151,7 @@ contains
       
       obs_vec ( 1 ) = inp % chn ( 42 ) % rfl
       obs_vec ( 2 ) = inp % chn ( 20 ) % rad
-      
+      print*,inp % chn ( 20 ) % rad,inp % chn ( 31 ) % rad,inp % chn ( 32 ) % rad
       bt_20 = planck_rad2tmp ( inp % chn ( 20 ) % rad , 'VIIRS' , 20 )
       bt_31 = planck_rad2tmp ( inp % chn ( 31 ) % rad , 'VIIRS' , 31 )
       bt_32 = planck_rad2tmp ( inp % chn ( 32 ) % rad , 'VIIRS' , 32 )
@@ -228,7 +228,7 @@ contains
       
 
       iteration_idx = 0
-         debug_mode = 1
+         debug_mode = 6
       IF (debug_mode > 4 ) THEN
          PRINT *, "<--- Begin New Retrieval for pixel = "
          PRINT *, "cloud type, phase = ", cld_phase
@@ -309,7 +309,7 @@ contains
 		   ! - check for convergence
          Conv_Test = abs ( sum (delta_X * matmul ( S_x_inv , Delta_X ) ) )	
       
-        debug_mode = 0
+        debug_mode = 7
 		
          if ( debug_mode > 4 ) then 
             

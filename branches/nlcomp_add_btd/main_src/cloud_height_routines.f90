@@ -815,7 +815,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   !--- compute size of averaging window
   call COMPUTE_BOX_WIDTH(SOUNDER_RESOLUTION_KM,Box_Width_KM,Box_Width)
 
-print *, "Box Width  = ", Box_Width
+
 
   !--- allocate temporary arrays needed here
   allocate(Mask(Num_Elem,Num_Lines))

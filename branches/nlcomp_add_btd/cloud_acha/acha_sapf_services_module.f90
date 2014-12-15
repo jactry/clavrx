@@ -1,4 +1,3 @@
-!$Id: acha_services_fwait_mod.f90 582 2014-10-08 03:40:18Z heidinger $
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
@@ -182,6 +181,12 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order  
+   real, dimension(:,:), pointer:: Pc_Opaque
+   real, dimension(:,:), pointer:: Tc_Opaque
+   real, dimension(:,:), pointer:: Zc_Opaque
+   real, dimension(:,:), pointer:: Pc_H2O
+   real, dimension(:,:), pointer:: Tc_H2O
+   real, dimension(:,:), pointer:: Zc_H2O
  end type acha_output_struct
   
 !Symbol stucture

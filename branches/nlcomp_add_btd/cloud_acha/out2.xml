@@ -101,5 +101,72 @@
              max="-999.0"
              numtype="real4">
    </out_var>    
+
+   <out_var sdsname="Pc_Opaque_Cloud" 
+            varname="Pc_Opaque_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
+   <out_var sdsname="Tc_Opaque_Cloud" 
+            varname="Tc_Opaque_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
+   <out_var sdsname="Zc_Opaque_Cloud" 
+            varname="Zc_Opaque_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
+   <out_var sdsname="Pc_H2O_Cloud" 
+            varname="Pc_H2O_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
+   <out_var sdsname="Tc_H2O_Cloud" 
+            varname="Tc_H2O_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
+   <out_var sdsname="Zc_H2O_Cloud" 
+            varname="Zc_H2O_Cloud" 
+            dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+   </out_var>    
+
     </out_list>
 </geocat_out2>

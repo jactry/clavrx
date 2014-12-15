@@ -188,10 +188,10 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
 
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
-          
+         
          if ( .not. is_cloud (elem_idx,line_idx)  ) cycle elem_loop
          if ( input % refl (CHN_VIS)  % d (elem_idx, line_idx) < 0 ) cycle elem_loop 
-           print*,'ddr'
+         
          ! - set local aliases
          cld_height     = input % cloud_hgt % d (elem_idx,line_idx)
          cld_press      = input % cloud_press % d (elem_idx,line_idx)

@@ -256,13 +256,14 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! Default Algorithm Modes - (maybe move to user options)
   !---------------------------------------------------------------------------------
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 1
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 0
-  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 5
-  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 6
-  integer,public,parameter:: ACHA_Mode_Default_Modis = 3
-  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 4
-  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 5
+  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 3
+  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 1
+  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 6
+  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 7
+  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 5
+  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 6
+  integer,public,parameter:: ACHA_Mode_Default_SEVIRI = 8
+  integer,public,parameter:: ACHA_Mode_Default_Modis = 8
 
   !---------------------------------------------------------------------------------
   ! variables that are computed to serve as attributes in the output files

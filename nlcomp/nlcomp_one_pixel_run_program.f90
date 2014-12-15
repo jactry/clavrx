@@ -152,8 +152,9 @@ program nlcomp_one_pixel_run
    inp_retr % chn ( 31 ) % rad_u = 0.
    inp_retr % chn ( 31 ) % alb_sfc = 0.05
    inp_retr % chn ( 31 ) % alb_sfc_u = 0.05
+   inp_retr % chn ( 31 ) % rad_sfc_nwp = 11
 
-   inp_retr % chn ( 32 ) % rad = 39.8
+   inp_retr % chn ( 32 ) % rad = 34.8
    inp_retr % chn ( 32 ) % rad_u = 5.
    inp_retr % chn ( 32 ) % alb_sfc = 0.05
    inp_retr % chn ( 32 ) % alb_sfc_u = 0.05

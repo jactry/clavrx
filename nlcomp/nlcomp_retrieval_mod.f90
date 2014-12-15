@@ -314,7 +314,7 @@ contains
          if ( debug_mode > 4 ) then 
             
             print*
-            print*,'iter = ',iteration_idx
+            print*,'iteration ... = ',iteration_idx
             print*, 'f = ', obs_fwd
             print*, 'k = ',kernel
             print*, 'Sx = ',S_x

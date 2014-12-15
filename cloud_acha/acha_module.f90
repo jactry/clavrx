@@ -2260,22 +2260,22 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   Sy = 0.0
   Sy(1,1) = T11um_Cal_Uncer**2 + ((1.0-Ec)*T11um_Clr_Uncer)**2 + (T11um_Cld_Uncer)**2
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 8) then
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + ((1.0-Ec)*T11um_12um_Clr_Uncer)**2 + (T11um_12um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 2) then
+  if (Acha_Mode_Flag == 4) then
     Sy(2,2) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
     Sy(3,3) = T11um_85um_Cal_Uncer**2 + ((1.0-Ec)*T11um_85um_Clr_Uncer)**2 + (T11um_85um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
 
@@ -2766,12 +2766,13 @@ end subroutine DETERMINE_SFC_TYPE_FORWARD_MODEL
 ! Using Andy's simpler expression
 !
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!            6=11+6.7+13um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !
 ! Input:
 ! Emiss_Vector = a vector of emissivities in each channel. 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 ! Sfc_Type_Forward_Model = the surface type used for covariance calcs 
 ! y_variance = the variance computed a 3x3 array for each element of y
 !
@@ -2898,8 +2899,8 @@ end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 !----------------------------------------------------------------------
 ! Compute Sy based on the clear-sky error covariance calcuLations.
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!                 5=11+6.7+13.3um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !----------------------------------------------------------------------
 subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
 
@@ -3687,30 +3688,30 @@ subroutine CHECK_ACHA_MODE(symbol, &
    endif
 
    if ((Chan_On_67um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 5) .or. &
+       ((Acha_Mode_Input == 2) .or. &
         (Acha_Mode_Input == 6) .or. &
         (Acha_Mode_Input == 7))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
-   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 4)) then
+   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 5)) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_12um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 1) .or. &
-        (Acha_Mode_Input == 4) .or. &
-        (Acha_Mode_Input == 5))) then
+       ((Acha_Mode_Input == 3) .or. &
+        (Acha_Mode_Input == 5) .or. &
+        (Acha_Mode_Input == 6))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_133um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 2) .or. &
-        (Acha_Mode_Input == 3) .or. &
-        (Acha_Mode_Input == 6))) then
+       ((Acha_Mode_Input == 4) .or. &
+        (Acha_Mode_Input == 7) .or. &
+        (Acha_Mode_Input == 8))) then
        Acha_Mode_Error_Flag = 1
        return
    endif

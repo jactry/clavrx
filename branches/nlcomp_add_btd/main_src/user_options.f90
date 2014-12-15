@@ -72,14 +72,18 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
  
       !------------------------------------------------------------------------
       !--- ACHA MODE Check
-      !         (0=11; 1 = 11/12; 2 = 11/13.3; 
+      !---      (0=11; 1 = 11/12; 2 = 11/13.3; 
+      !---       3 = 11,12,13; 4=8.5/11/12; 
+      !---       5=11/12/6.7; 6=11/13.3/6.7; 7=11/6.7 )
+      !
+      !---      (1=11; 1=11/6.7,3 = 11/12; 2 = 11/13.3; 
       !---       3 = 11,12,13; 4=8.5/11/12; 
       !---       5=11/12/6.7; 6=11/13.3/6.7; 7=11/6.7 )
       !------------------------------------------------------------------------
 
       if (Avhrr_Flag == sym%YES) then 
          if (Avhrr_1_Flag == sym%NO) then 
-             if (Acha_Mode > 1) then
+             if (Acha_Mode /=1 .or. Acha_Mode /= 3) then
                      print *, EXE_PROMPT, &
                      "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT, &
@@ -87,7 +91,7 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
                      Acha_Mode = Acha_Mode_Default_Avhrr 
              endif
          ELSE 
-             if (Acha_Mode /= 0)  then 
+             if (Acha_Mode /= 1)  then 
                      print *, EXE_PROMPT, &
                      "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT, &
@@ -97,15 +101,15 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
          endif
      endif
 
-               write (string_1,'(I1)') acha_mode
-     
-               call mesg ("Acha Mode = "//string_1)
+     write (string_1,'(I1)') acha_mode
+     call mesg ("Acha Mode = "//string_1)
+
      if (Goes_Flag == sym%YES) then 
 
           if (Goes_Mop_Flag == sym%NO) then 
 
-             if (Acha_Mode == 2 .or. Acha_Mode == 3 .or. &
-                 Acha_Mode == 4 .or. Acha_Mode == 6)  then 
+             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or. &
+                 Acha_Mode == 5 .or. Acha_Mode == 7)  then 
                      print *, EXE_PROMPT, &
                      "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT, &
@@ -115,8 +119,8 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
 
           ELSE 
 
-             if (Acha_Mode == 1 .or. Acha_Mode == 3 .or.  &
-                 Acha_Mode == 4 .or. Acha_Mode == 5)  then 
+             if (Acha_Mode == 3 .or. Acha_Mode == 8 .or.  &
+                 Acha_Mode == 5 .or. Acha_Mode == 6)  then 
                      print *, EXE_PROMPT, &
                      "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT, &
@@ -124,8 +128,8 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
                      Acha_Mode = Acha_Mode_Default_Goes_MP
                      
                write (string_1,'(I1)') acha_mode
-     
                call mesg ("Acha Mode = "//string_1 )
+
              endif
 
           endif
@@ -133,8 +137,8 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
 
      if (Viirs_Flag == sym%YES) then 
 
-             if (Acha_Mode == 2 .or. Acha_Mode == 3 .or.  &
-                 Acha_Mode == 5 .or. Acha_Mode == 6 .or. Acha_Mode == 7)  then 
+             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or.  &
+                 Acha_Mode == 6 .or. Acha_Mode == 7 .or. Acha_Mode == 2)  then 
                      print *, EXE_PROMPT, "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT,  "Changing to default for VIIRS"
                      Acha_Mode = Acha_Mode_Default_VIIRS
@@ -144,8 +148,8 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
 
      if (Mtsat_Flag == sym%YES) then
 
-             if (Acha_Mode == 2 .or. Acha_Mode == 3 .or. &
-                 Acha_Mode == 4 .or. Acha_Mode == 6)  then
+             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or. &
+                 Acha_Mode == 5 .or. Acha_Mode == 7)  then
                      print *, EXE_PROMPT, "Acha_Mode incompatible with satellite observations"
                      print *, EXE_PROMPT,  "Changing to default for MTSAT"
                      Acha_Mode = Acha_Mode_Default_MTSAT
@@ -154,37 +158,37 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
      endif
 
      !--- check ACHA mode based on available channels
-     if (Acha_Mode == 1 .and. &
+     if (Acha_Mode == 3 .and. &
          (Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 1 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 2 .and. &
+     if (Acha_Mode == 4 .and. &
          (Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 3 .and. &
+     if (Acha_Mode == 8 .and. &
          (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 4 .and. &
+     if (Acha_Mode == 5 .and. &
          (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 5 .and. &
+     if (Acha_Mode == 6 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 6 .and. &
+     if (Acha_Mode == 7 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
-     if (Acha_Mode == 7 .and. &
+     if (Acha_Mode == 2 .and. &
          (Chan_On_Flag_Default(27)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0

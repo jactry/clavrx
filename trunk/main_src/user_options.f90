@@ -73,8 +73,8 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
       !------------------------------------------------------------------------
       !--- ACHA MODE Check
       !---      (0=off; 1 = 11; 2 = 11/6.7; 
-      !---       3 = 11/12; 4=11/6.7; 
-      !---       5=11/12/8.5; 6=11/12/13.3; 7=11/13.3/6.7; 8 = 11/12/13.3)
+      !---       3 = 11/12; 4=11/13.4; 
+      !---       5=11/12/8.5; 6=11/12/6.7; 7=11/13.3/6.7; 8 = 11/12/13.3)
       !------------------------------------------------------------------------
 
       if (Avhrr_Flag == sym%YES) then 
@@ -156,37 +156,37 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
      !--- check ACHA mode based on available channels
      if (Acha_Mode == 3 .and. &
          (Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 1 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 4 .and. &
          (Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 8 .and. &
          (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 8 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 5 .and. &
          (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels. Acha will not run.'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 6 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 7 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
      endif
      if (Acha_Mode == 2 .and. &
          (Chan_On_Flag_Default(27)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels, ACHA Set to Mode 0'
+         print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
      endif
 

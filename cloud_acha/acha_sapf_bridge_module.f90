@@ -26,6 +26,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
  private :: WMO_Sensor_KM
    
  REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
+ REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy !for opaque stuff right now
 
  type(NPP_VIIRS_CLD_HEIGHT_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
 
@@ -36,6 +37,16 @@ module ACHA_CLAVRX_BRIDGE_MOD
  contains
 
 
+! Modes
+! 0 - Use this mode to not call ACHA from the framework
+! 1 - 11 um                          0           
+! 2 - 11 + 6.7 um                    7
+! 3 - 11 + 12 um                     1
+! 4 - 11 + 13.3 um                   2
+! 5 - 11 + 8.5 + 12 um               4
+! 6 - 11 + 6.7 + 12 um               5
+! 7 - 11 + 6.7 + 13.3 um             6
+! 8 - 11 + 12 + 13.3 um              3
 
 !----------------------------------------------------------------------
 ! BEGINNING OF ACHA SUBROUTINE
@@ -134,6 +145,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
    !--- cloud cover layers
    call COMPUTE_CLOUD_COVER_LAYERS(Input,Symbol, Output)
+   
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -246,6 +258,15 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+
+     Output%Pc_Opaque =>  null()
+     Output%Tc_Opaque =>  null()
+     Output%Zc_Opaque =>  null()
+     Output%Pc_H2O =>  null()
+     Output%Tc_H2O =>  null()
+     Output%Zc_H2O =>  null()
+
+     if (allocated(Dummy)) deallocate(Dummy)
      
      
  end subroutine NULL_OUTPUT
@@ -382,7 +403,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    
      if (Chan_On_Flag_Default(Input%Chan_Idx_67um) == sym%YES) then
         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9,  Input%Bt_67um)
-        CALL NFIA_Sat_L1b_Rad(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14,  Input%Rad_67um)
+        CALL NFIA_Sat_L1b_Rad(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9,  Input%Rad_67um)
         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI9,  Input%Rad_Clear_67um)
      endif
 
@@ -498,6 +519,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
 !--------------------------------------------------------
  subroutine SET_OUTPUT()
    integer(long) :: Stat
+   integer:: Num_Elem, Num_Line
 
 
     CALL NFIA_CloudHeight_Latitude_Pc(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%Latitude_Pc)
@@ -563,6 +585,24 @@ module ACHA_CLAVRX_BRIDGE_MOD
                                         
    CALL NFIA_CloudHeight_Low_Cld_Frac(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
                                         Output%Low_Cloud_Fraction)
+
+   ! ALLOCATE Dummy array
+   Num_Elem = Ctxt_ACHA%SegmentInfo%Current_Column_Size
+   Num_Line = Ctxt_ACHA%SegmentInfo%Current_Row_Size
+   
+   
+   ALLOCATE (Dummy(Num_Elem,Num_Line))
+   
+   !for now the opaque data will be put into dummy array
+   Output%Pc_Opaque => Dummy
+   Output%Tc_Opaque => Dummy
+   Output%Zc_Opaque => Dummy
+   Output%Pc_H2O => Dummy
+   Output%Tc_H2O => Dummy
+   Output%Zc_H2O => Dummy
+   
+   
+   
 
  end subroutine SET_OUTPUT
 

@@ -48,7 +48,6 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Bt_133um
  real, dimension(:,:), pointer:: Rad_67um
  real, dimension(:,:), pointer:: Rad_11um
- real, dimension(:,:), pointer:: Covar_Bt_11um_67um
  real, dimension(:,:), pointer:: Cosine_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
@@ -153,6 +152,12 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
+   real, dimension(:,:), pointer:: Pc_Opaque
+   real, dimension(:,:), pointer:: Tc_Opaque
+   real, dimension(:,:), pointer:: Zc_Opaque
+   real, dimension(:,:), pointer:: Pc_H2O
+   real, dimension(:,:), pointer:: Tc_H2O
+   real, dimension(:,:), pointer:: Zc_H2O
   end type acha_output_struct
   
 !Symbol stucture

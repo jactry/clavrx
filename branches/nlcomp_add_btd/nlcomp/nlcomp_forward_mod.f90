@@ -209,7 +209,7 @@ contains
       rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)            
       rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
       rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32) 
-     
+     print*,'rad31: ',lut_data31 %  ems ,planck_rad31, lut_data31 % trn_ems , rad_clear_toc(31)
       bt20 =  planck_rad2tmp ( rad20, trim(sensor), 20)    
       bt31 =  planck_rad2tmp ( rad31, trim(sensor), 31)
       bt32 =  planck_rad2tmp ( rad32, trim(sensor), 32)  
@@ -237,7 +237,8 @@ contains
    
    
       fm_vec(3) = bt31 - bt32
-
+      print*,rad31,rad32,rad20
+      print*,bt31,bt32,bt20
       
             
       kernel ( 3,1) = bt31_dcod - bt32_dcod

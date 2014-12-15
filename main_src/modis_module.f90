@@ -105,8 +105,8 @@ subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_file)
 end subroutine READ_MODIS_INSTR_CONSTANTS
 
 !----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_GEOLOCATION_FILE(modis_1b_name, Dir_Modis_Geo, Modis_Geo_Name)
-    character(len=*), intent(in):: modis_1b_name
+subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Modis_Geo_Name)
+    character(len=*), intent(in):: Modis_1b_Name
     character(len=*), intent(in):: Dir_Modis_Geo
     character(len=*), intent(out):: Modis_Geo_Name
     integer, parameter:: nc = 24
@@ -115,14 +115,14 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(modis_1b_name, Dir_Modis_Geo, Modis_
     integer(kind=int4):: Num_Files
     character(len=255), dimension(:), pointer:: Files
 
-    Search_String = trim(modis_1b_name(1:nc))
+    Search_String = trim(Modis_1b_Name(1:nc))
     
     if (Modis_Aqua_Flag == sym%YES) then
        Search_String = "MYD03"//trim(Search_String(9:nc) )//"*"
     else if (Modis_Aqua_Mac_Flag == sym%YES) then
        Search_String = "MAC03S0"//trim(Search_String(9:nc))//"*"   
     else if (Modis_CSPP_Flag == sym%YES) then
-       Search_String = trim(modis_1b_name(1:13)) //".geo.hdf"    
+       Search_String = trim(Modis_1b_Name(1:13)) //".geo.hdf"    
     else
        Search_String = "MOD03"//trim(Search_String(9:nc)//"*" )
     endif
@@ -148,21 +148,21 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(modis_1b_name, Dir_Modis_Geo, Modis_
   
     !--- if an AQUA Mac Name, trim something off
     ilen = len_trim(Modis_Geo_Name)
-    IF (Modis_Aqua_Mac_Flag == sym%YES) THEN
+    if (Modis_Aqua_Mac_Flag == sym%YES) THEN
         Modis_Geo_Name = Modis_Geo_Name(ilen-42:ilen)
-    ELSE IF (Modis_CSPP_Flag == sym%YES) THEN
+    else if (Modis_CSPP_Flag == sym%YES) THEN
         Modis_Geo_Name = TRIM(Modis_Geo_Name)
-    ELSE  
+    else  
         Modis_Geo_Name = Modis_Geo_Name(ilen-40:ilen)
-    ENDIF
+    endif
 
     print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Modis_Geo_Name)
    
 end subroutine DETERMINE_MODIS_GEOLOCATION_FILE
 
 !----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(modis_1b_name, Dir_Modis_Cloud_Mask, Modis_Cloud_Mask_Name)
-    character(len=*), intent(in):: modis_1b_name
+subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, Modis_Cloud_Mask_Name)
+    character(len=*), intent(in):: Modis_1b_Name
     character(len=*), intent(in):: Dir_Modis_Cloud_Mask
     character(len=*), intent(out):: Modis_Cloud_Mask_Name
     integer, parameter:: nc = 25
@@ -171,14 +171,22 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(modis_1b_name, Dir_Modis_Cloud_Mask, 
     integer(kind=int4):: Num_Files
     character(len=255), dimension(:), pointer:: Files
 
-    Search_String = trim(modis_1b_name(1:nc-1))
+    Search_String = trim(Modis_1b_Name(1:nc-1))
 
-    if (Modis_Aqua_Flag == sym%YES) then
-       Search_String = "MYD35_L2"//trim(Search_String(9:nc))//"*"
-     else if (Modis_Aqua_Mac_Flag == sym%YES) then
-       Search_String = "MAC35S0"//trim(Search_String(9:nc))//"*"
+    if (Modis_1km_Flag == sym%YES) then
+      if (Modis_Aqua_Flag == sym%YES) then
+        Search_String = "MYD35_L2"//trim(Search_String(9:nc))//"*"
+      else if (Modis_Aqua_Mac_Flag == sym%YES) then
+        Search_String = "MAC35S0"//trim(Search_String(9:nc))//"*"
+      else
+        Search_String = "MOD35"//trim(Search_String(9:nc))//"*"
+      endif
     else
-       Search_String = "MOD35"//trim(Search_String(9:nc))//"*"
+      if (Modis_Aqua_Flag == sym%YES) then
+        Search_String = "MYDATML2"//trim(Search_String(9:nc))//"*"
+      else
+        Search_String = "MODATML2"//trim(Search_String(9:nc))//"*"
+      endif
     endif
 
     Files => FILE_SEARCH(trim(Dir_Modis_Cloud_Mask),trim(Search_String),count=Num_Files)
@@ -199,11 +207,11 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(modis_1b_name, Dir_Modis_Cloud_Mask, 
     Files => null()
    
     ilen = len_trim(Modis_Cloud_Mask_Name)
-    IF (Modis_Aqua_Mac_Flag == sym%YES) THEN
+    if (Modis_Aqua_Mac_Flag == sym%YES) THEN
       Modis_Cloud_Mask_Name = Modis_Cloud_Mask_Name(ilen-45:ilen)
-    ELSE  
+    else  
       Modis_Cloud_Mask_Name = Modis_Cloud_Mask_Name(ilen-43:ilen)
-    ENDIF
+    endif
 
 end subroutine DETERMINE_MODIS_CLOUD_MASK_FILE
 
@@ -397,7 +405,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- look for the band in this list of bands
       iband_sds = -1
       DO ii = 1 , nbands
-         IF (band_int_names(ii) == iband) iband_sds = ii 
+         if (band_int_names(ii) == iband) iband_sds = ii 
       END DO
       
       if (iband_sds == -1) then
@@ -794,21 +802,26 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       ny_end = min(ny_start+ny-1,ny_total)
       ny_local_temp = ny_end - ny_start + 1
 
-      sds_start = (/0, ny_start-1, 0/)
-      sds_edges = (/nx_local, ny_local_temp,6/)
-
       nx_min = min(nx,nx_local)
       ny_min = min(ny,ny_local_temp)
 
       !--- allocate space for data to be read in
-      allocate(i1_buffer(nx_local,ny_local_temp,6))
+      if (Modis_1km_Flag == sym%YES) then
+        allocate(i1_buffer(nx_local,ny_local_temp,6))
+        sds_start = (/0, ny_start-1, 0/)
+        sds_edges = (/nx_local, ny_local_temp,6/)
+      else
+        allocate(i1_buffer(nx_local,ny_local_temp,1))
+        sds_start = (/0, ny_start-1, 0/)
+        sds_edges = (/nx_local, ny_local_temp,1/)
+      endif
 
       !--- Read Cloud Mask Bytes (packed)
       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Mask')))
       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i1_buffer) + Status_Flag
-      cloud_mask_out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
+      Cloud_Mask_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
- 
+
       !--- close file
       Status_Flag = sfend(Sd_Id) + Status_Flag
 
@@ -910,10 +923,23 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
                                             scan_number,ascend,Error_Status)
         if (Error_Status /= 0) exit
 
+        !--- read cloud mask - assume path is same as level-1b
+        Cloud_Mask_Aux_Read_Flag = sym%NO
+
         if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
-         print *, EXE_PROMPT, " Cloud Mask can not be read from 5km MODIS data"
-         Cloud_Mask_Aux_Flag = sym%NO_AUX_CLOUD_MASK
-         Cloud_Mask_Aux_Read_Flag = sym%NO
+
+         call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Dir_1b),  &
+                                            trim(Modis_Cloud_Mask_Name), &
+                                            Cld_Mask_Aux, &
+                                            Num_Pix,Num_Scans_Per_Segment, &
+                                            Seg_Idx,Num_Scans,Num_Scans_Read, &
+                                            Error_Status)
+
+
+         if (Error_Status == 0) then
+            Cloud_Mask_Aux_Read_Flag = sym%YES
+         endif
+
         endif
 
       endif
@@ -1159,9 +1185,9 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       ! for 5km MODIS files. This test does NOT key off the file name
       ! just in case the file name is different than 02SSH.
       
-      IF (trim(Temp_Char) .EQ. trim(Temp_5km_Char)) THEN
+      if (trim(Temp_Char) .EQ. trim(Temp_5km_Char)) THEN
            File_5km_Test = .TRUE. 
-      ENDIF
+      endif
       
       
       !usage of the I3 and I4 read have to be done due to the restrictions
@@ -1179,17 +1205,17 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
         endif
       enddo
       
-      IF (Num_Char .eq. 1) THEN
+      if (Num_Char .eq. 1) THEN
         read(Temp_Char, fmt="(I1)") Num_Lines
-      ELSEIF (Num_Char .eq. 2) THEN
+      elseif (Num_Char .eq. 2) THEN
         read(Temp_Char, fmt="(I2)") Num_Lines   
-      ELSEIF (Num_Char .eq. 3) THEN
+      elseif (Num_Char .eq. 3) THEN
         read(Temp_Char, fmt="(I3)") Num_Lines
-      ELSEIF (Num_Char .eq. 4) THEN
+      elseif (Num_Char .eq. 4) THEN
         read(Temp_Char, fmt="(I4)") Num_Lines
-      ELSEIF (Num_Char .eq. 5) THEN
+      elseif (Num_Char .eq. 5) THEN
         read(Temp_Char, fmt="(I5)") Num_Lines
-      ENDIF
+      endif
       
       
       !--- number of elements
@@ -1203,17 +1229,17 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
         endif
       enddo
 
-      IF (Num_Char .eq. 1) THEN
+      if (Num_Char .eq. 1) THEN
         read(Temp_Char, fmt="(I1)") Num_Elements
-      ELSEIF (Num_Char .eq. 2) THEN
+      elseif (Num_Char .eq. 2) THEN
         read(Temp_Char, fmt="(I2)") Num_Elements
-      ELSEIF (Num_Char .eq. 3) THEN
+      elseif (Num_Char .eq. 3) THEN
         read(Temp_Char, fmt="(I3)") Num_Elements
-      ELSEIF (Num_Char .eq. 4) THEN
+      elseif (Num_Char .eq. 4) THEN
         read(Temp_Char, fmt="(I4)") Num_Elements
-      ELSEIF (Num_Char .eq. 5) THEN
+      elseif (Num_Char .eq. 5) THEN
         read(Temp_Char, fmt="(I5)") Num_Elements
-      ENDIF
+      endif
 
     end subroutine READ_MODIS_SIZE_ATTR
 !==============================================================================

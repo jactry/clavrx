@@ -632,7 +632,7 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
   endif
       
   !-- determine modis cloud mask name
-  if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+  if (Modis_Flag == sym%YES .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
      call DETERMINE_MODIS_CLOUD_MASK_FILE(File_1b_Temp,Dir_1b,Modis_Cloud_Mask_Name)
      if (trim(Modis_Cloud_Mask_Name) == "no_file") then
         Ierror = sym%YES

@@ -127,11 +127,13 @@ module NB_CLOUD_MASK
  integer, dimension(:,:), allocatable, private, save:: Last_valid_Classifier_Bounds
  real, dimension(:,:,:), allocatable, private, save:: Class_Cond_Yes
  real, dimension(:,:,:), allocatable, private, save:: Class_Cond_No 
+ real, dimension(:,:,:), allocatable, private, save:: Class_Cond_Ratio
  character (len=30), dimension(:,:), allocatable, private, save:: Classifier_Value_Name
  integer, dimension(:), allocatable,private,save:: Class_To_Test_Idx
 
  real, dimension(:), allocatable, private, save:: Cond_Yes
  real, dimension(:), allocatable, private, save:: Cond_No
+ real, dimension(:), allocatable, private, save:: Cond_Ratio
  real, dimension(:), allocatable, private, save:: Posterior_Cld_Probability_By_Class
  real, dimension(:), allocatable, private, save:: Classifier_Value
 
@@ -241,6 +243,7 @@ module NB_CLOUD_MASK
    allocate(Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
    allocate(Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
    allocate(Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
+   allocate(Class_Cond_Ratio(N_bounds-1,N_class,N_sfc_bayes))
    allocate(Classifier_Value_Name(N_class,N_sfc_bayes))
    allocate(Class_To_Test_Idx(N_class))
 
@@ -305,6 +308,16 @@ module NB_CLOUD_MASK
 
    !--- close file
    close(unit=lun,iostat=ios)
+
+   !--- begin compute ratio
+   Class_Cond_Ratio = 1
+   where(Class_Cond_Yes == 0.0)
+       Class_Cond_Ratio = 100.0
+   endwhere
+   where(Class_Cond_Yes > 0.0)
+       Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
+   endwhere
+   !--- end compute ratio
 
    if (ios_sum == 0) then
            print *, EXE_PROMPT_CM, ' Bayesian Cloud Mask Data Read in Successfully'
@@ -386,6 +399,7 @@ module NB_CLOUD_MASK
    real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
    real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, &
            cld_mask_probab_thresh_hi_tmp
+   real:: r
 
    !------------------------------------------------------------------------------------------
    !---  begin executable code
@@ -395,8 +409,8 @@ module NB_CLOUD_MASK
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
-       call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
-!      call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
+!      call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
+       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
                                 symbol,Output%Cloud_Mask_Bayesian_Flag)
 
         !--- set up enumerated types for cloud mask values
@@ -461,11 +475,13 @@ module NB_CLOUD_MASK
    !------------------------------------------------------------------------------------------
    if (allocated(Cond_Yes)) deallocate(Cond_Yes)
    if (allocated(Cond_No)) deallocate(Cond_No)
+   if (allocated(Cond_Ratio)) deallocate(Cond_Ratio)
    if (allocated(Classifier_Value)) deallocate(Classifier_Value)
    if (allocated(Posterior_Cld_Probability_By_Class)) deallocate(Posterior_Cld_Probability_By_Class)
 
    allocate(Cond_Yes(N_Class))
    allocate(Cond_No(N_Class)) 
+   allocate(Cond_Ratio(N_Class)) 
    allocate(Posterior_Cld_Probability_By_Class(N_Class)) 
    allocate(Classifier_Value(N_Class)) 
 
@@ -623,6 +639,7 @@ module NB_CLOUD_MASK
              Classifier_Value(Class_Idx) = Missing_Value_Real4
              Cond_Yes(Class_Idx) = 1.0 
              Cond_No(Class_Idx) =  1.0
+             Cond_Ratio(Class_Idx) =  1.0
 
              select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
 
@@ -845,6 +862,7 @@ module NB_CLOUD_MASK
 
              Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
              Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
+             Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
 
         enddo  class_loop 
 
@@ -857,16 +875,8 @@ module NB_CLOUD_MASK
           Posterior_Cld_Probability_By_Class = Missing_Value_Real4
         endif
 
-        if (minval(Cond_Yes) == 0.0) then
-          Output%Posterior_Cld_Probability = 0.0
-        elseif (minval(Cond_No) == 0.0) then
-          Output%Posterior_Cld_Probability = 1.0
-        else
-          Output%Posterior_Cld_Probability = &
-                 (Prior_Yes(Sfc_Idx)*product(Cond_Yes)) / &
-                 (Prior_Yes(Sfc_Idx)*product(Cond_Yes) +  &        
-                 Prior_No(Sfc_Idx)*product(Cond_No))
-        endif
+        r = product(Cond_Ratio)
+        Output%Posterior_Cld_Probability =  1.0 / (1.0 + r/Prior_Yes(Sfc_Idx) - r)
 
         !------------------------------------------------------------------------------------------------------------
         !--- make a cloud mask
@@ -899,17 +909,8 @@ module NB_CLOUD_MASK
 
          do Class_Idx = 1, N_class
  
-          if (Cond_Yes(Class_Idx) == 0.0) then
-              Posterior_Cld_Probability_By_Class(Class_Idx) = 0.0
-          elseif (Cond_No(Class_Idx) == 0.0) then
-              Posterior_Cld_Probability_By_Class(Class_Idx) = 1.0
-          else
-              Posterior_Cld_Probability_By_Class(Class_Idx) = &
-                 (Prior_Yes(Sfc_Idx)*Cond_Yes(Class_Idx)) / &
-                 (Prior_Yes(Sfc_Idx)*Cond_Yes(Class_Idx) +  &        
-                  Prior_No(Sfc_Idx)*Cond_No(Class_Idx))
-
-          endif
+          r = Cond_Ratio(Class_Idx)
+          Posterior_Cld_Probability_By_Class(Class_Idx) =  1.0 / (1.0 + r/Prior_Yes(Sfc_Idx) - r)
 
           !-- set cloud flags
           Cld_Flag_Bit_Depth(Class_To_Test_Idx(Class_Idx)) = 2
@@ -977,6 +978,7 @@ module NB_CLOUD_MASK
 !       deallocate(Last_valid_Classifier_Bounds)
 !       deallocate(Class_Cond_Yes)
 !       deallocate(Class_Cond_No)
+!       deallocate(Class_Cond_Ratio)
 !       deallocate(Classifier_Value_Name)
 !       deallocate(Class_To_Test_Idx)
 !
@@ -992,6 +994,7 @@ module NB_CLOUD_MASK
    !----- deallocate memory
    if (allocated(Cond_Yes)) deallocate(Cond_Yes)
    if (allocated(Cond_No)) deallocate(Cond_No)
+   if (allocated(Cond_Ratio)) deallocate(Cond_Ratio)
    if (allocated(Classifier_Value)) deallocate(Classifier_Value)
    if (allocated(Posterior_Cld_Probability_By_Class)) deallocate(Posterior_Cld_Probability_By_Class)
 
@@ -1418,6 +1421,7 @@ module NB_CLOUD_MASK
    allocate(Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
    allocate(Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
    allocate(Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
+   allocate(Class_Cond_Ratio(N_bounds-1,N_class,N_sfc_bayes))
    allocate(Classifier_Value_Name(N_class,N_sfc_bayes))
    allocate(Class_To_Test_Idx(N_class))
 
@@ -1487,6 +1491,16 @@ module NB_CLOUD_MASK
    status = nf90_close(ncid)
 
    Is_Classifiers_Read = .true.
+
+   !--- begin compute ratio
+   Class_Cond_Ratio = 1
+   where(Class_Cond_Yes == 0.0)
+       Class_Cond_Ratio = 100.0
+   endwhere
+   where(Class_Cond_Yes > 0.0)
+       Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
+   endwhere
+   !--- end compute ratio
 
  end subroutine READ_NAIVE_BAYES_NC
 

@@ -219,7 +219,7 @@ contains
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarZenithAngle     ' & ! 7
                                                     /)                            
       integer :: i_gmtco
-      character ( len =150 ) :: file_gmtco
+      character ( len =650 ) :: file_gmtco
       
       integer :: i_mband
       character ( len =100) :: setname_mband , setname_mband_fac

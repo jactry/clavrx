@@ -71,7 +71,8 @@ module NB_CLOUD_MASK
 
  private:: COMPUTE_BAYES_SFC_TYPE
  private:: READ_NAIVE_BAYES
- private:: SPLIT_WINDOW_TEST
+ private:: CLEAR_NAIVE_BAYES_MEMORY
+ private:: split_window_test
  private:: reflectance_gross_contrast_test
  private:: relative_visible_contrast_test
  private:: reflectance_ratio_test
@@ -409,6 +410,7 @@ module NB_CLOUD_MASK
    !--- on first segment, read table
    !------------------------------------------------------------------------------------------
    if (.not. Is_Classifiers_Read) then
+
 !      call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
        call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
                                 symbol,Output%Cloud_Mask_Bayesian_Flag)
@@ -963,34 +965,6 @@ module NB_CLOUD_MASK
       endif   !If Skip_Sfc_Type_Flag
    endif   !If Invalid_Data_Mask
 
-
-!   !--- on last segment, deallocate arrays
-!   if (Segment_Number_Local == Input%Num_Segments) then
-!
-!       deallocate(Prior_Yes)
-!       deallocate(Prior_No)
-!       deallocate(Optimal_Posterior_Prob)
-!       deallocate(Skip_Sfc_Type_Flag)
-!       deallocate(Classifier_Bounds_Min)
-!       deallocate(Classifier_Bounds_Max)
-!       deallocate(Delta_Classifier_Bounds)
-!       deallocate(First_valid_Classifier_Bounds)
-!       deallocate(Last_valid_Classifier_Bounds)
-!       deallocate(Class_Cond_Yes)
-!       deallocate(Class_Cond_No)
-!       deallocate(Class_Cond_Ratio)
-!       deallocate(Classifier_Value_Name)
-!       deallocate(Class_To_Test_Idx)
-!
-!    endif
-!
-!    !--- increment segment number
-!    if (Segment_Number_Local == Input%Num_Segments) then
-!       Segment_Number_Local = 1
-!    else
-!       Segment_Number_Local = Segment_Number_Local + 1
-!    endif
-
    !----- deallocate memory
    if (allocated(Cond_Yes)) deallocate(Cond_Yes)
    if (allocated(Cond_No)) deallocate(Cond_No)
@@ -1492,6 +1466,7 @@ module NB_CLOUD_MASK
 
    Is_Classifiers_Read = .true.
 
+print *, "before compute ratio"
    !--- begin compute ratio
    Class_Cond_Ratio = 1
    where(Class_Cond_Yes == 0.0)
@@ -1500,6 +1475,7 @@ module NB_CLOUD_MASK
    where(Class_Cond_Yes > 0.0)
        Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
    endwhere
+print *, "end compute ratio"
    !--- end compute ratio
 
  end subroutine READ_NAIVE_BAYES_NC
@@ -1711,6 +1687,24 @@ module NB_CLOUD_MASK
    end subroutine read_netcdf_3d
 
 
+subroutine CLEAR_NAIVE_BAYES_MEMORY()
+        if (allocated(Prior_Yes)) deallocate(Prior_Yes)
+        if (allocated(Prior_No)) deallocate(Prior_No)
+        if (allocated(Optimal_Posterior_Prob)) deallocate(Optimal_Posterior_Prob)
+        if (allocated(Skip_Sfc_Type_Flag)) deallocate(Skip_Sfc_Type_Flag)
+        if (allocated(Classifier_Bounds_Min)) deallocate(Classifier_Bounds_Min)
+        if (allocated(Classifier_Bounds_Max)) deallocate(Classifier_Bounds_Max)
+        if (allocated(Delta_Classifier_Bounds)) deallocate(Delta_Classifier_Bounds)
+        if (allocated(First_Valid_Classifier_Bounds)) deallocate(First_Valid_Classifier_Bounds)
+        if (allocated(Last_Valid_Classifier_Bounds)) deallocate(Last_Valid_Classifier_Bounds)
+        if (allocated(Class_Cond_Yes)) deallocate(Class_Cond_Yes)
+        if (allocated(Class_Cond_No)) deallocate(Class_Cond_No)
+        if (allocated(Class_Cond_Ratio)) deallocate(Class_Cond_Ratio)
+        if (allocated(Classifier_Value_Name)) deallocate(Classifier_Value_Name)
+        if (allocated(Class_To_Test_Idx)) deallocate(Class_To_Test_Idx)
+        Is_Classifiers_Read = .false.
+end subroutine 
+ 
 
 
 !-----------------------------------------------------------------------------------

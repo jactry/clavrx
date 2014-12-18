@@ -5,8 +5,8 @@
 program test_cloud_mask
 
 
-use naive_bayesian_cloud_mask_module, only : &
-        cloud_mask_naive_bayes &
+use nb_cloud_mask, only : &
+        NB_CLOUD_MASK_ALGORITHM &
       , cloud_mask_input_type &
       , dust_detection &
       , fire_detection &
@@ -33,8 +33,8 @@ print*,'FIRE detection: ',fire_detection ( 310.,312., 2., 1. ,77. )
 inp % bayesian_mask_classifier = &
    &  '/DATA/Ancil_Data/clavrx_ancil_data/naive_bayes_mask/viirs_default_bayes_mask.txt'
 	
-inp % bayesian_mask_classifier = &
-   &  '/data/Ancil_Data/clavrx_ancil_data/bayes/viirs_default_bayes_mask.txt'	
+!inp % bayesian_mask_classifier = &
+!   &  '/data/Ancil_Data/clavrx_ancil_data/bayes/viirs_default_bayes_mask.txt'	
             
             inp % geo % lat         = 60.            
             inp % geo % lon         = 20.
@@ -81,7 +81,7 @@ inp % bayesian_mask_classifier = &
                        
             inp % sat % chan_on  = .true.
                          
-            call cloud_mask_naive_bayes ( inp, erg , info_flags , diag , vers )      
+            call NB_CLOUD_MASK_ALGORITHM ( inp, erg , info_flags , diag , vers )      
             print*,'cloud probability: ',erg
             print*,'info flags: ', info_flags
             counter = 0

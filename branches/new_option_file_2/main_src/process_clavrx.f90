@@ -126,7 +126,8 @@
    use SFC_EMISS
    use PLANCK
    use AVHRR_REPOSITION_ROUTINES
-   use NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
+   use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
+       NB_CLOUD_MASK_BRIDGE
    use MODIS_MODULE
    use IFF_CLAVRX_BRIDGE
    use GOES_MODULE
@@ -1361,7 +1362,7 @@
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
-                     call CLOUD_MASK_NAIVE_BAYES_BRIDGE(Segment_Number)
+                     call NB_CLOUD_MASK_BRIDGE(Segment_Number)
                   else
                      print *, "Only the Bayesian Cloud Mask is available, check selection"
                      stop 
@@ -1414,9 +1415,9 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
 
-               call COMPUTE_OPAQUE_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
-               call COMPUTE_H2O_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
-
+               !-------------------------------------------------------------------
+               ! make co2 slicing height from sounder with using sounder/imager IFF
+               !-------------------------------------------------------------------
                if (IFF_VIIRS_FLAG == sym%YES .or. &
                    IFF_AVHRR_FLAG == sym%YES .or. &
                    IFF_MODIS_FLAG == sym%YES) then
@@ -1613,7 +1614,7 @@
             end if
 
             !--- screen output to mark progress through orbit
-           write ( string_100, '(A22, I2, A16, I3 , 4X , I4)')  "processed segment #",Segment_Number," scanlines = ",  &
+           write ( string_100, '(A22, I2, A16, I5 , 4X , I5)')  "processed segment #",Segment_Number," scanlines = ",  &
                         Scan_Number(Line_Idx_Min_Segment), Scan_Number(Num_Scans_Read)
            call mesg  ( string_100 )
 

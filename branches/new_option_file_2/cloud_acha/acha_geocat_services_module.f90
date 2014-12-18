@@ -43,6 +43,7 @@ Implicit none
    real, dimension(:,:), pointer:: Bt_11um
    real, dimension(:,:), pointer:: Bt_12um
    real, dimension(:,:), pointer:: Bt_133um
+   real, dimension(:,:), pointer:: Rad_67um
    real, dimension(:,:), pointer:: Rad_11um
    real, dimension(:,:), pointer:: Cosine_Zenith_Angle
    real, dimension(:,:), pointer:: Sensor_Zenith_Angle
@@ -75,6 +76,7 @@ Implicit none
    !--- optional variables
    integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
    integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+   real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
  end type acha_input_struct
 
@@ -146,6 +148,12 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order
+   real, dimension(:,:), pointer:: Pc_Opaque
+   real, dimension(:,:), pointer:: Tc_Opaque
+   real, dimension(:,:), pointer:: Zc_Opaque
+   real, dimension(:,:), pointer:: Pc_H2O
+   real, dimension(:,:), pointer:: Tc_H2O
+   real, dimension(:,:), pointer:: Zc_H2O
  end type acha_output_struct
   
 !Symbol stucture

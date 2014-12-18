@@ -37,14 +37,23 @@ module AWG_CLOUD_HEIGHT
 ! 6 - degraded ec Retrieval (0 = no, 1 = yes)
 ! 7 - degraded beta Retrieval (0 = no, 1 = yes)
 !
+! Modes
+! 0 - Use this mode to not call ACHA from the framework
+! 1 - 11 um                          0           
+! 2 - 11 + 6.7 um                    7
+! 3 - 11 + 12 um                     1
+! 4 - 11 + 13.3 um                   2
+! 5 - 11 + 8.5 + 12 um               4
+! 6 - 11 + 6.7 + 12 um               5
+! 7 - 11 + 6.7 + 13.3 um             6
+! 8 - 11 + 12 + 13.3 um              3
 !----------------------------------------------------------------------
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
 
   implicit none
 
-  public::  AWG_CLOUD_HEIGHT_ALGORITHM
-  public::  SET_ACHA_MODE
-  public::  CHECK_ACHA_MODE
+  public:: AWG_CLOUD_HEIGHT_ALGORITHM
+  public:: CHECK_ACHA_MODE
   public:: SET_ACHA_VERSION
   public:: LOCAL_LINEAR_RADIATIVE_CENTER
 
@@ -65,7 +74,7 @@ module AWG_CLOUD_HEIGHT
   private:: INTERPOLATE_PROFILE_ACHA
   private:: INTERPOLATE_NWP_ACHA
   private:: DETERMINE_INVERSION_LEVEL
-  private:: DETERMINE_OPAQUE_LEVEL
+  private:: DETERMINE_OPAQUE_CLOUD_HEIGHT
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
   private:: NULL_PIX_POINTERS 
@@ -290,9 +299,6 @@ module AWG_CLOUD_HEIGHT
   real:: a_Beta_11um_67um_fit
   real:: b_Beta_11um_67um_fit
 
-  real:: Tc_Opaque_Level
-  real:: Pc_Opaque_Level
-  real:: Zc_Opaque_Level
   real:: Tsfc_Est
   real:: Tc_temp
   real:: Pc_temp
@@ -383,22 +389,22 @@ module AWG_CLOUD_HEIGHT
 
   !--- determine number of channels
   select case(Acha_Mode_Flag)
-     case(0)  !11 avhrr/1
+     case(1)  !11 avhrr/1
        Num_Obs = 1
-     case(1)  !11,12 avhrr/2/3
+     case(2)  !11,6.7
        Num_Obs = 2
-     case(2)  !11,13.3 goes-nop
+     case(3)  !11,12 avhrr/2/3
        Num_Obs = 2
-     case(3)  !11,12,13.3 goes-r
-       Num_Obs = 3
-     case(4)  !11,12,8.5 viirs 
-       Num_Obs = 3
-     case(5)  !11,12,6.7
-       Num_Obs = 3
-     case(6)  !11,13.3,6.7
-       Num_Obs = 3
-     case(7)  !11,6.7
+     case(4)  !11,13.3 goes-nop
        Num_Obs = 2
+     case(5)  !11,12,8.5 viirs 
+       Num_Obs = 3
+     case(6)  !11,12,6.7
+       Num_Obs = 3
+     case(7)  !11,13.3,6.7
+       Num_Obs = 3
+     case(8)  !11,12,13.3 goes-r
+       Num_Obs = 3
   end select
 
   !--- allocate needed 2d arrays for processing this segment
@@ -627,8 +633,6 @@ module AWG_CLOUD_HEIGHT
                                                 ACHA_RTM_NWP%T_Prof_2, &
                                                 ACHA_RTM_NWP%T_Prof_3, &
                                                 Inwp_Weight,Jnwp_Weight)
-
-    
     else
 
        Hght_Prof_RTM = ACHA_RTM_NWP%Z_Prof
@@ -637,23 +641,45 @@ module AWG_CLOUD_HEIGHT
     endif
 
    !-----------------------------------------------------------------------
-   !  find opaque levels
+   !  find opaque cloud height
    !-----------------------------------------------------------------------
-   CALL DETERMINE_OPAQUE_LEVEL(Input%Rad_11um(Elem_Idx,Line_Idx), &
+   call DETERMINE_OPAQUE_CLOUD_HEIGHT( &
+                                Input%Rad_11um(Elem_Idx,Line_Idx), &
                                 ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
                                 Press_Prof_RTM, &
                                 Hght_Prof_RTM, &
                                 Temp_Prof_RTM, &
                                 Tropo_Level_RTM, &
                                 Sfc_Level_RTM, &
-                                Pc_Opaque_Level, &
-                                Tc_Opaque_Level, &
-                                Zc_Opaque_Level)
+                                Output%Pc_Opaque(Elem_Idx,Line_Idx), &
+                                Output%Tc_Opaque(Elem_Idx,Line_Idx), &
+                                Output%Zc_Opaque(Elem_Idx,Line_Idx))
 
-   !-------------------------------------------------------------------
-   ! Apply Opaque Retrieval for Acha_Mode_Flag = 0, then cycle
-   !-------------------------------------------------------------------
-   if (Acha_Mode_Flag == 0) then
+   !-----------------------------------------------------------------------
+   !  find h2o cloud height
+   !-----------------------------------------------------------------------
+   if (Input%Chan_On_67um == symbol%YES) then
+       call H2O_CLOUD_HEIGHT ( &
+           Input%Rad_11um(Elem_Idx,Line_Idx), &
+           ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
+           Input%Rad_Clear_11um(Elem_Idx,Line_Idx), &
+           Input%Rad_67um(Elem_Idx,Line_Idx), &
+           ACHA_RTM_NWP%Black_Body_Rad_Prof_67um, &
+           Input%Rad_Clear_67um(Elem_Idx,Line_Idx), &
+           Tropo_Level_RTM, &
+           Sfc_Level_RTM, &
+           Press_Prof_RTM, &
+           Temp_Prof_RTM, &
+           Hght_Prof_RTM, &
+           Output%Pc_H2O(Elem_Idx,Line_Idx), & 
+           Output%Tc_H2O(Elem_Idx,Line_Idx), & 
+           Output%Zc_H2O(Elem_Idx,Line_Idx) )
+  endif
+
+  !-------------------------------------------------------------------
+  ! Apply Opaque Retrieval for Acha_Mode_Flag = 1, then cycle
+  !-------------------------------------------------------------------
+  if (Acha_Mode_Flag == 1) then
         if (((Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%CLEAR) .or.  &
             (Input%Cloud_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLEAR)) .and. &
             (Input%Process_Undetected_Cloud_Flag == symbol%NO)) then
@@ -663,9 +689,9 @@ module AWG_CLOUD_HEIGHT
           Output%Ec(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
         else
-          Output%Tc(Elem_Idx,Line_Idx) = Tc_Opaque_Level
-          Output%Pc(Elem_Idx,Line_Idx) = Pc_Opaque_Level
-          Output%Zc(Elem_Idx,Line_Idx) = Zc_Opaque_Level
+          Output%Tc(Elem_Idx,Line_Idx) = Output%Tc_Opaque(Elem_Idx,Line_Idx)
+          Output%Pc(Elem_Idx,Line_Idx) = Output%Pc_Opaque(Elem_Idx,Line_Idx)
+          Output%Zc(Elem_Idx,Line_Idx) = Output%Zc_Opaque(Elem_Idx,Line_Idx)
           Output%Ec(Elem_Idx,Line_Idx) = 1.0
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL
         endif
@@ -768,22 +794,22 @@ module AWG_CLOUD_HEIGHT
 
    Bt_11um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2),Input%Invalid_Data_Mask(i1:i2,j1:j2))
 
-   if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
     Btd_11um_67um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_67um(i1:i2,j1:j2),&
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
-   if (Acha_Mode_Flag == 4) then
+   if (Acha_Mode_Flag == 5) then
     Btd_11um_85um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_85um(i1:i2,j1:j2), &
                                                   Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or.  &
-       Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
+       Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
     Btd_11um_12um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_12um(i1:i2,j1:j2), &
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Btd_11um_133um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_133um(i1:i2,j1:j2), &
                                                     Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
@@ -794,52 +820,52 @@ module AWG_CLOUD_HEIGHT
 
    !--- y - the observation vOutput%Ector
    select case(Acha_Mode_Flag)
-     case(0)
+     case(1)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
-     case(1)
+     case(2)
+       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
+       y_variance(1) =  Bt_11um_Std**2
+       y_variance(2) = Btd_11um_67um_Std**2 
+     case(3)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
-     case(2)
+     case(4)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
-     case(3)
-       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
-       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
-       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
-       y_variance(2) = Btd_11um_12um_Std**2 
-       y_variance(3) = Btd_11um_133um_Std**2 
-     case(4)
+     case(5)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_85um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_85um_Std**2 
-     case(5)
+     case(6)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(3) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
-     case(6)
+     case(7)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
-     case(7)
+     case(8)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
-       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
+       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y_variance(1) =  Bt_11um_Std**2
-       y_variance(2) = Btd_11um_67um_Std**2 
+       y_variance(2) = Btd_11um_12um_Std**2 
+       y_variance(3) = Btd_11um_133um_Std**2 
      case DEFAULT
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
@@ -906,35 +932,13 @@ module AWG_CLOUD_HEIGHT
 
   !--- logic for unmasked or untyped pixels (UndetOutput%Ected cloud)
   if (Undetected_Cloud == symbol%YES) then
-         if (Tc_Opaque_Level < 260.0 .and.  &
-             Tc_Opaque_Level /= MISSING_VALUE_REAL) then
+         if (Output%Tc_Opaque(Elem_Idx,Line_Idx) < 260.0 .and.  &
+             Output%Tc_Opaque(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
              Cloud_Type = symbol%CIRRUS_TYPE
          else
              Cloud_Type = symbol%FOG_TYPE
          endif
   endif
-
-!-------------------------------------------------------------------
-! if (Input%Chan_On_67um == symbol%YES) then
-!       call H2O_CLOUD_HEIGHT ( &
-!          Input % Rad_11um(Elem_Idx,Line_Idx), &
-!          ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
-!          Input % Rad_Clear_11um(Elem_Idx,Line_Idx), &
-!          Input % Rad_67um(Elem_Idx,Line_Idx), &
-!          ACHA_RTM_NWP%Black_Body_Rad_Prof_67um, &
-!          Input % Rad_Clear_67um(Elem_Idx,Line_Idx), &
-!          Input % Covar_Bt_11um_67um(Elem_Idx,Line_Idx), &
-!          Tropo_Level_RTM, &
-!          Sfc_Level_RTM, &
-!          ACHA_RTM_NWP%T_Prof, &
-!          ACHA_RTM_NWP%Z_Prof, &
-!          Tc_H2O, & 
-!          Zc_H2O )
-! else
-!          Tc_H2O = MISSING_VALUE_REAL
-!          Zc_H2O = MISSING_VALUE_REAL
-! endif
-!-------------------------------------------------------------------
 
   !---- Compute 11um emissivity referenced to tropopause
   Emiss_11um_Tropo = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( &
@@ -959,7 +963,7 @@ module AWG_CLOUD_HEIGHT
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
                        Bt_11um_Lrc, &
-                       Tc_Opaque_Level, &
+                       Output%Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
@@ -973,11 +977,12 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-  if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
+  if (associated(Input%Tc_Cirrus_Sounder)) then
+    if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
       Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+    endif
   endif
-
 
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
@@ -1072,7 +1077,7 @@ module AWG_CLOUD_HEIGHT
     Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
     Rad_Clear_11um = Rad_Ac_11um + Trans_Ac_11um*Bc_11um
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1082,7 +1087,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_12um = Rad_Ac_12um + Trans_Ac_12um*Bc_12um
   endif
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1093,7 +1098,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_133um = Rad_Ac_133um + Trans_Ac_133um*Bc_133um
   endif
 
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
      Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
@@ -1104,7 +1109,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_85um = Rad_Ac_85um + Trans_Ac_85um*Bc_85um
   endif
 
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
      Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
@@ -1126,16 +1131,16 @@ module AWG_CLOUD_HEIGHT
 
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
   Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag ==3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
       Rad_Clear_12um = Input%Rad_Clear_12um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
       Rad_Clear_133um = Input%Rad_Clear_133um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
       Rad_Clear_85um = Input%Rad_Clear_85um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
       Rad_Clear_67um = Input%Rad_Clear_67um(Elem_Idx,Line_Idx)
   endif
 
@@ -1217,7 +1222,7 @@ Retrieval_Loop: do
   Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1225,7 +1230,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
   endif
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1233,7 +1238,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
   endif
 
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
     Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
@@ -1241,7 +1246,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
   endif
 
-  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
@@ -1290,8 +1295,7 @@ Retrieval_Loop: do
   !--------------------------------------------------
   ! compute the Sy convariance matrix
   !--------------------------------------------------
-
-   Call COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(  &
+  Call COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(  &
                                                  symbol, &
                                                  Emiss_Vector, &
                                                  Acha_Mode_Flag, &
@@ -1564,7 +1568,7 @@ endif     ! ---------- end of data check
 
 
  !---- null profile pointers each time  - REALLY?
- CALL NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+ call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
 
  end do Element_Loop
 
@@ -1677,6 +1681,10 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Line_Idx_2
       integer:: count_Valid
       integer, dimension(:,:), allocatable:: mask
+      !---STW Debug
+      integer, dimension(:,:), allocatable:: mask2
+      integer:: count_Valid2
+      !---STW End Debug
 
       Num_Elem = size(Cloud_Type,1)      !-----
       num_Line = size(Cloud_Type,2)      !-----
@@ -1709,12 +1717,24 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       else    !if Interp_Flag > 0 then do a spatial interpoLation
 
         !--- set box width
-        delem = 1
-        dline = 1
+        !---STW Debug
+        !delem = 1
+        !dline = 1
+        delem = 5
+        dline = 5
+        !---STW End Debug
 
         allocate(mask(Num_Elem,num_line))
 
+        !---STW Debug
+        allocate(mask2(Num_Elem,num_line))
+        !---STW End Debug
+
          mask = 0
+
+         !---STW Debug
+         mask2 = 0
+         !---STW End Debug
 
          where((Cloud_Type == symbol%FOG_TYPE .or. &
              Cloud_Type == symbol%WATER_TYPE .or. &
@@ -1722,6 +1742,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
              Cloud_Pressure /= MISSING_VALUE_REAL)
              mask = 1
          endwhere
+
+         !---STW Debug
+         where(Cloud_Pressure >= 700.0)
+           mask2 = 1
+         endwhere
+         !---STW End Debug
 
          Line_loop_2: do Line_Idx = Line_start, Line_end 
              Element_Loop_2: do Elem_Idx = 1, Num_Elem 
@@ -1737,10 +1763,24 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
              count_Valid = sum(mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
 
-             if (count_Valid > 0) then 
+             !---STW Debug
+             count_Valid2 = sum(mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+             !---STW End Debug
+
+             !---STW if (count_Valid > 0) then
+             if (count_Valid2 > 0) then
+
+                 !---STW Debug
+                 !---STWLower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
+                 !---STW             sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                 !---STW                     mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid
+
                  Lower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
-                              sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* & 
-                                  mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid
+                              sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                                  mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
+                                  mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid2
+                 !---STW End Debug
+
              endif
          
              end do Element_Loop_2
@@ -2220,22 +2260,22 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   Sy = 0.0
   Sy(1,1) = T11um_Cal_Uncer**2 + ((1.0-Ec)*T11um_Clr_Uncer)**2 + (T11um_Cld_Uncer)**2
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 8) then
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + ((1.0-Ec)*T11um_12um_Clr_Uncer)**2 + (T11um_12um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 2) then
+  if (Acha_Mode_Flag == 4) then
     Sy(2,2) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
     Sy(3,3) = T11um_85um_Cal_Uncer**2 + ((1.0-Ec)*T11um_85um_Clr_Uncer)**2 + (T11um_85um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
 
@@ -2405,7 +2445,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
 
  !--- forward model for 11um - 12um
- if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 5) then
+ if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6) then
    Rad_12um = Emiss_12um*Rad_Ac_12um + Trans_Ac_12um * Emiss_12um * Bc_12um +  Trans_12um * Rad_Clear_12um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_12um,Rad_12um,dB_dT = dB_dT_12um)
    K(2,1) = K(1,1) - Trans_Ac_12um * Emiss_12um * dB_dTc_12um / dB_dT_12um   
@@ -2415,7 +2455,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
             dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
  endif
  !--- forward model for 11um - 133um
- if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6) then
+ if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
    K(2,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
@@ -2424,7 +2464,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
  endif
- if (Acha_Mode_Flag == 3) then
+ if (Acha_Mode_Flag == 8) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
    K(3,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
@@ -2433,7 +2473,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
  endif
- if (Acha_Mode_Flag == 4) then
+ if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_85um,Rad_85um,dB_dT = dB_dT_85um)
    K(3,1) = K(1,1) - Trans_Ac_85um*Emiss_85um*dB_dTc_85um/dB_dT_85um
@@ -2442,7 +2482,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
  endif
- if (Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6) then
+ if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
    K(3,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
@@ -2451,7 +2491,7 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
  endif
- if (Acha_Mode_Flag == 7) then
+ if (Acha_Mode_Flag == 2) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
    K(2,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
@@ -2463,33 +2503,33 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
 
  !--- determine number of channels
   select case(Acha_Mode_Flag)
-     case(0)  !avhrr, goes-im
-       Emiss_Vector(1) = Emiss_11um
      case(1)  !avhrr, goes-im
        Emiss_Vector(1) = Emiss_11um
+     case(2)  !goes-np 3 chan
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_67um
+     case(3)  !avhrr, goes-im
+       Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_12um
-     case(2)  !goes-nop
+     case(4)  !goes-nop
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_133um
-     case(3)  !goes-r
-       Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_12um
-       Emiss_Vector(3) = Emiss_133um
-     case(4)  !viirs
+     case(5)  !viirs
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_12um
        Emiss_Vector(3) = Emiss_85um
-     case(5)  !goes-im 3 chan
+     case(6)  !goes-im 3 chan
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_67um
        Emiss_Vector(3) = Emiss_12um
-     case(6)  !goes-np 3 chan
-       Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_67um
-       Emiss_Vector(3) = Emiss_133um
      case(7)  !goes-np 3 chan
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_67um
+       Emiss_Vector(3) = Emiss_133um
+     case(8)  !goes-r
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_133um
   end select
 
  if (idiag_output == symbol%YES) then
@@ -2726,12 +2766,13 @@ end subroutine DETERMINE_SFC_TYPE_FORWARD_MODEL
 ! Using Andy's simpler expression
 !
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!            6=11+6.7+13um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !
 ! Input:
 ! Emiss_Vector = a vector of emissivities in each channel. 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 ! Sfc_Type_Forward_Model = the surface type used for covariance calcs 
 ! y_variance = the variance computed a 3x3 array for each element of y
 !
@@ -2771,41 +2812,36 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
  !--- forward model error due to sub-pixel heterogeneity
  !----------------------------------------------------------------
  Sub_Pixel_Uncer(1) = max(0.5,y_variance(1)/4.0)
- if (Acha_Mode_Flag > 0) then
+ if (Acha_Mode_Flag >= 2) then
     Sub_Pixel_Uncer(2) = max(0.25,y_variance(2)/4.0)
  endif
- if (Acha_Mode_Flag >= 3 .and. Acha_Mode_Flag /=7) then
+ if (Acha_Mode_Flag >= 5) then
     Sub_Pixel_Uncer(3) = max(0.25,y_variance(3)/4.0)
  endif
 
- if (Acha_Mode_Flag == 0) then
+ select case(Acha_Mode_Flag)
+  case(1) 
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
- endif
- if (Acha_Mode_Flag == 1) then
+
+  case(2) 
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_67um_Covar
+    Sy(2,1) = Sy(1,2)
+    Sy(2,2) = T11um_67um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_67um_Btd_11um_67um_Covar
+
+  case(3)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(2,1) = Sy(1,2)
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
- endif
- if (Acha_Mode_Flag == 2) then
+
+  case(4) 
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(2,1) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(2,2) = T11um_133um_Cal_Uncer**2 +  Sub_Pixel_Uncer(2)+ Trans2*Btd_11um_133um_Btd_11um_133um_Covar
- endif
- if (Acha_Mode_Flag == 3) then
-    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
-    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
-    Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
-    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + &
-              Trans2*Btd_11um_12um_Btd_11um_12um_Covar
-    Sy(2,1) = Sy(1,2)
-    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
-    Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
-    Sy(3,1) = Sy(1,3)
-    Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 4) then
+
+  case(5)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_85um_Covar
@@ -2817,9 +2853,8 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_85um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_85um_Btd_11um_85um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
 
- if (Acha_Mode_Flag == 5) then
+  case(6)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_67um_Covar
@@ -2831,8 +2866,8 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 6) then
+
+  case(7)
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_133um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_67um_Covar
@@ -2844,22 +2879,28 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
- endif
- if (Acha_Mode_Flag == 7) then
-    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
-    Sy(1,2) = Trans2*Bt_11um_Btd_11um_67um_Covar
-    Sy(2,1) = Sy(1,2)
-    Sy(2,2) = T11um_67um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_67um_Btd_11um_67um_Covar
- endif
 
+  case(8) 
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
+    Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
+    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + &
+              Trans2*Btd_11um_12um_Btd_11um_12um_Covar
+    Sy(2,1) = Sy(1,2)
+    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
+    Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
+    Sy(3,1) = Sy(1,3)
+    Sy(3,2) = Sy(2,3)
+
+  end select
 
 end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 
 !----------------------------------------------------------------------
 ! Compute Sy based on the clear-sky error covariance calcuLations.
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!                 5=11+6.7+13.3um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !----------------------------------------------------------------------
 subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
 
@@ -3121,26 +3162,39 @@ subroutine DETERMINE_ACHA_MODE_BASED_ON_CHANNELS(symbol, &
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_11um == symbol%YES .and. Chan_On_12um == symbol%YES) then
         if (Chan_On_133um == symbol%YES) then
-            Acha_Mode_Flag = 3          ! 11/12/13.3 um
+            Acha_Mode_Flag = 8          ! 11/12/13.3 um
         elseif (Chan_On_85um == symbol%YES) then
-            Acha_Mode_Flag = 4          ! 8.5/11/12 um
+            Acha_Mode_Flag = 5          ! 8.5/11/12 um
         elseif (Chan_On_67um == symbol%YES) then
-            Acha_Mode_Flag = 5          ! 6.7/11/12 um
+            Acha_Mode_Flag = 6          ! 6.7/11/12 um
         else
-            Acha_Mode_Flag = 1          ! 11/12 um
+            Acha_Mode_Flag = 3          ! 11/12 um
         endif
      endif
   endif
+
   if (Acha_Mode_Flag == -1) then
      if (Chan_On_12um == symbol%NO) then
         if (Chan_On_67um == symbol%YES .and. Chan_On_133um == symbol%YES) then
-              Acha_Mode_Flag = 6       !6.7/11/13.3
+              Acha_Mode_Flag = 7       !6.7/11/13.3
         endif
         if (Chan_On_67um == symbol%NO .and. Chan_On_133um == symbol%YES) then
-              Acha_Mode_Flag = 2       !11/13.3
+              Acha_Mode_Flag = 4       !11/13.3
+        endif
+        if (Chan_On_67um == symbol%YES .and. Chan_On_133um == symbol%NO) then
+              Acha_Mode_Flag = 2       !11/6.7
         endif
      endif
   endif
+
+  !--- if unsuccessful, resort to mode 1
+  if (Acha_Mode_Flag == -1) then
+     if (Chan_On_11um == symbol%YES) then
+              Acha_Mode_Flag = 1       !11
+     endif
+  endif
+   
+   
 end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
 
 !----------------------------------------------------------------------------
@@ -3236,16 +3290,17 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
  !---------------------------------------------------------------------
  ! Find Opaque Cloud Level - highest Level Inversion below trop
  !---------------------------------------------------------------------
- subroutine DETERMINE_OPAQUE_LEVEL(Radiance_11um, &
+ subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT( &
+                                   Radiance_11um, &
                                    Black_Body_Rad_Prof_11um, &
                                    Press_Prof, &
                                    Height_Prof, &
                                    Temp_Prof, &
                                    Tropo_Level, &
                                    Sfc_Level, &
-                                   Pc_Opaque_Level, &
-                                   Tc_Opaque_Level, &
-                                   Zc_Opaque_Level)
+                                   Pc_Opaque, &
+                                   Tc_Opaque, &
+                                   Zc_Opaque)
                              
    real(kind=real4), intent(in):: Radiance_11um
    real(kind=real4), intent(in), dimension(:):: Black_Body_Rad_Prof_11um
@@ -3254,17 +3309,17 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
    real(kind=real4), intent(in), dimension(:):: Temp_Prof
    integer(kind=int4), intent(in):: Tropo_Level
    integer(kind=int4), intent(in):: Sfc_Level
-   real(kind=real4), intent(out):: Pc_Opaque_Level
-   real(kind=real4), intent(out):: Tc_Opaque_Level
-   real(kind=real4), intent(out):: Zc_Opaque_Level
+   real(kind=real4), intent(out):: Pc_Opaque
+   real(kind=real4), intent(out):: Tc_Opaque
+   real(kind=real4), intent(out):: Zc_Opaque
    integer:: Ilev
    integer:: Ilev_Start
    integer:: Ilev_End
 
    !--- initialize
-   Pc_Opaque_Level =  MISSING_VALUE_REAL
-   Zc_Opaque_Level =  MISSING_VALUE_REAL
-   Tc_Opaque_Level =  MISSING_VALUE_REAL
+   Pc_Opaque =  MISSING_VALUE_REAL
+   Zc_Opaque =  MISSING_VALUE_REAL
+   Tc_Opaque =  MISSING_VALUE_REAL
 
    !--- restrict levels to consider
    Ilev_Start = Tropo_Level 
@@ -3272,15 +3327,15 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
 
    !--- loop through levels
    level_loop: do Ilev = Ilev_Start, Ilev_End
-      Pc_Opaque_Level = Press_Prof(Ilev-1)
-      Zc_Opaque_Level = Height_Prof(Ilev-1)
-      Tc_Opaque_Level = Temp_Prof(Ilev-1)
+      Pc_Opaque = Press_Prof(Ilev-1)
+      Zc_Opaque = Height_Prof(Ilev-1)
+      Tc_Opaque = Temp_Prof(Ilev-1)
      if (Black_Body_Rad_Prof_11um(Ilev) > Radiance_11um) then
          exit
      endif
    end do Level_Loop
 
- end subroutine DETERMINE_OPAQUE_LEVEL
+ end subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT
  !----------------------------------------------------------------------
  !
  ! Compute the IR Emissivity at a Reference Level
@@ -3603,73 +3658,6 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
    enddo element_loop
 
 end subroutine PARALLAX_ACHA 
-
-
-!----------------------------------------------------------------------
-!---   ACHA MODE Check
-!---
-!--- Input:
-!---        Chan_On_67um = channel on/off setting for 6.7 micron channel
-!---        Chan_On_85um = channel on/off setting for 8.5 micron channel
-!---        Chan_On_11um = channel on/off setting for 11 micron channel
-!---        Chan_On_12um = channel on/off setting for 12 micron channel
-!---        Chan_On_133um = channel on/off setting for 13.3 micron channel
-!---
-!---  Output:
-!---        Acha_Mode_Output = a mode for ACHA that works for available 
-!---                           channels. Will be set to 0-7 if success
-!---                           -1 is no option is possible
-!---
-!--- Mode Definition
-!---     0 = 11um only 
-!---     1 = 11um and 12um 
-!---     2 = 11um and 13.3um 
-!---     3 = 11um, 12um and 13
-!---     4 = 8.5um, 11um and 12um; 
-!---     5 = 6.7um, 11um and 12um 
-!---     6 = 6.7um, 11um and 13.3um
-!---     7 = 6.7um and 11 um 
-!----------------------------------------------------------------------
-subroutine SET_ACHA_MODE(symbol, &
-                         Chan_On_67um, &
-                         Chan_On_85um, &
-                         Chan_On_11um, &
-                         Chan_On_12um, &
-                         Chan_On_133um, &
-                         Acha_Mode_Output)
-
-   type(symbol_acha), intent(in) :: symbol
-   integer, intent(in) :: Chan_On_67um
-   integer, intent(in) :: Chan_On_85um
-   integer, intent(in) :: Chan_On_11um
-   integer, intent(in) :: Chan_On_12um
-   integer, intent(in) :: Chan_On_133um
-   integer, intent(out) :: Acha_Mode_Output
-
-   if (Chan_On_11um == symbol%NO) then
-      Acha_Mode_Output = -1
-      return
-   endif
-
-   Acha_Mode_Output = 0
-
-   if (Chan_On_85um == symbol%YES) then
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 4
-   endif
-
-   if (Chan_On_67um == symbol%YES) then
-      Acha_Mode_Output = 7
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 5
-      if (Chan_On_133um == symbol%YES) Acha_Mode_Output = 6
-   endif
-
-   if (Chan_On_133um == symbol%YES) then
-      if (Chan_On_67um == symbol%NO) Acha_Mode_Output = 2
-      if (Chan_On_12um == symbol%YES) Acha_Mode_Output = 3
-   endif
-
-end subroutine SET_ACHA_MODE
-
 !----------------------------------------------------------------------
 !--- check that the Acha_Mode is consistent with available channels
 !--- if consistent, Acha_Mode_Error_Flag = 0, if not, flag = 1
@@ -3700,30 +3688,30 @@ subroutine CHECK_ACHA_MODE(symbol, &
    endif
 
    if ((Chan_On_67um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 5) .or. &
+       ((Acha_Mode_Input == 2) .or. &
         (Acha_Mode_Input == 6) .or. &
         (Acha_Mode_Input == 7))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
-   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 4)) then
+   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 5)) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_12um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 1) .or. &
-        (Acha_Mode_Input == 4) .or. &
-        (Acha_Mode_Input == 5))) then
+       ((Acha_Mode_Input == 3) .or. &
+        (Acha_Mode_Input == 5) .or. &
+        (Acha_Mode_Input == 6))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_133um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 2) .or. &
-        (Acha_Mode_Input == 3) .or. &
-        (Acha_Mode_Input == 6))) then
+       ((Acha_Mode_Input == 4) .or. &
+        (Acha_Mode_Input == 7) .or. &
+        (Acha_Mode_Input == 8))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
@@ -3754,11 +3742,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
                              Rad_H2O, &
                              Rad_H2O_BB_Profile,  &
                              Rad_H2O_Clear,  &
-                             Covar_H2O_Window, &
                              Tropo_Level, &
                              Sfc_Level, &
+                             P_Prof, &
                              T_Prof, &
                              Z_Prof, &
+                             Pc,  &
                              Tc,  &
                              Zc)
 
@@ -3768,11 +3757,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
   real, intent(in):: Rad_11um_Clear
   real, intent(in):: Rad_H2O_Clear
   real, intent(in), dimension(:):: Rad_H2O_BB_Profile
-  real, intent(in):: Covar_H2O_Window
   integer, intent(in):: Sfc_Level
   integer, intent(in):: Tropo_Level
+  real, intent(in), dimension(:):: P_Prof
   real, intent(in), dimension(:):: T_Prof
   real, intent(in), dimension(:):: Z_Prof
+  real, intent(out) :: Pc
   real, intent(out) :: Tc
   real, intent(out) :: Zc
 
@@ -3785,9 +3775,9 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
 
   real, parameter:: Rad_11um_Thresh = 2.0
   real, parameter:: Rad_H2O_Thresh = 0.20
-  real, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 0.5
 
   !--- initialize
+  Pc = MISSING_VALUE_REAL
   Tc = MISSING_VALUE_REAL
   Zc = MISSING_VALUE_REAL
 
@@ -3797,10 +3787,6 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
   endif
 
   if (Rad_H2O_Clear - Rad_H2O < Rad_H2O_Thresh) then
-      return
-  endif
-
-  if (Covar_H2O_Window /= MISSING_VALUE_REAL .and. Covar_H2O_Window < Bt_Ch27_Ch31_Covar_Cirrus_Thresh) then
       return
   endif
 
@@ -3843,6 +3829,7 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
 
  !--- adjust back to full Rtm profile indices
  if (ilev_h2o > 0) then
+       Pc = P_Prof(ilev_h2o)
        Tc = T_Prof(ilev_h2o)
        Zc = Z_Prof(ilev_h2o)
   endif

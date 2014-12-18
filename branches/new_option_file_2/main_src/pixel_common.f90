@@ -258,13 +258,14 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! Default Algorithm Modes - (maybe move to user options)
   !---------------------------------------------------------------------------------
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 1
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 0
-  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 5
-  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 6
-  integer,public,parameter:: ACHA_Mode_Default_Modis = 3
-  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 4
-  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 5
+  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 3
+  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 1
+  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 6
+  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 7
+  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 5
+  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 6
+  integer,public,parameter:: ACHA_Mode_Default_SEVIRI = 8
+  integer,public,parameter:: ACHA_Mode_Default_Modis = 8
 
   !---------------------------------------------------------------------------------
   ! variables that are computed to serve as attributes in the output files
@@ -595,9 +596,9 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
   integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Dust_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Smoke_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Fire_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Smoke_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
@@ -819,8 +820,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Iwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Pc_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: LCL_Height_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: CCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: LCL_Height_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: CCL_Height_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Cfrac_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Ncld_Layers_Nwp_Pix
   integer (kind=int1), dimension(:,:), allocatable, public:: Cld_Type_Nwp_Pix

@@ -51,7 +51,7 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    call SET_SYMBOL()
 
    !-----------------------------------------------------------------------
-   !--- Call algorithm to make ACHA optical and microphysical properties
+   !--- Call algorithm to make cloud geometrical boundaries
    !-----------------------------------------------------------------------
    call CLOUD_BASE_ALGORITHM(Input, &
                              Symbol, &
@@ -66,7 +66,7 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  end subroutine CLOUD_BASE_BRIDGE
 
  !-----------------------------------------------------------------------------
- ! Nullify the pointers holding input to ACHA
+ ! Nullify the pointers holding input
  !-----------------------------------------------------------------------------
  subroutine NULL_INPUT_POINTERS()
      Input%Invalid_Data_Mask =>  null()
@@ -105,9 +105,13 @@ module CLOUD_BASE_CLAVRX_BRIDGE
      Input%Lower_Cloud_Pressure =>  null()
      Input%Lower_Cloud_Temperature =>  null()
      Input%Lower_Cloud_Height =>  null()
+     Input%Cdnc =>  null()
+     Input%Hcld =>  null()
+     Input%LCL =>  null()
+     Input%CCL =>  null()
  end subroutine NULL_INPUT_POINTERS
  !-----------------------------------------------------------------------------
- ! Nullify the pointers holding output to ACHA
+ ! Nullify the pointers holding output
  !-----------------------------------------------------------------------------
  subroutine NULL_OUTPUT_POINTERS()
      Output%Zc_Top =>  null()
@@ -241,6 +245,10 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Lower_Cloud_Pressure => Pc_Lower_Cloud
    Input%Lower_Cloud_Temperature => Tc_Lower_Cloud
    Input%Lower_Cloud_Height => Zc_Lower_Cloud
+   Input%Cdnc => Cdnc_DCOMP
+   Input%Hcld => Hcld_DCOMP
+   Input%LCL => LCL_Height_Nwp_Pix
+   Input%CCL => CCL_Height_Nwp_Pix
 
  end subroutine SET_INPUT
 

@@ -3,7 +3,7 @@
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
 ! NAME: coms_module.f90 (src)
-!       COMS_MODULE (program)
+!       COMS_module (program)
 !
 ! PURPOSE: This module contains all the subroutines needed to perform navigation and
 !          calibration for COMS, both HiRID and HRIT
@@ -25,7 +25,7 @@
 !
 !--------------------------------------------------------------------------------------
 
-MODULE COMS_MODULE
+module COMS_MODULE
 
 use CONSTANTS
 use PIXEL_COMMON
@@ -44,23 +44,23 @@ use VIEWING_GEOMETRY_MODULE
  public:: READ_COMS_INSTR_CONSTANTS
  public:: ASSIGN_COMS_ID_NUM_INTERNAL
          
- private :: COMS_RADIANCE_BT,COMS_Reflectance, &
-            COMS_navigation
+ private :: COMS_RADIANCE_BT, &
+            COMS_REFLECTANCE_PRELAUNCH, &
+            COMS_NAVIGATION
  
-
  TYPE (GVAR_NAV), PRIVATE    :: NAVstr_COMS_NAV
- integer, PARAMETER, PRIVATE :: nchan_COMS= 5
- INTEGER, PARAMETER, PRIVATE :: ndet_COMS = 4
- INTEGER, PARAMETER, PRIVATE :: ntable_COMS = 1024
+ integer, PARAMETER, PRIVATE :: Nchan_COMS= 5
+ integer, PARAMETER, PRIVATE :: Ndet_COMS = 4
+ integer, PARAMETER, PRIVATE :: Ntable_COMS = 1024
 
- INTEGER, PRIVATE :: nref_table_COMS
- INTEGER, PRIVATE :: nbt_table_COMS
- CHARACTER(len=4), PRIVATE:: calib_type
+ integer, PRIVATE :: Nref_Table_COMS
+ integer, PRIVATE :: Nbt_Table_COMS
+ CHARACTER(len=4), PRIVATE:: Calib_Type
 
- !---stw INTEGER (kind=int4), dimension(nchan_COMS,ndet_COMS,ntable_COMS), PRIVATE  :: ref_table
- REAL (kind=real4), dimension(ntable_COMS), PRIVATE  :: ref_table
- INTEGER (kind=int4), dimension(nchan_COMS,ndet_COMS,ntable_COMS), PRIVATE  :: bt_table
- INTEGER (kind=int4), dimension(nchan_COMS,ndet_COMS,ntable_COMS), PRIVATE  :: rad_table
+ !---stw integer (kind=int4), dimension(nchan_COMS,ndet_COMS,Ntable_COMS), PRIVATE  :: Ref_Table
+ real (kind=real4), dimension(Ntable_COMS), PRIVATE  :: Ref_Table
+ integer (kind=int4), dimension(nchan_COMS,ndet_COMS,Ntable_COMS), PRIVATE  :: bt_table
+ integer (kind=int4), dimension(nchan_COMS,ndet_COMS,Ntable_COMS), PRIVATE  :: rad_table
 
  integer(kind=int4), private, parameter:: COMS_Xstride = 1
  !---stw Full disk COMS scans are 2750x2750
@@ -119,6 +119,10 @@ subroutine READ_COMS_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
   read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
 
+  read(unit=Instr_Const_lun,fmt=*) Ch1_Dark_Count
+  read(unit=Instr_Const_lun,fmt=*) Ch1_Gain_Low_0,Ch1_Degrad_Low_1, Ch1_Degrad_Low_2
+  read(unit=Instr_Const_lun,fmt=*) Launch_Date
+
   read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
@@ -132,7 +136,7 @@ subroutine READ_COMS_INSTR_CONSTANTS(Instr_Const_file)
 end subroutine READ_COMS_INSTR_CONSTANTS
 
  ! Perform COMS Reflectance and BT calibration
- SUBROUTINE READ_COMS(segment_number,channel_1_filename, &
+ subroutine READ_COMS(segment_number,channel_1_filename, &
                      jday, image_time_ms, Time_Since_Launch, &
                      AREAstr,NAVstr_COMS)
 
@@ -157,8 +161,8 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    integer(kind=int4):: image_jday
    integer(kind=int4):: first_line_in_segment
    character(len=2):: ichan_goes_string
-   INTEGER :: Line_Idx
-   INTEGER :: Elem_Idx
+   integer :: Line_Idx
+   integer :: Elem_Idx
    integer:: num_elements_this_image
    integer:: num_scans_this_image
 
@@ -241,14 +245,14 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     ! On first segment, reflectance, BT and rad tables
     ! On first segment, get slope/offset information from McIDAS Header
     COMS_file_id = get_lun()   
-    IF (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) THEN
-        CALL mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
-    ELSE
-        CALL mread_open(trim(Dir_1b)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
-    ENDIF  
+    if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+        call mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
+    else
+        call mread_open(trim(Dir_1b)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
+    endif  
 
-    CALL load_COMS_calibration(COMS_file_id, AREAstr)
-    CALL mread_close(COMS_file_id)
+    call load_COMS_calibration(COMS_file_id, AREAstr)
+    call mread_close(COMS_file_id)
 
 
    endif
@@ -270,7 +274,8 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                     num_scans_read,   &
                                     Two_Byte_Temp)
                                     
-        call COMS_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
+        call COMS_REFLECTANCE_PRELAUNCH(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
+!cspp   call COMS_REFLECTANCE_PRELAUNCH(Two_Byte_Temp,Ref_Ch1)
 
         Ch1_Counts = Two_Byte_Temp
 
@@ -295,6 +300,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                     num_scans_read,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(2_int1, Two_Byte_Temp, ch(20)%Rad_Toa, ch(20)%Bt_Toa)
+!cspp call COMS_RADIANCE_BT(2_int1, Two_Byte_Temp, Rad_Ch20, Bt_Ch20)
 
    endif
                     
@@ -318,6 +324,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                     num_scans_read,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(3_int1, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
+!cspp call COMS_RADIANCE_BT(3_int1, Two_Byte_Temp, Rad_Ch27, Bt_Ch27)
 
    endif
 
@@ -342,6 +349,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                     num_scans_read,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(4_int1, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
+!cspp call COMS_RADIANCE_BT(4_int1, Two_Byte_Temp, Rad_Ch31, Bt_Ch31)
 
    endif
    
@@ -365,6 +373,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                     num_scans_read,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(5_int1, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
+!cspp call COMS_RADIANCE_BT(5_int1, Two_Byte_Temp, Rad_Ch32, Bt_Ch32)
 
    endif
     
@@ -401,19 +410,19 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
 
     
- END SUBROUTINE READ_COMS
+ end subroutine READ_COMS
  
  
  
- SUBROUTINE load_COMS_calibration(lun, AREAstr)
-  INTEGER(kind=int4), intent(in) :: lun
+ subroutine load_COMS_calibration(lun, AREAstr)
+  integer(kind=int4), intent(in) :: lun
   type(AREA_STRUCT), intent(in):: AREAstr
-  INTEGER(kind=int4), dimension(6528) :: ibuf
+  integer(kind=int4), dimension(6528) :: ibuf
   CHARACTER(len=25) :: cbuf
-  INTEGER :: nref, nbt, i, offset
-  INTEGER(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
+  integer :: nref, nbt, i, offset
+  integer(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
                         band_offset_9, band_offset_7, dir_offset
-  REAL(kind=real4) :: albedo, temperature, radiance
+  real(kind=real4) :: albedo, temperature, radiance
 
   call mreadf_int_o(lun,AREAstr%cal_offset,4,6528,ibuf)
   !if (AREAstr%swap_bytes > 0) call swap_bytes4(ibuf,6528)
@@ -425,10 +434,10 @@ end subroutine READ_COMS_INSTR_CONSTANTS
   band_offset_14 = ibuf(12)
   band_offset_15 = ibuf(14)  
   
-  nref = 256
-  nbt = 1024
-  nref_table_COMS = nref
-  nbt_table_COMS = nbt
+  Nref = 256
+  Nbt = 1024
+  Nref_Table_COMS = nref
+  Nbt_Table_COMS = nbt
   
   ! We need to get the vis calibration type. This is in 5th
   ! 4 character long block of the cal block (as per line 284, kbxmtst.dlm, v1.5)
@@ -441,23 +450,20 @@ end subroutine READ_COMS_INSTR_CONSTANTS
   ! Load the visible channel calibration from the McIDAS AREA file
   !---------------------------------------------------------------------
   
-  ptr = band_offset_2/4
+  ptr = Band_Offset_2/4
 
   do i = 1, 1024
 
     !---stw At this point, it still needs a divide by 10 to
     !---stw to match McIDAS-X.
 
-    albedo = real(ibuf(ptr),kind=real4) / 100.0
-    !print*,"albedo : ", i,albedo
+    Albedo = real(ibuf(ptr),kind=real4) / 100.0
 
-    ref_table(i) = albedo / 10.0
-    !print *, i, ref_table(i)
+    Ref_Table(i) = Albedo / 10.0
 
     ptr = ptr+1
 
   end do
-
 
   !---------------------------------------------------------------------
   ! Load the IR channel calibration table.
@@ -493,22 +499,22 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     rad_table(5,1,i) = nint(radiance * 1000.) 
   end do
  
- END SUBROUTINE load_COMS_calibration
+ end subroutine load_COMS_calibration
 
 
  ! Perform COMS Reflectance calculation
 
- SUBROUTINE COMS_Reflectance(COMS_Counts, alb_temp)
+ subroutine COMS_REFLECTANCE_PRELAUNCH(COMS_Counts, alb_temp)
                               
-    INTEGER (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
-    REAL (KIND=real4), dimension(:,:), intent(out):: alb_temp
+    integer (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
+    real (KIND=real4), dimension(:,:), intent(out):: alb_temp
 
-    INTEGER :: i, j
-    INTEGER :: index
+    integer :: i, j
+    integer :: index
     
-    DO j=1, num_scans_read
-      DO i=1, num_pix
-        IF (Space_Mask(i,j) == sym%NO_SPACE) THEN
+    do j=1, num_scans_read
+      do i=1, num_pix
+        if (Space_Mask(i,j) == sym%NO_SPACE) then
           
             !Not sure if I need to add 1 here.  Seems to be necessary
             !to match McIDAS-X.
@@ -518,31 +524,31 @@ end subroutine READ_COMS_INSTR_CONSTANTS
             !alb_temp(i,j) = 0.000978494701531316*(index) - 0.00197851402698724
             !alb_temp(i,j) = (alb_temp(i,j) * 100.0) 
 
-            alb_temp(i,j) = ref_table(index)
+            Alb_Temp(i,j) = Ref_Table(index)
   
-            ELSE
+            else
 
-             alb_temp(i,j) = Missing_Value_Real4
+             Alb_Temp(i,j) = Missing_Value_Real4
             
-            ENDIF      
-      END DO
-    END DO
+            endif      
+      end DO
+    end DO
                 
- END SUBROUTINE COMS_Reflectance
+ end subroutine COMS_REFLECTANCE_PRELAUNCH
 
  ! Perform COMS Navigation
 
- SUBROUTINE COMS_navigation(xstart,ystart,xsize,ysize,xstride, &
+ subroutine COMS_navigation(xstart,ystart,xsize,ysize,xstride, &
                             AREAstr,NAVstr_COMS)
-    INTEGER(KIND=int4) :: xstart, ystart
-    INTEGER(KIND=int4) :: xsize, ysize
-    INTEGER(KIND=int4) :: xstride  
+    integer(KIND=int4) :: xstart, ystart
+    integer(KIND=int4) :: xsize, ysize
+    integer(KIND=int4) :: xstride  
     type (AREA_STRUCT) :: AREAstr
     TYPE (GVAR_NAV), intent(in)    :: NAVstr_COMS
     
-    INTEGER :: i, j, ii, jj, imode
-    REAL(KIND(0.0d0)) :: latitude, longitude
-    REAL(KIND=REAL4) :: height
+    integer :: i, j, ii, jj, imode
+    real(KIND(0.0d0)) :: latitude, longitude
+    real(KIND=real4) :: height
 
     NAVstr_COMS_NAV = NAVstr_COMS
     
@@ -552,11 +558,11 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     lat = Missing_Value_Real4
     lon = Missing_Value_Real4
     
-    IF (NAVstr_COMS%nav_type == 'GEOS') THEN      
+    if (NAVstr_COMS%nav_type == 'GEOS') then      
         !HRIT requires actual line and element of being processed.
         ! Unlike MSG, COMS requires no switching to different corrdinates.
                 
-          DO j=1, ysize
+          do j=1, ysize
             
             jj = ystart + (j-1) + (AREAstr%north_bound / real(AREAstr%line_res))
             
@@ -564,12 +570,12 @@ end subroutine READ_COMS_INSTR_CONSTANTS
             !print *, AREAstr%north_bound / real(AREAstr%line_res)
             !stop
                
-            DO i=1, xsize
+            do i=1, xsize
                 ii = (i - 1)*(xstride) + xstart ! get element of the image segement
                 ii = ii  + (AREAstr%west_vis_pixel / real(AREAstr%elem_res))
 
                 ! again, use common algorithm for CGMS navigation
-                CALL pixcoord2geocoord_cgms(ii,                  &
+                call pixcoord2geocoord_cgms(ii,                  &
                                             jj,                  &
                                             NAVstr_COMS%LOFF,   &
                                             NAVstr_COMS%COFF,   & 
@@ -580,103 +586,99 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                             latitude,            &
                                             longitude)
                                           
-             IF (latitude .LE. -999.0) THEN  ! -999.99 is MSV nav missing value
+             if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Lat_1b(i,j) = Missing_Value_Real4
                     Lon_1b(i,j) = Missing_Value_Real4
                     Space_Mask(i,j) = sym%SPACE
-                ELSE
-                    Lat_1b(i,j) = REAL(latitude,kind=REAL4)
-                    Lon_1b(i,j) = REAL(longitude,kind=REAL4)
+                else
+                    Lat_1b(i,j) = real(latitude,kind=real4)
+                    Lon_1b(i,j) = real(longitude,kind=real4)
                     
                     ! BecaUSE JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
-                    IF (longitude .GT. 180.0 ) THEN
-                        Lon_1b(i,j) = REAL(longitude,kind=REAL4) - 360.0
-                    ENDIF
+                    if (longitude .GT. 180.0 ) then
+                        Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
+                    endif
                                         
                     Space_Mask(i,j) = sym%NO_SPACE
-                ENDIF
+                endif
 
         
-            END DO
+            end DO
                         
-        END DO     
+        end do     
         
-    ENDIF
+    endif
       
- END SUBROUTINE COMS_navigation
+ end subroutine COMS_navigation
  
  
 !------------------------------------------------------------------
-! SUBROUTINE to convert COMS counts to radiance and brightness
+! subroutine to convert COMS counts to radiance and brightness
 ! temperature
 !------------------------------------------------------------------
   
-  SUBROUTINE COMS_RADIANCE_BT(chan_num,COMS_Counts, rad2, temp1)
+  subroutine COMS_RADIANCE_BT(chan_num,COMS_Counts, rad2, temp1)
 
-    INTEGER (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
-    INTEGER (kind=int1), INTENT(in) :: chan_num
-    REAL (kind=real4), DIMENSION(:,:), INTENT(out):: temp1, rad2
+    integer (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
+    integer (kind=int1), INTENT(in) :: chan_num
+    real (kind=real4), DIMENSION(:,:), INTENT(out):: temp1, rad2
     
-    INTEGER :: i, j, index
+    integer :: i, j, index
                                    
-    DO j = 1, num_scans_read
-      DO i = 1, num_pix
-        IF (Space_Mask(i,j) == sym%NO_SPACE) THEN
+    do j = 1, num_scans_read
+      do i = 1, num_pix
+        if (Space_Mask(i,j) == sym%NO_SPACE) then
           index = int(COMS_Counts(i,j),KIND=int2) + 1
 
-          rad2(i,j) = REAL(rad_table(chan_num,1,index),KIND=REAL4)/1000.0
-          temp1(i,j) = REAL(bt_table(chan_num,1,index),KIND=REAL4)/100.0                    
-        ELSE
+          rad2(i,j) = real(rad_table(chan_num,1,index),KIND=real4)/1000.0
+          temp1(i,j) = real(bt_table(chan_num,1,index),KIND=real4)/100.0                    
+        else
           rad2(i,j) = Missing_Value_Real4
           temp1(i,j) = Missing_Value_Real4
-        ENDIF
-      END DO
-    END DO    
+        endif
+      end DO
+    end do    
   
-  END SUBROUTINE COMS_RADIANCE_BT
+  end subroutine COMS_RADIANCE_BT
   
 !------------------- COMS NAV BLOC
 
- SUBROUTINE READ_NAVIGATION_BLOCK_COMS(filename, AREAstr, NAVstr)
+ subroutine READ_NAVIGATION_BLOCK_COMS(filename, AREAstr, NAVstr)
   CHARACTER(len=*), intent(in):: filename
   TYPE(AREA_STRUCT), intent(in):: AREAstr
   TYPE(GVAR_NAV), intent(inout):: NAVstr
  
-  INTEGER :: geos_nav
-  INTEGER(kind=int4)nav_offset
+  integer :: geos_nav
+  integer(kind=int4)nav_offset
   integer:: number_of_words_read
-  INTEGER(kind=int4), DIMENSION(640) :: i4buf
+  integer(kind=int4), DIMENSION(640) :: i4buf
   
   nav_offset = AREAstr%sec_key_nav
     
   !determine GEOS or other navigation
   geos_nav = sym%NO
-  CALL mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
+  call mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
                     number_of_words_read, i4buf)
-!  IF (AREAstr%swap_bytes > 0) CALL swap_bytes4(i4buf,640)
-  CALL move_bytes(4,i4buf(1),NAVstr%nav_type,0)
+!  if (AREAstr%swap_bytes > 0) call swap_bytes4(i4buf,640)
+  call move_bytes(4,i4buf(1),NAVstr%nav_type,0)
  !SUBLON stored as SUBLON *10 in McIDAS NAV block
-  NAVstr%sub_lon = REAL(i4buf(6),kind=real4) / 10
+  NAVstr%sub_lon = real(i4buf(6),kind=real4) / 10
   NAVstr%sublon = NAVstr%sub_lon
 
-	 ! LOFF, COFF, CFAC, LFAC stored in McIDAS header for 1km data. All
-	 ! Multipied by 10. Order from nvxmtst.dlm in McIDAS
-  NAVstr%LOFF=(i4buf(2) / 10 ) / REAL(AREAstr%line_res)
-  NAVstr%COFF=(i4buf(3) / 10) / REAL(AREAstr%elem_res)
-  NAVstr%LFAC=(i4buf(4) / 10 ) / REAL(AREAstr%line_res)
-  NAVstr%CFAC=(i4buf(5) / 10 ) / REAL(AREAstr%elem_res)
+ ! LOFF, COFF, CFAC, LFAC stored in McIDAS header for 1km data. All
+ ! Multipied by 10. Order from nvxmtst.dlm in McIDAS
+  NAVstr%LOFF=(i4buf(2) / 10 ) / real(AREAstr%line_res)
+  NAVstr%COFF=(i4buf(3) / 10) / real(AREAstr%elem_res)
+  NAVstr%LFAC=(i4buf(4) / 10 ) / real(AREAstr%line_res)
+  NAVstr%CFAC=(i4buf(5) / 10 ) / real(AREAstr%elem_res)
 
- END SUBROUTINE READ_NAVIGATION_BLOCK_COMS
+ end subroutine READ_NAVIGATION_BLOCK_COMS
 
 !----------------------------------------------
 ! Copied subroutines
 !----------------------------------------------
-
-
-!COMS IS TRICKY. Need to keep seperate because of wierdness in HiRID bytes per pixel
-
 subroutine GET_COMS_IMAGE(filename,AREAstr, &
                                     segment_number, &
                                     num_lines_per_segment, &
@@ -706,8 +708,8 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
  integer(kind=int4):: bytemove
  integer(kind=int4):: Line_Idx
  integer(kind=int2), dimension(:), allocatable:: word_buffer
- INTEGER (kind=int1), dimension(:), allocatable :: buffer1
- INTEGER(kind=int4), DIMENSION(64) :: i4buf_temp
+ integer (kind=int1), dimension(:), allocatable :: buffer1
+ integer(kind=int4), DIMENSION(64) :: i4buf_temp
  integer:: nwords
 
  bytemove = 0 !COMS IS 0 byte offset
@@ -780,7 +782,6 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
  deallocate(word_buffer)
  if (allocated(buffer1)) deallocate(buffer1)
  
- 
  end subroutine GET_COMS_IMAGE
 
-END MODULE COMS_MODULE
+end module COMS_MODULE

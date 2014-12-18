@@ -90,7 +90,7 @@
 !
 !--------------------------------------------------------------------------------------
 
-module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
+module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
    ! -- MODULES USED
 
@@ -162,8 +162,8 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
       , Bt_Mean_ChI5 &
       , Bt_Uni_ChI5
      
-   use NAIVE_BAYESIAN_CLOUD_MASK_MODULE , only : &
-        Cloud_Mask_Naive_Bayes &
+   use NB_CLOUD_MASK , only : &
+        NB_CLOUD_MASK_ALGORITHM &
       , Cloud_Mask_Input_Type &
       , ET_Cloudiness_Class &
       , Cloud_Mask_Diagnostic &
@@ -172,14 +172,14 @@ module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
    use FILE_TOOLS, only: &
         FILE_TEST
 
-   public :: CLOUD_MASK_NAIVE_BAYES_BRIDGE
+   public :: NB_CLOUD_MASK_BRIDGE
    
 
 contains
    !----------------------------------------------------------------------
    !
    !---------------------------------------------------------------------- 
-   subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE(segment_number)
+   subroutine NB_CLOUD_MASK_BRIDGE(segment_number)
  
       implicit none
      
@@ -332,7 +332,7 @@ contains
 
             mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
              
-            call CLOUD_MASK_NAIVE_BAYES ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags &
+            call NB_CLOUD_MASK_ALGORITHM ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags &
                                          , diag , vers )
            
             Bayes_Mask_Sfc_Type_Global (  i , j ) = ibits ( info_flags (3) , 0, 3 ) 
@@ -384,10 +384,10 @@ contains
       Cloud_Mask_Version = vers % cloud_mask_version_id
       Cloud_Mask_Thresholds_Version = vers % cloud_mask_thresh_version_id
        
-   end subroutine CLOUD_MASK_NAIVE_BAYES_BRIDGE
+   end subroutine NB_CLOUD_MASK_BRIDGE
 
 
 !------------------------------------------------------------------------------------------------------------
 
-end module NAIVE_BAYESIAN_CLAVRX_BRIDGE_MODULE
+end module NB_CLOUD_MASK_CLAVRX_BRIDGE
 

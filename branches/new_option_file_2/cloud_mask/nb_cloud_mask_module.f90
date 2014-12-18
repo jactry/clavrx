@@ -1,4 +1,4 @@
-! $Header$
+! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/trunk/cloud_mask/naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $
 !
 !----------------------------------------------------------------------
 ! MODULE name: NAIVE_BAYESIAN_CLOUD_MASK
@@ -65,7 +65,9 @@
 !
 !----------------------------------------------------------------------
 
-module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
+module NB_CLOUD_MASK
+
+ use NB_CLOUD_MASK_SERVICES
 
    implicit none
    
@@ -255,7 +257,7 @@ contains
    !
    !
    !
-   subroutine CLOUD_MASK_NAIVE_BAYES ( inp , erg , info_flags , diag , vers )
+   subroutine NB_CLOUD_MASK_ALGORITHM ( inp , erg , info_flags , diag , vers )
           
       implicit none
             
@@ -313,7 +315,7 @@ contains
       
       ! - set mask and thresholds version id
       vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
-      vers % cloud_mask_version_id = "$Id$"
+      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $"
 
       ! - determine sfc type
       sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lon &
@@ -333,7 +335,7 @@ contains
                             
       use_lunar_refl_for_vis_tests = .false.
       if ( inp % sat % chan_on(42) ) then
-			
+
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
            ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
              inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
@@ -677,7 +679,7 @@ contains
             ! - this solar test can be also applied for lunar
             !TODO - make own lunar visible coefficients
             !
-			
+
             if ( use_lunar_refl_for_vis_tests ) then
                Classifier_Value = REFLECTANCE_GROSS_CONTRAST_TEST ( &
                                   inp % rtm % ref_dnb_clear &
@@ -863,7 +865,7 @@ contains
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
             
-   end subroutine CLOUD_MASK_NAIVE_BAYES
+   end subroutine NB_CLOUD_MASK_ALGORITHM
 
    !-------------------------------------------------------------------------------------
    !   Reads the coefficients from file
@@ -1436,5 +1438,5 @@ contains
    
 !-------------------------------------------------------------------------------------   
 
-end module NAIVE_BAYESIAN_CLOUD_MASK_MODULE
+end module NB_CLOUD_MASK
 

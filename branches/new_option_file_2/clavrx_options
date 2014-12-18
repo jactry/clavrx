@@ -1,12 +1,14 @@
 /DATA/Ancil_Data/
 ./temp/
-1   ! Mask mode bayesian cloud mask (0=no, 1 = yes)
-1   ! DCOMP
-4   ! ACHA
-1   ! NLCOMP 
+0   ! Expert mode (0 - nothing is read below, 1 - only ALG is read, 9 - everything is read )
+1   !ALG Mask mode bayesian cloud mask (0=no, 1 = yes)
+1   !ALG DCOMP
+4   !ALG ACHA
+1   !ALG NLCOMP 
 1   !OUTPUT Level-2  file output flag (0= no, 1 = yes)
 0   !OUTPUT RTM  file output flag (0= no, 1 = yes)
 1   !PRC Cloud flag  
+200 ! Num scan lines
 1   !FLUX parameters ( former erb_flag)
 1   !NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
 0   !NWP smooth nwp flag (0=no, 1=yes)
@@ -33,8 +35,7 @@ viirs_default_bayes_mask.txt
 0       !AVHRR-ONLY specific ref_cal_1b flag (0 = use default level1b cal, 1 = recalibrate using PATMOS-x numbers (AVHRR-only))
 0       !AVHRR-ONLY therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
 0       !AVHRR-ONLY 1bx flag      (1 = fill in clavr-x bytes in level 1b)
-0       !AVHRR-ONLY nav flag  (0=level-1b,1 = clevernav,2=Reposnx: For non-AVHRR, use 0)
-1       ! EXPERT-MODE switch on (1) /off (0)    
+0       !AVHRR-ONLY nav flag  (0=level-1b,1 = clevernav,2=Reposnx: For non-AVHRR, use 0)    
 1 1 1 1 1 1    !chan on flags of channels 1,2,3,4,5,6
 1 1 1 1 1 1    !chan on flags of channels 7,8,9,10,11,12
 1 1 1 1 1 1    !chan on flags of channels 13,14,15,16,17,18

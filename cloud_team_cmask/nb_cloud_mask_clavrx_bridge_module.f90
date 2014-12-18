@@ -80,6 +80,8 @@ contains
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
 
+print *, "IN BRIDGE "
+
    ! -----------    loop over pixels -----   
    line_loop: do i = 1, Num_Pix
       elem_loop: do  j = 1, Num_Scans_Read
@@ -267,54 +269,87 @@ contains
       Input%Snow_Class => Snow(i,j)
       Input%Land_Class => Land(i,j)
       Input%Oceanic_Glint_Mask => Glint_Mask(i,j)
-      Input%Lunar_Oceanic_Glint_Mask => Glint_Mask_Lunar(i,j)
       Input%Coastal_Mask => Coast_Mask(i,j)
       Input%Solzen => Solzen(i,j)
       Input%Scatzen => Scatangle(i,j)
-      Input%Lunscatzen => Scatangle_Lunar(i,j)
       Input%Senzen => Satzen(i,j)
-      Input%Lunzen => Lunzen(i,j)
       Input%Lat => Lat(i,j)
       Input%Lon => Lon(i,j)
-      Input%Ref_041um => ch(8)%Ref_Toa(i,j)
-      Input%Ref_063um => ch(1)%Ref_Toa(i,j)
-      Input%Ref_063um_Clear => ch(1)%Ref_Toa_Clear(i,j)
-      Input%Ref_063um_Std => Ref_Ch1_Std_3x3(i,j)
-      Input%Ref_063um_Min => Ref_Ch1_Min_3x3(i,j)
-      Input%Ref_086um => ch(2)%Ref_Toa(i,j)
-      Input%Ref_138um => ch(26)%Ref_Toa(i,j)
-      Input%Ref_160um => ch(6)%Ref_Toa(i,j)
-      Input%Ref_160um_Clear => ch(6)%Ref_Toa_Clear(i,j)
-      Input%Ref_375um => ch(20)%Ref_Toa(i,j)
-      Input%Ref_375um_Clear => ch(20)%Ref_Toa_Clear(i,j)
-      Input%Ref_213um => ch(7)%Ref_Toa(i,j)
-      Input%Bt_375um => ch(20)%Bt_Toa(i,j)
-      Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)
-      Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
-      Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm(i,j)
-      Input%Bt_67um => ch(27)%Bt_Toa (i,j)
-      Input%Bt_85um => ch(29)%Bt_Toa(i,j)
-      Input%Bt_11um => ch(31)%Bt_Toa(i,j)
-      Input%Bt_11um_Std => Bt_Ch31_Std_3x3(i,j)
-      Input%Bt_11um_Max => Bt_Ch31_Max_3x3(i,j)
-      Input%Bt_11um_Clear => ch(31)%Bt_Toa_Clear(i,j)
-      Input%Emiss_11um_Tropo => ch(31)%Emiss_Tropo(i,j)
-      Input%Bt_12um => ch(32)%Bt_Toa(i,j)
-      Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear(i,j)
-      Input%Ref_I1_064um_Std => Ref_Uni_ChI1(i,j)
-      Input%Bt_I4_374um_Std => Bt_Uni_ChI4(i,j)
-      Input%Bt_I5_114um_Std => Bt_Uni_ChI5(i,j)
-      Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5(i,j)
       Input%Sst_Anal_Uni => Sst_Anal_Uni(i,j)
       Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss(i,j)
-      Input%Rad_Lunar => ch(42)%Rad_Toa(i,j)
-      Input%Ref_Lunar => ch(42)%Ref_Lunar_Toa(i,j)
-      Input%Ref_Lunar_Min => Ref_ChDNB_Lunar_Min_3x3(i,j)
-      Input%Ref_Lunar_Std => Ref_ChDNB_Lunar_Std_3x3(i,j)
-      Input%Ref_Lunar_Clear => ch(42)%Ref_Lunar_Toa_Clear(i,j)
       Input%Zsfc => Zsfc(i,j)
       Input%Solar_Contamination_Mask => Solar_Contamination_Mask(i,j)
       Input%Sfc_Type => Sfc_Type(i,j)
+
+      if (Input%Chan_On_041um == sym%YES)  then 
+        Input%Ref_041um => ch(8)%Ref_Toa(i,j)
+      endif
+      if (Input%Chan_On_063um == sym%YES)  then 
+        Input%Ref_063um => ch(1)%Ref_Toa(i,j)
+        Input%Ref_063um_Clear => ch(1)%Ref_Toa_Clear(i,j)
+        Input%Ref_063um_Std => Ref_Ch1_Std_3x3(i,j)
+        Input%Ref_063um_Min => Ref_Ch1_Min_3x3(i,j)
+      endif
+      if (Input%Chan_On_086um == sym%YES)  then 
+        Input%Ref_086um => ch(2)%Ref_Toa(i,j)
+      endif
+      if (Input%Chan_On_138um == sym%YES)  then 
+        Input%Ref_138um => ch(26)%Ref_Toa(i,j)
+      endif
+      if (Input%Chan_On_160um == sym%YES)  then 
+        Input%Ref_160um => ch(6)%Ref_Toa(i,j)
+        Input%Ref_160um_Clear => ch(6)%Ref_Toa_Clear(i,j)
+      endif
+      if (Input%Chan_On_213um == sym%YES)  then 
+        Input%Ref_213um => ch(7)%Ref_Toa(i,j)
+      endif
+      if (Input%Chan_On_375um == sym%YES)  then 
+        Input%Ref_375um => ch(20)%Ref_Toa(i,j)
+        Input%Ref_375um_Clear => ch(20)%Ref_Toa_Clear(i,j)
+        Input%Bt_375um => ch(20)%Bt_Toa(i,j)
+        Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)
+        Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
+        Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm(i,j)
+      endif
+      if (Input%Chan_On_67um == sym%YES)  then 
+        Input%Bt_67um => ch(27)%Bt_Toa (i,j)
+        if (Input%Chan_On_11um == sym%YES)  then 
+           Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5(i,j)
+        endif
+      endif
+      if (Input%Chan_On_85um == sym%YES)  then 
+        Input%Bt_85um => ch(29)%Bt_Toa(i,j)
+      endif
+      if (Input%Chan_On_11um == sym%YES)  then 
+        Input%Bt_11um => ch(31)%Bt_Toa(i,j)
+        Input%Bt_11um_Std => Bt_Ch31_Std_3x3(i,j)
+        Input%Bt_11um_Max => Bt_Ch31_Max_3x3(i,j)
+        Input%Bt_11um_Clear => ch(31)%Bt_Toa_Clear(i,j)
+        Input%Emiss_11um_Tropo => ch(31)%Emiss_Tropo(i,j)
+      endif
+      if (Input%Chan_On_12um == sym%YES)  then 
+        Input%Bt_12um => ch(32)%Bt_Toa(i,j)
+        Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear(i,j)
+      endif
+      if (Input%Chan_On_DNB == sym%YES)  then 
+        Input%Lunscatzen => Scatangle_Lunar(i,j)
+        Input%Lunar_Oceanic_Glint_Mask => Glint_Mask_Lunar(i,j)
+        Input%Rad_Lunar => ch(42)%Rad_Toa(i,j)
+        Input%Ref_Lunar => ch(42)%Ref_Lunar_Toa(i,j)
+        Input%Ref_Lunar_Min => Ref_ChDNB_Lunar_Min_3x3(i,j)
+        Input%Ref_Lunar_Std => Ref_ChDNB_Lunar_Std_3x3(i,j)
+        Input%Ref_Lunar_Clear => ch(42)%Ref_Lunar_Toa_Clear(i,j)
+        Input%Lunzen => Lunzen(i,j)
+      endif
+      if (Input%Chan_On_I1_064um == sym%YES) then
+         Input%Ref_I1_064um_Std => Ref_Uni_ChI1(i,j)
+      endif
+      if (Input%Chan_On_I4_374um == sym%YES) then
+         Input%Bt_I4_374um_Std => Bt_Uni_ChI4(i,j)
+      endif
+      if (Input%Chan_On_I5_114um == sym%YES) then
+         Input%Bt_I5_114um_Std => Bt_Uni_ChI5(i,j)
+      endif
    end subroutine SET_INPUT
 
    subroutine SET_OUTPUT(i,j)

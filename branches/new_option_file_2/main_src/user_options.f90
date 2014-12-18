@@ -240,95 +240,100 @@ contains
 
      endif
 
-     !--- check ACHA mode based on available channels
-     if (Acha_Mode == 3 .and. &
+      !--- check ACHA mode based on available channels
+      if (Acha_Mode == 3 .and. &
          (Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA Set to Mode 0'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 4 .and. &
+      endif
+      if (Acha_Mode == 4 .and. &
          (Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 8 .and. &
+      endif
+      if (Acha_Mode == 8 .and. &
          (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 8 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 5 .and. &
+      endif
+      if (Acha_Mode == 5 .and. &
          (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels. Acha will not run.'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 6 .and. &
+      endif
+      if (Acha_Mode == 6 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 7 .and. &
+      endif
+      if (Acha_Mode == 7 .and. &
          (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
-     endif
-     if (Acha_Mode == 2 .and. &
+      endif
+      if (Acha_Mode == 2 .and. &
          (Chan_On_Flag_Default(27)==sym%NO)) then
          print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels. ACHA will not run.'
          Acha_Mode = 0
-     endif
+      endif
 
 
-     !-------------------------------------------------------------------------------------
-     !--- DCOMP Mode Check
-     !-------------------------------------------------------------------------------------
+      !-------------------------------------------------------------------------------------
+      !--- DCOMP Mode Check
+      !-------------------------------------------------------------------------------------
 
-     !- dcomp mode 9 is Andys test code
+      !- dcomp mode 9 is Andys test code
       write (string_1,'(I1)') dcomp_mode_user_set
-     call mesg ('dcomp user set:   ===================>  '//string_1 ,level = 5 )
-     dcomp_mode = dcomp_mode_user_set
+      call mesg ('dcomp user set:   ===================>  '//string_1 ,level = 5 )
+      dcomp_mode = dcomp_mode_user_set
    
-     if (AVHRR_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
-        Dcomp_Mode = 3
-        if (Sc_Id_WMO == 208) Dcomp_Mode = 1   !NOAA-17
-        if (Sc_Id_WMO == 3) Dcomp_Mode = 1     !METOP-A
-        if (Sc_Id_WMO == 4) Dcomp_Mode = 1     !METOP-B
-        if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
-     endif
-     if (GOES_Flag == sym%YES .and. Dcomp_Mode /= 0 .and.Dcomp_Mode /= 9) then
-        Dcomp_Mode = 3
-     endif
-     if (Mtsat_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
-        Dcomp_Mode = 3
-     endif
-     if  ( Dcomp_Mode_user_set .ne. Dcomp_Mode) then
-	   call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
-     endif 
+      if (AVHRR_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
+         Dcomp_Mode = 3
+         if (Sc_Id_WMO == 208) Dcomp_Mode = 1   !NOAA-17
+         if (Sc_Id_WMO == 3) Dcomp_Mode = 1     !METOP-A
+         if (Sc_Id_WMO == 4) Dcomp_Mode = 1     !METOP-B
+         if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
+      endif
+      
+      if (GOES_Flag == sym%YES .and. Dcomp_Mode /= 0 .and.Dcomp_Mode /= 9) then
+         Dcomp_Mode = 3
+      endif
+      
+      if (Mtsat_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
+         Dcomp_Mode = 3
+      endif
+      
+      if  ( Dcomp_Mode_user_set .ne. Dcomp_Mode) then
+	      call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
+      endif 
      
-     write (string_1,'(i1)') dcomp_mode
-     call mesg ('dcomp mode used for this file: '//string_1)
+      write (string_1,'(i1)') dcomp_mode
+      call mesg ('dcomp mode used for this file: '//string_1)
 
 
-     !--- check based on available channels
-     if (Dcomp_Mode_User_Set == 1 .and. &
+      !--- check based on available channels
+      if (Dcomp_Mode_User_Set == 1 .and. &
          (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(6)==sym%NO)) then
          print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
-     endif
-     if (Dcomp_Mode_User_Set == 2 .and. &
+      endif
+      
+      if (Dcomp_Mode_User_Set == 2 .and. &
          (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(7)==sym%NO)) then
          print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
-     endif
-     if (Dcomp_Mode_User_Set == 3 .and. &
+      endif
+      
+      if (Dcomp_Mode_User_Set == 3 .and. &
          (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(20)==sym%NO)) then
          print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
-     endif
+      endif
     
-     !--- Prevent level3 file creation for anything but AVHRR
-     if (Level3_Flag == sym%YES .and. Avhrr_Flag == sym%NO) then
+      !--- Prevent level3 file creation for anything but AVHRR
+      if (Level3_Flag == sym%YES .and. Avhrr_Flag == sym%NO) then
          Level3_Flag = sym%NO
          print *, EXE_PROMPT, "Level3 creation supported only for AVHRR, turning off"
-     endif
+      endif
 
-  end subroutine CHECK_ALGORITHM_CHOICES
+   end subroutine CHECK_ALGORITHM_CHOICES
    
    
    !------------------------------------------------------------------
@@ -800,12 +805,6 @@ contains
     if (nav_Flag == 2) then
          call mesg( "REPOSNX geolocation adjustment done")
     endif
-
-   
-
-   
-
-    
 
     if (cld_Flag == sym%NO) then
         print *, EXE_PROMPT, "Cloud products will not be created"

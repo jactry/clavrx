@@ -147,6 +147,8 @@
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
+   use cr_config_mod    
+      
    implicit none
  
    !***********************************************************************
@@ -248,6 +250,7 @@
    character ( len = 30) :: string_30
    character ( len = 100) :: string_100
    
+   type (conf_user_opt_type) :: config
    
   
    !------------- VIIRS variables --------------
@@ -266,7 +269,8 @@
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
-   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' , level = verb_lev % MINIMAL , color = 43 )
+   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
+      , level = verb_lev % MINIMAL , color = 43 )
 
 #ifdef HDF5LIBS
    call mesg ( "HDF5 USED" , level = verb_lev % VERBOSE )
@@ -308,7 +312,10 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
-  
+   
+   call config % set_config ()
+   print*,config % file % infile , config % file % ETsensor
+   print*
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************

@@ -27,47 +27,133 @@
 ! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 ! SUPPORT TO USERS.
 !
+!
+!  HISTORY:
+!        16 Dec 2014: Switch to new option file  (AW)
+!                       code cleaning
+!   
 !--------------------------------------------------------------------------------------
 module USER_OPTIONS
- use PIXEL_COMMON
- use CONSTANTS
- use FILE_UTILITY
+
+   use PIXEL_COMMON, only: &
+      chan_on_flag_default &
+      , aer_flag &
+      , ash_file_flag &
+      , ash_flag &
+      , bx_file_flag &
+      , cld_file_flag &
+      , cld_flag &
+      , cloud_mask_aux_flag &
+      , cloud_mask_Bayesian_flag &
+      , cmr_file_flag &
+      , erb_flag &
+      , level3_flag &
+      , nav_Flag &
+      , nwp_flag &
+      , ref_cal_1b &
+      , rtm_file_flag &
+      , rtm_flag &
+      , sst_file_flag &
+      , temporary_data_dir &
+      , therm_cal_1b &
+      , ancil_data_dir &
+      , cfsr_data_dir &
+      , data_comp_flag &
+      , diag_flag &
+      , dlat &
+      , file_list &
+      , geo_file_flag &
+      , gfs_data_dir &
+      , lat_max_limit &
+      , lat_min_limit &
+      , level2_file_flag &
+      , level3_format &
+      , lrc_flag &
+      , modis_clr_alb_flag &
+      , nav_file_flag &
+      , ncep_data_dir &
+      , num_scans_per_segment &
+      , obs_file_flag &
+      , oisst_data_dir &
+      , output_scaled_reflectances &
+      , prob_clear_res_flag &
+      , process_undetected_cloud_flag &
+      , read_coast_mask &
+      , read_hires_sfc_type &
+      , read_land_mask &
+      , read_snow_mask &
+      , read_surface_elevation &
+      , read_volcano_mask &
+      , smooth_nwp_flag &
+      , snow_data_dir &
+      , solzen_max_limit &
+      , solzen_min_limit &
+      , sst_anal_opt &
+      , subset_pixel_hdf_flag &
+      , use_default &
+      , use_seebor &
+      , use_sst_anal_default &
+      , acha_mode &
+      , ASc_Flag_Diag &
+      , bayesian_cloud_mask_name &
+      , Compress_Flag &
+      , Nlcomp_Mode &
+      , viirs_flag &
+      , goes_mop_flag &
+      , dcomp_mode &
+      , avhrr_flag &
+      , avhrr_1_flag &
+      , acha_mode_default_mtsat &
+      , Acha_Mode_Default_VIIRS &
+      , Acha_Mode_Default_Goes_IL &
+      , goes_flag &
+      , Acha_Mode_Default_avhrr &
+      , Acha_Mode_Default_avhrr1 &
+      , Acha_Mode_Default_goes_mp &      
+      , read_dark_comp &
+      , mtsat_flag &
+      , sc_id_wmo
+      
+      
+   use CONSTANTS, only: &
+      sym &
+      , exe_prompt   
+   use FILE_UTILITY, only: &
+      get_lun
  
-  use  clavrx_message_module, only: &
-    mesg &
+   use  clavrx_message_module, only: &
+      mesg &
     , verb_lev
 
-  implicit none
+   implicit none
 
-  public:: SETUP_USER_DEFINED_OPTIONS
-  public:: CHECK_ALGORITHM_CHOICES
+   public:: SETUP_USER_DEFINED_OPTIONS
+   public:: CHECK_ALGORITHM_CHOICES
 
-  private:: READ_CLAVRXORB_DEFAULT_OPTIONS, &
+   private:: READ_CLAVRXORB_DEFAULT_OPTIONS, &
             HELPER, &
             QC_CLAVRXORB_OPTIONS
 
-  character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
-  character ( len = 50 ) :: data_base_path
-  integer :: Dcomp_Mode_User_Set
-  contains
+   character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
+   character ( len = 50 ) :: data_base_path
+   integer :: Dcomp_Mode_User_Set
+contains
+
 !------------------------------------------------------------------
 !
 !------------------------------------------------------------------
-subroutine SETUP_USER_DEFINED_OPTIONS()
+   subroutine SETUP_USER_DEFINED_OPTIONS()
 
-    call READ_CLAVRXORB_COMMANDLINE_OPTIONS()
+      call READ_CLAVRXORB_COMMANDLINE_OPTIONS()
+      call QC_CLAVRXORB_OPTIONS()
 
-    call QC_CLAVRXORB_OPTIONS()
-
-
-end subroutine SETUP_USER_DEFINED_OPTIONS
-  !----------------------------------------------------------------------------
-  !
-  !----------------------------------------------------------------------------
+   end subroutine SETUP_USER_DEFINED_OPTIONS
+   
+   !----------------------------------------------------------------------------
+   !
+   !----------------------------------------------------------------------------
    subroutine CHECK_ALGORITHM_CHOICES()
-     
-     
-      
+
       character ( len = 1 ) :: string_1
  
  
@@ -243,154 +329,156 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
      endif
 
   end subroutine CHECK_ALGORITHM_CHOICES
-!------------------------------------------------------------------
-! Read Parameters from AVHRR INPUT files and check them for errors
-!
-! parameters are pased in avhrr_pixel_common public memory
-!------------------------------------------------------------------
-  subroutine READ_CLAVRXORB_DEFAULT_OPTIONS(File_Default)
-    character(len=*), intent(in):: File_Default
-    integer::ios0
-    integer::erstat
-    integer:: Default_Lun
-    integer :: expert_mode
-    
-    call mesg ("DEFAULT FILE READ IN",level = 5 )
-    call mesg ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
+   
+   
+   !------------------------------------------------------------------
+   ! Read Parameters from AVHRR INPUT files and check them for errors
+   !
+   ! parameters are pased in avhrr_pixel_common public memory
+   !------------------------------------------------------------------
+   subroutine READ_CLAVRXORB_DEFAULT_OPTIONS(File_Default)
+      character(len=*), intent(in):: File_Default
+      integer::ios0
+      integer::erstat
+      integer:: Default_Lun
+      integer :: expert_mode
+      
+      call mesg ("DEFAULT FILE READ IN",level = 5 )
+      call mesg ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
 
-    Default_Lun = GET_LUN()
+      Default_Lun = GET_LUN()
 
-    open(unit=Default_Lun,file=trim(File_Default), &
+      open(unit=Default_Lun,file=trim(File_Default), &
           iostat = ios0, &
           action="read", &
           status="old", &
           position="rewind")
 
-    erstat = 0
-    if (ios0 /= 0) then    !avhrr_input_check
-      erstat = 1
-      print *, EXE_PROMPT, "error opening AVHRR default control file, ios0 = ", ios0
-      stop 1
-   else
-      read(unit=Default_Lun,fmt="(a)") Data_base_path
-      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
-      read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
-      read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
-      read(unit=Default_Lun,fmt=*) Acha_Mode
-      read(unit=Default_Lun,fmt=*) Nlcomp_Mode
-      read(unit=Default_Lun,fmt=*) Level2_File_Flag
-      read(unit=Default_Lun,fmt=*) Rtm_File_Flag
-      read(unit=Default_Lun,fmt=*) Cld_Flag
-      read(unit=Default_Lun,fmt=*) Erb_Flag
-      read(unit=Default_Lun,fmt=*) Nwp_Flag
-      read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
-      read(unit=Default_Lun,fmt=*) Rtm_Flag
-      read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
-      read(unit=Default_Lun,fmt=*) Compress_Flag
-      read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
-      read(unit=Default_Lun,fmt=*) Prob_Clear_Res_Flag
-      read(unit=Default_Lun,fmt=*) Lrc_Flag
-      read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
-      read(unit=Default_Lun,fmt=*) Diag_Flag
-      read(unit=Default_Lun,fmt=*) ASc_Flag_Diag
-      read(unit=Default_Lun,fmt=*) Lat_Min_Limit
-      read(unit=Default_Lun,fmt=*) Lat_Max_Limit
-      read(unit=Default_Lun,fmt=*) Sst_Anal_Opt
-      read(unit=Default_Lun,fmt=*) Use_Seebor
-      read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
-      read(unit=Default_Lun,fmt=*) Read_Land_Mask
-      read(unit=Default_Lun,fmt=*) Read_Coast_Mask
-      read(unit=Default_Lun,fmt=*) Read_Surface_Elevation
-      read(unit=Default_Lun,fmt=*) Read_Volcano_Mask
-      read(unit=Default_Lun,fmt=*) Read_Snow_Mask
-      read(unit=Default_Lun,fmt=*) Read_Dark_Comp
-      read(unit=Default_Lun,fmt=*) Ref_Cal_1b
-      read(unit=Default_Lun,fmt=*) Therm_Cal_1b
-      read(unit=Default_Lun,fmt=*) Bx_File_Flag
-      read(unit=Default_Lun,fmt=*) Nav_Flag
-      read(unit=Default_Lun,fmt=*) expert_mode
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(19:24)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
-    endif
-    close(unit=Default_Lun)
+      erstat = 0
+      if (ios0 /= 0) then    !avhrr_input_check
+         erstat = 1
+         print *, EXE_PROMPT, "error opening AVHRR default control file, ios0 = ", ios0
+         stop 1
+      else
+         read(unit=Default_Lun,fmt="(a)") Data_base_path
+         read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
+         read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
+         read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
+         read(unit=Default_Lun,fmt=*) Acha_Mode
+         read(unit=Default_Lun,fmt=*) Nlcomp_Mode
+         read(unit=Default_Lun,fmt=*) Level2_File_Flag
+         read(unit=Default_Lun,fmt=*) Rtm_File_Flag
+         read(unit=Default_Lun,fmt=*) Cld_Flag
+         read(unit=Default_Lun,fmt=*) Erb_Flag
+         read(unit=Default_Lun,fmt=*) Nwp_Flag
+         read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
+         read(unit=Default_Lun,fmt=*) Rtm_Flag
+         read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
+         read(unit=Default_Lun,fmt=*) Compress_Flag
+         read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
+         read(unit=Default_Lun,fmt=*) Prob_Clear_Res_Flag
+         read(unit=Default_Lun,fmt=*) Lrc_Flag
+         read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
+         read(unit=Default_Lun,fmt=*) Diag_Flag
+         read(unit=Default_Lun,fmt=*) ASc_Flag_Diag
+         read(unit=Default_Lun,fmt=*) Lat_Min_Limit
+         read(unit=Default_Lun,fmt=*) Lat_Max_Limit
+         read(unit=Default_Lun,fmt=*) Sst_Anal_Opt
+         read(unit=Default_Lun,fmt=*) Use_Seebor
+         read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
+         read(unit=Default_Lun,fmt=*) Read_Land_Mask
+         read(unit=Default_Lun,fmt=*) Read_Coast_Mask
+         read(unit=Default_Lun,fmt=*) Read_Surface_Elevation
+         read(unit=Default_Lun,fmt=*) Read_Volcano_Mask
+         read(unit=Default_Lun,fmt=*) Read_Snow_Mask
+         read(unit=Default_Lun,fmt=*) Read_Dark_Comp
+         read(unit=Default_Lun,fmt=*) Ref_Cal_1b
+         read(unit=Default_Lun,fmt=*) Therm_Cal_1b
+         read(unit=Default_Lun,fmt=*) Bx_File_Flag
+         read(unit=Default_Lun,fmt=*) Nav_Flag
+         read(unit=Default_Lun,fmt=*) expert_mode
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(19:24)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
+         read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
+      end if
+      close(unit=Default_Lun)
     
     
-    Modis_Clr_Alb_Flag = 1
+      Modis_Clr_Alb_Flag = 1
 
- end subroutine READ_CLAVRXORB_DEFAULT_OPTIONS
+   end subroutine READ_CLAVRXORB_DEFAULT_OPTIONS
  
- subroutine READ_CLAVRXORB_COMMANDLINE_OPTIONS()
-!------------------------------------------------------------------
-! Command-line input option variables 
-!------------------------------------------------------------------  
+   subroutine READ_CLAVRXORB_COMMANDLINE_OPTIONS()
+   !------------------------------------------------------------------
+   ! Command-line input option variables 
+   !------------------------------------------------------------------  
   
-  character(len=30) :: fargv
-  character(len=30) :: junk
-  character(len=1) :: temp_string
-  logical:: back
-  character(len=300):: default_temp
-  real :: int_temp
-  integer :: fargc
-  integer :: i
-  integer :: Temp_Scans_Arg !--- temporary integer for number of scanlines
-  integer*4 :: iargc
+      character(len=30) :: fargv
+      character(len=30) :: junk
+      character(len=1) :: temp_string
+      logical:: back
+      character(len=300):: default_temp
+      real :: int_temp
+      integer :: fargc
+      integer :: i
+      integer :: Temp_Scans_Arg !--- temporary integer for number of scanlines
+      integer*4 :: iargc
 
-  temp_string = '.'  !--- tempoary string to search for in angle commandline
+      temp_string = '.'  !--- tempoary string to search for in angle commandline
 
-  !---- SET DEFAULT OPTIONS
+      !---- SET DEFAULT OPTIONS
   
-  use_Default = sym%YES
-  default_temp="./clavrx_options"
-  file_list = "./file_list"
+      use_Default = sym%YES
+      default_temp="./clavrx_options"
+      file_list = "./file_list"
   
-  !--- set yes/no options to no as default
-  Ref_Cal_1b = sym%NO
-  therm_Cal_1b = sym%NO
-  bx_file_Flag = sym%NO
-  nav_Flag = 0
-  prob_clear_res_Flag = 0
-  lrc_Flag = sym%NO
-  process_undetected_cloud_Flag = sym%NO
-  nav_file_Flag = sym%NO 
-  cmr_file_Flag = sym%NO
-  cld_file_Flag = sym%NO
-  sst_file_Flag = sym%NO
-  obs_file_Flag = sym%NO
-  geo_file_Flag = sym%NO
-  rtm_file_Flag = sym%NO
-  ash_file_Flag = sym%NO
-  level2_file_Flag = sym%NO
-  level3_Flag = sym%NO
-  cld_Flag = sym%NO
-  Aer_Flag = sym%NO
-  Erb_Flag = sym%NO
-  Ash_Flag = sym%NO
-  Data_comp_Flag = 0
-  Diag_Flag = 0
-  Subset_pixel_hdf_Flag = 0
-  use_seebor = 0
-  Smooth_Nwp_Flag = 0
-  read_hires_sfc_type = 0
-  read_land_mask = 0
-  read_coast_mask = 0
-  read_surface_elevation = 0
-  read_volcano_mask = 0
-  Cloud_Mask_Aux_Flag = 0
-  Cloud_Mask_Bayesian_Flag = 0
-  use_sst_anal_Default = 0 ! Do not use OISST analisys
-  sst_anal_opt = 0 !determine OISST file
-  modis_clr_alb_Flag = 0 ! do not use clear-sky MODIS albedo maps
-  read_snow_mask = 0
-  output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
-  Num_Scans_per_Segment = 240
-  Temp_Scans_Arg = 0
+      !--- set yes/no options to no as default
+      Ref_Cal_1b = sym%NO
+      therm_Cal_1b = sym%NO
+      bx_file_Flag = sym%NO
+      nav_Flag = 0
+      prob_clear_res_Flag = 0
+      lrc_Flag = sym%NO
+      process_undetected_cloud_Flag = sym%NO
+      nav_file_Flag = sym%NO 
+      cmr_file_Flag = sym%NO
+      cld_file_Flag = sym%NO
+      sst_file_Flag = sym%NO
+      obs_file_Flag = sym%NO
+      geo_file_Flag = sym%NO
+      rtm_file_Flag = sym%NO
+      ash_file_Flag = sym%NO
+      level2_file_Flag = sym%NO
+      level3_Flag = sym%NO
+      cld_Flag = sym%NO
+      Aer_Flag = sym%NO
+      Erb_Flag = sym%NO
+      Ash_Flag = sym%NO
+      Data_comp_Flag = 0
+      Diag_Flag = 0
+      Subset_pixel_hdf_Flag = 0
+      use_seebor = 0
+      Smooth_Nwp_Flag = 0
+      read_hires_sfc_type = 0
+      read_land_mask = 0
+      read_coast_mask = 0
+      read_surface_elevation = 0
+      read_volcano_mask = 0
+      Cloud_Mask_Aux_Flag = 0
+      Cloud_Mask_Bayesian_Flag = 0
+      use_sst_anal_Default = 0 ! Do not use OISST analisys
+      sst_anal_opt = 0 !determine OISST file
+      modis_clr_alb_Flag = 0 ! do not use clear-sky MODIS albedo maps
+      read_snow_mask = 0
+      output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
+      Num_Scans_per_Segment = 240
+      Temp_Scans_Arg = 0
  
-  
+
   !--- Default is equal angle @ 0.5 degree resolution
   level3_format = 1
   dlat = 0.5
@@ -448,7 +536,7 @@ end subroutine SETUP_USER_DEFINED_OPTIONS
           print *, EXE_PROMPT, "Using standard defaults and command line options"
   endif 
  
-  do i=1, fargc
+      do i=1, fargc
         call getarg(i,fargv)
     
         !Change Ref_Cal_1b flag 

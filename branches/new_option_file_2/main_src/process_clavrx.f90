@@ -272,9 +272,6 @@
    call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
 
-#ifdef HDF5LIBS
-   call mesg ( "HDF5 USED" , level = verb_lev % VERBOSE )
-#endif
    
    !----------------------------------------------------------------------------
    ! Initialize some flags

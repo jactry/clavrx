@@ -169,11 +169,9 @@ module PIXEL_COMMON
   integer,public, save:: Cloud_Mask_Aux_Flag
   integer,public, save:: Cloud_Mask_Aux_Read_Flag
   integer,public, save:: Cloud_Mask_Bayesian_Flag
-  integer,public, save:: Level3_Flag
   integer,public, save:: Ref_cal_1b 
   integer,public, save:: Therm_cal_1b
   integer,public, save:: Nav_Flag       !0=level1b,1=clevernav,2=reposnx
-  integer,public, save:: Nav_File_Flag  !yes, write out a navigation file
   integer,public, save:: Obs_File_Flag
   integer,public, save:: Geo_File_Flag
   integer,public, save:: Sst_File_Flag
@@ -255,17 +253,7 @@ module PIXEL_COMMON
   integer,public, save:: Ncdc_Level2_Flag
 
 
-  !---------------------------------------------------------------------------------
-  ! Default Algorithm Modes - (maybe move to user options)
-  !---------------------------------------------------------------------------------
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 3
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 1
-  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 6
-  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 7
-  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 5
-  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 6
-  integer,public,parameter:: ACHA_Mode_Default_SEVIRI = 8
-  integer,public,parameter:: ACHA_Mode_Default_Modis = 8
+
 
   !---------------------------------------------------------------------------------
   ! variables that are computed to serve as attributes in the output files
@@ -308,7 +296,6 @@ module PIXEL_COMMON
   character(len=255),public,save:: Algo_Const_File
   character(len=355),public,save:: Dir_cmr
   character(len=355),public,save:: Dir_sst
-  character(len=355),public,save:: Dir_Level3
   character(len=355),public,save:: Dir_nav_in
   character(len=355),public,save:: Dir_nav_out
   character(len=355),public,save:: Dir_cld
@@ -325,7 +312,7 @@ module PIXEL_COMMON
   !----- IFF data files
   character(len=255),public,save:: IFF_File
 
-  real(kind=real4), public, save:: Dlat
+  !real(kind=real4), public, save:: Dlat
   real(kind=real4), public, save:: Lat_Min_Limit
   real(kind=real4), public, save:: Lat_Max_Limit
   real(kind=real4), public, save:: Solzen_Min_Limit
@@ -343,7 +330,7 @@ module PIXEL_COMMON
   integer(kind=int4), public, save:: Num_Pix
   integer(kind=int4), public, save:: l1b_Rec_Length
   integer(kind=int4), public, save:: Num_Anchors
-  integer, public, save:: level3_format
+ 
   real(kind=real4), public, save:: dLat_hist2d
 
   !--- channel on/off flags

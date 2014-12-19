@@ -13,7 +13,7 @@ module cr_config_mod
       logical :: run_sst
       logical :: run_cld
       logical :: run_aot
-      logical :: run_flux
+      logical :: run_sasrab
       logical :: run_ash
    end type conf_process_type
    
@@ -27,9 +27,9 @@ module cr_config_mod
    type conf_sfc_type
       integer :: oisst_mode
       logical :: use_seebor
-      logical :: use_hres_cloudtype
+      logical :: use_hres_sfctype
       logical :: use_hres_land_mask
-      logical :: use_hres_coast_mask
+      logical :: use_coast_mask
       logical :: use_hres_elev
       logical :: use_volc_mask 
       logical :: use_dark_compo 
@@ -71,21 +71,24 @@ module cr_config_mod
      
    type conf_user_opt_type
       integer :: n_files
+      integer :: expert_mode
       character (len=256) :: ancil_path
       character (len=256) :: temp_path
       type (conf_algo_modes_type ) :: user_modes
       type (conf_algo_modes_type ) :: updated_modes
       integer :: rtm_mode
       integer :: nwp_mode
+      integer :: nav_mode
       logical :: do_smooth_nwp
       logical :: do_process_cloudfree
       logical :: do_compress_out
+      integer :: num_scans_per_segment
       type (conf_process_type ) :: algo_group
       type (conf_diag_type ) :: diag
       type ( conf_sfc_type ) :: sfc
       type ( conf_mask_type) :: mask
       type ( conv_avhhr_type ) :: avhrr
-      type ( conf_channel_type ) , dimension(40) :: chan
+      type ( conf_channel_type ) , dimension(42) :: chan
       type ( conf_output_type) :: out
       logical :: use_gzip     
       logical :: subset_pixel_hdf
@@ -122,6 +125,26 @@ module cr_config_mod
       enumerator :: ETresolu_5km
    
    end enum
+   
+   
+   interface read_option_line
+      subroutine  read_option_line_logical ( a ,b )
+         integer :: a
+         logical :: b
+      end subroutine  read_option_line_logical  
+      subroutine  read_option_line_int ( a ,b )
+         integer :: a
+         integer :: b
+      end subroutine  read_option_line_int   
+            subroutine  read_option_line_string ( a ,b )
+         integer :: a
+         character ( len = * ) :: b
+      end subroutine  read_option_line_string
+      subroutine read_option_line_l6 ( lun , data_i )
+         integer :: lun
+         logical :: data_i (6) 
+      end subroutine read_option_line_l6    
+   end interface read_option_line
    
    
 contains
@@ -324,75 +347,126 @@ contains
          print*, 'Error opening clavrx_options file'
          stop 1
       else
-         read(unit=lun,fmt="(a)") conf % ancil_path
-         read(unit=lun,fmt="(a)") conf % temp_path
+         read(unit = lun,fmt="(a)") conf % ancil_path
+         read(unit = lun,fmt="(a)") conf % temp_path
+         read(unit = Lun,fmt=*) conf % expert_mode
+         
+         if ( conf % expert_mode  == 0 )  then
+            close(unit = Lun)
+            return
+         end if
+                 
          read(unit=lun,fmt=*) conf %user_modes% mask_mode
          read(unit=lun,fmt=*) conf %user_modes% dcomp_mode
          read(unit=lun,fmt=*) conf % user_modes%acha_mode
          read(unit=lun,fmt=*) conf % user_modes%nlcomp_mode
          
-         read(unit=lun,fmt=*) int_dummy
-         conf % out % level2 = int_dummy == 1
-         read(unit=lun,fmt=*) int_dummy
-         conf % out % rtm = int_dummy == 1
+         if ( conf % expert_mode  <= 1 )  then
+            close(unit= Lun)
+            return
+         end if
          
-         read(unit=lun,fmt=*) int_dummy
-          conf % algo_group% run_cld = int_dummy == 1
-         read(unit=lun,fmt=*) int_dummy
-          conf % algo_group% run_flux= int_dummy == 1
-         read(unit=lun,fmt=*)  conf % nwp_mode
+         call read_option_line ( lun,  conf % out % level2)
+         call read_option_line ( lun,  conf % out % rtm )
+         call read_option_line ( lun,  conf % algo_group % run_cld )
          
-         read(unit=lun,fmt=*)  int_dummy
-         conf % do_smooth_nwp = int_dummy == 1
+         call read_option_line ( lun , conf % num_scans_per_segment)
+         call read_option_line ( lun , conf % algo_group % run_sasrab )
+         call read_option_line ( lun , conf % nwp_mode )
+         call read_option_line ( lun , conf % rtm_mode )
+         call read_option_line ( lun , conf % nav_mode )
+         call read_option_line ( lun , conf % do_compress_out )
          
-         read(unit=lun,fmt=*) conf % rtm_mode
+         call read_option_line ( lun , conf % mask % read_aux )
+         call read_option_line ( lun , conf % mask % bayesian_mask_classifier )
          
-         read(unit=lun,fmt=*)  int_dummy
-         conf % do_process_cloudfree = int_dummy == 1
+         if ( conf % expert_mode  <= 2 )  then
+            close(unit= Lun)
+            return
+         end if
          
-         read(unit=lun,fmt=*)  int_dummy
-         conf % do_compress_out = int_dummy == 1
          
-         read(unit=lun,fmt=*)  int_dummy
-         conf % mask % read_aux = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % mask % use_prob_clear_res = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % mask % use_lrc = int_dummy == 1
+         call read_option_line ( lun , conf % sfc % use_seebor )
+         call read_option_line ( lun , conf % sfc % use_hres_sfctype )
+         call read_option_line ( lun , conf % sfc % use_hres_land_mask)
+         call read_option_line ( lun , conf % sfc % use_coast_mask)
+         call read_option_line ( lun , conf % sfc % use_hres_elev)
+         call read_option_line ( lun , conf % sfc % use_volc_mask)
+         call read_option_line ( lun , conf % sfc % snow_mask_mode)
+         call read_option_line ( lun , conf % sfc % use_dark_compo)
          
-         read(unit=lun,fmt="(a)")   conf % mask %bayesian_mask_classifier
+          if ( conf % expert_mode  <= 3 )  then
+            close(unit= Lun)
+            return
+         end if
          
-         read(unit=lun,fmt=*)  int_dummy
-         conf % diag % is_diag_on = int_dummy == 1 
-         read(unit=lun,fmt=*)  int_dummy
-         conf % diag % is_node_des = int_dummy == 1 
-         read(unit=lun,fmt=*) conf % diag % min_lat 
-         read(unit=lun,fmt=*) conf % diag % max_lat
+         call read_option_line ( lun , conf % avhrr % active_rfl_cal_1b )
+         call read_option_line ( lun , conf % avhrr % use_therm_cal_1b )
          
-         read(unit=lun,fmt=*) conf % sfc % oisst_mode
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
-         conf % sfc % use_seebor = int_dummy == 1
+         if ( conf % expert_mode  <= 4 )  then
+            close(unit= Lun)
+            return
+         end if
          
-          
+         call read_option_line ( lun , conf % mask % use_lrc )
+         call read_option_line ( lun , conf % do_smooth_nwp )
+         call read_option_line ( lun , conf % do_process_cloudfree )
          
+         if ( conf % expert_mode  <= 5 )  then
+            close(unit= Lun)
+            return
+         end if
+         
+         call read_option_line ( lun , conf % chan ( 1: 6 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 7: 12 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 13: 18 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 19: 24 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 25: 30 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 31: 36 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 37: 42 ) % is_on )
+   
       end if
       close ( unit = lun )
       
    end subroutine read_user_configuration
+   
+ 
 
 end module cr_config_mod
 
+   subroutine read_option_line_int ( lun , data_i )
+      integer :: lun
+      integer :: data_i
+      
+      read(unit=lun,fmt=*)  data_i
+      
+   end subroutine read_option_line_int
+   
+   subroutine read_option_line_logical( lun , data_l) 
+      integer :: lun
+      logical :: data_l
+      
+      integer :: int_dummy
+      
+      read(unit=lun,fmt=*)  int_dummy
+      data_l = int_dummy == 1
+      
+   
+   end subroutine read_option_line_logical 
+   
+    subroutine read_option_line_string ( lun , data_i )
+      integer :: lun
+      character ( len = * ) :: data_i
+      
+      read(unit=lun,fmt=*)  data_i
+      
+   end subroutine read_option_line_string
+   
+   subroutine read_option_line_l6 ( lun , data_i )
+      integer :: lun
+      logical :: data_i (6)
+      
+      read(unit=lun,fmt=*)  data_i
+      
+   end subroutine read_option_line_l6
+   

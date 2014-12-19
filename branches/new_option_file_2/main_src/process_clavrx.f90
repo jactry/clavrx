@@ -310,9 +310,10 @@
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
    
-   !call config % set_config ()
-   !print*,config % file % infile , config % file % ETsensor
-   !print*
+   call config % set_config ()
+   print*,config % file % infile , config % file % ETsensor
+   print*
+   stop
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************

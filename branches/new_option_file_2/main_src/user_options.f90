@@ -127,6 +127,8 @@ module USER_OPTIONS
    integer :: Acha_Mode_User_set
    integer :: expert_mode
    
+   
+   
    !---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
    !---------------------------------------------------------------------------------
@@ -225,6 +227,7 @@ contains
    end subroutine
    
    
+  
    !----------------------------------------------------------------------------
    !
    !----------------------------------------------------------------------------
@@ -452,53 +455,81 @@ contains
       read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
       read(unit=Default_Lun,fmt=*) expert_mode
          
-      if ( expert_mode  > 0 ) then   
-         read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
-         read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
-         read(unit=Default_Lun,fmt=*) Acha_Mode_user_set
-         read(unit=Default_Lun,fmt=*) Nlcomp_Mode
-         
-         if ( expert_mode > 1 ) then 
-            read(unit=Default_Lun,fmt=*) Level2_File_Flag
-            read(unit=Default_Lun,fmt=*) Rtm_File_Flag
-            read(unit=Default_Lun,fmt=*) Cld_Flag
-            read(unit=Default_Lun,fmt=*) num_scans_per_segment
-            read(unit=Default_Lun,fmt=*) Sasrab_Flag
-            read(unit=Default_Lun,fmt=*) Nwp_Opt
-           
-            read(unit=Default_Lun,fmt=*) Rtm_Opt
-            
-            read(unit=Default_Lun,fmt=*) Compress_Flag
-            read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
-           
-            read(unit=Default_Lun,fmt=*) Lrc_Flag
-            read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
-            
-         
-            
-            read(unit=Default_Lun,fmt=*) Use_Seebor
-            read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
-            read(unit=Default_Lun,fmt=*) Read_Land_Mask
-            read(unit=Default_Lun,fmt=*) Read_Coast_Mask
-            read(unit=Default_Lun,fmt=*) Read_Surface_Elevation
-            read(unit=Default_Lun,fmt=*) Read_Volcano_Mask
-            read(unit=Default_Lun,fmt=*) Read_Snow_Mask
-            read(unit=Default_Lun,fmt=*) Read_Dark_Comp
-            read(unit=Default_Lun,fmt=*) Ref_Cal_1b
-            read(unit=Default_Lun,fmt=*) Therm_Cal_1b
-            
-            read(unit=Default_Lun,fmt=*) Nav_Opt
-             read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
-             read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(19:24)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
-            read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
-         end if
+      if ( expert_mode  == 0 )  then
+          close(unit=Default_Lun)
+          return
       end if
+      
+      read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
+      read(unit=Default_Lun,fmt=*) Dcomp_Mode_user_set
+      read(unit=Default_Lun,fmt=*) Acha_Mode_user_set
+      read(unit=Default_Lun,fmt=*) Nlcomp_Mode
+         
+      if ( expert_mode <= 1 )  then
+          close(unit=Default_Lun)
+          return
+      end if
+      
+      read(unit=Default_Lun,fmt=*) Level2_File_Flag
+      read(unit=Default_Lun,fmt=*) Rtm_File_Flag
+      read(unit=Default_Lun,fmt=*) Cld_Flag
+      read(unit=Default_Lun,fmt=*) num_scans_per_segment
+      read(unit=Default_Lun,fmt=*) Sasrab_Flag
+      read(unit=Default_Lun,fmt=*) Nwp_Opt
+     
+      read(unit=Default_Lun,fmt=*) Rtm_Opt
+      read(unit=Default_Lun,fmt=*) Nav_Opt
+      
+      read(unit=Default_Lun,fmt=*) Compress_Flag
+      read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
+
+      read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
+      
+      if ( expert_mode <= 2 )  then
+          close(unit=Default_Lun)
+          return
+      end if 
+      
+      read(unit=Default_Lun,fmt=*) Use_Seebor
+      read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
+      read(unit=Default_Lun,fmt=*) Read_Land_Mask
+      read(unit=Default_Lun,fmt=*) Read_Coast_Mask
+      read(unit=Default_Lun,fmt=*) Read_Surface_Elevation
+      read(unit=Default_Lun,fmt=*) Read_Volcano_Mask
+      read(unit=Default_Lun,fmt=*) Read_Snow_Mask
+      read(unit=Default_Lun,fmt=*) Read_Dark_Comp
+         
+      if ( expert_mode <= 3 ) then
+          close(unit=Default_Lun)
+          return
+      end if
+         
+      read(unit=Default_Lun,fmt=*) Ref_Cal_1b
+      read(unit=Default_Lun,fmt=*) Therm_Cal_1b
+            
+      if ( expert_mode <= 4 ) then
+          close(unit=Default_Lun)
+          return
+      end if
+      
+      read(unit=Default_Lun,fmt=*) Lrc_Flag
+      read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
+      read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
+               
+      if ( expert_mode <= 5 ) then
+          close(unit=Default_Lun)
+          return
+      end if
+      
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(19:24)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
+             
+     
       close(unit=Default_Lun)
     
 

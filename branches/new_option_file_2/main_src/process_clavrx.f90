@@ -313,7 +313,7 @@
    call config % set_config ()
    print*,config % file % infile , config % file % ETsensor
    print*
-   stop
+   
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
@@ -323,7 +323,7 @@
    !------------------------------------------------------------------------------
    !--- Read elevation data 
    !------------------------------------------------------------------------------
-   if (Read_Surface_Elevation /= 0) then
+   if (config % sfc % use_hres_elev ) then
       call mesg  ( "Opening surface elevation file", level = verb_lev % VERBOSE)
       Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
      
@@ -431,27 +431,9 @@
    
    File_loop: do
  
-      !----------------------------------------------------------------------
-      ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
-      !----------------------------------------------------------------------
-      read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
-      if ( file_1b_temp == "") exit
-      if (ios /= 0) then
-         if (ios /= -1) then
-            !-- non eof error
-            erstat = 8
-            call mesg ( "ERROR: Problem reading orbit names from control file" &
-               , level = verb_lev % QUIET) 
-            stop 8
-         else
-            !-- end of orbits
-            if (File_Number == 1) then
-               print *, EXE_PROMPT, "ERROR: No orbits to process, stopping"
-               stop
-            end if
-            exit
-         end if
-      end if
+   
+      
+      file_1b_temp = config % file % infile ( File_number )
  
       !----------------------------------------------------------------------------
       ! Determine time of the start of the processing of this orbit
@@ -886,6 +868,7 @@
 
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
+            
             exit
          end if
 

@@ -388,9 +388,12 @@ contains
          
          call read_option_line ( lun , conf % sfc % use_seebor )
          call read_option_line ( lun , conf % sfc % use_hres_sfctype )
+         
          call read_option_line ( lun , conf % sfc % use_hres_land_mask)
          call read_option_line ( lun , conf % sfc % use_coast_mask)
+         print*,'========>'
          call read_option_line ( lun , conf % sfc % use_hres_elev)
+         print*,conf % sfc % use_hres_elev
          call read_option_line ( lun , conf % sfc % use_volc_mask)
          call read_option_line ( lun , conf % sfc % snow_mask_mode)
          call read_option_line ( lun , conf % sfc % use_dark_compo)
@@ -416,8 +419,9 @@ contains
             close(unit= Lun)
             return
          end if
-         
+         print*,conf % do_process_cloudfree
          call read_option_line ( lun , conf % chan ( 1: 6 ) % is_on )
+         print*,'aa'
          call read_option_line ( lun , conf % chan ( 7: 12 ) % is_on )
          call read_option_line ( lun , conf % chan ( 13: 18 ) % is_on )
          call read_option_line ( lun , conf % chan ( 19: 24 ) % is_on )
@@ -450,7 +454,7 @@ end module cr_config_mod
       
       read(unit=lun,fmt=*)  int_dummy
       data_l = int_dummy == 1
-      
+      print*,int_dummy
    
    end subroutine read_option_line_logical 
    
@@ -465,8 +469,9 @@ end module cr_config_mod
    subroutine read_option_line_l6 ( lun , data_i )
       integer :: lun
       logical :: data_i (6)
-      
-      read(unit=lun,fmt=*)  data_i
+      integer :: int_dummy(6)
+      read(unit=lun,fmt=*)  int_summy
+      data_i = int_dummy == 1
       
    end subroutine read_option_line_l6
    

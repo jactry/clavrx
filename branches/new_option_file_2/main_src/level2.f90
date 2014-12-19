@@ -115,11 +115,10 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    Sun_Earth_Distance, &
    Therm_Cal_1b,  &
    Ref_Cal_1b, &
-   Nav_Flag, &
+   nav_opt, &
    Use_Sst_anal, &
-   Sst_Anal_opt, &
    Modis_clr_alb_flag, &
-   Nwp_Flag, &
+   Nwp_Opt, &
    Ch1_gain_low, &
    Ch1_gain_high, &
    Ch1_switch_count, &
@@ -146,11 +145,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  character(len=*), intent(in):: File_1b
  integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
- integer, intent(in):: Sst_Anal_Opt
+ 
  integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
- integer(kind=int4), intent(in) :: Nwp_Flag
+ integer(kind=int4), intent(in) :: Nwp_Opt
  integer, intent(in):: therm_cal_1b
- integer, intent(in):: nav_flag
+ integer, intent(in):: nav_opt
  integer, intent(in):: use_sst_anal
  integer, intent(in):: Ref_cal_1b
  real(kind=real4), intent(in):: c1,c2,a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32, &
@@ -327,8 +326,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                            resolution_km, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, Ch1_gain_low, Ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, Ch1_gain_low, Ch1_gain_high, &
                            Ch1_switch_count, Ch1_dark_count, &
                            Ch2_gain_low, Ch2_gain_high, &
                            Ch2_switch_count, Ch2_dark_count, &
@@ -674,8 +673,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                            Resolution_KM, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, Ch1_gain_low, Ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, Ch1_gain_low, Ch1_gain_high, &
                            Ch1_switch_count, Ch1_dark_count, &
                            Ch2_gain_low, Ch2_gain_high, &
                            Ch2_switch_count, Ch2_dark_count, &
@@ -2251,7 +2250,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- outgoing longwave radiation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Olr_Flag == sym%YES) then
+     if (Sds_Num_Level2_Olr_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Olr),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "olr", &
                                "toa_net_upward_longwave_flux", &
@@ -2262,7 +2261,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Insol),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               !"test_product_1", &
                               !"test_product_1", &
@@ -2276,7 +2275,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- insolation diffuse
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Insol_Dif),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               !"test_product_2", &
                               !"test_product_2", &
@@ -4307,7 +4306,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- olr
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Olr_Flag == sym%YES) then
+     if ( Sds_Num_Level2_Olr_Flag == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(olr, &
                                  sym%LINEAR_SCALING,Min_olr,Max_olr,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_olr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4315,7 +4314,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
         call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4323,7 +4322,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- diffuse insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
         call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky_Diffuse, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &

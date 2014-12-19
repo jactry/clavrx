@@ -825,21 +825,6 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
       call DETERMINE_AVHRR_FILE_TYPE(trim(File_1b_Full),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
                                   Ver_1b,Data_Type,Byte_Swap_1b)
 
-      !--- based on AVHRR_KLM_Flag and Gac flags, check for option consistency
-      if ((AVHRR_KLM_Flag == sym%NO) .and. (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK)) then
-        Erstat = 2
-        print *, EXE_PROMPT,  &
-           "Error: using cloud mask from 1bx option not "// & 
-           "available for pre-AVHRR_KLM_Flag data, stopping"
-        stop 2
-      endif
-      if ((AVHRR_KLM_Flag == sym%NO) .and. (BX_File_Flag == sym%YES)) then
-        Erstat = 3
-        print *,EXE_PROMPT, "Error: 1bx option not available "// & 
-                            "for pre-AVHRR_KLM_Flag data, stopping"
-        stop 3
-      endif
-
       !-------------------------------------------------------------------
       !-- based on file type (AVHRR_KLM_Flag and Gac), determine parameters needed
       !-- to read in header and data records for this orbit

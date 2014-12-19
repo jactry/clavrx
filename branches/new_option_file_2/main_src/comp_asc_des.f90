@@ -49,7 +49,7 @@
 !    SCALING_PARAMETERS
 !
 ! Calling Sequence:  
-!    comp_asc_des_level2 node nav_flag geo_flag
+!    comp_asc_des_level2 node nav_opt geo_flag
 !--------------------------------------------------------------------------------------
 program COMPILE_ASC_DES
  use CONSTANTS
@@ -83,7 +83,7 @@ program COMPILE_ASC_DES
 !--- global attributes for composite
  integer(kind=int4):: sd_id_comp
  integer(kind=int4):: num_cells_comp,num_cells_with_data_comp
- integer:: therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp, &
+ integer:: therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp, &
                         sst_anal_opt_comp, modis_clr_alb_flag_comp, nwp_flag_comp
  integer(kind=int4)::  start_time_comp,end_time_comp
  integer(kind=int4)::  acha_mode_comp, dcomp_mode_comp, wmo_id_comp
@@ -108,7 +108,7 @@ program COMPILE_ASC_DES
 
 !--- global attributes for orbital files
  integer(kind=int4):: num_cells_orbit
- integer:: therm_cal_1b_orbit,Ref_cal_1b_orbit,nav_flag_orbit,use_sst_anal_orbit, &
+ integer:: therm_cal_1b_orbit,Ref_cal_1b_orbit,nav_opt_orbit,use_sst_anal_orbit, &
                         sst_anal_opt_orbit, modis_clr_alb_flag_orbit, nwp_flag_orbit
  integer(kind=int4)::  start_time_orbit,end_time_orbit, wmo_id_temp_orbit
  integer(kind=int4)::  acha_mode_orbit,dcomp_mode_orbit
@@ -207,7 +207,7 @@ call READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES(sd_id(1),data_type_comp,file_name_comp,fi
                            resolution_km, &
                            start_year_comp,end_year_comp,start_day_comp,end_day_comp,start_time_comp,end_time_comp,&
                            num_cells_comp,num_cells_with_data_comp,grid_format_comp,grid_resolution_comp, &
-                           therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp,sst_anal_opt_comp, &
+                           therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp,sst_anal_opt_comp, &
                            modis_clr_alb_flag_comp, nwp_flag_comp, ch1_gain_low_comp, ch1_gain_high_comp, &
                            ch1_switch_count_comp, ch1_dark_count_comp, &
                            ch2_gain_low_comp, ch2_gain_high_comp, &
@@ -352,7 +352,7 @@ asc_des_loop: do asc_des_node = 0, 1
                            resolution_km, &
                            start_year_orbit,end_year_orbit,start_day_orbit,end_day_orbit,start_time_orbit,end_time_orbit,&
                            num_cells_orbit,num_cells_with_data_orbit(ifile),grid_format_orbit,grid_resolution_orbit, &
-                           therm_cal_1b_orbit,Ref_cal_1b_orbit,nav_flag_orbit,use_sst_anal_orbit,sst_anal_opt_orbit, &
+                           therm_cal_1b_orbit,Ref_cal_1b_orbit,nav_opt_orbit,use_sst_anal_orbit,sst_anal_opt_orbit, &
                            modis_clr_alb_flag_orbit,  &
                            nwp_flag_orbit, ch1_gain_low_orbit, ch1_gain_high_orbit, &
                            ch1_switch_count_orbit, ch1_dark_count_orbit, &
@@ -517,7 +517,7 @@ asc_des_loop: do asc_des_node = 0, 1
           resolution_km, &
           start_year_comp,end_year_comp,start_day_comp,end_day_comp,start_time_comp,end_time_comp,&
           num_cells_comp,num_cells_with_data_comp,grid_format_comp,grid_resolution_comp, &
-          therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp,sst_anal_opt_comp, &
+          therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp,sst_anal_opt_comp, &
           modis_clr_alb_flag_comp, nwp_flag_comp, ch1_gain_low_comp, ch1_gain_high_comp, &
           ch1_switch_count_comp, ch1_dark_count_comp, &
           ch2_gain_low_comp, ch2_gain_high_comp, &

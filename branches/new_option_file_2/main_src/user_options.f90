@@ -40,25 +40,25 @@ module USER_OPTIONS
       , aer_flag &
       , ash_file_flag &
       , ash_flag &
-      , bx_file_flag &
+      , goes_stride &
       
       , cld_flag &
       , cloud_mask_aux_flag &
       , cloud_mask_Bayesian_flag &
  
-      , erb_flag &
-      , nav_Flag &
-      , nwp_flag &
+      , sasrab_flag &
+      , nav_opt &
+      , nwp_opt &
       , ref_cal_1b &
       , rtm_file_flag &
-      , rtm_flag &
+      , rtm_opt &
       , sst_file_flag &
       , temporary_data_dir &
       , therm_cal_1b &
       , ancil_data_dir &
       , cfsr_data_dir &
       , data_comp_flag &
-      , diag_flag &
+  
       , file_list &
       , geo_file_flag &
       , gfs_data_dir &
@@ -72,7 +72,7 @@ module USER_OPTIONS
       , obs_file_flag &
       , oisst_data_dir &
       , output_scaled_reflectances &
-      , prob_clear_res_flag &
+      
       , process_undetected_cloud_flag &
       , read_coast_mask &
       , read_hires_sfc_type &
@@ -84,13 +84,12 @@ module USER_OPTIONS
       , snow_data_dir &
       , solzen_max_limit &
       , solzen_min_limit &
-      , sst_anal_opt &
+     
       , subset_pixel_hdf_flag &
       , use_default &
       , use_seebor &
-      , use_sst_anal_default &
+      
       , acha_mode &
-      , ASc_Flag_Diag &
       , bayesian_cloud_mask_name &
       , Compress_Flag &
       , Nlcomp_Mode &
@@ -170,7 +169,7 @@ contains
       Subset_pixel_hdf_Flag = 0
       
  
-      use_sst_anal_Default = 0 ! Do not use OISST analisys
+     
       
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
       
@@ -192,34 +191,28 @@ contains
       Level2_File_Flag = 1
       Rtm_File_Flag = 1
       Cld_Flag = 1
-      num_scans_per_segment = 200
-      Erb_Flag = 1
-      Nwp_Flag = 1
-      Smooth_Nwp_Flag = 1
-      Rtm_Flag = 1
-      Process_Undetected_Cloud_Flag = 0
-      Compress_Flag = 1
-      Cloud_Mask_Aux_Flag = 0
-      Prob_Clear_Res_Flag = 1
-      Lrc_Flag = 1 
+      num_scans_per_segment = 240
+      Sasrab_Flag = 1
+      Nwp_Opt = 1
+      Rtm_Opt = 1 
+      Compress_Flag = 1 
+      Cloud_Mask_Aux_Flag = 0 
       bayesian_cloud_mask_name = 'viirs_default_bayes_mask.txt'
-      Diag_Flag = 0
-      ASc_Flag_Diag = 1
-      Lat_Min_Limit = -90.
-      Lat_Max_Limit = 90.
-      Sst_Anal_Opt = 1
-      Use_Seebor = 1
-      Read_Hires_Sfc_Type = 0
+      Use_Seebor = 1 
+      Read_Hires_Sfc_Type = 1 
       Read_Land_Mask = 1
-      Read_Coast_Mask =  1
+      Read_Coast_Mask = 1
       Read_Surface_Elevation = 1
       Read_Volcano_Mask = 0
       Read_Snow_Mask = 1
-      Read_Dark_Comp = 1
-      Ref_Cal_1b = 0
-      Therm_Cal_1b = 0
-      Bx_File_Flag= 0
-      Nav_Flag = 0
+      Read_Dark_Comp = 0
+      Ref_Cal_1b = 1
+      Therm_Cal_1b = 1    
+      Nav_Opt = 0  
+      goes_stride = 2
+      Lrc_Flag = 1 
+      Smooth_Nwp_Flag = 1  
+      Process_Undetected_Cloud_Flag = 0
       Chan_On_Flag_Default(1:6) = [1,1,1,1,1,1]
       Chan_On_Flag_Default(7:12) = [1,1,1,1,1,1]
       Chan_On_Flag_Default(13:18) = [1,1,1,1,1,1]
@@ -242,9 +235,15 @@ contains
  
       !------------------------------------------------------------------------
       !--- ACHA MODE Check
-      !---      (0=off; 1 = 11; 2 = 11/6.7; 
-      !---       3 = 11/12; 4=11/13.4; 
-      !---       5=11/12/8.5; 6=11/12/6.7; 7=11/13.3/6.7; 8 = 11/12/13.3)
+      !---      (       0 = off
+      !---              1 = 11
+      !----             2 = 11/6.7; 
+      !---              3 = 11/12
+      !----             4 = 11/13.4; 
+      !---              5 = 11/12/8.5
+      !---              6 = 11/12/6.7
+      !---              7 = 11/13.3/6.7
+      !---              8 = 11/12/13.3)
       !------------------------------------------------------------------------
       
       acha_mode = acha_mode_user_set
@@ -464,21 +463,19 @@ contains
             read(unit=Default_Lun,fmt=*) Rtm_File_Flag
             read(unit=Default_Lun,fmt=*) Cld_Flag
             read(unit=Default_Lun,fmt=*) num_scans_per_segment
-            read(unit=Default_Lun,fmt=*) Erb_Flag
-            read(unit=Default_Lun,fmt=*) Nwp_Flag
-            read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
-            read(unit=Default_Lun,fmt=*) Rtm_Flag
-            read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
+            read(unit=Default_Lun,fmt=*) Sasrab_Flag
+            read(unit=Default_Lun,fmt=*) Nwp_Opt
+           
+            read(unit=Default_Lun,fmt=*) Rtm_Opt
+            
             read(unit=Default_Lun,fmt=*) Compress_Flag
             read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
-            read(unit=Default_Lun,fmt=*) Prob_Clear_Res_Flag
+           
             read(unit=Default_Lun,fmt=*) Lrc_Flag
             read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
-            read(unit=Default_Lun,fmt=*) Diag_Flag
-            read(unit=Default_Lun,fmt=*) ASc_Flag_Diag
-            read(unit=Default_Lun,fmt=*) Lat_Min_Limit
-            read(unit=Default_Lun,fmt=*) Lat_Max_Limit
-            read(unit=Default_Lun,fmt=*) Sst_Anal_Opt
+            
+         
+            
             read(unit=Default_Lun,fmt=*) Use_Seebor
             read(unit=Default_Lun,fmt=*) Read_Hires_Sfc_Type
             read(unit=Default_Lun,fmt=*) Read_Land_Mask
@@ -489,8 +486,10 @@ contains
             read(unit=Default_Lun,fmt=*) Read_Dark_Comp
             read(unit=Default_Lun,fmt=*) Ref_Cal_1b
             read(unit=Default_Lun,fmt=*) Therm_Cal_1b
-            read(unit=Default_Lun,fmt=*) Bx_File_Flag
-            read(unit=Default_Lun,fmt=*) Nav_Flag
+            
+            read(unit=Default_Lun,fmt=*) Nav_Opt
+             read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
+             read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
             read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
             read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
             read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
@@ -588,7 +587,7 @@ contains
         
         !Change Nav type
         elseif(trim(fargv) == "-l1bnav") then
-          nav_Flag = 0
+          nav_opt = 0
           
         !Change RTM output flag
         elseif(trim(fargv) == "-rtm_file") then
@@ -777,26 +776,26 @@ contains
     !---- Since the NWP controls everything, we first check if an NWP is being used
     !---- before anything else is checked.  If no nwp, we stop processing
 
-    if ((Nwp_Flag < 0) .or. (Nwp_Flag > 4)) then
-       print *,  EXE_PROMPT, "unrecognized value for Nwp_Flag: ", Nwp_Flag
+    if ((Nwp_Opt < 0) .or. (Nwp_Opt > 4)) then
+       print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
        stop "6-Nwp_Flag"
     endif
-    if (Nwp_Flag == 1) then
+    if (Nwp_Opt == 1) then
        call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Flag == 2) then
+    else if (Nwp_Opt == 2) then
        call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Flag == 3) then
+    else if (Nwp_Opt == 3) then
        call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Flag == 4) then
+    else if (Nwp_Opt == 4) then
        call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
     endif
     
-    if (Nwp_Flag == 0) then
+    if (Nwp_Opt == 0) then
        print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
        Cld_Flag = sym%NO
-       Aer_Flag = sym%NO
-       Erb_Flag = sym%NO
-       Ash_Flag = sym%NO
+       
+       Sasrab_Flag = sym%NO
+      
        
       
        Rtm_File_Flag = sym%NO
@@ -816,12 +815,12 @@ contains
        call mesg ("Thermal Calibration within 1b will be used")
     endif
 
-    if (nav_Flag == 1) then
+    if (nav_Opt == 1) then
         call mesg ("CLEVERNAV geolocation no longer supported, using REPOSNX")
-        nav_Flag = 2
+        nav_Opt = 2
     endif
 
-    if (nav_Flag == 2) then
+    if (nav_opt == 2) then
          call mesg( "REPOSNX geolocation adjustment done")
     endif
 
@@ -829,14 +828,9 @@ contains
         print *, EXE_PROMPT, "Cloud products will not be created"
     endif
 
-    if (aer_Flag == sym%NO) then
-        print *, EXE_PROMPT, "Aerosol products will not be created"
-    endif
+ 
 
-    if (erb_Flag == sym%NO) then
-        print *, EXE_PROMPT, "Radiative Flux products will not be created"
-    endif
-
+   
 
     if (rtm_file_Flag == sym%YES) then
         call mesg( "rtm file will be created")
@@ -845,26 +839,11 @@ contains
    
 
     if (Cloud_Mask_Aux_Flag == sym%YES) then
-       print *,  EXE_PROMPT, "Cloud mask results will be read in from precomputed 1bx file"
+       print *,  EXE_PROMPT, "Cloud mask results will be read in from an aux file"
     endif
 
-    if (bx_file_Flag == 1) then
-         if (nav_Flag == 1) then
-            print *,  EXE_PROMPT, "Cannot create 1bx file and use external re-navigation"
-            stop "3a"
-         else
-            print *, EXE_PROMPT, "1bx file will be created"
-         endif
-    endif
-
-
-    if ((Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) .and. (bx_file_Flag == sym%YES)) then
-       erstat = 6
-       print *,  EXE_PROMPT, "Cannot read cloud mask from both 1bx and write out a 1bx file, stopping"
-       stop 6
-    endif
-
-    if (Rtm_Flag /=1) then
+ 
+    if (Rtm_opt /=1) then
        print *,  EXE_PROMPT, "Only PFAST RTM implemented, stopping"
        stop
     endif
@@ -916,14 +895,7 @@ subroutine HELPER()
   print *,"  -no_therm_Cal_1b"
   print *,"   Do not use the thermal calibration in the level 1b file"
   print *," "
-  
-  print *,"  -bx_file_Flag"
-  print *, "  Fill in clavr-x bytes in the level 1b file"
-  print *," "
-
-  print *,"  -no_bx_file_Flag"
-  print *, "  Do not fill in clavr-x bytes in the level 1b file"
-  print *," "
+ 
   
   print *,"  -l1bnav"
   print *, "  Use the navigation data from level 1b file"
@@ -1016,28 +988,8 @@ subroutine HELPER()
   print *,"  -no_aer_Flag"
   print *, "   Don't run aerosol algorithms. "
   print *," "
-  
-  print *,"  -erb_Flag"
-  print *, "   Run radiative flux algorithms. "
-  print *," "
-  print *,"  -no_erb_Flag"
-  print *, "   Don't run radiative flux algorithms. "
-  print *," "
 
-  print *,"  -use_sst_anal"
-  print *, "   Use OISST analysis. "
-  print *," "
-  print *,"  -no_use_sst_anal"
-  print *, "   Don't use OISST analysis. "
-  print *," "
-  
-  print *,"  -use_oisst_cur"
-  print *, "   Use the oisst.current OISST analysis."
-  print *," "
-  print *,"  -determine_oisst_file"
-  print *, "   Determine which OISST analysis file to use."
-  print *," "
-  
+
   print *,"  -subset_pixel_hdf"
   print *, "  Subset HDF pixel data. " 
   print *," "

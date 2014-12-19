@@ -89,7 +89,7 @@ module RT_UTILITIES
       , P_Trop_Nwp 
       
    use PIXEL_COMMON, only: &
-      Nwp_Flag &
+      Nwp_Opt &
       , Num_Pix &
       , Bad_Pixel_Mask &
       , Zen_Idx_Rtm &
@@ -480,7 +480,7 @@ contains
       end do
 
       !--- if using NCEP reanalysis which has no ozone profile, use default
-      if (Nwp_Flag == 2) then
+      if (Nwp_Opt == 2) then
          Ozmr_Profile_Rtm = Ozmr_Std_Profile_Rtm
       end if
 
@@ -1192,7 +1192,7 @@ contains
 
       !--- GOES-10
       if (Sc_Id_WMO == 254) then
-         if (Nwp_Flag == 3) then
+         if (Nwp_Opt == 3) then
             Gamma_Trans_Factor(20) = 1.25
             Gamma_Trans_Factor(27) = 0.79
             Gamma_Trans_Factor(31) = 1.15
@@ -1202,7 +1202,7 @@ contains
        
       !--- GOES-11
       if (Sc_Id_WMO == 255) then
-         if (Nwp_Flag == 3) then
+         if (Nwp_opt == 3) then
             Gamma_Trans_Factor(20) = 1.35
             Gamma_Trans_Factor(27) = 0.74
             Gamma_Trans_Factor(31) = 1.05
@@ -1212,7 +1212,7 @@ contains
       
       !--- GOES-12
       if (Sc_Id_WMO == 256) then
-         if (Nwp_Flag == 1 .or. Nwp_flag == 3) then    !repeat of cfsr
+         if (nwp_opt == 1 .or. nwp_opt == 3) then    !repeat of cfsr
             Gamma_Trans_Factor(20) = 1.45 
             Gamma_Trans_Factor(27) = 0.79 
             Gamma_Trans_Factor(31) = 1.15
@@ -1222,7 +1222,7 @@ contains
       
       !--- GOES-13
       if (Sc_Id_WMO == 257) then
-         if (Nwp_Flag == 1 .or. Nwp_Flag == 3) then
+         if (nwp_opt == 1 .or. nwp_opt == 3) then
             Gamma_Trans_Factor(20) = 1.45
             Gamma_Trans_Factor(27) = 0.83
             Gamma_Trans_Factor(31) = 1.05
@@ -1252,7 +1252,7 @@ contains
       
       !--- MTSAT-02
       if (Sc_Id_WMO == 172) then
-         if (Nwp_Flag == 1) then
+         if (nwp_opt == 1) then
             Gamma_Trans_Factor(20) = 1.25
             Gamma_Trans_Factor(27) = 0.87
             Gamma_Trans_Factor(31) = 1.15

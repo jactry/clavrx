@@ -55,6 +55,8 @@ module AWG_CLOUD_HEIGHT
 ! - Renamed module from AWG_CLOUD_HEIGHT to AWG_CLOUD_HEIGHT_ACHA
 ! - Had to redo Skip_LRC_Mask due to issues in Framework
 !
+! ** Note:  These changes are in the Framework repository only.
+!
 !----------------------------------------------------------------------
 
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src

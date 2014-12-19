@@ -2,15 +2,14 @@
 !----------------------------------------------------------------------
 ! MODULE name: NB_CLOUD_MASK
 ! 
-! Routines for the determination of the Naive Bayesian cloud mask
+! Routines for the determination of the naive Bayesian cloud mask
 !
-! Author: Andrew Heidinger, NOAA/NESDIS
+! Authors: Andrew Heidinger, NOAA/NESDIS
+!          Andi Walther, CIMSS
+!          Denis Botambekov, CIMSS
+!          William Straka, CIMSS
 !
-! DEPENDENCIES:
-!      PIXEL_COMMON
-!      NUMERICAL_ROUTINES
-!      FILE_UTILITY
-!      CLOUD_MASK_ROUTINES
+! DEPENDENCIES: Services_Module, NETCDF library
 !
 ! SIDE EFFECTS: None
 !
@@ -59,7 +58,7 @@
 ! 33           2            49-50     7    Ref_063_Min_3x3 (RVCT)
 ! 34           2            51-52     7    Ref_Ratio_Day   (RRCT)
 ! 35           2            53-54     7    Ref_138_Day     (CIRREF)
-! 36           2            55-56     7    Ref_160_Day     (NIRREF)
+! 36           2            55-56     7    Ndsi_Day        (NIRREF)
 !
 !----------------------------------------------------------------------
 module NB_CLOUD_MASK
@@ -71,7 +70,6 @@ module NB_CLOUD_MASK
 
  private:: COMPUTE_BAYES_SFC_TYPE
  private:: READ_NAIVE_BAYES
- private:: CLEAR_NAIVE_BAYES_MEMORY
  private:: split_window_test
  private:: reflectance_gross_contrast_test
  private:: relative_visible_contrast_test
@@ -93,6 +91,7 @@ module NB_CLOUD_MASK
  public:: NB_CLOUD_MASK_ALGORITHM
  public:: SET_CLOUD_MASK_VERSION
  public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
+ public:: RESET_NB_CLOUD_MASK_LUT
 
  !--- set thresholds and algorithm specific constants
  include 'nb_cloud_mask.inc'
@@ -313,7 +312,7 @@ module NB_CLOUD_MASK
    !--- begin compute ratio
    Class_Cond_Ratio = 1
    where(Class_Cond_Yes == 0.0)
-       Class_Cond_Ratio = 100.0
+       Class_Cond_Ratio = Max_Cond_Ratio
    endwhere
    where(Class_Cond_Yes > 0.0)
        Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
@@ -461,11 +460,11 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 16
                     case("Ref_138_Day")
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 17
-                    case("Ref_160_Day")
+                    case("Ndsi_Day")
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 18
                     case default
-                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
-                       stop
+                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                       return
            end select
 
          end do
@@ -838,17 +837,20 @@ module NB_CLOUD_MASK
                        if (Input%Ref_138um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um
 
-                    case("Ref_160_Day")
+                    case("Ndsi_Day")
+                       if (Input%Chan_On_063um == symbol%NO) cycle
                        if (Input%Chan_On_160um == symbol%NO) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Input%Ref_160um == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) = Input%Ref_160um
+                       if (Input%Ref_063um == Missing_Value_Real4) cycle
+                       Classifier_Value(Class_Idx) = (Input%Ref_063um - Input%Ref_160um) /  &
+                                                     (Input%Ref_063um + Input%Ref_160um)
                     
                      case default
-                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, stopping"
-                       stop
+                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                       return
              end select
 
              !--- Turn off Classifiers if Chosen Metric is Missing
@@ -936,7 +938,7 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_std") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Min_3x3_Day") then
-         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_160_Day") then
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ndsi_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_11_67") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Night") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_11") then
@@ -1454,29 +1456,21 @@ module NB_CLOUD_MASK
    sds_edge_3d(2) = N_class
    sds_edge_3d(3) = N_sfc_bayes
 
-   var_name="class_cond_yes_reg" !real
+!  var_name="class_cond_yes_reg" !real
+!  call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
+!                             var_name,Class_Cond_Yes)
+!  var_name="class_cond_no_reg" !real
+!  call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
+!                             var_name,Class_Cond_No)
+
+   var_name="class_cond_ratio_reg" !real
    call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
-                              var_name,Class_Cond_Yes)
-   var_name="class_cond_no_reg" !real
-   call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
-                              var_name,Class_Cond_No)
+                              var_name,Class_Cond_Ratio)
 
 
    status = nf90_close(ncid)
 
    Is_Classifiers_Read = .true.
-
-print *, "before compute ratio"
-   !--- begin compute ratio
-   Class_Cond_Ratio = 1
-   where(Class_Cond_Yes == 0.0)
-       Class_Cond_Ratio = 100.0
-   endwhere
-   where(Class_Cond_Yes > 0.0)
-       Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
-   endwhere
-print *, "end compute ratio"
-   !--- end compute ratio
 
  end subroutine READ_NAIVE_BAYES_NC
 
@@ -1501,14 +1495,14 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !get Variable
       status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
       if (status /= nf90_noerr) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
    end subroutine read_netcdf_1d_real                                                                                                                           
@@ -1533,14 +1527,14 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then 
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !get Variable
       status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
       if (status /= nf90_noerr) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
    end subroutine read_netcdf_1d_int
@@ -1563,14 +1557,14 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !get Variable
       status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
    end subroutine read_netcdf_2d_real
@@ -1593,14 +1587,14 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !get Variable
       status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
    end subroutine read_netcdf_2d_int
@@ -1626,7 +1620,7 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !find dimentions
@@ -1639,7 +1633,7 @@ print *, "end compute ratio"
       status = nf90_get_var(nc_file_id, nc_var_id, var, start=(/1,1/), count=(/tmp1,tmp2/) )
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
       !extract and save classifier names to the final array
@@ -1673,21 +1667,30 @@ print *, "end compute ratio"
       status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
       if (status /= nf90_noerr) then
             print *, "Error: Unable to get variable id for ", trim(var_name)
-            stop
+            return
       endif
 
       !get Variable
       status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            stop
+            return
       ENDIF
 
 
    end subroutine read_netcdf_3d
 
 
-subroutine CLEAR_NAIVE_BAYES_MEMORY()
+!-----------------------------------------------------------------------------------------
+! This routine deallocates all LUT arrays and resets Is_Classifiers_Read to be  false
+!
+! This should be called from the bridge code using whatever mechanism exists to 
+! identify the appropriate time to reset the LUT.  This could be
+! 1. end of a file
+! 2. change from one sensor to another
+!-----------------------------------------------------------------------------------------
+
+subroutine RESET_NB_CLOUD_MASK_LUT()
         if (allocated(Prior_Yes)) deallocate(Prior_Yes)
         if (allocated(Prior_No)) deallocate(Prior_No)
         if (allocated(Optimal_Posterior_Prob)) deallocate(Optimal_Posterior_Prob)
@@ -1703,7 +1706,7 @@ subroutine CLEAR_NAIVE_BAYES_MEMORY()
         if (allocated(Classifier_Value_Name)) deallocate(Classifier_Value_Name)
         if (allocated(Class_To_Test_Idx)) deallocate(Class_To_Test_Idx)
         Is_Classifiers_Read = .false.
-end subroutine 
+end subroutine RESET_NB_CLOUD_MASK_LUT 
  
 
 

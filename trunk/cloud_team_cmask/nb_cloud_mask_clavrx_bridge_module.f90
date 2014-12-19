@@ -80,8 +80,6 @@ contains
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
 
-print *, "IN BRIDGE "
-
    ! -----------    loop over pixels -----   
    line_loop: do i = 1, Num_Pix
       elem_loop: do  j = 1, Num_Scans_Read
@@ -120,11 +118,21 @@ print *, "IN BRIDGE "
       end do elem_loop
    end do line_loop
 
+   !------------------------------------------------------------------------------
+   !-- CLAVR-x specific Processing
    !--- grab version tags for output as attributes in level2
    !--- only need to do this once, so do on first segment
+   !------------------------------------------------------------------------------
    if (Segment_Number == 1) then
      call SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
      call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
+   endif
+
+   !-------------------------------------------------------------------------------
+   ! on last segment, wipe out the lut from memory and reset is_read_flag to no
+   !-------------------------------------------------------------------------------
+   if (Segment_Number == Input%Num_Segments) then
+       call RESET_NB_CLOUD_MASK_LUT()
    endif
 
    end subroutine NB_CLOUD_MASK_BRIDGE
@@ -276,7 +284,7 @@ print *, "IN BRIDGE "
       Input%Lat => Lat(i,j)
       Input%Lon => Lon(i,j)
       Input%Sst_Anal_Uni => Sst_Anal_Uni(i,j)
-      Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss(i,j)
+      Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss(i,j)    !note, this is on always
       Input%Zsfc => Zsfc(i,j)
       Input%Solar_Contamination_Mask => Solar_Contamination_Mask(i,j)
       Input%Sfc_Type => Sfc_Type(i,j)

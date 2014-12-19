@@ -4,6 +4,7 @@
 
  !--- Set this to 1 to peform diagnostic calculations
  integer, parameter, private:: Do_By_Class_Flag = 1
+ real, parameter, private:: Max_Cond_Ratio = 100.0 
 
  !--- Number of Tests
  integer, parameter, private:: NUMBER_OF_FLAGS = 36

@@ -68,6 +68,9 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
    character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
+   !Segment counter
+   integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1
+
    !Make Iband and DNB flag
    integer (kind=INT1), DIMENSION(5), PRIVATE :: IBand_Flag
    integer (kind=INT1), PRIVATE :: DNB_Flag
@@ -480,6 +483,15 @@ contains
    
       end do elem_loop
    end do line_loop
+
+!-------------------------------------------------------------------------------
+! on last segment, wipe out the lut from memory and reset is_read_flag to no
+!-------------------------------------------------------------------------------
+   if (Segment_Number_CM == Input%Num_Segments) then
+       call RESET_NB_CLOUD_MASK_LUT()
+   endif
+
+
    
    
    !Deallocate arrays
@@ -549,6 +561,9 @@ contains
    Dust_Mask => null()
    Smoke_Mask => null()
    Fire_Mask => null()
+   
+   !Increment segment number
+   Segment_Number_CM = Segment_Number_CM +1
 
    end subroutine NB_CLOUD_MASK_BRIDGE
 

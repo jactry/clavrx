@@ -1537,6 +1537,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud optical depth for Mask
+     if (Cld_Flag == sym%YES .and. Chan_On_Flag_Default(1)==sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
+                               "cld_opd_mask", &
+                               "atmosphere_optical_thickness_due_to_cloud_assuming_water_phase", &
+                               "cloud optical depth at the nominal wavelength of 0.65 microns, "//&
+                               "and water phase with 10 micron particle size determined for cloud mask use", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Tau, Max_Tau, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud type
      if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Type),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -3896,6 +3908,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Sds_Num_Level2_Fire_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Fire), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         Fire_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld optical depth from mask
+     if (Cld_Flag == sym%YES .and. Chan_On_Flag_Default(1) == sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ch(1)%Opd,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld type

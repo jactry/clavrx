@@ -242,6 +242,8 @@ module PIXEL_COMMON
   integer,public, save:: Modis_Terra_Flag
   integer,public, save:: Avhrr_Flag
   integer,public, save:: Avhrr_1_Flag
+  
+  
 
   !---------------------------------------------------------------------------------
   ! Internal Flags to communicate ancillary data information

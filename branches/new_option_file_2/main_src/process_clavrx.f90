@@ -252,6 +252,8 @@
    
    type (conf_user_opt_type) :: config
    
+   character(len = 10) :: sensorname
+   
   
    !------------- VIIRS variables --------------
    real(kind=real4),    dimension(:,:), pointer :: lunar_ref
@@ -310,10 +312,7 @@
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
    
-   call config % set_config ()
-   print*,config % file % infile , config % file % ETsensor
-   print*
-   
+
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
@@ -464,8 +463,10 @@
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
       !------------------------------------------------------------------------
-      call DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierror)
-
+      call DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sensorname, Ierror)
+      
+      
+      
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
          cycle file_loop
@@ -549,6 +550,7 @@
       ! for the generation of the algorithms
       !------------------------------------------------------------------
       call CHECK_ALGORITHM_CHOICES()
+      call CHECK_CHANNEL_SETTINGS(sensorname)
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite

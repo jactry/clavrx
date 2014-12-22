@@ -118,8 +118,9 @@ module USER_OPTIONS
 
    implicit none
    private
-   public:: SETUP_USER_DEFINED_OPTIONS
-   public:: CHECK_ALGORITHM_CHOICES
+   public :: SETUP_USER_DEFINED_OPTIONS
+   public :: CHECK_ALGORITHM_CHOICES
+   public :: CHECK_CHANNEL_SETTINGS
 
    character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
    character ( len = 50 ) :: data_base_path
@@ -419,6 +420,60 @@ contains
     
 
    end subroutine CHECK_ALGORITHM_CHOICES
+   
+   
+   !----------------------------------------------------------------------
+   !   Channel settings
+   !   
+   !
+   !----------------------------------------------------------------------
+   subroutine CHECK_CHANNEL_SETTINGS(sensorname)
+      character ( len =10) , intent(in) :: sensorname
+      integer :: valid_channels ( 42)
+      integer :: i
+      
+      ! expert can decide themselves
+      if (expert_mode > 6 ) return
+      
+      valid_channels = -99
+      
+       Chan_On_Flag_Default =  0
+      
+      
+      select case ( trim(sensorname))
+      
+      
+      case ( 'AVHRR')
+         valid_channels (1:6) = [1,2,6,20,31,32]
+      case ( 'GOES')      
+         valid_channels (1:5) = [1,20,27, 31, 32]
+         !if (goes_mop_flag == 1) valid_channels(5) = 33
+      case ( 'GOES_SNDR')
+         valid_channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
+      case ( 'MTSAT')
+         valid_channels (1:5) = [1,20,27,31,32]  
+      case ('SEVIRI')
+         valid_channels (1:11) = [1,2,6,20,27,28,29,30,31,32,33]
+      case ('FY2')
+         valid_channels (1:5) = [1,20,27,31,32]    
+      case ('VIIRS')
+         valid_channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]       
+      case ('IFF_VIIRS')      
+         valid_channels (1:26) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,37,38,39,40,41,42]       
+      case ('IFF_AVHRR')      
+         valid_channels (1:19) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36]
+      case ('COMS')
+         valid_channels (1:5) = [1,20,27,31,32]
+      case ('MODIS')
+         valid_channels(1:36) = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36]   
+      end select
+      
+      do i = 1, 42 
+         if (valid_channels (i) < 0 ) cycle
+         Chan_On_Flag_Default (valid_channels (i)) = 1
+      end do
+   
+   end subroutine CHECK_CHANNEL_SETTINGS
    
    
    !------------------------------------------------------------------

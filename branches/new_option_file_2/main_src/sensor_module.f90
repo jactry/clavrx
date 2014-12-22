@@ -551,12 +551,13 @@ END SUBROUTINE READ_ALGO_CONSTANTS
 !--------------------------------------------------------------------------------------------------
 !  Apply various tests to determine from which sensor this data comes
 !--------------------------------------------------------------------------------------------------
-subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierror)
+subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sensorname, Ierror)
 
   CHARACTER(len=*), intent(in) :: File_1b_Full
   CHARACTER(len=*), intent(in) :: File_1b_Temp
   TYPE (AREA_STRUCT), intent(out) :: AREAstr
   TYPE (GVAR_NAV), intent(out)    :: NAVstr
+  CHARACTER(len=10), intent(out) :: sensorname
   INTEGER(kind=int4) :: Ierror
 
   INTEGER(kind=int4) :: Itest_Aqua_5km
@@ -753,6 +754,27 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierr
       FY2_Flag == sym%NO .and. Coms_Flag == sym%NO) then
           AVHRR_Flag = sym%YES
   endif
+  
+  
+  
+  
+   if ( Goes_Flag == sym%YES)         sensorname = 'GOES'
+   if ( Goes_Sndr_Flag == sym%YES ) sensorname = 'GOES_SNDR'
+  if ( Modis_Flag == sym%YES ) sensorname = 'MODIS'
+  if ( Avhrr_Flag == sym%YES ) sensorname = 'AVHRR'
+  if ( Seviri_Flag == sym%YES ) sensorname = 'SEVIRI'
+  if ( FY2_Flag == sym%YES ) sensorname = 'FY2'
+  if ( Mtsat_Flag == sym%YES ) sensorname = 'MTSAT'
+  if ( Coms_Flag == sym%YES ) sensorname = 'COMS'
+  if ( Modis_Aqua_Flag == sym%YES ) sensorname = 'MODIS_AQUA'
+  if ( Modis_Terra_Flag == sym%YES ) sensorname = 'MODIS_TERRA'
+  if ( Modis_1km_Flag == sym%YES ) sensorname = 'MODIS_1KM'
+  if ( Modis_5km_Flag == sym%YES ) sensorname = 'MODIS_5KM'
+  if ( Modis_Aqua_Mac_Flag == sym%YES ) sensorname = 'MODIS_MAC'
+  if ( Viirs_Flag == sym%YES ) sensorname = 'VIIRS'
+  if ( Iff_Viirs_Flag == sym%YES ) sensorname = 'IFF_VIIRS'
+  if ( Iff_Modis_Flag == sym%YES ) sensorname = 'IFF_MODIS'
+  if ( Iff_Avhrr_Flag == sym%YES ) sensorname = 'IFF_AVHRR'
 
   end subroutine DETECT_SENSOR_FROM_FILE
 

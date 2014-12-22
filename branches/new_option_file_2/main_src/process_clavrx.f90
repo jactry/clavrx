@@ -322,7 +322,7 @@
    !------------------------------------------------------------------------------
    !--- Read elevation data 
    !------------------------------------------------------------------------------
-   if (config % sfc % use_hres_elev ) then
+   if (Read_Surface_Elevation /= 0) then
       call mesg  ( "Opening surface elevation file", level = verb_lev % VERBOSE)
       Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
      
@@ -430,9 +430,27 @@
    
    File_loop: do
  
-   
-      
-      file_1b_temp = config % file % infile ( File_number )
+      !----------------------------------------------------------------------
+      ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
+      !----------------------------------------------------------------------
+      read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
+      if ( file_1b_temp == "") exit
+      if (ios /= 0) then
+         if (ios /= -1) then
+            !-- non eof error
+            erstat = 8
+            call mesg ( "ERROR: Problem reading orbit names from control file" &
+               , level = verb_lev % QUIET) 
+            stop 8
+         else
+            !-- end of orbits
+            if (File_Number == 1) then
+               print *, EXE_PROMPT, "ERROR: No orbits to process, stopping"
+               stop
+            end if
+            exit
+         end if
+      end if
  
       !----------------------------------------------------------------------------
       ! Determine time of the start of the processing of this orbit
@@ -501,6 +519,7 @@
   
       !-----------------------------------------------------------------------
       !--- Compute the time stamp for use in all generated HDF output files
+      !  AW-2014-12-22 Why now? Why here?
       !-----------------------------------------------------------------------
       call HDF_TSTAMP()
    
@@ -517,6 +536,7 @@
 
       !----------------------------------------------------------------------
       ! Knowing the sensor, setup internal parameters needed for processing
+      !  not only: also assigns sensor flags ...
       !----------------------------------------------------------------------
       call SET_SENSOR_CONSTANTS ( AREAstr)
 
@@ -870,7 +890,6 @@
 
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
-            
             exit
          end if
 

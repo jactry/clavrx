@@ -446,7 +446,7 @@ contains
       case ( 'AVHRR')
          valid_channels (1:6) = [1,2,6,20,31,32]
       case ( 'GOES')      
-         valid_channels (1:5) = [1,20,27, 31, 32]
+         valid_channels (1:6) = [1,20,27, 31, 32, 33]
          !if (goes_mop_flag == 1) valid_channels(5) = 33
       case ( 'GOES_SNDR')
          valid_channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
@@ -465,7 +465,7 @@ contains
       case ('COMS')
          valid_channels (1:5) = [1,20,27,31,32]
       case ('MODIS')
-         valid_channels(1:36) = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36]   
+         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
       end select
       
       do i = 1, 42 

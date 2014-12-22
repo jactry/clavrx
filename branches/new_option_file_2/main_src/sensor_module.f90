@@ -625,7 +625,7 @@ subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sens
   
   !-- for 1 km MODIS, determine name of separate geolocation file
   if (Modis_1km_Flag == sym%YES) then
-     call DETERMINE_MODIS_GEOLOCATION_FILE(File_1b_Temp,Dir_Nav_in,Modis_Geo_Name)
+     call DETERMINE_MODIS_GEOLOCATION_FILE(File_1b_Temp,Dir_1b,Modis_Geo_Name)
           
      if (trim(Modis_Geo_Name) == "no_file") then
         Ierror = sym%YES

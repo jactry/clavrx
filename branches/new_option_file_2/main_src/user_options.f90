@@ -195,7 +195,7 @@ contains
       Rtm_File_Flag = 1
       Cld_Flag = 1
       num_scans_per_segment = 240
-      Sasrab_Flag = 1
+      Sasrab_Flag = 0
       Nwp_Opt = 1
       Rtm_Opt = 1 
       Compress_Flag = 1 

@@ -540,16 +540,7 @@
       !----------------------------------------------------------------------
       call SET_SENSOR_CONSTANTS ( AREAstr)
 
-      !------------------------------------------------------------------
-      ! Turn off selected channels based on sensor
-      !------------------------------------------------------------------
-      call TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
-                                          Goes_Flag, Goes_Mop_Flag, &
-                                          Goes_Sndr_Flag,Seviri_Flag,  &
-                                          Mtsat_Flag, Viirs_Flag,  &
-                                          Iff_Viirs_Flag, Iff_Avhrr_flag, &
-                                          FY2_Flag, COMS_Flag)
-   
+     
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
       !------------------------------------------------------------------
@@ -571,6 +562,18 @@
       !------------------------------------------------------------------
       call CHECK_ALGORITHM_CHOICES()
       call CHECK_CHANNEL_SETTINGS(sensorname)
+      
+      !------------------------------------------------------------------
+      ! Turn off selected channels based on sensor
+      !------------------------------------------------------------------
+      call TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
+                                          Goes_Flag, Goes_Mop_Flag, &
+                                          Goes_Sndr_Flag,Seviri_Flag,  &
+                                          Mtsat_Flag, Viirs_Flag,  &
+                                          Iff_Viirs_Flag, Iff_Avhrr_flag, &
+                                          FY2_Flag, COMS_Flag)
+   
+      
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite

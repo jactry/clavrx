@@ -292,15 +292,9 @@ module PIXEL_COMMON
   character(len=255),public,save:: File_nav
   character(len=255),public,save:: Instr_Const_File
   character(len=255),public,save:: Algo_Const_File
-  character(len=355),public,save:: Dir_cmr
-  character(len=355),public,save:: Dir_sst
-  character(len=355),public,save:: Dir_nav_in
-  character(len=355),public,save:: Dir_nav_out
-  character(len=355),public,save:: Dir_cld
-  character(len=355),public,save:: Dir_obs
-  character(len=355),public,save:: Dir_geo
+
   character(len=355),public,save:: Dir_Rtm
-  character(len=355),public,save:: Dir_ash
+ 
   character(len=355),public,save:: Dir_Level2
   character(len=355),public,save:: Bayesian_Cloud_Mask_Name
   character(len=355),public,save:: Modis_Geo_Name

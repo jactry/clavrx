@@ -496,7 +496,7 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
         endif
 
         !--- NWP
-        if (Nwp_Flag /= 0) then
+        if (Nwp_Opt /= 0) then
             Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
             Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
             if (Lon_Nwp_Idx < 1 .or. Lat_Nwp_Idx < 1) then
@@ -731,7 +731,7 @@ j_loop:    DO j = j1,j2
       if (ihires == sym%NO) then
 
         !use nwp and/or Sst analysis
-        if (Nwp_Flag > 0) then
+        if (Nwp_Opt > 0) then
           if ((inwp > 0) .and. (jnwp > 0)) then
             if (Weasd_Nwp(inwp, jnwp) > 0.1) then  !this is Snow depth
                 Snow(i,j) = sym%SNOW

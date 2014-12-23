@@ -48,6 +48,17 @@ module AWG_CLOUD_HEIGHT
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
 !----------------------------------------------------------------------
+!Changes needed to get into SAPF
+!
+! - Renamed AWG_CLOUD_HEIGHT_ALGORITHM to AWG_CLOUD_HEIGHT_ALGORITHM_ACHA
+! - Renamed LOCAL_LINEAR_RADIATIVE_CENTER to LOCAL_LINEAR_RADIATIVE_CENTER_ACHA
+! - Renamed module from AWG_CLOUD_HEIGHT to AWG_CLOUD_HEIGHT_ACHA
+! - Had to redo Skip_LRC_Mask due to issues in Framework
+!
+! ** Note:  These changes are in the Framework repository only.
+!
+!----------------------------------------------------------------------
+
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
 
   implicit none
@@ -1683,9 +1694,9 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Line_Idx_1
       integer:: Line_Idx_2
       integer:: count_Valid
-      integer, dimension(:,:), allocatable:: mask
+      integer(kind=int1), dimension(:,:), allocatable:: mask
       !---STW Debug
-      integer, dimension(:,:), allocatable:: mask2
+      integer(kind=int1), dimension(:,:), allocatable:: mask2
       integer:: count_Valid2
       !---STW End Debug
 
@@ -3910,7 +3921,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
    real(kind=real4), intent(out), dimension(:,:):: Temperature_Cirrus
-   logical, dimension(:,:), allocatable:: Mask
+   integer(kind=int1), dimension(:,:), allocatable:: Mask
 
    integer:: Num_Elements
    integer:: Num_Lines
@@ -3924,14 +3935,14 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
 
    allocate(Mask(Num_Elements,Num_Lines))
 
-   mask = .false.
+   Mask = 0
 
    where( (Type == sym%CIRRUS_TYPE .or. &
            Type == sym%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud > Emissivity_Thresh)
 
-      Mask = .true.
+      Mask = 1
 
    end where
 
@@ -3941,11 +3952,16 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
       i2 = min(Num_Elements,max(1,Elem_Idx + Box_Width))
 
       do Line_Idx = 1, Num_Lines, Box_Width
+
+          Temperature_Temporary = Missing
+          Count_Temporary = 0
+          Sum_Temporary = 0.0
+
           j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
           j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
-          Count_Temporary = count(Mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
+          Count_Temporary = sum(Mask(i1:i2,j1:j2))
+          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2)*Mask(i1:i2,j1:j2))
           if (Count_Temporary > Count_Thresh) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary
           else

@@ -294,6 +294,8 @@
   
  
    Skip_Processing_Flag = sym%NO
+   
+   
 
    !----------------------------------------------------------------------------
    ! Determine time of the start of all processing
@@ -551,10 +553,7 @@
       !------------------------------------------------------------------
       call SETUP_SOLAR_RTM(Sc_Id_WMO)
 
-      !------------------------------------------------------------------
-      ! Create pixel arrays which data for this segment
-      !------------------------------------------------------------------
-      call CREATE_PIXEL_ARRAYS()
+     
 
       !------------------------------------------------------------------
       ! Check to see if the channels available and selected allow
@@ -573,7 +572,10 @@
                                           Iff_Viirs_Flag, Iff_Avhrr_flag, &
                                           FY2_Flag, COMS_Flag)
    
-      
+      !------------------------------------------------------------------
+      ! Create pixel arrays which data for this segment
+      !------------------------------------------------------------------
+      call CREATE_PIXEL_ARRAYS()
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite

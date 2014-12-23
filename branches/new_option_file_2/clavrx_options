@@ -1,6 +1,6 @@
 /DATA/Ancil_Data/
 ./temp/
-9   !Expert mode (0 - nothing is read below, 1 - only !E1 and lower is read, 9 - everything is read )
+1   !Expert mode (0 - nothing is read below, 1 - only !E1 and lower is read, 9 - everything is read )
 1   !E1 ALG Mask mode bayesian cloud mask (0=no, 1 = yes)
 1   !E1 ALG DCOMP
 4   !E1 ALG ACHA
@@ -9,7 +9,7 @@
 0   !E2 OUTPUT RTM  file output flag (0= no, 1 = yes)
 1   !E2 PRC Cloud flag  
 200 !E2 Num scan lines
-1   !E2 SASRAB switch on/off SASRAB parameters 
+0   !E2 SASRAB switch on/off SASRAB parameters 
 1   !E2 NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
 1   !E2 RTM rtm option  (0=crtm,1=pfast, (2=rttov))
 0   !E2 NAV nav option  (0 =  Use  level-1b,1 = external (future) 2 = Reposnx ( fred nagle): For non-AVHRR, use 0) 
@@ -23,7 +23,7 @@ viirs_default_bayes_mask.txt
 1   !E3 SFC read surface elevation flag (0=no, 1=yes) (GLOBE_xkm_digelev.hdf, x = 1 or 8)
 0   !E3 SFC read volcano mask flag (0=no, 1=yes) (volcano_mask_1km.hdf)
 1   !E3 SFC read snow mask flag (0=no, 1 = ims, 2 = GlobSnow)
-1   !E3 SFC read dark composite flag (0=no, 1 = yes) only GEO
+0   !E3 SFC read dark composite flag (0=no, 1 = yes) only GEO
 0   !E4 AVHRR-ONLY specific ref_cal_1b flag (0 = use default level1b cal, 1 = recalibrate using PATMOS-x numbers (AVHRR-only))
 0   !E4 AVHRR-ONLY therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
 1   !E5 MASK lrc_flag (0=no,1=yes) 

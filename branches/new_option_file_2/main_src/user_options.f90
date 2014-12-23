@@ -439,7 +439,7 @@ contains
       
        Chan_On_Flag_Default =  0
       
-      
+    
       select case ( trim(sensorname))
       
       
@@ -466,6 +466,10 @@ contains
          valid_channels (1:5) = [1,20,27,31,32]
       case ('MODIS')
          valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+      case ('MODIS_1KM')
+         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+      case default 
+         print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
       
       do i = 1, 42 

@@ -139,131 +139,131 @@ subroutine Getmod(Unit16, Unit1, &
                   Fnvt, Fnaer, Utau, Glat, Glon, Month, Ntable, &
                   Iaer, Itable, Isrmod, Isrtyp, Tauclm, Ilat, Ilon)
 
-! Modules
-  use CONSTANTS
+   ! Modules
+   use CONSTANTS
 
-! Parameters
-  integer, parameter :: Numlat = 2880
-  integer, parameter :: Numlon = 5760
+   ! Parameters
+   integer, parameter :: Numlat = 2880
+   integer, parameter :: Numlon = 5760
 
-! Input Arguments
-  integer,           intent(in)    :: Unit16
-  integer,           intent(in)    :: Unit1
-  character (len=*), intent(in)    :: Fnaer, Fnvt
-  logical,           intent(in)    :: Utau
-  integer,           intent(in)    :: Month, Ntable, Iaer(*)
-  real,              intent(in)    :: Glat
-  real,              intent(inout) :: Glon
+   ! Input Arguments
+   integer,           intent(in)    :: Unit16
+   integer,           intent(in)    :: Unit1
+   character (len=*), intent(in)    :: Fnaer, Fnvt
+   logical,           intent(in)    :: Utau
+   integer,           intent(in)    :: Month, Ntable, Iaer(*)
+   real,              intent(in)    :: Glat
+   real,              intent(inout) :: Glon
 
-! Output Arguments
-  integer,          intent(out) :: Ilat, Ilon, Isrmod, Isrtyp, Itable
-  real,             intent(out) :: Tauclm
+   ! Output Arguments
+   integer,          intent(out) :: Ilat, Ilon, Isrmod, Isrtyp, Itable
+   real,             intent(out) :: Tauclm
 
-! Local Scalars
-  logical, save :: First = .true.
-  logical :: Newaer
-  integer :: Ib, Iv
-  integer :: status = 0
-  integer, save :: Kaer, Kaerp, Ksrmp
-  real :: Dlat = 0.0625
-  real :: Dlon = 0.0625
-  real :: Frslat = 89.96875
-  real :: Frslon = -179.96875
-  real :: Mistau
+   ! Local Scalars
+   logical, save :: First = .true.
+   logical :: Newaer
+   integer :: Ib, Iv
+   integer :: status = 0
+   integer, save :: Kaer, Kaerp, Ksrmp
+   real :: Dlat = 0.0625
+   real :: Dlon = 0.0625
+   real :: Frslat = 89.96875
+   real :: Frslon = -179.96875
+   real :: Mistau
 
-! Local Arrays
-  integer :: Ialbmo(0:13) = (/ 11, 4, 7, 6, 8, 5, 8, 3, 3, 3, 2, 1, 9, 10 /)
-  integer (kind=int1), save :: Vegtyp(Numlon, Numlat)
+   ! Local Arrays
+   integer :: Ialbmo(0:13) = (/ 11, 4, 7, 6, 8, 5, 8, 3, 3, 3, 2, 1, 9, 10 /)
+   integer (kind=int1), save :: Vegtyp(Numlon, Numlat)
 
 
-  if (First) then
+   if (First) then
 
-     First = .false.
+      First = .false.
 
-!    Initialize aerosol and surface-albedo model ID's
-     Kaerp = -9999
-     Ksrmp = -9999
+      !    Initialize aerosol and surface-albedo model ID's
+      Kaerp = -9999
+      Ksrmp = -9999
 
-!    Read UMD landcover data
-     open(Unit=Unit1, File=trim(Fnvt), Access='DIRECT', Status='OLD', &
+      !    Read UMD landcover data
+      open(Unit=Unit1, File=trim(Fnvt), Access='DIRECT', Status='OLD', &
           Action='READ', Recl=Numlon, Iostat=status)
-     if (status .ne. 0) then
+      if (status .ne. 0) then
         write (6, FMT='(/,1X, 2A)') 'Error opening file: ', trim(Fnvt)
         stop
-     end if
-!    read(Unit=Unit1, Rec=1)
-     do Ilat = 1, Numlat
-        read(Unit=Unit1, Rec=Ilat, iostat=status) Vegtyp(1:Numlon, Ilat)
-!!$        if (status .ne. 0) stop 'GETMOD--PREMAT END OF VEG TYPE FILE'
-        if (status .ne. 0) stop 'GETMOD--ERROR READING VEG TYPE DATA'
-     enddo
-     close(Unit=Unit1)
+      end if
+      !    read(Unit=Unit1, Rec=1)
+      do Ilat = 1, Numlat
+         read(Unit=Unit1, Rec=Ilat, iostat=status) Vegtyp(1:Numlon, Ilat)
 
-  end if
+         if (status .ne. 0) stop 'GETMOD--ERROR READING VEG TYPE DATA'
+      end do
+      close(Unit=Unit1)
 
-  if (Glon .gt. 180.) Glon = Glon - 360.
+   end if
 
-! Get lat/lon indeces for location
-  Ilat = int( ((Frslat+Dlat/2.)-Glat)/Dlat ) + 1
-  Ilat = min( Ilat, Numlat )
-  Ilon = int( (Glon - (Frslon-Dlon/2.))/Dlon ) + 1
-  Ilon = min( Ilon, Numlon )
+   if (Glon .gt. 180.) Glon = Glon - 360.
 
-! Find vegetation type and albedo of location
-  Iv = Vegtyp(Ilon, Ilat)
+   ! Get lat/lon indeces for location
+   Ilat = int( ((Frslat+Dlat/2.)-Glat)/Dlat ) + 1
+   Ilat = min( Ilat, Numlat )
+   Ilon = int( (Glon - (Frslon-Dlon/2.))/Dlon ) + 1
+   Ilon = min( Ilon, Numlon )
 
-! Associate surface type with one of the land albedo models of 
-! Briegleb et al.
-  Isrmod = Ialbmo(Iv)
+   ! Find vegetation type and albedo of location
+   Iv = Vegtyp(Ilon, Ilat)
 
-! Find surface type for current albedo model
-  Ksrmp  = Isrmod
-  Isrtyp = 2
-  if (Isrmod == 11) then
-     Isrtyp = 1
-  else if (Isrmod == 9) then
-     Isrtyp = 3
-  else if (Isrmod == -1) then
-     Isrtyp = 4
-  end if
+   ! Associate surface type with one of the land albedo models of 
+   ! Briegleb et al.
+   Isrmod = Ialbmo(Iv)
 
-! Get monthly mean aerosol optical depth and aerosol model
-  Mistau = -999.0
-  Tauclm = Mistau
+   ! Find surface type for current albedo model
+   Ksrmp  = Isrmod
+   Isrtyp = 2
+   if (Isrmod == 11) then
+      Isrtyp = 1
+   else if (Isrmod == 9) then
+       Isrtyp = 3
+   else if (Isrmod == -1) then
+      Isrtyp = 4
+   end if
 
-  if (Utau) call Aertab(Unit16, Fnaer, Glat, Glon, Month, Mistau, Tauclm)
+   ! Get monthly mean aerosol optical depth and aerosol model
+   Mistau = -999.0
+   Tauclm = Mistau
 
-  if (Isrtyp == 1) then
-     Kaer = 1
-     if (Tauclm == Mistau) Tauclm = 0.05
-  else if (Isrtyp == 2) then
-     Kaer = 3
-     if (Tauclm == Mistau) Tauclm = 0.05
-  else if (Isrtyp == 3) then
-     Kaer = 3
-     if (Tauclm == Mistau) Tauclm = 0.05
-  else if (Isrtyp == 4) then
-     Kaer = 1
-     if (Tauclm == Mistau) Tauclm = 0.05
-  end if
+   if (Utau) call Aertab(Unit16, Fnaer, Glat, Glon, Month, Mistau, Tauclm)
 
-  Newaer = Kaer .ne. Kaerp
+   if (Isrtyp == 1) then
+      Kaer = 1
+      if (Tauclm == Mistau) Tauclm = 0.05
+   else if (Isrtyp == 2) then
+      Kaer = 3
+      if (Tauclm == Mistau) Tauclm = 0.05
+   else if (Isrtyp == 3) then
+      Kaer = 3
+      if (Tauclm == Mistau) Tauclm = 0.05
+   else if (Isrtyp == 4) then
+      Kaer = 1
+      if (Tauclm == Mistau) Tauclm = 0.05
+   end if
 
-! Use previous aerosol model for this location
-  if (.not. Newaer) return
+   Newaer = Kaer .ne. Kaerp
 
-! New model for this location. Search thru refl/trans tables until 
-! a match for -Iaer- is found.
-  Kaerp = Kaer
+   ! Use previous aerosol model for this location
+   if (.not. Newaer) return
 
-  do Ib = 1, Ntable
-     if (Kaer == Iaer(Ib)) then
-        Itable = Ib
-        return
-     end if
-  enddo
+   ! New model for this location. Search thru refl/trans tables until 
+   ! a match for -Iaer- is found.
+   Kaerp = Kaer
 
-  call Errmsg('GETMOD--ATMOSPHERIC MODEL NOT FOUND', .true.)
+   do Ib = 1, Ntable
+      if (Kaer == Iaer(Ib)) then
+         Itable = Ib
+         return
+      end if
+   enddo
+
+   call Errmsg('GETMOD--ATMOSPHERIC MODEL NOT FOUND', .true.)
 
   return
 

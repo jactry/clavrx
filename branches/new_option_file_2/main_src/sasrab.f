@@ -186,7 +186,7 @@ C     .. Save statement ..
       SAVE  Itb, Isrtyp, Tauclm, Smumax, Smumin, Extrap, Solcon, Vernum,
      &      Nobdrc, Nontob, Climat, Satalb, Matthe, Prnt, Utau, Nflux,
      &      Nother, Fnrt, Fnvt, Fnbdr, Fnaer, First, Prvday, Ntable,
-     &      Unit16, Unit1
+     &      Unit16, Unit1, Iaer
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC  Aint, Int, Mod

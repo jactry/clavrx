@@ -391,7 +391,7 @@ contains
          
          call read_option_line ( lun , conf % sfc % use_hres_land_mask)
          call read_option_line ( lun , conf % sfc % use_coast_mask)
-         print*,'========>'
+         
          call read_option_line ( lun , conf % sfc % use_hres_elev)
          print*,conf % sfc % use_hres_elev
          call read_option_line ( lun , conf % sfc % use_volc_mask)
@@ -419,9 +419,8 @@ contains
             close(unit= Lun)
             return
          end if
-         print*,conf % do_process_cloudfree
+         
          call read_option_line ( lun , conf % chan ( 1: 6 ) % is_on )
-         print*,'aa'
          call read_option_line ( lun , conf % chan ( 7: 12 ) % is_on )
          call read_option_line ( lun , conf % chan ( 13: 18 ) % is_on )
          call read_option_line ( lun , conf % chan ( 19: 24 ) % is_on )

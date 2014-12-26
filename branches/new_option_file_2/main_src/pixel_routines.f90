@@ -2603,58 +2603,61 @@ subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS(Dcomp_Processed_Count,Dcomp_Valid_C
 
 end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
 
-!-----------------------------------------------------------
-! Determine a Fraction of pixels with a confident cloud mask
-!
-!-----------------------------------------------------------
-subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS(Cloud_Mask_Count,Nonconfident_Cloud_Mask_Count)
-
-  integer:: Num_Elements
-  integer:: Num_Lines
-  real(kind=real4), intent(inout):: Cloud_Mask_Count
-  real(kind=real4), intent(inout):: Nonconfident_Cloud_Mask_Count
-  integer(kind=int1), dimension(:,:), allocatable:: Mask
-  integer(kind=int1), dimension(:,:), allocatable:: Nonconfident_Mask
-  integer, parameter:: Count_Min = 10
-  real:: Count_Segment
-  real:: Nonconfident_Count_Segment
+   !-----------------------------------------------------------
+   ! Determine a Fraction of pixels with a confident cloud mask
+   !
+   !-----------------------------------------------------------
+   subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS(Cloud_Mask_Count,Nonconfident_Cloud_Mask_Count)
+      
+     
+      integer:: Num_Elements
+      integer:: Num_Lines
+      real(kind=real4), intent(inout):: Cloud_Mask_Count
+      real(kind=real4), intent(inout):: Nonconfident_Cloud_Mask_Count
+      integer(kind=int1), dimension(:,:), allocatable:: Mask_local
+      integer(kind=int1), dimension(:,:), allocatable:: Nonconfident_Mask_local
+      integer, parameter:: Count_Min = 10
+      real:: Count_Segment
+      real:: Nonconfident_Count_Segment
   
+      Num_Elements = Num_Pix  !make local copy of a global variable
+      Num_Lines = Num_Scans_Per_Segment  !make local copy of a global variable
 
-  Num_Elements = Num_Pix  !make local copy of a global variable
-  Num_Lines = Num_Scans_Per_Segment  !make local copy of a global variable
+      allocate(Mask_local(Num_Elements,Num_Lines))
+      allocate(Nonconfident_Mask_local(Num_Elements,Num_Lines))
 
-  allocate(Mask(Num_Elements,Num_Lines))
-  allocate(Nonconfident_Mask(Num_Elements,Num_Lines))
+      Mask_local = 0
+      Nonconfident_Mask_local = 0
 
-  Mask = 0
-  Nonconfident_Mask = 0
+      where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
+         Mask_local = 1
+      end where
 
-  where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
-     Mask = 1
-  endwhere
+      where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
+         Nonconfident_Mask_local = 1
+      end where
 
-  where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
-     Nonconfident_Mask = 1
-  endwhere
-
-  Count_Segment = sum(real(Mask))
-  if (Count_Segment < Count_Min) then
-      return
-  endif
-
-  Nonconfident_Count_Segment = sum(real(Nonconfident_Mask))
-
-  Cloud_Mask_Count = Cloud_Mask_Count + Count_Segment
-  Nonconfident_Cloud_Mask_Count = Nonconfident_Cloud_Mask_Count + Nonconfident_Count_Segment
-
-  if (Cloud_Mask_Count > Count_Min) then
-    Nonconfident_Cloud_Mask_Fraction = Nonconfident_Cloud_Mask_Count / Cloud_Mask_Count
-  else
-    Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4 
-  endif
+      Count_Segment = sum(real(Mask_local))
+      if (Count_Segment < Count_Min) then
+         return
+      end if
   
+      deallocate ( mask_local)
 
-end subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS
+      Nonconfident_Count_Segment = sum(real(Nonconfident_Mask_local))
+   
+      deallocate (Nonconfident_Mask_local) 
+   
+      Cloud_Mask_Count = Cloud_Mask_Count + Count_Segment
+      Nonconfident_Cloud_Mask_Count = Nonconfident_Cloud_Mask_Count + Nonconfident_Count_Segment
+
+      if (Cloud_Mask_Count > Count_Min) then
+         Nonconfident_Cloud_Mask_Fraction = Nonconfident_Cloud_Mask_Count / Cloud_Mask_Count
+      else
+         Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4 
+      end if
+  
+   end subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS
 
 
 !==============================================================================

@@ -4951,7 +4951,13 @@ subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
   Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
   if (Level2_File_Flag == sym%YES) then
    do Isds = 1, Num_Level2_Sds
-     Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+      
+      if (sds_Id_Level2(Isds) /= 0 ) Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+      ! - do this if sds_id_level2 is saved from last file and not used here..
+      ! - some compilers with ceratin flags save also without save attribute
+      ! - 20141225-AW
+      sds_Id_Level2(Isds) = 0
+     
    enddo
    Istatus = sfend(Sd_Id_Level2) + Istatus
 !--- errors are expected on close since all sds were not opened

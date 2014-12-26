@@ -634,7 +634,6 @@ contains
             stop   
          else if  ( trim(fargv) == "-version" .or. &
              trim(fargv) == "-ver") then
-            print*,'clavrx_5.4 trunk'
             print*,'$Header$'
             stop
         
@@ -728,48 +727,11 @@ contains
           call getarg(i+1,ancil_data_dir)
           ancil_data_dir=trim(ancil_data_dir)
 
-        !Change GFS data directory
-        elseif(trim(fargv) == "-gfs_data_dir") then
-          call getarg(i+1,gfs_data_dir)
-          gfs_data_dir=trim(gfs_data_dir)
-
-        !Change NCEP reanalysis data directory
-        elseif(trim(fargv) == "-ncep_data_dir") then
-          call getarg(i+1,ncep_data_dir)
-          ncep_data_dir=trim(ncep_data_dir)
-
-        !Change CFSR reanalysis data directory
-        elseif(trim(fargv) == "-cfsr_data_dir") then
-          call getarg(i+1,cfsr_data_dir)
-          cfsr_data_dir=trim(cfsr_data_dir)
-
-        !Change OISST data directory
-        elseif(trim(fargv) == "-oisst_data_dir") then
-          call getarg(i+1,oisst_data_dir)
-          oisst_data_dir=trim(oisst_data_dir)
-
-        !Change SNOW data directory
-        elseif(trim(fargv) == "-snow_data_dir") then
-          call getarg(i+1,snow_data_dir)
-          snow_data_dir=trim(snow_data_dir)
-
         !Smooth/not smooth NWP data
         elseif(trim(fargv) == "-smooth_nwp") then
           Smooth_Nwp_Flag = sym%YES
         elseif(trim(fargv) == "-no_smooth_nwp") then
           Smooth_Nwp_Flag = sym%NO
-
-        !Use/not use SEEBOR emissivity
-        elseif(trim(fargv) == "-use_seebor") then
-          use_seebor = sym%YES
-        elseif(trim(fargv) == "-no_seebor") then
-          use_seebor = sym%NO
-
-        !Change which surface type flag 
-        elseif(trim(fargv) == "-high_res") then
-          read_hires_sfc_type = 1
-        elseif(trim(fargv) == "-low_res") then
-          read_hires_sfc_type = 0
 
         !Read/not read land mask
         elseif(trim(fargv) == "-read_land_mask") then
@@ -777,31 +739,11 @@ contains
         elseif(trim(fargv) == "-no_land_mask") then
           read_land_mask = sym%NO
 
-        !Read/not read coast mask
-        elseif(trim(fargv) == "-read_coast_mask") then
-          read_coast_mask = sym%YES
-        elseif(trim(fargv) == "-no_coast_mask") then
-          read_coast_mask = sym%NO
-
-        !Read/not read surface elevation
-        elseif(trim(fargv) == "-no_surface_elevation") then
-          read_surface_elevation = 0
-        elseif(trim(fargv) == "-high_surface_elevation") then
-          read_surface_elevation = 1
-        elseif(trim(fargv) == "-low_surface_elevation") then
-          read_surface_elevation = 2
-
         !Read/not read volcano mask
         elseif(trim(fargv) == "-read_volcano_mask") then
           read_volcano_mask = sym%YES
         elseif(trim(fargv) == "-no_volcano_mask") then
           read_volcano_mask = sym%NO
-
-        !read snow mask
-        elseif(trim(fargv) == "-snow") then
-          read_snow_mask = sym%YES
-        elseif(trim(fargv) == "-no_snow") then
-          read_snow_mask = sym%NO
 
         !Output scaled reflectances or not
         elseif(trim(fargv) == "-output_scaled_ref") then
@@ -995,55 +937,6 @@ subroutine HELPER()
   print *, "  Use the navigation data from a clevernav"
   print *," "
 
-  print *,"  -nav_file"
-  print *, "   Output a navigation file."
-  print *," "
-  print *,"  -no_nav_file"
-  print *, "   Do not output a navigation file."
-  print *," "
-
-  print *,"  -cmr_file"
-  print *, "   Output cmr file."
-  print *," "
-  print *,"  -no_cmr_file"
-  print *, "   Do not output cmr file."
-  print *," "
-  
-  print *,"  -obs_file"
-  print *, "   Output obs file."
-  print *," "
-  print *,"  -no_obs_file"
-  print *, "   Do not output obs file."
-  print *," "
-  
-  print *,"  -geo_file"
-  print *, "   Output geolocation file. "
-  print *," "
-  print *,"  -no_geo_file"
-  print *, "   Output geolocation file. "
-  print *," "
-
-  print *,"  -cld_file"
-  print *, "   Run and output cloud algorithms."
-  print *," "
-  print *,"  -no_cld_file"
-  print *, "   Do not output cloud algorithms."
-  print *," "
-
-  print *,"  -sst_file"
-  print *, "   Calculate and output SST data. "
-  print *," "
-  print *,"  -no_sst_file"
-  print *, "   Do not output SST data. "
-  print *," "
-
-  print *,"  -ash_file"
-  print *, "   Output VolAsh data file. "
-  print *," "
-  print *,"  -no_ash_file"
-  print *, "   Do not output VolAsh data file. "
-  print *," "
-
   print *,"  -rtm_file"
   print *, "   Output rtm data file. "
   print *," "
@@ -1072,14 +965,6 @@ subroutine HELPER()
   print *, "   Don't run cloud algorithms. "
   print *," "
   
-  print *,"  -aer_Flag"
-  print *, "   Run aerosol algorithms. "
-  print *," "
-  print *,"  -no_aer_Flag"
-  print *, "   Don't run aerosol algorithms. "
-  print *," "
-
-
   print *,"  -subset_pixel_hdf"
   print *, "  Subset HDF pixel data. " 
   print *," "

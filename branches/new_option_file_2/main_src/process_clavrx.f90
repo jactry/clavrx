@@ -559,6 +559,7 @@
       ! Check to see if the channels available and selected allow
       ! for the generation of the algorithms
       !------------------------------------------------------------------
+      call CHECK_MODE_SETTINGS ( sensorname )
       call CHECK_ALGORITHM_CHOICES()
       call CHECK_CHANNEL_SETTINGS(sensorname)
       

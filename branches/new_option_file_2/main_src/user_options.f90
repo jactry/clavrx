@@ -119,6 +119,7 @@ module USER_OPTIONS
    implicit none
    private
    public :: SETUP_USER_DEFINED_OPTIONS
+   public :: CHECK_MODE_SETTINGS
    public :: CHECK_ALGORITHM_CHOICES
    public :: CHECK_CHANNEL_SETTINGS
 
@@ -126,6 +127,8 @@ module USER_OPTIONS
    character ( len = 50 ) :: data_base_path
    integer :: Dcomp_Mode_User_Set
    integer :: Acha_Mode_User_set
+   integer :: nlcomp_Mode_User_set
+   integer :: mask_Mode_User_set
    integer :: expert_mode
    
    
@@ -395,7 +398,7 @@ contains
       endif
       
       if  ( Dcomp_Mode_user_set .ne. Dcomp_Mode) then
-	      call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
+         call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
       endif 
      
       write (string_1,'(i1)') dcomp_mode
@@ -421,6 +424,54 @@ contains
 
    end subroutine CHECK_ALGORITHM_CHOICES
    
+   !
+   !
+   !
+   subroutine check_mode_settings ( sensorname )
+      character ( len =10) , intent(in) :: sensorname
+      
+      if (expert_mode > 0 ) return
+      
+      nlcomp_mode_user_set     = 0
+      dcomp_mode_user_set = 3
+      
+      select case ( trim(sensorname))
+      
+      
+      case ( 'AVHRR')
+        
+         acha_mode_user_set  = 3
+         
+      case ( 'GOES')      
+         acha_mode_user_set  = 7
+      case ( 'GOES_SNDR')
+         acha_mode_user_set  = 7   
+      case ( 'MTSAT')
+          acha_mode_user_set  = 6
+      case ('SEVIRI')
+         acha_mode_user_set  = 8
+      case ('FY2')
+         acha_mode_user_set  =  7  
+      case ('VIIRS')
+         acha_mode_user_set  =  5  
+         nlcomp_mode_user_set = 1  
+      case ('IFF_VIIRS')      
+          acha_mode_user_set  = 5      
+      case ('IFF_AVHRR')      
+         acha_mode_user_set  = 3
+      case ('COMS')
+         acha_mode_user_set  = 7
+      case ('MODIS')
+          acha_mode_user_set  = 8 
+      case ('MODIS_1KM')
+          acha_mode_user_set  = 8
+      case default 
+         print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
+      end select
+      
+   
+   end
+   
    
    !----------------------------------------------------------------------
    !   Channel settings
@@ -435,9 +486,10 @@ contains
       ! expert can decide themselves
       if (expert_mode > 6 ) return
       
+
       valid_channels = -99
       
-       Chan_On_Flag_Default =  0
+      Chan_On_Flag_Default =  0
       
     
       select case ( trim(sensorname))
@@ -788,102 +840,91 @@ contains
   
   
    
-  !--- default ancillary data directory
-  ancil_data_dir = trim(data_base_path)//'/clavrx_ancil_data/'
-  gfs_data_dir = trim(data_base_path)//'gfs/'
-  ncep_data_dir = trim(data_base_path)//'/clavrx_ancil_data/ncep-reanalysis/'
-  cfsr_data_dir = trim(data_base_path)//'/cfsr/'
-  oisst_data_dir = trim(data_base_path)//'/clavrx_ancil_data/oisst/'
-  snow_data_dir = './data/snow/'
+      !--- default ancillary data directory
+      ancil_data_dir = trim(data_base_path)//'/clavrx_ancil_data/'
+      gfs_data_dir = trim(data_base_path)//'gfs/'
+      ncep_data_dir = trim(data_base_path)//'/clavrx_ancil_data/ncep-reanalysis/'
+      cfsr_data_dir = trim(data_base_path)//'/cfsr/'
+      oisst_data_dir = trim(data_base_path)//'/clavrx_ancil_data/oisst/'
+      snow_data_dir = './data/snow/'
 
- end subroutine READ_CLAVRXORB_OPTIONS
+   end subroutine READ_CLAVRXORB_OPTIONS
 
-!-------------------------------------------------------------------------------
-!--- QC options and modify as needed
-!-------------------------------------------------------------------------------
- subroutine QC_CLAVRXORB_OPTIONS()
+   !-------------------------------------------------------------------------------
+   !--- QC options and modify as needed
+   !-------------------------------------------------------------------------------
+   subroutine QC_CLAVRXORB_OPTIONS()
 
-    integer:: erstat
+      integer:: erstat
 
-    !---- Since the NWP controls everything, we first check if an NWP is being used
-    !---- before anything else is checked.  If no nwp, we stop processing
+      !---- Since the NWP controls everything, we first check if an NWP is being used
+      !---- before anything else is checked.  If no nwp, we stop processing
 
-    if ((Nwp_Opt < 0) .or. (Nwp_Opt > 4)) then
-       print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
-       stop "6-Nwp_Flag"
-    endif
-    if (Nwp_Opt == 1) then
-       call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Opt == 2) then
-       call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Opt == 3) then
-       call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
-    else if (Nwp_Opt == 4) then
-       call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
-    endif
+      if ((Nwp_Opt < 0) .or. (Nwp_Opt > 4)) then
+         print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
+         stop "6-Nwp_Flag"
+      endif
+      if (Nwp_Opt == 1) then
+         call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
+      else if (Nwp_Opt == 2) then
+         call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
+      else if (Nwp_Opt == 3) then
+         call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
+      else if (Nwp_Opt == 4) then
+         call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
+      endif
     
-    if (Nwp_Opt == 0) then
-       print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
-       Cld_Flag = sym%NO
+      if (Nwp_Opt == 0) then
+         print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
+         Cld_Flag = sym%NO
        
-       Sasrab_Flag = sym%NO
-      
-       
-      
-       Rtm_File_Flag = sym%NO
-       Cloud_Mask_Bayesian_Flag = sym%NO
-       Cloud_Mask_Aux_Flag = sym%NO ! this is to determine if the lut's are being read in
-    endif
+         Sasrab_Flag = sym%NO
+         Rtm_File_Flag = sym%NO
+         Cloud_Mask_Bayesian_Flag = sym%NO
+         Cloud_Mask_Aux_Flag = sym%NO ! this is to determine if the lut's are being read in
+      endif
 
-    if (cloud_mask_bayesian_Flag == sym%YES) then
-       call mesg  ("Bayesian cloud mask will be generated")
-    endif
+      if (cloud_mask_bayesian_Flag == sym%YES) then
+         call mesg  ("Bayesian cloud mask will be generated")
+      endif
 
-    if (Ref_Cal_1b == sym%YES) then
-       call mesg ("Reflectance Calibration within 1b will be used")
-    endif
+      if (Ref_Cal_1b == sym%YES) then
+         call mesg ("Reflectance Calibration within 1b will be used")
+      endif
 
-    if (therm_Cal_1b == sym%YES) then
-       call mesg ("Thermal Calibration within 1b will be used")
-    endif
+      if (therm_Cal_1b == sym%YES) then
+         call mesg ("Thermal Calibration within 1b will be used")
+      endif
 
-    if (nav_Opt == 1) then
-        call mesg ("CLEVERNAV geolocation no longer supported, using REPOSNX")
-        nav_Opt = 2
-    endif
+      if (nav_Opt == 1) then
+         call mesg ("CLEVERNAV geolocation no longer supported, using REPOSNX")
+         nav_Opt = 2
+       endif
 
-    if (nav_opt == 2) then
+      if (nav_opt == 2) then
          call mesg( "REPOSNX geolocation adjustment done")
-    endif
+      endif
 
-    if (cld_Flag == sym%NO) then
-        print *, EXE_PROMPT, "Cloud products will not be created"
-    endif
+      if (cld_Flag == sym%NO) then
+         print *, EXE_PROMPT, "Cloud products will not be created"
+      endif
 
- 
-
-   
-
-    if (rtm_file_Flag == sym%YES) then
+      if (rtm_file_Flag == sym%YES) then
         call mesg( "rtm file will be created")
-    endif
+      endif
 
-   
+      if (Cloud_Mask_Aux_Flag == sym%YES) then
+         print *,  EXE_PROMPT, "Cloud mask results will be read in from an aux file"
+      endif
 
-    if (Cloud_Mask_Aux_Flag == sym%YES) then
-       print *,  EXE_PROMPT, "Cloud mask results will be read in from an aux file"
-    endif
+      if (Rtm_opt /=1) then
+         print *,  EXE_PROMPT, "Only PFAST RTM implemented, stopping"
+         stop
+      endif
 
- 
-    if (Rtm_opt /=1) then
-       print *,  EXE_PROMPT, "Only PFAST RTM implemented, stopping"
-       stop
-    endif
+      call mesg ("Temporary Files will be written to "//trim(Temporary_Data_Dir),level = verb_lev % VERBOSE )
 
-
-    call mesg ("Temporary Files will be written to "//trim(Temporary_Data_Dir),level = verb_lev % VERBOSE )
-
- end subroutine QC_CLAVRXORB_OPTIONS
+   end subroutine QC_CLAVRXORB_OPTIONS
  
  
 !--------------------------------------------------------------------------

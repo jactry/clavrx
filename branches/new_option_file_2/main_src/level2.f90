@@ -4933,7 +4933,8 @@ subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
     Istatus = sfsnatt(Sd_Id_Rtm, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
     Istatus = sfsnatt(Sd_Id_Rtm, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
     do Isds = 1, Num_Rtm_Sds
-     Istatus = sfendacc(Sds_Id_Rtm(Isds)) + Istatus
+      if (sds_id_rtm(isds) /= 0 ) Istatus = sfendacc(Sds_Id_Rtm(Isds)) + Istatus
+      sds_id_rtm(isds) = 0
     enddo
     Istatus = sfend(Sd_Id_Rtm) + Istatus
   endif

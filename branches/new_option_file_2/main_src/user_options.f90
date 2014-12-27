@@ -660,7 +660,7 @@ contains
       integer :: fargc
       integer :: i
       integer :: Temp_Scans_Arg !--- temporary integer for number of scanlines
-      integer*4 :: iargc
+      integer :: iargc
 
       temp_string = '.'  !--- tempoary string to search for in angle commandline
 

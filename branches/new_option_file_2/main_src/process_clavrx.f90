@@ -597,10 +597,10 @@
       Day_Of_Month = COMPUTE_DAY(int(Start_Day, kind=int4), int(ileap, kind=int4))
 
       !--- continue output to screen
-      write ( string_30, '(I4,X,I3,X,F9.5)') Start_Year,Start_Day, &
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Start_Year,Start_Day, &
              Start_Time/60.0/60.0/1000.0
       call mesg ("start year, day, time = "//string_30 ) 
-      write ( string_30, '(I4,X,I3,X,F9.5)') End_Year,End_Day, &
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') End_Year,End_Day, &
              End_Time/60.0/60.0/1000.0
       call mesg ("End year, day, time = "//string_30 ) 
       

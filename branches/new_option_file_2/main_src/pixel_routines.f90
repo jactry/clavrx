@@ -73,7 +73,6 @@ MODULE PIXEL_ROUTINES
           QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
-          TURN_OFF_CHANNELS_BASED_ON_SENSOR, &
           DETERMINE_LEVEL1B_COMPRESSION, &
           TERM_REFL_NORM, &
           MERGE_NWP_HIRES_ZSFC, &
@@ -92,133 +91,7 @@ MODULE PIXEL_ROUTINES
             COMPUTE_TSFC
 
   contains
-!----------------------------------------------------------------------------
-! Routine to modify Chan_On_Default_Flag based on channels that are available
-!----------------------------------------------------------------------------
-subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
-                                              Goes_Flag, Goes_Mop_Flag, &
-                                              Goes_Sndr_Flag, &
-                                              Seviri_Flag, Mtsat_Flag, &
-                                              Viirs_Flag, Iff_Viirs_Flag, &
-                                              Iff_Avhrr_flag, &
-                                              FY2_Flag, COMS_Flag)
 
-   integer, intent(in):: Avhrr_Flag
-   integer, intent(in):: Avhrr_1_Flag
-   integer, intent(in):: Goes_Flag
-   integer, intent(in):: Goes_Mop_Flag
-   integer, intent(in):: Goes_Sndr_Flag
-   integer, intent(in):: Seviri_Flag
-   integer, intent(in):: Mtsat_Flag
-   integer, intent(in):: Iff_Viirs_Flag
-   integer, intent(in):: Iff_Avhrr_Flag
-   integer, intent(in):: FY2_Flag
-   integer, intent(in):: Viirs_Flag
-   integer, intent(in):: COMS_Flag
-
-   if (Avhrr_Flag == sym%YES) then
-      Chan_On_Flag_Default(3:5) = sym%NO
-      Chan_On_Flag_Default(7:19) = sym%NO
-      Chan_On_Flag_Default(21:30) = sym%NO
-      Chan_On_Flag_Default(33:36) = sym%NO
-      if (Avhrr_1_Flag == sym%YES) then
-            Chan_On_Flag_Default(32) = sym%NO
-      endif
-      Chan_On_Flag_Default(37:42) = sym%NO
-   endif 
-
-  !GOES
-  if (Goes_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(34:36) = sym%NO
-
-       if (Goes_Mop_Flag == sym%YES) then
-             Chan_On_Flag_Default(32) = sym%NO
-       else
-             Chan_On_Flag_Default(33) = sym%NO
-       endif
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-
-  !GOES Sounder
-  if (Goes_Sndr_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(22) = sym%NO
-       Chan_On_Flag_Default(26) = sym%NO
-       Chan_On_Flag_Default(29) = sym%NO
-  endif
-
-  !MTSAT
-  if (Mtsat_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-
-  ! SEVIRI
-  !note 3.9 channel mapped to channel 20
-  if (Seviri_Flag == sym%YES) then
-       Chan_On_Flag_Default(3:5) = sym%NO
-       Chan_On_Flag_Default(7:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(34:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-
-  !FY2-D/E
-  if (FY2_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  ENDIF
-
-  ! VIIRS  
-  IF (Viirs_Flag == sym%YES) THEN
-       Chan_On_Flag_Default(10:14) = sym%NO
-       Chan_On_Flag_Default(16:19) = sym%NO
-       Chan_On_Flag_Default(21) = sym%NO
-       Chan_On_Flag_Default(23:25) = sym%NO
-       Chan_On_Flag_Default(27:28) = sym%NO
-       Chan_On_Flag_Default(30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-  ENDIF
-
-  ! VIIRS + CrIS in IFF
-  ! note CrIS uses 33:36 channels
-  IF (Iff_Viirs_Flag == sym%YES) THEN
-       Chan_On_Flag_Default(10:14) = sym%NO
-       Chan_On_Flag_Default(16:19) = sym%NO
-       Chan_On_Flag_Default(21) = sym%NO
-       Chan_On_Flag_Default(23:25) = sym%NO
-       Chan_On_Flag_Default(27:28) = sym%NO
-       Chan_On_Flag_Default(30) = sym%NO
-  ENDIF
-
-   ! AVHRR + HIRS in IFF
-   ! note HIRS uses 21,23:25,27:30,33:36
-   if (Iff_Avhrr_Flag == sym%YES) then
-      Chan_On_Flag_Default(3:5) = sym%NO
-      Chan_On_Flag_Default(7:19) = sym%NO
-      Chan_On_Flag_Default(26) = sym%NO
-      Chan_On_Flag_Default(37:42) = sym%NO
-   endif
-  
-  !COMS
-  if (COMS_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-  
-end subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR
 !----------------------------------------------------------------------
 ! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
 !

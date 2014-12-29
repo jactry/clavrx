@@ -547,7 +547,13 @@ contains
    !--------------------------------------------------------------------------------------------------
    !  Apply various tests to determine from which sensor this data comes
    !--------------------------------------------------------------------------------------------------
-   subroutine DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sensorname, Ierror)
+   subroutine DETECT_SENSOR_FROM_FILE( &
+           File_1b_Full &
+         , File_1b_Temp &
+         , AREAstr &
+         , NAVstr &
+         , sensorname &
+         , Ierror)
 
       CHARACTER(len=*), intent(in) :: File_1b_Full
       CHARACTER(len=*), intent(in) :: File_1b_Temp

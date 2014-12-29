@@ -538,9 +538,13 @@
 
       !----------------------------------------------------------------------
       ! Knowing the sensor, setup internal parameters needed for processing
-      !  not only: also assigns sensor flags ...
+      !  not only: also assigns sensor flags as goes_mop_flag ..  ...
       !----------------------------------------------------------------------
       call SET_SENSOR_CONSTANTS ( AREAstr)
+      
+      if ( goes_mop_flag == sym%YES) sensorname = 'GOES_MOP'
+      if ( avhrr_1_flag == sym % YES ) sensorname='AVHRR_1'
+    
 
      
       !------------------------------------------------------------------
@@ -553,26 +557,12 @@
       !------------------------------------------------------------------
       call SETUP_SOLAR_RTM(Sc_Id_WMO)
 
+      !------------------------------------------------------------------
+      ! update settings according sensor ( algo mode and channel settings 
+      !    including turn-on and off)
+      !------------------------------------------------------------------
+      call UPDATE_CONFIGURATION ( sensorname )
      
-
-      !------------------------------------------------------------------
-      ! Check to see if the channels available and selected allow
-      ! for the generation of the algorithms
-      !------------------------------------------------------------------
-      call CHECK_MODE_SETTINGS ( sensorname )
-      call CHECK_ALGORITHM_CHOICES()
-      call CHECK_CHANNEL_SETTINGS(sensorname)
-      
-      !------------------------------------------------------------------
-      ! Turn off selected channels based on sensor
-      !------------------------------------------------------------------
-      call TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
-                                          Goes_Flag, Goes_Mop_Flag, &
-                                          Goes_Sndr_Flag,Seviri_Flag,  &
-                                          Mtsat_Flag, Viirs_Flag,  &
-                                          Iff_Viirs_Flag, Iff_Avhrr_flag, &
-                                          FY2_Flag, COMS_Flag)
-   
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------

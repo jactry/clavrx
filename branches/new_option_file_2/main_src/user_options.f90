@@ -109,6 +109,7 @@ module USER_OPTIONS
    use CONSTANTS, only: &
       sym &
       , exe_prompt   
+      
    use FILE_UTILITY, only: &
       get_lun
  
@@ -118,10 +119,8 @@ module USER_OPTIONS
 
    implicit none
    private
-   public :: SETUP_USER_DEFINED_OPTIONS
-   public :: CHECK_MODE_SETTINGS
-   public :: CHECK_ALGORITHM_CHOICES
-   public :: CHECK_CHANNEL_SETTINGS
+   public  :: SETUP_USER_DEFINED_OPTIONS
+   public  :: UPDATE_CONFIGURATION
 
    character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
    character ( len = 50 ) :: data_base_path
@@ -131,69 +130,58 @@ module USER_OPTIONS
    integer :: mask_Mode_User_set
    integer :: expert_mode
    
+   integer :: chan_on_flag_default_user_set ( 42)
    
    
-   !---------------------------------------------------------------------------------
+   
+   ! ---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
-   !---------------------------------------------------------------------------------
+   ! ---------------------------------------------------------------------------------
    integer,parameter:: ACHA_Mode_Default_Avhrr = 3
    integer,parameter:: ACHA_Mode_Default_Avhrr1 = 1
    integer,parameter:: ACHA_Mode_Default_Goes_IL = 6
    integer,parameter:: ACHA_Mode_Default_Goes_MP = 7
+   integer,parameter:: ACHA_Mode_Default_Goes_SNDR = 7
+   integer,parameter:: ACHA_Mode_Default_COMS = 7
    integer,parameter:: ACHA_Mode_Default_VIIRS = 5
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
    integer,parameter:: ACHA_Mode_Default_Modis = 8
+   integer,parameter:: ACHA_Mode_Default_Fy2 = 7
    
 contains
 
-   !------------------------------------------------------------------
-   !
-   !------------------------------------------------------------------
+   ! ---------------------------------------------------------------------------------
+   !  wrapper for initial clavrx option read
+   ! ---------------------------------------------------------------------------------
    subroutine SETUP_USER_DEFINED_OPTIONS()
       call SET_DEFAULT_VALUES
-      call READ_CLAVRXORB_OPTIONS()
+      call DETERMINE_USER_CONFIG()
       call QC_CLAVRXORB_OPTIONS()
 
    end subroutine SETUP_USER_DEFINED_OPTIONS
    
+   ! ---------------------------------------------------------------------------------
    !
-   !
-   !
+   ! ---------------------------------------------------------------------------------
    subroutine set_default_values
-   
-   
-            !--- set yes/no options to no as default
- 
-      
+           
       Aer_Flag = sym%YES
-      
-      
       Ash_Flag = sym%NO
       Data_comp_Flag = 0
-     
-      Subset_pixel_hdf_Flag = 0
-      
- 
-     
-      
+      Subset_pixel_hdf_Flag = 0      
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
-      
       output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
-     
-  
-  
+      
       !--- default solar zenith limits
       Solzen_Min_Limit= 0 
       Solzen_Max_Limit= 180.0
-      
-      
+       
       !  -- default what can be changed for expert mode
       Cloud_Mask_Bayesian_Flag = 1
       Dcomp_Mode_user_set = 3
       Acha_Mode_user_set = 1
-      Nlcomp_Mode = 1
-                  
+      Nlcomp_Mode = 1            
       Level2_File_Flag = 1
       Rtm_File_Flag = 1
       Cld_Flag = 1
@@ -219,331 +207,28 @@ contains
       Lrc_Flag = 1 
       Smooth_Nwp_Flag = 1  
       Process_Undetected_Cloud_Flag = 0
-      Chan_On_Flag_Default(1:6) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(7:12) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(13:18) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(19:24) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(25:30) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(31:36) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default(37:42) = [0,0,0,0,0,1]
-   
-   
+      Chan_On_Flag_Default_user_set(1:6) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(7:12) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(13:18) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(19:24) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(25:30) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(31:36) = [1,1,1,1,1,1]
+      Chan_On_Flag_Default_user_set(37:42) = [0,0,0,0,0,1]
+      
    end subroutine
    
-   
-  
-   !----------------------------------------------------------------------------
-   !
-   !----------------------------------------------------------------------------
-   subroutine CHECK_ALGORITHM_CHOICES()
 
-      character ( len = 1 ) :: string_1
- 
- 
-      !------------------------------------------------------------------------
-      !--- ACHA MODE Check
-      !---      (       0 = off
-      !---              1 = 11
-      !----             2 = 11/6.7; 
-      !---              3 = 11/12
-      !----             4 = 11/13.4; 
-      !---              5 = 11/12/8.5
-      !---              6 = 11/12/6.7
-      !---              7 = 11/13.3/6.7
-      !---              8 = 11/12/13.3)
-      !------------------------------------------------------------------------
-      
-      acha_mode = acha_mode_user_set
-      
-      if (Avhrr_Flag == sym%YES) then 
-         if (Avhrr_1_Flag == sym%NO) then 
-             if (Acha_Mode /=1 .or. Acha_Mode /= 3) then
-                     print *, EXE_PROMPT, &
-                     "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT, &
-                     "Changing to default for AVHRR ", Acha_Mode_Default_Avhrr
-                     Acha_Mode = Acha_Mode_Default_Avhrr 
-             endif
-         ELSE 
-             if (Acha_Mode /= 1)  then 
-                     print *, EXE_PROMPT, &
-                     "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT, &
-                     "Changing to default for AVHRR/1 ",Acha_Mode_Default_Avhrr1
-                     Acha_Mode = Acha_Mode_Default_Avhrr1 
-             endif
-         endif
-         if ( expert_mode <= 1 ) bayesian_cloud_mask_name = 'avhrr_default_bayes_mask.txt'
-      endif
-
-      write (string_1,'(I1)') acha_mode
-      call mesg ("Acha Mode = "//string_1)
-
-      if (Goes_Flag == sym%YES) then 
-
-          if (Goes_Mop_Flag == sym%NO) then 
-
-             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or. &
-                 Acha_Mode == 5 .or. Acha_Mode == 7)  then 
-                     print *, EXE_PROMPT, &
-                     "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT, &
-                     "Changing to default for GOES-IL ",Acha_Mode_Default_Goes_IL
-                     Acha_Mode = Acha_Mode_Default_Goes_IL
-             endif
-
-          ELSE 
-
-             if (Acha_Mode == 3 .or. Acha_Mode == 8 .or.  &
-                 Acha_Mode == 5 .or. Acha_Mode == 6)  then 
-                     print *, EXE_PROMPT, &
-                     "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT, &
-                     "Changing to default for GOES-MP"
-                     Acha_Mode = Acha_Mode_Default_Goes_MP
-                     
-               write (string_1,'(I1)') acha_mode
-               call mesg ("Acha Mode = "//string_1 )
-
-             endif
-
-          endif
-           if ( expert_mode <= 1 ) bayesian_cloud_mask_name = 'goes_default_bayes_mask.txt' 
-      endif
-
-      if (Viirs_Flag == sym%YES) then 
-
-             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or.  &
-                 Acha_Mode == 6 .or. Acha_Mode == 7 .or. Acha_Mode == 2)  then 
-                     print *, EXE_PROMPT, "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT,  "Changing to default for VIIRS"
-                     Acha_Mode = Acha_Mode_Default_VIIRS
-             endif
-         if ( expert_mode <= 1 ) bayesian_cloud_mask_name = 'viirs_default_bayes_mask.txt'
-      endif
-
-      if (Mtsat_Flag == sym%YES) then
-
-             if (Acha_Mode == 4 .or. Acha_Mode == 8 .or. &
-                 Acha_Mode == 5 .or. Acha_Mode == 7)  then
-                     print *, EXE_PROMPT, "Acha_Mode incompatible with satellite observations"
-                     print *, EXE_PROMPT,  "Changing to default for MTSAT"
-                     Acha_Mode = Acha_Mode_Default_MTSAT
-             endif
-         if ( expert_mode <= 1 ) bayesian_cloud_mask_name = 'mtsat_default_bayes_mask.txt'       
-
-      endif
-
-      !--- check ACHA mode based on available channels
-      if (Acha_Mode == 3 .and. &
-         (Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA Set to Mode 0'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 4 .and. &
-         (Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 8 .and. &
-         (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 8 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 5 .and. &
-         (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels. Acha will not run.'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 6 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 7 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-      endif
-      if (Acha_Mode == 2 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-      endif
-
-
-      !-------------------------------------------------------------------------------------
-      !--- DCOMP Mode Check
-      !-------------------------------------------------------------------------------------
-
-      !- dcomp mode 9 is Andys test code
-      write (string_1,'(I1)') dcomp_mode_user_set
-      call mesg ('dcomp user set:   ===================>  '//string_1 ,level = 5 )
-      dcomp_mode = dcomp_mode_user_set
-   
-      if (AVHRR_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
-         Dcomp_Mode = 3
-         if (Sc_Id_WMO == 208) Dcomp_Mode = 1   !NOAA-17
-         if (Sc_Id_WMO == 3) Dcomp_Mode = 1     !METOP-A
-         if (Sc_Id_WMO == 4) Dcomp_Mode = 1     !METOP-B
-         if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
-      endif
-      
-      if (GOES_Flag == sym%YES .and. Dcomp_Mode /= 0 .and.Dcomp_Mode /= 9) then
-         Dcomp_Mode = 3
-      endif
-      
-      if (Mtsat_Flag == sym%YES .and. Dcomp_Mode /= 0  .and.Dcomp_Mode /= 9) then
-         Dcomp_Mode = 3
-      endif
-      
-      if  ( Dcomp_Mode_user_set .ne. Dcomp_Mode) then
-         call mesg ( 'dcomp mode switched due to sensor  setting  ',color=91, level = 0 )
-      endif 
-     
-      write (string_1,'(i1)') dcomp_mode
-      call mesg ('dcomp mode used for this file: '//string_1)
-
-
-      !--- check based on available channels
-      if (Dcomp_Mode_User_Set == 1 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(6)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
-      endif
-      
-      if (Dcomp_Mode_User_Set == 2 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(7)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
-      endif
-      
-      if (Dcomp_Mode_User_Set == 3 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(20)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
-      endif
-    
-
-   end subroutine CHECK_ALGORITHM_CHOICES
-   
-   !
-   !
-   !
-   subroutine check_mode_settings ( sensorname )
-      character ( len =10) , intent(in) :: sensorname
-      
-      if (expert_mode > 0 ) return
-      
-      nlcomp_mode_user_set     = 0
-      dcomp_mode_user_set = 3
-      
-      select case ( trim(sensorname))
-      
-      
-      case ( 'AVHRR')
-        
-         acha_mode_user_set  = 3
-         
-      case ( 'GOES')      
-         acha_mode_user_set  = 7
-      case ( 'GOES_SNDR')
-         acha_mode_user_set  = 7   
-      case ( 'MTSAT')
-          acha_mode_user_set  = 6
-      case ('SEVIRI')
-         acha_mode_user_set  = 8
-      case ('FY2')
-         acha_mode_user_set  =  7  
-      case ('VIIRS')
-         acha_mode_user_set  =  5  
-         nlcomp_mode_user_set = 1  
-      case ('IFF_VIIRS')      
-          acha_mode_user_set  = 5      
-      case ('IFF_AVHRR')      
-         acha_mode_user_set  = 3
-      case ('COMS')
-         acha_mode_user_set  = 7
-      case ('MODIS')
-          acha_mode_user_set  = 8 
-      case ('MODIS_1KM')
-          acha_mode_user_set  = 8
-      case default 
-         print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
-      end select
-      
-   
-   end
-   
-   
-   !----------------------------------------------------------------------
-   !   Channel settings
-   !   
-   !
-   !----------------------------------------------------------------------
-   subroutine CHECK_CHANNEL_SETTINGS(sensorname)
-      character ( len =10) , intent(in) :: sensorname
-      integer :: valid_channels ( 42)
-      integer :: i
-      
-      ! expert can decide themselves
-      if (expert_mode > 6 ) return
-      
-
-      valid_channels = -99
-      
-      Chan_On_Flag_Default =  0
-      
-    
-      select case ( trim(sensorname))
-      
-      
-      case ( 'AVHRR')
-         valid_channels (1:6) = [1,2,6,20,31,32]
-      case ( 'GOES')      
-         valid_channels (1:6) = [1,20,27, 31, 32, 33]
-         !if (goes_mop_flag == 1) valid_channels(5) = 33
-      case ( 'GOES_SNDR')
-         valid_channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
-      case ( 'MTSAT')
-         valid_channels (1:5) = [1,20,27,31,32]  
-      case ('SEVIRI')
-         valid_channels (1:11) = [1,2,6,20,27,28,29,30,31,32,33]
-      case ('FY2')
-         valid_channels (1:5) = [1,20,27,31,32]    
-      case ('VIIRS')
-         valid_channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]       
-      case ('IFF_VIIRS')      
-         valid_channels (1:26) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,37,38,39,40,41,42]       
-      case ('IFF_AVHRR')      
-         valid_channels (1:19) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36]
-      case ('COMS')
-         valid_channels (1:5) = [1,20,27,31,32]
-      case ('MODIS')
-         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
-      case ('MODIS_1KM')
-         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
-      case default 
-         print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
-      end select
-      
-      do i = 1, 42 
-         if (valid_channels (i) < 0 ) cycle
-         Chan_On_Flag_Default (valid_channels (i)) = 1
-      end do
-   
-   end subroutine CHECK_CHANNEL_SETTINGS
-   
-   
-   !------------------------------------------------------------------
+   !---------------------------------------------------------------------------------
    ! Read Parameters from AVHRR INPUT files and check them for errors
    !
    ! parameters are pased in avhrr_pixel_common public memory
-   !------------------------------------------------------------------
-   subroutine READ_CLAVRXORB_DEFAULT_OPTIONS(File_Default)
+   !---------------------------------------------------------------------------------
+   subroutine READ_OPTION_FILE (File_Default)
       character(len=*), intent(in):: File_Default
       integer::ios0
       integer::erstat
       integer:: Default_Lun
-      
-      
+            
       call mesg ("DEFAULT FILE READ IN",level = 5 )
       call mesg ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
 
@@ -632,21 +317,21 @@ contains
           return
       end if
       
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(1:6)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(7:12)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(13:18)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(19:24)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(25:30)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(31:36)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default(37:42)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(1:6)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(7:12)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(13:18)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(19:24)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(25:30)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(31:36)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(37:42)
              
      
       close(unit=Default_Lun)
     
 
-   end subroutine READ_CLAVRXORB_DEFAULT_OPTIONS
+   end subroutine READ_OPTION_FILE
  
-   subroutine READ_CLAVRXORB_OPTIONS()
+   subroutine DETERMINE_USER_CONFIG()
    !------------------------------------------------------------------
    ! Command-line input option variables 
    !------------------------------------------------------------------  
@@ -686,7 +371,8 @@ contains
             stop   
          else if  ( trim(fargv) == "-version" .or. &
              trim(fargv) == "-ver") then
-            print*,'$Header$'
+            print*,&
+            &'$Header$'
             stop
         
          else if (trim(fargv) == "-no_Default") then 
@@ -704,12 +390,15 @@ contains
   
 
       if(Use_Default == sym%YES)  then
-         call READ_CLAVRXORB_DEFAULT_OPTIONS(Default_Temp)
+         call READ_OPTION_FILE (Default_Temp)
       end if
       
       if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"
       end if 
+      
+      
+      
  
       do i=1, fargc
         call getarg(i,fargv)
@@ -785,12 +474,6 @@ contains
         elseif(trim(fargv) == "-no_smooth_nwp") then
           Smooth_Nwp_Flag = sym%NO
 
-        !Read/not read land mask
-        elseif(trim(fargv) == "-read_land_mask") then
-          read_land_mask = sym%YES
-        elseif(trim(fargv) == "-no_land_mask") then
-          read_land_mask = sym%NO
-
         !Read/not read volcano mask
         elseif(trim(fargv) == "-read_volcano_mask") then
           read_volcano_mask = sym%YES
@@ -821,10 +504,6 @@ contains
           call getarg(i+1,junk)
           read(junk,'(i1)') Dcomp_Mode_user_set
           
-       !Change dcomp mode
-        elseif(trim(fargv) == "-Dcomp_Mode") then
-          call getarg(i+1,junk)
-          read(junk,'(i1)') Dcomp_Mode_user_set
           
          elseif(trim(fargv) == "-solzen_max_limit") then
             call getarg(i+1,junk)
@@ -837,9 +516,7 @@ contains
          endif
       enddo
   
-  
-  
-   
+
       !--- default ancillary data directory
       ancil_data_dir = trim(data_base_path)//'/clavrx_ancil_data/'
       gfs_data_dir = trim(data_base_path)//'gfs/'
@@ -847,8 +524,11 @@ contains
       cfsr_data_dir = trim(data_base_path)//'/cfsr/'
       oisst_data_dir = trim(data_base_path)//'/clavrx_ancil_data/oisst/'
       snow_data_dir = './data/snow/'
+      
+      
+      chan_on_flag_default = chan_on_flag_default_user_set
 
-   end subroutine READ_CLAVRXORB_OPTIONS
+   end subroutine DETERMINE_USER_CONFIG
 
    !-------------------------------------------------------------------------------
    !--- QC options and modify as needed
@@ -860,21 +540,8 @@ contains
       !---- Since the NWP controls everything, we first check if an NWP is being used
       !---- before anything else is checked.  If no nwp, we stop processing
 
-      if ((Nwp_Opt < 0) .or. (Nwp_Opt > 4)) then
-         print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
-         stop "6-Nwp_Flag"
-      endif
-      if (Nwp_Opt == 1) then
-         call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
-      else if (Nwp_Opt == 2) then
-         call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
-      else if (Nwp_Opt == 3) then
-         call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
-      else if (Nwp_Opt == 4) then
-         call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
-      endif
-    
-      if (Nwp_Opt == 0) then
+      select case ( nwp_opt)
+      case ( 0 )   
          print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
          Cld_Flag = sym%NO
        
@@ -882,8 +549,21 @@ contains
          Rtm_File_Flag = sym%NO
          Cloud_Mask_Bayesian_Flag = sym%NO
          Cloud_Mask_Aux_Flag = sym%NO ! this is to determine if the lut's are being read in
-      endif
-
+      case ( 1 )
+         call mesg ("GFS data will be used",level = verb_lev % DEFAULT)
+      case ( 2 )
+         call mesg ( "NCEP Reanalysis data will be used",level = verb_lev % DEFAULT)
+      case ( 3 )
+         call mesg ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
+      case ( 4 )
+         call mesg ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
+      case default
+         print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
+         stop "6-Nwp_Flag"
+      
+      end select
+      
+     
       if (cloud_mask_bayesian_Flag == sym%YES) then
          call mesg  ("Bayesian cloud mask will be generated")
       endif
@@ -905,10 +585,6 @@ contains
          call mesg( "REPOSNX geolocation adjustment done")
       endif
 
-      if (cld_Flag == sym%NO) then
-         print *, EXE_PROMPT, "Cloud products will not be created"
-      endif
-
       if (rtm_file_Flag == sym%YES) then
         call mesg( "rtm file will be created")
       endif
@@ -918,248 +594,465 @@ contains
       endif
 
       if (Rtm_opt /=1) then
-         print *,  EXE_PROMPT, "Only PFAST RTM implemented, stopping"
-         stop
+         print *,  EXE_PROMPT, "Only PFAST RTM implemented, switching to rtm ==1"
+         rtm_opt = 1
       endif
 
-      call mesg ("Temporary Files will be written to "//trim(Temporary_Data_Dir),level = verb_lev % VERBOSE )
 
    end subroutine QC_CLAVRXORB_OPTIONS
  
  
-!--------------------------------------------------------------------------
-! This subroutine outputs what each command line options
-! are available to override the default file options or to set
-! options different from the default options
-!--------------------------------------------------------------------------
-subroutine HELPER()
+   !--------------------------------------------------------------------------
+   ! This subroutine outputs what each command line options
+   ! are available to override the default file options or to set
+   ! options different from the default options
+   !--------------------------------------------------------------------------
+   subroutine HELPER()
  
-  print "(a,'help: option list')",EXE_PROMPT
-  print *,"  This is a list of all of the command line options to override"
-  print *,"     the file list options"
-  print *," "
+      print "(a,'help: option list')",EXE_PROMPT
+      print *,"  This is a list of all of the command line options to override"
+      print *,"     the file list options"
+      print *," "
 
-  print *,"  -default (default_temp)"
-  print *, "  This option allows you to set which default file you want to use."
-  print *, "  Initial default file is clavrx_Default_options"
-  print *," "
+      print *,"  -default (default_temp)"
+      print *, "  This option allows you to set which default file you want to use."
+      print *, "  Initial default file is clavrx_options"
+      print *," "
 
-  print *,"  -filelist (file_list)"
-  print *, "  This option allows you to set which clavrxorb_file_list file you want to use."
-  print *, "  Initial default file is the clavrxorb_file_list in the current directory"
-  print *," "
+      print *,"  -filelist (file_list)"
+      print *, "  This option allows you to set which clavrxorb_file_list file you want to use."
+      print *, "  Initial default file is the clavrxorb_file_list in the current directory"
+      print *," "
 
-  print *,"  -lines_per_seg (Num_Scans_per_Segment)"
-  print *, "  specify the number of scanlines per segment (default is 240)"
-  print *," "
+      print *,"  -lines_per_seg (Num_Scans_per_Segment)"
+      print *, "  specify the number of scanlines per segment (default is 240)"
+      print *," "
  
-  print *,"  -ref_Cal_1b"
-  print *,"  Use the reflectance cal in level 1b file."
-  print *," "
+      print *,"  -ref_Cal_1b"
+      print *,"  Use the reflectance cal in level 1b file."
+      print *," "
 
-  print *,"  -no_ref_Cal_1b"
-  print *,"  Do not us the reflectance cal in level 1b file."
-  print *," "
+      print *,"  -no_ref_Cal_1b"
+      print *,"  AVHRR-ONLY: Do not us the reflectance cal in level 1b file."
+      print *," "
 
-  print *,"  -therm_Cal_1b"
-  print *,"   Use the thermal calibration in the level 1b file"
-  print *," "
+      print *,"  -therm_Cal_1b"
+      print *,"   AVHRR-ONLY: Use the thermal calibration in the level 1b file"
+      print *," "
 
-  print *,"  -no_therm_Cal_1b"
-  print *,"   Do not use the thermal calibration in the level 1b file"
-  print *," "
- 
-  
-  print *,"  -l1bnav"
-  print *, "  Use the navigation data from level 1b file"
-  print *," "
+      print *,"  -no_therm_Cal_1b"
+      print *,"   Do not use the thermal calibration in the level 1b file"
+      print *," "
 
-  print *,"  -clevernav"
-  print *, "  Use the navigation data from a clevernav"
-  print *," "
+      print *,"  -rtm_file"
+      print *, "   Output rtm data file. "
+      print *," "
+      print *,"  -no_rtm_file"
+      print *, "   Do not output rtm data file. "
+      print *," "
 
-  print *,"  -rtm_file"
-  print *, "   Output rtm data file. "
-  print *," "
-  print *,"  -no_rtm_file"
-  print *, "   Do not output rtm data file. "
-  print *," "
+      print *,"  -level2_file"
+      print *, "   Make Level-2 output."
+      print *," "
+      print *,"  -no_level2_file"
+      print *, "   Don't make Level-2 output."
+      print *," "
+  
+      print *,"  -cloud_mask_1b"
+      print *, "   Read cloud mask from level 1b file."
+      print *," "
+  
+  
+      print *,"  -no_nwp"
+      print *, "  Do not use NWP data. No algorithms will be processed. Also, no orbital data will be processed"
+      print *," "
 
-  print *,"  -level2_file"
-  print *, "   Make Level-2 output."
-  print *," "
-  print *,"  -no_level2_file"
-  print *, "   Don't make Level-2 output."
-  print *," "
+      print *,"  -gfs_nwp"
+      print *, "  Use GFS data for NWP dataset. "
+      print *," "
   
-  print *,"  -cloud_mask_1b"
-  print *, "   Read cloud mask from level 1b file."
-  print *," "
-  print *,"  -cloud_mask_calc"
-  print *, "   recalculate cloud mask."
-  print *," "
-  
-  print *,"  -cld_Flag"
-  print *, "   Run cloud algorithms. "
-  print *," "
-  print *,"  -no_cld_Flag"
-  print *, "   Don't run cloud algorithms. "
-  print *," "
-  
-  print *,"  -subset_pixel_hdf"
-  print *, "  Subset HDF pixel data. " 
-  print *," "
-  print *,"  -no_subset_pixel_hdf"
-  print *, "  Don't subset HDF pixel data. " 
-  print *," "
-  
-  print *,"  -no_nwp"
-  print *, "  Do not use NWP data. No algorithms will be processed. Also, no orbital data will be processed"
-  print *," "
+      print *,"  -ncep_nwp"
+      print *, "  Use NCEP Reanalysis data"
+      print *," "
 
-  print *,"  -gfs_nwp"
-  print *, "  Use GFS data for NWP dataset. "
-  print *," "
-  
-  print *,"  -ncep_nwp"
-  print *, "  Use NCEP Reanalysis data"
-  print *," "
-  
-  print *,"  -crtm"
-  print *, "  Use CRTM. "
-  print *, "  NOT AVAILABLE CURRENTLY. ONLY PFAST AVAILABLE" 
-  print *," "
-  
-  print *,"  -pfast"
-  print *, "  Use PFAST RTM. "
-  print *," "
-  
-  print *,"  -use_clear_composite"
-  print *,"    Use this option to use clear composite refs."
-  print *," "
-  print *,"  -no_clear_composite"
-  print *,"    Use this option to NOT use clear composite refs."
-  print *," "
+      print *,"  -lat_min_limit (Lat_Min_Limit)"
+      print *, "  minimum latitude for processing(degrees)"
+      print *," "
+      print *,"  -lat_max_limit (Lat_Max_Limit)"
+      print *, "  maximum latitude for processing (degrees)"
+      print *," "
 
-  print *,"  -use_modis_clr_alb"
-  print *,"    Use this option to use MODIS clear reflectance data."
-  print *," "
-  print *,"  -no_modis_clr_alb"
-  print *,"    Use this option to NOT use MODIS clear reflectance data."
-  print *," "
- 
-  print *,"  -prob_clear_res"
-  print *, "  Restore probably clear pixels. "
-  print *," "
-  print *,"  -no_prob_clear_res"
-  print *, "  Don't restore probably clear pixels. "
-  print *," "
+      print *,"  -ancil_data_dir (ancil_data_dir)"
+      print *, "  change the location of the ancillary data directory"
+      print *," "
+     
+      print *,"  -smooth_nwp"
+      print *, "  Smooth the NWP fields. "
+      print *," "
+      print *,"  -no_smooth_nwp"
+      print *, "  Don't smooth the NWP fields. "
+      print *," "
+  
+      print *,"  -use_seebor"
+      print *, "  Use Seebor emissivity dataset. "
+      print *," "
+      print *,"  -no_seebor"
+      print *, "  Don't use Seebor emissivity dataset. "
+      print *," "
 
-  print *,"  -lrc"
-  print *, "  Include local radiative center calcs.  "
-  print *," "
-  print *,"  -no_lrc"
-  print *, "  Don't include local radiative center calcs.  "
-  print *," "
-  
-  print *,"  -crc"
-  print *, "  Include cloud radiative center calcs.  "
-  print *," "
-  print *,"  -no_crc"
-  print *, "  Don't include cloud radiative center calcs.  "
-  print *," "
-
-  print *,"  -lat_min_limit (Lat_Min_Limit)"
-  print *, "  minimum latitude for processing(degrees)"
-  print *," "
-  print *,"  -lat_max_limit (Lat_Max_Limit)"
-  print *, "  maximum latitude for processing (degrees)"
-  print *," "
-
-  print *,"  -ancil_data_dir (ancil_data_dir)"
-  print *, "  change the location of the ancillary data directory"
-  print *," "
-  print *,"  -gfs_data_dir (gfs_data_dir)"
-  print *, "  change the location of the gfs data directory"
-  print *," "
-  print *,"  -ncep_data_dir (ncep_data_dir)"
-  print *, "  change the location of the ncep-reanalysis data directory"
-  print *," "
-  print *,"  -cfsr_data_dir (cfsr_data_dir)"
-  print *, "  change the location of the cfsr data directory"
-  print *," "
-  print *,"  -oisst_data_dir (oisst_data_dir)"
-  print *, "  change the location of the oisst data directory"
-  print *," "
-  print *,"  -snow_data_dir (snow_data_dir)"
-  print *, "  change the location of the snow data directory"
-  print *," "
-  
-  print *,"  -smooth_nwp"
-  print *, "  Smooth the NWP fields. "
-  print *," "
-  print *,"  -no_smooth_nwp"
-  print *, "  Don't smooth the NWP fields. "
-  print *," "
-  
-  print *,"  -use_seebor"
-  print *, "  Use Seebor emissivity dataset. "
-  print *," "
-  print *,"  -no_seebor"
-  print *, "  Don't use Seebor emissivity dataset. "
-  print *," "
-  
-  print *,"  -high_res"
-  print *, "  Use high resolution surface type map. "
-  print *," "
-  print *,"  -low_res"
-  print *, "  Use low resolution (8km) surface type map. "
-  print *," "
-  
-  print *,"  -read_land_mask"
-  print *, "  Read land mask in. "
-  print *," "
-  print *,"  -no_land_mask"
-  print *, "  Don't read land mask in. "
-  print *," "
-  
-  print *,"  -read_coast_mask"
-  print *, "  Read coast mask in. "
-  print *," "
-  print *,"  -no_coast_mask"
-  print *, "  Don't read coast mask in. "
-  print *," "
-  
-  print *,"  -no_surface_elevation"
-  print *, "  Don't read surface elevation map in. "
-  print *," "
-  print *,"  -high_surface_elevation"
-  print *, "  Use 1km res GLOBE global elevation map. "
-  print *," "
-  print *,"  -low_surface_elevation"
-  print *, "  Use 8km res GLOBE global elevation map. "
-  print *," "
+      print *,"  -no_surface_elevation"
+      print *, "  Don't read surface elevation map in. "
+      print *," "
+      print *,"  -high_surface_elevation"
+      print *, "  Use 1km res GLOBE global elevation map. "
+      print *," "
+      print *,"  -low_surface_elevation"
+      print *, "  Use 8km res GLOBE global elevation map. "
+      print *," "
 
   
-  print *,"  -read_volcano_mask"
-  print *, "  Read volcano map in. "
-  print *," "
-  print *,"  -no_volcano_mask"
-  print *, "  Don't read volcano map in. "
-  print *," "
+      print *,"  -read_volcano_mask"
+      print *, "  Read volcano map in. "
+      print *," "
+      print *,"  -no_volcano_mask"
+      print *, "  Don't read volcano map in. "
+      print *," "
   
-  print *,"  -Solzen_min_limit (Solzen_min_limit)"
-  print *, "  Solar zenith angle minimum limit"
-  print *," "
+      print *,"  -Solzen_min_limit (Solzen_min_limit)"
+      print *, "  Solar zenith angle minimum limit"
+      print *," "
   
-  print *,"  -Solzen_max_limit (Solzen_max_limit)"
-  print *, "  Solar zenith angle maximum limit."
-  print *," "  
+      print *,"  -Solzen_max_limit (Solzen_max_limit)"
+      print *, "  Solar zenith angle maximum limit."
+      print *," "  
   
-  print *,"  -dcomp_mode"
-  print *, "  dcomp mode 1,2 or 3 (1.6,2.2 or 3.8 micron)."
-  print *," "  
+      print *,"  -dcomp_mode"
+      print *, "  dcomp mode 1,2 or 3 (1.6,2.2 or 3.8 micron)."
+      print *," "  
 
   end subroutine HELPER
+  
+   ! -----------------------------------------------------------------
+   ! -- wrapper for all updating tools for a new file
+   !     called from PROCESS_CLAVRX inside file loop
+   ! ---------------------------------------------------
+   subroutine UPDATE_CONFIGURATION ( sensorname)
+      character ( len =10) , intent(in) :: sensorname
+      
+      if ( expert_mode == 0 ) then
+         acha_mode_user_set =  default_acha_mode ( sensorname )
+         dcomp_mode_user_set = default_dcomp_mode ( sensorname )
+      end if
+      call CHECK_ALGORITHM_CHOICES(sensorname)
+      
+      call CHANNEL_SWITCH_ON (sensorname)
+      
+      call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
+      
+   end subroutine UPDATE_CONFIGURATION
+   
+   !----------------------------------------------------------------------
+   !  This sets the algorithm modes if expert mode is set to 0 ( user-mode )
+   !----------------------------------------------------------------------
+   integer function default_acha_mode ( sensorname )
+      character ( len =10) , intent(in) :: sensorname
+      
+      
+      
+      select case ( trim(sensorname))
+      
+      case ( 'AVHRR')        
+         default_acha_mode  = ACHA_Mode_Default_Avhrr
+      case ( 'AVHRR_1')   
+         default_acha_mode = ACHA_Mode_Default_Avhrr1   
+      case ( 'GOES_MOP')      
+         default_acha_mode  = ACHA_Mode_Default_Goes_MP
+      case ( 'GOES')      
+         default_acha_mode  = ACHA_Mode_Default_Goes_IL   
+      case ( 'GOES_SNDR')
+         default_acha_mode  = ACHA_Mode_Default_Goes_SNDR 
+      case ( 'MTSAT')
+          default_acha_mode  = ACHA_Mode_Default_MTSAT
+      case ('SEVIRI')
+         default_acha_mode  = ACHA_Mode_Default_SEVIRI
+      case ('FY2')
+         default_acha_mode  =  ACHA_Mode_Default_FY2 
+      case ('VIIRS')
+         default_acha_mode  =  ACHA_Mode_Default_VIIRS 
+      case ('IFF_VIIRS')      
+          default_acha_mode  = ACHA_Mode_Default_VIIRS      
+      case ('IFF_AVHRR')      
+         default_acha_mode  = ACHA_Mode_Default_Avhrr
+      case ('COMS')
+         default_acha_mode  = ACHA_Mode_Default_COMS
+      case ('MODIS')
+          default_acha_mode  = ACHA_Mode_Default_Modis 
+      case ('MODIS_1KM')
+          default_acha_mode  = ACHA_Mode_Default_Modis
+      case default 
+         print*,'sensor ',sensorname, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
+      end select
+          
+   end function default_acha_mode
+   
+   
+   integer function default_dcomp_mode ( sensorname )
+      character ( len =10) , intent(in) :: sensorname
+   
+      default_dcomp_mode = 3
+      
+      if (Sc_Id_WMO == 208) Dcomp_Mode = 1   !NOAA-17
+      if (Sc_Id_WMO == 3) Dcomp_Mode = 1     !METOP-A
+      if (Sc_Id_WMO == 4) Dcomp_Mode = 1     !METOP-B
+      if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
+     
+   end function default_dcomp_mode
+   
+   !----------------------------------------------------------------------------
+   !  check if algo mode set by user is possible
+   !----------------------------------------------------------------------------
+   
+   subroutine CHECK_ALGORITHM_CHOICES(sensorname)
+      character ( len =10) , intent(in) :: sensorname
+      character ( len = 1 ) :: string_1
+      
+      integer :: possible_acha_modes ( 8 )
+      integer :: possible_dcomp_modes ( 3)
+ 
+      !------------------------------------------------------------------------
+      !--- ACHA MODE Check
+      !---      (       0 = off
+      !---              1 = 11
+      !----             2 = 11/6.7; 
+      !---              3 = 11/12
+      !----             4 = 11/13.4; 
+      !---              5 = 11/12/8.5
+      !---              6 = 11/12/6.7
+      !---              7 = 11/13.3/6.7
+      !---              8 = 11/12/13.3)
+      !------------------------------------------------------------------------
+      
+      acha_mode = acha_mode_user_set
+      
+      dcomp_mode = dcomp_mode_user_set
+       
+      possible_acha_modes = 0 
+      possible_dcomp_modes = 0
+         
+      select case ( trim ( sensorname))
+      
+      case ( 'AVHRR')  
+         possible_acha_modes(1:2)  = [ 1 , 3 ]
+         possible_dcomp_modes(1) =  3 
+      case ( 'AVHRR_1')   
+         possible_acha_modes(1)  =  1
+         possible_dcomp_modes(1) =  3   
+      case ( 'GOES_MOP')      
+         possible_acha_modes(1:2)  = [ 1,3 ]
+         possible_dcomp_modes(1) =  3
+      case ( 'GOES')      
+         possible_acha_modes(1:4)  = [ 4,5,7,8 ] 
+         possible_dcomp_modes(1) =  3  
+      case ( 'GOES_SNDR')
+         possible_acha_modes(1:4)  = [ 3,5,6,8 ]  
+         possible_dcomp_modes(1) =  3
+      case ( 'MTSAT')
+          possible_acha_modes(1:4)  = [ 4,5,7,8 ]
+          possible_dcomp_modes(1:2) =  [1,3]
+      case ('SEVIRI')
+         possible_acha_modes(1:3)  = [ 1,3, 8 ]
+         possible_dcomp_modes(1:2) =  [1,3]
+      case ('FY2')
+         possible_acha_modes(1:2)  =  [ 1 , 7 ] 
+         possible_dcomp_modes(1:2) =  [ 1 , 3 ]
+      case ('VIIRS')
+        possible_acha_modes(1:5)  = [ 2,4,6,7,8] 
+        possible_dcomp_modes(1:3) =  [1,2,3]
+         nlcomp_mode_user_set = 1  
+      case ('IFF_VIIRS')      
+         possible_acha_modes(1:2)  = [ 1,3 ]      
+      case ('IFF_AVHRR')      
+         possible_acha_modes(1:2)  = [ 1,3 ]
+      case ('COMS')
+         possible_acha_modes(1:2)  = [ 1,3 ]
+         possible_dcomp_modes(1:2) =  [1,3]
+      case ('MODIS')
+         possible_acha_modes(1:8)  = [ 1,2,3,4,5,6,7,8 ] 
+         possible_dcomp_modes(1:3) =  [1,2,3]
+      case ('MODIS_1KM')
+         possible_acha_modes(1:8)  =[ 1,2,3,4,5,6,7,8 ]
+         possible_dcomp_modes(1:3) =  [1,2,3]
+      case default 
+         print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
+      end select
+      
+      if ( .not. ANY ( acha_mode_user_set == possible_acha_modes ) ) then
+         acha_mode = default_acha_mode ( sensorname )
+         print*, 'Wished ACHA mode not possible for '//sensorname//' switched to default '
+      end if
+ 
+      if ( .not. ANY ( dcomp_mode_user_set == possible_dcomp_modes ) ) then
+         dcomp_mode = default_dcomp_mode ( sensorname )
+         print*, 'Wished DCOMP mode not possible for '//sensorname//' switched to default '
+      end if
+
+   end subroutine CHECK_ALGORITHM_CHOICES
+   
+   ! ----------------------------------------------------------------------
+   !    returns all available sensors for this sensors
+   ! ----------------------------------------------------------------------
+   function existing_channels  (sensorname)  result( valid_channels )
+      character ( len = 10 ) , intent(in) :: sensorname
+      
+      integer , target :: valid_channels ( 42) 
+     
+      
+      valid_channels = -99
+      select case ( trim(sensorname))
+        
+      case ( 'AVHRR')
+         valid_channels (1:6) = [1,2,6,20,31,32]
+      case ( 'GOES')      
+         valid_channels (1:5) = [1,20,27, 31, 32]
+      case ( 'GOES_MOP')      
+         valid_channels (1:5) = [1,20,27, 31, 33]   
+      case ( 'GOES_SNDR')
+         valid_channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
+      case ( 'MTSAT')
+         valid_channels (1:5) = [1,20,27,31,32]  
+      case ('SEVIRI')
+         valid_channels (1:11) = [1,2,6,20,27,28,29,30,31,32,33]
+      case ('FY2')
+         valid_channels (1:5) = [1,20,27,31,32]    
+      case ('VIIRS')
+         valid_channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]       
+      case ('IFF_VIIRS')      
+         valid_channels (1:26) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,37,38,39,40,41,42]       
+      case ('IFF_AVHRR')      
+         valid_channels (1:19) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36]
+      case ('COMS')
+         valid_channels (1:5) = [1,20,27,31,32]
+      case ('MODIS')
+         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+      case ('MODIS_1KM')
+         valid_channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+      case default 
+         print*,'sensor ',sensorname, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
+      end select
+
+
+   end function existing_channels
+   
+   !----------------------------------------------------------------------
+   !   Channel settings
+   !     will not be done for full-experts  ( expert mode 7 and higher)
+   !
+   !----------------------------------------------------------------------
+   subroutine CHANNEL_SWITCH_ON (sensorname)
+      character ( len =10) , intent(in) :: sensorname
+      integer :: valid_channels ( 42)
+      integer :: i
+ 
+      ! expert can decide themselves
+      if (expert_mode > 6 ) return
+      
+      valid_channels = existing_channels ( sensorname )
+           
+      Chan_On_Flag_Default =  0
+
+      do i = 1, 42 
+         if (valid_channels (i) < 0 ) cycle
+         Chan_On_Flag_Default (valid_channels (i) ) = 1
+      end do
+   
+   end subroutine CHANNEL_SWITCH_ON
+   
+   ! --------------------------------------------------------------------
+   !  every incosistency between channel settings and algorithm mode 
+   ! --------------------------------------------------------------------
+   subroutine  EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
+      character ( len =10) , intent(in) :: sensorname  
+      
+      integer :: valid_channels ( 42)
+      integer :: i
+      
+      if ( expert_mode < 7 ) return
+      
+      chan_on_flag_default = chan_on_flag_default_user_set
+      
+       !--- check ACHA mode based on available channels
+      if (Acha_Mode == 3 .and. &
+         (Chan_On_Flag_Default(32)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA will not run'
+         Acha_Mode  = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 4 .and. &
+         (Chan_On_Flag_Default(33)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels. ACHA will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 8 .and. &
+         (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 8 not possible with selected channels. ACHA will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 5 .and. &
+         (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels. Acha will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 6 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels. ACHA will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 7 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels. ACHA will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+      if (Acha_Mode == 2 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO)) then
+         print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels. ACHA will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      endif
+
+      !--- check based on available channels
+      if (Dcomp_Mode_User_Set == 1 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(6)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
+      endif
+      
+      if (Dcomp_Mode_User_Set == 2 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(7)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
+      endif
+      
+      if (Dcomp_Mode_User_Set == 3 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(20)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
+      endif
+      
+      ! - turn off channels if not available for this sensor
+      
+      valid_channels = existing_channels ( sensorname )
+      
+      do i = 1, 42 
+         if ( any ( i == valid_channels )) cycle
+         Chan_On_Flag_Default ( i ) = 0
+      end do
+      
+   
+   end subroutine EXPERT_MODE_CHANNEL_ALGORITHM_CHECK
+   
+   
+  
 
 end module USER_OPTIONS

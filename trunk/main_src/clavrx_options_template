@@ -14,7 +14,7 @@
 1   !E2 RTM rtm option  (0=crtm,1=pfast, (2=rttov))
 0   !E2 NAV nav option  (0 =  Use  level-1b,1 = external (future) 2 = Reposnx ( fred nagle): For non-AVHRR, use 0) 
 1   !E2 OUT output compression flag (0=no,1=gzip)
-0   !E2 MASK read auxilary cloud mask 1b (1 = read from 1b and don't recompute)
+0   !E2 MASK read auxilary cloud mask 1b (0=no, 1=read/use from 1b and don't compute bayesian, 2=yes but compute/use bayesian)
 viirs_default_bayes_mask.txt 
 1   !E3 SFC seebor emiss flag (0=no, 1=yes) (global_emiss_intABI_2005xxx.hdf, xxx is the date)
 0   !E3 SFC read hires sfc type flag (0=no-8km, 1 = yes-1km) (gl-latlong-xkm-landcover.hdf, x = 1 or 8)
@@ -28,7 +28,7 @@ viirs_default_bayes_mask.txt
 0   !E4 AVHRR-ONLY therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
 1   !E5 MASK lrc_flag (0=no,1=yes) 
 1   !E5 NWP smooth nwp flag (0=no, 1=yes)   
-0   !E5 process_undetected_flag (0=no,1=yes) ( means process all pixels cloudy and cloud-free
+0   !E5 process_undetected_flag (0=no,1=yes) (means process all pixels cloudy and cloud-free)
 1 1 1 1 1 1    !E6 chan on flags of channels 1,2,3,4,5,6
 1 1 1 1 1 1    !E6 chan on flags of channels 7,8,9,10,11,12
 1 1 1 1 1 1    !E6 chan on flags of channels 13,14,15,16,17,18

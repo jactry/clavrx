@@ -9,13 +9,20 @@
 !          default_options file or the command line
 !
 ! DESCRIPTION: 
-!             Routines in this module and their purpose:
+!             Public Routines in this module and their purpose:
+!               SETUP_USER_DEFINED_OPTIONS:
+!                    Reads user defined configuration
+!           	      Called in process_clavrx.f90 outside any loop in the beginning
 !
-!             READ_CLAVRXORB_DEFAULT_OPTIONS - Opens default file if necessary
-!             QC_CLAVRXORB_OPTIONS - quality control options
+!                UPDATE_CONFIGURATION
+!                     Updates configuarion for each file
+!                     called in process_clavrx.f90 inside file loop
+!                     Check algorithm modes and channel switches
+!       
 !
 ! AUTHORS:
-!  Andrew Heidinger, Andrew.Heidinger@noaa.gov
+!  	Andrew Heidinger, Andrew.Heidinger@noaa.gov
+!   	Andi Walther
 !
 ! COPYRIGHT
 ! THIS SOFTWARE AND ITS DOCUMENTATION ARE CONSIDERED TO BE IN THE PUBLIC
@@ -31,6 +38,10 @@
 !  HISTORY:
 !        16 Dec 2014: Switch to new option file  (AW)
 !                       code cleaning
+!
+!         30 Dec 2014: Submitting to trunk
+
+!
 !   
 !--------------------------------------------------------------------------------------
 module USER_OPTIONS
@@ -191,7 +202,7 @@ contains
       Rtm_Opt = 1 
       Compress_Flag = 1 
       Cloud_Mask_Aux_Flag = 0 
-      bayesian_cloud_mask_name = 'viirs_default_bayes_mask.txt'
+      bayesian_cloud_mask_name = 'default'
       Use_Seebor = 1 
       Read_Hires_Sfc_Type = 1 
       Read_Land_Mask = 1
@@ -747,6 +758,9 @@ contains
       call CHECK_ALGORITHM_CHOICES(sensorname)
      
       call CHANNEL_SWITCH_ON (sensorname)
+		
+		if ( expert_mode < 3 ) bayesian_cloud_mask_name = default_nb_mask_classifier_file ( sensorname )
+		if ( trim(bayesian_cloud_mask_name) = 'default')  bayesian_cloud_mask_name = default_nb_mask_classifier_file ( sensorname )
       
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
       
@@ -755,7 +769,7 @@ contains
    end subroutine UPDATE_CONFIGURATION
    
    !----------------------------------------------------------------------
-   !  This sets the algorithm modes if expert mode is set to 0 ( user-mode )
+   !  returns default acha mode 
    !----------------------------------------------------------------------
    integer function default_acha_mode ( sensorname )
       character ( len =10) , intent(in) :: sensorname
@@ -798,9 +812,9 @@ contains
           
    end function default_acha_mode
    
-   !
-   !
-   ! ----------
+   !-----------------------------------------------------------------
+   !   returns default dcomp mode
+   ! -----------------------------------------------------------------
    integer function default_dcomp_mode ( sensorname )
       character ( len =10) , intent(in) :: sensorname
    
@@ -812,7 +826,53 @@ contains
       if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
      
    end function default_dcomp_mode
+	
+	!-----------------------------------------------------------------
+	!   returns default classifier name
+	!-----------------------------------------------------------------
    
+	function default_nb_mask_classifier_file ( sensorname ) result (filename)
+		character ( len =10) , intent(in) :: sensorname
+		character ( len = 355 ) :: filename
+		
+		select case ( trim(sensorname))
+      
+      case ( 'AVHRR')        
+         filename  = 'avhrr_default_nb_mask.nc'
+      case ( 'AVHRR_1')   
+         filename  = 'avhrr_default_nb_mask.nc'   
+      case ( 'GOES_MOP')      
+         filename  = 'goesnp_default_nb_mask.nc'
+      case ( 'GOES')      
+         filename  = 'goesim_default_nb_mask.nc'   
+      case ( 'GOES_SNDR')
+         filename  = 'goesnp_default_nb_mask.nc' 
+      case ( 'MTSAT')
+          filename  = 'mtsat_default_nb_mask.nc'
+      case ('SEVIRI')
+         filename  = 'avhrr_default_nb_mask.nc'
+      case ('FY2')
+         filename  = 'avhrr_default_nb_mask.nc' 
+      case ('VIIRS')
+         filename  = 'viirs_default_nb_mask.nc' 
+      case ('IFF_VIIRS')      
+          filename  = 'avhrr_default_nb_mask.nc'		
+      case ('IFF_AVHRR')      
+        filename  = 'avhrr_default_nb_mask.nc'
+      case ('COMS')
+         filename  = 'avhrr_default_nb_mask.nc'
+      case ('MODIS')
+          filename  = 'modis_default_nb_mask.nc' 
+      case ('MODIS_1KM')
+          filename  = 'modis_default_nb_mask.nc'
+      case default 
+         print*,'sensor ',sensorname, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'  
+			stop 
+      end select
+	
+	
+	end function default_nb_mask_classifier_file
+	
    !----------------------------------------------------------------------------
    !  check if algo mode set by user is possible
    !----------------------------------------------------------------------------

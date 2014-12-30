@@ -183,7 +183,9 @@ clavrxorb_objs = process_clavrx.o \
                  fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
-                 viewing_geometry_module.o
+                 viewing_geometry_module.o \
+                 cr_config_mod.o \
+                 area_file_mod.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -293,7 +295,7 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_module.f90
 
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
-
+area_file_mod.o:area_file_mod.f90
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
@@ -307,6 +309,7 @@ cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_commo
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
+cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
@@ -379,7 +382,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \
               seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o
+              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
 
 
 

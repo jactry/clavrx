@@ -52,23 +52,23 @@ MODULE hdf_read_module
                      read_hdf_sds_int8_2d, &
                      read_hdf_sds_int16_2d, &
                      read_hdf_sds_int32_2d, &
-		     read_hdf_sds_float32_2d, &
-		     read_hdf_sds_float64_2d, &
-		     read_hdf_sds_int8_3d, &
+     read_hdf_sds_float32_2d, &
+     read_hdf_sds_float64_2d, &
+     read_hdf_sds_int8_3d, &
                      read_hdf_sds_int16_3d, &
                      read_hdf_sds_int32_3d, &
-		     read_hdf_sds_float32_3d, &
-		     read_hdf_sds_float64_3d, &
-		     read_hdf_sds_int8_4d, &
+     read_hdf_sds_float32_3d, &
+     read_hdf_sds_float64_3d, &
+     read_hdf_sds_int8_4d, &
                      read_hdf_sds_int16_4d, &
                      read_hdf_sds_int32_4d, &
-		     read_hdf_sds_float32_4d, &
-		     read_hdf_sds_float64_4d, &
+     read_hdf_sds_float32_4d, &
+     read_hdf_sds_float64_4d, &
                      read_hdf_sds_int8_5d, &
                      read_hdf_sds_int16_5d, &
                      read_hdf_sds_int32_5d, &
-		     read_hdf_sds_float32_5d, &
-		     read_hdf_sds_float64_5d, &
+     read_hdf_sds_float32_5d, &
+     read_hdf_sds_float64_5d, &
                      read_hdf_sds_float64_6d
   end interface
   
@@ -76,9 +76,9 @@ MODULE hdf_read_module
     module procedure read_hdf_attribute_char8_scalar,   &
                      read_hdf_attribute_int8_scalar,    &
                      read_hdf_attribute_int16_scalar,   &
-		     read_hdf_attribute_int32_scalar,   &
-		     read_hdf_attribute_float32_scalar, &
-		     read_hdf_attribute_float64_scalar, &
+     read_hdf_attribute_int32_scalar,   &
+     read_hdf_attribute_float32_scalar, &
+     read_hdf_attribute_float64_scalar, &
                      read_hdf_attribute_int8_vector,    &
                      read_hdf_attribute_int16_vector,   &
                      read_hdf_attribute_int32_vector,   &
@@ -94,7 +94,7 @@ MODULE hdf_read_module
   
   CONTAINS
 
-					  
+  
 !---------------------------------------------------------------------
 ! This routine is used to read navigation and other constants fields
 ! from a GEOCAT NAV file.
@@ -102,22 +102,22 @@ MODULE hdf_read_module
 
 SUBROUTINE read_navigation_file(file_id, &
                                 xstart, &
-				ystart, &
-				xsize, &
-				ysize, &
-				xstride, &
-			        lat, &
-				lon, &
-				satzen, &
-				sataz, &
-				zsfc, &
-				space_mask, &
-				sfc_type, &
-				eco_type, &
-				land_mask, &
-				coast_mask, &
-				volcano_mask, &
-				desert_mask)
+ystart, &
+xsize, &
+ysize, &
+xstride, &
+        lat, &
+lon, &
+satzen, &
+sataz, &
+zsfc, &
+space_mask, &
+sfc_type, &
+eco_type, &
+land_mask, &
+coast_mask, &
+volcano_mask, &
+desert_mask)
   INTEGER(kind=int4), intent(in) :: file_id
   INTEGER(kind=int4), intent(in) :: xstart, ystart
   INTEGER(kind=int4), intent(in) :: xsize, ysize
@@ -2210,7 +2210,7 @@ FUNCTION read_hdf_sds_int8_3d(sd_id, sds_name, istart, istride, iedge, buffer, t
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3)) then
+size(buffer,3) < iedge(3)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 3d HDF buffer.')",EXE_PROMPT
@@ -2308,7 +2308,7 @@ FUNCTION read_hdf_sds_int16_3d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3)) then
+       size(buffer,3) < iedge(3)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 3d HDF buffer.')",EXE_PROMPT
@@ -2406,7 +2406,7 @@ FUNCTION read_hdf_sds_int32_3d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3)) then
+size(buffer,3) < iedge(3)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 3d HDF buffer.')",EXE_PROMPT
@@ -2504,7 +2504,7 @@ FUNCTION read_hdf_sds_float32_3d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3)) then
+size(buffer,3) < iedge(3)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 3d HDF buffer.')",EXE_PROMPT
@@ -2602,7 +2602,7 @@ FUNCTION read_hdf_sds_float64_3d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3)) then
+size(buffer,3) < iedge(3)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 3d HDF buffer.')",EXE_PROMPT
@@ -2703,8 +2703,8 @@ FUNCTION read_hdf_sds_int8_4d(sd_id, sds_name, istart, istride, iedge, buffer, t
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4)) then
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 4d HDF buffer.')",EXE_PROMPT
@@ -2802,8 +2802,8 @@ FUNCTION read_hdf_sds_int16_4d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4)) then
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 4d HDF buffer.')",EXE_PROMPT
@@ -2901,8 +2901,8 @@ FUNCTION read_hdf_sds_int32_4d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4)) then
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 4d HDF buffer.')",EXE_PROMPT
@@ -3000,8 +3000,8 @@ FUNCTION read_hdf_sds_float32_4d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4)) then
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 4d HDF buffer.')",EXE_PROMPT
@@ -3099,8 +3099,8 @@ FUNCTION read_hdf_sds_float64_4d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4)) then
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
         print "(a,'Error deallocating 4d HDF buffer.')",EXE_PROMPT
@@ -3205,8 +3205,8 @@ FUNCTION read_hdf_sds_int8_5d(sd_id, sds_name, istart, istride, iedge, buffer, t
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
@@ -3305,8 +3305,8 @@ FUNCTION read_hdf_sds_int16_5d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
@@ -3405,8 +3405,8 @@ FUNCTION read_hdf_sds_int32_5d(sd_id, sds_name, istart, istride, iedge, buffer, 
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
@@ -3505,8 +3505,8 @@ FUNCTION read_hdf_sds_float32_5d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
@@ -3605,8 +3605,8 @@ FUNCTION read_hdf_sds_float64_5d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5)) then
       deallocate(buffer,stat=astatus)
       if (astatus /= 0) then
@@ -3705,8 +3705,8 @@ FUNCTION read_hdf_sds_float64_6d(sd_id, sds_name, istart, istride, iedge, buffer
   if (allocated(buffer)) then
     if (size(buffer,1) < iedge(1) .or. &
         size(buffer,2) < iedge(2) .or. &
-	size(buffer,3) < iedge(3) .or. &
-	size(buffer,4) < iedge(4) .or. &
+size(buffer,3) < iedge(3) .or. &
+size(buffer,4) < iedge(4) .or. &
         size(buffer,5) < iedge(5) .or. &
         size(buffer,6) < iedge(6)) then
       deallocate(buffer,stat=astatus)

@@ -186,7 +186,7 @@ C     .. Save statement ..
       SAVE  Itb, Isrtyp, Tauclm, Smumax, Smumin, Extrap, Solcon, Vernum,
      &      Nobdrc, Nontob, Climat, Satalb, Matthe, Prnt, Utau, Nflux,
      &      Nother, Fnrt, Fnvt, Fnbdr, Fnaer, First, Prvday, Ntable,
-     &      Unit16, Unit1
+     &      Unit16, Unit1, Iaer
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC  Aint, Int, Mod
@@ -622,18 +622,18 @@ C
       Inperr = .FALSE.
       Dimerr = .FALSE.
 C
-      IF ( Smumin.LT.0.0 ) Inperr = Wrtbad( 'SMUMIN' )
+      IF ( Smumin.LT.0.0 ) Inperr = Wrtbad( Unit16, 'SMUMIN' )
       IF ( Smumax.LT.Smumin .OR. Smumax.GT. 1.0 )
-     &  Inperr = Wrtbad( 'SMUMAX' )
-      IF ( Solcon.LE.0.0 ) Inperr = Wrtbad( 'SOLCON' )
-      IF ( Matthe .AND. Satalb ) Inperr = Wrtbad( 'MATTHE/SATALB' )
+     &  Inperr = Wrtbad( Unit16,'SMUMAX' )
+      IF ( Solcon.LE.0.0 ) Inperr = Wrtbad(Unit16, 'SOLCON' )
+      IF ( Matthe .AND. Satalb ) Inperr=Wrtbad( Unit16,'MATTHE/SATALB')
 
-      IF ( Mxfpr.LT.Nfpar ) Dimerr = Wrtdim( 'Mxfpr', Nfpar )
-      IF ( Mxint.LT.Nintv ) Dimerr = Wrtdim( 'Mxint', Nintv )
-      IF ( Maxfpr.LT.Nfpar ) Dimerr = Wrtdim( 'Maxfpr', Nfpar )
-      IF ( Maxint.LT.Nintv ) Dimerr = Wrtdim( 'Maxint', Nintv )
-      IF ( Maxflx.LT.Nflux ) Dimerr = Wrtdim( 'Maxflx', Nflux )
-      IF ( Maxotr.LT.Nother ) Dimerr = Wrtdim( 'Maxotr', Nother )
+      IF ( Mxfpr.LT.Nfpar ) Dimerr = Wrtdim( Unit16,'Mxfpr', Nfpar )
+      IF ( Mxint.LT.Nintv ) Dimerr = Wrtdim( Unit16,'Mxint', Nintv )
+      IF ( Maxfpr.LT.Nfpar ) Dimerr = Wrtdim(Unit16, 'Maxfpr', Nfpar )
+      IF ( Maxint.LT.Nintv ) Dimerr = Wrtdim( Unit16,'Maxint', Nintv )
+      IF ( Maxflx.LT.Nflux ) Dimerr = Wrtdim( Unit16,'Maxflx', Nflux )
+      IF ( Maxotr.LT.Nother ) Dimerr = Wrtdim(Unit16, 'Maxotr', Nother )
 
       IF ( Inperr .OR .Dimerr ) CALL Errmsg
      &   ( Unit16,'SASRAB--INPUT AND/OR DIMENSION ERRORS', .TRUE. )
@@ -962,7 +962,7 @@ C                       ** Check local dimension
 C
          First  = .FALSE.
          Dimerr = .FALSE.
-         IF ( Nwlint.GT.Maxwvl ) Dimerr = Wrtdim( 'MAXWVL', Nwlint )
+         IF ( Nwlint.GT.Maxwvl) Dimerr=Wrtdim(Unit16, 'MAXWVL',Nwlint)
          IF ( Dimerr ) CALL Errmsg(Unit16, 'GETALB -- DIMENSION ERROR',
      &                              .TRUE. )
 
@@ -1281,11 +1281,11 @@ C                       ** CHECK LOCAL DIMENSIONS
       IF ( First ) THEN
          First  = .FALSE.
          Dimerr = .FALSE.
-         IF ( Maxtau.LT.Max(Ntaua,Ntauc) ) Dimerr = Wrtdim( 'Maxtau',
+         IF (Maxtau.LT.Max(Ntaua,Ntauc)) Dimerr=Wrtdim(unit16,'Maxtau',
      &        Max(Ntaua,Ntauc) )
-         IF ( Maxwvl.LT.Nwlint ) Dimerr = Wrtdim( 'Maxwvl', Nwlint )
-         IF ( Maxflx.LT.Nflux ) Dimerr = Wrtdim( 'Maxflx', Nflux )
-         IF ( Maxint.LT.Nintv ) Dimerr = Wrtdim( 'Maxint', Nintv )
+         IF ( Maxwvl.LT.Nwlint )Dimerr=Wrtdim(Unit16,'Maxwvl', Nwlint )
+         IF ( Maxflx.LT.Nflux ) Dimerr = Wrtdim(unit16,'Maxflx', Nflux )
+         IF ( Maxint.LT.Nintv ) Dimerr = Wrtdim(unit16,'Maxint', Nintv )
          IF ( Dimerr ) CALL Errmsg(Unit16, 'INSEST--DIMENSION ERROR(S)',
      &                              .TRUE. )
          IF ( Prnt ) THEN

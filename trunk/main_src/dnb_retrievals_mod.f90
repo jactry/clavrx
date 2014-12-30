@@ -232,7 +232,7 @@ contains
       curr_mean_irrad = lunar_irrad_lut(2,irrad_index) + &
                      &   phase_fraction*(lunar_irrad_lut(2,irrad_index+1)-lunar_irrad_lut(2,irrad_index))
 
-
+      deallocate ( phase_array)
       if (dnb_verbose) then
          print *,'phase_fraction = ',phase_fraction
          print *,'irrad_index = ',irrad_index

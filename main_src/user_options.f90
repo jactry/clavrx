@@ -534,7 +534,7 @@ contains
       ncep_data_dir = trim(data_base_path)//'/clavrx_ancil_data/ncep-reanalysis/'
       cfsr_data_dir = trim(data_base_path)//'/cfsr/'
       oisst_data_dir = trim(data_base_path)//'/clavrx_ancil_data/oisst/'
-      snow_data_dir = './data/snow/'
+      snow_data_dir = trim(data_base_path)//'/snow/'
       
       
       chan_on_flag_default = chan_on_flag_default_user_set

@@ -743,11 +743,14 @@ contains
          acha_mode_user_set =  default_acha_mode ( sensorname )
          dcomp_mode_user_set = default_dcomp_mode ( sensorname )
       end if
+
       call CHECK_ALGORITHM_CHOICES(sensorname)
-      
+     
       call CHANNEL_SWITCH_ON (sensorname)
       
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
+      
+      
       
    end subroutine UPDATE_CONFIGURATION
    
@@ -795,7 +798,9 @@ contains
           
    end function default_acha_mode
    
-   
+   !
+   !
+   ! ----------
    integer function default_dcomp_mode ( sensorname )
       character ( len =10) , intent(in) :: sensorname
    
@@ -832,8 +837,7 @@ contains
       !---              8 = 11/12/13.3)
       !------------------------------------------------------------------------
       
-      acha_mode = acha_mode_user_set
-      
+      acha_mode = acha_mode_user_set     
       dcomp_mode = dcomp_mode_user_set
        
       possible_acha_modes = 0 
@@ -888,12 +892,12 @@ contains
       
       if ( .not. ANY ( acha_mode_user_set == possible_acha_modes ) ) then
          acha_mode = default_acha_mode ( sensorname )
-         print*, 'Wished ACHA mode not possible for '//sensorname//' switched to default '
+         print*, 'User set ACHA mode not possible for '//trim(sensorname)//' switched to default '
       end if
  
       if ( .not. ANY ( dcomp_mode_user_set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( sensorname )
-         print*, 'Wished DCOMP mode not possible for '//sensorname//' switched to default '
+         print*, 'User set DCOMP mode not possible for '//trim(sensorname)//' switched to default '
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES
@@ -975,72 +979,13 @@ contains
       
       integer :: valid_channels ( 42)
       integer :: i
+      logical :: not_run_flag
       
       if ( expert_mode < 7 ) return
-      
-      chan_on_flag_default = chan_on_flag_default_user_set
-      
-       !--- check ACHA mode based on available channels
-      if (Acha_Mode == 3 .and. &
-         (Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 3 not possible with selected channels, ACHA will not run'
-         Acha_Mode  = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 4 .and. &
-         (Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 4 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 8 .and. &
-         (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 8 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 5 .and. &
-         (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 5 not possible with selected channels. Acha will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 6 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 6 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 7 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 7 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
-      if (Acha_Mode == 2 .and. &
-         (Chan_On_Flag_Default(27)==sym%NO)) then
-         print *, EXE_PROMPT, 'ACHA Mode 2 not possible with selected channels. ACHA will not run.'
-         Acha_Mode = 0
-         Dcomp_mode = 0
-      endif
 
-      !--- check based on available channels
-      if (Dcomp_Mode_User_Set == 1 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(6)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
-      endif
-      
-      if (Dcomp_Mode_User_Set == 2 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(7)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
-      endif
-      
-      if (Dcomp_Mode_User_Set == 3 .and. &
-         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(20)==sym%NO)) then
-         print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
-      endif
-      
-      ! - turn off channels if not available for this sensor
+      chan_on_flag_default = chan_on_flag_default_user_set
+
+      ! - turn off channels not available for this sensor
       
       valid_channels = existing_channels ( sensorname )
       
@@ -1049,6 +994,68 @@ contains
          Chan_On_Flag_Default ( i ) = 0
       end do
       
+      
+       !--- check ACHA mode based on available channels
+      if (Acha_Mode == 3 .and. &
+         (Chan_On_Flag_Default(32)==sym%NO)) then
+            not_run_flag = .true.
+         
+      endif
+      if (Acha_Mode == 4 .and. &
+         (Chan_On_Flag_Default(33)==sym%NO)) then
+            not_run_flag = .true.
+         
+      endif
+      if (Acha_Mode == 8 .and. &
+         (Chan_On_Flag_Default(32)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
+            not_run_flag = .true.
+         
+      endif
+      if (Acha_Mode == 5 .and. &
+         (Chan_On_Flag_Default(29)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
+            not_run_flag = .true.
+        
+      endif
+      if (Acha_Mode == 6 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(32)==sym%NO)) then
+            not_run_flag = .true.
+        
+      endif
+      if (Acha_Mode == 7 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO .or. Chan_On_Flag_Default(33)==sym%NO)) then
+            not_run_flag = .true.
+         
+      endif
+      if (Acha_Mode == 2 .and. &
+         (Chan_On_Flag_Default(27)==sym%NO)) then
+            not_run_flag = .true.
+         
+      endif
+      
+      
+      if ( not_run_flag ) then
+         print *, EXE_PROMPT, 'ACHA Mode ', acha_mode,' not possible with selected channels. ACHA and DCOMP  will not run.'
+         Acha_Mode = 0
+         Dcomp_mode = 0
+      end if 
+
+      !--- check based on available channels
+      if (Dcomp_Mode == 1 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(6)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
+      endif
+      
+      if (Dcomp_Mode == 2 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(7)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
+      endif
+      
+      if (Dcomp_Mode == 3 .and. &
+         (Chan_On_Flag_Default(1) == sym%NO .or. Chan_On_Flag_Default(20)==sym%NO)) then
+         print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
+      endif
+  
+
    
    end subroutine EXPERT_MODE_CHANNEL_ALGORITHM_CHECK
    

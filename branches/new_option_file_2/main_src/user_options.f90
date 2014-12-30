@@ -758,9 +758,10 @@ contains
       call CHECK_ALGORITHM_CHOICES(sensorname)
      
       call CHANNEL_SWITCH_ON (sensorname)
-		
-		if ( expert_mode < 3 ) bayesian_cloud_mask_name = default_nb_mask_classifier_file ( sensorname )
-		if ( trim(bayesian_cloud_mask_name) = 'default')  bayesian_cloud_mask_name = default_nb_mask_classifier_file ( sensorname )
+
+      if ( expert_mode < 3 .or. trim(bayesian_cloud_mask_name) == 'default') then
+         bayesian_cloud_mask_name = default_nb_mask_classifier_file ( sensorname )
+      end if
       
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
       
@@ -826,16 +827,16 @@ contains
       if (Sc_Id_WMO == 5) Dcomp_Mode = 1     !METOP-C
      
    end function default_dcomp_mode
-	
-	!-----------------------------------------------------------------
-	!   returns default classifier name
-	!-----------------------------------------------------------------
+
+!-----------------------------------------------------------------
+!   returns default classifier name
+!-----------------------------------------------------------------
    
-	function default_nb_mask_classifier_file ( sensorname ) result (filename)
-		character ( len =10) , intent(in) :: sensorname
-		character ( len = 355 ) :: filename
-		
-		select case ( trim(sensorname))
+   function default_nb_mask_classifier_file ( sensorname ) result (filename)
+      character ( len =10) , intent(in) :: sensorname
+      character ( len = 355 ) :: filename
+
+      select case ( trim(sensorname))
       
       case ( 'AVHRR')        
          filename  = 'avhrr_default_nb_mask.nc'
@@ -856,7 +857,7 @@ contains
       case ('VIIRS')
          filename  = 'viirs_default_nb_mask.nc' 
       case ('IFF_VIIRS')      
-          filename  = 'avhrr_default_nb_mask.nc'		
+          filename  = 'avhrr_default_nb_mask.nc'
       case ('IFF_AVHRR')      
         filename  = 'avhrr_default_nb_mask.nc'
       case ('COMS')
@@ -867,12 +868,12 @@ contains
           filename  = 'modis_default_nb_mask.nc'
       case default 
          print*,'sensor ',sensorname, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'  
-			stop 
+         stop 
       end select
-	
-	
-	end function default_nb_mask_classifier_file
-	
+
+
+     end function default_nb_mask_classifier_file
+
    !----------------------------------------------------------------------------
    !  check if algo mode set by user is possible
    !----------------------------------------------------------------------------

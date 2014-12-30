@@ -92,84 +92,58 @@ MODULE PIXEL_ROUTINES
 
   contains
 
-!----------------------------------------------------------------------
-! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
-!
-! this logic allows the default values to also be used to turn off
-! channels
-!----------------------------------------------------------------------
-  subroutine SET_CHAN_ON_FLAG(jmin,nj)
+   !----------------------------------------------------------------------
+   ! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
+   !
+   ! this logic allows the default values to also be used to turn off
+   ! channels
+   !
+   !  called by process_clavrx inside segment loop
+   !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
+   !----------------------------------------------------------------------
+   subroutine SET_CHAN_ON_FLAG(jmin,nj)
 
-     integer (kind=int4), intent(in):: jmin
-     integer (kind=int4), intent(in):: nj
-     integer:: Line_Idx
+      integer (kind=int4), intent(in):: jmin
+      integer (kind=int4), intent(in):: nj
+      integer:: Line_Idx
+      
+      
+      Ch6_On_Pixel_Mask = sym%NO
 
-     Chan_On_Flag = sym%NO
-     Ch6_On_Pixel_Mask = sym%NO
+      line_loop: DO Line_Idx = jmin, nj - jmin + 1
+      
+         ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
+         Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default   
+         
+         
+         ! two exceptions
+         if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES &
+                .and. Chan_On_Flag_Default(6) == sym%YES ) then
+            
+            if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
+                     Chan_On_Flag(6,Line_Idx) = sym%NO 
+            end if  
+         end if
+         
+         
+         if (Avhrr_Flag == sym%YES) then
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
+               Chan_On_Flag(6,Line_Idx) = Chan_On_Flag_Default(6)   
+               Chan_On_Flag(20,Line_Idx) = sym%NO   
+            end if
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
+               Chan_On_Flag(6,Line_Idx) = sym%NO   
+               Chan_On_Flag(20,Line_Idx) = Chan_On_Flag_Default(20)   
+            end if
+         endif
 
-     line_loop: DO Line_Idx = jmin, nj - jmin + 1
 
-       if (Modis_Flag == sym%YES) then
+         !--- set 2d mask used for channel-6 (1.6 um)
+         Ch6_On_Pixel_Mask(:,Line_Idx) = Chan_On_Flag(6,Line_Idx)
 
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default   
+      end do line_loop
 
-          !--- Steve Platnick suggested to use UNC_Ch6 (Uncertainty of channel6)
-          if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES ) then
-             if (Chan_On_Flag_Default(6) == sym%YES) then
-               if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                 Chan_On_Flag(6,Line_Idx) = sym%NO 
-               endif
-             endif  
-          endif
-
-          !--- set ch3a_on flag for AVHRR algorithms
-          Ch3a_On_Avhrr(Line_Idx) = -1
-          if ((Chan_On_Flag_Default(20) == sym%NO) .and. &
-              (Chan_On_Flag_Default(6) == sym%YES)) then
-               Ch3a_On_Avhrr(Line_Idx) = 1
-          endif
-          if (Chan_On_Flag_Default(20) == sym%YES) then
-               Ch3a_On_Avhrr(Line_Idx) = 0
-          endif
-       endif
-
-       if (Avhrr_Flag == sym%YES) then
-          Chan_On_Flag(:,Line_Idx) = sym%NO  
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default
-          if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-             Chan_On_Flag(6,Line_Idx) = Chan_On_Flag_Default(6)   
-             Chan_On_Flag(20,Line_Idx) = sym%NO   
-          endif
-          if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-             Chan_On_Flag(6,Line_Idx) = sym%NO   
-             Chan_On_Flag(20,Line_Idx) = Chan_On_Flag_Default(20)   
-          endif
-       endif
-
-       if (Goes_Flag == sym%YES .or. Goes_Sndr_Flag == sym%YES .or. &
-           Seviri_Flag == sym%YES .or. &
-           Mtsat_Flag == sym%YES .or. Viirs_Flag == sym%YES ) then
-          Chan_On_Flag(:,Line_Idx) = sym%NO         
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default
-
-          !--- set ch3a_on flag for AVHRR algorithms
-          Ch3a_On_Avhrr(Line_Idx) = -1
-          if ((Chan_On_Flag_Default(20) == sym%NO) .and. &
-              (Chan_On_Flag_Default(6) == sym%YES)) then
-               Ch3a_On_Avhrr(Line_Idx) = 1
-          endif
-          if (Chan_On_Flag_Default(20) == sym%YES) then
-               Ch3a_On_Avhrr(Line_Idx) = 0
-          endif
-              
-       endif
-
-       !--- set 2d mask used for channel-6 (1.6 um)
-       Ch6_On_Pixel_Mask(:,Line_Idx) = Chan_On_Flag(6,Line_Idx)
-
-     end do line_loop
-
-  end subroutine SET_CHAN_ON_FLAG
+   end subroutine SET_CHAN_ON_FLAG
 
 !----------------------------------------------------------------------
 ! rudimentary quality check of modis

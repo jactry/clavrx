@@ -846,46 +846,46 @@ contains
       select case ( trim ( sensorname))
       
       case ( 'AVHRR')  
-         possible_acha_modes(1:2)  = [ 1 , 3 ]
-         possible_dcomp_modes(1) =  3 
+         possible_acha_modes(1:2)   = [1, 3]
+         possible_dcomp_modes(1)    =  3 
       case ( 'AVHRR_1')   
-         possible_acha_modes(1)  =  1
-         possible_dcomp_modes(1) =  3   
+         possible_acha_modes(1)     =  1
+         possible_dcomp_modes(1)    =  3   
       case ( 'GOES_MOP')      
-         possible_acha_modes(1:4)  = [ 1,2,4,7 ]
-         possible_dcomp_modes(1) =  3
+         possible_acha_modes(1:4)   =  [1, 2, 4, 7]
+         possible_dcomp_modes(1)    =  3
       case ( 'GOES')      
-         possible_acha_modes(1:4)  = [ 1,2,3,6 ] 
-         possible_dcomp_modes(1) =  3  
+         possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
+         possible_dcomp_modes(1)    =  3  
       case ( 'GOES_SNDR')
-         possible_acha_modes(1:4)  = [ 3,5,6,8 ]  
-         possible_dcomp_modes(1) =  3
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
+         possible_dcomp_modes(1)    =  3
       case ( 'MTSAT')
-          possible_acha_modes(1:4)  = [ 4,5,7,8 ]
+          possible_acha_modes(1:4)  =  [4, 5, 7, 8]
           possible_dcomp_modes(1:2) =  [1,3]
       case ('SEVIRI')
-         possible_acha_modes(1:3)  = [ 1,3, 8 ]
-         possible_dcomp_modes(1:2) =  [1,3]
+         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:2) =   [1, 3]
       case ('FY2')
-         possible_acha_modes(1:2)  =  [ 1 , 7 ] 
-         possible_dcomp_modes(1:2) =  [ 1 , 3 ]
+         possible_acha_modes(1:2)  =   [1 , 2 ] 
+         possible_dcomp_modes(1:2) =   [1 , 3 ]
       case ('VIIRS')
-        possible_acha_modes(1:5)  = [ 2,4,6,7,8] 
-        possible_dcomp_modes(1:3) =  [1,2,3]
+        possible_acha_modes(1:4)  =    [1, 3, 4, 5] 
+        possible_dcomp_modes(1:3) =    [1, 2, 3]
          nlcomp_mode_user_set = 1  
       case ('IFF_VIIRS')      
-         possible_acha_modes(1:2)  = [ 1,3 ]      
+         possible_acha_modes(1:4)  =   [1, 3, 5, 8]      
       case ('IFF_AVHRR')      
-         possible_acha_modes(1:2)  = [ 1,3 ]
+         possible_acha_modes(1:4)  =   [1, 3, 4, 8]
       case ('COMS')
-         possible_acha_modes(1:2)  = [ 1,3 ]
-         possible_dcomp_modes(1:2) =  [1,3]
+         possible_acha_modes(1:3)  =   [1, 3, 6]
+         possible_dcomp_modes(1:2) =   [1, 3]
       case ('MODIS')
-         possible_acha_modes(1:8)  = [ 1,2,3,4,5,6,7,8 ] 
-         possible_dcomp_modes(1:3) =  [1,2,3]
+         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8] 
+         possible_dcomp_modes(1:3) =   [1, 2, 3]
       case ('MODIS_1KM')
-         possible_acha_modes(1:8)  =[ 1,2,3,4,5,6,7,8 ]
-         possible_dcomp_modes(1:3) =  [1,2,3]
+         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3) =   [1, 2, 3]
       case default 
          print*,'sensor ',sensorname, ' is not set in chaeck channels settings Inform andi.walther@ssec.wisc.edu'   
       end select

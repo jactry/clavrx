@@ -852,10 +852,10 @@ contains
          possible_acha_modes(1)  =  1
          possible_dcomp_modes(1) =  3   
       case ( 'GOES_MOP')      
-         possible_acha_modes(1:2)  = [ 1,3 ]
+         possible_acha_modes(1:4)  = [ 1,2,4,7 ]
          possible_dcomp_modes(1) =  3
       case ( 'GOES')      
-         possible_acha_modes(1:4)  = [ 4,5,7,8 ] 
+         possible_acha_modes(1:4)  = [ 1,2,3,6 ] 
          possible_dcomp_modes(1) =  3  
       case ( 'GOES_SNDR')
          possible_acha_modes(1:4)  = [ 3,5,6,8 ]  
@@ -892,6 +892,7 @@ contains
       
       if ( .not. ANY ( acha_mode_user_set == possible_acha_modes ) ) then
          acha_mode = default_acha_mode ( sensorname )
+         print*,acha_mode_user_set,possible_acha_modes
          print*, 'User set ACHA mode not possible for '//trim(sensorname)//' switched to default '
       end if
  

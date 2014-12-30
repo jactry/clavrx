@@ -467,8 +467,9 @@ contains
       call dcomp_interpolation_weight(self%dims%n_cps, cps_log10,self%dims%cps &
          & , weight_out = wgt_cps, index_out= pos_cps)
         
-         
+        
       rfl_cld_2x2       = data_loc%cld_refl( pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol,self%pos_sat,self%pos_azi)
+     
      
       trn_sol_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol)
       trn_sat_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)

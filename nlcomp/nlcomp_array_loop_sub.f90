@@ -341,7 +341,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
          inp_retr % chn ( 42 ) % trans_air_abvcld = trans_total ( CHN_VIS )
          
-         
+        
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )
                          

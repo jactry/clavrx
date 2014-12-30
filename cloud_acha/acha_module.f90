@@ -1854,6 +1854,9 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
         end do Element_Loop_4
        end do Line_loop_4
 
+       if (allocated(mask)) deallocate(mask)
+       if (allocated(mask2)) deallocate(mask2)
+
    end subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION
 
    !-----------------------------------------------------------------
@@ -3930,8 +3933,8 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
 
    Temperature_Cirrus = Missing
 
-   Num_Elements = size(Type,1)
-   Num_Lines = size(Type,2)
+   Num_Elements = size(Temperature_Cirrus,1)
+   Num_Lines = size(Temperature_Cirrus,2)
 
    allocate(Mask(Num_Elements,Num_Lines))
 
@@ -4007,8 +4010,8 @@ subroutine COMPUTE_PROCESSING_ORDER(symbol,Invalid_Data_Mask,Cloud_Type, &
   integer:: Line_Idx, Elem_Idx
   integer:: ilrc, jlrc
 
-  Number_of_Elements = size(Processing_Order,1)
-  Number_of_Lines = size(Processing_Order,2)
+  Number_of_Elements = size(Elem_Idx_LRC,1)
+  Number_of_Lines = size(Elem_Idx_LRC,2)
 
   Processing_Order = Missing_Value_Int1
   where(Invalid_Data_Mask == symbol%NO) 

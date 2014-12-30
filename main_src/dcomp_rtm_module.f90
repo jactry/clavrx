@@ -147,7 +147,7 @@ module dcomp_rtm_module
      
        line_loop: do line_idx = 1 , dim_2   
          element_loop: do elem_idx= 1 ,dim_1
-           	
+           
             if ( bad_pixel_mask(  elem_idx , line_idx ) == 1 ) cycle
             
             ! - alias local variables	
@@ -166,24 +166,24 @@ module dcomp_rtm_module
             hgt_prof_nwp   => z_prof_nwp(:,x_nwp,y_nwp)     ! - height profile
             
               ! - level indicies and weights in nwp and rtm profiles
-	         placeholder_cld = cld_height_loc
+            placeholder_cld = cld_height_loc
             call t_to_pz_from_profile ( cld_temp_loc , &
                                 temp_prof_nwp , &
                                 p_std_nwp , &
                                 hgt_prof_nwp, &
                                 sfc_level_nwp(x_nwp,y_nwp), &
                                 tropo_level_nwp(x_nwp,y_nwp), &
-	                             inversion_level_nwp(x_nwp,y_nwp), &
-                                placeholder_cld, cld_height_loc, idx_lev_nwp , prof_wgt_nwp)	
-                                
+                                 inversion_level_nwp(x_nwp,y_nwp), &
+                                 placeholder_cld, cld_height_loc, idx_lev_nwp , prof_wgt_nwp)
+ 
              call t_to_pz_from_profile ( cld_temp_loc , &
                                rtm(x_nwp,y_nwp)%t_prof , &
                                p_std_rtm , &
                                rtm(x_nwp,y_nwp)%z_prof, &
                                rtm(x_nwp,y_nwp)%sfc_level, &
                                rtm(x_nwp,y_nwp)%tropo_level, &
-	                            rtm(x_nwp,y_nwp)%inversion_level, &
-			                      placeholder_cld, cld_height_loc, idx_lev_rtm , prof_wgt_rtm)
+                              rtm(x_nwp,y_nwp)%inversion_level, &
+                               placeholder_cld, cld_height_loc, idx_lev_rtm , prof_wgt_rtm)
                              
             temp_prof_nwp  => null()
             hgt_prof_nwp   => null()
@@ -285,9 +285,9 @@ module dcomp_rtm_module
       logical :: inv_flag 
       integer :: n_prof
       integer :: n_levs_temp
-	   real :: d_press
-	   real :: d_height
-	   real :: d_temp
+      real :: d_press
+      real :: d_height
+      real :: d_temp
  
       n_prof = size(p_prof)
  

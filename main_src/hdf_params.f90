@@ -86,8 +86,8 @@ contains
                            resolution_km, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            num_cells,num_cells_with_data,grid_format,dlat, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, ch1_gain_low, ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, ch1_gain_low, ch1_gain_high, &
                            ch1_switch_count, ch1_dark_count, &
                            ch2_gain_low, ch2_gain_high, &
                            ch2_switch_count, ch2_dark_count, &
@@ -102,8 +102,8 @@ contains
                            
 
  integer(kind=int4), intent(in):: hdf_file_id,num_cells,num_cells_with_data
- integer, intent(in):: therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal, &
-                           sst_anal_opt, modis_clr_alb_flag, nwp_flag
+ integer, intent(in):: therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                            modis_clr_alb_flag, nwp_opt
 
  integer(kind=int4), intent(in):: start_time
  integer(kind=int4), intent(in):: end_time
@@ -270,10 +270,9 @@ istatus = sfscatt(hdf_file_id, "DATA_TYPE", DFNT_CHAR8,len_trim(data_type),trim(
  istatus = sfscatt(hdf_file_id, "USE_1B_REFLECTANCE_CALIBRATION_FLAG", DFNT_INT32,1,Ref_cal_1b)+istatus
 ! istatus = sfscatt(hdf_file_id, "RENAVIGATION_DATA_FROM", DFNT_CHAR8, &
 !     len_trim(renav_data_from), trim(renav_data_from))+istatus
- istatus = sfscatt(hdf_file_id, "RENAVIGATION_FLAG", DFNT_INT32,1,nav_flag)+istatus
+ istatus = sfscatt(hdf_file_id, "RENAVIGATION_FLAG", DFNT_INT32,1,nav_opt)+istatus
  istatus = sfscatt(hdf_file_id, "USE_SST_ANALYSIS_FLAG", DFNT_INT32,1,use_sst_anal)+istatus
- istatus = sfsnatt(hdf_file_id, "SST_ANALYSIS_SOURCE_FLAG", DFNT_INT32,1,sst_anal_opt)+istatus
- istatus = sfsnatt(hdf_file_id, "NWP_FLAG", DFNT_INT32,1,nwp_flag)+istatus
+ istatus = sfsnatt(hdf_file_id, "NWP_OPT", DFNT_INT32,1,nwp_opt)+istatus
  istatus = sfsnatt(hdf_file_id, "MODIS_CLEAR_SKY_REFLECTANCE_FLAG", DFNT_INT32,1,modis_clr_alb_flag)+istatus
 
 !-- reflectance channel calibration
@@ -320,8 +319,8 @@ endif
                            resolution_km, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            num_cells,num_cells_with_data,grid_format,grid_resolution, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, ch1_gain_low, ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, ch1_gain_low, ch1_gain_high, &
                            ch1_switch_count, ch1_dark_count, &
                            ch2_gain_low, ch2_gain_high, &
                            ch2_switch_count, ch2_dark_count, &
@@ -338,8 +337,8 @@ endif
                                                                                                                                                          
      integer(kind=int4), intent(in):: hdf_file_id
      integer(kind=int4), intent(out):: num_cells,num_cells_with_data
-     integer, intent(out):: therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal, &
-                            sst_anal_opt, modis_clr_alb_flag, nwp_flag
+     integer, intent(out):: therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                             modis_clr_alb_flag, nwp_opt
      integer(kind=int4), intent(out)::  start_time,end_time
      integer(kind=int4), intent(out)::  acha_mode, dcomp_mode, wmo_sc_code
      integer(kind=int2), intent(out)::  start_year,end_year,start_day,end_day
@@ -423,10 +422,9 @@ endif
 istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "USE_1B_THERMAL_CALIBRATION_FLAG"), therm_cal_1b)
 istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "USE_1B_REFLECTANCE_CALIBRATION_FLAG"), Ref_cal_1b)
 istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "USE_SST_ANALYSIS_FLAG"), use_sst_anal)
-istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "SST_ANALYSIS_SOURCE_FLAG"), sst_anal_opt)
-istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "NWP_FLAG"), nwp_flag)
+istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "NWP_FLAG"), nwp_opt)
 istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "MODIS_CLEAR_SKY_REFLECTANCE_FLAG"), modis_clr_alb_flag)
-istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "RENAVIGATION_FLAG"), nav_flag)
+istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "RENAVIGATION_FLAG"), nav_opt)
 
 !--- calibration attributes
 istatus = sfrnatt(hdf_file_id, sffattr(hdf_file_id, "C1"), c1)

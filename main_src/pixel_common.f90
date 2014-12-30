@@ -164,16 +164,14 @@ module PIXEL_COMMON
 
   type(observations), dimension(42), public, target :: ch
 
-  integer,public, save:: Bx_File_Flag
+  
   integer,public, save:: Cmr_File_Flag
   integer,public, save:: Cloud_Mask_Aux_Flag
   integer,public, save:: Cloud_Mask_Aux_Read_Flag
   integer,public, save:: Cloud_Mask_Bayesian_Flag
-  integer,public, save:: Level3_Flag
   integer,public, save:: Ref_cal_1b 
   integer,public, save:: Therm_cal_1b
-  integer,public, save:: Nav_Flag       !0=level1b,1=clevernav,2=reposnx
-  integer,public, save:: Nav_File_Flag  !yes, write out a navigation file
+  integer,public, save:: Nav_Opt       !0=level1b,1=clevernav,2=reposnx
   integer,public, save:: Obs_File_Flag
   integer,public, save:: Geo_File_Flag
   integer,public, save:: Sst_File_Flag
@@ -186,8 +184,8 @@ module PIXEL_COMMON
   integer,public, save:: Use_Sst_Anal_Default
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
-  integer,public, save:: Diag_Flag
-  integer,public, save:: Sst_Anal_Opt
+  
+ 
   integer,public, save:: Data_Comp_Flag
   integer,public, save:: Use_seebor
   integer,public, save:: Read_Volcano_Mask
@@ -203,18 +201,19 @@ module PIXEL_COMMON
   integer,public, save:: Process_Undetected_Cloud_Flag
   integer,public, save:: DCOMP_Mode
   integer,public, save:: ACHA_Mode
+  integer,public, save:: NLCOMP_Mode
+  integer,public, save:: Mask_Mode
   integer,public, save:: Cld_Flag
   integer,public, save:: Blank_Flag
   integer,public, save:: Aer_Flag
   integer,public, save:: Ash_Flag
-  integer,public, save:: Erb_Flag
-  integer,public, save:: Nwp_Flag
+  integer,public, save:: Sasrab_Flag
+  integer,public, save:: Nwp_Opt
   integer,public, save:: Modis_Clr_Alb_Flag
-  integer,public, save:: Asc_Flag_Diag
-  integer,public, save:: Rtm_Flag
-  integer,public, save:: Prob_Clear_Res_Flag
-  integer,public, save:: Smooth_Nwp_Flag
 
+  integer,public, save:: Rtm_Opt
+  integer,public, save:: Smooth_Nwp_Flag
+  integer,public, save:: compress_flag
   !---------------------------------------------------------------------------------
   ! Flags Computed within CLAVR-x that describe the sensor data
   !---------------------------------------------------------------------------------
@@ -243,6 +242,8 @@ module PIXEL_COMMON
   integer,public, save:: Modis_Terra_Flag
   integer,public, save:: Avhrr_Flag
   integer,public, save:: Avhrr_1_Flag
+  
+  
 
   !---------------------------------------------------------------------------------
   ! Internal Flags to communicate ancillary data information
@@ -253,17 +254,7 @@ module PIXEL_COMMON
   integer,public, save:: Ncdc_Level2_Flag
 
 
-  !---------------------------------------------------------------------------------
-  ! Default Algorithm Modes - (maybe move to user options)
-  !---------------------------------------------------------------------------------
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr = 3
-  integer,public,parameter:: ACHA_Mode_Default_Avhrr1 = 1
-  integer,public,parameter:: ACHA_Mode_Default_Goes_IL = 6
-  integer,public,parameter:: ACHA_Mode_Default_Goes_MP = 7
-  integer,public,parameter:: ACHA_Mode_Default_VIIRS = 5
-  integer,public,parameter:: ACHA_Mode_Default_MTSAT = 6
-  integer,public,parameter:: ACHA_Mode_Default_SEVIRI = 8
-  integer,public,parameter:: ACHA_Mode_Default_Modis = 8
+
 
   !---------------------------------------------------------------------------------
   ! variables that are computed to serve as attributes in the output files
@@ -286,9 +277,7 @@ module PIXEL_COMMON
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
   character(len=255),public,save::File_1b
-  character(len=255),public,save::File_1bx
   character(len=255),public,save::File_cmr
-  character(len=255),public,save::File_sst
   character(len=255),public,save::File_1b_root
   character(len=355),public,save:: Ancil_Data_Dir
   character(len=355),public,save:: Gfs_Data_Dir
@@ -300,20 +289,12 @@ module PIXEL_COMMON
   character(len=355),public,save:: Dark_Comp_Data_Dir
   character(len=355),public,save:: Temporary_Data_Dir
   character(len=355),public,save:: Dir_1b
-  character(len=355),public,save:: Dir_1bx
   character(len=255),public,save:: File_nav
   character(len=255),public,save:: Instr_Const_File
   character(len=255),public,save:: Algo_Const_File
-  character(len=355),public,save:: Dir_cmr
-  character(len=355),public,save:: Dir_sst
-  character(len=355),public,save:: Dir_Level3
-  character(len=355),public,save:: Dir_nav_in
-  character(len=355),public,save:: Dir_nav_out
-  character(len=355),public,save:: Dir_cld
-  character(len=355),public,save:: Dir_obs
-  character(len=355),public,save:: Dir_geo
+
   character(len=355),public,save:: Dir_Rtm
-  character(len=355),public,save:: Dir_ash
+ 
   character(len=355),public,save:: Dir_Level2
   character(len=355),public,save:: Bayesian_Cloud_Mask_Name
   character(len=355),public,save:: Modis_Geo_Name
@@ -323,7 +304,7 @@ module PIXEL_COMMON
   !----- IFF data files
   character(len=255),public,save:: IFF_File
 
-  real(kind=real4), public, save:: Dlat
+  !real(kind=real4), public, save:: Dlat
   real(kind=real4), public, save:: Lat_Min_Limit
   real(kind=real4), public, save:: Lat_Max_Limit
   real(kind=real4), public, save:: Solzen_Min_Limit
@@ -341,7 +322,8 @@ module PIXEL_COMMON
   integer(kind=int4), public, save:: Num_Pix
   integer(kind=int4), public, save:: l1b_Rec_Length
   integer(kind=int4), public, save:: Num_Anchors
-  integer, public, save:: level3_format
+  integer , public, save :: goes_stride
+ 
   real(kind=real4), public, save:: dLat_hist2d
 
   !--- channel on/off flags
@@ -2295,7 +2277,7 @@ end subroutine DESTROY_DCOMP_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_SASRAB_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Erb_Flag == sym%YES) then
+   if (Sasrab_Flag == sym%YES) then
       allocate(Insolation_All_Sky(dim1,dim2))
       allocate(Insolation_All_Sky_Diffuse(dim1,dim2))
       allocate(Insolation_Clear_Sky(dim1,dim2))
@@ -2304,7 +2286,7 @@ subroutine CREATE_SASRAB_ARRAYS(dim1,dim2)
    endif
 end subroutine CREATE_SASRAB_ARRAYS
 subroutine RESET_SASRAB_ARRAYS()
-   if (Erb_Flag == sym%YES) then
+   if (Sasrab_Flag == sym%YES) then
       Insolation_All_Sky = Missing_Value_Real4
       Insolation_All_Sky_Diffuse = Missing_Value_Real4
       Insolation_Clear_Sky = Missing_Value_Real4
@@ -2313,7 +2295,7 @@ subroutine RESET_SASRAB_ARRAYS()
    endif
 end subroutine RESET_SASRAB_ARRAYS
 subroutine DESTROY_SASRAB_ARRAYS()
-   if (Erb_Flag == sym%YES) then
+   if (sasrab_Flag == sym%YES) then
       deallocate(Insolation_All_Sky)
       deallocate(Insolation_All_Sky_Diffuse)
       deallocate(Insolation_Clear_Sky)
@@ -2326,22 +2308,22 @@ end subroutine DESTROY_SASRAB_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_OLR_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Erb_Flag == sym%YES) then
+   
       allocate(Olr(dim1,dim2))
       allocate(Olr_Qf(dim1,dim2))
-   endif
+   
 end subroutine CREATE_OLR_ARRAYS
 subroutine RESET_OLR_ARRAYS
-   if (Erb_Flag == sym%YES) then
+   
       Olr = Missing_Value_Real4
       Olr_Qf = Missing_Value_Int1
-   endif
+   
 end subroutine RESET_OLR_ARRAYS
 subroutine DESTROY_OLR_ARRAYS
-   if (Erb_Flag == sym%YES) then
+   
       deallocate(Olr)
       deallocate(Olr_Qf)
-   endif
+   
 end subroutine DESTROY_OLR_ARRAYS
 !-----------------------------------------------------------
 !

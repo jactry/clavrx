@@ -140,11 +140,11 @@ module OISST_ANALYSIS
   !-------------------------------------------------------------------
   ! Function to find the oisst map name.
   !-------------------------------------------------------------------
-  FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path,oisst_option) result(oisst_filename)
+  FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path) result(oisst_filename)
    CHARACTER(*), intent(in) :: oisst_path
    INTEGER(kind=int2), intent(in):: year_in
    INTEGER(kind=int2), intent(in):: day_of_year
-   integer, intent(in):: oisst_option
+  
    CHARACTER(len=256) :: oisst_filename
    CHARACTER(len=256) :: oisst_filename_tmp
    CHARACTER(len=256) :: oisst_filename_tmp_preliminary
@@ -154,60 +154,44 @@ module OISST_ANALYSIS
 
     oisst_filename = "no_file"
 
-   if (oisst_option == 1) then
+   do iday=0, MAX_OISST_LATENCY - 1
+      jday = day_of_year - iday
+      year = year_in 
+      ileap = leap_year_fct(year)
+      
+      if (jday < 1) then
+         year = year - 1
+         ileap = leap_year_fct(year)
+         jday = (365 + ileap) + jday
+      end if 
+       
+      month = compute_month(jday, ileap)
+      day = compute_day(jday, ileap)
+      write (year_string,fmt="(I4)") year
+      write (month_string, '(I2.2)') month
+      write (day_string,   '(I2.2)') day
 
-        oisst_filename_tmp = trim(oisst_path)//"avhrr-only-v2.current"
+      oisst_filename_tmp= "avhrr-only-v2."//year_string//month_string//day_string
+      oisst_filename_tmp = trim(oisst_path)//trim(year_string)//"/"//trim(oisst_filename_tmp)
+      oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.gz"
+      oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
 
-        !--- add gz suffix
-        oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
+      !--- check for regular file
+      if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
+         oisst_filename = oisst_filename_tmp
+         print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp)
+         exit
+      end if
 
-        !--- check if file exists
-        if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
-              oisst_filename = oisst_filename_tmp
-              return
-        endif
-
-   else
-
-        do iday=0, MAX_OISST_LATENCY - 1
-               jday = day_of_year - iday
-               year = year_in 
-               ileap = leap_year_fct(year)
-               if (jday < 1) then
-                 year = year - 1
-                 ileap = leap_year_fct(year)
-                 jday = (365 + ileap) + jday
-               endif 
-               month = compute_month(jday, ileap)
-               day = compute_day(jday, ileap)
-               write (year_string,fmt="(I4)") year
-               write (month_string, '(I2.2)') month
-               write (day_string,   '(I2.2)') day
-
-               oisst_filename_tmp= "avhrr-only-v2."//year_string//month_string//day_string
-               oisst_filename_tmp = trim(oisst_path)//trim(year_string)//"/"//trim(oisst_filename_tmp)
-               oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.gz"
-               oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
-
-               !--- check for regular file
-               if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
-                   oisst_filename = oisst_filename_tmp
-                   print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp)
-                   exit
-               endif
-
-               !--- check for preliminary file (true of recent files)
-               if (file_exists(trim(oisst_filename_tmp_preliminary)) .eqv. .true.) then
-                   oisst_filename = oisst_filename_tmp_preliminary
-                   print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp_preliminary)
-                   exit
-               endif
-
+      !--- check for preliminary file (true of recent files)
+      if (file_exists(trim(oisst_filename_tmp_preliminary)) .eqv. .true.) then
+         oisst_filename = oisst_filename_tmp_preliminary
+         print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp_preliminary)
+         exit
+      end if
 
    end do
-   
-   endif
-   
+      
    return
 
 END FUNCTION get_oisst_map_filename

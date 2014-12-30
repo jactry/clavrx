@@ -1799,6 +1799,8 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
          
              end do Element_Loop_2
           end do Line_loop_2
+          
+          deallocate(mask2)
 
           !--- fill missing values with default value
           Line_loop_3: do Line_Idx = Line_start, Line_end 

@@ -40,7 +40,6 @@
 ! REF_CAL - perform the reflectance calibration
 ! THERM_CAL - perform the thermal calibration
 ! COMPUTE_NEW_THERM_CAL_COEF - compute thermal calibration coefficients
-! WRITE_HEADER_1BX - write a header to the level 1bx files
 ! READ_AVHRR_LEVEL1B_DATA - read level 1b data records
 ! READ_AVHRR_LEVEL1B_HEADER - read level 1b header records
 ! CALCULATE_ASC_DES - Calculates ascending/descending flag if error presennt
@@ -58,7 +57,7 @@ module AVHRR_MODULE
 
   implicit none
 
-  public:: WRITE_HEADER_1BX,&
+  public:: &
            ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL, &
            READ_AVHRR_INSTR_CONSTANTS, &
            READ_AVHRR_LEVEL1B_DATA,  &
@@ -944,42 +943,7 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
 
 end subroutine READ_AVHRR_LEVEL1B_HEADER
 
-!---------------------------------------------------------------------
-! when creating a 1bx file, this routine write the original level 1b
-! header to it
-!---------------------------------------------------------------------
- subroutine WRITE_HEADER_1BX(file_1b)
 
-    character(len=*), intent(in):: file_1b
-    character(len=120):: file_1bx
-    integer:: ios0,erstat
-
-    file_1bx = trim(file_1b)
-    if (file_1bx(1:3) == 'NSS') then
-       file_1bx(1:3) = 'TCL'
-    endif
-    print *,EXE_PROMPT, "PROCESS_AVHRR unit 11 out 1bx==>",dir_1bx
-    print *,EXE_PROMPT, "creating file ",trim(file_1bx)
-
-    open(unit=lun_level1b,file=trim(dir_1bx)//trim(file_1bx),  &
-         status="replace",form="unformatted", &
-         access="dIrect",recl=l1b_rec_length,action="write",iostat=ios0)
-
-         if (ios0 /= 0) then
-           erstat = 12
-           print *, EXE_PROMPT, "Error opening 1Bx file, ios0 = ",ios0
-           stop 12
-         endif
-
-      write(unit=lun_level1b,rec=1,iostat=ios0) Header_Buffer_AVHRR
-
-      if (ios0 /= 0) then
-       print *, EXE_PROMPT, "Error writing 1Bx file header, ios0 = ",ios0
-       stop 13
-      endif
-
-end subroutine WRITE_HEADER_1BX
-!*******************************************************************
 
 
 !-----------------------------------------------------------

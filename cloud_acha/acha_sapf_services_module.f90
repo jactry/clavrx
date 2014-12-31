@@ -333,13 +333,16 @@ end type acha_rtm_nwp_struct
    
    if (Acha_Input%Chan_On_85um == sym%YES) then
      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, Acha_NWP%Atm_Rad_Prof_85um)
+     
      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, Acha_NWP%Atm_Trans_Prof_85um)
+     
    endif
    
    if (Acha_Input%Chan_On_11um == sym%YES) then
       CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Atm_Rad_Prof_11um)
       CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Atm_Trans_Prof_11um)
       CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Black_Body_Rad_Prof_11um)
+      
    endif
    
    if (Acha_Input%Chan_On_12um == sym%YES) then
@@ -352,6 +355,9 @@ end type acha_rtm_nwp_struct
       CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Rad_Prof_133um)
       CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Trans_Prof_133um)
    endif
+   
+   
+   
 
    Ctxt => null()
 

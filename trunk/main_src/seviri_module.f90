@@ -728,6 +728,7 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
     integer ::  LFAC_MSG = -781648343
     integer ::  COFF_MSG = 1856
     integer ::  LOFF_MSG = 1856
+    integer :: FGF_TYPE = 2 !MSG uses EUMETSAT GEOS navigation, so set type here
         
        
     do j=1, ysize
@@ -751,6 +752,21 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
                                      SUB_LON_MSG,  &
                                      dlat,         &
                                      dlon)
+
+          ! Putting in hooks for updated navigation code
+          ! to be edited after 1/12
+                 
+          !CALL fgf_to_earth(FGF_TYPE,                  &
+          !                  ii,                  &
+          !                  jj,                  &
+          !                  COFF_MSG,   &
+          !                  CFAC_MSG,   &
+          !                  LFAC_MSG,   &
+          !                  LFAC_MSG,   & 
+          !                  SUB_LON_MSG, &
+          !                  dlon,            &
+          !                  dlat)
+                                   
 
                   
          if (dlat == -999.0) then  ! -999.0 is MSG nav missing value

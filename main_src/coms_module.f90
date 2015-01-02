@@ -549,6 +549,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     integer :: i, j, ii, jj, imode
     real(KIND(0.0d0)) :: latitude, longitude
     real(KIND=real4) :: height
+    integer :: FGF_TYPE = 3 !COMS uses JMA GEOS navigation, so set type here
 
     NAVstr_COMS_NAV = NAVstr_COMS
     
@@ -585,6 +586,20 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                                             NAVstr_COMS%sub_lon, &
                                             latitude,            &
                                             longitude)
+
+                 ! Putting in hooks for updated navigation code
+                 ! to be edited after 1/12
+                 
+                 !CALL fgf_to_earth(FGF_TYPE,                  &
+                 !                  ii,                  &
+                 !                  jj,                  &
+                 !                  NAVstr_COMS%COFF,   &
+                 !                  NAVstr_COMS%CFAC,   &
+                 !                  NAVstr_COMS%LFAC,   &
+                 !                  NAVstr_COMS%LOFF,   & 
+                 !                  NAVstr_COMS%sub_lon, &
+                 !                  longitude,            &
+                 !                  latitude)
                                           
              if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Lat_1b(i,j) = Missing_Value_Real4

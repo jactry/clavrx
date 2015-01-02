@@ -698,6 +698,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
     real(KIND=real4) :: dlon, dlat
     real(KIND=real8) :: mjd
     real(KIND=real4), dimension(8) :: angles
+    integer :: FGF_TYPE = 3 !MTSAT uses JMA GEOS navigation, so set type here
 
     NAVstr_MTSAT_NAV = NAVstr_MTSAT
     
@@ -767,6 +768,20 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                                             NAVstr_MTSAT%sub_lon, &
                                             latitude,            &
                                             longitude)
+
+                 ! Putting in hooks for updated navigation code
+                 ! to be edited after 1/12
+                 
+                 !CALL fgf_to_earth(FGF_TYPE,                  &
+                 !                  ii,                  &
+                 !                  jj,                  &
+                 !                  NAVstr_MTSAT%COFF,   &
+                 !                  NAVstr_MTSAT%CFAC,   &
+                 !                  NAVstr_MTSAT%LFAC,   &
+                 !                  NAVstr_MTSAT%LOFF,   & 
+                 !                  NAVstr_MTSAT%sub_lon, &
+                 !                  longitude,            &
+                 !                  latitude)
                                           
              IF (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Lat_1b(i,j) = Missing_Value_Real4

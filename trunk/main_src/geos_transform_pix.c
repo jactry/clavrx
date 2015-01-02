@@ -4,7 +4,7 @@
 /*
   20121002 graemem@ssec.wisc.edu
 
-  This module was transcoded from GOESTransform.java, provided by Tom Rink, 20120705.
+  Initial transcod from GOESTransform.java, provided by Tom Rink, 20120705.
   
   Transforms GOES-R Fixed Grid Format (FGF) x and y coordinates to Earth coordinates 
   (i.e. lon and lat), and vice versa. Transformations are done by first calculating 
@@ -14,17 +14,17 @@
        Earth  -->  satellite view angle coordinates  -->  FGF
 
   Entry routines are fgf_to_earth_ and earth_to_fgf_. These routines are designed to
-  be callable from Fortran.
+  be callable from Fortran, independent of any framework.
 
   Using the GRS80 constants.
   
   
   20140509 - wstraka@ssec.wisc.edu
     
-    To be consistant with the EUMETSAT/JMA code, there are a couple of values which 
-    have to be flipped for MTSAT/AHI and SEVIRI. It appears there is an assumption
+    Added in the transforms for EUMETSAT/JMA code. This means that the WGS84 constants had to be added
+    into the code as well. In addition, there is an assumption
     of how the data is organized in the x direction for ABI which isn't consistant with
-    the CGMS orientation. Locations are marked with WCS3
+    the CGMS orientation. Locations are marked with WCS3.
   
 
  */

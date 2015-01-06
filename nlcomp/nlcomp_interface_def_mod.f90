@@ -90,6 +90,7 @@ module nlcomp_interface_def_mod
       TYPE ( d2_real4_TYPE ) :: press_sfc
       TYPE ( d2_real4_TYPE)  :: emiss_sfc(N_CHN)
       TYPE ( d2_int1_TYPE)   :: snow_class 
+      TYPE ( d2_real4_TYPE ) :: temp_sfc
       
       ! - atmosphere
       TYPE ( d2_real4_TYPE ) :: ozone_nwp

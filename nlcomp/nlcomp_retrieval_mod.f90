@@ -37,6 +37,7 @@ module nlcomp_retrieval_mod
       real :: rel_azi
       real :: lun_rel_azi
       real :: lun_zen
+      real :: tsfc
    end type nlcomp_geo_type
    
    type :: nlcomp_prd_type
@@ -168,20 +169,23 @@ contains
       dcomp_ancil_path = trim ( inp % conf % ancil_path )
       alb_sfc ( 1) = inp % chn ( 42 ) % alb_sfc 
       
-     
+
+      bt_20 = planck_rad2tmp ( inp % chn ( 20 ) % rad , 'VIIRS' , 20 )
+      bt_31 = planck_rad2tmp ( inp % chn ( 31 ) % rad , 'VIIRS' , 31 )
+      bt_32 = planck_rad2tmp ( inp % chn ( 32 ) % rad , 'VIIRS' , 32 )
       
-     
+      obs_vec ( 3 ) = bt_31 - bt_32
+      obs_vec ( 4 ) = bt_20 - bt_31
       
-    ! bt_20 = planck_rad2tmp ( inp % chn ( 20 ) % rad , 'VIIRS' , 20 )
-    !  bt_31 = planck_rad2tmp ( inp % chn ( 31 ) % rad , 'VIIRS' , 31 )
-    !  bt_32 = planck_rad2tmp ( inp % chn ( 32 ) % rad , 'VIIRS' , 32 )
-      
-    !  obs_vec ( 3 ) = bt_31 - bt_32
-    !  obs_vec ( 4 ) = bt_20 - bt_31
+      print*,'bt s 20 31 32',bt_20,bt_31,bt_32, inp % geo % tsfc
+      print*, 
       cod = -999.
       cps= -999.
+      
+      if ( obs_vec ( 1 ) > 1.0 ) return
       call vis_channel_cod (obs_vec ( 1 ),  pxl, alb_sfc ( 1) , dcomp_ancil_path , cod) 
-    ! call cps_known_cod ( obs_vec ,  cod , rad_clear_toc,  pxl , dcomp_ancil_path , cps )
+      print*,'------  coputed cod ------- '
+      call cps_known_cod ( obs_vec ,  cod , rad_clear_toc,  pxl , dcomp_ancil_path , cps ,inp % geo % tsfc )
       
      
       

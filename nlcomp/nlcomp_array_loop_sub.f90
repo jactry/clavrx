@@ -299,6 +299,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % geo % sat_zen = sat_zen
          inp_retr % geo % rel_azi = rel_azi
          inp_retr % geo % lun_rel_azi = lunar_rel_azi
+         inp_retr % geo % tsfc = input % temp_sfc % d ( elem_idx , line_idx )
          
          inp_retr % prd % ctt = cld_temp  
          inp_retr % prd % cph = is_water_phase(elem_idx, line_idx)
@@ -341,7 +342,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
          inp_retr % chn ( 42 ) % trans_air_abvcld = trans_total ( CHN_VIS )
          
-        
+        print*, 'sfc temperature: ',input % temp_sfc % d ( elem_idx , line_idx )
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )
                          

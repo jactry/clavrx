@@ -93,7 +93,10 @@ contains
       real :: a1 , a2 , nu 
       
       
-      file = 'Ancil_Data/clavrx_ancil_data/avhrr_data/planck_coeff.dat'
+      file = '/DATA/Ancil_Data/clavrx_ancil_data/avhrr_data/planck_coeff.dat'
+      
+      
+      
       unit = 20
       open ( unit , file = trim(file), action = "read" )
       

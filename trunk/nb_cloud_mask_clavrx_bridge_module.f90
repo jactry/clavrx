@@ -29,8 +29,42 @@
 module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
    ! -- MODULES USED
-   use PIXEL_COMMON
-!   use NUMERICAL_ROUTINES, only:
+   use PIXEL_COMMON, only: &
+       Ch, &
+       Geo, & 
+       Nav, &
+       Sfc, &
+       Image, &
+       Sensor, &
+       Ancil_Data_Dir, &
+       Bayesian_Cloud_Mask_Name, &
+       Bayes_Mask_Sfc_Type_Global, &
+       Bad_Pixel_Mask, &
+       Cld_Mask, &
+       Cld_Test_Vector_Packed, &
+       Dust_Mask, &
+       Fire_Mask, &
+       Posterior_Cld_Probability, &
+       Smoke_Mask, &
+       SST_Anal_Uni, &
+       Solar_Contamination_Mask, &
+       Ref_Ch1_Std_3x3, &
+       Ref_Ch1_Min_3x3, &
+       Bt_Ch20_Std_3x3, &
+       Ems_Ch20_Median_3x3, &
+       Ems_Ch20_Clear_Solar_Rtm, &
+       Covar_Ch27_Ch31_5x5, &
+       Bt_Ch31_Std_3x3, &
+       Bt_Ch31_Max_3x3, &
+       Ref_ChDNB_Lunar_Std_3x3, &
+       Ref_ChDNB_Lunar_Min_3x3, &
+       Ref_Uni_ChI1, &
+       Bt_Uni_ChI4, &
+       Bt_Uni_ChI5, &
+       Diag_Pix_Array_1, &
+       Diag_Pix_Array_2, &
+       Diag_Pix_Array_3
+
    use CONSTANTS, only: &
        sym, &
        CLOUD_MASK_VERSION, & 
@@ -75,14 +109,14 @@ contains
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 
    !---- set paths and mask classifier file name to their values in this framework
-   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)//"bayes/"//trim(Bayesian_Cloud_Mask_Name)
+   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
 
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
 
    ! -----------    loop over pixels -----   
-   line_loop: do i = 1, Num_Pix
-      elem_loop: do  j = 1, Num_Scans_Read
+   line_loop: do i = 1, Image%Number_Of_Elements
+      elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
          call SET_INPUT(i,j)
          call SET_OUTPUT(i,j)
          call SET_DIAG(i,j)
@@ -254,40 +288,40 @@ contains
    subroutine SET_INPUT(i,j)
       integer, intent (in) :: i, j
 
-      Input%Num_Elem = Num_Pix
-      Input%Num_Line = Num_Scans_Read
-      Input%Num_Line_Max = Num_Scans_Per_Segment
-      Input%Num_Segments = Num_Segments
+      Input%Num_Elem = Image%Number_Of_Elements
+      Input%Num_Line = Image%Number_Of_Lines_Read_This_Segment
+      Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
+      Input%Num_Segments = Image%Number_Of_Segments
       Input%Invalid_Data_Mask => Bad_Pixel_Mask(i,j)
-      Input%Chan_On_041um = Chan_On_Flag_Default(8)
-      Input%Chan_On_063um = Chan_On_Flag_Default(1)
-      Input%Chan_On_086um = Chan_On_Flag_Default(2)
-      Input%Chan_On_138um = Chan_On_Flag_Default(26)
-      Input%Chan_On_160um = Chan_On_Flag_Default(6)
-      Input%Chan_On_213um = Chan_On_Flag_Default(7)
-      Input%Chan_On_375um = Chan_On_Flag_Default(20)
-      Input%Chan_On_67um = Chan_On_Flag_Default(27)
-      Input%Chan_On_85um = Chan_On_Flag_Default(29)
-      Input%Chan_On_11um = Chan_On_Flag_Default(31)
-      Input%Chan_On_12um = Chan_On_Flag_Default(32)
-      Input%Chan_On_I1_064um = Chan_On_Flag_Default(37)
-      Input%Chan_On_I4_374um = Chan_On_Flag_Default(40)
-      Input%Chan_On_I5_114um = Chan_On_Flag_Default(41)
-      Input%Chan_On_DNB = Chan_On_Flag_Default(42)
-      Input%Snow_Class => Snow(i,j)
-      Input%Land_Class => Land(i,j)
-      Input%Oceanic_Glint_Mask => Glint_Mask(i,j)
-      Input%Coastal_Mask => Coast_Mask(i,j)
-      Input%Solzen => Solzen(i,j)
-      Input%Scatzen => Scatangle(i,j)
-      Input%Senzen => Satzen(i,j)
-      Input%Lat => Lat(i,j)
-      Input%Lon => Lon(i,j)
+      Input%Chan_On_041um = Sensor%Chan_On_Flag_Default(8)
+      Input%Chan_On_063um = Sensor%Chan_On_Flag_Default(1)
+      Input%Chan_On_086um = Sensor%Chan_On_Flag_Default(2)
+      Input%Chan_On_138um = Sensor%Chan_On_Flag_Default(26)
+      Input%Chan_On_160um = Sensor%Chan_On_Flag_Default(6)
+      Input%Chan_On_213um = Sensor%Chan_On_Flag_Default(7)
+      Input%Chan_On_375um = Sensor%Chan_On_Flag_Default(20)
+      Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
+      Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
+      Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
+      Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
+      Input%Chan_On_I1_064um = Sensor%Chan_On_Flag_Default(37)
+      Input%Chan_On_I4_374um = Sensor%Chan_On_Flag_Default(40)
+      Input%Chan_On_I5_114um = Sensor%Chan_On_Flag_Default(41)
+      Input%Chan_On_DNB = Sensor%Chan_On_Flag_Default(42)
+      Input%Snow_Class => Sfc%Snow(i,j)
+      Input%Land_Class => Sfc%Land(i,j)
+      Input%Oceanic_Glint_Mask => Sfc%Glint_Mask(i,j)
+      Input%Coastal_Mask => Sfc%Coast_Mask(i,j)
+      Input%Solzen => Geo%Solzen(i,j)
+      Input%Scatzen => Geo%Scatangle(i,j)
+      Input%Senzen => Geo%Satzen(i,j)
+      Input%Lat => Nav%Lat(i,j)
+      Input%Lon => Nav%Lon(i,j)
       Input%Sst_Anal_Uni => Sst_Anal_Uni(i,j)
       Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss(i,j)    !note, this is on always
-      Input%Zsfc => Zsfc(i,j)
+      Input%Zsfc => Sfc%Zsfc(i,j)
       Input%Solar_Contamination_Mask => Solar_Contamination_Mask(i,j)
-      Input%Sfc_Type => Sfc_Type(i,j)
+      Input%Sfc_Type => Sfc%Sfc_Type(i,j)
 
       if (Input%Chan_On_041um == sym%YES)  then 
         Input%Ref_041um => ch(8)%Ref_Toa(i,j)
@@ -340,14 +374,14 @@ contains
         Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear(i,j)
       endif
       if (Input%Chan_On_DNB == sym%YES)  then 
-        Input%Lunscatzen => Scatangle_Lunar(i,j)
-        Input%Lunar_Oceanic_Glint_Mask => Glint_Mask_Lunar(i,j)
+        Input%Lunscatzen => Geo%Scatangle_Lunar(i,j)
+        Input%Lunar_Oceanic_Glint_Mask => Sfc%Glint_Mask_Lunar(i,j)
         Input%Rad_Lunar => ch(42)%Rad_Toa(i,j)
         Input%Ref_Lunar => ch(42)%Ref_Lunar_Toa(i,j)
         Input%Ref_Lunar_Min => Ref_ChDNB_Lunar_Min_3x3(i,j)
         Input%Ref_Lunar_Std => Ref_ChDNB_Lunar_Std_3x3(i,j)
         Input%Ref_Lunar_Clear => ch(42)%Ref_Lunar_Toa_Clear(i,j)
-        Input%Lunzen => Lunzen(i,j)
+        Input%Lunzen => Geo%Lunzen(i,j)
       endif
       if (Input%Chan_On_I1_064um == sym%YES) then
          Input%Ref_I1_064um_Std => Ref_Uni_ChI1(i,j)

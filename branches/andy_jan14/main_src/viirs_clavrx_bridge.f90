@@ -65,37 +65,18 @@ module VIIRS_CLAVRX_BRIDGE
 
 
    use Pixel_Common , only : &
-      Chan_On_Flag_Default &
-      , Chan_On_Flag &
-      , Num_Scans_Per_Segment &
-      , Num_Scans &
-      , Num_Scans_Read &
-      , Num_Pix &
+        Image &
+      , Sensor &
+      , Geo &
+      , Nav &
       , Scan_Number &
-      , Dir_1b &
       , Ancil_Data_Dir & 
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
       , Cld_Mask_Aux &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
-      , Lat_1b &
-      , Lon_1b &
       , Scan_Time &
-      , Sataz &
-      , Satzen &
-      , Solaz &
-      , Solzen &
-      , Ascend &
-      , Moon_Phase_Angle &
-      , Relaz &
-      , Glintzen &
-      , Lunzen &
-      , Lunaz &
-      , Lunrelaz &
-      , Scatangle_Lunar &
-      , Scatangle &
-      , Glintzen_Lunar &
       , Gap_Pixel_Mask &
       , Ch &
       , Ref_ChI1 &
@@ -178,22 +159,22 @@ contains
       !                 M1  M2   M3   M4  M5   M6   M7  M8  M9  M10 M11  M12  M13  M14  M15  M16  
       modis_chn_list = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
       modis_chn_list_iband = [ 37 , 38 , 39 , 40 , 41 ]
-      is_mband_on = Chan_On_Flag_Default ( modis_chn_list) == sym%YES
-      is_iband_on = Chan_On_Flag_Default ( modis_chn_list_iband ) == sym%YES
+      is_mband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
+      is_iband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) == sym%YES
       
-      y_start = ( segment_number -1 ) * num_scans_per_segment + 1
-      c_seg_lines = min (  y_start + num_scans_per_segment -1 , num_scans )  - y_start  + 1
+      y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment + 1
+      c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 , Image%Number_Of_Elements )  - y_start  + 1
       
       ! - configure viirs interface
       v_conf % chan_on_rfl_mband = is_mband_on
       v_conf % chan_on_iband = is_iband_on
-      v_conf % chan_on_dnb = Chan_On_Flag_Default(42) == sym%YES
+      v_conf % chan_on_dnb = Sensor%Chan_On_Flag_Default(42) == sym%YES
       v_conf % viirs_cloud_mask_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       v_conf % viirs_cloud_type_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       
       v_conf % offset = [ 1 , y_start]
-      v_conf % count = [ num_pix  , c_seg_lines  ]
-      v_conf % dir_1b = trim(dir_1b)
+      v_conf % count = [ Image%Number_Of_Elements  , c_seg_lines  ]
+      v_conf % dir_1b = trim(Image%Level1b_Path)
       
       v_conf % Ancil_Data_Dir = trim(Ancil_Data_Dir)
       v_conf % file_gmtco_base =  trim(file_gmtco_base)
@@ -207,24 +188,24 @@ contains
 
       ! - output to clavrx global variables
       ! geo
-      lat_1b(:,1:c_seg_lines)    = out % geo % lat
-      lon_1b(:,1:c_seg_lines)    = out % geo % lon
+      nav % lat_1b(:,1:c_seg_lines)    = out % geo % lat
+      nav % lon_1b(:,1:c_seg_lines)    = out % geo % lon
       scan_time(1:c_seg_lines)   = out % geo % scan_time
-      sataz(:,1:c_seg_lines)     = out % geo % sataz
-      satzen(:,1:c_seg_lines)    = out % geo % satzen
-      solaz (:,1:c_seg_lines)    = out % geo % solaz 
-      solzen (:,1:c_seg_lines)   = out % geo % solzen 
-      ascend (1:c_seg_lines)     = out % geo % ascend
+      geo % sataz(:,1:c_seg_lines)     = out % geo % sataz
+      geo % satzen(:,1:c_seg_lines)    = out % geo % satzen
+      geo % solaz (:,1:c_seg_lines)    = out % geo % solaz 
+      geo % solzen (:,1:c_seg_lines)   = out % geo % solzen 
+      nav % ascend (1:c_seg_lines)     = out % geo % ascend
       
-      moon_phase_angle = out % geo % Moon_Phase_Angle
+      geo % moon_phase_angle = out % geo % Moon_Phase_Angle
       ! rel azimuths  - these are all global variables
-      call  COMPUTE_RELATIVE_AZIMUTH_VIIRS( solaz , sataz , relaz )
+      call  COMPUTE_RELATIVE_AZIMUTH_VIIRS( geo % solaz , geo % sataz , geo % relaz )
 
       !--- compute the glint zenith angle
-      glintzen = glint_angle( solzen , satzen , relaz )
+      geo % glintzen = glint_angle( geo % solzen , geo % satzen , geo % relaz )
 
       !--- compute the scattering angle
-      scatangle = scattering_angle( solzen , satzen , relaz )
+      geo % scatangle = scattering_angle( geo % solzen , geo % satzen , geo % relaz )
 
       ! gap
       gap_pixel_mask( : ,1:c_seg_lines) = 0
@@ -237,7 +218,7 @@ contains
       do i_mband = 1 , 16
          modis_chn = modis_chn_list (i_mband)
          if ( .not. out % mband ( i_mband ) % is_read ) then
-            chan_on_flag (modis_chn ,1:c_seg_lines) = sym % no 
+            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = sym % no 
             cycle   
          end if
          
@@ -258,7 +239,7 @@ contains
       ! - i-bands
       do  i_iband = 1 , 5
            if ( .not. out % iband ( i_iband ) % is_read ) then
-            chan_on_flag (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % no 
+            sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % no 
             cycle   
          end if
          if ( .not. is_iband_on(i_iband) .or. (size(out % iband (i_iband) % ref) < 1 &
@@ -279,33 +260,33 @@ contains
       
       end do 
     
-      if ( Chan_On_Flag_Default(42) == sym%YES .and. size(out % dnb_mgrid % rad) > 0) then
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. size(out % dnb_mgrid % rad) > 0) then
          ch(42)%rad_toa( : ,1:c_seg_lines)  = out % dnb_mgrid % rad
-         lunzen( : ,1:c_seg_lines) = out % geo % lunzen
-         lunaz( : ,1:c_seg_lines) = out % geo % lunaz
+         geo % lunzen( : ,1:c_seg_lines) = out % geo % lunzen
+         geo % lunaz( : ,1:c_seg_lines) = out % geo % lunaz
          ch(42)%ref_toa( : ,1:c_seg_lines) = out % dnb_mgrid % ref
-         lunrelaz( : ,1:c_seg_lines) = Relative_Azimuth ( lunaz( : ,1:c_seg_lines) &
-                                                       , sataz( : ,1:c_seg_lines) )
+         geo % lunrelaz( : ,1:c_seg_lines) = Relative_Azimuth ( geo % lunaz( : ,1:c_seg_lines) &
+                                                             , geo % sataz( : ,1:c_seg_lines) )
           
          !--- compute the scattering angle
-         scatangle_lunar( : ,1:c_seg_lines) = scattering_angle(  lunzen( : ,1:c_seg_lines) &
-                                                , satzen( : ,1:c_seg_lines) &
-                                                , lunrelaz( : ,1:c_seg_lines) )
-         glintzen_lunar( : ,1:c_seg_lines) = glint_angle( lunzen( : ,1:c_seg_lines) &
-                                             , satzen( : ,1:c_seg_lines) &
-                                             , lunrelaz( : ,1:c_seg_lines) )                                       
+         geo % scatangle_lunar( : ,1:c_seg_lines) = scattering_angle(  geo % lunzen( : ,1:c_seg_lines) &
+                                                , geo % satzen( : ,1:c_seg_lines) &
+                                                , geo % lunrelaz( : ,1:c_seg_lines) )
+         geo % glintzen_lunar( : ,1:c_seg_lines) = glint_angle( geo % lunzen( : ,1:c_seg_lines) &
+                                             , geo % satzen( : ,1:c_seg_lines) &
+                                             , geo % lunrelaz( : ,1:c_seg_lines) )                                       
       end if
       
       ! -global variables which has to be set
-       Num_Scans_Read = c_seg_lines
-      do i = 1, num_scans_per_segment
+      Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
+      do i = 1, Image%Number_Of_Lines_Per_Segment
          scan_number(i) = y_start + i - 1
       end do
       
       !- ascending  (global varaibel )
-      ascend = 0  
-      do i = 1 , Num_Scans_Read - 1
-         if ( lat_1b(num_pix / 2 , i + 1) <= lat_1b( num_pix / 2 , i ) ) ascend ( i )  = 1
+      nav % ascend = 0  
+      do i = 1 , Image%Number_Of_Lines_Read_This_Segment - 1
+         if ( nav % lat_1b(Image%Number_Of_Elements / 2 , i + 1) <= nav % lat_1b( Image%Number_Of_Elements / 2 , i ) ) nav % ascend ( i )  = 1
       end do
       
       !---  statistics I-Band on M-band grid

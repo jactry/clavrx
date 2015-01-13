@@ -109,13 +109,15 @@ module PIXEL_COMMON
            DESTROY_PIXEL_ARRAYS, &
            RESET_PIXEL_ARRAYS_TO_MISSING
 
+  private:: CREATE_NAV_ARRAYS, RESET_NAV_ARRAYS, DESTROY_NAV_ARRAYS
   private:: CREATE_GEO_ARRAYS, RESET_GEO_ARRAYS, DESTROY_GEO_ARRAYS
-  private:: CREATE_GEO_ANCHOR_ARRAYS, RESET_GEO_ANCHOR_ARRAYS, DESTROY_GEO_ANCHOR_ARRAYS
+  private:: CREATE_SENSOR_ARRAYS, RESET_SENSOR_ARRAYS, DESTROY_SENSOR_ARRAYS
+  private:: CREATE_AVHRR_ANCHOR_ARRAYS, RESET_AVHRR_ANCHOR_ARRAYS, DESTROY_AVHRR_ANCHOR_ARRAYS
   private:: CREATE_NWP_PIX_ARRAYS, RESET_NWP_PIX_ARRAYS, DESTROY_NWP_PIX_ARRAYS
   private:: CREATE_REF_CHANNEL_ARRAYS, RESET_REF_CHANNEL_ARRAYS, DESTROY_REF_CHANNEL_ARRAYS
   private:: CREATE_THERM_CHANNEL_ARRAYS, RESET_THERM_CHANNEL_ARRAYS, DESTROY_THERM_CHANNEL_ARRAYS
   private:: CREATE_EXTRA_CHANNEL_ARRAYS, RESET_EXTRA_CHANNEL_ARRAYS, DESTROY_EXTRA_CHANNEL_ARRAYS
-  private:: CREATE_LUNAR_ARRAYS, RESET_LUNAR_ARRAYS, DESTROY_LUNAR_ARRAYS
+! private:: CREATE_LUNAR_ARRAYS, RESET_LUNAR_ARRAYS, DESTROY_LUNAR_ARRAYS
   private:: CREATE_BTD_ARRAYS, RESET_BTD_ARRAYS, DESTROY_BTD_ARRAYS
   private:: CREATE_SURFACE_ARRAYS, RESET_SURFACE_ARRAYS, DESTROY_SURFACE_ARRAYS
   private:: CREATE_ACHA_ARRAYS, RESET_ACHA_ARRAYS, DESTROY_ACHA_ARRAYS
@@ -162,9 +164,109 @@ module PIXEL_COMMON
     integer (kind=int1), dimension(:,:), allocatable:: Unc
   end type observations
 
-  type(observations), dimension(42), public, target :: ch
+  type :: geometry_definition
+     real (kind=real4), dimension(:,:), allocatable:: Satzen
+     real (kind=real4), dimension(:,:), allocatable:: Solzen
+     real (kind=real4), dimension(:,:), allocatable:: Solaz
+     real (kind=real4), dimension(:,:), allocatable:: Sataz
+     real (kind=real4), dimension(:,:), allocatable:: Relaz
+     real (kind=real4), dimension(:,:), allocatable:: Glintzen
+     real (kind=real4), dimension(:,:), allocatable:: Seczen
+     real (kind=real4), dimension(:,:), allocatable:: Coszen
+     real (kind=real4), dimension(:,:), allocatable:: CosSolzen
+     real (kind=real4), dimension(:,:), allocatable:: Scatangle
+     real (kind=real4), dimension(:,:), allocatable:: Airmass
+     real (kind=real4), dimension(:,:), allocatable:: Glintzen_Lunar
+     real (kind=real4), dimension(:,:), allocatable:: Scatangle_Lunar
+     real (kind=real4), dimension(:,:), allocatable:: Lunzen
+     real (kind=real4), dimension(:,:), allocatable:: Lunaz
+     real (kind=real4), dimension(:,:), allocatable:: LunRelaz
+     double precision:: Moon_Phase_Angle
+     real (kind=real4):: Moon_Illum_Frac
+     real(kind=real4):: Solzen_Min_Limit
+     real(kind=real4):: Solzen_Max_Limit
+  end type geometry_definition
 
-  
+  type :: navigation_definition
+   integer (kind=int1), dimension(:), allocatable:: Ascend
+   real (kind=real4), dimension(:,:), allocatable:: Lat
+   real (kind=real4), dimension(:,:), allocatable:: Lon
+   real (kind=real4), dimension(:,:), allocatable:: Lat_Pc
+   real (kind=real4), dimension(:,:), allocatable:: Lon_Pc
+   real (kind=real4), dimension(:,:), allocatable:: Lat_1b
+   real (kind=real4), dimension(:,:), allocatable:: Lon_1b
+   real(kind=real4):: Lat_Min_Limit
+   real(kind=real4):: Lat_Max_Limit
+   real(kind=real4):: Timerr_Seconds
+  end type navigation_definition
+
+  type :: surface_definition
+     integer(kind=int1), dimension(:,:), allocatable:: Land
+     integer(kind=int1), dimension(:,:), allocatable:: Land_Modified
+     integer(kind=int1), dimension(:,:), allocatable:: Land_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: Coast
+     integer(kind=int1), dimension(:,:), allocatable:: Coast_Mask 
+     integer(kind=int1), dimension(:,:), allocatable:: Coast_Mask_Nwp
+     integer(kind=int1), dimension(:,:), allocatable:: Glint_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: Glint_Mask_Lunar
+     integer(kind=int1), dimension(:,:), allocatable:: Desert_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: City_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: Volcano_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_Hires
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_Glob
+     integer(kind=int1), dimension(:,:), allocatable:: Snow
+     integer(kind=int1), dimension(:,:), allocatable:: Sfc_Type
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc_Hires
+     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Mean_3x3
+     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Min_3x3
+     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Max_3x3
+     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Std_3x3
+  end type surface_definition
+
+  type :: sensor_definition
+    character(len=32):: Sensor_Name
+    integer(kind=int4):: Spatial_Resolution_Meters
+    character(len=32):: Platform_Name
+    integer(kind=int4):: WMO_Id
+    integer(kind=int4):: WMO_Id_Previous
+    character(len=128):: Instr_Const_File
+    character(len=128):: Algo_Const_File
+    real(kind=real8):: Geo_Sub_Satellite_Longitude
+    real(kind=real8):: Geo_Sub_Satellite_Latitude
+    integer(kind=int1), dimension(Nchan_Clavrx):: Chan_On_Flag_Default
+    integer(kind=int1), dimension(:,:), allocatable:: Chan_On_Flag_Per_Line
+  end type sensor_definition
+
+  type :: image_definition
+    character(len=128):: Level1b_Name
+    character(len=128):: Level1b_Full_Name
+    character(len=128):: Level1b_Path
+    integer(kind=int4):: Number_Of_Elements
+    integer(kind=int4):: Number_Of_Lines
+    integer(kind=int4):: Number_Of_Lines_Per_Segment
+    integer(kind=int4):: Number_Of_Lines_Read_This_Segment
+    integer(kind=int4):: Number_Of_Segments
+    integer(kind=int4):: Segment_Number
+    integer(kind=int2):: Start_Year
+    integer(kind=int2):: Start_Doy
+    integer(kind=int4):: Start_Time
+    integer(kind=int2):: End_Year
+    integer(kind=int2):: End_Doy
+    integer(kind=int4):: End_Time
+    character(len=128) :: Auxiliary_Cloud_Mask_File_Name
+    character(len=128) :: Auxiliary_Geolocation_File_Name
+  end type image_definition
+
+  !---- declare strucutres using above types
+  type(observations), dimension(42), public, save, target :: Ch
+  type(sensor_definition), public, save, target :: Sensor
+  type(image_definition), public, save, target :: Image
+  type(geometry_definition), public, save, target :: Geo
+  type(navigation_definition), public, save, target :: Nav
+  type(surface_definition), public, save, target :: Sfc
+
+  !---- declare other global variables
   integer,public, save:: Cmr_File_Flag
   integer,public, save:: Cloud_Mask_Aux_Flag
   integer,public, save:: Cloud_Mask_Aux_Read_Flag
@@ -185,7 +287,6 @@ module PIXEL_COMMON
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
   
- 
   integer,public, save:: Data_Comp_Flag
   integer,public, save:: Use_seebor
   integer,public, save:: Read_Volcano_Mask
@@ -220,29 +321,8 @@ module PIXEL_COMMON
   integer,public, save:: AVHRR_GAC_Flag
   integer,public, save:: AVHRR_KLM_Flag
   integer,public, save:: AVHRR_AAPP_Flag
-  integer,public, save:: Viirs_Flag
-  integer,public, save:: Iff_Viirs_Flag
-  integer,public, save:: Iff_Modis_Flag
-  integer,public, save:: Iff_Avhrr_Flag
-  integer,public, save:: Seviri_Flag
-  integer,public, save:: Mtsat_Flag
-  integer,public, save:: FY2_Flag
-  integer,public, save:: COMS_Flag
-  integer,public, save:: Goes_Flag
-  integer,public, save:: Goes_Mop_Flag
-  integer,public, save:: Goes_Sndr_Flag
-  integer,public, save:: Goes_1km_Flag
+  integer,public, save:: AVHRR_1_Flag
   integer,public, save:: Goes_Scan_Line_Flag
-  integer,public, save:: Modis_Flag
-  integer,public, save:: Modis_5km_Flag
-  integer,public, save:: Modis_1km_Flag
-  integer,public, save:: Modis_CSPP_Flag
-  integer,public, save:: Modis_Aqua_Flag
-  integer,public, save:: Modis_Aqua_Mac_Flag
-  integer,public, save:: Modis_Terra_Flag
-  integer,public, save:: Avhrr_Flag
-  integer,public, save:: Avhrr_1_Flag
-  
   
 
   !---------------------------------------------------------------------------------
@@ -252,8 +332,6 @@ module PIXEL_COMMON
   integer,public, save:: Failed_Glob_Snow_Mask_Flag
   integer,public, save:: Output_Scaled_Reflectances
   integer,public, save:: Ncdc_Level2_Flag
-
-
 
 
   !---------------------------------------------------------------------------------
@@ -276,9 +354,6 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
-  character(len=255),public,save::File_1b
-  character(len=255),public,save::File_cmr
-  character(len=255),public,save::File_1b_root
   character(len=355),public,save:: Ancil_Data_Dir
   character(len=355),public,save:: Gfs_Data_Dir
   character(len=355),public,save:: Ncep_Data_Dir
@@ -288,50 +363,29 @@ module PIXEL_COMMON
   character(len=355),public,save:: GlobSnow_Data_Dir
   character(len=355),public,save:: Dark_Comp_Data_Dir
   character(len=355),public,save:: Temporary_Data_Dir
-  character(len=355),public,save:: Dir_1b
-  character(len=255),public,save:: File_nav
-  character(len=255),public,save:: Instr_Const_File
-  character(len=255),public,save:: Algo_Const_File
+  character(len=255),public,save:: File_Nav
 
   character(len=355),public,save:: Dir_Rtm
- 
   character(len=355),public,save:: Dir_Level2
   character(len=355),public,save:: Bayesian_Cloud_Mask_Name
-  character(len=355),public,save:: Modis_Geo_Name
-  character(len=355),public,save:: Modis_Cloud_Mask_Name
   character(len=355),public,save:: Dark_Composite_Name
 
   !----- IFF data files
   character(len=255),public,save:: IFF_File
 
-  !real(kind=real4), public, save:: Dlat
-  real(kind=real4), public, save:: Lat_Min_Limit
-  real(kind=real4), public, save:: Lat_Max_Limit
-  real(kind=real4), public, save:: Solzen_Min_Limit
-  real(kind=real4), public, save:: Solzen_Max_Limit
-  real(kind=real4), public, save:: Timerr_Seconds
-
   !------------------------------------------------------------------
   !--- variables pertaining to scanline size
   !------------------------------------------------------------------
-  integer, public, save:: Num_Scans_Per_Segment
-  integer, public, save:: Num_Scans_Read
-  integer, public, save:: Num_Segments
   integer, public, save:: Line_Idx_Min_Segment
-  integer, public, save:: Line_Idx_Max_Segment
-  integer(kind=int4), public, save:: Num_Pix
-  integer(kind=int4), public, save:: l1b_Rec_Length
+  integer, public, save:: Line_Idx_Max_Segment 
+
+  integer(kind=int4), public, save:: L1b_Rec_Length
   integer(kind=int4), public, save:: Num_Anchors
-  integer , public, save :: goes_stride
+  integer , public, save :: Goes_Stride
  
   real(kind=real4), public, save:: dLat_hist2d
 
-  !--- channel on/off flags
-  integer(kind=int1), dimension(Nchan_Clavrx), public, target:: Chan_On_Flag_Default
-  integer(kind=int1), dimension(:,:), allocatable, public:: Chan_On_Flag
-
   !------- pixel array declarations
-  integer (kind=int1), dimension(:), allocatable, public:: Ascend
   integer (kind=int1), dimension(:), allocatable, public:: Bad_Scan_Flag
   integer (kind=int1), dimension(:), allocatable, public:: Ch3a_On_AVHRR
 
@@ -356,27 +410,12 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------
   !--- parameters from avhrr Header
   !---------------------------------------------------------------------------
-  integer(kind=int4), public, save:: Num_Scans
   integer(kind=int4), public, save:: Num_Scans_Level2_Hdf
-  integer(kind=int2), public, save:: Sc_Id,Ver_1b,Data_Type, Num_Loc, Tip_Parity, Aux_Sync,  &
+  integer(kind=int2), public, save:: Sc_Id_Avhrr,Ver_1b,Data_Type, Num_Loc, Tip_Parity, Aux_Sync,  &
                                      Ramp_Auto_Cal,Start_Year_Prev, Start_Day_Prev, &
                                      Month,Month_Prev,Day_of_Month,Ileap
   character(len=6), public, save:: Sc_Id_Char
   character(len=7),public,save:: Proc_Block_Id
-  integer(kind=int4), save, public:: Orbit_Number
-  integer(kind=int4), save, public:: Start_Time
-  integer(kind=int4), save, public:: End_Time
-  integer(kind=int2), save, public:: Start_Year
-  integer(kind=int2), save, public:: End_Year
-  integer(kind=int2), save, public:: Start_Day
-  integer(kind=int2), save, public:: End_Day
-
-  !--- satellite and sensor descriptors
-  integer(kind=int4), public, save:: Sc_Id_WMO
-  integer(kind=int4), public, save:: Sc_Id_WMO_Prev
-  character(len=20),public,save:: Sensor_Name_Attribute
-  character(len=20),public,save:: Platform_Name_Attribute
-  real(kind=real4), public, save:: Sensor_Resolution_KM
 
   !--- instrument counts
   integer (kind=int2), dimension(:,:), allocatable, public,save:: Ch1_Counts
@@ -395,11 +434,6 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI3
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_ChI4
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_ChI5
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: Lunzen
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: Lunaz
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: LunRelaz
-  double precision, public, save,target:: Moon_Phase_Angle
-  real (kind=real4), public, save,target:: Moon_Illum_Frac
 
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChDNB_Lunar_Mean_3x3
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChDNB_Lunar_Max_3x3
@@ -427,32 +461,8 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Uni_ChI5
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Mean_ChI5
 
-
-
   real (kind=real4), dimension(:,:), allocatable, public, save:: Rad_Ch20_ems
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Solzen
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lat
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lon
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lat_Pc
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Lon_Pc
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Lat_1b
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Lon_1b
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Glintzen
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Glintzen_Lunar
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: Satzen
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: Relaz
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: Solaz
- 
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Sataz
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Seczen
   real (kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zsfc
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Zsfc_Hires
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Coszen
-  real (kind=real4), dimension(:,:), allocatable, public, save,target:: CosSolzen
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Scatangle
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Scatangle_Lunar
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Airmass
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Err
@@ -506,10 +516,6 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Min_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Zsfc_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Zsfc_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Zsfc_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Zsfc_Std_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ems_Ch20_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Median_3x3
@@ -532,8 +538,6 @@ module PIXEL_COMMON
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Elem_Idx_Min_Bt_Ch31_3x3
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Line_Idx_Min_Bt_Ch31_3x3
 
- 
-
   real (kind=real4), dimension(:,:), allocatable, public:: Sst_Unmasked   !sst used in cld Mask
   real (kind=real4), dimension(:,:), allocatable, public:: Sst_Masked !sst where non-clear ocean is Masked
   real (kind=real4), dimension(:,:), allocatable, public:: Ndvi_Toa
@@ -543,20 +547,9 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch31
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch32
 
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Land
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Land_Modified
-  integer(kind=int1), dimension(:,:), allocatable, public:: Coast
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Desert_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: City_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Sfc_Type
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Snow
-  integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Hires
-  integer(kind=int1), dimension(:,:), allocatable, public:: Snow_Glob
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Ch6_On_Pixel_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Volcano_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Coast_Mask_Nwp
   integer(kind=int1), dimension(:,:), allocatable, public:: Space_Mask
   integer(kind=int4), dimension(:,:), allocatable, public:: Sfc_Level_Rtm_Pixel
   real, public:: Segment_Valid_Fraction
@@ -570,10 +563,6 @@ module PIXEL_COMMON
 
 
   !--- Mask arrays
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Land_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Coast_Mask 
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Glint_Mask_Lunar
   integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
   integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
@@ -825,12 +814,6 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_133um_Tropo_Rtm
 
 
-  real (kind=real4), dimension(:,:), allocatable, public:: Bt_Clear_Ch31_Rtm_unbiased
-  real (kind=real4), dimension(:,:), allocatable, public:: Bt_Clear_Ch32_Rtm_unbiased
-  real (kind=real4), dimension(:,:), allocatable, public:: Rad_Clear_Ch31_Rtm_unbiased
-  real (kind=real4), dimension(:,:), allocatable, public:: Rad_Clear_Ch32_Rtm_unbiased
-
-
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Opaque_Cloud
@@ -881,11 +864,13 @@ subroutine CREATE_PIXEL_ARRAYS()
   integer:: dim2 
   integer:: idx
 
-  dim1 = Num_Pix
-  dim2 = Num_Scans_Per_Segment
+
+  !--- allocate pixel arrays
+  dim1 = Image%Number_Of_Elements
+  dim2 = Image%Number_Of_Lines_Per_Segment
 
   do idx = 1,36
-      if (Chan_On_Flag_Default(idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
          allocate(Ch(idx)%Unc(dim1,dim2))
          if (idx <= 20 .or. idx == 26) then 
             allocate(Ch(idx)%Ref_Toa(dim1,dim2))
@@ -921,7 +906,7 @@ subroutine CREATE_PIXEL_ARRAYS()
 
    !--- DNB Variable
    idx = 42
-   if (Chan_On_Flag_Default(idx) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
       allocate(Ch(idx)%Rad_Toa(dim1,dim2))
       allocate(Ch(idx)%Ref_Toa(dim1,dim2))
       allocate(Ch(idx)%Ref_Lunar_Toa(dim1,dim2))
@@ -931,116 +916,113 @@ subroutine CREATE_PIXEL_ARRAYS()
       allocate(Ch(idx)%Unc(dim1,dim2))
    endif
 
-   allocate(Chan_On_Flag(Nchan_Clavrx,Num_Scans_Per_Segment))
-
-   if ((Chan_On_Flag_Default(27) == sym%YES) .and.   &
-       (Chan_On_Flag_Default(31) == sym%YES)) then
-           allocate(Covar_Ch27_Ch31_5x5(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   if ((Sensor%Chan_On_Flag_Default(27) == sym%YES) .and.   &
+       (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then
+           allocate(Covar_Ch27_Ch31_5x5(dim1,dim2))
    endif
 
-   allocate(Bad_Pixel_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-            Volcano_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment),&
-            Space_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   allocate(Bad_Pixel_Mask(dim1,dim2), &
+            Space_Mask(dim1,dim2))
 
-   allocate(Sfc_Level_Rtm_Pixel(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-   allocate(Solar_Contamination_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   allocate(Sfc_Level_Rtm_Pixel(dim1,dim2))
+   allocate(Solar_Contamination_Mask(dim1,dim2))
     
    !--- VIIRS Arrays
-   allocate(IFF_Gap_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-   allocate(Gap_Pixel_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-   allocate(Gap_Line_Idx(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   allocate(IFF_Gap_Mask(dim1,dim2))
+   allocate(Gap_Pixel_Mask(dim1,dim2))
+   allocate(Gap_Line_Idx(dim1,dim2))
 
    !--- 3x3 uni
-   if (Chan_On_Flag_Default(27) == sym%YES) then
-          allocate (Bt_Ch27_Mean_3x3(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-          allocate (Bt_Ch27_Max_3x3(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-          allocate (Bt_Ch27_Min_3x3(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-          allocate (Bt_Ch27_Std_3x3(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+          allocate (Bt_Ch27_Mean_3x3(dim1,dim2))
+          allocate (Bt_Ch27_Max_3x3(dim1,dim2))
+          allocate (Bt_Ch27_Min_3x3(dim1,dim2))
+          allocate (Bt_Ch27_Std_3x3(dim1,dim2))
    endif
 
    allocate(   &
-          Dust_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Smoke_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Fire_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Shadow_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Sst_Anal(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Sst_Anal_Err(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Sst_Anal_Cice(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-          Sst_Anal_Uni(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+          Dust_Mask(dim1,dim2), &
+          Smoke_Mask(dim1,dim2), &
+          Fire_Mask(dim1,dim2), &
+          Shadow_Mask(dim1,dim2), &
+          Sst_Anal(dim1,dim2), &
+          Sst_Anal_Err(dim1,dim2), &
+          Sst_Anal_Cice(dim1,dim2), &
+          Sst_Anal_Uni(dim1,dim2))
 
-  allocate(Beta_11um_12um_Tropo_Rtm(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-  allocate(Beta_11um_85um_Tropo_Rtm(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-  allocate(Beta_11um_67um_Tropo_Rtm(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-  allocate(Beta_11um_133um_Tropo_Rtm(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+  allocate(Beta_11um_12um_Tropo_Rtm(dim1,dim2))
+  allocate(Beta_11um_85um_Tropo_Rtm(dim1,dim2))
+  allocate(Beta_11um_67um_Tropo_Rtm(dim1,dim2))
+  allocate(Beta_11um_133um_Tropo_Rtm(dim1,dim2))
 
-  allocate(Temp_Mask(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+  allocate(Temp_Mask(dim1,dim2))
 
-
- 
-
+  !--- sensor arrays
+  call  CREATE_SENSOR_ARRAYS(Nchan_Clavrx,dim2)
+  !--- navigation arrays
+  call  CREATE_NAV_ARRAYS(dim1, dim2)
   !--- geometry arrays
-  call  CREATE_GEO_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
+  call  CREATE_GEO_ARRAYS(dim1, dim2)
   !--- anchor point arrays
-  call  CREATE_GEO_ANCHOR_ARRAYS(Num_Anchors, Num_Scans_Per_Segment)
+  call  CREATE_AVHRR_ANCHOR_ARRAYS(Num_Anchors, dim2)
   !--- nwp fields interpolated to the pixel level
-  call  CREATE_NWP_PIX_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_SURFACE_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
+  call  CREATE_NWP_PIX_ARRAYS(dim1, dim2)
+  call  CREATE_SURFACE_ARRAYS(dim1, dim2)
   !--- ch1 arrays
-  call  CREATE_REF_CHANNEL_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_THERM_CHANNEL_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_EXTRA_CHANNEL_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_LUNAR_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_BTD_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_ACHA_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_DCOMP_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_NLCOMP_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_SASRAB_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_OLR_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_AEROSOL_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_CLOUD_MASK_ARRAYS(Num_Pix, Num_Scans_Per_Segment, Max_Num_Cld_Test_Bytes)
-  call  CREATE_CLOUD_TYPE_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_DIAGNOSTIC_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_SFC_PROD_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
-  call  CREATE_CLOUD_PROD_ARRAYS(Num_Pix, Num_Scans_Per_Segment)
+  call  CREATE_REF_CHANNEL_ARRAYS(dim1, dim2)
+  call  CREATE_THERM_CHANNEL_ARRAYS(dim1, dim2)
+  call  CREATE_EXTRA_CHANNEL_ARRAYS(dim1, dim2)
+! call  CREATE_LUNAR_ARRAYS(dim1, dim2)
+  call  CREATE_BTD_ARRAYS(dim1, dim2)
+  call  CREATE_ACHA_ARRAYS(dim1, dim2)
+  call  CREATE_DCOMP_ARRAYS(dim1, dim2)
+  call  CREATE_NLCOMP_ARRAYS(dim1, dim2)
+  call  CREATE_SASRAB_ARRAYS(dim1, dim2)
+  call  CREATE_OLR_ARRAYS(dim1, dim2)
+  call  CREATE_AEROSOL_ARRAYS(dim1, dim2)
+  call  CREATE_CLOUD_MASK_ARRAYS(dim1, dim2, Max_Num_Cld_Test_Bytes)
+  call  CREATE_CLOUD_TYPE_ARRAYS(dim1, dim2)
+  call  CREATE_DIAGNOSTIC_ARRAYS(dim1, dim2)
+  call  CREATE_SFC_PROD_ARRAYS(dim1, dim2)
+  call  CREATE_CLOUD_PROD_ARRAYS(dim1, dim2)
 
   !--- pixel level parameters
-   allocate(Zen_Idx_Rtm(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-   allocate(i_LRC(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
-   allocate(j_LRC(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+   allocate(Zen_Idx_Rtm(dim1,dim2))
+   allocate(i_LRC(dim1,dim2))
+   allocate(j_LRC(dim1,dim2))
 
    
-  allocate(Ch3a_On_AVHRR(Num_Scans_Per_Segment), &
-           Bad_Scan_Flag(Num_Scans_Per_Segment), &
-           Scan_Number(Num_Scans_Per_Segment), &
-           Scan_Time(Num_Scans_Per_Segment), &
-           Scan_Day(Num_Scans_Per_Segment), &
-           Scan_Year(Num_Scans_Per_Segment), &
-           Utc_Scan_Time_Hours(Num_Scans_Per_Segment), &
-           Pixel_Local_Time_Hours(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment), &
-           Pixel_Time(Num_Pix,Line_Idx_Min_Segment:Line_Idx_Max_Segment))
+  allocate(Ch3a_On_AVHRR(dim2), &
+           Bad_Scan_Flag(dim2), &
+           Scan_Number(dim2), &
+           Scan_Time(dim2), &
+           Scan_Day(dim2), &
+           Scan_Year(dim2), &
+           Utc_Scan_Time_Hours(dim2), &
+           Pixel_Local_Time_Hours(dim1,dim2), &
+           Pixel_Time(dim1,dim2))
 
-  allocate(Pix_Data(nchan_Avhrr,Num_Pix))
+  allocate(Pix_Data(nchan_Avhrr,dim1))
 
-   !--------------------------------------------------------------------------------
-   ! Initialize variables that are not reset for each segment
-   !--------------------------------------------------------------------------------
+  !--------------------------------------------------------------------------------
+  ! Initialize variables that are not reset for each segment
+  !--------------------------------------------------------------------------------
 
-   !--- metrics - needed initialize counts to be zero but they accumulate through orbit
-   ACHA_Processed_Count = 0
-   ACHA_Valid_Count = 0
-   ACHA_Success_Fraction = Missing_Value_Real4
-   DCOMP_Processed_Count = 0
-   DCOMP_Valid_Count = 0
-   DCOMP_Success_Fraction = Missing_Value_Real4
-   Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4
-   Nonconfident_Cloud_Mask_Count = 0
-   Cloud_Mask_Count = 0
+  !--- metrics - needed initialize counts to be zero but they accumulate through orbit
+  ACHA_Processed_Count = 0
+  ACHA_Valid_Count = 0
+  ACHA_Success_Fraction = Missing_Value_Real4
+  DCOMP_Processed_Count = 0
+  DCOMP_Valid_Count = 0
+  DCOMP_Success_Fraction = Missing_Value_Real4
+  Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4
+  Nonconfident_Cloud_Mask_Count = 0
+  Cloud_Mask_Count = 0
 
-   !--- other
-   DCOMP_version_string = "not DCOMP source id  available"
+  !--- other
+  DCOMP_version_string = "not DCOMP source id  available"
 
 end subroutine CREATE_PIXEL_ARRAYS
-
 !------------------------------------------------------------------------------
 subroutine DESTROY_PIXEL_ARRAYS()
 
@@ -1071,8 +1053,6 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Unc)) deallocate(Ch(idx)%Unc)
   enddo
 
-  if (allocated(Chan_On_Flag)) deallocate(Chan_On_Flag)
-
   if (allocated(Temp_Mask)) deallocate(Temp_Mask)
 
   deallocate(Ch3a_On_AVHRR, &
@@ -1088,14 +1068,16 @@ subroutine DESTROY_PIXEL_ARRAYS()
 
   deallocate(Bad_Pixel_Mask)
 
+  call DESTROY_SENSOR_ARRAYS()
+  call DESTROY_NAV_ARRAYS()
   call DESTROY_GEO_ARRAYS()
-  call DESTROY_GEO_ANCHOR_ARRAYS()
+  call DESTROY_AVHRR_ANCHOR_ARRAYS()
   call DESTROY_NWP_PIX_ARRAYS()
   call DESTROY_SURFACE_ARRAYS()
   call DESTROY_REF_CHANNEL_ARRAYS()
   call DESTROY_THERM_CHANNEL_ARRAYS()
   call DESTROY_EXTRA_CHANNEL_ARRAYS()
-  call DESTROY_LUNAR_ARRAYS()
+! call DESTROY_LUNAR_ARRAYS()
   call DESTROY_BTD_ARRAYS()
   call DESTROY_ACHA_ARRAYS()
   call DESTROY_DCOMP_ARRAYS()
@@ -1109,7 +1091,6 @@ subroutine DESTROY_PIXEL_ARRAYS()
   call DESTROY_SFC_PROD_ARRAYS()
   call DESTROY_CLOUD_PROD_ARRAYS()
 
-  deallocate(Volcano_Mask)
   deallocate(Space_Mask)
   deallocate(Sfc_Level_Rtm_Pixel)
   deallocate(Fire_Mask)
@@ -1133,15 +1114,11 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(j_LRC)) deallocate(j_LRC)
 
 !--- pixel rtm parameters
-  if (Chan_On_Flag_Default(27) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
     if (allocated(Bt_Ch27_Mean_3x3)) deallocate(Bt_Ch27_Mean_3x3)
     if (allocated(Bt_Ch27_Max_3x3)) deallocate(Bt_Ch27_Max_3x3)
     if (allocated(Bt_Ch27_Min_3x3)) deallocate(Bt_Ch27_Min_3x3)
     if (allocated(Bt_Ch27_Std_3x3)) deallocate(Bt_Ch27_Std_3x3)
-  endif
-  if (Chan_On_Flag_Default(32) == sym%YES) then
-    if (allocated(Rad_Clear_Ch32_Rtm_Unbiased)) deallocate(Rad_Clear_Ch32_Rtm_Unbiased)
-    if (allocated(Bt_Clear_Ch32_Rtm_Unbiased)) deallocate(Bt_Clear_Ch32_Rtm_Unbiased)
   endif
 
   !--- ir cloud layer
@@ -1157,6 +1134,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Gap_Line_Idx_Pattern)) deallocate(Gap_Line_Idx_Pattern)
   if (allocated(IFF_Gap_Mask)) deallocate(IFF_Gap_Mask)
 
+
 end subroutine DESTROY_PIXEL_ARRAYS
 
 !-----------------------------------------------------------------------------
@@ -1168,14 +1146,16 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Bad_Pixel_Mask = sym%YES      !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
 
+      call RESET_SENSOR_ARRAYS()
+      call RESET_NAV_ARRAYS()
       call RESET_GEO_ARRAYS()
-      call RESET_GEO_ANCHOR_ARRAYS()
+      call RESET_AVHRR_ANCHOR_ARRAYS()
       call RESET_NWP_PIX_ARRAYS()
       call RESET_SURFACE_ARRAYS()
       call RESET_REF_CHANNEL_ARRAYS()
       call RESET_THERM_CHANNEL_ARRAYS()
       call RESET_EXTRA_CHANNEL_ARRAYS()
-      call RESET_LUNAR_ARRAYS()
+!     call RESET_LUNAR_ARRAYS()
       call RESET_BTD_ARRAYS()
       call RESET_ACHA_ARRAYS()
       call RESET_DCOMP_ARRAYS()
@@ -1189,7 +1169,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_SFC_PROD_ARRAYS()
       call RESET_CLOUD_PROD_ARRAYS()
 
-      if (Chan_On_Flag_Default(27) == sym%YES) THEN
+      if (Sensor%Chan_On_Flag_Default(27) == sym%YES) THEN
         Bt_Ch27_Mean_3x3 = Missing_Value_Real4
         Bt_Ch27_Min_3x3 = Missing_Value_Real4
         Bt_Ch27_Max_3x3 = Missing_Value_Real4
@@ -1201,20 +1181,20 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
       Zen_Idx_Rtm = Missing_Value_Int1
 
-      if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(32) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(32) == sym%YES)) then
         Beta_11um_12um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(27) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(27) == sym%YES)) then
         Beta_11um_67um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(29) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(29) == sym%YES)) then
         Beta_11um_85um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(33) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(33) == sym%YES)) then
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
 
@@ -1244,75 +1224,113 @@ end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
 ! reset - sets arrays to missing
 ! destroy - deallocate arrays
 !-------------------------------------------------------------
-
+subroutine CREATE_SENSOR_ARRAYS(Nchan,dim2)
+   integer, intent(in):: Nchan, dim2
+   allocate(Sensor%Chan_On_Flag_Per_Line(Nchan,dim2))
+end subroutine CREATE_SENSOR_ARRAYS
+subroutine RESET_SENSOR_ARRAYS()
+   if (allocated(Sensor%Chan_On_Flag_Per_Line)) Sensor%Chan_On_Flag_Per_Line = Missing_Value_Int1
+end subroutine RESET_SENSOR_ARRAYS
+subroutine DESTROY_SENSOR_ARRAYS()
+   if (allocated(Sensor%Chan_On_Flag_Per_Line)) deallocate(Sensor%Chan_On_Flag_Per_Line)
+end subroutine DESTROY_SENSOR_ARRAYS
 !-------------------------------------------------------------
 !
 !-------------------------------------------------------------
-subroutine CREATE_GEO_ARRAYS(dim1,dim2)
+subroutine CREATE_NAV_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   allocate(Ascend(dim2))
-   allocate(Lat(dim1,dim2))
-   allocate(Lon(dim1,dim2))
-   allocate(Lat_1b(dim1,dim2))
-   allocate(Lon_1b(dim1,dim2))
-   allocate(Lat_Pc(dim1,dim2))
-   allocate(Lon_Pc(dim1,dim2))
-   allocate(Satzen(dim1,dim2))
-   allocate(Solzen(dim1,dim2))
-   allocate(Sataz(dim1,dim2))
-   allocate(Solaz(dim1,dim2))
-   allocate(Relaz(dim1,dim2))
-   allocate(Coszen(dim1,dim2))
-   allocate(Seczen(dim1,dim2))
-   allocate(CosSolzen(dim1,dim2))
-   allocate(Glintzen(dim1,dim2))
-   allocate(Airmass(dim1,dim2))
-   allocate(Scatangle(dim1,dim2))
+   allocate(Nav%Ascend(dim2))
+   allocate(Nav%Lat(dim1,dim2))
+   allocate(Nav%Lon(dim1,dim2))
+   allocate(Nav%Lat_1b(dim1,dim2))
+   allocate(Nav%Lon_1b(dim1,dim2))
+   allocate(Nav%Lat_Pc(dim1,dim2))
+   allocate(Nav%Lon_Pc(dim1,dim2))
+end subroutine CREATE_NAV_ARRAYS
+subroutine DESTROY_NAV_ARRAYS()
+  deallocate(Nav%Ascend)
+  deallocate(Nav%Lat)
+  deallocate(Nav%Lon)
+  deallocate(Nav%Lat_1b)
+  deallocate(Nav%Lon_1b)
+  deallocate(Nav%Lat_Pc)
+  deallocate(Nav%Lon_Pc)
+end subroutine
+subroutine RESET_NAV_ARRAYS()
+  Nav%Ascend = Missing_Value_Int1
+  Nav%Lat = Missing_Value_Real4
+  Nav%Lon = Missing_Value_Real4
+  Nav%Lat_1b = Missing_Value_Real4
+  Nav%Lon_1b = Missing_Value_Real4
+  Nav%Lat_Pc = Missing_Value_Real4
+  Nav%Lon_Pc = Missing_Value_Real4
+end subroutine RESET_NAV_ARRAYS
+!------------------------------------------------------------------------------
+!  routines to create, destroy and reset geo structure
+!------------------------------------------------------------------------------
+subroutine CREATE_GEO_ARRAYS(dim1,dim2)
+    integer, intent(in):: dim1, dim2
+    allocate (Geo%Satzen(dim1,dim2))
+    allocate (Geo%Solzen(dim1,dim2))
+    allocate (Geo%Sataz(dim1,dim2))
+    allocate (Geo%Solaz(dim1,dim2))
+    allocate (Geo%Relaz(dim1,dim2))
+    allocate (Geo%Glintzen(dim1,dim2))
+    allocate (Geo%Seczen(dim1,dim2))
+    allocate (Geo%Coszen(dim1,dim2))
+    allocate (Geo%Cossolzen(dim1,dim2))
+    allocate (Geo%Scatangle(dim1,dim2))
+    allocate (Geo%Airmass(dim1,dim2))
+    if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+           allocate(Geo%Lunzen(dim1,dim2))
+           allocate(Geo%Lunaz(dim1,dim2))
+           allocate(Geo%LunRelaz(dim1,dim2))
+           allocate(Geo%Scatangle_Lunar(dim1,dim2))
+           allocate(Geo%Glintzen_Lunar(dim1,dim2))
+    endif
 end subroutine CREATE_GEO_ARRAYS
 subroutine DESTROY_GEO_ARRAYS()
-  deallocate(Ascend)
-  deallocate(Lat)
-  deallocate(Lon)
-  deallocate(Lat_1b)
-  deallocate(Lon_1b)
-  deallocate(Lat_Pc)
-  deallocate(Lon_Pc)
-  deallocate(Satzen)
-  deallocate(Solzen)
-  deallocate(Sataz)
-  deallocate(Solaz)
-  deallocate(Relaz)
-  deallocate(Coszen)
-  deallocate(Seczen)
-  deallocate(CosSolzen)
-  deallocate(Glintzen)
-  deallocate(Airmass)
-  deallocate(Scatangle)
+  if (allocated(Geo%Satzen)) deallocate(Geo%Satzen)
+  if (allocated(Geo%Solzen)) deallocate(Geo%Solzen)
+  if (allocated(Geo%Sataz)) deallocate(Geo%Sataz)
+  if (allocated(Geo%Solaz)) deallocate(Geo%Solaz)
+  if (allocated(Geo%Relaz)) deallocate(Geo%Relaz)
+  if (allocated(Geo%Glintzen)) deallocate(Geo%Glintzen)
+  if (allocated(Geo%Seczen)) deallocate(Geo%Seczen)
+  if (allocated(Geo%Coszen)) deallocate(Geo%Coszen)
+  if (allocated(Geo%Cossolzen)) deallocate(Geo%Cossolzen)
+  if (allocated(Geo%Scatangle)) deallocate(Geo%Scatangle)
+  if (allocated(Geo%Airmass)) deallocate(Geo%Airmass)
+  if (allocated(Geo%Lunzen))deallocate(Geo%Lunzen)
+  if (allocated(Geo%Lunaz)) deallocate(Geo%Lunaz)
+  if (allocated(Geo%LunRelaz)) deallocate(Geo%LunRelaz)
+  if (allocated(Geo%Scatangle_Lunar)) deallocate(Geo%Scatangle_Lunar)
+  if (allocated(Geo%Glintzen_Lunar)) deallocate(Geo%Glintzen_Lunar)
 end subroutine DESTROY_GEO_ARRAYS
 subroutine RESET_GEO_ARRAYS()
-  Ascend = Missing_Value_Int1
-  Lat = Missing_Value_Real4
-  Lon = Missing_Value_Real4
-  Lat_1b = Missing_Value_Real4
-  Lon_1b = Missing_Value_Real4
-  Lat_Pc = Missing_Value_Real4
-  Lon_Pc = Missing_Value_Real4
-  Satzen = Missing_Value_Real4
-  Solzen = Missing_Value_Real4
-  Coszen = Missing_Value_Real4
-  Seczen = Missing_Value_Real4
-  CosSolzen = Missing_Value_Real4
-  Relaz = Missing_Value_Real4
-  Solaz = Missing_Value_Real4
-  Sataz = Missing_Value_Real4
-  Glintzen = Missing_Value_Real4
-  Scatangle = Missing_Value_Real4
-  Airmass = Missing_Value_Real4
+  if (allocated(Geo%Satzen)) Geo%Satzen = Missing_Value_Real4
+  if (allocated(Geo%Solzen)) Geo%Solzen = Missing_Value_Real4
+  if (allocated(Geo%Sataz)) Geo%Sataz = Missing_Value_Real4
+  if (allocated(Geo%Solaz)) Geo%Solaz = Missing_Value_Real4
+  if (allocated(Geo%Relaz)) Geo%Relaz = Missing_Value_Real4
+  if (allocated(Geo%Glintzen)) Geo%Glintzen = Missing_Value_Real4
+  if (allocated(Geo%Seczen)) Geo%Seczen = Missing_Value_Real4
+  if (allocated(Geo%Coszen)) Geo%Coszen = Missing_Value_Real4
+  if (allocated(Geo%Cossolzen)) Geo%Cossolzen = Missing_Value_Real4
+  if (allocated(Geo%Scatangle)) Geo%Scatangle = Missing_Value_Real4
+  if (allocated(Geo%Airmass)) Geo%Airmass = Missing_Value_Real4
+  if (allocated(Geo%Lunzen)) Geo%Lunzen = Missing_Value_Real4
+  if (allocated(Geo%Lunaz)) Geo%Lunaz = Missing_Value_Real4
+  if (allocated(Geo%LunRelaz)) Geo%LunRelaz = Missing_Value_Real4
+  if (allocated(Geo%Scatangle_Lunar)) Geo%Scatangle_Lunar = Missing_Value_Real4
+  if (allocated(Geo%Glintzen_Lunar)) Geo%Glintzen_Lunar = Missing_Value_Real4
+  Geo%Moon_Phase_Angle = Missing_Value_Real4
+  Geo%Moon_Illum_Frac = Missing_Value_Real4
 end subroutine RESET_GEO_ARRAYS
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
-subroutine CREATE_GEO_ANCHOR_ARRAYS(dim1,dim2)
+subroutine CREATE_AVHRR_ANCHOR_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    allocate(Lat_Anchor_1b(dim1,dim2))
    allocate(Lon_Anchor_1b(dim1,dim2))
@@ -1323,8 +1341,8 @@ subroutine CREATE_GEO_ANCHOR_ARRAYS(dim1,dim2)
    allocate(Relaz_Anchor(dim1,dim2))
    allocate(Solaz_Anchor(dim1,dim2))
    allocate(Sataz_Anchor(dim1,dim2))
-end subroutine CREATE_GEO_ANCHOR_ARRAYS
-subroutine RESET_GEO_ANCHOR_ARRAYS()
+end subroutine CREATE_AVHRR_ANCHOR_ARRAYS
+subroutine RESET_AVHRR_ANCHOR_ARRAYS()
   Lat_Anchor_1b = Missing_Value_Real4
   Lon_Anchor_1b = Missing_Value_Real4
   Solzen_Anchor = Missing_Value_Real4
@@ -1334,8 +1352,8 @@ subroutine RESET_GEO_ANCHOR_ARRAYS()
   Relaz_Anchor = Missing_Value_Real4
   Solaz_Anchor = Missing_Value_Real4
   Sataz_Anchor = Missing_Value_Real4
-end subroutine RESET_GEO_ANCHOR_ARRAYS
-subroutine DESTROY_GEO_ANCHOR_ARRAYS
+end subroutine RESET_AVHRR_ANCHOR_ARRAYS
+subroutine DESTROY_AVHRR_ANCHOR_ARRAYS
   deallocate(Lat_Anchor_1b)
   deallocate(Lon_Anchor_1b)
   deallocate(Solzen_Anchor)
@@ -1345,7 +1363,7 @@ subroutine DESTROY_GEO_ANCHOR_ARRAYS
   deallocate(Relaz_Anchor)
   deallocate(Solaz_Anchor)
   deallocate(Sataz_Anchor)
-end subroutine DESTROY_GEO_ANCHOR_ARRAYS
+end subroutine DESTROY_AVHRR_ANCHOR_ARRAYS
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
@@ -1450,7 +1468,7 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
 
    integer, intent(in):: dim1, dim2
 
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
            allocate(Ch1_Counts(dim1,dim2))
            allocate(Ref_Ch1_Mean_3x3(dim1,dim2))
            allocate(Ref_Ch1_Max_3x3(dim1,dim2))
@@ -1467,11 +1485,11 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Ref_Ch1_Sfc_White_Sky_Std_3x3(dim1,dim2))
    endif
 
-   if (Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
       allocate(Ch2_Counts(dim1,dim2))
    endif
 
-   if (Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       allocate(Ch6_Counts(dim1,dim2))
    endif
    allocate(Ch6_On_Pixel_Mask(dim1,dim2))
@@ -1505,7 +1523,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Unc)) Ch(idx)%Unc = Missing_Value_Int1
    enddo
 
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
       Ch1_Counts = Missing_Value_Int2
       Ref_Ch1_Mean_3x3 = Missing_Value_Real4
       Ref_Ch1_Min_3x3 = Missing_Value_Real4
@@ -1522,11 +1540,11 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       Ref_Ch1_Sfc_White_Sky_Std_3x3 = Missing_Value_Real4
    endif
 
-   if (Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
       Ch2_Counts = Missing_Value_Int2
    endif
 
-   if (Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       Ch6_Counts = Missing_Value_Int2
    endif
    Ch6_On_Pixel_Mask = Missing_Value_Int1
@@ -1534,7 +1552,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
 end subroutine RESET_REF_CHANNEL_ARRAYS
 subroutine DESTROY_REF_CHANNEL_ARRAYS
 
-  if (Chan_On_Flag_Default(1) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
    if (allocated(Ch1_Counts)) deallocate (Ch1_Counts)
    if (allocated(Ref_Ch1_Mean_3x3)) deallocate (Ref_Ch1_Mean_3x3)
    if (allocated(Ref_Ch1_Max_3x3)) deallocate (Ref_Ch1_Max_3x3)
@@ -1551,11 +1569,11 @@ subroutine DESTROY_REF_CHANNEL_ARRAYS
    if (allocated(Ref_Ch1_Sfc_White_Sky_Std_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Std_3x3)
   endif
 
-   if (Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
       deallocate(Ch2_Counts)
    endif
 
-   if (Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       deallocate(Ch6_Counts)
    endif
    deallocate(Ch6_On_Pixel_Mask)
@@ -1567,7 +1585,7 @@ end subroutine DESTROY_REF_CHANNEL_ARRAYS
 subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
 
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        allocate(Rad_Ch20_ems(dim1,dim2))
        allocate(Ems_Ch20(dim1,dim2))
        allocate(Bt_Ch20_Mean_3x3(dim1,dim2))
@@ -1594,7 +1612,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Ems_Ch20_Sfc(dim1,dim2))
    endif
 
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       allocate(Bt_Ch31_Mean_3x3(dim1,dim2))
       allocate(Bt_Ch31_Max_3x3(dim1,dim2))
       allocate(Bt_Ch31_Min_3x3(dim1,dim2))
@@ -1604,20 +1622,13 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
       allocate(Elem_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Line_Idx_Min_Bt_Ch31_3x3(dim1,dim2))
       allocate(Emiss_11um_Tropo_Nadir_Rtm(dim1,dim2))
-      allocate(Rad_Clear_Ch31_Rtm_unbiased(dim1,dim2))
-      allocate(Bt_Clear_Ch31_Rtm_unbiased(dim1,dim2))
-   endif
-
-   if (Chan_On_Flag_Default(32) == sym%YES) then
-     allocate(Rad_Clear_Ch32_Rtm_unbiased(dim1,dim2))
-     allocate(Bt_Clear_Ch32_Rtm_unbiased(dim1,dim2))
    endif
 
 end subroutine CREATE_THERM_CHANNEL_ARRAYS
 
 subroutine RESET_THERM_CHANNEL_ARRAYS()
 
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        Rad_Ch20_ems = Missing_Value_Real4
        Ems_Ch20 = Missing_Value_Real4
        Bt_Ch20_Mean_3x3 = Missing_Value_Real4
@@ -1644,7 +1655,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Ems_Ch20_Sfc = Missing_Value_Real4
    endif
 
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       Bt_Ch31_Mean_3x3 = Missing_Value_Real4
       Bt_Ch31_Max_3x3 = Missing_Value_Real4
       Bt_Ch31_Min_3x3 = Missing_Value_Real4
@@ -1654,19 +1665,12 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
       Elem_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Line_Idx_Min_Bt_Ch31_3x3 = Missing_Value_Real4
       Emiss_11um_Tropo_Nadir_Rtm = Missing_Value_Real4
-      Rad_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
-      Bt_Clear_Ch31_Rtm_unbiased = Missing_Value_Real4
-   endif
-
-   if (Chan_On_Flag_Default(32) == sym%YES) then
-     Rad_Clear_Ch32_Rtm_unbiased = Missing_Value_Real4
-     Bt_Clear_Ch32_Rtm_unbiased = Missing_Value_Real4
    endif
 
 end subroutine RESET_THERM_CHANNEL_ARRAYS
 subroutine DESTROY_THERM_CHANNEL_ARRAYS()
 
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        deallocate(Rad_Ch20_ems)
        deallocate(Ems_Ch20)
        deallocate(Bt_Ch20_Mean_3x3)
@@ -1692,7 +1696,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Rad_Ch20_ems_Sfc)
        deallocate(Ems_Ch20_Sfc)
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       deallocate(Bt_Ch31_Mean_3x3)
       deallocate(Bt_Ch31_Max_3x3)
       deallocate(Bt_Ch31_Min_3x3)
@@ -1702,13 +1706,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
       deallocate(Elem_Idx_Min_Bt_Ch31_3x3)
       deallocate(Line_Idx_Min_Bt_Ch31_3x3)
       deallocate(Emiss_11um_Tropo_Nadir_Rtm)
-      deallocate(Rad_Clear_Ch31_Rtm_unbiased)
-      deallocate(Bt_Clear_Ch31_Rtm_unbiased)
    endif
-   if (Chan_On_Flag_Default(32) == sym%YES) then
-     deallocate(Rad_Clear_Ch32_Rtm_unbiased)
-     deallocate(Bt_Clear_Ch32_Rtm_unbiased)
-  endif
 
 end subroutine DESTROY_THERM_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
@@ -1716,49 +1714,47 @@ end subroutine DESTROY_THERM_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Iff_Viirs_Flag == sym%YES .or. &
-       Iff_AVHRR_Flag == sym%YES .or. &
-       Iff_MODIS_Flag == sym%YES) then
+   if (index(Sensor%Sensor_Name,'IFF') > 0) then
            allocate(Bt_375um_Sounder(dim1,dim2))
            allocate(Bt_11um_Sounder(dim1,dim2))
            allocate(Bt_12um_Sounder(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(37) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(37) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
            allocate(Ref_Min_ChI1(dim1,dim2))
            allocate(Ref_Uni_ChI1(dim1,dim2))
            allocate(Ref_Mean_ChI1(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(38) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(38) == sym%YES) then
            allocate(Ref_ChI2(2*dim1,2*dim2))
            allocate(Ref_Max_ChI2(dim1,dim2))
            allocate(Ref_Min_ChI2(dim1,dim2))
            allocate(Ref_Uni_ChI2(dim1,dim2))
            allocate(Ref_Mean_ChI2(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(39) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI3(2*dim1,2*dim2))
            allocate(Ref_Max_ChI3(dim1,dim2))
            allocate(Ref_Min_ChI3(dim1,dim2))
            allocate(Ref_Uni_ChI3(dim1,dim2))
            allocate(Ref_Mean_ChI3(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(40) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
            allocate(Bt_ChI4(2*dim1,2*dim2))
            allocate(Bt_Max_ChI4(dim1,dim2))
            allocate(Bt_Min_ChI4(dim1,dim2))
            allocate(Bt_Uni_ChI4(dim1,dim2))
            allocate(Bt_Mean_ChI4(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(41) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
            allocate(Bt_ChI5(2*dim1,2*dim2))
            allocate(Bt_Max_ChI5(dim1,dim2))
            allocate(Bt_Min_ChI5(dim1,dim2))
            allocate(Bt_Uni_ChI5(dim1,dim2))
            allocate(Bt_Mean_ChI5(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(42) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
            allocate(Ref_ChDNB_Lunar_Mean_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Max_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Min_3x3(dim1,dim2))
@@ -1767,38 +1763,36 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
 end subroutine CREATE_EXTRA_CHANNEL_ARRAYS
 
 subroutine RESET_EXTRA_CHANNEL_ARRAYS()
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_ChI1 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(38) == sym%YES) Ref_ChI2 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(38) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(38) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
-      if (Iff_Viirs_Flag == sym%YES .or. &
-          Iff_AVHRR_Flag == sym%YES .or. &
-          Iff_MODIS_Flag == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
+      if (index(Sensor%Sensor_Name,'IFF') > 0) then
           Bt_375um_Sounder = Missing_Value_Real4
           Bt_11um_Sounder = Missing_Value_Real4
           Bt_12um_Sounder = Missing_Value_Real4
@@ -1842,45 +1836,45 @@ end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
-subroutine CREATE_LUNAR_ARRAYS(dim1,dim2)
-   integer, intent(in):: dim1, dim2
-   if (Chan_On_Flag_Default(42) == sym%YES) then
-           allocate(Lunzen(dim1,dim2))
-           allocate(Lunaz(dim1,dim2))
-           allocate(LunRelaz(dim1,dim2))
-           allocate(Scatangle_Lunar(dim1,dim2))
-           allocate(Glintzen_Lunar(dim1,dim2))
-   endif
-end subroutine CREATE_LUNAR_ARRAYS
-subroutine RESET_LUNAR_ARRAYS()
-      if (Chan_On_Flag_Default(42) == sym%YES) Lunzen = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Lunaz = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) LunRelaz = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Moon_Phase_Angle = Missing_Value_Real4
-      if (Chan_On_Flag_Default(42) == sym%YES) Moon_Illum_Frac = Missing_Value_Real4
-      if (allocated(Scatangle_Lunar)) Scatangle_Lunar = Missing_Value_Real4
-      if (allocated(Glintzen_Lunar)) Glintzen_Lunar = Missing_Value_Real4
-end subroutine RESET_LUNAR_ARRAYS
-subroutine DESTROY_LUNAR_ARRAYS()
-  if (allocated(Lunzen))deallocate(Lunzen)
-  if (allocated(Lunaz)) deallocate(Lunaz)
-  if (allocated(LunRelaz)) deallocate(LunRelaz)
-  if (allocated(Scatangle_Lunar)) deallocate(Scatangle_Lunar)
-  if (allocated(Glintzen_Lunar)) deallocate(Glintzen_Lunar)
-end subroutine DESTROY_LUNAR_ARRAYS
+!subroutine CREATE_LUNAR_ARRAYS(dim1,dim2)
+!   integer, intent(in):: dim1, dim2
+!   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+!           allocate(Lunzen(dim1,dim2))
+!           allocate(Lunaz(dim1,dim2))
+!           allocate(LunRelaz(dim1,dim2))
+!           allocate(Scatangle_Lunar(dim1,dim2))
+!           allocate(Glintzen_Lunar(dim1,dim2))
+!   endif
+!end subroutine CREATE_LUNAR_ARRAYS
+!subroutine RESET_LUNAR_ARRAYS()
+!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Lunzen = Missing_Value_Real4
+!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Lunaz = Missing_Value_Real4
+!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) LunRelaz = Missing_Value_Real4
+!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Moon_Phase_Angle = Missing_Value_Real4
+!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Moon_Illum_Frac = Missing_Value_Real4
+!      if (allocated(Scatangle_Lunar)) Scatangle_Lunar = Missing_Value_Real4
+!      if (allocated(Glintzen_Lunar)) Glintzen_Lunar = Missing_Value_Real4
+!end subroutine RESET_LUNAR_ARRAYS
+!subroutine DESTROY_LUNAR_ARRAYS()
+!  if (allocated(Lunzen))deallocate(Lunzen)
+!  if (allocated(Lunaz)) deallocate(Lunaz)
+!  if (allocated(LunRelaz)) deallocate(LunRelaz)
+!  if (allocated(Scatangle_Lunar)) deallocate(Scatangle_Lunar)
+!  if (allocated(Glintzen_Lunar)) deallocate(Glintzen_Lunar)
+!end subroutine DESTROY_LUNAR_ARRAYS
 
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
 subroutine CREATE_BTD_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       allocate(Btd_Ch20_Ch31(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       allocate(Btd_Ch20_Ch32(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       allocate(Btd_Ch31_Ch32(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Mean_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Max_3x3(dim1,dim2))
@@ -1888,19 +1882,19 @@ subroutine CREATE_BTD_ARRAYS(dim1,dim2)
       allocate(Btd_Ch31_Ch32_Std_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
       allocate(Btd_Ch31_Ch27_Mean_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch27_Max_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch27_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch27_Std_3x3(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
       allocate(Btd_Ch31_Ch29_Mean_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch29_Max_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch29_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch29_Std_3x3(dim1,dim2))
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
       allocate(Btd_Ch31_Ch33_Mean_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch33_Max_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch33_Min_3x3(dim1,dim2))
@@ -1908,13 +1902,13 @@ subroutine CREATE_BTD_ARRAYS(dim1,dim2)
    endif
 end subroutine CREATE_BTD_ARRAYS
 subroutine RESET_BTD_ARRAYS()
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       Btd_Ch20_Ch31 = Missing_Value_Real4
    endif
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       Btd_Ch20_Ch32 = Missing_Value_Real4
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       Btd_Ch31_Ch32 = Missing_Value_Real4
       Btd_Ch31_Ch32_Mean_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch32_Max_3x3 = Missing_Value_Real4
@@ -1922,19 +1916,19 @@ subroutine RESET_BTD_ARRAYS()
       Btd_Ch31_Ch32_Std_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch32_Bt_Ch31_Max_3x3 = Missing_Value_Real4
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
       Btd_Ch31_Ch27_Mean_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch27_Max_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch27_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch27_Std_3x3 = Missing_Value_Real4
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
       Btd_Ch31_Ch29_Mean_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch29_Max_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch29_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch29_Std_3x3 = Missing_Value_Real4
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
       Btd_Ch31_Ch33_Mean_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch33_Max_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch33_Min_3x3 = Missing_Value_Real4
@@ -1942,13 +1936,13 @@ subroutine RESET_BTD_ARRAYS()
    endif
 end subroutine RESET_BTD_ARRAYS
 subroutine DESTROY_BTD_ARRAYS()
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       deallocate(Btd_Ch20_Ch31)
    endif
-   if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       deallocate(Btd_Ch20_Ch32)
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       deallocate(Btd_Ch31_Ch32)
       deallocate(Btd_Ch31_Ch32_Mean_3x3)
       deallocate(Btd_Ch31_Ch32_Max_3x3)
@@ -1956,19 +1950,19 @@ subroutine DESTROY_BTD_ARRAYS()
       deallocate(Btd_Ch31_Ch32_Std_3x3)
       deallocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3)
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
       deallocate(Btd_Ch31_Ch27_Mean_3x3)
       deallocate(Btd_Ch31_Ch27_Max_3x3)
       deallocate(Btd_Ch31_Ch27_Min_3x3)
       deallocate(Btd_Ch31_Ch27_Std_3x3)
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
       deallocate(Btd_Ch31_Ch29_Mean_3x3)
       deallocate(Btd_Ch31_Ch29_Max_3x3)
       deallocate(Btd_Ch31_Ch29_Min_3x3)
       deallocate(Btd_Ch31_Ch29_Std_3x3)
    endif
-   if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
       deallocate(Btd_Ch31_Ch33_Mean_3x3)
       deallocate(Btd_Ch31_Ch33_Max_3x3)
       deallocate(Btd_Ch31_Ch33_Min_3x3)
@@ -1980,70 +1974,73 @@ end subroutine DESTROY_BTD_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   allocate(Land(dim1,dim2))
-   allocate(Land_Modified(dim1,dim2))
-   allocate(Land_Mask(dim1,dim2))
-   allocate(Coast(dim1,dim2))
-   allocate(Coast_Mask(dim1,dim2))
-   allocate(Coast_Mask_Nwp(dim1,dim2))
-   allocate(Glint_Mask(dim1,dim2))
-   allocate(Glint_Mask_Lunar(dim1,dim2))
-   allocate(Desert_Mask(dim1,dim2))
-   allocate(City_Mask(dim1,dim2))
-   allocate(Snow_Hires(dim1,dim2))
-   allocate(Snow_Glob(dim1,dim2))
-   allocate(Snow(dim1,dim2))
-   allocate(Sfc_Type(dim1,dim2))
-   allocate(Zsfc(dim1,dim2))
-   allocate(Zsfc_Hires(dim1,dim2))
-   allocate(Zsfc_Mean_3x3(dim1,dim2))
-   allocate(Zsfc_Max_3x3(dim1,dim2))
-   allocate(Zsfc_Min_3x3(dim1,dim2))
-   allocate(Zsfc_Std_3x3(dim1,dim2))
+   allocate(Sfc%Land(dim1,dim2))
+   allocate(Sfc%Land_Modified(dim1,dim2))
+   allocate(Sfc%Land_Mask(dim1,dim2))
+   allocate(Sfc%Coast(dim1,dim2))
+   allocate(Sfc%Coast_Mask(dim1,dim2))
+   allocate(Sfc%Coast_Mask_Nwp(dim1,dim2))
+   allocate(Sfc%Glint_Mask(dim1,dim2))
+   allocate(Sfc%Glint_Mask_Lunar(dim1,dim2))
+   allocate(Sfc%Desert_Mask(dim1,dim2))
+   allocate(Sfc%City_Mask(dim1,dim2))
+   allocate(Sfc%Volcano_Mask(dim1,dim2))
+   allocate(Sfc%Snow_Hires(dim1,dim2))
+   allocate(Sfc%Snow_Glob(dim1,dim2))
+   allocate(Sfc%Snow(dim1,dim2))
+   allocate(Sfc%Sfc_Type(dim1,dim2))
+   allocate(Sfc%Zsfc(dim1,dim2))
+   allocate(Sfc%Zsfc_Hires(dim1,dim2))
+   allocate(Sfc%Zsfc_Mean_3x3(dim1,dim2))
+   allocate(Sfc%Zsfc_Max_3x3(dim1,dim2))
+   allocate(Sfc%Zsfc_Min_3x3(dim1,dim2))
+   allocate(Sfc%Zsfc_Std_3x3(dim1,dim2))
 end subroutine CREATE_SURFACE_ARRAYS
 subroutine RESET_SURFACE_ARRAYS
-   Land = Missing_Value_Int1
-   Land_Modified = Missing_Value_Int1
-   Land_Mask = Missing_Value_Int1
-   Coast = Missing_Value_Int1
-   Coast_Mask = Missing_Value_Int1
-   Coast_Mask_Nwp = Missing_Value_Int1
-   Glint_Mask = Missing_Value_Int1
-   Glint_Mask_Lunar = Missing_Value_Int1
-   Desert_Mask = Missing_Value_Int1
-   City_Mask = Missing_Value_Int1
-   Snow_Hires = Missing_Value_Int1
-   Snow_Glob = Missing_Value_Int1
-   Snow = Missing_Value_Int1
-   Sfc_Type = Missing_Value_Int1
-   Zsfc = Missing_Value_Real4
-   Zsfc_Hires = Missing_Value_Real4
-   Zsfc_Mean_3x3 = Missing_Value_Real4
-   Zsfc_Max_3x3 = Missing_Value_Real4
-   Zsfc_Min_3x3 = Missing_Value_Real4
-   Zsfc_Std_3x3 = Missing_Value_Real4
+   Sfc%Land = Missing_Value_Int1
+   Sfc%Land_Modified = Missing_Value_Int1
+   Sfc%Land_Mask = Missing_Value_Int1
+   Sfc%Coast = Missing_Value_Int1
+   Sfc%Coast_Mask = Missing_Value_Int1
+   Sfc%Coast_Mask_Nwp = Missing_Value_Int1
+   Sfc%Glint_Mask = Missing_Value_Int1
+   Sfc%Glint_Mask_Lunar = Missing_Value_Int1
+   Sfc%Desert_Mask = Missing_Value_Int1
+   Sfc%City_Mask = Missing_Value_Int1
+   Sfc%Volcano_Mask = Missing_Value_Int1
+   Sfc%Snow_Hires = Missing_Value_Int1
+   Sfc%Snow_Glob = Missing_Value_Int1
+   Sfc%Snow = Missing_Value_Int1
+   Sfc%Sfc_Type = Missing_Value_Int1
+   Sfc%Zsfc = Missing_Value_Real4
+   Sfc%Zsfc_Hires = Missing_Value_Real4
+   Sfc%Zsfc_Mean_3x3 = Missing_Value_Real4
+   Sfc%Zsfc_Max_3x3 = Missing_Value_Real4
+   Sfc%Zsfc_Min_3x3 = Missing_Value_Real4
+   Sfc%Zsfc_Std_3x3 = Missing_Value_Real4
 end subroutine RESET_SURFACE_ARRAYS
 subroutine DESTROY_SURFACE_ARRAYS
-   deallocate(Land)
-   deallocate(Land_Modified)
-   deallocate(Land_Mask)
-   deallocate(Coast)
-   deallocate(Coast_Mask)
-   deallocate(Coast_Mask_Nwp)
-   deallocate(Glint_Mask)
-   deallocate(Glint_Mask_Lunar)
-   deallocate(Desert_Mask)
-   deallocate(City_Mask)
-   deallocate(Snow_Hires)
-   deallocate(Snow_Glob)
-   deallocate(Snow)
-   deallocate(Sfc_Type)
-   deallocate(Zsfc)
-   deallocate(Zsfc_Hires)
-   deallocate(Zsfc_Mean_3x3)
-   deallocate(Zsfc_Max_3x3)
-   deallocate(Zsfc_Min_3x3)
-   deallocate(Zsfc_Std_3x3)
+   deallocate(Sfc%Land)
+   deallocate(Sfc%Land_Modified)
+   deallocate(Sfc%Land_Mask)
+   deallocate(Sfc%Coast)
+   deallocate(Sfc%Coast_Mask)
+   deallocate(Sfc%Coast_Mask_Nwp)
+   deallocate(Sfc%Glint_Mask)
+   deallocate(Sfc%Glint_Mask_Lunar)
+   deallocate(Sfc%Desert_Mask)
+   deallocate(Sfc%City_Mask)
+   deallocate(Sfc%Volcano_Mask)
+   deallocate(Sfc%Snow_Hires)
+   deallocate(Sfc%Snow_Glob)
+   deallocate(Sfc%Snow)
+   deallocate(Sfc%Sfc_Type)
+   deallocate(Sfc%Zsfc)
+   deallocate(Sfc%Zsfc_Hires)
+   deallocate(Sfc%Zsfc_Mean_3x3)
+   deallocate(Sfc%Zsfc_Max_3x3)
+   deallocate(Sfc%Zsfc_Min_3x3)
+   deallocate(Sfc%Zsfc_Std_3x3)
 end subroutine DESTROY_SURFACE_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2368,7 +2365,9 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
      allocate(Bayes_Mask_Sfc_Type_Global(dim1,dim2))
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
-  if (Avhrr_Flag == sym%YES) then
+  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
      if (.not. allocated(Cld_Mask_Aux)) allocate(Cld_Mask_Aux(dim1,dim2))  
   endif
   
@@ -2384,7 +2383,9 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
      Bayes_Mask_Sfc_Type_Global = Missing_Value_Int1
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
-  if (Avhrr_Flag == sym%YES) then
+  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
      Cld_Mask_Aux = Missing_Value_Int1
   endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
@@ -2399,7 +2400,9 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
      deallocate(Bayes_Mask_Sfc_Type_Global)
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
-  if (Avhrr_Flag == sym%YES) then
+  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
      if (allocated(Cld_Mask_Aux)) deallocate(Cld_Mask_Aux)  
   endif
 end subroutine DESTROY_CLOUD_MASK_ARRAYS

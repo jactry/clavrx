@@ -76,15 +76,15 @@ module dcomp_rtm_module
           , p_std_rtm 
           
       use pixel_common, only: &
-        i_nwp , j_nwp &
+           image &
+         , geo &
+         , i_nwp &
+         , j_nwp &
          , zc_acha  &
          , tc_acha &
          , pc_acha &
          , zen_idx_rtm &
-         , satzen &
          , ch &
-         , num_scans_read &
-         , num_pix &
          , bad_pixel_mask &
          , Rad_Clear_Ch20_Solar_Rtm
         
@@ -139,8 +139,8 @@ module dcomp_rtm_module
       ! -----------------------------------------
       
       
-      dim_1 = num_pix
-      dim_2 = num_scans_read
+      dim_1 = Image%Number_Of_Elements
+      dim_2 = Image%Number_Of_Lines_Read_This_Segment
       
            
       call allocate_dcomp_rtm ( dcomp_rtm , dim_1 , dim_2 )
@@ -209,7 +209,7 @@ module dcomp_rtm_module
                                   & rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile(idx_lev_rtm))
                   
             dcomp_rtm % trans_ir_ac_nadir(elem_idx,line_idx) = &
-                                 & dcomp_rtm % trans_ir_ac(elem_idx,line_idx) ** (cos ( satzen(elem_idx, line_idx) * PI / 180.  ))
+                                 & dcomp_rtm % trans_ir_ac(elem_idx,line_idx) ** (cos ( geo % satzen(elem_idx, line_idx) * PI / 180.  ))
             
             dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
             

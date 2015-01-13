@@ -154,49 +154,48 @@
    !***********************************************************************
    ! Marker: DECLARE VARIABLES
    !***********************************************************************
-   INTEGER(kind=int4), parameter:: nmask_clavr = 5
-   INTEGER(kind=int4):: Nword_Clavr
-   INTEGER(kind=int4):: Nword_Clavr_Start
-   INTEGER(kind=int4):: Nrec_Avhrr_Header
-   INTEGER(kind=int4):: Ifile    
-   INTEGER(kind=int4):: File_List_Lun                 !logical unit number for File_list
-   INTEGER(kind=int4):: Segment_Number
-   INTEGER(kind=int4):: Skip_Processing_Flag
-   INTEGER(kind=int4):: Lat_Idx
-   INTEGER(kind=int4):: Lon_Idx
-   INTEGER(kind=int4):: Zen_Idx
-   INTEGER(kind=int4):: Elem_Idx  !generic pixel (along scan) index
-   INTEGER(kind=int4):: Line_Idx  !generic line (across scan) index
-   INTEGER(kind=int4):: Phase_Called_Flag
+   integer(kind=int4), parameter:: nmask_clavr = 5
+   integer(kind=int4):: Nword_Clavr
+   integer(kind=int4):: Nword_Clavr_Start
+   integer(kind=int4):: Nrec_Avhrr_Header
+   integer(kind=int4):: Ifile    
+   integer(kind=int4):: File_List_Lun                 !logical unit number for File_list
+   integer(kind=int4):: Segment_Number
+   integer(kind=int4):: Skip_Processing_Flag
+   integer(kind=int4):: Lat_Idx
+   integer(kind=int4):: Lon_Idx
+   integer(kind=int4):: Zen_Idx
+   integer(kind=int4):: Elem_Idx  !generic pixel (along scan) index
+   integer(kind=int4):: Line_Idx  !generic line (across scan) index
+   integer(kind=int4):: Phase_Called_Flag
    logical:: Level1b_Exists
-   INTEGER, parameter:: num_Segment_Time_points=15
-   REAL(kind=REAL4), dimension(num_Segment_Time_points):: Segment_Time_Point_Seconds
-   REAL(kind=REAL4) :: Start_Time_Point_Hours
-   REAL(kind=REAL4) :: End_Time_Point_Hours
+   integer, parameter:: num_Segment_Time_points=15
+   real(kind=real4), dimension(num_Segment_Time_points):: Segment_Time_Point_Seconds
+   real(kind=real4) :: Start_Time_Point_Hours
+   real(kind=real4) :: End_Time_Point_Hours
 
-   REAL(kind=REAL4) :: Segment_Time_Point_Seconds_temp
-   REAL(kind=REAL4) :: Start_Time_Point_Hours_temp
-   REAL(kind=REAL4) :: End_Time_Point_Hours_temp
+   real(kind=real4) :: Segment_Time_Point_Seconds_temp
+   real(kind=real4) :: Start_Time_Point_Hours_temp
+   real(kind=real4) :: End_Time_Point_Hours_temp
 
-   REAL(kind=REAL4) :: Total_Processing_Start_Time_Hours
-   REAL(kind=REAL4) :: Total_Processing_End_Time_Hours
-   REAL(kind=REAL4) :: Total_Processing_Time_seconds
-   REAL(kind=REAL4) :: Orbital_Processing_Start_Time_Hours
-   REAL(kind=REAL4) :: Orbital_Processing_End_Time_Hours
-   REAL(kind=REAL4) :: Orbital_Processing_Time_Seconds
+   real(kind=real4) :: Total_Processing_Start_Time_Hours
+   real(kind=real4) :: Total_Processing_End_Time_Hours
+   real(kind=real4) :: Total_Processing_Time_seconds
+   real(kind=real4) :: Orbital_Processing_Start_Time_Hours
+   real(kind=real4) :: Orbital_Processing_End_Time_Hours
+   real(kind=real4) :: Orbital_Processing_Time_Seconds
    character(len=180):: File_1b_Temp
-   character(len=180):: File_1b_Full
-   INTEGER(kind=int4):: erstat
-   REAL(kind=REAL4):: Time_Since_Launch
-   INTEGER(kind=int4):: err_reposnx_Flag
-   INTEGER(kind=int4), parameter:: One = 1
+   integer(kind=int4):: erstat
+   real(kind=real4):: Time_Since_Launch
+   integer(kind=int4):: err_reposnx_Flag
+   integer(kind=int4), parameter:: One = 1
  
-   INTEGER(kind=int4):: ios
-   INTEGER(kind=int4):: File_Number
-   INTEGER(kind=int4):: Ierror_Level1b
-   INTEGER(kind=int4):: ierror_Nwp
-   INTEGER(kind=int4):: iperiod16   
-   INTEGER(kind=int4) :: ierror
+   integer(kind=int4):: ios
+   integer(kind=int4):: File_Number
+   integer(kind=int4):: Ierror_Level1b
+   integer(kind=int4):: ierror_Nwp
+   integer(kind=int4):: iperiod16   
+   integer(kind=int4) :: ierror
    character(len=3):: Day_String
    character(len=100):: Modis_White_Sky_0_66_Name
    character(len=100):: Modis_White_Sky_0_86_Name
@@ -207,39 +206,39 @@
    character(len=100):: oiSst_File_Name
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
-   INTEGER(kind=int4):: Emiss_File_Id = missing_value_int4
-   INTEGER(kind=int4):: Coast_Mask_Id = missing_value_int4
-   INTEGER(kind=int4):: Land_Mask_Id = missing_value_int4
-   INTEGER(kind=int4):: Sfc_Type_Id = missing_value_int4
-   INTEGER(kind=int4):: Volcano_Mask_Id = missing_value_int4
-   INTEGER(kind=int4):: Surface_Elev_Id = missing_value_int4
-   INTEGER(kind=int4):: Modis_Alb_0_66_Id = missing_value_int4
-   INTEGER(kind=int4):: Modis_Alb_0_86_Id = missing_value_int4
-   INTEGER(kind=int4):: Modis_Alb_1_24_Id = missing_value_int4
-   INTEGER(kind=int4):: Modis_Alb_1_64_Id = missing_value_int4
-   INTEGER(kind=int4):: Modis_Alb_2_13_Id = missing_value_int4
-   INTEGER(kind=int4):: Snow_Mask_Id = missing_value_int4
-   TYPE(Land_grid_Description) :: Coast_Mask_Str
-   TYPE(Land_grid_Description) :: Sfc_Type_Str
-   TYPE(Land_grid_Description) :: Land_Mask_Str
-   TYPE(Land_grid_Description) :: Volcano_Mask_Str
-   TYPE(Land_grid_Description) :: Surface_Elev_Str
-   TYPE(Land_grid_Description) :: Modis_Alb_0_66_Str
-   TYPE(Land_grid_Description) :: Modis_Alb_0_86_Str
-   TYPE(Land_grid_Description) :: Modis_Alb_1_24_Str
-   TYPE(Land_grid_Description) :: Modis_Alb_1_64_Str
-   TYPE(Land_grid_Description) :: Modis_Alb_2_13_Str
-   TYPE(Land_grid_Description) :: Snow_Mask_Str
+   integer(kind=int4):: Emiss_File_Id = missing_value_int4
+   integer(kind=int4):: Coast_Mask_Id = missing_value_int4
+   integer(kind=int4):: Land_Mask_Id = missing_value_int4
+   integer(kind=int4):: Sfc_Type_Id = missing_value_int4
+   integer(kind=int4):: Volcano_Mask_Id = missing_value_int4
+   integer(kind=int4):: Surface_Elev_Id = missing_value_int4
+   integer(kind=int4):: Modis_Alb_0_66_Id = missing_value_int4
+   integer(kind=int4):: Modis_Alb_0_86_Id = missing_value_int4
+   integer(kind=int4):: Modis_Alb_1_24_Id = missing_value_int4
+   integer(kind=int4):: Modis_Alb_1_64_Id = missing_value_int4
+   integer(kind=int4):: Modis_Alb_2_13_Id = missing_value_int4
+   integer(kind=int4):: Snow_Mask_Id = missing_value_int4
+   type(Land_grid_Description) :: Coast_Mask_Str
+   type(Land_grid_Description) :: Sfc_Type_Str
+   type(Land_grid_Description) :: Land_Mask_Str
+   type(Land_grid_Description) :: Volcano_Mask_Str
+   type(Land_grid_Description) :: Surface_Elev_Str
+   type(Land_grid_Description) :: Modis_Alb_0_66_Str
+   type(Land_grid_Description) :: Modis_Alb_0_86_Str
+   type(Land_grid_Description) :: Modis_Alb_1_24_Str
+   type(Land_grid_Description) :: Modis_Alb_1_64_Str
+   type(Land_grid_Description) :: Modis_Alb_2_13_Str
+   type(Land_grid_Description) :: Snow_Mask_Str
 
    
-   INTEGER, PARAMETER:: LRC_Meander_Flag = 1
-   INTEGER, PARAMETER:: Max_LRC_Distance = 10
-   REAL, PARAMETER:: Min_LRC_Jump = 0.0   !0.5
-   REAL, PARAMETER:: Max_LRC_Jump = 100.0 !10.0
-   INTEGER, PARAMETER:: Missing_LRC_Value = -999
-   INTEGER, PARAMETER:: Grad_Flag_LRC = -1
-   REAL, PARAMETER:: Min_Bt_11um_LRC = 220.0
-   REAL, PARAMETER:: Max_Bt_11um_LRC = 300.0
+   integer, parameter:: LRC_Meander_Flag = 1
+   integer, parameter:: Max_LRC_Distance = 10
+   real, parameter:: Min_LRC_Jump = 0.0   !0.5
+   real, parameter:: Max_LRC_Jump = 100.0 !10.0
+   integer, parameter:: Missing_LRC_Value = -999
+   integer, parameter:: Grad_Flag_LRC = -1
+   real, parameter:: Min_Bt_11um_LRC = 220.0
+   real, parameter:: Max_Bt_11um_LRC = 300.0
      
    ! GOES header structures
    TYPE (AREA_STRUCT) :: AREAstr
@@ -252,14 +251,9 @@
    
    type (conf_user_opt_type) :: config
    
-   character(len = 10) :: sensorname
-   
-  
    !------------- VIIRS variables --------------
-   real(kind=real4),    dimension(:,:), pointer :: lunar_ref
+   real(kind=real4), dimension(:,:), pointer :: lunar_ref
    real(kind=real4), dimension(:,:),allocatable :: lunar_placeholder
-   
-   
    
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
@@ -279,23 +273,7 @@
    ! Initialize some flags
    !----------------------------------------------------------------------------
    Number_Of_Temporary_Files = 0
-   Avhrr_Flag = sym%YES
-   Goes_Flag = sym%NO
-   Seviri_Flag = sym%NO
-   Mtsat_Flag = sym%NO
-   FY2_Flag = sym%NO
-   COMS_Flag = sym%NO
-   Modis_Flag = sym%NO
-   Modis_5km_Flag = sym%NO
-   Modis_1km_Flag = sym%NO
-   Viirs_Flag = sym%NO
-   Iff_Viirs_Flag = sym%NO
-   Iff_Modis_Flag = sym%NO
-  
- 
    Skip_Processing_Flag = sym%NO
-   
-   
 
    !----------------------------------------------------------------------------
    ! Determine time of the start of all processing
@@ -306,7 +284,7 @@
    ! initialize previous date variables
    !-------------------------------------------------------------------------------
    Month_Prev = 0
-   Sc_Id_WMO_Prev = 0
+   Sensor%WMO_Id_Previous = 0
    Start_Year_Prev = 0
    Start_Day_Prev = 0
 
@@ -419,10 +397,9 @@
    end if
 
    !--- read directories from clavrxorb_input_Files
-   read(unit=File_List_Lun,fmt="(a)") Dir_1b
+   read(unit=File_List_Lun,fmt="(a)") Image%Level1b_Path
    read(unit=File_List_Lun,fmt="(a)") Dir_Level2
   
-
    !--- reset file counter
    File_Number = 1
 
@@ -468,7 +445,7 @@
       !**********************************************************************
 
       !-- see if level-1b file exists
-      Level1b_Exists = File_exists(trim(Dir_1b)//trim(File_1b_Temp))
+      Level1b_Exists = file_exists(trim(Image%Level1b_Path)//trim(File_1b_Temp))
       if (Level1b_Exists .eqv. .FALSE.) then
          print *, EXE_PROMPT, "ERROR: Level-1b file not found, skipping"
          cycle file_loop
@@ -478,14 +455,15 @@
       !  Determine based on the L1b file's extension if the input file
       !  is gzipped. Announce this fact thru a boolean var.
       !--------------------------------------------------------------
-      call DETERMINE_LEVEL1B_COMPRESSION(File_1b_Temp,L1b_Gzip,L1b_Bzip2,File_1b_Full)
+      call DETERMINE_LEVEL1B_COMPRESSION(File_1b_Temp,L1b_Gzip,L1b_Bzip2)
 
+print *, "temp = ", trim(File_1b_Temp)
+print *, "full = ", trim(Image%Level1b_Full_Name)
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
+      ! and populate sensor structure
       !------------------------------------------------------------------------
-      call DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sensorname, Ierror)
-      
-      
+      call DETECT_SENSOR_FROM_FILE(AREAstr,NAVstr,Ierror)
       
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
@@ -495,27 +473,27 @@
       !--- print to screen the file name
       call mesg (" " )
       call mesg ("<------------- Next Orbit ---------------> ",level = verb_lev % DEFAULT )
-      call mesg ("file name = "//trim(File_1b) , level = verb_lev % MINIMAL )
+      call mesg ("file name = "//trim(Image%Level1b_Name) , level = verb_lev % MINIMAL )
 
       !-------------------------------------------------------
       ! reset record counters
       !-------------------------------------------------------
       File_Number = File_Number + 1
 
-
       !-----------------------------------------------------------------------
       ! knowing the file type, determine the expected number of elements and
       ! lines in the file
       ! for AVHRR, determine file type and some record lengths
+      ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-      call  SET_FILE_DIMENSIONS(File_1b_Full,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
+      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "
          cycle file_loop
       end if
 
-      if (Num_Scans <= 0) then
+      if (Image%Number_Of_Lines <= 0) then
          cycle file_loop    
       end if
   
@@ -530,38 +508,37 @@
       !-----------------------------------------------------------------------
       !--- determine segment size here
       Line_Idx_Min_Segment = 1
-      Line_Idx_Max_Segment = Num_Scans_Per_Segment
+      Line_Idx_Max_Segment = Image%Number_Of_Lines_Per_Segment
 
       !*************************************************************************
       ! Marker:  READ IN HEADER AND DETERMINE SOME CONSTANTS
       !*************************************************************************
 
       !----------------------------------------------------------------------
-      ! Knowing the sensor, setup internal parameters needed for processing
-      !  not only: also assigns sensor flags as goes_mop_flag ..  ...
+      ! Knowing the sensor, interogate files to start, end date and time
       !----------------------------------------------------------------------
-      call SET_SENSOR_CONSTANTS ( AREAstr)
-      
-      if ( goes_mop_flag == sym%YES) sensorname = 'GOES_MOP'
-      if ( avhrr_1_flag == sym % YES ) sensorname='AVHRR_1'
-    
+      call SET_DATA_DATE_AND_TIME ( AREAstr)
 
-     
+      !----------------------------------------------------------------------
+      ! Output sensor and image parameters to screen
+      !----------------------------------------------------------------------
+      call OUTPUT_SENSOR_TO_SCREEN()
+      
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
       !------------------------------------------------------------------
-      call SETUP_PFAAST(Sc_Id_WMO)
+      call SETUP_PFAAST(Sensor%WMO_Id)
 
       !------------------------------------------------------------------
       ! Setup Solar-channel RTM terms for this particular sensor
       !------------------------------------------------------------------
-      call SETUP_SOLAR_RTM(Sc_Id_WMO)
+      call SETUP_SOLAR_RTM(Sensor%WMO_Id)
 
       !------------------------------------------------------------------
       ! update settings according sensor ( algo mode and channel settings 
       !    including turn-on and off)
       !------------------------------------------------------------------
-      call UPDATE_CONFIGURATION ( sensorname )
+      call UPDATE_CONFIGURATION (Sensor%Sensor_Name)
      
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
@@ -581,17 +558,17 @@
       !------------------------------------------------------------------
 
       ! Made ileap consistant with oisst call.
-      ileap = leap_year_Fct(int(Start_Year, kind=int4))
+      ileap = leap_year_Fct(int(Image%Start_Year, kind=int4))
 
-      Month = COMPUTE_MONTH(int(Start_Day, kind=int4), int(ileap, kind=int4))
-      Day_Of_Month = COMPUTE_DAY(int(Start_Day, kind=int4), int(ileap, kind=int4))
+      Month = COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
+      Day_Of_Month = COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
 
       !--- continue output to screen
-      write ( string_30, '(I4,1X,I3,1X,F9.5)') Start_Year,Start_Day, &
-             Start_Time/60.0/60.0/1000.0
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%Start_Year,Image%Start_Doy, &
+             Image%Start_Time/60.0/60.0/1000.0
       call mesg ("start year, day, time = "//string_30 ) 
-      write ( string_30, '(I4,1X,I3,1X,F9.5)') End_Year,End_Day, &
-             End_Time/60.0/60.0/1000.0
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%End_Year,Image%End_Doy, &
+             Image%End_Time/60.0/60.0/1000.0
       call mesg ("End year, day, time = "//string_30 ) 
       
       
@@ -617,22 +594,22 @@
       !Set to use default options. This will be turned off if there is NO daily OISST data
       Use_Sst_Anal = 0
 
-      if (Start_Year /= Start_Year_Prev .or. Start_Day /= Start_Day_Prev) then
-         OiSst_File_Name= GET_OISST_MAP_FILENAME(Start_Year,Start_Day, &
+      if (Image%Start_Year /= Start_Year_Prev .or. Image%Start_Doy /= Start_Day_Prev) then
+         OiSst_File_Name= GET_OISST_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(OiSst_Data_Dir) )
 
          if (trim(OiSst_File_Name) == "no_file") then
             Use_Sst_Anal = sym%NO
             call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
          else
-            call READ_OISST_ANALYSIS_MAP(oiSst_File_Name)
+            call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
             use_sst_anal = 1
          end if
       end if
       
        !------- store previous day and year to prevent reading of same data for next orbit
-      Start_Year_Prev = Start_Year
-      Start_Day_Prev = Start_Day  
+      Start_Year_Prev = Image%Start_Year
+      Start_Day_Prev = Image%Start_Doy  
 
       !--------------------------------------------------------------------
       !--- 5 km surface emiss
@@ -650,11 +627,11 @@
          call mesg ("Opening Modis clear albedo map")
 
          !--- determine 16 day period and its string value
-         iperiod16 = 16 * ((Start_Day-1) / 16) + 1 
+         iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
          write(Day_String,fmt="(i3.3)") iperiod16
 
          !--- Open Modis white sky 0.66 um albedo
-         if (Chan_On_Flag_Default(1) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.659_x4.hdf"
             Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
@@ -664,7 +641,7 @@
          end if
 
          !--- Open Modis white sky 0.86 um albedo
-         if (Chan_On_Flag_Default(2) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
             Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.858_x4.hdf"
             Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
@@ -674,7 +651,7 @@
          end if
 
          !--- Open Modis white sky 1.24 um albedo
-         if (Chan_On_Flag_Default(5) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
             Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.24_x4.hdf"
             Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
@@ -684,7 +661,7 @@
          end if
 
          !--- Open Modis white sky 1.66 um albedo
-         if (Chan_On_Flag_Default(6) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
             Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.64_x4.hdf"
             Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
@@ -694,7 +671,7 @@
          end if                                    
 
          !--- Open Modis white sky 2.13 um albedo
-         if (Chan_On_Flag_Default(7) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
             Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".2.13_x4.hdf"
          Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
@@ -713,7 +690,7 @@
          Failed_Hires_Snow_Mask_Flag = sym%NO
 
          Snow_Mask_Str%sds_Name = SNOW_MASK_SDS_NAME
-         Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Start_Year,Start_Day, &
+         Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(Snow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") then
             Failed_Hires_Snow_Mask_Flag = sym%YES
@@ -737,7 +714,7 @@
       IF (Read_Snow_Mask == sym%READ_SNOW_GLOB) THEN 
          Failed_Glob_Snow_Mask_Flag = sym%NO
 
-         Snow_Mask_File_Name = GET_GLOBSNOW_FILENAME(Start_Year,Start_Day, &
+         Snow_Mask_File_Name = GET_GLOBSNOW_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(GlobSnow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") THEN
             Failed_Glob_Snow_Mask_Flag = sym%YES
@@ -753,27 +730,31 @@
       !*************************************************************************
 
       !--- GFS
-      if (nwp_opt == 1) then
-         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, gfs_Data_Dir, ierror_Nwp) 
+      if (Nwp_Opt == 1) then
+         call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time, &
+                           Image%End_Year, Image%End_Doy, Image%End_Time, Gfs_Data_Dir, ierror_Nwp) 
       end if
 
       !--- NCEP Reanalysis
-      if (nwp_opt == 2) then
-         call READ_NCEP_REANALYSIS_DATA(Start_Year, Start_Day, Start_Time, End_Day, End_Time, ncep_Data_Dir)
+      if (Nwp_Opt == 2) then
+         call READ_NCEP_REANALYSIS_DATA(Image%Start_Year, Image%Start_Doy, Image%Start_Time,  &
+                                        Image%End_Doy, Image%End_Time, Ncep_Data_Dir)
       end if
 
       !--- CFSR
-      if (nwp_opt == 3) then
-         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
+      if (Nwp_Opt == 3) then
+         call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time, &
+                            Image%End_Year, Image%End_Doy, Image%End_Time, Cfsr_Data_Dir, ierror_Nwp) 
       endif
 
       !--- GDAS
-      if (nwp_opt == 4) then
-         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
+      if (Nwp_Opt == 4) then
+         call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time,  &
+                            Image%End_Year, Image%End_Doy, Image%End_Time, Cfsr_Data_Dir, ierror_Nwp) 
       endif
      
       !---- if NWP is being read in, then proceeed in allocating RTM, NWP arrays
-      if (nwp_opt /= 0) then
+      if (Nwp_Opt /= 0) then
          
          !--- Quality control NWP fields
          call QC_NWP()
@@ -800,7 +781,7 @@
       !*************************************************************************
 
       !--- planck and aerosol tables
-      if (Sc_Id_WMO /= Sc_Id_WMO_Prev) then
+      if (Sensor%WMO_Id /= Sensor%WMO_Id_Previous) then
 
          call  POPULATE_PLANCK_TABLES(a1_20,a2_20,nu_20, &
                                    a1_21,a2_21,nu_21, &
@@ -818,31 +799,36 @@
                                    a1_40,a2_40,nu_40, &
                                    a1_41,a2_41,nu_41)
  
-         if (Aer_Flag == sym%YES .and. Avhrr_Flag == sym%YES) then
-            call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sc_Id_WMO)
+         if (Aer_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
+            call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sensor%WMO_Id)
          end if
 
-         Sc_Id_WMO_Prev = Sc_Id_WMO
+         Sensor%WMO_Id_Previous = Sensor%WMO_Id
  
       end if
  
  
 
       !--- compute Sun-Earth distance
-      Sun_Earth_Distance = 1.0 - 0.016729*cos(0.9856*(Start_Day-4.0)*dtor)
+      Sun_Earth_Distance = 1.0 - 0.016729*cos(0.9856*(Image%Start_Doy-4.0)*dtor)
  
       !--- compute time since launch needed for reflectance calibration
-      Time_Since_Launch = Start_Year + Start_Day / 365.25  - launch_Date
+      Time_Since_Launch = Image%Start_Year + Image%Start_Doy / 365.25  - launch_Date
  
       !--------------------------------------------------------------
       !-- Marker: Interpolate a clock correction for this orbit
       !--------------------------------------------------------------
-      if (Avhrr_Flag == sym%YES .and. nav_opt== 2) then
-         call INTERPOLATE_CLOCK_ERROR(Start_Year, Start_Time,  &
-                                   End_Year, End_Time, &
-                                   Sc_Id_WMO,timerr_seconds)
-         print *, EXE_PROMPT, "Clock Error = ", timerr_seconds
-      end if
+      if ((trim(Sensor%Sensor_Name) == 'AVHRR-1') .or. &
+          (trim(Sensor%Sensor_Name) == 'AVHRR-2') .or. &
+          (trim(Sensor%Sensor_Name) == 'AVHRR-3')) then
+
+         if(Nav_Opt == 2) then
+            call INTERPOLATE_CLOCK_ERROR(Image%Start_Year, Image%Start_Time,  &
+                                   Image%End_Year, Image%End_Time, &
+                                   Sensor%WMO_Id,Nav%Timerr_Seconds)
+           print *, EXE_PROMPT, "Clock Error = ", Nav%Timerr_Seconds
+         endif  
+      endif
 
       !*************************************************************************
       ! READ IN DATA RECORDS AND PERFORM QUALITY CHECKING
@@ -856,17 +842,17 @@
 
 
       !--- compute number of segments in this orbit 
-      if (mod(Num_Scans,Num_Scans_Per_Segment) == 0) then
-         Num_Segments = Num_Scans / Num_Scans_Per_Segment
+      if (mod(Image%Number_Of_Lines,Image%Number_Of_Lines_Per_Segment) == 0) then
+         Image%Number_Of_Segments = Image%Number_Of_Lines / Image%Number_Of_Lines_Per_Segment
       else
-         Num_Segments = Num_Scans / Num_Scans_Per_Segment + 1
-      end if
+         Image%Number_Of_Segments = Image%Number_Of_Lines / Image%Number_Of_Lines_Per_Segment + 1
+      endif
 
       !--- initialize time counters
       Segment_Time_Point_Seconds = 0.0
       Segment_Time_Point_Seconds_temp = 0.0
 
-      Segment_loop: do Segment_Number = 1,Num_Segments
+      Segment_loop: do Segment_Number = 1,Image%Number_Of_Segments
         
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
@@ -882,7 +868,8 @@
          !-----------------------------------------------------------------
          Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-         call READ_LEVEL1B_DATA(File_1b_Full,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
+         call READ_LEVEL1B_DATA(Image%Level1b_Full_Name,Segment_Number, &
+                                Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
 
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
@@ -892,12 +879,12 @@
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
-         call SET_CHAN_ON_FLAG(Line_Idx_Min_Segment,Num_Scans_Read)
+         call SET_CHAN_ON_FLAG(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
          
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
-         if (Viirs_Flag == sym%YES .and. Chan_On_Flag_Default(42) == sym%YES) then
+         if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
 
            ! - check the angles if this is a good lunar scene
            ! - lun and solar zenith angle
@@ -905,9 +892,9 @@
            Lunar_Ref => ch(42)%Ref_Lunar_Toa
                   
            call COMPUTE_LUNAR_REFLECTANCE (ch(42)%Rad_Toa &
-                     & , Solzen, Lunzen &
-                     & , start_year, month,day_of_month,start_time &
-                     & , moon_phase_angle  &
+                     & , Geo%Solzen, Geo%Lunzen &
+                     & , Image%Start_Year, month,day_of_month,Image%start_time &
+                     & , Geo%moon_phase_angle  &
                      & , ancil_data_dir &
                      & , Lunar_placeholder)
             
@@ -915,13 +902,12 @@
         
                   Lunar_Ref=>null() 
                   
-                  Lunrelaz = abs ( Lunaz - Sataz )
-                  where ( Lunrelaz > 180. ) 
-                     Lunrelaz = 360.0 - Lunrelaz  
+                  Geo%Lunrelaz = abs ( Geo%Lunaz - Geo%Sataz )
+                  where ( Geo%Lunrelaz > 180. ) 
+                     Geo%Lunrelaz = 360.0 - Geo%Lunrelaz  
                   end where
        
             end if
-         
          
          End_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -930,7 +916,7 @@
               60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
          !--- check to see that some data was read in
-         if (Num_Scans_Read == 0) then
+         if (Image%Number_Of_Lines_Read_This_Segment == 0) then
             print *, EXE_PROMPT, "WARNING: no scans read in, exiting segment processing loop"
             Skip_Processing_Flag = sym%YES
             !exit
@@ -952,25 +938,25 @@
 
                Num_Scans_Level2_Hdf = 0
 
-               call DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
+               call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Rtm, &
                               Dir_Level2, &
-                              File_1b, &
+                              Image%Level1b_Name, &
                               Rtm_File_Flag, &
                               Level2_File_Flag, &
                               c1,c2,a1_20,a2_20,nu_20, &
                               a1_31,a2_31,nu_31,a1_32,a2_32,nu_32,Solar_Ch20_Nu,&
                               Sun_Earth_Distance,Therm_Cal_1b, &
                               Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
-                               Modis_Clr_Alb_Flag,nwp_opt, &
+                              Modis_Clr_Alb_Flag,Nwp_Opt, &
                               Ch1_Gain_Low,Ch1_gain_High, &
                               Ch1_Switch_Count_Cal,Ch1_Dark_Count_Cal, &
                               Ch2_Gain_low,Ch2_Gain_High, &
                               Ch2_Switch_Count_Cal,Ch2_Dark_Count_Cal, &
                               Ch3a_Gain_low,Ch3a_Gain_High, &
                               Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
-                              Start_Year,End_Year,Start_Day,End_Day,&
-                              Start_Time,End_Time)
+                              Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
+                              Image%Start_Time,Image%End_Time)
             end if
    
             !----------------------------------------------------------------------
@@ -979,15 +965,15 @@
             if (Subset_Pixel_Hdf_Flag == sym%YES) then
 
                !--- check to see if data fell within Solar zenith angle bounds
-               if ((minval(Solzen(Num_Pix/2,:)) > Solzen_Max_Limit) .or.   &
-                   & (maxval(Solzen(Num_Pix/2,:)) < Solzen_Min_Limit)) then
+               if ((minval(Geo%Solzen(Image%Number_Of_Elements/2,:)) > Geo%Solzen_Max_Limit) .or.   &
+                   & (maxval(Geo%Solzen(Image%Number_Of_Elements/2,:)) < Geo%Solzen_Min_Limit)) then
                   print *, "skipping seg for solzen"
                   cycle   Segment_loop
                end if
 
                !--- check to see if in latitude range (using diag values)
-               if ((minval(Lat_1b(Num_Pix/2,:)) > Lat_Max_Limit) .or.   &
-                  & (maxval(Lat_1b(Num_Pix/2,:)) < Lat_Min_Limit)) then
+               if ((minval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) > Nav%Lat_Max_Limit) .or.   &
+                  & (maxval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) < Nav%Lat_Min_Limit)) then
                   print *, "skipping seg for latitude"
                   cycle   Segment_loop 
                end if
@@ -998,44 +984,45 @@
             ! Marker: Recompute geolocation
             !*******************************************************************
             !--- use level 1b navigation
-            if (nav_opt== 0 .or. Modis_Flag == sym%YES .or.  &
-                &  Seviri_Flag == sym%YES .or. Mtsat_Flag == sym%YES .or. &
-                &  Goes_Flag == sym%YES .or. Viirs_Flag == sym%YES .or. &
-                &  FY2_Flag == sym%YES .or. COMS_Flag == sym%YES .or. &
-                &  Goes_Sndr_Flag == sym%YES ) then
-               
-               Lat = Lat_1b
-               Lon = Lon_1b
-            end if
+            Nav%Lat = Nav%Lat_1b
+            Nav%Lon = Nav%Lon_1b
 
-            !---  Repositioning
-            if (nav_opt== 2 .and. Avhrr_Flag == sym%YES) then
-               if ((timerr_seconds /= Missing_Value_Real4) .and. &
-                      & (timerr_seconds /= 0.0)) then 
-                  call REPOSITION_FOR_CLOCK_ERROR(Line_Idx_Min_Segment,Num_Scans_Read, &
-                                  Timerr_Seconds,Err_Reposnx_Flag)
+            !---  AVHRR Repositioning
+            if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+                trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+                trim(Sensor%Sensor_Name) == 'AVHRR-3' ) then
+
+              if (Nav_Opt == 2) then
+
+               if ((Nav%Timerr_Seconds /= Missing_Value_Real4) .and. &
+                   (Nav%Timerr_Seconds /= 0.0)) then 
+
+                  call REPOSITION_FOR_CLOCK_ERROR(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment, &
+                                  Nav%Timerr_Seconds,Err_Reposnx_Flag)
                else
-                  Lat = Lat_1b
-                  Lon = Lon_1b
+                  Nav%Lat = Nav%Lat_1b
+                  Nav%Lon = Nav%Lon_1b
                end if
+
+             end if
+
             end if
    
             !--- compute time (local and utc) variables for this segment
-            call CONVERT_TIME(Line_Idx_Min_Segment,Num_Scans_Read)
+            call CONVERT_TIME(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            if (nwp_opt /= 0) then
+            if (Nwp_Opt /= 0) then
 
                !--- map each each into correct NWP cell
-               call MAP_PIXEL_NWP(Num_Pix,Num_Scans_Read)
+               call MAP_PIXEL_NWP(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
                !--- compute needed NWP levels (sfc, tropo, inversion, ...)
-               call COMPUTE_NWP_LEVELS_SEGMENT(Num_Pix,Num_Scans_Read)
+               call COMPUTE_NWP_LEVELS_SEGMENT(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
             end if
-
    
             !--- determine a pixel-level mask to exclude bad or unprocessible data
-            call SET_BAD_PIXEL_MASK(Num_Pix,Num_Scans_Read)
+            call SET_BAD_PIXEL_MASK(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- if the segment is 99% bad data, skip it
             if (Segment_Valid_Fraction < 0.01) then 
@@ -1052,12 +1039,12 @@
             if (use_seebor == sym%YES) then
 
                !--- force channel 20 read
-               call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), lat, lon, Space_Mask, ch(20)%Sfc_Emiss)
+               call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
 
                do Chan_Idx = 21, 36
                   if (Chan_Idx == 26) cycle
-                  if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
-                     call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), lat, lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
+                  if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+                     call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
                   endif
                enddo
             end if
@@ -1065,118 +1052,118 @@
             !--- mandatory fields - check for substitution of Bad_Pixel for space 
 
             !--- surface type
-            call READ_LAND_SFC_HDF(Sfc_Type_Id, Sfc_Type_Str, lat, lon, Space_Mask, Sfc_Type)
+            call READ_LAND_SFC_HDF(Sfc_Type_Id, Sfc_Type_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Sfc_Type)
 
             !--- surface elevation
             if (Read_Surface_Elevation /= 0) then
 
                !--- read the high res data
-               call READ_LAND_SFC_HDF(Surface_Elev_Id, Surface_Elev_Str, lat, lon, Space_Mask, two_byte_temp)
+               call READ_LAND_SFC_HDF(Surface_Elev_Id, Surface_Elev_Str, Nav%Lat, Nav%Lon, Space_Mask, Two_Byte_Temp)
 
-               !---  convert to a REAL number
-               Zsfc_Hires = REAL(two_byte_temp,kind=REAL4)
+               !---  convert to a real number
+               Sfc%Zsfc_Hires = real(two_byte_temp,kind=real4)
                !--- values over water are missing, set to zero
-               where(Zsfc_Hires == Missing_Value_Real4)
-                  Zsfc_Hires = 0.0
+               where(Sfc%Zsfc_Hires == Missing_Value_Real4)
+                  Sfc%Zsfc_Hires = 0.0
                end where
 
             end if
 
             !--- merge with nwp surface elevation
-            if (nwp_opt /= 0) then
-                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (Nwp_Opt /= 0) then
+                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             endif
 
             !--- read coast mask
             if (Read_Coast_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Lat, Lon, Space_Mask, coast)
+               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
             end if
 
             !--- read land mask
             if (Read_Land_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Lat, Lon, Space_Mask, Land)
+               call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Land)
             end if
 
             !--- modify land class with ndvi if available (helps mitigate navigation errors)
-            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Num_Scans_Read)
+            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- read volcano mask
             if (Read_Volcano_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, lat, lon, Space_Mask, Volcano_Mask)
+               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
             end if
 
             !--- read Snow mask
             if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_Hires_Snow_Mask_Flag == sym%NO) then
-               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, lat, lon, Space_Mask, Snow_Hires)
+               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_Hires)
             end if
    
             if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
-               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(lat,lon,Land,Bad_Pixel_Mask,Snow_Glob)
+               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
             end if
    
             !--- define binary land and coast masks (yes/no) from land and coast flags
-            call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Num_Scans_Read)   
+            call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
 
             !---- ensure missing values for space scenes
             where (Space_Mask == sym%YES) 
-               Zsfc_Hires = Missing_Value_Real4
-               Coast = Missing_Value_Int1
-               Land = Missing_Value_Int1
-               Snow_Hires = Missing_Value_Int1
-               Snow_Glob = Missing_Value_Int1
-               Volcano_Mask = Missing_Value_Int1
-               Sfc_Type = Missing_Value_Int1
+               Sfc%Zsfc_Hires = Missing_Value_Real4
+               Sfc%Coast = Missing_Value_Int1
+               Sfc%Land = Missing_Value_Int1
+               Sfc%Snow_Hires = Missing_Value_Int1
+               Sfc%Snow_Glob = Missing_Value_Int1
+               Sfc%Volcano_Mask = Missing_Value_Int1
+               Sfc%Sfc_Type = Missing_Value_Int1
             end where
 
             !--- interpolate sst analyses to each pixel
             if (Use_Sst_Anal == 1) then
                
-               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Num_Scans_Read)
+               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
               
             end if
 
             !--- compute a coast mask relative to nwp data
-            if (nwp_opt /= 0) then
-               call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (Nwp_Opt /= 0) then
+               call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
             !--- interpolate white sky albedoes to each pixel in segment
             if (Modis_Clr_Alb_Flag == sym%YES) then
-               if (Chan_On_Flag_Default(1) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
                     if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(1)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
+                     allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
                                           ch(1)%Sfc_Ref_White_Sky)
                endif
-               if (Chan_On_Flag_Default(2) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
                   if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(2)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
+                     allocate(ch(2)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
                                           ch(2)%Sfc_Ref_White_Sky)
                endif
-               if (Chan_On_Flag_Default(5) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
                   if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(5)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
+                     allocate(ch(5)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
                                           ch(5)%Sfc_Ref_White_Sky)
                endif
-               if (Chan_On_Flag_Default(6) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
                   if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(6)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
+                     allocate(ch(6)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
                                           ch(6)%Sfc_Ref_White_Sky)
                endif
-               if (Chan_On_Flag_Default(7) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
                   if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(7)%Sfc_Ref_White_Sky(Num_Pix,Num_Scans_Per_Segment))
+                     allocate(ch(7)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
@@ -1186,45 +1173,43 @@
  
             !--- post process dark composite if one read in
             if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
-               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Land)
+               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Sfc%Land)
             endif
 
             !--- check ancillary data
-            call QUALITY_CONTROL_ANCILLARY_DATA(Line_Idx_Min_Segment,Num_Scans_Read)
+            call QUALITY_CONTROL_ANCILLARY_DATA(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             !-----------------------------------------------------------------------
             !--- Marker: Compute some fundamental pixel-level arrays
             !-----------------------------------------------------------------------
 
             !--- compute some common used pixel arrays 
-            call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Num_Scans_Read)
+            call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            if (Viirs_Flag == sym%YES .or. Iff_Viirs_Flag == sym%YES) then
-               call COMPUTE_VIIRS_SST(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (index(Sensor%Sensor_Name, 'VIIRS') > 0) then
+               call COMPUTE_VIIRS_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
-            !--- if not viirs, normalize reflectances by the Solar zenith angle
-            if (Viirs_Flag == sym%NO .and. Iff_Viirs_Flag == sym%NO .and. Iff_Avhrr_Flag == sym%NO) then
-               call NORMALIZE_REFLECTANCES(Sun_Earth_Distance,Line_Idx_Min_Segment,Num_Scans_Read)
-            end if
+            !--- normalize reflectances by the solar zenith angle and sun-earth distance
+            call NORMALIZE_REFLECTANCES(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
    
             !--- compute the channel 3b albedo arrays
-            call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Num_Scans_Read)
+            call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- compute pixel level Snow map based on all ancillary data
-            if (nwp_opt /= 0) then
-               call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (Nwp_Opt /= 0) then
+               call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
             !--- interpolate surface type field to each pixel in segment
-            call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Num_Scans_Read)   
+            call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
 
             !--- compute desert mask cloud detection
-            Desert_Mask =  DESERT_MASK_FOR_CLOUD_DETECTION(ch(20)%Sfc_Emiss,Lat, Snow, Sfc_Type)
+            Sfc%Desert_Mask =  DESERT_MASK_FOR_CLOUD_DETECTION(ch(20)%Sfc_Emiss, Nav%Lat, Sfc%Snow, Sfc%Sfc_Type)
 
             !--- compute city mask cloud detection
-            if (Chan_On_Flag_Default(42) == sym%YES) then
-             City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(42)%Rad_Toa, Sfc_Type)
+            if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+             Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(42)%Rad_Toa, Sfc%Sfc_Type)
             endif
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1239,33 +1224,33 @@
             !*******************************************************************
 
             !--- needs an NWP to run.
-            if (nwp_opt /= 0) then
+            if (Nwp_Opt /= 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                !-- temporally interp skin temp for each segment (only ncep reanalysis)
-               if (nwp_opt == 2) then
-                  call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment), Scan_Time(Line_Idx_Min_Segment+Num_Scans_Read-1))
+               if (Nwp_Opt == 2) then
+                  call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment), Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
                end if
 
                !--- compute desired nwp parameters 
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_nwp_flag)
+               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute a surface temperature from the NWP
-               call MODIFY_TSFC_NWP_PIX(1,Num_Pix,Line_Idx_Min_Segment,Num_Scans_Read)
+               call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                !--- compute pixel-level rtm parameters 
                Start_Time_Point_Hours_temp = COMPUTE_TIME_HOURS()
-               call GET_PIXEL_NWP_RTM(Line_Idx_Min_Segment,Num_Scans_Read)
+               call GET_PIXEL_NWP_RTM(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                End_Time_Point_Hours_temp = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds_temp =  Segment_Time_Point_Seconds_temp + &
-                   & 60.0*60.0*(End_Time_Point_Hours_temp - Start_Time_Point_Hours_temp)
+                   & 60.0*60.0*(End_Time_Point_Hours_temp - Start_Time_Point_Hours_Temp)
 
                !--- apply atmospheric correction - needs rtm results
-               call ATMOS_CORR(Line_Idx_Min_Segment,Num_Scans_Read)
+               call ATMOS_CORR(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                !--- compute surface products (Tsfc,Ndvi,Rsr ...)
-               call SURFACE_REMOTE_SENSING(Line_Idx_Min_Segment,Num_Scans_Read)
+               call SURFACE_REMOTE_SENSING(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(3) =  Segment_Time_Point_Seconds(3) + &
@@ -1278,47 +1263,47 @@
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
             !--- populate needed spatial uniformity arrays
-            call COMPUTE_SPATIAL_UNIFORMITY(Line_Idx_Min_Segment,Num_Scans_Read)
+            call COMPUTE_SPATIAL_UNIFORMITY(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- call spatial correlation routines
             call COMPUTE_SPATIAL_CORRELATION_ARRAYS()
 
-            if (Chan_On_Flag_Default(20) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
                !--- apply median filter to Bt_Ch20
                call COMPUTE_MEDIAN_SEGMENT(ch(20)%Bt_Toa,Bad_Pixel_Mask, One, &
-                              1, Num_Pix,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Num_Scans_Read-One, &
+                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
                               Bt_Ch20_Median_3x3,  &
                               Bt_Ch20_Std_Median_3x3)
  
                !--- apply median filter to Ems_Ch20
                call COMPUTE_MEDIAN_SEGMENT(Ems_Ch20,Bad_Pixel_Mask, One, &
-                              1, Num_Pix,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Num_Scans_Read-One, &
+                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
                               Ems_Ch20_Median_3x3,  &
                               Ems_Ch20_Std_Median_3x3)
             end if
 
             !--- populate local radiative center arrays
             if (LRC_Flag == sym%YES) then
-               if (Chan_On_Flag_Default(31) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
                   call LOCAL_LINEAR_RADIATIVE_CENTER(sym%YES,sym%NO, &
                                        LRC_Meander_Flag, &
-                                       ch(31)%Bt_Toa(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1), &
+                                       ch(31)%Bt_Toa(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
                                        1, &
-                                       Num_Pix, &
+                                       Image%Number_Of_Elements, &
                                        Line_Idx_Min_Segment,  &
-                                       Num_Scans_Read, &
+                                       Image%Number_Of_Lines_Read_This_Segment, &
                                        Max_LRC_Distance,  &
                                        Min_LRC_Jump,  &
                                        Max_LRC_Jump,  &
                                        Grad_Flag_LRC,  &
                                        Missing_Value_Int4, &
-                                       Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1), &
+                                       Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
                                        Min_Bt_11um_LRC,  &
                                        Max_Bt_11um_LRC, &
-                                       I_LRC(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1), &
-                                       J_LRC(:,Line_Idx_Min_Segment:Num_Scans_Read-Line_Idx_Min_Segment+1))
+                                       I_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
+                                       J_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1))
                end if
             end if
 
@@ -1334,11 +1319,11 @@
             !*******************************************************************
 
             !---- pixel level aerosol
-            if (Avhrr_Flag == sym%YES .and. Aer_Flag == sym%YES) then
+            if (index(Sensor%Sensor_Name,'AVHRR') .and. Aer_Flag == sym%YES) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-               call PIXEL_AER_RET_OCEAN(Line_Idx_Min_Segment,Num_Scans_Read)
+               call PIXEL_AER_RET_OCEAN(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(5) =  Segment_Time_Point_Seconds(5) + &
@@ -1346,12 +1331,12 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-            if (Cld_Flag == sym%YES .and. nwp_opt > 0) then
+            if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                !--- simple cloud optical depth
-!              call COMPUTE_SIMPLE_COD(Num_Pix,Num_Scans_Read)               
+!              call COMPUTE_SIMPLE_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
@@ -1368,11 +1353,13 @@
                end if
 
                !--- Compute Adjacent pixels Cloud Mask
-               call ADJACENT_PIXEL_CLOUD_MASK(Line_Idx_Min_Segment,Num_Scans_Read)
+               call ADJACENT_PIXEL_CLOUD_MASK(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                !--- if dark composite available for GOES-1km data, do this
-               if (GOES_1km_Flag == sym%YES .and. Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
-                  call DARK_COMPOSITE_CLOUD_MASK(Cld_Mask)
+               if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or. trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') then
+                 if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
+                   call DARK_COMPOSITE_CLOUD_MASK(Cld_Mask)
+                 endif
                end if
 
                !--- accumulate cloud mask metrics
@@ -1382,9 +1369,9 @@
                Segment_Time_Point_Seconds(6) =  Segment_Time_Point_Seconds(6) + &
                      & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-               !--- cloud type
+               !--- cloud type 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
+               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. trim(Sensor%Sensor_Name) == 'VIIRS') then
 
                   Cld_Type = Cld_Type_Aux
                   Cld_Phase = Cld_Phase_Aux
@@ -1404,7 +1391,7 @@
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
-            if (Cld_Flag == sym%YES .and. nwp_opt > 0) then
+            if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
@@ -1412,17 +1399,15 @@
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
-               if (IFF_VIIRS_FLAG == sym%YES .or. &
-                   IFF_AVHRR_FLAG == sym%YES .or. &
-                   IFF_MODIS_FLAG == sym%YES) then
+               if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
-                   call CO2_SLICING_CLOUD_HEIGHT(Num_Pix,Line_Idx_Min_Segment,Num_Scans_Read, &
+                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment, &
                                     P_Std_Rtm,Cld_Type, &
                                     Pc_Cirrus_Co2,Tc_Cirrus_Co2)
                endif
 
                if (ACHA_Mode == 0) then
-                  call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Num_Scans_Read)
+                  call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                endif
 
                if (ACHA_Mode > 0) then 
@@ -1431,10 +1416,10 @@
                   call AWG_CLOUD_HEIGHT_BRIDGE()
 
                   !--- interpolate NWP wind profiles at cloud-top level
-                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Num_Scans_Read)
+                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--- interpolate ACHA cloud heights to flight level altitude.
-                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Num_Scans_Read)
+                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
@@ -1448,7 +1433,7 @@
     
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (viirs_flag == sym%yes .and. chan_on_flag_default(42) == sym % yes) then
+               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(42) == sym % yes) then
                   if ( count (ch(42)%Ref_Lunar_Toa > 0) > 0 ) then
                      call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
                   end if   
@@ -1466,9 +1451,9 @@
                   call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)
                   call SET_DCOMP_VERSION()
                   if ( dcomp_run ) then
-                     call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Num_Scans_Read)
-                     call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Num_Scans_Read,Sun_Earth_Distance)
-                     call  COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Num_Scans_Read)
+                     call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+                     call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,Sun_Earth_Distance)
+                     call COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Image%Number_Of_Lines_Read_This_Segment)
                      call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
                   end if
                   
@@ -1476,7 +1461,7 @@
     
                !--- compute precipation from optical properties
                if (Dcomp_Mode > 0 ) then
-                  call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Num_Scans_Read)
+                  call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                end if
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1499,8 +1484,8 @@
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-               !-->        call DUST_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Num_Scans_Read)
-               !-->        call SMOKE_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Num_Scans_Read)
+               !-->        call DUST_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               !-->        call SMOKE_DETECTION_ALGORITHM(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(11) =  Segment_Time_Point_Seconds(11) + &
@@ -1509,8 +1494,7 @@
 
             !--- Volcanic ash - only for AVHRR/2 and AVHRR/3
             if (Ash_Flag > 0) then
-               if (avhrr_flag == sym%YES .and. avhrr_1_flag == sym%NO) then
-
+               if (trim(Sensor%Sensor_Name) == 'AVHRR_2' .or. trim(Sensor%Sensor_Name) == 'AVHRR_3') then 
                   start_time_point_hours = COMPUTE_TIME_HOURS()
                   end_time_point_hours = COMPUTE_TIME_HOURS()
                   segment_time_point_seconds(11) =  segment_time_point_seconds(11) + &
@@ -1523,29 +1507,27 @@
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             
             if (AVHRR_1_Flag == sym%NO) then    !currently, no AVHRR/1 algorithm
-               call COMPUTE_ERB(Line_Idx_Min_Segment,Num_Scans_Read)
+               call COMPUTE_ERB(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
-            !--- don't run if not a geostationary satellite
-            if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or. SEVIRI_Flag == sym%YES) then
-               if ( sasrab_flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
-            end if
+            !---  Run SASRAB
+            if ( Sasrab_Flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(12) =  Segment_Time_Point_Seconds(12) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-            if (nwp_opt > 0) then
+            if (Nwp_Opt > 0) then
 
                !--- assign clear sky quality flags
-               call ASSIGN_CLEAR_SKY_QUALITY_FLAGS(Line_Idx_Min_Segment,Num_Scans_Read)
+               call ASSIGN_CLEAR_SKY_QUALITY_FLAGS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             end if
 
             !--- generated cloud masked sst field
-            if (nwp_opt > 0) then
-                call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Num_Scans_Read)
+            if (Nwp_Opt > 0) then
+                call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
             !  endif   !end Skip_Processing_Flag condition
@@ -1566,10 +1548,10 @@
             !*************************************************************************
 
             !--- deallocate rtm profile arrays (only do if NWP is used)
-            if (nwp_opt /= 0) then
+            if (Nwp_Opt /= 0) then
 
-               do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-                  do Elem_Idx = 1, Num_Pix
+               do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+                  do Elem_Idx = 1, Image%Number_Of_Elements
                      Lon_Idx = i_Nwp(Elem_Idx,Line_Idx)
                      Lat_Idx = j_Nwp(Elem_Idx,Line_Idx)
                      Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
@@ -1587,8 +1569,8 @@
                end do
 
                !--- deallocate rtm cells
-               do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-                  do Elem_Idx = 1, Num_Pix
+               do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+                  do Elem_Idx = 1, Image%Number_Of_Elements
 
                      Lon_Idx = i_Nwp(Elem_Idx,Line_Idx)
                      Lat_Idx = j_Nwp(Elem_Idx,Line_Idx)
@@ -1609,7 +1591,7 @@
 
             !--- screen output to mark progress through orbit
            write ( string_100, '(A22, I2, A16, I5 , 4X , I5)')  "processed segment #",Segment_Number," scanlines = ",  &
-                        Scan_Number(Line_Idx_Min_Segment), Scan_Number(Num_Scans_Read)
+                        Scan_Number(Line_Idx_Min_Segment), Scan_Number(Image%Number_Of_Lines_Read_This_Segment)
            call mesg  ( string_100 )
 
          end if   !end Skip_Processing_Flag condition
@@ -1642,7 +1624,7 @@
       !Marker: Deallocate remaining arrays
       !*************************************************************************
       !--- main RTM structures and NWP arrays
-      if (nwp_opt > 0) then
+      if (Nwp_Opt > 0) then
          call DESTROY_NWP_ARRAYS()
          call DESTROY_TEMP_NWP_VECTORS()
          call DEALLOCATE_RTM()
@@ -1736,8 +1718,8 @@
    call mesg (  "<--------- End of CLAVRXORB ---------->",level=verb_lev % MINIMAL)
 
    stop
-!--------- PFAST error statements
- 200   print *, EXE_PROMPT, "error reading PFAST RTM coefficients, stopping"
+!--------- PFAAST error statements
+ 200   print *, EXE_PROMPT, "error reading PFAAST RTM coefficients, stopping"
 
 !*************************************************************************
 ! Marker: End of code

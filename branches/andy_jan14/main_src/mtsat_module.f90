@@ -41,7 +41,6 @@ public :: READ_MTSAT
 public :: READ_NAVIGATION_BLOCK_MTSAT_FY
 public :: CALIBRATE_MTSAT_DARK_COMPOSITE
 public :: READ_MTSAT_INSTR_CONSTANTS
-public :: ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL
          
 private :: MTSAT_RADIANCE_BT
 private :: MTSAT_REFLECTANCE_PRELAUNCH
@@ -72,34 +71,6 @@ private :: MGIVSR
 
 
  CONTAINS
-!--------------------------------------------------------------------
-! assign internal sat id's and const file names for FY2
-!--------------------------------------------------------------------
-subroutine ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
-    integer(kind=int4), intent(in):: Mcidas_Id_Num
-
-    if (Mcidas_Id_Num == 84)   then
-        Sc_Id_WMO = 171
-        Instr_Const_file = 'mtsat1r_instr.dat'
-        Algo_Const_file = 'mtsat1r_algo.dat'
-        Platform_Name_Attribute = 'MTSAT-1R'
-        Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'MTSAT-1R : Imager'
-    endif
-    if (Mcidas_Id_Num == 85)   then
-        Sc_Id_WMO = 172
-        Instr_Const_file = 'mtsat2_instr.dat'
-        Algo_Const_file = 'mtsat2_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'MTSAT-2'
-        Sensor_Name_Attribute = 'IMAGER'
-!       Sensor_Name_Attribute = 'MTSAT-2 : Imager'
-    endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
-
-end subroutine ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL
 !----------------------------------------------------------------
 ! read the MTSAT constants into memory
 !-----------------------------------------------------------------
@@ -178,14 +149,14 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    ipos = index(Channel_1_Filename, "_1_")
    ilen = len(Channel_1_Filename)
     
-   first_line_in_segment = (segment_number-1)*num_scans_per_segment
+   first_line_in_segment = (segment_number-1)*Image%Number_Of_Lines_Per_Segment
 
    !---------------------------------------------------------------------------
    ! MTSAT Navigation (Do Navigation and Solar angles first)
    !---------------------------------------------------------------------------
    
    call mtsat_navigation(1,first_line_in_segment,&
-                              num_pix,Num_Scans_Per_Segment,1,&
+                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                               AREAstr,NAVstr_MTSAT)
    
    if (segment_number == 1) then
@@ -211,7 +182,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
        write(Chan_Idx_Mtsat_String,fmt="(I1.1)") Chan_Idx_Mtsat
        if(Chan_Idx_Mtsat > 9) write(Chan_Idx_Mtsat_String,fmt="(I2.2)") Chan_Idx_Mtsat
 
-       if (Chan_On_Flag_Default(Chan_Idx_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Chan_Idx_Modis) == sym%YES) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_Mtsat_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -219,10 +190,10 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
           if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
-          Channel_X_Filename_Full_uncompressed = trim(Dir_1b)//trim(Channel_X_Filename)
+          Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           if (l1b_gzip == sym%YES) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
@@ -253,8 +224,8 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
     IF (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
         CALL mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
     ELSE
-      CALL mread_open(trim(Dir_1b)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
-    ENDIF  
+      CALL mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
+    endif  
 
     CALL load_mtsat_calibration(mtsat_file_id, AREAstr)
     CALL mread_close(mtsat_file_id)
@@ -264,20 +235,20 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    
    
    !---   read channel 1 (MTSAT channel 1)
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_1_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Mtsat_Byte_Shift, &
                                     AREAstr, Mtsat_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -289,7 +260,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    endif
    
    !---   read channel 20 (MTSAT channel 5)
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -297,15 +268,15 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Mtsat_Byte_Shift, &
                                     AREAstr, Mtsat_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -316,7 +287,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
                     
    
    !---   read channel 27 (MTSAT channel 4)
-   if (Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -324,15 +295,15 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Mtsat_Byte_Shift, &
                                     AREAstr, Mtsat_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -344,7 +315,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
 
    
    !---   read channel 31 (MTSAT channel 2)
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -352,15 +323,15 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Mtsat_Byte_Shift, &
                                     AREAstr, Mtsat_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -371,7 +342,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    
    
    !---   read channel 32 (MTSAT channel 3)
-   if (Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -379,15 +350,15 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Mtsat_Byte_Shift, &
                                     AREAstr, Mtsat_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -396,7 +367,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
 
    endif
     
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + num_scans_read - 1
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_Number(Line_Idx) = first_line_in_segment + Line_Idx
      Scan_Time(Line_Idx) = image_time_ms + (Scan_Number(Line_Idx)-1) * Scan_rate
    enddo
@@ -408,30 +379,27 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
 !------------------------------------------------------------------------------
    image_jday = jday
    image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
-   do iline = Line_Idx_Min_Segment, Line_Idx_Min_Segment + num_scans_read - 1
-     do ielem = 1,num_pix
+   do iline = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do ielem = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_time_hours, &
-                    Lon_1b(ielem,iline),Lat_1b(ielem,iline), &
-                    Solzen(ielem,iline),Solaz(ielem,iline))
+                    Nav%Lon_1b(ielem,iline),Nav%Lat_1b(ielem,iline), &
+                    Geo%Solzen(ielem,iline),Geo%Solaz(ielem,iline))
      enddo
-     call COMPUTE_SATELLITE_ANGLES(goes_sub_satellite_longitude,  &
-                                   goes_sub_satellite_latitude, iline)                      
+     call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                                   Sensor%Geo_Sub_Satellite_Latitude, iline)                      
    enddo
 
    !--- ascending node
-   ielem = num_pix/2
-   do iline = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + num_scans_read - 1
-     ascend(iline) = 0
-     if (lat_1b(ielem,iline) < lat_1b(ielem,iline-1)) then
-       ascend(iline) = 1
+   ielem = Image%Number_Of_Elements/2
+   do iline = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Nav%Ascend(iline) = 0
+     if (Nav%Lat_1b(ielem,iline) < Nav%Lat_1b(ielem,iline-1)) then
+       Nav%Ascend(iline) = 1
      endif
    enddo
-   ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
+   Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
 
-    
 end subroutine READ_MTSAT
- 
- 
  
 subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
@@ -507,7 +475,7 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
         b_mtsat(3) = 0.1968675   ! 12.0 micron
   
   
-  ENDIF
+  endif
   
 
 
@@ -530,7 +498,7 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
         b_mtsat(2) = 0.3597581   ! 10.8 micron
         b_mtsat(3) = 0.2195110   ! 12.0 micron
 
-  ENDIF
+  endif
   
   do i=1, 1024
     !  3.9 micron
@@ -573,8 +541,8 @@ end subroutine LOAD_MTSAT_CALIBRATION
 !----------------------------------------------------------------------
 subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Temp)
     integer (kind=INT2), dimension(:,:), intent(in):: Mtsat_Counts
-    real (KIND=real4), intent(in):: Time_Temp_Since_Launch
-    real (KIND=real4), dimension(:,:), intent(out):: Alb_Temp
+    real (kind=real4), intent(in):: Time_Temp_Since_Launch
+    real (kind=real4), dimension(:,:), intent(out):: Alb_Temp
 
     integer :: index
     integer:: i, j
@@ -587,8 +555,8 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
      Alb_Temp = Missing_Value_Real4
     endwhere
     
-!   do j = 1,Num_Scans_Read
-!     do i = 1,Num_Pix
+!   do j = 1,Image%Number_Of_Lines_Read_This_Segment
+!     do i = 1,Image%Number_Of_Elements
 !       if (Space_Mask(i,j) == sym%NO_SPACE) then
 !          Alb_Temp(i,j) = Ch1_Gain_Low * ( Mtsat_Counts(i,j) - Ch1_Dark_Count)
 !       endif
@@ -603,7 +571,7 @@ end subroutine MTSAT_REFLECTANCE_GSICS
 subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
                               
     integer (kind=INT2), dimension(:,:), intent(in):: Mtsat_Counts
-    real (KIND=real4), dimension(:,:), intent(out):: alb_temp
+    real (kind=real4), dimension(:,:), intent(out):: alb_temp
 
     integer :: index
     integer:: i, j
@@ -616,8 +584,8 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
     !Currently the same for MTSAT-1r and MTSAT-2. McIDAS currently doesn't calculate this.
     !---- WCS3 ------!
 
-    DO j=1, num_scans_read
-      DO i=1, num_pix
+    DO j=1, Image%Number_Of_Lines_Read_This_Segment
+      DO i=1, Image%Number_Of_Elements
         IF (Space_Mask(i,j) == sym%NO_SPACE) then
           !  Because MTSAT has two vis calibration type, we need to 
           !  which route it needs to go. calibration.f90 was edited to 
@@ -656,27 +624,27 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
             
             Alb_Temp(i,j) = (Alb_Temp(i,j) * 100.0) 
                               
-          ENDIF
+          endif
           
           IF (calib_type == 'MVIS' .OR. &
                calib_type == 'SIVM') then
           
             !Not sure if I need to add 1 here
-            index = int(Mtsat_Counts(i,j),KIND=int2)
+            index = int(Mtsat_Counts(i,j),kind=int2)
 
             if((index .GT. 0) .AND. (index .LE. 1024)) then
             
                 alb_temp(i,j) = &
-             (real(ref_table(2,1,index),KIND=real4) /  100.0) 
+             (real(ref_table(2,1,index),kind=real4) /  100.0) 
      
-            ENDIF                        
+            endif                        
             
-          ENDIF
+          endif
         ELSE
 
             alb_temp(i,j) = Missing_Value_Real4
 
-        ENDIF      
+        endif      
       end DO
     end DO
         
@@ -686,18 +654,18 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
 
  subroutine mtsat_navigation(xstart,ystart,xsize,ysize,xstride, &
                             AREAstr,NAVstr_MTSAT)
-    integer(KIND=int4) :: xstart, ystart
-    integer(KIND=int4) :: xsize, ysize
-    integer(KIND=int4) :: xstride  
+    integer(kind=int4) :: xstart, ystart
+    integer(kind=int4) :: xsize, ysize
+    integer(kind=int4) :: xstride  
     type (AREA_STRUCT) :: AREAstr
     TYPE (GVAR_NAV), intent(in)    :: NAVstr_MTSAT
     
     integer :: i, j, ii, jj, ierr, imode
-    real(KIND(0.0d0)) :: latitude, longitude
-    real(KIND=real4) :: elem, line, height
-    real(KIND=real4) :: dlon, dlat
-    real(KIND=real8) :: mjd
-    real(KIND=real4), dimension(8) :: angles
+    real(kind(0.0d0)) :: latitude, longitude
+    real(kind=real4) :: elem, line, height
+    real(kind=real4) :: dlon, dlat
+    real(kind=real8) :: mjd
+    real(kind=real4), dimension(8) :: angles
     integer :: FGF_TYPE = 3 !MTSAT uses JMA GEOS navigation, so set type here
 
     NAVstr_MTSAT_NAV = NAVstr_MTSAT
@@ -705,8 +673,8 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
     imode = -1
     height = 0.0    !Used for parallax correction
     
-    lat = Missing_Value_Real4
-    lon = Missing_Value_Real4
+    Nav%Lat = Missing_Value_Real4
+    Nav%Lon = Missing_Value_Real4
        
     IF (NAVstr_MTSAT%nav_type == 'GMSX') then
     
@@ -729,15 +697,15 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
             
                 IF (ierr == 0) then
                      Space_Mask(i,j) = sym%NO_SPACE
-                     Lat_1b(i,j) = dlat
-                     Lon_1b(i,j) = dlon
-                ENDIF
+                     Nav%Lat_1b(i,j) = dlat
+                     Nav%Lon_1b(i,j) = dlon
+                endif
             end DO
             
             jj = jj + AREAstr%line_res
         end DO
                         
-    ENDIF
+    endif
 
     IF (NAVstr_MTSAT%nav_type == 'GEOS') then      
         !HRIT requires actual line and element of being processed.
@@ -750,7 +718,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                
             DO i=1, xsize
 !                ii = (i - 1)*(xstride) + xstart	 ! get element of the image segement
-                ii = (AREAstr%west_vis_pixel / AREAstr%elem_res) + (i - 1)*(xstride) + xstart	 ! get element of the image segement
+                ii = (AREAstr%west_vis_pixel / AREAstr%elem_res) + (i - 1)*(xstride) + xstart   ! get element of the image segement
                 
                 
                 !CALL pixcoord2geocoord_mtsat(ii, jj, NAVstr_MTSAT%LOFF, NAVstr_MTSAT%COFF, &
@@ -784,29 +752,30 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                  !                  latitude)
                                           
              IF (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
-                    Lat_1b(i,j) = Missing_Value_Real4
-                    Lon_1b(i,j) = Missing_Value_Real4
+                    Nav%Lat_1b(i,j) = Missing_Value_Real4
+                    Nav%Lon_1b(i,j) = Missing_Value_Real4
                     Space_Mask(i,j) = sym%SPACE
                 ELSE
-                    Lat_1b(i,j) = real(latitude,kind=real4)
-                    Lon_1b(i,j) = real(longitude,kind=real4)
+                    Nav%Lat_1b(i,j) = real(latitude,kind=real4)
+                    Nav%Lon_1b(i,j) = real(longitude,kind=real4)
                     
                     ! BecaUSE JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
                     IF (longitude .GT. 180.0 ) then
-                        Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
-                    ENDIF
+                        Nav%Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
+                    endif
                                         
                     Space_Mask(i,j) = sym%NO_SPACE
-                ENDIF
+
+                endif
 
         
             end DO
                         
         end DO     
         
-    ENDIF
+    endif
       
  end subroutine mtsat_navigation
  
@@ -819,25 +788,25 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
   subroutine MTSAT_RADIANCE_BT(chan_num,Mtsat_Counts, rad2, temp1)
 
     integer (kind=INT2), dimension(:,:), intent(in):: Mtsat_Counts
-    integer (kind=int1), INTENT(in) :: chan_num
-    real (kind=real4), DIMENSION(:,:), INTENT(out):: temp1, rad2
+    integer (kind=int1), intent(in) :: chan_num
+    real (kind=real4), dimension(:,:), intent(out):: temp1, rad2
     
     integer :: i, j, index
                                    
-    DO j = 1, num_scans_read
-      DO i = 1, num_pix
+    DO j = 1, Image%Number_Of_Lines_Read_This_Segment
+      DO i = 1, Image%Number_Of_Elements
        
-       index = int(Mtsat_Counts(i,j),KIND=int2) + 1
+       index = int(Mtsat_Counts(i,j),kind=int2) + 1
        
        IF ((Space_Mask(i,j) == sym%NO_SPACE) .AND. &
            (index .LE. 1024) .AND. (index .GE. 1)) then 
        !only do valid counts
-          rad2(i,j) = real(rad_table(chan_num,1,index),KIND=real4)/1000.0
-          temp1(i,j) = real(bt_table(chan_num,1,index),KIND=real4)/100.0                    
+          rad2(i,j) = real(rad_table(chan_num,1,index),kind=real4)/1000.0
+          temp1(i,j) = real(bt_table(chan_num,1,index),kind=real4)/100.0                    
        ELSE
           rad2(i,j) = Missing_Value_Real4
           temp1(i,j) = Missing_Value_Real4
-       ENDIF
+       endif
       end DO
     end DO    
   
@@ -869,8 +838,8 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !
  !***********************************************************************
  !            I/O  TYPE
- !   IMODE     I   I*4   CONVERSION MODE & IMAGE KIND
- !                         IMAGE KIND
+ !   IMODE     I   I*4   CONVERSION MODE & IMAGE kind
+ !                         IMAGE kind
  !                               GMS-4 GMS-5  MTSAT
  !                          1,-1  VIS   VIS    VIS
  !                          2,-2  IR    IR1  IR1,IR4
@@ -909,15 +878,15 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !!!!!!!!!!!!!!!!!! DEFINITION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !      COMMON /MMAP1/MAP
  !
-       integer, INTENT(in) :: IMODE
-       real(KIND=real4), INTENT(inout) :: RPIX, RLIN, RLON, RLAT
-       real(KIND=real4), INTENT(in) :: RHGT
-       real(KIND=real4), dimension(8), INTENT(out) :: RINF
-       real(KIND=real8), INTENT(out) :: DSCT
-       integer, INTENT(out) :: IRTN
+       integer, intent(in) :: IMODE
+       real(kind=real4), intent(inout) :: RPIX, RLIN, RLON, RLAT
+       real(kind=real4), intent(in) :: RHGT
+       real(kind=real4), dimension(8), intent(out) :: RINF
+       real(kind=real8), intent(out) :: DSCT
+       integer, intent(out) :: IRTN
        
        integer :: LMODE
-       real(KIND=real8) :: WKCOS, WKSIN
+       real(kind=real8) :: WKCOS, WKSIN
     
 !       real*4     RPIX,RLIN,RLON,RLAT,RHGT,RINF(8)
  !     integer*4  MAP(672,4)
@@ -1023,7 +992,7 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
                    (DSPIN*1440.D0)+DTIMS
            RI0   = RI
            GO TO  100
-         ENDIF
+         endif
          RLIN    = RI
          RPIX    = RJ
          DSCT    = RTIM
@@ -1070,12 +1039,12 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          ELSE
            IRTN    = 6
            GO TO  9000
-         ENDIF
+         endif
          if(DABS(DK1).LE.DABS(DK2))  then
            DK    = DK1
          ELSE
            DK    = DK2
-         ENDIF
+         endif
          STN1(1) = SAT(1)+DK*SL(1)
          STN1(2) = SAT(2)+DK*SL(2)
          STN1(3) = SAT(3)+DK*SL(3)
@@ -1090,12 +1059,12 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
              DLON=HPAI
            ELSE
              DLON=-HPAI
-           ENDIF
-         ENDIF
+           endif
+         endif
          RLAT    = SNGL(DLAT*CRD)
          RLON    = SNGL(DLON*CRD)
          DSCT    = RTIM
-       ENDIF
+       endif
  !
  !!!!!!!!!!!!!!!!!! TRANSFORMATION (ZENITH/AZIMUTH) !!!!!!!!!!!!!!![3.16]
        STN2(1)   = DCOS(DLAT)*DCOS(DLON)                           ![3.17]
@@ -1121,7 +1090,7 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        ELSE
          DLATN   = HPAI+DLAT
          DLONN   = DLON
-       ENDIF
+       endif
        STN3(1) = DCOS(DLATN)*DCOS(DLONN)
        STN3(2) = DCOS(DLATN)*DSIN(DLONN)
        STN3(3) = DSIN(DLATN)
@@ -1177,7 +1146,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
            CALL  MGI110 &
                 (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,ORBT2,SAT,SITAGT,SUNALP,SUNDEL,NPA)
            GO TO  1200
-         ENDIF
+         endif
   1000 CONTINUE
   1200 CONTINUE
  !
@@ -1190,7 +1159,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
            if( (NAVstr_MTSAT_NAV%ATIT(5,I+1)-NAVstr_MTSAT_NAV%ATIT(5,I)).GT.0.D0 ) &
              BETA   = NAVstr_MTSAT_NAV%ATIT(5,I)+(NAVstr_MTSAT_NAV%ATIT(5,I+1)-NAVstr_MTSAT_NAV%ATIT(5,I)-360.D0*CDR)*DELT
            GO TO  3001
-         ENDIF
+         endif
   3000 CONTINUE
   3001 CONTINUE
  !
@@ -1243,7 +1212,7 @@ subroutine MGI110(I,RTIM,CDR,ORBTA,ORBTB,SAT,SITAGT,SUNALP,SUNDEL,NPA)
          NPA(1,3) = ORBTA(26,I)
          NPA(2,3) = ORBTA(27,I)
          NPA(3,3) = ORBTA(28,I)
-       ENDIF
+       endif
        return
 end subroutine MGI110
 
@@ -1311,7 +1280,7 @@ end subroutine MGI240
   real(kind=real8) :: R8DMY  
 ! real(kind=real8) :: LOFF,COFF, LFAC, CFAC  
   integer:: number_of_words_read
-  integer(kind=int4), DIMENSION(640) :: i4buf
+  integer(kind=int4), dimension(640) :: i4buf
   
   nav_offset = AREAstr%sec_key_nav
     

@@ -75,7 +75,7 @@ c               tauo = transmittance due to ozone
         dimension tauc(nl),tlas(nl),wlas(nl),olas(nl)
         dimension xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
         character*16 cfile
-        character*72 ancil_data_path,pfast_path
+        character*72 ancil_data_path,pfaast_path
         character*3 comp(nk)
         data comp /'dry','ozo','wco','wtl','wts'/
         integer iuc(nk),lencf(nk)
@@ -87,7 +87,7 @@ c               tauo = transmittance due to ozone
         secant(z)=1./cos(0.01745329*z)
 
         cfile = 'metsecgencom.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
         if(mets.ne.init) then
            !iux=70
@@ -96,7 +96,7 @@ c               tauo = transmittance due to ozone
 !              iux=iux+1
 !              iuc(l)=iux
               iuc(l)=get_lun()    !akh added
-              open(iuc(l),file=trim(pfast_path)//cfile,
+              open(iuc(l),file=trim(pfaast_path)//cfile,
      +             recl=lencf(l),access='direct',
      +             status='old',err=200)
            enddo

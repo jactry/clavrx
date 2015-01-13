@@ -306,20 +306,20 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
 
     do j = j1, j1+j2-1
 
-     do i = 1, num_pix
+     do i = 1, Image%Number_Of_Elements
 
      if (bad_pixel_mask(i,j) == sym%YES) then
       cycle
      endif
 
-     if (lon(i,j) < 0.0) then
-         xlon = lon(i,j) + 360.0
+     if (nav % lon(i,j) < 0.0) then
+         xlon = nav % lon(i,j) + 360.0
      else
-         xlon = lon(i,j)
+         xlon = nav % lon(i,j)
      endif
 
      ilon_sst_anal = max(1,min(num_lon_sst_anal,int((xlon - first_lon_sst_anal)/del_lon_sst_anal+1)))
-     ilat_sst_anal = max(1,min(num_lat_sst_anal,int((lat(i,j) - first_lat_sst_anal)/del_lat_sst_anal+1)))
+     ilat_sst_anal = max(1,min(num_lat_sst_anal,int((nav % lat(i,j) - first_lat_sst_anal)/del_lat_sst_anal+1)))
      ilon_sst_anal_x = ilon_sst_anal+1
      ilat_sst_anal_x = ilat_sst_anal+1
 
@@ -330,7 +330,7 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
      lat_sst_anal = first_lat_sst_anal + (ilat_sst_anal-1) * del_lat_sst_anal
 
      lon_weight = max(0.0,min(1.0,(xlon - lon_sst_anal) / del_lon_sst_anal))
-     lat_weight = max(0.0,min(1.0,(lat(i,j) - lat_sst_anal) / del_lat_sst_anal))
+     lat_weight = max(0.0,min(1.0,(nav % lat(i,j) - lat_sst_anal) / del_lat_sst_anal))
 
      if (minval(oisst_anal_map(ilon_sst_anal:ilon_sst_anal_x,ilat_sst_anal:ilat_sst_anal_x))  &
                 /= missing_value_real4) then

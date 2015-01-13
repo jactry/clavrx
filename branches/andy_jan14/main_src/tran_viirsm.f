@@ -79,7 +79,7 @@ c     nr = number of bands
       dimension xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
 
       character*12 cfile
-      character*72 ancil_data_path,pfast_path !WCS3
+      character*72 ancil_data_path,pfaast_path !WCS3
       character*3 comp(nk)
       logical newang,newatm, flip(nk)
       data olas/nl*0./,tlas/nl*0./,wlas/nl*0./,zlas/-999./
@@ -90,7 +90,7 @@ c     nr = number of bands
 
       secant(z)=1./cos(0.01745329*z)
 
-      pfast_path = trim(ancil_data_path)//"pfast/" !WCS3
+      pfaast_path = trim(ancil_data_path)//"static/pfaast/" !WCS3
  
         koff=0
 ! * define and open the coefficient files
@@ -99,7 +99,7 @@ c     nr = number of bands
            cfile(6:8)=comp(l)
            iux=iux+1
            iux=get_lun() !WCS3
-           open(iux,file=trim(pfast_path)//cfile,recl=lencf(l),
+           open(iux,file=trim(pfaast_path)//cfile,recl=lencf(l),
      +             access='direct', status='old',err=200)
            iuc(l)=iux
         enddo

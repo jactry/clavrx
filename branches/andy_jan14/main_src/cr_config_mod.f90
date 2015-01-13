@@ -1,7 +1,6 @@
 ! $Id:$
 module cr_config_mod
    
-  
   ! - AVHRR specific 
    type conv_avhhr_type
       logical :: active_rfl_cal_1b
@@ -473,4 +472,3 @@ end module cr_config_mod
       data_i = int_dummy == 1
       
    end subroutine read_option_line_l6
-   

@@ -37,14 +37,14 @@ c     parameter (kb=3,ke=5)       !commented in original
 c     common/avhpfc/wnum(kb:ke),fk1(kb:ke),fk2(kb:ke),tc(nt,kb:ke)  !commented in original
       common/avhpfc/pbuf(lenp)
       dimension cbuf(lenc)
-      character*72 ancil_data_path,pfast_path
+      character*72 ancil_data_path,pfaast_path
       character*12 cfile
       character*6 craft
 
       cfile="avhrnbnd.dat"
-      pfast_path = trim(ancil_data_path)//"pfast/"
+      pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
-      open(iuc,file=trim(pfast_path)//cfile, 
+      open(iuc,file=trim(pfaast_path)//cfile, 
      +          recl=lencb,access='direct',status='old',
      +            err=100)
       call getnumsc(craft,noff)

@@ -169,135 +169,132 @@ module AVHRR_MODULE
 !-------------------------------------------------------------------
 !-- define a Sc_Id that is unique value for each satellite
 !-------------------------------------------------------------------
- subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Avhrr_Number,Sc_Id_Char)
+ subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id)
 
   integer(kind=int2), intent(in):: Sc_Id
-  integer(kind=int4), intent(out):: Avhrr_Number
-  character(len=6), intent(out):: Sc_Id_Char
 
-  Avhrr_Number = 0
   if (AVHRR_KLM_Flag == sym%NO) then
-    if(Sc_Id == 1 .and. avhrr_1_Flag == sym%YES) then  !TIROS-N
-       Avhrr_Number = 5
-       Sc_Id_WMO = 708
-       Sc_Id_Char = 'tirosn'
-       Platform_Name_Attribute = 'TIROS-N'
-       Sensor_Name_Attribute = 'AVHRR-1'
+    if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N
+       Sensor%Platform_Name = 'TIROS-N'
+       Sensor%Sensor_Name = 'AVHRR-1'
+       Sensor%WMO_Id = 708
+       Sensor%Instr_Const_File = "avhrr_5_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_5_algo.dat"
     endif
-    if(Sc_Id == 2 .and. avhrr_1_Flag == sym%YES) then  !NOAA-6
-       Avhrr_Number = 6
-       Sc_Id_WMO = 706
-       Sc_Id_Char = 'noaa06'
-       Platform_Name_Attribute = 'NOAA-6'
-       Sensor_Name_Attribute = 'AVHRR-1'
+    if(Sc_Id_AVHRR == 2 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-6
+       Sensor%Platform_Name = 'NOAA-6'
+       Sensor%Sensor_Name = 'AVHRR-1'
+       Sensor%WMO_Id = 706
+       Sensor%Instr_Const_File = "avhrr_6_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_6_algo.dat"
     endif
-    if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
-       Avhrr_Number = 7
-       Sc_Id_WMO = 707
-       Sc_Id_Char = 'noaa07'
-       Platform_Name_Attribute = 'NOAA-7'
-       Sensor_Name_Attribute = 'AVHRR-2'
+    if(Sc_Id_AVHRR == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
+       Sensor%Platform_Name = 'NOAA-7'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 707
+       Sensor%Instr_Const_File = "avhrr_7_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_7_algo.dat"
     endif
-    if(Sc_Id == 6 .and. avhrr_1_Flag == sym%YES) then  !NOAA-8
-       Avhrr_Number = 8
-       Sc_Id_WMO = 200
-       Sc_Id_Char = 'noaa08'
-       Platform_Name_Attribute = 'NOAA-8'
-       Sensor_Name_Attribute = 'AVHRR-1'
+    if(Sc_Id_AVHRR == 6 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-8
+       Sensor%Platform_Name = 'NOAA-8'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 200
+       Sensor%Instr_Const_File = "avhrr_8_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_8_algo.dat"
     endif
-    if(Sc_Id == 7 .and. avhrr_1_Flag == sym%NO) then  !NOAA-9
-       Avhrr_Number = 9
-       Sc_Id_WMO = 201
-       Sc_Id_Char = 'noaa09'
-       Platform_Name_Attribute = 'NOAA-9'
-       Sensor_Name_Attribute = 'AVHRR-2'
+    if(Sc_Id_AVHRR == 7 .and. AVHRR_1_Flag == sym%NO) then  !NOAA-9
+       Sensor%Platform_Name = 'NOAA-9'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 201
+       Sensor%Instr_Const_File = "avhrr_9_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_9_algo.dat"
     endif
-    if(Sc_Id == 8 .and. avhrr_1_Flag == sym%YES) then  !NOAA-10
-       Avhrr_Number = 10
-       Sc_Id_WMO = 202
-       Sc_Id_Char = 'noaa10'
-       Platform_Name_Attribute = 'NOAA-10'
-       Sensor_Name_Attribute = 'AVHRR-1'
+    if(Sc_Id_AVHRR == 8 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-10
+       Sensor%Platform_Name = 'NOAA-10'
+       Sensor%Sensor_Name = 'AVHRR-1'
+       Sensor%WMO_Id = 202
+       Sensor%Instr_Const_File = "avhrr_10_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_10_algo.dat"
     endif
-    if(Sc_Id == 1 .and. avhrr_1_Flag == sym%NO) then  !NOAA-11
-       Avhrr_Number = 11
-       Sc_Id_WMO = 203
-       Sc_Id_Char = 'noaa11'
-       Platform_Name_Attribute = 'NOAA-11'
-       Sensor_Name_Attribute = 'AVHRR-2'
+    if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%NO) then  !NOAA-11
+       Sensor%Platform_Name = 'NOAA-11'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 203
+       Sensor%Instr_Const_File = "avhrr_11_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_11_algo.dat"
     endif
-    if(Sc_Id == 5 .and. AVHRR_KLM_Flag==sym%NO) then             !NOAA-12
-       Avhrr_Number = 12
-       Sc_Id_WMO = 204
-       Sc_Id_Char = 'noaa12'
-       Platform_Name_Attribute = 'NOAA-12'
-       Sensor_Name_Attribute = 'AVHRR-2'
+    if(Sc_Id_AVHRR == 5 .and. AVHRR_KLM_Flag==sym%NO) then             !NOAA-12
+       Sensor%Platform_Name = 'NOAA-12'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 204
+       Sensor%Instr_Const_File = "avhrr_12_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_12_algo.dat"
     endif
-    if(Sc_Id == 3 .and. AVHRR_KLM_Flag == sym%NO) then           !NOAA-14
-       Avhrr_Number = 14
-       Sc_Id_WMO = 205
-       Sc_Id_Char = 'noaa14'
-       Platform_Name_Attribute = 'NOAA-14'
-       Sensor_Name_Attribute = 'AVHRR-2'
+    if(Sc_Id_AVHRR == 3 .and. AVHRR_KLM_Flag == sym%NO) then           !NOAA-14
+       Sensor%Platform_Name = 'NOAA-14'
+       Sensor%Sensor_Name = 'AVHRR-2'
+       Sensor%WMO_Id = 205
+       Sensor%Instr_Const_File = "avhrr_14_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_14_algo.dat"
     endif
   else
-    if(Sc_Id == 4 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-15
-       Avhrr_Number = 15
-       Sc_Id_WMO = 206
-       Sc_Id_Char = 'noaa15'
-       Platform_Name_Attribute = 'NOAA-15'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 4 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-15
+       Sensor%Platform_Name = 'NOAA-15'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 206
+       Sensor%Instr_Const_File = "avhrr_15_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_15_algo.dat"
     endif
-    if(Sc_Id == 2 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-16
-       Avhrr_Number = 16
-       Sc_Id_WMO = 207
-       Sc_Id_Char = 'noaa16'
-       Platform_Name_Attribute = 'NOAA-16'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 2 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-16
+       Sensor%Platform_Name = 'NOAA-16'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 207
+       Sensor%Instr_Const_File = "avhrr_16_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_16_algo.dat"
     endif
-    if(Sc_Id == 6 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-17
-       Avhrr_Number = 17
-       Sc_Id_WMO = 208
-       Sc_Id_Char = 'noaa17'
-       Platform_Name_Attribute = 'NOAA-17'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 6 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-17
+       Sensor%Platform_Name = 'NOAA-17'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 208
+       Sensor%Instr_Const_File = "avhrr_17_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_17_algo.dat"
     endif
-    if(Sc_Id == 7 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-18
-       Avhrr_Number = 18
-       Sc_Id_WMO = 209
-       Sc_Id_Char = 'noaa18'
-       Platform_Name_Attribute = 'NOAA-18'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 7 .and. AVHRR_KLM_Flag == sym%YES) then          !NOAA-18
+       Sensor%Platform_Name = 'NOAA-18'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 209
+       Sensor%Instr_Const_File = "avhrr_18_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_18_algo.dat"
     endif
-    if(Sc_Id == 8 .and. AVHRR_KLM_Flag == sym%YES) then         !NOAA-19
-       Avhrr_Number = 19
-       Sc_Id_WMO = 223
-       Sc_Id_Char = 'noaa19'
-       Platform_Name_Attribute = 'NOAA-19'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 8 .and. AVHRR_KLM_Flag == sym%YES) then         !NOAA-19
+       Sensor%Platform_Name = 'NOAA-19'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 223
+       Sensor%Instr_Const_File = "avhrr_19_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_19_algo.dat"
     endif
-    if(Sc_Id == 12 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-A
-       Avhrr_Number =  2
-       Sc_Id_WMO = 4
-       Sc_Id_Char = 'metopa'
-       Platform_Name_Attribute = 'METOP-A'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 12 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-A
+       Sensor%Platform_Name = 'METOP-A'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 4
+       Sensor%Instr_Const_File = "avhrr_2_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_2_algo.dat"
+    endif
+    if(Sc_Id_AVHRR == 11 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-B
+       Sensor%Platform_Name = 'METOP-B'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 3
+       Sensor%Instr_Const_File = "avhrr_1_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_1_algo.dat"
     endif
 
-    if(Sc_Id == 11 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-B
-       Avhrr_Number =  1
-       Sc_Id_WMO = 3
-       Sc_Id_Char = 'metopb'
-       Platform_Name_Attribute = 'METOP-B'
-       Sensor_Name_Attribute = 'AVHRR-3'
-    endif
     !------- Metop-C Sc_Id numbers are not unknown at this time
-    if(Sc_Id == 13 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-C
-       Avhrr_Number =  4
-       Sc_Id_WMO = 5
-       Sc_Id_Char = 'metopc'
-       Platform_Name_Attribute = 'METOP-C'
-       Sensor_Name_Attribute = 'AVHRR-3'
+    if(Sc_Id_AVHRR == 13 .and. AVHRR_KLM_Flag == sym%YES) then         !Metop-C
+       Sensor%Platform_Name = 'METOP-C'
+       Sensor%Sensor_Name = 'AVHRR-3'
+       Sensor%WMO_Id = 5
+       Sensor%Instr_Const_File = "avhrr_3_instr.dat"
+       Sensor%Algo_Const_File = "avhrr_3_algo.dat"
     endif
 
   endif
@@ -380,7 +377,7 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 !      AVHRR_KLM_Flag - T if NOAA-AVHRR_KLM_Flag, F if NOAA-J or earlier
 !      AVHRR_AAPP_Flag - T if AAPP, F if NESDIS
 ! output
-!      Num_Pix - the number of pixels per scanline
+!      Image%Number_Of_Elements - the number of pixels per scanline
 !      l1b_rec_length - the number of bytes per record of the 1b file
 !      Nrec_Header - the number of records used for the header
 !      Nword_Clavr_Start - byte number of first clavr byte on 1b
@@ -396,7 +393,7 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
  integer(kind=int4), intent(out):: Nrec_Header
 
   if (AVHRR_GAC_Flag == sym%YES) then
-      Num_Pix = 409              !number of pixels per scan line
+      Image%Number_Of_Elements = 409              !number of pixels per scan line
       if (AVHRR_KLM_Flag == sym%YES) then
        l1b_rec_length  = 4608
        Nrec_Header = 1
@@ -410,13 +407,13 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
       endif
    else
      if (AVHRR_KLM_Flag == sym%YES) then
-       Num_Pix = 2048
+       Image%Number_Of_Elements = 2048
        Nrec_Header = 1
        l1b_rec_length = 15872
        Nword_Clavr_Start = 14977
        Nword_Clavr = 2*256
      else
-      Num_Pix = 2048
+      Image%Number_Of_Elements = 2048
       Nrec_Header = 1
       l1b_rec_length = 14800
       Nword_Clavr_Start = 0
@@ -426,7 +423,7 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 
 !---- AVHRR_AAPP_Flag - assumed to be 1 km  and no clavr bits
    if (AVHRR_AAPP_Flag == sym%YES) then
-       Num_Pix = 2048
+       Image%Number_Of_Elements = 2048
        Nrec_Header = 1
        l1b_rec_length = 22016
        Nword_Clavr_Start = 0
@@ -501,10 +498,10 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
      endif
 
 !--- read spacedraft id
-     Sc_Id = MAKE_I2WORD(Header_Buffer_Temp(73:74),sym%UNSIGNED,Byte_Swap_1b)
+     Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_Temp(73:74),sym%UNSIGNED,Byte_Swap_1b)
 
 !--- fix noaa-15 bug
-     if ((ver_1b == 1) .and. (Sc_Id == 4)) then
+     if ((ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
        ver_1b = 2
      endif
 
@@ -531,21 +528,21 @@ end subroutine DETERMINE_AVHRR_FILE_TYPE
 !==================================================================================================
 !--- determine if this data is from AVHRR/1 which has no channel 5
 !==================================================================================================
-subroutine DETERMINE_AVHRR_1(year, AVHRR_KLM_Flag_Flag, avhrr_1_Flag)
+subroutine DETERMINE_AVHRR_1(year, AVHRR_KLM_Flag_Flag, AVHRR_1_Flag)
 
     integer(kind=int2), intent(in):: year       !year of this data-set
     integer(kind=int4), intent(in):: AVHRR_KLM_Flag_Flag   !AVHRR_KLM_Flag flag (yes/no)
-    integer(kind=int4), intent(out):: avhrr_1_Flag  !AVHRR/1 flag (yes/no)
+    integer(kind=int4), intent(out):: AVHRR_1_Flag  !AVHRR/1 flag (yes/no)
 
      !--- initialize to no
-     avhrr_1_Flag = sym%NO
+     AVHRR_1_Flag = sym%NO
 
      !--- check Sc_Id for pre-AVHRR_KLM_Flag data
      if (AVHRR_KLM_Flag_Flag == sym%NO) then
-      if (Sc_Id == 1 .and. year < 1985) avhrr_1_Flag = sym%YES   !TIROS-N (NOAA-11 repeat) 
-      if (Sc_Id == 2) avhrr_1_Flag = sym%YES   !NOAA-6
-      if (Sc_Id == 6) avhrr_1_Flag = sym%YES   !NOAA-8
-      if (Sc_Id == 8) avhrr_1_Flag = sym%YES   !NOAA-10
+      if (Sc_Id_AVHRR == 1 .and. year < 1985) AVHRR_1_Flag = sym%YES   !TIROS-N (NOAA-11 repeat) 
+      if (Sc_Id_AVHRR == 2) AVHRR_1_Flag = sym%YES   !NOAA-6
+      if (Sc_Id_AVHRR == 6) AVHRR_1_Flag = sym%YES   !NOAA-8
+      if (Sc_Id_AVHRR == 8) AVHRR_1_Flag = sym%YES   !NOAA-10
      endif
 
 end subroutine DETERMINE_AVHRR_1
@@ -589,14 +586,14 @@ end subroutine DETERMINE_AVHRR_1
 
     !--- based on segment number, compute starting and ending record in level-1b
     !--- for this segment
-    Irec_start = Nrec_Header + (Seg_Idx-1)*Num_Scans_per_Segment + 1
-    Irec_end =   Irec_start + Num_Scans_per_Segment - 1
+    Irec_start = Nrec_Header + (Seg_Idx-1)*Image%Number_Of_Lines_Per_Segment + 1
+    Irec_end =   Irec_start + Image%Number_Of_Lines_Per_Segment - 1
 
     !--- initialize number of scans-read index
-    Num_Scans_Read = 0
+    Image%Number_Of_Lines_Read_This_Segment = 0
 
     !--- create interal arrays needed to process this segment
-    call CREATE_AVHRR_ARRAYS(Num_Pix, Num_Scans_Per_Segment, L1b_Rec_Length)
+    call CREATE_AVHRR_ARRAYS(Image%Number_Of_Elements, Image%Number_Of_Lines_Per_Segment, L1b_Rec_Length)
 
     !--- reset interal arrays needed to process this segment
     call RESET_AVHRR_ARRAYS()
@@ -617,25 +614,23 @@ end subroutine DETERMINE_AVHRR_1
 
     !--- use external c-routine for read
     bytes_per_word = 1
-    word_start = l1b_rec_length* ( 1 + (Seg_Idx-1)*Num_Scans_per_Segment)
-    Number_Of_Words = l1b_rec_length*Num_Scans_per_Segment
-    call mreadf_int(file_1b_local//CHAR(0),word_start,bytes_per_word, &
+    word_start = l1b_rec_length* ( 1 + (Seg_Idx-1)*Image%Number_Of_Lines_Per_Segment)
+    Number_Of_Words = l1b_rec_length*Image%Number_Of_Lines_Per_Segment
+    call MREADF_INT(file_1b_local//CHAR(0),word_start,bytes_per_word, &
                    Number_Of_Words,Number_Of_Words_Read,Segment_Buffer_AVHRR)
     !--- update number of scans read
-    Num_Scans_Read = Number_Of_Words_Read / l1b_rec_length
+    Image%Number_Of_Lines_Read_This_Segment = Number_Of_Words_Read / l1b_rec_length
 
 !   !--- use instrinsic fortran read
-!   word_start = l1b_rec_length* ( 1 + (Seg_Idx-1)*Num_Scans_per_Segment) + 1
+!   word_start = l1b_rec_length* ( 1 + (Seg_Idx-1)*Image%Number_Of_Lines_Per_Segment) + 1
 !   read(unit=lun_level1b,pos=word_start,iostat=ios_l1b) Segment_Buffer_AVHRR
 !   if (ios_l1b == 0) then
-!      Num_Scans_Read = Num_Scans_per_Segment
+!      Image%Number_Of_Lines_Read_This_Segment = Image%Number_Of_Lines_Per_Segment
 !   else
 !      print *, "error on read from l1b", ios_l1b
 !   stop
 !   endif
  
-  
-
    !----------------------------------------------------------------------
    !  reset thermal calibration stats for this orbit
    !----------------------------------------------------------------------
@@ -665,7 +660,7 @@ end subroutine DETERMINE_AVHRR_1
    !------------------------------------------------------------------------------------------------------------
    !--- UNPACK Level-1b Data
    !------------------------------------------------------------------------------------------------------------
-   segment_loop: do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   segment_loop: do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
 
        !extract level-1b information for this scanline
        word_start = (Line_Idx-1)*l1b_rec_length + 1
@@ -717,18 +712,18 @@ end subroutine DETERMINE_AVHRR_1
       !------------------------------------------------------------------------------
       if (maxval(abs(Lat_Anchor_1b(:,Line_Idx))) > 85.0) then
          call GNOMIC_ANCHOR_INTERP(Lon_Anchor_1b(:,Line_Idx),Lat_Anchor_1b(:,Line_Idx), &
-                                   Lon_1b(:,Line_Idx),Lat_1b(:,Line_Idx))
+                                   Nav%Lon_1b(:,Line_Idx),Nav%Lat_1b(:,Line_Idx))
       else
-         call LAGRANGIAN_ANCHOR_INTERP(Lat_Anchor_1b(:,Line_Idx),Lat_1b(:,Line_Idx))
-         call LAGRANGIAN_ANCHOR_INTERP(Lon_Anchor_1b(:,Line_Idx),Lon_1b(:,Line_Idx))
+         call LAGRANGIAN_ANCHOR_INTERP(Lat_Anchor_1b(:,Line_Idx),Nav%Lat_1b(:,Line_Idx))
+         call LAGRANGIAN_ANCHOR_INTERP(Lon_Anchor_1b(:,Line_Idx),Nav%Lon_1b(:,Line_Idx))
       endif
 
       !--- constrain lat and lon to physical values
-      if ((minval(Lat_1b(:,Line_Idx)) < -90.0).or.(maxval(Lat_1b(:,Line_Idx)) > 90.0)) then
-           Lat_1b(:,Line_Idx) = min(90.0,max(-90.0,Lat_1b(:,Line_Idx)))
+      if ((minval(Nav%Lat_1b(:,Line_Idx)) < -90.0).or.(maxval(Nav%Lat_1b(:,Line_Idx)) > 90.0)) then
+           Nav%Lat_1b(:,Line_Idx) = min(90.0,max(-90.0,Nav%Lat_1b(:,Line_Idx)))
       endif
-      if ((minval(Lon_1b(:,Line_Idx)) < -180.0).or.(maxval(Lon_1b(:,Line_Idx)) > 180.0)) then
-           Lon_1b(:,Line_Idx) = min(180.0,max(-180.0,Lon_1b(:,Line_Idx)))
+      if ((minval(Nav%Lon_1b(:,Line_Idx)) < -180.0).or.(maxval(Nav%Lon_1b(:,Line_Idx)) > 180.0)) then
+           Nav%Lon_1b(:,Line_Idx) = min(180.0,max(-180.0,Nav%Lon_1b(:,Line_Idx)))
       endif 
 
       !----------------------------------------------------------------
@@ -754,17 +749,17 @@ end subroutine DETERMINE_AVHRR_1
 !     endif
 
       !--- interpolate pixel values from Anchor values
-      call LINEAR_ANCHOR_INTERP(Satzen_Anchor(:,Line_Idx),Satzen(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Solzen_Anchor(:,Line_Idx),Solzen(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Relaz_Anchor(:,Line_Idx),Relaz(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Solaz_Anchor(:,Line_Idx),Solaz(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Sataz_Anchor(:,Line_Idx),Sataz(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Glintzen_Anchor(:,Line_Idx),Glintzen(:,Line_Idx))
-      call LINEAR_ANCHOR_INTERP(Scatangle_Anchor(:,Line_Idx),Scatangle(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Satzen_Anchor(:,Line_Idx),Geo%Satzen(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Solzen_Anchor(:,Line_Idx),Geo%Solzen(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Relaz_Anchor(:,Line_Idx),Geo%Relaz(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Solaz_Anchor(:,Line_Idx),Geo%Solaz(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Sataz_Anchor(:,Line_Idx),Geo%Sataz(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Glintzen_Anchor(:,Line_Idx),Geo%Glintzen(:,Line_Idx))
+      call LINEAR_ANCHOR_INTERP(Scatangle_Anchor(:,Line_Idx),Geo%Scatangle(:,Line_Idx))
 
       !--- constrain sensor zenith
-      if ((minval(Satzen(:,Line_Idx)) < 0.0).or.(maxval(Satzen(:,Line_Idx)) > 89.9)) then
-          Satzen(:,Line_Idx) = min(89.9,max(0.0,Satzen(:,Line_Idx)))
+      if ((minval(Geo%Satzen(:,Line_Idx)) < 0.0).or.(maxval(Geo%Satzen(:,Line_Idx)) > 89.9)) then
+          Geo%Satzen(:,Line_Idx) = min(89.9,max(0.0,Geo%Satzen(:,Line_Idx)))
       endif
 
       !------------------------------------------------------------------------------
@@ -796,7 +791,7 @@ end subroutine DETERMINE_AVHRR_1
        !--- check erroneous asc/des flag 
        !--- erroneous values are common on AVHRR/1 data
        !--- so this is no longer considered a fatal error
-       if ((Ascend(Line_Idx) < 0) .or. (Ascend(Line_Idx)  > 1)) then
+       if ((Nav%Ascend(Line_Idx) < 0) .or. (Nav%Ascend(Line_Idx)  > 1)) then
            Calc_Asc_Des = sym%YES
        endif
 
@@ -825,8 +820,8 @@ end subroutine DETERMINE_AVHRR_1
 
        !---- set geolocation to missing for bad-scans to avoid ancil-data interp
        if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
-               Lat_1b(:,Line_Idx) = Missing_Value_Real4
-               Lon_1b(:,Line_Idx) = Missing_Value_Real4
+               Nav%Lat_1b(:,Line_Idx) = Missing_Value_Real4
+               Nav%Lon_1b(:,Line_Idx) = Missing_Value_Real4
        endif
 
   end do segment_loop
@@ -835,7 +830,7 @@ end subroutine DETERMINE_AVHRR_1
   ! Calculate ascending/descending flag if needed for this segment
   !------------------------------------------------------------------------------
   if (Calc_Asc_Des == sym%YES) then
-      call CALCULATE_ASC_DES(Line_Idx_Min_Segment,Num_Scans_Read)
+      call CALCULATE_ASC_DES(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
   endif
 
   !------------------------------------------------------------------------------
@@ -843,11 +838,11 @@ end subroutine DETERMINE_AVHRR_1
   !------------------------------------------------------------------------------
 
   !--- RADIANCE CALIBRATION (3b,4,5)
-  call THERM_CAL(Num_Scans_Read)
+  call THERM_CAL(Image%Number_Of_Lines_Read_This_Segment)
 
 
   !--- convert AVHRR counts to single gain and store in global count arrays
-  call CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,Line_Idx_Min_Segment,Num_Scans_Read)
+  call CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
   call DESTROY_AVHRR_ARRAYS()
 end subroutine READ_AVHRR_LEVEL1B_DATA
@@ -886,54 +881,58 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
 
      if (AVHRR_KLM_Flag == sym%YES) then
 
-      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year, &
-                   Start_day,Start_time,Num_Scans,End_Year,End_day,End_time, &
+      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+                   Image%Start_Doy,Image%Start_time,Image%Number_Of_Lines, &
+                   Image%End_Year,Image%End_Doy,Image%End_time, &
                    tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
      else
 
-      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year, &
-                   Start_day,Start_time,Num_Scans,End_Year,End_day,End_time, &
+      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+                   Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines,Image%End_Year, &
+                   Image%End_Doy,Image%End_Time, &
                    tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
       !--- pre AVHRR_KLM_Flag used a 2 digit year
-      if (End_Year > 50) then
-       End_Year = End_Year + 1900
+      if (Image%End_Year > 50) then
+       Image%End_Year = Image%End_Year + 1900
       else
-        End_Year = End_Year + 2000
+        Image%End_Year = Image%End_Year + 2000
       endif
-      if (Start_Year > 50) then
-        Start_Year = Start_Year + 1900
+      if (Image%Start_Year > 50) then
+        Image%Start_Year = Image%Start_Year + 1900
       else
-        Start_Year = Start_Year + 2000
+        Image%Start_Year = Image%Start_Year + 2000
       endif
-                                                                                                                                          
+
      endif
 
    else     !if not AVHRR_GAC_Flag
 
      if (AVHRR_KLM_Flag == sym%YES) then
 
-      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year, &
-                  Start_day,Start_time,Num_Scans,End_Year,End_day,End_time, &
+      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+                  Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines, &
+                  Image%End_Year,Image%End_Doy,Image%End_Time, &
                   tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
      else
 
-      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year, &
-                Start_day,Start_time,Num_Scans,End_Year,End_day,End_time, &
+      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+                Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines, &
+                Image%End_Year,Image%End_Doy,Image%End_Time, &
                 tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
 !--- pre AVHRR_KLM_Flag used a 2 digit year
-      if (End_Year > 50) then
-        End_Year = End_Year + 1900
+      if (Image%End_Year > 50) then
+        Image%End_Year = Image%End_Year + 1900
       else
-        End_Year = End_Year + 2000
+        Image%End_Year = Image%End_Year + 2000
       endif
-      if (Start_Year > 50) then
-        Start_Year = Start_Year + 1900
+      if (Image%Start_Year > 50) then
+        Image%Start_Year = Image%Start_Year + 1900
       else
-        Start_Year = Start_Year + 2000
+        Image%Start_Year = Image%Start_Year + 2000
       endif
      endif
    endif
@@ -942,9 +941,6 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
    deallocate(Header_Buffer_AVHRR)
 
 end subroutine READ_AVHRR_LEVEL1B_HEADER
-
-
-
 
 !-----------------------------------------------------------
 ! REFLECTANCE CALIBRATION ROUTINE
@@ -1176,9 +1172,9 @@ end subroutine REF_CAL
 !  the AVHRR_KLM_Flag-POD nomenclature has changed.  
 !
 !---------------------------------------------------------------------------
-subroutine THERM_CAL(Num_Scans_Read)
+subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
-  integer, intent(in):: Num_Scans_Read
+  integer, intent(in):: Number_Of_Lines_Read_This_Segment
   integer(kind=int4):: i
   integer(kind=int4):: j
   integer, parameter:: dx = 2
@@ -1196,7 +1192,7 @@ subroutine THERM_CAL(Num_Scans_Read)
   ! Perform Filter on Ch20 counts for appropriate sensors
   ! Do this only for TIROS-N, NOAA-5,6,7,8,9,10
   !------------------------------------------------------------------------
-  if ((Sc_Id_WMO >= 706 .and. Sc_Id_WMO <= 708) .or. (Sc_Id_WMO >= 200 .and. Sc_Id_WMO <= 202)) then
+  if ((Sensor%WMO_Id >= 706 .and. Sensor%WMO_Id <= 708) .or. (Sensor%WMO_Id >= 200 .and. Sensor%WMO_Id <= 202)) then
 
        Temp_Pix_Array = Chan_Counts_Avhrr(3,:,:)
        Ch20_Counts_Filtered = Chan_Counts_Avhrr(3,:,:)
@@ -1205,16 +1201,16 @@ subroutine THERM_CAL(Num_Scans_Read)
               One_Byte_Temp = 0
        endwhere
 
-       do Elem_Idx = 1, Num_Pix
+       do Elem_Idx = 1, Image%Number_Of_Elements
 
-          Elem_Idx_Min = min(Num_Pix,max(1,Elem_Idx - dx))
-          Elem_Idx_Max = min(Num_Pix,max(1,Elem_Idx + dx))
+          Elem_Idx_Min = min(Image%Number_Of_Elements,max(1,Elem_Idx - dx))
+          Elem_Idx_Max = min(Image%Number_Of_Elements,max(1,Elem_Idx + dx))
 
-         do Line_Idx = 1, Num_Scans_Read
+         do Line_Idx = 1, Number_Of_Lines_Read_This_Segment
 
            if (Chan_Counts_Avhrr(3,Elem_Idx,Line_Idx) > Ch20_Counts_Filter_Thresh) then
-             Line_Idx_Min = min(Num_Scans_Read,max(1,Line_Idx - dy))
-             Line_Idx_Max = min(Num_Scans_Read,max(1,Line_Idx + dy))
+             Line_Idx_Min = min(Number_Of_Lines_Read_This_Segment,max(1,Line_Idx - dy))
+             Line_Idx_Max = min(Number_Of_Lines_Read_This_Segment,max(1,Line_Idx + dy))
              Num_Valid = sum(One_Byte_Temp(Elem_Idx_Min:Elem_Idx_Max,Line_Idx_Min:Line_Idx_Max))
              if (Num_Valid > 1) then
               Ch20_Counts_Filtered(Elem_Idx,Line_Idx) =  &
@@ -1231,7 +1227,7 @@ subroutine THERM_CAL(Num_Scans_Read)
   !------------------------------------------------------------------------
   ! Loop through each line and calibrate
   !------------------------------------------------------------------------
-  do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+  do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
 
     if (Bad_Scan_Flag(j) == sym%YES) then
        cycle
@@ -1242,15 +1238,15 @@ subroutine THERM_CAL(Num_Scans_Read)
 
        if (AVHRR_KLM_Flag == sym%YES) then       !apply level-1b non-linear correction
 
-         if (Ch3a_On_AVHRR(j) == 0 .and. Chan_On_Flag_Default(20) == sym%YES) then
+         if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
            ch(20)%Rad_Toa(:,j) = ir_coef_1_1b(3,j) + ir_coef_2_1b(3,j)*Chan_Counts_Avhrr(3,:,j) +  &
                         ir_coef_3_1b(3,j)*Chan_Counts_Avhrr(3,:,j)**2
          endif
-         if (Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
              ch(31)%Rad_Toa(:,j) = ir_coef_1_1b(4,j) + ir_coef_2_1b(4,j)*Chan_Counts_Avhrr(4,:,j) +  &
                        ir_coef_3_1b(4,j)*Chan_Counts_Avhrr(4,:,j)**2
          endif
-         if (Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
             ch(32)%Rad_Toa(:,j) = ir_coef_1_1b(5,j) + ir_coef_2_1b(5,j)*Chan_Counts_Avhrr(5,:,j) +  &
                             ir_coef_3_1b(5,j)*Chan_Counts_Avhrr(5,:,j)**2
          endif
@@ -1258,13 +1254,13 @@ subroutine THERM_CAL(Num_Scans_Read)
        else                         !compute level-1b linear correction for pre-AVHRR_KLM_Flag
 
          !--- Eqn 7.1.2.4-7
-         if (Chan_On_Flag_Default(20) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
            ch(20)%Rad_Toa(:,j) = ir_linear_slope_1b(3,j)*Chan_Counts_Avhrr(3,:,j) + ir_linear_intercept_1b(3,j)
          endif
-         if (Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
            ch(31)%Rad_Toa(:,j) = ir_linear_slope_1b(4,j)*Chan_Counts_Avhrr(4,:,j) + ir_linear_intercept_1b(4,j)
          endif
-         if (Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
            ch(32)%Rad_Toa(:,j) = ir_linear_slope_1b(5,j)*Chan_Counts_Avhrr(5,:,j) + ir_linear_intercept_1b(5,j)
          endif
 
@@ -1272,13 +1268,13 @@ subroutine THERM_CAL(Num_Scans_Read)
 
     else    !generate linear radiance using internally computed coefficients
 
-      if (Ch3a_On_AVHRR(j) == 0 .and. Chan_On_Flag_Default(20) == sym%YES) then
+      if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
          ch(20)%Rad_Toa(:,j) = IR_Linear_Slope_New(3,j)*Chan_Counts_Avhrr(3,:,j) + IR_Linear_Intercept_New(3,j)
       endif
-      if (Chan_On_Flag_Default(31) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
         ch(31)%Rad_Toa(:,j) = IR_Linear_Slope_New(4,j)*Chan_Counts_Avhrr(4,:,j) + IR_Linear_Intercept_New(4,j)
       endif
-      if (Chan_On_Flag_Default(32) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
         ch(32)%Rad_Toa(:,j) = IR_Linear_Slope_New(5,j)*Chan_Counts_Avhrr(5,:,j) + IR_Linear_Intercept_New(5,j)
       endif
     endif
@@ -1286,22 +1282,22 @@ subroutine THERM_CAL(Num_Scans_Read)
    !--- apply non-linear correction where appropriate (non-AVHRR_KLM_Flag or any if thermal cal redone)
    if ((AVHRR_KLM_Flag == sym%NO) .or. (Therm_Cal_1b == sym%NO)) then 
 
-     if (Ch3a_On_AVHRR(j) == 0 .and. Chan_On_Flag_Default(20) == sym%YES) then
+     if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        ch(20)%Rad_Toa(:,j) = ch(20)%Rad_Toa(:,j) + b0_3b + b1_3b*ch(20)%Rad_Toa(:,j) + b2_3b*ch(20)%Rad_Toa(:,j)**2
      endif
-     if (Chan_On_Flag_Default(31) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
        ch(31)%Rad_Toa(:,j) = ch(31)%Rad_Toa(:,j) + b0_4 + b1_4*ch(31)%Rad_Toa(:,j) + b2_4*ch(31)%Rad_Toa(:,j)**2
      endif
-     if (Chan_On_Flag_Default(32) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
        ch(32)%Rad_Toa(:,j) = ch(32)%Rad_Toa(:,j) + b0_5 + b1_5*ch(32)%Rad_Toa(:,j) + b2_5*ch(32)%Rad_Toa(:,j)**2
      endif
    endif
 
    !---- convert radiance to brightness temperature
 
-    do i = 1, Num_Pix
+    do i = 1, Image%Number_Of_Elements
 
-        if (Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
          if (ch(20)%Rad_Toa(i,j) > 0.0) then
           ch(20)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(i,j)) 
          else
@@ -1310,7 +1306,7 @@ subroutine THERM_CAL(Num_Scans_Read)
          endif
         endif
 
-        if (Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
          if (ch(31)%Rad_Toa(i,j) > 0.0) then
            ch(31)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(i,j)) 
          else
@@ -1319,7 +1315,7 @@ subroutine THERM_CAL(Num_Scans_Read)
          endif
         endif
 
-        if (Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
          if (ch(32)%Rad_Toa(i,j) > 0.0) then
            ch(32)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(i,j)) 
          else
@@ -1333,7 +1329,7 @@ subroutine THERM_CAL(Num_Scans_Read)
   enddo
 
   !----- additional quality check on Bt_Ch31
-  do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+  do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
     if (minval(ch(31)%Bt_Toa(:,j)) < 0.0) then
       Bad_Scan_Flag(j) = sym%YES
     endif
@@ -1824,11 +1820,11 @@ end subroutine COMPUTE_NEW_THERM_CAL_COEF
 !
 ! Modified December 2008 for segment processing
 !======================================================================
-subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year_Temp,&
+subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
               Start_day_Temp,Start_Time_Temp,Num_Scans,End_Year_Temp,End_day_Temp,End_Time_Temp, &
               tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
-   integer(kind=int2), intent(out):: Sc_Id,data_type,Start_Year_Temp,Start_day_Temp, &
+   integer(kind=int2), intent(out):: Sc_Id_AVHRR,data_type,Start_Year_Temp,Start_day_Temp, &
                                      End_Year_Temp,End_day_Temp, &
                                      tip_parity,aux_sync,ramp_auto_Cal,ver_1b
    integer(kind=int4), intent(out):: Start_Time_Temp,End_Time_Temp,Num_Scans
@@ -1841,7 +1837,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year_Temp,&
    ! begin executable code
    !-----------------------------------------------------------------------
 
-   Sc_Id = Header_Buffer_AVHRR(1)
+   Sc_Id_AVHRR = Header_Buffer_AVHRR(1)
    data_type = ishft(Header_Buffer_AVHRR(2),-4)
 
    tip_parity = 0
@@ -1859,7 +1855,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year_Temp,&
    end where
    i4word =  data_byte(1)*256 + data_byte(2)
    Start_Year_Temp = i4word / (2**9)
-   Start_day_Temp = i4word - Start_Year_Temp * (2**9)
+   Start_Day_Temp = i4word - Start_Year_Temp * (2**9)
 
    i4word = MAKE_I4WORD(Header_Buffer_AVHRR(5:8),sym%UNSIGNED,Byte_Swap_1b)
    Start_Time_Temp = i4word - ((i4word/2**27)*(2**27))
@@ -1887,7 +1883,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year_Temp,&
    i4word =  data_byte(1)*256 + data_byte(2)
 
    End_Year_Temp = i4word / (2**9)
-   End_day_Temp = i4word - Start_Year_Temp * (2**9)
+   End_Day_Temp = i4word - Start_Year_Temp * (2**9)
 
    i4word = MAKE_I4WORD(Header_Buffer_AVHRR(13:16),sym%UNSIGNED,Byte_Swap_1b)
    End_Time_Temp = i4word - ((i4word/2**27)*(2**27))
@@ -1907,11 +1903,11 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id,data_type,Start_Year_Temp,&
 !
 ! Modified December 2008 for segment processing
 !======================================================================
-subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
+subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
               Start_day_Temp,Start_Time_Temp,Num_Scans,End_Year_Temp,End_day_Temp,End_Time_Temp, &
               tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
 
-   integer(kind=int2), intent(out):: Sc_Id,data_type,Start_Year_Temp,Start_day_Temp, &
+   integer(kind=int2), intent(out):: Sc_Id_AVHRR,data_type,Start_Year_Temp,Start_day_Temp, &
                                      End_Year_Temp,End_day_Temp, &
                                      tip_parity,aux_sync,ramp_auto_Cal,ver_1b
    integer(kind=int4), intent(out):: Start_Time_Temp,End_Time_Temp,Num_Scans
@@ -1921,7 +1917,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
 !-----------------------------------------------------------------------
 ! begin executable code
 !-----------------------------------------------------------------------
-      Sc_Id = MAKE_I2WORD(Header_Buffer_AVHRR(73:74),sym%UNSIGNED,Byte_Swap_1b)
+      Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_AVHRR(73:74),sym%UNSIGNED,Byte_Swap_1b)
       data_type = MAKE_I2WORD(Header_Buffer_AVHRR(77:78),sym%UNSIGNED,Byte_Swap_1b)
 
       do i = 1,len(proc_block_Id)
@@ -1934,7 +1930,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
       ver_1b = MAKE_I2WORD(Header_Buffer_AVHRR(5:6),sym%UNSIGNED,Byte_Swap_1b)
 
      !--- correct for noaa-15 bug in version number
-     if ((ver_1b == 1) .and. (Sc_Id== 4)) then
+     if ((ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
        ver_1b = 2
      endif  
 
@@ -1942,7 +1938,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
      ! unpack starting Time_Temp
      !----------------------------------------------------------------------
      Start_Year_Temp = MAKE_I2WORD(Header_Buffer_AVHRR(85:86),sym%UNSIGNED,Byte_Swap_1b)
-     Start_day_Temp = MAKE_I2WORD(Header_Buffer_AVHRR(87:88),sym%UNSIGNED,Byte_Swap_1b)
+     Start_Day_Temp = MAKE_I2WORD(Header_Buffer_AVHRR(87:88),sym%UNSIGNED,Byte_Swap_1b)
      Start_Time_Temp = MAKE_I4WORD(Header_Buffer_AVHRR(89:92),sym%UNSIGNED,Byte_Swap_1b)
    
     !----------------------------------------------------------------------
@@ -2016,7 +2012,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
 
 ! I'm leaving `Num_skip' and `Num_start' here as useful constants although they
 ! are not used in this subroutine.
-   if (Num_Pix == 409) then
+   if (Image%Number_Of_Elements == 409) then
       ! It's a GAC scan line.
       Num_start = 5 !number of pixels between Anchors
       Num_skip = 8  !pixel number for first Anchor point
@@ -2059,7 +2055,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id,data_type,Start_Year_Temp,&
 
 ! If it's a GAC scan line perform averaging of `temp_y' for the 2nd and 3rd LAC
 ! pixel going into every GAC pixel for the final value of `y'.
-if (Num_Pix == 409) then
+if (Image%Number_Of_Elements == 409) then
    do Pix_Idx = 1, 409
       y(Pix_Idx) = 0.5*(temp_y(5*Pix_Idx)+temp_y(5*Pix_Idx-1))
    enddo
@@ -2089,14 +2085,14 @@ endif
    real (kind=ipre), dimension(:), intent(out):: longitude,latitude
    real (kind=ipre), dimension(:), allocatable:: k,x_Anchor,y_Anchor, &
                                                  Lon_Anchor,Lat_Anchor
-   real (kind=ipre), dimension(Num_Pix):: x,y
+   real (kind=ipre), dimension(Image%Number_Of_Elements):: x,y
    real (kind=ipre):: yy,xx,xa1,xa2,rho,v,v_prev,c,Lat_center,Lon_center,offset
    integer:: ia1,ia2,Pix_Idx,Num_Anchor,Num_skip,Num_start
 
 
    Num_Anchor = size(Lon_Anchor_deg)  !should be 51
-   Num_skip = Num_Pix / Num_Anchor
-   Num_start = (Num_Pix - Num_skip*(Num_Anchor-1))/2 + 1
+   Num_skip = Image%Number_Of_Elements / Num_Anchor
+   Num_start = (Image%Number_Of_Elements - Num_skip*(Num_Anchor-1))/2 + 1
 
    allocate(k(Num_Anchor))
    allocate(x_Anchor(Num_Anchor))
@@ -2126,7 +2122,7 @@ endif
                      sin(Lat_center) * cos(Lat_Anchor) * cos(Lon_Anchor - Lon_center))
 
 !--- linear interp in gnomic space
-      do Pix_Idx = 1, Num_Pix
+      do Pix_Idx = 1, Image%Number_Of_Elements
 
 !--- determine two closest Anchor points
          ia1 = max(1,min(Num_Anchor-1,(Pix_Idx - Num_start)/Num_skip + 1))
@@ -2154,7 +2150,7 @@ endif
 !--- convert other quantities
       v_prev = 0.0
       offset = 0
-      do Pix_Idx = 1,Num_Pix
+      do Pix_Idx = 1,Image%Number_Of_Elements
 
 !--- some needed constants
         rho = sqrt(x(Pix_Idx)**2 + y(Pix_Idx)**2)
@@ -2232,8 +2228,8 @@ endif
    integer:: discon
 
    Num_Anchor = size(Anchor)  !should be 51
-   Num_skip = Num_Pix / Num_Anchor
-   Num_start = (Num_Pix - Num_skip*(Num_Anchor-1))/2 + 1
+   Num_skip = Image%Number_Of_Elements / Num_Anchor
+   Num_start = (Image%Number_Of_Elements - Num_skip*(Num_Anchor-1))/2 + 1
 
    allocate(Temp_Anchor(Num_Anchor))
 
@@ -2251,7 +2247,7 @@ endif
     endif
 
 !-----------------------------------------------------------
-      do Pix_Idx = 1, Num_Pix
+      do Pix_Idx = 1, Image%Number_Of_Elements
          ia1 = max(1,min(Num_Anchor-1,(Pix_Idx - Num_start)/Num_skip + 1))
          ia2 = ia1 + 1
 
@@ -2467,7 +2463,7 @@ endif
    if (i2word < 0) then
       i2word = i2word + 256
    end if
-   Ascend(Line_Idx) = ishft(ishft(i2word, 6),-7)
+   Nav%Ascend(Line_Idx) = ishft(ishft(i2word, 6),-7)
 
    !--- this needs to be verified
    i2word = Buffer_AVHRR(10)
@@ -2548,7 +2544,7 @@ endif
 
       do j = 1,3
 
-        if (Pix_Idx > Num_Pix) then
+        if (Pix_Idx > Image%Number_Of_Elements) then
             exit
         endif
 
@@ -2563,7 +2559,7 @@ endif
 
       enddo
 
-      if (Pix_Idx > Num_Pix) then
+      if (Pix_Idx > Image%Number_Of_Elements) then
             exit
       endif
 
@@ -2654,7 +2650,7 @@ endif
    if (i2word < 0) then
       i2word = i2word + 256
    end if
-   Ascend(Line_Idx) = ishft(i2word, -7)
+   Nav%Ascend(Line_Idx) = ishft(i2word, -7)
 
    i2word  = Buffer_AVHRR(14)
    if (i2word < 0) then
@@ -2763,7 +2759,7 @@ endif
       i4word = MAKE_I4WORD(Buffer_AVHRR(Byte_Idx:Byte_Idx+3),sym%UNSIGNED,Byte_Swap_1b)
 
       do j = 1,3
-       if (Pix_Idx > Num_Pix) then
+       if (Pix_Idx > Image%Number_Of_Elements) then
            exit
        endif
 
@@ -2780,7 +2776,7 @@ endif
         endif
       enddo
 
-      if (Pix_Idx > Num_Pix) then
+      if (Pix_Idx > Image%Number_Of_Elements) then
             exit
       endif
 
@@ -2804,10 +2800,10 @@ endif
       onebyte = Buffer_AVHRR(iword)
       Pix_Idx = 1
       Start_Pixel = (iword - Start_word)*4 + 1
-      End_Pixel = min(Num_Pix, Start_Pixel+3_int2)
+      End_Pixel = min(Image%Number_Of_Elements, Start_Pixel+3_int2)
 
       do Pix_Idx = Start_Pixel, End_Pixel
-         if (Pix_Idx > Num_Pix) then
+         if (Pix_Idx > Image%Number_Of_Elements) then
            exit
          endif
          i = (Pix_Idx - Start_Pixel) + 1
@@ -2884,7 +2880,7 @@ endif
    if (i2word < 0) then
       i2word = i2word + 256
    end if
-   Ascend(Line_Idx) = ishft(i2word, -7)
+   Nav%Ascend(Line_Idx) = ishft(i2word, -7)
 
    !--- Ch3a/b flag - note difference in position and meaning from nesdis
    i2word  = Buffer_AVHRR(13)
@@ -2995,21 +2991,21 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
 !---------------------------------------------------------
 ! compute the ascending/descending node flag 
 !---------------------------------------------------------
-  subroutine CALCULATE_ASC_DES(Line_Idx_Min_Segment,Num_Scans_Read)
+  subroutine CALCULATE_ASC_DES(Line_Idx_Min_Segment,Number_Of_Lines_Read_This_Segment)
 
         integer, intent(in):: Line_Idx_Min_Segment
-        integer, intent(in):: Num_Scans_Read
+        integer, intent(in):: Number_Of_Lines_Read_This_Segment
         real:: diff
         real:: diff_before
         real:: diff_after
         integer:: j
 
-        do j = Line_Idx_Min_Segment+1, Num_Scans_Read - 2
+        do j = Line_Idx_Min_Segment+1, Number_Of_Lines_Read_This_Segment - 2
         
          if (Bad_Scan_Flag(j) == sym%YES) then
 
             if (j > Line_Idx_Min_Segment + 1) then
-              Ascend(j) = Ascend(j-1)
+              Nav%Ascend(j) = Nav%Ascend(j-1)
             endif
 
             cycle ! Cycle if there is missing navigation
@@ -3018,32 +3014,32 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
 
          diff = Lat_Anchor_1b(25,j) - Lat_Anchor_1b(25,j+1)
 
-         Ascend(j) = 1
-         if (diff <= 0) Ascend(j) = 0
+         Nav%Ascend(j) = 1
+         if (diff <= 0) Nav%Ascend(j) = 0
 
          if (Bad_Scan_Flag(j+1) == sym%YES .and.  &
               Bad_Scan_Flag(j-1) == sym%NO) then
-              Ascend(j) = Ascend(j-1)
+              Nav%Ascend(j) = Nav%Ascend(j-1)
          endif
 
          diff_before = Lat_Anchor_1b(25,j-1) - Lat_Anchor_1b(25,j)
          diff_after = Lat_Anchor_1b(25,j+1) - Lat_Anchor_1b(25,j+2)
 
          ! check to see if current one is a fluke in diff
-         if (diff_after >= 0 .and. Ascend(j-1) == 1 .and.  &
-              diff <= 0 .and. Ascend(j) == 0)  then
-              Ascend(j) = 1
+         if (diff_after >= 0 .and. Nav%Ascend(j-1) == 1 .and.  &
+              diff <= 0 .and. Nav%Ascend(j) == 0)  then
+              Nav%Ascend(j) = 1
          endif
-         if (Ascend(j-1) == 0 .and. diff_after <= 0 .and.  &
-             diff >= 0 .and. Ascend(j) == 1)  then
-             Ascend(j) = 0
+         if (Nav%Ascend(j-1) == 0 .and. diff_after <= 0 .and.  &
+             diff >= 0 .and. Nav%Ascend(j) == 1)  then
+             Nav%Ascend(j) = 0
          endif
 
          enddo
 
-        Ascend(Line_Idx_Min_Segment) = Ascend(Line_Idx_Min_Segment+1)
-        Ascend(Num_Scans_Read-1) = Ascend(Num_Scans_Read - 2)
-        Ascend(Num_Scans_Read) = Ascend(Num_Scans_Read - 2)
+        Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
+        Nav%Ascend(Number_Of_Lines_Read_This_Segment-1) = Nav%Ascend(Number_Of_Lines_Read_This_Segment - 2)
+        Nav%Ascend(Number_Of_Lines_Read_This_Segment) = Nav%Ascend(Number_Of_Lines_Read_This_Segment - 2)
 
   end subroutine CALCULATE_ASC_DES
 !------------------------------------------------------------------------------
@@ -3130,12 +3126,21 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
  integer:: i, j
 
 
- if (AVHRR_FLAG == sym%NO) return
+ !--- if not AVHRR, return
+ if ((trim(Sensor%Sensor_Name) /= 'AVHRR-1') .and.  &
+     (trim(Sensor%Sensor_Name) /= 'AVHRR-2') .and.  &
+     (trim(Sensor%Sensor_Name) /= 'AVHRR-3')) then
 
- if (Chan_On_Flag_Default(1) == sym%NO) return
- if (Chan_On_Flag_Default(2) == sym%NO) return
- if (Chan_On_Flag_Default(6) == sym%NO) return
+     return
 
+ endif
+
+ !--- if channels missing, return
+ if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
+ if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return
+ if (Sensor%Chan_On_Flag_Default(6) == sym%NO) return
+
+ !--- pre-KLM logic
  if (AVHRR_KLM_Flag == sym%NO) then
 
   Chan_Counts_Avhrr_Sg(:,:,j1:j2) = Chan_Counts_Avhrr(:,:,j1:j2)
@@ -3149,6 +3154,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
     endif
   enddo
 
+ !--- KLM logic
  else
 
   do j = j1, j1+j2-1
@@ -3158,10 +3164,10 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
         cycle
    endif
 
-   do i = 1, Num_Pix
+   do i = 1, Image%Number_Of_Elements
 
      !--- channel 1
-     if (Chan_On_Flag_Default(1) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
       if (Chan_Counts_Avhrr(1,i,j) < Ch1_Switch_Count) then
          Chan_Counts_Avhrr_Sg(1,i,j) = Scan_Space_Counts_Avhrr(1,j) + 0.5*(Chan_Counts_Avhrr(1,i,j) - Scan_Space_Counts_Avhrr(1,j))
        else
@@ -3172,7 +3178,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
      endif
 
      !--- channel 2
-     if (Chan_On_Flag_Default(2) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
       if (Chan_Counts_Avhrr(2,i,j) < Ch2_Switch_Count) then
        Chan_Counts_Avhrr_Sg(2,i,j) = Scan_Space_Counts_Avhrr(2,j) + 0.5*(Chan_Counts_Avhrr(2,i,j) - Scan_Space_Counts_Avhrr(2,j))
       else
@@ -3183,7 +3189,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
     endif
 
     !--- channel 3a
-    if (Chan_On_Flag_Default(6) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
 
      if (Ch3a_On_AVHRR(j) == sym%YES) then
 

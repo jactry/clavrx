@@ -72,12 +72,12 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    call CLOUD_SHADOW_RETR (  &
            Zc_Acha &
-         , Solaz &
-         , Solzen &
-         , Lat &
-         , Lon &
-         , Lat_Pc &
-         , Lon_Pc &
+         , Geo%Solaz &
+         , Geo%Solzen &
+         , Nav%Lat &
+         , Nav%Lon &
+         , Nav%Lat_Pc &
+         , Nav%Lon_Pc &
          , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
@@ -250,8 +250,8 @@ module ACHA_CLAVRX_BRIDGE
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
-   Output%Latitude_Pc => Lat_Pc
-   Output%Longitude_Pc => Lon_Pc
+   Output%Latitude_Pc => Nav%Lat_Pc
+   Output%Longitude_Pc => Nav%Lon_Pc
    Output%Tc => Tc_Acha
    Output%Ec => Ec_Acha
    Output%Beta => Beta_Acha
@@ -288,14 +288,13 @@ module ACHA_CLAVRX_BRIDGE
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
-   Input%Number_of_Elements = Num_Pix
-   Input%Number_of_Lines = Num_Scans_Read
-   Input%Number_of_Lines = Num_Scans_Per_Segment
-   Input%Num_Line_Max = Num_Scans_Per_Segment
+   Input%Number_of_Elements = Image%Number_Of_Elements
+   Input%Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+   Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
    Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
    Input%ACHA_Mode_Flag_In = ACHA_MODE
-   Input%Sensor_Resolution_KM = Sensor_Resolution_KM
+   Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
 
    Input%Chan_Idx_67um = 27     !channel number for 6.7
    Input%Chan_Idx_85um = 29     !channel number for 8.5
@@ -303,11 +302,11 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_Idx_12um = 32     !channel number for 12
    Input%Chan_Idx_133um = 33  !channel number for 13.3
 
-   Input%Chan_On_67um = Chan_On_Flag_Default(27)
-   Input%Chan_On_85um = Chan_On_Flag_Default(29)
-   Input%Chan_On_11um = Chan_On_Flag_Default(31)
-   Input%Chan_On_12um = Chan_On_Flag_Default(32)
-   Input%Chan_On_133um = Chan_On_Flag_Default(33)
+   Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
+   Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
+   Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
+   Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
+   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(33)
 
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Elem_Idx_Nwp =>  I_Nwp
@@ -325,21 +324,21 @@ module ACHA_CLAVRX_BRIDGE
 
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
-   Input%Cosine_Zenith_Angle => Coszen
-   Input%Sensor_Zenith_Angle => Satzen
-   Input%Sensor_Azimuth_Angle => Sataz
-   Input%Latitude => Lat
-   Input%Longitude => Lon
+   Input%Cosine_Zenith_Angle => Geo%Coszen
+   Input%Sensor_Zenith_Angle => Geo%Satzen
+   Input%Sensor_Azimuth_Angle => Geo%Sataz
+   Input%Latitude => Nav%Lat
+   Input%Longitude => Nav%Lon
 
-   Input%Snow_Class => Snow
-   Input%Surface_Type => Sfc_Type
+   Input%Snow_Class => Sfc%Snow
+   Input%Surface_Type => Sfc%Sfc_Type
 
    Input%Surface_Temperature =>Tsfc_Nwp_Pix
    Input%Surface_Air_Temperature => Tair_Nwp_Pix
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
 
-   Input%Surface_Elevation => Zsfc
+   Input%Surface_Elevation => Sfc%Zsfc
    Input%Cloud_Mask => Cld_Mask
    Input%Cloud_Type => Cld_Type
    Input%Cloud_Probability => Posterior_Cld_Probability

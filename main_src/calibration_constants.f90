@@ -115,8 +115,8 @@ module CALIBRATION_CONSTANTS
 
  real(kind=real8),save,public:: Goes_Input_Time = 0
  real(kind=real8),save,public:: Goes_Epoch_Time = 0
- real(kind=real8),save,public:: Goes_Sub_Satellite_Longitude
- real(kind=real8),save,public:: Goes_Sub_Satellite_Latitude
+!real(kind=real8),save,public:: Goes_Sub_Satellite_Longitude   ! Now in sensor struc
+!real(kind=real8),save,public:: Goes_Sub_Satellite_Latitude    ! Now in sensor struc
 
  !--- MCSST values
  real(kind=real4),save,public:: B1_day_mask,B2_day_mask, &

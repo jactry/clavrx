@@ -101,7 +101,7 @@ c     character*14 path/'./pfaast_coef/'/
       !--- initialize this (AKH)
       iok = 0
 
-      path = trim(ancil_data_path) // "pfast/"
+      path = trim(ancil_data_path) // "static/pfaast/"
 
       if(craft .ne. cinit) then
          if(craft == cbt .or. craft == cst) then

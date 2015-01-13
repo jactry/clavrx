@@ -42,8 +42,6 @@ public:: GET_GOES_HEADERS, &
          COMPUTE_SATELLITE_ANGLES, &
          LMODEL, &
          DETERMINE_DARK_COMPOSITE_NAME, &
-         ASSIGN_GOES_SAT_ID_NUM_INTERNAL, &
-         ASSIGN_GOES_SNDR_ID_NUM_INTERNAL, &
          READ_GOES_SNDR_INSTR_CONSTANTS, &
          READ_GOES_INSTR_CONSTANTS, &
          READ_DARK_COMPOSITE_COUNTS, &
@@ -261,177 +259,17 @@ end type AREA_STRUCT
 
 contains
 
-!--------------------------------------------------------------------
-! assign internal sat id's and const file names for goes
-!--------------------------------------------------------------------
-subroutine ASSIGN_GOES_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num, Elem_Res)
-    integer(kind=int4), intent(in):: Mcidas_Id_Num
-    integer(kind=int4), intent(in):: Elem_Res
-
-    Goes_Mop_Flag = sym%NO
-    Goes_1km_Flag = sym%NO
-    Goes_Sndr_Flag = sym%NO ! Make sure sounder is turned off
-    if (Mcidas_Id_Num == 70)   then
-        Sc_Id_WMO = 252
-        Instr_Const_file = 'goes_08_instr.dat'
-        Algo_Const_file = 'goes_08_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'GOES-8'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 72)   then
-        Instr_Const_file = 'goes_09_instr.dat'
-        Algo_Const_file = 'goes_09_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'GOES-9'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 74)   then
-        Sc_Id_WMO = 254
-        Instr_Const_file = 'goes_10_instr.dat'
-        Algo_Const_file = 'goes_10_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'GOES-10'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-   if (Mcidas_Id_Num == 76)   then
-        Sc_Id_WMO = 255
-        Instr_Const_file = 'goes_11_instr.dat'
-        Algo_Const_file = 'goes_11_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'GOES-11'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 78)   then
-        Sc_Id_WMO = 256
-        Instr_Const_file = 'goes_12_instr.dat'
-        Algo_Const_file = 'goes_12_algo.dat'
-        Goes_Mop_Flag = sym%YES
-        Platform_Name_Attribute = 'GOES-12'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 180)   then
-        Sc_Id_WMO = 257
-        Instr_Const_file = 'goes_13_instr.dat'
-        Algo_Const_file = 'goes_13_algo.dat'
-        Goes_Mop_Flag = sym%YES
-        Platform_Name_Attribute = 'GOES-13'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 182)   then
-        Sc_Id_WMO = 258
-        Instr_Const_file = 'goes_14_instr.dat'
-        Algo_Const_file = 'goes_14_algo.dat'
-        Goes_Mop_Flag = sym%YES
-        Platform_Name_Attribute = 'GOES-14'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 184)   then
-        Sc_Id_WMO = 259
-        Instr_Const_file = 'goes_15_instr.dat'
-        Algo_Const_file = 'goes_15_algo.dat'
-        Goes_Mop_Flag = sym%YES
-        Platform_Name_Attribute = 'GOES-15'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
-
-   if (Goes_Mop_Flag == sym%YES) then
-           Chan_On_Flag_Default(32) = sym%NO
-   else
-           Chan_On_Flag_Default(33) = sym%NO
-   endif
-
-
-   !---- Set flag for processing 1 km GOES Imager data
-   if (Goes_Sndr_Flag == sym%NO .and. Elem_Res == 1) then 
-      Goes_1km_Flag = sym%YES
-   endif
-
-end subroutine ASSIGN_GOES_SAT_ID_NUM_INTERNAL
-!--------------------------------------------------------------------
-! assign internal sat id's and const file names for goes sounder
-!--------------------------------------------------------------------
-subroutine ASSIGN_GOES_SNDR_ID_NUM_INTERNAL(Mcidas_Id_Num)
-    integer(kind=int4), intent(in):: Mcidas_Id_Num
-
-    Goes_Sndr_Flag = sym%YES
-
-    if (Mcidas_Id_Num == 71)   then
-        Sc_Id_WMO = 252
-        Instr_Const_file = 'goes_8_Sndr_instr.dat'
-        Algo_Const_file = 'goes_8_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-8'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 73)   then
-        Sc_Id_WMO = 253
-        Instr_Const_file = 'goes_9_Sndr_instr.dat'
-        Algo_Const_file = 'goes_9_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-9'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 75)   then
-        Sc_Id_WMO = 254
-        Instr_Const_file = 'goes_10_Sndr_instr.dat'
-        Algo_Const_file = 'goes_10_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-10'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 77)   then
-        Sc_Id_WMO = 255
-        Instr_Const_file = 'goes_11_Sndr_instr.dat'
-        Algo_Const_file = 'goes_11_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-11'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 79)   then
-        Sc_Id_WMO = 256
-        Instr_Const_file = 'goes_12_Sndr_instr.dat'
-        Algo_Const_file = 'goes_12_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-12'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 181)   then
-        Sc_Id_WMO = 257
-        Instr_Const_file = 'goes_13_Sndr_instr.dat'
-        Algo_Const_file = 'goes_13_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-13'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 183)   then
-        Sc_Id_WMO = 258
-        Instr_Const_file = 'goes_14_Sndr_instr.dat'
-        Algo_Const_file = 'goes_14_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-14'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-    if (Mcidas_Id_Num == 185)   then
-        Sc_Id_WMO = 259
-        Instr_Const_file = 'goes_15_Sndr_instr.dat'
-        Algo_Const_file = 'goes_15_Sndr_algo.dat'
-        Platform_Name_Attribute = 'GOES-15'
-        Sensor_Name_Attribute = 'SOUNDER'
-    endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
-
-end subroutine ASSIGN_GOES_SNDR_ID_NUM_INTERNAL
-
 !----------------------------------------------------------------
 ! read the goes constants into memory
 !-----------------------------------------------------------------
-subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
+subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
+ character(len=*), intent(in):: Instr_Const_File
  integer:: ios0, erstat
  integer:: Instr_Const_lun
 
  Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
 
  erstat = 0
  if (ios0 /= 0) then
@@ -467,14 +305,14 @@ end subroutine READ_GOES_INSTR_CONSTANTS
 !----------------------------------------------------------------
 ! read the goes sounder constants into memory
 !-----------------------------------------------------------------
-subroutine READ_GOES_SNDR_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
+subroutine READ_GOES_SNDR_INSTR_CONSTANTS(Instr_Const_File)
+ character(len=*), intent(in):: Instr_Const_File
  integer:: ios0, erstat
  integer:: Instr_Const_lun
 
  Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
 
  erstat = 0
  if (ios0 /= 0) then
@@ -578,7 +416,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
        write(Ichan_Goes_String,fmt="(I1)") Ichan_Goes
 
-       if (Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//Ichan_Goes_String//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -586,10 +424,10 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
           if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
-          Channel_X_Filename_Full_uncompressed = trim(Dir_1b)//trim(Channel_X_Filename)
+          Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           if (L1b_Gzip == sym%YES) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
@@ -617,20 +455,20 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 1 (GOES channel 1)
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_1_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -643,7 +481,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 20 (GOES channel 2)
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -651,15 +489,15 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -668,7 +506,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 27 (GOES channel 3)
-   if (Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -676,15 +514,15 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -693,7 +531,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 31 (GOES channel 4)
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -701,15 +539,15 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -718,7 +556,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 32 (GOES channel 5)
-   if (Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -726,15 +564,15 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -743,7 +581,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 33 (GOES channel 6)
-   if (Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_6_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -751,15 +589,15 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Imager_Byte_Shift, &
                                     AREAstr, Goes_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -770,34 +608,34 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    !--------------------------------------------------------------------------
    ! Compute IR Brightness Temperature
    !--------------------------------------------------------------------------
-   do Elem_Idx = 1,num_pix
-     do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   do Elem_Idx = 1,Image%Number_Of_Elements
+     do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
 
-        if (Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
@@ -808,26 +646,27 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    !------------------------------------------------------------------------------
    ! Goes Navigation
    !------------------------------------------------------------------------------
-   call GET_GOES_NAVIGATION(Segment_Number, Num_Scans_Per_Segment, Num_Scans_Read, NAVstr, AREAstr, Goes_Xstride)
+   call GET_GOES_NAVIGATION(Segment_Number, Image%Number_Of_Lines_Per_Segment,  &
+                            Image%Number_Of_Lines_Read_This_Segment, NAVstr, AREAstr, Goes_Xstride)
 
    !------------------------------------------------------------------------------
    ! Goes Angles
    !------------------------------------------------------------------------------
    image_jday = jday
    image_Time_Hours = image_Time_ms / 60.0 / 60.0 / 1000.0
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     do Elem_Idx = 1,num_pix
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_Time_Hours, &
-                    Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx), &
-                    solzen(Elem_Idx,Line_Idx),solaz(Elem_Idx,Line_Idx))
+                    Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
+                    Geo%solzen(Elem_Idx,Line_Idx),Geo%solaz(Elem_Idx,Line_Idx))
      enddo
-     call COMPUTE_SATELLITE_ANGLES(goes_Sub_Satellite_longitude,  &
-                      goes_Sub_Satellite_latitude, Line_Idx)
+     call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                      Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
 
    !--- scan number and time
-   First_Line_In_Segment = (Segment_Number-1)*Num_Scans_Per_Segment
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   First_Line_In_Segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_number(Line_Idx) = First_Line_In_Segment + Line_Idx
          ! - if normal (header-based) scan_Time detection failed use==>  (AW 2012/02/23)
          if (Scan_Time(Line_Idx) == 0) then
@@ -836,14 +675,14 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    enddo
 
    !--- ascending node
-   Elem_Idx = num_pix/2
-   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     ascend(Line_Idx) = 0
-     if (Lat_1b(Elem_Idx,Line_Idx) < Lat_1b(Elem_Idx,Line_Idx-1)) then
-       ascend(Line_Idx) = 1
+   Elem_Idx = Image%Number_Of_Elements/2
+   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Nav%Ascend(Line_Idx) = 0
+     if (Nav%Lat_1b(Elem_Idx,Line_Idx) < Nav%Lat_1b(Elem_Idx,Line_Idx-1)) then
+       Nav%Ascend(Line_Idx) = 1
      endif
    enddo
-   ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
+   Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
 
 
 end subroutine READ_GOES
@@ -913,7 +752,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
           write(ichan_goes_string,fmt="(I2.2)") ichan_goes
        endif
 
-       if (Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Ichan_Goes_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -921,10 +760,10 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
           if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
-          Channel_X_Filename_Full_uncompressed = trim(Dir_1b)//trim(Channel_X_Filename)
+          Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           if (L1b_Gzip == sym%YES) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
@@ -951,7 +790,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 36 (GOES Sounder channel 2)
-   if (Chan_On_Flag_Default(36) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -959,15 +798,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -978,7 +817,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 35 (GOES Sounder channel 3)
-   if (Chan_On_Flag_Default(35) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -986,15 +825,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1004,7 +843,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 34 (GOES Sounder channel 4)
-   if (Chan_On_Flag_Default(34) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1012,15 +851,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1030,7 +869,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
    !---   read channel 33 (GOES Sounder channel 5)
-   if (Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1038,15 +877,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1057,7 +896,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 32 (GOES Sounder channel 7)
-   if (Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_7_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1065,15 +904,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1084,7 +923,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 31 (GOES Sounder channel 8)
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_8_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1092,15 +931,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1111,7 +950,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 30 (GOES Sounder channel 9)
-   if (Chan_On_Flag_Default(30) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_9_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1119,15 +958,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1137,7 +976,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 28 (GOES Sounder channel 10)
-   if (Chan_On_Flag_Default(28) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_10_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1145,15 +984,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1163,7 +1002,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 27 (GOES Sounder channel 12)
-   if (Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_12_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1171,15 +1010,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1189,7 +1028,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 25 (GOES Sounder channel 13)
-   if (Chan_On_Flag_Default(25) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_13_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1197,15 +1036,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
        
@@ -1216,7 +1055,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 24 (GOES Sounder channel 14)
-   if (Chan_On_Flag_Default(24) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_14_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1224,15 +1063,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1242,7 +1081,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 23 (GOES Sounder channel 16)
-   if (Chan_On_Flag_Default(23) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_16_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1250,15 +1089,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1268,7 +1107,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 21 (GOES Sounder channel 17)
-   if (Chan_On_Flag_Default(21) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_17_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1276,15 +1115,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1295,7 +1134,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 20 (GOES Sounder channel 18)
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_18_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1303,15 +1142,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1323,7 +1162,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    
       !---   read channel 2 (GOES Sounder channel 19)
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_19_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1331,15 +1170,15 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Goes_Sounder_Byte_Shift, AREAstr, &
                                     Goes_Sndr_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -1354,92 +1193,92 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    !--------------------------------------------------------------------------
    ! Compute IR Brightness Temperature
    !--------------------------------------------------------------------------
-   do Elem_Idx = 1,num_pix
-     do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-        if (Chan_On_Flag_Default(36) == sym%YES) then
+   do Elem_Idx = 1,Image%Number_Of_Elements
+     do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+        if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
            if (ch(36)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(36)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(36,ch(36)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(35) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
            if (ch(35)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(35)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(35,ch(35)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(34) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
            if (ch(34)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(34)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(34,ch(34)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Chan_On_Flag_Default(30) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
            if (ch(30)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(30)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(30,ch(30)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Chan_On_Flag_Default(28) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
            if (ch(28)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(28)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(28,ch(28)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(25) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
             if (ch(25)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(25)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(25,ch(25)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Chan_On_Flag_Default(24) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
            if (ch(24)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(24)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(24,ch(24)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(23) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
             if (ch(23)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(23)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(23,ch(23)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Chan_On_Flag_Default(21) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
            if (ch(21)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(21)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(21,ch(21)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
@@ -1451,26 +1290,27 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    !------------------------------------------------------------------------------
    ! Goes Navigation
    !------------------------------------------------------------------------------
-   call GET_GOES_NAVIGATION(Segment_Number, Num_Scans_Per_Segment, Num_Scans_Read, NAVstr, AREAstr, Goes_Sndr_Xstride)
+   call GET_GOES_NAVIGATION(Segment_Number, Image%Number_Of_Lines_Per_Segment,  &
+            Image%Number_Of_Lines_Read_This_Segment, NAVstr, AREAstr, Goes_Sndr_Xstride)
 
    !------------------------------------------------------------------------------
    ! Goes Angles
    !------------------------------------------------------------------------------
    image_jday = jday
    image_Time_Hours = image_Time_ms / 60.0 / 60.0 / 1000.0
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     do Elem_Idx = 1,num_pix
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_Time_Hours, &
-                    Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx), &
-                    solzen(Elem_Idx,Line_Idx),solaz(Elem_Idx,Line_Idx))
+                    Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
+                    Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
      enddo
-     call COMPUTE_SATELLITE_ANGLES(goes_Sub_Satellite_longitude,  &
-                      goes_Sub_Satellite_latitude, Line_Idx)
+     call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                                   Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
    
    !--- scan number and time
-   First_Line_In_Segment = (Segment_Number-1)*Num_Scans_Per_Segment
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   First_Line_In_Segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_number(Line_Idx) = First_Line_In_Segment + Line_Idx
          ! - For now use image time for GOES Sounder
          if (Scan_Time(Line_Idx) == 0) then
@@ -1838,8 +1678,8 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
  integer(kind=int4):: First_Line_In_Segment
 
  !--- initialize
- Lat_1b = Missing_Value_Real4
- Lon_1b = Missing_Value_Real4
+ Nav%Lat_1b = Missing_Value_Real4
+ Nav%Lon_1b = Missing_Value_Real4
  Space_Mask = sym%SPACE
 
  !-- compute first line in data space for this segment
@@ -1854,7 +1694,7 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
 !     Line = real(AREAstr%North_Bound) + real(Line_Idx_Temp - 1) + &
 !            real(AREAstr%Line_Res)/2.0
 
-      if(Goes_Sndr_Flag == sym%YES) then 
+      if(trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then 
          line = (real(AREAstr%north_bound) + real(Line_Idx_Temp - 1) + 9.0) / 10.0
       else
          line = real(AREAstr%north_bound) + real(Line_Idx_Temp - 1) + &
@@ -1862,7 +1702,7 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
       endif
 
       !--- loop over all elements
-      do Elem_Idx = 1, Num_Pix
+      do Elem_Idx = 1, Image%Number_Of_Elements
 
          !-- element index in satellite space
          Elem_Idx_Temp = (Elem_Idx - 1)*AREAstr%Elem_Res*Xstride + 1
@@ -1872,7 +1712,7 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
 
         ! For sounder, convert McIDAS elem to GVAR elem. 
         ! Copied from McIDAS code, nvxgvar.dlm, v1.16
-        if(Goes_Sndr_Flag == sym%YES) then 
+        if(trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then 
            elem = (real(AREAstr%west_vis_pixel) + real(Elem_Idx_Temp - 1) + 9.0) / 10.0  
         else
            elem = real(AREAstr%west_vis_pixel) + real(Elem_Idx_Temp - 1) + &
@@ -1888,8 +1728,8 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
          Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
 
          if (Ierr == 0) then
-          Lat_1b(Elem_Idx,Line_Idx) = Dlat / DTOR
-          Lon_1b(Elem_Idx,Line_Idx) = Dlon / DTOR
+          Nav%Lat_1b(Elem_Idx,Line_Idx) = Dlat / DTOR
+          Nav%Lon_1b(Elem_Idx,Line_Idx) = Dlon / DTOR
           Space_Mask(Elem_Idx,Line_Idx) = sym%NO_SPACE
          endif
 
@@ -3296,7 +3136,7 @@ end subroutine GET_GOES_NAVIGATION
    real:: Satlon
    real:: Satlat
 
-   n = size(lon(:,Line_Idx))
+   n = size(Nav%Lon(:,Line_Idx))
 
    Satlon = glon
    Satlat = glat
@@ -3306,31 +3146,31 @@ end subroutine GET_GOES_NAVIGATION
 
     if (Space_Mask(Elem_Idx,Line_Idx) == sym%NO) then
 
-!     Satzen(Elem_Idx,Line_Idx) = COMPUTE_SENSOR_ZENITH_GEO(satlon,satlat, &
-!                                Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx))
+!     Geo%Satzen(Elem_Idx,Line_Idx) = COMPUTE_SENSOR_ZENITH_GEO(satlon,satlat, &
+!                                       Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx))
 
-      Satzen(Elem_Idx,Line_Idx) = SENSOR_ZENITH(GEO_ALTITUDE,satlon,satlat, &
-                                 Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx))
+      Geo%Satzen(Elem_Idx,Line_Idx) = SENSOR_ZENITH(GEO_ALTITUDE,satlon,satlat, &
+                                      Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx))
       
-      Sataz(Elem_Idx,Line_Idx) = SENSOR_AZIMUTH(Satlon,Satlat, &
-                                                Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx))
+      Geo%Sataz(Elem_Idx,Line_Idx) = SENSOR_AZIMUTH(Satlon,Satlat, &
+                                                Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx))
 
-      Relaz(Elem_Idx,Line_Idx) = RELATIVE_AZIMUTH(Solaz(Elem_Idx,Line_Idx), Sataz(Elem_Idx,Line_Idx))
+      Geo%Relaz(Elem_Idx,Line_Idx) = RELATIVE_AZIMUTH(Geo%Solaz(Elem_Idx,Line_Idx),Geo%Sataz(Elem_Idx,Line_Idx))
 
-      Glintzen(Elem_Idx,Line_Idx) = GLINT_ANGLE(Solzen(Elem_Idx,Line_Idx), &
-                                      Satzen(Elem_Idx,Line_Idx),Relaz(Elem_Idx,Line_Idx)) 
+      Geo%Glintzen(Elem_Idx,Line_Idx) = GLINT_ANGLE(Geo%Solzen(Elem_Idx,Line_Idx), &
+                                                    Geo%Satzen(Elem_Idx,Line_Idx),Geo%Relaz(Elem_Idx,Line_Idx)) 
 
-      Scatangle(Elem_Idx,Line_Idx) = SCATTERING_ANGLE(Solzen(Elem_Idx,Line_Idx), &
-                                      Satzen(Elem_Idx,Line_Idx),Relaz(Elem_Idx,Line_Idx)) 
+      Geo%Scatangle(Elem_Idx,Line_Idx) = SCATTERING_ANGLE(Geo%Solzen(Elem_Idx,Line_Idx), &
+                                             Geo%Satzen(Elem_Idx,Line_Idx),Geo%Relaz(Elem_Idx,Line_Idx)) 
 
     else
 
-     Solzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
-     Sataz(Elem_Idx,Line_Idx) = Missing_Value_Real4
-     Satzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
-     Relaz(Elem_Idx,Line_Idx) = Missing_Value_Real4
-     Glintzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
-     Scatangle(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Solzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Sataz(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Satzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Relaz(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Glintzen(Elem_Idx,Line_Idx) = Missing_Value_Real4
+     Geo%Scatangle(Elem_Idx,Line_Idx) = Missing_Value_Real4
 
     endif
 
@@ -3446,14 +3286,16 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
  Dark_Composite_Name = "no_file"
 
  !--- only do this for geostationary imager data
- if (Goes_Flag /= sym%NO .AND.  &
-     COMS_Flag == sym%NO .AND. &
-     Mtsat_Flag == sym%NO .AND. &
-     Seviri_Flag /= sym%NO ) then
+ !--- NOTE FY-2DE not supported yet
+ if (trim(Sensor%Sensor_Name) /= 'GOES_IL_IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'GOES_MP_IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'COMS_IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'MTSAT_IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'SEVIRI') then
      return
  endif
 
- select case (Sc_Id_WMO)
+ select case (Sensor%WMO_Id)
     case(252)
          Goes_Name = "goes08"
     case(253)
@@ -3495,8 +3337,8 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
  ! loop through today and previous days to find the most current file
  ! if no file can be found, the file name is set to "no_file"
  !----------------------------------------------------------------------
- year_in = Start_Year
- day_of_year_in = Start_Day
+ year_in = Image%Start_Year
+ day_of_year_in = Image%Start_Doy
 
  Dark_Composite_Name = "no_file"
 
@@ -3591,9 +3433,9 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    character(len=3):: Dark_Ext
 
    !--- aliases
-   Num_Elements = Num_Pix
-   Num_Lines_Per_Segment = Num_Scans_Per_Segment
-   Num_Lines_Read = Num_Scans_Read
+   Num_Elements = Image%Number_Of_Elements
+   Num_Lines_Per_Segment = Image%Number_Of_Lines_Per_Segment
+   Num_Lines_Read = Image%Number_Of_Lines_Read_This_Segment
 
    !--- initialize
    Big_Count = 999
@@ -3724,9 +3566,9 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
 
     !--- determine records to read - this accounts for north-south shift
     First_Rec_Num = 1  + First_Line_In_Segment + Line_Offset
-    Last_Rec_Num = First_Rec_Num + Num_Scans_Read - 1
+    Last_Rec_Num = First_Rec_Num + Image%Number_Of_Lines_Read_This_Segment - 1
     First_Rec_Num = max(2,First_Rec_Num)
-    Last_Rec_Num = min(Last_Rec_Num,Num_Scans)
+    Last_Rec_Num = min(Last_Rec_Num,Image%Number_Of_Lines)
     Num_Recs_To_Read = Last_Rec_Num - First_Rec_Num + 1
 
     Line_Idx = 1
@@ -3768,7 +3610,7 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    endif
   
    !--- close file
-   if (Segment_Number == Num_Segments) then
+   if (Segment_Number == Image%Number_Of_Segments) then
       close(unit=Dark_Lun_Data)
       if (allocated(Dark_Comp_Counts_Temp)) deallocate(Dark_Comp_Counts_Temp)
       if (allocated(Dark_Comp_Counts)) deallocate(Dark_Comp_Counts)
@@ -3908,8 +3750,8 @@ line_loop:  DO Line_Idx = 1, Num_Lines
    !--- check for valid data
    if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
-   if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
+   if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
+   if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
    if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
    if (Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
 

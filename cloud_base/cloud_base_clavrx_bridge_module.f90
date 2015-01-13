@@ -187,10 +187,10 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()
-   Input%Number_of_Elements = Num_Pix
-   Input%Number_of_Lines = Num_Scans_Read
-   Input%Number_of_Lines = Num_Scans_Per_Segment
-   Input%Num_Line_Max = Num_Scans_Per_Segment
+
+   Input%Number_of_Elements = Image%Number_Of_Elements
+   Input%Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+   Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
 
    Input%Chan_Idx_67um = 27     !channel number for 6.7
    Input%Chan_Idx_85um = 29     !channel number for 8.5
@@ -198,11 +198,11 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Chan_Idx_12um = 32     !channel number for 12
    Input%Chan_Idx_133um = 33  !channel number for 13.3
 
-   Input%Chan_On_67um = Chan_On_Flag_Default(27)
-   Input%Chan_On_85um = Chan_On_Flag_Default(29)
-   Input%Chan_On_11um = Chan_On_Flag_Default(31)
-   Input%Chan_On_12um = Chan_On_Flag_Default(32)
-   Input%Chan_On_133um = Chan_On_Flag_Default(33)
+   Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
+   Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
+   Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
+   Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
+   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(33)
 
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Elem_Idx_Nwp =>  I_Nwp
@@ -213,14 +213,14 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
    Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
 
-   Input%Cosine_Zenith_Angle => Coszen
-   Input%Sensor_Zenith_Angle => Satzen
-   Input%Latitude => Lat
-   Input%Longitude => Lon
+   Input%Cosine_Zenith_Angle => Geo%Coszen
+   Input%Sensor_Zenith_Angle => Geo%Satzen
+   Input%Latitude => Nav%Lat
+   Input%Longitude => Nav%Lon
 
-   Input%Surface_Type => Sfc_Type
+   Input%Surface_Type => Sfc%Sfc_Type
 
-   Input%Surface_Elevation => Zsfc
+   Input%Surface_Elevation => Sfc%Zsfc
    Input%Cloud_Mask => Cld_Mask
    Input%Cloud_Type => Cld_Type
    Input%Cloud_Probability => Posterior_Cld_Probability
@@ -228,8 +228,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC
 
-   Input%Latitude_Pc => Lat_Pc
-   Input%Longitude_Pc => Lon_Pc
+   Input%Latitude_Pc => Nav%Lat_Pc
+   Input%Longitude_Pc => Nav%Lon_Pc
    Input%Tc => Tc_Acha
    Input%Ec => Ec_Acha
    Input%Beta => Beta_Acha

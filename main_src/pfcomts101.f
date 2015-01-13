@@ -28,7 +28,7 @@ c--------------------------------------------------------------------------
 	subroutine pfcomts101(ancil_data_path,isat,*)
 c * Input MTSAT Planck-function and band-correction coefficients
 c .... version of 20.08.07
-c added ancil and pfast path - WCS3
+c added ancil and pfaast path - WCS3
 
         parameter (iuc=70,irec=1,lenc=100,nc=5,nt=2)
         parameter (lenp=nc*(nt+3),lenb=lenc*4)
@@ -36,13 +36,13 @@ c added ancil and pfast path - WCS3
         dimension cbuf(lenc),pbuf(lenp)
         equivalence (cwn(1),pbuf(1))
         character*16 cfile
-        character*72 ancil_data_path,pfast_path 
+        character*72 ancil_data_path,pfaast_path 
         
     
         cfile = 'mtsatbnd_101.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
-        open(iuc,file=trim(pfast_path)//cfile,
+        open(iuc,file=trim(pfaast_path)//cfile,
      +          recl=lenb,access='direct',status='old',
      +          err=100)
         krec=isat

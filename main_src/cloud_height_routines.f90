@@ -74,7 +74,7 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
   integer:: Vza_Idx
 
   !--- intialize local variables using global variables
-  Number_Of_Elements = num_pix
+  Number_Of_Elements = Image%Number_Of_Elements
 
   !--- initialize output
   Tc_Acha =  Missing_Value_Real4
@@ -161,7 +161,7 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min,Num_Lines)
   !--- save elements
   Line_Start = Line_Idx_Min 
   Line_End = Line_Start + Num_Lines - 1
-  Num_Elem = Num_Pix      !Num_Pix is a global variable
+  Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
   Wnd_Spd_Cld_Top_Nwp_Pix = Missing_Value_Real4
@@ -245,7 +245,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
   !--- save elements
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
-  Num_Elem = Num_Pix      !Num_Pix is a global variable
+  Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
   Alt_Acha = Missing_Value_Real4
@@ -359,10 +359,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Tc_Cirrus_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Chan_On_Flag_Default(33) == sym%NO .or. &
-      Chan_On_Flag_Default(34) == sym%NO .or. &
-      Chan_On_Flag_Default(35) == sym%NO .or. &
-      Chan_On_Flag_Default(36) == sym%NO) then
+  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
      return
   endif
 

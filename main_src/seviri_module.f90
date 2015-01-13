@@ -61,9 +61,6 @@ real, PRIVATE,dimension(11) ::  Offset_Sev
  
 !------- Since we are going to do Rad -> BT internal, we'll need a, b, nu 
 real, PRIVATE,dimension(4)  ::  Solar_Const_Sev
-real, PRIVATE,dimension(11) ::  alpha_sev
-real, PRIVATE,dimension(11) ::  beta_sev
-real, PRIVATE,dimension(11) ::  nu_sev
 
 
 integer(kind=int4), public, parameter:: Seviri_Xstride = 1
@@ -82,38 +79,34 @@ subroutine ASSIGN_MSG_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
     integer(kind=int4), intent(in):: Mcidas_Id_Num
 
     !--- Met-08
-    Sensor_Name_Attribute = 'SEVIRI'
+    Sensor%Sensor_Name = 'SEVIRI'
     if (Mcidas_Id_Num == 51)   then
-        Sc_Id_WMO = 55
-        Instr_Const_file = 'met8_instr.dat'
-        Algo_Const_file = 'met8_algo.dat'
-        Platform_Name_Attribute = 'Meteosat-8'
+        Sensor%WMO_Id = 55
+        Sensor%Instr_Const_File = 'met8_instr.dat'
+        Sensor%Algo_Const_File = 'met8_algo.dat'
+        Sensor%Platform_Name = 'Meteosat-8'
     endif
     !--- Met-09
     if (Mcidas_Id_Num == 52)   then
-        Sc_Id_WMO = 56
-        Instr_Const_file = 'met9_instr.dat'
-        Algo_Const_file = 'met9_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'Meteosat-9'
+        Sensor%WMO_Id = 56
+        Sensor%Instr_Const_File = 'met9_instr.dat'
+        Sensor%Algo_Const_File = 'met9_algo.dat'
+        Sensor%Platform_Name = 'Meteosat-9'
     endif
     !--- Met-10
     if (Mcidas_Id_Num == 53)   then
-        Sc_Id_WMO = 57
-        Instr_Const_file = 'met10_instr.dat'
-        Algo_Const_file = 'met10_algo.dat'
-        Platform_Name_Attribute = 'Meteosat-10'
+        Sensor%WMO_Id = 57
+        Sensor%Instr_Const_File = 'met10_instr.dat'
+        Sensor%Algo_Const_File = 'met10_algo.dat'
+        Sensor%Platform_Name = 'Meteosat-10'
     endif
     !--- Met-11
     if (Mcidas_Id_Num == 54)   then
-        Sc_Id_WMO = 58
-        Instr_Const_file = 'met10_instr.dat'
-        Algo_Const_file = 'met10_algo.dat'
-        Platform_Name_Attribute = 'Meteosat-11'
+        Sensor%WMO_Id = 58
+        Sensor%Instr_Const_File = 'met11_instr.dat'
+        Sensor%Algo_Const_File = 'met11_algo.dat'
+        Sensor%Platform_Name = 'Meteosat-11'
     endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
 
 end subroutine ASSIGN_MSG_SAT_ID_NUM_INTERNAL
 !----------------------------------------------------------------
@@ -191,7 +184,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    integer :: Line_Idx
    integer :: Elem_Idx
    integer :: Num_Elements_this_image
-   integer :: Num_scans_this_image
+   integer :: Num_Scans_This_Image
   
 
    !--- assume Channel_1_file name has a unique "_1_" in the name. 
@@ -199,13 +192,13 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    ipos = index(Channel_1_Filename, "_1_")
    ilen = len(Channel_1_Filename)
     
-   first_Line_in_segment = (Segment_Number-1)*Num_scans_per_segment
+   first_Line_in_segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
    
    !---------------------------------------------------------------------------
    ! SEVIRI Navigation (Do Navigation first)
    !---------------------------------------------------------------------------
    call GET_SEVIRI_NAVIGATION(1,first_Line_in_segment,&
-                              Num_pix,Num_Scans_Per_Segment,1,&
+                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                               AREAstr)
 
 !-------------------------------------------------------------------------------
@@ -245,7 +238,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
           write(Ichan_Goes_String,fmt="(I2.2)") ichan_goes
        endif
 
-       if (Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Ichan_Goes_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -253,10 +246,10 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
           if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
-          Channel_X_Filename_Full_uncompressed = trim(Dir_1b)//trim(Channel_X_Filename)
+          Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           if (l1b_gzip == sym%YES) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
@@ -286,7 +279,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) THEN
       CALL mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), seviri_file_id)
     ELSE
-      CALL mread_open(trim(Dir_1b)//trim(Channel_1_Filename)//CHAR(0), seviri_file_id)
+      CALL mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), seviri_file_id)
     ENDif  
     CALL LOAD_SEVIRI_CAL_AREA(seviri_file_id, AREAstr)
     CALL mread_close(seviri_file_id)
@@ -294,20 +287,20 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
      
 
    !---   read channel 1 (MSG channel 1)
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_1_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
        endif
       
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -315,13 +308,13 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 
 
        !----- How to do Ref % utilizing EUMETSAT values. Solar constant is 20.76 for 0.64
-       DO Line_Idx=1, Num_Scans_Per_Segment
-           DO Elem_Idx=1, Num_pix
+       DO Line_Idx=1, Image%Number_Of_Lines_Per_Segment
+           DO Elem_Idx=1, Image%Number_Of_Elements
            
            ch(1)%Ref_Toa(Elem_Idx,Line_Idx) =  Missing_Value_Real4
 
            if ( (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) .OR. &
-                (Solzen(Elem_Idx,Line_Idx) >= 90.0) ) THEN                
+                (Geo%Solzen(Elem_Idx,Line_Idx) >= 90.0) ) THEN                
                 cycle
            endif
         
@@ -340,7 +333,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    
 
 
-   if (Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -348,27 +341,27 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
        Ch2_Counts = Two_Byte_Temp
                                     
-       DO Line_Idx=1, Num_Scans_Per_Segment
-           DO Elem_Idx=1, Num_pix
+       DO Line_Idx=1, Image%Number_Of_Lines_Per_Segment
+           DO Elem_Idx=1, Image%Number_Of_Elements
            
            ch(2)%Ref_Toa(Elem_Idx,Line_Idx) =  Missing_Value_Real4
 
            if ( (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) .OR. &
-                (Solzen(Elem_Idx,Line_Idx) >= 90.0) ) THEN                
+                (Geo%Solzen(Elem_Idx,Line_Idx) >= 90.0) ) THEN                
                 cycle
            endif
            
@@ -382,7 +375,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
 
 !--- 1.6 micron
-   if (Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -390,27 +383,27 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
 
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
        
 !----- How to do Ref % utilizing EUMETSAT values. Solar constant is 19.85 for 1.64
 
-       DO Line_Idx=1, Num_Scans_Per_Segment
-           DO Elem_Idx=1, Num_pix
+       DO Line_Idx=1, Image%Number_Of_Lines_Per_Segment
+           DO Elem_Idx=1, Image%Number_Of_Elements
            
            ch(6)%Ref_Toa(Elem_Idx,Line_Idx) =  Missing_Value_Real4
 
            if ( (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) .OR. &
-                (Solzen(Elem_Idx,Line_Idx) .GE. 90.0) ) THEN                
+                (Geo%Solzen(Elem_Idx,Line_Idx) .GE. 90.0) ) THEN                
                 cycle
            endif
         
@@ -428,7 +421,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 
    
 ! 3.9 micron
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -436,15 +429,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -454,7 +447,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
    
 ! 6.2 micron
-   if (Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
         Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -462,15 +455,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -479,7 +472,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
 
 ! 7.4 micron
-   if (Chan_On_Flag_Default(28) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
 
         Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_6_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -487,15 +480,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -504,7 +497,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
 
 ! 8.5 micron
-   if (Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(29) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_7_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -512,15 +505,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -529,7 +522,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
 
 !9.7 micron
-   if (Chan_On_Flag_Default(30) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_8_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -537,15 +530,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -555,7 +548,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 
 
 !11 micron
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_9_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -563,15 +556,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
        
@@ -580,7 +573,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    endif
    
 !12 micron
-   if (Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_10_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -588,15 +581,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -606,7 +599,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 
    
 !13.3 micron
-   if (Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_11_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -614,15 +607,15 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
-               Channel_X_Filename_Full = trim(Dir_1b)//trim(Channel_X_Filename)
+               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
        endif
        
        call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     Seviri_Byte_Shift, &
                                     AREAstr, Seviri_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
 
@@ -635,38 +628,37 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 ! NOTE: These were private routines in the GOES module. Suggest they become
 !       public with different names, since they are used cross platform  
 !------------------------------------------------------------------------------
-   do iline = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     do ielem = 1,Num_pix
+   do iline = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do ielem = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_time_hours, &
-                    Lon_1b(ielem,iline),Lat_1b(ielem,iline), &
-                    Solzen(ielem,iline),solaz(ielem,iline))
+                    Nav%Lon_1b(ielem,iline),Nav%Lat_1b(ielem,iline), &
+                    Geo%Solzen(ielem,iline),Geo%solaz(ielem,iline))
      enddo
 
-      call COMPUTE_SATELLITE_ANGLES(goes_sub_satellite_longitude,  &
-                                    goes_sub_satellite_latitude, iline)
+      call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                                    Sensor%Geo_Sub_Satellite_Latitude, iline)
    enddo
 
    !--- compute scantime and scan angles
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_Number(Line_Idx) = first_Line_in_segment + Line_Idx
      Scan_Time(Line_Idx) = image_time_ms + (Scan_number(Line_Idx)-1) * Scan_Rate
    enddo
 
-   !--- ascending node
-   ielem = Num_pix/2
-   do iline = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     ascend(iline) = 0
-     if (lat_1b(ielem,iline) < lat_1b(ielem,iline-1)) then
-       ascend(iline) = 1
+   !--- Ascending node
+   ielem = Image%Number_Of_Elements/2
+   do iline = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Nav%Ascend(iline) = 0
+     if (Nav%Lat_1b(ielem,iline) < Nav%Lat_1b(ielem,iline-1)) then
+       Nav%Ascend(iline) = 1
      endif
    enddo
-   ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
-
+   Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
    
 end subroutine READ_SEVIRI
  
  
-  subroutine MSG_RAD_BT(Chan_Num, Chan_Num_Ref,Sev_Counts, Brit_Temp_Out, Rad_Out)
+subroutine MSG_RAD_BT(Chan_Num, Chan_Num_Ref,Sev_Counts, Brit_Temp_Out, Rad_Out)
 !This subroutine takes a radiance and converts it to a temperature
 !ONLY TO BE USED WITH SEVIRI
 
@@ -681,8 +673,8 @@ end subroutine READ_SEVIRI
     Brit_Temp_Out = Missing_Value_real4
     Rad_Temp = Missing_Value_real4
         
-    DO Line_Idx=1, Num_Scans_Per_Segment
-      DO Elem_Idx=1, Num_pix
+    DO Line_Idx=1, Image%Number_Of_Lines_Per_Segment
+      DO Elem_Idx=1, Image%Number_Of_Elements
             
         if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
             cycle
@@ -696,13 +688,6 @@ end subroutine READ_SEVIRI
                 
             Rad_Out(Elem_Idx,Line_Idx) = Rad_Temp
             
-            !--- this uses EUMETSAT's numbers
-!           Brit_Temp_Out(Elem_Idx,Line_Idx) =(((c2*nu_sev(Chan_Num)) / &
-!                                     (log( 1 + ((c1*(nu_sev(Chan_Num)**3)) /&
-!                                      Rad_Temp)))) - beta_sev(Chan_Num)) / &
-!                                      alpha_sev(Chan_Num)
-
-            !--- this uses AKH derived numbers
             Brit_Temp_Out(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(Chan_Num_Ref,Rad_Temp)
 
         endif 
@@ -770,12 +755,12 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
 
                   
          if (dlat == -999.0) then  ! -999.0 is MSG nav missing value
-            Lat_1b(i,j) = Missing_Value_Real4
-            Lon_1b(i,j) = Missing_Value_Real4
+            Nav%Lat_1b(i,j) = Missing_Value_Real4
+            Nav%Lon_1b(i,j) = Missing_Value_Real4
             Space_Mask(i,j) = sym%SPACE
          else
-            Lat_1b(i,j) = real(dlat,kind=real4)
-            Lon_1b(i,j) = real(dlon,kind=real4)
+            Nav%Lat_1b(i,j) = real(dlat,kind=real4)
+            Nav%Lon_1b(i,j) = real(dlon,kind=real4)
             Space_Mask(i,j) = sym%NO_SPACE
          endif
          
@@ -784,6 +769,9 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
   
 end subroutine GET_SEVIRI_NAVIGATION
 
+!--------------------------------------------------------------------------------
+! AKH This needs to go away!
+!--------------------------------------------------------------------------------
 subroutine LOAD_SEVIRI_CAL_AREA(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
   type(AREA_STRUCT), intent(in):: AREAstr
@@ -792,88 +780,29 @@ subroutine LOAD_SEVIRI_CAL_AREA(lun, AREAstr)
   integer :: bandoffset, band, avoid_warning
   real(kind=real8) :: c1w3,c2w,alpha,beta,gain,offset
   integer, parameter :: nbands = 11
-  integer, parameter, dimension(nbands) :: arr_index = (/2,3,5,7,8,10,11,12,14,15,16/)
   
   avoid_warning = lun  
   
-!  c2 = C_2*1.0e02_real4
-  
-!Solar constants
+  !Solar constants
   Solar_Const_Sev(1) = 20.76
   Solar_Const_Sev(2) = 23.24
   Solar_Const_Sev(3) = 19.85
   Solar_Const_Sev(4) = 4.92
   
   
-! internal plack coeff
-  if (Sc_Id_WMO == 55) then !MET-8
-        alpha_sev(4) = 0.9959
-        alpha_sev(5) = 0.9963
-        alpha_sev(6) = 0.9991
-        alpha_sev(7) = 0.9996
-        alpha_sev(8) = 0.9999
-        alpha_sev(9) = 0.9983
-        alpha_sev(10) = 0.9988
-        alpha_sev(11) = 0.9981
-
-        beta_sev(4) = 3.471
-        beta_sev(5) = 2.219
-        beta_sev(6) = 0.485
-        beta_sev(7) = 0.181
-        beta_sev(8) = 0.060
-        beta_sev(9) = 0.627
-        beta_sev(10) = 0.397
-        beta_sev(11) = 0.576
-    
-  
-  endif  
-    
-
-!Met-9
-  if (Sc_Id_WMO == 56) then !MET-8
-        alpha_sev(4) = 0.9954
-        alpha_sev(5) = 0.9963
-        alpha_sev(6) = 0.9991
-        alpha_sev(7) = 0.9996
-        alpha_sev(8) = 0.9999
-        alpha_sev(9) = 0.9983
-        alpha_sev(10) = 0.9988
-        alpha_sev(11) = 0.9981
-  
-        beta_sev(4) = 3.438
-        beta_sev(5) = 2.185
-        beta_sev(6) = 0.470
-        beta_sev(7) = 0.179
-        beta_sev(8) = 0.056
-        beta_sev(9) = 0.640
-        beta_sev(10) = 0.408
-        beta_sev(11) = 0.561
-  endif
-  
-
   !---------------------------------------------------------------------
   ! Read from the calibration block.  Logic supplied by D. Santek.
-  ! mreadf version as implmented in GEOCAT, which is much cleaner than 
-  ! original GSIP code
   !---------------------------------------------------------------------
 
-  call mreadf_int_o(lun,AREAstr%cal_offset,1,1252,cbuf)
+  call MREADF_INT_O(lun,AREAstr%Cal_Offset,1,1252,cbuf)
 
   ! read nu out of header, along with slope/offset incase of shift
   do band=1, nbands
     bandoffset = (band-1)*104 + 5
     cout(1:104) = cbuf(bandoffset:bandoffset+103)
     read(cout,'(6E17.10)') c1w3,c2w,alpha,beta,gain,offset
-    nu_sev(band) = c2w/c2
-    !a(arr_index(band),1) = alpha
-    !b(arr_index(band),1) = beta
     Slope_Sev(band) = gain
     Offset_Sev(band) = offset
-
-!    print *,'band=',arr_index(band),'c1w2=',c1w3,'nu=',c2w/c2,'a=',alpha,'b=',beta,'gain=',gain,'offset=',offset
-!   print *,'band=',arr_index(band),'gain=',slope(arr_index(band),1),'offset=',&
-!  offset(arr_index(band),1)
-    
   enddo
   
 end subroutine LOAD_SEVIRI_CAL_AREA

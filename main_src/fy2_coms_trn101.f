@@ -76,7 +76,7 @@ c      character*14 cfile/'fy2exxx101.dat'/
       logical newang,newatm
       data init/1/,tlas/nl*0./,wlas/nl*0./,olas/nl*0./,zlas/-999./
 
-      character*72 ancil_data_path,pfast_path
+      character*72 ancil_data_path,pfaast_path
       integer*4 get_lun   !needed by Get_lun() call by AKH     
 
 
@@ -95,10 +95,7 @@ c      character*14 cfile/'fy2exxx101.dat'/
          cfile = 'fy2eccc101.dat'   
       endif
             
-      pfast_path = trim(ancil_data_path)//"pfast/"
-    
-    
-    
+      pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
         if(init.ne.0) then
 c * define and open the coefficient files
@@ -107,7 +104,7 @@ c * define and open the coefficient files
               cfile(5:7)=comp(l)
               iux=iux+1
               iux=get_lun()    !akh added
-              open(iux,file=trim(pfast_path)//cfile,recl=lencf(l),
+              open(iux,file=trim(pfaast_path)//cfile,recl=lencf(l),
      +         access='direct',
      +         status='old',err=200)
               iuc(l)=iux

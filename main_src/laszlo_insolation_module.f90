@@ -46,9 +46,9 @@ module LASZLO_INSOLATION
 
 contains
 
-   subroutine INSOLATION(Line_Idx_Min_Segment,Num_Scans_Read)
+   subroutine INSOLATION(Line_Idx_Min_Segment,Number_Of_Lines_Read_This_Segment)
       integer, intent(in):: Line_Idx_Min_Segment
-      integer, intent(in):: Num_Scans_Read
+      integer, intent(in):: Number_Of_Lines_Read_This_Segment
       
        character(len=120):: Auxpath
       real(kind=real4):: Glat
@@ -82,8 +82,8 @@ contains
       integer:: Number_of_Lines
 
       First_Element = Line_Idx_Min_Segment
-      Number_of_Elements = Num_Pix
-      Number_of_Lines = Num_Scans_Read
+      Number_of_Elements = Image%Number_Of_Elements
+      Number_of_Lines = Number_Of_Lines_Read_This_Segment
 
       !----------------------------------------------------------
       ! loop over each pixel in segment
@@ -95,11 +95,11 @@ contains
       Insolation_Aer_Opd = Missing_Value_Real4
 
       !--- check for required channels
-      if (Chan_On_Flag_Default(1) == sym%NO) return
+      if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
       
-      Year = Start_Year
+      Year = Image%Start_Year
       Month_Local = month
-      Jday = start_day
+      Jday = Image%Start_Doy
       
 
       element_loop: do Elem_Idx = First_Element, First_Element + Number_of_Elements - 1
@@ -114,7 +114,7 @@ contains
                cycle
             end if
             
-            if (Solzen(Elem_Idx,Line_Idx) > Solzen_Limit_SASRAB) then
+            if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Limit_SASRAB) then
                Insolation_All_Sky(Elem_Idx,Line_Idx) = 0.0
                Insolation_All_Sky_Diffuse(Elem_Idx,Line_Idx) = 0.0
                Insolation_Clear_Sky(Elem_Idx,Line_Idx) = 0.0
@@ -123,11 +123,11 @@ contains
                cycle
             end if
 
-            Glat = Lat(Elem_Idx,Line_Idx)
-            Glon = Lon(Elem_Idx,Line_Idx)
+            Glat = Nav%Lat(Elem_Idx,Line_Idx)
+            Glon = Nav%Lon(Elem_Idx,Line_Idx)
             
             Gmtime = Utc_Scan_Time_Hours(Line_Idx)
-            if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then
+            if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then
                Snowfr = 1.0
             else
                Snowfr = 0.0
@@ -156,13 +156,12 @@ contains
             if (Ozone /= Missing_Value_Real4) Ozone = Ozone / 1000.0
 
             Pwater = Tpw_Nwp_Pix(Elem_Idx,Line_Idx)   !g/cm^2 or cm
-            Solmu = Cossolzen(Elem_Idx,Line_Idx)
-            Satmu = Coszen(Elem_Idx,Line_Idx)
-            Relaz_local = Relaz(Elem_Idx,Line_Idx) !convention?
+            Solmu = Geo%Cossolzen(Elem_Idx,Line_Idx)
+            Satmu = Geo%Coszen(Elem_Idx,Line_Idx)
+            Relaz_local = Geo%Relaz(Elem_Idx,Line_Idx) !convention?
             IF ( Relaz_Local /= Missing_Value_Real4 ) Relaz_Local = 180.0 - Relaz_Local
-            Glint = Glintzen(Elem_Idx,Line_Idx)
+            Glint = Geo%Glintzen(Elem_Idx,Line_Idx)
 
-           
             !---------------------------------------------------
             ! Isatid : satellite id.
             !                            1 - noaa-7/ch1
@@ -174,7 +173,7 @@ contains
             !---------------------------------------------------
             Isatid = 6                 !Default to GOES
 
-            select case (Sc_Id_WMO)
+            select case (Sensor%WMO_Id)
 
             case(3:5,200:209,223,706:708)       !AVHRR
                Isatid = 1

@@ -82,7 +82,7 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
   Reff = Missing_Value_Real4
 
   line_loop: DO Line_Idx = jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx = 1, Num_Pix
+    element_loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
      !------------------------------------------------
      ! determine phase from cloud type
@@ -124,7 +124,7 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
 
      !--- assign optical depth and particle size
-     if (Solzen(Elem_Idx,Line_Idx) < 90.0) then 
+     if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0) then 
        Tau = Tau_Dcomp(Elem_Idx,Line_Idx)
        Reff = Reff_Dcomp(Elem_Idx,Line_Idx)
      else
@@ -239,7 +239,7 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
   real(kind=real4)::  T_Cloud, Reff_Cloud, Tau_Cloud
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -380,7 +380,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -407,7 +407,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       CTT_Pix = Tc_Acha(Elem_Idx,Line_Idx)
       Reff_Pix = Reff_Dcomp(Elem_Idx,Line_Idx)
 
-      if (Solzen(Elem_Idx,Line_Idx) > 90.0) then
+      if (Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) then
         Reff_Pix = Reff_Nlcomp(Elem_Idx,Line_Idx)
       endif
 
@@ -515,7 +515,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
 
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -530,8 +530,8 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       Lat_Nwp_Idx = J_Nwp(Elem_Idx,Line_Idx)
 
       Cloud_Optical_Depth = Tau_Dcomp(Elem_Idx,Line_Idx)  
-      Solar_Zenith_Angle = Solzen(Elem_Idx,Line_Idx)
-      Land_Class = Land(Elem_Idx,Line_Idx)
+      Solar_Zenith_Angle = Geo%Solzen(Elem_Idx,Line_Idx)
+      Land_Class = Sfc%Land(Elem_Idx,Line_Idx)
       TPW = Tpw_Nwp_Pix(Elem_Idx,Line_Idx)
       Tozone = 0.0
       Surface_Pressure = 1010.00
@@ -541,7 +541,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       endif
 
       !--- adjust gases for slant path
-      Cosine_Solar_Zenith_Angle = cos(Solzen(Elem_Idx,Line_Idx)*DTOR)
+      Cosine_Solar_Zenith_Angle = cos(Geo%Solzen(Elem_Idx,Line_Idx)*DTOR)
 
 !     H2O_Trans_Direct = 1.0 - 2.9*TPW / ((1.0 + 141.5*TPW)**(0.635) + 5.925*TPW)
 !     Ozone_Trans_Direct = 1.0 - 0.02118*Ozone / (1.0 + 0.042*Ozone + 0.000323*(Ozone**2))

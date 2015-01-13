@@ -829,8 +829,6 @@ contains
      
       integer :: i_mband
       integer :: missing_value_int1 = -999
-   
-  
     
       allocate ( gap_pixel_mask (3200, number_of_lines) , gap_line_idx(3200, number_of_lines))
       

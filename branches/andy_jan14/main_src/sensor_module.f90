@@ -356,8 +356,6 @@ module SENSOR_MODULE
       Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
  
 
-PRINT *, "IN DETECT_SENSOR_FROM_FILE ", trim(Image%Level1b_Full_Name)
-
       !-------------------------------------------------------------------------
       !-- Loop through tests for each file type, if not found assume avhrr
       !-------------------------------------------------------------------------
@@ -374,7 +372,6 @@ PRINT *, "IN DETECT_SENSOR_FROM_FILE ", trim(Image%Level1b_Full_Name)
         Sensor%WMO_Id = 784
         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
-PRINT *, "MYD012KM DETECTED"
         exit test_loop
       endif
 
@@ -385,7 +382,6 @@ PRINT *, "MYD012KM DETECTED"
         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
         Sensor%WMO_Id = 784
-PRINT *, "MYD02SSH DETECTED"
         exit test_loop
       endif
 
@@ -679,12 +675,16 @@ PRINT *, "MYD02SSH DETECTED"
                endif
 
             end select
+      endif
 
       !---  VIIRS
       if (index(Image%Level1b_Name, 'GMTCO') > 0) then 
          Sensor%Sensor_Name = 'VIIRS'
          Sensor%Spatial_Resolution_Meters = 750
          Sensor%Platform_Name = 'SNPP'
+         Sensor%WMO_Id = 224
+         Sensor%Instr_Const_File = 'viirs_npp_instr.dat'
+         Sensor%Algo_Const_File = 'viirs_npp_algo.dat'
          exit test_loop
       endif
 
@@ -693,6 +693,7 @@ PRINT *, "MYD02SSH DETECTED"
          Sensor%Sensor_Name = 'VIIRS-IFF'
          Sensor%Spatial_Resolution_Meters = 750
          Sensor%Platform_Name = 'SNPP'
+         Sensor%WMO_Id = 224
          Sensor%Instr_Const_File = 'iff_viirs_npp_instr.dat'
          Sensor%Algo_Const_File = 'viirs_npp_algo.dat'
          exit test_loop
@@ -703,6 +704,7 @@ PRINT *, "MYD02SSH DETECTED"
          Sensor%Sensor_Name = 'MODIS-IFF'
          Sensor%Spatial_Resolution_Meters = 1000
          Sensor%Platform_Name = 'AQUA'
+         Sensor%WMO_Id = 784
          Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
          Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
          exit test_loop
@@ -871,7 +873,6 @@ PRINT *, "MYD02SSH DETECTED"
                Sensor%Algo_Const_File = "iff_avhrr_3_algo.dat"
                exit test_loop
             end if
-          endif
 
       endif
 
@@ -895,7 +896,7 @@ PRINT *, "MYD02SSH DETECTED"
 
       enddo test_loop
 
-PRINT *, "END OF TEST_LOOP"
+!PRINT *, "END OF TEST_LOOP"
 print *, "Sensor Name = ", trim(Sensor%Sensor_Name)
 print *, "Platform Name = ", trim(Sensor%Platform_Name)
 print *, "Spatial Resolution = ", Sensor%Spatial_Resolution_Meters
@@ -917,7 +918,7 @@ print *, "Spatial Resolution = ", Sensor%Spatial_Resolution_Meters
 
       !-- for 1 km MODIS, determine name of separate geolocation file
       if (trim(Sensor%Sensor_Name) == 'MODIS' .and.  Sensor%Spatial_Resolution_Meters == 1000) then
-print *, "calling geo file find "
+!print *, "calling geo file find "
          call DETERMINE_MODIS_GEOLOCATION_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Geolocation_File_Name)
          if (trim(Image%Auxiliary_Geolocation_File_Name) == "no_file") then
             Ierror = sym%YES
@@ -934,7 +935,7 @@ print *, "calling geo file find "
 
 print *, "instrument file = ", trim(Sensor%Instr_Const_File)
 print *, "algorithm file = ", trim(Sensor%Algo_Const_File)
-PRINT *, "END  OF DETECT"
+!PRINT *, "END  OF DETECT"
 
    end subroutine DETECT_SENSOR_FROM_FILE
 

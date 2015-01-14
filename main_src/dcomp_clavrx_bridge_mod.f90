@@ -236,7 +236,7 @@ contains
          ! - dcomp-mode
       dcomp_input % mode = dcomp_mode
          ! - ancil/lut path
-      dcomp_input % lut_path = trim(ancil_data_dir)//"/luts/cld/"   
+      dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
          ! - wmo sensor id
       dcomp_input % sensor_wmo_id = sensor % wmo_id
       dcomp_input % sun_earth_dist = sun_earth_distance

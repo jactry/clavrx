@@ -211,7 +211,7 @@ contains
             !------------------------------------------------------
             !  call the main insolation algorithm routine
             !------------------------------------------------------
-            Auxpath = trim(Ancil_Data_Dir)//"insolation/"
+            Auxpath = trim(Ancil_Data_Dir)//"static/sasrab/"
 
 
             call Sasrab(Auxpath, &

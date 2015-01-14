@@ -97,7 +97,8 @@ module USER_OPTIONS
       , Nlcomp_Mode &
       , dcomp_mode &
       , avhrr_1_flag &
-      , read_dark_comp
+      , read_dark_comp &
+      , globsnow_data_dir
       
       
    use CONSTANTS, only: &
@@ -517,7 +518,8 @@ contains
       Ncep_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/cfsr/'
       Oisst_data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/oisst/'
-      Snow_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/snow/'
+      Snow_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/snow/hires/'
+      Globsnow_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/snow/globsnow/'
       
       
       Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set

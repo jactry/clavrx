@@ -210,7 +210,7 @@ contains
       ! -- configure
       
            ! - ancil/lut path
-      nlcomp_input % lut_path = trim(ancil_data_dir)//"/luts/cld/"   
+      nlcomp_input % lut_path = trim(ancil_data_dir)//"static//luts/cld/"   
          ! - wmo sensor id
       nlcomp_input % sensor_wmo_id = sensor % wmo_id
       nlcomp_input % sun_earth_dist = sun_earth_distance

@@ -308,11 +308,11 @@
      
       !--- read in which elevation type that is specified.
       if (Read_Surface_Elevation == 1) then
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
                                       "GLOBE_1km_digelev.hdf", &
                                       grid_Str=Surface_Elev_Str)
       else ! low resolution, Read_Surface_Elevation = 2
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
                                      "GLOBE_8km_digelev.hdf", &
                                       grid_Str=Surface_Elev_Str)
       end if
@@ -325,7 +325,7 @@
    if (Read_Coast_Mask == sym%YES) then
       call mesg ( "Opening coast file", level = verb_lev % VERBOSE)
       Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
-      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"sfc_data/", &
+      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
                                       "coast_mask_1km.hdf", &
                                       grid_Str=Coast_Mask_Str)
    end if
@@ -337,11 +337,11 @@
    Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
 
    if (Read_Hires_sfc_type == sym%YES) then
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                      "gl-latlong-1km-landcover.hdf", &
                                       grid_Str=Sfc_Type_Str)
    else
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                      "gl-latlong-8km-landcover.hdf", &
                                       grid_Str=Sfc_Type_Str)
    end if
@@ -352,7 +352,7 @@
    if (Read_Land_Mask == sym%YES) then
       call mesg  ( "Opening land mask file" ,level = verb_lev % VERBOSE )
       Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
-      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                     "lw_geo_2001001_v03m.hdf", &
                                      grid_Str=Land_Mask_Str)
    end if
@@ -363,7 +363,7 @@
    if (Read_Volcano_Mask == sym%YES) then
       call mesg  ( "Opening volcano mask file",level = verb_lev % VERBOSE )
       Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
-      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         "volcano_mask_1km.hdf", &
                                         grid_Str=Volcano_Mask_Str)
     end if
@@ -616,7 +616,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
       !--------------------------------------------------------------------
       if (use_seebor == sym%YES) then
          print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", month
-         call open_seebor_emiss(trim(Ancil_Data_Dir)//"sfc_data", month, Emiss_File_Id)
+         call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", month, Emiss_File_Id)
       end if
 
       !----------------------------------------------------------------------
@@ -635,7 +635,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
             Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.659_x4.hdf"
             Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
-            Modis_Alb_0_66_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+            Modis_Alb_0_66_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_0_66_Name), &
                                         grid_Str=Modis_Alb_0_66_Str)
          end if
@@ -645,7 +645,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
             Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.858_x4.hdf"
             Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
-            Modis_Alb_0_86_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+            Modis_Alb_0_86_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_0_86_Name), &
                                         grid_Str=Modis_Alb_0_86_Str)
          end if
@@ -655,7 +655,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
             Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.24_x4.hdf"
             Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
-            Modis_Alb_1_24_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+            Modis_Alb_1_24_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_1_24_Name), &
                                         grid_Str=Modis_Alb_1_24_Str)
          end if
@@ -665,7 +665,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
             Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.64_x4.hdf"
             Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
-            Modis_Alb_1_64_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+            Modis_Alb_1_64_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_1_64_Name), &
                                         grid_Str=Modis_Alb_1_64_Str)
          end if                                    
@@ -675,7 +675,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
             Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".2.13_x4.hdf"
          Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
-         Modis_Alb_2_13_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/sfc_data/", &
+         Modis_Alb_2_13_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_2_13_Name), &
                                         grid_Str=Modis_Alb_2_13_Str)
          end if                                    

@@ -331,8 +331,8 @@ contains
      
       
       ! - some lut paths
-      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
-      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
+      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
       

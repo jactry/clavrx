@@ -456,7 +456,7 @@ contains
       if (config %  chan_on_dnb ) then
          
          ! - mapping file ( maps from dnb to M-bands resolution)
-         file_dnb_idx = trim(config % Ancil_Data_Dir)//'viirs/dnb2m_indx.txt'
+         file_dnb_idx = trim(config % Ancil_Data_Dir)//'static/viirs/dnb2m_indx.txt'
          lun = getlun()
          dim_seg_dnb(1) = 4064
          dim_seg_dnb(2) = dim_seg(2)

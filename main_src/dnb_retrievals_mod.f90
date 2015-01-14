@@ -141,13 +141,13 @@ contains
       
       ! --- executable --------------------------------------
       
-      lunar_irrad_file     = trim(ancil_data_dir)//'dnb_ancils/lunar_irrad_Mean_DNB.bin'
+      lunar_irrad_file     = trim(ancil_data_dir)//'static/dnb_ancils/lunar_irrad_Mean_DNB.bin'
       if ( .not. file_test ( trim(lunar_irrad_file) ) ) then
          print* , 'lunar irradiance file missing ', lunar_irrad_file
          return
       end if   
       
-      distance_table_file  = trim(ancil_data_dir)//'dnb_ancils/DIST_2010-2030_double.bin'
+      distance_table_file  = trim(ancil_data_dir)//'static/dnb_ancils/DIST_2010-2030_double.bin'
       if ( .not. file_test ( trim(distance_table_file) ) ) then
          print* , 'lunar irradiance file missing ', distance_table_file
          return

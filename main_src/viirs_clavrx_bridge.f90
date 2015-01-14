@@ -163,7 +163,7 @@ contains
       is_iband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) == sym%YES
       
       y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment + 1
-      c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 , Image%Number_Of_Elements )  - y_start  + 1
+      c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 , Image%Number_Of_Lines )  - y_start  + 1
       
       ! - configure viirs interface
       v_conf % chan_on_rfl_mband = is_mband_on

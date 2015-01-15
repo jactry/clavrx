@@ -13,7 +13,6 @@ module ACHA_CLAVRX_BRIDGE
  use ACHA_SHADOW
  use ACHA_SERVICES_MOD
  use ACHA_CLOUD_COVER_LAYERS
- use PIXEL_COMMON
    
  implicit none
 

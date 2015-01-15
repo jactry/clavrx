@@ -182,8 +182,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
-   Output%Zc_Top => Zc_Top_Acha
-   Output%Zc_Base => Zc_Base_Acha
+   Output%Zc_Top => ACHA%Zc_Top
+   Output%Zc_Base => ACHA%Zc_Base
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()
@@ -230,21 +230,21 @@ module CLOUD_BASE_CLAVRX_BRIDGE
 
    Input%Latitude_Pc => Nav%Lat_Pc
    Input%Longitude_Pc => Nav%Lon_Pc
-   Input%Tc => Tc_Acha
-   Input%Ec => Ec_Acha
-   Input%Beta => Beta_Acha
-   Input%Pc => Pc_Acha
-   Input%Zc => Zc_Acha
-   Input%Tau => Tau_Acha
-   Input%Reff => Reff_Acha
-   Input%Tc_Uncertainty => Tc_Acha_Uncertainty
-   Input%Ec_Uncertainty => Ec_Acha_Uncertainty
-   Input%Beta_Uncertainty => Beta_Acha_Uncertainty
-   Input%Pc_Uncertainty => Pc_Acha_Uncertainty
-   Input%Zc_Uncertainty => Zc_Acha_Uncertainty
-   Input%Lower_Cloud_Pressure => Pc_Lower_Cloud
-   Input%Lower_Cloud_Temperature => Tc_Lower_Cloud
-   Input%Lower_Cloud_Height => Zc_Lower_Cloud
+   Input%Tc => ACHA%Tc
+   Input%Ec => ACHA%Ec
+   Input%Beta => ACHA%Beta
+   Input%Pc => ACHA%Pc
+   Input%Zc => ACHA%Zc
+   Input%Tau => ACHA%Tau
+   Input%Reff => ACHA%Reff
+   Input%Tc_Uncertainty => ACHA%Tc_Uncertainty
+   Input%Ec_Uncertainty => ACHA%Ec_Uncertainty
+   Input%Beta_Uncertainty => ACHA%Beta_Uncertainty
+   Input%Pc_Uncertainty => ACHA%Pc_Uncertainty
+   Input%Zc_Uncertainty => ACHA%Zc_Uncertainty
+   Input%Lower_Cloud_Pressure => ACHA%Pc_Lower_Cloud
+   Input%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
+   Input%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
    Input%Cdnc => Cdnc_DCOMP
    Input%Hcld => Hcld_DCOMP
    Input%LCL => LCL_Height_Nwp_Pix

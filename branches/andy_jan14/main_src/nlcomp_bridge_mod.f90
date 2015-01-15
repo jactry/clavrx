@@ -53,12 +53,9 @@ module nlcomp_bridge_mod
       , sfc &
       , image &
       , ch  &
+      , acha &
       , cld_type &
       , cld_mask &
-      , zc_acha  &
-      , pc_acha  &
-      , tc_acha &
-      , tau_acha &
       , bad_pixel_mask &
       , reff_nlcomp, tau_nlcomp  &
       , tau_dcomp_qf, reff_dcomp_qf &
@@ -230,9 +227,9 @@ contains
       nlcomp_input % azi_lunar % d = geo % lunrelaz
               
          ! - Cloud products
-      nlcomp_input % cloud_press % d = pc_acha
-      nlcomp_input % cloud_temp % d  = tc_acha
-      nlcomp_input % tau_acha % d    = tau_acha
+      nlcomp_input % cloud_press % d = acha % pc
+      nlcomp_input % cloud_temp % d  = acha % tc
+      nlcomp_input % tau_acha % d    = acha % tau
       nlcomp_input % cloud_mask % d  = cld_mask
       nlcomp_input % cloud_type % d  = cld_type
                   

@@ -14,6 +14,7 @@ module ACHA_SERVICES_MOD
        Geo, &
        Sensor, &
        Image, &
+       ACHA, &
        Sfc, &
        Bad_Pixel_Mask, &
        I_Lrc, &
@@ -32,34 +33,11 @@ module ACHA_SERVICES_MOD
        Smooth_Nwp_Flag, &
        Process_Undetected_Cloud_Flag, &
        Posterior_Cld_Probability, &
-       ACHA_MODE, &
        Cld_Mask, &
        Cld_Type, &
        Cld_Test_Vector_Packed, &
        Shadow_Mask, &
-       Tc_Acha, &
-       Ec_Acha, &
-       Beta_Acha, &
-       Zc_Acha, &
-       Pc_Acha, &
-       Tau_Acha, &
-       Reff_Acha, &
-       Tc_Acha_Uncertainty, &
-       Pc_Acha_Uncertainty, &
-       Zc_Acha_Uncertainty, &
-       Ec_Acha_Uncertainty, &
-       Beta_Acha_Uncertainty, &
-       Acha_Quality_Flag, &
-       Acha_OE_Quality_Flags, &
-       Acha_Processing_Order_Global, &
-       Acha_Packed_Meta_Data_Flags, &
-       Acha_Packed_Quality_Flags, &
-       Zc_Lower_Cloud, &
-       Tc_Lower_Cloud, &
-       Pc_Lower_Cloud, &
        Cloud_Fraction_Uncer_3x3, &
-       Cld_Layer_Acha, &
-       Cost_Acha, &
        Tc_Cirrus_Co2, &
        Tc_Opaque_Cloud, &
        Pc_Opaque_Cloud, &
@@ -69,18 +47,10 @@ module ACHA_SERVICES_MOD
        Cloud_Fraction_3x3, &
        Low_Cloud_Fraction_3x3, &
        Mid_Cloud_Fraction_3x3, &
-       High_Cloud_Fraction_3x3
-!      Geo, &
-!      Nav, &
-!      Sfc, &
-!      Image, &
-!      Sensor, &
-!      Ancil_Data_Dir, &
-!      Bad_Pixel_Mask, &
-!      Cld_Mask, &
-!      Diag_Pix_Array_1, &
-!      Diag_Pix_Array_2, &
-!      Diag_Pix_Array_3
+       High_Cloud_Fraction_3x3, &
+       Diag_Pix_Array_1, &
+       Diag_Pix_Array_2, &
+       Diag_Pix_Array_3
 
  implicit none
 

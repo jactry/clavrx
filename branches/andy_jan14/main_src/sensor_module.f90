@@ -81,8 +81,10 @@ module SENSOR_MODULE
    character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier
   
-   character (len = 3) :: string_3
-   character (len = 6) :: string_6
+   character (len = 3), private :: string_3
+   character (len = 4), private :: string_4
+   character (len = 6), private :: string_6
+   character (len = 30), private :: string_30
 
    contains
 
@@ -188,39 +190,102 @@ module SENSOR_MODULE
    !--------------------------------------------------------------------------------------
    subroutine OUTPUT_SENSOR_TO_SCREEN()
 
-      call mesg ( "Satellite : Sensor = "//trim(Sensor%Platform_Name)//' : '//trim(Sensor%Sensor_Name))
+      call mesg ( " ",level = verb_lev % DEFAULT)
+      call mesg ( "SENSOR DEFINITION",level = verb_lev % DEFAULT)
+
+      call mesg ( "Satellite = "//trim(Sensor%Platform_Name), level = verb_lev % DEFAULT)
+      call mesg ( "Sensor = "//trim(Sensor%Sensor_Name), level = verb_lev % DEFAULT)
+
       write(string_3,'(i3)' ) Sensor%WMO_ID 
       call mesg ( "Spacecraft WMO number = "//trim(string_3) , level = verb_lev % DEFAULT)
-      write(string_3,'(i3)' ) Image%Start_Doy
-      call mesg ("Start Day of Year= "//trim(string_3))
-      call mesg ( "Start Time of Day = ", Image%Start_Time / 1000.0 / 60.0 / 60.0 )
-      write(string_6,'(i5)') Image%Number_Of_Lines
-      call mesg ( "Number of Scans = "//string_6)
+
       write ( string_6,'(i6)')   Sensor%Spatial_Resolution_Meters
-      call mesg ( "Pixel Resolution (m) = "//string_6)
+      call mesg ( "Pixel Resolution (m) = "//string_6, level = verb_lev % DEFAULT)
 
       !--- some avhrr specific output
       if (index(Sensor%Sensor_Name,'AVHRR-1') > 0 .or. &
           index(Sensor%Sensor_Name,'AVHRR-2') > 0 .or. &
           index(Sensor%Sensor_Name,'AVHRR-3') > 0) then
-         print *,EXE_PROMPT, "AVHRR data type = ", Data_Type
-         print *,EXE_PROMPT, "AVHRR level 1b version = ", Ver_1b
-         print *,EXE_PROMPT, "AVHRR Gac flag = ", AVHRR_GAC_Flag
-         print *,EXE_PROMPT, "AVHRR KLM_flag = ", AVHRR_KLM_Flag
-         print *,EXE_PROMPT, "AVHRR AAPP flag = ", AVHRR_AAPP_Flag
+
+         write ( string_3,'(i3)')   AVHRR_Data_Type
+         call mesg ( "AVHRR data type = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_Ver_1b
+         call mesg ( "AVHRR Level1b Version = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_GAC_FLAG
+         call mesg ( "AVHRR GAC Flag = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_KLM_FLAG
+         call mesg ( "AVHRR KLM Flag = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_AAPP_FLAG
+         call mesg ( "AVHRR AAPP Flag = "//string_3, level = verb_lev % DEFAULT)
+    
       end if
 
    end subroutine OUTPUT_SENSOR_TO_SCREEN
    !--------------------------------------------------------------------------------------
-   !   screen output if image structure
+   !   screen output of some members of the image structure
    !--------------------------------------------------------------------------------------
    subroutine OUTPUT_IMAGE_TO_SCREEN()
-        
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+      call mesg ( "IMAGE DEFINITION",level = verb_lev % DEFAULT)
+
+      call mesg ("Level1b Name = "//trim(Image%Level1b_Name) , level = verb_lev % MINIMAL )
+
+      write(string_6,'(i6)' ) Image%Number_Of_Elements
+      call mesg ( "Number of Elements Per Line = "//string_6,level = verb_lev % DEFAULT)
+
+      write(string_6,'(i6)' ) Image%Number_Of_Lines
+      call mesg ( "Number of Lines in File = "//string_6,level = verb_lev % DEFAULT)
+
+      write(string_6,'(i6)' ) Image%Number_Of_Lines_Per_Segment
+      call mesg ( "Number of Lines in each Segment = "//string_6,level = verb_lev % DEFAULT)
+
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%Start_Year,Image%Start_Doy, &
+             Image%Start_Time/60.0/60.0/1000.0
+      call mesg ("Start Year, Doy, Time = "//string_30,level = verb_lev % DEFAULT)
+
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%End_Year,Image%End_Doy, &
+             Image%End_Time/60.0/60.0/1000.0
+      call mesg ("End Year, Doy, Time = "//string_30,level = verb_lev % DEFAULT)
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+
    end subroutine OUTPUT_IMAGE_TO_SCREEN
+
+   !--------------------------------------------------------------------------------------
+   !   screen output of the spatial or viewing limits imposed on this processing
+   !--------------------------------------------------------------------------------------
+   subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
+      call mesg ( "PROCESSING LIMITS",level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.2)' ) Nav%Lon_Max_Limit
+      call mesg ( "Maximum Longitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.2)' ) Nav%Lon_Min_Limit
+      call mesg ( "Minimum Longitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.2)' ) Nav%Lat_Max_Limit
+      call mesg ( "Maximum Latitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.2)' ) Nav%Lat_Min_Limit
+      call mesg ( "Minimum Latitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.1)' ) Geo%Solzen_Max_Limit
+      call mesg ( "Maximum Solar Zenith Angle for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      write(string_6,'(f6.1)' ) Geo%Solzen_Min_Limit
+      call mesg ( "Minimum Solar Zenith Angle for Processing = "//string_6, level = verb_lev % DEFAULT)
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+   end subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN
 
 
    !--------------------------------------------------------------------------------------------------
-   !
+   !  Read the values from instrument constant files
    !--------------------------------------------------------------------------------------------------
    subroutine READ_INSTR_CONSTANTS()
  
@@ -884,7 +949,7 @@ module SENSOR_MODULE
       !--- from a preliminary header read, set some global AVHRR flags and parameters
       call DETERMINE_AVHRR_FILE_TYPE(trim(Image%Level1b_Full_Name), &
                                      AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                     Ver_1b,Data_Type,Byte_Swap_1b)
+                                     AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
 
       !-- determine if this data is from the AVHRR/1 series
       call DETERMINE_AVHRR_1(Image%Start_Year,AVHRR_KLM_Flag,AVHRR_1_Flag)
@@ -895,11 +960,6 @@ module SENSOR_MODULE
       ifound = sym%YES   ! force exit need to develop logic for setting Ierror
 
       enddo test_loop
-
-!PRINT *, "END OF TEST_LOOP"
-print *, "Sensor Name = ", trim(Sensor%Sensor_Name)
-print *, "Platform Name = ", trim(Sensor%Platform_Name)
-print *, "Spatial Resolution = ", Sensor%Spatial_Resolution_Meters
 
       !---------------------------------------------------------------------------------
       ! Set sub-satellite point for geostationary satellites
@@ -918,7 +978,6 @@ print *, "Spatial Resolution = ", Sensor%Spatial_Resolution_Meters
 
       !-- for 1 km MODIS, determine name of separate geolocation file
       if (trim(Sensor%Sensor_Name) == 'MODIS' .and.  Sensor%Spatial_Resolution_Meters == 1000) then
-!print *, "calling geo file find "
          call DETERMINE_MODIS_GEOLOCATION_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Geolocation_File_Name)
          if (trim(Image%Auxiliary_Geolocation_File_Name) == "no_file") then
             Ierror = sym%YES
@@ -932,10 +991,6 @@ print *, "Spatial Resolution = ", Sensor%Spatial_Resolution_Meters
             Ierror = sym%YES
          endif
       endif
-
-print *, "instrument file = ", trim(Sensor%Instr_Const_File)
-print *, "algorithm file = ", trim(Sensor%Algo_Const_File)
-!PRINT *, "END  OF DETECT"
 
    end subroutine DETECT_SENSOR_FROM_FILE
 
@@ -1078,7 +1133,7 @@ print *, "algorithm file = ", trim(Sensor%Algo_Const_File)
          ! Determine the type of level 1b file
          !-------------------------------------------------------
          call DETERMINE_AVHRR_FILE_TYPE(trim(Level1b_Full_Name),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                        Ver_1b,Data_Type,Byte_Swap_1b)
+                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
    
          !-------------------------------------------------------------------
          !-- based on file type (AVHRR_KLM_Flag and Gac), determine parameters needed

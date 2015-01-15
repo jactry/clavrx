@@ -2395,27 +2395,28 @@ end subroutine COMPUTE_VIIRS_SST
 ! 6 - degraded ec Retrieval (1 = yes, 0 = no)
 ! 7 - degraded beta Retrieval (1 = yes, 0 = no)! 
 !-----------------------------------------------------------
-subroutine COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
+subroutine COMPUTE_ACHA_PERFORMANCE_METRICS(Processed_Count,Valid_Count,Success_Fraction)
 
-  real(kind=real4), intent(inout):: ACHA_Processed_Count
-  real(kind=real4), intent(inout):: ACHA_Valid_Count
+  real(kind=real4), intent(inout):: Processed_Count
+  real(kind=real4), intent(inout):: Valid_Count
+  real(kind=real4), intent(out):: Success_Fraction
   integer, parameter:: Count_Min = 10
   real:: Processed_Count_Segment
   real:: Valid_Count_Segment
 
-  Processed_Count_Segment = count(btest(ACHA_Packed_Quality_Flags,0))
+  Processed_Count_Segment = count(btest(ACHA%Packed_Quality_Flags,0))
 
-  Valid_Count_Segment = count((btest(int(ACHA_Packed_Quality_Flags),1)) .and.  &
-                              (btest(int(ACHA_Packed_Quality_Flags),2)) .and. &
-                              (btest(int(ACHA_Packed_Quality_Flags),3)))
+  Valid_Count_Segment = count((btest(int(ACHA%Packed_Quality_Flags),1)) .and.  &
+                              (btest(int(ACHA%Packed_Quality_Flags),2)) .and. &
+                              (btest(int(ACHA%Packed_Quality_Flags),3)))
   
-  ACHA_Processed_Count = ACHA_Processed_Count + Processed_Count_Segment
-  ACHA_Valid_Count = ACHA_Valid_Count + Valid_Count_Segment
+  Processed_Count = Processed_Count + Processed_Count_Segment
+  Valid_Count = Valid_Count + Valid_Count_Segment
 
-  if (ACHA_Processed_Count > Count_Min) then
-    ACHA_Success_Fraction = ACHA_Valid_Count / ACHA_Processed_Count
+  if (Processed_Count > Count_Min) then
+    Success_Fraction = Valid_Count / Processed_Count
   else
-    ACHA_Success_Fraction = Missing_Value_Real4 
+    Success_Fraction = Missing_Value_Real4 
   endif
 
 end subroutine COMPUTE_ACHA_PERFORMANCE_METRICS

@@ -152,15 +152,15 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
      !--- skip if invalid nwp indices
      if (Lat_Nwp_Idx <= 0 .or. Lon_Nwp_Idx <= 0) cycle
 
-     Cloud_Geometrical_Thickness = Zc_Top_Acha(Elem_Idx,Line_Idx) - Zc_Base_Acha(Elem_Idx,Line_Idx)
+     Cloud_Geometrical_Thickness = ACHA%Zc_Top(Elem_Idx,Line_Idx) - ACHA%Zc_Base(Elem_Idx,Line_Idx)
      !--- skip if failed cloud boundares
-     if (Cloud_Geometrical_Thickness <= 0.00 .or. Zc_Top_Acha(Elem_Idx,Line_Idx) <= 0.00) cycle
+     if (Cloud_Geometrical_Thickness <= 0.00 .or. ACHA%Zc_Top(Elem_Idx,Line_Idx) <= 0.00) cycle
 
      Ice_Layer_Fraction = 0.0
      Water_Layer_Fraction = 0.0
      Scwater_Layer_Fraction = 0.0
 
-     if (Zc_Base_Acha(Elem_Idx,Line_Idx) >= Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
+     if (ACHA%Zc_Base(Elem_Idx,Line_Idx) >= Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
 
          Ice_Layer_Fraction  = 1.0
          Water_Layer_Fraction  = 0.0
@@ -168,40 +168,40 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
      else
 
-         Ice_Layer_Fraction = (Zc_Top_Acha(Elem_Idx,Line_Idx) - Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
+         Ice_Layer_Fraction = (ACHA%Zc_Top(Elem_Idx,Line_Idx) - Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                Cloud_Geometrical_Thickness
 
      endif
 
      if (Ice_Layer_Fraction /= 1.0) then
 
-         if (Zc_Top_Acha(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
+         if (ACHA%Zc_Top(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
 
            Water_Layer_Fraction = 1.0
 
          else
-           Water_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-Zc_Base_Acha(Elem_Idx,Line_Idx)) / &
+           Water_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-ACHA%Zc_Base(Elem_Idx,Line_Idx)) / &
                                   Cloud_Geometrical_Thickness
          endif
 
-         if ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-             (Zc_Base_Acha(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         if ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+             (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
 
             Scwater_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) - &
                                      Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                      Cloud_Geometrical_Thickness
 
-         elseif ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-                   (Zc_Base_Acha(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         elseif ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+                   (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
   
               Scwater_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) - &
-                                       Zc_Base_Acha(Elem_Idx,Line_Idx)) / &
+                                       ACHA%Zc_Base(Elem_Idx,Line_Idx)) / &
                                        Cloud_Geometrical_Thickness
 
-         elseif ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-                   (Zc_Base_Acha(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         elseif ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+                   (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
 
-              Scwater_Layer_Fraction = (Zc_Top_Acha(Elem_Idx,Line_Idx) - Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
+              Scwater_Layer_Fraction = (ACHA%Zc_Top(Elem_Idx,Line_Idx) - Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                         Cloud_Geometrical_Thickness
 
           endif
@@ -270,7 +270,7 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
 
       !--- make local aliases of global variables
       Water_Path_Cloud = Cwp_Dcomp(Elem_Idx,Line_Idx) / 1000.0   !kg/m^2
-      T_Cloud = Tc_Acha(Elem_Idx,Line_Idx)
+      T_Cloud = ACHA%Tc(Elem_Idx,Line_Idx)
       Reff_Cloud = Reff_Dcomp(Elem_Idx,Line_Idx)
       Tau_Cloud = Tau_Dcomp(Elem_Idx,Line_Idx)
 
@@ -404,7 +404,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       endif
 
       CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
-      CTT_Pix = Tc_Acha(Elem_Idx,Line_Idx)
+      CTT_Pix = ACHA%Tc(Elem_Idx,Line_Idx)
       Reff_Pix = Reff_Dcomp(Elem_Idx,Line_Idx)
 
       if (Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) then
@@ -435,7 +435,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       Line_Idx_2  = min(Line_Idx_Max,max(2,Line_Idx + N_box /2))
       Elem_Idx_1  = min(Elem_Idx_Max-1,max(1,Elem_Idx - N_box /2))
       Elem_Idx_2  = min(Elem_Idx_Max,max(2,Elem_Idx + N_box /2))
-      CTT_Max = maxval(Tc_Acha(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))  
+      CTT_Max = maxval(ACHA%Tc(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))  
 
 
       !--- compute precip height

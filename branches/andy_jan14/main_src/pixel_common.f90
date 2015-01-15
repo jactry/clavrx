@@ -197,6 +197,8 @@ module PIXEL_COMMON
    real (kind=real4), dimension(:,:), allocatable:: Lon_1b
    real(kind=real4):: Lat_Min_Limit
    real(kind=real4):: Lat_Max_Limit
+   real(kind=real4):: Lon_Min_Limit
+   real(kind=real4):: Lon_Max_Limit
    real(kind=real4):: Timerr_Seconds
   end type navigation_definition
 
@@ -258,6 +260,44 @@ module PIXEL_COMMON
     character(len=128) :: Auxiliary_Geolocation_File_Name
   end type image_definition
 
+  type :: acha_definition
+    integer:: Mode
+    real (kind=real4), dimension(:,:), allocatable:: Tc
+    real (kind=real4), dimension(:,:), allocatable:: Ec
+    real (kind=real4), dimension(:,:), allocatable:: Pc
+    real (kind=real4), dimension(:,:), allocatable:: Zc
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Top
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Base
+    real (kind=real4), dimension(:,:), allocatable:: Zc_KM
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Top_KM
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Base_KM
+    real (kind=real4), dimension(:,:), allocatable:: Beta
+    real (kind=real4), dimension(:,:), allocatable:: Tau
+    real (kind=real4), dimension(:,:), allocatable:: Reff
+    real (kind=real4), dimension(:,:), allocatable:: Tc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Ec_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Beta_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Pc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Alt
+    real (kind=real4), dimension(:,:), allocatable:: Cost
+    real (kind=real4), dimension(:,:), allocatable:: Pc_Lower_Cloud
+    real (kind=real4), dimension(:,:), allocatable:: Zc_Lower_Cloud
+    real (kind=real4), dimension(:,:), allocatable:: Tc_Lower_Cloud
+    integer(kind=int1), dimension(:,:), allocatable:: Processing_Order
+    integer(kind=int1), dimension(:,:), allocatable:: Inversion_Flag
+    integer (kind=int1), dimension(:,:), allocatable:: Quality_Flag
+    integer (kind=int1), dimension(:,:), allocatable:: Cld_Layer
+    integer (kind=int1), dimension(:,:), allocatable:: Meta_Data
+    integer (kind=int1), dimension(:,:,:), allocatable:: OE_Quality_Flags
+    integer (kind=int1), dimension(:,:), allocatable:: Packed_Quality_Flags
+    integer (kind=int1), dimension(:,:), allocatable:: Packed_Meta_Data_Flags
+    real(kind=real4):: Success_Fraction
+    real(kind=real4):: Processed_Count
+    real(kind=real4):: Valid_Count
+  end type acha_definition
+
+
   !---- declare strucutres using above types
   type(observations), dimension(42), public, save, target :: Ch
   type(sensor_definition), public, save, target :: Sensor
@@ -265,6 +305,7 @@ module PIXEL_COMMON
   type(geometry_definition), public, save, target :: Geo
   type(navigation_definition), public, save, target :: Nav
   type(surface_definition), public, save, target :: Sfc
+  type(acha_definition), public, save, target :: ACHA
 
   !---- declare other global variables
   integer,public, save:: Cmr_File_Flag
@@ -301,7 +342,6 @@ module PIXEL_COMMON
   integer,public, save:: LRC_Flag  !local radiative center flag
   integer,public, save:: Process_Undetected_Cloud_Flag
   integer,public, save:: DCOMP_Mode
-  integer,public, save:: ACHA_Mode
   integer,public, save:: NLCOMP_Mode
   integer,public, save:: Mask_Mode
   integer,public, save:: Cld_Flag
@@ -339,9 +379,6 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   real(kind=real4), public, save:: Orbital_Processing_Time_Minutes
   real(kind=real4), public, save:: DCOMP_Success_Fraction
-  real(kind=real4), public, save:: ACHA_Success_Fraction
-  real(kind=real4), public, save:: ACHA_Processed_Count
-  real(kind=real4), public, save:: ACHA_Valid_Count
   real(kind=real4), public, save:: DCOMP_Processed_Count
   real(kind=real4), public, save:: DCOMP_Valid_Count
   real(kind=real4), public, save:: Nonconfident_Cloud_Mask_Fraction
@@ -411,7 +448,8 @@ module PIXEL_COMMON
   !--- parameters from avhrr Header
   !---------------------------------------------------------------------------
   integer(kind=int4), public, save:: Num_Scans_Level2_Hdf
-  integer(kind=int2), public, save:: Sc_Id_Avhrr,Ver_1b,Data_Type, Num_Loc, Tip_Parity, Aux_Sync,  &
+  integer(kind=int2), public, save:: Sc_Id_Avhrr,AVHRR_Ver_1b, &
+                                     AVHRR_Data_Type, Num_Loc, Tip_Parity, Aux_Sync,  &
                                      Ramp_Auto_Cal,Start_Year_Prev, Start_Day_Prev, &
                                      Month,Month_Prev,Day_of_Month,Ileap
   character(len=6), public, save:: Sc_Id_Char
@@ -588,35 +626,6 @@ module PIXEL_COMMON
 
 !--- pixel level cloud props
 
-  !-- ACHA cloud algorithm results
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: ACHA_Processing_Order_Global !changed to target
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: ACHA_Inversion_Flag_Global
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ec_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Top_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Base_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_ACHA_km
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Top_ACHA_km
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_Base_ACHA_km
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Beta_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tau_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Reff_ACHA
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_ACHA_Uncertainty
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ec_ACHA_Uncertainty
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Beta_ACHA_Uncertainty
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_ACHA_Uncertainty
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_ACHA_Uncertainty
-  integer (kind=int1), dimension(:,:), allocatable, public, save, target:: ACHA_Quality_Flag
-  integer (kind=int1), dimension(:,:), allocatable, public, save, target:: Cld_Layer_ACHA
-  integer (kind=int1), dimension(:,:), allocatable, public, save, target:: Meta_Data_ACHA
-  integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: ACHA_OE_Quality_Flags
-
-     !--- Converted pressure to altitude heights.
-     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Alt_Acha
-     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cost_Acha
-
      !--- h2o heights
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_H2O
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_H2O
@@ -644,8 +653,6 @@ module PIXEL_COMMON
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_Qf
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: DCOMP_Quality_Flag
      integer (kind=int2), dimension(:,:), allocatable, public,target, save:: DCOMP_Info_Flag
-     integer (kind=int1), dimension(:,:), allocatable, public, save, target:: ACHA_Packed_Quality_Flags
-     integer (kind=int1), dimension(:,:), allocatable, public,target, save:: ACHA_Packed_Meta_Data_Flags
 
      !-- Nlcomp cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_Nlcomp
@@ -817,9 +824,6 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Opaque_Cloud
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Lower_Cloud
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Lower_Cloud
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Lower_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
@@ -1009,9 +1013,6 @@ subroutine CREATE_PIXEL_ARRAYS()
   !--------------------------------------------------------------------------------
 
   !--- metrics - needed initialize counts to be zero but they accumulate through orbit
-  ACHA_Processed_Count = 0
-  ACHA_Valid_Count = 0
-  ACHA_Success_Fraction = Missing_Value_Real4
   DCOMP_Processed_Count = 0
   DCOMP_Valid_Count = 0
   DCOMP_Success_Fraction = Missing_Value_Real4
@@ -2048,87 +2049,105 @@ end subroutine DESTROY_SURFACE_ARRAYS
 subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
-      allocate(ACHA_Processing_Order_Global(dim1,dim2)) 
-      allocate(ACHA_Inversion_Flag_Global(dim1,dim2)) 
-      allocate(Tc_ACHA(dim1,dim2))
-      allocate(Ec_ACHA(dim1,dim2))
-      allocate(Beta_ACHA(dim1,dim2))
-      allocate(Pc_ACHA(dim1,dim2))
-      allocate(Zc_ACHA(dim1,dim2))
-      allocate(Zc_Top_ACHA(dim1,dim2))
-      allocate(Zc_Base_ACHA(dim1,dim2))
-      allocate(Cld_Layer_ACHA(dim1,dim2))
-      allocate(Tau_ACHA(dim1,dim2))
-      allocate(Reff_ACHA(dim1,dim2))
-      allocate(Tc_ACHA_Uncertainty(dim1,dim2))
-      allocate(Ec_ACHA_Uncertainty(dim1,dim2))
-      allocate(Beta_ACHA_Uncertainty(dim1,dim2))
-      allocate(Zc_ACHA_Uncertainty(dim1,dim2))
-      allocate(Pc_ACHA_Uncertainty(dim1,dim2))
-      allocate(ACHA_Quality_Flag(dim1,dim2))
-      allocate(ACHA_Packed_Meta_Data_Flags(dim1,dim2))
-      allocate(ACHA_Packed_Quality_Flags(dim1,dim2))
-      allocate(Meta_Data_ACHA(dim1,dim2))
-      allocate(ACHA_OE_Quality_Flags(3,dim1,dim2))
-      allocate(Alt_Acha(dim1,dim2))
-      allocate(Cost_Acha(dim1,dim2))
+    if (.not. allocated(ACHA%Tc)) allocate(ACHA%Tc(dim1,dim2)) 
+    if (.not. allocated(ACHA%Ec)) allocate(ACHA%Ec(dim1,dim2)) 
+    if (.not. allocated(ACHA%Pc)) allocate(ACHA%Pc(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc)) allocate(ACHA%Zc(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Top)) allocate(ACHA%Zc_Top(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Base)) allocate(ACHA%Zc_Base(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_KM)) allocate(ACHA%Zc_KM(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Top_KM)) allocate(ACHA%Zc_Top_KM(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Base_KM)) allocate(ACHA%Zc_Base_KM(dim1,dim2)) 
+    if (.not. allocated(ACHA%Beta)) allocate(ACHA%Beta(dim1,dim2)) 
+    if (.not. allocated(ACHA%Tau)) allocate(ACHA%Tau(dim1,dim2)) 
+    if (.not. allocated(ACHA%Reff)) allocate(ACHA%Reff(dim1,dim2)) 
+    if (.not. allocated(ACHA%Tc_Uncertainty)) allocate(ACHA%Tc_Uncertainty(dim1,dim2)) 
+    if (.not. allocated(ACHA%Ec_Uncertainty)) allocate(ACHA%Ec_Uncertainty(dim1,dim2)) 
+    if (.not. allocated(ACHA%Beta_Uncertainty)) allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Uncertainty)) allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
+    if (.not. allocated(ACHA%Pc_Uncertainty)) allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+    if (.not. allocated(ACHA%Alt)) allocate(ACHA%Alt(dim1,dim2)) 
+    if (.not. allocated(ACHA%Cost)) allocate(ACHA%Cost(dim1,dim2)) 
+    if (.not. allocated(ACHA%Pc_Lower_Cloud)) allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
+    if (.not. allocated(ACHA%Zc_Lower_Cloud)) allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
+    if (.not. allocated(ACHA%Tc_Lower_Cloud)) allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
+    if (.not. allocated(ACHA%Processing_Order)) allocate(ACHA%Processing_Order(dim1,dim2)) 
+    if (.not. allocated(ACHA%Inversion_Flag)) allocate(ACHA%Inversion_Flag(dim1,dim2)) 
+    if (.not. allocated(ACHA%Quality_Flag)) allocate(ACHA%Quality_Flag(dim1,dim2)) 
+    if (.not. allocated(ACHA%Cld_Layer)) allocate(ACHA%Cld_Layer(dim1,dim2)) 
+    if (.not. allocated(ACHA%Meta_Data)) allocate(ACHA%Meta_Data(dim1,dim2)) 
+    if (.not. allocated(ACHA%OE_Quality_Flags)) allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
+    if (.not. allocated(ACHA%Packed_Quality_Flags)) allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
+    if (.not. allocated(ACHA%Packed_Meta_Data_Flags)) allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
    endif
+
+   !--- these accumulate through the whole image, do not reset with each segment
+   ACHA%Processed_Count = 0
+   ACHA%Valid_Count = 0
+   ACHA%Success_Fraction = Missing_Value_Real4
+
 end subroutine CREATE_ACHA_ARRAYS
+
 subroutine RESET_ACHA_ARRAYS()
-   if (Cld_Flag == sym%YES) then
-      ACHA_Processing_Order_Global = Missing_Value_Int1
-      ACHA_Inversion_Flag_Global = Missing_Value_Int1
-      Tc_ACHA = Missing_Value_Real4
-      Ec_ACHA = Missing_Value_Real4
-      Beta_ACHA = Missing_Value_Real4
-      Pc_ACHA = Missing_Value_Real4
-      Zc_ACHA = Missing_Value_Real4
-      Zc_Top_ACHA = Missing_Value_Real4
-      Zc_Base_ACHA = Missing_Value_Real4
-      Cld_Layer_ACHA = Missing_Value_Int1
-      Tau_ACHA = Missing_Value_Real4
-      Reff_ACHA = Missing_Value_Real4
-      Tc_ACHA_Uncertainty = Missing_Value_Real4
-      Ec_ACHA_Uncertainty = Missing_Value_Real4
-      Beta_ACHA_Uncertainty = Missing_Value_Real4
-      Zc_ACHA_Uncertainty = Missing_Value_Real4
-      Pc_ACHA_Uncertainty = Missing_Value_Real4
-      ACHA_Quality_Flag = 0
-      ACHA_Packed_Meta_Data_Flags = 0
-      ACHA_Packed_Quality_Flags = 0
-      Meta_Data_ACHA = 0
-      ACHA_OE_Quality_Flags = 0
-      Alt_Acha = Missing_Value_Real4
-      Cost_Acha = Missing_Value_Real4
-   endif
+    if (allocated(ACHA%Pc)) ACHA%Pc = Missing_Value_Real4
+    if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
+    if (allocated(ACHA%Zc_KM)) ACHA%Zc_KM = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Top_KM)) ACHA%Zc_Top_KM = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Base_KM)) ACHA%Zc_Base_KM  = Missing_Value_Real4
+    if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
+    if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
+    if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
+    if (allocated(ACHA%Tc_Uncertainty)) ACHA%Tc_Uncertainty = Missing_Value_Real4
+    if (allocated(ACHA%Ec_Uncertainty)) ACHA%Ec_Uncertainty = Missing_Value_Real4
+    if (allocated(ACHA%Beta_Uncertainty)) ACHA%Beta_Uncertainty = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Uncertainty)) ACHA%Zc_Uncertainty = Missing_Value_Real4
+    if (allocated(ACHA%Pc_Uncertainty)) ACHA%Pc_Uncertainty = Missing_Value_Real4
+    if (allocated(ACHA%Alt)) ACHA%Alt = Missing_Value_Real4
+    if (allocated(ACHA%Cost)) ACHA%Cost = Missing_Value_Real4
+    if (allocated(ACHA%Zc_Lower_Cloud)) ACHA%Zc_Lower_Cloud = Missing_Value_Real4
+    if (allocated(ACHA%Pc_Lower_Cloud)) ACHA%Pc_Lower_Cloud = Missing_Value_Real4
+    if (allocated(ACHA%Tc_Lower_Cloud)) ACHA%Tc_Lower_Cloud = Missing_Value_Real4
+    if (allocated(ACHA%Processing_Order)) ACHA%Processing_Order = Missing_Value_Int1
+    if (allocated(ACHA%Inversion_Flag)) ACHA%Inversion_Flag = Missing_Value_Int1
+    if (allocated(ACHA%Cld_Layer)) ACHA%Cld_Layer = Missing_Value_Int1
+    if (allocated(ACHA%Quality_Flag)) ACHA%Quality_Flag = Missing_Value_Int1
+    if (allocated(ACHA%Meta_Data)) ACHA%Meta_Data = 0
+    if (allocated(ACHA%OE_Quality_Flags)) ACHA%OE_Quality_Flags = 0
+    if (allocated(ACHA%Packed_Quality_Flags)) ACHA%Packed_Quality_Flags = 0
+    if (allocated(ACHA%Packed_Meta_Data_Flags)) ACHA%Packed_Meta_Data_Flags = 0
 end subroutine RESET_ACHA_ARRAYS
+
 subroutine DESTROY_ACHA_ARRAYS()
-   if (Cld_Flag == sym%YES) then
-      deallocate(ACHA_Processing_Order_Global) 
-      deallocate(ACHA_Inversion_Flag_Global) 
-      deallocate(Tc_ACHA)
-      deallocate(Ec_ACHA)
-      deallocate(Beta_ACHA)
-      deallocate(Pc_ACHA)
-      deallocate(Zc_ACHA)
-      deallocate(Zc_Top_ACHA)
-      deallocate(Zc_Base_ACHA)
-      deallocate(Cld_Layer_ACHA)
-      deallocate(Tau_ACHA)
-      deallocate(Reff_ACHA)
-      deallocate(Tc_ACHA_Uncertainty)
-      deallocate(Ec_ACHA_Uncertainty)
-      deallocate(Beta_ACHA_Uncertainty)
-      deallocate(Zc_ACHA_Uncertainty)
-      deallocate(Pc_ACHA_Uncertainty)
-      deallocate(ACHA_Quality_Flag)
-      deallocate(ACHA_Packed_Meta_Data_Flags)
-      deallocate(ACHA_Packed_Quality_Flags)
-      deallocate(Meta_Data_ACHA)
-      deallocate(ACHA_OE_Quality_Flags)
-      deallocate(Alt_Acha)
-      deallocate(Cost_Acha)
-   endif
+    if (allocated(ACHA%Pc)) deallocate(ACHA%Pc) 
+    if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
+    if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 
+    if (allocated(ACHA%Zc_Base)) deallocate(ACHA%Zc_Base) 
+    if (allocated(ACHA%Zc_KM)) deallocate(ACHA%Zc_KM) 
+    if (allocated(ACHA%Zc_Top_KM)) deallocate(ACHA%Zc_Top_KM) 
+    if (allocated(ACHA%Zc_Base_KM)) deallocate(ACHA%Zc_Base_KM) 
+    if (allocated(ACHA%Beta)) deallocate(ACHA%Beta) 
+    if (allocated(ACHA%Tau)) deallocate(ACHA%Tau) 
+    if (allocated(ACHA%Reff)) deallocate(ACHA%Reff) 
+    if (allocated(ACHA%Tc_Uncertainty)) deallocate(ACHA%Tc_Uncertainty) 
+    if (allocated(ACHA%Ec_Uncertainty)) deallocate(ACHA%Ec_Uncertainty) 
+    if (allocated(ACHA%Beta_Uncertainty)) deallocate(ACHA%Beta_Uncertainty) 
+    if (allocated(ACHA%Zc_Uncertainty)) deallocate(ACHA%Zc_Uncertainty) 
+    if (allocated(ACHA%Pc_Uncertainty)) deallocate(ACHA%Pc_Uncertainty) 
+    if (allocated(ACHA%Alt)) deallocate(ACHA%Alt) 
+    if (allocated(ACHA%Cost)) deallocate(ACHA%Cost) 
+    if (allocated(ACHA%Zc_Lower_Cloud)) deallocate(ACHA%Zc_Lower_Cloud) 
+    if (allocated(ACHA%Pc_Lower_Cloud)) deallocate(ACHA%Pc_Lower_Cloud) 
+    if (allocated(ACHA%Tc_Lower_Cloud)) deallocate(ACHA%Tc_Lower_Cloud) 
+    if (allocated(ACHA%Processing_Order)) deallocate(ACHA%Processing_Order) 
+    if (allocated(ACHA%Inversion_Flag)) deallocate(ACHA%Inversion_Flag) 
+    if (allocated(ACHA%Quality_Flag)) deallocate(ACHA%Quality_Flag) 
+    if (allocated(ACHA%Cld_Layer)) deallocate(ACHA%Cld_Layer) 
+    if (allocated(ACHA%Meta_Data)) deallocate(ACHA%Meta_Data) 
+    if (allocated(ACHA%OE_Quality_Flags)) deallocate(ACHA%OE_Quality_Flags) 
+    if (allocated(ACHA%Packed_Quality_Flags)) deallocate(ACHA%Packed_Quality_Flags) 
+    if (allocated(ACHA%Packed_Meta_Data_Flags)) deallocate(ACHA%Packed_Meta_Data_Flags) 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2529,9 +2548,6 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Pc_Opaque_Cloud(dim1,dim2))
     allocate(Zc_Opaque_Cloud(dim1,dim2))
     allocate(Tc_Opaque_Cloud(dim1,dim2))
-    allocate(Pc_Lower_Cloud(dim1,dim2))
-    allocate(Zc_Lower_Cloud(dim1,dim2))
-    allocate(Tc_Lower_Cloud(dim1,dim2))
     allocate(Pc_H2O(dim1,dim2))
     allocate(Tc_H2O(dim1,dim2))
     allocate(Zc_H2O(dim1,dim2))
@@ -2551,9 +2567,6 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Pc_Opaque_Cloud = Missing_Value_Real4
      Zc_Opaque_Cloud = Missing_Value_Real4
      Tc_Opaque_Cloud = Missing_Value_Real4
-     Pc_Lower_Cloud = Missing_Value_Real4
-     Zc_Lower_Cloud = Missing_Value_Real4
-     Tc_Lower_Cloud = Missing_Value_Real4
      Pc_H2O = Missing_Value_Real4
      Tc_H2O = Missing_Value_Real4
      Zc_H2O = Missing_Value_Real4
@@ -2573,9 +2586,6 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Pc_Opaque_Cloud)
      deallocate(Zc_Opaque_Cloud)
      deallocate(Tc_Opaque_Cloud)
-     deallocate(Pc_Lower_Cloud)
-     deallocate(Zc_Lower_Cloud)
-     deallocate(Tc_Lower_Cloud)
      deallocate(Pc_H2O)
      deallocate(Tc_H2O)
      deallocate(Zc_H2O)

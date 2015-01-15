@@ -56,8 +56,8 @@ module ACHA_CLAVRX_BRIDGE
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
-                                    Symbol, &
-                                    Output)
+                                   Symbol, &
+                                   Output)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -70,7 +70,7 @@ module ACHA_CLAVRX_BRIDGE
    !--- Call to Geometrical Shadow Algorithm
    !-----------------------------------------------------------------------
    call CLOUD_SHADOW_RETR (  &
-           Zc_Acha &
+           ACHA%Zc &
          , Geo%Solaz &
          , Geo%Solzen &
          , Nav%Lat &
@@ -251,28 +251,28 @@ module ACHA_CLAVRX_BRIDGE
  subroutine SET_OUTPUT()
    Output%Latitude_Pc => Nav%Lat_Pc
    Output%Longitude_Pc => Nav%Lon_Pc
-   Output%Tc => Tc_Acha
-   Output%Ec => Ec_Acha
-   Output%Beta => Beta_Acha
-   Output%Pc => Pc_Acha
-   Output%Zc => Zc_Acha
-   Output%Tau => Tau_Acha
-   Output%Reff => Reff_Acha
-   Output%Tc_Uncertainty => Tc_Acha_Uncertainty
-   Output%Ec_Uncertainty => Ec_Acha_Uncertainty
-   Output%Beta_Uncertainty => Beta_Acha_Uncertainty
-   Output%Pc_Uncertainty => Pc_Acha_Uncertainty
-   Output%Zc_Uncertainty => Zc_Acha_Uncertainty
-   Output%Lower_Cloud_Pressure => Pc_Lower_Cloud
-   Output%Lower_Cloud_Temperature => Tc_Lower_Cloud
-   Output%Lower_Cloud_Height => Zc_Lower_Cloud
-   Output%Qf => Acha_Quality_Flag
-   Output%OE_Qf => Acha_OE_Quality_Flags
-   Output%Packed_Qf => Acha_Packed_Quality_Flags
-   Output%Packed_Meta_Data => Acha_Packed_Meta_Data_Flags
-   Output%Processing_Order  => Acha_Processing_Order_Global
-   Output%Cost  => Cost_Acha
-   Output%Cloud_Layer  => Cld_Layer_Acha
+   Output%Tc => ACHA%Tc
+   Output%Ec => ACHA%Ec
+   Output%Beta => ACHA%Beta
+   Output%Pc => ACHA%Pc
+   Output%Zc => ACHA%Zc
+   Output%Tau => ACHA%Tau
+   Output%Reff => ACHA%Reff
+   Output%Tc_Uncertainty => ACHA%Tc_Uncertainty
+   Output%Ec_Uncertainty => ACHA%Ec_Uncertainty
+   Output%Beta_Uncertainty => ACHA%Beta_Uncertainty
+   Output%Pc_Uncertainty => ACHA%Pc_Uncertainty
+   Output%Zc_Uncertainty => ACHA%Zc_Uncertainty
+   Output%Lower_Cloud_Pressure => ACHA%Pc_Lower_Cloud
+   Output%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
+   Output%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
+   Output%Qf => ACHA%Quality_Flag
+   Output%OE_Qf => ACHA%OE_Quality_Flags
+   Output%Packed_Qf => ACHA%Packed_Quality_Flags
+   Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
+   Output%Processing_Order  => ACHA%Processing_Order
+   Output%Cost  => ACHA%Cost
+   Output%Cloud_Layer  => ACHA%Cld_Layer
    Output%Total_Cloud_Fraction => Cloud_Fraction_3x3
    Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer_3x3
    Output%High_Cloud_Fraction => High_Cloud_Fraction_3x3
@@ -292,7 +292,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
    Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
-   Input%ACHA_Mode_Flag_In = ACHA_MODE
+   Input%ACHA_Mode_Flag_In = ACHA%Mode
    Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
 
    Input%Chan_Idx_67um = 27     !channel number for 6.7

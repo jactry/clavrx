@@ -457,8 +457,6 @@
       !--------------------------------------------------------------
       call DETERMINE_LEVEL1B_COMPRESSION(File_1b_Temp,L1b_Gzip,L1b_Bzip2)
 
-print *, "temp = ", trim(File_1b_Temp)
-print *, "full = ", trim(Image%Level1b_Full_Name)
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
       ! and populate sensor structure
@@ -473,7 +471,6 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
       !--- print to screen the file name
       call mesg (" " )
       call mesg ("<------------- Next Orbit ---------------> ",level = verb_lev % DEFAULT )
-      call mesg ("file name = "//trim(Image%Level1b_Name) , level = verb_lev % MINIMAL )
 
       !-------------------------------------------------------
       ! reset record counters
@@ -523,6 +520,8 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
       ! Output sensor and image parameters to screen
       !----------------------------------------------------------------------
       call OUTPUT_SENSOR_TO_SCREEN()
+      call OUTPUT_IMAGE_TO_SCREEN()
+      call OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
       
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
@@ -563,15 +562,6 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
       Month = COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
       Day_Of_Month = COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
 
-      !--- continue output to screen
-      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%Start_Year,Image%Start_Doy, &
-             Image%Start_Time/60.0/60.0/1000.0
-      call mesg ("start year, day, time = "//string_30 ) 
-      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%End_Year,Image%End_Doy, &
-             Image%End_Time/60.0/60.0/1000.0
-      call mesg ("End year, day, time = "//string_30 ) 
-      
-      
 
       !*************************************************************************
       ! Marker:  READ IN SENSOR-SPECIFIC CONSTANTS
@@ -1406,11 +1396,11 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
                                     Pc_Cirrus_Co2,Tc_Cirrus_Co2)
                endif
 
-               if (ACHA_Mode == 0) then
+               if (ACHA%Mode == 0) then
                   call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                endif
 
-               if (ACHA_Mode > 0) then 
+               if (ACHA%Mode > 0) then 
 
                   !--- AWG CLoud Height Algorithm (ACHA) and associated products
                   call AWG_CLOUD_HEIGHT_BRIDGE()
@@ -1422,7 +1412,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
                   call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--accumulate performance metrics
-                  call COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
+                  call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
 
                end if
 
@@ -1470,7 +1460,7 @@ print *, "full = ", trim(Image%Level1b_Full_Name)
 
                !--- CLoud Base Height Algorithm if ACHA was executed
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (ACHA_Mode > 0) then 
+               if (ACHA%Mode > 0) then 
                  call CLOUD_BASE_BRIDGE()
                endif
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()

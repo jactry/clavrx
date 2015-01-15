@@ -77,14 +77,14 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
   Number_Of_Elements = Image%Number_Of_Elements
 
   !--- initialize output
-  Tc_Acha =  Missing_Value_Real4
-  Ec_Acha =  Missing_Value_Real4
-  Beta_Acha =  Missing_Value_Real4
-  Pc_Acha =  Missing_Value_Real4
-  Zc_Acha =  Missing_Value_Real4
-  Acha_Quality_Flag = 0
-  Acha_OE_Quality_Flags = 0
-  Cld_Layer_Acha = 0
+  ACHA%Tc =  Missing_Value_Real4
+  ACHA%Ec =  Missing_Value_Real4
+  ACHA%Beta =  Missing_Value_Real4
+  ACHA%Pc =  Missing_Value_Real4
+  ACHA%Zc =  Missing_Value_Real4
+  ACHA%Quality_Flag = 0
+  ACHA%OE_Quality_Flags = 0
+  ACHA%Cld_Layer = 0
 
   !--------------------------------------------------------------------------
   ! loop over pixels in scanlines
@@ -100,36 +100,36 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
 
     !--- combine heights into a coherent product
     if (Tc_H2O(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-       Pc_Acha(Elem_Idx,Line_Idx) = Pc_H2O(Elem_Idx,Line_Idx)
-       Tc_Acha(Elem_Idx,Line_Idx) = Tc_H2O(Elem_Idx,Line_Idx)
-       Zc_Acha(Elem_Idx,Line_Idx) = Zc_H2O(Elem_Idx,Line_Idx)
-       Ec_Acha(Elem_Idx,Line_Idx) = 1.0
-       Acha_Quality_Flag(Elem_Idx,Line_Idx) = 1
+       ACHA%Pc(Elem_Idx,Line_Idx) = Pc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Tc(Elem_Idx,Line_Idx) = Tc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Zc(Elem_Idx,Line_Idx) = Zc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Ec(Elem_Idx,Line_Idx) = 1.0
+       ACHA%Quality_Flag(Elem_Idx,Line_Idx) = 1
 
     elseif (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-       Pc_Acha(Elem_Idx,Line_Idx) = Pc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Tc_Acha(Elem_Idx,Line_Idx) = Tc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Zc_Acha(Elem_Idx,Line_Idx) = Zc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Ec_Acha(Elem_Idx,Line_Idx) = 1.0
-       Acha_Quality_Flag(Elem_Idx,Line_Idx) = 1
+       ACHA%Pc(Elem_Idx,Line_Idx) = Pc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Tc(Elem_Idx,Line_Idx) = Tc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Zc(Elem_Idx,Line_Idx) = Zc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Ec(Elem_Idx,Line_Idx) = 1.0
+       ACHA%Quality_Flag(Elem_Idx,Line_Idx) = 1
     else
        cycle
     endif
 
     !------- determine cloud layer based on pressure
-    if (Pc_Acha(Elem_Idx,Line_Idx) <= 440.0) then
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 3
-    elseif (Pc_Acha(Elem_Idx,Line_Idx) < 680.0) then
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 2
+    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 440.0) then
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 3
+    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 680.0) then
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 2
     else
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 1
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 1
     endif
 
     !----- set beta passed on temp
-    if (Tc_Acha(Elem_Idx,Line_Idx) < 260.0) then
-        Beta_Acha(Elem_Idx,Line_Idx) = Beta_Ap_Ice
+    if (ACHA%Tc(Elem_Idx,Line_Idx) < 260.0) then
+        ACHA%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Ice
     else
-        Beta_Acha(Elem_Idx,Line_Idx) = Beta_Ap_Water
+        ACHA%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Water
     endif
 
     end do Element_loop
@@ -185,12 +185,12 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min,Num_Lines)
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
      !-- check if cld-top pressure is valid
-     if (Pc_Acha(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (ACHA%Pc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- determine Level in profiles 
      !--- note, wind profiles are at the native nwp resolution
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
-                                    Pc_Acha(Elem_Idx,Line_Idx), &
+                                    ACHA%Pc(Elem_Idx,Line_Idx), &
                                     Tc_Temp,Zc_Temp,Level)
 
      !--- assign u and v winds
@@ -248,7 +248,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
   Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
-  Alt_Acha = Missing_Value_Real4
+  ACHA%Alt = Missing_Value_Real4
 
   !----------------------------------------------------------
   ! loop through segment
@@ -273,12 +273,12 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
      !--- check if cld-top pressure is valid
-     if (Pc_Acha(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (ACHA%Pc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- Place valid pressure in temp variable for readability in the
      !--- calculations below.
-     Pc_Temp = Pc_Acha(Elem_Idx,Line_Idx)
-     Tc_Temp = Tc_Acha(Elem_Idx,Line_Idx)
+     Pc_Temp = ACHA%Pc(Elem_Idx,Line_Idx)
+     Tc_Temp = ACHA%Tc(Elem_Idx,Line_Idx)
 
      !--- calculated altitude, in feet, from pressure.
      !--- 1st pivot point is directly from the pressure to
@@ -305,7 +305,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      endif
 
      !--- Assign final altitude, in feet, to the level2 array.
-     Alt_Acha(Elem_Idx,Line_Idx) = Alt_Temp
+     ACHA%Alt(Elem_Idx,Line_Idx) = Alt_Temp
 
   enddo Element_Loop_1
   enddo Line_Loop_1

@@ -50,6 +50,7 @@ module USER_OPTIONS
       , Geo &
       , Nav &
       , Image  &
+      , ACHA &
       , Aer_Flag &
       , Ash_File_Flag &
       , Ash_Flag &
@@ -91,7 +92,6 @@ module USER_OPTIONS
       , subset_pixel_hdf_flag &
       , use_default &
       , use_seebor &
-      , acha_mode &
       , bayesian_cloud_mask_name &
       , Compress_Flag &
       , Nlcomp_Mode &
@@ -890,7 +890,7 @@ contains
       !---              8 = 11/12/13.3)
       !------------------------------------------------------------------------
       
-      acha_mode = acha_mode_user_set     
+      acha % mode = acha_mode_user_set     
       dcomp_mode = dcomp_mode_user_set
        
       possible_acha_modes = 0 
@@ -950,7 +950,7 @@ contains
       end select
       
       if ( .not. ANY ( acha_mode_user_set == possible_acha_modes ) ) then
-         acha_mode = default_acha_mode ( sensorname )
+         acha % mode = default_acha_mode ( sensorname )
          print*,acha_mode_user_set,possible_acha_modes
          print*, 'User set ACHA mode not possible for '//trim(sensorname)//' switched to default '
       end if
@@ -1062,37 +1062,37 @@ contains
       
       
        !--- check ACHA mode based on available channels
-      if (Acha_Mode == 3 .and. &
+      if (ACHA%Mode == 3 .and. &
          (Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
             not_run_flag = .true.
          
       endif
-      if (Acha_Mode == 4 .and. &
+      if (ACHA%Mode == 4 .and. &
          (Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
             not_run_flag = .true.
          
       endif
-      if (Acha_Mode == 8 .and. &
+      if (ACHA%Mode == 8 .and. &
          (Sensor%Chan_On_Flag_Default(32)==sym%NO .or. Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
             not_run_flag = .true.
          
       endif
-      if (Acha_Mode == 5 .and. &
+      if (ACHA%Mode == 5 .and. &
          (Sensor%Chan_On_Flag_Default(29)==sym%NO .or. Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
             not_run_flag = .true.
         
       endif
-      if (Acha_Mode == 6 .and. &
+      if (ACHA%Mode == 6 .and. &
          (Sensor%Chan_On_Flag_Default(27)==sym%NO .or. Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
             not_run_flag = .true.
         
       endif
-      if (Acha_Mode == 7 .and. &
+      if (ACHA%Mode == 7 .and. &
          (Sensor%Chan_On_Flag_Default(27)==sym%NO .or. Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
             not_run_flag = .true.
          
       endif
-      if (Acha_Mode == 2 .and. &
+      if (ACHA%Mode == 2 .and. &
          (Sensor%Chan_On_Flag_Default(27)==sym%NO)) then
             not_run_flag = .true.
          
@@ -1100,8 +1100,8 @@ contains
       
       
       if ( not_run_flag ) then
-         print *, EXE_PROMPT, 'ACHA Mode ', acha_mode,' not possible with selected channels. ACHA and DCOMP  will not run.'
-         Acha_Mode = 0
+         print *, EXE_PROMPT, 'ACHA Mode ', ACHA%Mode,' not possible with selected channels. ACHA and DCOMP  will not run.'
+         ACHA%Mode = 0
          Dcomp_mode = 0
       end if 
 

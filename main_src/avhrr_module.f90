@@ -442,17 +442,17 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 ! read header to get data type and version of 1b data
 ! inorder to get AVHRR_KLM_Flag and AVHRR_GAC_Flag which determine
 ! the data format for subsequent read statements
-! note, data_type and ver_1b are read in again later
+! note, AVHRR_Data_Type and AVHRR_Ver_1b are read in again later
 !-------------------------------------------------------
    subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                        ver_1b,data_type,Byte_Swap_1b)
+                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
 
     character(len=*), intent(in):: file_1b_local
     integer(kind=int4), intent(out):: AVHRR_GAC_Flag
     integer(kind=int4), intent(out):: AVHRR_KLM_Flag
     integer(kind=int4), intent(out):: AVHRR_AAPP_Flag
-    integer(kind=int2), intent(out):: ver_1b
-    integer(kind=int2), intent(out):: data_type
+    integer(kind=int2), intent(out):: AVHRR_Ver_1b
+    integer(kind=int2), intent(out):: AVHRR_Data_Type
     integer(kind=int4), intent(out):: Byte_Swap_1b
 
     integer(kind=int1), dimension(100):: Header_Buffer_Temp
@@ -484,16 +484,16 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
      endif
 
 !--- assuming AVHRR_KLM_Flag, unpack ver1b, Valid values are (1-5)
-     ver_1b = MAKE_I2WORD(Header_Buffer_Temp(5:6),sym%UNSIGNED,sym%NOSWAP)
+     AVHRR_Ver_1b = MAKE_I2WORD(Header_Buffer_Temp(5:6),sym%UNSIGNED,sym%NOSWAP)
 
 !--- if version number unrealistic, assume AVHRR_AAPP_Flag
      AVHRR_AAPP_Flag = sym%NO
      Byte_Swap_1b = sym%NO
      if (AVHRR_KLM_Flag == sym%YES) then
-        if ((ver_1b > 10).or.(ver_1b < 1)) then
+        if ((AVHRR_Ver_1b > 10).or.(AVHRR_Ver_1b < 1)) then
           AVHRR_AAPP_Flag = sym%YES
           Byte_Swap_1b = sym%YES
-          ver_1b = MAKE_I2WORD(Header_Buffer_Temp(5:6),sym%UNSIGNED,Byte_Swap_1b)
+          AVHRR_Ver_1b = MAKE_I2WORD(Header_Buffer_Temp(5:6),sym%UNSIGNED,Byte_Swap_1b)
         endif
      endif
 
@@ -501,25 +501,25 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
      Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_Temp(73:74),sym%UNSIGNED,Byte_Swap_1b)
 
 !--- fix noaa-15 bug
-     if ((ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
-       ver_1b = 2
+     if ((AVHRR_Ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
+       AVHRR_Ver_1b = 2
      endif
 
 !--- assign pre-AVHRR_KLM_Flag to version 1
      if (AVHRR_KLM_Flag == sym%NO) then
-       ver_1b = 1
+       AVHRR_Ver_1b = 1
      endif
 
-!--- based on AVHRR_KLM_Flag flag, choose bytes to construct data_type
+!--- based on AVHRR_KLM_Flag flag, choose bytes to construct AVHRR_Data_Type
      if (AVHRR_KLM_Flag == sym%YES) then
-         data_type = MAKE_I2WORD(Header_Buffer_Temp(77:78),sym%UNSIGNED,Byte_Swap_1b)
+         AVHRR_Data_Type = MAKE_I2WORD(Header_Buffer_Temp(77:78),sym%UNSIGNED,Byte_Swap_1b)
      else
-         data_type = ishft(Header_Buffer_Temp(2),-4)
+         AVHRR_Data_Type = ishft(Header_Buffer_Temp(2),-4)
      endif
 
-!--- based on data_type, set AVHRR_GAC_Flag
+!--- based on AVHRR_Data_Type, set AVHRR_GAC_Flag
      AVHRR_GAC_Flag = sym%NO
-     if (data_type == 2) then
+     if (AVHRR_Data_Type == 2) then
        AVHRR_GAC_Flag = sym%YES
      endif
 
@@ -881,17 +881,17 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
 
      if (AVHRR_KLM_Flag == sym%YES) then
 
-      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,AVHRR_Data_Type,Image%Start_Year, &
                    Image%Start_Doy,Image%Start_time,Image%Number_Of_Lines, &
                    Image%End_Year,Image%End_Doy,Image%End_time, &
-                   tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+                   tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
      else
 
-      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,AVHRR_Data_Type,Image%Start_Year, &
                    Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines,Image%End_Year, &
                    Image%End_Doy,Image%End_Time, &
-                   tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+                   tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
       !--- pre AVHRR_KLM_Flag used a 2 digit year
       if (Image%End_Year > 50) then
@@ -911,17 +911,17 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
 
      if (AVHRR_KLM_Flag == sym%YES) then
 
-      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+      call UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,AVHRR_Data_Type,Image%Start_Year, &
                   Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines, &
                   Image%End_Year,Image%End_Doy,Image%End_Time, &
-                  tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+                  tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
      else
 
-      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Image%Start_Year, &
+      call UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,AVHRR_Data_Type,Image%Start_Year, &
                 Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines, &
                 Image%End_Year,Image%End_Doy,Image%End_Time, &
-                tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+                tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
 !--- pre AVHRR_KLM_Flag used a 2 digit year
       if (Image%End_Year > 50) then
@@ -1820,13 +1820,13 @@ end subroutine COMPUTE_NEW_THERM_CAL_COEF
 !
 ! Modified December 2008 for segment processing
 !======================================================================
-subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
+subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,AVHRR_Data_Type,Start_Year_Temp,&
               Start_day_Temp,Start_Time_Temp,Num_Scans,End_Year_Temp,End_day_Temp,End_Time_Temp, &
-              tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+              tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
-   integer(kind=int2), intent(out):: Sc_Id_AVHRR,data_type,Start_Year_Temp,Start_day_Temp, &
+   integer(kind=int2), intent(out):: Sc_Id_AVHRR,AVHRR_Data_Type,Start_Year_Temp,Start_day_Temp, &
                                      End_Year_Temp,End_day_Temp, &
-                                     tip_parity,aux_sync,ramp_auto_Cal,ver_1b
+                                     tip_parity,aux_sync,ramp_auto_Cal,AVHRR_Ver_1b
    integer(kind=int4), intent(out):: Start_Time_Temp,End_Time_Temp,Num_Scans
    character(len=*), intent(out):: proc_block_Id
    integer(kind=int4):: i4word
@@ -1838,12 +1838,12 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
    !-----------------------------------------------------------------------
 
    Sc_Id_AVHRR = Header_Buffer_AVHRR(1)
-   data_type = ishft(Header_Buffer_AVHRR(2),-4)
+   AVHRR_Data_Type = ishft(Header_Buffer_AVHRR(2),-4)
 
    tip_parity = 0
    aux_sync = 0
    ramp_auto_Cal = 0
-   ver_1b = 1
+   AVHRR_Ver_1b = 1
 
    !----------------------------------------------------------------------
    ! unpack starting Time_Temp
@@ -1903,13 +1903,13 @@ subroutine UNPACK_AVHRR_HEADER_RECORD(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
 !
 ! Modified December 2008 for segment processing
 !======================================================================
-subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Start_Year_Temp,&
+subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,AVHRR_Data_Type,Start_Year_Temp,&
               Start_day_Temp,Start_Time_Temp,Num_Scans,End_Year_Temp,End_day_Temp,End_Time_Temp, &
-              tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,ver_1b)
+              tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
 
-   integer(kind=int2), intent(out):: Sc_Id_AVHRR,data_type,Start_Year_Temp,Start_day_Temp, &
+   integer(kind=int2), intent(out):: Sc_Id_AVHRR,AVHRR_Data_Type,Start_Year_Temp,Start_day_Temp, &
                                      End_Year_Temp,End_day_Temp, &
-                                     tip_parity,aux_sync,ramp_auto_Cal,ver_1b
+                                     tip_parity,aux_sync,ramp_auto_Cal,AVHRR_Ver_1b
    integer(kind=int4), intent(out):: Start_Time_Temp,End_Time_Temp,Num_Scans
    character(len=*), intent(out):: proc_block_Id
    integer:: i
@@ -1918,7 +1918,7 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Start_Year_Temp,
 ! begin executable code
 !-----------------------------------------------------------------------
       Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_AVHRR(73:74),sym%UNSIGNED,Byte_Swap_1b)
-      data_type = MAKE_I2WORD(Header_Buffer_AVHRR(77:78),sym%UNSIGNED,Byte_Swap_1b)
+      AVHRR_Data_Type = MAKE_I2WORD(Header_Buffer_AVHRR(77:78),sym%UNSIGNED,Byte_Swap_1b)
 
       do i = 1,len(proc_block_Id)
        proc_block_Id(i:i) =  char(Header_Buffer_AVHRR(66+(i-1)))
@@ -1927,11 +1927,11 @@ subroutine UNPACK_AVHRR_HEADER_RECORD_KLM(Sc_Id_AVHRR,data_type,Start_Year_Temp,
 !----------------------------------------------------------------------
 ! unpack 1b version number
 !----------------------------------------------------------------------
-      ver_1b = MAKE_I2WORD(Header_Buffer_AVHRR(5:6),sym%UNSIGNED,Byte_Swap_1b)
+      AVHRR_Ver_1b = MAKE_I2WORD(Header_Buffer_AVHRR(5:6),sym%UNSIGNED,Byte_Swap_1b)
 
      !--- correct for noaa-15 bug in version number
-     if ((ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
-       ver_1b = 2
+     if ((AVHRR_Ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
+       AVHRR_Ver_1b = 2
      endif  
 
      !----------------------------------------------------------------------
@@ -2712,7 +2712,7 @@ endif
 ! the scaling changed from 10**6 to 10**7 - account for extra
 ! factor of 10 in NOAA-N format here
 !------------------------------------------------------------------------------
-  if (ver_1b >= 3) then
+  if (AVHRR_Ver_1b >= 3) then
     ir_coef_3_1b(4,Line_Idx) = ir_coef_3_1b(4,Line_Idx) / 10.0
     ir_coef_3_1b(5,Line_Idx) = ir_coef_3_1b(5,Line_Idx) / 10.0
   endif

@@ -43,8 +43,8 @@
 ! 19           2            21-22     3    T_11           (TGCT)
 ! 20           2            23-24     3    T_max-T        (RTCT)
 ! ---
-! 21           2            25-26     4    T_std          (TUT)
-! 22           2            27-28     4    Emiss_tropo
+! 21           2            25-26     4    T_Std          (TUT)
+! 22           2            27-28     4    Emiss_Tropo
 ! 23           2            29-30     4    FMFT mask (Btd_11_12)
 ! 24           2            31-32     4    Btd_11_67 
 !---
@@ -61,13 +61,14 @@
 ! 33           2            49-50     7    Ref_063_Min_3x3 (RVCT)
 ! 34           2            51-52     7    Ref_Ratio_Day   (RRCT)
 ! 35           2            53-54     7    Ref_138_Day     (CIRREF)
-! 36           2            55-56     7    Ref_160_Day     (NIRREF)
+! 36           2            55-56     7    Ndsi_Day     (NIRREF)
 !
 !----------------------------------------------------------------------
 
 module NB_CLOUD_MASK
 
  use NB_CLOUD_MASK_SERVICES
+ use NETCDF
 
    implicit none
    
@@ -124,7 +125,7 @@ module NB_CLOUD_MASK
       integer , parameter :: et_class_R_006_MIN_3x3_DAY = 15
       integer , parameter :: et_class_R_RATIO_DAY = 16
       integer , parameter :: et_class_R_013_DAY = 17
-      integer , parameter :: et_class_R_016_DAY = 18
+      integer , parameter :: et_class_NDSI_DAY = 18
       integer , parameter :: et_class_LAST = 18
       
    type cloud_mask_geo_type
@@ -231,18 +232,23 @@ module NB_CLOUD_MASK
       logical :: is_read = .false.
       integer :: n_class
       integer :: n_bounds
+      integer :: N_sfc_bayes
       real, allocatable :: prior_no (:)
       real, allocatable :: prior_yes (:)
       real, allocatable :: Optimal_Posterior_Prob (:)
       real, allocatable :: Classifier_Bounds_Min(:,:)
       real, allocatable :: Classifier_Bounds_Max(:,:)
       real, allocatable :: Delta_Classifier_Bounds(:,:)
+      integer, allocatable :: First_Valid_Classifier_Bounds(:,:)
+      integer, allocatable :: Last_Valid_Classifier_Bounds(:,:)
       real, allocatable :: class_cond_no(:,:,:)
       real, allocatable :: class_cond_yes(:,:,:) 
+      real, allocatable :: Class_Cond_Ratio(:,:,:) 
       real, allocatable :: cond_no(:,:,:)
       real, allocatable :: cond_yes(:,:,:)
+      real, allocatable :: Cond_Ratio(:,:,:)
       logical, allocatable :: do_this_classifier (:,:)
-      character (len=20), allocatable :: Classifier_Value_Name(:)
+      character (len=30), allocatable :: Classifier_Value_Name(:,:)
       integer, allocatable :: Classifier_Value_Name_enum(:)
       integer, allocatable :: flag_idx(:)
    
@@ -253,6 +259,19 @@ module NB_CLOUD_MASK
    
    type ( bayes_coef_type) , private , save :: bayes_coef
   
+   ! netCDF parameters
+   integer, parameter, private :: sds_rank_1d = 1
+   integer, dimension(sds_rank_1d), private :: sds_start_1d, sds_edge_1d, &
+          sds_stride_1d
+
+   integer, parameter, private :: sds_rank_2d = 2
+   integer, dimension(sds_rank_2d), private :: sds_start_2d, sds_edge_2d, &
+          sds_stride_2d, sds_dims_2d
+
+   integer, parameter, private :: sds_rank_3d = 3
+   integer, dimension(sds_rank_3d), private :: sds_start_3d, sds_edge_3d, &
+          sds_stride_3d, sds_dims_3d
+
 contains
    !
    !
@@ -270,8 +289,9 @@ contains
       integer :: sfc_type_number 
       integer :: class_idx, sfc_idx
       real :: Classifier_Value
-      real, allocatable :: Cond_yes(:)
-      real, allocatable :: Cond_no(:)
+      real, allocatable :: Cond_Yes(:)
+      real, allocatable :: Cond_No(:)
+      real, allocatable :: Cond_Ratio(:)
       
       integer :: bin_idx
       
@@ -307,11 +327,13 @@ contains
       integer :: pos_info_flag 
       integer :: idx_info_flag
       real :: class_contr
+      real :: r
       
       ! ---    Executable  ----------------------------
       ! - read in classifer coeffiecients
       bayes_coef %  file =trim(inp  %  bayesian_mask_classifier ) 
-      if ( .not. bayes_coef % is_read) call READ_BAYES_COEFF ( ) 
+      !if ( .not. bayes_coef % is_read) call READ_BAYES_COEFF ( ) 
+      if ( .not. bayes_coef % is_read) call READ_BAYES_COEFF_NC ( ) 
       
       ! - set mask and thresholds version id
       vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
@@ -323,9 +345,13 @@ contains
           , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
          
-      allocate ( Cond_Yes ( bayes_coef % n_class ) )
-      allocate ( Cond_No ( bayes_coef % n_class ) )
-            
+      allocate ( Cond_Yes ( Bayes_Coef % N_Class ) )
+      allocate ( Cond_No ( Bayes_Coef % N_Class ) )
+      allocate ( Cond_Ratio ( Bayes_Coef % N_Class ) )
+
+      Cond_Yes = 1.0
+      Cond_No =  1.0
+      Cond_Ratio =  1.0
           
       sfc_idx = sfc_type_number
            
@@ -778,21 +804,24 @@ contains
             pos_info_flag = 4
             idx_info_flag = 7    
             
-         case ( et_class_R_016_Day )
+         case ( et_class_NDSI_DAY )
+            if ( .not. inp % sat % chan_on(1) ) cycle class_loop
             if ( .not. inp % sat % chan_on(6) ) cycle class_loop
             if ( is_forward_scatter )  cycle class_loop
             if ( .not. is_day_063um ) cycle class_loop
             if ( inp % geo % glint )  cycle class_loop
+            if ( inp % sat % ref_ch1 <= 0 ) cycle class_loop
             if ( inp % sat % ref_ch6 <= 0 ) cycle class_loop
            
-            Classifier_Value = inp % sat % ref_ch6
+            Classifier_Value = (inp % sat % ref_ch1 - inp % sat % ref_ch6) / &
+                               (inp % sat % ref_ch1 + inp % sat % ref_ch6)
             is_on_test=.true.
             pos_info_flag = 6
             idx_info_flag = 7  
               
          case default
             print*,'unknown class ', bayes_coef % Classifier_Value_Name_enum (class_idx) &
-                                   , bayes_coef % Classifier_Value_Name (class_idx)
+                                   , bayes_coef % Classifier_Value_Name (class_idx,1)
          end select
        
        ! - AW 09/17/2014 
@@ -803,16 +832,19 @@ contains
         if ( is_on_test ) then
             
             bin_idx = int (( classifier_value &
-               &  -  bayes_coef % Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
-               &     bayes_coef % Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
+                 -  bayes_coef % Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
+                    bayes_coef % Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
              
             bin_idx =  max(1,min(bayes_coef % N_bounds-1,Bin_Idx)) 
-            Cond_yes (class_idx) = bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )
-            Cond_no (class_idx)  = bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) 
-            
-            class_contr =  bayes_coef % Prior_Yes(Sfc_Idx)* bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
-                           & ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
-                           & + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
+            Cond_Yes (Class_Idx) = Bayes_Coef % Class_Cond_Yes ( Bin_Idx, Class_Idx, Sfc_Idx )
+            Cond_No (Class_Idx)  = Bayes_Coef % Class_Cond_No ( Bin_Idx, Class_Idx, Sfc_Idx ) 
+            Cond_Ratio (Class_Idx) = Bayes_Coef % Class_Cond_Ratio ( Bin_Idx, Class_Idx, Sfc_Idx )
+
+            r = Cond_Ratio(Class_Idx)
+            class_contr =  1.0 / (1.0 + r / Bayes_Coef % Prior_Yes(Sfc_Idx) - r)
+!            class_contr =  bayes_coef % Prior_Yes(Sfc_Idx)* bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
+!                            ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
+!                            + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
             
             if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = &
@@ -848,22 +880,25 @@ contains
            case ( et_class_R_006_MIN_3x3_DAY )
            case ( et_class_R_RATIO_DAY )
            case ( et_class_R_013_DAY )
-           case ( et_class_R_016_Day )
+           case ( et_class_NDSI_DAY )
              
          end select
          !
                 
       end do class_loop
                         
-            ! - compute Posterior_Cld_Probability
+      ! - compute Posterior_Cld_Probability
            
-            erg  = &
-                  (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
-                  (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
-                   bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
+      r = product(Cond_Ratio)
+      erg =  1.0 / (1.0 + r / Bayes_Coef % Prior_Yes(Sfc_Idx) - r)
+!     erg  = &
+!           (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
+!           (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
+!            bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
                 
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
+            deallocate ( Cond_Ratio )
             
    end subroutine NB_CLOUD_MASK_ALGORITHM
 
@@ -892,8 +927,6 @@ contains
       integer :: int_dummy
       integer :: index_start
       integer :: index_end
-      
-      
       
       
       lun = GETLUN()
@@ -937,62 +970,62 @@ contains
                              int_dummy &
                           ,  index_start &
                           ,  index_end &
-                          ,  bayes_coef %Classifier_Value_Name(i_class)
+                          ,  bayes_coef %Classifier_Value_Name(i_class,i_sfc)
            
             
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_11' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'T_11' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_T110
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_max-T' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'T_max-T' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_TMAX_T
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'T_std' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'T_Std' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_T_STD
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_tropo' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Emiss_Tropo' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_TROP
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'FMFT' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'FMFT' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_FMFT
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_11_67' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Btd_11_67' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Bt_11_67_Covar' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Bt_11_67_Covar' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_067_COV
                           
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_11_85' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Btd_11_85' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_110_085
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Emiss_375' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375_Day' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Emiss_375_Day' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037_DAY
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Emiss_375_Night' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Emiss_375_Night' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_E_037_NGT
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Btd_375_11_Night' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Btd_375_11_Night' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_BTD_037_110_NGT
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_063_Day' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ref_063_Day' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_006_DAY
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_std' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ref_std' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_STD
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_063_Min_3x3_Day' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ref_063_Min_3x3_Day' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_MIN_3x3_DAY
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_Ratio_Day' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ref_Ratio_Day' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_RATIO_DAY
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_138_Day' ) &
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ref_138_Day' ) &
                  bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_013_DAY
                
-            if ( trim(bayes_coef % Classifier_Value_Name(i_class)) == 'Ref_160_Day' ) &
-                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_R_016_DAY
+            if ( trim(bayes_coef % Classifier_Value_Name(i_class,i_sfc)) == 'Ndsi_Day' ) &
+                 bayes_coef % Classifier_Value_Name_enum(i_class) =  et_class_NDSI_DAY
                         
             read (unit=lun, fmt=*, iostat=ios)  &
                                  bayes_coef % Classifier_Bounds_Min(i_class,i_sfc)  &
@@ -1012,16 +1045,197 @@ contains
              if ( index_start >= index_end) then
                bayes_coef % do_this_classifier (i_class,i_sfc) = .false.               
              end if
-             
          end do
-      
       end do
-      
          
       bayes_coef % is_read = .true.
    
    end subroutine READ_BAYES_COEFF
+
+!-------------------------------------------------------------------------------
+! NetCDF LUT routines:
+!-------------------------------------------------------------------------------
+
+!====================================================================
+! SUBROUTINE Name: READ_NAIVE_BAYES_NC
+!
+! Function:
+!   Allocate and Read in the LUTs needed for Bayesian cloud mask tables
+!
+!====================================================================
+ subroutine READ_BAYES_COEFF_NC ()
+
+   implicit none
+
+   !local variables
+   integer:: Ncid
+   integer:: Status
+   integer:: i_class
+   character(30):: Var_Name
+
+   Bayes_Coef % Is_Read = .FALSE.
+
+   print *,'Reading Bayesian Coefficients From -> ',trim(Bayes_Coef % file)
+   Status = nf90_open(trim(Bayes_Coef % file), mode = nf90_nowrite, ncid = Ncid)
+   if (Status /= nf90_noerr) then
+      print *, 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
+      print *, 'Bayesian Cloud Mask Turned Off'
+      return
+   endif
+
+   Status = nf90_get_att(Ncid, nf90_global, "data_file", bayes_coef % cvs_version)
+   if (Status /= nf90_noerr) then
+      print *, 'ERROR: Bayesian Cloud Mask Version Read Failed'
+      return
+   endif
+
+   Status = nf90_get_att(Ncid, nf90_global, "n_class", Bayes_Coef % N_Class)
+   Status = nf90_get_att(Ncid, nf90_global, "n_bounds_reg", Bayes_Coef % N_Bounds)
+   Status = nf90_get_att(Ncid, nf90_global, "n_sfc_type", Bayes_Coef % N_Sfc_Bayes)
+
+   !--- allocate
+   call Bayes_Coef % Alloc ( Bayes_Coef % N_Class, Bayes_Coef % N_Bounds, &
+                                Bayes_Coef % N_Sfc_Bayes )
+   Bayes_Coef % Do_This_Classifier (:,:) = .true.
+
+   !--- initialize
+   Bayes_Coef % Prior_Yes = -999.
+   Bayes_Coef % Prior_No = -999.
+   Bayes_Coef % Optimal_Posterior_Prob = -999.
+   Bayes_Coef % First_Valid_Classifier_Bounds = 0
+   Bayes_Coef % Last_Valid_Classifier_Bounds = 0
+
+   !Now read in to the 1D variables
+
+   Var_name="prior_yes"
+   call read_netcdf_1d_real ( Ncid, Bayes_Coef % N_Sfc_Bayes, Var_Name,Bayes_Coef % Prior_Yes )
+
+   Var_name="prior_no"
+   call read_netcdf_1d_real ( Ncid, Bayes_Coef % N_Sfc_Bayes, Var_Name,Bayes_Coef % Prior_No )
+
+   Var_name="optimal_posterior_prob"
+   call read_netcdf_1d_real ( Ncid, Bayes_Coef % N_Sfc_Bayes, Var_Name, &
+                                    Bayes_Coef % Optimal_Posterior_Prob )
+
+   !Now the 2D variables
+
+   Sds_Start_2d = 1
+   Sds_Edge_2d(1) = Bayes_Coef % N_Class
+   Sds_Edge_2d(2) = Bayes_Coef % N_Sfc_Bayes
+
+   Var_Name="bin_start"
+   call read_netcdf_2d_real(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % Classifier_Bounds_Min)
+
+   Var_Name="bin_end" !real
+   call read_netcdf_2d_real(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % Classifier_Bounds_Max)
+
+   Var_Name="delta_bin" !real
+   call read_netcdf_2d_real(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % Delta_Classifier_Bounds)
+
+   Var_Name="first_valid_bounds" !integer
+   call read_netcdf_2d_int(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % First_Valid_Classifier_Bounds)
+
+   Var_Name="last_valid_bounds" !integer
+   call read_netcdf_2d_int(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % Last_Valid_Classifier_Bounds)
+
+   Var_Name="classifier_names" !character
+   call read_netcdf_2d_char(Ncid, Sds_Start_2d, Sds_Edge_2d, &
+                              Var_Name, Bayes_Coef % Classifier_Value_Name)
+
+   !finally 3D variables
+   Sds_Start_3d = 1
+   Sds_Edge_3d(1) = Bayes_Coef % N_bounds-1
+   Sds_Edge_3d(2) = Bayes_Coef % N_class
+   Sds_Edge_3d(3) = Bayes_Coef % N_sfc_bayes
+
+   Var_Name="class_cond_yes_reg" !real
+   call read_netcdf_3d(ncid, Sds_Start_3d, Sds_edge_3d, &
+                             Var_Name, Bayes_Coef % Class_Cond_Yes)
+
+   Var_Name="class_cond_no_reg" !real
+   call read_netcdf_3d(Ncid, Sds_Start_3d, Sds_Edge_3d, &
+                             Var_Name, Bayes_Coef % Class_Cond_No)
+
+   Var_Name="class_cond_ratio_reg" !real
+   call read_netcdf_3d(Ncid, Sds_Start_3d, Sds_Edge_3d, &
+                              Var_Name, Bayes_Coef % Class_Cond_Ratio)
+
+   Status = nf90_close(Ncid)
+ 
+   where (Bayes_Coef % First_Valid_Classifier_Bounds >= &
+       Bayes_Coef % Last_Valid_Classifier_Bounds)
+      Bayes_Coef % Do_This_Classifier = .false.
+   endwhere
+
+  ! --- set Classifier_Value_Name_enum
+  do i_class = 1 , Bayes_Coef % N_Class
+
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'T_11' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_T110
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'T_max-T' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_TMAX_T
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'T_Std' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_T_STD
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Emiss_Tropo' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_TROP
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'FMFT' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_FMFT
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Btd_11_67' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_BTD_110_067
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Bt_11_67_Covar' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_BTD_110_067_COV
+                          
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Btd_11_85' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_BTD_110_085
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Emiss_375' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_037
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Emiss_375_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_037_DAY
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Emiss_375_Night' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_E_037_NGT
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Btd_375_11_Night' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_BTD_037_110_NGT
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ref_063_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_DAY
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ref_std' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_STD
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ref_063_Min_3x3_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_006_MIN_3x3_DAY
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ref_Ratio_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_RATIO_DAY
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ref_138_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_R_013_DAY
+               
+     if ( trim(bayes_coef % Classifier_Value_Name(i_class,1)) == 'Ndsi_Day' ) &
+         bayes_coef % Classifier_Value_Name_enum(i_class) = et_class_NDSI_DAY
+  enddo
+
+   Bayes_Coef % Is_Read = .true.
+
+ end subroutine READ_BAYES_COEFF_NC
+
    
+   !-------------------------------------------------------------------------------------
    !  7 sfc bayesian surface  types 
    !-------------------------------------------------------------------------------------
    !
@@ -1134,10 +1348,13 @@ contains
       allocate (this % Classifier_Bounds_Min(N_class,N_sfc_bayes))
       allocate (this % Classifier_Bounds_Max(N_class,N_sfc_bayes))
       allocate (this % Delta_Classifier_Bounds(N_class,N_sfc_bayes))
+      allocate (this % First_valid_Classifier_Bounds(N_class,N_sfc_bayes))
+      allocate (this % Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
       allocate (this % do_this_classifier(N_class,N_sfc_bayes))
       allocate (this % Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
       allocate (this % Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
-      allocate (this % Classifier_Value_Name(N_class))
+      allocate (this % Class_Cond_Ratio(N_bounds-1,N_class,N_sfc_bayes))
+      allocate (this % Classifier_Value_Name(N_class,N_sfc_bayes))
       allocate (this % Classifier_Value_Name_enum(N_class))
       allocate (this % Flag_Idx(N_class))
             
@@ -1156,8 +1373,11 @@ contains
       deallocate (this % Classifier_Bounds_Min)
       deallocate (this % Classifier_Bounds_Max)
       deallocate (this % Delta_Classifier_Bounds)
+      deallocate (this % First_valid_Classifier_Bounds)
+      deallocate (this % Last_valid_Classifier_Bounds)
       deallocate (this % Class_Cond_Yes)
       deallocate (this % Class_Cond_No)
+      deallocate (this % Class_Cond_Ratio)
       deallocate (this % Classifier_Value_Name)
       deallocate (this % Classifier_Value_Name_enum)
       deallocate (this % Flag_Idx)
@@ -1435,6 +1655,209 @@ contains
       if (  ref_006_std < st_dev_thresh_cand ) dust_detection = .true.
    
    end function DUST_DETECTION
+
+   ! ----------------------------------------------------------
+   ! Read in 1D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_1d_real (nc_file_id, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: var_dim
+      character(30), intent(in) :: var_name
+      real, intent(out), dimension(:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      Sds_Start_1D = 1
+      Sds_Stride_1D = 1
+      Sds_Edge_1D = var_dim
+
+      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
+      if (status /= nf90_noerr) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+   end subroutine read_netcdf_1d_real                                                                                              
+
+   ! ----------------------------------------------------------
+   ! Read in 1D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_1d_int (nc_file_id, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: var_dim
+      character(len=*), intent(in) :: var_name
+      integer, intent(out), dimension(:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      Sds_Start_1D = 1
+      Sds_Stride_1D = 1
+      Sds_Edge_1D = var_dim
+
+      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
+      if (status /= nf90_noerr) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+   end subroutine read_netcdf_1d_int
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays (used code from DCOMP reader)
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_2d_real (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      real, intent(out), dimension(:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+   end subroutine read_netcdf_2d_real
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays Integers
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_2d_int (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      integer , intent(out), dimension(:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+   end subroutine read_netcdf_2d_int
+
+   ! ----------------------------------------------------------
+   ! Read in 2D arrays Characters
+   ! ----------------------------------------------------------
+
+   subroutine read_netcdf_2d_char (nc_file_id, start_var, var_dim, var_name, var_output)
+        implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=*), intent(in) :: var_name
+      character(len=30) , intent(out), dimension(:,:) :: var_output
+      character(len=30), allocatable, dimension(:,:) :: var
+
+      integer :: nc_var_id
+      integer :: status, tmp1, tmp2, i, j
+      integer, dimension(2) ::dimIDs
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !find dimentions
+      status = nf90_inquire_variable(nc_file_id, nc_var_id, dimids = dimIDs)
+      status = nf90_inquire_dimension(nc_file_id, dimIDs(1), len = tmp1)
+      status = nf90_inquire_dimension(nc_file_id, dimIDs(2), len = tmp2)
+      allocate (var(tmp1,tmp2))
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var, start=(/1,1/), count=(/tmp1,tmp2/) )
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+      !extract and save classifier names to the final array
+      do i = 1, tmp2
+        if ((var(i,1) .ge. 'a' .and. var(i,1) .le. 'z') &
+        .or.(var(i,1) .ge. 'A' .and. var(i,1) .le. 'Z')) then
+           var_output(i,:) = trim(var(i,1))
+        endif
+      enddo
+
+      if (allocated(var)) deallocate (var)
+
+   end subroutine read_netcdf_2d_char
+
+  ! ----------------------------------------------------------
+   ! Read in 3D arrays (used code from DCOMP reader
+   ! ----------------------------------------------------------
+   subroutine read_netcdf_3d (nc_file_id, start_var, var_dim, var_name, var_output)
+         implicit none
+      integer, intent(in) :: nc_file_id
+      integer, intent(in) :: start_var(:)
+      integer, dimension(:), intent(in) :: var_dim
+
+      character(len=30), intent(in) :: var_name
+      real, intent(out), dimension(:,:,:) :: var_output
+
+      integer :: nc_var_id
+      integer :: status = 0
+
+      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
+      if (status /= nf90_noerr) then
+            print *, "Error: Unable to get variable id for ", trim(var_name)
+            return
+      endif
+
+      !get Variable
+      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
+      if ((status /= nf90_noerr)) THEN
+            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
+            return
+      ENDIF
+
+   end subroutine read_netcdf_3d
    
 !-------------------------------------------------------------------------------------   
 

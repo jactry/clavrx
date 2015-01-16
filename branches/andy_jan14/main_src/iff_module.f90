@@ -170,15 +170,18 @@ end subroutine GET_IFF_DATA
 
       if ( config % offset (1) <= 0 )  config % offset (1) = 1
       if ( config % offset (2) <= 0 )  config % offset (2)  = 1
-      if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF' == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 3200
-      endif
-      if (trim(Sensor%Sensor_Name)== 'MODIS-IFF' == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 1354
-      endif
-      if (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 409
-      endif
+      
+      if ( config % count (1) <= 0 ) then
+         select case ( trim(Sensor%Sensor_Name) )
+         case ('VIIRS-IFF') 
+            config % count (1) = 3200
+         case ('MODIS-IFF') 
+            config % count (1) = 1354
+         case ( 'AVHRR-IFF') 
+            config % count (1) = 409
+         case default      
+         end select   
+      end if   
       if ( config % count (2) <= 0 )  config % count (2)  = Image%Number_Of_Lines_Per_Segment
 
    end subroutine CHECK_INPUT
@@ -340,15 +343,19 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          ! for MODIS set low 13 & 14 channels to 913 and 914 to ignore it
          do ii = 1, num_char_band_names
             Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'-','1','before') + Status
-            if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF' == sym%YES) then
+            select case (trim(Sensor%Sensor_Name))
+            case('VIIRS-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'M',' ','before') + Status
-            elseif (trim(Sensor%Sensor_Name)== 'MODIS-IFF' == sym%YES) then
+            case('MODIS-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status
-            elseif (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' == sym%YES) then
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status  
+            case('AVHRR-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'a',' ','after') + Status
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status
-            endif
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status               
+            case default
+            
+            end select  
+         
          enddo ! loop over band names
 
          ! convert string array to integer
@@ -561,12 +568,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
           print *, EXE_PROMPT, "Reading in AUX cloud mask"
 
-          if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF' == sym%YES) then
+          if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
              file_srch = 'IFFCMO_npp_d'//trim(config % iff_file &
                          (len(trim(config % dir_1b))+13:len(trim(config % dir_1b))+28)) &
                          //'*_ssec_dev.hdf'
           endif
-          if (trim(Sensor%Sensor_Name)== 'MODIS-IFF' == sym%YES) then
+          if (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
              file_srch = 'IFFCMO_aqua_d'//trim(config % iff_file &
                           (len(trim(config % dir_1b))+14:len(trim(config % dir_1b))+29)) &
                           //'*_ssec_dev.hdf'
@@ -671,21 +678,21 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
 !IFF_noaa19_avhrr_nss_d20120929_t153700_e161100_c20140722185339.hdf
 
 ! --- Read data from the file name
-if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF' == sym%YES) then
+if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
   read(Infile(13:16), fmt="(I4)") year
   read(Infile(17:18), fmt="(I2)") month
   read(Infile(19:20), fmt="(I2)") day
   read(Infile(23:24), fmt="(I2)") start_hour
   read(Infile(25:26), fmt="(I2)") start_minute
   read(Infile(27:28), fmt="(I2)") start_sec
-elseif (trim(Sensor%Sensor_Name)== 'MODIS-IFF' == sym%YES) then
+elseif (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
   read(Infile(14:17), fmt="(I4)") year
   read(Infile(18:19), fmt="(I2)") month
   read(Infile(20:21), fmt="(I2)") day
   read(Infile(24:25), fmt="(I2)") start_hour
   read(Infile(26:27), fmt="(I2)") start_minute
   read(Infile(28:29), fmt="(I2)") start_sec
-elseif (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' == sym%YES) then
+elseif (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' ) then
   read(Infile(23:26), fmt="(I4)") year
   read(Infile(27:28), fmt="(I2)") month
   read(Infile(29:30), fmt="(I2)") day

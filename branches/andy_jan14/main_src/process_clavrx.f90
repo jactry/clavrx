@@ -1309,7 +1309,7 @@
             !*******************************************************************
 
             !---- pixel level aerosol
-            if (index(Sensor%Sensor_Name,'AVHRR') .and. Aer_Flag == sym%YES) then
+            if (index(Sensor%Sensor_Name,'AVHRR') > 0 .and. Aer_Flag == sym%YES) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 

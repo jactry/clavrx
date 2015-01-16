@@ -1,7 +1,7 @@
-#FC=gfortran
-FC=ifort
+FC=gfortran
+#FC=ifort
 FCFLAGS = -g
-NETCDFLIBS = -L/home/dbotambekov/lib/netcdf3/lib -I/home/dbotambekov/lib/netcdf3/include -lnetcdf
+NETCDFLIBS = -L/Users/awalther/lib/netcdf3/lib -I/Users/awalther/lib/netcdf3/include -lnetcdf
 
 SRCS = ../main_src/file_tools.f90
 

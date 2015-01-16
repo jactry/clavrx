@@ -3287,10 +3287,10 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
 
  !--- only do this for geostationary imager data
  !--- NOTE FY-2DE not supported yet
- if (trim(Sensor%Sensor_Name) /= 'GOES_IL_IMAGER' .and.  &
-     trim(Sensor%Sensor_Name) /= 'GOES_MP_IMAGER' .and.  &
-     trim(Sensor%Sensor_Name) /= 'COMS_IMAGER' .and.  &
-     trim(Sensor%Sensor_Name) /= 'MTSAT_IMAGER' .and.  &
+ if (trim(Sensor%Sensor_Name) /= 'GOES-IL-IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'GOES-MP-IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'COMS-IMAGER' .and.  &
+     trim(Sensor%Sensor_Name) /= 'MTSAT-IMAGER' .and.  &
      trim(Sensor%Sensor_Name) /= 'SEVIRI') then
      return
  endif

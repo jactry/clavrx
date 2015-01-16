@@ -513,13 +513,13 @@ contains
   
 
       !--- default ancillary data directory
-      Ancil_Data_dir = trim(Data_Base_Path)//'/clavrx_ancil_data/'
-      Gfs_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/gfs/'
-      Ncep_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/ncep-reanalysis/'
-      Cfsr_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/cfsr/'
-      Oisst_data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/oisst/'
-      Snow_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/snow/hires/'
-      Globsnow_Data_Dir = trim(Data_Base_Path)//'/clavrx_ancil_data/dynamic/snow/globsnow/'
+      Ancil_Data_dir = trim(Data_Base_Path)
+      Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
+      Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
+      Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
+      Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
+      Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
+      Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
       
       
       Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
@@ -860,7 +860,7 @@ contains
       case ('MODIS-MAC')
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case default 
-         print*,'sensor ',sensorname, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'  
+         print*,'sensor ',sensorname, ' is not set in user_options.f90:  Inform andi.walther@ssec.wisc.edu'  
          stop 
       end select
 

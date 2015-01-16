@@ -178,7 +178,7 @@ contains
       Acha_Mode_user_set = 1
       Nlcomp_Mode = 1            
       Level2_File_Flag = 1
-      Rtm_File_Flag = 1
+      Rtm_File_Flag = 0
       Cld_Flag = 1
       Image%Number_Of_Lines_Per_Segment = 240
       Sasrab_Flag = 0
@@ -908,16 +908,16 @@ contains
          possible_acha_modes(1)     =  1
          possible_dcomp_modes(1)    =  3   
       case ( 'GOES-MP-IMAGER')      
-         possible_acha_modes(1:4)   =  [1, 2, 4, 7]
+         possible_acha_modes(1:4)   =  [1, 3, 7]
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-IL-IMAGER')      
-         possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
+         possible_acha_modes(1:3)   =  [1,  3, 6] 
          possible_dcomp_modes(1)    =  3  
       case ( 'GOES_IP_SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
       case ( 'MTSAT-IMAGER')
-          possible_acha_modes(1:4)  =  [4, 5, 7, 8]
+          possible_acha_modes(1:4)  =  [ 1, 2, 3 , 6 ]
           possible_dcomp_modes(1:2) =  [1,3]
       case ('SEVIRI')
          possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
@@ -1027,7 +1027,7 @@ contains
       if (expert_mode > 6 ) return
       
       valid_channels = existing_channels ( sensorname )
-           
+          
       Sensor%Chan_On_Flag_Default =  0
 
       do i = 1, 42 

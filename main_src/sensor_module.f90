@@ -546,7 +546,7 @@ module SENSOR_MODULE
                endif
 
             case (84,85)
-               Sensor%Sensor_Name = 'MTSAT_IMAGER'
+               Sensor%Sensor_Name = 'MTSAT-IMAGER'
                Sensor%Spatial_Resolution_Meters = 4000
                if (AREAstr%Sat_Id_Num == 84) then
                   Sensor%Platform_Name = 'MTSAT-1R'

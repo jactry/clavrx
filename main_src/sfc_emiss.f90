@@ -27,46 +27,45 @@
 !
 !--------------------------------------------------------------------------------------
 MODULE sfc_emiss
-  use HDF
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
+   use HDF
+   use CONSTANTS
+   use NUMERICAL_ROUTINES
   
-  implicit none
+   implicit none
   
-!--- routine access declaration
-  private :: read_integrated_seebor_hdf
-  public :: open_seebor_emiss, close_seebor_emiss, read_seebor_emiss
+   !--- routine access declaration
+   private :: read_integrated_seebor_hdf
+   public :: open_seebor_emiss, close_seebor_emiss, read_seebor_emiss
 
-!---------------------------------------------------------------------------------------
-  INTEGER, parameter, private :: num_lat_emiss = 3600
-  INTEGER, parameter, private :: num_lon_emiss = 7200
-  REAL(kind=real4), parameter, private :: first_lat_emiss = 89.9750, last_lat_emiss = -89.9750
-  REAL(kind=real4), parameter, private :: first_lon_emiss = -179.975, last_lon_emiss = 179.975
-  REAL(kind=real4), parameter, private :: del_lat_emiss = 0.05
-  REAL(kind=real4), parameter, private :: del_lon_emiss = 0.05
-    
-  CONTAINS
+   !---------------------------------------------------------------------------------------
+   INTEGER, parameter, private :: num_lat_emiss = 3600
+   INTEGER, parameter, private :: num_lon_emiss = 7200
+   REAL(kind=real4), parameter, private :: first_lat_emiss = 89.9750, last_lat_emiss = -89.9750
+   REAL(kind=real4), parameter, private :: first_lon_emiss = -179.975, last_lon_emiss = 179.975
+   REAL(kind=real4), parameter, private :: del_lat_emiss = 0.05
+   REAL(kind=real4), parameter, private :: del_lon_emiss = 0.05
+CONTAINS
   
-!====================================================================
-! SUBROUTINE Name: open_seebor_emiss
-!
-! Function:
-!   Determines which SEEBOR Emissivty file to use
-!
-! Description:
-!   This subroutine, given the ancillary data directory and month
-!   outputs the HDF file id associated with the correct SEEBOR
-!   Emmissivity database file
-!====================================================================
+   !====================================================================
+   ! SUBROUTINE Name: open_seebor_emiss
+   !
+   ! Function:
+   !   Determines which SEEBOR Emissivty file to use
+   !
+   ! Description:
+   !   This subroutine, given the ancillary data directory and month
+   !   outputs the HDF file id associated with the correct SEEBOR
+   !   Emmissivity database file
+   !====================================================================
 
-SUBROUTINE open_seebor_emiss(data_dir, month, id)
-  CHARACTER(len=*), intent(in) :: data_dir
-  INTEGER(kind=int2), intent(in) :: month
-  INTEGER(kind=int4), intent(out) :: id
+   SUBROUTINE open_seebor_emiss(data_dir, month, id)
+      CHARACTER(len=*), intent(in) :: data_dir
+      INTEGER(kind=int2), intent(in) :: month
+      INTEGER(kind=int4), intent(out) :: id
   
-  CHARACTER(len=256) :: filename
-  CHARACTER(len=3) :: jday_str
-  CHARACTER(len=4) :: year_str
+      CHARACTER(len=256) :: filename
+      CHARACTER(len=3) :: jday_str
+      CHARACTER(len=4) :: year_str
   
   logical :: file_exists
   
@@ -141,208 +140,200 @@ SUBROUTINE close_seebor_emiss(id)
 
 END SUBROUTINE close_seebor_emiss
 
-!====================================================================
-! SUBROUTINE Name: read_seebor_emiss
-!
-! Function:
-!  Read a given channel from the surface emissivity file for a segment of
-!  Data
-! 
-! Description:
-!  This subroutine, given the latitude, longitude, space mask and channel
-!   number reads in a segment of data from the appropriate SEEBOR Emissivity file
-!   and outputs to the appropriate global array
-!====================================================================
+   !====================================================================
+   ! SUBROUTINE Name: read_seebor_emiss
+   !
+   ! Function:
+   !  Read a given channel from the surface emissivity file for a segment of
+   !  Data
+   ! 
+   ! Description:
+   !  This subroutine, given the latitude, longitude, space mask and channel
+   !   number reads in a segment of data from the appropriate SEEBOR Emissivity file
+   !   and outputs to the appropriate global array
+   !====================================================================
   
-SUBROUTINE read_seebor_emiss(id, ichan, lat, lon, space_mask, emiss)
-  INTEGER(kind=int4), intent(in) :: id, ichan
-  REAL(kind=real4), dimension(:,:), intent(in) :: lat, lon
-  INTEGER(kind=int1), dimension(:,:), intent(in) :: space_mask
-  REAL(kind=real4), dimension(:,:), intent(out) :: emiss
+   SUBROUTINE read_seebor_emiss(id, ichan, lat, lon, space_mask, emiss)
+   
+      INTEGER(kind=int4), intent(in) :: id, ichan
+      REAL(kind=real4), dimension(:,:), intent(in) :: lat, lon
+      INTEGER(kind=int1), dimension(:,:), intent(in) :: space_mask
+      REAL(kind=real4), dimension(:,:), intent(out) :: emiss
   
-  CHARACTER (len=100) :: sds_name  
-  INTEGER :: astatus
-  INTEGER :: ilat1, ilat2, ilon1, ilon2, ilat, ilon, ilat_ad, ilon_ad, &
+      CHARACTER (len=100) :: sds_name  
+      INTEGER :: astatus
+      INTEGER :: ilat1, ilat2, ilon1, ilon2, ilat, ilon, ilat_ad, ilon_ad, &
              ilon1_2, ilon2_2
-  INTEGER :: temp, nx, ny, i, j
-  REAL(kind=real4), dimension(:,:), allocatable :: emiss_grid, emiss_grid_2
-  REAL(kind=real4) :: wlon, elon, slat, nlat
-  INTEGER(kind=int1) :: dateline_flg, space_check
+      INTEGER :: temp, nx, ny, i, j
+      REAL(kind=real4), dimension(:,:), allocatable :: emiss_grid, emiss_grid_2
+      REAL(kind=real4) :: wlon, elon, slat, nlat
+      INTEGER(kind=int1) :: dateline_flg, space_check
   
-  INTEGER, dimension(2) :: start_2d, stride_2d, edge_2d, &
+      INTEGER, dimension(2) :: start_2d, stride_2d, edge_2d, &
                            start_2d_2, stride_2d_2, edge_2d_2
   
-! if (ichan < 3 .or. ichan > 5) then
-  if (ichan < 7) then
-    print "(a,'Surface emissivity: invalid channel number ',i0,' - cannot read in surface emissivity')",EXE_PROMPT,ichan
-    stop
-  endif
+      ! if (ichan < 3 .or. ichan > 5) then
+      if (ichan < 7) then
+         print "(a,'Surface emissivity: invalid channel number ',i0,' - cannot read in surface emissivity')",EXE_PROMPT,ichan
+         stop
+      end if
   
-  space_check = minval(space_mask)
-  if (space_check == 1) then
-    emiss = missing_value_real4
-    return
-  endif
+      space_check = minval(space_mask)
+      if (space_check == 1) then
+         emiss = missing_value_real4
+         return
+      endif
   
-  write(sds_name,'(a,i0)') 'emiss',ichan
-  if (ichan == 3) then
-      sds_name = trim(sds_name)//'b'
-  endif 
+      write(sds_name,'(a,i0)') 'emiss',ichan
+      if (ichan == 3) then
+         sds_name = trim(sds_name)//'b'
+      endif 
 
-  nx = size(emiss,1)
-  ny = size(emiss,2)
+      nx = size(emiss,1)
+      ny = size(emiss,2)
   
-  call find_bounds(lat,lon,wlon,elon,slat,nlat,dateline_flg)
-  !print*,wlon,elon,slat,nlat,dateline_flg
+      call find_bounds(lat,lon,wlon,elon,slat,nlat,dateline_flg)
+     
+      if (dateline_flg == 0) then
   
-  if (dateline_flg == 0) then
+         ilat1 = max(1,min(num_lat_emiss,int(abs(nlat - first_lat_emiss)/del_lat_emiss) + 1))
+         ilat2 = max(1,min(num_lat_emiss,int(abs(slat - first_lat_emiss)/del_lat_emiss) + 1))
   
-    ilat1 = max(1,min(num_lat_emiss,int(abs(nlat - first_lat_emiss)/del_lat_emiss) + 1))
-    ilat2 = max(1,min(num_lat_emiss,int(abs(slat - first_lat_emiss)/del_lat_emiss) + 1))
+         ilon1 = max(1,min(num_lon_emiss,int(abs(wlon - first_lon_emiss)/del_lon_emiss) + 1))
+         ilon2 = max(1,min(num_lon_emiss,int(abs(elon - first_lon_emiss)/del_lon_emiss) + 1))
   
-    ilon1 = max(1,min(num_lon_emiss,int(abs(wlon - first_lon_emiss)/del_lon_emiss) + 1))
-    ilon2 = max(1,min(num_lon_emiss,int(abs(elon - first_lon_emiss)/del_lon_emiss) + 1))
+         if (ilat1 > ilat2) then
+            temp = ilat1
+            ilat1 = ilat2
+            ilat2 = temp
+         endif
   
-    if (ilat1 > ilat2) then
-      temp = ilat1
-      ilat1 = ilat2
-      ilat2 = temp
-    endif
+         if (ilon1 > ilon2) then
+            temp = ilon1
+            ilon1 = ilon2
+            ilon2 = temp
+         endif
   
-    if (ilon1 > ilon2) then
-      temp = ilon1
-      ilon1 = ilon2
-      ilon2 = temp
-    endif
+         start_2d = (/ilon1, ilat1/)
+         stride_2d = (/1, 1/)
+         edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
   
-    !print*,ilat1,ilon1
-    !print*,ilat2,ilon2
+         call read_integrated_seebor_hdf(id, trim(sds_name), start_2d, stride_2d, edge_2d, emiss_grid)
   
-    start_2d = (/ilon1, ilat1/)
-    stride_2d = (/1, 1/)
-    edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
-  
-    call read_integrated_seebor_hdf(id, trim(sds_name), start_2d, stride_2d, edge_2d, emiss_grid)
-  
-    do j = 1, ny
-      do i = 1, nx
+         do j = 1, ny
+            do i = 1, nx
     
-        if (space_mask(i,j) == sym%NO_SPACE) then
+               if (space_mask(i,j) == sym%NO_SPACE) then
 
-             ilat = max(1,min(num_lat_emiss,int(abs(lat(i,j) - first_lat_emiss)/del_lat_emiss) + 1))
-             ilon = max(1,min(num_lon_emiss,int(abs(lon(i,j) - first_lon_emiss)/del_lon_emiss) + 1))
-             !ilat_ad = (ilat - start_2d(2)) + 1
-             !ilon_ad = (ilon - start_2d(1)) + 1
-             ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(emiss_grid,2)))
-             ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(emiss_grid,1)))
-             if (emiss_grid(ilon_ad,ilat_ad) < 0.0) then
-               emiss(i,j) = 0.99
-             else
-               emiss(i,j) = emiss_grid(ilon_ad,ilat_ad)
-             endif
+                  ilat = max(1,min(num_lat_emiss,int(abs(lat(i,j) - first_lat_emiss)/del_lat_emiss) + 1))
+                  ilon = max(1,min(num_lon_emiss,int(abs(lon(i,j) - first_lon_emiss)/del_lon_emiss) + 1))
+             
+                  ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(emiss_grid,2)))
+                  ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(emiss_grid,1)))
+                  if (emiss_grid(ilon_ad,ilat_ad) < 0.0) then
+                     emiss(i,j) = 0.99
+                  else
+                     emiss(i,j) = emiss_grid(ilon_ad,ilat_ad)
+                  end if
 
-        endif
+               end if      
+            end do
+         end do
+    
+         deallocate(emiss_grid, stat=astatus)
+         if (astatus /= 0) then
+            print "(a,'Error deallocating surface emissivity grid.')",EXE_PROMPT
+            stop
+         end if
+    
+      else
+  
+         ilat1 = max(1,min(num_lat_emiss,int(abs(nlat - first_lat_emiss)/del_lat_emiss) + 1))
+         ilat2 = max(1,min(num_lat_emiss,int(abs(slat - first_lat_emiss)/del_lat_emiss) + 1))
+  
+         ilon1 = max(1,min(num_lon_emiss,int(abs(wlon - first_lon_emiss)/del_lon_emiss) + 1))
+         ilon2 = max(1,min(num_lon_emiss,int(abs(180.0 - first_lon_emiss)/del_lon_emiss) + 1))
+    
+         ilon1_2 = max(1,min(num_lon_emiss,int(abs(-180.0 - first_lon_emiss)/del_lon_emiss) + 1))
+         ilon2_2 = max(1,min(num_lon_emiss,int(abs((elon-360.0) - first_lon_emiss)/del_lon_emiss) + 1))
+  
+         if (ilat1 > ilat2) then
+            temp = ilat1
+            ilat1 = ilat2
+            ilat2 = temp
+         endif
+  
+         if (ilon1 > ilon2) then
+            temp = ilon1
+            ilon1 = ilon2
+            ilon2 = temp
+         endif
+    
+         if (ilon1_2 > ilon2_2) then
+            temp = ilon1_2
+            ilon1_2 = ilon2_2
+            ilon2_2 = temp
+         endif
+
+         !--- prevent one single value in a hemisphere - akh mod
+         ilon1_2 = 1  !this must be for a dateline crossing segment
+         ilon2 = num_lon_emiss   !this must be for dateline crossing segment
+         if (ilon1 == num_lon_emiss) then
+            ilon1 = num_lon_emiss -1
+         endif
+         if (ilon2_2 == 1) then
+            ilon2_2 =  2
+         endif
+
+  
+         !--- read western segment
+         start_2d = (/ilon1, ilat1/)
+         stride_2d = (/1, 1/)
+         edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
+
+         call read_integrated_seebor_hdf(id, trim(sds_name), start_2d, stride_2d, edge_2d, emiss_grid)
+    
+         start_2d_2 = (/ilon1_2, ilat1/)
+         stride_2d_2 = (/1, 1/)
+         edge_2d_2 = (/(ilon2_2-ilon1_2)+1, (ilat2-ilat1)+1/)
+  
+         call read_integrated_seebor_hdf(id, trim(sds_name), start_2d_2, stride_2d_2, edge_2d_2, emiss_grid_2)
+    
+         do j = 1, ny
+            do i = 1, nx
+    
+               if (space_mask(i,j) == sym%NO_SPACE) then
+
+               ilat = max(1,min(num_lat_emiss,int(abs(lat(i,j) - first_lat_emiss)/del_lat_emiss) + 1))
+               ilon = max(1,min(num_lon_emiss,int(abs(lon(i,j) - first_lon_emiss)/del_lon_emiss) + 1))
+               if (lon(i,j) >= 0.0) then
+                  ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(emiss_grid,2)))
+                  ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(emiss_grid,1)))
+                  emiss(i,j) = emiss_grid(ilon_ad,ilat_ad)
+               else
+                  ilat_ad = max(1,min((ilat - start_2d_2(2)) + 1,size(emiss_grid_2,2)))
+                  ilon_ad = max(1,min((ilon - start_2d_2(1)) + 1,size(emiss_grid_2,1)))
+                  emiss(i,j) = emiss_grid_2(ilon_ad,ilat_ad)
+               endif
+  
+               if (emiss(i,j) < 0.0) then
+                  emiss(i,j) = 0.99
+               endif
+
+            endif
       
+         enddo
       enddo
-    enddo
+  
+      deallocate(emiss_grid, emiss_grid_2, stat=astatus)
+      if (astatus /= 0) then
+         print "(a,'Error deallocating surface emissivity grid.')",EXE_PROMPT
+         stop
+      endif
     
-    deallocate(emiss_grid, stat=astatus)
-    if (astatus /= 0) then
-      print "(a,'Error deallocating surface emissivity grid.')",EXE_PROMPT
-      stop
-    endif
-    
-  else
+   endif
   
-    ilat1 = max(1,min(num_lat_emiss,int(abs(nlat - first_lat_emiss)/del_lat_emiss) + 1))
-    ilat2 = max(1,min(num_lat_emiss,int(abs(slat - first_lat_emiss)/del_lat_emiss) + 1))
-  
-    ilon1 = max(1,min(num_lon_emiss,int(abs(wlon - first_lon_emiss)/del_lon_emiss) + 1))
-    ilon2 = max(1,min(num_lon_emiss,int(abs(180.0 - first_lon_emiss)/del_lon_emiss) + 1))
-    
-    ilon1_2 = max(1,min(num_lon_emiss,int(abs(-180.0 - first_lon_emiss)/del_lon_emiss) + 1))
-    ilon2_2 = max(1,min(num_lon_emiss,int(abs((elon-360.0) - first_lon_emiss)/del_lon_emiss) + 1))
-  
-    if (ilat1 > ilat2) then
-      temp = ilat1
-      ilat1 = ilat2
-      ilat2 = temp
-    endif
-  
-    if (ilon1 > ilon2) then
-      temp = ilon1
-      ilon1 = ilon2
-      ilon2 = temp
-    endif
-    
-    if (ilon1_2 > ilon2_2) then
-      temp = ilon1_2
-      ilon1_2 = ilon2_2
-      ilon2_2 = temp
-    endif
-
-!--- prevent one single value in a hemisphere - akh mod
-    ilon1_2 = 1  !this must be for a dateline crossing segment
-    ilon2 = num_lon_emiss   !this must be for dateline crossing segment
-    if (ilon1 == num_lon_emiss) then
-       ilon1 = num_lon_emiss -1
-    endif
-    if (ilon2_2 == 1) then
-       ilon2_2 =  2
-    endif
-
-  
-    !print*,ilat1,ilon1,ilon1_2
-    !print*,ilat2,ilon2,ilon2_2
-  
-!--- read western segment
-    start_2d = (/ilon1, ilat1/)
-    stride_2d = (/1, 1/)
-    edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
-
-    call read_integrated_seebor_hdf(id, trim(sds_name), start_2d, stride_2d, edge_2d, emiss_grid)
-    
-    start_2d_2 = (/ilon1_2, ilat1/)
-    stride_2d_2 = (/1, 1/)
-    edge_2d_2 = (/(ilon2_2-ilon1_2)+1, (ilat2-ilat1)+1/)
-  
-    call read_integrated_seebor_hdf(id, trim(sds_name), start_2d_2, stride_2d_2, edge_2d_2, emiss_grid_2)
-    
-    do j = 1, ny
-      do i = 1, nx
-    
-        if (space_mask(i,j) == sym%NO_SPACE) then
-
-           ilat = max(1,min(num_lat_emiss,int(abs(lat(i,j) - first_lat_emiss)/del_lat_emiss) + 1))
-           ilon = max(1,min(num_lon_emiss,int(abs(lon(i,j) - first_lon_emiss)/del_lon_emiss) + 1))
-           if (lon(i,j) >= 0.0) then
-             ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(emiss_grid,2)))
-             ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(emiss_grid,1)))
-             emiss(i,j) = emiss_grid(ilon_ad,ilat_ad)
-           else
-             ilat_ad = max(1,min((ilat - start_2d_2(2)) + 1,size(emiss_grid_2,2)))
-             ilon_ad = max(1,min((ilon - start_2d_2(1)) + 1,size(emiss_grid_2,1)))
-             emiss(i,j) = emiss_grid_2(ilon_ad,ilat_ad)
-           endif
-  
-           if (emiss(i,j) < 0.0) then
-             emiss(i,j) = 0.99
-           endif
-
-        endif
-      
-      enddo
-    enddo
-  
-    deallocate(emiss_grid, emiss_grid_2, stat=astatus)
-    if (astatus /= 0) then
-      print "(a,'Error deallocating surface emissivity grid.')",EXE_PROMPT
-      stop
-    endif
-    
-  endif
-  
-END SUBROUTINE read_seebor_emiss
+   END SUBROUTINE read_seebor_emiss
 
 !====================================================================
 ! SUBROUTINE Name: read_integrated_seebor_hdf

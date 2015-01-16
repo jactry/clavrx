@@ -289,8 +289,9 @@ contains
       integer :: sfc_type_number 
       integer :: class_idx, sfc_idx
       real :: Classifier_Value
-      real, allocatable :: Cond_yes(:)
-      real, allocatable :: Cond_no(:)
+      real, allocatable :: Cond_Yes(:)
+      real, allocatable :: Cond_No(:)
+      real, allocatable :: Cond_Ratio(:)
       
       integer :: bin_idx
       
@@ -326,6 +327,7 @@ contains
       integer :: pos_info_flag 
       integer :: idx_info_flag
       real :: class_contr
+      real :: r
       
       ! ---    Executable  ----------------------------
       ! - read in classifer coeffiecients
@@ -343,9 +345,13 @@ contains
           , inp % sfc % emis_ch20,  inp % sfc % sst_anal_uni )
           
          
-      allocate ( Cond_Yes ( bayes_coef % n_class ) )
-      allocate ( Cond_No ( bayes_coef % n_class ) )
-            
+      allocate ( Cond_Yes ( Bayes_Coef % N_Class ) )
+      allocate ( Cond_No ( Bayes_Coef % N_Class ) )
+      allocate ( Cond_Ratio ( Bayes_Coef % N_Class ) )
+
+      Cond_Yes = 1.0
+      Cond_No =  1.0
+      Cond_Ratio =  1.0
           
       sfc_idx = sfc_type_number
            
@@ -830,12 +836,15 @@ contains
                     bayes_coef % Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
              
             bin_idx =  max(1,min(bayes_coef % N_bounds-1,Bin_Idx)) 
-            Cond_yes (class_idx) = bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )
-            Cond_no (class_idx)  = bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) 
-            
-            class_contr =  bayes_coef % Prior_Yes(Sfc_Idx)* bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
-                            ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
-                            + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
+            Cond_Yes (Class_Idx) = Bayes_Coef % Class_Cond_Yes ( Bin_Idx, Class_Idx, Sfc_Idx )
+            Cond_No (Class_Idx)  = Bayes_Coef % Class_Cond_No ( Bin_Idx, Class_Idx, Sfc_Idx ) 
+            Cond_Ratio (Class_Idx) = Bayes_Coef % Class_Cond_Ratio ( Bin_Idx, Class_Idx, Sfc_Idx )
+
+            r = Cond_Ratio(Class_Idx)
+            class_contr =  1.0 / (1.0 + r / Bayes_Coef % Prior_Yes(Sfc_Idx) - r)
+!            class_contr =  bayes_coef % Prior_Yes(Sfc_Idx)* bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx ) / &
+!                            ( bayes_coef % Prior_Yes(Sfc_Idx) * bayes_coef % class_cond_yes ( bin_idx, class_idx , sfc_idx )  &
+!                            + bayes_coef % Prior_No(Sfc_Idx) * bayes_coef % class_cond_no ( bin_idx, class_idx , sfc_idx ) )
                             
             
             if ( class_contr > 0.1 .and. class_contr < 0.5)  info_flags ( idx_info_flag) = &
@@ -878,15 +887,18 @@ contains
                 
       end do class_loop
                         
-            ! - compute Posterior_Cld_Probability
+      ! - compute Posterior_Cld_Probability
            
-            erg  = &
-                  (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
-                  (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
-                   bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
+      r = product(Cond_Ratio)
+      erg =  1.0 / (1.0 + r / Bayes_Coef % Prior_Yes(Sfc_Idx) - r)
+!     erg  = &
+!           (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes)) / &
+!           (bayes_coef % Prior_Yes(Sfc_Idx) * product(Cond_Yes) +  &        
+!            bayes_coef % Prior_No(Sfc_Idx) * product(Cond_No))
                 
             deallocate ( Cond_Yes )
             deallocate ( Cond_No )
+            deallocate ( Cond_Ratio )
             
    end subroutine NB_CLOUD_MASK_ALGORITHM
 

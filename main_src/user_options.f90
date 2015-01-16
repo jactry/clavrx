@@ -756,7 +756,7 @@ contains
    !  returns default acha mode 
    !----------------------------------------------------------------------
    integer function default_acha_mode ( sensorname )
-      character ( len =10) , intent(in) :: sensorname
+      character ( len =*) , intent(in) :: sensorname
       
       select case ( trim(sensorname))
       

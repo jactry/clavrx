@@ -279,7 +279,7 @@ contains
          has_ems_table(20) = .true.
          chan_string(1) = '1'
          chan_string(20) = '5'  
-                
+         sensor_identifier = trim(self % lut_path) //'MTSAT'       
       case default
           print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
           stop

@@ -908,7 +908,7 @@ contains
          possible_acha_modes(1)     =  1
          possible_dcomp_modes(1)    =  3   
       case ( 'GOES-MP-IMAGER')      
-         possible_acha_modes(1:4)   =  [1, 3, 7]
+         possible_acha_modes(1:3)   =  [1, 3, 7]
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-IL-IMAGER')      
          possible_acha_modes(1:3)   =  [1,  3, 6] 

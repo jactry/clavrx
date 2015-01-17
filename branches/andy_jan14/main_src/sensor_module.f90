@@ -281,6 +281,7 @@ module SENSOR_MODULE
       call mesg ( "Minimum Solar Zenith Angle for Processing = "//string_6, level = verb_lev % DEFAULT)
 
       call mesg ( " ",level = verb_lev % DEFAULT)
+
    end subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN
 
 
@@ -376,7 +377,7 @@ module SENSOR_MODULE
    !        spatial_resolution:  3
    ! 
    !   MTSAT
-   !        sensors:  MTSAT_IMAGER
+   !        sensors:  MTSAT-IMAGER
    !        platform:  MTSAT-1R, MTSAT-2
    !        spatial_resolution:  4
    !
@@ -1134,7 +1135,7 @@ module SENSOR_MODULE
          !-------------------------------------------------------
          call DETERMINE_AVHRR_FILE_TYPE(trim(Level1b_Full_Name),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
                                         AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
-   
+  
          !-------------------------------------------------------------------
          !-- based on file type (AVHRR_KLM_Flag and Gac), determine parameters needed
          !-- to read in header and data records for this orbit
@@ -1264,9 +1265,9 @@ module SENSOR_MODULE
       end if
 
       
-      if (trim(Sensor%Sensor_Name) == 'AVHRR_1' .or. &
-          trim(Sensor%Sensor_Name) == 'AVHRR_2' .or. &
-          trim(Sensor%Sensor_Name) == 'AVHRR_3') then
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-3') then
          call READ_AVHRR_LEVEL1B_DATA(trim(Level1b_Full_Name), &
               AVHRR_KLM_Flag,AVHRR_AAPP_Flag,Therm_Cal_1b,&
               Time_Since_Launch,Nrec_Avhrr_Header,Segment_Number)

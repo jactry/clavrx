@@ -957,7 +957,7 @@ contains
  
       if ( .not. ANY ( dcomp_mode_user_set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( sensorname )
-         print*, 'User set DCOMP mode not possible for '//trim(sensorname)//' switched to default 'default_dcomp_mode ( sensorname )
+         print*, 'User set DCOMP mode not possible for '//trim(sensorname)//' switched to default ', default_dcomp_mode ( sensorname )
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES

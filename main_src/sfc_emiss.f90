@@ -101,7 +101,6 @@ CONTAINS
   end select
   
   filename = trim(data_dir)//"/global_emiss_intABI_"//trim(year_str)//trim(jday_str)//".hdf"
-! filename = trim(data_dir)//"/global_emiss_intAVHRR_"//trim(year_str)//trim(jday_str)//".hdf"
   
   inquire(file = filename, exist = file_exists)
   if (.not. file_exists) then

@@ -926,7 +926,7 @@ contains
          possible_acha_modes(1:2)  =   [1 , 2 ] 
          possible_dcomp_modes(1:2) =   [1 , 3 ]
       case ('VIIRS')
-        possible_acha_modes(1:4)  =    [1, 3, 4, 5] 
+        possible_acha_modes(1:3)  =    [1, 3, 5] 
         possible_dcomp_modes(1:3) =    [1, 2, 3]
          nlcomp_mode_user_set = 1  
       case ('VIIRS-IFF')      

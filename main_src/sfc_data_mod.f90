@@ -143,7 +143,7 @@ contains
       
       ! - executable
       
-      print*,'start to populate SFC structure ...'
+     
       
       ! - writes bounds in bounds structure
       call find_bounds (  lat , lon )
@@ -270,7 +270,7 @@ contains
         
       
       end do  
- print*,'end  populate SFC structure ...'
+
    end subroutine
    
    ! ==========================================================

@@ -268,9 +268,6 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Zc
     real (kind=real4), dimension(:,:), allocatable:: Zc_Top
     real (kind=real4), dimension(:,:), allocatable:: Zc_Base
-    real (kind=real4), dimension(:,:), allocatable:: Zc_KM
-    real (kind=real4), dimension(:,:), allocatable:: Zc_Top_KM
-    real (kind=real4), dimension(:,:), allocatable:: Zc_Base_KM
     real (kind=real4), dimension(:,:), allocatable:: Beta
     real (kind=real4), dimension(:,:), allocatable:: Tau
     real (kind=real4), dimension(:,:), allocatable:: Reff
@@ -2055,9 +2052,6 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     if (.not. allocated(ACHA%Zc)) allocate(ACHA%Zc(dim1,dim2)) 
     if (.not. allocated(ACHA%Zc_Top)) allocate(ACHA%Zc_Top(dim1,dim2)) 
     if (.not. allocated(ACHA%Zc_Base)) allocate(ACHA%Zc_Base(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_KM)) allocate(ACHA%Zc_KM(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Top_KM)) allocate(ACHA%Zc_Top_KM(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Base_KM)) allocate(ACHA%Zc_Base_KM(dim1,dim2)) 
     if (.not. allocated(ACHA%Beta)) allocate(ACHA%Beta(dim1,dim2)) 
     if (.not. allocated(ACHA%Tau)) allocate(ACHA%Tau(dim1,dim2)) 
     if (.not. allocated(ACHA%Reff)) allocate(ACHA%Reff(dim1,dim2)) 
@@ -2093,9 +2087,6 @@ subroutine RESET_ACHA_ARRAYS()
     if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
     if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
     if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
-    if (allocated(ACHA%Zc_KM)) ACHA%Zc_KM = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Top_KM)) ACHA%Zc_Top_KM = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Base_KM)) ACHA%Zc_Base_KM  = Missing_Value_Real4
     if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
     if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
     if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
@@ -2124,9 +2115,6 @@ subroutine DESTROY_ACHA_ARRAYS()
     if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
     if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 
     if (allocated(ACHA%Zc_Base)) deallocate(ACHA%Zc_Base) 
-    if (allocated(ACHA%Zc_KM)) deallocate(ACHA%Zc_KM) 
-    if (allocated(ACHA%Zc_Top_KM)) deallocate(ACHA%Zc_Top_KM) 
-    if (allocated(ACHA%Zc_Base_KM)) deallocate(ACHA%Zc_Base_KM) 
     if (allocated(ACHA%Beta)) deallocate(ACHA%Beta) 
     if (allocated(ACHA%Tau)) deallocate(ACHA%Tau) 
     if (allocated(ACHA%Reff)) deallocate(ACHA%Reff) 

@@ -185,6 +185,7 @@ contains
       call read_data_i2 ( this % elevation , lat , lon)      
       this % elevation % is_set = .true.
       
+      
      
       ! 5. snow class
       ! we use nwp data for snow
@@ -267,9 +268,17 @@ contains
          if ( chn_seebor(i) == 0 ) cycle
          write(this %  emis(i) % meta % sds_name ,'(a,i0)') 'emiss', chn_seebor ( i )
          call read_emis ( this % emis(i) , lat , lon)
-        
+         where ( this % emis (i) % data < 0 )
+            this % emis ( i) % data = 0.99 
+         end where
+         
+         where ( lat == -999. )
+            this % emis ( i) % data = -999. 
+         end where
       
       end do  
+      
+      
 
    end subroutine
    
@@ -394,10 +403,10 @@ contains
       ilon_buffer = ilon - idx_lon_first + 1
     
       allocate ( data_obj % data ( nx , ny ) )
-      
+      data_obj % data  (:,:) = 0
       do i = 1  , nx 
          do j = 1 , ny
-            if ( lat (i,j) == -999. .or. lon(i,j) == -999.  .or. ilat_buffer (i,j) > ny .or. ilon_buffer (i,j) > nx ) cycle
+            if ( lat (i,j) == -999. .or. lon(i,j) == -999.   .or. ilat_buffer (i,j) > edge_2d(2)  .or. ilon_buffer (i,j) > edge_2d(1) ) cycle
              
             data_obj % data  (i, j ) = buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) )
          
@@ -474,7 +483,7 @@ contains
        allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
       
       
-       ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
+      ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
       ilon = int ( abs ( lon - data_obj%meta%first_lon ) / data_obj % meta % del_lon ) + 1
       
       ilat_buffer = ilat - idx_lat_first + 1
@@ -482,9 +491,11 @@ contains
       
          
       allocate ( data_obj % data ( nx , ny ) )
+      data_obj % data ( :,: ) = 0
       do i = 1  , nx 
          do j = 1 , ny
-            if ( lat (i,j) == -999. .or. lon(i,j) == -999. .or. ilat_buffer (i,j) > ny  .or. ilon_buffer (i,j) > nx ) cycle
+            if ( lat (i,j) == -999.) cycle
+            if ( lon(i,j) == -999. .or. ilat_buffer (i,j) > edge_2d(2)  .or. ilon_buffer (i,j) > edge_2d(1) ) cycle
                
             data_obj % data  (i, j ) =  buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) ) 
          end do
@@ -569,7 +580,7 @@ contains
          do j = 1 , ny
             ! -- factor computes white sky albedo in a range from [0,100]
            
-            if ( lat (i,j) == -999. .or. lon(i,j) == -999. .or. ilat_buffer (i,j) > ny .or. ilon_buffer (i,j) > nx ) cycle
+            if ( lat (i,j) == -999. .or. lon(i,j) == -999.  .or. ilat_buffer (i,j) > edge_2d(2)  .or. ilon_buffer (i,j) > edge_2d(1)  ) cycle
          
             data_obj % data  (i, j ) = buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) ) 
             if ( buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) ) == 32767 ) data_obj % data  (i, j ) = -999.

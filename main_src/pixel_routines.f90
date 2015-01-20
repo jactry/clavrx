@@ -1908,9 +1908,9 @@ subroutine READ_MODIS_WHITE_SKY_ALBEDO(modis_alb_id,modis_alb_str,Ref_Sfc_White_
     CALL READ_LAND_SFC_HDF(modis_alb_id, modis_alb_str, Nav%Lat, &
                           Nav%Lon, Space_Mask, Two_Byte_Temp)
     Ref_Sfc_White_Sky = 0.1*Two_Byte_Temp
-
+   
     Ref_Sfc_White_Sky = 1.10*Ref_Sfc_White_Sky   !EMPIRICAL ADJUSTMENT
-
+   
     where(Two_Byte_Temp == 32767)
              Ref_Sfc_White_Sky = Missing_Value_Real4
     endwhere

@@ -147,7 +147,14 @@
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
-   use cr_config_mod    
+   use cr_config_mod 
+   use date_tools_mod 
+   
+   use sfc_data_mod, only: &
+      sfc_main_type 
+      
+  use nwp_data_mod , only: &
+     nwp_main_type   
       
    implicit none
  
@@ -194,9 +201,9 @@
    integer(kind=int4):: File_Number
    integer(kind=int4):: Ierror_Level1b
    integer(kind=int4):: ierror_Nwp
-   integer(kind=int4):: iperiod16   
+     
    integer(kind=int4) :: ierror
-   character(len=3):: Day_String
+   
    character(len=100):: Modis_White_Sky_0_66_Name
    character(len=100):: Modis_White_Sky_0_86_Name
    character(len=100):: Modis_White_Sky_1_24_Name
@@ -251,14 +258,21 @@
    
    type (conf_user_opt_type) :: config
    
+   type ( date_type ) :: start_time_obj
+   type ( date_type ) :: end_time_obj
+   
    !------------- VIIRS variables --------------
    real(kind=real4), dimension(:,:), pointer :: lunar_ref
    real(kind=real4), dimension(:,:),allocatable :: lunar_placeholder
    
+   type ( sfc_main_type ) :: sfc_obj
+   type ( conf_user_opt_type) :: conf_obj
+   type ( nwp_main_type ) :: nwp
+   
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
    integer, dimension(20:36), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0,10,10,11,12,14,15,16,16,16,16/)
-   integer:: Chan_Idx
+   integer:: Chan_Idx , ii,jj
    
    
 
@@ -515,7 +529,25 @@
       ! Knowing the sensor, interogate files to start, end date and time
       !----------------------------------------------------------------------
       call SET_DATA_DATE_AND_TIME ( AREAstr)
-
+      
+      call start_time_obj % set_date_with_doy ( int(image % start_year) , int(image % start_doy) &
+         , int(image % start_time / 1000./60./60.) &
+         , int(modulo(image % start_time / 1000. / 60. , 60.)) &
+         , int(modulo(image % start_time / 1000. , 60.)) ) 
+      
+       call end_time_obj % set_date_with_doy ( int(image % end_year) , int(image % end_doy) &
+         , int(image % end_time / 1000./60./60.) &
+         , int(modulo(image % end_time / 1000. / 60. , 60.)) &
+         , int(modulo(image % end_time / 1000. , 60.)) )
+         
+      call start_time_obj % print_data
+      call end_time_obj % print_data
+      
+      
+     
+      
+      
+      
       !----------------------------------------------------------------------
       ! Output sensor and image parameters to screen
       !----------------------------------------------------------------------
@@ -605,8 +637,9 @@
       !--- 5 km surface emiss
       !--------------------------------------------------------------------
       if (use_seebor == sym%YES) then
-         print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", month
-         call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", month, Emiss_File_Id)
+         print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", start_time_obj % month
+         call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", &
+            start_time_obj % month  , Emiss_File_Id)
       end if
 
       !----------------------------------------------------------------------
@@ -616,14 +649,12 @@
 
          call mesg ("Opening Modis clear albedo map")
 
-         !--- determine 16 day period and its string value
-         iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
-         write(Day_String,fmt="(i3.3)") iperiod16
+    
 
          !--- Open Modis white sky 0.66 um albedo
          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".0.659_x4.hdf"
+                                 start_time_obj % period_16()//".0.659_x4.hdf"
             Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
             Modis_Alb_0_66_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_0_66_Name), &
@@ -633,7 +664,7 @@
          !--- Open Modis white sky 0.86 um albedo
          if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
             Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".0.858_x4.hdf"
+                                 start_time_obj % period_16()//".0.858_x4.hdf"
             Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
             Modis_Alb_0_86_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_0_86_Name), &
@@ -643,7 +674,7 @@
          !--- Open Modis white sky 1.24 um albedo
          if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
             Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".1.24_x4.hdf"
+                                 start_time_obj % period_16()//".1.24_x4.hdf"
             Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
             Modis_Alb_1_24_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_1_24_Name), &
@@ -653,7 +684,7 @@
          !--- Open Modis white sky 1.66 um albedo
          if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
             Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".1.64_x4.hdf"
+                                 start_time_obj % period_16()//".1.64_x4.hdf"
             Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
             Modis_Alb_1_64_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_1_64_Name), &
@@ -663,7 +694,7 @@
          !--- Open Modis white sky 2.13 um albedo
          if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
             Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".2.13_x4.hdf"
+                                 start_time_obj % period_16()//".2.13_x4.hdf"
          Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
          Modis_Alb_2_13_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
                                         trim(Modis_White_Sky_2_13_Name), &
@@ -860,7 +891,13 @@
 
          call READ_LEVEL1B_DATA(Image%Level1b_Full_Name,Segment_Number, &
                                 Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
-
+         conf_obj % ancil_path = trim(Ancil_Data_Dir)
+         call sfc_obj % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, conf_obj , nwp)
+         
+ 
+         
+         
+         
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
@@ -1126,6 +1163,7 @@
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
                                           ch(1)%Sfc_Ref_White_Sky)
+                                  
                endif
                if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
                   if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
@@ -1588,7 +1626,7 @@
         !*************************************************************************
         ! Marker: End of loop over orbital segments
         !*************************************************************************
-
+         call sfc_obj % deallocate_all()
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")

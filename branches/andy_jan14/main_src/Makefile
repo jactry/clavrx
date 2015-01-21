@@ -7,21 +7,6 @@
 ############################## Makefile Settings ###############################
 
 #--- attributes written to hdf files to describe data
-#Title_String = " PATMOS-x AVHRR reflectance, brightness temperature and cloud product CDRs"
-#Calibration_String = "mc5y2011"
-#Institution_String = " NOAA/NESDIS and the University of Wisconsin-Madison / CIMSS"
-#Product_Version_String = "v05r03"
-#Program_String = " NOAA Climate Data Record Program for satellites"
-#Status_String = " Interim"
-#Summary_String = " Included in this file are PATMOS-x/CLAVR-x calibrated reflectance, brightness temperature and cloud products developed by NOAA in collaboration with the University of Wisconsin-Madison CIMSS"
-#Variable_String = " refl_0_65um_nom, refl_0_86um_nom, refl_1_60um_nom, refl_3_75um_nom, temp_3_75um_nom, temp_11_0um_nom, temp_12_0um_nom, cld_temp_acha, cld_emiss_acha, cld_opd_dcomp, cld_reff_dcomp"
-#Keywords_String = "EARTH SCIENCE > LAND SURFACE > SURFACE RADIATIVE PROPERTIES > REFLECTANCE, EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > REFLECTANCE, EARTH SCIENCE > SPECTRAL/ENGINEERING > INFRARED WAVELENGTHS > BRIGHTNESS TEMPERATURE, EARTH SCIENCE > SPECTRAL/ENGINEERING > SENSOR #CHARACTERISTICS > VIEWING GEOMETRY"
-#Keywords_Vocabulary_String = "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 8.0"
-#Metadata_Link_String = "gov.noaa.ncdc:C00837 gov.noaa.ncdc.C00840"
-#Time_Coverage_Resolution_String = "P1D"
-#Spatial_Resolution_String = "0.1 x 0.1 degree equal-angle grid"
-
-#--- attributes written to hdf files to describe data
 Title_String = " PATMOS-x "
 Calibration_String = "mc5y2011"
 Institution_String = " NOAA/NESDIS and the University of Wisconsin-Madison / CIMSS"
@@ -106,7 +91,7 @@ clavrxorb_objs = process_clavrx.o \
                  file_utility.o \
                  scaling_params.o \
                  hdf.o \
-                 oisst_analysis.o \
+                 cr_oisst_mod.o \
                  constant.o \
                  calibration_constants.o \
                  algorithm_constants.o \
@@ -260,9 +245,8 @@ bindir:
 #The convert big endian flag is only needed for the OISST module, hence the special compilation
 #instuctions
 
-oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o hdf.o num_mod.o
-	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90 
-
+cr_oisst_mod.o: cr_oisst_mod.f90 pixel_common.o file_utility.o hdf.o num_mod.o date_tools_mod.o
+	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) cr_oisst_mod.f90 
 constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o
 avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_utility.o
@@ -318,7 +302,7 @@ sfc_tools.o:sfc_tools.f90
 nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o
 cr_constants_module.o:cr_constants_module.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o
+sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
@@ -379,7 +363,7 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_addons_module.f90
 
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
-              avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
+              avhrr_module.o sensor_module.o user_options.o cr_oisst_mod.o \
               sfc_prop_umd.o cloud_type_bridge_module.o \
               file_utility.o level2.o cloud_height_routines.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \

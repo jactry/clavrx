@@ -1,4 +1,4 @@
-! $Id:$
+! $Id: date_tools_mod.f90 4 2014-03-20 21:14:10Z awalther $
 
 module date_tools_mod
    
@@ -19,8 +19,6 @@ module date_tools_mod
       integer :: dayOfYear
       character(6) :: yymmdd
       character(8) :: yymmddhh
-      character(8) :: yyyymmdd
-      character(4) :: yyyy 
       real (kind = r15) :: julday
       real :: mod_julday
       
@@ -36,7 +34,7 @@ module date_tools_mod
       procedure , private :: set_julday
       procedure , private::  add_day
       procedure , private :: update_from_jd
-      procedure ::  period_16 
+    !  procedure ::  period_16 
       
    
    end type date_type
@@ -63,7 +61,7 @@ contains
    !
    !
    function period_16 (this ) result ( out_string )
-      class ( date_type) :: this
+      type ( date_type) :: this
       character ( len = 3 ) :: out_string
       integer :: iperiod16
       
@@ -116,10 +114,12 @@ contains
       end do
       day_dum = doy - last_day_month
       month = maxloc ( day_dum , mask = day_dum <= 0 )
-      
+      print*,day_dum
+      print*,month
+      print*,this % day 
       this % month = month(1)
-      this % day = jmonth(month(1)) + day_dum(month(1))
-      
+      this % day = day_dum(month(1))
+       
       call this % update()
        
    end subroutine set_date_with_doy
@@ -195,8 +195,6 @@ contains
       write ( minute_s , fmt = '(i2.2)') this % minute
       this % yymmdd =  year_s2d//month_s//day_s
       this % yymmddhh =  year_s2d//month_s//day_s//hour_s
-      this % yyyy = year_s
-      this % yyyymmdd = year_s//month_s//day_s
    end subroutine update
    
    
@@ -226,17 +224,14 @@ contains
    
    
    ! -- 
-   subroutine print_data( this ,  title )
+   subroutine print_data( this )
       class (date_type) :: this
-      character ( len =*), optional, intent(in) :: title
-      print*
-      if ( present(title)) print*,'======  '//trim(title)//'   ========'
+      
       print*,'year: ', this % year
       print*,'month: ', this % month
       print*,'day: ', this % day
       print*,'hour: ', this % hour
       print*,'minute: ', this % minute
-      print*,'second: ', this % second
       print*,'jday: ' , this % julday
    
    end subroutine print_data

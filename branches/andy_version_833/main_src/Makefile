@@ -130,6 +130,7 @@ clavrxorb_objs = process_clavrx.o \
                  gfs_hdf_module.o \
 	         nwp_common.o \
                  ncep_reanalysis.o \
+                 sfc_emiss.o \
 	         rt_utils.o  \
                  rtm_common.o \
 	         Message_Handler.o \
@@ -184,11 +185,6 @@ clavrxorb_objs = process_clavrx.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
                  cr_config_mod.o \
-                 date_tools_mod.o \
-                 sfc_tools.o \
-                 sfc_data_mod.o \
-                 nwp_data_mod.o \
-                 cr_physics_mod.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -301,7 +297,6 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 area_file_mod.o:area_file_mod.f90
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
-date_tools_mod.o:date_tools_mod.f90
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
@@ -313,13 +308,6 @@ dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
-geo_mod.o:geo_mod.f90
-config_mod.o:config_mod.f90 area_file_mod.o
-sfc_tools.o:sfc_tools.f90
-nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o
-cr_constants_module.o:cr_constants_module.f90
-cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
@@ -350,6 +338,7 @@ level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
 planck.o: planck.f90 constant.o calibration_constants.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o
+sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
@@ -382,7 +371,7 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
-              sfc_prop_umd.o cloud_type_bridge_module.o \
+              sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
@@ -391,8 +380,8 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
-              laszlo_insolation_module.o sasrab.o conver.o getmod.o sfc_data_mod.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o date_tools_mod.o \
+              laszlo_insolation_module.o sasrab.o conver.o getmod.o \
+              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
 
 

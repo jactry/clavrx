@@ -989,7 +989,7 @@ contains
       case ( 'MTSAT-IMAGER')
          valid_channels (1:5) = [1,20,27,31,32]  
       case ('SEVIRI')
-         valid_channels (1:10) = [1,2,6,20,27,28,29,31,32,33]
+         valid_channels (1:11) = [1,2,6,20,27,28,29,30,31,32,33]
       case ('FY2-IMAGER')
          valid_channels (1:5) = [1,20,27,31,32]    
       case ('VIIRS')

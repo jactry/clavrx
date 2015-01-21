@@ -452,7 +452,6 @@ SUBROUTINE read_land_sfc_hdf_i2(id, grid_str, lat, lon, space_mask, land)
     edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
 
     call read_hdf_sds(id, trim(grid_str%sds_name), start_2d, stride_2d, edge_2d, land_grid)
-    
   
     do j = 1, ny
       do i = 1, nx
@@ -464,9 +463,7 @@ SUBROUTINE read_land_sfc_hdf_i2(id, grid_str, lat, lon, space_mask, land)
               ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(land_grid,2)))
               ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(land_grid,1)))
               land(i,j) = land_grid(ilon_ad,ilat_ad)
-              
-              
-               
+  
         endif
       
       enddo

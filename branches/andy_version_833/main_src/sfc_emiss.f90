@@ -60,7 +60,7 @@ CONTAINS
 
    SUBROUTINE open_seebor_emiss(data_dir, month, id)
       CHARACTER(len=*), intent(in) :: data_dir
-      INTEGER, intent(in) :: month
+      INTEGER(kind=int2), intent(in) :: month
       INTEGER(kind=int4), intent(out) :: id
   
       CHARACTER(len=256) :: filename

@@ -88,7 +88,21 @@ module CONSTANTS
   CHARACTER(120), public :: Cloud_Type_Version
   
   !--- define sds names in hdf files of relevant static ancillary data
-
+  CHARACTER(*), parameter, public :: SFC_TYPE_SDS_NAME = "surface_type"
+  CHARACTER(*), parameter, public :: COAST_MASK_SDS_NAME = "coast_mask"
+  CHARACTER(*), parameter, public :: VOLCANO_MASK_SDS_NAME = "volcano_mask"
+  CHARACTER(*), parameter, public :: LAND_MASK_SDS_NAME = "land_sea_mask"
+  CHARACTER(*), parameter, public :: SURFACE_ELEV_SDS_NAME = "surface_elevation"
+  CHARACTER(*), parameter, public ::  &
+                     MODIS_ALB_0_66_SDS_NAME="Albedo_Map_0.659"
+  CHARACTER(*), parameter, public ::  &
+                     MODIS_ALB_0_86_SDS_NAME="Albedo_Map_0.858"
+  CHARACTER(*), parameter, public ::  &
+                     MODIS_ALB_1_24_SDS_NAME="Albedo_Map_1.24"
+  CHARACTER(*), parameter, public ::  &
+                     MODIS_ALB_1_64_SDS_NAME="Albedo_Map_1.64"
+  CHARACTER(*), parameter, public ::  &
+                     MODIS_ALB_2_13_SDS_NAME="Albedo_Map_2.13"
   CHARACTER(*), parameter, public :: SNOW_MASK_SDS_NAME = "snow_ice_cover"
 
   !--- define a structure of symbols of clarity

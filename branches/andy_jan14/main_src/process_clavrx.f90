@@ -465,7 +465,9 @@
       !*************************************************************************
       ! Marker:  READ IN NWP DATA
       !*************************************************************************
-      call nwp % populate ( start_time_obj, end_time_obj ,  config  % ancil_path  )
+      call nwp % populate ( start_time_obj, end_time_obj ,  config  % ancil_path , nwp_opt  )
+      
+    
       
       !--- GFS
       if (Nwp_Opt == 1) then

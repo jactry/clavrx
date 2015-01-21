@@ -105,9 +105,9 @@ module sfc_data_mod
    type ( et_snow_class_type) , public :: ET_snow_class   
 contains  
 
-   ! ===================================
+   ! ================================================================
    !
-   ! ===================================
+   ! ================================================================
    subroutine populate ( this, date , lat , lon , conf,  nwp   )
       
       use date_tools_mod ,only: &
@@ -135,6 +135,9 @@ contains
       character(len=4) :: year_str_emiss_files
       integer , dimension(20:36) :: chn_seebor
       integer :: dim_all(2)
+      
+      character ( len =200) ::snow_glob_filename
+      character ( len =200) ::snow_hires_filename
       
       
       integer :: i
@@ -199,15 +202,27 @@ contains
       !-TODO  differentiate snow options
       !- now only globSnow
       
-        this % snow_class % meta % filename = &
-          &  trim(conf % ancil_path) //'/static/snow/snow_map_4km_'//date % yymmdd//'.hdf'
-      ! this % snow_class % meta % sds_name = 'snow_ice_cover'  
-      ! call open_file (this % snow_class % meta )
-      ! call read_meta (this % snow_class % meta )
-      ! call read_data_i1 ( this % snow_class , lat , lon)
-      this % snow_class % is_set = .false.
       
-      stop
+      snow_hires_filename =  trim(conf % ancil_path) //'/dynamic/snow/hires/snow_map_4km_'//date % yymmdd//'.hdf' 
+      snow_glob_filename  =  trim(conf % ancil_path) //'/dynamic/snow/globsnow/'//date%yyyy//'/GlobSnow_SWE_L3A_'//date%yyyymmdd//'_v1.0.hdf'
+         
+      if ( file_test (snow_hires_filename)) then  
+         this % snow_class % meta % filename =  snow_hires_filename
+         this % snow_class % meta % sds_name = 'snow_ice_cover'  
+         call open_file (this % snow_class % meta )
+         call read_meta (this % snow_class % meta )
+         call read_data_i1 ( this % snow_class , lat , lon)
+         this % snow_class % is_set = .true.
+      else if (file_test (snow_glob_filename)) then
+         this % snow_class % meta % filename = snow_glob_filename 
+         
+         print*,'glob snow data will be re-implemented soon '
+         !this % snow_class = 
+         this % snow_class % is_set = .false.
+      else 
+         print*,'no aux snow data ==> use of NWP'
+         this % snow_class % is_set = .false.
+      end if
      
                 
       ! 7. white sky albedo
@@ -237,14 +252,14 @@ contains
           !  Empirical correction of white sky albedo! 
           !  Personal communication: Jan Fokke Meiring 
           !  factor is  1.1 (AW 2013/05/29 )
-          where (  this % modis_w_sky(i) % data /= -999.)
+         where (  this % modis_w_sky(i) % data /= -999.)
             this % modis_w_sky(i) % data &
                   & = WHITE_SKY_EMPIRIC_FACTOR * this % modis_w_sky(i) % data
-          end where
+         end where
           
-          where ( this % land_class % data /= 1)
+         where ( this % land_class % data /= 1)
             this % modis_w_sky(i) % data = 5.
-          end where
+         end where
           
       end do
      

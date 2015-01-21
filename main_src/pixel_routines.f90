@@ -65,7 +65,6 @@ MODULE PIXEL_ROUTINES
           COMPUTE_SNOW_FIELD, &
           SET_BAD_PIXEL_MASK, &
           QUALITY_CONTROL_ANCILLARY_DATA,   &
-          READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
           COMPUTE_MASKED_SST,               &
           COMPUTE_GLINT,                    &
@@ -1896,31 +1895,7 @@ subroutine COMPUTE_GLINT_LUNAR()
 
  end subroutine COMPUTE_GLINT_LUNAR
 
-!----------------------------------------------------------------------
-! Read MODIS white sky albedoes
-!----------------------------------------------------------------------
-subroutine READ_MODIS_WHITE_SKY_ALBEDO(modis_alb_id,modis_alb_str,Ref_Sfc_White_Sky)
 
-    integer(kind=4), intent(in):: modis_alb_id
-    TYPE(Land_grid_description), intent(in) :: modis_alb_str
-    real(kind=real4), dimension(:,:), intent(out):: Ref_Sfc_White_Sky
-
-    CALL READ_LAND_SFC_HDF(modis_alb_id, modis_alb_str, Nav%Lat, &
-                          Nav%Lon, Space_Mask, Two_Byte_Temp)
-    Ref_Sfc_White_Sky = 0.1*Two_Byte_Temp
-   
-    Ref_Sfc_White_Sky = 1.10*Ref_Sfc_White_Sky   !EMPIRICAL ADJUSTMENT
-   
-    where(Two_Byte_Temp == 32767)
-             Ref_Sfc_White_Sky = Missing_Value_Real4
-    endwhere
-
-    !--- modify for water
-    where(Sfc%Land_Mask == sym%NO)
-            Ref_Sfc_White_Sky = Ref_Sfc_White_Sky_Water
-    endwhere
-
-end subroutine READ_MODIS_WHITE_SKY_ALBEDO
 
 !------------------------------------------------------------
 ! compute the single scater and aerosol reflectance

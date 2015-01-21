@@ -99,7 +99,7 @@
    use NLCOMP_BRIDGE_MOD
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
-   use LAND_SFC_PROPERTIES
+   
    use GLOBSNOW_READ_ROUTINES
    use GFS
    use NCEP_REANALYSIS
@@ -207,17 +207,9 @@
      
    integer(kind=int4) :: ierror
    
-   character(len=100):: Snow_Mask_File_Name
    character(len=100):: oiSst_File_Name
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
-  
-   integer(kind=int4):: Snow_Mask_Id = missing_value_int4
- 
-  
-   type(Land_grid_Description) :: Snow_Mask_Str
-
-   
    integer, parameter:: LRC_Meander_Flag = 1
    integer, parameter:: Max_LRC_Distance = 10
    real, parameter:: Min_LRC_Jump = 0.0   !0.5
@@ -257,7 +249,7 @@
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
-   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
+   call mesg ( '<-- Start of CLAVRXORB --> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
 
    
@@ -285,10 +277,11 @@
    !*************************************************************************
    call config % set_config()
    call SETUP_USER_DEFINED_OPTIONS()
-   
+   print*,'==============     files to process  ==========='
    do ii = 1, config % n_files
       print*,trim(config % file % infile(ii)), config % file % ETsensor (ii)
    end do   
+   print*
    !-----------------------------------------------------------------------
    !--- set up surface radiative properties 
    !TODO    
@@ -309,69 +302,29 @@
    !--- print to screen which file list is used
    call mesg ( "CLAVR-x FILE LIST FILE USED: "//trim(File_list)  ) 
 
-   !--- open file containing list of level1b data to process
-   File_list_lun = GET_LUN()
-   open(unit=File_list_lun,file = trim(File_list),status="old",action="read",iostat=ios)
-   if (ios /= 0) then
-      write ( string_30, '(i8)') ios
-      call mesg ("ERROR: Opening clavrxorb_File_list, iostat = "//trim(string_30) , level = verb_lev % ERROR) 
-      stop
-   end if
-
-   !--- read directories from clavrxorb_input_Files
-   read(unit=File_List_Lun,fmt="(a)") Image%Level1b_Path
-   read(unit=File_List_Lun,fmt="(a)") Dir_Level2
+   Image%Level1b_Path = config % file % l1b_path
+   Dir_Level2 = config % file % out_path
   
-   !--- reset file counter
-   File_Number = 1
-
    !----------------------------------------------------------------------
    ! Marker: BEGIN LOOP OVER FILES
    !----------------------------------------------------------------------
    
-   File_loop: do
- 
-      !----------------------------------------------------------------------
-      ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
-      !----------------------------------------------------------------------
-      read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
-      if ( file_1b_temp == "") exit
-      if (ios /= 0) then
-         if (ios /= -1) then
-            !-- non eof error
-            erstat = 8
-            call mesg ( "ERROR: Problem reading orbit names from control file" &
-               , level = verb_lev % QUIET) 
-            stop 8
-         else
-            !-- end of orbits
-            if (File_Number == 1) then
-               print *, EXE_PROMPT, "ERROR: No orbits to process, stopping"
-               stop
-            end if
-            exit
-         end if
-      end if
+   File_loop: do file_number = 1 , config % n_files
  
       !----------------------------------------------------------------------------
       ! Determine time of the start of the processing of this orbit
       !----------------------------------------------------------------------------
       Orbital_Processing_Start_Time_Hours = COMPUTE_TIME_HOURS()
-
+      
       !--------------------------------------------------------------
       ! Determine if this level-1b file can be opended, if not skip
       !--------------------------------------------------------------
-
-      !**********************************************************************
-      ! Marker: Prepare to read Level-1b file
-      !**********************************************************************
-
-      !-- see if level-1b file exists
-      Level1b_Exists = file_exists(trim(Image%Level1b_Path)//trim(File_1b_Temp))
-      if (Level1b_Exists .eqv. .FALSE.) then
+      file_1b_temp = config % file % infile (file_number)
+      
+      if (.not. file_test(config % file % infile_fullpath (file_number))) then
          print *, EXE_PROMPT, "ERROR: Level-1b file not found, skipping"
          cycle file_loop
-      end if
+      end if 
 
       !--------------------------------------------------------------
       !  Determine based on the L1b file's extension if the input file
@@ -394,10 +347,7 @@
       call mesg (" " )
       call mesg ("<------------- Next Orbit ---------------> ",level = verb_lev % DEFAULT )
 
-      !-------------------------------------------------------
-      ! reset record counters
-      !-------------------------------------------------------
-      File_Number = File_Number + 1
+     
 
       !-----------------------------------------------------------------------
       ! knowing the file type, determine the expected number of elements and
@@ -509,10 +459,7 @@
       !--- read in Algorithm Constants from appropriate file
       call READ_ALGO_CONSTANTS()
 
-      !*************************************************************************
-      ! Marker:  Open non-static high spatial resolution ancillary data
-      !*************************************************************************
-
+   
       !--------------------------------------------------------------------
       ! read in sst analysis file
       !--------------------------------------------------------------------
@@ -539,54 +486,12 @@
       Start_Day_Prev = Image%Start_Doy  
 
      
-      
-      !------------------------------------------------------------------
-      ! Open Snow mask file
-      !------------------------------------------------------------------
-      if (Read_Snow_Mask == sym%READ_SNOW_HIRES) then
-
-         Failed_Hires_Snow_Mask_Flag = sym%NO
-
-         Snow_Mask_Str%sds_Name = "snow_ice_cover"
-         Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
-                                                 trim(Snow_Data_Dir))
-         if (trim(Snow_Mask_File_Name) == "no_file") then
-            Failed_Hires_Snow_Mask_Flag = sym%YES
-            call mesg ( "WARNING: Could not find Snow mask file ==> "// &
-              Snow_Mask_File_Name, level = verb_lev % WARNING)
-         else
-            Snow_Mask_Id = OPEN_LAND_SFC_HDF(trim(Snow_Data_Dir), &
-                                      Snow_Mask_File_Name, &
-                                      grid_Str=Snow_Mask_Str)
-            if (Snow_Mask_Id > 0) then
-               Failed_Hires_Snow_Mask_Flag = sym%NO
-               print *, EXE_PROMPT, "Snow mask file opened successfully "
-            else
-               Failed_Hires_Snow_Mask_Flag = sym%YES
-               print *, EXE_PROMPT, "WARNING: Snow mask file open failed "
-            end if
-         end if
-      end if
-
-
-      IF (Read_Snow_Mask == sym%READ_SNOW_GLOB) THEN 
-         Failed_Glob_Snow_Mask_Flag = sym%NO
-
-         Snow_Mask_File_Name = GET_GLOBSNOW_FILENAME(Image%Start_Year,Image%Start_Doy, &
-                                                 trim(GlobSnow_Data_Dir))
-         if (trim(Snow_Mask_File_Name) == "no_file") THEN
-            Failed_Glob_Snow_Mask_Flag = sym%YES
-            call mesg ( "WARNING:  Could not find GlobSnow mask file, using NWP ", level = verb_lev % WARNING )
-         else
-            CALL READ_GLOBSNOW_ANALYSIS_MAP(trim(GlobSnow_Data_Dir)//Snow_Mask_File_Name)
-         end if
-
-      END IF
-    
+ 
       !*************************************************************************
       ! Marker:  READ IN NWP DATA
       !*************************************************************************
       call nwp % populate ( start_time_obj, end_time_obj ,  config  % ancil_path  )
+      
       !--- GFS
       if (Nwp_Opt == 1) then
          call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time, &
@@ -952,14 +857,11 @@
             end if
 
             !--- read Snow mask
-            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_Hires_Snow_Mask_Flag == sym%NO) then
-               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_Hires)
+            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. sfc_obj % snow_class % is_set ) then
+               Sfc%Snow_Hires = sfc_obj % snow_class % data
             end if
    
-            if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
-               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
-            end if
-   
+          
             !--- define binary land and coast masks (yes/no) from land and coast flags
             call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
 
@@ -1517,16 +1419,7 @@
    ! DEALLOCATE MEMORY AND END PROGRAM
    !----------------------------------------------------------------------
 
-   !*************************************************************************
-   !-- Marker: Close static ancillary data files
-   !*************************************************************************
-
    
-   
-   
-   
-   if (Snow_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Snow_Mask_Id)
-
    !*************************************************************************
    ! Marker: Final remaining memory deallocation
    !*************************************************************************

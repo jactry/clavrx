@@ -122,7 +122,6 @@ clavrxorb_objs = process_clavrx.o \
 	         cloud_height_routines.o \
 	         file_tools.o \
 	         clavrx_message_module.o \
-	         land_sfc_properties.o \
 	         avhrr_pixel_aerosol.o \
                  hdf_params.o \
                  level2.o \
@@ -304,7 +303,7 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 date_tools_mod.o:date_tools_mod.f90
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
-pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
+pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
@@ -333,7 +332,6 @@ globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o 
 hdf.o: hdf.f90
 hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
-land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
 modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o
@@ -383,7 +381,7 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o cloud_type_bridge_module.o \
-              land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
+              file_utility.o level2.o cloud_height_routines.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \

@@ -345,9 +345,9 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
 
      endif
 
-     sst_anal_err(i,j) =  oisst_err_map(ilon_sst_anal,ilat_sst_anal)
-     sst_anal_cice(i,j) = oisst_cice_map(ilon_sst_anal,ilat_sst_anal)
-     sst_anal_uni(i,j) = oisst_anal_map_uni(ilon_sst_anal,ilat_sst_anal)
+    
+      sst_anal_cice(i,j) = oisst_cice_map(ilon_sst_anal,ilat_sst_anal)
+      sst_anal_uni(i,j) = oisst_anal_map_uni(ilon_sst_anal,ilat_sst_anal)
 
     end do
   end do

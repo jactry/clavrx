@@ -56,6 +56,7 @@ module cr_config_mod
       character (len=256) :: l1b_path
       character (len=256) :: out_path
       character (len=256) , allocatable, dimension (:)  :: infile
+      character (len=256) , allocatable, dimension (:)  :: infile_fullpath
       integer , allocatable, dimension(:) :: wmo_id
       integer, allocatable, dimension (:)  :: ETsensor 
       integer, allocatable, dimension (:)  :: ETresolu 
@@ -163,6 +164,7 @@ contains
       n_files = file_nr_lines (trim(input_file)) - 2 
       conf % n_files = n_files
       allocate ( conf % file % infile (n_files) ) 
+      allocate ( conf % file % infile_fullpath (n_files) )
       allocate ( conf % file % ETsensor ( n_files ) )
       allocate ( conf % file % wmo_id ( n_files ) )
       
@@ -175,7 +177,7 @@ contains
          read(unit=lun,fmt="(a)")  conf % file % infile (i_file)
          conf % file % ETsensor (i_file) &
                  &  =  sensor_from_filename (trim(conf % file % infile (i_file)) , conf % file % l1b_path )
-         
+         conf % file % infile_fullpath (i_file) = trim(conf % file % l1b_path)//trim(conf % file % infile (i_file))
       end do
       
       close ( unit = lun )
@@ -217,7 +219,7 @@ contains
       
       ! - test if this is an area file
       if (   is_area_file ( trim(path)//file , sat_id_num ) ) then
-         
+         print*,sat_id_num
          select case (sat_id_num )
          case(51:53)
             sensor = ETsensor_seviri
@@ -237,6 +239,7 @@ contains
       
       end if
       
+      if ( sensor == ETsensor_invalid ) sensor = ETsensor_avhrr
      
    end function sensor_from_filename
    

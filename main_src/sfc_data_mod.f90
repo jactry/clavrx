@@ -1,7 +1,8 @@
 !  $Id:$
 !   sfc data object class
 !
-!  
+!   HISTORY:
+!     01/21/2015: AW created 
 !
 module sfc_data_mod
    use sfc_tools, only : &
@@ -10,6 +11,8 @@ module sfc_data_mod
     , read_hdf_sds
    
    implicit none
+   
+   private
    
    integer, parameter, public:: int1 = selected_int_kind(1)
    integer, parameter, public:: int2 = selected_int_kind(3)

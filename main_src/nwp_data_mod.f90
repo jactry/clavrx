@@ -1,5 +1,7 @@
-! $Header: https://svn.ssec.wisc.edu/repos/aw_clavrx/trunk/nwp_data_mod.f90 18 2014-10-23 20:40:18Z awalther $
+! $Header:$
 ! 
+!   01/21/2015: in clavrx
+!
 module nwp_data_mod
    use date_tools_mod
     
@@ -136,16 +138,16 @@ contains
    ! ----------------------------------------------------------------
    ! 
    ! -----------------------------------------------------------------
-   subroutine populate_all_nwp ( this , date_start , date_end , ancil_path )
+   subroutine populate_all_nwp ( this , date_start , date_end , ancil_path , nwp_opt)
       
            
       implicit none
       class ( nwp_main_type) :: this
       type ( date_type ) , intent (in) :: date_start , date_end
       character (256) , intent(in) ::ancil_path
+      integer , intent(in) :: nwp_opt
    
-     
-      call read_gfs_data ( this, date_start , date_end , ancil_path ) 
+      call read_gfs_data ( this, date_start , date_end , ancil_path, nwp_opt ) 
       call set_special_levels( this  )
           
    end subroutine populate_all_nwp
@@ -223,7 +225,7 @@ contains
    !   READ_GFS_DATA
    !   Andi Walther Nov 2013
    !  -------------------------------------------------
-   subroutine read_gfs_data(gNWP , date_start , date_end , ancil_path)
+   subroutine read_gfs_data(gNWP , date_start , date_end , ancil_path , nwp_opt)
       
       use file_tools, only: &
          file_test &
@@ -236,6 +238,7 @@ contains
       type ( date_type ) , intent (in) :: date_start , date_end
       type ( nwp_main_type), intent (in out)  :: gNWP
       character (256) , intent(in) ::ancil_path
+      integer, intent(in) :: nwp_opt
       
       character(len = 255 ) :: nwp_file1, nwp_file2
       type ( date_type ) :: after_gfs_time
@@ -274,11 +277,29 @@ contains
       ! -  the minus 2 because this is a 12h forecast to stay between 0 and 1.
       time_wgt = time_diff_weight (date_start, before_gfs_time, after_gfs_time) -2.
      
-     
-      nwp_file1 = trim(trim(ancil_path)//'../gfs'//"/"// &
+       select case (nwp_opt)
+       case (1)  
+         nwp_file1 = trim(trim(ancil_path)//'../gfs'//"/"// &
                       "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
-      nwp_file2 = trim(trim(ancil_path)//'../gfs'//"/"// &
+         nwp_file2 = trim(trim(ancil_path)//'../gfs'//"/"// &
                       "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
+                      
+        case (2)
+            print*,'baeeh ncep later'
+        
+        case (3)
+              nwp_file1 = trim(trim(ancil_path)//'../cfsr'//"/"// &
+                      "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
+            nwp_file2 = trim(trim(ancil_path)//'../cfsr'//"/"// &
+                      "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
+        
+        case(4)
+              nwp_file1 = trim(trim(ancil_path)//'../gdas'//"/"// &
+                      "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
+            nwp_file2 = trim(trim(ancil_path)//'../gdas'//"/"// &
+                      "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
+        
+        end select              
      
       nwp_file1 = trim(nwp_file1)
       if ( .not. file_test (nwp_file1)) then 
@@ -369,7 +390,7 @@ contains
    gNWP % tmpair = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'temperature at sigma=0.995', time_wgt )
    gNWP % rhsfc  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'rh at sigma=0.995', time_wgt )
      
-   gNWP % weasd  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'water equivalent snow depth', time_wgt )	
+   gNWP % weasd  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'water equivalent snow depth', time_wgt )
       gNWP % t_trop = read_nwp_2d ( sd_id_1, sd_id_2 , 'tropopause temperature', time_wgt ) 
       gNWP % p_trop = read_nwp_2d ( sd_id_1, sd_id_2 , 'tropopause pressure', time_wgt )
       gNWP % ozone = read_nwp_2d ( sd_id_1, sd_id_2 , 'total ozone', time_wgt )
@@ -385,36 +406,36 @@ contains
          
       Istatus = sfrdata(sds_id,  0 , 1 , gfs_n_levels  ,  &
                       gNWP%p_std) + Istatus
-   Istatus = sfendacc(sds_id) + Istatus				 
+   Istatus = sfendacc(sds_id) + Istatus	 
      
    gNWP%n_levels = gfs_n_levels
 
    allocate ( gNWP%t_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-	   allocate ( gNWP%z_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-	   allocate ( gNWP%rh_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-	   allocate ( gNWP%ozone_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-	   allocate ( gNWP%wvmr_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-	
-	   gNWP%wvmr_prof = 0.
-	
-	   gNWP%t_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'temperature' , time_wgt )
-	   gNWP%z_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'height' , time_wgt )
-	   gNWP%rh_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'rh' , time_wgt )
+   allocate ( gNWP%z_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+   allocate ( gNWP%rh_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+   allocate ( gNWP%ozone_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+   allocate ( gNWP%wvmr_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+
+   gNWP%wvmr_prof = 0.
+
+   gNWP%t_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'temperature' , time_wgt )
+   gNWP%z_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'height' , time_wgt )
+   gNWP%rh_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'rh' , time_wgt )
       gNWP%ozone_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'o3mr' , time_wgt )
-	
-	   do ii =1 , gfs_n_lon
-	      do jj =1 , gfs_n_lat
-	         gNWP%wvmr_prof(ii,jj,:) =  wvmr_from_rh_temp_press (  gNWP % rh_prof ( ii , jj , : )  &
-		                , gNWP % t_prof ( ii , jj , : ) , gNWP % p_std(:) )
-	      end do
-	   end do 
-	 
-	   allocate (gNWP%wvmrsfc(gfs_n_lon, gfs_n_lat))
-	   !gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
-		!                , gNWP % tmpair , gNWP % pmsl )
-	
-	   deallocate (gNWP%rh_prof)
-	   istatus = sfend(sd_id_1)
+
+   do ii =1 , gfs_n_lon
+      do jj =1 , gfs_n_lat
+         gNWP%wvmr_prof(ii,jj,:) =  wvmr_from_rh_temp_press (  gNWP % rh_prof ( ii , jj , : )  &
+                , gNWP % t_prof ( ii , jj , : ) , gNWP % p_std(:) )
+      end do
+   end do 
+ 
+   allocate (gNWP%wvmrsfc(gfs_n_lon, gfs_n_lat))
+   !gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
+!                , gNWP % tmpair , gNWP % pmsl )
+
+   deallocate (gNWP%rh_prof)
+   istatus = sfend(sd_id_1)
       istatus = sfend(sd_id_2)
       
       
@@ -428,134 +449,134 @@ contains
       ! - be happy
     
    contains
-	   
+   
       ! ======================================================
       !
       ! ======================================================
       
-	   function read_nwp_2d (sd_id_1 , sd_id_2, sds_name, time_wgt)  &
-	                      &   result (result_real)
-	      implicit none
-	 	 
+   function read_nwp_2d (sd_id_1 , sd_id_2, sds_name, time_wgt)  &
+                      &   result (result_real)
+      implicit none
+ 
          integer, intent(in):: sd_id_1, sd_id_2
-	      character(len=*), intent(in):: sds_name
+      character(len=*), intent(in):: sds_name
 	      real, intent(in) :: time_wgt
-	      integer, dimension(2) :: sds_start, sds_stride, sds_edge
+      integer, dimension(2) :: sds_start, sds_stride, sds_edge
 	      real , dimension(:,:), allocatable :: result_real
-	  
-	      integer :: sds_id_1, sds_id_2
+  
+      integer :: sds_id_1, sds_id_2
 	      real , dimension(:,:), allocatable :: dum1, dum2
-	      integer :: istatus_1 = 0
+      integer :: istatus_1 = 0
          integer :: istatus_2 = 0
          integer :: istatus = 0
-	      integer :: gfs_n_lon , gfs_n_lat
+      integer :: gfs_n_lon , gfs_n_lat
  
-	      ! - hdf functions
-	      integer :: sfselect ,  sfn2index, sdreaddata
-	      integer :: sffattr
-	      
+      ! - hdf functions
+      integer :: sfselect ,  sfn2index, sdreaddata
+      integer :: sffattr
+      
          !  executable   
-	      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LATITUDES"),gfs_n_lat) + istatus
+      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LATITUDES"),gfs_n_lat) + istatus
          istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LONGITUDES"),gfs_n_lon) + istatus
-	  
-	      sds_start = [ 0, 0 ]
+  
+      sds_start = [ 0, 0 ]
 
-	      sds_stride = [ 1, 1 ]
-	      sds_edge = [ gfs_n_lon , gfs_n_lat ]
+      sds_stride = [ 1, 1 ]
+      sds_edge = [ gfs_n_lon , gfs_n_lat ]
 
-	      Istatus_1 = 0
+      Istatus_1 = 0
 
          sds_id_1 = sfselect(sd_id_1, sfn2index( sd_id_1, sds_name ) )
-	      sds_id_2 = sfselect(sd_id_2, sfn2index( sd_id_2, sds_name ) )
-	  
-	      !--- read sds's
-	      allocate( dum1  ( gfs_n_lon , gfs_n_lat ) , dum2( gfs_n_lon , gfs_n_lat ))
-	      allocate(result_real (gfs_n_lon , gfs_n_lat ))
-	  
+      sds_id_2 = sfselect(sd_id_2, sfn2index( sd_id_2, sds_name ) )
+  
+      !--- read sds's
+      allocate( dum1  ( gfs_n_lon , gfs_n_lat ) , dum2( gfs_n_lon , gfs_n_lat ))
+      allocate(result_real (gfs_n_lon , gfs_n_lat ))
+  
          Istatus_1 = sfrData(sds_id_1,sds_start, sds_stride, sds_edge, dum1) + Istatus_1
          Istatus_2 = sfrData(sds_id_2,sds_start, sds_stride, sds_edge, dum2) + Istatus_2
          
-	      result_real = (( 1.0 - time_wgt) * dum1 ) + (time_wgt * dum2 )
-	     
-	      deallocate ( dum1, dum2 )
-	  
+      result_real = (( 1.0 - time_wgt) * dum1 ) + (time_wgt * dum2 )
+     
+      deallocate ( dum1, dum2 )
+  
       end function read_nwp_2d 
       
-	   !  =============================================
-	   !
-	   !  ==============================================
+   !  =============================================
+   !
+   !  ==============================================
       
-	   function read_nwp_3d (sd_id_1 , sd_id_2, sds_name, time_wgt)  &
-	      &   result (result_real)
-	      implicit none
-	 	 
+   function read_nwp_3d (sd_id_1 , sd_id_2, sds_name, time_wgt)  &
+      &   result (result_real)
+      implicit none
+ 
          integer, intent(in):: sd_id_1, sd_id_2
-	      character(len=*), intent(in):: sds_name
+      character(len=*), intent(in):: sds_name
 	      real, intent(in) :: time_wgt
-	      integer, dimension(3) :: sds_start, sds_stride, sds_edge
+      integer, dimension(3) :: sds_start, sds_stride, sds_edge
 	      real, dimension(:,:,:), allocatable :: result_real
-	  
-	      integer :: sds_id_1, sds_id_2
+  
+      integer :: sds_id_1, sds_id_2
 	      real  , dimension(:,:,:), allocatable :: dum1, dum2, dum3
-	      integer :: istatus_1 = 0
+      integer :: istatus_1 = 0
          integer :: istatus_2 = 0
          integer :: istatus= 0
-	      integer :: gfs_n_lon , gfs_n_lat,  gfs_n_levels
+      integer :: gfs_n_lon , gfs_n_lat,  gfs_n_levels
  
-	      ! - hdf functions
-	      integer :: sfselect ,  sfn2index, sdreaddata
-	      integer :: sffattr, sfrnatt
-	      character (3) ::gfs_array_order_1 , gfs_array_order_2 
+      ! - hdf functions
+      integer :: sfselect ,  sfn2index, sdreaddata
+      integer :: sffattr, sfrnatt
+      character (3) ::gfs_array_order_1 , gfs_array_order_2 
 	      real  :: MISSING= 9.999E+20
-	      integer :: i1
-	  
-	      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LATITUDES"),gfs_n_lat) + istatus
+      integer :: i1
+  
+      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LATITUDES"),gfs_n_lat) + istatus
          istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF LONGITUDES"),gfs_n_lon) + istatus
-	      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF PRESSURE LEVELS"),gfs_n_levels) + istatus
-	      istatus = sfrcatt(sd_id_1,sffattr(sd_id_1,"3D ARRAY ORDER"), gfs_array_order_1) + istatus
-	  
-	      sds_start = [ 0, 0, 0 ]
-	      sds_stride = [ 1, 1, 1 ]
-	  
-	      if ( gfs_array_order_1 .eq. 'ZXY' ) then
-	         sds_edge = [ gfs_n_levels, gfs_n_lon , gfs_n_lat ]
-	         allocate( dum1  (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ))
-	         allocate (dum2  (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ))
-	         allocate(dum3 (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ) )
-	      else 
-	         sds_edge = [  gfs_n_lon , gfs_n_lat , gfs_n_levels ]
-	         allocate( dum1  (  gfs_n_lon , gfs_n_lat , gfs_n_levels  ))
-	         allocate (dum2  (  gfs_n_lon , gfs_n_lat , gfs_n_levels  ))
-	         allocate(dum3  (  gfs_n_lon , gfs_n_lat , gfs_n_levels   ) )  
-	      end if
-	  
-	      Istatus_1 = 0
+      istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF PRESSURE LEVELS"),gfs_n_levels) + istatus
+      istatus = sfrcatt(sd_id_1,sffattr(sd_id_1,"3D ARRAY ORDER"), gfs_array_order_1) + istatus
+  
+      sds_start = [ 0, 0, 0 ]
+      sds_stride = [ 1, 1, 1 ]
+  
+      if ( gfs_array_order_1 .eq. 'ZXY' ) then
+         sds_edge = [ gfs_n_levels, gfs_n_lon , gfs_n_lat ]
+         allocate( dum1  (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ))
+         allocate (dum2  (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ))
+         allocate(dum3 (  gfs_n_levels ,gfs_n_lon , gfs_n_lat  ) )
+      else 
+         sds_edge = [  gfs_n_lon , gfs_n_lat , gfs_n_levels ]
+         allocate( dum1  (  gfs_n_lon , gfs_n_lat , gfs_n_levels  ))
+         allocate (dum2  (  gfs_n_lon , gfs_n_lat , gfs_n_levels  ))
+         allocate(dum3  (  gfs_n_lon , gfs_n_lat , gfs_n_levels   ) )  
+      end if
+  
+      Istatus_1 = 0
          sds_id_1 = sfselect(sd_id_1, sfn2index( sd_id_1, sds_name ) )
-	      sds_id_2 = sfselect(sd_id_2, sfn2index( sd_id_2, sds_name ) )
-	  
-	      !--- read sds's
-	 
+      sds_id_2 = sfselect(sd_id_2, sfn2index( sd_id_2, sds_name ) )
+  
+      !--- read sds's
+ 
          Istatus_1 = sfrData(sds_id_1,sds_start, sds_stride, sds_edge, dum1) + Istatus_1
          Istatus_2 = sfrData(sds_id_2,sds_start, sds_stride, sds_edge, dum2) + Istatus_2
       
-	      where ( dum1 .ne. MISSING .and. dum2 .ne. MISSING )
-	         dum3 = (( 1.0 - time_wgt) * dum1 ) + (time_wgt * dum2 )
-	      end where 
-	 
-	      allocate ( result_real (gfs_n_lon , gfs_n_lat , gfs_n_levels)  )
-	 
-	      if ( gfs_array_order_1 .eq. 'ZXY' ) then
-	         do i1 = 1,   gfs_n_levels
+      where ( dum1 .ne. MISSING .and. dum2 .ne. MISSING )
+         dum3 = (( 1.0 - time_wgt) * dum1 ) + (time_wgt * dum2 )
+      end where 
+ 
+      allocate ( result_real (gfs_n_lon , gfs_n_lat , gfs_n_levels)  )
+ 
+      if ( gfs_array_order_1 .eq. 'ZXY' ) then
+         do i1 = 1,   gfs_n_levels
                result_real ( : , : , i1 ) = dum3 (i1, : , :  )  
             end do
-	      else 
-	         result_real = dum3	
-	      end if
-	  
-	     deallocate ( dum1, dum2, dum3 )
-	  
+      else 
+         result_real = dum3
+      end if
+  
+     deallocate ( dum1, dum2, dum3 )
+  
       end function read_nwp_3d 
-	
+
    end subroutine read_gfs_data
    
    !

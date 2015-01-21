@@ -51,6 +51,9 @@ MODULE PIXEL_ROUTINES
  
  use FILE_UTILITY
  use SURFACE_PROPERTIES
+ 
+ 
+ use CR_DATA_POOL_MOD, only: sfc_obj_g
 
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &

@@ -98,6 +98,7 @@
    use NLCOMP_BRIDGE_MOD
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
+   use CR_DATA_POOL_MOD
    
    use GLOBSNOW_READ_ROUTINES
    use GFS
@@ -236,7 +237,7 @@
    real(kind=real4), dimension(:,:), pointer :: lunar_ref
    real(kind=real4), dimension(:,:),allocatable :: lunar_placeholder
    
-   type ( sfc_main_type ) :: sfc_obj
+   
    type ( conf_user_opt_type) :: conf_obj
    type ( nwp_main_type ) :: nwp
    
@@ -620,7 +621,7 @@
          
           ! - read the sfc data for this segement                       
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
-         call sfc_obj % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp)
+         call sfc_obj_g % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp)
          
       
          !-------------------------------------------------------------------
@@ -790,7 +791,7 @@
                   if (Chan_Idx == 26) cycle
                   if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                       !TO_REMOVE_SFC
-                     ch(Chan_Idx)%Sfc_Emiss = sfc_obj%emis(chan_idx) % data 
+                     ch(Chan_Idx)%Sfc_Emiss = sfc_obj_g%emis(chan_idx) % data 
                      
                   endif
                enddo
@@ -800,12 +801,12 @@
 
             !--- surface type
             !TO_REMOVE SFC
-             sfc % sfc_type = sfc_obj % sfc_type % data  
+             sfc % sfc_type = sfc_obj_g % sfc_type % data  
               
             !--- surface elevation
             if (Read_Surface_Elevation /= 0) then
                  !TO_REMOVE_SFC 
-               Sfc%Zsfc_Hires = real(sfc_obj % elevation % data ,kind=real4)
+               Sfc%Zsfc_Hires = real(sfc_obj_g % elevation % data ,kind=real4)
             end if
 
             !--- merge with nwp surface elevation
@@ -816,13 +817,13 @@
             !--- read coast mask
             if (Read_Coast_Mask == sym%YES) then
                 !TO_REMOVE_SFC 
-               sfc % coast = sfc_obj % coast_mask % data
+               sfc % coast = sfc_obj_g % coast_mask % data
             end if
             
          
             !--- read land mask
             if (Read_Land_Mask == sym%YES) then
-                Sfc%Land = sfc_obj % land_class % data
+                Sfc%Land = sfc_obj_g % land_class % data
             end if
   
             !--- modify land class with ndvi if available (helps mitigate navigation errors)
@@ -830,12 +831,12 @@
 
             !--- read volcano mask
             if (Read_Volcano_Mask == sym%YES) then
-               sfc%volcano_mask = sfc_obj % volcano % data
+               sfc%volcano_mask = sfc_obj_g % volcano % data
             end if
 
             !--- read Snow mask
-            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. sfc_obj % snow_class % is_set ) then
-               Sfc%Snow_Hires = sfc_obj % snow_class % data
+            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. sfc_obj_g % snow_class % is_set ) then
+               Sfc%Snow_Hires = sfc_obj_g % snow_class % data
             end if
    
           
@@ -855,9 +856,9 @@
 
             !--- interpolate sst analyses to each pixel
             if (Use_Sst_Anal == 1) then
-               sst_anal = sfc_obj % sst % data
-               sst_anal_uni = sfc_obj % sst % stdv
-               sst_anal_cice = sfc_obj % sea_ice_fraction % data
+               sst_anal = sfc_obj_g % sst % data
+               sst_anal_uni = sfc_obj_g % sst % stdv
+               sst_anal_cice = sfc_obj_g % sea_ice_fraction % data
               
             end if
 
@@ -876,7 +877,7 @@
                   if (  allocated ( ch(chan_idx)%Sfc_Ref_White_Sky )) deallocate ( ch(chan_idx)%Sfc_Ref_White_Sky )
                    allocate(ch(chan_idx)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                     
-                  ch(chan_idx)%Sfc_Ref_White_Sky = sfc_obj%modis_w_sky(chan_idx) % data
+                  ch(chan_idx)%Sfc_Ref_White_Sky = sfc_obj_g%modis_w_sky(chan_idx) % data
                end if   
             end do
             
@@ -1308,7 +1309,7 @@
         !*************************************************************************
         ! Marker: End of loop over orbital segments
         !*************************************************************************
-         call sfc_obj % deallocate_all()
+         call sfc_obj_g % deallocate_all()
          call nwp % deallocate_sat_grid()
       end do Segment_loop
 

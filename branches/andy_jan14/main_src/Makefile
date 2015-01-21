@@ -173,6 +173,7 @@ clavrxorb_objs = process_clavrx.o \
                  sfc_data_mod.o \
                  nwp_data_mod.o \
                  cr_physics_mod.o \
+                 cr_data_pool_mod.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -302,6 +303,7 @@ sfc_tools.o:sfc_tools.f90
 nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o
 cr_constants_module.o:cr_constants_module.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
+cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o
 sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
@@ -370,7 +372,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o \
+              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o cr_data_pool_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o sfc_data_mod.o \

@@ -136,7 +136,11 @@
    use COMS_MODULE
    use FY2_MODULE
    use SENSOR_MODULE
-   use USER_OPTIONS
+   
+   use USER_OPTIONS,only:&
+      SETUP_USER_DEFINED_OPTIONS &
+      , update_configuration
+      
    use CLAVRX_MESSAGE_MODULE, only: &
       mesg &
       , verb_lev
@@ -153,7 +157,7 @@
       sfc_main_type 
       
   use nwp_data_mod , only: &
-     nwp_main_type   
+      nwp_main_type   
       
    implicit none
  
@@ -279,11 +283,12 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
-   
+   call config % set_config()
    call SETUP_USER_DEFINED_OPTIONS()
-
-
-
+   
+   do ii = 1, config % n_files
+      print*,trim(config % file % infile(ii)), config % file % ETsensor (ii)
+   end do   
    !-----------------------------------------------------------------------
    !--- set up surface radiative properties 
    !TODO    
@@ -455,6 +460,7 @@
       
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
+      !   bring this later
       !------------------------------------------------------------------
       call SETUP_PFAAST(Sensor%WMO_Id)
 
@@ -517,11 +523,12 @@
       if (Image%Start_Year /= Start_Year_Prev .or. Image%Start_Doy /= Start_Day_Prev) then
          OiSst_File_Name= GET_OISST_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(OiSst_Data_Dir) )
-
+          print*,'oisst: ',oisst_file_name 
          if (trim(OiSst_File_Name) == "no_file") then
             Use_Sst_Anal = sym%NO
             call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
          else
+            
             call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
             use_sst_anal = 1
          end if
@@ -579,7 +586,7 @@
       !*************************************************************************
       ! Marker:  READ IN NWP DATA
       !*************************************************************************
-
+      call nwp % populate ( start_time_obj, end_time_obj ,  config  % ancil_path  )
       !--- GFS
       if (Nwp_Opt == 1) then
          call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time, &
@@ -744,28 +751,27 @@
          !-------------------------------------------------------------------
          if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
 
-           ! - check the angles if this is a good lunar scene
-           ! - lun and solar zenith angle
+            ! - check the angles if this is a good lunar scene
+            ! - lun and solar zenith angle
 
-           Lunar_Ref => ch(42)%Ref_Lunar_Toa
+            Lunar_Ref => ch(42)%Ref_Lunar_Toa
                   
-           call COMPUTE_LUNAR_REFLECTANCE (ch(42)%Rad_Toa &
+            call COMPUTE_LUNAR_REFLECTANCE (ch(42)%Rad_Toa &
                      & , Geo%Solzen, Geo%Lunzen &
                      & , Image%Start_Year, month,day_of_month,Image%start_time &
                      & , Geo%moon_phase_angle  &
                      & , ancil_data_dir &
                      & , Lunar_placeholder)
             
-                  Lunar_Ref = Lunar_placeholder   
-        
-                  Lunar_Ref=>null() 
+            Lunar_Ref = Lunar_placeholder   
+            Lunar_Ref=>null() 
                   
-                  Geo%Lunrelaz = abs ( Geo%Lunaz - Geo%Sataz )
-                  where ( Geo%Lunrelaz > 180. ) 
-                     Geo%Lunrelaz = 360.0 - Geo%Lunrelaz  
-                  end where
+            Geo%Lunrelaz = abs ( Geo%Lunaz - Geo%Sataz )
+            where ( Geo%Lunrelaz > 180. ) 
+               Geo%Lunrelaz = 360.0 - Geo%Lunrelaz  
+            end where
        
-            end if
+         end if
          
          End_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1356,8 +1362,6 @@
                 call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
             end if
 
-            !  endif   !end Skip_Processing_Flag condition
-
             !*******************************************************************
             ! Marker: Write to output files (pixel-level)
             !*******************************************************************
@@ -1425,6 +1429,7 @@
         ! Marker: End of loop over orbital segments
         !*************************************************************************
          call sfc_obj % deallocate_all()
+         call nwp % deallocate_sat_grid()
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")
@@ -1500,7 +1505,7 @@
       !*************************************************************************
       ! Marker: End loop over files
       !*************************************************************************
- 
+      call nwp % deallocate()
    end do File_Loop
 
    !*************************************************************************

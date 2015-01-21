@@ -2,8 +2,10 @@
 ! 
 module nwp_data_mod
    use date_tools_mod
-   use cr_physics_mod  
-   
+    
+   use cr_physics_mod, only: &
+     wvmr_from_rh_temp_press
+     
    implicit none
    
     integer, parameter :: real4 = selected_real_kind(6,37)
@@ -123,6 +125,7 @@ module nwp_data_mod
    
    contains
       procedure :: populate => populate_all_nwp
+      procedure :: deallocate =>deallocate_all
       procedure :: set_special_levels
       procedure :: assign_to_sat_grid 
       procedure :: deallocate_sat_grid
@@ -213,10 +216,7 @@ contains
          end do
       end do   
       
-      
-      
-   
-   
+
    end subroutine set_special_levels
    
    !  -----------------------------------------
@@ -224,44 +224,45 @@ contains
    !   Andi Walther Nov 2013
    !  -------------------------------------------------
    subroutine read_gfs_data(gNWP , date_start , date_end , ancil_path)
+      
       use file_tools, only: &
          file_test &
       , file_basename
       
       ! use hdf
-   !  use cr_physics_mod
+      !  use cr_physics_mod
       implicit none
       
-   type ( date_type ) , intent (in) :: date_start , date_end
-   type ( nwp_main_type), intent (in out)  :: gNWP
+      type ( date_type ) , intent (in) :: date_start , date_end
+      type ( nwp_main_type), intent (in out)  :: gNWP
       character (256) , intent(in) ::ancil_path
       
       character(len = 255 ) :: nwp_file1, nwp_file2
       type ( date_type ) :: after_gfs_time
       type ( date_type ) :: before_gfs_time
 
-   ! - file and hdf data handling
-   integer :: sd_id_1, sd_id_2
-   integer :: istatus
-   integer :: sfstart, sfend, sfrnatt, sffattr, sfrcatt, sfrdata, sfendacc
+      ! - file and hdf data handling
+      integer :: sd_id_1, sd_id_2
+      integer :: istatus
+      integer :: sfstart, sfend, sfrnatt, sffattr, sfrcatt, sfrdata, sfendacc
 
-   ! - nwp attributes
-   integer :: gfs_n_levels
-   integer :: gfs_n_levels_o3
-   integer :: gfs_n_levels_rh
-   integer :: gfs_n_levels_clw
-   integer :: gfs_n_lat
-   integer :: gfs_n_lon
+      ! - nwp attributes
+      integer :: gfs_n_levels
+      integer :: gfs_n_levels_o3
+      integer :: gfs_n_levels_rh
+      integer :: gfs_n_levels_clw
+      integer :: gfs_n_lat
+      integer :: gfs_n_lon
 	   real :: gfs_d_lat
 	   real :: gfs_d_lon
 	   real :: gfs_lat_1
 	   real :: gfs_lon_1
-   character (3) :: gfs_array_order_1 ,  gfs_array_order_2
+      character (3) :: gfs_array_order_1 ,  gfs_array_order_2
 
-   integer, dimension ( 2 ) :: sds_start_2d, sds_stride_2d, sds_edge_2d
-   integer :: sfselect , sds_id , sfn2index
+      integer, dimension ( 2 ) :: sds_start_2d, sds_stride_2d, sds_edge_2d
+      integer :: sfselect , sds_id , sfn2index
 	   real :: time_wgt
-   integer ::  ii ,  jj , i , j
+      integer ::  ii ,  jj , i , j
 
 	   real , dimension(:), allocatable, target :: P_Std_Nwp
       integer :: DFACC_READ =1 
@@ -274,41 +275,37 @@ contains
       time_wgt = time_diff_weight (date_start, before_gfs_time, after_gfs_time) -2.
      
      
-   nwp_file1 = trim(trim(ancil_path)//'/gfs'//"/"// &
+      nwp_file1 = trim(trim(ancil_path)//'../gfs'//"/"// &
                       "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
-      nwp_file2 = trim(trim(ancil_path)//'/gfs'//"/"// &
+      nwp_file2 = trim(trim(ancil_path)//'../gfs'//"/"// &
                       "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
      
       nwp_file1 = trim(nwp_file1)
-   if ( .not. file_test (nwp_file1)) then 
+      if ( .not. file_test (nwp_file1)) then 
     
-      print*,'file missing nwp1 ..',nwp_file1
-      stop
-   end if
+         print*,'file missing nwp1 => ',nwp_file1
+         stop
+      end if
   
       nwp_file2 = trim(nwp_file2)
 
-   if ( .not. file_test (nwp_file2)) then 
+      if ( .not. file_test (nwp_file2)) then 
     
-      print*,'file missing nwp2 ..',nwp_file2
-      stop
-   end if
+         print*,'file missing nwp2 ..',nwp_file2
+         stop
+      end if
    
-   ! - check if files exist and open					
-   if ((file_test (nwp_file1) .eqv. .false. ) .or. (file_test (nwp_file1) .eqv. .false. )) then
-      print*, 'nwp files are not existing ', file_basename (nwp_file1) 
-   end if
+      ! - check if files exist and open					
+      if ((file_test (nwp_file1) .eqv. .false. ) .or. (file_test (nwp_file1) .eqv. .false. )) then
+         print*, 'nwp files are not existing ', file_basename (nwp_file1) 
+      end if
       
-      
-      
-      
-   sd_id_1 = sfstart ( nwp_file1, DFACC_READ)
-   sd_id_2 = sfstart ( nwp_file2, DFACC_READ)
-      
-      
- 
+
+      sd_id_1 = sfstart ( nwp_file1, DFACC_READ)
+      sd_id_2 = sfstart ( nwp_file2, DFACC_READ)
+
       ! - reads attribute data from file 1
-   istatus = 0
+      istatus = 0
       istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF PRESSURE LEVELS"),gfs_n_levels) + istatus
       istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF O3MR LEVELS"),gfs_n_levels_o3) + istatus
       istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"NUMBER OF RH LEVELS"),gfs_n_levels_rh) + istatus
@@ -321,7 +318,7 @@ contains
       istatus = sfrnatt(sd_id_1,sffattr(sd_id_1,"FIRST LONGITUDE"),gfs_lon_1) + istatus
       istatus = sfrcatt(sd_id_1,sffattr(sd_id_1,"3D ARRAY ORDER"), gfs_array_order_1) + istatus
 
-  ! - don't read file2 attributes ( assume they are the same) 
+   ! - don't read file2 attributes ( assume they are the same) 
   istatus = sfrcatt(sd_id_2,sffattr(sd_id_2,"3D ARRAY ORDER"), gfs_array_order_2) + istatus
      
       gNWP % d_lat  = gfs_d_lat
@@ -413,8 +410,8 @@ contains
 	   end do 
 	 
 	   allocate (gNWP%wvmrsfc(gfs_n_lon, gfs_n_lat))
-	   gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
-		                , gNWP % tmpair , gNWP % pmsl )
+	   !gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
+		!                , gNWP % tmpair , gNWP % pmsl )
 	
 	   deallocate (gNWP%rh_prof)
 	   istatus = sfend(sd_id_1)
@@ -605,6 +602,39 @@ contains
       
       if (allocated ( self % sgrid )) deallocate ( self % sgrid  ) 
    end subroutine deallocate_sat_grid
+   
+   subroutine deallocate_all ( self )
+      class ( nwp_main_type ) :: self
+      
+      deallocate (self %psfc )
+      deallocate (self %lon)
+      deallocate (self %lat)
+
+      deallocate (self %pmsl)
+      deallocate (self %tmpsfc)
+      deallocate (self %tmpair)
+      deallocate (self %zsfc)
+      deallocate (self %rhsfc)
+      deallocate (self %land)
+      deallocate (self %weasd)
+      deallocate (self %ice)
+      deallocate (self %t_trop)
+      deallocate (self %p_trop)
+      deallocate (self %ozone)
+      deallocate (self %tpw)
+      
+      deallocate ( self%p_std)
+      deallocate ( self %t_prof)
+      deallocate ( self %z_prof)
+      !deallocate ( self %rh_prof)
+      deallocate ( self %ozone_prof)
+      deallocate ( self %wvmr_prof)
+      deallocate (self%wvmrsfc)
+      deallocate ( self %sfc_level)
+      deallocate ( self % tropo_level)
+      
+      
+   end subroutine deallocate_all
    
    
  

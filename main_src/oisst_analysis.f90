@@ -113,10 +113,28 @@
 !  an extra 4 byte header and trailer word to the total record.
 !--------------------------------------------------------------------------------------
 module OISST_ANALYSIS
-   use CONSTANTS
-   use NUMERICAL_ROUTINES
-   use PIXEL_COMMON
-   use FILE_UTILITY
+   use CONSTANTS,only: &
+      int2 , int4 &
+      , real4 &
+      , sym &
+      , exe_prompt &
+      , missing_value_real4
+   use NUMERICAL_ROUTINES,only: &
+      compute_day &
+      , compute_month &
+      , leap_year_fct
+   use PIXEL_COMMON,only: &
+      image &
+      , nav &
+      , bad_pixel_mask &
+      , use_sst_anal &
+      , sst_anal_uni &
+      , sst_anal &
+      , sst_anal_cice &
+      , Temporary_Data_Dir
+   use FILE_UTILITY,only: &
+    file_exists &
+    , get_lun
    
    implicit none
    private
@@ -130,7 +148,7 @@ module OISST_ANALYSIS
    real, parameter, private:: min_sst_anal = -4.0, max_sst_anal=36.0
    integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
    real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map
-   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_err_map
+   
    real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map_uni
    real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_cice_map
 
@@ -143,8 +161,8 @@ contains
    !-------------------------------------------------------------------
    FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path) result(oisst_filename)
       CHARACTER(*), intent(in) :: oisst_path
-      INTEGER(kind=int2), intent(in):: year_in
-      INTEGER(kind=int2), intent(in):: day_of_year
+      INTEGER, intent(in):: year_in
+      INTEGER, intent(in):: day_of_year
   
       CHARACTER(len=256) :: oisst_filename
       CHARACTER(len=256) :: oisst_filename_tmp
@@ -242,7 +260,7 @@ contains
    read(unit=oisst_lun,iostat=ios2) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
 
    read(unit=oisst_lun,iostat=ios3) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
-   oisst_err_map = temp_i2_buffer * 0.01
+   
 
    read(unit=oisst_lun,iostat=ios4) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
    oisst_cice_map = temp_i2_buffer * 0.01

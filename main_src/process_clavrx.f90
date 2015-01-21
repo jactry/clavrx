@@ -90,7 +90,6 @@
    use PIXEL_COMMON
    use PIXEL_ROUTINES
    use LEVEL2_ROUTINES
-   use OISST_ANALYSIS
    use SURFACE_PROPERTIES
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
@@ -207,7 +206,7 @@
      
    integer(kind=int4) :: ierror
    
-   character(len=100):: oiSst_File_Name
+  
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
    integer, parameter:: LRC_Meander_Flag = 1
@@ -277,6 +276,10 @@
    !*************************************************************************
    call config % set_config()
    call SETUP_USER_DEFINED_OPTIONS()
+   ! - have to put  this toegther
+   
+   config % temp_path = trim(temporary_data_dir)
+   print*,config % temp_path
    print*,'==============     files to process  ==========='
    do ii = 1, config % n_files
       print*,trim(config % file % infile(ii)), config % file % ETsensor (ii)
@@ -290,6 +293,8 @@
  
     !--------------------------------------------------------------------
     !--- setup clock corrections in memory
+    !  -- this is avhrr only !!
+    ! TODO
     !--------------------------------------------------------------------
     if (nav_opt== 2) then
       call SETUP_CLOCK_CORRECTIONS()
@@ -347,8 +352,6 @@
       call mesg (" " )
       call mesg ("<------------- Next Orbit ---------------> ",level = verb_lev % DEFAULT )
 
-     
-
       !-----------------------------------------------------------------------
       ! knowing the file type, determine the expected number of elements and
       ! lines in the file
@@ -398,8 +401,8 @@
          , int(modulo(image % end_time / 1000. / 60. , 60.)) &
          , int(modulo(image % end_time / 1000. , 60.)) )
          
-      call start_time_obj % print_data
-      call end_time_obj % print_data
+      call start_time_obj % print_data(title='STARTTIME')
+      call end_time_obj % print_data(title='STOPTIME')
 
       !----------------------------------------------------------------------
       ! Output sensor and image parameters to screen
@@ -410,7 +413,7 @@
       
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
-      !   bring this later
+      !AW   bring this later
       !------------------------------------------------------------------
       call SETUP_PFAAST(Sensor%WMO_Id)
 
@@ -438,17 +441,6 @@
          call DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
       end if
    
-      !------------------------------------------------------------------
-      ! compute the month and day of month
-      !------------------------------------------------------------------
-
-      ! Made ileap consistant with oisst call.
-      ileap = leap_year_Fct(int(Image%Start_Year, kind=int4))
-
-      Month = COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
-      Day_Of_Month = COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
-
-
       !*************************************************************************
       ! Marker:  READ IN SENSOR-SPECIFIC CONSTANTS
       !*************************************************************************
@@ -467,24 +459,7 @@
       !Set to use default options. This will be turned off if there is NO daily OISST data
       Use_Sst_Anal = 0
 
-      if (Image%Start_Year /= Start_Year_Prev .or. Image%Start_Doy /= Start_Day_Prev) then
-         OiSst_File_Name= GET_OISST_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
-                                                 trim(OiSst_Data_Dir) )
-          print*,'oisst: ',oisst_file_name 
-         if (trim(OiSst_File_Name) == "no_file") then
-            Use_Sst_Anal = sym%NO
-            call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
-         else
-            
-            call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
-            use_sst_anal = 1
-         end if
-      end if
-      
-       !------- store previous day and year to prevent reading of same data for next orbit
-      Start_Year_Prev = Image%Start_Year
-      Start_Day_Prev = Image%Start_Doy  
-
+ 
      
  
       !*************************************************************************
@@ -643,7 +618,7 @@
          
           ! - read the sfc data for this segement                       
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
-         call sfc_obj % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, conf_obj , nwp)
+         call sfc_obj % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp)
          
       
          !-------------------------------------------------------------------
@@ -878,8 +853,9 @@
 
             !--- interpolate sst analyses to each pixel
             if (Use_Sst_Anal == 1) then
-               
-               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               sst_anal = sfc_obj % sst % data
+               sst_anal_uni = sfc_obj % sst % stdv
+               sst_anal_cice = sfc_obj % sea_ice_fraction % data
               
             end if
 

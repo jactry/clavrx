@@ -49,6 +49,7 @@ module sfc_data_mod
       character (len=255) :: file 
       character ( len = 255) :: sds_name
       real, dimension(:,:) , allocatable :: data 
+      real, dimension(:,:) , allocatable :: stdv
       type (sfc_file_metadata_type ) :: meta
    end type sfc_data_r4_type
    
@@ -62,6 +63,8 @@ module sfc_data_mod
       type ( sfc_data_i1_type ) :: snow_class
       type ( sfc_data_i1_type ) :: volcano
       
+      type ( sfc_data_r4_type ) :: sst
+      type ( sfc_data_r4_type ) :: sea_ice_fraction
       type ( sfc_data_i2_type ) :: elevation
       type ( sfc_data_r4_type ) , dimension(7) :: modis_w_sky
       type ( sfc_data_r4_type ) , dimension(7) :: albedo_snow
@@ -117,6 +120,7 @@ contains
       use nwp_data_mod , only: &
           nwp_main_type 
       use cr_config_mod
+      use cr_oisst_mod
       
       ! use sfc_default_values_mod
       
@@ -138,9 +142,9 @@ contains
       
       character ( len =200) ::snow_glob_filename
       character ( len =200) ::snow_hires_filename
+      character ( len =200) ::oisst_filename
       
-      
-      integer :: i
+      integer :: i , nx , ny
       
       ! - executable
       
@@ -220,7 +224,7 @@ contains
          !this % snow_class = 
          this % snow_class % is_set = .false.
       else 
-         print*,'no aux snow data ==> use of NWP'
+         
          this % snow_class % is_set = .false.
       end if
      
@@ -300,6 +304,23 @@ contains
       end do  
       
       call close_file (this % emis(20) % meta )
+      
+      
+      !9. SST from oisst
+      oisst_filename = get_oisst_map_filename ( date,trim(conf % ancil_path) //'/dynamic/oisst/')
+      this % sst % meta % filename = oisst_filename
+      
+      if (.not. oisst_filename == 'no_file') then
+         nx = size (lat,1)
+         ny = size(lat,2)
+         if (.not. allocated (this % sst % data) ) allocate ( this % sst % data (nx,ny))
+         if (.not. allocated (this % sst % stdv) ) allocate ( this % sst % stdv (nx,ny))
+         if (.not. allocated (this % sea_ice_fraction % data) ) allocate ( this % sea_ice_fraction % data (nx,ny))
+         
+         call get_oisst_data (this % sst % meta % filename , conf % temp_path , lat ,lon , this % sst % data , this % sea_ice_fraction % data , this % sst % stdv)
+         
+      end if
+  
 
    end subroutine
    
@@ -691,7 +712,9 @@ contains
       if ( allocated ( this % elevation % data ) ) deallocate  ( this % elevation % data )
       if ( allocated ( this % z % data ) ) deallocate  ( this % z % data )
       if ( allocated ( this % volcano % data )) deallocate ( this % volcano % data )
-      
+      if ( allocated ( this % sst % data )) deallocate ( this % sst % data )
+      if ( allocated (this % sst % stdv) ) deallocate ( this % sst % stdv )
+      if ( allocated (this % sea_ice_fraction % data) ) deallocate ( this % sea_ice_fraction % data )
       do i_w_sky = 1 , 7
          if ( allocated ( this % modis_w_sky (i_w_sky) % data )) &
             &  deallocate ( this % modis_w_sky (i_w_sky) % data )

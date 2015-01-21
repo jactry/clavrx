@@ -1,4 +1,4 @@
-!  $Id: sfc_data_mod.f90 18 2014-10-23 20:40:18Z awalther $
+!  $Id:$
 !   sfc data object class
 !
 !  
@@ -75,16 +75,8 @@ module sfc_data_mod
       logical  :: chn_on ( 42)
    end type sfc_config_type
    
-   type lonlat_type
-         real :: west_lon
-         real :: east_lon
-         real :: south_lat
-         real :: north_lat
-   end type lonlat_type
-   
-   type ( lonlat_type) :: bounds
-   
-   
+
+     
    type et_land_class_type
       integer :: FIRST = 0
       integer :: SHALLOW_OCEAN = 0
@@ -116,7 +108,7 @@ contains
    !
    ! ===================================
    subroutine populate ( this, date , lat , lon , conf,  nwp   )
-   
+      
       use date_tools_mod ,only: &
           date_type, period_16 &
           , first_doy_month
@@ -124,6 +116,8 @@ contains
       use nwp_data_mod , only: &
           nwp_main_type 
       use cr_config_mod
+      
+      implicit none
       
       class ( sfc_main_type) :: this 
       type ( date_type ) , intent (in) :: date
@@ -144,10 +138,6 @@ contains
       
       ! - executable
       
-     
-      
-      ! - writes bounds in bounds structure
-      call find_bounds (  lat , lon )
       
       dim_all = shape(lat)
       this % dim_x = dim_all(1)
@@ -176,7 +166,7 @@ contains
       call open_file (this % coast_mask % meta )
       call read_meta (this % coast_mask % meta )
       call read_data_i1 ( this % coast_mask , lat , lon)
-      
+     
       ! 4. elevation
       this % elevation % meta % filename = &
          &  trim(conf % ancil_path) //'/static/sfc_data/GLOBE_1km_digelev.hdf'
@@ -191,12 +181,11 @@ contains
          &  trim(conf % ancil_path) //'/static/sfc_data/volcano_mask_1km.hdf'
       this % volcano % meta % sds_name = 'volcano_mask'  
       call open_file (this % volcano % meta )
-      call read_meta (this % volcano % meta )    
+      call read_meta (this % volcano % meta )  
       call read_data_i1 ( this % volcano , lat , lon)      
       this % volcano % is_set = .true.
-      
-     
-      ! 5. snow class
+
+      ! 6. snow class
       ! we use nwp data for snow
      
       !-TODO  differentiate snow options
@@ -211,7 +200,7 @@ contains
       this % snow_class % is_set = .false.
      
                 
-      ! 6. white sky albedo
+      ! 7. white sky albedo
       day_string =   period_16 ( date ) 
      
       ! - part of modis w sky name
@@ -250,10 +239,9 @@ contains
           end where
           
       end do
+     
       
-      
-      
-      ! - emis
+      ! 8. - seebor emis
       year_str_emiss_files = '2005'
      
       this %  emis (:) % meta % filename =  trim(ancil_path)//'global_emiss_intABI_' &
@@ -287,7 +275,7 @@ contains
       
       end do  
       
-      
+     
 
    end subroutine
    
@@ -345,158 +333,137 @@ contains
       
    end subroutine read_meta
    
+   ! ===============================================================
+   !    returns array with index in to read in buffer region
+   !    buffer region is determined by lon/kat of satellite image
+   ! ===============================================================
+   
+   subroutine index_in_buffer_array ( data_obj_meta, lat, lon, ilat_buffer , ilon_buffer,start_2d,stride_2d,edge_2d )
+      type ( sfc_file_metadata_type ) :: data_obj_meta 
+      real, dimension(:,:) :: lat , lon
+      integer, dimension(2) :: start_2d, stride_2d, edge_2d
+      
+      real :: west_lon
+      real :: east_lon
+      real :: south_lat
+      real :: north_lat
+      integer :: nr_lat
+      integer :: nr_lon
+      integer :: idx_lon_first
+      integer :: idx_lon_last
+      integer :: idx_lat_first
+      integer :: idx_lat_last
+      integer  :: nx, ny
+      
+      integer ( int4 ) , allocatable , dimension(:,:) :: ilat , ilon
+      integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer
+      integer :: temp
+      
+      north_lat = maxval ( lat , mask = lat >= -90.0 .and. lat <= 90.0 )
+      south_lat = minval ( lat , mask = lat >= -90. .and. lat <= 90.0 )
+      east_lon = maxval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
+      west_lon = minval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
+      
+      idx_lon_first = int ( abs (west_lon - data_obj_meta%first_lon )  /  data_obj_meta % del_lon)
+      idx_lon_last  = int ( abs (east_lon - data_obj_meta%first_lon )  /  data_obj_meta % del_lon)
+      idx_lat_first = int ( abs (north_lat - data_obj_meta%first_lat ) /  data_obj_meta % del_lat)
+      idx_lat_last  = int ( abs (south_lat - data_obj_meta%first_lat ) /  data_obj_meta % del_lat) 
+      
+      !- most files have north as first lat, if not we use this switch ( for volcano )
+      if ( north_lat > data_obj_meta%first_lat ) then
+         
+         temp = idx_lat_first
+         idx_lat_first = idx_lat_last
+         idx_lat_last = temp
+      end if
+      
+      nr_lat = idx_lat_last - idx_lat_first
+      nr_lon = idx_lon_last - idx_lon_first
+      
+      nx = size ( lon,  1 )
+      ny = size ( lon , 2 )
+      
+      allocate ( ilat (nx, ny ) , ilon (nx, ny ))
+      allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
+      
+      ilat = int ( abs ( lat - data_obj_meta%first_lat ) / data_obj_meta % del_lat ) + 1
+      ilon = int ( abs ( lon - data_obj_meta%first_lon ) / data_obj_meta % del_lon ) + 1
+      
+      ilat_buffer = ilat - idx_lat_first + 1
+      ilon_buffer = ilon - idx_lon_first + 1
+      
+      
+     
+      deallocate ( ilon, ilat) 
+      start_2d = [idx_lon_first , idx_lat_first]
+      stride_2d = [ 1, 1 ]
+      edge_2d = [ nr_lon  +1,  nr_lat +1 ]
+      
+   
+   end subroutine index_in_buffer_array
+   
+   
    ! ====================================================================
    !
    ! ====================================================================
    subroutine read_data_i1 ( data_obj , lat , lon )
       type ( sfc_data_i1_type ) :: data_obj
       real, dimension(:,:) :: lat , lon
-      
       integer, dimension(2) :: start_2d, stride_2d, edge_2d
-      
-      real :: west_lon
-      real :: east_lon
-      real :: south_lat
-      real :: north_lat
-      
-      integer ( int1 ) , allocatable , dimension(:,:) :: buffer
-      integer ( int4 ) , allocatable , dimension(:,:) :: ilat , ilon
+      integer ( int1 ) , allocatable , dimension(:,:) :: buffer      
       integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer
-      
       integer  :: nx, ny
-      integer :: idx_lon_first
-      integer :: idx_lon_last
-      integer :: idx_lat_first
-      integer :: idx_lat_last
-      integer :: nr_lat
-      integer :: nr_lon
-      integer :: ilat1
-      integer :: ilat2
       integer :: i , j
       
+      ! -executable
+      call index_in_buffer_array ( data_obj%meta, lat, lon &             ! input
+            , ilat_buffer , ilon_buffer , start_2d,stride_2d, edge_2d)   ! output
      
-      north_lat = maxval ( lat , mask = lat >= -90.0 .and. lat <= 90.0 )
-      south_lat = minval ( lat , mask = lat >= -90. .and. lat <= 90.0 )
-      east_lon = maxval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-      west_lon = minval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-      
-      idx_lon_first = int ( abs (west_lon - data_obj%meta%first_lon )  /  data_obj % meta % del_lon)
-      idx_lon_last  = int ( abs (east_lon - data_obj%meta%first_lon )  /  data_obj % meta % del_lon)
-      idx_lat_first = int ( abs (north_lat - data_obj%meta%first_lat ) /  data_obj % meta % del_lat)
-      idx_lat_last  = int ( abs (south_lat - data_obj%meta%first_lat ) /  data_obj % meta % del_lat) 
-       
-      nr_lat = idx_lat_last - idx_lat_first
-      nr_lon = idx_lon_last - idx_lon_first
-      
-      ilat1 = int ( abs ( north_lat - data_obj % meta % first_lat ) / data_obj % meta % del_lat ) 
-      ilat2 = int ( abs ( south_lat - data_obj % meta % first_lat ) / data_obj % meta % del_lat ) 
-     
-      
-      start_2d = [idx_lon_first , idx_lat_first]
-      stride_2d = [ 1, 1 ]
-      edge_2d = [ nr_lon  +1,  nr_lat +1 ]
-      
-      !  buffer is only a sub-region of the array in the file
-    
       call read_hdf_sds(data_obj%meta % file_id, trim(data_obj%meta%sds_name), start_2d, stride_2d, edge_2d, buffer )
     
-      nx = size ( lon, 1)
-      ny = size ( lon, 2)
-      allocate ( ilat (nx, ny ) , ilon (nx, ny ))
-      allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
-      
-       ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
-      ilon = int ( abs ( lon - data_obj%meta%first_lon ) / data_obj % meta % del_lon ) + 1
-      
-      ilat_buffer = ilat - idx_lat_first + 1
-      ilon_buffer = ilon - idx_lon_first + 1
-    
+      nx = size ( lon,  1 )
+      ny = size ( lon , 2 )
+     
       allocate ( data_obj % data ( nx , ny ) )
+      
       data_obj % data  (:,:) = 0
+     
       do i = 1  , nx 
          do j = 1 , ny
-            if ( lat (i,j) == -999. .or. lon(i,j) == -999.   .or. ilat_buffer (i,j) > edge_2d(2)  .or. ilon_buffer (i,j) > edge_2d(1) ) cycle
+         
+            if ( lat (i,j) == -999. .or. lon(i,j) == -999.   &
+               .or. ilat_buffer (i,j) > edge_2d(2)  .or. ilon_buffer (i,j) > edge_2d(1) ) cycle
              
             data_obj % data  (i, j ) = buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) )
          
          end do
       end do
-       
-       
+   
       deallocate ( buffer )
-      deallocate ( ilon, ilat ,ilon_buffer,ilat_buffer)
+      deallocate ( ilon_buffer,ilat_buffer)
       
-      
-      ! find out size and borders
-      
-  
    end subroutine read_data_i1
    
+   ! ====================================================================
    !
-   !
-   !
+   ! ====================================================================
    subroutine read_data_i2 ( data_obj , lat , lon )
       type ( sfc_data_i2_type ) :: data_obj
-      real, dimension(:,:) :: lat , lon
-      
-      integer, dimension(2) :: start_2d, stride_2d, edge_2d
-      
-      real :: west_lon
-      real :: east_lon
-      real :: south_lat
-      real :: north_lat
-      
-      integer ( int2 ) , allocatable , dimension(:,:) :: buffer
-      integer ( int4 ) , allocatable , dimension(:,:) :: ilat , ilon
-      integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer
-      
-       integer  :: nx, ny
-      integer :: idx_lon_first
-      integer :: idx_lon_last
-      integer :: idx_lat_first
-      integer :: idx_lat_last
-      integer :: nr_lat
-      integer :: nr_lon
-      integer :: ilat1
-      integer :: ilat2
+      real, dimension(:,:) :: lat , lon      
+      integer, dimension(2) :: start_2d, stride_2d, edge_2d     
+      integer ( int2 ) , allocatable , dimension(:,:) :: buffer     
+      integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer      
+      integer  :: nx, ny
       integer :: i , j
-      real :: first_lat_buffer
       
-      north_lat = maxval ( lat , mask = lat >= -90.0 .and. lat <= 90.0 )
-      south_lat = minval ( lat , mask = lat >= -90. .and. lat <= 90.0 )
-      east_lon = maxval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-      west_lon = minval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-      
-      idx_lon_first = int ( abs (west_lon - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lon_last = int ( abs (east_lon - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lat_first = int ( abs (north_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat)
-      idx_lat_last = int ( abs (south_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat) 
-       
-      nr_lat = idx_lat_last - idx_lat_first
-      nr_lon = idx_lon_last - idx_lon_first
-      
-      ilat1 = int ( abs ( north_lat - data_obj % meta % first_lat ) / data_obj % meta % del_lat ) 
-      ilat2 = int ( abs ( south_lat - data_obj % meta % first_lat ) / data_obj % meta % del_lat ) 
-     
-      
-      start_2d = [idx_lon_first , idx_lat_first]
-      stride_2d = [ 1, 1 ]
-      edge_2d = [ nr_lon  +1,  nr_lat +1 ]
-    
+      call index_in_buffer_array ( data_obj%meta, lat, lon &             ! input
+            , ilat_buffer , ilon_buffer , start_2d,stride_2d, edge_2d)   ! output
+ 
       call read_hdf_sds(data_obj%meta % file_id, trim(data_obj%meta%sds_name), start_2d &
         , stride_2d, edge_2d, buffer )
      
       nx = size ( lon,  1 )
       ny = size ( lon , 2 )
-      allocate ( ilat (nx, ny ) , ilon (nx, ny ))
-       allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
-      
-      
-      ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
-      ilon = int ( abs ( lon - data_obj%meta%first_lon ) / data_obj % meta % del_lon ) + 1
-      
-      ilat_buffer = ilat - idx_lat_first + 1
-      ilon_buffer = ilon - idx_lon_first + 1
       
          
       allocate ( data_obj % data ( nx , ny ) )
@@ -511,52 +478,26 @@ contains
       end do
       
       deallocate ( buffer )
-      deallocate ( ilon, ilat,ilon_buffer,ilat_buffer )
+      deallocate ( ilon_buffer,ilat_buffer )
       
-        
-      ! find out size and borders
-      
-   
-   
-   end subroutine read_data_i2
-   ! ------------------------------------------------------------------------------------------------------------------------------
-   !
-   !
-   ! ------------------------------------------------------------------------------------------------------------------------------
-   subroutine read_modis_white_sky ( data_obj , lat , lon )
 
+   end subroutine read_data_i2
+   
+   ! ====================================================================
+   !
+   ! ====================================================================
+   subroutine read_modis_white_sky ( data_obj , lat , lon )
       type ( sfc_data_r4_type ) :: data_obj
-      real, dimension(:,:) :: lat , lon
-      
+      real, dimension(:,:) :: lat , lon    
       integer, dimension(2) :: start_2d, stride_2d, edge_2d
-    
-      
       integer ( kind = int2)  , allocatable , dimension(:,:) :: buffer
-      integer ( int4 ) , allocatable , dimension(:,:) :: ilat , ilon
       integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer
       integer  :: nx, ny
-      integer :: idx_lon_first
-      integer :: idx_lon_last
-      integer :: idx_lat_first
-      integer :: idx_lat_last
-      integer :: nr_lat
-      integer :: nr_lon
       integer :: i , j
       
-      real :: first_lat_buffer
-     
-      idx_lon_first = int ( abs ( bounds % west_lon - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lon_last = int ( abs (bounds %east_lon - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lat_first = int ( abs (bounds %north_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat)
-      idx_lat_last = int ( abs (bounds %south_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat) 
       
-       
-      nr_lat = idx_lat_last - idx_lat_first
-      nr_lon = idx_lon_last - idx_lon_first
- 
-      start_2d = [idx_lon_first , idx_lat_first]
-      stride_2d = [ 1, 1 ]
-      edge_2d = [ nr_lon  +1,  nr_lat +1 ]
+      call index_in_buffer_array ( data_obj%meta, lat, lon &             ! input
+            , ilat_buffer , ilon_buffer , start_2d,stride_2d, edge_2d)   ! output
          
       call read_hdf_sds( &
             data_obj%meta % file_id &
@@ -566,24 +507,10 @@ contains
          , edge_2d &
          , buffer )
     
-         
       nx = size ( lon , 1 )
       ny = size ( lon , 2 )
-      allocate ( ilat (nx, ny ) , ilon (nx, ny ))
-      allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
-      ! - switch latitude order if first latitude is north ..
-      
-      
-      
-      ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
-      ilon = int ( abs ( lon - data_obj%meta%first_lon ) / data_obj % meta % del_lon ) + 1
-      
-      ilat_buffer = ilat - idx_lat_first + 1
-      ilon_buffer = ilon - idx_lon_first + 1
-         
-     
+              
       allocate ( data_obj % data ( nx , ny ) )
-       
      
       do i = 1  , nx 
          do j = 1 , ny
@@ -597,57 +524,34 @@ contains
          end do
       end do
       
-     
-           
+ 
       where (  data_obj % data  /= -999. )
          data_obj % data = 0.1 * data_obj % data
       end where
       
       deallocate ( buffer )
-      deallocate ( ilon, ilat ,ilon_buffer,ilat_buffer)
+      deallocate (ilon_buffer,ilat_buffer)
    
    
    end subroutine read_modis_white_sky
    
-   ! ------------------------------------------------------------------------------------------------------------------------------
+   ! ====================================================================
    !
-   !
-   ! ------------------------------------------------------------------------------------------------------------------------------
+   ! ====================================================================  
+   
    subroutine read_emis ( data_obj , lat , lon )
-
       type ( sfc_data_r4_type ) :: data_obj
       real, dimension(:,:) :: lat , lon
-      
       integer(int4), dimension(2) :: start_2d, stride_2d, edge_2d
-         
       real ( kind = real4)  , allocatable , dimension(:,:) :: buffer
-      integer ( int4 ) , allocatable , dimension ( : , : ) :: ilat , ilon
       integer ( int4 ) , allocatable , dimension(:,:) :: ilat_buffer , ilon_buffer
-      character(len =30) ::   name_scale , name_offset
-     
+      character(len =30) ::   name_scale , name_offset 
       integer  :: nx, ny
-      integer :: idx_lon_first
-      integer :: idx_lon_last
-      integer :: idx_lat_first
-      integer :: idx_lat_last
-      integer :: nr_lat
-      integer :: nr_lon
-      integer :: ilat1
-      integer :: ilat2
       integer :: i , j
-     
-      
-      idx_lon_first = int ( abs ( bounds % west_lon  - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lon_last  = int ( abs ( bounds % east_lon  - data_obj%meta%first_lon ) /  data_obj%meta%del_lon)
-      idx_lat_first = int ( abs ( bounds % north_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat)
-      idx_lat_last  = int ( abs ( bounds % south_lat - data_obj%meta%first_lat ) /  data_obj%meta%del_lat) 
-            
-      nr_lat = idx_lat_last - idx_lat_first + 1
-      nr_lon = idx_lon_last - idx_lon_first + 1
-        
-      start_2d  =  [ idx_lon_first , idx_lat_first]
-      stride_2d = [ 1, 1 ]
-      edge_2d = [ nr_lon  ,  nr_lat  ]
+       
+      call index_in_buffer_array ( data_obj%meta, lat, lon &             ! input
+            , ilat_buffer , ilon_buffer , start_2d,stride_2d, edge_2d)   ! output
+   
       name_scale = 'scale_factor'
       name_offset = 'add_offset'
       
@@ -656,14 +560,7 @@ contains
       
       nx = size ( lon, 1 )
       ny = size ( lon , 2)
-      allocate ( ilat (nx, ny ) , ilon (nx, ny ))
-      allocate ( ilat_buffer (nx, ny ) , ilon_buffer (nx, ny ))
-       
-      ilat = int ( abs ( lat - data_obj%meta%first_lat ) / data_obj % meta % del_lat ) + 1
-      ilon = int ( abs ( lon - data_obj%meta%first_lon ) / data_obj % meta % del_lon ) + 1
-      
-      ilat_buffer = ilat - idx_lat_first + 1
-      ilon_buffer = ilon - idx_lon_first + 1
+
       allocate ( data_obj % data ( nx , ny ) )
       
       do i = 1  , nx 
@@ -673,34 +570,16 @@ contains
             data_obj % data  (i, j ) =   buffer ( ilon_buffer ( i, j), ilat_buffer (i, j) )
          end do
       end do
-      
-      
-     
+ 
       deallocate ( buffer )
-       deallocate ( ilon, ilat ,ilon_buffer,ilat_buffer)
-   
+      deallocate ( ilon_buffer,ilat_buffer)   
    
    end subroutine read_emis
-   
-   
-   
+ 
    !============================== = = = = = = = = = = = = = = 
    !
-   !
-   subroutine find_bounds ( lat, lon )
-      real, dimension(:,:) :: lat , lon
-     
-      bounds % north_lat = maxval ( lat , mask = lat >= -90.0 .and. lat <= 90.0 )
-      bounds % south_lat = minval ( lat , mask = lat >= -90. .and. lat <= 90.0 )
-      bounds % east_lon = maxval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-      bounds % west_lon = minval(lon, mask = lon >= -180.0 .and. lon <= 180.0)
-    
-   end subroutine find_bounds 
-  
+   !============================================================
    
-   !============================== = = = = = = = = = = = = = = 
-   !
-   !
    subroutine update_sfc_from_nwp ( sfc , nwp, geo )
       use nwp_data_mod, only:  nwp_main_type
       use geo_mod, only:  geo_type
@@ -743,12 +622,9 @@ contains
             end do
          end do   
          
-        
-         ! sfc % snow_class % data = nwp % 
-      
+     
       end if
-      
-      
+            
       ! - update emis to default values for snow
       
       where ( sfc % snow_class % data == et_snow_class % SNOW )
@@ -757,8 +633,7 @@ contains
          sfc % emis ( 31 ) % data = 0.979
          sfc % emis ( 32 ) % data = 0.977
       end where
-      
-   
+         
    end subroutine update_sfc_from_nwp
    
    
@@ -767,16 +642,18 @@ contains
    ! ============================== = = = = = = = = = = = = = = =======
    
    subroutine deallocate_sfc ( this ) 
-       class ( sfc_main_type ) :: this
-       integer :: i_w_sky
-       integer :: i_emis
-      
+      class ( sfc_main_type ) :: this
+      integer :: i_w_sky
+      integer :: i_emis
+       
       if ( allocated ( this % land_class % data ) ) deallocate  ( this % land_class % data )
       if ( allocated ( this % sfc_type % data ) ) deallocate  ( this % sfc_type % data )
       if ( allocated ( this % coast_mask % data ) ) deallocate  ( this % coast_mask % data )
       if ( allocated ( this % snow_class % data ) ) deallocate  ( this % snow_class % data )
       if ( allocated ( this % elevation % data ) ) deallocate  ( this % elevation % data )
       if ( allocated ( this % z % data ) ) deallocate  ( this % z % data )
+      if ( allocated ( this % volcano % data )) deallocate ( this % volcano % data )
+      
       do i_w_sky = 1 , 7
          if ( allocated ( this % modis_w_sky (i_w_sky) % data )) &
             &  deallocate ( this % modis_w_sky (i_w_sky) % data )

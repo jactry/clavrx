@@ -722,11 +722,7 @@
          call READ_LEVEL1B_DATA(Image%Level1b_Full_Name,Segment_Number, &
                                 Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
                                 
-        
- 
-         
-         
-         
+     
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
@@ -737,7 +733,7 @@
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
          call sfc_obj % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, conf_obj , nwp)
          
-
+      
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------

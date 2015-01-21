@@ -123,7 +123,6 @@
    
    use NWP_COMMON
    use SCALING_PARAMETERS
-   use SFC_EMISS
    use PLANCK
    use AVHRR_REPOSITION_ROUTINES
    use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
@@ -208,20 +207,10 @@
    character(len=100):: oiSst_File_Name
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
-   integer(kind=int4):: Emiss_File_Id = missing_value_int4
-   integer(kind=int4):: Coast_Mask_Id = missing_value_int4
-   
-   integer(kind=int4):: Sfc_Type_Id = missing_value_int4
-   integer(kind=int4):: Volcano_Mask_Id = missing_value_int4
-   integer(kind=int4):: Surface_Elev_Id = missing_value_int4
   
    integer(kind=int4):: Snow_Mask_Id = missing_value_int4
-   type(Land_grid_Description) :: Coast_Mask_Str
-   type(Land_grid_Description) :: Sfc_Type_Str
-   
-   type(Land_grid_Description) :: Volcano_Mask_Str
-   
-
+ 
+  
    type(Land_grid_Description) :: Snow_Mask_Str
 
    
@@ -293,50 +282,13 @@
    
    call SETUP_USER_DEFINED_OPTIONS()
 
-   !------------------------------------------------------------------
-   ! Open coast mask file
-   !------------------------------------------------------------------
-   if (Read_Coast_Mask == sym%YES) then
-      call mesg ( "Opening coast file", level = verb_lev % VERBOSE)
-      Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
-      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
-                                      "coast_mask_1km.hdf", &
-                                      grid_Str=Coast_Mask_Str)
-   end if
 
-   !------------------------------------------------------------------
-   ! Open land surface type file
-   !------------------------------------------------------------------
-   call mesg ( "Opening land surface type file", level = verb_lev % VERBOSE)
-   Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
 
-   if (Read_Hires_sfc_type == sym%YES) then
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                     "gl-latlong-1km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   else
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                     "gl-latlong-8km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   end if
-
-  
- 
-   !------------------------------------------------------------------
-   ! Open volcano mask file
-   !------------------------------------------------------------------
-   if (Read_Volcano_Mask == sym%YES) then
-      call mesg  ( "Opening volcano mask file",level = verb_lev % VERBOSE )
-      Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
-      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        "volcano_mask_1km.hdf", &
-                                        grid_Str=Volcano_Mask_Str)
-    end if
-
-    !-----------------------------------------------------------------------
-    !--- set up surface radiative properties 
-    !-----------------------------------------------------------------------
-    call SETUP_UMD_PROPS()
+   !-----------------------------------------------------------------------
+   !--- set up surface radiative properties 
+   !TODO    
+   !-----------------------------------------------------------------------
+   call SETUP_UMD_PROPS()
  
     !--------------------------------------------------------------------
     !--- setup clock corrections in memory
@@ -579,15 +531,7 @@
       Start_Year_Prev = Image%Start_Year
       Start_Day_Prev = Image%Start_Doy  
 
-      !--------------------------------------------------------------------
-      !--- 5 km surface emiss
-      !--------------------------------------------------------------------
-      if (use_seebor == sym%YES) then
-         print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", start_time_obj % month
-         call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", &
-            start_time_obj % month  , Emiss_File_Id)
-      end if
-
+     
       
       !------------------------------------------------------------------
       ! Open Snow mask file
@@ -596,7 +540,7 @@
 
          Failed_Hires_Snow_Mask_Flag = sym%NO
 
-         Snow_Mask_Str%sds_Name = SNOW_MASK_SDS_NAME
+         Snow_Mask_Str%sds_Name = "snow_ice_cover"
          Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(Snow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") then
@@ -971,8 +915,9 @@
             !--- mandatory fields - check for substitution of Bad_Pixel for space 
 
             !--- surface type
-            call READ_LAND_SFC_HDF(Sfc_Type_Id, Sfc_Type_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Sfc_Type)
-
+            !TO_REMOVE SFC
+             sfc % sfc_type = sfc_obj % sfc_type % data  
+              
             !--- surface elevation
             if (Read_Surface_Elevation /= 0) then
                  !TO_REMOVE_SFC 
@@ -986,9 +931,11 @@
 
             !--- read coast mask
             if (Read_Coast_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
+                !TO_REMOVE_SFC 
+               sfc % coast = sfc_obj % coast_mask % data
             end if
-
+            
+         
             !--- read land mask
             if (Read_Land_Mask == sym%YES) then
                 Sfc%Land = sfc_obj % land_class % data
@@ -999,7 +946,7 @@
 
             !--- read volcano mask
             if (Read_Volcano_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
+               sfc%volcano_mask = sfc_obj % volcano % data
             end if
 
             !--- read Snow mask
@@ -1573,11 +1520,9 @@
    !-- Marker: Close static ancillary data files
    !*************************************************************************
 
-   !--- high resolution hdf ancillary data
-   if (Sfc_Type_Id > 0) call CLOSE_LAND_SFC_HDF(Sfc_Type_Id)
-   if (Coast_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Coast_Mask_Id)
    
-   if (Volcano_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Volcano_Mask_Id)
+   
+   
    
    if (Snow_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Snow_Mask_Id)
 

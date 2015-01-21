@@ -33,7 +33,7 @@ module sfc_data_mod
    end type sfc_file_metadata_type 
      
    type :: sfc_data_i1_type
-      logical :: is_read
+      logical :: is_set
       type (sfc_file_metadata_type ) :: meta
       integer (kind=int1) , dimension(:,:), allocatable :: data
    end type sfc_data_i1_type
@@ -60,6 +60,7 @@ module sfc_data_mod
       type ( sfc_data_i1_type ) :: sfc_type
       type ( sfc_data_i1_type ) :: coast_mask
       type ( sfc_data_i1_type ) :: snow_class
+      type ( sfc_data_i1_type ) :: volcano
       
       type ( sfc_data_i2_type ) :: elevation
       type ( sfc_data_r4_type ) , dimension(7) :: modis_w_sky
@@ -185,6 +186,14 @@ contains
       call read_data_i2 ( this % elevation , lat , lon)      
       this % elevation % is_set = .true.
       
+      !5.volcanoe
+      this % volcano % meta % filename = &
+         &  trim(conf % ancil_path) //'/static/sfc_data/volcano_mask_1km.hdf'
+      this % volcano % meta % sds_name = 'volcano_mask'  
+      call open_file (this % volcano % meta )
+      call read_meta (this % volcano % meta )    
+      call read_data_i1 ( this % volcano , lat , lon)      
+      this % volcano % is_set = .true.
       
      
       ! 5. snow class
@@ -199,7 +208,7 @@ contains
       ! call open_file (this % snow_class % meta )
       ! call read_meta (this % snow_class % meta )
       ! call read_data_i1 ( this % snow_class , lat , lon)
-      this % snow_class % is_read = .false.
+      this % snow_class % is_set = .false.
      
                 
       ! 6. white sky albedo
@@ -709,7 +718,7 @@ contains
       if ( .not. allocated( sfc % z % data ) ) &
          & allocate ( sfc % z % data ( sfc % dim_x,  sfc % dim_y ) )
       
-      if ( .not. sfc % snow_class % is_read ) then
+      if ( .not. sfc % snow_class % is_set ) then
          allocate ( sfc % snow_class % data ( sfc % dim_x,  sfc % dim_y ) )
          
       
@@ -747,9 +756,6 @@ contains
          sfc % emis ( 29 ) % data = 0.979
          sfc % emis ( 31 ) % data = 0.979
          sfc % emis ( 32 ) % data = 0.977
-         
-      
-      
       end where
       
    

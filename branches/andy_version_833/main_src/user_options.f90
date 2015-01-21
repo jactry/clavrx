@@ -223,6 +223,9 @@ contains
       integer::ios0
       integer::erstat
       integer:: Default_Lun
+      real :: Dummy_hi_lat, Dummy_lo_lat, &
+              Dummy_hi_lon, Dummy_lo_lon, &
+              Dummy_hi_sun_angl, Dummy_lo_sun_angl
             
       call mesg ("DEFAULT FILE READ IN",level = 5 )
       call mesg ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
@@ -311,6 +314,12 @@ contains
           close(unit=Default_Lun)
           return
       end if
+
+      ! --- Read lat, lon and sun angle high - low limits
+      ! --- !!! DUMMY FOR NOW.  Denis B. 01/21/2015
+      read(unit=Default_Lun,fmt=*) Dummy_hi_lat, Dummy_lo_lat, &
+                                   Dummy_hi_lon, Dummy_lo_lon, &
+                                   Dummy_hi_sun_angl, Dummy_lo_sun_angl
       
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(1:6)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_user_set(7:12)

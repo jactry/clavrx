@@ -1,67 +1,40 @@
-0       !ref_cal_1b flag (0 = use default level1b cal, 1 = recalibrate using PATMOS-x numbers (AVHRR-only))
-0       !therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
-0       !1bx flag      (1 = fill in clavr-x bytes in level 1b)
-2       !nav flag  (0=level-1b,1 = clevernav,2=Reposnx: For non-AVHRR, use 0)
-1       !write nav out  (0=no,1=write to a nav file)
-0       !cmr file flag  (0=no,1=make output file)
-0       !obs file flag  (0=no,1=make output file)
-1       !geo file flag  (0=no,1=make output file)
-0       !cld file flag  (0=no,1=make output file)
-0       !sst file flag  (0=no,1=make output file)
-0       !rtm file flag  (0=no,1=make output file)
-0       !ash file flag  (0=no,1=make output file)
-1       !level2 file flag  (0=no,1=make output file)
-0       !level3 file flag  (1 = make gridded output)
-0       !cloud mask 1b (1 = read from 1b and don't recompute)
-1       !bayesian cloud mask (0=no, 1 = yes)
-1       !sst flag (0= no, 1 = yes)
-1       !cld flag (0= no, 1 = yes)
-1       !aot flag (0= no, 1 = yes)
-1       !erb flag (0= no, 1 = yes)
-0       !ash flag (0= no, 1 = yes)
-1       !use oisst     
-0       !oisst option  (0 = determine file, 1 = use oisst.current)
-0.5     !grid resolution
-0       !grid format: eqv. area (0) / eqv. angle (1)
-0       !output compression flag (0=no,1=gzip)
-0       !subset pixel hdf flag (0=no / 1= yes, lat bounds given by lat_min/max_diag)
-3       !nwp flag  (1=gfs,2=ncep reanalysis,3=cfsr)
-1       !rtm flag  (0=crtm,1=pfast)
-1       !use modis clear ref (0=no,1=yes)
-1       !prob_clear_res_flag (0=no,1=yes)
-1       !lrc_flag (0=no,1=yes)
-0       !process_undetected_flag (0=no,1=yes)
-0       !diagnostic output flag (0=no,1=yes)
-1       !node for diagnostic output (0=asc,1=des)
--90.0    !minimum latitude for diagnostic output
-90.0    !maximum latitude for diagnostic output
-/Users/heidinger/Ancil_Data/clavrx_ancil_data/
-/Volumes/EXTERNAL_1/Ancil_Data/gfs/hdf/
-/Volumes/EXTERNAL_1/Ancil_Data/ncep-reanalysis/
-/Volumes/EXTERNAL_1/Ancil_Data/cfsr/hdf/
-/Volumes/EXTERNAL_1/Ancil_Data/oisst_daily/
-/Volumes/EXTERNAL_1/Ancil_Data/snow/
-/Volumes/EXTERNAL_1/Ancil_Data/GlobSnow/
-/Volumes/EXTERNAL_1/Ancil_Data/Dark_Composites/
-./temporary_files/
-1         !smooth nwp flag (0=no, 1=yes)
-0         !seebor emiss flag (0=no, 1=yes) (global_emiss_intABI_2005xxx.hdf, xxx is the date)
-0         !read hires sfc type flag (0=no-8km, 1 = yes-1km) (gl-latlong-xkm-landcover.hdf, x = 1 or 8)
-1         !read land mask flag (0=no, 1=yes) (goge2_0ll.hdf)
-1         !read coast mask flag (0=no, 1=yes) (coast_mask_xkm.hdf, x = 1 or 8)
-1         !read surface elevation flag (0=no, 1=yes) (GLOBE_xkm_digelev.hdf, x = 1 or 8)
-0         !read volcano mask flag (0=no, 1=yes) (volcano_mask_1km.hdf)
-0.0 180.0 !solar zenith angle limits
-2         !read snow mask flag (0=no, 1 = ims, 2 = GlobSnow)
-0         !read dark composite flag (0=no, 1 = yes)
-1 1 1 1 1 1    !chan on flags of channels 1,2,3,4,5,6
-1 1 1 1 1 1    !chan on flags of channels 7,8,9,10,11,12
-1 1 1 1 1 1    !chan on flags of channels 13,14,15,16,17,18
-1 1 1 1 1 1    !chan on flags of channels 19,20,21,22,23,24
-1 1 1 1 1 1    !chan on flags of channels 25,26,27,28,29,30
-1 1 1 1 1 1    !chan on flags of channels 31,32,33,34,35,36
-0 0 0 0 0 0    !chan on flags of channels i5,i2,i3,i4,i5,DNB (VIIRS ONLY)
-3         ! DCOMP MODIS MODE (1 = 0.6/1.6 . 2 = 0.6/2.2 3 = 0.6/3.7  )
-1         ! ACHA MODE (0=11;1=11/12;2=11/13.3;3=11,12,13;4=8.5/11/12  )
-the_name_of_the_bayesian_cloud_mask_data_file
-$Id$
+/data/Ancil_Data/
+./temp/
+1   !Expert mode (0 - nothing is read below, 1 - only !E1 and lower is read, 9 - everything is read )
+1   !E1 ALG Mask mode bayesian cloud mask (0=no, 1 = yes)
+1   !E1 ALG DCOMP
+4   !E1 ALG ACHA
+1   !E1 ALG NLCOMP 
+1   !E2 OUTPUT Level-2  file output flag (0= no, 1 = yes)
+0   !E2 OUTPUT RTM  file output flag (0= no, 1 = yes)
+1   !E2 PRC Cloud flag  
+200 !E2 Num scan lines
+0   !E2 SASRAB switch on/off SASRAB parameters 
+1   !E2 NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
+1   !E2 RTM rtm option  (0=crtm,1=pfast, (2=rttov))
+0   !E2 NAV nav option  (0 =  Use  level-1b,1 = external (future) 2 = Reposnx ( fred nagle): For non-AVHRR, use 0) 
+1   !E2 OUT output compression flag (0=no,1=gzip)
+0   !E2 MASK read auxilary cloud mask 1b (1 = read from 1b and don't recompute)
+viirs_default_bayes_mask.txt 
+1   !E3 SFC seebor emiss flag (0=no, 1=yes) 
+0   !E3 SFC read hires sfc type flag (0=no-8km, 1 = yes-1km) 
+1   !E3 SFC read land mask flag (0=no, 1=yes) (goge2_0ll.hdf)
+1   !E3 SFC read coast mask flag (0=no, 1=yes) (coast_mask_xkm.hdf, x = 1 or 8)
+1   !E3 SFC read surface elevation flag (0=no, 1=yes) (GLOBE_xkm_digelev.hdf, x = 1 or 8)
+0   !E3 SFC read volcano mask flag (0=no, 1=yes) (volcano_mask_1km.hdf)
+1   !E3 SFC read snow mask flag (0=no, 1 = ims, 2 = GlobSnow)
+0   !E3 SFC read dark composite flag (0=no, 1 = yes) only GEO
+0   !E4 AVHRR-ONLY specific ref_cal_1b flag (0 = use default level1b cal, 1 = recalibrate using PATMOS-x numbers (AVHRR-only))
+0   !E4 AVHRR-ONLY therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
+1   !E5 MASK lrc_flag (0=no,1=yes) 
+1   !E5 NWP smooth nwp flag (0=no, 1=yes)   
+0   !E5 process_undetected_flag (0=no,1=yes) ( means process all pixels cloudy and cloud-free
+90.0 -90.0  180.0 -180.0 180.0 0.0    !E6 Latitude, longitude, sun angle high and low limits (dummy for now)
+1 1 1 1 1 1    !E6 chan on flags of channels 1,2,3,4,5,6
+1 1 1 1 1 1    !E6 chan on flags of channels 7,8,9,10,11,12
+1 1 1 1 1 1    !E6 chan on flags of channels 13,14,15,16,17,18
+1 1 1 1 1 1    !E6 chan on flags of channels 19,20,21,22,23,24
+1 1 1 1 1 1    !E6 chan on flags of channels 25,26,27,28,29,30
+1 1 1 1 1 1    !E6 chan on flags of channels 31,32,33,34,35,36
+0 0 0 0 0 1    !E6 chan on flags of channels i5,i2,i3,i4,i5,DNB (VIIRS ONLY)
+0 0 0 0 0 0    !E6    future channels   

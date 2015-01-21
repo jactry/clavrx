@@ -150,6 +150,7 @@ contains
       call open_file (this % land_class % meta )
       call read_meta (this % land_class % meta )
       call read_data_i1 ( this % land_class , lat , lon)
+      call close_file ( this % land_class % meta )
     
       ! 2. sfc type  
       this % sfc_type % meta % filename = &
@@ -158,7 +159,8 @@ contains
       call open_file (this % sfc_type % meta )
       call read_meta (this % sfc_type % meta )
       call read_data_i1 ( this % sfc_type , lat , lon)
-     
+      call close_file ( this % sfc_type % meta )
+      
       ! 3. coastal mask
       this % coast_mask % meta % filename = &
          &  trim(conf % ancil_path) //'/static/sfc_data/coast_mask_1km.hdf'
@@ -166,14 +168,16 @@ contains
       call open_file (this % coast_mask % meta )
       call read_meta (this % coast_mask % meta )
       call read_data_i1 ( this % coast_mask , lat , lon)
-     
+      call close_file ( this % coast_mask % meta )
+      
       ! 4. elevation
       this % elevation % meta % filename = &
          &  trim(conf % ancil_path) //'/static/sfc_data/GLOBE_1km_digelev.hdf'
       this % elevation % meta % sds_name = 'surface_elevation'  
       call open_file (this % elevation % meta )
       call read_meta (this % elevation % meta )    
-      call read_data_i2 ( this % elevation , lat , lon)      
+      call read_data_i2 ( this % elevation , lat , lon) 
+      call close_file ( this % elevation % meta )     
       this % elevation % is_set = .true.
       
       !5.volcanoe
@@ -182,7 +186,8 @@ contains
       this % volcano % meta % sds_name = 'volcano_mask'  
       call open_file (this % volcano % meta )
       call read_meta (this % volcano % meta )  
-      call read_data_i1 ( this % volcano , lat , lon)      
+      call read_data_i1 ( this % volcano , lat , lon) 
+      call close_file ( this % volcano % meta )      
       this % volcano % is_set = .true.
 
       ! 6. snow class
@@ -220,11 +225,9 @@ contains
          this %  modis_w_sky(i) % meta % sds_name = 'Albedo_Map_'//trim(w_sky_string( i ))
         
          call open_file (this % modis_w_sky(i) % meta )
-         
-         call read_meta (this % modis_w_sky(i) % meta )
-         
+         call read_meta (this % modis_w_sky(i) % meta )         
          call read_modis_white_sky ( this % modis_w_sky(i) , lat , lon)
-          
+         call close_file ( this % modis_w_sky(i)  % meta ) 
          
           !  Empirical correction of white sky albedo! 
           !  Personal communication: Jan Fokke Meiring 
@@ -265,6 +268,7 @@ contains
          if ( chn_seebor(i) == 0 ) cycle
          write(this %  emis(i) % meta % sds_name ,'(a,i0)') 'emiss', chn_seebor ( i )
          call read_emis ( this % emis(i) , lat , lon)
+         
          where ( this % emis (i) % data < 0 )
             this % emis ( i) % data = 0.99 
          end where
@@ -275,7 +279,7 @@ contains
       
       end do  
       
-     
+      call close_file (this % emis(20) % meta )
 
    end subroutine
    
@@ -305,6 +309,20 @@ contains
       file % file_id = sfstart(trim(file % filename  ), DFACC_READ)
      
    end subroutine open_file
+
+   ! ============================================================
+   !
+   ! ============================================================   
+   subroutine close_file ( file )
+      implicit none
+      type ( sfc_file_metadata_type ) :: file 
+      integer :: sfend
+      integer :: istatus
+      
+      istatus = sfend ( file % file_id )
+      
+   
+   end subroutine close_file
    
    ! ============================================================
    !

@@ -500,7 +500,6 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal
-  real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Err
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Sst_Anal_Uni
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal_Cice
   real (kind=real4), dimension(:,:), allocatable, public, save:: Tsfc_Retrieved
@@ -947,7 +946,6 @@ subroutine CREATE_PIXEL_ARRAYS()
           Fire_Mask(dim1,dim2), &
           Shadow_Mask(dim1,dim2), &
           Sst_Anal(dim1,dim2), &
-          Sst_Anal_Err(dim1,dim2), &
           Sst_Anal_Cice(dim1,dim2), &
           Sst_Anal_Uni(dim1,dim2))
 
@@ -1097,7 +1095,6 @@ subroutine DESTROY_PIXEL_ARRAYS()
   deallocate(Shadow_Mask)
 
   deallocate(Sst_Anal)
-  deallocate(Sst_Anal_Err)
   deallocate(Sst_Anal_Cice)
   deallocate(Sst_Anal_Uni)
 

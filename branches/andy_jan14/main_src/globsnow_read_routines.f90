@@ -31,25 +31,25 @@
 !
 !--------------------------------------------------------------------------------------
 module GLOBSNOW_READ_ROUTINES
-  use HDF
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
-  use FILE_UTILITY
-  implicit none
-  private
-  public:: GET_PIXEL_GLOBSNOW_ANALYSIS
-  public:: GET_GLOBSNOW_FILENAME
-  public:: READ_GLOBSNOW_ANALYSIS_MAP
-  integer, parameter, public:: Num_Lon_GlobSnow = 721
-  integer, parameter, public:: Num_Lat_GlobSnow = 721 
-  real, parameter, private:: GLOBSNOW_SWE_THRESHOLD = 0.001
-  real, parameter, private:: Min_Lat_GlobSnow = 35.0
-  real, parameter, private:: Max_Lat_GlobSnow = 85.0
-  real(kind=real4), dimension(Num_Lon_GlobSnow,Num_Lat_GlobSnow), public, save:: GlobSnow_Map
+   use HDF
+   use CONSTANTS
+   use NUMERICAL_ROUTINES
+   use FILE_UTILITY
+   implicit none
+   private
+   public:: GET_PIXEL_GLOBSNOW_ANALYSIS
+   public:: GET_GLOBSNOW_FILENAME
+   public:: READ_GLOBSNOW_ANALYSIS_MAP
+   integer, parameter, public:: Num_Lon_GlobSnow = 721
+   integer, parameter, public:: Num_Lat_GlobSnow = 721 
+   real, parameter, private:: GLOBSNOW_SWE_THRESHOLD = 0.001
+   real, parameter, private:: Min_Lat_GlobSnow = 35.0
+   real, parameter, private:: Max_Lat_GlobSnow = 85.0
+   real(kind=real4), dimension(Num_Lon_GlobSnow,Num_Lat_GlobSnow), public, save:: GlobSnow_Map
 
-  integer(kind=int4), parameter, private :: MAX_GLOBSNOW_LATENCY = 3 !including current day
+   integer(kind=int4), parameter, private :: MAX_GLOBSNOW_LATENCY = 3 !including current day
 
-  contains
+contains
 
 !----------------------------------------------------------------------------------------
 !

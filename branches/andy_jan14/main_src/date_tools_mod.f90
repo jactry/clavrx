@@ -19,6 +19,8 @@ module date_tools_mod
       integer :: dayOfYear
       character(6) :: yymmdd
       character(8) :: yymmddhh
+      character(8) :: yyyymmdd
+      character(4) :: yyyy 
       real (kind = r15) :: julday
       real :: mod_julday
       
@@ -193,6 +195,8 @@ contains
       write ( minute_s , fmt = '(i2.2)') this % minute
       this % yymmdd =  year_s2d//month_s//day_s
       this % yymmddhh =  year_s2d//month_s//day_s//hour_s
+      this % yyyy = year_s
+      this % yyyymmdd = year_s//month_s//day_s
    end subroutine update
    
    

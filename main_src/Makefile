@@ -187,6 +187,8 @@ clavrxorb_objs = process_clavrx.o \
                  date_tools_mod.o \
                  sfc_tools.o \
                  sfc_data_mod.o \
+                 nwp_data_mod.o \
+                 cr_physics_mod.o \
                  area_file_mod.o
 
 #Level2b routines

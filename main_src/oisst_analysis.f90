@@ -113,88 +113,89 @@
 !  an extra 4 byte header and trailer word to the total record.
 !--------------------------------------------------------------------------------------
 module OISST_ANALYSIS
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
-  use PIXEL_COMMON
-  use FILE_UTILITY
-  implicit none
-  private
-!  public:: READ_OISST_ANALYSIS_MAP, GET_PIXEL_SST_ANALYSIS
-  public:: GET_PIXEL_SST_ANALYSIS, get_oisst_map_filename, READ_OISST_ANALYSIS_MAP
-  integer, parameter, public:: num_lon_sst_anal =1440, num_lat_sst_anal= 720 
-  real, parameter, public:: first_lon_sst_anal = 0.125, first_lat_sst_anal = -89.875, & 
+   use CONSTANTS
+   use NUMERICAL_ROUTINES
+   use PIXEL_COMMON
+   use FILE_UTILITY
+   
+   implicit none
+   private
+   !  public:: READ_OISST_ANALYSIS_MAP, GET_PIXEL_SST_ANALYSIS
+   public:: GET_PIXEL_SST_ANALYSIS, get_oisst_map_filename, READ_OISST_ANALYSIS_MAP
+   integer, parameter, public:: num_lon_sst_anal =1440, num_lat_sst_anal= 720 
+   real, parameter, public:: first_lon_sst_anal = 0.125, first_lat_sst_anal = -89.875, & 
                             last_lon_sst_anal = 359.875, last_lat_sst_anal = 89.875
-  real, parameter, public:: del_lon_sst_anal = (last_lon_sst_anal - first_lon_sst_anal)/(num_lon_sst_anal-1)
-  real, parameter, public:: del_lat_sst_anal = (last_lat_sst_anal - first_lat_sst_anal)/(num_lat_sst_anal-1)
-  real, parameter, private:: min_sst_anal = -4.0, max_sst_anal=36.0
-  integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_err_map
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map_uni
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_cice_map
+   real, parameter, public:: del_lon_sst_anal = (last_lon_sst_anal - first_lon_sst_anal)/(num_lon_sst_anal-1)
+   real, parameter, public:: del_lat_sst_anal = (last_lat_sst_anal - first_lat_sst_anal)/(num_lat_sst_anal-1)
+   real, parameter, private:: min_sst_anal = -4.0, max_sst_anal=36.0
+   integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
+   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map
+   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_err_map
+   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map_uni
+   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_cice_map
 
-  INTEGER(kind=int4), parameter, private :: MAX_OISST_LATENCY = 5 !including current day
+   INTEGER(kind=int4), parameter, private :: MAX_OISST_LATENCY = 5 !including current day
 
-  contains
+contains
 
-  !-------------------------------------------------------------------
-  ! Function to find the oisst map name.
-  !-------------------------------------------------------------------
-  FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path) result(oisst_filename)
-   CHARACTER(*), intent(in) :: oisst_path
-   INTEGER(kind=int2), intent(in):: year_in
-   INTEGER(kind=int2), intent(in):: day_of_year
+   !-------------------------------------------------------------------
+   ! Function to find the oisst map name.
+   !-------------------------------------------------------------------
+   FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path) result(oisst_filename)
+      CHARACTER(*), intent(in) :: oisst_path
+      INTEGER(kind=int2), intent(in):: year_in
+      INTEGER(kind=int2), intent(in):: day_of_year
   
-   CHARACTER(len=256) :: oisst_filename
-   CHARACTER(len=256) :: oisst_filename_tmp
-   CHARACTER(len=256) :: oisst_filename_tmp_preliminary
-   INTEGER(kind=int4) :: iday, year, month, day, jday, ileap
-   CHARACTER (len=2)   :: day_string, month_string
-   CHARACTER (len=4)   :: year_string
+      CHARACTER(len=256) :: oisst_filename
+      CHARACTER(len=256) :: oisst_filename_tmp
+      CHARACTER(len=256) :: oisst_filename_tmp_preliminary
+      INTEGER(kind=int4) :: iday, year, month, day, jday, ileap
+      CHARACTER (len=2)   :: day_string, month_string
+      CHARACTER (len=4)   :: year_string
 
-    oisst_filename = "no_file"
+      oisst_filename = "no_file"
 
-   do iday=0, MAX_OISST_LATENCY - 1
-      jday = day_of_year - iday
-      year = year_in 
-      ileap = leap_year_fct(year)
-      
-      if (jday < 1) then
-         year = year - 1
+      do iday=0, MAX_OISST_LATENCY - 1
+         jday = day_of_year - iday
+         year = year_in 
          ileap = leap_year_fct(year)
-         jday = (365 + ileap) + jday
-      end if 
-       
-      month = compute_month(jday, ileap)
-      day = compute_day(jday, ileap)
-      write (year_string,fmt="(I4)") year
-      write (month_string, '(I2.2)') month
-      write (day_string,   '(I2.2)') day
-
-      oisst_filename_tmp= "avhrr-only-v2."//year_string//month_string//day_string
-      oisst_filename_tmp = trim(oisst_path)//trim(year_string)//"/"//trim(oisst_filename_tmp)
-      oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.gz"
-      oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
-
-      !--- check for regular file
-      if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
-         oisst_filename = oisst_filename_tmp
-         print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp)
-         exit
-      end if
-
-      !--- check for preliminary file (true of recent files)
-      if (file_exists(trim(oisst_filename_tmp_preliminary)) .eqv. .true.) then
-         oisst_filename = oisst_filename_tmp_preliminary
-         print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp_preliminary)
-         exit
-      end if
-
-   end do
       
-   return
+         if (jday < 1) then
+            year = year - 1
+            ileap = leap_year_fct(year)
+            jday = (365 + ileap) + jday
+         end if 
+       
+         month = compute_month(jday, ileap)
+         day = compute_day(jday, ileap)
+         write (year_string,fmt="(I4)") year
+         write (month_string, '(I2.2)') month
+         write (day_string,   '(I2.2)') day
 
-END FUNCTION get_oisst_map_filename
+         oisst_filename_tmp= "avhrr-only-v2."//year_string//month_string//day_string
+         oisst_filename_tmp = trim(oisst_path)//trim(year_string)//"/"//trim(oisst_filename_tmp)
+         oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.gz"
+         oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
+
+         !--- check for regular file
+         if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
+            oisst_filename = oisst_filename_tmp
+            print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp)
+            exit
+         end if
+
+         !--- check for preliminary file (true of recent files)
+         if (file_exists(trim(oisst_filename_tmp_preliminary)) .eqv. .true.) then
+            oisst_filename = oisst_filename_tmp_preliminary
+            print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp_preliminary)
+            exit
+         end if
+
+      end do
+      
+      return
+
+   END FUNCTION get_oisst_map_filename
 
 !----------------------------------------------------------------------
 ! Read the Data

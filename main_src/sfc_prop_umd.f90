@@ -49,46 +49,46 @@
 !
 !--------------------------------------------------------------------------------------
 module SURFACE_PROPERTIES
-use CONSTANTS
-use PIXEL_COMMON
+   use CONSTANTS
+   use PIXEL_COMMON
 
-implicit none
+   implicit none
 
-private
-public:: SETUP_UMD_PROPS,  &
+   private
+   public:: SETUP_UMD_PROPS,  &
          GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE, &
          COMPUTE_BINARY_LAND_COAST_MASKS, &
          COMPUTE_COAST_MASK_FROM_LAND_MASK
 
-integer, parameter, public:: ntype_sfc=14
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch1_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch2_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch6_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch20_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch20_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch27_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch28_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch29_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch31_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch32_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch33_Sfc_Emiss_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch1_Snow_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch2_Snow_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch5_Snow_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch6_Snow_Sfc_Alb_Umd
-real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch7_Snow_Sfc_Alb_Umd
+   integer, parameter, public:: ntype_sfc=14
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch1_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch2_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch6_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch20_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch20_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch27_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch28_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch29_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch31_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch32_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch33_Sfc_Emiss_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch1_Snow_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch2_Snow_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch5_Snow_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch6_Snow_Sfc_Alb_Umd
+   real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch7_Snow_Sfc_Alb_Umd
 
 contains
 
-!-----------------------------------------------------------------
-! read into memory the radiative properties for each UMD type
-!-----------------------------------------------------------------
-subroutine SETUP_UMD_PROPS()
+   !-----------------------------------------------------------------
+   ! read into memory the radiative properties for each UMD type
+   !-----------------------------------------------------------------
+   subroutine SETUP_UMD_PROPS()
 
-!--- channel 1 surface albedo based on PATMOS-x
-!  Ch1_Sfc_Alb_Umd = (/0.0300, & !0
+      !--- channel 1 surface albedo based on PATMOS-x
+      !  Ch1_Sfc_Alb_Umd = (/0.0300, & !0
 
-   Ch1_Sfc_Alb_Umd = (/0.0500, & !0
+      Ch1_Sfc_Alb_Umd = (/0.0500, & !0
                        0.0406,  &  !1
                        0.0444,  &  !2
                        0.0406,  &  !3
@@ -102,10 +102,10 @@ subroutine SETUP_UMD_PROPS()
                        0.0677,  &  !11
                        0.3124,  &  !12
                        0.0918/)    !13
-     Ch1_Sfc_Alb_Umd = 100.0*Ch1_Sfc_Alb_Umd
+      Ch1_Sfc_Alb_Umd = 100.0*Ch1_Sfc_Alb_Umd
 
-     !--- channel 2 surface albedo based on PATMOS-x
-     Ch2_Sfc_Alb_Umd = (/0.0163,  &  !0
+      !--- channel 2 surface albedo based on PATMOS-x
+      Ch2_Sfc_Alb_Umd = (/0.0163,  &  !0
                          0.1991,  &  !1
                          0.2179,  &  !2
                          0.1991,  &  !3
@@ -119,10 +119,10 @@ subroutine SETUP_UMD_PROPS()
                          0.2520,  &  !11
                          0.4019,  &  !12
                          0.2466/)   !13
-     Ch2_Sfc_Alb_Umd = 100.0*Ch2_Sfc_Alb_Umd
+      Ch2_Sfc_Alb_Umd = 100.0*Ch2_Sfc_Alb_Umd
 
-     !--- channel 3a surface albedo based on PATMOS-x
-     Ch6_Sfc_Alb_Umd = (/0.0163, & !0
+      !--- channel 3a surface albedo based on PATMOS-x
+      Ch6_Sfc_Alb_Umd = (/0.0163, & !0
                          0.2020, & !1
                          0.2210, & !2
                          0.2020, & !3
@@ -136,10 +136,10 @@ subroutine SETUP_UMD_PROPS()
                          0.2520, & !11
                          0.3900, & !12
                          0.2650/)  !13
-    Ch6_Sfc_Alb_Umd = 100.0*Ch6_Sfc_Alb_Umd
+      Ch6_Sfc_Alb_Umd = 100.0*Ch6_Sfc_Alb_Umd
 
-    !--- channel 3b surface emissivity based on SeeBor et al 2006
-    Ch20_Sfc_Emiss_Umd =(/0.985, &   !0
+      !--- channel 3b surface emissivity based on SeeBor et al 2006
+      Ch20_Sfc_Emiss_Umd =(/0.985, &   !0
                           0.95,  &   !1
                           0.96,  &   !2
                           0.94,  &   !3
@@ -237,8 +237,8 @@ subroutine SETUP_UMD_PROPS()
                      0.971,  &   !12
                      0.962/)     !13
 
-   !--- channel 33 surface emissivity based on SeeBor et al 2006 - FAKED
-   Ch33_Sfc_Emiss_Umd = (/0.985,  &   !0
+         !--- channel 33 surface emissivity based on SeeBor et al 2006 - FAKED
+         Ch33_Sfc_Emiss_Umd = (/0.985,  &   !0
                      0.967,  &   !1
                      0.965,  &   !2
                      0.965,  &   !3
@@ -253,12 +253,12 @@ subroutine SETUP_UMD_PROPS()
                      0.971,  &   !12
                      0.962/)     !13
    
-!------------------------------------------------------------------------------
-! Snow reflectance values computed as the mode of distributions from 
-! MODIS/TERRA for each of the surface types
-! This is assuming 0=ocean 1=sea ice, 2-14=Landsurf_type-1, 15 - not used
-!------------------------------------------------------------------------------
-   Ch1_Snow_Sfc_Alb_Umd = (/0.66,  &  !0
+      !------------------------------------------------------------------------------
+      ! Snow reflectance values computed as the mode of distributions from 
+      ! MODIS/TERRA for each of the surface types
+      ! This is assuming 0=ocean 1=sea ice, 2-14=Landsurf_type-1, 15 - not used
+      !------------------------------------------------------------------------------
+      Ch1_Snow_Sfc_Alb_Umd = (/0.66,  &  !0
                             0.23 , &  !1   
                             0.50,  &  !2   
                             0.42,  &  !3 
@@ -272,9 +272,9 @@ subroutine SETUP_UMD_PROPS()
                             0.72,  &  !11 
                             0.76,  &  !12 
                             0.65/)    !13 
-   Ch1_Snow_Sfc_Alb_Umd = 100.0*Ch1_Snow_Sfc_Alb_Umd
+      Ch1_Snow_Sfc_Alb_Umd = 100.0*Ch1_Snow_Sfc_Alb_Umd
 
-   Ch2_Snow_Sfc_Alb_Umd = (/0.61,  &  !0
+      Ch2_Snow_Sfc_Alb_Umd = (/0.61,  &  !0
                             0.29 , &  !1   
                             0.60,  &  !2   
                             0.43,  &  !3  
@@ -288,9 +288,9 @@ subroutine SETUP_UMD_PROPS()
                             0.71,  &  !11 
                             0.72,  &  !12 
                             0.65/)    !13 
-   Ch2_Snow_Sfc_Alb_Umd = 100.0*Ch2_Snow_Sfc_Alb_Umd
+      Ch2_Snow_Sfc_Alb_Umd = 100.0*Ch2_Snow_Sfc_Alb_Umd
 
-   Ch5_Snow_Sfc_Alb_Umd = (/0.12,  &  !0
+      Ch5_Snow_Sfc_Alb_Umd = (/0.12,  &  !0
                             0.18 , &  !1  
                             0.70,  &  !2  
                             0.22,  &  !3  
@@ -304,10 +304,10 @@ subroutine SETUP_UMD_PROPS()
                             0.41,  &  !11 
                             0.43,  &  !12 
                             0.52/)    !13 
-   Ch5_Snow_Sfc_Alb_Umd = 100.0*Ch5_Snow_Sfc_Alb_Umd
+      Ch5_Snow_Sfc_Alb_Umd = 100.0*Ch5_Snow_Sfc_Alb_Umd
 
 
-   Ch6_Snow_Sfc_Alb_Umd = (/0.02,  &  !0
+      Ch6_Snow_Sfc_Alb_Umd = (/0.02,  &  !0
                             0.08 , &  !1  
                             0.64,  &  !2   
                             0.15,  &  !3   
@@ -321,9 +321,9 @@ subroutine SETUP_UMD_PROPS()
                             0.12,  &  !11   
                             0.09,  &  !12   
                             0.14/)    !13   
-   Ch6_Snow_Sfc_Alb_Umd = 100.0*Ch6_Snow_Sfc_Alb_Umd
+      Ch6_Snow_Sfc_Alb_Umd = 100.0*Ch6_Snow_Sfc_Alb_Umd
 
-   Ch7_Snow_Sfc_Alb_Umd = (/0.13,  &  !0
+      Ch7_Snow_Sfc_Alb_Umd = (/0.13,  &  !0
                             0.03 , &  !1   !TBD 
                             0.13,  &  !2    !TBD 
                             0.08,  &  !3    !TBD
@@ -337,9 +337,9 @@ subroutine SETUP_UMD_PROPS()
                             0.08,  &  !11   !TBD
                             0.03,  &  !12   !TBD
                             0.08/)    !13   !TBD
-   Ch7_Snow_Sfc_Alb_Umd = 100.0*Ch7_Snow_Sfc_Alb_Umd
+      Ch7_Snow_Sfc_Alb_Umd = 100.0*Ch7_Snow_Sfc_Alb_Umd
 
-end subroutine SETUP_UMD_PROPS
+   end subroutine SETUP_UMD_PROPS
 
 !-----------------------------------------------------------------------
 ! If no sfc emiss data base read in, base it on the surface type.

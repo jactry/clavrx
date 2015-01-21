@@ -64,6 +64,7 @@ module sfc_data_mod
       
       type ( sfc_data_i2_type ) :: elevation
       type ( sfc_data_r4_type ) , dimension(7) :: modis_w_sky
+      type ( sfc_data_r4_type ) , dimension(7) :: albedo_snow
       type ( sfc_data_r4_type ) , dimension(20:36) :: emis
       type ( sfc_data_r4_type )  :: z
       contains
@@ -116,6 +117,8 @@ contains
       use nwp_data_mod , only: &
           nwp_main_type 
       use cr_config_mod
+      
+      ! use sfc_default_values_mod
       
       implicit none
       
@@ -196,13 +199,15 @@ contains
       !-TODO  differentiate snow options
       !- now only globSnow
       
-      !  this % snow_class % meta % filename = &
-      !    &  '/data3/Ancil_Data/snow/snow_map_4km_'//date % yymmdd//'.hdf'
+        this % snow_class % meta % filename = &
+          &  trim(conf % ancil_path) //'/static/snow/snow_map_4km_'//date % yymmdd//'.hdf'
       ! this % snow_class % meta % sds_name = 'snow_ice_cover'  
       ! call open_file (this % snow_class % meta )
       ! call read_meta (this % snow_class % meta )
       ! call read_data_i1 ( this % snow_class , lat , lon)
       this % snow_class % is_set = .false.
+      
+      stop
      
                 
       ! 7. white sky albedo

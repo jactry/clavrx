@@ -8,8 +8,8 @@ program test_cloud_mask
 use nb_cloud_mask, only : &
         NB_CLOUD_MASK_ALGORITHM &
       , cloud_mask_input_type &
-      , dust_detection &
-      , fire_detection &
+!      , dust_detection &
+!      , fire_detection &
       , cloud_mask_diagnostic &
       , Cloud_Mask_Version_Type
       
@@ -25,16 +25,16 @@ type (Cloud_Mask_Version_Type) :: vers
   
 
 
-print*,'DUST detection: ',dust_detection(-12.,12.,1.,.true.,1)
+!print*,'DUST detection: ',dust_detection(-12.,12.,1.,.true.,1)
 
-print*,'FIRE detection: ',fire_detection ( 310.,312., 2., 1. ,77. )
+!print*,'FIRE detection: ',fire_detection ( 310.,312., 2., 1. ,77. )
 
+
+!inp % bayesian_mask_classifier = &
+!     '/DATA/Ancil_Data/clavrx_ancil_data/naive_bayes_mask/viirs_default_bayes_mask.nc'
 
 inp % bayesian_mask_classifier = &
-   &  '/DATA/Ancil_Data/clavrx_ancil_data/naive_bayes_mask/viirs_default_bayes_mask.txt'
-	
-!inp % bayesian_mask_classifier = &
-!   &  '/data/Ancil_Data/clavrx_ancil_data/bayes/viirs_default_bayes_mask.txt'	
+     '/data/Ancil_Data/clavrx_ancil_data/static/luts/nb_cloud_mask/viirs_default_nb_cloud_mask_lut.nc'
             
             inp % geo % lat         = 60.            
             inp % geo % lon         = 20.

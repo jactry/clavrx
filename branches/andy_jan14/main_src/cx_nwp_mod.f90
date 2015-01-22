@@ -2,7 +2,7 @@
 ! 
 !   01/21/2015: in clavrx
 !
-module nwp_data_mod
+module cx_nwp_mod
    use date_tools_mod
     
    use cr_physics_mod, only: &
@@ -660,4 +660,4 @@ contains
    
  
   
-end module nwp_data_mod
+end module cx_nwp_mod

@@ -171,7 +171,7 @@ clavrxorb_objs = process_clavrx.o \
                  date_tools_mod.o \
                  sfc_tools.o \
                  sfc_data_mod.o \
-                 nwp_data_mod.o \
+                 cx_nwp_mod.o \
                  cr_physics_mod.o \
                  cr_data_pool_mod.o \
                  cx_geo_mod.o \
@@ -301,12 +301,12 @@ cgms_nav.o: cgms_nav.f90
 geo_mod.o:geo_mod.f90
 config_mod.o:config_mod.f90 area_file_mod.o
 sfc_tools.o:sfc_tools.f90
-nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_mod.o
+cx_nwp_mod.o:cx_nwp_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_mod.o
 cr_constants_module.o:cr_constants_module.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
 cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o
 cx_geo_mod.o:cx_geo_mod.f90
-sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
+sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o cx_nwp_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o

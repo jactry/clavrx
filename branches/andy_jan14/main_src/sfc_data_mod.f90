@@ -121,7 +121,7 @@ contains
           date_type, period_16 &
           , first_doy_month
       use file_tools    
-      use nwp_data_mod , only: &
+      use cx_nwp_mod , only: &
           nwp_main_type 
       use cr_config_mod
       use cr_oisst_mod
@@ -644,7 +644,7 @@ contains
    !============================================================
    
    subroutine update_with_nwp ( this , nwp, geo )
-      use nwp_data_mod, only:  nwp_main_type
+      use cx_nwp_mod, only:  nwp_main_type
       use cx_geo_mod, only:  geo_type
       implicit none   
       class ( sfc_main_type ) , intent ( in out ) :: this

@@ -213,11 +213,11 @@ contains
       if ( allocated ( this % geo  % airmass_sol ) ) deallocate ( this % geo  % airmass_sol )
      
       
-      do i_mband = 1 , 16 
+      do i_mband = 1 , 42 
         
-         if ( allocated ( this % chn (modis_chn_list(i_mband))  % ref ) ) deallocate ( this % chn (modis_chn_list(i_mband))  % ref )
-         if ( allocated ( this % chn (modis_chn_list(i_mband))  % rad ) ) deallocate ( this % chn (modis_chn_list(i_mband))  % rad )
-         if ( allocated ( this % chn (modis_chn_list(i_mband))  % bt ) ) deallocate ( this % chn (modis_chn_list(i_mband))  % bt )
+         if ( allocated ( this % chn (i_mband)  % ref ) ) deallocate ( this % chn (i_mband)  % ref )
+         if ( allocated ( this % chn (i_mband)  % rad ) ) deallocate ( this % chn (i_mband)  % rad )
+         if ( allocated ( this % chn (i_mband)  % bt ) ) deallocate ( this % chn (i_mband)  % bt )
          
       end do
    

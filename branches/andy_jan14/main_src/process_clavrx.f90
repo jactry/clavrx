@@ -620,8 +620,7 @@
          
          ! - this makes sgrid values in nwp object for this segment
          call  nwp_obj_g %  assign_to_sat_grid (  geo_obj_g ) 
-         
-         
+                 
           ! - read the sfc data for this segement                       
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
          call sfc_obj_g % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp_obj_g)
@@ -1317,6 +1316,7 @@
         !*************************************************************************
          call sfc_obj_g % deallocate_all()
          call nwp_obj_g % deallocate_sat_grid()
+         call sfc_obj_g % deallocate_all ()
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")

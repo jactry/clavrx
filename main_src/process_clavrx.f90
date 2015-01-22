@@ -239,7 +239,6 @@
    
    
    type ( conf_user_opt_type) :: conf_obj
-   type ( nwp_main_type ) :: nwp
    
   
    integer:: Chan_Idx , ii,jj
@@ -466,7 +465,7 @@
       !*************************************************************************
       ! Marker:  READ IN NWP DATA
       !*************************************************************************
-      call nwp % populate ( start_time_obj, end_time_obj ,  config  % ancil_path , nwp_opt  )
+      call nwp_obj_g % populate ( start_time_obj, end_time_obj ,  config  % ancil_path , nwp_opt  )
       
     
       
@@ -622,22 +621,22 @@
          
          
          !  nwp_to_sat grid indicies and writes it in geo_obj_g
-         call lon_lat_index ( nwp % lat &
-         , nwp % lon &
+         call lon_lat_index ( nwp_obj_g % lat &
+         , nwp_obj_g % lon &
          , nav % lat_1b &
          , nav % lon_1b &
          , geo_obj_g )
          
          ! - this makes sgrid values in nwp object for this segment
-         call  nwp %  assign_to_sat_grid (  geo_obj_g ) 
+         call  nwp_obj_g %  assign_to_sat_grid (  geo_obj_g ) 
          
          
           ! - read the sfc data for this segement                       
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
-         call sfc_obj_g % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp)
+         call sfc_obj_g % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp_obj_g)
          
          ! - some sfc parameters will be updated with nwp data (e.g. snow , emis )
-         call sfc_obj_g % update_with_nwp (    nwp , geo_obj_g )
+         call sfc_obj_g % update_with_nwp (    nwp_obj_g , geo_obj_g )
          
          
          !-------------------------------------------------------------------
@@ -1326,7 +1325,7 @@
         ! Marker: End of loop over orbital segments
         !*************************************************************************
          call sfc_obj_g % deallocate_all()
-         call nwp % deallocate_sat_grid()
+         call nwp_obj_g % deallocate_sat_grid()
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")
@@ -1402,7 +1401,7 @@
       !*************************************************************************
       ! Marker: End loop over files
       !*************************************************************************
-      call nwp % deallocate()
+      call nwp_obj_g % deallocate()
    end do File_Loop
 
    !*************************************************************************

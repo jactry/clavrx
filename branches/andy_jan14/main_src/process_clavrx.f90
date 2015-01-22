@@ -156,9 +156,7 @@
    use sfc_data_mod, only: &
       sfc_main_type 
       
-  use nwp_data_mod , only: &
-      nwp_main_type   
-      
+  
    implicit none
  
    !***********************************************************************

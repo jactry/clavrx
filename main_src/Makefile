@@ -175,6 +175,7 @@ clavrxorb_objs = process_clavrx.o \
                  cr_physics_mod.o \
                  cr_data_pool_mod.o \
                  cx_geo_mod.o \
+                 cx_sat_mod.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -304,8 +305,9 @@ sfc_tools.o:sfc_tools.f90
 cx_nwp_mod.o:cx_nwp_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_mod.o
 cr_constants_module.o:cr_constants_module.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o
+cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o cx_sat_mod.o
 cx_geo_mod.o:cx_geo_mod.f90
+cx_sat_mod.o:cx_sat_mod.f90
 sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o cx_nwp_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
@@ -372,7 +374,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               file_utility.o level2.o cloud_height_routines.o cx_geo_mod.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
-              sort_module.o calibration_constants.o algorithm_constants.o  \
+              sort_module.o calibration_constants.o algorithm_constants.o cx_sat_mod.o \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o cr_data_pool_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \

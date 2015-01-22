@@ -608,21 +608,14 @@
          !-----------------------------------------------------------------
          Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-         call READ_LEVEL1B_DATA(Image%Level1b_Full_Name,Segment_Number, &
-                                Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
-                                
-      
-         if (Ierror_Level1b /= 0) then
-            print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
-            exit
-         end if
-         
+         !- reads levele 1b data  
+         call  sat_obj_g % read_l1b ( Segment_Number ,areastr,navstr , Nrec_Avhrr_Header, Time_Since_Launch)
          
          !  nwp_to_sat grid indicies and writes it in geo_obj_g
          call lon_lat_index ( nwp_obj_g % lat &
          , nwp_obj_g % lon &
-         , nav % lat_1b &
-         , nav % lon_1b &
+         , sat_obj_g % geo % lat &
+         , sat_obj_g % geo % lon &
          , geo_obj_g )
          
          ! - this makes sgrid values in nwp object for this segment

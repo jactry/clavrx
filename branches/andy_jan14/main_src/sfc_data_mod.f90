@@ -76,6 +76,7 @@ module sfc_data_mod
       contains
          procedure :: populate
          procedure :: deallocate_all => deallocate_sfc
+         procedure :: update_with_nwp
    end type sfc_main_type
       !        
    type, public :: sfc_config_type
@@ -642,11 +643,11 @@ contains
    !
    !============================================================
    
-   subroutine update_sfc_from_nwp ( sfc , nwp, geo )
+   subroutine update_with_nwp ( this , nwp, geo )
       use nwp_data_mod, only:  nwp_main_type
-      use geo_mod, only:  geo_type
+      use cx_geo_mod, only:  geo_type
       implicit none   
-      type ( sfc_main_type ) , intent ( in out ) :: sfc
+      class ( sfc_main_type ) , intent ( in out ) :: this
       type ( nwp_main_type ) , intent ( in ) :: nwp
       type ( geo_type ) , intent ( in ) :: geo
       
@@ -656,30 +657,30 @@ contains
       integer :: i , j
       
       
-      if ( .not. allocated( sfc % z % data ) ) &
-         & allocate ( sfc % z % data ( sfc % dim_x,  sfc % dim_y ) )
+      if ( .not. allocated( this % z % data ) ) &
+         & allocate ( this % z % data ( this % dim_x,  this % dim_y ) )
       
-      if ( .not. sfc % snow_class % is_set ) then
-         allocate ( sfc % snow_class % data ( sfc % dim_x,  sfc % dim_y ) )
+      if ( .not. this % snow_class % is_set ) then
+         allocate ( this % snow_class % data ( this % dim_x,  this % dim_y ) )
          
       
          
-         sfc % snow_class % data = et_snow_class % NO_SNOW_NOR_ICE
+         this % snow_class % data = et_snow_class % NO_SNOW_NOR_ICE
         
-         do j = 1, sfc % dim_y 
-            do i = 1, sfc % dim_x
+         do j = 1, this % dim_y 
+            do i = 1, this % dim_x
            
                
                xnwp = geo % idx_nwp_x ( i , j)
                ynwp = geo % idx_nwp_y ( i , j)
              
-               sfc % z % data ( i , j ) = nwp % zsfc ( xnwp , ynwp )
+               this % z % data ( i , j ) = nwp % zsfc ( xnwp , ynwp )
                
                if ( nwp % weasd ( xnwp , ynwp ) > 0.1 ) then
-                  sfc % snow_class % data ( i, j) = et_snow_class % SNOW
+                  this % snow_class % data ( i, j) = et_snow_class % SNOW
                end if    
                if ( nwp % ice ( xnwp , ynwp ) > 0.5 ) then
-                  sfc % snow_class % data ( i, j) = et_snow_class % SEA_ICE
+                  this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
                end if 
             end do
          end do   
@@ -689,14 +690,14 @@ contains
             
       ! - update emis to default values for snow
       
-      where ( sfc % snow_class % data == et_snow_class % SNOW )
-         sfc % emis ( 20 ) % data = 0.984
-         sfc % emis ( 29 ) % data = 0.979
-         sfc % emis ( 31 ) % data = 0.979
-         sfc % emis ( 32 ) % data = 0.977
+      where ( this % snow_class % data == et_snow_class % SNOW )
+         this % emis ( 20 ) % data = 0.984
+         this % emis ( 29 ) % data = 0.979
+         this % emis ( 31 ) % data = 0.979
+         this % emis ( 32 ) % data = 0.977
       end where
          
-   end subroutine update_sfc_from_nwp
+   end subroutine update_with_nwp
    
    
    ! ============================== = = = = = = = = = = = = = = =======

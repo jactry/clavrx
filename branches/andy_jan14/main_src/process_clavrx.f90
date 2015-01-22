@@ -603,7 +603,9 @@
 
          !--- reset pixel arrays to missing for this segment
          call RESET_PIXEL_ARRAYS_TO_MISSING()
-
+         
+        
+        
          !-----------------------------------------------------------------
          !---- Marker: Read level-1b data
          !-----------------------------------------------------------------
@@ -612,18 +614,32 @@
          call READ_LEVEL1B_DATA(Image%Level1b_Full_Name,Segment_Number, &
                                 Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
                                 
-     
+      
          if (Ierror_Level1b /= 0) then
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
          end if
          
          
+         !  nwp_to_sat grid indicies and writes it in geo_obj_g
+         call lon_lat_index ( nwp % lat &
+         , nwp % lon &
+         , nav % lat_1b &
+         , nav % lon_1b &
+         , geo_obj_g )
+         
+         ! - this makes sgrid values in nwp object for this segment
+         call  nwp %  assign_to_sat_grid (  geo_obj_g ) 
+         
+         
           ! - read the sfc data for this segement                       
          conf_obj % ancil_path = trim(Ancil_Data_Dir)
          call sfc_obj_g % populate ( start_time_obj, nav % lat_1b, nav % lon_1b, config , nwp)
          
-      
+         ! - some sfc parameters will be updated with nwp data (e.g. snow , emis )
+         call sfc_obj_g % update_with_nwp (    nwp , geo_obj_g )
+         
+         
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------

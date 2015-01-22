@@ -98,7 +98,13 @@
    use NLCOMP_BRIDGE_MOD
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
-   use CR_DATA_POOL_MOD
+   use CR_DATA_POOL_MOD, only: &
+      sfc_obj_g &
+      ,geo_obj_g &
+      ,nwp_obj_g &
+      ,sat_obj_g &
+      ,imp_obj_g &
+      ,rtm_obj_g
    
    use GLOBSNOW_READ_ROUTINES
    use GFS
@@ -155,7 +161,8 @@
    
    use sfc_data_mod, only: &
       sfc_main_type 
-      
+   
+   
   
    implicit none
  
@@ -607,7 +614,7 @@
          !---- Marker: Read level-1b data
          !-----------------------------------------------------------------
          Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
+         
          !- reads levele 1b data  
          call  sat_obj_g % read_l1b ( Segment_Number ,areastr,navstr , Nrec_Avhrr_Header, Time_Since_Launch)
          
@@ -628,7 +635,11 @@
          ! - some sfc parameters will be updated with nwp data (e.g. snow , emis )
          call sfc_obj_g % update_with_nwp (    nwp_obj_g , geo_obj_g )
          
+         ! compute intermediate products (examples: lrc, array stats,etc.. ) 
+         call imp_obj_g % populate ( sat_obj_g , sfc_obj_g )
          
+         ! rtm computations
+         call rtm_obj_g % populate ( nwp_obj_g, geo_obj_g  , sfc_obj_g,   sat_obj_g )
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
@@ -1316,7 +1327,8 @@
         !*************************************************************************
          call sfc_obj_g % deallocate_all()
          call nwp_obj_g % deallocate_sat_grid()
-         call sfc_obj_g % deallocate_all ()
+         call sat_obj_g % deallocate_all ()
+         call imp_obj_g % deallocate_all ()
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")

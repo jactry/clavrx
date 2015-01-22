@@ -176,13 +176,15 @@ contains
          end if
          
       this % file = 'the file'
+      this % num_pix = Image%Number_Of_Lines
+      this % num_elem_this_seg = Image%Number_Of_Lines_Per_Segment
       
       do ii = 1, 42
-         print*,shape(this % chn(ii) % ref)
+         
          if ( allocated ( ch(ii) % rad_toa)) this % chn(ii) % rad = ch(ii) % rad_toa
          if ( allocated ( ch(ii) % ref_toa)) this % chn(ii) % ref = ch(ii) % ref_toa
          if ( allocated ( ch(ii) % bt_toa)) this % chn(ii) % bt = ch(ii) % bt_toa
-         print*,shape(this % chn(ii) % ref)
+         
       end do   
       
       if ( allocated (nav%lat_1b)) this %  geo % lat = nav % lat_1b

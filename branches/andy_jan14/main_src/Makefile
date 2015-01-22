@@ -176,6 +176,15 @@ clavrxorb_objs = process_clavrx.o \
                  cr_data_pool_mod.o \
                  cx_geo_mod.o \
                  cx_sat_mod.o \
+                 cx_imp_mod.o \
+                 cx_tools_array_mod.o \
+                 cx_tools_science_mod.o \
+                 cx_tools_science_planck_mod.o \
+                 cx_rtm_constants_mod.o \
+                 cx_rtm_mod.o \
+                 cx_rtm_tools_mod.o \
+                 cx_rtm_types_mod.o \
+                 get_rad_refl_factor.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -290,7 +299,7 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 date_tools_mod.o:date_tools_mod.f90
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
-pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o cr_data_pool_mod.o
+pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o 
 calibration_constants.o: calibration_constants.f90 constant.o 
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
@@ -304,10 +313,19 @@ config_mod.o:config_mod.f90 area_file_mod.o
 sfc_tools.o:sfc_tools.f90
 cx_nwp_mod.o:cx_nwp_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_mod.o
 cr_constants_module.o:cr_constants_module.f90
+get_rad_refl_factor.o:get_rad_refl_factor.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o cx_sat_mod.o
+cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o cx_sat_mod.o cx_imp_mod.o cx_rtm_mod.o cx_rtm_types_mod.o
 cx_geo_mod.o:cx_geo_mod.f90
-cx_sat_mod.o:cx_sat_mod.f90
+cx_sat_mod.o:cx_sat_mod.f90 sensor_module.o 
+cx_imp_mod.o:cx_imp_mod.f90 cx_tools_array_mod.o cx_tools_science_mod.o cx_sat_mod.o
+cx_tools_array_mod.o:cx_tools_array_mod.f90
+cx_tools_science_mod.o:cx_tools_science_mod.f90 cx_tools_science_planck_mod.o
+cx_tools_science_planck_mod.o:cx_tools_science_planck_mod.f90
+cx_rtm_constants_mod.o:cx_rtm_constants_mod.f90
+cx_rtm_mod.o:cx_rtm_mod.f90 cx_rtm_constants_mod.o cx_rtm_tools_mod.o cx_tools_science_mod.o 
+cx_rtm_tools_mod.o:cx_rtm_tools_mod.f90 cx_rtm_constants_mod.o cx_rtm_types_mod.o cx_rtm_mod.o
+cx_rtm_types_mod.o:cx_rtm_types_mod.f90
 sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o cx_nwp_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
@@ -323,7 +341,7 @@ hdf.o: hdf.f90
 hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o
+modis_module.o: modis_module.f90 constant.o hdf.o  pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o
 iff_module.o: iff_module.f90 hdf.o pixel_common.o file_utility.o hdf_read_module.o 
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o avhrr_module.o
@@ -372,15 +390,18 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o cr_oisst_mod.o \
               sfc_prop_umd.o cloud_type_bridge_module.o \
               file_utility.o level2.o cloud_height_routines.o cx_geo_mod.o \
-              dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
+              dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o cx_imp_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o cx_sat_mod.o \
-              acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
+              acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o cx_tools_array_mod.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o cr_data_pool_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o sfc_data_mod.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o date_tools_mod.o \
+              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o date_tools_mod.o cx_rtm_constants_mod.o \
+                 cx_rtm_mod.o \
+                 cx_rtm_tools_mod.o \
+                 cx_rtm_types_mod.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
 
 

@@ -351,7 +351,7 @@ contains
       !-TODO
    
   
-   allocate (gNWP%psfc(gfs_n_lon, gfs_n_lat))
+      allocate (gNWP%psfc(gfs_n_lon, gfs_n_lat))
    allocate (gNWP%lon(gfs_n_lon, gfs_n_lat))
    allocate (gNWP%lat(gfs_n_lon, gfs_n_lat))
 
@@ -379,63 +379,59 @@ contains
       gNWP % lon_first = gfs_lon_1
      
       gNWP % ice    = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'ice fraction', time_wgt )
-   gNWP % psfc   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface pressure', time_wgt )
-   gNWP % land   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'land mask', time_wgt )
+      gNWP % psfc   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface pressure', time_wgt )
+      gNWP % land   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'land mask', time_wgt )
+
+      gNWP % pmsl   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'MSL pressure', time_wgt )
+      gNWP % tmpsfc = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface temperature', time_wgt )
       
-  
-   gNWP % pmsl   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'MSL pressure', time_wgt )
-   gNWP % tmpsfc = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface temperature', time_wgt )
-      
-   gNWP % zsfc   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface height', time_wgt )
-   gNWP % tmpair = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'temperature at sigma=0.995', time_wgt )
-   gNWP % rhsfc  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'rh at sigma=0.995', time_wgt )
+      gNWP % zsfc   = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'surface height', time_wgt )
+      gNWP % tmpair = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'temperature at sigma=0.995', time_wgt )
+      gNWP % rhsfc  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'rh at sigma=0.995', time_wgt )
      
-   gNWP % weasd  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'water equivalent snow depth', time_wgt )
+      gNWP % weasd  = read_nwp_2d  ( sd_id_1 , sd_id_2 , 'water equivalent snow depth', time_wgt )
       gNWP % t_trop = read_nwp_2d ( sd_id_1, sd_id_2 , 'tropopause temperature', time_wgt ) 
       gNWP % p_trop = read_nwp_2d ( sd_id_1, sd_id_2 , 'tropopause pressure', time_wgt )
       gNWP % ozone = read_nwp_2d ( sd_id_1, sd_id_2 , 'total ozone', time_wgt )
       gNWP % tpw = read_nwp_2d ( sd_id_1, sd_id_2 , 'total precipitable water', time_wgt )
-      
-      
-      
-      
-   istatus =0
-   allocate ( gNWP%p_std ( gfs_n_levels) )
+
+      istatus =0
+      allocate ( gNWP%p_std ( gfs_n_levels) )
       sds_id = sfselect(sd_id_1, sfn2index(sd_id_1,'pressure levels'))
       
          
       Istatus = sfrdata(sds_id,  0 , 1 , gfs_n_levels  ,  &
                       gNWP%p_std) + Istatus
-   Istatus = sfendacc(sds_id) + Istatus	 
+      Istatus = sfendacc(sds_id) + Istatus	 
      
-   gNWP%n_levels = gfs_n_levels
+      gNWP%n_levels = gfs_n_levels
 
-   allocate ( gNWP%t_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-   allocate ( gNWP%z_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-   allocate ( gNWP%rh_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-   allocate ( gNWP%ozone_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
-   allocate ( gNWP%wvmr_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+      allocate ( gNWP%t_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+      allocate ( gNWP%z_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+      allocate ( gNWP%rh_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+      allocate ( gNWP%ozone_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
+      allocate ( gNWP%wvmr_prof(gfs_n_lon, gfs_n_lat,gfs_n_levels))
 
-   gNWP%wvmr_prof = 0.
+      gNWP%wvmr_prof = 0.
 
-   gNWP%t_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'temperature' , time_wgt )
-   gNWP%z_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'height' , time_wgt )
-   gNWP%rh_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'rh' , time_wgt )
+      gNWP%t_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'temperature' , time_wgt )
+      gNWP%z_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'height' , time_wgt )
+      gNWP%rh_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'rh' , time_wgt )
       gNWP%ozone_prof = read_nwp_3d (sd_id_1 , sd_id_2 , 'o3mr' , time_wgt )
 
-   do ii =1 , gfs_n_lon
-      do jj =1 , gfs_n_lat
-         gNWP%wvmr_prof(ii,jj,:) =  wvmr_from_rh_temp_press (  gNWP % rh_prof ( ii , jj , : )  &
+      do ii =1 , gfs_n_lon
+         do jj =1 , gfs_n_lat
+            gNWP%wvmr_prof(ii,jj,:) =  wvmr_from_rh_temp_press (  gNWP % rh_prof ( ii , jj , : )  &
                 , gNWP % t_prof ( ii , jj , : ) , gNWP % p_std(:) )
-      end do
-   end do 
+         end do
+      end do 
  
-   allocate (gNWP%wvmrsfc(gfs_n_lon, gfs_n_lat))
-   !gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
-!                , gNWP % tmpair , gNWP % pmsl )
+      allocate (gNWP%wvmrsfc(gfs_n_lon, gfs_n_lat))
+      !gNWP % wvmrsfc =  wvmr_from_rh_temp_press (  gNWP % rhsfc  &
+      !                , gNWP % tmpair , gNWP % pmsl )
 
-   deallocate (gNWP%rh_prof)
-   istatus = sfend(sd_id_1)
+      deallocate (gNWP%rh_prof)
+      istatus = sfend(sd_id_1)
       istatus = sfend(sd_id_2)
       
       

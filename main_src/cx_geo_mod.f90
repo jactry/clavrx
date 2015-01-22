@@ -47,7 +47,7 @@ contains
    
       real, dimension(:,:), allocatable :: lat_loc
       real, dimension(:,:), allocatable :: lon_loc
-       
+       integer :: i,j
       real :: dLat_ma, dLon_ma
   
       dim_ma = shape ( lat_master )
@@ -74,8 +74,7 @@ contains
      
       geo % idx_nwp_x = nint((( lon_loc - lon_master(1,1) ) / dlon_ma ) + 1)
       geo % idx_nwp_y = nint((( lat_loc - lat_master(1,1) ) / dlat_ma ) + 1)
-      
-     
+          
       where ( geo % idx_nwp_x > dim_ma_1 )
          geo % idx_nwp_x = 1
       end where       

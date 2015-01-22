@@ -174,6 +174,7 @@ clavrxorb_objs = process_clavrx.o \
                  nwp_data_mod.o \
                  cr_physics_mod.o \
                  cr_data_pool_mod.o \
+                 cx_geo_mod.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -288,7 +289,7 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 date_tools_mod.o:date_tools_mod.f90
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
-pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o
+pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o cr_data_pool_mod.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
@@ -300,11 +301,12 @@ cgms_nav.o: cgms_nav.f90
 geo_mod.o:geo_mod.f90
 config_mod.o:config_mod.f90 area_file_mod.o
 sfc_tools.o:sfc_tools.f90
-nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o
+nwp_data_mod.o:nwp_data_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_mod.o
 cr_constants_module.o:cr_constants_module.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o
-sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o
+cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o
+cx_geo_mod.o:cx_geo_mod.f90
+sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o nwp_data_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
@@ -367,7 +369,7 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o cr_oisst_mod.o \
               sfc_prop_umd.o cloud_type_bridge_module.o \
-              file_utility.o level2.o cloud_height_routines.o \
+              file_utility.o level2.o cloud_height_routines.o cx_geo_mod.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \

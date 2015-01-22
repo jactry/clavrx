@@ -583,7 +583,7 @@ contains
    !TODO : spatial interpolation 
    !
    subroutine assign_to_sat_grid ( self,  geo)
-      use geo_mod
+      use cx_geo_mod
       class ( nwp_main_type ) :: self
       type ( geo_type) :: geo
       integer :: i,j

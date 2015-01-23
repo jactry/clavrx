@@ -45,7 +45,7 @@ contains
    ! -------------------------------------------------
    subroutine populate_imp ( this, sat , sfc )
       use cx_sat_mod
-      use sfc_data_mod
+      use cx_sfc_mod
       
       type(sat_main_type) , intent(in) :: sat
       type(sfc_main_type) , intent(in) :: sfc

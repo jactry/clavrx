@@ -18,7 +18,7 @@ module cx_rtm_mod
       planck_bt2rad &
       , planck_rad2bt
    
-   use sfc_data_mod, only: &
+   use cx_sfc_mod, only: &
       sfc_main_type
       
   
@@ -623,7 +623,7 @@ contains
    end subroutine set_key_levels
    
    subroutine rtm_solar ( sfc , rtm ) 
-      use sfc_data_mod, only: sfc_main_type
+      use cx_sfc_mod, only: sfc_main_type
       use cx_rtm_types_mod
       type(sfc_main_type) :: sfc
       type (rtm_main_type) , target :: rtm

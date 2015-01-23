@@ -4,7 +4,7 @@
 !   HISTORY:
 !     01/21/2015: AW created 
 !
-module sfc_data_mod
+module cx_sfc_mod
    use sfc_tools, only : &
       read_hdf_global_attribute_float64 &
     , read_hdf_sds_dimensions &
@@ -65,6 +65,7 @@ module sfc_data_mod
       type ( sfc_data_i1_type ) :: coast_mask
       type ( sfc_data_i1_type ) :: snow_class
       type ( sfc_data_i1_type ) :: volcano
+      type ( sfc_data_r4_type ) :: ndvi
       
       type ( sfc_data_r4_type ) :: sst
       type ( sfc_data_r4_type ) :: sea_ice_fraction
@@ -733,7 +734,7 @@ contains
   
   
    
-end module sfc_data_mod
+end module cx_sfc_mod
 
 
 

@@ -133,7 +133,7 @@
    use AVHRR_REPOSITION_ROUTINES
    use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
        NB_CLOUD_MASK_BRIDGE
-   use MODIS_MODULE
+ !  use MODIS_MODULE
    use IFF_CLAVRX_BRIDGE
    use GOES_MODULE
    use LASZLO_INSOLATION
@@ -159,11 +159,13 @@
    use cr_config_mod 
    use date_tools_mod 
    
-   use sfc_data_mod, only: &
+   use cx_sfc_mod, only: &
       sfc_main_type 
    
    use cx_geo_mod, only: &
       lon_lat_index
+   
+   use cx_sfc_tools_mod   
    
   
    implicit none
@@ -845,7 +847,7 @@
             end if
   
             !--- modify land class with ndvi if available (helps mitigate navigation errors)
-            call MODIFY_LAND_CLASS_WITH_NDVI()
+            call update_sfc ( sfc_obj_g, sat_obj_g )
 
             !--- read volcano mask
             if (Read_Volcano_Mask == sym%YES) then

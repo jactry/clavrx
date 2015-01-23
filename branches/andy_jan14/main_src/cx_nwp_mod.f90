@@ -402,7 +402,7 @@ contains
          
       Istatus = sfrdata(sds_id,  0 , 1 , gfs_n_levels  ,  &
                       gNWP%p_std) + Istatus
-      Istatus = sfendacc(sds_id) + Istatus	 
+      Istatus = sfendacc(sds_id) + Istatus 
      
       gNWP%n_levels = gfs_n_levels
 

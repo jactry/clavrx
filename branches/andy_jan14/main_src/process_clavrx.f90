@@ -162,6 +162,8 @@
    use sfc_data_mod, only: &
       sfc_main_type 
    
+   use cx_geo_mod, only: &
+      lon_lat_index
    
   
    implicit none
@@ -639,7 +641,7 @@
          call imp_obj_g % populate ( sat_obj_g , sfc_obj_g )
          
          ! rtm computations
-         call rtm_obj_g % populate ( nwp_obj_g, geo_obj_g  , sfc_obj_g,   sat_obj_g )
+       !  call rtm_obj_g % populate ( nwp_obj_g, geo_obj_g  , sfc_obj_g,   sat_obj_g )
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
@@ -843,7 +845,7 @@
             end if
   
             !--- modify land class with ndvi if available (helps mitigate navigation errors)
-            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            call MODIFY_LAND_CLASS_WITH_NDVI()
 
             !--- read volcano mask
             if (Read_Volcano_Mask == sym%YES) then

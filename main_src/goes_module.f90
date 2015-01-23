@@ -275,6 +275,7 @@ subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
  if (ios0 /= 0) then
     erstat = 19
     print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
+	 print*,'filename is  ', Instr_Const_File
     stop 19
  endif
 
@@ -318,6 +319,7 @@ subroutine READ_GOES_SNDR_INSTR_CONSTANTS(Instr_Const_File)
  if (ios0 /= 0) then
     erstat = 19
     print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
+	 print*,'filename is ',trim(Instr_Const_File)
     stop 19
  endif
 

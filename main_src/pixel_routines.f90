@@ -52,8 +52,6 @@ MODULE PIXEL_ROUTINES
  use FILE_UTILITY
  use SURFACE_PROPERTIES
  
- 
- !use CR_DATA_POOL_MOD, only: sfc_obj_g , sat_obj_g
 
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &
@@ -73,7 +71,6 @@ MODULE PIXEL_ROUTINES
           COMPUTE_GLINT,                    &
           COMPUTE_GLINT_LUNAR,              &
           QC_MODIS,                         &
-          SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
           DETERMINE_LEVEL1B_COMPRESSION, &
           TERM_REFL_NORM, &
@@ -94,56 +91,7 @@ MODULE PIXEL_ROUTINES
 
   contains
 
-   !----------------------------------------------------------------------
-   ! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
-   !
-   ! this logic allows the default values to also be used to turn off
-   ! channels
-   !
-   !  called by process_clavrx inside segment loop
-   !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
-   !----------------------------------------------------------------------
-   subroutine SET_CHAN_ON_FLAG(jmin,nj)
 
-      integer (kind=int4), intent(in):: jmin
-      integer (kind=int4), intent(in):: nj
-      integer:: Line_Idx
-      
-      
-      Ch6_On_Pixel_Mask = sym%NO
-
-      line_loop: DO Line_Idx = jmin, nj - jmin + 1
-      
-         ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
-         Sensor%Chan_On_Flag_Per_Line(:,Line_Idx) = Sensor%Chan_On_Flag_Default   
-         
-         
-         ! two exceptions
-         if (trim(Sensor%Platform_Name)=='AQUA' .and. Sensor%Chan_On_Flag_Default(6) == sym%YES ) then
-            if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                     Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
-            end if  
-         end if
-         
-         
-         if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
-            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = Sensor%Chan_On_Flag_Default(6)   
-               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
-            end if
-            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
-               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = Sensor%Chan_On_Flag_Default(20)   
-            end if
-         endif
-
-
-         !--- set 2d mask used for channel-6 (1.6 um)
-         Ch6_On_Pixel_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
-
-      end do line_loop
-
-   end subroutine SET_CHAN_ON_FLAG
 
 !----------------------------------------------------------------------
 ! rudimentary quality check of modis

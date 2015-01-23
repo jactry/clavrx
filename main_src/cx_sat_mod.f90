@@ -186,7 +186,12 @@ contains
          if ( allocated ( ch(ii) % bt_toa)) this % chn(ii) % bt = ch(ii) % bt_toa
          
       end do   
-      
+      if ( .not. allocated  (nav%lat_1b) ) then
+			print*,'nav lon is to existing'
+			stop
+		end if
+		
+		
       if ( allocated (nav%lat_1b)) this %  geo % lat = nav % lat_1b
       if ( allocated (nav%lon_1b)) this %  geo % lon = nav % lon_1b
       if ( allocated (geo % solzen)) this %  geo % sol_zen = geo % solzen

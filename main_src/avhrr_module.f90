@@ -51,9 +51,11 @@ module AVHRR_MODULE
   use PIXEL_COMMON
   use CALIBRATION_CONSTANTS
   use CONSTANTS
-  use FILE_UTILITY
+ 
   use VIEWING_GEOMETRY_MODULE
   use PLANCK
+  use file_tools, only: &
+   getlun
 
   implicit none
 
@@ -309,7 +311,7 @@ subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
  integer:: ios0, erstat
  integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+ Instr_Const_lun = GETLUN()
 
  open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
 

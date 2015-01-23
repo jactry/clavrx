@@ -262,7 +262,7 @@ cr_oisst_mod.o: cr_oisst_mod.f90 pixel_common.o file_utility.o hdf.o num_mod.o d
 	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) cr_oisst_mod.f90 
 constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o
-avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_utility.o
+avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_tools.o
 
 acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \
                      rtm_common.o constant.o planck.o rtm_common.o 
@@ -296,12 +296,13 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 area_file_mod.o:area_file_mod.f90
-avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
-date_tools_mod.o:date_tools_mod.f90
+avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_tools.o
+
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o sfc_prop_umd.o file_utility.o 
 calibration_constants.o: calibration_constants.f90 constant.o 
+date_tools_mod.o:date_tools_mod.f90
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o

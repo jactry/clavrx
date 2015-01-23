@@ -86,17 +86,17 @@
 ! Marker: ACCESS MODULES 
 !******************************************************************************
    use CONSTANTS
-   use HDF
    use PIXEL_COMMON
    use PIXEL_ROUTINES
    use LEVEL2_ROUTINES
-   use SURFACE_PROPERTIES
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
    use NLCOMP_BRIDGE_MOD
-   use AEROSOL_PROPERTIES
+   use AEROSOL_PROPERTIES, only: &
+		read_aer_ch123a_ref_luts &
+		, pixel_aer_ret_ocean
    use HDF_PARAMS
    use CR_DATA_POOL_MOD, only: &
       sfc_obj_g &
@@ -127,17 +127,15 @@
    use RTM_COMMON,only: &
       nlevels_rtm
    
-   use NWP_COMMON
-   use SCALING_PARAMETERS
    use PLANCK
    use AVHRR_REPOSITION_ROUTINES
    use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
        NB_CLOUD_MASK_BRIDGE
- !  use MODIS_MODULE
+ 
    use IFF_CLAVRX_BRIDGE
-   use GOES_MODULE
+  
    use LASZLO_INSOLATION
-   use SEVIRI_MODULE
+  
    use MTSAT_MODULE
    use COMS_MODULE
    use FY2_MODULE
@@ -145,7 +143,8 @@
    
    use USER_OPTIONS,only:&
       SETUP_USER_DEFINED_OPTIONS &
-      , update_configuration
+      , update_configuration &
+		, SET_CHAN_ON_FLAG
       
    use CLAVRX_MESSAGE_MODULE, only: &
       mesg &
@@ -204,7 +203,7 @@
    real(kind=real4) :: Orbital_Processing_End_Time_Hours
    real(kind=real4) :: Orbital_Processing_Time_Seconds
    character(len=180):: File_1b_Temp
-   integer(kind=int4):: erstat
+
    real(kind=real4):: Time_Since_Launch
    integer(kind=int4):: err_reposnx_Flag
    integer(kind=int4), parameter:: One = 1
@@ -260,7 +259,6 @@
    call mesg ( '<-- Start of CLAVRXORB --> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
 
-   
    !----------------------------------------------------------------------------
    ! Initialize some flags
    !----------------------------------------------------------------------------
@@ -287,8 +285,8 @@
    call SETUP_USER_DEFINED_OPTIONS()
    ! - have to put  this toegther
    
-   config % temp_path = trim(temporary_data_dir)
-   print*,config % temp_path
+  
+
    print*,'==============     files to process  ==========='
    do ii = 1, config % n_files
       print*,trim(config % file % infile(ii)), config % file % ETsensor (ii)
@@ -367,7 +365,8 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
+      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr &
+				,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "

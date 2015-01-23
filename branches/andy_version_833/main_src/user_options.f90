@@ -118,7 +118,7 @@ module USER_OPTIONS
    public  :: UPDATE_CONFIGURATION
 
    character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
-   character ( len = 50 ) :: Data_Base_Path
+   character ( len = 250 ) :: Data_Base_Path
    integer :: Dcomp_Mode_User_Set
    integer :: Acha_Mode_User_Set
    integer :: Nlcomp_Mode_User_Set

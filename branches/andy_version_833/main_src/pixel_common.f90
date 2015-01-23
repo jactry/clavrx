@@ -241,9 +241,9 @@ module PIXEL_COMMON
   end type sensor_definition
 
   type :: image_definition
-    character(len=128):: Level1b_Name
-    character(len=128):: Level1b_Full_Name
-    character(len=128):: Level1b_Path
+    character(len=328):: Level1b_Name
+    character(len=528):: Level1b_Full_Name
+    character(len=328):: Level1b_Path
     integer(kind=int4):: Number_Of_Elements
     integer(kind=int4):: Number_Of_Lines
     integer(kind=int4):: Number_Of_Lines_Per_Segment

@@ -210,6 +210,7 @@ module NB_CLOUD_MASK
      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
      print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
      cloud_mask_bayesian_flag = symbol%NO
+	  print*,trim(Naive_Bayes_File_Name_Full_Path)
      return
    endif
    ios_sum = ios_sum + ios
@@ -1372,6 +1373,7 @@ module NB_CLOUD_MASK
       print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
       print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
       cloud_mask_bayesian_flag = symbol%NO
+		print*, EXE_PROMPT_CM ,' filename is: ', Naive_Bayes_File_Name_Full_Path
       return
    endif
 

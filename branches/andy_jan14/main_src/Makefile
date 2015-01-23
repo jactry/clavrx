@@ -170,7 +170,7 @@ clavrxorb_objs = process_clavrx.o \
                  cr_config_mod.o \
                  date_tools_mod.o \
                  sfc_tools.o \
-                 sfc_data_mod.o \
+                 cx_sfc_mod.o \
                  cx_nwp_mod.o \
                  cr_physics_mod.o \
                  cr_data_pool_mod.o \
@@ -185,6 +185,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_rtm_tools_mod.o \
                  cx_rtm_types_mod.o \
                  get_rad_refl_factor.o \
+                 cx_sfc_tools_mod.o \
                  area_file_mod.o
 
 #Level2b routines
@@ -315,7 +316,7 @@ cx_nwp_mod.o:cx_nwp_mod.f90 cr_physics_mod.o geo_mod.o date_tools_mod.o cx_geo_m
 cr_constants_module.o:cr_constants_module.f90
 get_rad_refl_factor.o:get_rad_refl_factor.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
-cr_data_pool_mod.o:cr_data_pool_mod.f90 sfc_data_mod.o cx_geo_mod.o cx_sat_mod.o cx_imp_mod.o cx_rtm_mod.o cx_rtm_types_mod.o
+cr_data_pool_mod.o:cr_data_pool_mod.f90 cx_sfc_mod.o cx_geo_mod.o cx_sat_mod.o cx_imp_mod.o cx_rtm_mod.o cx_rtm_types_mod.o
 cx_geo_mod.o:cx_geo_mod.f90
 cx_sat_mod.o:cx_sat_mod.f90 sensor_module.o 
 cx_imp_mod.o:cx_imp_mod.f90 cx_tools_array_mod.o cx_tools_science_mod.o cx_sat_mod.o
@@ -326,7 +327,8 @@ cx_rtm_constants_mod.o:cx_rtm_constants_mod.f90
 cx_rtm_mod.o:cx_rtm_mod.f90 cx_rtm_constants_mod.o cx_rtm_tools_mod.o cx_tools_science_mod.o 
 cx_rtm_tools_mod.o:cx_rtm_tools_mod.f90 cx_rtm_constants_mod.o cx_rtm_types_mod.o cx_rtm_mod.o
 cx_rtm_types_mod.o:cx_rtm_types_mod.f90
-sfc_data_mod.o:sfc_data_mod.f90 sfc_tools.o cx_nwp_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
+cx_sfc_mod.o:cx_sfc_mod.f90 sfc_tools.o cx_nwp_mod.o config_mod.o cr_config_mod.o cr_oisst_mod.o cx_geo_mod.o
+cx_sfc_tools_mod.o:cx_sfc_mod.o cx_sat_mod.o
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
@@ -396,13 +398,11 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o cx_tools_array_mod.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o cr_data_pool_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o \
-              modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
-              laszlo_insolation_module.o sasrab.o conver.o getmod.o sfc_data_mod.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o date_tools_mod.o cx_rtm_constants_mod.o \
-                 cx_rtm_mod.o \
-                 cx_rtm_tools_mod.o \
-                 cx_rtm_types_mod.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
+              iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
+              laszlo_insolation_module.o sasrab.o conver.o getmod.o cx_sfc_mod.o \
+              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o date_tools_mod.o \
+              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o \
+              cx_sfc_tools_mod.o
 
 
 

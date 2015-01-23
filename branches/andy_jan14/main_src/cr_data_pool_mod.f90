@@ -1,6 +1,6 @@
 module cr_data_pool_mod
    
-   use sfc_data_mod, only: sfc_main_type
+   use cx_sfc_mod, only: sfc_main_type
    use cx_geo_mod, only:lon_lat_index , geo_type
    use cx_nwp_mod, only:nwp_main_type
    use cx_sat_mod,only: sat_main_type

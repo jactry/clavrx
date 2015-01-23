@@ -53,7 +53,7 @@ MODULE PIXEL_ROUTINES
  use SURFACE_PROPERTIES
  
  
- use CR_DATA_POOL_MOD, only: sfc_obj_g , sat_obj_g
+ !use CR_DATA_POOL_MOD, only: sfc_obj_g , sat_obj_g
 
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &
@@ -83,7 +83,7 @@ MODULE PIXEL_ROUTINES
           COMPUTE_ACHA_PERFORMANCE_METRICS, &
           COMPUTE_DCOMP_PERFORMANCE_METRICS, &
           COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS, &
-          MODIFY_LAND_CLASS_WITH_NDVI, &
+         
           DESERT_MASK_FOR_CLOUD_DETECTION, &
           CITY_MASK_FOR_CLOUD_DETECTION
 
@@ -1997,14 +1997,14 @@ end subroutine COMPUTE_CLEAR_SKY_SCATTER
       logical ,allocatable :: cloud_free_ocean (:,:)
 
       Sst_Masked = Missing_Value_Real4
-      cloud_free_ocean =  Bad_Pixel_Mask /= sym%YES .and. sfc_obj_g % Land_class % data /= sym%LAND .and. &
-         sfc_obj_g %Land_class % data /= sym%COASTLINE .and.  ( cld_mask == sym%CLEAR &
-            .or. cld_mask == sym % PROB_CLEAR )
+    !  cloud_free_ocean =  Bad_Pixel_Mask /= sym%YES .and. sfc_obj_g % Land_class % data /= sym%LAND .and. &
+   !      sfc_obj_g %Land_class % data /= sym%COASTLINE .and.  ( cld_mask == sym%CLEAR &
+    !        .or. cld_mask == sym % PROB_CLEAR )
   
-      where ( cloud_free_ocean )
+      !where ( cloud_free_ocean )
          sst_masked = sst_unmasked
-      end where
-      deallocate ( cloud_free_ocean)
+     ! end where
+     ! deallocate ( cloud_free_ocean)
 
    end subroutine COMPUTE_MASKED_SST
 
@@ -2069,55 +2069,7 @@ end subroutine COMPUTE_CLEAR_SKY_SCATTER
 
  end subroutine DETERMINE_LEVEL1B_COMPRESSION
 
-   !====================================================================
-   !
-   ! Attempt to fix the land classification based on observed ndvi
-   !
-   ! if the ndvi is high and the land class is not land, this pixel should be land
-   ! if the ndvi is low and the land class is land, this pixel should be water
-   !
-   !====================================================================
-   subroutine MODIFY_LAND_CLASS_WITH_NDVI()
 
-      real, parameter:: Ndvi_Land_Threshold = 0.25
-      real, parameter:: Ndvi_Water_Threshold = -0.25
-      real, parameter:: Solzen_Threshold = 60.0
-      
-      
-      logical, allocatable :: to_apply_land (:,:) , to_apply_water (:,:)
-      real, allocatable :: ndvi_temp (:,:)
-
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
-      if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return
-      if (index(Sensor%Sensor_Name,'MODIS') > 0) return
-  
-       !modis ch2 saturates, need to modify for MODIS
-       
-       ndvi_temp = ( sat_obj_g % chn(2) % ref - sat_obj_g % chn(1) % ref ) / &
-                  ( sat_obj_g % chn(2) % ref + sat_obj_g % chn(1) % ref )
-      
-      to_apply_land = Bad_Pixel_Mask /= sym % YES .and. &
-                  Geo%Solzen <= Solzen_Threshold .and. &
-                  ndvi_temp > Ndvi_Land_Threshold
-                                    
-      to_apply_water = Bad_Pixel_Mask /= sym % YES .and. &
-                  Geo%Solzen <= Solzen_Threshold .and. &
-                  ndvi_temp < Ndvi_Water_Threshold    .and. &
-                  sfc_obj_g % land_class % data == sym % LAND         
-      
-      where ( to_apply_land )
-         sfc_obj_g % land_class % data = sym % LAND      
-      end where  
-      
-      where ( to_apply_water )
-         sfc_obj_g % land_class % data = sym%SHALLOW_INLAND_WATER      
-      end where     
-   
-      deallocate ( to_apply_land)
-      deallocate ( to_apply_water )
-      deallocate ( ndvi_temp)
-
-   end subroutine MODIFY_LAND_CLASS_WITH_NDVI
 !====================================================================
 ! Function Name: TERM_REFL_NORM
 !

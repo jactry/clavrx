@@ -116,6 +116,7 @@ module USER_OPTIONS
    private
    public  :: SETUP_USER_DEFINED_OPTIONS
    public  :: UPDATE_CONFIGURATION
+	public :: SET_CHAN_ON_FLAG
 
    character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
    character ( len = 50 ) :: Data_Base_Path
@@ -728,10 +729,10 @@ contains
 
   end subroutine HELPER
   
-   ! -----------------------------------------------------------------
+   ! ---------------------------------------------------------------------------------------------------
    ! -- wrapper for all updating tools for a new file
    !     called from PROCESS_CLAVRX inside file loop
-   ! ---------------------------------------------------
+   ! ---------------------------------------------------------------------------------------------------
    subroutine UPDATE_CONFIGURATION (sensorname)
       character (len=*) , intent(in) :: sensorname
       
@@ -751,6 +752,58 @@ contains
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( sensorname ) 
       
    end subroutine UPDATE_CONFIGURATION
+	
+   !----------------------------------------------------------------------
+   ! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
+   !
+   ! this logic allows the default values to also be used to turn off
+   ! channels
+   !
+   !  called by process_clavrx inside segment loop
+   !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
+   !----------------------------------------------------------------------
+	subroutine SET_CHAN_ON_FLAG(jmin,nj)
+		use constants
+		use pixel_common
+      integer (kind=int4), intent(in):: jmin
+      integer (kind=int4), intent(in):: nj
+      integer:: Line_Idx
+         
+      Ch6_On_Pixel_Mask = sym%NO
+		
+      line_loop: DO Line_Idx = jmin, nj - jmin + 1
+      
+         ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
+         Sensor%Chan_On_Flag_Per_Line(:,Line_Idx) = Sensor%Chan_On_Flag_Default   
+         
+         
+         ! two exceptions
+         if (trim(Sensor%Platform_Name)=='AQUA' .and. Sensor%Chan_On_Flag_Default(6) == sym%YES ) then
+            if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
+                     Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
+            end if  
+         end if
+         
+         
+         if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
+               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = Sensor%Chan_On_Flag_Default(6)   
+               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
+            end if
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
+               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
+               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = Sensor%Chan_On_Flag_Default(20)   
+            end if
+         endif
+
+
+         !--- set 2d mask used for channel-6 (1.6 um)
+         Ch6_On_Pixel_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
+
+      end do line_loop
+
+   end subroutine SET_CHAN_ON_FLAG
+	
    
    !----------------------------------------------------------------------
    !  returns default acha mode 

@@ -59,6 +59,8 @@ contains
       
       geo % n_x = dim_sl_1
       geo % n_y = dim_sl_2
+		geo % idx_nwp_x = 1
+		geo % idx_nwp_y = 1
       allocate ( geo % idx_nwp_x (dim_sl_1 , dim_sl_2 ) ,  geo % idx_nwp_y (dim_sl(1) , dim_sl(2) ))
       allocate ( lat_loc (dim_sl_1 , dim_sl_2 ) ,  lon_loc (dim_sl(1) , dim_sl(2) ))
       
@@ -71,10 +73,11 @@ contains
       
       dLat_ma = lat_master(10,11)  - lat_master(10,10)
       dLon_ma = lon_master(11,10) - lon_master(10,10)
-     
+		
+		
       geo % idx_nwp_x = nint((( lon_loc - lon_master(1,1) ) / dlon_ma ) + 1)
       geo % idx_nwp_y = nint((( lat_loc - lat_master(1,1) ) / dlat_ma ) + 1)
-          
+        
       where ( geo % idx_nwp_x > dim_ma_1 )
          geo % idx_nwp_x = 1
       end where       

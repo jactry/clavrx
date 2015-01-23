@@ -65,31 +65,33 @@
 !
 !--------------------------------------------------------------------------------------
 module AEROSOL_PROPERTIES
- use PIXEL_COMMON
- use CONSTANTS
- use FILE_UTILITY
- use NUMERICAL_ROUTINES
- implicit none
- private
- public:: READ_AER_CH123A_REF_LUTS,&
+ 	use PIXEL_COMMON
+	use CONSTANTS
+ 	use NUMERICAL_ROUTINES
+	use file_tools, only: &
+		getlun
+	
+ 	implicit none
+	private
+ 	public:: READ_AER_CH123A_REF_LUTS,&
           PIXEL_AER_RET_OCEAN
- private:: AER_RET
+ 	private:: AER_RET
 
-!------------------------------------------------------------------------
- integer, parameter, private:: nzen = 15, Naz = 19, Nsolzen = 15, Ntau = 7
+	!------------------------------------------------------------------------
+ 	integer, parameter, private:: nzen = 15, Naz = 19, Nsolzen = 15, Ntau = 7
 
-!--- aerosol lut variables
- real, dimension(Ntau), save, private::tau_Lut
- real, dimension(Nsolzen), save, private::Solzen_Lut
- real, dimension(nzen), save, private::zen_Lut
- real, dimension(Naz), save, private::az_Lut
- real, save, public:: lambda_ref
- real, save, private:: delta_Solzen,delta_zen,delta_az,delta_tau
- real, dimension(Nsolzen,nzen,Ntau,Naz), save, private::  Ref_Lut_Ch1_aer, &
+	!--- aerosol lut variables
+ 	real, dimension(Ntau), save, private::tau_Lut
+ 	real, dimension(Nsolzen), save, private::Solzen_Lut
+ 	real, dimension(nzen), save, private::zen_Lut
+ 	real, dimension(Naz), save, private::az_Lut
+ 	real, save, public:: lambda_ref
+ 	real, save, private:: delta_Solzen,delta_zen,delta_az,delta_tau
+ 	real, dimension(Nsolzen,nzen,Ntau,Naz), save, private::  Ref_Lut_Ch1_aer, &
                                                  Ref_Lut_Ch2_aer,Ref_Lut_Ch3a_aer
 
-!--- other module-wide variables
- real, dimension(Ntau), save, private::temp_Ref_Lut
+	!--- other module-wide variables
+	 real, dimension(Ntau), save, private::temp_Ref_Lut
 
  contains
 
@@ -275,11 +277,11 @@ end subroutine AER_RET
     ch3a_aer_Lut_file = trim(ancil_data_dir)//"static/luts/aerosol/"//"Ch1F.lut.dat-NOAA15_3"
   endif
 
-  ch1_lun = GET_LUN()
+  ch1_lun = GETLUN()
   open(unit=ch1_lun,file=ch1_aer_Lut_file,status="old",position="rewind",action="read")
-  ch2_lun = GET_LUN()
+  ch2_lun = GETLUN()
   open(unit=ch2_lun,file=ch2_aer_Lut_file,status="old",position="rewind",action="read")
-  ch3a_lun = GET_LUN()
+  ch3a_lun = GETLUN()
   open(unit=ch3a_lun,file=ch3a_aer_Lut_file,status="old",position="rewind",action="read")
 
    read(unit=ch1_lun,fmt="(4i5)") nzen1, Naz1, Nsolzen1,Ntau1

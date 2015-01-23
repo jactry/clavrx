@@ -68,10 +68,14 @@ module config_mod
       integer :: n_files
       character (len=256) :: ancil_path
       character (len=256) :: temp_path
+		integer :: expert_mode
       type (conf_algo_modes_type ) :: user_modes
       type (conf_algo_modes_type ) :: updated_modes
-      integer :: rtm_mode
-      integer :: nwp_mode
+		logical :: make_level2_file
+		logical :: make_rtm_file
+      integer :: rtm_opt
+      integer :: nwp_opt
+		integer :: nav_opt
       logical :: do_smooth_nwp
       logical :: do_process_cloudfree
       logical :: do_compress_out
@@ -80,9 +84,10 @@ module config_mod
       type ( conf_sfc_type ) :: sfc
       type ( conf_mask_type) :: mask
       type ( conv_avhhr_type ) :: avhrr
-      type ( conf_channel_type ) , dimension(40) :: chan
+      type ( conf_channel_type ) , dimension(42) :: chan
       logical :: use_gzip     
       logical :: subset_pixel_hdf
+		integer :: num_lines_per_segm
       
       type ( conf_file_type ):: file
       
@@ -320,37 +325,56 @@ contains
       else
          read(unit=lun,fmt="(a)") conf % ancil_path
          read(unit=lun,fmt="(a)") conf % temp_path
+			read(unit=lun,fmt="(a)") conf % expert_mode
+			
+			if ( conf % expert_mode == 0 ) then
+				close ( unit = lun ) 
+				return
+			end if
+			
          read(unit=lun,fmt=*) conf %user_modes% mask_mode
          read(unit=lun,fmt=*) conf %user_modes% dcomp_mode
          read(unit=lun,fmt=*) conf % user_modes%acha_mode
          read(unit=lun,fmt=*) conf % user_modes%nlcomp_mode
+			
+			if ( conf % expert_mode <= 1 ) then
+				close ( unit = lun ) 
+				return
+			end if
+			
          read(unit=lun,fmt=*) int_dummy
-         conf % algo_group% run_sst = int_dummy == 1
+         conf % make_level2_file = int_dummy == 1
          read(unit=lun,fmt=*) int_dummy
-         conf % algo_group% run_cld = int_dummy == 1
+         conf % make_rtm_file = int_dummy == 1
          read(unit=lun,fmt=*) int_dummy
-          conf % algo_group% run_aot= int_dummy == 1
-         read(unit=lun,fmt=*) int_dummy
-          conf % algo_group% run_erb= int_dummy == 1
+          conf % algo_group% run_cld = int_dummy == 1
+         read(unit=lun,fmt=*) conf % num_lines_per_segm
+          
          read(unit=lun,fmt=*)  int_dummy
-         conf % algo_group% run_ash= int_dummy == 1
-         read(unit=lun,fmt=*) conf % nwp_mode
-         read(unit=lun,fmt=*)  int_dummy
-         conf % do_smooth_nwp = int_dummy == 1
-         read(unit=lun,fmt=*) conf % rtm_mode
-         read(unit=lun,fmt=*)  int_dummy
-         conf % do_process_cloudfree = int_dummy == 1
-         read(unit=lun,fmt=*)  int_dummy
+         conf % algo_group% run_erb = int_dummy == 1
+         read(unit=lun,fmt=*) conf % nwp_opt
+         read(unit=lun,fmt=*) conf % rtm_opt
+			read(unit=lun,fmt=*) conf % nav_opt
+         
+			read(unit=lun,fmt=*)  int_dummy
          conf % do_compress_out = int_dummy == 1
          read(unit=lun,fmt=*)  int_dummy
          conf % mask % read_aux = int_dummy == 1
+			read(unit=lun,fmt="(a)")   conf % mask %bayesian_mask_classifier
+			
+			if ( conf % expert_mode <= 1 ) then
+				close ( unit = lun ) 
+				return
+			end if
+			
+			
          read(unit=lun,fmt=*)  int_dummy
          conf % mask % use_modis_clear = int_dummy == 1 
          read(unit=lun,fmt=*)  int_dummy
          conf % mask % use_prob_clear_res = int_dummy == 1 
          read(unit=lun,fmt=*)  int_dummy
          conf % mask % use_lrc = int_dummy == 1 
-         read(unit=lun,fmt="(a)")   conf % mask %bayesian_mask_classifier
+         
       end if
       close ( unit = lun )
       

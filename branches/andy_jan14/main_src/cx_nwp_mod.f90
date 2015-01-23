@@ -279,18 +279,18 @@ contains
      
        select case (nwp_opt)
        case (1)  
-         nwp_file1 = trim(trim(ancil_path)//'../gfs'//"/"// &
+         nwp_file1 = trim(trim(ancil_path)//'dynamic/gfs'//"/"// &
                       "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
-         nwp_file2 = trim(trim(ancil_path)//'../gfs'//"/"// &
+         nwp_file2 = trim(trim(ancil_path)//'dynamic/gfs'//"/"// &
                       "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
                       
         case (2)
             print*,'baeeh ncep later'
         
         case (3)
-              nwp_file1 = trim(trim(ancil_path)//'../cfsr'//"/"// &
+              nwp_file1 = trim(trim(ancil_path)//'dynamic/cfsr'//"/"// &
                       "gfs." // before_gfs_time % yymmddhh //"_F012.hdf")
-            nwp_file2 = trim(trim(ancil_path)//'../cfsr'//"/"// &
+            nwp_file2 = trim(trim(ancil_path)//'dynamic/cfsr'//"/"// &
                       "gfs." // after_gfs_time % yymmddhh //"_F012.hdf")
         
         case(4)

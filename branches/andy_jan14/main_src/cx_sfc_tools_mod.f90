@@ -9,15 +9,17 @@ contains
       
       type ( sfc_main_type ) :: sfc_obj
       type ( sat_main_type ) :: sat_obj
-      
-      sfc_obj % ndvi % data = ndvi (sat_obj % chn(2) % ref , sat_obj % chn(1) % ref) 
-     print*, maxval(sfc_obj % ndvi % data )
+     
+		if ( allocated ( sat_obj % chn(2) % ref )) then
+      	sfc_obj % ndvi % data = ndvi (sat_obj % chn(2) % ref , sat_obj % chn(1) % ref) 
+		end if	
+     
    
    end subroutine
    
    elemental real function ndvi ( rfl_1, rfl_2 )
       real , intent(in) :: rfl_1, rfl_2
-      ndvi = (rfl_2-rfl_1 ) / ( rfl_2+rfl_1)   
+      ndvi = (rfl_2-rfl_1 ) / ( rfl_2+rfl_1) 
    end function ndvi
    
    

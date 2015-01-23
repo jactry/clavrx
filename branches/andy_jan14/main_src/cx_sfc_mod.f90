@@ -657,29 +657,31 @@ contains
       integer :: ynwp
       integer :: i , j
       
+	
       
       if ( .not. allocated( this % z % data ) ) &
          & allocate ( this % z % data ( this % dim_x,  this % dim_y ) )
       
       if ( .not. this % snow_class % is_set ) then
          allocate ( this % snow_class % data ( this % dim_x,  this % dim_y ) )
-         
-      
-         
+
          this % snow_class % data = et_snow_class % NO_SNOW_NOR_ICE
         
          do j = 1, this % dim_y 
             do i = 1, this % dim_x
            
                
+					
                xnwp = geo % idx_nwp_x ( i , j)
                ynwp = geo % idx_nwp_y ( i , j)
-             
+            
+			
                this % z % data ( i , j ) = nwp % zsfc ( xnwp , ynwp )
-               
+              
                if ( nwp % weasd ( xnwp , ynwp ) > 0.1 ) then
                   this % snow_class % data ( i, j) = et_snow_class % SNOW
                end if    
+					
                if ( nwp % ice ( xnwp , ynwp ) > 0.5 ) then
                   this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
                end if 
@@ -697,6 +699,8 @@ contains
          this % emis ( 31 ) % data = 0.979
          this % emis ( 32 ) % data = 0.977
       end where
+		
+	
          
    end subroutine update_with_nwp
    

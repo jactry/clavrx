@@ -53,7 +53,7 @@ MODULE PIXEL_ROUTINES
  use SURFACE_PROPERTIES
  
  
- !use CR_DATA_POOL_MOD, only: sfc_obj_g
+ use CR_DATA_POOL_MOD, only: sfc_obj_g , sat_obj_g
 
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &
@@ -1988,34 +1988,25 @@ subroutine COMPUTE_CLEAR_SKY_SCATTER(Tau_Aer, &
 end subroutine COMPUTE_CLEAR_SKY_SCATTER
 
 
-!===========================================================================
-!-- Compute Cloud and Land Masked SST
-!===========================================================================
-subroutine COMPUTE_MASKED_SST(jmin,jmax)
+   !===========================================================================
+   !-- Compute Cloud and Land Masked SST
+   !===========================================================================
+   subroutine COMPUTE_MASKED_SST(jmin,jmax)
+      integer, intent(in):: jmin
+      integer, intent(in):: jmax
+      logical ,allocatable :: cloud_free_ocean (:,:)
 
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
+      Sst_Masked = Missing_Value_Real4
+      cloud_free_ocean =  Bad_Pixel_Mask /= sym%YES .and. sfc_obj_g % Land_class % data /= sym%LAND .and. &
+         sfc_obj_g %Land_class % data /= sym%COASTLINE .and.  ( cld_mask == sym%CLEAR &
+            .or. cld_mask == sym % PROB_CLEAR )
+  
+      where ( cloud_free_ocean )
+         sst_masked = sst_unmasked
+      end where
+      deallocate ( cloud_free_ocean)
 
-  integer:: Elem_Idx
-  integer:: Line_Idx
-
-  Sst_Masked = Missing_Value_Real4
-
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
-
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
- 
-     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
-        if (Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or. Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
-          Sst_Masked(Elem_Idx,Line_Idx) = Sst_Unmasked(Elem_Idx,Line_Idx)
-        endif
-     endif
-
-    end do element_loop
-  end do line_loop
-
- end subroutine COMPUTE_MASKED_SST
+   end subroutine COMPUTE_MASKED_SST
 
 !==============================================================================
 !
@@ -2078,61 +2069,55 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
 
  end subroutine DETERMINE_LEVEL1B_COMPRESSION
 
-!====================================================================
-!
-! Attempt to fix the land classification based on observed ndvi
-!
-! if the ndvi is high and the land class is not land, this pixel should be land
-! if the ndvi is low and the land class is land, this pixel should be water
-!
-!====================================================================
-subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
+   !====================================================================
+   !
+   ! Attempt to fix the land classification based on observed ndvi
+   !
+   ! if the ndvi is high and the land class is not land, this pixel should be land
+   ! if the ndvi is low and the land class is land, this pixel should be water
+   !
+   !====================================================================
+   subroutine MODIFY_LAND_CLASS_WITH_NDVI()
 
-  integer, intent(in):: Line_Idx_Min
-  integer, intent(in):: Num_Lines
+      real, parameter:: Ndvi_Land_Threshold = 0.25
+      real, parameter:: Ndvi_Water_Threshold = -0.25
+      real, parameter:: Solzen_Threshold = 60.0
+      
+      
+      logical, allocatable :: to_apply_land (:,:) , to_apply_water (:,:)
+      real, allocatable :: ndvi_temp (:,:)
 
-  integer:: Line_Idx_Max
-  integer:: Elem_Idx_Max
-  integer:: Elem_Idx_Min
-  integer:: Num_Elements
-  integer:: Line_Idx
-  integer:: Elem_Idx
-  real:: ndvi_temp
-  real, parameter:: Ndvi_Land_Threshold = 0.25
-  real, parameter:: Ndvi_Water_Threshold = -0.25
-  real, parameter:: Solzen_Threshold = 60.0
-  real, parameter:: Ref_Ch2_Threshold = 60.0
+      if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
+      if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return
+      if (index(Sensor%Sensor_Name,'MODIS') > 0) return
+  
+       !modis ch2 saturates, need to modify for MODIS
+       
+       ndvi_temp = ( sat_obj_g % chn(2) % ref - sat_obj_g % chn(1) % ref ) / &
+                  ( sat_obj_g % chn(2) % ref + sat_obj_g % chn(1) % ref )
+      
+      to_apply_land = Bad_Pixel_Mask /= sym % YES .and. &
+                  Geo%Solzen <= Solzen_Threshold .and. &
+                  ndvi_temp > Ndvi_Land_Threshold
+                                    
+      to_apply_water = Bad_Pixel_Mask /= sym % YES .and. &
+                  Geo%Solzen <= Solzen_Threshold .and. &
+                  ndvi_temp < Ndvi_Water_Threshold    .and. &
+                  sfc_obj_g % land_class % data == sym % LAND         
+      
+      where ( to_apply_land )
+         sfc_obj_g % land_class % data = sym % LAND      
+      end where  
+      
+      where ( to_apply_water )
+         sfc_obj_g % land_class % data = sym%SHALLOW_INLAND_WATER      
+      end where     
+   
+      deallocate ( to_apply_land)
+      deallocate ( to_apply_water )
+      deallocate ( ndvi_temp)
 
-  Elem_Idx_Min = 1
-  Num_Elements = Image%Number_Of_Elements
-  Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
-  Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
-
-  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
-    element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
-
-    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
-    if (Sensor%Chan_On_Flag_Default(1) == sym%NO) cycle
-    if (Sensor%Chan_On_Flag_Default(2) == sym%NO) cycle
-    if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Threshold) cycle
-    if (index(Sensor%Sensor_Name,'MODIS') > 0) cycle                         !modis ch2 saturates, need to modify for MODIS
-
-    Ndvi_Temp = (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) - ch(1)%Ref_Toa(Elem_idx,Line_Idx)) / &
-                (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) + ch(1)%Ref_Toa(Elem_idx,Line_Idx)) 
-
-    if (Ndvi_Temp > Ndvi_Land_Threshold) then
-      Sfc%Land(Elem_Idx,Line_Idx) = sym%LAND
-    endif
-
-    if (Ndvi_Temp < Ndvi_Water_Threshold .and. &
-        Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
-        Sfc%Land(Elem_Idx,Line_Idx) = sym%SHALLOW_INLAND_WATER
-    endif
-
-    enddo element_loop
-  enddo line_loop
-
-end subroutine MODIFY_LAND_CLASS_WITH_NDVI
+   end subroutine MODIFY_LAND_CLASS_WITH_NDVI
 !====================================================================
 ! Function Name: TERM_REFL_NORM
 !

@@ -18,7 +18,7 @@ contains
    elemental real function ndvi ( rfl_1, rfl_2 )
       real , intent(in) :: rfl_1, rfl_2
       ndvi = (rfl_2-rfl_1 ) / ( rfl_2+rfl_1)   
-   end 
+   end function ndvi
    
    
    !====================================================================

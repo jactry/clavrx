@@ -318,8 +318,8 @@ get_rad_refl_factor.o:get_rad_refl_factor.f90
 cr_physics_mod.o:cr_physics_mod.f90 cr_constants_module.o
 cr_data_pool_mod.o:cr_data_pool_mod.f90 cx_sfc_mod.o cx_geo_mod.o cx_sat_mod.o cx_imp_mod.o cx_rtm_mod.o cx_rtm_types_mod.o
 cx_geo_mod.o:cx_geo_mod.f90
-cx_sat_mod.o:cx_sat_mod.f90 sensor_module.o 
-cx_imp_mod.o:cx_imp_mod.f90 cx_tools_array_mod.o cx_tools_science_mod.o cx_sat_mod.o
+cx_sat_mod.o:cx_sat_mod.f90 sensor_module.o config_mod.o
+cx_imp_mod.o:cx_imp_mod.f90 cx_tools_array_mod.o cx_tools_science_mod.o cx_sat_mod.o cx_sfc_mod.o
 cx_tools_array_mod.o:cx_tools_array_mod.f90
 cx_tools_science_mod.o:cx_tools_science_mod.f90 cx_tools_science_planck_mod.o
 cx_tools_science_planck_mod.o:cx_tools_science_planck_mod.f90

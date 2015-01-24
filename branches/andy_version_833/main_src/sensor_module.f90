@@ -84,6 +84,7 @@ module SENSOR_MODULE
    character (len = 3), private :: string_3
    character (len = 4), private :: string_4
    character (len = 6), private :: string_6
+   character (len = 7), private :: string_7
    character (len = 30), private :: string_30
 
    contains
@@ -262,28 +263,27 @@ module SENSOR_MODULE
    subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
       call mesg ( "PROCESSING LIMITS",level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.2)' ) Nav%Lon_Max_Limit
-      call mesg ( "Maximum Longitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.2)' ) Nav%Lon_Max_Limit
+      call mesg ( "Maximum Longitude for Processing = "//string_7, level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.2)' ) Nav%Lon_Min_Limit
-      call mesg ( "Minimum Longitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.2)' ) Nav%Lon_Min_Limit
+      call mesg ( "Minimum Longitude for Processing = "//string_7, level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.2)' ) Nav%Lat_Max_Limit
-      call mesg ( "Maximum Latitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.1)' ) Nav%Lat_Max_Limit
+      call mesg ( "Maximum Latitude for Processing = "//string_7, level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.2)' ) Nav%Lat_Min_Limit
-      call mesg ( "Minimum Latitude for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.1)' ) Nav%Lat_Min_Limit
+      call mesg ( "Minimum Latitude for Processing = "//string_7, level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.1)' ) Geo%Solzen_Max_Limit
-      call mesg ( "Maximum Solar Zenith Angle for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.1)' ) Geo%Solzen_Max_Limit
+      call mesg ( "Maximum Solar Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
 
-      write(string_6,'(f6.1)' ) Geo%Solzen_Min_Limit
-      call mesg ( "Minimum Solar Zenith Angle for Processing = "//string_6, level = verb_lev % DEFAULT)
+      write(string_7,'(f7.1)' ) Geo%Solzen_Min_Limit
+      call mesg ( "Minimum Solar Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
 
       call mesg ( " ",level = verb_lev % DEFAULT)
 
    end subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN
-
 
    !--------------------------------------------------------------------------------------------------
    !  Read the values from instrument constant files

@@ -1414,6 +1414,10 @@
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
 
+                  !-- make CSBT masks (Clear Sky Brightness Temperature)
+                  call CH27_OPAQUE_TRANSMISSION_HEIGHT()
+                  call COMPUTE_CSBT_CLOUD_MASKS()
+
                end if
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()

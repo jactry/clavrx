@@ -567,6 +567,9 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
+  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ch27_Opaque_Height
+  integer(kind=int1), dimension(:,:), allocatable, public, save, target:: Ch27_CSBT_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, save, target:: Ch31_CSBT_Mask
 
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Elem_Idx_Max_Bt_Ch31_3x3
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Line_Idx_Max_Bt_Ch31_3x3
@@ -846,9 +849,6 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
  
   type (solar_rtm_struct), public, save:: Solar_Rtm
 
-!--- pixel arrays used in clavr_mod
-  real(kind=real4), dimension(:,:), allocatable, public:: Pix_Data
-
 !--- flags for using clavrxorb_Default_file
   integer ,public, save :: Use_Default
 
@@ -920,6 +920,9 @@ subroutine CREATE_PIXEL_ARRAYS()
    if ((Sensor%Chan_On_Flag_Default(27) == sym%YES) .and.   &
        (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then
            allocate(Covar_Ch27_Ch31_5x5(dim1,dim2))
+           allocate(Ch27_Opaque_Height(dim1,dim2))
+           allocate(Ch27_CSBT_Mask(dim1,dim2))
+           allocate(Ch31_CSBT_Mask(dim1,dim2))
    endif
 
    allocate(Bad_Pixel_Mask(dim1,dim2), &
@@ -1003,8 +1006,6 @@ subroutine CREATE_PIXEL_ARRAYS()
            Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
 
-  allocate(Pix_Data(nchan_Avhrr,dim1))
-
   !--------------------------------------------------------------------------------
   ! Initialize variables that are not reset for each segment
   !--------------------------------------------------------------------------------
@@ -1060,9 +1061,9 @@ subroutine DESTROY_PIXEL_ARRAYS()
              Pixel_Local_Time_Hours,Pixel_Time)
 
   if (allocated(Covar_Ch27_Ch31_5x5)) deallocate(Covar_Ch27_Ch31_5x5)
-
-  deallocate(Pix_Data)
-
+  if (allocated(Ch27_Opaque_Height)) deallocate(Ch27_Opaque_Height)
+  if (allocated(Ch27_CSBT_Mask)) deallocate(Ch27_CSBT_Mask)
+  if (allocated(Ch31_CSBT_Mask)) deallocate(Ch31_CSBT_Mask)
 
   deallocate(Bad_Pixel_Mask)
 

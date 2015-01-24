@@ -73,7 +73,7 @@ contains
    
       
       if ( message_level <= verbose_level ) then
-         print*,PROMPT//achar(27)//'['//color_string//' '//text//achar(27)//'[0m'      
+         print*,PROMPT//achar(27)//'['//color_string//'m '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it

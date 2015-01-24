@@ -36,6 +36,7 @@ module CLOUD_HEIGHT_ROUTINES
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
   public::  CO2_SLICING_CLOUD_HEIGHT
+  public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -621,17 +622,18 @@ end subroutine COMPUTE_BETA_PROFILE
    ! Output: Beta - the beta value from the two emissivities
    !
    !====================================================================
-   function BETA_RATIO(Emiss_top, Emiss_bot) result(beta)
-      real(kind=real4), intent(in) :: Emiss_top
-      real(kind=real4), intent(in) :: Emiss_bot
-      real(kind=real4) :: beta
+   function BETA_RATIO(Emiss_Top, Emiss_Bot) result(Beta)
+      real(kind=real4), intent(in) :: Emiss_Top
+      real(kind=real4), intent(in) :: Emiss_Bot
+      real(kind=real4) :: Beta
 
-      beta = Missing_Value_Real4
+      Beta = Missing_Value_Real4
 
-      if (Emiss_top > 0.0 .and. Emiss_top < 1.0 .and. &
-          Emiss_bot > 0.0 .and. Emiss_bot < 1.0) then
+      if (Emiss_Top > 0.0 .and. Emiss_Top < 1.0 .and. &
+          Emiss_Bot > 0.0 .and. Emiss_Bot < 1.0) then
 
-         beta = alog(1.0 - Emiss_top)/alog(1.0 - Emiss_bot)
+         Beta = alog(1.0 - Emiss_Top)/alog(1.0 - Emiss_Bot)
+
       end if
 
       return
@@ -690,6 +692,105 @@ subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
 
 end subroutine COMPUTE_BOX_WIDTH
 
+!----------------------------------------------------------------------
+! Compute Ch27 height where level transmission to space is opaque
+!----------------------------------------------------------------------
+subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Lon_Idx
+  integer:: Lat_Idx
+  integer:: Zen_Idx
+  integer:: Chan_Idx
+  integer:: Lev_Idx
+  real, dimension(:), pointer:: Trans_Prof
+  real, dimension(:), pointer:: Z_Prof
+  real, parameter:: Trans_Limit = 0.01
+
+  Ch27_Opaque_Height = Missing_Value_Real4
+
+  do Elem_Idx = 1, Image%Number_Of_Elements
+     do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+      
+     !--- indice aliases
+     Chan_Idx = 27
+     Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     !-- check if indices are valid
+     if (Lon_Idx < 0 .or. Lat_Idx < 0) cycle
+
+     Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
+     Z_Prof => Rtm(Lon_Idx,Lat_Idx)%Z_Prof
+
+     Lev_Idx = minloc(abs(Trans_Prof-Trans_Limit),1)   
+     Ch27_Opaque_Height(Elem_Idx,Line_Idx) = Z_Prof(Lev_Idx)
+
+     Trans_Prof => null()
+     Z_Prof => null()
+        
+     enddo
+  enddo
+
+end subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT
+
+!----------------------------------------------------------------------
+! Compute CSBT Cloud Masks
+! must be called at end of cloud processing chain (After ACHA)
+!----------------------------------------------------------------------
+subroutine COMPUTE_CSBT_CLOUD_MASKS()
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Lon_Idx
+  integer:: Lat_Idx
+  integer:: Zen_Idx
+  integer:: Chan_Idx
+  integer:: Lev_Idx
+  real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
+  real, parameter:: Covar_Ch27_Ch31_Max = 1.0
+
+  Ch27_CSBT_Mask = Missing_Value_Int1
+  Ch31_CSBT_Mask = Missing_Value_Int1
+
+  do Elem_Idx = 1, Image%Number_Of_Elements
+     do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- initialize to cloudy
+     Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 3
+     Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 3
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
+         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 0
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 0
+         cycle
+     endif
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
+         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 1
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 1
+         cycle
+     endif
+
+     if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
+       if (Acha%Zc(Elem_Idx,Line_Idx) <= Ch27_Opaque_Height(Elem_Idx,Line_Idx)) then
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 2
+       endif
+     endif
+
+     enddo
+  enddo
+      
+
+end subroutine COMPUTE_CSBT_CLOUD_MASKS
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

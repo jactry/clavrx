@@ -66,6 +66,8 @@ module cx_sfc_mod
       type ( sfc_data_i1_type ) :: snow_class
       type ( sfc_data_i1_type ) :: volcano
       type ( sfc_data_r4_type ) :: ndvi
+      logical, allocatable :: is_ocean (:,:)
+      logical, allocatable :: is_coast ( :,:)
       
       type ( sfc_data_r4_type ) :: sst
       type ( sfc_data_r4_type ) :: sea_ice_fraction
@@ -73,11 +75,15 @@ module cx_sfc_mod
       type ( sfc_data_r4_type ) , dimension(7) :: modis_w_sky
       type ( sfc_data_r4_type ) , dimension(7) :: albedo_snow
       type ( sfc_data_r4_type ) , dimension(20:36) :: emis
-      type ( sfc_data_r4_type )  :: z
+      type ( sfc_data_r4_type ) :: z
+      type ( sfc_data_r4_type ) :: lat , lon 
+      logical :: use_oisst
       contains
          procedure :: populate
          procedure :: deallocate_all => deallocate_sfc
          procedure :: update_with_nwp
+         procedure :: make_ocean_mask
+         procedure :: make_coast_mask
    end type sfc_main_type
       !        
    type, public :: sfc_config_type
@@ -110,7 +116,19 @@ module cx_sfc_mod
       integer :: SNOW = 3
       integer :: LAST = 3   
    end type
-   type ( et_snow_class_type) , public :: ET_snow_class   
+   type ( et_snow_class_type) , public :: ET_snow_class  
+    
+   type et_coast_class_type
+      integer :: FIRST = 1
+      integer :: NO_COAST = 1
+      integer :: COAST_5KM = 2
+      integer :: COAST_10KM = 3
+      integer :: LAST = 3   
+   end type
+   type ( et_coast_class_type) , public :: ET_coast_class 
+   
+   
+   
 contains  
 
    ! ================================================================
@@ -157,6 +175,9 @@ contains
       dim_all = shape(lat)
       this % dim_x = dim_all(1)
       this % dim_y = dim_all(2)
+      
+      this % lat % data = lat
+      this % lon % data = lon
     
       ! 1. land class     
       this % land_class % meta % filename = &
@@ -166,6 +187,8 @@ contains
       call read_meta (this % land_class % meta )
       call read_data_i1 ( this % land_class , lat , lon)
       call close_file ( this % land_class % meta )
+      
+      call this % make_ocean_mask ()
     
       ! 2. sfc type  
       this % sfc_type % meta % filename = &
@@ -177,6 +200,7 @@ contains
       call close_file ( this % sfc_type % meta )
       
       ! 3. coastal mask
+      this % coast_mask % is_set = .false.
       this % coast_mask % meta % filename = &
          &  trim(conf % ancil_path) //'/static/sfc_data/coast_mask_1km.hdf'
       this % coast_mask % meta % sds_name = 'coast_mask'  
@@ -184,6 +208,7 @@ contains
       call read_meta (this % coast_mask % meta )
       call read_data_i1 ( this % coast_mask , lat , lon)
       call close_file ( this % coast_mask % meta )
+      this % coast_mask % is_set = .true.
       
       ! 4. elevation
       this % elevation % meta % filename = &
@@ -314,7 +339,7 @@ contains
       !9. SST from oisst
       oisst_filename = get_oisst_map_filename ( date,trim(conf % ancil_path) //'/dynamic/oisst/')
       this % sst % meta % filename = oisst_filename
-      
+      this % use_oisst = .false.
       if (.not. oisst_filename == 'no_file') then
          nx = size (lat,1)
          ny = size(lat,2)
@@ -323,7 +348,7 @@ contains
          if (.not. allocated (this % sea_ice_fraction % data) ) allocate ( this % sea_ice_fraction % data (nx,ny))
          
          call get_oisst_data (this % sst % meta % filename , conf % temp_path , lat ,lon , this % sst % data , this % sea_ice_fraction % data , this % sst % stdv)
-         
+         this % use_oisst = .true.
       end if
   
 
@@ -657,6 +682,9 @@ contains
       integer :: ynwp
       integer :: i , j
       
+      real, parameter :: SNOW_NWP_WEASD_THRESHOLD = 0.1
+      real, parameter :: SEA_ICE_NWP_THRESHOLD = 0.5
+      
 	
       
       if ( .not. allocated( this % z % data ) ) &
@@ -669,22 +697,60 @@ contains
         
          do j = 1, this % dim_y 
             do i = 1, this % dim_x
-           
-               
-					
+
                xnwp = geo % idx_nwp_x ( i , j)
                ynwp = geo % idx_nwp_y ( i , j)
-            
-			
+            			
                this % z % data ( i , j ) = nwp % zsfc ( xnwp , ynwp )
-              
-               if ( nwp % weasd ( xnwp , ynwp ) > 0.1 ) then
-                  this % snow_class % data ( i, j) = et_snow_class % SNOW
+               
+               ! - do snow and sea-ice only if snow mask is empty from aux/hres data
+               if ( .not. this % snow_class % is_set ) then
+                  
+                  ! - nwp snow depth
+                  if ( nwp % weasd ( xnwp , ynwp ) > SNOW_NWP_WEASD_THRESHOLD ) then
+                     this % snow_class % data ( i, j) = et_snow_class % SNOW
+                  end if    
+					   
+                  !- nwp sea ice fraction
+                  if ( nwp % ice ( xnwp , ynwp ) > SEA_ICE_NWP_THRESHOLD ) then
+                     this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
+                  end if
+                  
+                  ! - oisst analysis is used for ocean if set
+                  if (this % use_oisst .and. this % is_ocean (i,j) ) then
+                     
+                     if ( this % sea_ice_fraction % data ( i,j) > SEA_ICE_NWP_THRESHOLD) then
+                        this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
+                     else
+                        this % snow_class % data ( i, j) = et_snow_class % NO_SNOW_NOR_ICE
+                        
+                        ! - oisst does not capture sea-ice in shallow water near antarctiva
+                         if ( this % land_class % data ( i,j) == et_land_class % SHALLOW_OCEAN &
+                              .and. this % lat % data (i,j) < -60.0  &
+                              .and. nwp % ice ( xnwp , ynwp ) > SEA_ICE_NWP_THRESHOLD) then
+                           this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
+                        end if
+                     end if 
+                     
+                     ! - detect any ice ( but not remove it)
+                     ! - example lake erie is covered the oisst but
+                     ! - classified as shallow_inland_water ( no ocean)
+                     
+                     if ( this % land_class % data (i,j) == et_land_class % SHALLOW_INLAND_WATER &
+                           .and. this % sea_ice_fraction % data ( i,j) > SEA_ICE_NWP_THRESHOLD) then
+                     
+                        this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
+                     end if
+  
+                  end if
+                  
+                  ! -can't be snow if this is warm
+                  !TODO
+                  
+                  ! - can't be snow if this is dark in VIS channel
+                  !TODO
+                  
                end if    
-					
-               if ( nwp % ice ( xnwp , ynwp ) > 0.5 ) then
-                  this % snow_class % data ( i, j) = et_snow_class % SEA_ICE
-               end if 
             end do
          end do   
          
@@ -724,6 +790,9 @@ contains
       if ( allocated ( this % sst % data )) deallocate ( this % sst % data )
       if ( allocated (this % sst % stdv) ) deallocate ( this % sst % stdv )
       if ( allocated (this % sea_ice_fraction % data) ) deallocate ( this % sea_ice_fraction % data )
+      if ( allocated ( this % lat % data )) deallocate ( this % lat % data )
+      if ( allocated ( this % lon % data )) deallocate ( this % lon % data )
+      if ( allocated ( this % is_ocean)) deallocate ( this % is_ocean)
       do i_w_sky = 1 , 7
          if ( allocated ( this % modis_w_sky (i_w_sky) % data )) &
             &  deallocate ( this % modis_w_sky (i_w_sky) % data )
@@ -734,7 +803,46 @@ contains
       end do 
       
    end subroutine deallocate_sfc
-  
+  !
+  !
+  !
+   subroutine make_ocean_mask ( this )
+      class ( sfc_main_type ) :: this
+      
+      this % is_ocean = .true.
+      
+      where ( this % land_class % data ==   et_land_class % land  .or. &
+            this % land_class% data ==   et_land_class % COASTLINE .or. &
+            this % land_class% data ==   et_land_class % EPHEMERAL_WATER .or. &
+            this % land_class% data ==   et_land_class % SHALLOW_INLAND_WATER )  
+         this % is_ocean = .false.
+      end where
+         
+    
+   end subroutine   
+   !
+   !
+   !
+    subroutine make_coast_mask ( this )
+      class ( sfc_main_type ) :: this
+      
+      this % is_coast = .true.
+      
+      !- for gac
+      where ( this % coast_mask % data <= et_coast_class % COAST_10km .and. this % coast_mask % data /= et_coast_class %  NO_COAST )
+         this % is_coast = .true.
+      end where 
+      ! -  for lac hrpt or frac
+      where ( this % coast_mask % data <= et_coast_class % COAST_5km .and. this % coast_mask % data /= et_coast_class %  NO_COAST )
+         this % is_coast = .true.
+      end where    
+      
+      if ( .not. this % coast_mask % is_set ) then
+         print*,'ask andi about not set coast masks in cx_sfc_mod.f90'   
+         stop 
+      end if      
+    
+   end subroutine   make_coast_mask
   
   
    

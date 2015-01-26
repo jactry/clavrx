@@ -828,10 +828,7 @@
                Sfc%Zsfc_Hires = real(sfc_obj_g % elevation % data ,kind=real4)
             end if
 
-            !--- merge with nwp surface elevation
-            if (Nwp_Opt /= 0) then
-                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            endif
+           
 
             !--- read coast mask
             if (Read_Coast_Mask == sym%YES) then
@@ -918,9 +915,7 @@
             !--- compute some common used pixel arrays 
             call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            if (index(Sensor%Sensor_Name, 'VIIRS') > 0) then
-               call COMPUTE_VIIRS_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
+          
 
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -928,10 +923,7 @@
             !--- compute the channel 3b albedo arrays
             call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            !--- compute pixel level Snow map based on all ancillary data
-            if (Nwp_Opt /= 0) then
-               call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
+            
 
             !--- interpolate surface type field to each pixel in segment
             call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
@@ -969,7 +961,7 @@
                call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute a surface temperature from the NWP
-               call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment, sfc_obj_g_land_class % data)
 
                !--- compute pixel-level rtm parameters 
                Start_Time_Point_Hours_temp = COMPUTE_TIME_HOURS()

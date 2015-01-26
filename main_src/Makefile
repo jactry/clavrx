@@ -353,14 +353,14 @@ coms_module.o: coms_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o go
 ncep_reanalysis.o: ncep_reanalysis.f90 constant.o hdf.o nwp_common.o sort_module.o num_mod.o
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
-nwp_common.o: nwp_common.f90 pixel_common.o constant.o
-level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o clavrx_message_module.o
+nwp_common.o: nwp_common.f90 pixel_common.o constant.o 
+level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o clavrx_message_module.o cr_data_pool_mod.o
 level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
 planck.o: planck.f90 constant.o calibration_constants.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o
 scaling_params.o: scaling_params.f90 constant.o
-sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
+sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o 
 sort_module.o: sort_module.f90
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
 rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o ahi_transm.o

@@ -57,6 +57,61 @@ contains
       self % max = 0.0
    
    end subroutine initialize
+   ! ------------------------------------------------
+   !
+   ! -------------------------------------------------   
+   subroutine array_sub_uniform ( &
+      data_array &
+      , n_box &
+      , out &
+      , mask_in )
+     
+      logical , intent(in) :: data_array(:,:)
+      integer , intent(in) :: n_box
+      logical :: out (:,:)
+      logical , intent(in) , optional :: mask_in(:,:) 
+      logical, allocatable :: mask ( :,:)
+      logical , dimension(n_box,n_box) :: box
+      logical, dimension(n_box,n_box) :: mask_box
+      integer :: dim_1 , dim_2
+      integer  :: n_box_half 
+      real :: sum_box
+      integer :: count_box
+      
+      n_box_half = (n_box -1)/ 2
+      dim_1 = size(data_array,1)
+      dim_2 = size(data_array,2)
+      
+      allocate ( mask ( dim_1, dim_2) )
+      mask = .true.
+      
+      if ( present ( mask_in) ) mask = mask_in
+      
+      line_loop: do j = 1 , dim_1 
+         elem_loop: do i = 1, dim_2 
+            if ( .not. mask ( j , i) ) cycle elem_loop
+                       ! edge requires this
+            i0 = max ( i - n_box_half , 1)
+            i1 = min ( i + n_box_half , dim_2)
+            j0 = max ( j - n_box_half , 1)
+            j1 = min ( j + n_box_half , dim_1)
+            
+             ! -init local box
+            mask_box = .false.
+            box = .false.
+            
+            mask_box( 1 : 1+j1-j0, 1: 1+i1-i0) = mask( j0 : j1 , i0 : i1 )
+            box( 1 : 1+j1-j0, 1: 1+i1-i0) = data_array ( j0 : j1 , i0 : i1 )
+            
+           ! sum_box = sum (  box , mask_box )
+            count_box = max ( 1, count ( mask_box ) )  
+            
+         end do elem_loop
+      end do line_loop   
+                  
+   end subroutine array_sub_uniform
+   
+   
    
    ! ------------------------------------------------
    !
@@ -66,7 +121,7 @@ contains
       , n_box &
       , out  &
       , mask_in  ) 
-      ! this routine should provide mean , minvalue, maxvalue and standard deviation in a 
+      ! this routine  provides mean , minvalue, maxvalue and standard deviation in a 
       !  nxn environment
    
       real , intent(in) :: data_array(:,:)

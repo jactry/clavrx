@@ -51,14 +51,14 @@
 module SURFACE_PROPERTIES
    use CONSTANTS
    use PIXEL_COMMON
+   
+   
 
    implicit none
 
    private
    public:: SETUP_UMD_PROPS,  &
-         GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE, &
-         COMPUTE_BINARY_LAND_COAST_MASKS, &
-         COMPUTE_COAST_MASK_FROM_LAND_MASK
+         GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE
 
    integer, parameter, public:: ntype_sfc=14
    real(kind=real4), dimension(0:ntype_sfc-1), public,save:: Ch1_Sfc_Alb_Umd
@@ -442,73 +442,6 @@ i_loop:    do i = 1,Image%Number_Of_Elements
  end do j_loop
 
  end subroutine GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE
-!----------------------------------------------------------------------
-! based on the coast and land flags, derive binary land and coast
-! masks (yes/no)
-!
-! Note, coast mask is dependent on sensor resolution
-!----------------------------------------------------------------------
- subroutine COMPUTE_BINARY_LAND_COAST_MASKS(j1,j2)
-    integer, intent(in):: j1, j2
-    integer:: i, j
-    
-j_loop:  do j = j1,j1+j2-1
-
-i_loop:    do i = 1,Image%Number_Of_Elements
-
-   !--- check for a bad pixel
-   if (Bad_Pixel_Mask(i,j) == sym%YES) then
-      cycle
-   endif
-
-   !--- binary land mask
-   Sfc%Land_Mask(i,j) = sym%NO
-
-   !--- if land mask read in, use it
-   if (Read_Land_Mask == sym%YES) then
-     if (Sfc%Land(i,j) == sym%LAND) then
-       Sfc%Land_Mask(i,j) = sym%YES
-     endif
-   !--- if land mask not read in, base off of surface type
-   else   
-     if (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) then
-       Sfc%Land_Mask(i,j) = sym%YES
-     endif
-   endif
-
-   !--- binary coast mask
-   if (Read_Coast_Mask == sym%YES) then
-    Sfc%Coast_Mask(i,j) = sym%NO
-
-     !-- for gac data
-     if ((Sensor%Spatial_Resolution_Meters <= 1000) .and. (Sfc%Coast(i,j) /= sym%NO_COAST)) then
-      if (Sfc%Coast(i,j) <= sym%COAST_10KM) then
-         Sfc%Coast_Mask(i,j) = sym%YES
-      endif
-     endif
-
-     !-- for lac,hrpt or frac data
-     if ((Sensor%Spatial_Resolution_Meters > 1000) .and. (Sfc%Coast(i,j) /= sym%NO_COAST)) then
-      if (Sfc%Coast(i,j) <= sym%COAST_5KM) then
-         Sfc%Coast_Mask(i,j) = sym%YES
-      endif
-     endif
-
-   endif
-
-  end do i_loop
- end do j_loop
-
-
-
-!------------- compute coast mask if coast data not read in
- if (Read_Coast_Mask == sym%NO) then 
-
-   call COMPUTE_COAST_MASK_FROM_LAND_MASK(j1,j2)
-
- endif
-
- end subroutine COMPUTE_BINARY_LAND_COAST_MASKS
 
 
 !------------------------------------------------------------------------

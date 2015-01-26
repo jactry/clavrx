@@ -46,7 +46,7 @@ MODULE PIXEL_ROUTINES
  use ALGORITHM_CONSTANTS
  use PIXEL_COMMON
  use NUMERICAL_ROUTINES
- use NWP_COMMON, only:
+ use NWP_COMMON
  use PLANCK
  
  use FILE_UTILITY
@@ -63,7 +63,6 @@ MODULE PIXEL_ROUTINES
           COMPUTE_SPATIAL_UNIFORMITY, &
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
-          COMPUTE_SNOW_FIELD, &
           SET_BAD_PIXEL_MASK, &
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           COMPUTE_CLEAR_SKY_SCATTER,        &
@@ -74,9 +73,9 @@ MODULE PIXEL_ROUTINES
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
           DETERMINE_LEVEL1B_COMPRESSION, &
           TERM_REFL_NORM, &
-          MERGE_NWP_HIRES_ZSFC, &
+         
           ADJACENT_PIXEL_CLOUD_MASK, &
-          COMPUTE_VIIRS_SST, &
+          
           COMPUTE_ACHA_PERFORMANCE_METRICS, &
           COMPUTE_DCOMP_PERFORMANCE_METRICS, &
           COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS, &
@@ -486,174 +485,7 @@ end subroutine CONVERT_TIME
 
  end subroutine COMPUTE_PIXEL_ARRAYS
 
-!-------------------------------------------------------------------------------
-!--- populate the Snow array based on all available sources of Snow data
-!-------------------------------------------------------------------------------
- subroutine COMPUTE_SNOW_FIELD(j1,nj)
 
-   integer, intent(in):: j1,nj
-   integer(kind=int4):: i,j, j2, inwp,jnwp, ihires
-
-   j2 = j1 + nj - 1
-
-   Sfc%Snow = Missing_Value_Int1
-
-j_loop:    DO j = j1,j2
-                                                                                                                                         
-  i_loop:    DO i = 1, Image%Number_Of_Elements
-
-      Sfc%Snow(i,j) = Missing_Value_Int1
-
-      !--- check for bad scans
-      if (Bad_Pixel_Mask(i,j) == sym%YES) then
-       cycle
-      endif
-
-      !--- initialize valid pixels to NO_SNOW
-      Sfc%Snow(i,j) = sym%NO_SNOW
-
-      !--- save nwp indices for convenience
-      inwp = i_nwp(i,j)
-      jnwp = j_nwp(i,j)
-     
-      !--- if hires available, use it and ignore other sources
-      ihires = sym%NO
-      if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
-          Failed_Hires_Snow_Mask_flag == sym%NO) then
-          Sfc%Snow(i,j) = Sfc%Snow_Hires(i,j)
-          ihires = sym%YES
-      endif
-
-      if (ihires == sym%NO) then
-
-        !use nwp and/or Sst analysis
-        if (Nwp_Opt > 0) then
-          if ((inwp > 0) .and. (jnwp > 0)) then
-            if (Weasd_Nwp(inwp, jnwp) > 0.1) then  !this is Snow depth
-                Sfc%Snow(i,j) = sym%SNOW
-             endif
-             if (Use_Sst_Anal == sym%NO .and. Ice_Nwp(inwp, jnwp) > 0.5) then
-               Sfc%Snow(i,j) = sym%SEA_ICE
-             endif
-           endif
-         endif
-
-         !--- GlobSnow (Land Only)
-         if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and.   &
-          Failed_Glob_Snow_Mask_Flag == sym%NO  .and.       &
-          Sfc%Land(i,j) == sym%LAND  .and.       &
-          Nav%Lat(i,j) >= 35.0 .and. &     !note, globSnow is NH only (35-85)
-          Nav%Lat(i,j) <= 85.0) then
-
-            Sfc%Snow(i,j)  = Sfc%Snow_Glob(i,j)
-
-         endif  
-
-
-         !-- correct for GlobSnow missing snow over Greenland and Arctic Islands
-         !-- that have a barren surface type
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Sfc_Type(i,j) == sym%Bare_Sfc .or. Sfc%Sfc_Type(i,j) == sym%OPEN_SHRUBS_SFC) .and. &
-             (abs(Nav%Lat(i,j)) > 60.0) .and. &
-             (Weasd_Nwp(inwp, jnwp) > 0.1)) then
-                Sfc%Snow(i,j) = sym%SNOW
-          endif
-         endif
-
-         !-- correct for GlobSnow missing snow over mountains in v1.0
-         !-- this will be fixed in future versions
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Zsfc(i,j) > 1000.0) .and.  (Weasd_Nwp(inwp, jnwp) > 0.001)) then
-                Sfc%Snow(i,j) = sym%SNOW
-          endif
-         endif
-
-         !--- pick up small lakes in regions marked snowy in glob snow 
-         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sfc%Snow_Glob(i,j) == sym%SNOW .or. Sfc%Snow_Glob(i,j) == sym%SEA_ICE)) then
-          Sfc%Snow(i,j)  = sym%SEA_ICE
-         endif
-
-
-         !--- check for sea-ice from Sst analysis (OISST in this case)
-         !--- and replace values from nwp
-         !--- note, threshold 0.5 determined by matching IMS
-
-         !--- under these conditions believe SST Analysis
-         !--- and allow it to remove ice 
-         if (use_Sst_anal == sym%YES .and. &
-             (Sfc%Land(i,j) == sym%DEEP_OCEAN .or.     &
-              Sfc%Land(i,j) == sym%DEEP_INLAND_WATER .or. &
-              Sfc%Land(i,j) == sym%MODERATE_OCEAN .or. &
-              Sfc%Land(i,j) == sym%SHALLOW_OCEAN))  then
-
-           if (Sst_Anal_Cice(i,j) > 0.50) then     
-             Sfc%Snow(i,j) = sym%SEA_ICE
-           else
-             Sfc%Snow(i,j) = sym%NO_SNOW
-           endif
-
-         endif
-
-         !--- OISST does not capture sea-ice in shallow water near AntArctica
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Land(i,j) == sym%SHALLOW_OCEAN) .and. &
-              (Nav%Lat(i,j) < -60.0) .and. &
-              ((Ice_Nwp(inwp,jnwp) > 0.50).or.(Weasd_Nwp(inwp,jnwp)>0.1))) then
-                Sfc%Snow(i,j) = sym%SEA_ICE
-          endif
-         endif
-
-
-         !--- allow sst analysis to detect any ice (but not remove it)
-         !--- this is needed since Lake Erie is cover the OISST but
-         !--- classified as shallow_inland_water
-         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sst_Anal_Cice(i,j) > 0.50)) then     
-             Sfc%Snow(i,j) = sym%SEA_ICE
-         endif
-          
-         !-- final check for consistnecy of land and snow masks
-         if ((Sfc%Snow(i,j) == sym%SNOW) .and. (Sfc%Land(i,j) /= sym%LAND)) then
-             Sfc%Snow(i,j) = sym%SEA_ICE
-         endif
-         if ((Sfc%Snow(i,j) == sym%SEA_ICE) .and. (Sfc%Land(i,j) == sym%LAND)) then
-             Sfc%Snow(i,j) = sym%SNOW
-         endif
-
-          
-       endif
-
-       !-------------------------------------------------------
-       ! use some basic tests to modify Snow
-       ! only DO this when hires Snow field is unavailable
-       !-------------------------------------------------------
-
-       if (ihires == sym%NO) then
-
-          !-- can't be Snow if warm
-         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-          if (ch(31)%Bt_Toa(i,j) > 277.0) then
-           Sfc%Snow(i,j) = sym%NO_SNOW
-          endif
-         endif
-
-         !--- some day-specific tests
-         if (Geo%Solzen(i,j) < 75.0) then  ! day check
-
-         !--- conditions where Snow is not possible
-           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-            if(ch(1)%Ref_Toa(i,j) < 10.0) then
-             Sfc%Snow(i,j) = sym%NO_SNOW
-            endif
-           endif
-
-         endif           !day check
-
-       endif            !hires Snow check
-
-    end do i_loop
- end do   j_loop
-
- end subroutine COMPUTE_SNOW_FIELD
 
 !------------------------------------------------------------------
 ! Compute a surface temperature by using the observed 
@@ -2062,79 +1894,6 @@ end subroutine COMPUTE_CLEAR_SKY_SCATTER
  end FUNCTION TERM_REFL_NORM
 
 
-!====================================================================
-! Routine Name: MERGE_NWP_HIRES_ZSFC
-!
-! Function:
-! Merge the high resolution and low resolution surface elevation
-! fields into one single field
-!
-! Inputs: 
-!    Zsfc_Hires - passed via global arrays
-!    Zsfc_Nwp - passed via global arrays
-!
-! Outputs: 
-!    Zsfc - passed via global arrays
-!====================================================================
-subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
-
-  integer, intent(in):: Line_Idx_Min
-  integer, intent(in):: Num_Lines
-  integer:: Num_Elements
-  integer:: Line_Idx
-  integer:: Elem_Idx
-  integer:: Elem_Idx_Min
-  integer:: Elem_Idx_Max
-  integer:: Line_Idx_Max
-  integer:: Lat_NWP_Idx
-  integer:: Lon_NWP_Idx
-
-
-  Elem_Idx_Min = 1
-  Num_Elements = Image%Number_Of_Elements
-  Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
-  Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
-
-  line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
-    element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
-
-      !--- if no, geolocation, set to missing and go to next pixel
-      if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-          Sfc%Zsfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
-          cycle
-      endif
- 
-      !--- if hires value available use it, or try NWP
-      if (Sfc%Zsfc_Hires(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then 
-
-           Sfc%Zsfc(Elem_Idx,Line_Idx) = Sfc%Zsfc_Hires(Elem_Idx,Line_Idx)
-
-      !--- if this is ocean pixel, assume zero
-      elseif (Sfc%Land(Elem_Idx,Line_Idx) == sym%SHALLOW_OCEAN .or. &
-              Sfc%Land(Elem_Idx,Line_Idx) == sym%MODERATE_OCEAN .or. &
-              Sfc%Land(Elem_Idx,Line_Idx) == sym%DEEP_OCEAN) then
-
-              Sfc%Zsfc(Elem_Idx,Line_Idx) = 0.0     
-
-      !--- try NWP
-      else
-
-         Lon_Nwp_Idx = I_Nwp(Elem_Idx,Line_Idx)
-         Lat_Nwp_Idx = J_Nwp(Elem_Idx,Line_Idx)
-
-         !--- if nwp not available, assume zero
-         if (Lon_Nwp_Idx > 0 .and. Lat_Nwp_Idx > 0) then
-           Sfc%Zsfc(Elem_Idx,Line_Idx) = Zsfc_Nwp(Lon_Nwp_Idx, Lat_Nwp_Idx)
-         else
-           Sfc%Zsfc(Elem_Idx,Line_Idx) = 0.0     
-         endif
-
-      endif
-          
-    enddo element_loop
-  enddo line_loop
-
-end subroutine MERGE_NWP_HIRES_ZSFC
 
 !====================================================================
 ! Routine Name:
@@ -2179,64 +1938,7 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
 
 end subroutine ADJACENT_PIXEL_CLOUD_MASK
 !---------------------------------------------------------------------------------------
-! COMPUTE_VIIRS_SST is used to compute Sst_Masked for VIIRS
-! It purpouse is to replicate VIIRS SST team algorithm results
-! called from process_clavrx.f90
-!---------------------------------------------------------------------------------------
-subroutine COMPUTE_VIIRS_SST(jmin,jmax)
 
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-  real:: a0_day = 2.74438
-  real:: a1_day = 0.996818
-  real:: a2_day = 0.0720411
-  real:: a3_day = 1.35385
-  real:: a0_night = -5.31302
-  real:: a1_night = 0.788114
-  real:: a2_night = 1.04555
-  real:: a3_night = -0.810677
-  real:: a4_night = 0.145501
-  real:: a5_night = 1.11931
-
-  Sst_Unmasked = Missing_Value_Real4
-
-  if (Sensor%Chan_On_Flag_Default(20) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
-
-  line_loop: DO Line_Idx=jmin, jmax + jmin - 1
-    element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
-
-  ! Day time
-     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
-        if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0 .and. sst_anal(Elem_Idx,Line_Idx) > 150.0) then
-           if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-              Sst_Unmasked(Elem_Idx,Line_Idx) = a0_day + a1_day * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a2_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (sst_anal(Elem_Idx,Line_Idx) - 273.15) + &
-                   a3_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
-           endif
-        endif
-
-  ! Night time
-        if (Geo%Solzen(Elem_Idx,Line_Idx) .ge. 90.0) then
-           if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-                 Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-
-                   Sst_Unmasked(Elem_Idx,Line_Idx) = a0_night + a1_night * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a2_night * ch(20)%Bt_Toa(Elem_Idx,Line_Idx) + a3_night * ch(32)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a4_night * (ch(20)%Bt_Toa(Elem_Idx,Line_Idx) - ch(32)%Bt_Toa(Elem_Idx,Line_Idx)) * &
-                   (Geo%Seczen(Elem_Idx,Line_Idx)-1) + a5_night * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
-           endif 
-        endif
-     endif
-
-    end do element_loop
-  end do line_loop
-
-end subroutine COMPUTE_VIIRS_SST
 
 !-----------------------------------------------------------
 ! Determine an ACHA Success fraction

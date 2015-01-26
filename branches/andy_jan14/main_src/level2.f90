@@ -33,6 +33,8 @@ module LEVEL2_ROUTINES
    use HDF_PARAMS
    
    use clavrx_message_module
+   
+   use cr_data_pool_mod
 
    implicit none
    private
@@ -3544,7 +3546,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       !--- packed land cover (land,snow,coast masks)
       if (Sds_Num_Level2_Packed_Land_Flag == sym%YES) then
        One_Byte_Temp = 0
-       One_Byte_Temp = ishft(Sfc%Land,5) + ishft(Sfc%Snow,3) + Sfc%Coast_Mask
+       One_Byte_Temp = ishft(Sfc_obj_g%Land_class%data,5) + ishft(Sfc%Snow,3) + Sfc%Coast_Mask
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Packed_Land), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
@@ -3570,7 +3572,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       !--- land classification
       if (Sds_Num_Level2_Land_Mask_Flag == sym%YES) then
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Land_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Land(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                         Sfc_obj_g%Land_class % data(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !--- Snow classification

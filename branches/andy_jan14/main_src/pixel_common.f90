@@ -203,8 +203,8 @@ module PIXEL_COMMON
   end type navigation_definition
 
   type :: surface_definition
-     integer(kind=int1), dimension(:,:), allocatable:: Land
-     integer(kind=int1), dimension(:,:), allocatable:: Land_Modified
+      ! integer(kind=int1), dimension(:,:), allocatable:: Land
+     
      integer(kind=int1), dimension(:,:), allocatable:: Land_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Coast
      integer(kind=int1), dimension(:,:), allocatable:: Coast_Mask 
@@ -1969,8 +1969,8 @@ end subroutine DESTROY_BTD_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   allocate(Sfc%Land(dim1,dim2))
-   allocate(Sfc%Land_Modified(dim1,dim2))
+   !allocate(Sfc%Land(dim1,dim2))
+   
    allocate(Sfc%Land_Mask(dim1,dim2))
    allocate(Sfc%Coast(dim1,dim2))
    allocate(Sfc%Coast_Mask(dim1,dim2))
@@ -1992,8 +1992,8 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Zsfc_Std_3x3(dim1,dim2))
 end subroutine CREATE_SURFACE_ARRAYS
 subroutine RESET_SURFACE_ARRAYS
-   Sfc%Land = Missing_Value_Int1
-   Sfc%Land_Modified = Missing_Value_Int1
+   !Sfc%Land = Missing_Value_Int1
+   
    Sfc%Land_Mask = Missing_Value_Int1
    Sfc%Coast = Missing_Value_Int1
    Sfc%Coast_Mask = Missing_Value_Int1
@@ -2015,8 +2015,8 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Zsfc_Std_3x3 = Missing_Value_Real4
 end subroutine RESET_SURFACE_ARRAYS
 subroutine DESTROY_SURFACE_ARRAYS
-   deallocate(Sfc%Land)
-   deallocate(Sfc%Land_Modified)
+   !deallocate(Sfc%Land)
+   
    deallocate(Sfc%Land_Mask)
    deallocate(Sfc%Coast)
    deallocate(Sfc%Coast_Mask)

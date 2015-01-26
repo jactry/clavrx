@@ -265,12 +265,14 @@ end subroutine QC_NWP
 !
 ! This must be called After MAP_PIXEL_NWP
 !----------------------------------------------------------------------
-subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Lines)
+subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Lines,land_class)
 
   integer(kind=int4), intent(in):: Elem_Idx_Start
   integer(kind=int4), intent(in):: Num_Elements
   integer(kind=int4), intent(in):: Line_Idx_Start
   integer(kind=int4), intent(in):: Num_Lines
+  integer , intent(in) :: land_class (:,:)
+  
   integer(kind=int4) :: Elem_Idx_End
   integer(kind=int4) :: Line_Idx_End
   integer(kind=int4) :: Elem_Idx
@@ -317,7 +319,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
      !  Zsfc_Nwp = nwp level elevation in km
      !
      !----------------------------------------------------------------------------------
-     if (Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
+     if ( Land_class  (Elem_Idx,Line_Idx) == sym%LAND) then
 
         !--- assume all surface features are in lowest half of profile
         Ilev_end = Nlevels_Nwp

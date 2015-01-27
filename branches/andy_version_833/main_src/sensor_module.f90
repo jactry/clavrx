@@ -382,7 +382,7 @@ module SENSOR_MODULE
    !        spatial_resolution:  4
    !
    !   COMS
-   !        sensors:  COMS_IMAGER
+   !        sensors:  COMS-IMAGER
    !        platform:  COMS-1
    !        spatial_resolution:  4
    !
@@ -565,7 +565,7 @@ module SENSOR_MODULE
                endif
 
             case (36, 37)
-               Sensor%Sensor_Name = 'FY_IMAGER'
+               Sensor%Sensor_Name = 'FY-IMAGER'
                Sensor%Spatial_Resolution_Meters = 4000
                if (AREAstr%Sat_Id_Num == 36) then
                   Sensor%Platform_Name = 'FY-2D'
@@ -583,7 +583,7 @@ module SENSOR_MODULE
                endif
 
             case (250)
-               Sensor%Sensor_Name = 'COMS_IMAGER'
+               Sensor%Sensor_Name = 'COMS-IMAGER'
                Sensor%Spatial_Resolution_Meters = 4000
                Sensor%Platform_Name = 'COMS-1'
                Sensor%WMO_Id = 810

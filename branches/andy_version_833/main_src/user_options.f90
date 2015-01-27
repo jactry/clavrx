@@ -137,7 +137,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_Goes_IL = 6
    integer,parameter:: ACHA_Mode_Default_Goes_MP = 7
    integer,parameter:: ACHA_Mode_Default_Goes_SNDR = 7
-   integer,parameter:: ACHA_Mode_Default_COMS = 7
+   integer,parameter:: ACHA_Mode_Default_COMS = 6
    integer,parameter:: ACHA_Mode_Default_VIIRS = 5
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
@@ -317,8 +317,20 @@ contains
                                    Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &
                                    Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
 
-print *, "limits = ", Nav%Lat_Max_Limit, Nav%Lat_Min_Limit, Nav%Lon_Max_Limit, &
-Nav%Lon_Min_Limit, Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
+      !---
+      Subset_Pixel_Hdf_Flag = sym%NO
+      if (Nav%Lat_Max_Limit /= 90.0 .or. &
+          Nav%Lat_Min_Limit /= -90.0 .or. &
+          Nav%Lon_Max_Limit /= 180.0 .or. &
+          Nav%Lon_Min_Limit /= -180.0 .or. &
+          Geo%Solzen_Max_Limit /= 180.0 .or. &
+          Geo%Solzen_Min_Limit /= 0.0) then
+
+        call MESG ("unlimited, uncompressed output will be generated",level = verb_lev % DEFAULT)
+
+        Subset_Pixel_Hdf_Flag = sym%YES
+
+      endif
 
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(1:6)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(7:12)
@@ -449,13 +461,13 @@ Nav%Lon_Min_Limit, Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
           data_comp_Flag=2
 
         !Subset pixel HDF
-        elseif(trim(fargv) == "-subset_pixel_hdf") then
-          subset_pixel_hdf_Flag = sym%YES
-        elseif(trim(fargv) == "-no_subset_pixel_hdf") then
-          subset_pixel_hdf_Flag = sym%NO
+!       elseif(trim(fargv) == "-subset_pixel_hdf") then
+!         subset_pixel_hdf_Flag = sym%YES
+!       elseif(trim(fargv) == "-no_subset_pixel_hdf") then
+!         subset_pixel_hdf_Flag = sym%NO
 
         !Change lat max/min for processing
-        elseif(trim(fargv) == "-Lat_min_limit") then
+        elseif(trim(fargv) == "-lat_min_limit") then
            call getarg(i+1,junk)
            int_temp = scan(junk,temp_string, back) 
            if(int_temp > 0.0) read(junk,'(f6.3)') Nav%Lat_Min_Limit
@@ -920,19 +932,19 @@ Nav%Lon_Min_Limit, Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-IL-IMAGER')      
          possible_acha_modes(1:3)   =  [1,  3, 6] 
-         possible_dcomp_modes(1)    =  3  
-      case ( 'GOES_IP_SOUNDER')
+         possible_dcomp_modes(1)    =  [3]  
+      case ( 'GOES-IP-SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
       case ( 'MTSAT-IMAGER')
           possible_acha_modes(1:4)  =  [ 1, 2, 3 , 6 ]
-          possible_dcomp_modes(1) =  3
+          possible_dcomp_modes(1) =  [3]
       case ('SEVIRI')
          possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:2) =   [1, 3]
       case ('FY2-IMAGER')
          possible_acha_modes(1:2)  =   [1 , 2 ] 
-         possible_dcomp_modes(1:2) =   [1 , 3 ]
+         possible_dcomp_modes(1:1) =   [3]
       case ('VIIRS')
         possible_acha_modes(1:3)  =    [1, 3, 5] 
         possible_dcomp_modes(1:3) =    [1, 2, 3]
@@ -943,7 +955,7 @@ Nav%Lon_Min_Limit, Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
          possible_acha_modes(1:4)  =   [1, 3, 4, 8]
       case ('COMS-IMAGER')
          possible_acha_modes(1:3)  =   [1, 3, 6]
-         possible_dcomp_modes(1:2) =   [1, 3]
+         possible_dcomp_modes(1:1) =   [3]
       case ('MODIS')
          possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8] 
          possible_dcomp_modes(1:3) =   [1, 2, 3]

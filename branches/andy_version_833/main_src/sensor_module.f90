@@ -117,7 +117,7 @@ module SENSOR_MODULE
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
 
-         CALL READ_MODIS_TIME_ATTR(trim(Image%Level1b_Path), trim(Image%Level1b_Name), Image%Start_Year, &
+         call READ_MODIS_TIME_ATTR(trim(Image%Level1b_Path), trim(Image%Level1b_Name), Image%Start_Year, &
                             Image%Start_Doy, Image%Start_Time, Image%End_Year, Image%End_Doy, &
                             Image%End_Time)
   
@@ -335,10 +335,10 @@ module SENSOR_MODULE
 
       open(unit=Algo_Lun,file=trim(Sensor%Algo_Const_File),status="old",position="rewind",action="read",iostat = ios)
 
-      IF (ios /= 0) THEN
+      if (ios /= 0) then
          print *, "Error opening algorithm constant file, iostat = ", ios
          stop
-      ENDIF
+      endif
 
       !nlSst
       read(unit=Algo_Lun,fmt=*)
@@ -1013,6 +1013,8 @@ module SENSOR_MODULE
  
             !test for SEVIRI
             case (51:53)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat 
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
                if (AREAstr%Sat_Id_Num == 51 ) Sensor%Geo_Sub_Satellite_Longitude = -3.477996     ! Longitude of actual Sub-Satellite Point for Met-8
                if (AREAstr%Sat_Id_Num == 52 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-9
                if (AREAstr%Sat_Id_Num == 53 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-10 (?? TBD ??)
@@ -1022,7 +1024,7 @@ module SENSOR_MODULE
             case (84,85)
                !This is needed to determine type of navigation
                !as Nav coefficents specific to MTSAT (and FY2)
-               CALL READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
           
@@ -1032,7 +1034,7 @@ module SENSOR_MODULE
                !This is needed to determine type of navigation
                !as Nav coefficents specific to FY2D/E. They are stored in
                ! the same manner as MTSAT, hence using the same routine
-               CALL READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
@@ -1040,14 +1042,14 @@ module SENSOR_MODULE
             case (250)
                !This is needed to determine type of navigation
                !as Nav coefficents specific to COMS
-               CALL READ_NAVIGATION_BLOCK_COMS(trim(Level1b_Full_Name), AREAstr,NAVstr)
+               call READ_NAVIGATION_BLOCK_COMS(trim(Level1b_Full_Name), AREAstr,NAVstr)
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
             !test for GOES Imagers or Sounders
             case (70:79,180:185)
 
-               CALL LMODEL(Goes_Input_Time,  &
+               call LMODEL(Goes_Input_Time,  &
                            Goes_Epoch_Time, &
                            NAVstr, &
                            Sensor%Geo_Sub_Satellite_Latitude, &

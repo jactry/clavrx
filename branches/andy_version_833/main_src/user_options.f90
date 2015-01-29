@@ -69,7 +69,6 @@ module USER_OPTIONS
       , therm_cal_1b &
       , ancil_data_dir &
       , Cfsr_Data_Dir &
-      , data_comp_flag &
       , file_list &
       , geo_file_flag &
       , Gfs_Data_Dir &
@@ -163,7 +162,6 @@ contains
            
       Aer_Flag = sym%YES
       Ash_Flag = sym%NO
-      Data_comp_Flag = 0
       Subset_pixel_hdf_Flag = 0      
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
       output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
@@ -453,12 +451,12 @@ contains
           Cloud_Mask_Aux_Flag = sym%NO
 
         !Change data compression flag
-        elseif(trim(fargv) == "-no_data_comp") then
-          data_comp_Flag=0
-        elseif(trim(fargv) == "-data_comp_gzip") then
-          data_comp_Flag=1
-        elseif(trim(fargv) == "-data_comp_szip") then
-          data_comp_Flag=2
+        elseif(trim(fargv) == "-no_output_comp") then
+          Compress_Flag=0
+        elseif(trim(fargv) == "-output_comp_gzip") then
+          Compress_Flag=1
+        elseif(trim(fargv) == "-output_comp_szip") then
+          Compress_Flag=2
 
         !Subset pixel HDF
 !       elseif(trim(fargv) == "-subset_pixel_hdf") then
@@ -932,13 +930,13 @@ contains
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-IL-IMAGER')      
          possible_acha_modes(1:3)   =  [1,  3, 6] 
-         possible_dcomp_modes(1)    =  [3]  
+         possible_dcomp_modes(1)    =  3  
       case ( 'GOES-IP-SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
       case ( 'MTSAT-IMAGER')
           possible_acha_modes(1:4)  =  [ 1, 2, 3 , 6 ]
-          possible_dcomp_modes(1) =  [3]
+          possible_dcomp_modes(1) =  3
       case ('SEVIRI')
          possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:2) =   [1, 3]

@@ -251,12 +251,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 !-------------------------------------------------------------
 ! define chunking here
 !-------------------------------------------------------------
-     Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
-     Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
+     !--- 3d , first dim is sds dependent
+     Sds_Dims_3d(2) = Image%Number_Of_Elements
+     Sds_Dims_3d(3) = Num_Scans
+     Sds_Chunk_Size_3d(2) = Image%Number_Of_Elements
+     Sds_Chunk_Size_3d(3) = Num_Scans
 
      !-- dimension of 2d variables
      Sds_Dims_2d(1) = Image%Number_Of_Elements
      Sds_Dims_2d(2) = Image%Number_Of_Lines
+     Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
+     Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
 
      !-- dimension of 1d variables
      Sds_Dims_1d(1) = Image%Number_Of_Lines
@@ -264,8 +269,10 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- if subsetting pixel hdf, set scan dimension to 0 (sd_unlimited)
      !--- note, this turns off compression
      if (Subset_Pixel_Hdf_Flag == sym%YES) then
+          Sds_Dims_3d(3) = 0   !SD_UNLIMITED
           Sds_Dims_2d(2) = 0   !SD_UNLIMITED
-!         Sds_Dims_1d(1) = 0   !- this is does not seem to work
+          Sds_Dims_1d(1) = 0   !- this is does not seem to work
+          Compress_Flag = 0
      endif
 
 !-------------------------------------------------------------
@@ -275,13 +282,13 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  Comp_Prm(1) = 0
  Comp_Prm(2) = 0
 
- if (Data_Comp_Flag == 1) then  !gzip compression
+ if (Compress_Flag == 1) then  !gzip compression
    Comp_Type = 4
    Comp_Prm(1) = 6
    Comp_Prm(2) = 0
  endif
 
- if (Data_Comp_Flag == 2) then  !szip compression
+ if (Compress_Flag == 2) then  !szip compression
    Comp_Type = 5
    Comp_Prm(1) = 32
    Comp_Prm(2) = 2
@@ -1419,12 +1426,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      if (Sds_Num_Level2_Cld_Tests_Flag == sym%YES) then
 
        Sds_Dims_3d(1) = Max_Num_Cld_Test_Bytes
-       Sds_Dims_3d(2) = Image%Number_Of_Elements
-       Sds_Dims_3d(3) = Num_Scans
-
        Sds_Chunk_Size_3d(1) = Max_Num_Cld_Test_Bytes
-       Sds_Chunk_Size_3d(2) = Image%Number_Of_Elements
-       Sds_Chunk_Size_3d(3) = Num_Scans
+
+      if (Subset_Pixel_Hdf_Flag == sym%YES) then
+          Sds_Dims_3d(3) = 0   !SD_UNLIMITED
+       endif
 
         call DEFINE_PIXEL_3D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Tests),Sd_Id_Level2, &
                              Sds_Dims_3d, &
@@ -3111,7 +3117,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
        stop
      endif
-
   endif
 
 end subroutine DEFINE_HDF_FILE_STRUCTURES
@@ -5010,9 +5015,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     !--- Attributes that go into all SDSs
     Istatus = sfsnatt(Sds_Id, "SCALED", DFNT_INT8, 1, scaled) + Istatus
 
-!    if (trim(Sds_Units) /= "none") then
-        Istatus = sfscatt(Sds_Id, "units", DFNT_CHAR8, len_trim(Sds_Units), trim(Sds_Units)) + Istatus
-!    endif
+    Istatus = sfscatt(Sds_Id, "units", DFNT_CHAR8, len_trim(Sds_Units), trim(Sds_Units)) + Istatus
 
     Istatus = sfscatt(Sds_Id, "standard_name", DFNT_CHAR8, len_trim(Sds_Standard_Name),  &
                                trim(Sds_Standard_Name)) + Istatus
@@ -5270,6 +5273,9 @@ end subroutine CLOSE_PIXEL_HDF_FILES
      Istatus = sfsnatt(Sds_Id, "SCALED_MIN", DFNT_INT32, 1, Scaled_Min) + Istatus
      Istatus = sfsnatt(Sds_Id, "SCALED_MAX", DFNT_INT32, 1, Scaled_Max) + Istatus
 
+
+     if (Istatus /= 0) print *, "Error writing level2 2d sds named ", trim(Sds_Name)
+
    endif 
 
   end subroutine DEFINE_PIXEL_2D_SDS
@@ -5334,12 +5340,9 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     integer:: sfsdmname
     integer:: sfschnk
     
-    
     real :: temp_vector_2  (2)
     integer (kind = int1)  :: temp_vector_2_int1  (2)  
     integer (kind = int2)  :: temp_vector_2_int2  (2) 
-    
-    
 
     Istatus = 0 
 
@@ -5354,7 +5357,6 @@ end subroutine CLOSE_PIXEL_HDF_FILES
 
     Istatus = sfscatt(Sds_Id, "long_name", DFNT_CHAR8, len_trim(Sds_Long_Name),  &
                                 trim(Sds_Long_Name)) + Istatus
-
     Dim_Id = sfdimid(Sds_Id, 0)
     Istatus = sfsdmname(Dim_Id,trim(Dim1_Name)) + Istatus
 
@@ -5370,11 +5372,8 @@ end subroutine CLOSE_PIXEL_HDF_FILES
 
     !-- Range Missing written out regardless of Scaled Value
     Istatus = sfsnatt(Sds_Id, "RANGE_MISSING", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
-!    Istatus = sfsnatt(Sds_Id, "actual_missing", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
-   temp_vector_2 = [Sds_Min,Sds_Max]
+    temp_vector_2 = [Sds_Min,Sds_Max]
     Istatus = sfsnatt(Sds_Id, "actual_range", DFNT_FLOAT32, 2, temp_vector_2) + Istatus
-!   Istatus = sfsnatt(Sds_Id, "data_min", DFNT_FLOAT32, 1, Sds_Min) + Istatus
-!   Istatus = sfsnatt(Sds_Id, "data_max", DFNT_FLOAT32, 1, Sds_Max) + Istatus
 
     !--- determine scaled ranges based on Sds_Type
     if (Sds_Type == DFNT_INT8) then
@@ -5390,7 +5389,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     !--- write valid_range and _FillValue for all except bitmasks (missing = -888)
     if (Sds_Missing /= -888.0) then
    
-     !--- write valid range
+    !--- write valid range
     if (Sds_Type == DFNT_INT8) then
        temp_vector_2_int1 = int((/Scaled_Min,Scaled_Max/),kind=int1)
        Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2,  temp_vector_2_int1 ) + Istatus
@@ -5402,7 +5401,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
        Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2, temp_vector_2) + Istatus
      endif
 
-     !--- write Fill_Value
+     !--- write fill_value
      if (Sds_Type == DFNT_INT8) then
        Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, int(Scaled_Missing,kind=int1)) + Istatus
      elseif (Sds_Type == DFNT_INT16) then
@@ -5412,7 +5411,6 @@ end subroutine CLOSE_PIXEL_HDF_FILES
      endif
 
     endif
-
 
     !--- Attributes that go into scaled SDSs
     if (Scaled > 0) then
@@ -5444,6 +5442,8 @@ end subroutine CLOSE_PIXEL_HDF_FILES
      endif
 
    endif
+
+   if (Istatus /= 0) print *, "Error writing level2 3d sds named ", trim(Sds_Name)
 
   end subroutine DEFINE_PIXEL_3D_SDS
 

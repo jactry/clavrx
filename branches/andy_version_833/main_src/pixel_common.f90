@@ -325,8 +325,7 @@ module PIXEL_COMMON
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
   
-  integer,public, save:: Data_Comp_Flag
-  integer,public, save:: Use_seebor
+  integer,public, save:: Use_Seebor
   integer,public, save:: Read_Volcano_Mask
   integer,public, save:: Read_Land_Mask
   integer,public, save:: Read_Coast_Mask
@@ -351,7 +350,7 @@ module PIXEL_COMMON
 
   integer,public, save:: Rtm_Opt
   integer,public, save:: Smooth_Nwp_Flag
-  integer,public, save:: compress_flag
+  integer,public, save:: Compress_Flag
   !---------------------------------------------------------------------------------
   ! Flags Computed within CLAVR-x that describe the sensor data
   !---------------------------------------------------------------------------------
@@ -865,7 +864,6 @@ subroutine CREATE_PIXEL_ARRAYS()
   integer:: dim2 
   integer:: idx
 
-
   !--- allocate pixel arrays
   dim1 = Image%Number_Of_Elements
   dim2 = Image%Number_Of_Lines_Per_Segment
@@ -898,6 +896,10 @@ subroutine CREATE_PIXEL_ARRAYS()
          if (idx == 31) then 
             allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
          endif
+         if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) then
+            allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+         endif
+
       endif
 
    enddo
@@ -1197,7 +1199,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
 
-      Space_Mask = Missing_Value_Int1
+      Space_Mask = sym%YES
       Sfc_Level_Rtm_Pixel = Missing_Value_Int4
     
       Scan_Time = Missing_Value_Int4

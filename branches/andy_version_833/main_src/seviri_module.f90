@@ -291,9 +291,9 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
                             Channel_1_Filename(ipos+3:ilen)
 
          if (L1b_gzip == sym%YES .or. L1b_bzip2 == sym%YES) then
-               Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
+               Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
          else
-               Channel_X_Filename_Full = trim(Image%LeveL1b_Path)//trim(Channel_1_Filename)
+               Channel_X_Filename_Full = trim(Image%LeveL1b_Path)//trim(Channel_X_Filename)
          endif
 
          call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &

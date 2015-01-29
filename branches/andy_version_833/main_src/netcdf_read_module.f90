@@ -15,14 +15,34 @@ module NETCDF_READ_MODULE
 
  use CONSTANTS
  use NETCDF
+
+ implicit none
  
- public:: read_netcdf_1d_real
- public:: read_netcdf_1d_int
- public:: read_netcdf_2d_real
- public:: read_netcdf_2d_int
- public:: read_netcdf_2d_char
- public:: read_netcdf_3d
- public:: read_netcdf_attribute
+ 
+ 
+ 
+ public :: read_netcdf_attribute_real
+ public :: read_netcdf_1d_real
+ public :: read_netcdf_1d_int
+ public :: read_netcdf_2d_real
+ public :: read_netcdf_2d_int
+ public :: read_netcdf_2d_char
+ public :: read_netcdf_3d
+
+ integer, parameter, private :: sds_rank_1d = 1
+ integer, dimension(sds_rank_1d), private :: sds_start_1d, sds_edge_1d, sds_stride_1d
+   
+ integer, parameter, private :: sds_rank_2d = 2
+ integer, dimension(sds_rank_2d), private :: sds_start_2d, sds_edge_2d, sds_stride_2d, sds_dims_2d
+   
+ integer, parameter, private :: sds_rank_3d = 3
+ integer, dimension(sds_rank_3d), private :: sds_start_3d, sds_edge_3d, sds_stride_3d, sds_dims_3d
+   
+ integer, parameter, private :: sds_rank_5d = 5
+ integer, dimension(sds_rank_5d), private :: sds_start_5d, sds_edge_5d, sds_stride_5d, sds_dims_5d
+
+ contains
+ 
  
  subroutine read_netcdf_attribute_real (nc_file_id, attribute_id, var_name, attr)
    integer:: nc_file_id
@@ -34,11 +54,9 @@ module NETCDF_READ_MODULE
    status = nf90_get_att(nc_file_id, attribute_id, trim(var_name), attr)
  
  
- end subroutine
+ end subroutine read_netcdf_attribute_real
  
  
- 
-
    ! ----------------------------------------------------------
    ! Read in 1D arrays (used code from DCOMP reader
    ! ----------------------------------------------------------
@@ -243,7 +261,6 @@ module NETCDF_READ_MODULE
 
 
    end subroutine read_netcdf_3d
- 
  
 
 

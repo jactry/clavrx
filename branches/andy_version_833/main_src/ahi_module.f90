@@ -40,7 +40,9 @@ module AHI_MODULE
 
  implicit none
 
+ private
  private:: CONVERT_RADIANCE
+ private:: READ_AHI_INSTR_CONSTANTS
  public:: READ_AHI
  public:: READ_AHI_CHANNEL
  public:: READ_AHI_INSTR_CONSTANTS
@@ -50,7 +52,7 @@ module AHI_MODULE
  integer(kind=int2), parameter, private:: fill_value = 32767
  real(kind=real4), parameter, private:: missing_value = -999.0
  character(len=13), parameter:: MODULE_PROMPT="AHI_MODULE:"
- TYPE (GVAR_NAV), PRIVATE    :: NAVstr_AHI_NAV
+ type (GVAR_NAV), PRIVATE    :: NAVstr_AHI_NAV
  integer, PARAMETER, PRIVATE :: nchan_ahi= 16
 
  integer(kind=int4), private, parameter:: Num_2km_Scans_Fd = 3712
@@ -132,14 +134,14 @@ end subroutine READ_AHI_INSTR_CONSTANTS
 
 
  ! Perform AHI Reflectance and BT calibration
- SUBROUTINE READ_AHI(segment_number,Channel_1_Filename, &
+ subroutine READ_AHI(segment_number,Channel_1_Filename, &
                      jday, image_time_ms, Time_Since_Launch, &
                      AREAstr,NAVstr_AHI)
 
    integer(kind=int4), intent(in):: segment_number
    character(len=*), intent(in):: Channel_1_Filename
-   TYPE (AREA_STRUCT), intent(in) :: AREAstr
-   TYPE (GVAR_NAV), intent(in)    :: NAVstr_AHI
+   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (GVAR_NAV), intent(in)    :: NAVstr_AHI
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
@@ -404,25 +406,25 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                                    goes_sub_satellite_latitude, iline)                      
    enddo
     
- END SUBROUTINE READ_AHI
+ end subroutine READ_AHI
  
 
  ! Perform AHI Navigation
 
- SUBROUTINE AHI_navigation(xstart,ystart,xsize,ysize,xstride, &
+ subroutine AHI_navigation(xstart,ystart,xsize,ysize,xstride, &
                             AREAstr,NAVstr_AHI)
-    INTEGER(KIND=int4) :: xstart, ystart
-    INTEGER(KIND=int4) :: xsize, ysize
-    INTEGER(KIND=int4) :: xstride  
+    integer(kind=int4) :: xstart, ystart
+    integer(kind=int4) :: xsize, ysize
+    integer(kind=int4) :: xstride  
     type (AREA_STRUCT) :: AREAstr
-    TYPE (GVAR_NAV), intent(in)    :: NAVstr_AHI
+    type (GVAR_NAV), intent(in)    :: NAVstr_AHI
     
-    INTEGER :: i, j, ii, jj, ierr, imode
-    REAL(KIND(0.0d0)) :: latitude, longitude
-    REAL(KIND=REAL4) :: elem, line, height
-    REAL(KIND=REAL4) :: dlon, dlat
-    REAL(KIND=REAL8) :: mjd
-    REAL(KIND=REAL4), dimension(8) :: angles
+    integer :: i, j, ii, jj, ierr, imode
+    real(kind(0.0d0)) :: latitude, longitude
+    real(kind=real4) :: elem, line, height
+    real(kind=real4) :: dlon, dlat
+    real(kind=real8) :: mjd
+    real(kind=real4), dimension(8) :: angles
 
     NAVstr_AHI_NAV = NAVstr_AHI
     
@@ -433,16 +435,18 @@ end subroutine READ_AHI_INSTR_CONSTANTS
     lon = Missing_Value_Real4
           
     !HRIT requires actual line and element of being processed.
-    ! Unlike MSG, AHI requires no switching to different corrdinates.
+    !Unlike MSG, AHI requires no switching to different corrdinates.
                 
-    DO j=1, ysize
+    do j = 1, ysize
+
         jj = ystart + (j-1)
         
-        DO i=1, xsize
-            ii = (i - 1) + xstart	 ! get element of the image segement
+        do i = 1, xsize
+
+            ii = (i - 1) + xstart      ! get element of the image segement
                 
-                ! again, use common algorithm for CGMS navigation
-            CALL pixcoord2geocoord_cgms(ii,                  &
+            ! again, use common algorithm for CGMS navigation
+            call pixcoord2geocoord_cgms(ii,                  &
                                         jj,                  &
                                         NAVstr_AHI%LOFF,   &
                                         NAVstr_AHI%COFF,   & 
@@ -453,32 +457,32 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                                         latitude,            &
                                         longitude)
                                           
-            IF (latitude .LE. -999.0) THEN  ! -999.99 is MSV nav missing value
+            if (latitude .LE. -999.0) THEN  ! -999.99 is MSV nav missing value
                     Lat_1b(i,j) = Missing_Value_Real4
                     Lon_1b(i,j) = Missing_Value_Real4
                     Space_Mask(i,j) = sym%SPACE
-            ELSE
-                    Lat_1b(i,j) = REAL(latitude,kind=REAL4)
-                    Lon_1b(i,j) = REAL(longitude,kind=REAL4)
+            else
+                    Lat_1b(i,j) = real(latitude,kind=real4)
+                    Lon_1b(i,j) = real(longitude,kind=real4)
                     
                     ! BecaUSE JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
-                    IF (longitude .GT. 180.0 ) THEN
-                        Lon_1b(i,j) = REAL(longitude,kind=REAL4) - 360.0
-                    ENDIF
+                    if (longitude .GT. 180.0 ) THEN
+                        Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
+                    endif
                                         
                     Space_Mask(i,j) = sym%NO_SPACE
-            ENDIF
+            endif
 
         
-            END DO
+            enddo
                         
-        END DO     
+        enddo     
         
-    ENDIF
+    endif
       
- END SUBROUTINE AHI_navigation
+ end subroutine AHI_navigation
 
 !----------------------------------------------------------------------
 ! Likely needed for conversion between AHI radiances to units expected
@@ -518,5 +522,48 @@ subroutine READ_AHI_CHANNEL(Channel, Segment_Number, &
 
 end subroutine READ_AHI_CHANNEL
 
+!----------------------------------------------------------------
+! read the MSG constants into memory
+!-----------------------------------------------------------------
+subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
+  character(len=*), intent(in):: Instr_Const_file
+  integer:: ios0, erstat
+  integer:: Instr_Const_lun
+ 
+  Instr_Const_lun = GET_LUN()
+
+  open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+
+  print *, "opening ", trim(Instr_Const_file)
+  erstat = 0
+  if (ios0 /= 0) then
+    erstat = 19
+    print *, EXE_PROMPT, "Error opening AHI constants file, ios0 = ", ios0
+    stop 19
+  endif
+  read(unit=Instr_Const_lun,fmt="(a3)") Sat_Name
+  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20
+  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27
+  read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28,nu_28
+  read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29
+  read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30,nu_30
+  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
+  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
+  read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33
+  read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43     
+  read(unit=Instr_Const_lun,fmt=*) a1_44, a2_44,nu_44
+  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
+  close(unit=Instr_Const_lun)
+
+  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+  !--- hardwire dark counts   (TBD)
+  Ch1_Dark_Count = 29
+  Ch2_Dark_Count = 29
+
+end subroutine READ_AHI_INSTR_CONSTANTS
 
 end module AHI_MODULE

@@ -420,7 +420,6 @@ module SENSOR_MODULE
       Sensor%Algo_Const_File = 'no_file'
       Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
       Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
- 
 
       !-------------------------------------------------------------------------
       !-- Loop through tests for each file type, if not found assume avhrr
@@ -430,6 +429,19 @@ module SENSOR_MODULE
 
       test_loop: do while (ifound == sym%NO)
       
+      !--- HIMAWARI-8 AHI Test
+      if (index(Image%Level1b_Name, 'HIM8') > 0) then
+        Sensor%Sensor_Name = 'AHI'
+        Sensor%Platform_Name = 'HIM8'
+        Sensor%Spatial_Resolution_Meters = 2000
+        Sensor%WMO_Id = 173
+        Sensor%Instr_Const_File = 'him8_instr.dat'
+        Sensor%Algo_Const_File = 'him8_algo.dat'
+        Sensor%Geo_Sub_Satellite_Longitude = 140.0
+        Sensor%Geo_Sub_Satellite_Latitude = 0.0
+        exit test_loop
+      endif
+
       !--- MODIS Test
       if (index(Image%Level1b_Name, 'MYD021KM') > 0) then
         Sensor%Sensor_Name = 'MODIS'
@@ -963,7 +975,7 @@ module SENSOR_MODULE
       enddo test_loop
 
       !---------------------------------------------------------------------------------
-      ! Set sub-satellite point for geostationary satellites
+      ! Set sub-satellite point for geostationary satellites that are Areafiles
       !---------------------------------------------------------------------------------
       call DETERMINE_GEO_SUB_SATELLITE_POSITION(trim(Image%Level1b_Full_Name),AREAstr,NAVstr)
 

@@ -28,6 +28,7 @@ module NETCDF_READ_MODULE
  public :: read_netcdf_2d_int
  public :: read_netcdf_2d_char
  public :: read_netcdf_3d
+ public :: read_ahi_nav_coeff
 
  integer, parameter, private :: sds_rank_1d = 1
  integer, dimension(sds_rank_1d), private :: sds_start_1d, sds_edge_1d, sds_stride_1d
@@ -47,7 +48,7 @@ module NETCDF_READ_MODULE
  subroutine read_netcdf_attribute_real (nc_file_id, attribute_id, var_name, attr)
    integer:: nc_file_id
    integer:: attribute_id
-   character(30):: var_name
+   character(4):: var_name
    real, intent(out) :: attr
    integer:: status
 
@@ -56,7 +57,57 @@ module NETCDF_READ_MODULE
  
  end subroutine read_netcdf_attribute_real
  
+ subroutine read_ahi_nav_coeff ( ncdf_file, CFAC, COFF, LFAC, LOFF)
  
+ !, CFAC, COFF, LFAC, LOFF, Sub_point)
+ 
+   character ( len =*) , intent(in) :: ncdf_file
+   REAL(KIND(0.0d0)) , INTENT (OUT) :: CFAC
+   REAL(KIND(0.0d0)) , INTENT (OUT) :: COFF
+   REAL(KIND(0.0d0)) , INTENT (OUT) :: LFAC
+   REAL(KIND(0.0d0)) , INTENT (OUT) :: LOFF
+!   REAL(KIND(0.0d0)) , INTENT (OUT) :: Sub_point
+ 
+   integer :: nc_file_id
+   integer :: nc_var_id
+   integer :: status
+   REAL :: attr
+   
+   
+
+
+!open netCDF file
+    status = nf90_open(path = trim(ncdf_file), mode = nf90_nowrite, ncid = nc_file_id)
+    if (status .ne. nf90_noerr) then 
+            print *, "Error: Unable to open netCDF file ", trim(ncdf_file)
+            stop  
+    endif  
+    
+    status = nf90_inq_varid(nc_file_id, trim('X_CGMS'), nc_var_id)
+    
+    call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'CFAC', attr)
+    CFAC = DBLE(attr)
+    call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'COFF', attr)
+    COFF = DBLE(attr)
+ 
+    status = nf90_inq_varid(nc_file_id, trim('Y_CGMS'), nc_var_id)
+    
+    call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'LFAC', attr)
+    LFAC = DBLE(attr)
+    call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'LOFF', attr)
+    LOFF = DBLE(attr)
+
+!close netCDF file
+
+    status = nf90_close(nc_file_id)
+    if (status .ne. nf90_noerr) then 
+            print *, "Error: Unable to open netCDF file ", trim(ncdf_file)
+            stop  
+    endif
+ 
+ end subroutine  read_ahi_nav_coeff
+ 
+  
    ! ----------------------------------------------------------
    ! Read in 1D arrays (used code from DCOMP reader
    ! ----------------------------------------------------------

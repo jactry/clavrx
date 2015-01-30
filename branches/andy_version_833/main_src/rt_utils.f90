@@ -571,9 +571,9 @@ contains
       integer:: Lat_Idx
       integer:: Lon_Idx_x
       integer:: Lat_Idx_x
-      integer:: Lon_Idx_prev
-      integer:: Lat_Idx_prev
-      integer:: Zen_Idx_prev
+      integer:: Lon_Idx_Prev
+      integer:: Lat_Idx_Prev
+      integer:: Zen_Idx_Prev
       real:: Lat_x
       real:: Lon_x
       real:: Prof_Weight
@@ -592,9 +592,9 @@ contains
       !--------------------------------------------------------------------------
       call COMPUTE_GAMMA_FACTOR()
 
-      Lon_Idx_prev = 0
-      Lat_Idx_prev = 0
-      Zen_Idx_prev = 0
+      Lon_Idx_Prev = 0
+      Lat_Idx_Prev = 0
+      Zen_Idx_Prev = 0
 
       !--- loop over pixels in segment
       line_loop: do Line_Idx = Line_Idx_Min, Num_Lines + Line_Idx_Min - 1
@@ -622,7 +622,6 @@ contains
             Lon_x = Lon_Nwp_Fac(Elem_Idx,Line_Idx)
             Lat_x = Lat_Nwp_Fac(Elem_Idx,Line_Idx)
             Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
-
 
             !--- if this is the first time this nwp cell is being processed do the following
             if (Rtm(Lon_Idx,Lat_Idx)%Flag == 0) then
@@ -701,9 +700,9 @@ contains
                !--------------------------------------------------------------
 
                !--- decide if this can be skipped
-               if ((Lon_Idx_prev == 0) .or. (abs(Lon_Idx-Lon_Idx_prev) >= Ilon_Stride) .or. &
-                  (Lat_Idx_prev == 0) .or. (abs(Lat_Idx-Lat_Idx_prev) >= Ilat_Stride) .or. &
-                  (Zen_Idx_prev == 0) .or. (abs(Zen_Idx - Zen_Idx_prev) >= Ivza_Stride)) then  
+               if ((Lon_Idx_Prev == 0) .or. (abs(Lon_Idx-Lon_Idx_Prev) >= Ilon_Stride) .or. &
+                  (Lat_Idx_Prev == 0) .or. (abs(Lat_Idx-Lat_Idx_Prev) >= Ilat_Stride) .or. &
+                  (Zen_Idx_Prev == 0) .or. (abs(Zen_Idx - Zen_Idx_Prev) >= Ivza_Stride)) then  
 
                   Start_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
 
@@ -718,7 +717,6 @@ contains
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
                      if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
-
 
                      call PFAAST_CALLER(Chan_Idx,Satzen_Mid_Bin,Error_Status)
 
@@ -778,9 +776,9 @@ contains
 
                   end do
 
-                  Lon_Idx_prev = Lon_Idx
-                  Lat_Idx_prev = Lat_Idx
-                  Zen_Idx_prev = Zen_Idx
+                  Lon_Idx_Prev = Lon_Idx
+                  Lat_Idx_Prev = Lat_Idx
+                  Zen_Idx_Prev = Zen_Idx
                   Trans_Atm_Prof_Prev = Trans_Atm_Prof
                   Trans_Atm_Solar_Prof_Prev = Trans_Atm_Solar_Prof
                   Trans_Atm_Total_Prof_Prev = Trans_Atm_Total_Prof
@@ -852,7 +850,7 @@ contains
          end do element_loop
       end do line_loop
 
-         return
+      return
 
    end subroutine GET_PIXEL_NWP_RTM
 
@@ -2606,7 +2604,8 @@ contains
          
          case(27,29,31,32,33) 
             if (Sensor%Chan_On_Flag_Default(Chan_Idx)==sym%YES) then
-               if (.not. allocated(ch(Chan_Idx)%Emiss_Tropo)) allocate(ch(Chan_Idx)%Emiss_Tropo(dim1,dim2))
+
+!              if (.not. allocated(ch(Chan_Idx)%Emiss_Tropo)) allocate(ch(Chan_Idx)%Emiss_Tropo(dim1,dim2))
                
                ch(Chan_Idx)%Emiss_Tropo(Elem_Idx,Line_Idx) =  &
                         EMISSIVITY(ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx),  &

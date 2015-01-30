@@ -5,7 +5,7 @@
 ! NAME: pixel_routines.f90 (src)
 !       PIXEL_ROUTINES (program)
 !
-! PURPOSE: this MODULE houses routines for computing some needed pixel-level arrays
+! PURPOSE: this module houses routines for computing some needed pixel-level arrays
 !
 ! DESCRIPTION: 
 !
@@ -63,6 +63,7 @@ MODULE PIXEL_ROUTINES
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
           COMPUTE_SNOW_FIELD, &
+          MODIFY_SPACE_MASK, &
           SET_BAD_PIXEL_MASK, &
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           READ_MODIS_WHITE_SKY_ALBEDO,      &
@@ -110,11 +111,10 @@ MODULE PIXEL_ROUTINES
       
       Ch6_On_Pixel_Mask = sym%NO
 
-      line_loop: DO Line_Idx = jmin, nj - jmin + 1
+      line_loop: do Line_Idx = jmin, nj - jmin + 1
       
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
          Sensor%Chan_On_Flag_Per_Line(:,Line_Idx) = Sensor%Chan_On_Flag_Default   
-         
          
          ! two exceptions
          if (trim(Sensor%Platform_Name)=='AQUA' .and. Sensor%Chan_On_Flag_Default(6) == sym%YES ) then
@@ -122,7 +122,6 @@ MODULE PIXEL_ROUTINES
                      Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
             end if  
          end if
-         
          
          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
             if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
@@ -134,7 +133,6 @@ MODULE PIXEL_ROUTINES
                Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = Sensor%Chan_On_Flag_Default(20)   
             end if
          endif
-
 
          !--- set 2d mask used for channel-6 (1.6 um)
          Ch6_On_Pixel_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
@@ -153,7 +151,7 @@ subroutine QC_MODIS(jmin,nj)
 
   Bad_Pixel_Mask = sym%NO
 
-  line_loop: DO Line_Idx= jmin, nj- jmin + 1
+  line_loop: do Line_Idx= jmin, nj- jmin + 1
      if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
         Bad_Pixel_Mask(:,Line_Idx) = sym%YES
      endif
@@ -163,6 +161,44 @@ subroutine QC_MODIS(jmin,nj)
   enddo line_loop
 
 end subroutine QC_MODIS
+
+!======================================================================
+! Modify the space mask based the limits on lat, lon, satzen and solzen 
+! Space mask was initially determined in the Level-1b Navigation
+!======================================================================
+subroutine MODIFY_SPACE_MASK()
+
+   where(Nav%Lat_1b /= Missing_Value_Real4 .and. Nav%Lon_1b /= Missing_Value_Real4)
+        Space_Mask = sym%NO
+   end where 
+
+   where(Nav%Lat_1b == Missing_Value_Real4 .or. Nav%Lon_1b == Missing_Value_Real4)
+        Space_Mask = sym%YES
+   end where
+
+   where(isnan(Nav%Lat_1b) .or. isnan(Nav%Lon_1b))
+        Space_Mask = sym%YES
+   end where
+
+   where(Nav%Lat_1b < Nav%Lat_Min_Limit .or. Nav%Lat_1b > Nav%Lat_Max_Limit)
+        Space_Mask = sym%YES
+   end where
+
+   where(Nav%Lon_1b < Nav%Lon_Min_Limit .or. Nav%Lon_1b > Nav%Lon_Max_Limit)
+        Space_Mask = sym%YES
+   end where
+
+   !--- Satzen limit
+   where (Geo%Satzen >= Satzen_Thresh_Processing .or. Geo%Satzen == Missing_Value_Real4)
+        Space_Mask = sym%YES
+   end where
+
+   !--- Solzen limit
+   where (Geo%Solzen < Geo%Solzen_Min_Limit .or. Geo%Solzen > Geo%Solzen_Max_Limit .or. Geo%Satzen == Missing_Value_Real4)
+        Space_Mask = sym%YES
+   end where
+
+end subroutine MODIFY_SPACE_MASK
  
 !======================================================================
 ! Check for bad pixels
@@ -186,57 +222,32 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
    !---- this is needed to ensure extra lines (beyond Num_Scans_Read) are bad
    Bad_Pixel_Mask = sym%YES
 
-   line_loop: DO Line_Idx = 1, Number_of_Lines
+   line_loop: do Line_Idx = 1, Number_of_Lines
 
       !--- initialize
       Solar_Contamination_Mask(:,Line_Idx) = sym%NO
       Bad_Pixel_Mask(:,Line_Idx) = sym%NO
-      Space_Mask(:,Line_Idx) = sym%NO_SPACE
 
      !--- check for a bad scan
      if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
 
        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
-       Space_Mask(:,Line_Idx) = sym%SPACE
 
      else
 
       !--- if not a bad scan, check pixels on this scan
-      element_loop: DO Elem_Idx = 1, Number_of_Elements
+      element_loop: do Elem_Idx = 1, Number_of_Elements
 
-        !--- missing geolocation
-        if ((Nav%Lat(Elem_Idx,Line_Idx) == Missing_Value_Real4) .or.  &
-            (Nav%Lon(Elem_Idx,Line_Idx) == Missing_Value_Real4)) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
+        Bad_Pixel_Mask(Elem_Idx,Line_Idx) = Space_Mask(Elem_Idx,Line_Idx)
 
         !--- NaN checks on geolocation and geometry
-        if (isnan(Nav%Lat(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Nav%Lon(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Geo%Satzen(Elem_Idx,Line_Idx)) .or.  &
+        if (isnan(Geo%Satzen(Elem_Idx,Line_Idx)) .or.  &
             isnan(Geo%Solzen(Elem_Idx,Line_Idx))) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
-        !--- Satzen limit
-        if (Geo%Satzen(Elem_Idx,Line_Idx) >= Satzen_Thresh_Processing) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
- 
-        !--- Satzen limit
-        if (Geo%Satzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- Relaz limit
+        !--- Bad Relazimuth
         if (Geo%Relaz(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- Solzen limit
-        if (Geo%Solzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
@@ -250,11 +261,6 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
           endif
 
-        endif
-
-        !--- space views for considered as bad pixels
-        if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
         !--- missing 11 um observations
@@ -329,7 +335,7 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
 
         !--- CALL any bad pixel as being space (for ancil data interp)
         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+           Space_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
         !--- check for solar contamination of nighttime data in GOES
@@ -404,9 +410,9 @@ subroutine QUALITY_CONTROL_ANCILLARY_DATA (j1,nj)
 
    j2 = j1 + nj - 1
 
-   DO Line_Idx = j1,j2+j1-1
+   do Line_Idx = j1,j2+j1-1
 
-      DO Elem_Idx = 1, Image%Number_Of_Elements
+      do Elem_Idx = 1, Image%Number_Of_Elements
 
         !--- invalid sfc type observations
         if (Sfc%Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) > 15) then
@@ -548,9 +554,9 @@ end subroutine CONVERT_TIME
 
    Sfc%Snow = Missing_Value_Int1
 
-j_loop:    DO j = j1,j2
+j_loop:    do j = j1,j2
                                                                                                                                          
-  i_loop:    DO i = 1, Image%Number_Of_Elements
+  i_loop:    do i = 1, Image%Number_Of_Elements
 
       Sfc%Snow(i,j) = Missing_Value_Int1
 
@@ -674,7 +680,7 @@ j_loop:    DO j = j1,j2
 
        !-------------------------------------------------------
        ! use some basic tests to modify Snow
-       ! only DO this when hires Snow field is unavailable
+       ! only do this when hires Snow field is unavailable
        !-------------------------------------------------------
 
        if (ihires == sym%NO) then
@@ -746,8 +752,8 @@ j_loop:    DO j = j1,j2
      return 
   endif
 
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
+  line_loop: do Line_Idx=jmin, jmax - jmin + 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
       !--- check for a bad pixel pixel
       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -835,9 +841,9 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
    Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
   !---------- loop over scan lines
-  line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
+  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
-  element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
+  element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
@@ -1105,9 +1111,9 @@ end subroutine ATMOS_CORR
   !--------------------------------------------------------------------
   j2 = j1 + nj - 1
 
-  DO j = j1,j2
+  do j = j1,j2
 
-     DO i = 1, Image%Number_Of_Elements
+     do i = 1, Image%Number_Of_Elements
 
       if (Bad_Pixel_Mask(i,j) == sym%NO .and. Geo%Cossolzen(i,j) > 0.0) then
 
@@ -1232,7 +1238,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
   integer:: i,j
   real :: solar_irradiance
 
-  DO j = j1,j1+j2-1
+  do j = j1,j1+j2-1
 
     !---- compute channel 3b albedo
     if ((Sensor%Chan_On_Flag_Default(20) == sym%YES) .and.  &
@@ -1241,7 +1247,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
       !----------------------------------------------------------------------------
       !--- standard Ref_Ch20 computation
       !---------------------------------------------------------------------------
-      DO i = 1, Image%Number_Of_Elements
+      do i = 1, Image%Number_Of_Elements
 
 
       !--- check for bad scans
@@ -1305,8 +1311,8 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
     Elem_Idx_segment_max = Image%Number_Of_Elements
     Line_Idx_segment_max = Line_Idx_Min_Segment + Line_Idx_Max_Segment - 1
 
-    DO Elem_Idx = 1, Elem_Idx_segment_max
-       DO Line_Idx = 1, Line_Idx_segment_max
+    do Elem_Idx = 1, Elem_Idx_segment_max
+       do Line_Idx = 1, Line_Idx_segment_max
 
         !--- compute 5x5 arrays
         Elem_Idx_min = max(1,min(Elem_Idx - 2,Elem_Idx_segment_max))
@@ -1350,13 +1356,13 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
  Rsr_Qf = 0
 
 
- DO j = jmin, jmin+jmax-1
+ do j = jmin, jmin+jmax-1
                                                                                                                                                 
    !--- determine y-dimensions of array to check
    j1 = max(jmin,j-n)
    j2 = min(jmax,j+n)
                                                                                                                                                 
-    DO i = 1, Image%Number_Of_Elements
+    do i = 1, Image%Number_Of_Elements
 
       !--- check for bad scans
       if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -1470,7 +1476,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 !
 !  note this can handle nx2 uniformity calculations.  If n /= 2, then make
 !  sure this routine is called for each pixel in the scanline.  However,
-!  because we still process two scanlines, we only DO this once for each
+!  because we still process two scanlines, we only do this once for each
 !  scanline in the pair
 !
 ! note, this routine attempts to return the local standard deviation of area
@@ -1637,8 +1643,8 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
     !----- store Btd_Ch31_Ch32 at maximum Bt_Ch31 in surrounding pixels
-    line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-      element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
+    line_loop: do Line_Idx=jmin, jmax - jmin + 1
+      element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
        if ((Elem_Idx_Max_Bt_Ch31_3x3(Elem_Idx,Line_Idx) > 0) .and. &
            (Line_Idx_Max_Bt_Ch31_3x3(Elem_Idx,Line_Idx) > 0)) then
           Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(Elem_Idx,Line_Idx) =  &
@@ -1748,9 +1754,9 @@ subroutine COMPUTE_GLINT()
 
   Sfc%Glint_Mask = Missing_Value_Int1
 
-     line_loop: DO Line_Idx = 1, Number_Of_Lines
+     line_loop: do Line_Idx = 1, Number_Of_Lines
 
-     element_loop: DO Elem_Idx = 1, Number_Of_Elements
+     element_loop: do Elem_Idx = 1, Number_Of_Elements
 
      !--- skip bad pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -1831,9 +1837,9 @@ subroutine COMPUTE_GLINT_LUNAR()
 
   Sfc%Glint_Mask_Lunar = Missing_Value_Int1
 
-     line_loop: DO Line_Idx = 1, Number_Of_Lines
+     line_loop: do Line_Idx = 1, Number_Of_Lines
 
-     element_loop: DO Elem_Idx = 1, Number_Of_Elements
+     element_loop: do Elem_Idx = 1, Number_Of_Elements
 
      !--- skip bad pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -2023,8 +2029,8 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
 
   Sst_Masked = Missing_Value_Real4
 
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
+  line_loop: do Line_Idx=jmin, jmax - jmin + 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
  
@@ -2232,8 +2238,8 @@ subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
-    element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
+  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
+    element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
       !--- if no, geolocation, set to missing and go to next pixel
       if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -2299,12 +2305,12 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
 
   Adj_Pix_Cld_Mask = Missing_Value_Int1
 
-  line_loop: DO Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
+  line_loop: do Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
 
     j1 = max(1,Line_Idx - 1)
     j2 = min(Number_of_Lines,Line_Idx + 1)
 
-    element_loop: DO Elem_Idx = 1, Number_of_Elements
+    element_loop: do Elem_Idx = 1, Number_of_Elements
 
       i1 = max(1,Elem_Idx - 1)
       i2 = min(Number_of_Elements,Elem_Idx + 1)
@@ -2344,8 +2350,8 @@ subroutine COMPUTE_VIIRS_SST(jmin,jmax)
   if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
   if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
 
-  line_loop: DO Line_Idx=jmin, jmax + jmin - 1
-    element_loop: DO Elem_Idx= 1, Image%Number_Of_Elements
+  line_loop: do Line_Idx=jmin, jmax + jmin - 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
   ! Day time
      if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then

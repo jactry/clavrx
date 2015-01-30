@@ -221,14 +221,14 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
     ! On first segment, reflectance, BT and rad tables
     ! On first segment, get slope/offset information from McIDAS Header
     mtsat_file_id = get_lun()   
-    IF (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-        CALL mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
+    if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+        call mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
     ELSE
-      CALL mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
+      call mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
     endif  
 
-    CALL load_mtsat_calibration(mtsat_file_id, AREAstr)
-    CALL mread_close(mtsat_file_id)
+    call load_mtsat_calibration(mtsat_file_id, AREAstr)
+    call mread_close(mtsat_file_id)
 
 
    endif
@@ -457,7 +457,7 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
   !--- first set a, b, nu in form that is needed for table. Outside this routine, these
   !    coefficents are not needed.
   
-  IF (AREAstr%sat_id_num  == 84) then
+  if (AREAstr%sat_id_num  == 84) then
   ! Updated with values from GSICS activities at JMA http://mscweb.kishou.go.jp/monitoring/gsics/ir/techinfo.htm
         nu_mtsat(5) = 2652.9316   !  3.9 micron
         nu_mtsat(4) = 1482.2068   !  6.8 micron
@@ -479,7 +479,7 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
   
 
 
-  IF (AREAstr%sat_id_num  == 85) then
+  if (AREAstr%sat_id_num  == 85) then
   ! Coeff provided by JMA to WCS3. Will be on GSICS/JMA website at some point
   ! http://mscweb.kishou.go.jp/monitoring/gsics/ir/techinfo.htm
 
@@ -584,16 +584,16 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
     !Currently the same for MTSAT-1r and MTSAT-2. McIDAS currently doesn't calculate this.
     !---- WCS3 ------!
 
-    DO j=1, Image%Number_Of_Lines_Read_This_Segment
-      DO i=1, Image%Number_Of_Elements
-        IF (Space_Mask(i,j) == sym%NO_SPACE) then
+    do j=1, Image%Number_Of_Lines_Read_This_Segment
+      do i=1, Image%Number_Of_Elements
+        if (Space_Mask(i,j) == sym%NO_SPACE) then
           !  Because MTSAT has two vis calibration type, we need to 
           !  which route it needs to go. calibration.f90 was edited to 
           !  gather the vis calibration type, which is stored in thesat_info
           !  structure. Now we USE it here, based off of how to do it via
           !  kbxmtst.dlm (v1.5) from McIDAS - WCS3 - 3/29/2010
                     
-          IF ( calib_type == 'MVSH' .OR. &
+          if ( calib_type == 'MVSH' .OR. &
                calib_type == 'HSVM') then
 
             !---- WCS3 ------!
@@ -626,7 +626,7 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
                               
           endif
           
-          IF (calib_type == 'MVIS' .OR. &
+          if (calib_type == 'MVIS' .OR. &
                calib_type == 'SIVM') then
           
             !Not sure if I need to add 1 here
@@ -676,26 +676,26 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
     Nav%Lat = Missing_Value_Real4
     Nav%Lon = Missing_Value_Real4
        
-    IF (NAVstr_MTSAT%nav_type == 'GMSX') then
+    if (NAVstr_MTSAT%nav_type == 'GMSX') then
     
         jj = 1 + (ystart - 1)*AREAstr%line_res
     
-        DO j=1, ysize
+        do j=1, ysize
             line = real(AREAstr%north_bound) + real(jj - 1) + &
                     real(AREAstr%line_res)/2.0
                
-            DO i=1, xsize
+            do i=1, xsize
                 ii = ((i+(xstart-1)) - 1)*(AREAstr%elem_res*(xstride)) + 1
         
                 elem = real(AREAstr%west_vis_pixel) + real(ii - 1) + &
 	                   real(AREAstr%elem_res*(xstride))/2.0
                    
-                CALL MGIVSR(imode,elem,line,dlon,dlat,height,&
+                call MGIVSR(imode,elem,line,dlon,dlat,height,&
                             angles,mjd,ierr)
                 
                 Space_Mask(i,j) = sym%SPACE
             
-                IF (ierr == 0) then
+                if (ierr == 0) then
                      Space_Mask(i,j) = sym%NO_SPACE
                      Nav%Lat_1b(i,j) = dlat
                      Nav%Lon_1b(i,j) = dlon
@@ -707,26 +707,26 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                         
     endif
 
-    IF (NAVstr_MTSAT%nav_type == 'GEOS') then      
+    if (NAVstr_MTSAT%nav_type == 'GEOS') then      
         !HRIT requires actual line and element of being processed.
         ! Unlike MSG, MTSAT requires no switching to different corrdinates.
                 
-          DO j=1, ysize
+          do j=1, ysize
 !            jj = ystart + (j-1)
             jj = (AREAstr%north_bound / AREAstr%line_res) + ystart + (j-1)
     
                
-            DO i=1, xsize
+            do i=1, xsize
 !                ii = (i - 1)*(xstride) + xstart	 ! get element of the image segement
                 ii = (AREAstr%west_vis_pixel / AREAstr%elem_res) + (i - 1)*(xstride) + xstart   ! get element of the image segement
                 
                 
-                !CALL pixcoord2geocoord_mtsat(ii, jj, NAVstr_MTSAT%LOFF, NAVstr_MTSAT%COFF, &
+                !call pixcoord2geocoord_mtsat(ii, jj, NAVstr_MTSAT%LOFF, NAVstr_MTSAT%COFF, &
                 !     latitude,longitude, NAVstr_MTSAT%sub_lon, NAVstr_MTSAT%CFAC, NAVstr_MTSAT%LFAC)
 
 
                 ! again, use common algorithm for CGMS navigation
-                CALL pixcoord2geocoord_cgms(ii,                  &
+                call pixcoord2geocoord_cgms(ii,                  &
                                             jj,                  &
                                             NAVstr_MTSAT%LOFF,   &
                                             NAVstr_MTSAT%COFF,   & 
@@ -740,7 +740,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                  ! Putting in hooks for updated navigation code
                  ! to be edited after 1/12
                  
-                 !CALL fgf_to_earth(FGF_TYPE,                  &
+                 !call fgf_to_earth(FGF_TYPE,                  &
                  !                  ii,                  &
                  !                  jj,                  &
                  !                  NAVstr_MTSAT%COFF,   &
@@ -751,7 +751,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                  !                  longitude,            &
                  !                  latitude)
                                           
-             IF (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
+             if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Nav%Lat_1b(i,j) = Missing_Value_Real4
                     Nav%Lon_1b(i,j) = Missing_Value_Real4
                     Space_Mask(i,j) = sym%SPACE
@@ -762,7 +762,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                     ! BecaUSE JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
-                    IF (longitude .GT. 180.0 ) then
+                    if (longitude .GT. 180.0 ) then
                         Nav%Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
                     endif
                                         
@@ -773,7 +773,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
         
             end DO
                         
-        end DO     
+        end do     
         
     endif
       
@@ -793,12 +793,12 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
     
     integer :: i, j, index
                                    
-    DO j = 1, Image%Number_Of_Lines_Read_This_Segment
-      DO i = 1, Image%Number_Of_Elements
+    do j = 1, Image%Number_Of_Lines_Read_This_Segment
+      do i = 1, Image%Number_Of_Elements
        
        index = int(Mtsat_Counts(i,j),kind=int2) + 1
        
-       IF ((Space_Mask(i,j) == sym%NO_SPACE) .AND. &
+       if ((Space_Mask(i,j) == sym%NO_SPACE) .AND. &
            (index .LE. 1024) .AND. (index .GE. 1)) then 
        !only do valid counts
           rad2(i,j) = real(rad_table(chan_num,1,index),kind=real4)/1000.0
@@ -808,7 +808,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
           temp1(i,j) = Missing_Value_Real4
        endif
       end DO
-    end DO    
+    end do    
   
   end subroutine MTSAT_RADIANCE_BT
   
@@ -961,27 +961,27 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          RTIM    = DTIMS+DBLE(RI0/SENS/1440.)/DSPIN                 ![3.3]
  !
    100   CONTINUE
-         CALL  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                      ![3.4]
+         call  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                      ![3.4]
  !-----------------------------------------------------------------------
-         CALL  MGI220(SP,SS,SW1)                                    ![3.5]
-         CALL  MGI220(SW1,SP,SW2)
+         call  MGI220(SP,SS,SW1)                                    ![3.5]
+         call  MGI220(SW1,SP,SW2)
          BC      = DCOS(BETA)
          BS      = DSIN(BETA)
          SW3(1)  = SW1(1)*BS+SW2(1)*BC
          SW3(2)  = SW1(2)*BS+SW2(2)*BC
          SW3(3)  = SW1(3)*BS+SW2(3)*BC
-         CALL  MGI200(SW3,SX)
-         CALL  MGI220(SP,SX,SY)
+         call  MGI200(SW3,SX)
+         call  MGI220(SP,SX,SY)
          SLV(1)  = STN1(1)-SAT(1)                                  ![3.6]
          SLV(2)  = STN1(2)-SAT(2)
          SLV(3)  = STN1(3)-SAT(3)
-         CALL  MGI200(SLV,SL)                                      ![3.7]
-         CALL  MGI210(SP,SL,SW2)
-         CALL  MGI210(SY,SW2,SW3)
-         CALL  MGI230(SY,SW2,TP)
+         call  MGI200(SLV,SL)                                      ![3.7]
+         call  MGI210(SP,SL,SW2)
+         call  MGI210(SY,SW2,SW3)
+         call  MGI230(SY,SW2,TP)
          TF      = SP(1)*SW3(1)+SP(2)*SW3(2)+SP(3)*SW3(3)
          if(TF.LT.0.D0)  TP=-TP
-         CALL  MGI230(SP,SL,TL)
+         call  MGI230(SP,SL,TL)
  !
          RI      = SNGL(HPAI-TL)/RSTEP+RFCL-VMIS(2)/RSTEP
          RJ      = SNGL(TP)/RSAMP+RFCP &
@@ -1004,16 +1004,16 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !
          RTIM    = DBLE(AINT((RLIN-1.)/SENS)+RPIX*RSAMP/SNGL(DPAI))/ &
                    (DSPIN*1440.D0)+DTIMS                           ![3.9]
-         CALL  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                     ![3.10]
-         CALL  MGI220(SP,SS,SW1)                                   ![3.11]
-         CALL  MGI220(SW1,SP,SW2)
+         call  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                     ![3.10]
+         call  MGI220(SP,SS,SW1)                                   ![3.11]
+         call  MGI220(SW1,SP,SW2)
          BC      = DCOS(BETA)
          BS      = DSIN(BETA)
          SW3(1)  = SW1(1)*BS+SW2(1)*BC
          SW3(2)  = SW1(2)*BS+SW2(2)*BC
          SW3(3)  = SW1(3)*BS+SW2(3)*BC
-         CALL  MGI200(SW3,SX)
-         CALL  MGI220(SP,SX,SY)
+         call  MGI200(SW3,SX)
+         call  MGI220(SP,SX,SY)
          PC      = DCOS(DBLE(RSTEP*(RLIN-RFCL)))                   ![3.12]
          PS      = DSIN(DBLE(RSTEP*(RLIN-RFCL)))
          QC      = DCOS(DBLE(RSAMP*(RPIX-RFCP)))
@@ -1027,7 +1027,7 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          SW3(1)  = SX(1)*SW2(1)+SY(1)*SW2(2)+SP(1)*SW2(3)          ![3.13]
          SW3(2)  = SX(2)*SW2(1)+SY(2)*SW2(2)+SP(2)*SW2(3)
          SW3(3)  = SX(3)*SW2(1)+SY(3)*SW2(2)+SP(3)*SW2(3)
-         CALL  MGI200(SW3,SL)                                      ![3.14]
+         call  MGI200(SW3,SL)                                      ![3.14]
          DEF     = (1.D0-EF)*(1.D0-EF)
          DDA     = DEF*(SL(1)*SL(1)+SL(2)*SL(2))+SL(3)*SL(3)
          DDB     = DEF*(SAT(1)*SL(1)+SAT(2)*SL(2))+SAT(3)*SL(3)
@@ -1073,9 +1073,9 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        SLV(1)    = SAT(1)-STN1(1)                                  ![3.18]
        SLV(2)    = SAT(2)-STN1(2)
        SLV(3)    = SAT(3)-STN1(3)
-       CALL  MGI200(SLV,SL)
+       call  MGI200(SLV,SL)
  !
-       CALL  MGI230(STN2,SL,DSATZ)                                 ![3.19]
+       call  MGI230(STN2,SL,DSATZ)                                 ![3.19]
        if(DSATZ.GT.HPAI)  IRTN = 7
  !
        SUNM    = 315.253D0+0.985600D0*RTIM                         ![3.20]
@@ -1097,24 +1097,24 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        SW1(1)  = SLV(1)+SS(1)*SDIS*1.D3                            ![3.22]
        SW1(2)  = SLV(2)+SS(2)*SDIS*1.D3
        SW1(3)  = SLV(3)+SS(3)*SDIS*1.D3
-       CALL  MGI200(SW1,SW2)                                       ![3.23]
-       CALL  MGI230(STN2,SW2,DSUNZ)
-       CALL  MGI230(SL,SW2,DSSDA)                                  ![3.24]
-       CALL  MGI240(SL,STN2,STN3,DPAI,DSATA)                       ![3.25]
-       CALL  MGI240(SW2,STN2,STN3,DPAI,DSUNA)                      ![3.26]
+       call  MGI200(SW1,SW2)                                       ![3.23]
+       call  MGI230(STN2,SW2,DSUNZ)
+       call  MGI230(SL,SW2,DSSDA)                                  ![3.24]
+       call  MGI240(SL,STN2,STN3,DPAI,DSATA)                       ![3.25]
+       call  MGI240(SW2,STN2,STN3,DPAI,DSUNA)                      ![3.26]
        DSATD   = DSQRT(SLV(1)*SLV(1)+SLV(2)*SLV(2)+SLV(3)*SLV(3))  ![3.27]
  !
  !
-       CALL  MGI200(STN1,SL)                                       ![3.28]
-       CALL  MGI230(SW2,SL,DSUNG)
-       CALL  MGI220(SL, SW2,SW3)
-       CALL  MGI220(SW3,SL, SW1)
+       call  MGI200(STN1,SL)                                       ![3.28]
+       call  MGI230(SW2,SL,DSUNG)
+       call  MGI220(SL, SW2,SW3)
+       call  MGI220(SW3,SL, SW1)
        WKCOS=DCOS(DSUNG)
        WKSIN=DSIN(DSUNG)
        SW2(1)=WKCOS*SL(1)-WKSIN*SW1(1)
        SW2(2)=WKCOS*SL(2)-WKSIN*SW1(2)
        SW2(3)=WKCOS*SL(3)-WKSIN*SW1(3)
-       CALL  MGI230(SW2,SLV,DSUNG)
+       call  MGI230(SW2,SLV,DSUNG)
  !
        RINF(6) = SNGL(DSATD)
        RINF(7) = SNGL(SDIS)
@@ -1141,16 +1141,16 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
  !      EQUIVALENCE (MAP(13,3),ORBT1(1,1))
  !      EQUIVALENCE (MAP(13,2),ATIT(1,1))
  !
-       DO 1000 I=1,7
+       do 1000 I=1,7
          if(RTIM.GE.NAVstr_MTSAT_NAV%ORBT1(1,I).AND.RTIM.LT.NAVstr_MTSAT_NAV%ORBT1(1,I+1))  then
-           CALL  MGI110 &
+           call  MGI110 &
                 (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,ORBT2,SAT,SITAGT,SUNALP,SUNDEL,NPA)
            GO TO  1200
          endif
   1000 CONTINUE
   1200 CONTINUE
  !
-       DO 3000 I=1,9
+       do 3000 I=1,9
          if(RTIM.GE.NAVstr_MTSAT_NAV%ATIT(1,I) .AND. RTIM.LT.NAVstr_MTSAT_NAV%ATIT(1,I+1))  then
            DELT = (RTIM-NAVstr_MTSAT_NAV%ATIT(1,I))/(NAVstr_MTSAT_NAV%ATIT(1,I+1)-NAVstr_MTSAT_NAV%ATIT(1,I))
            ATTALP = NAVstr_MTSAT_NAV%ATIT(3,I)+(NAVstr_MTSAT_NAV%ATIT(3,I+1)-NAVstr_MTSAT_NAV%ATIT(3,I))*DELT
@@ -1175,7 +1175,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        ATT3(1)  = WKCOS*ATT2(1)+WKSIN*ATT2(2)
        ATT3(2)  =-WKSIN*ATT2(1)+WKCOS*ATT2(2)
        ATT3(3)  = ATT2(3)
-       CALL  MGI200(ATT3,SP)
+       call  MGI200(ATT3,SP)
  !
        WKCOS    = DCOS(SUNDEL)
        SS(1)    = WKCOS       *DCOS(SUNALP)
@@ -1240,7 +1240,7 @@ subroutine MGI220(VA,VB,VD)
        VC(1)= VA(2)*VB(3)-VA(3)*VB(2)
        VC(2)= VA(3)*VB(1)-VA(1)*VB(3)
        VC(3)= VA(1)*VB(2)-VA(2)*VB(1)
-       CALL  MGI200(VC,VD)
+       call  MGI200(VC,VD)
        return
 end subroutine MGI220
 
@@ -1256,10 +1256,10 @@ end subroutine MGI230
 
 subroutine MGI240(VA,VH,VN,DPAI,AZI)
        real*8  VA(3),VH(3),VN(3),VB(3),VC(3),VD(3),DPAI,AZI,DNAI
-       CALL  MGI220(VN,VH,VB)
-       CALL  MGI220(VA,VH,VC)
-       CALL  MGI230(VB,VC,AZI)
-       CALL  MGI220(VB,VC,VD)
+       call  MGI220(VN,VH,VB)
+       call  MGI220(VA,VH,VC)
+       call  MGI230(VB,VC,AZI)
+       call  MGI220(VB,VC,VD)
        DNAI = VD(1)*VH(1)+VD(2)*VH(2)+VD(3)*VH(3)
        if(DNAI.GT.0.D0)  AZI=DPAI-AZI
        return
@@ -1286,12 +1286,12 @@ end subroutine MGI240
     
   !determine GEOS or other navigation
   geos_nav = sym%NO
-  CALL mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
+  call mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
                     number_of_words_read, i4buf)
-!  IF (AREAstr%swap_bytes > 0) CALL swap_bytes4(i4buf,640)
-  CALL move_bytes(4,i4buf(1),NAVstr%nav_type,0)
+!  if (AREAstr%swap_bytes > 0) call swap_bytes4(i4buf,640)
+  call move_bytes(4,i4buf(1),NAVstr%nav_type,0)
   
-  IF (NAVstr%nav_type == 'GEOS') then
+  if (NAVstr%nav_type == 'GEOS') then
         !SUBLON stored as SUBLON *10 in McIDAS NAV block
         NAVstr%sub_lon = real(i4buf(6),kind=real4) / 10
         NAVstr%sublon = NAVstr%sub_lon
@@ -1305,8 +1305,8 @@ end subroutine MGI240
      
   endif
     
-  IF (NAVstr%nav_type == 'GMSX') then
-    CALL mreadf_int(trim(filename)//CHAR(0),nav_offset,1,3200,&
+  if (NAVstr%nav_type == 'GMSX') then
+    call mreadf_int(trim(filename)//CHAR(0),nav_offset,1,3200,&
                     number_of_words_read,NAVstr%COBAT)
         
     CBUF(1:504) = NAVstr%COBAT(5:508)
@@ -1315,78 +1315,78 @@ end subroutine MGI240
     CBUF(1521:2028) = NAVstr%COBAT(1537:2044)
     CBUF(2029:2536) = NAVstr%COBAT(2049:2556)
     
-    CALL SV0100( 6, 8, CBUF( 1:   6), R4DMY, NAVstr%DTIMS )
-    CALL SV0100( 4, 8, CBUF( 7:  10), NAVstr%RESLIN(1), R8DMY )
-    CALL SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(2), R8DMY )
-    CALL SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(3), R8DMY )
-    CALL SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(4), R8DMY )
-    CALL SV0100( 4,10, CBUF( 15: 18), NAVstr%RESELM(1), R8DMY )
-    CALL SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(2), R8DMY )
-    CALL SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(3), R8DMY )
-    CALL SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(4), R8DMY )
-    CALL SV0100( 4, 4, CBUF( 23: 26), NAVstr%RLIC(1), R8DMY )
-    CALL SV0100( 4, 4, CBUF( 27: 30), NAVstr%RLIC(2), R8DMY )
-    CALL SV0100( 4, 4, CBUF(111:114), NAVstr%RLIC(3), R8DMY )
-    CALL SV0100( 4, 4, CBUF(115:118), NAVstr%RLIC(4), R8DMY )
-    CALL SV0100( 4, 4, CBUF( 31: 34), NAVstr%RELMFC(1), R8DMY )
-    CALL SV0100( 4, 4, CBUF( 35: 38), NAVstr%RELMFC(2), R8DMY )
-    CALL SV0100( 4, 4, CBUF(119:122), NAVstr%RELMFC(3), R8DMY )
-    CALL SV0100( 4, 4, CBUF(123:126), NAVstr%RELMFC(4), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 39: 42), NAVstr%SENSSU(1), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(2), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(3), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(4), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 47: 50), NAVstr%RLINE(1) , R8DMY )
-    CALL SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(2) , R8DMY )
-    CALL SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(3) , R8DMY )
-    CALL SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(4) , R8DMY )
-    CALL SV0100( 4, 0, CBUF( 55: 58), NAVstr%RELMNT(1), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(2), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(3), R8DMY )
-    CALL SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(4), R8DMY )
-    CALL SV0100( 4,10, CBUF( 63: 66), NAVstr%VMIS(1), R8DMY )
-    CALL SV0100( 4,10, CBUF( 67: 70), NAVstr%VMIS(2), R8DMY )
-    CALL SV0100( 4,10, CBUF( 71: 74), NAVstr%VMIS(3), R8DMY )
-    CALL SV0100( 4, 7, CBUF( 75: 78), NAVstr%ELMIS(1,1), R8DMY )
-    CALL SV0100( 4,10, CBUF( 79: 82), NAVstr%ELMIS(2,1), R8DMY )
-    CALL SV0100( 4,10, CBUF( 83: 86), NAVstr%ELMIS(3,1), R8DMY )
-    CALL SV0100( 4,10, CBUF( 87: 90), NAVstr%ELMIS(1,2), R8DMY )
-    CALL SV0100( 4, 7, CBUF( 91: 94), NAVstr%ELMIS(2,2), R8DMY )
-    CALL SV0100( 4,10, CBUF( 95: 98), NAVstr%ELMIS(3,2), R8DMY )
-    CALL SV0100( 4,10, CBUF( 99:102), NAVstr%ELMIS(1,3), R8DMY )
-    CALL SV0100( 4,10, CBUF(103:106), NAVstr%ELMIS(2,3), R8DMY )
-    CALL SV0100( 4, 7, CBUF(107:110), NAVstr%ELMIS(3,3), R8DMY )
-    CALL SV0100( 6, 8, CBUF(241:246), R4DMY, NAVstr%DSPIN )
-    CALL SV0100( 6, 6, CBUF(199:204), NAVstr%sublon, R8DMY )
-    CALL SV0100( 6, 6, CBUF(205:210), NAVstr%sublat, R8DMY )
+    call SV0100( 6, 8, CBUF( 1:   6), R4DMY, NAVstr%DTIMS )
+    call SV0100( 4, 8, CBUF( 7:  10), NAVstr%RESLIN(1), R8DMY )
+    call SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(2), R8DMY )
+    call SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(3), R8DMY )
+    call SV0100( 4, 8, CBUF( 11: 14), NAVstr%RESLIN(4), R8DMY )
+    call SV0100( 4,10, CBUF( 15: 18), NAVstr%RESELM(1), R8DMY )
+    call SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(2), R8DMY )
+    call SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(3), R8DMY )
+    call SV0100( 4,10, CBUF( 19: 22), NAVstr%RESELM(4), R8DMY )
+    call SV0100( 4, 4, CBUF( 23: 26), NAVstr%RLIC(1), R8DMY )
+    call SV0100( 4, 4, CBUF( 27: 30), NAVstr%RLIC(2), R8DMY )
+    call SV0100( 4, 4, CBUF(111:114), NAVstr%RLIC(3), R8DMY )
+    call SV0100( 4, 4, CBUF(115:118), NAVstr%RLIC(4), R8DMY )
+    call SV0100( 4, 4, CBUF( 31: 34), NAVstr%RELMFC(1), R8DMY )
+    call SV0100( 4, 4, CBUF( 35: 38), NAVstr%RELMFC(2), R8DMY )
+    call SV0100( 4, 4, CBUF(119:122), NAVstr%RELMFC(3), R8DMY )
+    call SV0100( 4, 4, CBUF(123:126), NAVstr%RELMFC(4), R8DMY )
+    call SV0100( 4, 0, CBUF( 39: 42), NAVstr%SENSSU(1), R8DMY )
+    call SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(2), R8DMY )
+    call SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(3), R8DMY )
+    call SV0100( 4, 0, CBUF( 43: 46), NAVstr%SENSSU(4), R8DMY )
+    call SV0100( 4, 0, CBUF( 47: 50), NAVstr%RLINE(1) , R8DMY )
+    call SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(2) , R8DMY )
+    call SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(3) , R8DMY )
+    call SV0100( 4, 0, CBUF( 51: 54), NAVstr%RLINE(4) , R8DMY )
+    call SV0100( 4, 0, CBUF( 55: 58), NAVstr%RELMNT(1), R8DMY )
+    call SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(2), R8DMY )
+    call SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(3), R8DMY )
+    call SV0100( 4, 0, CBUF( 59: 62), NAVstr%RELMNT(4), R8DMY )
+    call SV0100( 4,10, CBUF( 63: 66), NAVstr%VMIS(1), R8DMY )
+    call SV0100( 4,10, CBUF( 67: 70), NAVstr%VMIS(2), R8DMY )
+    call SV0100( 4,10, CBUF( 71: 74), NAVstr%VMIS(3), R8DMY )
+    call SV0100( 4, 7, CBUF( 75: 78), NAVstr%ELMIS(1,1), R8DMY )
+    call SV0100( 4,10, CBUF( 79: 82), NAVstr%ELMIS(2,1), R8DMY )
+    call SV0100( 4,10, CBUF( 83: 86), NAVstr%ELMIS(3,1), R8DMY )
+    call SV0100( 4,10, CBUF( 87: 90), NAVstr%ELMIS(1,2), R8DMY )
+    call SV0100( 4, 7, CBUF( 91: 94), NAVstr%ELMIS(2,2), R8DMY )
+    call SV0100( 4,10, CBUF( 95: 98), NAVstr%ELMIS(3,2), R8DMY )
+    call SV0100( 4,10, CBUF( 99:102), NAVstr%ELMIS(1,3), R8DMY )
+    call SV0100( 4,10, CBUF(103:106), NAVstr%ELMIS(2,3), R8DMY )
+    call SV0100( 4, 7, CBUF(107:110), NAVstr%ELMIS(3,3), R8DMY )
+    call SV0100( 6, 8, CBUF(241:246), R4DMY, NAVstr%DSPIN )
+    call SV0100( 6, 6, CBUF(199:204), NAVstr%sublon, R8DMY )
+    call SV0100( 6, 6, CBUF(205:210), NAVstr%sublat, R8DMY )
     
-    DO i=1, 10
+    do i=1, 10
         j = (i-1)*48 + 256
-        CALL SV0100(6, 8,CBUF( 1+j: 6+j),R4DMY,NAVstr%ATIT(1,i))
-        CALL SV0100(6, 8,CBUF(13+j:18+j),R4DMY,NAVstr%ATIT(3,i))
-        CALL SV0100(6,11,CBUF(19+j:24+j),R4DMY,NAVstr%ATIT(4,i))
-        CALL SV0100(6, 8,CBUF(25+j:30+j),R4DMY,NAVstr%ATIT(5,i))
-        CALL SV0100(6, 8,CBUF(31+j:36+j),R4DMY,NAVstr%ATIT(6,i))
+        call SV0100(6, 8,CBUF( 1+j: 6+j),R4DMY,NAVstr%ATIT(1,i))
+        call SV0100(6, 8,CBUF(13+j:18+j),R4DMY,NAVstr%ATIT(3,i))
+        call SV0100(6,11,CBUF(19+j:24+j),R4DMY,NAVstr%ATIT(4,i))
+        call SV0100(6, 8,CBUF(25+j:30+j),R4DMY,NAVstr%ATIT(5,i))
+        call SV0100(6, 8,CBUF(31+j:36+j),R4DMY,NAVstr%ATIT(6,i))
     end DO
     
-    DO i=1, 8
+    do i=1, 8
         j = (i-1)*200 + (256 + 10*48)
-        CALL SV0100(6, 8,CBUF(1+j:6+j),R4DMY,NAVstr%ORBT1( 1,i))
-        CALL SV0100(6, 6,CBUF(49+j:54+j),R4DMY,NAVstr%ORBT1( 9,i))
-        CALL SV0100(6, 6,CBUF(55+j:60+j),R4DMY,NAVstr%ORBT1(10,i))
-        CALL SV0100(6, 6,CBUF(61+j:66+j),R4DMY,NAVstr%ORBT1(11,i))
-        CALL SV0100(6, 8,CBUF(85+j:90+j),R4DMY,NAVstr%ORBT1(15,i))
-        CALL SV0100(6, 8,CBUF(103+j:108+j),R4DMY,NAVstr%ORBT1(18,i))
-        CALL SV0100(6, 8,CBUF(109+j:114+j),R4DMY,NAVstr%ORBT1(19,i))
-        CALL SV0100(6,12,CBUF(129+j:134+j),R4DMY,NAVstr%ORBT1(20,i))
-        CALL SV0100(6,14,CBUF(135+j:140+j),R4DMY,NAVstr%ORBT1(21,i))
-        CALL SV0100(6,14,CBUF(141+j:146+j),R4DMY,NAVstr%ORBT1(22,i))
-        CALL SV0100(6,14,CBUF(147+j:152+j),R4DMY,NAVstr%ORBT1(23,i))
-        CALL SV0100(6,12,CBUF(153+j:158+j),R4DMY,NAVstr%ORBT1(24,i))
-        CALL SV0100(6,16,CBUF(159+j:164+j),R4DMY,NAVstr%ORBT1(25,i))
-        CALL SV0100(6,12,CBUF(165+j:170+j),R4DMY,NAVstr%ORBT1(26,i))
-        CALL SV0100(6,16,CBUF(171+j:176+j),R4DMY,NAVstr%ORBT1(27,i))
-        CALL SV0100(6,12,CBUF(177+j:182+j),R4DMY,NAVstr%ORBT1(28,i))
+        call SV0100(6, 8,CBUF(1+j:6+j),R4DMY,NAVstr%ORBT1( 1,i))
+        call SV0100(6, 6,CBUF(49+j:54+j),R4DMY,NAVstr%ORBT1( 9,i))
+        call SV0100(6, 6,CBUF(55+j:60+j),R4DMY,NAVstr%ORBT1(10,i))
+        call SV0100(6, 6,CBUF(61+j:66+j),R4DMY,NAVstr%ORBT1(11,i))
+        call SV0100(6, 8,CBUF(85+j:90+j),R4DMY,NAVstr%ORBT1(15,i))
+        call SV0100(6, 8,CBUF(103+j:108+j),R4DMY,NAVstr%ORBT1(18,i))
+        call SV0100(6, 8,CBUF(109+j:114+j),R4DMY,NAVstr%ORBT1(19,i))
+        call SV0100(6,12,CBUF(129+j:134+j),R4DMY,NAVstr%ORBT1(20,i))
+        call SV0100(6,14,CBUF(135+j:140+j),R4DMY,NAVstr%ORBT1(21,i))
+        call SV0100(6,14,CBUF(141+j:146+j),R4DMY,NAVstr%ORBT1(22,i))
+        call SV0100(6,14,CBUF(147+j:152+j),R4DMY,NAVstr%ORBT1(23,i))
+        call SV0100(6,12,CBUF(153+j:158+j),R4DMY,NAVstr%ORBT1(24,i))
+        call SV0100(6,16,CBUF(159+j:164+j),R4DMY,NAVstr%ORBT1(25,i))
+        call SV0100(6,12,CBUF(165+j:170+j),R4DMY,NAVstr%ORBT1(26,i))
+        call SV0100(6,16,CBUF(171+j:176+j),R4DMY,NAVstr%ORBT1(27,i))
+        call SV0100(6,12,CBUF(177+j:182+j),R4DMY,NAVstr%ORBT1(28,i))
     end DO
     NAVstr%sub_lon = NAVstr%sublon    
   endif

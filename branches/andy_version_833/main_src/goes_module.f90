@@ -1725,12 +1725,12 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
          !--- Convert angles to lat/lon
          CALL LPOINT(NAVstr%instr, 1, Elev, Scan, Dlat, Dlon, Ierr)
 
-         Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+         Space_Mask(Elem_Idx,Line_Idx) = sym%YES
 
          if (Ierr == 0) then
           Nav%Lat_1b(Elem_Idx,Line_Idx) = Dlat / DTOR
           Nav%Lon_1b(Elem_Idx,Line_Idx) = Dlon / DTOR
-          Space_Mask(Elem_Idx,Line_Idx) = sym%NO_SPACE
+          Space_Mask(Elem_Idx,Line_Idx) = sym%NO
          endif
 
       end do

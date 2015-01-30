@@ -987,7 +987,7 @@ contains
       character (len = *) , intent(in) :: SensorName
       
       integer , target :: Valid_Channels ( 42) 
-     
+      integer :: i 
       
       Valid_Channels = -99
       select case ( trim(SensorName))
@@ -1019,11 +1019,11 @@ contains
       case ('COMS-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]
       case ('MODIS')
-         Valid_Channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+         Valid_Channels(1:36) = [(i,i=1,36,1)]  
       case ('MODIS-MAC')
-         Valid_Channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+         Valid_Channels(1:36) = [(i,i=1,36,1)]  
       case ('MODIS-CSPP')
-         Valid_Channels(1:12) = [1,2,6,7,8,20,26,27,29,31,32,33]   
+         Valid_Channels(1:36) = [(i,i=1,36,1)]  
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -1072,7 +1072,7 @@ contains
       ! - turn off channels not available for this sensor
       
       Valid_Channels = Existing_Channels ( SensorName )
-      
+
       do i = 1, 42 
          if ( any ( i == Valid_Channels )) cycle
          Sensor%Chan_On_Flag_Default ( i ) = 0

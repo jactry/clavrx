@@ -604,7 +604,7 @@
       !--------------------------------------------------------------------
       !--- 5 km surface emiss
       !--------------------------------------------------------------------
-      if (use_seebor == sym%YES) then
+      if (Use_Seebor == sym%YES) then
          print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", month
          call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", month, Emiss_File_Id)
       end if
@@ -866,6 +866,11 @@
             exit
          end if
 
+         !------------------------------------------------------------------
+         ! Apply spatial limits
+         !------------------------------------------------------------------
+         call MODIFY_SPACE_MASK()
+
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
@@ -952,23 +957,23 @@
             !----------------------------------------------------------------------
             ! check to see if this segment fits desired subset if subsetting
             !----------------------------------------------------------------------
-            if (Subset_Pixel_Hdf_Flag == sym%YES) then
+      !     if (Subset_Pixel_Hdf_Flag == sym%YES) then
 
-               !--- check to see if data fell within Solar zenith angle bounds
-               if ((minval(Geo%Solzen(Image%Number_Of_Elements/2,:)) > Geo%Solzen_Max_Limit) .or.   &
-                   & (maxval(Geo%Solzen(Image%Number_Of_Elements/2,:)) < Geo%Solzen_Min_Limit)) then
-                  print *, "skipping seg for solzen"
-                  cycle   Segment_loop
-               end if
+      !        !--- check to see if data fell within Solar zenith angle bounds
+      !        if ((minval(Geo%Solzen(Image%Number_Of_Elements/2,:)) > Geo%Solzen_Max_Limit) .or.   &
+      !            & (maxval(Geo%Solzen(Image%Number_Of_Elements/2,:)) < Geo%Solzen_Min_Limit)) then
+      !           print *, "skipping seg for solzen"
+      !           cycle   Segment_loop
+      !        end if
 
-               !--- check to see if in latitude range (using diag values)
-               if ((minval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) > Nav%Lat_Max_Limit) .or.   &
-                  & (maxval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) < Nav%Lat_Min_Limit)) then
-                  print *, "skipping seg for latitude"
-                  cycle   Segment_loop 
-               end if
+      !        !--- check to see if in latitude range (using diag values)
+      !        if ((minval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) > Nav%Lat_Max_Limit) .or.   &
+      !           & (maxval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) < Nav%Lat_Min_Limit)) then
+      !           print *, "skipping seg for latitude"
+      !           cycle   Segment_loop 
+      !        end if
 
-            end if
+      !     end if
 
             !*******************************************************************
             ! Marker: Recompute geolocation
@@ -1015,7 +1020,7 @@
             call SET_BAD_PIXEL_MASK(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- if the segment is 99% bad data, skip it
-            if (Segment_Valid_Fraction < 0.01) then 
+            if (Segment_Valid_Fraction < 0.01 .and. Subset_Pixel_Hdf_Flag == sym%YES) then 
                   print *, EXE_PROMPT, "ERROR: Insufficient Data, skipping Segment ", Segment_Valid_Fraction
                   cycle Segment_loop 
             endif
@@ -1026,7 +1031,7 @@
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
             !--- surface emissivity
-            if (use_seebor == sym%YES) then
+            if (Use_Seebor == sym%YES) then
 
                !--- force channel 20 read
                call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
@@ -1172,7 +1177,6 @@
             !-----------------------------------------------------------------------
             !--- Marker: Compute some fundamental pixel-level arrays
             !-----------------------------------------------------------------------
-
             !--- compute some common used pixel arrays 
             call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
@@ -1231,6 +1235,7 @@
 
                !--- compute pixel-level rtm parameters 
                Start_Time_Point_Hours_temp = COMPUTE_TIME_HOURS()
+
                call GET_PIXEL_NWP_RTM(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                End_Time_Point_Hours_temp = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds_temp =  Segment_Time_Point_Seconds_temp + &
@@ -1326,7 +1331,7 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                !--- simple cloud optical depth
-!              call COMPUTE_SIMPLE_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
+               call COMPUTE_SIMPLE_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
@@ -1385,13 +1390,25 @@
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
+               !--------- test code for a proposal - not for trunk or stable release
+              !call SINGLE_CO2_SLICING_CLOUD_HEIGHT(34,35,1.0,Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+              !                     Image%Number_Of_Lines_Read_This_Segment, &
+              !                     P_Std_Rtm,Cld_Type, &
+              !                     Diag_Pix_Array_1)
+
+              !call SINGLE_CO2_SLICING_CLOUD_HEIGHT(24,25,0.85,Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+              !                     Image%Number_Of_Lines_Read_This_Segment, &
+              !                     P_Std_Rtm,Cld_Type, &
+              !                     Diag_Pix_Array_2)
+               !-------- end test code
 
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
                if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
-                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment, &
+                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment, &
                                     P_Std_Rtm,Cld_Type, &
                                     Pc_Cirrus_Co2,Tc_Cirrus_Co2)
                endif

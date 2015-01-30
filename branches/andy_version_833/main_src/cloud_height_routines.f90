@@ -36,6 +36,7 @@ module CLOUD_HEIGHT_ROUTINES
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
   public::  CO2_SLICING_CLOUD_HEIGHT
+  public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
   public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
 
   !--- include parameters for each system here
@@ -526,6 +527,98 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)
 
 end subroutine  CO2_SLICING_CLOUD_HEIGHT
+!----------------------------------------------------------------------
+! Compute CO2 Slicing for SWI Channels - 24 & 25
+!----------------------------------------------------------------------
+subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
+                                    Beta_Target, &
+                                    Num_Elem,Line_Idx_min,Num_Lines, &
+                                    Pressure_Profile,Cloud_Type, &
+                                    Pc_Co2)
+  integer, intent(in):: Chan_Idx_1
+  integer, intent(in):: Chan_Idx_2
+  real, intent(in):: Beta_Target
+  integer, intent(in):: Num_Elem
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
+  real, intent(in), dimension(:):: Pressure_Profile
+  real, intent(out), dimension(:,:):: Pc_Co2
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Line_Start
+  integer:: Line_End
+  integer:: Nwp_Lon_Idx
+  integer:: Nwp_Lat_Idx
+  integer:: Vza_Rtm_Idx
+  integer:: Tropo_Level_Idx
+  integer:: Sfc_Level_Idx
+  integer:: Lev_Idx_Temp
+  integer:: Pc_Lev_Idx
+
+  Line_Start = Line_Idx_Min
+  Line_End = Line_Start + Num_Lines - 1
+
+  !--- intialize output
+  Pc_CO2 = Missing_Value_Real4
+
+  !---- check that all co2 channels are available
+  if (Sensor%Chan_On_Flag_Default(Chan_Idx_1) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(Chan_Idx_2) == sym%NO) then
+     return
+  endif
+
+  Line_Loop: do Line_Idx = Line_Start, Line_End
+  Element_Loop: do Elem_Idx = 1, Num_Elem
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     !--- skip missing data
+     if (ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     if (ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- indice aliases
+     Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     !-- check if indices are valid
+     if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+     Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+     Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+
+     !--- only do this for appropriate cloud types
+     if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and.   & 
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
+          cycle
+     endif
+
+     !--- compute cloud top pressure using each channel pair
+!print *, "in single  A ", ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx), ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx)
+!print *, "in single  B ", ch(Chan_Idx_1)%Rad_Toa_Clear(Elem_Idx,Line_Idx), ch(Chan_Idx_2)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
+!print *, "in single  C ", rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_1)%Rad_BB_Cloud_Profile
+!print *, "in single  D ", rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_2)%Rad_BB_Cloud_Profile
+
+     call COMPUTE_BETA_PROFILE(ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(Chan_Idx_1)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_1)%Rad_BB_Cloud_Profile, &
+                               ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(Chan_Idx_2)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_2)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               Pressure_Profile, &
+                               Beta_Target, &
+                               Pc_CO2(Elem_Idx,Line_Idx),Pc_Lev_Idx)
+
+  enddo Element_Loop
+  enddo Line_Loop
+
+end subroutine  SINGLE_CO2_SLICING_CLOUD_HEIGHT
+!==================================================================================================
 !==================================================================================================
 !
 !==================================================================================================
@@ -586,6 +679,8 @@ subroutine COMPUTE_BETA_PROFILE(Ch_X_Rad_Toa, &
 
       !--- make beta ratio
       Beta_X_Y = BETA_RATIO(Ch_X_Emissivity, Ch_Y_Emissivity)
+
+!print *, "Channel Emiss = ", Lev_Idx, Ch_X_Emissivity, Ch_Y_Emissivity, Beta_X_Y
 
       if (Beta_X_Y == Missing_Value_Real4) cycle
 

@@ -127,7 +127,7 @@ contains
    
     subroutine mesg_1d ( text,  param_r, level , color , stop_evt )
       character (len = *) , intent(in) :: text
-      double , intent(in) :: param_r
+      double precision , intent(in) :: param_r
       integer, optional, intent(in) :: level
       integer, optional, intent(in) :: color
       logical, optional, intent(in) :: stop_evt

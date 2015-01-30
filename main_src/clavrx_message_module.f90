@@ -50,6 +50,7 @@ public :: mesg
 interface mesg
    module procedure mesg_pure
    module procedure mesg_1r
+   module procedure mesg_1d
 end interface mesg
 
 
@@ -122,6 +123,33 @@ contains
     
  
    end subroutine mesg_1r
+   
+   
+    subroutine mesg_1d ( text,  param_r, level , color , stop_evt )
+      character (len = *) , intent(in) :: text
+      double , intent(in) :: param_r
+      integer, optional, intent(in) :: level
+      integer, optional, intent(in) :: color
+      logical, optional, intent(in) :: stop_evt
+      character( len = 2) :: color_string
+      integer :: lev
+      character ( len =100 ) :: string_100
+      character ( len =200) :: text_1
+ 
+  
+      write ( string_100, '(f20.7)') param_r
+  
+      lev = verb_lev % DEFAULT
+      if ( present (level)) lev = level
+      text_1 = text//trim(string_100)
+      color_string=''  
+      if (present(color)) write(color_string,'(I2)') color 
+      
+      call do_it ( trim(text_1), color_string, lev ) 
+      
+    
+ 
+   end subroutine mesg_1d
 
 
 end module clavrx_message_module

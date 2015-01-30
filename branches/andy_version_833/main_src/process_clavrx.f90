@@ -180,11 +180,11 @@
 
    real(kind=real4) :: Total_Processing_Start_Time_Hours
    real(kind=real4) :: Total_Processing_End_Time_Hours
-   real(kind=real4) :: Total_Processing_Time_seconds
+   real(kind=real8) :: Total_Processing_Time_seconds
    real(kind=real4) :: Orbital_Processing_Start_Time_Hours
    real(kind=real4) :: Orbital_Processing_End_Time_Hours
    real(kind=real4) :: Orbital_Processing_Time_Seconds
-   character(len=180):: File_1b_Temp
+   character(len=280):: File_1b_Temp
    integer(kind=int4):: erstat
    real(kind=real4):: Time_Since_Launch
    integer(kind=int4):: err_reposnx_Flag
@@ -430,6 +430,7 @@
             exit
          end if
       end if
+
  
       !----------------------------------------------------------------------------
       ! Determine time of the start of the processing of this orbit
@@ -1309,6 +1310,7 @@
             !--- compute the glint mask
             call COMPUTE_GLINT()
 
+
             !*******************************************************************
             ! Marker: Generate pixel-level products
             !*******************************************************************
@@ -1723,7 +1725,7 @@
    Total_Processing_End_Time_Hours = COMPUTE_TIME_HOURS()
    Total_Processing_Time_seconds = 60.0*60.0*(Total_Processing_End_Time_Hours -  &
                                               Total_Processing_Start_Time_Hours)
-    call mesg ( "Total Time for All Processing (sec) = ", Total_Processing_Time_seconds,level=verb_lev % MINIMAL)
+   call mesg ("Total Time for All Processing (sec) = ", Total_Processing_Time_seconds,level=verb_lev % MINIMAL)
 
    !---- print to screen that processing is done
    call mesg (  "<--------- End of CLAVRXORB ---------->",level=verb_lev % MINIMAL)

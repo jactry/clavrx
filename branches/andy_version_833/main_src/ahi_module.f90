@@ -194,7 +194,11 @@ end subroutine READ_AHI_INSTR_CONSTANTS
 !                  real(Num_4km_elem_fd/AHI_Xstride)) * &
 !                  real((Num_Scans_This_Image) / real(Num_4km_Scans_Fd)) * &
 !                  real(Time_For_Fd_Scan) / real(Num_Scans_This_Image)  
+
+
+      call (trim(Image%LeveL1b_Path)//trim(Channel_1_Filename)//CHAR(0), Severi_File_Id)
    
+   endif
   
    !---   read channel 3 (AHI channel 1)
    if (Chan_On_Flag_Default(3) == sym%YES) then
@@ -425,6 +429,7 @@ end subroutine READ_AHI_INSTR_CONSTANTS
     real(kind=real4) :: dlon, dlat
     real(kind=real8) :: mjd
     real(kind=real4), dimension(8) :: angles
+    integer :: FGF_TYPE = 3 !AHI uses JMA GEOS navigation, so set type here
 
     NAVstr_AHI_NAV = NAVstr_AHI
     
@@ -446,16 +451,16 @@ end subroutine READ_AHI_INSTR_CONSTANTS
             ii = (i - 1) + xstart      ! get element of the image segement
                 
             ! again, use common algorithm for CGMS navigation
-            call pixcoord2geocoord_cgms(ii,                  &
-                                        jj,                  &
-                                        NAVstr_AHI%LOFF,   &
-                                        NAVstr_AHI%COFF,   & 
-                                        NAVstr_AHI%LFAC,   &
-                                        NAVstr_AHI%CFAC,   &
-                                        1,             &
-                                        NAVstr_AHI%sub_lon, &
-                                        latitude,            &
-                                        longitude)
+                 CALL fgf_to_earth(FGF_TYPE,                  &
+                                   DBLE(ii),                  &
+                                   DBLE(jj),                  &
+                                   DBLE(NAVstr_AHI%CFAC),   &
+                                   DBLE(NAVstr_AHI%COFF),   &
+                                   DBLE(NAVstr_AHI%LFAC),   &
+                                   DBLE(NAVstr_AHI%LOFF),   & 
+                                   DBLE(NAVstr_AHI%sub_lon), &
+                                   longitude,            &
+                                   latitude)
                                           
             if (latitude .LE. -999.0) THEN  ! -999.99 is MSV nav missing value
                     Lat_1b(i,j) = Missing_Value_Real4

@@ -83,14 +83,14 @@ module NETCDF_READ_MODULE
             stop  
     endif  
     
-    status = nf90_inq_varid(nc_file_id, trim('X_CGMS'), nc_var_id)
+    status = nf90_inq_varid(nc_file_id, trim('x_cgms'), nc_var_id)
     
     call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'CFAC', attr)
     CFAC = DBLE(attr)
     call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'COFF', attr)
     COFF = DBLE(attr)
  
-    status = nf90_inq_varid(nc_file_id, trim('Y_CGMS'), nc_var_id)
+    status = nf90_inq_varid(nc_file_id, trim('y_cgms'), nc_var_id)
     
     call read_netcdf_attribute_real(nc_file_id, nc_var_id, 'LFAC', attr)
     LFAC = DBLE(attr)

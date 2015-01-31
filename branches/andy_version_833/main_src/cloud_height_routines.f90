@@ -804,7 +804,10 @@ subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
   real, dimension(:), pointer:: Z_Prof
   real, parameter:: Trans_Limit = 0.01
 
+
+   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
   Ch27_Opaque_Height = Missing_Value_Real4
+
 
   do Elem_Idx = 1, Image%Number_Of_Elements
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
@@ -849,7 +852,9 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
   integer:: Lev_Idx
   real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
   real, parameter:: Covar_Ch27_Ch31_Max = 1.0
-
+   
+   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+   
   Ch27_CSBT_Mask = Missing_Value_Int1
   Ch31_CSBT_Mask = Missing_Value_Int1
 

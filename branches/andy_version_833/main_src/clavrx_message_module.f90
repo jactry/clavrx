@@ -67,14 +67,14 @@ contains
       verbose_level = verb_lev % DEFAULT
       if ( file_test ( 'verbose_level.txt') ) then
          open ( 37, file = 'verbose_level.txt' )
-         read (37,'(i1)'),verbose_level
+         read (37,'(i1)') verbose_level
          close (37)
       end if
       
    
       
       if ( message_level <= verbose_level ) then
-         print*,PROMPT//achar(27)//'['//color_string//'  '//text//achar(27)//'[0m'      
+         print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it

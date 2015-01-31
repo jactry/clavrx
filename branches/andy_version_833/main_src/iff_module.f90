@@ -26,6 +26,7 @@
 module IFF_MODULE
 
  use HDF
+ use PLANCK
  use PIXEL_COMMON, only: &
      sensor &
      , image
@@ -60,7 +61,6 @@ module IFF_MODULE
 
  public :: GET_IFF_DATA
  public :: READ_IFF_DATE_TIME
- private :: CONVERT_RADIANCE
 
    type , public :: iff_data_config
       integer :: n_chan
@@ -535,7 +535,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                       allocate (out % band ( i_band ) % ref (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % ref =  r3d_buffer(:,:,1)
          elseif (trim(setname_band) == 'EmissiveBands') then
-            call CONVERT_RADIANCE(r3d_buffer,nu_list(i_band),missing_value)
+            call CONVERT_RADIANCE(r3d_buffer(:,:,1),nu_list(i_band),missing_value)
             if (.not. allocated ( out % band ( i_band ) % rad ) ) &
                      allocate (out % band ( i_band ) % rad (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % rad =  r3d_buffer(:,:,1)
@@ -736,29 +736,10 @@ endif
 end subroutine READ_IFF_DATE_TIME
 
 !----------------------------------------------------------------------
-!  Convert radiances based on channel 
-! from NASA standad (W m-2 um-1 sr-1) in IFF
-! to NOAA standard (mW/cm^2/cm^-1/str)
-!
-
-subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
-
- real (kind=real4), dimension(:,:,:), intent(inout):: radiance
- real (kind=real4), intent(in):: nu
- real (kind=real4), intent(in):: missing_value
-
- where(radiance /= missing_value)
-       radiance = radiance * (((10000.0 / nu )**2) / 10.0)
- end where
-
- return
-
-end subroutine CONVERT_RADIANCE
-
+!  public routine to deallocate output structure
+!  history: 11/14/2013 Denis B.
+! 
 !----------------------------------------------------------------------
-   !  public routine to deallocate output structure
-   !  history: 11/14/2013 Denis B.
-   ! 
    subroutine dealloc_iff_data_out ( this )
       class ( iff_data_out) :: this
       integer :: m

@@ -216,20 +216,6 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, 
 end subroutine DETERMINE_MODIS_CLOUD_MASK_FILE
 
 !----------------------------------------------------------------------
-subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
- real (kind=real4), dimension(:,:), intent(inout):: radiance
- real (kind=real4), intent(in):: nu
- real (kind=real4), intent(in):: missing_value
-
- where(radiance /= missing_value) 
-       radiance = radiance * (((10000.0 / nu )**2) / 10.0)
- end where
-
- return
-
-end subroutine CONVERT_RADIANCE
-
-!----------------------------------------------------------------------
 ! Read MODIS data. 
 !
 ! For reflectance channels, the output is scaled radiance

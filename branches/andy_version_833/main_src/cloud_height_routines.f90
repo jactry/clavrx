@@ -716,8 +716,10 @@ end subroutine COMPUTE_BETA_PROFILE
    !
    ! Output: Beta - the beta value from the two emissivities
    !
+   !  Traditional Beta 11,12 um = BETA_RATIO(11,12)
+   !
    !====================================================================
-   function BETA_RATIO(Emiss_Top, Emiss_Bot) result(Beta)
+   function BETA_RATIO(Emiss_Bot, Emiss_Top) result(Beta)
       real(kind=real4), intent(in) :: Emiss_Top
       real(kind=real4), intent(in) :: Emiss_Bot
       real(kind=real4) :: Beta

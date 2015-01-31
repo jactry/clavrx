@@ -25,6 +25,27 @@
 ! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 ! SUPPORT TO USERS.
 !
+! AHI Channel Mapping
+!
+! wvl       ahi  modis/clavrx 
+!
+! 0.47       1      3   
+! 0.51       2      4
+! 0.64       3      1  
+! 0.86       4      2  
+! 1.6        5      6
+! 2.2        6     r7
+! 3.9        7     20
+! 6.2        8     43
+! 6.9        9     27
+! 7.3       10     28
+! 8.6       11     29
+! 9.6       12     30
+! 10.4      13     44
+! 11.2      14     31
+! 12.3      15     32 
+! 13.3      16     33
+!
 !--------------------------------------------------------------------------------------
 module AHI_MODULE
 
@@ -41,7 +62,6 @@ module AHI_MODULE
  implicit none
 
  private
- private:: CONVERT_RADIANCE
  private:: READ_AHI_INSTR_CONSTANTS
  public:: READ_AHI
  public:: READ_AHI_CHANNEL
@@ -57,6 +77,7 @@ module AHI_MODULE
 
  integer(kind=int4), private, parameter:: Num_2km_Scans_Fd = 3712
  integer(kind=int4), private, parameter:: Num_2km_elem_fd = 3712
+ integer, dimension(16), parameter, private:: Chan_Idx=[1,2,6,20,27,28,29,30,31,32,33]
 
 
 contains
@@ -178,9 +199,9 @@ end subroutine READ_AHI_INSTR_CONSTANTS
    ! AHI Navigation (Do Navigation and Solar angles first)
    !---------------------------------------------------------------------------
    
-   call AHI_navigation(1,first_line_in_segment,&
-                              num_pix,Num_Scans_Per_Segment,1,&
-                              AREAstr,NAVstr_AHI)
+   call AHI_NAVIGATON(1,first_line_in_segment,&
+                      num_pix,Num_Scans_Per_Segment,1,&
+                      AREAstr,NAVstr_AHI)
    
    if (segment_number == 1) then
 
@@ -415,8 +436,8 @@ end subroutine READ_AHI_INSTR_CONSTANTS
 
  ! Perform AHI Navigation
 
- subroutine AHI_navigation(xstart,ystart,xsize,ysize,xstride, &
-                            AREAstr,NAVstr_AHI)
+ subroutine AHI_NAVIGATION(xstart,ystart,xsize,ysize,xstride, &
+                           AREAstr,NAVstr_AHI)
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
@@ -488,25 +509,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
     endif
       
  end subroutine AHI_navigation
-
-!----------------------------------------------------------------------
-! Likely needed for conversion between AHI radiances to units expected
-! in CLAVRx
-!----------------------------------------------------------------------
-
-subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
- real (kind=real4), dimension(:,:), intent(inout):: radiance
- real (kind=real4), intent(in):: nu
- real (kind=real4), intent(in):: missing_value
-
- where(radiance /= missing_value) 
-       radiance = radiance * (((10000.0 / nu )**2) / 10.0)
- end where
-
- return
-
-end subroutine CONVERT_RADIANCE
-
 
 !======================================================================
 subroutine READ_AHI_CHANNEL(Channel, Segment_Number, &

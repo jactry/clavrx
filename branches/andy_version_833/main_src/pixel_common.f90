@@ -1199,7 +1199,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
 
-      Space_Mask = sym%YES
+      Space_Mask = sym%NO
       Sfc_Level_Rtm_Pixel = Missing_Value_Int4
     
       Scan_Time = Missing_Value_Int4

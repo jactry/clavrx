@@ -1,8 +1,0 @@
-This directory includes all clavrx related shell scripts which may be useful for users and developers.
-
-
-1. install_clavrx.sh   (AW) 01/31/2014
-    installs and makes clavrx development branch
-    
- 2. add install_clavrx_trunk.sh (AW) 01/31/2014
-    installs and make trunk version  of clavrx  

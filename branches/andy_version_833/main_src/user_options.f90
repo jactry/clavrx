@@ -207,6 +207,12 @@ contains
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(37:42) = [0,0,0,0,0,1]
+      Nav%Lat_Max_Limit = 90.0
+      Nav%Lat_Min_Limit = -90.0
+      Nav%Lon_Max_Limit = 180.0
+      Nav%Lon_Min_Limit = -180.0
+      Geo%Solzen_Max_Limit = 180.0
+      Geo%Solzen_Min_Limit = 0.0
       
    end subroutine
    
@@ -272,7 +278,7 @@ contains
       read(unit=Default_Lun,fmt=*) Compress_Flag
       read(unit=Default_Lun,fmt=*) Cloud_Mask_Aux_Flag
 
-      read(unit=Default_Lun,fmt="(a)") bayesian_cloud_mask_name
+      read(unit=Default_Lun,fmt="(a)") Bayesian_Cloud_Mask_Name
       
       if ( Expert_Mode <= 2 )  then
           close(unit=Default_Lun)
@@ -577,8 +583,7 @@ contains
       
       end select
       
-     
-      if (cloud_mask_bayesian_Flag == sym%YES) then
+      if (Cloud_Mask_Bayesian_Flag == sym%YES) then
          call MESG  ("Bayesian cloud mask will be generated")
       endif
 
@@ -762,12 +767,12 @@ contains
      
       call CHANNEL_SWITCH_ON (SensorName)
 
-      if ( Expert_Mode < 3 .or. trim(bayesian_cloud_mask_name) == 'default') then
-         bayesian_cloud_mask_name = default_nb_mask_classifier_file ( SensorName )
+      if ( Expert_Mode < 3 .or. trim(Bayesian_Cloud_Mask_Name) == 'default') then
+         Bayesian_Cloud_Mask_Name = default_nb_mask_classifier_file ( SensorName )
       end if
       
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( SensorName ) 
-      
+
    end subroutine UPDATE_CONFIGURATION
    
    !----------------------------------------------------------------------

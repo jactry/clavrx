@@ -63,7 +63,8 @@ MODULE PIXEL_ROUTINES
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
           COMPUTE_SNOW_FIELD, &
-          MODIFY_SPACE_MASK, &
+          EXPAND_SPACE_MASK_FOR_USER_LIMITS, &
+          SET_SOLAR_CONTAMINATION_MASK, &
           SET_BAD_PIXEL_MASK, &
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           READ_MODIS_WHITE_SKY_ALBEDO,      &
@@ -102,40 +103,40 @@ MODULE PIXEL_ROUTINES
    !  called by process_clavrx inside segment loop
    !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
    !----------------------------------------------------------------------
-   subroutine SET_CHAN_ON_FLAG(jmin,nj)
+   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line)
 
-      integer (kind=int4), intent(in):: jmin
-      integer (kind=int4), intent(in):: nj
-      integer:: Line_Idx
-      
-      
-      Ch6_On_Pixel_Mask = sym%NO
+     integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
+     integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
+     integer:: Number_of_Elements
+     integer:: Number_of_Lines
+     integer:: Elem_Idx
+     integer:: Line_Idx
 
-      line_loop: do Line_Idx = jmin, nj - jmin + 1
+     Number_of_Elements = Image%Number_Of_Elements
+     Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+      
+     line_loop: do Line_Idx = 1, Number_Of_Lines
       
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
-         Sensor%Chan_On_Flag_Per_Line(:,Line_Idx) = Sensor%Chan_On_Flag_Default   
+         Chan_On_Flag_Per_Line(:,Line_Idx) = Chan_On_Flag_Default   
          
          ! two exceptions
-         if (trim(Sensor%Platform_Name)=='AQUA' .and. Sensor%Chan_On_Flag_Default(6) == sym%YES ) then
+         if (trim(Sensor%Platform_Name)=='AQUA' .and. Chan_On_Flag_Default(6) == sym%YES ) then
             if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                     Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
+                 Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
             end if  
          end if
          
          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
             if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = Sensor%Chan_On_Flag_Default(6)   
-               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(6,Line_Idx) = Chan_On_Flag_Default(6)   
+               Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
             end if
             if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-               Sensor%Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
-               Sensor%Chan_On_Flag_Per_Line(20,Line_Idx) = Sensor%Chan_On_Flag_Default(20)   
+               Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(20,Line_Idx) = Chan_On_Flag_Default(20)   
             end if
          endif
-
-         !--- set 2d mask used for channel-6 (1.6 um)
-         Ch6_On_Pixel_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
 
       end do line_loop
 
@@ -166,13 +167,13 @@ end subroutine QC_MODIS
 ! Modify the space mask based the limits on lat, lon, satzen and solzen 
 ! Space mask was initially determined in the Level-1b Navigation
 !======================================================================
-subroutine MODIFY_SPACE_MASK()
+subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
+
+   integer(kind=int1), dimension(:,:), intent(inout):: Space_Mask
 
    where(Nav%Lat_1b /= Missing_Value_Real4 .and. Nav%Lon_1b /= Missing_Value_Real4)
         Space_Mask = sym%NO
-   end where 
-
-   where(Nav%Lat_1b == Missing_Value_Real4 .or. Nav%Lon_1b == Missing_Value_Real4)
+   elsewhere 
         Space_Mask = sym%YES
    end where
 
@@ -198,21 +199,112 @@ subroutine MODIFY_SPACE_MASK()
         Space_Mask = sym%YES
    end where
 
-end subroutine MODIFY_SPACE_MASK
+end subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS
  
 !======================================================================
-! Check for bad pixels
+! Check for solar contamination of what should be nighttime data
+! 
+! this is common in AVHRR and GOES.  Pixels with solar contamination
+!
+! are treated as bad pixel in the bad_pixel_mask
+!
 !======================================================================
-subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
+subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask) 
 
-   integer, intent(in):: Number_of_Elements
-   integer, intent(in):: Number_of_Lines
+   integer(kind=int1), dimension(:,:), intent(out):: Solar_Contamination_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
+   integer:: Elem_Idx
+   integer:: Line_Idx
+
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+   !--- initialize 
+   Solar_Contamination_Mask(:,1:Number_Of_Lines) = sym%NO
+
+   !---  loop through lines and elements
+   line_loop: do Line_Idx = 1, Number_of_Lines
+      element_loop: do Elem_Idx = 1, Number_of_Elements
+
+        !--- check for solar contamination of nighttime data in AVHRR
+        if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+
+          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
+
+            if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+              if (therm_cal_1b == sym%NO) then
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                endif
+             else
+               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif 
+             endif
+            endif
+  
+          endif
+
+          !--- check for solar contamination of nighttime data in GOES
+          if (index(Sensor%Sensor_Name,'GOES') > 0) then
+             if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                endif 
+             endif
+          endif
+
+        endif
+
+        !--- check for solar contamination of nighttime data in GOES
+        if (index(Sensor%Sensor_Name,'GOES') > 0) then
+          if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Geo%Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
+            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
+          endif
+        endif
+
+      end do element_loop
+   end do line_loop
+
+end subroutine SET_SOLAR_CONTAMINATION_MASK
+
+!======================================================================
+! Check for bad pixels
+!
+! Apply tests to detect pixels that should not be processed.
+!
+!
+! Bad_Pixel_Mask is meant to single mask that captures all reasons
+! why a pixel should be skipped. This includes
+!
+! Space_Mask
+! Solar_Contamination_Mask
+! Missing NWP
+! any one of channel tests
+!
+! Also, if many pixels in a line are bad, the whole line is set to bad
+!
+! Output:  Bad_Pixel_Mask 
+! Input: taken from pixel common
+!  
+!======================================================================
+subroutine SET_BAD_PIXEL_MASK(Bad_Pixel_Mask)
+
+   integer(kind=int1), dimension(:,:), intent(out):: Bad_Pixel_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
    integer:: Elem_Idx
    integer:: Line_Idx
    integer:: Number_Bad_Pixels
    integer:: Number_Bad_Pixels_Thresh
    integer:: Lon_Nwp_Idx
    integer:: Lat_Nwp_Idx
+
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
 
    Number_Bad_Pixels_Thresh = 0.9 * Image%Number_Of_Elements
 
@@ -225,7 +317,6 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
    line_loop: do Line_Idx = 1, Number_of_Lines
 
       !--- initialize
-      Solar_Contamination_Mask(:,Line_Idx) = sym%NO
       Bad_Pixel_Mask(:,Line_Idx) = sym%NO
 
      !--- check for a bad scan
@@ -302,51 +393,6 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
              Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
-        !--- check for solar contamination of nighttime data in AVHRR
-        if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-
-          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
-
-            if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-              if (therm_cal_1b == sym%NO) then
-!               if (Ch1_Counts(Elem_Idx,Line_Idx) - Scan_Space_Counts_Avhrr(1,Line_Idx) > 2) then 
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif
-             else
-               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-               endif 
-             endif
-            endif
-  
-          endif
-
-          !--- check for solar contamination of nighttime data in GOES
-          if (index(Sensor%Sensor_Name,'GOES') > 0) then
-             if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif 
-             endif
-          endif
-
-        endif
-
-        !--- CALL any bad pixel as being space (for ancil data interp)
-        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-           Space_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- check for solar contamination of nighttime data in GOES
-        if (index(Sensor%Sensor_Name,'GOES') > 0) then
-          if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Geo%Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
-            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-            endif
-          endif
-        endif
-
         !--- NWP
         if (Nwp_Opt /= 0) then
             Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
@@ -403,22 +449,27 @@ end subroutine SET_BAD_PIXEL_MASK
 !QUALITY_CONTROL_ANCILLARY_DATA
 !
 ! Apply some checks on ancillary data.  Call pixels bad when checks fail
+!
+! Note, Bad_Pixel_Mask is modified but not created here. Do not initialize
 !--------------------------------------------------------------------------
-subroutine QUALITY_CONTROL_ANCILLARY_DATA (j1,nj)
-   integer, intent(in):: j1, nj
-   integer:: j2, Elem_Idx,Line_Idx
+subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
+   integer(kind=int1), dimension(:,:), intent(inout):: Bad_Pixel_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
+   integer:: Elem_Idx
+   integer:: Line_Idx
 
-   j2 = j1 + nj - 1
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
 
-   do Line_Idx = j1,j2+j1-1
+   do Line_Idx = 1, Number_of_Lines
 
-      do Elem_Idx = 1, Image%Number_Of_Elements
+      do Elem_Idx = 1, Number_Of_Elements
 
         !--- invalid sfc type observations
         if (Sfc%Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) > 15) then
            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
-
 
       enddo
 

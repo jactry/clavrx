@@ -3138,6 +3138,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
  integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
  integer:: Istatus
+ integer:: Line_Idx
 
 ! HDF function declarations
  integer:: sfwdata
@@ -3441,7 +3442,11 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       !--- packed pixel metadata
       if (Sds_Num_Level2_Meta_Data_Flag == sym%YES) then
        One_Byte_Temp = 0
-       One_Byte_Temp = ishft(Bayes_Mask_Sfc_Type_Global,3) + ishft(ch6_on_pixel_mask,2)+ &
+       Temp_Mask = 0
+       do Line_Idx = 1, Image%Number_Of_Lines_Per_Segment
+         Temp_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
+       enddo
+       One_Byte_Temp = ishft(Bayes_Mask_Sfc_Type_Global,3) + ishft(Temp_Mask,2)+ &
                        ishft(solar_contamination_mask,1) + bad_pixel_mask
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Meta_Data), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus

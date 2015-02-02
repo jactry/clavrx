@@ -69,8 +69,8 @@ private :: MGIVSR
  real, private, save:: Scan_rate    !scan rate in millsec / line
  integer(kind=int4), private, parameter:: Mtsat_Byte_Shift = 0
 
+ contains
 
- CONTAINS
 !----------------------------------------------------------------
 ! read the MTSAT constants into memory
 !-----------------------------------------------------------------
@@ -223,7 +223,7 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
     mtsat_file_id = get_lun()   
     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
         call mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
-    ELSE
+    else
       call mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
     endif  
 
@@ -551,13 +551,13 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
                                   Ch1_Degrad_Low_2*Time_Temp_Since_Launch**2)/100.0
 
     Alb_Temp = Ch1_Gain_Low * ( Mtsat_Counts - Ch1_Dark_Count)
-    where (Space_Mask == sym%SPACE)
+    where (Space_Mask == sym%YES)
      Alb_Temp = Missing_Value_Real4
     endwhere
     
 !   do j = 1,Image%Number_Of_Lines_Read_This_Segment
 !     do i = 1,Image%Number_Of_Elements
-!       if (Space_Mask(i,j) == sym%NO_SPACE) then
+!       if (Space_Mask(i,j) == sym%NO) then
 !          Alb_Temp(i,j) = Ch1_Gain_Low * ( Mtsat_Counts(i,j) - Ch1_Dark_Count)
 !       endif
 !     enddo
@@ -586,7 +586,7 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
 
     do j=1, Image%Number_Of_Lines_Read_This_Segment
       do i=1, Image%Number_Of_Elements
-        if (Space_Mask(i,j) == sym%NO_SPACE) then
+        if (Space_Mask(i,j) == sym%NO) then
           !  Because MTSAT has two vis calibration type, we need to 
           !  which route it needs to go. calibration.f90 was edited to 
           !  gather the vis calibration type, which is stored in thesat_info
@@ -640,7 +640,7 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
             endif                        
             
           endif
-        ELSE
+        else
 
             alb_temp(i,j) = Missing_Value_Real4
 
@@ -693,10 +693,10 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
                 call MGIVSR(imode,elem,line,dlon,dlat,height,&
                             angles,mjd,ierr)
                 
-                Space_Mask(i,j) = sym%SPACE
+                Space_Mask(i,j) = sym%YES
             
                 if (ierr == 0) then
-                     Space_Mask(i,j) = sym%NO_SPACE
+                     Space_Mask(i,j) = sym%NO
                      Nav%Lat_1b(i,j) = dlat
                      Nav%Lon_1b(i,j) = dlon
                 endif
@@ -754,19 +754,19 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
              if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Nav%Lat_1b(i,j) = Missing_Value_Real4
                     Nav%Lon_1b(i,j) = Missing_Value_Real4
-                    Space_Mask(i,j) = sym%SPACE
-                ELSE
+                    Space_Mask(i,j) = sym%YES
+                else
                     Nav%Lat_1b(i,j) = real(latitude,kind=real4)
                     Nav%Lon_1b(i,j) = real(longitude,kind=real4)
                     
-                    ! BecaUSE JMA sets their longitudes from 0 to 360, and
+                    ! Because JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
                     if (longitude .GT. 180.0 ) then
                         Nav%Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
                     endif
                                         
-                    Space_Mask(i,j) = sym%NO_SPACE
+                    Space_Mask(i,j) = sym%NO
 
                 endif
 
@@ -798,12 +798,12 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
        
        index = int(Mtsat_Counts(i,j),kind=int2) + 1
        
-       if ((Space_Mask(i,j) == sym%NO_SPACE) .AND. &
+       if ((Space_Mask(i,j) == sym%NO) .AND. &
            (index .LE. 1024) .AND. (index .GE. 1)) then 
        !only do valid counts
           rad2(i,j) = real(rad_table(chan_num,1,index),kind=real4)/1000.0
           temp1(i,j) = real(bt_table(chan_num,1,index),kind=real4)/100.0                    
-       ELSE
+       else
           rad2(i,j) = Missing_Value_Real4
           temp1(i,j) = Missing_Value_Real4
        endif
@@ -1036,13 +1036,13 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          if(DD.GE.0.D0 .AND. DDA.NE.0.D0)  then
            DK1     = (-DDB+DSQRT(DD))/DDA
            DK2     = (-DDB-DSQRT(DD))/DDA
-         ELSE
+         else
            IRTN    = 6
            GO TO  9000
          endif
          if(DABS(DK1).LE.DABS(DK2))  then
            DK    = DK1
-         ELSE
+         else
            DK    = DK2
          endif
          STN1(1) = SAT(1)+DK*SL(1)
@@ -1054,10 +1054,10 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
            DLON  = DATAN(STN1(2)/STN1(1))
            if(STN1(1).LT.0.D0 .AND. STN1(2).GE.0.D0)  DLON=DLON+PI
            if(STN1(1).LT.0.D0 .AND. STN1(2).LT.0.D0)  DLON=DLON-PI
-         ELSE
+         else
            if(STN1(2).GT.0.D0)  then
              DLON=HPAI
-           ELSE
+           else
              DLON=-HPAI
            endif
          endif
@@ -1087,7 +1087,7 @@ subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          DLATN   = HPAI-DLAT
          DLONN = DLON-PI
          if(DLONN.LE.-PI)  DLONN=DLONN+DPAI
-       ELSE
+       else
          DLATN   = HPAI+DLAT
          DLONN   = DLON
        endif

@@ -586,7 +586,6 @@ module PIXEL_COMMON
 
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Ch6_On_Pixel_Mask
   integer(kind=int1), dimension(:,:), allocatable, public:: Space_Mask
   integer(kind=int4), dimension(:,:), allocatable, public:: Sfc_Level_Rtm_Pixel
   real, public:: Segment_Valid_Fraction
@@ -1199,7 +1198,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
 
-      Space_Mask = sym%NO
+      Space_Mask = Missing_Value_Int1
       Sfc_Level_Rtm_Pixel = Missing_Value_Int4
     
       Scan_Time = Missing_Value_Int4
@@ -1493,7 +1492,6 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       allocate(Ch6_Counts(dim1,dim2))
    endif
-   allocate(Ch6_On_Pixel_Mask(dim1,dim2))
 
 end subroutine CREATE_REF_CHANNEL_ARRAYS
 
@@ -1548,7 +1546,6 @@ subroutine RESET_REF_CHANNEL_ARRAYS
    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       Ch6_Counts = Missing_Value_Int2
    endif
-   Ch6_On_Pixel_Mask = Missing_Value_Int1
 
 end subroutine RESET_REF_CHANNEL_ARRAYS
 subroutine DESTROY_REF_CHANNEL_ARRAYS
@@ -1577,7 +1574,6 @@ subroutine DESTROY_REF_CHANNEL_ARRAYS
    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
       deallocate(Ch6_Counts)
    endif
-   deallocate(Ch6_On_Pixel_Mask)
 
 end subroutine DESTROY_REF_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------

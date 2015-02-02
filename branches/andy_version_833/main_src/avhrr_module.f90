@@ -2657,7 +2657,6 @@ endif
       i2word = i2word + 256
    end if
    Ch3a_On_AVHRR(Line_Idx) = ishft(ishft(i2word, 6),-6)
-   Ch6_On_Pixel_Mask(:,Line_Idx) = Ch3a_On_AVHRR(Line_Idx)
 
    i2word  = Buffer_AVHRR(28)
    if (i2word < 0) then
@@ -2896,7 +2895,6 @@ endif
    if (onebyte == 1) then 
       Ch3a_On_AVHRR(Line_Idx) = 0
    endif
-   Ch6_On_Pixel_Mask(:,Line_Idx) = Ch3a_On_AVHRR(Line_Idx)
 
    i2word  = Buffer_AVHRR(28)
    if (i2word < 0) then

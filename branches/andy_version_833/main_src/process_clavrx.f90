@@ -870,12 +870,12 @@
          !------------------------------------------------------------------
          ! Apply spatial limits
          !------------------------------------------------------------------
-         call MODIFY_SPACE_MASK()
+         call EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
 
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
-         call SET_CHAN_ON_FLAG(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+         call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line)
          
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
@@ -1017,8 +1017,11 @@
 
             end if
    
+            !--- determine a pixel-level mask to exclude data solar contaminiation
+            call SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
+
             !--- determine a pixel-level mask to exclude bad or unprocessible data
-            call SET_BAD_PIXEL_MASK(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
+            call SET_BAD_PIXEL_MASK(Bad_Pixel_Mask)
 
             !--- if the segment is 99% bad data, skip it
             if (Segment_Valid_Fraction < 0.01 .and. Subset_Pixel_Hdf_Flag == sym%YES) then 
@@ -1172,8 +1175,8 @@
                call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Sfc%Land)
             endif
 
-            !--- check ancillary data
-            call QUALITY_CONTROL_ANCILLARY_DATA(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            !--- check ancillary data and modify Bad_Pixel_Mask accordingly
+            call QUALITY_CONTROL_ANCILLARY_DATA(Bad_Pixel_Mask)
 
             !-----------------------------------------------------------------------
             !--- Marker: Compute some fundamental pixel-level arrays

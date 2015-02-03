@@ -88,7 +88,6 @@ module USER_OPTIONS
       , read_volcano_mask &
       , smooth_nwp_flag &
       , snow_data_dir &
-      , subset_pixel_hdf_flag &
       , use_default &
       , use_seebor &
       , bayesian_cloud_mask_name &
@@ -162,7 +161,6 @@ contains
            
       Aer_Flag = sym%YES
       Ash_Flag = sym%NO
-      Subset_pixel_hdf_Flag = 0      
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
       output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
       
@@ -321,21 +319,6 @@ contains
                                    Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &
                                    Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
 
-      !---
-      Subset_Pixel_Hdf_Flag = sym%NO
-      if (Nav%Lat_Max_Limit /= 90.0 .or. &
-          Nav%Lat_Min_Limit /= -90.0 .or. &
-          Nav%Lon_Max_Limit /= 180.0 .or. &
-          Nav%Lon_Min_Limit /= -180.0 .or. &
-          Geo%Solzen_Max_Limit /= 180.0 .or. &
-          Geo%Solzen_Min_Limit /= 0.0) then
-
-        call MESG ("unlimited, uncompressed output will be generated",level = verb_lev % DEFAULT)
-
-        Subset_Pixel_Hdf_Flag = sym%YES
-
-      endif
-
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(1:6)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(7:12)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(13:18)
@@ -463,12 +446,6 @@ contains
           Compress_Flag=1
         elseif(trim(fargv) == "-output_comp_szip") then
           Compress_Flag=2
-
-        !Subset pixel HDF
-!       elseif(trim(fargv) == "-subset_pixel_hdf") then
-!         subset_pixel_hdf_Flag = sym%YES
-!       elseif(trim(fargv) == "-no_subset_pixel_hdf") then
-!         subset_pixel_hdf_Flag = sym%NO
 
         !Change lat max/min for processing
         elseif(trim(fargv) == "-lat_min_limit") then
@@ -998,7 +975,7 @@ contains
       select case ( trim(SensorName))
         
       case ( 'AVHRR-1')
-         Valid_Channels (1:5) = [1,2,20,31,32]
+         Valid_Channels (1:4) = [1,2,20,31]
       case ( 'AVHRR-2')
          Valid_Channels (1:5) = [1,2,20,31,32]
       case ( 'AVHRR-3')

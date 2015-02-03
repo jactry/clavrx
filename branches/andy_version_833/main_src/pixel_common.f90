@@ -319,7 +319,6 @@ module PIXEL_COMMON
   integer,public, save:: Rtm_File_Flag
   integer,public, save:: Ash_File_Flag
   integer,public, save:: Level2_File_Flag
-  integer,public, save:: Subset_Pixel_Hdf_Flag
   integer,public, save:: Use_Sst_Anal
   integer,public, save:: Use_Sst_Anal_Default
   integer,public, save:: L1b_Gzip

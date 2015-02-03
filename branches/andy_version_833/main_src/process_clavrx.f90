@@ -291,8 +291,7 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
-   
-
+ 
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
@@ -955,27 +954,6 @@
                               Image%Start_Time,Image%End_Time)
             end if
    
-            !----------------------------------------------------------------------
-            ! check to see if this segment fits desired subset if subsetting
-            !----------------------------------------------------------------------
-      !     if (Subset_Pixel_Hdf_Flag == sym%YES) then
-
-      !        !--- check to see if data fell within Solar zenith angle bounds
-      !        if ((minval(Geo%Solzen(Image%Number_Of_Elements/2,:)) > Geo%Solzen_Max_Limit) .or.   &
-      !            & (maxval(Geo%Solzen(Image%Number_Of_Elements/2,:)) < Geo%Solzen_Min_Limit)) then
-      !           print *, "skipping seg for solzen"
-      !           cycle   Segment_loop
-      !        end if
-
-      !        !--- check to see if in latitude range (using diag values)
-      !        if ((minval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) > Nav%Lat_Max_Limit) .or.   &
-      !           & (maxval(Nav%Lat_1b(Image%Number_Of_Elements/2,:)) < Nav%Lat_Min_Limit)) then
-      !           print *, "skipping seg for latitude"
-      !           cycle   Segment_loop 
-      !        end if
-
-      !     end if
-
             !*******************************************************************
             ! Marker: Recompute geolocation
             !*******************************************************************
@@ -1022,12 +1000,6 @@
 
             !--- determine a pixel-level mask to exclude bad or unprocessible data
             call SET_BAD_PIXEL_MASK(Bad_Pixel_Mask)
-
-            !--- if the segment is 99% bad data, skip it
-            if (Segment_Valid_Fraction < 0.01 .and. Subset_Pixel_Hdf_Flag == sym%YES) then 
-                  print *, EXE_PROMPT, "ERROR: Insufficient Data, skipping Segment ", Segment_Valid_Fraction
-                  cycle Segment_loop 
-            endif
 
             !*******************************************************************
             ! Marker: Interpolate ancillary data to each pixel in this segment
@@ -1395,18 +1367,6 @@
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
-               !--------- test code for a proposal - not for trunk or stable release
-              !call SINGLE_CO2_SLICING_CLOUD_HEIGHT(34,35,1.0,Image%Number_Of_Elements,Line_Idx_Min_Segment, &
-              !                     Image%Number_Of_Lines_Read_This_Segment, &
-              !                     P_Std_Rtm,Cld_Type, &
-              !                     Diag_Pix_Array_1)
-
-              !call SINGLE_CO2_SLICING_CLOUD_HEIGHT(24,25,0.85,Image%Number_Of_Elements,Line_Idx_Min_Segment, &
-              !                     Image%Number_Of_Lines_Read_This_Segment, &
-              !                     P_Std_Rtm,Cld_Type, &
-              !                     Diag_Pix_Array_2)
-               !-------- end test code
-
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------

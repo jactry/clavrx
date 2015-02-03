@@ -970,6 +970,12 @@ module SENSOR_MODULE
       !--- knowing Sc_Id_AVHRR and the above flags, populate sensor structure for AVHRR
       call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id_AVHRR)
 
+      if (AVHRR_GAC_Flag == sym%YES) then
+         Sensor%Spatial_Resolution_Meters = 4000
+      else
+         Sensor%Spatial_Resolution_Meters = 1000
+      endif
+     
       ifound = sym%YES   ! force exit need to develop logic for setting Ierror
 
       enddo test_loop

@@ -175,35 +175,36 @@ module AVHRR_MODULE
 
   if (AVHRR_KLM_Flag == sym%NO) then
     if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N
-       Sensor%Platform_Name = 'TIROS-N'
+!      Sensor%Platform_Name = 'TIROS-N'
+       Sensor%Platform_Name = 'NOAA-05'
        Sensor%Sensor_Name = 'AVHRR-1'
        Sensor%WMO_Id = 708
        Sensor%Instr_Const_File = "avhrr_5_instr.dat"
        Sensor%Algo_Const_File = "avhrr_5_algo.dat"
     endif
     if(Sc_Id_AVHRR == 2 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-6
-       Sensor%Platform_Name = 'NOAA-6'
+       Sensor%Platform_Name = 'NOAA-06'
        Sensor%Sensor_Name = 'AVHRR-1'
        Sensor%WMO_Id = 706
        Sensor%Instr_Const_File = "avhrr_6_instr.dat"
        Sensor%Algo_Const_File = "avhrr_6_algo.dat"
     endif
     if(Sc_Id_AVHRR == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
-       Sensor%Platform_Name = 'NOAA-7'
+       Sensor%Platform_Name = 'NOAA-07'
        Sensor%Sensor_Name = 'AVHRR-2'
        Sensor%WMO_Id = 707
        Sensor%Instr_Const_File = "avhrr_7_instr.dat"
        Sensor%Algo_Const_File = "avhrr_7_algo.dat"
     endif
     if(Sc_Id_AVHRR == 6 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-8
-       Sensor%Platform_Name = 'NOAA-8'
+       Sensor%Platform_Name = 'NOAA-08'
        Sensor%Sensor_Name = 'AVHRR-2'
        Sensor%WMO_Id = 200
        Sensor%Instr_Const_File = "avhrr_8_instr.dat"
        Sensor%Algo_Const_File = "avhrr_8_algo.dat"
     endif
     if(Sc_Id_AVHRR == 7 .and. AVHRR_1_Flag == sym%NO) then  !NOAA-9
-       Sensor%Platform_Name = 'NOAA-9'
+       Sensor%Platform_Name = 'NOAA-09'
        Sensor%Sensor_Name = 'AVHRR-2'
        Sensor%WMO_Id = 201
        Sensor%Instr_Const_File = "avhrr_9_instr.dat"
@@ -498,7 +499,11 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
      endif
 
 !--- read spacedraft id
-     Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_Temp(73:74),sym%UNSIGNED,Byte_Swap_1b)
+     if (AVHRR_KLM_Flag == sym%YES) then
+       Sc_Id_AVHRR = MAKE_I2WORD(Header_Buffer_Temp(73:74),sym%UNSIGNED,Byte_Swap_1b)
+     else
+       Sc_Id_AVHRR = Header_Buffer_Temp(1)
+     endif
 
 !--- fix noaa-15 bug
      if ((AVHRR_Ver_1b == 1) .and. (Sc_Id_AVHRR == 4)) then
@@ -892,6 +897,8 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
                    Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines,Image%End_Year, &
                    Image%End_Doy,Image%End_Time, &
                    tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
+
+print *, "After header read ", Sc_Id_AVHRR
 
       !--- pre AVHRR_KLM_Flag used a 2 digit year
       if (Image%End_Year > 50) then

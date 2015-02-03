@@ -1151,18 +1151,14 @@ end subroutine ATMOS_CORR
   integer:: i,j,j2, Chan_Idx
   real:: Factor
 
-
   ! for these sensors, no correction is needed
   if (index(Sensor%Sensor_Name,'VIIRS') > 0) return 
   if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') return 
 
-
   !--------------------------------------------------------------------
   ! loop through pixels and apply normalization factor
   !--------------------------------------------------------------------
-  j2 = j1 + nj - 1
-
-  do j = j1,j2
+  do j = 1, Image%Number_Of_Lines_Read_This_Segment
 
      do i = 1, Image%Number_Of_Elements
 
@@ -1171,9 +1167,9 @@ end subroutine ATMOS_CORR
        Factor = 1.0 / Geo%Cossolzen(i,j)
 
        ! for these sensors, a correction for sun earth distance is also needed
-       if ( (trim(Sensor%Sensor_Name) == 'AVHRR_1') .or. &
-            (trim(Sensor%Sensor_Name) == 'AVHRR_2') .or. &
-            (trim(Sensor%Sensor_Name) == 'AVHRR_3') .or. &
+       if ( (trim(Sensor%Sensor_Name) == 'AVHRR-1') .or. &
+            (trim(Sensor%Sensor_Name) == 'AVHRR-2') .or. &
+            (trim(Sensor%Sensor_Name) == 'AVHRR-3') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') .or. &
@@ -1209,7 +1205,8 @@ end subroutine ATMOS_CORR
 
 
        !--- for avhrr, handle absense of ch6
-       if (index(Sensor%Sensor_Name,'AVHRR') > 0 ) then
+       if (index(Sensor%Sensor_Name,'AVHRR') > 0 .and. &
+           Sensor%Chan_On_Flag_Default(6) == sym%YES) then
            if (ch(6)%Ref_Toa(i,j) < 0) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
            if (Ch3a_On_Avhrr(j) /= sym%YES) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
        endif

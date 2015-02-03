@@ -90,7 +90,6 @@ module cr_config_mod
       type ( conf_channel_type ) , dimension(42) :: chan
       type ( conf_output_type) :: out
       logical :: use_gzip     
-      logical :: subset_pixel_hdf
       
       type ( conf_file_type ):: file
       

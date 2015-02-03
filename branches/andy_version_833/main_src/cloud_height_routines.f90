@@ -592,16 +592,13 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
 
      !--- only do this for appropriate cloud types
      if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and.   & 
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE .and.  &
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERSHOOTING_TYPE .and.  &
          Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
           cycle
      endif
 
      !--- compute cloud top pressure using each channel pair
-!print *, "in single  A ", ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx), ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx)
-!print *, "in single  B ", ch(Chan_Idx_1)%Rad_Toa_Clear(Elem_Idx,Line_Idx), ch(Chan_Idx_2)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
-!print *, "in single  C ", rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_1)%Rad_BB_Cloud_Profile
-!print *, "in single  D ", rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_2)%Rad_BB_Cloud_Profile
-
      call COMPUTE_BETA_PROFILE(ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(Chan_Idx_1)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                                rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_1)%Rad_BB_Cloud_Profile, &

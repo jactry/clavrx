@@ -266,15 +266,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !-- dimension of 1d variables
      Sds_Dims_1d(1) = Image%Number_Of_Lines
 
-     !--- if subsetting pixel hdf, set scan dimension to 0 (sd_unlimited)
-     !--- note, this turns off compression
-     if (Subset_Pixel_Hdf_Flag == sym%YES) then
-          Sds_Dims_3d(3) = 0   !SD_UNLIMITED
-          Sds_Dims_2d(2) = 0   !SD_UNLIMITED
-          Sds_Dims_1d(1) = 0   !- this is does not seem to work
-          Compress_Flag = 0
-     endif
-
 !-------------------------------------------------------------
 ! define compression here
 !-------------------------------------------------------------
@@ -1427,10 +1418,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
        Sds_Dims_3d(1) = Max_Num_Cld_Test_Bytes
        Sds_Chunk_Size_3d(1) = Max_Num_Cld_Test_Bytes
-
-      if (Subset_Pixel_Hdf_Flag == sym%YES) then
-          Sds_Dims_3d(3) = 0   !SD_UNLIMITED
-       endif
 
         call DEFINE_PIXEL_3D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Tests),Sd_Id_Level2, &
                              Sds_Dims_3d, &
@@ -5039,9 +5026,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     Dim_Id = sfdimid(Sds_Id, 1)
     Istatus = sfsdmname(Dim_Id,"scan_lines_along_track_direction") + Istatus
 
-    if (Subset_Pixel_Hdf_Flag == sym%NO) then      !compression not compatible
-        Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
-    endif
+    Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
 
     !--- determine scaled ranges based on Sds_Type
     if (Sds_Type == DFNT_INT8) then
@@ -5371,9 +5356,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     Dim_Id = sfdimid(Sds_Id, 2)
     Istatus = sfsdmname(Dim_Id,trim(Dim3_Name)) + Istatus
 
-    if (Subset_Pixel_Hdf_Flag == sym%NO) then      !compression not compatible
-       Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
-    endif
+    Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
 
     !-- Range Missing written out regardless of Scaled Value
     Istatus = sfsnatt(Sds_Id, "RANGE_MISSING", DFNT_FLOAT32, 1, Sds_Missing) + Istatus

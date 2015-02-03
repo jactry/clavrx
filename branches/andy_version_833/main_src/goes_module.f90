@@ -1697,8 +1697,14 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
       if(trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then 
          line = (real(AREAstr%north_bound) + real(Line_Idx_Temp - 1) + 9.0) / 10.0
       else
+
+         !--- Navigate to the center of the pixel.  CLAVRx.
          line = real(AREAstr%north_bound) + real(Line_Idx_Temp - 1) + &
               real(AREAstr%line_res)/2.0
+
+         !--- Navigate to the corner of the pixel.  McIDAS-X.
+         !line = anint((Line_Idx_Temp - 1.0)*real(AREAstr%Line_Res)+real(AREAstr%north_bound))
+
       endif
 
       !--- loop over all elements
@@ -1715,8 +1721,14 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
         if(trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then 
            elem = (real(AREAstr%west_vis_pixel) + real(Elem_Idx_Temp - 1) + 9.0) / 10.0  
         else
+
+           !--- Navigate to the center of the pixel.  CLAVRx.
            elem = real(AREAstr%west_vis_pixel) + real(Elem_Idx_Temp - 1) + &
                 real(AREAstr%elem_res*(xstride))/2.0
+
+           !--- Navigate to the corner of the pixel.  McIDAS-X.
+           !elem = anint((Elem_Idx_Temp - 1.0)*real(AREAstr%Elem_Res)+real(AREAstr%west_vis_pixel))
+
         end if
         
         

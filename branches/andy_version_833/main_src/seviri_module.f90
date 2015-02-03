@@ -437,33 +437,31 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
          ! convert to eumetsat coordinate space if necessary
          if (AREAstr%west_vis_pixel == 1) elem = AREAstr%Num_Elem - elem + 1 
 
-         call pixcoord2geocoord_cgms(elem,         &
-                                     line,         &
-                                     COFF_MSG,     &
-                                     LOFF_MSG,     & 
-                                     LFAC_MSG,     &
-                                     CFAC_MSG,     &
-                                     0,       &
-                                     SUB_LON_MSG,  &
-                                     dlat,         &
-                                     dlon)
+         !call pixcoord2geocoord_cgms(elem,         &
+         !                            line,         &
+         !                            COFF_MSG,     &
+         !                            LOFF_MSG,     & 
+         !                            LFAC_MSG,     &
+         !                            CFAC_MSG,     &
+         !                            0,       &
+         !                            SUB_LON_MSG,  &
+         !                            dlat,         &
+         !                            dlon)
 
           ! Putting in hooks for updated navigation code
           ! to be edited after 1/12
-                 
-          !call fgf_to_earth(FGF_TYPE,                  &
-          !                  ii,                  &
-          !                  jj,                  &
-          !                  COFF_MSG,   &
-          !                  CFAC_MSG,   &
-          !                  LFAC_MSG,   &
-          !                  LFAC_MSG,   & 
-          !                  SUB_LON_MSG, &
-          !                  dlon,            &
-          !                  dlat)
-                                   
 
-                  
+          CALL fgf_to_earth(FGF_TYPE,        &
+                            DBLE(elem),      &
+                            DBLE(line),      &
+                            DBLE(CFAC_MSG),  &
+                            DBLE(COFF_MSG),  &
+                            DBLE(LFAC_MSG),  &
+                            DBLE(LOFF_MSG),  &
+                            SUB_LON_MSG,     &
+                            dlon,            &
+                            dlat)
+
          if (dlat == -999.0) then  ! -999.0 is MSG nav missing value
             Nav%Lat_1b(i,j) = Missing_Value_Real4
             Nav%Lon_1b(i,j) = Missing_Value_Real4

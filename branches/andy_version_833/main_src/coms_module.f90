@@ -553,31 +553,31 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                 ii = ii  + (AREAstr%west_vis_pixel / real(AREAstr%elem_res))
 
                 ! again, use common algorithm for CGMS navigation
-                call pixcoord2geocoord_cgms(ii,                  &
-                                            jj,                  &
-                                            NAVstr_COMS%LOFF,   &
-                                            NAVstr_COMS%COFF,   & 
-                                            NAVstr_COMS%LFAC,   &
-                                            NAVstr_COMS%CFAC,   &
-                                            1,             &
-                                            NAVstr_COMS%sub_lon, &
-                                            latitude,            &
-                                            longitude)
+                !call pixcoord2geocoord_cgms(ii,                  &
+                !                            jj,                  &
+                !                            NAVstr_COMS%LOFF,   &
+                !                            NAVstr_COMS%COFF,   & 
+                !                            NAVstr_COMS%LFAC,   &
+                !                            NAVstr_COMS%CFAC,   &
+                !                            1,             &
+                !                            NAVstr_COMS%sub_lon, &
+                !                            latitude,            &
+                !                            longitude)
 
                  ! Putting in hooks for updated navigation code
                  ! to be edited after 1/12
-                 
-                 !CALL fgf_to_earth(FGF_type,                  &
-                 !                  ii,                  &
-                 !                  jj,                  &
-                 !                  NAVstr_COMS%COFF,   &
-                 !                  NAVstr_COMS%CFAC,   &
-                 !                  NAVstr_COMS%LFAC,   &
-                 !                  NAVstr_COMS%LOFF,   & 
-                 !                  NAVstr_COMS%sub_lon, &
-                 !                  longitude,            &
-                 !                  latitude)
-                                          
+
+                CALL fgf_to_earth(FGF_type,                  &
+                                  DBLE(ii),                  &
+                                  DBLE(jj),                  &
+                                  DBLE(NAVstr_COMS%CFAC),    &
+                                  DBLE(NAVstr_COMS%COFF),    &
+                                  DBLE(NAVstr_COMS%LFAC),    &
+                                  DBLE(NAVstr_COMS%LOFF),    &
+                                  DBLE(NAVstr_COMS%sub_lon), &
+                                  longitude,                 &
+                                  latitude)
+
              if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Nav%Lat_1b(i,j) = Missing_Value_Real4
                     Nav%Lon_1b(i,j) = Missing_Value_Real4

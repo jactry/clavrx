@@ -719,38 +719,38 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
             do i=1, xsize
 !                ii = (i - 1)*(xstride) + xstart	 ! get element of the image segement
                 ii = (AREAstr%west_vis_pixel / AREAstr%elem_res) + (i - 1)*(xstride) + xstart   ! get element of the image segement
-                
-                
+
+
                 !call pixcoord2geocoord_mtsat(ii, jj, NAVstr_MTSAT%LOFF, NAVstr_MTSAT%COFF, &
                 !     latitude,longitude, NAVstr_MTSAT%sub_lon, NAVstr_MTSAT%CFAC, NAVstr_MTSAT%LFAC)
 
-
+                ! Move to C-routine navigation below.
                 ! again, use common algorithm for CGMS navigation
-                call pixcoord2geocoord_cgms(ii,                  &
-                                            jj,                  &
-                                            NAVstr_MTSAT%LOFF,   &
-                                            NAVstr_MTSAT%COFF,   & 
-                                            NAVstr_MTSAT%LFAC,   &
-                                            NAVstr_MTSAT%CFAC,   &
-                                            1,             &
-                                            NAVstr_MTSAT%sub_lon, &
-                                            latitude,            &
-                                            longitude)
+                !call pixcoord2geocoord_cgms(ii,                  &
+                !                            jj,                  &
+                !                            NAVstr_MTSAT%LOFF,   &
+                !                            NAVstr_MTSAT%COFF,   &
+                !                            NAVstr_MTSAT%LFAC,   &
+                !                            NAVstr_MTSAT%CFAC,   &
+                !                            1,             &
+                !                            NAVstr_MTSAT%sub_lon, &
+                !                            latitude,            &
+                !                            longitude)
 
                  ! Putting in hooks for updated navigation code
                  ! to be edited after 1/12
-                 
-                 !call fgf_to_earth(FGF_TYPE,                  &
-                 !                  ii,                  &
-                 !                  jj,                  &
-                 !                  NAVstr_MTSAT%COFF,   &
-                 !                  NAVstr_MTSAT%CFAC,   &
-                 !                  NAVstr_MTSAT%LFAC,   &
-                 !                  NAVstr_MTSAT%LOFF,   & 
-                 !                  NAVstr_MTSAT%sub_lon, &
-                 !                  longitude,            &
-                 !                  latitude)
-                                          
+
+                 call fgf_to_earth(FGF_TYPE,                  &
+                                   DBLE(ii),                  &
+                                   DBLE(jj),                  &
+                                   DBLE(NAVstr_MTSAT%CFAC),   &
+                                   DBLE(NAVstr_MTSAT%COFF),   &
+                                   DBLE(NAVstr_MTSAT%LFAC),   &
+                                   DBLE(NAVstr_MTSAT%LOFF),   &
+                                   DBLE(NAVstr_MTSAT%sub_lon), &
+                                   longitude,            &
+                                   latitude)
+
              if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
                     Nav%Lat_1b(i,j) = Missing_Value_Real4
                     Nav%Lon_1b(i,j) = Missing_Value_Real4

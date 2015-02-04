@@ -3909,7 +3909,7 @@ end subroutine SET_ACHA_VERSION
 !====================================================================
 ! 
 !====================================================================
-subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
+subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
                                       Temperature_Cloud,&
                                       Emissivity_Cloud,&
                                       Emissivity_Thresh,&
@@ -3918,7 +3918,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
                                       Missing, &
                                       Temperature_Cirrus)
 
-   integer(kind=int1), intent(in), dimension(:,:):: CldType
+   integer(kind=int1), intent(in), dimension(:,:):: Type
    real(kind=real4), intent(in), dimension(:,:):: Temperature_Cloud
    real(kind=real4), intent(in), dimension(:,:):: Emissivity_Cloud
    real(kind=int4), intent(in):: Emissivity_Thresh
@@ -3926,7 +3926,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
    real(kind=real4), intent(out), dimension(:,:):: Temperature_Cirrus
-   logical, dimension(:,:), allocatable:: Mask
+   integer(kind=int1), dimension(:,:), allocatable:: Mask
 
    integer:: Num_Elements
    integer:: Num_Lines
@@ -3940,14 +3940,14 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
 
    allocate(Mask(Num_Elements,Num_Lines))
 
-   mask = .false.
+   Mask = 0
 
-   where( (CldType == sym%CIRRUS_TYPE .or. &
-           CldType == sym%OVERLAP_TYPE) .and.  &
+   where( (Type == sym%CIRRUS_TYPE .or. &
+           Type == sym%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud > Emissivity_Thresh)
 
-      Mask = .true.
+      Mask = 1
 
    end where
 
@@ -3957,15 +3957,16 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
       i2 = min(Num_Elements,max(1,Elem_Idx + Box_Width))
 
       do Line_Idx = 1, Num_Lines, Box_Width
-          j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
-          j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
           Temperature_Temporary = Missing
           Count_Temporary = 0
           Sum_Temporary = 0.0
 
-          Count_Temporary = count(Mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
+          j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
+          j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
+
+          Count_Temporary = sum(1*Mask(i1:i2,j1:j2))
+          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2)*Mask(i1:i2,j1:j2))
           if (Count_Temporary > Count_Thresh) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary
           else
@@ -3974,11 +3975,14 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(CldType, &
 
           if (Temperature_Temporary /= Missing) then
              Temperature_Cirrus(i1:i2,j1:j2) = Temperature_Temporary
-          endif         
+          endif
+         
       enddo
    enddo   
 
 end subroutine COMPUTE_TEMPERATURE_CIRRUS
+
+
 !--------------------------------------------------------------------------
 ! Determine processing order of pixels
 !

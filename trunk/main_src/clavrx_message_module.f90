@@ -67,14 +67,14 @@ contains
       verbose_level = verb_lev % DEFAULT
       if ( file_test ( 'verbose_level.txt') ) then
          open ( 37, file = 'verbose_level.txt' )
-         read (37,'(i1)'),verbose_level
+         read (37,'(i1)') verbose_level
          close (37)
       end if
       
    
       
       if ( message_level <= verbose_level ) then
-         print*,PROMPT//achar(27)//'['//color_string//'m '//text//achar(27)//'[0m'      
+         print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it
@@ -123,11 +123,10 @@ contains
     
  
    end subroutine mesg_1r
-   
-   
-    subroutine mesg_1d ( text,  param_r, level , color , stop_evt )
+
+   subroutine mesg_1d ( text,  param_d, level , color , stop_evt )
       character (len = *) , intent(in) :: text
-      double precision , intent(in) :: param_r
+      real(8), intent(in) :: param_d
       integer, optional, intent(in) :: level
       integer, optional, intent(in) :: color
       logical, optional, intent(in) :: stop_evt
@@ -135,20 +134,18 @@ contains
       integer :: lev
       character ( len =100 ) :: string_100
       character ( len =200) :: text_1
- 
-  
-      write ( string_100, '(f20.7)') param_r
-  
+
+
+      write ( string_100, '(f25.4)') param_d
+
       lev = verb_lev % DEFAULT
       if ( present (level)) lev = level
       text_1 = text//trim(string_100)
-      color_string=''  
-      if (present(color)) write(color_string,'(I2)') color 
-      
-      call do_it ( trim(text_1), color_string, lev ) 
-      
-    
- 
+      color_string=''
+      if (present(color)) write(color_string,'(I2)') color
+
+      call do_it ( trim(text_1), color_string, lev )
+
    end subroutine mesg_1d
 
 

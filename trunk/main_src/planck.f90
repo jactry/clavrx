@@ -72,6 +72,7 @@
   public:: PLANCK_RAD
   public:: PLANCK_TEMP
   public:: COMPUTE_BT_ARRAY
+  public:: CONVERT_RADIANCE
 
 !-- planck tables arrays
   integer, parameter, private:: nplanck = 161
@@ -509,4 +510,23 @@
 
   end function PLANCK_TEMP
 
- end module PLANCK
+ !----------------------------------------------------------------------
+ ! Convert radiances based on channel centroid wavenumber (nu)
+ ! from NASA standad (W m-2 um-1 sr-1) 
+ ! to NOAA standard (mW/cm^2/cm^-1/str)
+ !
+ !----------------------------------------------------------------------
+ subroutine CONVERT_RADIANCE(Radiance,Nu,Missing_Value)
+  real (kind=real4), dimension(:,:), intent(inout):: Radiance
+  real (kind=real4), intent(in):: Nu
+  real (kind=real4), intent(in):: Missing_Value
+ 
+  where(Radiance /= Missing_Value)
+       Radiance = Radiance * (((10000.0 / Nu )**2) / 10.0)
+  end where
+
+  return
+
+ end subroutine CONVERT_RADIANCE
+
+end module PLANCK

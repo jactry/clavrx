@@ -46,12 +46,12 @@ c       common/plncgx/cwn(nk),fk1(nk),fk2(nk),tc(nt,nk)
         common/use/ibuf(lenu)
         dimension cbuf(lenc)
         character*12 cfile
-        character*72 ancil_data_path,pfast_path 
+        character*72 ancil_data_path,pfaast_path 
         
         cfile = 'goescbnd.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
-        open(iuc,file=trim(pfast_path)//cfile,recl=lenr,
+        open(iuc,file=trim(pfaast_path)//cfile,recl=lenr,
      +          access='direct',status='old',
      +          err=100)
         irc=ngoes-7

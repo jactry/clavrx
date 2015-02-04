@@ -72,7 +72,7 @@ c .... version of 15.02.06
         dimension tauc(nl),tlas(nl),wlas(nl),olas(nl)
         dimension xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
         character*32 cfile
-        character*72 ancil_data_path,pfast_path
+        character*72 ancil_data_path,pfaast_path
         character*3 comp(nk)
         data comp /'dry','ozo','wts','wtl','wco'/
         integer*4 lencf(nk)
@@ -83,7 +83,7 @@ c .... version of 15.02.06
         secant(z)=1./cos(0.01745329*z)
 
         cfile = 'goesccom.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
         if(ngoes.ne.lgoes) then
          ! iux=70             !akh commented 
@@ -91,7 +91,7 @@ c .... version of 15.02.06
               cfile(6:8)=comp(l)
              !iux=iux+1       !akh commented
               iux = get_lun()    !akh added
-              open(iux,file=trim(pfast_path)//cfile,recl=lencf(l),
+              open(iux,file=trim(pfaast_path)//cfile,recl=lencf(l),
      +                  access='direct',status='old',
      +                  err=200)
               iuc(l)=iux

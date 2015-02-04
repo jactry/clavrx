@@ -1,7 +1,6 @@
 ! $Id:$
 module cr_config_mod
    
-  
   ! - AVHRR specific 
    type conv_avhhr_type
       logical :: active_rfl_cal_1b
@@ -91,7 +90,6 @@ module cr_config_mod
       type ( conf_channel_type ) , dimension(42) :: chan
       type ( conf_output_type) :: out
       logical :: use_gzip     
-      logical :: subset_pixel_hdf
       
       type ( conf_file_type ):: file
       
@@ -473,4 +471,3 @@ end module cr_config_mod
       data_i = int_dummy == 1
       
    end subroutine read_option_line_l6
-   

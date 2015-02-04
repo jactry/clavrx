@@ -185,7 +185,8 @@ clavrxorb_objs = process_clavrx.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
                  cr_config_mod.o \
-                 area_file_mod.o
+                 area_file_mod.o \
+                 geos_transform_pix.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -479,6 +480,9 @@ mreadf.o: mreadf.c
 
 move_bytes.o: move_bytes.c
 	$(CC) -c -O2 move_bytes.c
+
+geos_transform_pix.o: geos_transform_pix.c
+	$(CC) -c -O2 geos_transform_pix.c
 
 ################################ Misc. Targets #################################
 

@@ -43,7 +43,7 @@
 	dimension xdry(nxd,nm),xozo(nxo,nm),xcon(nxc,nm),xwet(nxw,nm)
 	character*32 cpath/'/home/chial/AHI/101_levels/coef/'/
 	character*13 cfile/'ahixxx101.dat'/
-        character*72 ancil_data_path,pfast_path !akh
+        character*72 ancil_data_path,pfaast_path !akh
 	character*3 comp(nk)/'dry','ozo','wco','wtl','wts'/
 !	character*3 clblrtm(6:11)/'612','704','830','9xx','10x','113'/
 	character*2 clbl
@@ -54,7 +54,7 @@
 	data init/1/,tlas/nl*0./,wlas/nl*0./,olas/nl*0./,zlas/-999./
 	secant(z)=1./cos(0.01745329*z)
 
-        pfast_path = trim(ancil_data_path)//"pfast/" !akh
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/" !akh
 
 	if(init.ne.0) then
 	   read(clbl,*) lbl
@@ -63,7 +63,7 @@
 	      lencf=lengcf(l)
 
            iuc(l)=get_lun() !akh
-           open(iuc(l),file=trim(pfast_path)//cfile,recl=lencf,
+           open(iuc(l),file=trim(pfaast_path)//cfile,recl=lencf,
      +             access='direct', status='old',err=200)
 
 	   enddo

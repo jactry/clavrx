@@ -31,35 +31,17 @@
 module IFF_CLAVRX_BRIDGE
 
    use PIXEL_COMMON, only: &
-       Iff_Viirs_Flag &
-       , Iff_Modis_Flag &
-       , Iff_Avhrr_Flag &
+       Sensor &
+       , Geo &
+       , Nav &
+       , Image &
        , Iff_Gap_Mask &
        , Cld_Mask_Aux &
        , Cloud_Mask_Aux_Flag &
        , Cloud_Mask_Aux_Read_Flag &
-       , Chan_On_Flag_Default &
-       , Chan_On_Flag &
-       , Num_Scans_Per_Segment &
-       , Num_Scans &
-       , Num_Scans_Read &
        , Scan_Number &
-       , Start_Time &
-       , End_Time &
-       , Num_Pix &
-       , Dir_1b &
        , Ancil_Data_Dir &
-       , Lat_1b &
-       , Lon_1b &
        , Scan_Time &
-       , Sataz &
-       , Satzen &
-       , Solaz &
-       , Solzen &
-       , Relaz &
-       , Glintzen &
-       , Scatangle &
-       , Ascend &
        , ch &
        , Bt_375um_Sounder &
        , Bt_11um_Sounder &
@@ -118,21 +100,21 @@ contains
       modis_chn_list = [  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, &
                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, &
                          29, 30, 31, 32, 33, 34, 35, 36 ]
-      is_band_on = Chan_On_Flag_Default ( modis_chn_list) == sym%YES
+      is_band_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
 
-      y_start = ( segment_number - 1 ) * Num_Scans_Per_Segment + 1
-      c_seg_lines = min (  y_start + Num_Scans_Per_Segment - 1 , Num_Scans )  &
+      y_start = ( segment_number - 1 ) * Image%Number_Of_Lines_Per_Segment + 1
+      c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment - 1 , Image%Number_Of_Lines )  &
                          - y_start  + 1
 
       ! - configure interface
       iff_conf % n_chan = num_chan
       iff_conf % chan_list = modis_chn_list
-      iff_conf % chan_on = Chan_On_Flag_Default ( modis_chn_list ) == sym%YES
+      iff_conf % chan_on = Sensor%Chan_On_Flag_Default ( modis_chn_list ) == sym%YES
       iff_conf % iff_cloud_mask_on = Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK
 
       iff_conf % offset = [ 1 , y_start]
-      iff_conf % count = [ num_pix , c_seg_lines  ]
-      iff_conf % dir_1b = trim(dir_1b)
+      iff_conf % count = [ Image%Number_Of_Elements , c_seg_lines  ]
+      iff_conf % dir_1b = trim(Image%Level1b_Path)
 
       iff_conf % Ancil_Data_Dir = trim(Ancil_Data_Dir)
       iff_conf % iff_file =  trim(iff_file)
@@ -142,22 +124,22 @@ contains
 
       ! - output to clavrx global variables
       ! geo
-      Lat_1b(:,1:c_seg_lines)    = out % geo % lat
-      Lon_1b(:,1:c_seg_lines)    = out % geo % lon
+      Nav%Lat_1b(:,1:c_seg_lines)    = out % geo % lat
+      Nav%Lon_1b(:,1:c_seg_lines)    = out % geo % lon
       Scan_Time(1:c_seg_lines)   = out % geo % scan_time
-      Sataz(:,1:c_seg_lines)     = out % geo % sataz
-      Satzen(:,1:c_seg_lines)    = out % geo % satzen
-      Solaz (:,1:c_seg_lines)    = out % geo % solaz
-      Solzen (:,1:c_seg_lines)   = out % geo % solzen
+      Geo%Sataz(:,1:c_seg_lines)     = out % geo % sataz
+      Geo%Satzen(:,1:c_seg_lines)    = out % geo % satzen
+      Geo%Solaz (:,1:c_seg_lines)    = out % geo % solaz
+      Geo%Solzen (:,1:c_seg_lines)   = out % geo % solzen
 
       ! - compute relative azimuth
-      Relaz = RELATIVE_AZIMUTH( Solaz , Sataz )
+      Geo%Relaz = RELATIVE_AZIMUTH( Geo%Solaz , Geo%Sataz )
 
       ! - compute glint angle
-      Glintzen = GLINT_ANGLE( Solzen , Satzen , Relaz )
+      Geo%Glintzen = GLINT_ANGLE( Geo%Solzen , Geo%Satzen , Geo%Relaz )
 
       ! - compute the scattering angle
-      Scatangle = SCATTERING_ANGLE( Solzen , Satzen , Relaz )
+      Geo%Scatangle = SCATTERING_ANGLE( Geo%Solzen , Geo%Satzen , Geo%Relaz )
 
       !--- redefine solar azimuth to be consistent with avhrr
       where (out % geo % solaz /= Missing_Value_Real4)
@@ -165,22 +147,23 @@ contains
       end where
 
       !---- compute asc/des node, scan_number
-      Num_Scans_Read = c_seg_lines
-      do iline = 1, Num_Scans_Read
+      Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
+      do iline = 1, Image%Number_Of_Lines_Read_This_Segment
         Scan_Number(iline) = y_start + iline - 1
       enddo
 
       ! - ascending or descending
-      Ascend = 0
-      do iline = 1 , Num_Scans_Read - 1
-         if ( out % geo % lat(Num_Pix / 2 , iline + 1) <= out % geo % lat( Num_Pix / 2 , iline ) ) &
-             Ascend( iline )  = 1
+      Nav%Ascend = 0
+      do iline = 1 , Image%Number_Of_Lines_Read_This_Segment - 1
+         if ( out % geo % lat(Image%Number_Of_Elements / 2 , iline + 1) <=  &
+              out % geo % lat( Image%Number_Of_Elements / 2 , iline ) ) &
+             Nav%Ascend( iline )  = 1
       end do
 
       ! - save all channel data that were read to global
       do i_band = 1 , iff_conf % n_chan
          if ( .not. out % band ( i_band ) % is_read ) then
-            Chan_On_Flag (modis_chn_list (i_band) ,1:c_seg_lines) = sym % no
+            Sensor%Chan_On_Flag_Per_Line (modis_chn_list (i_band) ,1:c_seg_lines) = sym % no
             cycle
          end if
 
@@ -196,13 +179,13 @@ contains
             .or. (i_band > 26 .and. i_band <=36)) then
 
             !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS (SPECIAL CASE) !!!
-            if (Iff_Avhrr_Flag == sym%YES .and. i_band == 21) then ! 3.75um 
+            if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 21) then ! 3.75um 
                call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
                                        20 , missing_value_real4 )
-            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 22) then ! 11um
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 22) then ! 11.00um 
                call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (22) % rad , &
                                        31 , missing_value_real4 )
-            elseif (Iff_Avhrr_Flag == sym%YES .and. i_band == 29) then ! 12um
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 29) then ! 12.00um 
                call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (29) % rad , &
                                        32 , missing_value_real4 )
             else ! the rest of channels are normal
@@ -212,7 +195,7 @@ contains
             endif
             ! --- make Iff_Gap_Mask out of CRIS channel
             ! --- 0 = data in 13.3, 1=no data in 13.3
-            if (Iff_Viirs_Flag == sym%YES .and. i_band == 33) then
+            if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF' .and. i_band == 33) then
                IFF_Gap_Mask = 0
                where (ch(33)%Bt_Toa == missing_value_real4) 
                   IFF_Gap_Mask = 1

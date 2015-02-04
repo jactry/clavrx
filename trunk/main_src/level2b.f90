@@ -120,8 +120,6 @@ module LEVEL2B_ROUTINES
  integer(kind=int4), dimension(:,:), allocatable, public, save:: Ielem_Output
  integer(kind=int4), dimension(:,:), allocatable, public, save:: Iline_Output
 
- integer, parameter, private:: subset_pixel_hdf_flag = 0
-
  !--- no compression
  !integer, parameter, private:: Comp_Type = 0
  !integer, dimension(2), parameter, private:: Comp_Prm = /(0,0)/

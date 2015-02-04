@@ -317,14 +317,14 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
      !  Zsfc_Nwp = nwp level elevation in km
      !
      !----------------------------------------------------------------------------------
-     if (Land(Elem_Idx,Line_Idx) == sym%LAND) then
+     if (Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
 
         !--- assume all surface features are in lowest half of profile
         Ilev_end = Nlevels_Nwp
         Ilev_start = Nlevels_Nwp/2
 
         if ((Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Real4) .and. &
-           (Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4) .and. &
+           (Sfc%Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4) .and. &
            (Lon_Nwp_Idx > 0) .and. (Lat_Nwp_Idx > 0) .and. (Lon_Nwp_Idx_x > 0) .and. (Lat_Nwp_Idx_x > 0) .and. &
            (Sfc_Level_Idx > 1)) then
 
@@ -347,7 +347,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
          endif
 
          !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
-         Delta_Zsfc = Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
+         Delta_Zsfc = Sfc%Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
          Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
          Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
 
@@ -415,13 +415,13 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
      do Elem_Idx = 1, Number_of_Elements
                                                                                                                                          
       !--- check for valid geolocation
-      if (Lon(Elem_Idx,Line_Idx) < -180.0 .or. Lon(Elem_Idx,Line_Idx) > 180.0 .or. &
-          Lat(Elem_Idx,Line_Idx) < -90.0 .or. Lat(Elem_Idx,Line_Idx) > 90.0) then
+      if (Nav%Lon(Elem_Idx,Line_Idx) < -180.0 .or. Nav%Lon(Elem_Idx,Line_Idx) > 180.0 .or. &
+          Nav%Lat(Elem_Idx,Line_Idx) < -90.0 .or. Nav%Lat(Elem_Idx,Line_Idx) > 90.0) then
           cycle
       endif 
         
       !--- compute NWP cell to pixel mapping
-      call FIND_NWP_GRID_CELL(Lon(Elem_Idx,Line_Idx),Lat(Elem_Idx,Line_Idx), &
+      call FIND_NWP_GRID_CELL(Nav%Lon(Elem_Idx,Line_Idx),Nav%Lat(Elem_Idx,Line_Idx), &
                               i_Nwp(Elem_Idx,Line_Idx),j_Nwp(Elem_Idx,Line_Idx), &
                               i_Nwp_x(Elem_Idx,Line_Idx),j_Nwp_x(Elem_Idx,Line_Idx),  &
                               Lon_Nwp_fac(Elem_Idx,Line_Idx), Lat_Nwp_fac(Elem_Idx,Line_Idx),Ierr)
@@ -1499,10 +1499,10 @@ end subroutine FIND_NWP_LEVELS
 
   !--- loop over all pixels in segment
   do Line_Idx = j1,j1+j2-1
-     do Elem_Idx = 1, num_pix
+     do Elem_Idx = 1, Image%Number_Of_Elements
 
         !--- initialize to no
-        Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%NO
+        Sfc%Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%NO
        
         !--- check for valid pixels
         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)  then
@@ -1514,8 +1514,8 @@ end subroutine FIND_NWP_LEVELS
         Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
 
         !--- derive nwp coast mask
-        if (Land_Mask(Elem_Idx,Line_Idx) /= Land_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
-           Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%YES
+        if (Sfc%Land_Mask(Elem_Idx,Line_Idx) /= Land_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
+           Sfc%Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%YES
         endif 
 
      !--- end loop over all pixels in segment
@@ -1979,8 +1979,8 @@ SUBROUTINE COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
   Low_Cloud_Fraction_Satellite_Nwp = Missing_Value_Real4
 
   !--- loop over pixels in segment
-   line_loop: do Line_Idx = 1, Num_Scans_Read
-     element_loop: do Elem_Idx = 1, Num_Pix
+   line_loop: do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+     element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
 
       !--- check for bad pixels
       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -2045,7 +2045,7 @@ integer(kind=int4):: nwp_start_hour_segment
 integer(kind=int4):: nwp_end_hour_segment
 
 !--- check for valid times (assume positive)
-if (start_itime < 0 .or. end_time < 0) then
+if (start_itime < 0 .or. end_itime < 0) then
   return
 endif
 

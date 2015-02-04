@@ -48,21 +48,14 @@ module nlcomp_bridge_mod
         mesg
    
    use pixel_common, only: &
-        num_pix &
+        sensor &
+      , geo &
+      , sfc &
+      , image &
       , ch  &
-      , num_scans_read &
-      , coszen &
-      , satzen &
-      , relaz  &
-      , solzen &
-      , snow &
+      , acha &
       , cld_type &
       , cld_mask &
-      , land_mask &
-      , zc_acha  &
-      , pc_acha  &
-      , tc_acha &
-      , tau_acha &
       , bad_pixel_mask &
       , reff_nlcomp, tau_nlcomp  &
       , tau_dcomp_qf, reff_dcomp_qf &
@@ -73,17 +66,12 @@ module nlcomp_bridge_mod
       , cloud_063um_spherical_albedo, cloud_063um_albedo &
       , ancil_data_dir &
       , i_nwp , j_nwp &
-      , num_scans_per_segment &
       , ch &
       , dcomp_mode  &
-      , zen_idx_rtm , solar_rtm &
-      , sc_id_wmo &
-      , chan_on_flag &
-      , lunzen , lunrelaz
+      , zen_idx_rtm , solar_rtm
    
    use pixel_common, only: &
-        dcomp_diag_1 , dcomp_diag_2 &
-        , chan_on_flag_default
+        dcomp_diag_1 , dcomp_diag_2
    
    use calibration_constants, only: &
         sun_earth_distance  &      !---- check this is defined in three routines   
@@ -166,8 +154,8 @@ contains
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( nlcomp_rtm ) 
       
-      dim_1 = num_pix
-      dim_2 = num_scans_read
+      dim_1 = Image%Number_Of_Elements
+      dim_2 = Image%Number_Of_Lines_Read_This_Segment
       
       
       ! - which channels do we need? possibles are 
@@ -175,7 +163,7 @@ contains
       
       nlcomp_possible_channels = [  20 , 42 ]
       do i = 1 , size ( nlcomp_possible_channels )   
-         if ( Chan_On_Flag_Default ( nlcomp_possible_channels ( i) ) == 1 ) then
+         if ( sensor % chan_on_flag_default ( nlcomp_possible_channels ( i) ) == 1 ) then
             nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
@@ -219,9 +207,9 @@ contains
       ! -- configure
       
            ! - ancil/lut path
-      nlcomp_input % lut_path = trim(ancil_data_dir)//"/luts/cld/"   
+      nlcomp_input % lut_path = trim(ancil_data_dir)//"static//luts/cld/"   
          ! - wmo sensor id
-      nlcomp_input % sensor_wmo_id = sc_id_wmo
+      nlcomp_input % sensor_wmo_id = sensor % wmo_id
       nlcomp_input % sun_earth_dist = sun_earth_distance
             
          ! -  Satellite Data
@@ -232,21 +220,21 @@ contains
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa
       
-      nlcomp_input % sat % d = satzen
-      nlcomp_input % sol % d = solzen
-      nlcomp_input % azi % d = relaz
-      nlcomp_input % zen_lunar % d = lunzen
-      nlcomp_input % azi_lunar % d = lunrelaz
+      nlcomp_input % sat % d = geo % satzen
+      nlcomp_input % sol % d = geo % solzen
+      nlcomp_input % azi % d = geo % relaz
+      nlcomp_input % zen_lunar % d = geo % lunzen
+      nlcomp_input % azi_lunar % d = geo % lunrelaz
               
          ! - Cloud products
-      nlcomp_input % cloud_press % d = pc_acha
-      nlcomp_input % cloud_temp % d  = tc_acha
-      nlcomp_input % tau_acha % d    = tau_acha
+      nlcomp_input % cloud_press % d = acha % pc
+      nlcomp_input % cloud_temp % d  = acha % tc
+      nlcomp_input % tau_acha % d    = acha % tau
       nlcomp_input % cloud_mask % d  = cld_mask
       nlcomp_input % cloud_type % d  = cld_type
                   
          ! - Flags
-      nlcomp_input % is_land % d = land_mask == 1 
+      nlcomp_input % is_land % d = sfc % land_mask == 1 
       nlcomp_input % is_valid % d = bad_pixel_mask /= 1
       
             
@@ -258,7 +246,7 @@ contains
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    !check this AKH
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
       nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp
-      nlcomp_input % snow_class % d = snow
+      nlcomp_input % snow_class % d = sfc % snow
             
          ! - Atmospheric contents
          ! ozone column in Dobson

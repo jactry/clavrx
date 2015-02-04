@@ -353,7 +353,7 @@ end subroutine SETUP_UMD_PROPS
 
 j_loop:  do j = j1,j1+j2-1
 
-i_loop:    do i = 1,num_pix
+i_loop:    do i = 1,Image%Number_Of_Elements
 
 !--- check for a bad pixel
          if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -363,77 +363,77 @@ i_loop:    do i = 1,num_pix
 !--- based on surface type, assign surface emissivities if seebor not used
 !--- if the Sfc_Type is missing, treat pixel as bad
     if (use_seebor == sym%NO) then
-      if (Sfc_Type(i,j) >= 0 .and. Sfc_Type(i,j) < 15) then     !limits depend on Sfc_Type
-       if (Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Ch27_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Ch28_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Ch29_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Ch31_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Ch32_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc_Type(i,j))
-       if (Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc_Type(i,j))
+      if (Sfc%Sfc_Type(i,j) >= 0 .and. Sfc%Sfc_Type(i,j) < 15) then     !limits depend on Sfc_Type
+       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Ch27_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Ch28_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Ch29_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Ch31_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Ch32_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
       else
-       if (Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Missing_Value_Real4
        Bad_Pixel_Mask(i,j) = sym%YES
       endif
     endif
 
 !--- for ocean, use this parameterization from Nick Nalli - overwrite seebor
-    if (Sfc_Type(i,j) == 0) then
+    if (Sfc%Sfc_Type(i,j) == 0) then
 !    Sfc_Emiss_Ch31(i,j) =  0.844780 + 0.328921 * coszen(i,j)  -0.182375*(coszen(i,j)**2)
 !    Sfc_Emiss_Ch32(i,j) =  0.775019 + 0.474005 * coszen(i,j)  -0.261739*(coszen(i,j)**2)
 !--- set to constant until we can verify the above
-     if (Chan_On_Flag_default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(30)==sym%YES) ch(30)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.985
-     if (Chan_On_Flag_default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(30)==sym%YES) ch(30)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.985
     endif
 
     !--- if (snow_mask
-    if (Snow(i,j) /= sym%NO_SNOW) then
+    if (Sfc%Snow(i,j) /= sym%NO_SNOW) then
 
-      if ((Sfc_Type(i,j) /= sym%EVERGREEN_NEEDLE_SFC) .and. &
-          (Sfc_Type(i,j) /= sym%EVERGREEN_BROAD_SFC)) then
+      if ((Sfc%Sfc_Type(i,j) /= sym%EVERGREEN_NEEDLE_SFC) .and. &
+          (Sfc%Sfc_Type(i,j) /= sym%EVERGREEN_BROAD_SFC)) then
 
-      if (Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.984
-      if (Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.979
-      if (Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.979
-      if (Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.979
-      if (Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.979
-      if (Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.977
-      if (Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.977
-      if (Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.977
-      if (Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.977
-      if (Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.984
+      if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.977
 
      endif
     endif
@@ -454,7 +454,7 @@ i_loop:    do i = 1,num_pix
     
 j_loop:  do j = j1,j1+j2-1
 
-i_loop:    do i = 1,num_pix
+i_loop:    do i = 1,Image%Number_Of_Elements
 
    !--- check for a bad pixel
    if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -462,35 +462,35 @@ i_loop:    do i = 1,num_pix
    endif
 
    !--- binary land mask
-   Land_Mask(i,j) = sym%NO
+   Sfc%Land_Mask(i,j) = sym%NO
 
    !--- if land mask read in, use it
    if (Read_Land_Mask == sym%YES) then
-     if (land(i,j) == sym%LAND) then
-       Land_Mask(i,j) = sym%YES
+     if (Sfc%Land(i,j) == sym%LAND) then
+       Sfc%Land_Mask(i,j) = sym%YES
      endif
    !--- if land mask not read in, base off of surface type
    else   
-     if (Sfc_Type(i,j) /= sym%WATER_SFC) then
-       Land_Mask(i,j) = sym%YES
+     if (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) then
+       Sfc%Land_Mask(i,j) = sym%YES
      endif
    endif
 
    !--- binary coast mask
-   if (read_Coast_Mask == sym%YES) then
-    Coast_Mask(i,j) = sym%NO
+   if (Read_Coast_Mask == sym%YES) then
+    Sfc%Coast_Mask(i,j) = sym%NO
 
      !-- for gac data
-     if ((AVHRR_GAC_Flag== sym%YES) .and. (Coast(i,j) /= sym%NO_COAST)) then
-      if (Coast(i,j) <= sym%COAST_10KM) then
-         Coast_Mask(i,j) = sym%YES
+     if ((Sensor%Spatial_Resolution_Meters <= 1000) .and. (Sfc%Coast(i,j) /= sym%NO_COAST)) then
+      if (Sfc%Coast(i,j) <= sym%COAST_10KM) then
+         Sfc%Coast_Mask(i,j) = sym%YES
       endif
      endif
 
      !-- for lac,hrpt or frac data
-     if ((AVHRR_GAC_Flag == sym%NO) .and. (Coast(i,j) /= sym%NO_COAST)) then
-      if (Coast(i,j) <= sym%COAST_5KM) then
-         Coast_Mask(i,j) = sym%YES
+     if ((Sensor%Spatial_Resolution_Meters > 1000) .and. (Sfc%Coast(i,j) /= sym%NO_COAST)) then
+      if (Sfc%Coast(i,j) <= sym%COAST_5KM) then
+         Sfc%Coast_Mask(i,j) = sym%YES
       endif
      endif
 
@@ -502,7 +502,7 @@ i_loop:    do i = 1,num_pix
 
 
 !------------- compute coast mask if coast data not read in
- if (read_Coast_Mask == sym%NO) then 
+ if (Read_Coast_Mask == sym%NO) then 
 
    call COMPUTE_COAST_MASK_FROM_LAND_MASK(j1,j2)
 
@@ -525,10 +525,10 @@ i_loop:    do i = 1,num_pix
     j1 = max(jmin,j-n)
     j2 = min(j+n,jmax)
 
-    do i = 1, num_pix
+    do i = 1, Image%Number_Of_Elements
 
      i1 = max(1,i-n)
-     i2 = min(i+n,int(num_pix, kind=int4))
+     i2 = min(i+n,int(Image%Number_Of_Elements, kind=int4))
 
      !--- check for bad pixels
      if (Bad_Pixel_Mask(i,j) /= 0) then
@@ -536,15 +536,15 @@ i_loop:    do i = 1,num_pix
      endif
 
      !--- compute number of land pixels in box
-     nland = sum(Land_Mask(i1:i2,j1:j2))
+     Nland = sum(Sfc%Land_Mask(i1:i2,j1:j2))
 
      !--- compute maximum number of land pixels in box
-     nmax = (j2-j1+1)*(i2-i1+1)
+     Nmax = (j2-j1+1)*(i2-i1+1)
 
      !--- compute coast mask
-     Coast_Mask(i,j) = sym%YES
-     if ((nland == nmax).or.(nland == 0)) then
-      Coast_Mask(i,j) = sym%NO
+     Sfc%Coast_Mask(i,j) = sym%YES
+     if ((Nland == Nmax).or.(Nland == 0)) then
+      Sfc%Coast_Mask(i,j) = sym%NO
      endif
 
    enddo

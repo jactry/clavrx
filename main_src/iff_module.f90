@@ -26,11 +26,10 @@
 module IFF_MODULE
 
  use HDF
+ use PLANCK
  use PIXEL_COMMON, only: &
-     Iff_Viirs_Flag  &
-     , Iff_Modis_Flag &
-     , Iff_Avhrr_Flag &
-     , Num_Scans_Per_Segment
+     sensor &
+     , image
  use CONSTANTS, only: &
      sym &
      , int1 &
@@ -62,7 +61,6 @@ module IFF_MODULE
 
  public :: GET_IFF_DATA
  public :: READ_IFF_DATE_TIME
- private :: CONVERT_RADIANCE
 
    type , public :: iff_data_config
       integer :: n_chan
@@ -172,16 +170,19 @@ end subroutine GET_IFF_DATA
 
       if ( config % offset (1) <= 0 )  config % offset (1) = 1
       if ( config % offset (2) <= 0 )  config % offset (2)  = 1
-      if (Iff_Viirs_Flag == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 3200
-      endif
-      if (Iff_Modis_Flag == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 1354
-      endif
-      if (Iff_Avhrr_Flag == sym%YES) then
-         if ( config % count (1) <= 0 )  config % count (1) = 409
-      endif
-      if ( config % count (2) <= 0 )  config % count (2)  = Num_Scans_Per_Segment
+      
+      if ( config % count (1) <= 0 ) then
+         select case ( trim(Sensor%Sensor_Name) )
+         case ('VIIRS-IFF') 
+            config % count (1) = 3200
+         case ('MODIS-IFF') 
+            config % count (1) = 1354
+         case ( 'AVHRR-IFF') 
+            config % count (1) = 409
+         case default      
+         end select   
+      end if   
+      if ( config % count (2) <= 0 )  config % count (2)  = Image%Number_Of_Lines_Per_Segment
 
    end subroutine CHECK_INPUT
 
@@ -266,7 +267,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! set nu numbes for radiance conversion
       nu_list = 0
-      if (Iff_Avhrr_Flag == sym%YES) then
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
          nu_list(20:25) = [Nu_20, Nu_20, Nu_31, Nu_23, Nu_24, Nu_25]
          nu_list(27:36) = [Nu_27, Nu_28, Nu_32, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
       else
@@ -342,15 +343,19 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          ! for MODIS set low 13 & 14 channels to 913 and 914 to ignore it
          do ii = 1, num_char_band_names
             Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'-','1','before') + Status
-            if (Iff_Viirs_Flag == sym%YES) then
+            select case (trim(Sensor%Sensor_Name))
+            case('VIIRS-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'M',' ','before') + Status
-            elseif (Iff_Modis_Flag == sym%YES) then
+            case('MODIS-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status
-            elseif (Iff_Avhrr_Flag == sym%YES) then
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status  
+            case('AVHRR-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'a',' ','after') + Status
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status
-            endif
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status               
+            case default
+            
+            end select  
+         
          enddo ! loop over band names
 
          ! convert string array to integer
@@ -358,7 +363,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             allocate ( band_names_int_ref (num_char_band_names) )
             read (band_names_char_arr,fmt=*) band_names_int_ref
             num_ref_ch = num_char_band_names
-            if (Iff_Viirs_Flag == sym%YES) then
+            if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
                do ii = 1, num_char_band_names
                  select case ( band_names_int_ref(ii) )
                     case (1)
@@ -385,7 +390,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                        band_names_int_ref(ii) = 7
                  end select
                enddo
-            elseif (Iff_Avhrr_Flag == sym%YES) then
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
                do ii = 1, num_char_band_names
                  select case ( band_names_int_ref(ii) )
                     case (1)
@@ -401,7 +406,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             allocate ( band_names_int_rad (num_char_band_names) )
             read (band_names_char_arr,fmt=*) band_names_int_rad
             num_rad_ch = num_char_band_names
-            if (Iff_Viirs_Flag == sym%YES) then
+            if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
                do ii = 1, num_char_band_names
                   select case ( band_names_int_rad(ii) )
                      case (12)
@@ -424,7 +429,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 36
                   end select
                enddo
-            elseif (Iff_Avhrr_Flag == sym%YES) then
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
                do ii = 1, num_char_band_names
                   select case ( band_names_int_rad(ii) )
                      case (3)
@@ -530,7 +535,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                       allocate (out % band ( i_band ) % ref (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % ref =  r3d_buffer(:,:,1)
          elseif (trim(setname_band) == 'EmissiveBands') then
-            call CONVERT_RADIANCE(r3d_buffer,nu_list(i_band),missing_value)
+            call CONVERT_RADIANCE(r3d_buffer(:,:,1),nu_list(i_band),missing_value)
             if (.not. allocated ( out % band ( i_band ) % rad ) ) &
                      allocate (out % band ( i_band ) % rad (dim_seg(1), dim_seg(2)) )
             out % band ( i_band ) % rad =  r3d_buffer(:,:,1)
@@ -560,14 +565,15 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! --- Read cld_mask_aux if it set in default file
       if ( config %  iff_cloud_mask_on ) then
          if (ny_end == dim_seg(2)) &
-            print *, EXE_PROMPT, "Reading in AUX cloud mask"
 
-          if (Iff_Viirs_Flag == sym%YES) then
+          print *, EXE_PROMPT, "Reading in AUX cloud mask"
+
+          if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
              file_srch = 'IFFCMO_npp_d'//trim(config % iff_file &
                          (len(trim(config % dir_1b))+13:len(trim(config % dir_1b))+28)) &
                          //'*_ssec_dev.hdf'
           endif
-          if (Iff_Modis_Flag == sym%YES) then
+          if (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
              file_srch = 'IFFCMO_aqua_d'//trim(config % iff_file &
                           (len(trim(config % dir_1b))+14:len(trim(config % dir_1b))+29)) &
                           //'*_ssec_dev.hdf'
@@ -672,21 +678,21 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
 !IFF_noaa19_avhrr_nss_d20120929_t153700_e161100_c20140722185339.hdf
 
 ! --- Read data from the file name
-if (Iff_Viirs_Flag == sym%YES) then
+if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
   read(Infile(13:16), fmt="(I4)") year
   read(Infile(17:18), fmt="(I2)") month
   read(Infile(19:20), fmt="(I2)") day
   read(Infile(23:24), fmt="(I2)") start_hour
   read(Infile(25:26), fmt="(I2)") start_minute
   read(Infile(27:28), fmt="(I2)") start_sec
-elseif (Iff_Modis_Flag == sym%YES) then
+elseif (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
   read(Infile(14:17), fmt="(I4)") year
   read(Infile(18:19), fmt="(I2)") month
   read(Infile(20:21), fmt="(I2)") day
   read(Infile(24:25), fmt="(I2)") start_hour
   read(Infile(26:27), fmt="(I2)") start_minute
   read(Infile(28:29), fmt="(I2)") start_sec
-elseif (Iff_Avhrr_Flag == sym%YES) then
+elseif (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' ) then
   read(Infile(23:26), fmt="(I4)") year
   read(Infile(27:28), fmt="(I2)") month
   read(Infile(29:30), fmt="(I2)") day
@@ -730,29 +736,10 @@ endif
 end subroutine READ_IFF_DATE_TIME
 
 !----------------------------------------------------------------------
-!  Convert radiances based on channel 
-! from NASA standad (W m-2 um-1 sr-1) in IFF
-! to NOAA standard (mW/cm^2/cm^-1/str)
-!
-
-subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
-
- real (kind=real4), dimension(:,:,:), intent(inout):: radiance
- real (kind=real4), intent(in):: nu
- real (kind=real4), intent(in):: missing_value
-
- where(radiance /= missing_value)
-       radiance = radiance * (((10000.0 / nu )**2) / 10.0)
- end where
-
- return
-
-end subroutine CONVERT_RADIANCE
-
+!  public routine to deallocate output structure
+!  history: 11/14/2013 Denis B.
+! 
 !----------------------------------------------------------------------
-   !  public routine to deallocate output structure
-   !  history: 11/14/2013 Denis B.
-   ! 
    subroutine dealloc_iff_data_out ( this )
       class ( iff_data_out) :: this
       integer :: m

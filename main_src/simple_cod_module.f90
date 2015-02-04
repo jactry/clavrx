@@ -65,34 +65,29 @@ module SIMPLE_COD
          Line_Loop: do Line_Idx = 1, Number_Lines
 
             if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == 1) cycle
-            if (Solzen(Elem_Idx,Line_Idx) > SOLZEN_LIMIT) cycle
-            if (Chan_On_Flag_Default(1) == sym%NO)  cycle
+            if (Geo%Solzen(Elem_Idx,Line_Idx) > SOLZEN_LIMIT) cycle
+            if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  cycle
 
             Ref_Toa = ch(1)%Ref_Toa(Elem_Idx,Line_Idx) / 100.0
 
-            Solzen_Idx = int((Solzen(Elem_Idx,Line_Idx) - Solzen_Lut(1))/Solzen_Delta) + 1
+            Solzen_Idx = int((Geo%Solzen(Elem_Idx,Line_Idx) - Solzen_Lut(1))/Solzen_Delta) + 1
             Solzen_Idx = min(max(1,Solzen_Idx),Number_Solzen)
 
-            Senzen_Idx = int((Satzen(Elem_Idx,Line_Idx) - Senzen_Lut(1))/Senzen_Delta) + 1
+            Senzen_Idx = int((Geo%Satzen(Elem_Idx,Line_Idx) - Senzen_Lut(1))/Senzen_Delta) + 1
             Senzen_Idx = min(max(1,Senzen_Idx),Number_Senzen)
 
-            Relaz_Idx = int((Relaz(Elem_Idx,Line_Idx) - Relaz_Lut(1))/Relaz_Delta) + 1
+            Relaz_Idx = int((Geo%Relaz(Elem_Idx,Line_Idx) - Relaz_Lut(1))/Relaz_Delta) + 1
             Relaz_Idx = min(max(1,Relaz_Idx),Number_Relaz)
 
             Ref_Vector = Ref_Lut(:,Solzen_Idx,Senzen_Idx,Relaz_Idx)
-!print *, "in ret loop", Elem_Idx,Line_Idx, Ref_Toa
-!print *, "solzen ", Solzen(Elem_Idx,Line_Idx), Solzen_Idx
-!print *, "senzen ", Satzen(Elem_Idx,Line_Idx), Senzen_Idx
-!print *, "relaz ", Relaz(Elem_Idx,Line_Idx), Relaz_Idx
-!print *, "Ref_Vector = ", Ref_Vector
 
             !--- Account for surface reflection and atmospheric transmission
             Alb_Sfc = ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)
             if (Alb_Sfc < 0.0) then
-               Alb_Sfc = Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
+               Alb_Sfc = Ch1_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx))
             endif
-            if (Snow(Elem_Idx,Line_Idx) /=sym%NO_SNOW) then
-               Alb_Sfc = Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
+            if (Sfc%Snow(Elem_Idx,Line_Idx) /=sym%NO_SNOW) then
+               Alb_Sfc = Ch1_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx))
             endif
             Alb_Sfc = Alb_Sfc / 100.0
             Temp_Vector = Alb_Sfc / (1.0 - Alb_Sfc * Spherical_Albedo_Lut)

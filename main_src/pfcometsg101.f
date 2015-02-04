@@ -45,13 +45,13 @@ c       common/plnmsg/cwn(kb:ke),fk1(kb:ke),fk2(kb:ke),tc(nt,kb:ke)
         common/plnmsg/pbuf(lenp)
         dimension cbuf(lenc)
         character*16 cfile
-        character*72 ancil_data_path,pfast_path 
+        character*72 ancil_data_path,pfaast_path 
         
         cfile = 'metsecgenbnd.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
-c       print *, pfast_path
-        open(iuc,file=trim(pfast_path)//cfile,
+c       print *, pfaast_path
+        open(iuc,file=trim(pfaast_path)//cfile,
      +          recl=lencb,access='direct',status='old',
      +          err=100)
         irec=meteo-7

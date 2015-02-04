@@ -268,7 +268,6 @@
    call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
 
-   
    !----------------------------------------------------------------------------
    ! Initialize some flags
    !----------------------------------------------------------------------------
@@ -295,89 +294,22 @@
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
-   ! Marker: Open hgh spatial resolution ancillary data files
+   ! Marker: Open high spatial resolution ancillary data files
    !*************************************************************************
  
-   !------------------------------------------------------------------------------
-   !--- Read elevation data 
-   !------------------------------------------------------------------------------
-   if (Read_Surface_Elevation /= 0) then
-      call mesg  ( "Opening surface elevation file", level = verb_lev % VERBOSE)
-      Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
-     
-      !--- read in which elevation type that is specified.
-      if (Read_Surface_Elevation == 1) then
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
-                                      "GLOBE_1km_digelev.hdf", &
-                                      grid_Str=Surface_Elev_Str)
-      else ! low resolution, Read_Surface_Elevation = 2
-         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
-                                     "GLOBE_8km_digelev.hdf", &
-                                      grid_Str=Surface_Elev_Str)
-      end if
+   call OPEN_STATIC_ANCIL_FILES()
 
+   !-----------------------------------------------------------------------
+   !--- set up surface radiative properties 
+   !-----------------------------------------------------------------------
+   call SETUP_UMD_PROPS()
+ 
+   !--------------------------------------------------------------------
+   !--- setup clock corrections in memory
+   !--------------------------------------------------------------------
+   if (nav_opt== 2) then
+     call SETUP_CLOCK_CORRECTIONS()
    endif
-
-   !------------------------------------------------------------------
-   ! Open coast mask file
-   !------------------------------------------------------------------
-   if (Read_Coast_Mask == sym%YES) then
-      call mesg ( "Opening coast file", level = verb_lev % VERBOSE)
-      Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
-      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
-                                      "coast_mask_1km.hdf", &
-                                      grid_Str=Coast_Mask_Str)
-   end if
-
-   !------------------------------------------------------------------
-   ! Open land surface type file
-   !------------------------------------------------------------------
-   call mesg ( "Opening land surface type file", level = verb_lev % VERBOSE)
-   Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
-
-   if (Read_Hires_sfc_type == sym%YES) then
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                     "gl-latlong-1km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   else
-      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                     "gl-latlong-8km-landcover.hdf", &
-                                      grid_Str=Sfc_Type_Str)
-   end if
-
-   !------------------------------------------------------------------
-   ! Open land mask file
-   !------------------------------------------------------------------
-   if (Read_Land_Mask == sym%YES) then
-      call mesg  ( "Opening land mask file" ,level = verb_lev % VERBOSE )
-      Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
-      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                    "lw_geo_2001001_v03m.hdf", &
-                                     grid_Str=Land_Mask_Str)
-   end if
- 
-   !------------------------------------------------------------------
-   ! Open volcano mask file
-   !------------------------------------------------------------------
-   if (Read_Volcano_Mask == sym%YES) then
-      call mesg  ( "Opening volcano mask file",level = verb_lev % VERBOSE )
-      Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
-      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        "volcano_mask_1km.hdf", &
-                                        grid_Str=Volcano_Mask_Str)
-    end if
-
-    !-----------------------------------------------------------------------
-    !--- set up surface radiative properties 
-    !-----------------------------------------------------------------------
-    call SETUP_UMD_PROPS()
- 
-    !--------------------------------------------------------------------
-    !--- setup clock corrections in memory
-    !--------------------------------------------------------------------
-    if (nav_opt== 2) then
-      call SETUP_CLOCK_CORRECTIONS()
-    endif
 
    !**********************************************************************
    ! Marker: Read file directories in FILELIST
@@ -605,116 +537,24 @@
       !--- 5 km surface emiss
       !--------------------------------------------------------------------
       if (Use_Seebor == sym%YES) then
-         print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", month
-         call open_seebor_emiss(trim(Ancil_Data_Dir)//"static/sfc_data", month, Emiss_File_Id)
+         print *, EXE_PROMPT, "Reading in SeeBor Data for month = ", Month
+         call OPEN_SEEBOR_EMISS(trim(Ancil_Data_Dir)//"static/sfc_data", Month, Emiss_File_Id)
       end if
 
       !----------------------------------------------------------------------
-      ! Read in Modis White Sky Albedo Map appropriate for this day
+      ! Open Modis White Sky Albedo Map appropriate for this day
       !----------------------------------------------------------------------
       if (Modis_Clr_Alb_Flag == sym%YES) then
 
-         call mesg ("Opening Modis clear albedo map")
+         call MESG("Opening Modis clear albedo map")
+         call OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
 
-         !--- determine 16 day period and its string value
-         iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
-         write(Day_String,fmt="(i3.3)") iperiod16
-
-         !--- Open Modis white sky 0.66 um albedo
-         if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-            Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".0.659_x4.hdf"
-            Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
-            Modis_Alb_0_66_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        trim(Modis_White_Sky_0_66_Name), &
-                                        grid_Str=Modis_Alb_0_66_Str)
-         end if
-
-         !--- Open Modis white sky 0.86 um albedo
-         if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-            Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".0.858_x4.hdf"
-            Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
-            Modis_Alb_0_86_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        trim(Modis_White_Sky_0_86_Name), &
-                                        grid_Str=Modis_Alb_0_86_Str)
-         end if
-
-         !--- Open Modis white sky 1.24 um albedo
-         if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
-            Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".1.24_x4.hdf"
-            Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
-            Modis_Alb_1_24_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        trim(Modis_White_Sky_1_24_Name), &
-                                        grid_Str=Modis_Alb_1_24_Str)
-         end if
-
-         !--- Open Modis white sky 1.66 um albedo
-         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-            Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".1.64_x4.hdf"
-            Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
-            Modis_Alb_1_64_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        trim(Modis_White_Sky_1_64_Name), &
-                                        grid_Str=Modis_Alb_1_64_Str)
-         end if                                    
-
-         !--- Open Modis white sky 2.13 um albedo
-         if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
-            Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
-                                 Day_String//".2.13_x4.hdf"
-         Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
-         Modis_Alb_2_13_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
-                                        trim(Modis_White_Sky_2_13_Name), &
-                                        grid_Str=Modis_Alb_2_13_Str)
-         end if                                    
-
-      end if
-
+      endif
       !------------------------------------------------------------------
       ! Open Snow mask file
       !------------------------------------------------------------------
-      if (Read_Snow_Mask == sym%READ_SNOW_HIRES) then
+      call GET_SNOW_MASK()
 
-         Failed_Hires_Snow_Mask_Flag = sym%NO
-
-         Snow_Mask_Str%sds_Name = SNOW_MASK_SDS_NAME
-         Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
-                                                 trim(Snow_Data_Dir))
-         if (trim(Snow_Mask_File_Name) == "no_file") then
-            Failed_Hires_Snow_Mask_Flag = sym%YES
-            call mesg ( "WARNING: Could not find Snow mask file ==> "// &
-              Snow_Mask_File_Name, level = verb_lev % WARNING)
-         else
-            Snow_Mask_Id = OPEN_LAND_SFC_HDF(trim(Snow_Data_Dir), &
-                                      Snow_Mask_File_Name, &
-                                      grid_Str=Snow_Mask_Str)
-            if (Snow_Mask_Id > 0) then
-               Failed_Hires_Snow_Mask_Flag = sym%NO
-               print *, EXE_PROMPT, "Snow mask file opened successfully "
-            else
-               Failed_Hires_Snow_Mask_Flag = sym%YES
-               print *, EXE_PROMPT, "WARNING: Snow mask file open failed "
-            end if
-         end if
-      end if
-
-
-      IF (Read_Snow_Mask == sym%READ_SNOW_GLOB) THEN 
-         Failed_Glob_Snow_Mask_Flag = sym%NO
-
-         Snow_Mask_File_Name = GET_GLOBSNOW_FILENAME(Image%Start_Year,Image%Start_Doy, &
-                                                 trim(GlobSnow_Data_Dir))
-         if (trim(Snow_Mask_File_Name) == "no_file") THEN
-            Failed_Glob_Snow_Mask_Flag = sym%YES
-            call mesg ( "WARNING:  Could not find GlobSnow mask file, using NWP ", level = verb_lev % WARNING )
-         else
-            CALL READ_GLOBSNOW_ANALYSIS_MAP(trim(GlobSnow_Data_Dir)//Snow_Mask_File_Name)
-         end if
-
-      END IF
-    
       !*************************************************************************
       ! Marker:  READ IN NWP DATA
       !*************************************************************************
@@ -1006,142 +846,8 @@
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-            !--- surface emissivity
-            if (Use_Seebor == sym%YES) then
+            call MAP_ANCIL_DATA_TO_PIXEL_GRID()
 
-               !--- force channel 20 read
-               call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
-
-               do Chan_Idx = 21, 36
-                  if (Chan_Idx == 26) cycle
-                  if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
-                     call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
-                  endif
-               enddo
-            end if
-
-            !--- mandatory fields - check for substitution of Bad_Pixel for space 
-
-            !--- surface type
-            call READ_LAND_SFC_HDF(Sfc_Type_Id, Sfc_Type_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Sfc_Type)
-
-            !--- surface elevation
-            if (Read_Surface_Elevation /= 0) then
-
-               !--- read the high res data
-               call READ_LAND_SFC_HDF(Surface_Elev_Id, Surface_Elev_Str, Nav%Lat, Nav%Lon, Space_Mask, Two_Byte_Temp)
-
-               !---  convert to a real number
-               Sfc%Zsfc_Hires = real(two_byte_temp,kind=real4)
-               !--- values over water are missing, set to zero
-               where(Sfc%Zsfc_Hires == Missing_Value_Real4)
-                  Sfc%Zsfc_Hires = 0.0
-               end where
-
-            end if
-
-            !--- merge with nwp surface elevation
-            if (Nwp_Opt /= 0) then
-                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            endif
-
-            !--- read coast mask
-            if (Read_Coast_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
-            end if
-
-            !--- read land mask
-            if (Read_Land_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Land)
-            end if
-
-            !--- modify land class with ndvi if available (helps mitigate navigation errors)
-            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-
-            !--- read volcano mask
-            if (Read_Volcano_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
-            end if
-
-            !--- read Snow mask
-            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_Hires_Snow_Mask_Flag == sym%NO) then
-               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_Hires)
-            end if
-   
-            if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
-               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
-            end if
-   
-            !--- define binary land and coast masks (yes/no) from land and coast flags
-            call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
-
-            !---- ensure missing values for space scenes
-            where (Space_Mask == sym%YES) 
-               Sfc%Zsfc_Hires = Missing_Value_Real4
-               Sfc%Coast = Missing_Value_Int1
-               Sfc%Land = Missing_Value_Int1
-               Sfc%Snow_Hires = Missing_Value_Int1
-               Sfc%Snow_Glob = Missing_Value_Int1
-               Sfc%Volcano_Mask = Missing_Value_Int1
-               Sfc%Sfc_Type = Missing_Value_Int1
-            end where
-
-            !--- interpolate sst analyses to each pixel
-            if (Use_Sst_Anal == 1) then
-               
-               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-              
-            end if
-
-            !--- compute a coast mask relative to nwp data
-            if (Nwp_Opt /= 0) then
-               call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
-
-            !--- interpolate white sky albedoes to each pixel in segment
-            if (Modis_Clr_Alb_Flag == sym%YES) then
-               if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-                    if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-                     ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
-                                          ch(1)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-                  if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(2)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-                     ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
-                                          ch(2)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
-                  if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(5)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-                     ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
-                                          ch(5)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-                  if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(6)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-                     ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
-                                          ch(6)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
-                  if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
-                     allocate(ch(7)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-                     ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
-                                          ch(7)%Sfc_Ref_White_Sky)
-               endif
-            endif
- 
             !--- post process dark composite if one read in
             if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
                call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Sfc%Land)
@@ -1199,7 +905,8 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                !-- temporally interp skin temp for each segment (only ncep reanalysis)
                if (Nwp_Opt == 2) then
-                  call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment), Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
+                  call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment),  &
+                                Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
                end if
 
                !--- compute desired nwp parameters 
@@ -1243,13 +950,15 @@
 
                !--- apply median filter to Bt_Ch20
                call COMPUTE_MEDIAN_SEGMENT(ch(20)%Bt_Toa,Bad_Pixel_Mask, One, &
-                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
+                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+                              Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
                               Bt_Ch20_Median_3x3,  &
                               Bt_Ch20_Std_Median_3x3)
  
                !--- apply median filter to Ems_Ch20
                call COMPUTE_MEDIAN_SEGMENT(Ems_Ch20,Bad_Pixel_Mask, One, &
-                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment,Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
+                              1, Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+                              Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-One, &
                               Ems_Ch20_Median_3x3,  &
                               Ems_Ch20_Std_Median_3x3)
             end if
@@ -1259,22 +968,22 @@
                if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
                   call LOCAL_LINEAR_RADIATIVE_CENTER(sym%YES,sym%NO, &
-                                       LRC_Meander_Flag, &
-                                       ch(31)%Bt_Toa(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
-                                       1, &
-                                       Image%Number_Of_Elements, &
-                                       Line_Idx_Min_Segment,  &
-                                       Image%Number_Of_Lines_Read_This_Segment, &
-                                       Max_LRC_Distance,  &
-                                       Min_LRC_Jump,  &
-                                       Max_LRC_Jump,  &
-                                       Grad_Flag_LRC,  &
-                                       Missing_Value_Int4, &
-                                       Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
-                                       Min_Bt_11um_LRC,  &
-                                       Max_Bt_11um_LRC, &
-                                       I_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
-                                       J_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1))
+                                   LRC_Meander_Flag, &
+                                   ch(31)%Bt_Toa(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
+                                   1, &
+                                   Image%Number_Of_Elements, &
+                                   Line_Idx_Min_Segment,  &
+                                   Image%Number_Of_Lines_Read_This_Segment, &
+                                   Max_LRC_Distance,  &
+                                   Min_LRC_Jump,  &
+                                   Max_LRC_Jump,  &
+                                   Grad_Flag_LRC,  &
+                                   Missing_Value_Int4, &
+                                   Bad_Pixel_Mask(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
+                                   Min_Bt_11um_LRC,  &
+                                   Max_Bt_11um_LRC, &
+                                   I_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1), &
+                                   J_LRC(:,Line_Idx_Min_Segment:Image%Number_Of_Lines_Read_This_Segment-Line_Idx_Min_Segment+1))
                end if
             end if
 
@@ -1698,6 +1407,338 @@
  200   print *, EXE_PROMPT, "error reading PFAAST RTM coefficients, stopping"
 
 !*************************************************************************
-! Marker: End of code
+! Marker: End of main code
 !*************************************************************************
+
+contains
+
+!*************************************************************************
+! Marker: Begin of Subroutines
+!*************************************************************************
+
+!*************************************************************************
+! open modis white sky reflectance files 
+!*************************************************************************
+subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
+
+         !--- determine 16 day period and its string value
+         iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
+         write(Day_String,fmt="(i3.3)") iperiod16
+
+         !--- Open Modis white sky 0.66 um albedo
+         if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+            Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
+                                 Day_String//".0.659_x4.hdf"
+            Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
+            Modis_Alb_0_66_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        trim(Modis_White_Sky_0_66_Name), &
+                                        grid_Str=Modis_Alb_0_66_Str)
+         end if
+
+         !--- Open Modis white sky 0.86 um albedo
+         if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+            Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
+                                 Day_String//".0.858_x4.hdf"
+            Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
+            Modis_Alb_0_86_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        trim(Modis_White_Sky_0_86_Name), &
+                                        grid_Str=Modis_Alb_0_86_Str)
+         end if
+
+         !--- Open Modis white sky 1.24 um albedo
+         if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
+            Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
+                                 Day_String//".1.24_x4.hdf"
+            Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
+            Modis_Alb_1_24_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        trim(Modis_White_Sky_1_24_Name), &
+                                        grid_Str=Modis_Alb_1_24_Str)
+         end if
+
+         !--- Open Modis white sky 1.66 um albedo
+         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+            Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
+                                 Day_String//".1.64_x4.hdf"
+            Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
+            Modis_Alb_1_64_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        trim(Modis_White_Sky_1_64_Name), &
+                                        grid_Str=Modis_Alb_1_64_Str)
+         end if                                    
+
+         !--- Open Modis white sky 2.13 um albedo
+         if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
+            Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
+                                 Day_String//".2.13_x4.hdf"
+         Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
+         Modis_Alb_2_13_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        trim(Modis_White_Sky_2_13_Name), &
+                                        grid_Str=Modis_Alb_2_13_Str)
+         end if                                    
+
+  end subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES
+  !****************************************************************************
+  ! acquire the information for the snow classication from multiple sources
+  !****************************************************************************
+  subroutine GET_SNOW_MASK()
+
+      if (Read_Snow_Mask == sym%READ_SNOW_HIRES) then
+         Failed_Hires_Snow_Mask_Flag = sym%NO
+
+         Snow_Mask_Str%sds_Name = SNOW_MASK_SDS_NAME
+         Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
+                                                 trim(Snow_Data_Dir))
+         if (trim(Snow_Mask_File_Name) == "no_file") then
+            Failed_Hires_Snow_Mask_Flag = sym%YES
+            call mesg ( "WARNING: Could not find Snow mask file ==> "// &
+              Snow_Mask_File_Name, level = verb_lev % WARNING)
+         else
+            Snow_Mask_Id = OPEN_LAND_SFC_HDF(trim(Snow_Data_Dir), &
+                                      Snow_Mask_File_Name, &
+                                      grid_Str=Snow_Mask_Str)
+            if (Snow_Mask_Id > 0) then
+               Failed_Hires_Snow_Mask_Flag = sym%NO
+               print *, EXE_PROMPT, "Snow mask file opened successfully "
+            else
+               Failed_Hires_Snow_Mask_Flag = sym%YES
+               print *, EXE_PROMPT, "WARNING: Snow mask file open failed "
+            end if
+         end if
+      end if
+
+
+      if (Read_Snow_Mask == sym%READ_SNOW_GLOB) THEN 
+         Failed_Glob_Snow_Mask_Flag = sym%NO
+
+         Snow_Mask_File_Name = GET_GLOBSNOW_FILENAME(Image%Start_Year,Image%Start_Doy, &
+                                                 trim(GlobSnow_Data_Dir))
+         if (trim(Snow_Mask_File_Name) == "no_file") THEN
+            Failed_Glob_Snow_Mask_Flag = sym%YES
+            call mesg ( "WARNING:  Could not find GlobSnow mask file, using NWP ", level = verb_lev % WARNING )
+         else
+            CALL READ_GLOBSNOW_ANALYSIS_MAP(trim(GlobSnow_Data_Dir)//Snow_Mask_File_Name)
+         end if
+      endif
+
+  end subroutine GET_SNOW_MASK
+  !****************************************************************************
+  ! open the hdf files that hold ancillary data
+  !****************************************************************************
+  subroutine OPEN_STATIC_ANCIL_FILES()
+   !------------------------------------------------------------------------------
+   !--- Read elevation data 
+   !------------------------------------------------------------------------------
+   if (Read_Surface_Elevation /= 0) then
+      call mesg  ( "Opening surface elevation file", level = verb_lev % VERBOSE)
+      Surface_Elev_Str%sds_Name = SURFACE_ELEV_SDS_NAME
+     
+      !--- read in which elevation type that is specified.
+      if (Read_Surface_Elevation == 1) then
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
+                                      "GLOBE_1km_digelev.hdf", &
+                                      grid_Str=Surface_Elev_Str)
+      else ! low resolution, Read_Surface_Elevation = 2
+         Surface_Elev_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
+                                     "GLOBE_8km_digelev.hdf", &
+                                      grid_Str=Surface_Elev_Str)
+      end if
+
+   endif
+
+   !------------------------------------------------------------------
+   ! Open coast mask file
+   !------------------------------------------------------------------
+   if (Read_Coast_Mask == sym%YES) then
+      call mesg ( "Opening coast file", level = verb_lev % VERBOSE)
+      Coast_Mask_Str%sds_Name = COAST_MASK_SDS_NAME
+      Coast_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"static/sfc_data/", &
+                                      "coast_mask_1km.hdf", &
+                                      grid_Str=Coast_Mask_Str)
+   end if
+
+   !------------------------------------------------------------------
+   ! Open land surface type file
+   !------------------------------------------------------------------
+   call mesg ( "Opening land surface type file", level = verb_lev % VERBOSE)
+   Sfc_Type_Str%sds_Name = SFC_TYPE_SDS_NAME
+
+   if (Read_Hires_sfc_type == sym%YES) then
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                     "gl-latlong-1km-landcover.hdf", &
+                                      grid_Str=Sfc_Type_Str)
+   else
+      Sfc_Type_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                     "gl-latlong-8km-landcover.hdf", &
+                                      grid_Str=Sfc_Type_Str)
+   end if
+
+   !------------------------------------------------------------------
+   ! Open land mask file
+   !------------------------------------------------------------------
+   if (Read_Land_Mask == sym%YES) then
+      call mesg  ( "Opening land mask file" ,level = verb_lev % VERBOSE )
+      Land_Mask_Str%sds_Name = LAND_MASK_SDS_NAME
+      Land_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                    "lw_geo_2001001_v03m.hdf", &
+                                     grid_Str=Land_Mask_Str)
+   end if
+ 
+   !------------------------------------------------------------------
+   ! Open volcano mask file
+   !------------------------------------------------------------------
+   if (Read_Volcano_Mask == sym%YES) then
+      call mesg  ( "Opening volcano mask file",level = verb_lev % VERBOSE )
+      Volcano_Mask_Str%sds_Name = VOLCANO_MASK_SDS_NAME
+      Volcano_Mask_Id = OPEN_LAND_SFC_HDF(trim(Ancil_Data_Dir)//"/static/sfc_data/", &
+                                        "volcano_mask_1km.hdf", &
+                                        grid_Str=Volcano_Mask_Str)
+   end if
+
+  end subroutine OPEN_STATIC_ANCIL_FILES
+  !*******************************************************************************************************
+  ! Read in various ancillary data and map it to the pixel grid for each segment 
+  !*******************************************************************************************************
+  subroutine  MAP_ANCIL_DATA_TO_PIXEL_GRID()
+
+       !--- surface emissivity
+       if (Use_Seebor == sym%YES) then
+
+           !--- force channel 20 read
+           call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
+
+           do Chan_Idx = 21, 36
+               if (Chan_Idx == 26) cycle
+               if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+                 call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
+               endif
+           enddo
+        end if
+
+        !--- mandatory fields - check for substitution of Bad_Pixel for space 
+ 
+        !--- surface type
+        call READ_LAND_SFC_HDF(Sfc_Type_Id, Sfc_Type_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Sfc_Type)
+
+        !--- surface elevation
+        if (Read_Surface_Elevation /= 0) then
+
+               !--- read the high res data
+               call READ_LAND_SFC_HDF(Surface_Elev_Id, Surface_Elev_Str, Nav%Lat, Nav%Lon, Space_Mask, Two_Byte_Temp)
+
+               !---  convert to a real number
+               Sfc%Zsfc_Hires = real(two_byte_temp,kind=real4)
+               !--- values over water are missing, set to zero
+               where(Sfc%Zsfc_Hires == Missing_Value_Real4)
+                  Sfc%Zsfc_Hires = 0.0
+               end where
+
+            end if
+
+            !--- merge with nwp surface elevation
+            if (Nwp_Opt /= 0) then
+                call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            endif
+
+            !--- read coast mask
+            if (Read_Coast_Mask == sym%YES) then
+               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
+            end if
+
+            !--- read land mask
+            if (Read_Land_Mask == sym%YES) then
+               call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Land)
+            end if
+
+            !--- modify land class with ndvi if available (helps mitigate navigation errors)
+            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+
+            !--- read volcano mask
+            if (Read_Volcano_Mask == sym%YES) then
+               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
+            end if
+
+            !--- read Snow mask
+            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_Hires_Snow_Mask_Flag == sym%NO) then
+               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_Hires)
+            end if
+   
+            if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
+               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
+            end if
+   
+            !--- define binary land and coast masks (yes/no) from land and coast flags
+            call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
+
+            !---- ensure missing values for space scenes
+            where (Space_Mask == sym%YES) 
+               Sfc%Zsfc_Hires = Missing_Value_Real4
+               Sfc%Coast = Missing_Value_Int1
+               Sfc%Land = Missing_Value_Int1
+               Sfc%Snow_Hires = Missing_Value_Int1
+               Sfc%Snow_Glob = Missing_Value_Int1
+               Sfc%Volcano_Mask = Missing_Value_Int1
+               Sfc%Sfc_Type = Missing_Value_Int1
+            end where
+
+            !--- interpolate sst analyses to each pixel
+            if (Use_Sst_Anal == 1) then
+               
+               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+              
+            end if
+
+            !--- compute a coast mask relative to nwp data
+            if (Nwp_Opt /= 0) then
+               call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            end if
+
+            !--- interpolate white sky albedoes to each pixel in segment
+            if (Modis_Clr_Alb_Flag == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+                    if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
+                     allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                  endif
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
+                                          ch(1)%Sfc_Ref_White_Sky)
+               endif
+               if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+                  if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
+                     allocate(ch(2)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                  endif
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
+                                          ch(2)%Sfc_Ref_White_Sky)
+               endif
+               if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
+                  if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
+                     allocate(ch(5)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                  endif
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
+                                          ch(5)%Sfc_Ref_White_Sky)
+               endif
+               if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+                  if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
+                     allocate(ch(6)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                  endif
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
+                                          ch(6)%Sfc_Ref_White_Sky)
+               endif
+               if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
+                  if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
+                     allocate(ch(7)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                  endif
+                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
+                                          ch(7)%Sfc_Ref_White_Sky)
+               endif
+            endif
+
+    end subroutine  MAP_ANCIL_DATA_TO_PIXEL_GRID
+
+!******************************************************************************
+! End of Code
+!******************************************************************************
+
  end program PROCESS_CLAVRX

@@ -110,10 +110,10 @@ program nlcomp_one_pixel_run
 	   print*
    end if
    
-   ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/luts/cld/'
-   ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-   if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-   if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+   ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
+   ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
+   if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
+   if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
    
    call nlcomp_algorithm ( obs , obs_u , alb_sfc , alb_sfc_u , state_apr , air_trans_ac &
                               & , lun_zen, sat_zen , rel_azi , cld_temp , water_phase &

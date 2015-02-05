@@ -223,6 +223,7 @@ contains
          if ( is_solar_channel ) then
             attr_name = trim(config % varname(i_chn))//'/cprime'
             call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), cprime )
+            allocate ( ahi % chn(i_chn) % ref (config % h5_count(1),config % h5_count(2)))
             ahi % chn(i_chn) % ref =100. *  ahi % chn(i_chn) % rad * cprime
          end if
         

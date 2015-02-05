@@ -216,7 +216,7 @@ contains
          end where
          
          is_solar_channel = .false.
-         if ( i_chn < 7 ) is_solar_channel = .true.
+         if ( i_chn <= 7 ) is_solar_channel = .true.
          if ( is_solar_channel ) then
             attr_name = trim(config % varname(i_chn))//'/cprime'
             call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), cprime )

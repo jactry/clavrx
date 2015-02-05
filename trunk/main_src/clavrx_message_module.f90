@@ -42,7 +42,7 @@ end type verbose_type
 type (verbose_type ) , save :: verb_lev 
 
 
-character(len = *) , parameter :: PROMPT = 'CLAVR-x>>'
+character(len = *) , parameter :: PROMPT = 'CLAVR-x >'
 integer :: VERBOSE_LEVEL = 5  ! from quiet (0) to verbose(10)
 
 public :: mesg
@@ -75,7 +75,7 @@ contains
       
       if ( message_level <= verbose_level ) then
          
-         print*, text 
+         print*,PROMPT,' ', text 
         
          ! switch off color because of deifferent bahvor for different shells. (AW 2015/02/05)   
         ! print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      

@@ -74,7 +74,11 @@ contains
    
       
       if ( message_level <= verbose_level ) then
-         print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
+         print*, ' < =========      ===========> "
+         print*, text 
+         print*
+         ! switch off color because of deifferent bahvor for different shells. (AW 2015/02/05)   
+        ! print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it

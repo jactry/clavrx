@@ -315,9 +315,7 @@ module SENSOR_MODULE
               call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MODIS')
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('GOES-IL-IMAGER','GOES-MP-IMAGER','AHI')
-            print*,trim(Sensor%Instr_Const_File)
-            print*,'AHI =====>   WRITE READ_AHI_CONSTANTS ROTUINE '
+         case('GOES-IL-IMAGER','GOES-MP-IMAGER')
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')
               call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -329,6 +327,8 @@ module SENSOR_MODULE
               call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('COMS-IMAGER')
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('AHI')
+              call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('VIIRS')
 #ifdef HDF5LIBS 
               call READ_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))

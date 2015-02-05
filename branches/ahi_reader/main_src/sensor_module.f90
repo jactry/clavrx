@@ -78,6 +78,7 @@ module SENSOR_MODULE
    public:: READ_LEVEL1B_DATA 
    public:: OUTPUT_SENSOR_TO_SCREEN
    public:: OUTPUT_IMAGE_TO_SCREEN
+   private:: READ_AHI_INSTR_CONSTANTS
 
    character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier
@@ -1350,6 +1351,53 @@ module SENSOR_MODULE
       end if
 
    end subroutine READ_LEVEL1B_DATA
+
+
+!----------------------------------------------------------------
+! read the AHI constants into memory
+!-----------------------------------------------------------------
+subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
+ character(len=*), intent(in):: Instr_Const_file
+ integer:: ios0, erstat
+ integer:: Instr_Const_lun
+
+ Instr_Const_lun = GET_LUN()
+
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+
+ print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_file)
+ erstat = 0
+ if (ios0 /= 0) then
+    erstat = 19
+    print *, EXE_PROMPT, MODULE_PROMPT, "Error opening AHI constants file, ios0 = ", ios0
+    stop 19
+ endif
+
+  read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20 ! Band 7
+  !Note AHI has a 6.2 (Band 8), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27 !Band 9
+  read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28,nu_28 !Band 10
+  read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29 !Band 11
+  read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30,nu_30 !Band 12
+  !NOTE AHI as a 10.4 (Band 13), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
+  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
+  read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
+  read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43 !Band 8
+  read(unit=Instr_Const_lun,fmt=*) a1_44, a2_44,nu_44 !Band 13
+  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
+  close(unit=Instr_Const_lun)
+
+  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+end subroutine READ_AHI_INSTR_CONSTANTS
+
+
+
 
 
 end module SENSOR_MODULE

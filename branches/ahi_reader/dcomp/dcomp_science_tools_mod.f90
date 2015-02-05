@@ -128,7 +128,9 @@ contains
 	case('COMS-1')
       solar = 4.8461549
       ew = 306.29122
-         
+    case('AHI')! faked
+      solar = 4.8461549
+      ew = 306.29122     
    case default
       print*,'missing sensor calibration'
 	  print*, 'add to get_rad_refl_factor.f90'
@@ -312,7 +314,10 @@ end function get_rad_refl_factor
          nu_20 = 2675.0265
 	      a1_20 = -2.2829416
 	      a2_20 = 1.0037865   
-    
+    case('AHI')  ! faked
+         nu_20 = 2675.0265
+	      a1_20 = -2.2829416
+	      a2_20 = 1.0037865   
 	  
       case default
          print*,'missing sensor calibration for sensor ', sensor

@@ -39,13 +39,14 @@ contains
       integer :: i_chn
       logical :: is_solar_channel(16)
       integer :: modis_chn
-      
+      integer :: i
+       print*,'entering ahi read routines!!  WELCOME'
       print*,'AHI-TODO=> clean ahi_clavrx_bridge.f90 code'
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 43 ,  27 , 28  &
                , 29 , 30 , 44 , 31 , 32 , 33 ]
       
       is_solar_channel(7:16) = .false.
-      is_solar_channel(1:7) = .true.
+      is_solar_channel(1:6) = .true.
       print*,'ereache the right bridge!!'
       
       ahi_c % file_base = file_ch01
@@ -80,7 +81,7 @@ contains
    
    do i_chn = 1, NUM_CHN_AHI
       modis_chn = modis_chn_list (i_chn)
-         print*,i_chn,modis_chn
+         
       if ( .not. ahi_data % chn ( i_chn ) % is_read ) then
             sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = SYM_NO 
             cycle   
@@ -95,21 +96,32 @@ contains
       else
         ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
        !call compute_bt_array ( ch(modis_chn)%bt_toa , ch(modis_chn)%rad_toa , modis_chn , missing_value_real4 )
-        print*,'AHI:  =====> TODO: Add bt computations in ahi_clavrx_bridge.f90 !! Check if sensor is correctly set etc..'
+       
       end if   
       
    end do
+    print*,'AHI:  =====> TODO: Add bt computations in ahi_clavrx_bridge.f90 !! Check if sensor is correctly set etc..'
    
+   Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
+    do i = 1, Image%Number_Of_Lines_Per_Segment
+         scan_number(i) = y_start + i - 1
+      end do
+      
+    nav % ascend = 0 
+    Cloud_Mask_Aux_Read_Flag = 0 
+     call ahi_data % deallocate_all
+  ! print*, '==> ',ahi_data % chn(1) % is_read
+  ! print*, 'example REFLECTANCE [0-100] channel 7 (3.9um):',ahi_data % chn(7) % ref (2750,190:199)
+  ! print*
+  ! print*, 'example REFLECTANCE [0-100] channel 3:',ahi_data % chn(3) % ref (2750,190:199)
+  ! print*
+  ! print*, 'example RADIANCE:',ahi_data % chn(3) % rad (2750,190:199)
    
-   print*, '==> ',ahi_data % chn(1) % is_read
-   print*, 'example REFLECTANCE [0-100] channel 7 (3.9um):',ahi_data % chn(7) % ref (2750,190:199)
-   print*
-   print*, 'example REFLECTANCE [0-100] channel 3:',ahi_data % chn(3) % ref (2750,190:199)
-   print*
-   print*, 'example RADIANCE:',ahi_data % chn(3) % rad (2750,190:199)
-   
-   print*,'example LON:',ahi_data % geo % lon (2750,190:199)
-      stop
+  ! print*,'example LON:',ahi_data % geo % lon (2750,190:199)
+  !    stop
+  
+  
+  print*,'leaving ahi read routines!!'
    end subroutine read_ahi_data
 
 end module ahi_clavrx_bridge

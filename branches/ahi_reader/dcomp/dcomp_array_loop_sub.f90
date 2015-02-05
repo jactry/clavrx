@@ -2,7 +2,7 @@
 !
 !  HISTORY: 06/05/2014: changed filename for better naming convebtion
 !
-!
+!           02/05/2014 : add AHI (AW)
 subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
    use dcomp_retrieval_mod
@@ -176,7 +176,9 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       case(171)
          sensor_name = 'MTSAT-1R'
       case (172)
-         sensor_name = 'MTSAT-2'  
+         sensor_name = 'MTSAT-2'
+      case (173)
+         sensor_name = 'AHI'     
       case (200:204)
          write(sensor_name, "('NOAA-',i2.2)") input % sensor_wmo_id - 192 
       case (205:209)

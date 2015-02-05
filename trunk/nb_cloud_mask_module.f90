@@ -628,7 +628,7 @@ module NB_CLOUD_MASK
           Cld_Flags(9) = Forward_Scattering_Flag;   Cld_Flag_Bit_Depth(9) = 1
           Cld_Flags(10) = Cold_Scene_375um_Flag ;   Cld_Flag_Bit_Depth(10) = 1
           Cld_Flags(11) = Cold_Scene_Btd_Flag  ;    Cld_Flag_Bit_Depth(11) = 1
-          Cld_Flags(12) = Spare_Value          ;    Cld_Flag_Bit_Depth(12) = 1
+          Cld_Flags(12) = Oceanic_Glint_Flag   ;    Cld_Flag_Bit_Depth(12) = 1
           Cld_Flags(13) = Spare_Value          ;    Cld_Flag_Bit_Depth(13) = 1
           Cld_Flags(14) = Spare_Value          ;    Cld_Flag_Bit_Depth(14) = 1
           Cld_Flags(15) = Spare_Value          ;    Cld_Flag_Bit_Depth(15) = 1

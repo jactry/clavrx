@@ -251,9 +251,9 @@ contains
       deallocate (  this % geo % is_space  )
       
       do i_chn = 1 ,16
-         if allocated (  this  % chn(i_chn) % rad ) deallocate (this  % chn(i_chn) % rad)
-         if allocated (  this  % chn(i_chn) % bt ) deallocate (this  % chn(i_chn) % bt)
-         if allocated (  this  % chn(i_chn) % ref ) deallocate (this  % chn(i_chn) % ref)
+         if (allocated (  this  % chn(i_chn) % rad )) deallocate (this  % chn(i_chn) % rad)
+         if (allocated (  this  % chn(i_chn) % bt ) ) deallocate (this  % chn(i_chn) % bt)
+         if (allocated (  this  % chn(i_chn) % ref )) deallocate (this  % chn(i_chn) % ref)
       end do
    
    

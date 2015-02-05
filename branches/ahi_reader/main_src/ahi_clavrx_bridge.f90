@@ -23,7 +23,7 @@ module ahi_clavrx_bridge
 contains
 
    subroutine read_ahi_data ( segment_number ,  file_ch01 , error_out )
-   
+      use planck
       use cx_read_ahi_mod
       implicit none
       integer , intent(in) :: segment_number
@@ -40,6 +40,7 @@ contains
       logical :: is_solar_channel(16)
       integer :: modis_chn
       integer :: i
+     ! real, parameter :: MISSING_VALUE_REAL4 = -999.
        print*,'entering ahi read routines!!  WELCOME'
       print*,'AHI-TODO=> clean ahi_clavrx_bridge.f90 code'
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 43 ,  27 , 28  &
@@ -47,7 +48,7 @@ contains
       
       is_solar_channel(7:16) = .false.
       is_solar_channel(1:6) = .true.
-      print*,'ereache the right bridge!!'
+      print*,'reache the AHI bridge!!'
       
       ahi_c % file_base = file_ch01
    ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) == 1
@@ -94,9 +95,17 @@ contains
          ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
          
       else
+         
+         if ( modis_chn > 36 ) then
+            print*,'channel AHI, MODIS: ',i_chn,modis_chn
+            print*,'AHI TODO: New Channels 43 and 44 not working for Planck and anything!!'
+            cycle
+         end if
         ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
-       !call compute_bt_array ( ch(modis_chn)%bt_toa , ch(modis_chn)%rad_toa , modis_chn , missing_value_real4 )
-       
+       call compute_bt_array ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) , ch(modis_chn)%rad_toa ( : ,1:c_seg_lines) &
+                , modis_chn ,MISSING_VALUE_REAL4 )
+        print*,'BT ', modis_chn, ch(modis_chn)%bt_toa (2750,190:199)
+        
       end if   
       
    end do
@@ -104,7 +113,7 @@ contains
    
    Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
     do i = 1, Image%Number_Of_Lines_Per_Segment
-         scan_number(i) = y_start + i - 1
+         scan_number(i) = y_start + i 
       end do
       
     nav % ascend = 0 
@@ -118,6 +127,7 @@ contains
   ! print*, 'example RADIANCE:',ahi_data % chn(3) % rad (2750,190:199)
    
   ! print*,'example LON:',ahi_data % geo % lon (2750,190:199)
+ 
   !    stop
   
   

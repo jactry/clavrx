@@ -63,6 +63,7 @@ module SENSOR_MODULE
        , READ_VIIRS_DATA &
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
+    use AHI_CLAVRX_BRIDGE    
 #endif
 
    use clavrx_message_module
@@ -143,6 +144,24 @@ module SENSOR_MODULE
 #endif
 
       end if 
+      
+      !----------------------------------------------
+      ! for IFF take time and set some constants
+      ! could be VIIRS, MODIS AVHRR sensor
+      !----------------------------------------------
+      if (index(Sensor%Sensor_Name,'AHI') > 0) then
+         print* , ' ========================================================================>'
+         print*,' TIME FOR AHI IS ONLY FAKED,, WRITE ROUTINE IN SENSOR_MODULE'
+         print*
+         Image%Start_Year = 2015
+         Image%End_Year = 2015
+         Image%Start_Doy = 25
+         Image%End_Doy = 25
+         Image%Start_Time = 150000.
+         Image%End_Time = 150000.
+
+      endif
+      
 
       !----------------------------------------------
       ! for IFF take time and set some constants
@@ -296,7 +315,8 @@ module SENSOR_MODULE
               call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MODIS')
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('GOES-IL-IMAGER','GOES-MP-IMAGER')
+         case('GOES-IL-IMAGER','GOES-MP-IMAGER','AHI')
+            print*,trim(Sensor%Instr_Const_File)
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')
               call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -426,11 +446,13 @@ module SENSOR_MODULE
       !-------------------------------------------------------------------------
       Ierror = sym%NO
       ifound = sym%NO
+      
+      print*,'=============================='
 
       test_loop: do while (ifound == sym%NO)
       
       !--- HIMAWARI-8 AHI Test
-      if (index(Image%Level1b_Name, 'HIM8') > 0) then
+      if (index(Image%Level1b_Name, 'HS_H08') > 0) then
         Sensor%Sensor_Name = 'AHI'
         Sensor%Platform_Name = 'HIM8'
         Sensor%Spatial_Resolution_Meters = 2000
@@ -441,6 +463,8 @@ module SENSOR_MODULE
         Sensor%Geo_Sub_Satellite_Latitude = 0.0
         exit test_loop
       endif
+      
+      print*,'hallo', sensor%sensor_name
 
       !--- MODIS Test
       if (index(Image%Level1b_Name, 'MYD021KM') > 0) then
@@ -1112,6 +1136,11 @@ module SENSOR_MODULE
          Image%Number_Of_Elements =  11
          Image%Number_Of_Lines = 2030
       endif
+      
+      if ( trim(Sensor%Sensor_Name) == 'AHI') then
+         Image%Number_Of_Elements =  5500
+         Image%Number_Of_Lines = 5500
+      end if
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
          Image%Number_Of_Elements = 3200
@@ -1303,6 +1332,11 @@ module SENSOR_MODULE
          print *, "No HDF5 library installed, stopping"
          stop
 #endif
+      end if
+      
+      if ( trim(sensor%sensor_name ) == 'AHI' ) then
+         call READ_AHI_DATA (Segment_Number ,trim (Image%level1b_name), ierror_level1b )
+      
       end if
 
       !--- IFF data (all sensors same format)

@@ -423,6 +423,7 @@
       end if
 
       if (Image%Number_Of_Lines <= 0) then
+         print*,' File dimesnions were not set correctly for this sensor ', sensor%sensor_name
          cycle file_loop    
       end if
   

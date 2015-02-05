@@ -63,7 +63,6 @@
 	      lencf=lengcf(l)
 
            iuc(l)=get_lun() !akh
-           print *, trim(pfaast_path)//cfile
            open(iuc(l),file=trim(pfaast_path)//cfile,recl=lencf,
      +             access='direct', status='old',err=200)
 

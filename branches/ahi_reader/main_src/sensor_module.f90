@@ -317,6 +317,7 @@ module SENSOR_MODULE
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IL-IMAGER','GOES-MP-IMAGER','AHI')
             print*,trim(Sensor%Instr_Const_File)
+            print*,'AHI =====>   WRITE READ_AHI_CONSTANTS ROTUINE '
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')
               call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -464,7 +465,7 @@ module SENSOR_MODULE
         exit test_loop
       endif
       
-      print*,'hallo', sensor%sensor_name
+      
 
       !--- MODIS Test
       if (index(Image%Level1b_Name, 'MYD021KM') > 0) then

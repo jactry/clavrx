@@ -54,15 +54,16 @@
 	data init/1/,tlas/nl*0./,wlas/nl*0./,olas/nl*0./,zlas/-999./
 	secant(z)=1./cos(0.01745329*z)
 
-        pfaast_path = trim(ancil_data_path)//"static/pfaast/" !akh
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/" !akh        
 
 	if(init.ne.0) then
-	   read(clbl,*) lbl
+!	   read(clbl,*) lbl
 	   do l=1,nk
 	      cfile(4:6)=comp(l)
 	      lencf=lengcf(l)
 
            iuc(l)=get_lun() !akh
+           print *, trim(pfaast_path)//cfile
            open(iuc(l),file=trim(pfaast_path)//cfile,recl=lencf,
      +             access='direct', status='old',err=200)
 

@@ -74,7 +74,7 @@ contains
    
       
       if ( message_level <= verbose_level ) then
-         print*, ' < =========      ===========> "
+         print*, ' < =========      ===========> '
          print*, text 
          print*
          ! switch off color because of deifferent bahvor for different shells. (AW 2015/02/05)   

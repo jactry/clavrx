@@ -195,6 +195,7 @@ contains
          
          !print*,'Read in AHI FIle > ', trim(config % filename ( i_chn ))
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ), config % h5_offset,config % h5_count, i2d_buffer )
+         allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
          
                ! - fortran does not support unsigned integer
          buffer_fake_i4 = i2d_buffer
@@ -209,11 +210,13 @@ contains
          attr_name = trim(config % varname(i_chn))//'/_FillValue'
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), fillvalue )
          if ( fillvalue < 0 ) fillvalue = fillvalue + 65536
-
+         allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
+          
           ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
          where ( buffer_fake_i4 == fillvalue )
             ahi % chn(i_chn) % rad = -999.
          end where
+         deallocate ( buffer_fake_i4 )
          
          is_solar_channel = .false.
          if ( i_chn < 7 ) is_solar_channel = .true.
@@ -232,7 +235,7 @@ contains
    
    subroutine deallocate_all (this )
       class ( ahi_data_out_type ) :: this
-      
+      integer :: i_chn
       if (allocated ( this % geo % lon)) deallocate ( this % geo % lon) 
       if (allocated ( this % geo % lat)) deallocate ( this % geo % lat) 
       
@@ -245,6 +248,12 @@ contains
       deallocate (  this % geo % glintzen   )
       deallocate (  this % geo % scatangle   )
       deallocate (  this % geo % is_space  )
+      
+      do i_chn = 1 ,16
+         if allocated (  this  % chn(i_chn) % rad ) deallocate (this  % chn(i_chn) % rad)
+         if allocated (  this  % chn(i_chn) % bt ) deallocate (this  % chn(i_chn) % bt)
+         if allocated (  this  % chn(i_chn) % ref ) deallocate (this  % chn(i_chn) % ref)
+      end do
    
    
    end subroutine deallocate_all

@@ -155,7 +155,7 @@ contains
       ahi % geo % is_space = .true.
       
       
-      print*,config %h5_count,config %h5_offset
+      
       
       do jj =+1 , config % h5_count(2)
      

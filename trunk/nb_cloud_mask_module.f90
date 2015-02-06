@@ -28,7 +28,7 @@
 ! 9            1            9         2    forward scattering
 ! 10           1            10        2    cold scene 375
 ! 11           1            11        2    cold scene btd
-! 12           1            12        2    blank
+! 12           1            12        2    glint
 ! 13           1            13        2    smoke detected
 ! 14           1            14        2    dust  detected
 ! 15           1            15        2    shadow detected

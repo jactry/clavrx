@@ -144,16 +144,11 @@ contains
       ! - update time
       call ahi_data % time_start_obj % get_date ( msec_of_day = Image%Start_Time  )
       call ahi_data % time_end_obj % get_date ( msec_of_day = Image%End_Time  )     
-      
-     
+           
       scan_time(1:c_seg_lines)   = Image%Start_Time + &
                                  ( scan_number * (Image%End_Time - Image%Start_Time)) &
                                  / Image%Number_Of_Lines
       
-      !scan_time(1:c_seg_lines)   = ahi_data % geo % scan_time                                           
-                                     
-      
-     
       call ahi_data % deallocate_all
  
  

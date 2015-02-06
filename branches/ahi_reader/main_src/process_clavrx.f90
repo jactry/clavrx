@@ -1013,7 +1013,7 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-            cld_flag = 0
+           
             if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()

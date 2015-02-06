@@ -61,8 +61,12 @@ contains
    ahi_c % data_path = trim(Image%Level1b_Path)
    
    y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment
-   c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 &
-      , Image%Number_Of_Lines )  - y_start  + 1
+   c_seg_lines = Image%Number_Of_Lines_Per_Segment
+   
+   if ( (c_seg_lines + y_start) > Image%Number_Of_Lines ) then
+      c_seg_lines = Image%Number_Of_Lines - y_start   
+   end if
+ 
    ahi_c % h5_offset = [0,y_start]
    ahi_c % h5_count = [Image%Number_Of_Elements  , c_seg_lines] 
    

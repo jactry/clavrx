@@ -154,6 +154,9 @@ contains
       ahi % geo % scatangle    =   -999.
       ahi % geo % is_space = .true.
       
+      
+      print*,config %h5_count,config %h5_offset
+      
       do jj =+1 , config % h5_count(2)
      
          do ii =1 ,   config % h5_count(1)
@@ -175,14 +178,12 @@ contains
             
             ahi % geo % relaz(ii,jj) = relative_azimuth (ahi % geo % solaz (ii,jj) , ahi % geo % sataz (ii,jj))
            
-            ahi % geo % glintzen(ii,jj) = glint_angle (ahi % geo % solzen (ii,jj) ,ahi % geo % satzen (ii,jj),  ahi % geo % relaz(ii,jj) )
-            
-            
+            ahi % geo % glintzen(ii,jj) = glint_angle (ahi % geo % solzen (ii,jj) ,ahi % geo % satzen (ii,jj) &
+                  ,  ahi % geo % relaz(ii,jj) )
            
-            ahi % geo % scatangle(ii,jj) = scattering_angle ( ahi % geo % solzen (ii,jj) , ahi % geo % satzen (ii,jj), ahi % geo % relaz(ii,jj))
-             
-            
-          
+            ahi % geo % scatangle(ii,jj) = scattering_angle ( ahi % geo % solzen (ii,jj)  &
+                  , ahi % geo % satzen (ii,jj), ahi % geo % relaz(ii,jj))
+  
          end do
       end do   
       
@@ -200,7 +201,8 @@ contains
          
          
          !print*,'Read in AHI FIle > ', trim(config % filename ( i_chn ))
-         call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ), config % h5_offset,config % h5_count, i2d_buffer )
+         call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
+               , config % h5_offset,config % h5_count, i2d_buffer )
          allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
          
                ! - fortran does not support unsigned integer
@@ -222,7 +224,7 @@ contains
          where ( buffer_fake_i4 == fillvalue )
             ahi % chn(i_chn) % rad = -999.
          end where
-         deallocate ( buffer_fake_i4 )
+         if (allocated ( buffer_fake_i4 ) )  deallocate ( buffer_fake_i4 )
          
          is_solar_channel = .false.
          if ( i_chn < 7 ) is_solar_channel = .true.

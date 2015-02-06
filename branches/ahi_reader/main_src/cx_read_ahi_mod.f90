@@ -118,6 +118,8 @@ contains
    real(8) :: latx, lonx
    real(8) :: fargc
    integer :: ii,jj
+   integer :: x_full_disk
+   integer :: y_full_disk
    
    real :: GEO_ALTITUDE = 35786.0 !km
       ! - executable
@@ -157,11 +159,13 @@ contains
       
       
       
-      do jj =+1 , config % h5_count(2)
-     
+      do jj = 1 , config % h5_count(2)     
          do ii =1 ,   config % h5_count(1)
-           
-            call fgf_to_earth ( 3, dble(ii), dble(jj) , cfac, coff, lfac, loff, sub_lon &
+            
+            x_full_disk = ii + config % h5_offset(1)
+            y_full_disk = jj + config % h5_offset(2)
+            
+            call fgf_to_earth ( 3, dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
            
             ahi % geo % lat (ii,jj) = latx  

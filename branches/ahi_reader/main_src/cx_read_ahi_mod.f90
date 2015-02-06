@@ -2,7 +2,7 @@
 !
 !   This module reads ahi files
 !
-!
+! -----------
 
 module cx_read_ahi_mod
    
@@ -36,6 +36,7 @@ module cx_read_ahi_mod
       real , dimension (:,:) , allocatable :: scatangle
       real , dimension (:)   , allocatable :: scan_time
       logical, dimension (:,:), allocatable :: is_space
+      
    end type  geo_str
    
    type, public :: ahi_data_out_type
@@ -44,12 +45,15 @@ module cx_read_ahi_mod
       
       contains
       procedure :: deallocate_all
+      procedure :: allocate_geo
    end type ahi_data_out_type
    
   
   !             
 contains
-
+   !
+   !
+   !
    subroutine get_ahi_data ( config , out )
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: out
@@ -97,9 +101,9 @@ contains
       
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: ahi
-      real :: lat ,lon
+     
       integer :: status
-      real , pointer :: rad(:,:)          
+           
       integer(kind = 2), dimension ( : , : ) , pointer :: i2d_buffer
       integer:: i_chn
       character (len=120) :: sds_name , attr_name
@@ -109,56 +113,52 @@ contains
      
       real ( 8 ) :: cprime 
       logical :: is_solar_channel = .false.
-         real(8) :: xx , yy
-   real (8) :: cfac
-   real (8):: coff
-   real (8) :: lfac
-   real (8) :: loff
-   real(8) :: sub_lon , sub_lat  
-   real(8) :: latx, lonx
-   real(8) :: fargc
-   integer :: ii,jj
-   integer :: x_full_disk
-   integer :: y_full_disk
+         
+      real (8) :: cfac
+      real (8):: coff
+      real (8) :: lfac
+      real (8) :: loff
+      real(8) :: sub_lon , sub_lat  
+      real(8) :: latx, lonx
+      real(8) :: fargc
+      integer :: ii,jj
+      integer :: x_full_disk
+      integer :: y_full_disk
    
-   real :: GEO_ALTITUDE = 35786.0 !km
+      real :: GEO_ALTITUDE = 35786.0 !km
+      
+      integer :: VALID_PROJECTION = 7
       ! - executable
       
       ! - navigation
       
-       xx=2300.
-   yy=2500.
-   cfac = 20466276.
-   coff = 2750.
-   lfac = 20466276.
-   loff = 2750.
-   sub_lon =  140.70
-   sub_lat = 0.
+     
+      cfac = 20466276.
+      coff = 2750.
+      lfac = 20466276.
+      loff = 2750.
+      sub_lon =  140.70
+      sub_lat = 0.
       
-      allocate (  ahi % geo % lon  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % lat  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % solzen  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % solaz  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % satzen  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % sataz  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % relaz  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % glintzen  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % scatangle  (config % h5_count(1),config % h5_count(2)) )
-      allocate (  ahi % geo % is_space (config % h5_count(1),config % h5_count(2)) )
-      ahi % geo % lon          =   -999.
-      ahi % geo % lat      =   -999.
-      ahi % geo % solzen      =   -999.
-      ahi % geo % solaz      =   -999.
-      ahi % geo % satzen      =   -999.
-      ahi % geo % sataz      =   -999.
-      ahi % geo % relaz      =   -999.
-      ahi % geo % glintzen     =   -999.
-      ahi % geo % scatangle    =   -999.
-      ahi % geo % is_space = .true.
+      ! - read in the constants fom file
       
+     
       
-      
-      
+      attr_name = trim('Projection/CFAC')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), CFAC )
+      attr_name = trim('Projection/LFAC')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), LFAC )
+      attr_name = trim('Projection/COFF')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), COFF )
+      attr_name = trim('Projection/LOFF')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), LOFF )
+      attr_name = trim('Projection/latitude_of_projection_origin')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), sub_lat )
+      attr_name = trim('Projection/longitude_of_projection_origin')
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), sub_lon )
+
+      call ahi % allocate_geo (config % h5_count(1),config % h5_count(2)) 
+
       do jj = 1 , config % h5_count(2)     
          do ii =1 ,   config % h5_count(1)
             
@@ -174,8 +174,7 @@ contains
             if ( lonx == -999. ) cycle
             
             call  possol (123 ,  2.4  , real(lonx) , real(latx),ahi % geo % solzen (ii,jj),ahi % geo % solaz (ii,jj) )
-            
-            
+                        
             ahi % geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
              
             ahi % geo % sataz (ii,jj) = sensor_azimuth (  real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
@@ -191,7 +190,7 @@ contains
          end do
       end do   
       
-      where ( ahi % geo % lat .gt. -299.0)
+      where ( ahi % geo % lat == -999.0)
          ahi % geo % is_space = .false.
       end where
          
@@ -245,8 +244,43 @@ contains
       end do
  
    end subroutine read_ahi_level1b
+   !
+   !
+   !
+   subroutine allocate_geo ( this, nx , ny )
+      class ( ahi_data_out_type ) :: this
+      integer, intent(in) :: nx 
+      integer, intent(in) :: ny
+      
+      call this % deallocate_all 
+          
+      allocate (  this % geo % lon        (nx , ny) )
+      allocate (  this % geo % lat        (nx , ny) )
+      allocate (  this % geo % solzen     (nx , ny) )
+      allocate (  this % geo % solaz      (nx , ny) )
+      allocate (  this % geo % satzen     (nx , ny) )
+      allocate (  this % geo % sataz      (nx , ny) )
+      allocate (  this % geo % relaz      (nx , ny) )
+      allocate (  this % geo % glintzen   (nx , ny) )
+      allocate (  this % geo % scatangle  (nx , ny) )
+      allocate (  this % geo % is_space   (nx , ny) )
+      
+      this % geo % lon        =   -999.
+      this % geo % lat        =   -999.
+      this % geo % solzen     =   -999.
+      this % geo % solaz      =   -999.
+      this % geo % satzen     =   -999.
+      this % geo % sataz      =   -999.
+      this % geo % relaz      =   -999.
+      this % geo % glintzen   =   -999.
+      this % geo % scatangle  =   -999.
+      this % geo % is_space = .true.
+      
    
-   
+   end subroutine allocate_geo
+   !
+   !
+   !
    subroutine deallocate_all (this )
       class ( ahi_data_out_type ) :: this
       integer :: i_chn
@@ -254,14 +288,14 @@ contains
       if (allocated ( this % geo % lat)) deallocate ( this % geo % lat) 
       
            
-      deallocate (  this % geo % solzen   )
-      deallocate (  this % geo % solaz   )
-      deallocate (  this % geo % satzen  )
-      deallocate (  this % geo % sataz  )
-      deallocate (  this % geo % relaz   )
-      deallocate (  this % geo % glintzen   )
-      deallocate (  this % geo % scatangle   )
-      deallocate (  this % geo % is_space  )
+      if ( allocated  (  this % geo % solzen   ) ) deallocate (  this % geo % solzen   )
+      if ( allocated  (  this % geo % solaz      ) ) deallocate (  this % geo % solaz   )
+      if ( allocated  (  this % geo % satzen     ) ) deallocate (  this % geo % satzen  )
+      if ( allocated  (  this % geo % sataz     ) ) deallocate (  this % geo % sataz  )
+      if ( allocated  (  this % geo % relaz      ) ) deallocate (  this % geo % relaz   )
+      if ( allocated  (  this % geo % glintzen    ) ) deallocate (  this % geo % glintzen   )
+      if ( allocated  (  this % geo % scatangle   ) ) deallocate (  this % geo % scatangle   )
+      if ( allocated  (  this % geo % is_space    ) ) deallocate (  this % geo % is_space  )
       
       do i_chn = 1 ,16
          if (allocated (  this  % chn(i_chn) % rad )) deallocate (this  % chn(i_chn) % rad)

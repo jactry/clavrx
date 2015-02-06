@@ -14,6 +14,7 @@
 !           readhdf5dataset
 !           string_functions
 !           viewing_geometry_module
+!           date_tools_mod
 !     SUBROUTINES
 !      fgf_to_earth ( c-routine )
 !
@@ -59,14 +60,14 @@
 
 module cx_read_ahi_mod
    
-   use date_tools_mod 
+   use date_tools_mod, only : &
+      date_type 
    
    implicit none  
    private
    public :: get_ahi_data
-   
-   
-   
+   public :: ahi_time_from_filename
+
    integer, parameter :: NUM_CHN = 16
    
    type, public :: ahi_config_type
@@ -122,7 +123,8 @@ contains
       logical, optional, intent(in) :: only_nav
       
       call set_filenames ( config )
-      call set_times ( config % file_base , out  )
+      call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
+      
       call read_navigation ( config , out )
       
       if ( .not. present ( only_nav )) then
@@ -133,30 +135,29 @@ contains
    ! --------------------------------------------------------------------------------------
    !
    ! --------------------------------------------------------------------------------------
-   subroutine set_times ( file_base , out )
+   subroutine ahi_time_from_filename ( file_base , time0,time1 )
       character ( len = * ) :: file_base 
-      type ( ahi_data_out_type ) :: out
+      type ( date_type) :: time0, time1
       
       integer :: year
       integer :: month
       integer :: day
       integer :: hour
       integer :: minute
-      
-      
+   
       read(file_base(8:11), fmt="(I4)") year
       read(file_base(12:13), fmt="(I2)") month
       read(file_base(14:15), fmt="(I2)") day
       read(file_base(17:18), fmt="(I2)") hour
       read(file_base(19:20), fmt="(I2)") minute
       
-      call out % time_start_obj % set_date ( &
+      call time0 % set_date ( &
             year , month, day , hour, minute &
             )
       
-      out % time_end_obj = out % time_start_obj
+      time1 = time0
       
-      call out % time_end_obj % add_time ( minute = 8)
+      call time1 % add_time ( minute = 8)
        
    end
    
@@ -189,8 +190,17 @@ contains
    !
    ! --------------------------------------------------------------------------------------
    subroutine read_navigation ( config, ahi )  
-      use viewing_geometry_module
-      use readh5dataset
+      
+      use viewing_geometry_module, only: &
+            possol &
+         , sensor_zenith &
+         , sensor_azimuth &
+         , relative_azimuth &
+         , glint_angle &
+         , scattering_angle
+         
+      use readh5dataset, only: &
+         h5readattribute 
       
       implicit none
       
@@ -292,7 +302,9 @@ contains
    ! --------------------------------------------------------------------------------------
    subroutine read_ahi_level1b ( config, ahi )
    
-      use readh5dataset
+      use readh5dataset , only: &
+         h5readattribute  &
+         , h5readdataset
       
       
       implicit none
@@ -320,18 +332,18 @@ contains
        
          if ( .not. config % chan_on ( i_chn ) ) cycle
          
-         
-         !print*,'Read in AHI FIle > ', trim(config % filename ( i_chn ))
+         ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
                , config % h5_offset,config % h5_count, i2d_buffer )
          allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
          
-               ! - fortran does not support unsigned integer
+         ! - fortran does not support unsigned integer
          buffer_fake_i4 = i2d_buffer
          where ( buffer_fake_i4 < 0 )
             buffer_fake_i4 = buffer_fake_i4 + 65536
          end where
          
+         !- variable attributes
          attr_name = trim(config % varname(i_chn))//'/scale_factor'
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), scale_factor )
          attr_name = trim(config % varname(i_chn))//'/add_offset'
@@ -339,16 +351,20 @@ contains
          attr_name = trim(config % varname(i_chn))//'/_FillValue'
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), fillvalue )
          if ( fillvalue < 0 ) fillvalue = fillvalue + 65536
+         
+         
          allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
           
-          ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
+         ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
          where ( buffer_fake_i4 == fillvalue )
             ahi % chn(i_chn) % rad = -999.
          end where
+         
          if (allocated ( buffer_fake_i4 ) )  deallocate ( buffer_fake_i4 )
          
          is_solar_channel = .false.
          if ( i_chn < 7 ) is_solar_channel = .true.
+         
          if ( is_solar_channel ) then
             attr_name = trim(config % varname(i_chn))//'/cprime'
             call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), cprime )

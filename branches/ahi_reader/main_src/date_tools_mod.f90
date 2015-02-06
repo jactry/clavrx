@@ -18,6 +18,7 @@ module date_tools_mod
       integer :: second = 0
       integer :: dayOfYear
       real :: hour_frac
+      integer :: msec_of_day
       character(6) :: yymmdd
       character(8) :: yymmddhh
       real (kind = r15) :: julday
@@ -40,6 +41,7 @@ module date_tools_mod
    
    end type date_type
    
+  
 contains   
    ! --
    subroutine set_date (this , year , month, day, hour ,minute, second)
@@ -60,10 +62,11 @@ contains
    !
    !
    !
-   subroutine get_date ( this , year , month, day, hour ,minute, second, doy , hour_frac)
+   subroutine get_date ( this , year , month, day, hour ,minute, second, doy , hour_frac, msec_of_day)
       class ( date_type) :: this
       integer , optional :: year , month ,day, hour , minute, second, doy
       real, optional :: hour_frac
+      integer, optional :: msec_of_day
       
       if ( present(year) )  year = this % year
       if ( present(month) ) month = this % month 
@@ -73,8 +76,11 @@ contains
       if ( present ( second ) ) second = this % second 
       if ( present ( doy ) ) doy = this % dayOfYear
       if ( present ( hour_frac )) hour_frac = this % hour_frac
+      if ( present ( msec_of_day )) msec_of_day = this % msec_of_day
    
    end subroutine get_date
+   
+   
    
    !
    !
@@ -221,9 +227,12 @@ contains
       this % minute = int((60)  &
              * ((24. * ( this % julday - int(this % julday) )) - this % hour))
       this % hour_frac = this % hour + this % minute / 60.
-      
+     
+      this % msec_of_day =  60* 60* 1000 * this % hour &
+                           + 60* 1000 * this % minute &
+                           + 1000 * this % second
                            
-   
+  
    end subroutine update_from_jd
    
    

@@ -63,7 +63,10 @@ module SENSOR_MODULE
        , READ_VIIRS_DATA &
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
-    use AHI_CLAVRX_BRIDGE    
+    use AHI_CLAVRX_BRIDGE 
+    
+    
+       
 #endif
 
    use clavrx_message_module
@@ -95,6 +98,13 @@ module SENSOR_MODULE
    !   Determine date and time of the data and store in image structure
    !==============================================================================
    subroutine SET_DATA_DATE_AND_TIME(AREAstr)
+      
+      
+      use DATE_TOOLS_MOD
+      use CX_READ_AHI_MOD, only: &
+         ahi_time_from_filename
+      
+      type ( date_type ) :: time0_obj, time1_obj
 
       type (AREA_STRUCT), intent(in) :: AREAstr
 
@@ -109,7 +119,7 @@ module SENSOR_MODULE
       integer(kind=int4):: Hour
       integer(kind=int4):: Minute
       integer(kind=int4):: Second
-
+      integer :: year, doy
       !----------------------------------------------
       ! for AVHRR, this is read in with level-1b data
       !----------------------------------------------
@@ -151,15 +161,21 @@ module SENSOR_MODULE
       ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'AHI') > 0) then
-         print* , ' ========================================================================>'
-         print*,' TIME FOR AHI IS ONLY FAKED,, WRITE ROUTINE IN SENSOR_MODULE'
-         print*
-         Image%Start_Year = 2015
-         Image%End_Year = 2015
-         Image%Start_Doy = 25
-         Image%End_Doy = 25
-         Image%Start_Time = 150000.
-         Image%End_Time = 150000.
+         
+         
+         call ahi_time_from_filename ( trim(Image%Level1b_Name) , time0_obj, time1_obj )
+         
+         
+         call time0_obj % get_date ( year =  year &
+                               , doy = doy  &
+                               , msec_of_day = Image%Start_Time  )
+         
+         call time1_obj % get_date ( msec_of_day = Image%End_Time  )                                                
+         Image%Start_Year  = year
+         Image%Start_Doy   = doy   
+         Image%End_Year  = year
+         Image%End_Doy   = doy  
+         
 
       endif
       

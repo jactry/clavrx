@@ -37,8 +37,6 @@ module ahi_clavrx_bridge
 
 contains
 
-
-
    subroutine read_ahi_data ( segment_number ,  file_ch01 , error_out )
       use planck
       use cx_read_ahi_mod
@@ -62,6 +60,7 @@ contains
       
       integer :: modis_chn
       integer :: i_line
+      
      
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 43 ,  27 , 28  &
                , 29 , 30 , 44 , 31 , 32 , 33 ]
@@ -94,8 +93,9 @@ contains
   
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon
-  
-      !scan_time(1:c_seg_lines)   = ahi_data % geo % scan_time
+      
+      
+      
       geo % sataz(:,1:c_seg_lines)        = ahi_data % geo % sataz
       geo % satzen(:,1:c_seg_lines)       = ahi_data % geo % satzen
       geo % solaz (:,1:c_seg_lines)       = ahi_data % geo % solaz 
@@ -139,6 +139,21 @@ contains
       nav % ascend = 0 
       Cloud_Mask_Aux_Read_Flag = 0 
       
+     
+      
+      ! - update time
+      call ahi_data % time_start_obj % get_date ( msec_of_day = Image%Start_Time  )
+      call ahi_data % time_end_obj % get_date ( msec_of_day = Image%End_Time  )     
+      
+     
+      scan_time(1:c_seg_lines)   = Image%Start_Time + &
+                                 ( scan_number * (Image%End_Time - Image%Start_Time)) &
+                                 / Image%Number_Of_Lines
+      
+      !scan_time(1:c_seg_lines)   = ahi_data % geo % scan_time                                           
+                                     
+      
+     
       call ahi_data % deallocate_all
  
  

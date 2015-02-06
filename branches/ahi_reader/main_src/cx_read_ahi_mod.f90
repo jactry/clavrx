@@ -154,42 +154,48 @@ contains
       ahi % geo % scatangle    =   -999.
       ahi % geo % is_space = .true.
       
-      do jj =config % h5_offset(2)+1 ,  config % h5_offset(2) + config % h5_count(2)
+      do jj =+1 , config % h5_count(2)
      
-         do ii =config % h5_offset(1)+1 ,  config % h5_offset(1) + config % h5_count(1)
-            
+         do ii =1 ,   config % h5_count(1)
+           
             call fgf_to_earth ( 3, dble(ii), dble(jj) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
-            
+           
             ahi % geo % lat (ii,jj) = latx  
             ahi % geo % lon (ii,jj) = lonx  
-           
+            
             if ( lonx == -999. ) cycle
             
             call  possol (123 ,  2.4  , real(lonx) , real(latx),ahi % geo % solzen (ii,jj),ahi % geo % solaz (ii,jj) )
             
             
             ahi % geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
-            
+             
             ahi % geo % sataz (ii,jj) = sensor_azimuth (  real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
             
             ahi % geo % relaz(ii,jj) = relative_azimuth (ahi % geo % solaz (ii,jj) , ahi % geo % sataz (ii,jj))
            
             ahi % geo % glintzen(ii,jj) = glint_angle (ahi % geo % solzen (ii,jj) ,ahi % geo % satzen (ii,jj),  ahi % geo % relaz(ii,jj) )
             
+            
+           
             ahi % geo % scatangle(ii,jj) = scattering_angle ( ahi % geo % solzen (ii,jj) , ahi % geo % satzen (ii,jj), ahi % geo % relaz(ii,jj))
              
-            ahi % geo % is_space(ii,jj) = .false.
+            
           
          end do
       end do   
+      
+      where ( ahi % geo % lat .gt. -299.0)
+         ahi % geo % is_space = .false.
+      end where
          
    
-      
+     
       
       ! - channel data read 
       do i_chn = 1 ,16
-         
+       
          if ( .not. config % chan_on ( i_chn ) ) cycle
          
          
@@ -228,6 +234,7 @@ contains
          end if
         
          ahi % chn(i_chn) % is_read = .true.
+         i2d_buffer => null()
          
       end do
  

@@ -55,7 +55,7 @@
 	secant(z)=1./cos(0.01745329*z)
 
         pfaast_path = trim(ancil_data_path)//"static/pfaast/" !akh        
-
+clbl=70
 	if(init.ne.0) then
 !	   read(clbl,*) lbl
 	   do l=1,nk

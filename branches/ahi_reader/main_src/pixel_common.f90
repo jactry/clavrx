@@ -1027,7 +1027,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
 
   integer:: idx
 
-  do idx = 1,42
+  do idx = 1,nchan_clavrx
       if (allocated(Ch(idx)%Rad_Toa)) deallocate(Ch(idx)%Rad_Toa)
       if (allocated(Ch(idx)%Bt_Toa)) deallocate(Ch(idx)%Bt_Toa)
       if (allocated(Ch(idx)%Rad_Toa_Clear)) deallocate(Ch(idx)%Rad_Toa_Clear)
@@ -1280,6 +1280,8 @@ subroutine CREATE_GEO_ARRAYS(dim1,dim2)
     allocate (Geo%Cossolzen(dim1,dim2))
     allocate (Geo%Scatangle(dim1,dim2))
     allocate (Geo%Airmass(dim1,dim2))
+ 
+    
     if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
            allocate(Geo%Lunzen(dim1,dim2))
            allocate(Geo%Lunaz(dim1,dim2))

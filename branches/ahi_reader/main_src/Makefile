@@ -189,6 +189,7 @@ clavrxorb_objs = process_clavrx.o \
                  ahi_clavrx_bridge.o \
                  cx_read_ahi_mod.o \
                  string_functions.o \
+                 date_tools_mod.o \
                  geos_transform_pix.o
 
 #Level2b routines
@@ -306,7 +307,7 @@ pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
-cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o
@@ -317,6 +318,7 @@ cgms_nav.o: cgms_nav.f90
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
+date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o constant.o file_utility.o avhrr_module.o
@@ -384,7 +386,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o \
+              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \

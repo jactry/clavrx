@@ -336,20 +336,22 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
                        Zsfc_Nwp(Lon_Nwp_Idx_x,Lat_Nwp_Idx_x), &
                        Lon_Nwp_fac(Elem_Idx,Line_Idx), &
                        Lat_Nwp_fac(Elem_Idx,Line_Idx))
-         
+        
+          Zsfc_Nwp_Pix = 1000.0 * Zsfc_Nwp_Pix   !now in meters
+ 
           !--- compute the near surface lapse rate (K/m) 
           Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
                               - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                             (Z_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
                             - Z_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx))
-         else
+        else
           Delta_Lapse_Rate = 0
-         endif
+        endif
 
-         !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
-         Delta_Zsfc = Sfc%Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
-         Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
-         Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
+        !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
+        Delta_Zsfc = Sfc%Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
+        Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
+        Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
 
      endif
 

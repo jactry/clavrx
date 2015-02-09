@@ -159,7 +159,7 @@ contains
       
       call time1 % add_time ( minute = 8)
        
-   end
+   end subroutine ahi_time_from_filename
    
    ! --------------------------------------------------------------------------------------
    !
@@ -184,7 +184,7 @@ contains
          
       end do
 
-   end subroutine 
+   end subroutine set_filenames
 
    ! --------------------------------------------------------------------------------------
    !

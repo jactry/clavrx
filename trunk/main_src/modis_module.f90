@@ -561,7 +561,8 @@ subroutine READ_MODIS_LEVEL1B_GEOLOCATION(path,file_name,  &
       real(kind=real4):: dtime_dline
       integer(kind=int4):: iend
 
-
+      integer(kind=int4), parameter:: time_last_gran_start = 86100000
+      integer(kind=int4), parameter:: time_last_gran_end   = 86400000 
 
       Status_Flag = 0
       Error_Status = 0
@@ -667,7 +668,13 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       end where
 
       !---- compute time
-      dtime_dline = (time_ms_end - time_ms_start) / (Image%Number_Of_Lines-1)
+      if (time_ms_end .eq. 0 .and. time_ms_start .eq. time_last_gran_start) then
+      ! end time of last granule is adjusted from 0 so time increment is positive
+         dtime_dline = (time_ms_end + time_last_gran_end - time_ms_start) / (Image%Number_Of_Lines-1) 
+      else
+         dtime_dline = (time_ms_end - time_ms_start) / (Image%Number_Of_Lines-1)
+      endif
+
       do iline = 1,ny_local_temp
         scan_number(iline) = ny_start + iline - 1
         time_ms(iline) = int(float(iline - 1 + ny_start-1)*dtime_dline) + time_ms_start 

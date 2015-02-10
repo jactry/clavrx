@@ -498,6 +498,11 @@ Istatus = sfend(sd_Id_2)
 !--- fix GFS bug in RH
 call FIX_GFS_RH()
 
+!--- Convert Zsfc_Nwp to meters
+where (Zsfc_Nwp /= Missing_Nwp)
+  Zsfc_Nwp = Zsfc_Nwp * 1000.0
+end where
+
 !--- Convert Z_Prof_Nwp to meters
 where (Z_Prof_Nwp /= Missing_Nwp)
   Z_Prof_Nwp = Z_Prof_Nwp * 1000.0

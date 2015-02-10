@@ -237,7 +237,7 @@ contains
 
         if ((P_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0) .or. &
             (T_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0) .or. &
-            (Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 10.0) .or. &
+            (Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 10000.0) .or. &
             (Psfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 1500.0) .or. &
             (Tmpsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 400.0) .or. &
             (Tmpsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0)) then
@@ -337,8 +337,6 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
                        Lon_Nwp_fac(Elem_Idx,Line_Idx), &
                        Lat_Nwp_fac(Elem_Idx,Line_Idx))
         
-          Zsfc_Nwp_Pix = 1000.0 * Zsfc_Nwp_Pix   !now in meters
- 
           !--- compute the near surface lapse rate (K/m) 
           Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
                               - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &

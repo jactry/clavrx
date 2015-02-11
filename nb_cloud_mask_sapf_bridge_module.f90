@@ -323,7 +323,7 @@ contains
                                    Ref_Ch1_Stddev_3X3)
 
 
-   CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn7BT, Bt_Ch31_Mean_3x3, &
+   CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn7BT, Bt_Ch20_Mean_3x3, &
                                    Bt_Ch20_Max_3x3, Bt_Ch20_Min_3x3, &
                                    Bt_Ch20_Stddev_3x3)
 

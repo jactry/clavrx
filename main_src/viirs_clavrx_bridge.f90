@@ -260,7 +260,7 @@ contains
       
       end do 
     
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. size(out % dnb_mgrid % rad) > 0) then
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. size(out % dnb_mgrid % rad) > 1) then
          ch(42)%rad_toa( : ,1:c_seg_lines)  = out % dnb_mgrid % rad
          geo % lunzen( : ,1:c_seg_lines) = out % geo % lunzen
          geo % lunaz( : ,1:c_seg_lines) = out % geo % lunaz

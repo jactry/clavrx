@@ -322,13 +322,14 @@
 !
 ! This routine comes from the 6S RTM http://6s.ltdri.org/
 !----------------------------------------------------------------------
- subroutine POSSOL(jday,tu,xlon,xlat,asol,phis)
-  integer, intent(in):: jday 
-  real, intent(in):: tu,xlon,xlat
-  real, intent(out):: asol, phis
-  real:: tsm, xlo, xla, xj, a1, a2, et, tsv, ah, a3, delta, amuzero, elev, &
+   subroutine POSSOL(jday,tu,xlon,xlat,asol,phis)
+   implicit none
+   integer, intent(in):: jday 
+   real, intent(in):: tu,xlon,xlat
+   real, intent(out):: asol, phis
+   real:: tsm, xlo, xla, xj, a1, a2, et, tsv, ah, a3, delta, amuzero, elev, &
          az, caz, azim, pi2
-  real, parameter:: pi = 3.14159265,DTOR = pi / 180.0
+ ! real, parameter:: pi = 3.14159265,DTOR = pi / 180.0
 !
 ! solar position (zenithal angle asol, azimuthal angle phi
 ! in degrees
@@ -392,6 +393,8 @@
 !
 ! conversion in degrees
 !
+      
+     
       elev = elev / DTOR
       asol = 90.0 - elev
       phis = azim / DTOR

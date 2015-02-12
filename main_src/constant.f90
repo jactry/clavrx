@@ -67,7 +67,7 @@ module CONSTANTS
 
   !--- channel numbers
   integer, parameter, public:: Nchan_Avhrr = 6
-  integer, parameter, public:: Nchan_Clavrx = 42 
+  integer, parameter, public:: Nchan_Clavrx = 44 
 
   !--- maximum number of cloud mask tests - used to dimension arrays
   integer, parameter, public:: Max_Num_Cld_Tests = 32

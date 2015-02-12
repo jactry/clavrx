@@ -1,7 +1,7 @@
-        subroutine ahi_transm(ancil_data_path,temp,wvmr,ozmr,
+        subroutine abi_transm(ancil_data_path,temp,wvmr,ozmr,
      +                        theta,kban, taut,*)
 C
-C - THIS IS A COPY OF ABI_TRANSM.F BUT USES AHI COEFFS
+C - CLAVR-x version - does abi and ahi
 C
 c * GOES-ABI: dry/wet/ozo transmittance at 101 AIRS levels
 c .... version of 23.02.04
@@ -42,7 +42,7 @@ c           * = error return in case of coefficient-file I/O trouble
         dimension tavg(nm),wamt(nm),oamt(nm),secz(nm)
         dimension tauc(nl),tlas(nl),wlas(nl),olas(nl)
         dimension xdry(nxd,nm),xozo(nxo,nm),xcon(nxc,nm),xwet(nxw,nm)
-        character*14 cfile/'ahixxx101.dat'/
+        character*14 cfile/'abixxx101.dat'/
         character*72 ancil_data_path,pfaast_path
         character*3 comp(nk)/'dry','ozo','wco','wtl','wts'/
         integer*4 iuc(nk)/11,12,13,14,15/

@@ -423,6 +423,7 @@
       end if
 
       if (Image%Number_Of_Lines <= 0) then
+         print*,' File dimesnions were not set correctly for this sensor ', sensor%sensor_name
          cycle file_loop    
       end if
   
@@ -1012,6 +1013,7 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
+           
             if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1289,7 +1291,7 @@
       call mesg ( "Finished Processing All Orbital Segments")
       call mesg ( " ")
 
-
+   
       !*************************************************************************
       !   Marker: Close output pixel-level files
       !*************************************************************************
@@ -1367,7 +1369,7 @@
       !*************************************************************************
  
    end do File_Loop
-
+print*,'end file loop'
    !*************************************************************************
    ! Marker: Close FILELIST
    !*************************************************************************

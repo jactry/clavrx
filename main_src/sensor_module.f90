@@ -63,6 +63,10 @@ module SENSOR_MODULE
        , READ_VIIRS_DATA &
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
+    use AHI_CLAVRX_BRIDGE 
+    
+    
+       
 #endif
 
    use clavrx_message_module
@@ -77,6 +81,7 @@ module SENSOR_MODULE
    public:: READ_LEVEL1B_DATA 
    public:: OUTPUT_SENSOR_TO_SCREEN
    public:: OUTPUT_IMAGE_TO_SCREEN
+   private:: READ_AHI_INSTR_CONSTANTS
 
    character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier
@@ -93,6 +98,13 @@ module SENSOR_MODULE
    !   Determine date and time of the data and store in image structure
    !==============================================================================
    subroutine SET_DATA_DATE_AND_TIME(AREAstr)
+      
+      
+      use DATE_TOOLS_MOD
+      use CX_READ_AHI_MOD, only: &
+         ahi_time_from_filename
+      
+      type ( date_type ) :: time0_obj, time1_obj
 
       type (AREA_STRUCT), intent(in) :: AREAstr
 
@@ -107,7 +119,7 @@ module SENSOR_MODULE
       integer(kind=int4):: Hour
       integer(kind=int4):: Minute
       integer(kind=int4):: Second
-
+      integer :: year, doy
       !----------------------------------------------
       ! for AVHRR, this is read in with level-1b data
       !----------------------------------------------
@@ -143,6 +155,30 @@ module SENSOR_MODULE
 #endif
 
       end if 
+      
+      !----------------------------------------------
+      ! for IFF take time and set some constants
+      ! could be VIIRS, MODIS AVHRR sensor
+      !----------------------------------------------
+      if (index(Sensor%Sensor_Name,'AHI') > 0) then
+         
+         
+         call ahi_time_from_filename ( trim(Image%Level1b_Name) , time0_obj, time1_obj )
+         
+         
+         call time0_obj % get_date ( year =  year &
+                               , doy = doy  &
+                               , msec_of_day = Image%Start_Time  )
+         
+         call time1_obj % get_date ( msec_of_day = Image%End_Time  )                                                
+         Image%Start_Year  = year
+         Image%Start_Doy   = doy   
+         Image%End_Year  = year
+         Image%End_Doy   = doy  
+         
+
+      endif
+      
 
       !----------------------------------------------
       ! for IFF take time and set some constants
@@ -308,6 +344,8 @@ module SENSOR_MODULE
               call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('COMS-IMAGER')
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('AHI')
+              call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('VIIRS')
 #ifdef HDF5LIBS 
               call READ_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -426,11 +464,13 @@ module SENSOR_MODULE
       !-------------------------------------------------------------------------
       Ierror = sym%NO
       ifound = sym%NO
+      
+      print*,'=============================='
 
       test_loop: do while (ifound == sym%NO)
       
       !--- HIMAWARI-8 AHI Test
-      if (index(Image%Level1b_Name, 'HIM8') > 0) then
+      if (index(Image%Level1b_Name, 'HS_H08') > 0) then
         Sensor%Sensor_Name = 'AHI'
         Sensor%Platform_Name = 'HIM8'
         Sensor%Spatial_Resolution_Meters = 2000
@@ -441,6 +481,8 @@ module SENSOR_MODULE
         Sensor%Geo_Sub_Satellite_Latitude = 0.0
         exit test_loop
       endif
+      
+      
 
       !--- MODIS Test
       if (index(Image%Level1b_Name, 'MYD021KM') > 0) then
@@ -1112,6 +1154,11 @@ module SENSOR_MODULE
          Image%Number_Of_Elements =  11
          Image%Number_Of_Lines = 2030
       endif
+      
+      if ( trim(Sensor%Sensor_Name) == 'AHI') then
+         Image%Number_Of_Elements =  5500
+         Image%Number_Of_Lines = 5500
+      end if
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
          Image%Number_Of_Elements = 3200
@@ -1304,6 +1351,11 @@ module SENSOR_MODULE
          stop
 #endif
       end if
+      
+      if ( trim(sensor%sensor_name ) == 'AHI' ) then
+         call READ_AHI_DATA (Segment_Number ,trim (Image%level1b_name), ierror_level1b )
+      
+      end if
 
       !--- IFF data (all sensors same format)
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
@@ -1315,6 +1367,53 @@ module SENSOR_MODULE
       end if
 
    end subroutine READ_LEVEL1B_DATA
+
+
+!----------------------------------------------------------------
+! read the AHI constants into memory
+!-----------------------------------------------------------------
+subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
+ character(len=*), intent(in):: Instr_Const_file
+ integer:: ios0, erstat
+ integer:: Instr_Const_lun
+
+ Instr_Const_lun = GET_LUN()
+
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+
+ print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_file)
+ erstat = 0
+ if (ios0 /= 0) then
+    erstat = 19
+    print *, EXE_PROMPT, MODULE_PROMPT, "Error opening AHI constants file, ios0 = ", ios0
+    stop 19
+ endif
+
+  read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20 ! Band 7
+  !Note AHI has a 6.2 (Band 8), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27 !Band 9
+  read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28,nu_28 !Band 10
+  read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29 !Band 11
+  read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30,nu_30 !Band 12
+  !NOTE AHI as a 10.4 (Band 13), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
+  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
+  read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
+  read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43 !Band 8
+  read(unit=Instr_Const_lun,fmt=*) a1_44, a2_44,nu_44 !Band 13
+  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
+  close(unit=Instr_Const_lun)
+
+  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+end subroutine READ_AHI_INSTR_CONSTANTS
+
+
+
 
 
 end module SENSOR_MODULE

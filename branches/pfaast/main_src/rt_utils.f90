@@ -142,7 +142,8 @@ module RT_UTILITIES
       , T_Std_Rtm &
       , Wvmr_Std_Rtm &
       , Ozmr_Std_Rtm 
-
+    use cx_pfaast_mod,only: &
+      compute_transmission_pfaast
    implicit none
    
    private:: EMISSIVITY, &
@@ -200,7 +201,7 @@ module RT_UTILITIES
     integer, dimension(Chan_Idx_Min:Chan_Idx_Max),  save:: Rtm_Chan_Idx
     character(len=20), dimension(Chan_Idx_Min:Chan_Idx_Max),  save:: Pfaast_Name
     integer,  save:: Sc_Id_Rtm
-    character(len=10),  save:: Sc_Name_Rtm
+    character(len=20),  save:: Sc_Name_Rtm
    
     real, parameter::  Rtm_Vza_Binsize = 0.02
 
@@ -717,6 +718,8 @@ contains
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
                      if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
+                     
+                     
 
                      call PFAAST_CALLER(Chan_Idx,Satzen_Mid_Bin,Error_Status)
 
@@ -1271,7 +1274,7 @@ contains
 
       !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
       case(3:5) !AVHRR (METOP-A,B,C)
-         Pfaast_Name(:) = "tranmavhrr"
+         
          !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
@@ -1358,117 +1361,117 @@ contains
       ! pfaast uses a number for some and a name for others
       !----------------------------------------------------------------
       Sc_Name_Rtm = ""
-      Sc_Id_Rtm = 0
+     
       select case(WMO_Id)
 
       case(4) !METOP-A
-         Sc_Name_Rtm = 'metopa'
+         Sc_Name_Rtm = 'AVHRR-METOPA'
 
       case(3) !METOP-B
-         Sc_Name_Rtm = 'metopb'
+         Sc_Name_Rtm = 'AVHRR-METOPB'
 
       case(5) !METOP-C
-        Sc_Name_Rtm = 'metopc'
+        Sc_Name_Rtm = 'AVHRR-METOPC'
 
       case(55) !MSG-8
         Sc_Id_Rtm = 8
-
+         Sc_Name_Rtm = 'SEVIRI-MSG08'
       case(56) !MSG-9
         Sc_Id_Rtm = 9
-
+         Sc_Name_Rtm = 'SEVIRI-MSG09'
       case(57) !MSG-10
         Sc_Id_Rtm = 10
-
+         Sc_Name_Rtm = 'SEVIRI-MSG10'
       case(171) !MTSAT-1R
         Sc_Id_Rtm =  1
-
+         Sc_Name_Rtm = 'MTSAT-1'
       case(172) !MTSAT-2
         Sc_Id_Rtm =  2
-
+         Sc_Name_Rtm = 'MTSAT-2'
       case(200) !NOAA-8
-        Sc_Name_Rtm = 'noaa08'
+        Sc_Name_Rtm = 'AVHRR-NOAA08'
 
       case(201) !NOAA-9
-        Sc_Name_Rtm = 'noaa09'
+        Sc_Name_Rtm = 'AVHRR-NOAA09'
 
       case(202) !NOAA-10
-        Sc_Name_Rtm = 'noaa10'
+        Sc_Name_Rtm = 'AVHRR-NOAA10'
 
       case(203) !NOAA-11
-        Sc_Name_Rtm = 'noaa11'
+        Sc_Name_Rtm = 'AVHRR-NOAA11'
 
       case(204) !NOAA-12
-        Sc_Name_Rtm = 'noaa12'
+        Sc_Name_Rtm = 'AVHRR-NOAA12'
 
       case(205) !NOAA-14
-        Sc_Name_Rtm = 'noaa14'
+        Sc_Name_Rtm = 'AVHRR-NOAA14'
 
       case(206) !NOAA-15
-        Sc_Name_Rtm = 'noaa15'
+        Sc_Name_Rtm = 'AVHRR-NOAA15'
 
       case(207) !NOAA-16
-        Sc_Name_Rtm = 'noaa16'
+        Sc_Name_Rtm = 'AVHRR-NOAA16'
 
       case(208) !NOAA-17
-        Sc_Name_Rtm = 'noaa17'
+        Sc_Name_Rtm = 'AVHRR-NOAA17'
 
       case(209) !NOAA-18
-        Sc_Name_Rtm = 'noaa18'
+        Sc_Name_Rtm = 'AVHRR-NOAA18'
 
       case(223) !NOAA-19
-        Sc_Name_Rtm = 'noaa19'
+        Sc_Name_Rtm = 'AVHRR-NOAA19'
 
       case(224) !VIIRS - only needed for IFF support, not used in viirs pfaast
         Sc_Name_Rtm = 'AQUA'
 
       case(252) !GOES-8
-        Sc_Id_Rtm =  8
+        Sc_Name_Rtm = 'GOES-8'
 
       case(253) !GOES-9
-        Sc_Id_Rtm =  9
+        Sc_Name_Rtm = 'GOES-9'
 
       case(254) !GOES-10
-        Sc_Id_Rtm =  10
+        Sc_Name_Rtm = 'GOES-10'
 
       case(255) !GOES-11
-        Sc_Id_Rtm =  11
+        Sc_Name_Rtm = 'GOES-11'
 
       case(256) !GOES-12
-        Sc_Id_Rtm =  12
+        Sc_Name_Rtm = 'GOES-12'
 
       case(257) !GOES-13
-        Sc_Id_Rtm =  13
+        Sc_Name_Rtm = 'GOES-13'
 
       case(258) !GOES-14
-        Sc_Id_Rtm =  14
+        Sc_Name_Rtm = 'GOES-14'
 
       case(259) !GOES-15
-        Sc_Id_Rtm =  15
+        Sc_Name_Rtm = 'GOES-15'
 
       case(706) !NOAA-6
-        Sc_Name_Rtm = 'noaa06'
+        Sc_Name_Rtm = 'AVHRR-NOAA06'
 
       case(707) !NOAA-7
-        Sc_Name_Rtm = 'noaa07'
+        Sc_Name_Rtm = 'AVHRR-NOAA07'
 
       case(708) !NOAA-5
-        Sc_Name_Rtm = 'tirosn'
+        Sc_Name_Rtm = 'AVHRR-TIROSN'
 
       case(783) !MODIS 
-          Sc_Name_Rtm = "TERRA"
+          Sc_Name_Rtm = "MODIS-TERRA"
 
       case(784) !MODIS 
-          Sc_Name_Rtm = "AQUA"
+          Sc_Name_Rtm = "AMODIS-QUA"
 
       case(810) !COMS
-          Sc_Id_Rtm =  1
-
+          
+            Sc_Name_Rtm ='FY2-1'
       case(514) !FY2D
-          Sc_Id_Rtm =  2
-
+         
+         Sc_Name_Rtm ='FY2-2'
       case(515) !FY2E
-          Sc_Id_Rtm =  3
-
+          
+         Sc_Name_Rtm ='FY2-3'
       end select
 
 
@@ -1476,80 +1479,28 @@ contains
    
    !--------------------------------------------------------------------------------------------------
    ! Call the original PFAAST routines
+   !
    !--------------------------------------------------------------------------------------------------
    subroutine PFAAST_CALLER(Chan_Idx,Zen_Ang,Error_Status)
 
       integer, intent(in):: Chan_Idx
       real, intent(in):: Zen_Ang
       integer, intent(out):: Error_Status
-
-      Error_Status = 1
-
-      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
-
-      if (Rtm_Chan_Idx(Chan_Idx) <= 0) return
-
-      Error_Status = 0
-
-      select case (trim(Pfaast_Name(Chan_Idx)))
-
-      case("tranmavhrr")
-         call tranmavhrr(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
-                       Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
-
-      case("hirstran_101")
-         call hirstran_101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
-                     Sc_Name_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
-
-      case("goestran") 
-         call goestran(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
-                     Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
-
-      case("tranmts101") 
-         call tranmts101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
-                       Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
-
-      case("tranmetsg101")
-         call tranmetsg101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
-                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
-
-      case("tran_modisd101")
-         call tran_modisd101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
-                           Rtm_Chan_Idx(Chan_Idx),0,Trans_Prof_Rtm,Error_Status) 
-
-      case("fy2_coms_trn101")
-         call fy2_coms_trn101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_RTM, &
-                            Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
-
-      case("tran_viirsm") 
-         call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
-                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
-
-      case("ahi_transm") 
-         call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
-                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
-
-      case("abi_transm") 
-         call abi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
-                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
-
-      case default
-
-         print *, EXE_PROMPT,"Version of PFAAST not implemented, stopping"
-         stop
-
-      end select
-
-      if (Error_Status == 0) then
-         return
-      else
-
-      !----- Pfaast error statements
-200     print *, "Error in PFAAST RTM Calculation, stopping"
-
-         Error_Status = 1
-
-      end if
+            
+      !- native band
+      
+      call compute_transmission_pfaast( &
+                     trim(Ancil_data_Dir) &
+                        ,  T_Prof_rtm &
+                        ,  Wvmr_Prof_Rtm &
+                        ,  Ozmr_Prof_Rtm &
+                        , Zen_ang &
+                        , CO2_RATIO &
+                        , Sc_Name_Rtm &
+                        , Rtm_Chan_Idx(Chan_Idx) &
+                        , Trans_Prof_Rtm )
+                        
+        Error_Status = 0                
 
    end subroutine PFAAST_CALLER
 

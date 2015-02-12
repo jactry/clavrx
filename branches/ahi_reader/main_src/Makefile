@@ -150,6 +150,7 @@ clavrxorb_objs = process_clavrx.o \
                  tranmetsg101.o\
                  tranmts101.o\
                  seviri_module.o \
+                 abi_transm.o \
                  ahi_transm.o \
 	         reposnx.o \
                  reposition_module.o \
@@ -352,7 +353,7 @@ sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
 string_functions.o:string_functions.f90
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o ahi_transm.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o abi_transm.o ahi_transm.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
@@ -415,6 +416,9 @@ conver.o : conver.f90
 
 getmod.o : getmod.f90
 	        $(fc) -c $(fflags_sasrab_f90) getmod.f90
+
+abi_transm.o : abi_transm.f get_lun.o
+	        $(fc) -c $(fflags_pfast) abi_transm.f 
 
 ahi_transm.o : ahi_transm.f get_lun.o
 	        $(fc) -c $(fflags_pfast) ahi_transm.f 

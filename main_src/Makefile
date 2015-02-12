@@ -191,7 +191,13 @@ clavrxorb_objs = process_clavrx.o \
                  cx_read_ahi_mod.o \
                  string_functions.o \
                  date_tools_mod.o \
-                 geos_transform_pix.o
+                 geos_transform_pix.o \
+                 cx_pfaast_mod.o \
+                 cx_pfaast_tools_mod.o \
+                 cx_pfaast_coef_mod.o \
+                 cx_pfaast_constants_mod.o \
+                 strings.o \
+                 precision.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -309,6 +315,10 @@ pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_com
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o
+cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
+cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
+cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o
+cx_pfaast_constants_mod.o:cx_pfaast_constants_mod.f90
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o
@@ -328,6 +338,7 @@ Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o file_utility.o
 hdf.o: hdf.f90
+precision.o:precision.f90
 hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
@@ -352,8 +363,9 @@ scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
 string_functions.o:string_functions.f90
+strings.o:strings.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o abi_transm.o ahi_transm.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o abi_transm.o ahi_transm.o cx_pfaast_mod.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90

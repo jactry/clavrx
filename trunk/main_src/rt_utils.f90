@@ -1526,8 +1526,12 @@ contains
                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
       case("ahi_transm") 
-         call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
-                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+         call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
+                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+
+      case("abi_transm") 
+         call abi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
+                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
       case default
 

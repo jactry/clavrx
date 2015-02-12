@@ -101,7 +101,8 @@ module USER_OPTIONS
       
    use CONSTANTS, only: &
       sym &
-      , exe_prompt   
+      , exe_prompt &
+      , nchan_clavrx
       
    use FILE_UTILITY, only: &
       get_lun
@@ -123,7 +124,7 @@ module USER_OPTIONS
    integer :: Mask_Mode_User_Set
    integer :: Expert_Mode
    
-   integer :: Chan_On_Flag_Default_User_Set ( 42)
+   integer :: Chan_On_Flag_Default_User_Set (nchan_clavrx)
    
    
    
@@ -141,6 +142,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
    integer,parameter:: ACHA_Mode_Default_Modis = 8
    integer,parameter:: ACHA_Mode_Default_Fy2 = 7
+   integer,parameter:: ACHA_Mode_Default_AHI = 1
    
 contains
 
@@ -792,8 +794,10 @@ contains
           default_acha_mode  = ACHA_Mode_Default_Modis 
       case ('MODIS-CSPP')
           default_acha_mode  = ACHA_Mode_Default_Modis 
+      case ('AHI')
+          default_acha_mode  = ACHA_Mode_Default_AHI   
       case default 
-         print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
+         print*,'sensor ',SensorName, ' is not set in user_options.f90: check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
           
    end function default_acha_mode
@@ -859,6 +863,9 @@ contains
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('MODIS-MAC')
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
+      case ('AHI')
+          filename  = 'modis_default_nb_cloud_mask_lut.nc'   
+          
       case default 
          print*,'sensor ',SensorName, ' is not set in user_options.f90:  Inform andi.walther@ssec.wisc.edu'  
          stop 
@@ -945,8 +952,11 @@ contains
       case ('MODIS-MAC')
          possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:3) =   [1, 2, 3]
+      case ( 'AHI')
+         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3) =   [1, 2, 3]
       case default 
-         print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
+         print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
       
       if ( .not. ANY ( acha_mode_User_Set == possible_acha_modes ) ) then
@@ -968,7 +978,7 @@ contains
    function Existing_Channels  (SensorName)  result( Valid_Channels )
       character (len = *) , intent(in) :: SensorName
       
-      integer , target :: Valid_Channels ( 42) 
+      integer , target :: Valid_Channels ( 44) 
       integer :: i 
       
       Valid_Channels = -99
@@ -1005,7 +1015,9 @@ contains
       case ('MODIS-MAC')
          Valid_Channels(1:36) = [(i,i=1,36,1)]  
       case ('MODIS-CSPP')
-         Valid_Channels(1:36) = [(i,i=1,36,1)]  
+         Valid_Channels(1:36) = [(i,i=1,36,1)] 
+      case ('AHI')
+         Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,43,44]    
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -1020,7 +1032,7 @@ contains
    !----------------------------------------------------------------------
    subroutine CHANNEL_SWITCH_ON (SensorName)
       character (len=*) , intent(in) :: SensorName
-      integer :: Valid_Channels ( 42)
+      integer :: Valid_Channels ( 44)
       integer :: i
  
       ! expert can decide themselves
@@ -1043,7 +1055,7 @@ contains
    subroutine  EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( SensorName ) 
       character (len=*) , intent(in) :: SensorName  
       
-      integer :: Valid_Channels ( 42)
+      integer :: Valid_Channels ( 44)
       integer :: i
       logical :: Not_Run_Flag
       

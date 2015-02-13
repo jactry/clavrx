@@ -161,7 +161,7 @@ END SUBROUTINE close_land_sfc_hdf
 
     snow_filename = "no_file"
 
-            do iday=0, MAX_SNOW_LATENCY - 1
+           do iday=0, MAX_SNOW_LATENCY - 1
               jday = day_of_year - iday
                year = year_in 
                ileap = leap_year_fct(year)
@@ -171,18 +171,18 @@ END SUBROUTINE close_land_sfc_hdf
                endif 
                month = compute_month(jday, ileap)
                day = compute_day(jday, ileap)
-			   write (year_string,  '(I2.2)') year - 100*(year/100)
-			   write (month_string, '(I2.2)') month
-			   write (day_string,   '(I2.2)') day
-			   
-			   snow_filename_tmp = "snow_map_4km_" //year_string//month_string// &
+               write (year_string,  '(I2.2)') year - 100*(year/100)
+               write (month_string, '(I2.2)') month
+               write (day_string,   '(I2.2)') day
+   
+               snow_filename_tmp = "snow_map_4km_" //year_string//month_string// &
                        day_string//".hdf"
-				   
-                if (file_exists(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
-                   snow_filename = snow_filename_tmp
-                   exit
-                endif
-              end do
+   
+               if (file_exists(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
+                  snow_filename = snow_filename_tmp
+                  exit
+               endif
+            end do
       return
 
  END FUNCTION get_snow_map_filename

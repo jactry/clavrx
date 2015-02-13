@@ -330,7 +330,7 @@ module SENSOR_MODULE
 
          case('AVHRR-1','AVHRR-2','AVHRR-3')
               call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('MODIS')
+         case('MODIS','AQUA-IFF')
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IL-IMAGER','GOES-MP-IMAGER')
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -425,7 +425,7 @@ module SENSOR_MODULE
    !        spatial_resolution:  4
    !
    !   MODIS
-   !        sensors:  MODIS, MODIS-IFF, MODIS-MAC, MODIS-CSPP
+   !        sensors:  MODIS, AQUA-IFF, MODIS-MAC, MODIS-CSPP
    !        platform:  AQUA, TERRA
    !        spatial_resolution:  1, 5
    !
@@ -821,7 +821,7 @@ module SENSOR_MODULE
 
       !--- AQUA IFF
       if (index(Image%Level1b_Name, 'IFFSDR_aqua') > 0) then
-         Sensor%Sensor_Name = 'MODIS-IFF'
+         Sensor%Sensor_Name = 'AQUA-IFF'
          Sensor%Spatial_Resolution_Meters = 1000
          Sensor%Platform_Name = 'AQUA'
          Sensor%WMO_Id = 784

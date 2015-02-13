@@ -1371,7 +1371,7 @@ contains
         Sc_Name_Rtm = 'AVHRR-NOAA19'
 
       case(224) !VIIRS - only needed for IFF support, not used in viirs pfaast
-        Sc_Name_Rtm = 'AQUA'
+        Sc_Name_Rtm = 'VIIRS'
 
       case(252) !GOES-8
         Sc_Name_Rtm = 'GOES-8'
@@ -1421,6 +1421,7 @@ contains
       case(515) !FY2E
           
          Sc_Name_Rtm ='FY2-3'
+      
       end select
 
 

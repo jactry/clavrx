@@ -374,7 +374,7 @@ contains
       end do
          
       return
-      end
+      end subroutine calpir
 !!ccccccc
       subroutine conpir( p, t, w, o, n_levels, i_dir, &
                               p_avg, t_avg, w_amt, o_amt)
@@ -710,7 +710,7 @@ contains
       end do
 
       return
-      end
+      end subroutine conpir
 !!ccccccc
       subroutine gphite( p, t, w, z_sfc, n_levels, i_dir, z)
 ! .... version of 18.05.00
@@ -892,7 +892,7 @@ contains
       end do
 
       return
-      end
+      end subroutine gphite
 
 !>
 !!
@@ -938,7 +938,7 @@ contains
    end do
    
 
-	end
+	end subroutine taudoc
    !
    !
    !
@@ -986,7 +986,7 @@ contains
         cc=> null() 
      
 	return
-	end
+	end subroutine tauwtr
    
    
    end module cx_pfaast_tools_mod

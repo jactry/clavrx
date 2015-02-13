@@ -6,7 +6,7 @@
 4   !E1 ALG ACHA
 1   !E1 ALG NLCOMP 
 1   !E2 OUTPUT Level-2  file output flag (0= no, 1 = yes)
-0   !E2 OUTPUT RTM  file output flag (0= no, 1 = yes)
+1   !E2 OUTPUT RTM  file output flag (0= no, 1 = yes)
 1   !E2 PRC Cloud flag  
 200 !E2 Num scan lines
 0   !E2 SASRAB switch on/off SASRAB parameters 

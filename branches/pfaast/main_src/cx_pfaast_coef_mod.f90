@@ -411,7 +411,7 @@ contains
           
       case ('SEVIRI')
          cfile = 'metsecgencom.dat' 
-         n_channels = 5 
+         n_channels = 8 
          pos_in_coeffile = 10
          idx_sat = 8
          
@@ -460,7 +460,7 @@ contains
          this % native_channel = [12,13,14,15,16]
          
       case ('SEVIRI')   
-         this % modis_channel_eqv = [20,27,28,29,31,32,33,34]
+         this % modis_channel_eqv = [20,27,28,29,30,31,32,33]
          this % native_channel = [ (i,i=4,11),1 ]
          
       case ('MTSAT')

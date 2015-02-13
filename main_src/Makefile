@@ -136,22 +136,11 @@ clavrxorb_objs = process_clavrx.o \
 	         Message_Handler.o \
 	         Compare_Float_Numbers.o \
 	         hdf_read_module.o \
-                 tranmavhrr.o \
-                 hirstran_101.o \
-                 tran_viirsm.o \
-                 irtsubn101.o \
                  flip_rtc.o \
                  re4flip.o \
-                 getnumsc.o \
-	         tran_modisd101.o \
                  big_endian.o \
                  get_lun.o \
-                 goestran.o \
-                 tranmetsg101.o\
-                 tranmts101.o\
                  seviri_module.o \
-                 abi_transm.o \
-                 ahi_transm.o \
 	         reposnx.o \
                  reposition_module.o \
 		 dcomp_derived_products_module.o \
@@ -181,7 +170,6 @@ clavrxorb_objs = process_clavrx.o \
                  simple_cod_module.o \
                  level2b.o \
                  user_options.o \
-                 fy2_coms_trn101.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
@@ -365,7 +353,7 @@ sort_module.o: sort_module.f90
 string_functions.o:string_functions.f90
 strings.o:strings.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o abi_transm.o ahi_transm.o cx_pfaast_mod.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
@@ -402,7 +390,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
-              laszlo_insolation_module.o sasrab.o conver.o getmod.o \
+              laszlo_insolation_module.o sasrab.o conver.o \
               seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
 
@@ -429,47 +417,11 @@ conver.o : conver.f90
 getmod.o : getmod.f90
 	        $(fc) -c $(fflags_sasrab_f90) getmod.f90
 
-abi_transm.o : abi_transm.f get_lun.o
-	        $(fc) -c $(fflags_pfast) abi_transm.f 
-
-ahi_transm.o : ahi_transm.f get_lun.o
-	        $(fc) -c $(fflags_pfast) ahi_transm.f 
-
-goestran.o : goestran.f get_lun.o
-	        $(fc) -c $(fflags_pfast) goestran.f 
-
-tran_modisd101.o : tran_modisd101.f big_endian.o get_lun.o
-	        $(fc) -c $(fflags_pfast) tran_modisd101.f 
-
 big_endian.o : big_endian.f
 	        $(fc) -c $(fflags_pfast) big_endian.f
 
 get_lun.o : get_lun.f90
 	        $(fc) -c $(fflags) get_lun.f90
-
-tranmavhrr.o : tranmavhrr.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) tranmavhrr.f 
-
-hirstran_101.o : hirstran_101.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) hirstran_101.f 
-
-getnumsc.o : getnumsc.f
-	$(fc) -c $(fflags_pfast) getnumsc.f
-
-tran_viirsm.o : tran_viirsm.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) tran_viirsm.f 
-
-tranmetsg101.o : tranmetsg101.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) tranmetsg101.f 
-
-tranmts101.o : tranmts101.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) tranmts101.f 
-
-fy2_coms_trn101.o : fy2_coms_trn101.f getnumsc.o get_lun.o
-	$(fc) -c $(fflags_pfast) fy2_coms_trn101.f
-
-irtsubn101.o : irtsubn101.f
-	$(fc) -c $(fflags_pfast) irtsubn101.f
 
 flip_rtc.o : flip_rtc.f
 	$(fc) -c $(fflags_pfast) flip_rtc.f

@@ -38,7 +38,8 @@ contains
        & ,rco2 &
        & ,sensor &
        & ,kban_native &
-       & ,taut )
+       & ,taut &
+       & , modis_chn_eqv )
        
        
        
@@ -51,11 +52,15 @@ contains
       real, intent(in)  :: theta 
       real, intent(in)  :: rco2 
       character (len =* ), intent(in) :: sensor
-      integer , intent(in)  :: kban_native  
+      integer, intent(in)  :: kban_native 
+      integer, intent(in), optional :: modis_chn_eqv
+      
+       
       integer :: kban
       real, intent(out)  :: taut (:)  
       integer,parameter :: NM = NL - 1 
-      real:: pavg(nm),tref(nm),wref(nm),oref(nm)
+      real, save:: pavg(nm),tref(nm),wref(nm),oref(nm)
+      logical :: are_ref_profiles_set = .false.
       real :: oamt ( NM )
       real :: wamt ( NM )
       real :: tavg ( NM ) 
@@ -72,23 +77,43 @@ contains
       tauo = 1.
       
       ! - start
-      
+     
       ! - read coef data if needed      
       call coef % read_it ( trim(sensor) , ancil_data_path ) 
       
-      !  find kban in coef data 
-      if ( .not. any ( kban_native ==  coef % native_channel)) then
-          print*,'wrong channel set for pfaast'
-          print*,'please use native sensor channel number'
-          print*,'sensor ', sensor
-          print*,'possible channels: ',coef % native_channel
-          print*,'returning...'
-          return
+      if ( present ( modis_chn_eqv )) then
+         !  find kban in coef data 
+         if ( .not. any ( modis_chn_eqv ==  coef % modis_channel_eqv)) then
+           ! print*,'wrong MODIS channel set for pfaast',modis_chn_eqv
+           ! print*,'please use modis equivalent sensor channel number'
+           !print*,'sensor ', sensor
+           ! print*,'possible channels: ',coef % modis_channel_eqv
+           ! print*,'returning...'
+            return
+         end if
+         kban = minloc ( abs ( coef % modis_channel_eqv - modis_chn_eqv ), 1)
+
+      else
+      
+      
+         !  find kban in coef data 
+         if ( .not. any ( kban_native ==  coef % native_channel)) then
+            print*,'wrong channel set for pfaast',kban_native
+            print*,'please use native sensor channel number'
+            print*,'sensor ', sensor
+            print*,'possible channels: ',coef % native_channel
+            print*,'returning...'
+            return
+         end if
+         kban = minloc ( abs ( coef % native_channel - kban_native ), 1)
       end if
-      kban = minloc ( abs ( coef % native_channel - kban_native ), 1)
-     
+      
       ! - computes mid-layer values for reference
-      call conpir ( pstd,tstd,wstd,ostd,nl,1,pavg,tref,wref,oref )
+      if ( .not. are_ref_profiles_set ) then
+         call conpir ( pstd,tstd,wstd,ostd,nl,1,pavg,tref,wref,oref )
+         are_ref_profiles_set = .true.
+         print*,'PFAAST: compute.. reference profiles'
+      end if   
       ! - compute mid-layer for input
       call conpir(pstd,temp,wvmr,ozmr,nl,1,pavg,tavg,wamt,oamt)
             

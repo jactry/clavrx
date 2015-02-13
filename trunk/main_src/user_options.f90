@@ -784,6 +784,8 @@ contains
          default_acha_mode  =  ACHA_Mode_Default_VIIRS 
       case ('VIIRS-IFF')      
           default_acha_mode  = ACHA_Mode_Default_VIIRS      
+      case ('AQUA-IFF')
+          default_acha_mode  = ACHA_Mode_Default_Modis
       case ('AVHRR-IFF')      
          default_acha_mode  = ACHA_Mode_Default_Avhrr
       case ('COMS-IMAGER')
@@ -853,6 +855,8 @@ contains
          filename  = 'viirs_default_nb_cloud_mask_lut.nc' 
       case ('VIIRS-IFF')      
           filename  = 'viirs_default_nb_cloud_mask_lut.nc'
+      case ('AQUA-IFF')
+          filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('AVHRR-IFF')      
         filename  = 'avhrr_default_nb_cloud_mask_lut.nc'
       case ('COMS-IMAGER')
@@ -924,37 +928,42 @@ contains
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
       case ( 'MTSAT-IMAGER')
-          possible_acha_modes(1:4)  =  [ 1, 2, 3 , 6 ]
-          possible_dcomp_modes(1) =  3
+         possible_acha_modes(1:4)   =  [ 1, 2, 3 , 6 ]
+         possible_dcomp_modes(1)    =  3
       case ('SEVIRI')
-         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:2) =   [1, 3]
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:2)  =  [1, 3]
       case ('FY2-IMAGER')
-         possible_acha_modes(1:2)  =   [1 , 2 ] 
-         possible_dcomp_modes(1:1) =   [3]
+         possible_acha_modes(1:2)   =  [1 , 2 ] 
+         possible_dcomp_modes(1:1)  =  [3]
       case ('VIIRS')
-        possible_acha_modes(1:3)  =    [1, 3, 5] 
-        possible_dcomp_modes(1:3) =    [1, 2, 3]
-         nlcomp_mode_User_Set = 1  
+         possible_acha_modes(1:3)   =  [1, 3, 5] 
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         nlcomp_mode_User_Set       =  1  
       case ('VIIRS-IFF')      
-         possible_acha_modes(1:4)  =   [1, 3, 5, 8]      
-      case ('AVHRR-IFF')      
-         possible_acha_modes(1:4)  =   [1, 3, 4, 8]
+         possible_acha_modes(1:3)   =  [1, 3, 5]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+      case ('AQUA-IFF')
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+      case ('AVHRR-IFF')
+         possible_acha_modes(1:4)   =  [1, 3, 4, 8]
+         possible_dcomp_modes(1)    =  3
       case ('COMS-IMAGER')
-         possible_acha_modes(1:3)  =   [1, 3, 6]
-         possible_dcomp_modes(1:1) =   [3]
+         possible_acha_modes(1:3)   =  [1, 3, 6]
+         possible_dcomp_modes(1:1)  =  [3]
       case ('MODIS')
-         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8] 
-         possible_dcomp_modes(1:3) =   [1, 2, 3]
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8] 
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ('MODIS-CSPP')
-         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3) =   [1, 2, 3]
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ('MODIS-MAC')
-         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3) =   [1, 2, 3]
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ( 'AHI')
-         possible_acha_modes(1:8)  =   [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3) =   [1, 2, 3]
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -978,7 +987,7 @@ contains
    function Existing_Channels  (SensorName)  result( Valid_Channels )
       character (len = *) , intent(in) :: SensorName
       
-      integer , target :: Valid_Channels ( 44) 
+      integer , target :: Valid_Channels ( 44 ) 
       integer :: i 
       
       Valid_Channels = -99
@@ -1003,10 +1012,12 @@ contains
       case ('FY2-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]    
       case ('VIIRS')
-         Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]       
-      case ('VIIRS-IFF')      
-         Valid_Channels (1:26) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,37,38,39,40,41,42]       
-      case ('AVHRR-IFF')      
+         Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]
+      case ('VIIRS-IFF')
+         Valid_Channels (1:20) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36]
+      case ('AQUA-IFF')
+         Valid_Channels (1:36) = [(i,i=1,36,1)]
+      case ('AVHRR-IFF')
          Valid_Channels (1:19) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36]
       case ('COMS-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]
@@ -1055,7 +1066,7 @@ contains
    subroutine  EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( SensorName ) 
       character (len=*) , intent(in) :: SensorName  
       
-      integer :: Valid_Channels ( 44)
+      integer :: Valid_Channels ( 44 )
       integer :: i
       logical :: Not_Run_Flag
       

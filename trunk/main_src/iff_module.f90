@@ -63,6 +63,8 @@ module IFF_MODULE
  public :: READ_IFF_DATE_TIME
 
    type , public :: iff_data_config
+      integer(2) :: year_int
+      integer(2) :: doy_int
       integer :: n_chan
       integer :: chan_list ( 36 )
       integer , dimension( 2 )  :: offset
@@ -175,7 +177,7 @@ end subroutine GET_IFF_DATA
          select case ( trim(Sensor%Sensor_Name) )
          case ('VIIRS-IFF') 
             config % count (1) = 3200
-         case ('MODIS-IFF') 
+         case ('AQUA-IFF') 
             config % count (1) = 1354
          case ( 'AVHRR-IFF') 
             config % count (1) = 409
@@ -346,7 +348,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             select case (trim(Sensor%Sensor_Name))
             case('VIIRS-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'M',' ','before') + Status
-            case('MODIS-IFF')
+            case('AQUA-IFF')
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status  
             case('AVHRR-IFF')
@@ -519,8 +521,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          Status = READ_HDF_SDS_FLOAT32_3D(Id,TRIM(setname_band),start_3d, &
                      stride_3d,edge_3d,r3d_buffer) + Status
 
-         ! change fill values to missing
-         where(r3d_buffer == fill_value)
+         ! change fill and unrealistic values to missing
+         where(r3d_buffer == fill_value .or. r3d_buffer .gt. 400.)
             r3d_buffer = missing_value
          endwhere
 
@@ -546,7 +548,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
          ! --- dealocate variables
          deallocate ( r3d_buffer )
-         
+
       enddo ! loop over channals
 
       deallocate ( band_names_int_ref )                                                                                        
@@ -557,10 +559,10 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       !0        1         2         3         4         5         6
       !123456789012345678901234567890123456789012345678901234567890
-      !IFFSDR_aqua_d20130806_t100000_c20140207033513_ssec_dev.hdf
-      !IFFSDR_npp_d20130806_t100000_c20140207034531_ssec_dev.hdf
-      !IFFCMO_aqua_d20130806_t100000_c20140207033616_ssec_dev.hdf
-      !IFFCMO_npp_d20130806_t100000_c20140207034800_ssec_dev.hdf
+      !IFFSDR_aqua_d20130113_t235500_c20150202152558_ssec_dev.hdf
+      !MYD35_L2.A2013013.2355_aqua_IFF_v2_2_6.hdf
+      !IFFSDR_npp_d20130113_t235500_c20150201214538_ssec_dev.hdf
+      !MYD35_L2.A2013013.2355_npp_IFF_v2_2_6.hdf
 
       ! --- Read cld_mask_aux if it set in default file
       if ( config %  iff_cloud_mask_on ) then
@@ -568,15 +570,21 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
           print *, EXE_PROMPT, "Reading in AUX cloud mask"
 
+          ! ---
+          write (year_strg, "(I4)") config % year_int
+          write (doy_strg, "(I0.3)") config % doy_int
+
           if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
-             file_srch = 'IFFCMO_npp_d'//trim(config % iff_file &
-                         (len(trim(config % dir_1b))+13:len(trim(config % dir_1b))+28)) &
-                         //'*_ssec_dev.hdf'
+             file_srch = 'MYD35_L2.A'//trim(year_strg)//trim(doy_strg)//'.'// &
+                         trim(config % iff_file &
+                         (len(trim(config % dir_1b))+23:len(trim(config % dir_1b))+26)) &
+                         //'_npp_IFF*.hdf'
           endif
-          if (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
-             file_srch = 'IFFCMO_aqua_d'//trim(config % iff_file &
-                          (len(trim(config % dir_1b))+14:len(trim(config % dir_1b))+29)) &
-                          //'*_ssec_dev.hdf'
+          if (trim(Sensor%Sensor_Name)== 'AQUA-IFF' ) then
+             file_srch = 'MYD35_L2.A'//trim(year_strg)//trim(doy_strg)//'.'// &
+                         trim(config % iff_file &
+                         (len(trim(config % dir_1b))+24:len(trim(config % dir_1b))+27)) &
+                         //'_aqua_IFF*.hdf'
           endif
 
          file_arr_dummy => FILE_SEARCH ( trim(config %dir_1b), file_srch, n_files )
@@ -685,7 +693,7 @@ if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
   read(Infile(23:24), fmt="(I2)") start_hour
   read(Infile(25:26), fmt="(I2)") start_minute
   read(Infile(27:28), fmt="(I2)") start_sec
-elseif (trim(Sensor%Sensor_Name)== 'MODIS-IFF' ) then
+elseif (trim(Sensor%Sensor_Name)== 'AQUA-IFF' ) then
   read(Infile(14:17), fmt="(I4)") year
   read(Infile(18:19), fmt="(I2)") month
   read(Infile(20:21), fmt="(I2)") day

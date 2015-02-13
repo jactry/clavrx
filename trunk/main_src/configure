@@ -310,13 +310,13 @@ if (exists($opt{'cmask_dir'}))
    else
    {
       print CONFIG "#export CMASK=../cloud_mask/\n";
-      print CONFIG "export CMASK=../cloud_team_cmask/\n";
+      print CONFIG "export CMASK=../cmask_ait/\n";
    }
 }
 else
 {
       print CONFIG "#export CMASK=../cloud_mask/\n";
-      print CONFIG "export CMASK=../cloud_team_cmask/\n";
+      print CONFIG "export CMASK=../cmask_ait/\n";
 
 }
 if (exists($opt{'ctype_dir'}))

@@ -41,8 +41,9 @@ module IFF_CLAVRX_BRIDGE
        , Cloud_Mask_Aux_Read_Flag &
        , Scan_Number &
        , Ancil_Data_Dir &
+       , Image &
        , Scan_Time &
-       , ch &
+       , Ch &
        , Bt_375um_Sounder &
        , Bt_11um_Sounder &
        , Bt_12um_Sounder
@@ -107,6 +108,8 @@ contains
                          - y_start  + 1
 
       ! - configure interface
+      iff_conf % year_int = Image % Start_Year
+      iff_conf % doy_int = Image % Start_Doy
       iff_conf % n_chan = num_chan
       iff_conf % chan_list = modis_chn_list
       iff_conf % chan_on = Sensor%Chan_On_Flag_Default ( modis_chn_list ) == sym%YES

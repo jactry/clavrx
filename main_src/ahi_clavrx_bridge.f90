@@ -119,7 +119,7 @@ contains
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
             
          else
-            if ( modis_chn > 36 ) then
+            if ( modis_chn > 36 .and. modis_chn < 43) then
                cycle
             end if
             

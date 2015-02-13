@@ -211,7 +211,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
   !--- special processing for IFF - remove hdf suffix - this hard coded for
 ! !PEATE files
-! if (trim(Sensor%Sensor_Name) == 'MODIS-IFF' .or. trim(Sensor%Sensor_Name) == 'MODIS-IFF') then
+! if (trim(Sensor%Sensor_Name) == 'AQUA-IFF' .or. trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
 !   File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-29)
 ! elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
 !   File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-20)

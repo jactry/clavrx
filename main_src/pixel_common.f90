@@ -2109,6 +2109,7 @@ subroutine RESET_ACHA_ARRAYS()
 end subroutine RESET_ACHA_ARRAYS
 
 subroutine DESTROY_ACHA_ARRAYS()
+    if (allocated(ACHA%Tc)) deallocate(ACHA%Tc) 
     if (allocated(ACHA%Pc)) deallocate(ACHA%Pc) 
     if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
     if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 

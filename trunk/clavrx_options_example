@@ -1,6 +1,6 @@
 /DATA/Ancil_Data/clavrx_ancil_data/
 ./temp/
-1   !Expert mode (0 - nothing is read below, 1 - only !E1 and lower is read, 9 - everything is read )
+2   !Expert mode (0 - nothing is read below, 1 - only !E1 and lower is read, 9 - everything is read )
 1   !E1 ALG Mask mode bayesian cloud mask (0=no, 1 = yes)
 1   !E1 ALG DCOMP
 4   !E1 ALG ACHA

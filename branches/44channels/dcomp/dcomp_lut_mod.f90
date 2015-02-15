@@ -142,7 +142,7 @@ contains
      
       call self % initialize ( trim(sensor), trim(ancil_path))
        
-      do idx_chn = 1 , 42 
+      do idx_chn = 1 , 44 
          do idx_phase = 1, 2 
             data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
             if ( .not. data_loc % is_set ) then 

@@ -207,6 +207,7 @@ contains
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(37:42) = [0,0,0,0,0,1]
+      Chan_On_Flag_Default_User_Set(43:44) = [0,0]
       Nav%Lat_Max_Limit = 90.0
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
@@ -328,6 +329,7 @@ contains
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(25:30)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(31:36)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(37:42)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:44)
              
      
       close(unit=Default_Lun)
@@ -1053,7 +1055,7 @@ contains
           
       Sensor%Chan_On_Flag_Default =  0
 
-      do i = 1, 42 
+      do i = 1, 44 
          if (Valid_Channels (i) < 0 ) cycle
          Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = 1
       end do
@@ -1078,7 +1080,7 @@ contains
       
       Valid_Channels = Existing_Channels ( SensorName )
 
-      do i = 1, 42 
+      do i = 1, 44 
          if ( any ( i == Valid_Channels )) cycle
          Sensor%Chan_On_Flag_Default ( i ) = 0
       end do

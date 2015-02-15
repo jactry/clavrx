@@ -257,8 +257,8 @@ contains
       read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29
       read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
       read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
-      read(unit=Instr_Const_lun,fmt=*) a1_40, a2_40,nu_40
-      read(unit=Instr_Const_lun,fmt=*) a1_41, a2_41,nu_41
+      read(unit=Instr_Const_lun,fmt=*) a1_42, a2_42,nu_42
+      read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43
       read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33
       read(unit=Instr_Const_lun,fmt=*) a1_34, a2_34,nu_34
       read(unit=Instr_Const_lun,fmt=*) a1_35, a2_35,nu_35

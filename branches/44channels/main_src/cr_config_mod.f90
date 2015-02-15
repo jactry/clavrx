@@ -87,7 +87,7 @@ module cr_config_mod
       type ( conf_sfc_type ) :: sfc
       type ( conf_mask_type) :: mask
       type ( conv_avhhr_type ) :: avhrr
-      type ( conf_channel_type ) , dimension(42) :: chan
+      type ( conf_channel_type ) , dimension(44) :: chan
       type ( conf_output_type) :: out
       logical :: use_gzip     
       
@@ -425,6 +425,7 @@ contains
          call read_option_line ( lun , conf % chan ( 25: 30 ) % is_on )
          call read_option_line ( lun , conf % chan ( 31: 36 ) % is_on )
          call read_option_line ( lun , conf % chan ( 37: 42 ) % is_on )
+         call read_option_line ( lun , conf % chan ( 43: 44 ) % is_on )
    
       end if
       close ( unit = lun )

@@ -927,7 +927,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- lunar zenith
-     if (Sds_Num_Level2_Lunzen_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+     if (Sds_Num_Level2_Lunzen_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Lunzen),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "lunar_zenith_angle", &
                               "lunar_zenith_angle", &
@@ -938,7 +938,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- lunar relative azimuth
-     if (Sds_Num_Level2_LunRelaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+     if (Sds_Num_Level2_LunRelaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_LunRelaz),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "lunar_relative_azimuth_angle", &
                                "lunar_relative_azimuth_angle", &
@@ -949,7 +949,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- lunar azimuth
-     if (Sds_Num_Level2_Lunaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+     if (Sds_Num_Level2_Lunaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Lunaz),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "lunar_azimuth_angle",  &
                                "lunar_azimuth_angle", &
@@ -1198,7 +1198,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       endif
 
      !--- ChDNB reflectance
-     if (Sds_Num_Level2_ChDNB_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then 
+     if (Sds_Num_Level2_ChDNB_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then 
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_ChDNB),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_sol_dnb_nom", &
                               "toa_bidirectional_reflectance_solar_dnb_nominal", &
@@ -1209,7 +1209,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       endif
   
      !--- ChDNB reflectance lunar
-     if (Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then 
+     if (Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then 
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_ChDNB_lunar),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_lunar_dnb_nom", &
                               "toa_bidirectional_reflectance_lunar_dnb_nominal", &
@@ -3518,21 +3518,21 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       endif
 
       !--- lunar zenith
-      if (Sds_Num_Level2_Lunzen_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      if (Sds_Num_Level2_Lunzen_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
        call SCALE_VECTOR_I1_RANK2(Geo%Lunzen,sym%LINEAR_SCALING,Min_Solzen,Max_Solzen,Missing_Value_Real4,One_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lunzen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !--- lunar relative azimuth 
-      if (Sds_Num_Level2_LunRelaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      if (Sds_Num_Level2_LunRelaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
        call SCALE_VECTOR_I1_RANK2(Geo%LunRelaz,sym%LINEAR_SCALING,Min_Relaz,Max_Relaz,Missing_Value_Real4,One_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_LunRelaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !--- lunar azimuth 
-      if (Sds_Num_Level2_Lunaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      if (Sds_Num_Level2_Lunaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
        call SCALE_VECTOR_I1_RANK2(Geo%Lunaz,sym%LINEAR_SCALING,Min_Solaz,Max_Solaz,Missing_Value_Real4,One_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lunaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -3680,15 +3680,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       endif
 
       !-- chDNB reflectance
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. Sds_Num_Level2_ChDNB_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(42)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB,Max_Ref_ChDNB,Missing_Value_Real4,Two_Byte_Temp)
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. Sds_Num_Level2_ChDNB_Flag == sym%YES) then
+       call SCALE_VECTOR_I2_RANK2(ch(44)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB,Max_Ref_ChDNB,Missing_Value_Real4,Two_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ChDNB), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !-- chDNB reflectance lunar
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(42)%Ref_Lunar_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB_lunar,Max_Ref_ChDNB_lunar,Missing_Value_Real4,Two_Byte_Temp)
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES) then
+       call SCALE_VECTOR_I2_RANK2(ch(44)%Ref_Lunar_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB_lunar,Max_Ref_ChDNB_lunar,Missing_Value_Real4,Two_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ChDNB_lunar), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif

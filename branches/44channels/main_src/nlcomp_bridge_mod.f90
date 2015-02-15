@@ -161,7 +161,7 @@ contains
       ! - which channels do we need? possibles are 
       nlcomp_input % is_channel_on = .false.
       
-      nlcomp_possible_channels = [  20 , 42 ]
+      nlcomp_possible_channels = [  20 , 44 ]
       do i = 1 , size ( nlcomp_possible_channels )   
          if ( sensor % chan_on_flag_default ( nlcomp_possible_channels ( i) ) == 1 ) then
             nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
@@ -171,7 +171,7 @@ contains
       
       
        ! === ALLOCATION
-      do idx_chn = 1 , 42
+      do idx_chn = 1 , 44
          if ( nlcomp_input % is_channel_on (idx_chn) .eqv. .false.) cycle
         
          call  alloc_nlcomp ( nlcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
@@ -217,8 +217,8 @@ contains
       
      
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa
+      if ( nlcomp_input % is_channel_on (44)) nlcomp_input % refl ( 44 ) % d = ch(44)%ref_lunar_toa
+      if ( nlcomp_input % is_channel_on (44)) nlcomp_input % rad ( 44 ) % d = ch(44)%rad_toa
       
       nlcomp_input % sat % d = geo % satzen
       nlcomp_input % sol % d = geo % solzen
@@ -239,8 +239,8 @@ contains
       
             
          ! - Surface  
-      ! - we use for DNB (channel 42) channel 1  
-      if ( nlcomp_input % is_channel_on (42 )) nlcomp_input % alb_sfc ( 42 ) % d = ch(1)%sfc_ref_white_sky  
+      ! - we use for DNB (channel 44) channel 1  
+      if ( nlcomp_input % is_channel_on (44 )) nlcomp_input % alb_sfc ( 44 ) % d = ch(1)%sfc_ref_white_sky  
      
 
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    !check this AKH

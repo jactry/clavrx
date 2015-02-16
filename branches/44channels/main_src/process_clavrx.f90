@@ -470,13 +470,10 @@
       !------------------------------------------------------------------
       call UPDATE_CONFIGURATION (Sensor%Sensor_Name)
 
-print *, "Chan_On = ", Sensor%Chan_On_Flag_Default
-     
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
       call CREATE_PIXEL_ARRAYS()
-print *, "bubba"
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite
@@ -641,8 +638,6 @@ print *, "bubba"
  
       end if
  
- 
-
       !--- compute Sun-Earth distance
       Sun_Earth_Distance = 1.0 - 0.016729*cos(0.9856*(Image%Start_Doy-4.0)*dtor)
  
@@ -709,9 +704,6 @@ print *, "bubba"
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
          end if
-
-         Diag_Pix_Array_1 = ch(37)%Bt_Toa
-         Diag_Pix_Array_2 = ch(38)%Bt_Toa
 
          !------------------------------------------------------------------
          ! Apply spatial limits
@@ -1019,7 +1011,6 @@ print *, "bubba"
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-           
             if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()

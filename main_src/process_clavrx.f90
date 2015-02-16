@@ -180,7 +180,7 @@
 
    real(kind=real4) :: Total_Processing_Start_Time_Hours
    real(kind=real4) :: Total_Processing_End_Time_Hours
-   real(kind=real8) :: Total_Processing_Time_seconds
+   real(kind=real4) :: Total_Processing_Time_minutes
    real(kind=real4) :: Orbital_Processing_Start_Time_Hours
    real(kind=real4) :: Orbital_Processing_End_Time_Hours
    real(kind=real4) :: Orbital_Processing_Time_Seconds
@@ -1358,7 +1358,8 @@
       call mesg ("Time for Earth Radiation Budget (sec) = ", Segment_Time_Point_Seconds(12))
       call mesg ("Time for Pixel-HDF Write (sec) = ", Segment_Time_Point_Seconds(13))
       !  call mesg ("Time for Grid-cell Compilation (sec) = ", Segment_Time_Point_Seconds(14)
-      call mesg ("Total Time for Processing This Orbit (sec) = ", Orbital_Processing_Time_Seconds,level=verb_lev % MINIMAL)
+      call mesg ("Total Time for Processing This Orbit (sec) = ", Orbital_Processing_Time_Seconds,&
+                                                           level=verb_lev % MINIMAL)
       !  print *, EXE_PROMPT, "Temp Time for Processing This Orbit (sec) = ", Segment_Time_Point_Seconds_temp
 
       !--- add processing time to global attributes
@@ -1397,9 +1398,10 @@
 
    !--- Determine time of the start of all processing
    Total_Processing_End_Time_Hours = COMPUTE_TIME_HOURS()
-   Total_Processing_Time_seconds = 60.0*60.0*(Total_Processing_End_Time_Hours -  &
+   Total_Processing_Time_minutes = 60.0*(Total_Processing_End_Time_Hours -  &
                                               Total_Processing_Start_Time_Hours)
-   call mesg ("Total Time for All Processing (sec) = ", Total_Processing_Time_seconds,level=verb_lev % MINIMAL)
+   call mesg ("Total Time for All Processing (minutes) = ", Total_Processing_Time_minutes, &
+                                           level=verb_lev % MINIMAL)
 
    !---- print to screen that processing is done
    call mesg (  "<--------- End of CLAVRXORB ---------->",level=verb_lev % MINIMAL)

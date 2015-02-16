@@ -126,8 +126,6 @@ module USER_OPTIONS
    
    integer :: Chan_On_Flag_Default_User_Set (nchan_clavrx)
    
-   
-   
    ! ---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
    ! ---------------------------------------------------------------------------------
@@ -206,8 +204,8 @@ contains
       Chan_On_Flag_Default_User_Set(19:24) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default_User_Set(37:42) = [0,0,0,0,0,1]
-      Chan_On_Flag_Default_User_Set(43:44) = [0,0]
+      Chan_On_Flag_Default_User_Set(37:42) = [1,1,0,0,0,0]
+      Chan_On_Flag_Default_User_Set(43:44) = [0,1]
       Nav%Lat_Max_Limit = 90.0
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
@@ -331,9 +329,7 @@ contains
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(37:42)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:44)
              
-     
       close(unit=Default_Lun)
-    
 
    end subroutine READ_OPTION_FILE
  
@@ -1030,11 +1026,10 @@ contains
       case ('MODIS-CSPP')
          Valid_Channels(1:36) = [(i,i=1,36,1)] 
       case ('AHI')
-         Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,43,44]    
+         Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,37,38]    
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
-
 
    end function Existing_Channels
    

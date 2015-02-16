@@ -3777,8 +3777,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
-
-
       !--- Ch1_std_3x3
       if (Sds_Num_Level2_Ch1_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
        call SCALE_VECTOR_I1_RANK2(Ref_Ch1_std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std, &
@@ -4330,8 +4328,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- surface temperature
-
-     !--- surface temperature
      if (Sds_Num_Level2_Tsfc_Flag == sym%YES) then
       call SCALE_VECTOR_I1_RANK2(Tsfc_Retrieved,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tsfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4440,8 +4436,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CCL_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
-
-
 
      !--- remote sensing reflectance
      if (Sds_Num_Level2_Rsr_Flag == sym%YES) then
@@ -4692,7 +4686,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Max of I1 at M-band
-    if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
                                    Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4700,7 +4694,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Min of I1 at M-band
-    if (Sds_Num_Level2_Ref_Min_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Min_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
                                    Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4708,7 +4702,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Mean of I1 at M-band
-    if (Sds_Num_Level2_Ref_Mean_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Mean_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
                                    Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4716,7 +4710,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Uni of I1 at M-band
-    if (Sds_Num_Level2_Ref_Uni_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Uni_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI1,sym%LINEAR_SCALING,Min_Uni_Ch1, &
                                    Max_Uni_Ch1,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4724,7 +4718,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Max of I2 at M-band
-    if (Sds_Num_Level2_Ref_Max_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Max_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
                                    Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4732,7 +4726,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Min of I2 at M-band
-    if (Sds_Num_Level2_Ref_Min_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Min_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
                                    Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4740,7 +4734,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Mean of I2 at M-band
-    if (Sds_Num_Level2_Ref_Mean_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Mean_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
                                    Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4748,7 +4742,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Uni of I2 at M-band
-    if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+    if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI2,sym%LINEAR_SCALING,Min_Uni_Ch2, &
                                    Max_Uni_Ch2,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4756,7 +4750,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Max of I5 at M-band
-    if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+    if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Bt_Max_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
                                    Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4764,7 +4758,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Min of I5 at M-band
-    if (Sds_Num_Level2_Bt_Min_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+    if (Sds_Num_Level2_Bt_Min_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Bt_Min_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
                                    Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4772,7 +4766,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Mean of I5 at M-band
-    if (Sds_Num_Level2_Bt_Mean_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+    if (Sds_Num_Level2_Bt_Mean_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Bt_Mean_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
                                    Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4780,7 +4774,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
 
     !--- Uni of I5 at M-band
-    if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+    if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI5,sym%LINEAR_SCALING,Min_Uni_Ch5, &
                                    Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &

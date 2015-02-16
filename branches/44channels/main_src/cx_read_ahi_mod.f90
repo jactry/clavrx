@@ -176,7 +176,6 @@ contains
       character(len=2) :: identifier
       character ( len=255) :: file_for_this_channel
       
-
       do i = 1 , 16
         
          write (identifier , fmt ='(i2.2)') i

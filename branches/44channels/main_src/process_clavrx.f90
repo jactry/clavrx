@@ -392,7 +392,7 @@
       ! and populate sensor structure
       !------------------------------------------------------------------------
       call DETECT_SENSOR_FROM_FILE(AREAstr,NAVstr,Ierror)
-      
+     
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
          cycle file_loop
@@ -469,13 +469,14 @@
       !    including turn-on and off)
       !------------------------------------------------------------------
       call UPDATE_CONFIGURATION (Sensor%Sensor_Name)
+
+print *, "Chan_On = ", Sensor%Chan_On_Flag_Default
      
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
       call CREATE_PIXEL_ARRAYS()
-
-print *, "hello 1"
+print *, "bubba"
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite
@@ -708,6 +709,9 @@ print *, "hello 1"
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
          end if
+
+         Diag_Pix_Array_1 = ch(37)%Bt_Toa
+         Diag_Pix_Array_2 = ch(38)%Bt_Toa
 
          !------------------------------------------------------------------
          ! Apply spatial limits

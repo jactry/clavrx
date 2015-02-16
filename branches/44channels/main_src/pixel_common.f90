@@ -868,7 +868,7 @@ subroutine CREATE_PIXEL_ARRAYS()
   dim1 = Image%Number_Of_Elements
   dim2 = Image%Number_Of_Lines_Per_Segment
 
-  do idx = 1,36
+  do idx = 1,38
       if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
          allocate(Ch(idx)%Unc(dim1,dim2))
          if (idx <= 20 .or. idx == 26) then 
@@ -1717,35 +1717,35 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Bt_11um_Sounder(dim1,dim2))
            allocate(Bt_12um_Sounder(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
            allocate(Ref_Min_ChI1(dim1,dim2))
            allocate(Ref_Uni_ChI1(dim1,dim2))
            allocate(Ref_Mean_ChI1(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
            allocate(Ref_ChI2(2*dim1,2*dim2))
            allocate(Ref_Max_ChI2(dim1,dim2))
            allocate(Ref_Min_ChI2(dim1,dim2))
            allocate(Ref_Uni_ChI2(dim1,dim2))
            allocate(Ref_Mean_ChI2(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
            allocate(Ref_ChI3(2*dim1,2*dim2))
            allocate(Ref_Max_ChI3(dim1,dim2))
            allocate(Ref_Min_ChI3(dim1,dim2))
            allocate(Ref_Uni_ChI3(dim1,dim2))
            allocate(Ref_Mean_ChI3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
            allocate(Bt_ChI4(2*dim1,2*dim2))
            allocate(Bt_Max_ChI4(dim1,dim2))
            allocate(Bt_Min_ChI4(dim1,dim2))
            allocate(Bt_Uni_ChI4(dim1,dim2))
            allocate(Bt_Mean_ChI4(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(43) == sym%YES) then
            allocate(Bt_ChI5(2*dim1,2*dim2))
            allocate(Bt_Max_ChI5(dim1,dim2))
            allocate(Bt_Min_ChI5(dim1,dim2))
@@ -1761,31 +1761,31 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
 end subroutine CREATE_EXTRA_CHANNEL_ARRAYS
 
 subroutine RESET_EXTRA_CHANNEL_ARRAYS()
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
       if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
       if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
       if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4

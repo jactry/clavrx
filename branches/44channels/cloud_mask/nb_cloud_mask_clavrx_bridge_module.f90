@@ -30,6 +30,7 @@
 !      2014/04/21:  add fire mask input (AW)
 !      2014/05/07:  added diagnostic type (Denis B)
 !      2014/05/09:  added version (Denis B)
+!      2015/02/16   New channel numbers for VIIRS i-band and DNB (AW)
 !
 !  GLOBAL VARIABLES:
 !

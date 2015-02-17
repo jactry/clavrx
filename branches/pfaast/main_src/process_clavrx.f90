@@ -72,13 +72,15 @@
 !            http://cimss.ssec.wisc.edu/patmosx
 !
 ! Channels 1 - 36 refer to MODIS or their analogs on other sensors
-! Channels 37-42 are defined only for VIIRS
-! Channel 37 - VIIRS I1 - 0.64 micron
-! Channel 38 - VIIRS I2 - 0.865 micron
-! Channel 39 - VIIRS I3 - 1.61 micron
-! Channel 40 - VIIRS I4 - 3.74 micron
-! Channel 41 - VIIRS I5 - 11.45 micron
-! Channel 42 - VIIRS DNB - 0.7 micron
+! Channel 37 = ABI Channel 8 = 6.2 micron
+! Channel 38 = ABI Channel 13 = 10.4 micron
+! Channels 39-44 are defined only for VIIRS
+! Channel 39 - VIIRS I1 - 0.64 micron
+! Channel 40 - VIIRS I2 - 0.865 micron
+! Channel 41 - VIIRS I3 - 1.61 micron
+! Channel 42 - VIIRS I4 - 3.74 micron
+! Channel 43 - VIIRS I5 - 11.45 micron
+! Channel 44 - VIIRS DNB - 0.7 micron
 !
 !-------------------------------------------------------------------------
  
@@ -146,8 +148,6 @@
  
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
-      
-   
       
    implicit none
  
@@ -249,15 +249,13 @@
    character ( len = 30) :: string_30
    character ( len = 100) :: string_100
    
-   
-   
    !------------- VIIRS variables --------------
    real(kind=real4), dimension(:,:), pointer :: lunar_ref
    real(kind=real4), dimension(:,:),allocatable :: lunar_placeholder
    
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
-                                                            !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
-   integer, dimension(20:36), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0,10,10,11,12,14,15,16,16,16,16/)
+                                                            !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38
+   integer, dimension(20:38), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16,8,13/)     !Check this
    integer:: Chan_Idx
    
    
@@ -394,7 +392,7 @@
       ! and populate sensor structure
       !------------------------------------------------------------------------
       call DETECT_SENSOR_FROM_FILE(AREAstr,NAVstr,Ierror)
-      
+     
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
          cycle file_loop
@@ -471,7 +469,7 @@
       !    including turn-on and off)
       !------------------------------------------------------------------
       call UPDATE_CONFIGURATION (Sensor%Sensor_Name)
-     
+
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
@@ -627,8 +625,10 @@
                                    a1_34,a2_34,nu_34, &
                                    a1_35,a2_35,nu_35, &
                                    a1_36,a2_36,nu_36, &
-                                   a1_40,a2_40,nu_40, &
-                                   a1_41,a2_41,nu_41)
+                                   a1_37,a2_37,nu_37, &
+                                   a1_38,a2_38,nu_38, &
+                                   a1_42,a2_42,nu_42, &
+                                   a1_43,a2_43,nu_43)
  
          if (Aer_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
             call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sensor%WMO_Id)
@@ -638,8 +638,6 @@
  
       end if
  
- 
-
       !--- compute Sun-Earth distance
       Sun_Earth_Distance = 1.0 - 0.016729*cos(0.9856*(Image%Start_Doy-4.0)*dtor)
  
@@ -720,14 +718,14 @@
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
-         if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+         if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
 
            ! - check the angles if this is a good lunar scene
            ! - lun and solar zenith angle
 
-           Lunar_Ref => ch(42)%Ref_Lunar_Toa
+           Lunar_Ref => ch(44)%Ref_Lunar_Toa
                   
-           call COMPUTE_LUNAR_REFLECTANCE (ch(42)%Rad_Toa &
+           call COMPUTE_LUNAR_REFLECTANCE (ch(44)%Rad_Toa &
                      & , Geo%Solzen, Geo%Lunzen &
                      & , Image%Start_Year, month,day_of_month,Image%start_time &
                      & , Geo%moon_phase_angle  &
@@ -885,8 +883,8 @@
             Sfc%Desert_Mask =  DESERT_MASK_FOR_CLOUD_DETECTION(ch(20)%Sfc_Emiss, Nav%Lat, Sfc%Snow, Sfc%Sfc_Type)
 
             !--- compute city mask cloud detection
-            if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-             Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(42)%Rad_Toa, Sfc%Sfc_Type)
+            if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+             Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(44)%Rad_Toa, Sfc%Sfc_Type)
             endif
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1013,7 +1011,6 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-           
             if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1116,12 +1113,11 @@
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(8) =  Segment_Time_Point_Seconds(8) + &
                    &   60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
-
     
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(42) == sym % yes) then
-                  if ( count (ch(42)%Ref_Lunar_Toa > 0) > 0 ) then
+               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes) then
+                  if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
                      call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
                   end if   
                end if   
@@ -1189,7 +1185,7 @@
                end if
 
             end if
-    
+   
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             
@@ -1200,7 +1196,6 @@
             !---  Run SASRAB
             if ( Sasrab_Flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(12) =  Segment_Time_Point_Seconds(12) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
@@ -1609,7 +1604,7 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
            !--- force channel 20 read
            call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
 
-           do Chan_Idx = 21, 36
+           do Chan_Idx = 21, 38
                if (Chan_Idx == 26) cycle
                if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                  call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)

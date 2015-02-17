@@ -1335,7 +1335,7 @@ contains
       case(223) !NOAA-19
         sensor_name_rtm = 'AVHRR-NOAA19'
 
-      case(224) !VIIRS - only needed for IFF support, not used in viirs pfaast
+      case(224) !VIIRS - 
         sensor_name_rtm = 'VIIRS'
 
       case(252) !GOES-8

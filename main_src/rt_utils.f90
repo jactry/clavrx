@@ -152,7 +152,7 @@ module RT_UTILITIES
              BETA_RATIO
    
     
-   public:: SETUP_PFAAST, &
+   public::  &
             SETUP_SOLAR_RTM, &
             MAP_NWP_RTM,  &
             CREATE_TEMP_NWP_VECTORS,  &
@@ -594,6 +594,7 @@ contains
       ! Compute Gamma_Trans_Factor for radiance bias
       !--------------------------------------------------------------------------
       call COMPUTE_GAMMA_FACTOR()
+     
 
       Lon_Idx_Prev = 0
       Lat_Idx_Prev = 0
@@ -718,7 +719,11 @@ contains
                      if (Chan_Idx == 26) cycle
                      if (Chan_Idx == 44) cycle
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+                     
+                
+                     Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
 
+                     
                      CALL compute_transmission_pfaast( &
                            trim(Ancil_data_Dir) &
                         ,  T_Prof_rtm &
@@ -727,9 +732,9 @@ contains
                         ,  Satzen_Mid_Bin &
                         ,  CO2_RATIO &
                         ,  Sc_Name_Rtm &
-                        ,  0 &
+                        ,  chan_idx &
                         ,  Trans_Prof_Rtm &
-                        ,  modis_chn_eqv = chan_idx ) 
+                        ,  use_modis_channel_equivalent = .true.  ) 
 
                      !---- Copy the output to appropriate channel's tranmission vector
                      Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
@@ -1257,180 +1262,152 @@ contains
 
 
    !--------------------------------------------------------------------------------------------------
-   ! subroutine NAME: SETUP_PFAAST
+   ! subroutine NAME: sensor_name_for_rtm
    !
    ! Description:
    ! Knowing the WMO Satellite Identification Number, put needed constants for pfaast into memory
    !--------------------------------------------------------------------------------------------------
    
-   subroutine SETUP_PFAAST(WMO_Id)
-
-      integer, intent(in):: WMO_Id
-
-
-      Rtm_Chan_Idx = 0
-
-      !----------------------------------------------------------------
-      ! set channel mapping and pfaast routine name
-      !----------------------------------------------------------------
-      select case(WMO_Id)
-
+   function sensor_name_for_rtm ( wmo_id, sensorname, chan_idx ) result ( sensor_name_rtm)
+      integer, intent(in) :: wmo_id
+      character (len =*) , intent(in) :: sensorname
+      integer, intent(in) :: chan_idx
+      character (len =20 ) ::  sensor_name_rtm
+      integer :: i
       
-      case(3:5) !AVHRR (METOP-A,B,C)
-         
-        
-         
-         if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-            print*,'has to be checked for pfaast ask andi'
-            stop
-         endif
-
-        
-      case(200:209,223,706:708) !AVHRR 
-         
-         if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-          print*,'has to be checked for pfaast ask andi'
-            stop
-         endif
-
-        case(224) !VIIRS
-         
-         if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
-           print*,'has to be checked for pfaast ask andi'
-            stop
-         endif
-
-      
-
-      case default
-        
-
-      end select
-
-      !----------------------------------------------------------------
-      ! set unique sensor id used by pfaast
-      ! pfaast uses a number for some and a name for others
-      !----------------------------------------------------------------
-      Sc_Name_Rtm = ""
-     
       select case(WMO_Id)
 
       case(4) !METOP-A
-         Sc_Name_Rtm = 'AVHRR-METOPA'
+         sensor_name_rtm = 'AVHRR-METOPA'
 
       case(3) !METOP-B
-         Sc_Name_Rtm = 'AVHRR-METOPB'
+         sensor_name_rtm = 'AVHRR-METOPB'
 
       case(5) !METOP-C
-        Sc_Name_Rtm = 'AVHRR-METOPC'
+        sensor_name_rtm = 'AVHRR-METOPC'
 
       case(55) !MSG-8
-        Sc_Id_Rtm = 8
-         Sc_Name_Rtm = 'SEVIRI-MSG08'
+         sensor_name_rtm = 'SEVIRI-MSG08'
+      
       case(56) !MSG-9
-        Sc_Id_Rtm = 9
-         Sc_Name_Rtm = 'SEVIRI-MSG09'
+         sensor_name_rtm = 'SEVIRI-MSG09'
+      
       case(57) !MSG-10
-        Sc_Id_Rtm = 10
-         Sc_Name_Rtm = 'SEVIRI-MSG10'
+         sensor_name_rtm = 'SEVIRI-MSG10'
+      
       case(171) !MTSAT-1R
-        Sc_Id_Rtm =  1
-         Sc_Name_Rtm = 'MTSAT-1'
+         sensor_name_rtm = 'MTSAT-1'
+      
       case(172) !MTSAT-2
-        Sc_Id_Rtm =  2
-         Sc_Name_Rtm = 'MTSAT-2'
+         sensor_name_rtm = 'MTSAT-2'
+      
       case(200) !NOAA-8
-        Sc_Name_Rtm = 'AVHRR-NOAA08'
+        sensor_name_rtm = 'AVHRR-NOAA08'
 
       case(201) !NOAA-9
-        Sc_Name_Rtm = 'AVHRR-NOAA09'
+        sensor_name_rtm = 'AVHRR-NOAA09'
 
       case(202) !NOAA-10
-        Sc_Name_Rtm = 'AVHRR-NOAA10'
+        sensor_name_rtm = 'AVHRR-NOAA10'
 
       case(203) !NOAA-11
-        Sc_Name_Rtm = 'AVHRR-NOAA11'
+        sensor_name_rtm = 'AVHRR-NOAA11'
 
       case(204) !NOAA-12
-        Sc_Name_Rtm = 'AVHRR-NOAA12'
+        sensor_name_rtm = 'AVHRR-NOAA12'
 
       case(205) !NOAA-14
-        Sc_Name_Rtm = 'AVHRR-NOAA14'
+        sensor_name_rtm = 'AVHRR-NOAA14'
 
       case(206) !NOAA-15
-        Sc_Name_Rtm = 'AVHRR-NOAA15'
+        sensor_name_rtm = 'AVHRR-NOAA15'
 
       case(207) !NOAA-16
-        Sc_Name_Rtm = 'AVHRR-NOAA16'
+        sensor_name_rtm = 'AVHRR-NOAA16'
 
       case(208) !NOAA-17
-        Sc_Name_Rtm = 'AVHRR-NOAA17'
+        sensor_name_rtm = 'AVHRR-NOAA17'
 
       case(209) !NOAA-18
-        Sc_Name_Rtm = 'AVHRR-NOAA18'
+        sensor_name_rtm = 'AVHRR-NOAA18'
 
       case(223) !NOAA-19
-        Sc_Name_Rtm = 'AVHRR-NOAA19'
+        sensor_name_rtm = 'AVHRR-NOAA19'
 
       case(224) !VIIRS - only needed for IFF support, not used in viirs pfaast
-        Sc_Name_Rtm = 'VIIRS'
+        sensor_name_rtm = 'VIIRS'
 
       case(252) !GOES-8
-        Sc_Name_Rtm = 'GOES-8'
+        sensor_name_rtm = 'GOES-8'
 
       case(253) !GOES-9
-        Sc_Name_Rtm = 'GOES-9'
+        sensor_name_rtm = 'GOES-9'
 
       case(254) !GOES-10
-        Sc_Name_Rtm = 'GOES-10'
+        sensor_name_rtm = 'GOES-10'
 
       case(255) !GOES-11
-        Sc_Name_Rtm = 'GOES-11'
+        sensor_name_rtm = 'GOES-11'
 
       case(256) !GOES-12
-        Sc_Name_Rtm = 'GOES-12'
+        sensor_name_rtm = 'GOES-12'
 
       case(257) !GOES-13
-        Sc_Name_Rtm = 'GOES-13'
+        sensor_name_rtm = 'GOES-13'
 
       case(258) !GOES-14
-        Sc_Name_Rtm = 'GOES-14'
+        sensor_name_rtm = 'GOES-14'
 
       case(259) !GOES-15
-        Sc_Name_Rtm = 'GOES-15'
+        sensor_name_rtm = 'GOES-15'
 
       case(706) !NOAA-6
-        Sc_Name_Rtm = 'AVHRR-NOAA06'
+        sensor_name_rtm = 'AVHRR-NOAA06'
 
       case(707) !NOAA-7
-        Sc_Name_Rtm = 'AVHRR-NOAA07'
+        sensor_name_rtm = 'AVHRR-NOAA07'
 
       case(708) !NOAA-5
-        Sc_Name_Rtm = 'AVHRR-TIROSN'
+        sensor_name_rtm = 'AVHRR-TIROSN'
 
       case(783) !MODIS 
-          Sc_Name_Rtm = "MODIS-TERRA"
+          sensor_name_rtm = 'MODIS-TERRA'
 
       case(784) !MODIS 
-          Sc_Name_Rtm = "AMODIS-QUA"
+         sensor_name_rtm = 'MODIS-AQUA'
 
       case(810) !COMS
-          
-            Sc_Name_Rtm ='FY2-1'
-      case(514) !FY2D
+         sensor_name_rtm ='FY2-1'
          
-         Sc_Name_Rtm ='FY2-2'
-      case(515) !FY2E
-          
-         Sc_Name_Rtm ='FY2-3'
+      case(514) !FY2D      
+         sensor_name_rtm ='FY2-2'
+         
+      case(515) !FY2E          
+         sensor_name_rtm ='FY2-3'
       
       end select
-
-
-   end subroutine SETUP_PFAAST
+      
+      
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+        
+         !  sensor for channels 21:30 and 33:36 is HIRS
+         if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) sensor_name_rtm   = 'HIRS'
+      end if
+   
+      if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
+         
+         !  sensor for channels 27:28 and 33:36 is CRISP this is similar to MODIS-AQUA
+         if ( any ( chan_idx ==  [27,28, 33,34,35,36] ) ) sensor_name_rtm   = 'MODIS-AQUA'
+         
+      end if
+   
+   
+   end function sensor_name_for_rtm 
+   
+   
+   
    
   
-
 
    !--------------------------------------------------------------------------------------------------
    !  set up values for the solar rtm calculations for this sensor

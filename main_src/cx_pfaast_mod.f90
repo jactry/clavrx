@@ -37,9 +37,9 @@ contains
        & ,theta  &
        & ,rco2 &
        & ,sensor &
-       & ,kban_native &
+       & ,kban_in &
        & ,taut &
-       & , modis_chn_eqv )
+       & , use_modis_channel_equivalent )
        
        
        
@@ -52,8 +52,9 @@ contains
       real, intent(in)  :: theta 
       real, intent(in)  :: rco2 
       character (len =* ), intent(in) :: sensor
-      integer, intent(in)  :: kban_native 
-      integer, intent(in), optional :: modis_chn_eqv
+      integer, intent(in)  :: kban_in 
+      logical , optional , intent(in) :: use_modis_channel_equivalent 
+      
       
        
       integer :: kban
@@ -67,7 +68,7 @@ contains
       real :: secz ( NM )
       real :: xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
       real, dimension(NL)  ::taud,tauw,tauo,tauc
-      
+      logical :: use_native_channel_number = .true.
       
       
       taud = 1.
@@ -81,32 +82,31 @@ contains
       ! - read coef data if needed      
       call coef % read_it ( trim(sensor) , ancil_data_path ) 
       
-      if ( present ( modis_chn_eqv )) then
-         !  find kban in coef data 
-         if ( .not. any ( modis_chn_eqv ==  coef % modis_channel_eqv)) then
-           ! print*,'wrong MODIS channel set for pfaast',modis_chn_eqv
-           ! print*,'please use modis equivalent sensor channel number'
-           !print*,'sensor ', sensor
-           ! print*,'possible channels: ',coef % modis_channel_eqv
-           ! print*,'returning...'
-            return
+      if ( present ( use_modis_channel_equivalent  )) then
+         if (  use_modis_channel_equivalent ) then
+            ! - modis channel
+            if ( .not. any ( kban_in ==  coef % modis_channel_eqv)) then
+               return            
+            end if
+            kban = minloc ( abs ( coef % modis_channel_eqv - kban_in ), 1)
+            use_native_channel_number = .false.
          end if
-         kban = minloc ( abs ( coef % modis_channel_eqv - modis_chn_eqv ), 1)
-
-      else
+      end if 
       
-      
-         !  find kban in coef data 
-         if ( .not. any ( kban_native ==  coef % native_channel)) then
-            print*,'wrong channel set for pfaast',kban_native
+      if ( use_native_channel_number ) then
+         if ( .not. any ( kban_in ==  coef % native_channel)) then
+            print*,'wrong channel set for pfaast',kban_in
             print*,'please use native sensor channel number'
             print*,'sensor ', sensor
             print*,'possible channels: ',coef % native_channel
             print*,'returning...'
             return
          end if
-         kban = minloc ( abs ( coef % native_channel - kban_native ), 1)
-      end if
+         kban = minloc ( abs ( coef % native_channel - kban_in ), 1)
+      
+      end if  
+      
+      
       
       ! - computes mid-layer values for reference
       if ( .not. are_ref_profiles_set ) then

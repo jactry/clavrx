@@ -284,7 +284,7 @@ contains
       
       case ('HIRS')
          
-         this % modis_channel_eqv = [ 50,50,50,50,50,34,33,50,30,50,28,27,50,50,25,24,50,23,21 ]
+         this % modis_channel_eqv = [ -1,-1,-1,-1,-1,34,33,-1,30,-1,28,27,-1,-1,25,24,-1,23,21 ]
          this % native_channel = [ (i,i=1,19),1 ]   
       case ('AVHRR')
         

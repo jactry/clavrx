@@ -10,8 +10,8 @@ module dcomp_interface_TYPEs_mod
    integer, parameter :: INT1 = selected_int_kind(1)   
    integer, parameter :: INT2 = selected_int_kind(2)
    
-   ! - CLAVRX uses 42 MODIS/VIIRS channels
-   integer , parameter :: N_CHN = 42   
+   ! - CLAVRX uses 44 MODIS/VIIRS channels
+   integer , parameter :: N_CHN = 44   
    
    ! - object for 2D real4 arrays
    type d2_real4_type

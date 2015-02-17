@@ -162,7 +162,12 @@ contains
       type ( date_type ) :: out
   
       integer , intent(in):: day_to_add
-      out = this
+      
+      select type (this)
+         type is (date_type)
+             out = this
+      
+      end select
       out % day = out % day + day_to_add
       call out % update ()
       
@@ -268,7 +273,7 @@ contains
    function date_string ( this , fmt ) result(out)
       class ( date_type) :: this
       character ( len = * ) , intent (in) :: fmt 
-      character (len=:) , allocatable :: out
+      character (len=20) , allocatable :: out
       character ( len = 2 ) :: year_s2d
       character ( len = 4 ) :: year_s
       character ( len = 2 ) :: month_s
@@ -278,7 +283,8 @@ contains
       integer :: len_fmt
       
       len_fmt = len(fmt) 
-       allocate ( character(len_fmt ) :: out  )
+      ! not supported by gfortran 4.7!
+      ! allocate ( character(len = 5 ) :: out  )
       
       write ( year_s2d, fmt ='(i2.2)') mod(this % year , 100)
       write ( year_s, fmt = '(i4.4)') this % year

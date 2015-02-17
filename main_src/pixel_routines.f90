@@ -899,23 +899,23 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
 
-     channel_loop: do Chan_Idx = 1,42
+     channel_loop: do Chan_Idx = 1,44
 
        if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
        if (Chan_Idx /= 1 .and. Chan_Idx /= 2 .and. Chan_Idx /= 5 .and. &
-           Chan_Idx /= 6 .and. Chan_Idx /= 7 .and. Chan_Idx /= 42) cycle
+           Chan_Idx /= 6 .and. Chan_Idx /= 7 .and. Chan_Idx /= 44) cycle
 
        !--- check for valid data
-       if (Chan_Idx /= 42 .and. ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-       if (Chan_Idx == 42) then
+       if (Chan_Idx /= 44 .and. ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+       if (Chan_Idx == 44) then
          if (ch(Chan_Idx)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
        endif
 
        !--- set source angle
        Source_Zen = Geo%SolZen(Elem_Idx,Line_Idx)
        Scattering_Angle = Geo%Scatangle(Elem_Idx,Line_Idx)
-       if (Chan_Idx == 42) then
+       if (Chan_Idx == 44) then
             Source_Zen = Geo%LunZen(Elem_Idx,Line_Idx)
             Scattering_Angle = Geo%Scatangle_Lunar(Elem_Idx,Line_Idx)
        endif
@@ -987,7 +987,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
               Albedo_View = Ch7_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
-       case(42)  !DNB - use mean of ch1 and ch2 for sfc reflectance
+       case(44)  !DNB - use mean of ch1 and ch2 for sfc reflectance
          if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 &
             .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = 0.5*(ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)+ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)) / 100.0
@@ -1026,7 +1026,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        Tau_Total = Tau_Aer + Tau_Ray + Tau_Gas
        Trans_Total = exp(-Tau_Total*Airmass_Factor)
 
-       if (Chan_Idx /= 42) then
+       if (Chan_Idx /= 44) then
 
          !--- compute atmospherically corrected reflectance (at sfc level)s
          ch(Chan_Idx)%Ref_Sfc(Elem_Idx,Line_Idx) = (ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_ss) / Trans_Total
@@ -1612,9 +1612,9 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
 
    !--- Ref_ChDNB_Lunar
-   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       ch(42)%Ref_Lunar_Toa,nbox,  &
+                                       ch(44)%Ref_Lunar_Toa,nbox,  &
                                        Uni_Land_Mask_flag_no, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
@@ -1933,8 +1933,8 @@ subroutine COMPUTE_GLINT_LUNAR()
           endif
 
           !-turn off if dark
-          if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-            if (ch(42)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) < 5.0) then
+          if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+            if (ch(44)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) < 5.0) then
              Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
@@ -2775,7 +2775,7 @@ integer(kind=int1) elemental function CITY_MASK_FOR_CLOUD_DETECTION( &
    !--- surface surfaces of light that we treat as cities
    !--- note, need to check if lunar radiance is available.
    !----------------------------------------------------------------------------
-   if (allocated(ch(42)%Rad_Toa)) then
+   if (allocated(ch(44)%Rad_Toa)) then
      if (Rad_Lunar > Radiance_Lunar_City_Thresh) then
        City_Mask_For_Cloud_Detection = 1
      endif

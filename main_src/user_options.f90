@@ -126,8 +126,6 @@ module USER_OPTIONS
    
    integer :: Chan_On_Flag_Default_User_Set (nchan_clavrx)
    
-   
-   
    ! ---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
    ! ---------------------------------------------------------------------------------
@@ -206,7 +204,8 @@ contains
       Chan_On_Flag_Default_User_Set(19:24) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
-      Chan_On_Flag_Default_User_Set(37:42) = [0,0,0,0,0,1]
+      Chan_On_Flag_Default_User_Set(37:42) = [1,1,0,0,0,0]
+      Chan_On_Flag_Default_User_Set(43:44) = [0,1]
       Nav%Lat_Max_Limit = 90.0
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
@@ -328,10 +327,9 @@ contains
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(25:30)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(31:36)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(37:42)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:44)
              
-     
       close(unit=Default_Lun)
-    
 
    end subroutine READ_OPTION_FILE
  
@@ -1012,7 +1010,7 @@ contains
       case ('FY2-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]    
       case ('VIIRS')
-         Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,37,38,39,40,41,42]
+         Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,39,40,41,42,43,44]
       case ('VIIRS-IFF')
          Valid_Channels (1:20) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36]
       case ('AQUA-IFF')
@@ -1028,11 +1026,10 @@ contains
       case ('MODIS-CSPP')
          Valid_Channels(1:36) = [(i,i=1,36,1)] 
       case ('AHI')
-         Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,43,44]    
+         Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,37,38]    
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
-
 
    end function Existing_Channels
    
@@ -1053,7 +1050,7 @@ contains
           
       Sensor%Chan_On_Flag_Default =  0
 
-      do i = 1, 42 
+      do i = 1, 44 
          if (Valid_Channels (i) < 0 ) cycle
          Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = 1
       end do
@@ -1078,7 +1075,7 @@ contains
       
       Valid_Channels = Existing_Channels ( SensorName )
 
-      do i = 1, 42 
+      do i = 1, 44 
          if ( any ( i == Valid_Channels )) cycle
          Sensor%Chan_On_Flag_Default ( i ) = 0
       end do

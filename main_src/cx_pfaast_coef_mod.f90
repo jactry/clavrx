@@ -14,6 +14,7 @@ module cx_pfaast_coef_mod
       integer , allocatable :: native_channel (:)
       character ( len = 10), allocatable :: channel_descr (:)
    contains
+   
       procedure :: allocate_it
       procedure :: deallocate_it
       procedure :: read_it => read_coef 
@@ -192,9 +193,9 @@ contains
          
       if ( big_endian()) then
          call flip_rtc(coefd,ncd,nm, N_CHANNELS)
-	      call flip_rtc(coefo,nco,nm, N_CHANNELS)
-	      call flip_rtc(coefc,ncc,nm, N_CHANNELS)
-	      call flip_rtc(coefl,ncl,nm, N_CHANNELS)
+         call flip_rtc(coefo,nco,nm, N_CHANNELS)
+         call flip_rtc(coefc,ncc,nm, N_CHANNELS)
+         call flip_rtc(coefl,ncl,nm, N_CHANNELS)
 	      call flip_rtc(coefs,ncs,nm, N_CHANNELS)
       end if
          
@@ -297,8 +298,9 @@ contains
       
    end subroutine read_avhrr
          
-   
-   !>
+   ! ----------------------------------
+   !> This function read MODIS PFAAST coeffecient file
+   !!  @param satellite This should be either "AQUA" or "TERRA"
    !!  @todo check channel 26 issue
    !!
    subroutine read_modis ( this , satellite)
@@ -504,7 +506,7 @@ contains
       
    end subroutine open_files
       
-      !>
+      !>  THis function reads PFAAST coefficient files for most sensors
       !!
       !!
       subroutine read_data_standard (this, n_channels, koff,  lun_s)

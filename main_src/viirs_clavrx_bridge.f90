@@ -52,12 +52,12 @@
 !    M14   -    29    -    8.550
 !    M15   -    31    -   10.763
 !    M16   -    32    -   12.013
-!    I1    -    37    -    0.640
-!    I2    -    38    -    0.865
-!    I3    -    39    -    1.610
-!    I4    -    40    -    3.740
-!    I5    -    41    -   11.450
-!    DNB   -    42    -    0.700
+!    I1    -    39    -    0.640
+!    I2    -    40    -    0.865
+!    I3    -    41    -    1.610
+!    I4    -    42    -    3.740
+!    I5    -    43    -   11.450
+!    DNB   -    44    -    0.700
 !
 !--------------------------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ contains
       !                 041 044 048 055  068  074   085 124 138 160 225  375  405  855  108  120
       !                 M1  M2   M3   M4  M5   M6   M7  M8  M9  M10 M11  M12  M13  M14  M15  M16  
       modis_chn_list = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
-      modis_chn_list_iband = [ 37 , 38 , 39 , 40 , 41 ]
+      modis_chn_list_iband = [ 39 , 40 , 41 , 42 , 43 ]
       is_mband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
       is_iband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) == sym%YES
       
@@ -168,7 +168,7 @@ contains
       ! - configure viirs interface
       v_conf % chan_on_rfl_mband = is_mband_on
       v_conf % chan_on_iband = is_iband_on
-      v_conf % chan_on_dnb = Sensor%Chan_On_Flag_Default(42) == sym%YES
+      v_conf % chan_on_dnb = Sensor%Chan_On_Flag_Default(44) == sym%YES
       v_conf % viirs_cloud_mask_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       v_conf % viirs_cloud_type_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       
@@ -238,12 +238,26 @@ contains
       
       ! - i-bands
       do  i_iband = 1 , 5
+         
+            if ( .not. out % file_exists % svi_file_exists (i_iband)) then
+                 ! - switch off chan_on in CLAVR-x if file is not there..
+               Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) = sym % NO
+               sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % NO
+               cycle
+            end if
+            
+            
            if ( .not. out % iband ( i_iband ) % is_read ) then
             sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % no 
+          
             cycle   
          end if
+         
          if ( .not. is_iband_on(i_iband) .or. (size(out % iband (i_iband) % ref) < 1 &
-              .and. size(out % iband (i_iband) % bt) < 1) ) cycle
+              .and. size(out % iband (i_iband) % bt) < 1) ) then    
+              cycle
+         end if
+         
          c_seg_lines_iband  = 2 * c_seg_lines
          select case ( i_iband)
          case(1)
@@ -260,11 +274,11 @@ contains
       
       end do 
     
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES .and. size(out % dnb_mgrid % rad) > 1) then
-         ch(42)%rad_toa( : ,1:c_seg_lines)  = out % dnb_mgrid % rad
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. size(out % dnb_mgrid % rad) > 1) then
+         ch(44)%rad_toa( : ,1:c_seg_lines)  = out % dnb_mgrid % rad
          geo % lunzen( : ,1:c_seg_lines) = out % geo % lunzen
          geo % lunaz( : ,1:c_seg_lines) = out % geo % lunaz
-         ch(42)%ref_toa( : ,1:c_seg_lines) = out % dnb_mgrid % ref
+         ch(44)%ref_toa( : ,1:c_seg_lines) = out % dnb_mgrid % ref
          geo % lunrelaz( : ,1:c_seg_lines) = Relative_Azimuth ( geo % lunaz( : ,1:c_seg_lines) &
                                                              , geo % sataz( : ,1:c_seg_lines) )
           
@@ -402,8 +416,8 @@ contains
       read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29
       read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
       read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
-      read(unit=Instr_Const_lun,fmt=*) a1_40, a2_40,nu_40
-      read(unit=Instr_Const_lun,fmt=*) a1_41, a2_41,nu_41
+      read(unit=Instr_Const_lun,fmt=*) a1_42, a2_42,nu_42
+      read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
   
@@ -528,24 +542,30 @@ contains
 !         
 ! output : jday - julian day
 !--------------------------------------------------
- subroutine JULIAN(iday,imonth,iyear,jday)
+   subroutine JULIAN(iday,imonth,iyear,jday)
 
-!-- Computes julian day (1-365/366)
-        integer, intent(in)::  iday,imonth,iyear
-        integer, intent(out):: jday
-        integer::  j
-        integer, dimension(12)::  jmonth
+      !-- Computes julian day (1-365/366)
+      integer, intent(in)::  iday,imonth,iyear
+      integer, intent(out):: jday
+      integer::  j
+      integer, dimension(12)::  jmonth
 
-        jmonth = reshape ((/31,28,31,30,31,30,31,31,30,31,30,31/),(/12/))
+      jmonth = reshape ((/31,28,31,30,31,30,31,31,30,31,30,31/),(/12/))
+      
+      jday = iday
+      if (modulo(iyear,4) == 0) then
+         jmonth(2)=29
+         ! make CLAVR-x year 2100 ready !!   
+         if ( modulo(iyear,100) == 0 .and. modulo(iyear,400) /= 0 ) then
+            jmonth (2) = 28
+         end if
+      endif
+      
+      
 
-        jday = iday
-        if (modulo(iyear,4) == 0) then
-            jmonth(2)=29
-        endif
-
-        do j = 1,imonth-1
-           jday = jday + jmonth(j)
-        end do
+      do j = 1,imonth-1
+         jday = jday + jmonth(j)
+      end do
 
    end subroutine JULIAN
 

@@ -207,7 +207,7 @@ contains
       this % wvp_solid  = coefs 
       this % wvp_liquid = coefl 
          
-      this % modis_channel_eqv = [ 20,27,28,29,30,31,32,33,43,44 ]
+      this % modis_channel_eqv = [ 20,27,28,29,30,31,32,33,37,38 ]
       this % native_channel = [(i , i=7 , 16 ) , 1 ]
         
    end subroutine read_ahi

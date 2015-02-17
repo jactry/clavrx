@@ -264,6 +264,7 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
                            sfginfo, sfn2index
       integer(kind=int4):: num_attrs, sds_data_type, sds_rank
       integer(kind=int4), dimension(3):: sds_dims
+      integer(kind=int4), dimension(:,:), allocatable:: i4_buffer
       integer(kind=int2), dimension(:,:,:), allocatable:: i2_buffer
       integer(kind=int2), dimension(:,:,:), allocatable:: i1_buffer
       real(kind=int4), dimension(:), allocatable:: scales
@@ -290,7 +291,7 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
       character(len=120):: band_name
       integer:: num_char_band_names
       integer::ii
-  
+
       Error_Status = 0
       iend = 0
       Status_Flag = 0
@@ -407,6 +408,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       nx_min = min(nx,nx_local)
       ny_min = min(ny,ny_local_temp)
 
+      allocate(i4_buffer(nx_local,ny_local_temp))
       allocate(i2_buffer(nx_local,ny_local_temp,1))
       allocate(i1_buffer(nx_local,ny_local_temp,1))
 
@@ -436,11 +438,15 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- close file
       Status_Flag = sfend(Sd_Id)
 
+      !--- convert from i2 to i4 because it's unsigned integer (Denis B.)
+      i4_buffer=i2_buffer(:,:,1)
+      where (i4_buffer < 0 .and. i4_buffer .ne. fill_value) i4_buffer=i4_buffer+2**16
+
       !----- calibrate counts
       !--radiances have units of  Watts/m^2/micrometer/steradian
       !--reflectances range from 0.0 to 1.0
 
-      calibrated_data = scales(iband_sds)*(i2_buffer(:,:,1) - offsets(iband_sds))
+      calibrated_data = scales(iband_sds)*(i4_buffer - offsets(iband_sds))
 
       !--- scale reflectaces to 0 to 100%
       if (therm_flag == sym%NO) then
@@ -450,7 +456,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
                    endwhere
       endif
 
-      where(i2_buffer(:,:,1) == fill_value) 
+      where(i4_buffer == fill_value) 
               calibrated_data = missing_value
       endwhere
       
@@ -467,6 +473,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- deallocate memory
       if (allocated(band_names)) deallocate(band_names)
       if (allocated(band_int_names)) deallocate(band_int_names)
+      if (allocated(i4_buffer)) deallocate(i4_buffer)
       if (allocated(i2_buffer)) deallocate(i2_buffer)
       if (allocated(i1_buffer)) deallocate(i1_buffer)
       if (allocated(scales)) deallocate(scales)
@@ -862,6 +869,8 @@ subroutine READ_MODIS(Seg_Idx,Error_Status)
 
     real, dimension(20:36):: Eff_Wavenumber
 
+    character (len=250) :: File_Name_Tmp
+
     Error_Status = 0
     End_Flag = 0
 
@@ -870,74 +879,47 @@ subroutine READ_MODIS(Seg_Idx,Error_Status)
 
 error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
-    if (trim(Sensor%Sensor_Name) == 'MODIS') then
+    if (trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
   
-      !-- read geolocation (and compute scan time)
-      if (Sensor%Spatial_Resolution_Meters == 1000) then
-         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Image%Level1b_Path),  &
-                                            trim(Image%Auxiliary_Geolocation_File_Name), &
-                                            Nav%Lon_1b, Nav%Lat_1b, & 
-                                            Geo%Satzen, Geo%Sataz, Geo%Solzen, Geo%Solaz, Geo%Relaz, &
-                                            Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
-                                            Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
-                                            Image%start_Time,Image%End_Time,scan_time, &
-                                            Scan_Number,Nav%Ascend,Error_Status)
+       !-- read geolocation (and compute scan time)
+       if (Sensor%Spatial_Resolution_Meters == 1000) then
+          File_Name_Tmp = trim(Image%Auxiliary_Geolocation_File_Name)
+       else
+          File_Name_Tmp = trim(Image%Level1b_Name)
+       endif
 
-        if (Error_Status /= 0) exit
-
-        !--- read cloud mask - assume path is same as level-1b
-        Cloud_Mask_Aux_Read_Flag = sym%NO
-
-        if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
-
-         call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
-                                            trim(Image%Auxiliary_Cloud_Mask_File_Name), &
-                                            Cld_Mask_Aux, & 
-                                            Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
-                                            Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
-                                            Error_Status)
+       call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Image%Level1b_Path),  &
+                                           trim(File_Name_Tmp), &
+                                           Nav%Lon_1b, Nav%Lat_1b, & 
+                                           Geo%Satzen, Geo%Sataz, Geo%Solzen, Geo%Solaz, Geo%Relaz, &
+                                           Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                                           Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                                           Image%start_Time,Image%End_Time,scan_time, &
+                                           Scan_Number,Nav%Ascend,Error_Status)
 
 
-         if (Error_Status == 0) then
-            Cloud_Mask_Aux_Read_Flag = sym%YES
-         endif
+       if (Error_Status /= 0) exit
 
-        endif
+       !--- read cloud mask - assume path is same as level-1b
+       Cloud_Mask_Aux_Read_Flag = sym%NO
+ 
+       if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
 
-      else
-
-         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Image%Level1b_Path),  &
-                                            trim(Image%Level1b_Name), &
-                                            Nav%lon_1b, Nav%lat_1b, & 
-                                            Geo%Satzen, Geo%Sataz, Geo%Solzen, Geo%Solaz, Geo%Relaz, &
-                                            Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
-                                            Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
-                                            Image%start_Time,Image%End_Time,scan_time, &
-                                            Scan_Number,Nav%Ascend,Error_Status)
-        if (Error_Status /= 0) exit
-
-        !--- read cloud mask - assume path is same as level-1b
-        Cloud_Mask_Aux_Read_Flag = sym%NO
-
-        if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
-
-         call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
-                                            trim(Image%Auxiliary_Cloud_Mask_File_Name), &
-                                            Cld_Mask_Aux, &
-                                            Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
-                                            Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
-                                            Error_Status)
+          call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
+                                             trim(Image%Auxiliary_Cloud_Mask_File_Name), &
+                                             Cld_Mask_Aux, & 
+                                             Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                                             Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                                             Error_Status)
 
 
-         if (Error_Status == 0) then
-            Cloud_Mask_Aux_Read_Flag = sym%YES
-         endif
+          if (Error_Status == 0) then
+             Cloud_Mask_Aux_Read_Flag = sym%YES
+          endif
 
-        endif
+       endif
 
-      endif
-
-      do Chan_Idx = 1,36
+       do Chan_Idx = 1,36
 
          if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
 
@@ -963,10 +945,10 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
                                         ch(Chan_Idx)%Unc,Error_Status)
          endif
 
-      enddo
+       enddo
 
-      !--- Quality check MODIS data
-      call QC_MODIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+       !--- Quality check MODIS data
+       call QC_MODIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
     endif
 

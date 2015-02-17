@@ -238,12 +238,25 @@ contains
       
       ! - i-bands
       do  i_iband = 1 , 5
+         
+            if ( .not. out % file_exists % svi_file_exists (i_iband)) then
+                 ! - switch off chan_on in CLAVR-x if file is not there..
+               Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) = sym % NO
+               cycle
+            end if
+            
+            
            if ( .not. out % iband ( i_iband ) % is_read ) then
             sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % no 
+          
             cycle   
          end if
+         
          if ( .not. is_iband_on(i_iband) .or. (size(out % iband (i_iband) % ref) < 1 &
-              .and. size(out % iband (i_iband) % bt) < 1) ) cycle
+              .and. size(out % iband (i_iband) % bt) < 1) ) then    
+              cycle
+         end if
+         
          c_seg_lines_iband  = 2 * c_seg_lines
          select case ( i_iband)
          case(1)
@@ -528,24 +541,30 @@ contains
 !         
 ! output : jday - julian day
 !--------------------------------------------------
- subroutine JULIAN(iday,imonth,iyear,jday)
+   subroutine JULIAN(iday,imonth,iyear,jday)
 
-!-- Computes julian day (1-365/366)
-        integer, intent(in)::  iday,imonth,iyear
-        integer, intent(out):: jday
-        integer::  j
-        integer, dimension(12)::  jmonth
+      !-- Computes julian day (1-365/366)
+      integer, intent(in)::  iday,imonth,iyear
+      integer, intent(out):: jday
+      integer::  j
+      integer, dimension(12)::  jmonth
 
-        jmonth = reshape ((/31,28,31,30,31,30,31,31,30,31,30,31/),(/12/))
+      jmonth = reshape ((/31,28,31,30,31,30,31,31,30,31,30,31/),(/12/))
+      
+      jday = iday
+      if (modulo(iyear,4) == 0) then
+         jmonth(2)=29
+         ! make CLAVR-x year 2100 ready !!   
+         if ( modulo(iyear,100) == 0 .and. modulo(iyear,400) /= 0 ) then
+            jmonth (2) = 28
+         end if
+      endif
+      
+      
 
-        jday = iday
-        if (modulo(iyear,4) == 0) then
-            jmonth(2)=29
-        endif
-
-        do j = 1,imonth-1
-           jday = jday + jmonth(j)
-        end do
+      do j = 1,imonth-1
+         jday = jday + jmonth(j)
+      end do
 
    end subroutine JULIAN
 

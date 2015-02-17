@@ -187,17 +187,16 @@ contains
       real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
       real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, cld_mask_probab_thresh_hi_tmp
       
-      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
+      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/static/luts/nb_cloud_mask/'//trim(Bayesian_Cloud_Mask_Name) 
       
       if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
-         mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/bayes/'//trim(Bayesian_Cloud_Mask_Name)
-         if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
+        
             print*,'Classifier file not there: '
             print*, 'check location: '
             print*, mask_inp % bayesian_mask_classifier
             print*,'stopping.........'
             stop
-         end if
+       
       end if
                  
                  

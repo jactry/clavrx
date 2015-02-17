@@ -242,6 +242,7 @@ contains
             if ( .not. out % file_exists % svi_file_exists (i_iband)) then
                  ! - switch off chan_on in CLAVR-x if file is not there..
                Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) = sym % NO
+               sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % NO
                cycle
             end if
             

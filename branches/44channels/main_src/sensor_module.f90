@@ -324,7 +324,7 @@ module SENSOR_MODULE
 
          case('AVHRR-1','AVHRR-2','AVHRR-3')
               call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('MODIS','AQUA-IFF')
+         case('MODIS','MODIS-MAC','MODIS-CSPP','AQUA-IFF')
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IL-IMAGER','GOES-MP-IMAGER')
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -1032,7 +1032,8 @@ module SENSOR_MODULE
       !---------------------------------------------------------------------------------
 
       !-- for 1 km MODIS, determine name of separate geolocation file
-      if (trim(Sensor%Sensor_Name) == 'MODIS' .and.  Sensor%Spatial_Resolution_Meters == 1000) then
+      if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
+          .and.  Sensor%Spatial_Resolution_Meters == 1000) then
          call DETERMINE_MODIS_GEOLOCATION_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Geolocation_File_Name)
          if (trim(Image%Auxiliary_Geolocation_File_Name) == "no_file") then
             Ierror = sym%YES
@@ -1040,7 +1041,8 @@ module SENSOR_MODULE
       endif
 
       !-- determine modis cloud mask name
-      if (trim(Sensor%Sensor_Name) == 'MODIS' .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+      if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
+          .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
          call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
          if (trim(Image%Auxiliary_Cloud_Mask_File_Name ) == "no_file") then
             Ierror = sym%YES

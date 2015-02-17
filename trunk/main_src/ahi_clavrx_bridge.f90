@@ -22,14 +22,16 @@ module ahi_clavrx_bridge
       
       
     use calibration_constants, only: &
-          Nu_20 &
-          , nu_27 &
+            Nu_20 &
+          , Nu_27 &
           , Nu_28 &
           , Nu_29 &
-          , nu_30 &
+          , Nu_30 &
           , Nu_31 &
-          , Nu_32  &
-          , nu_33
+          , Nu_32 &
+          , Nu_33 &
+          , Nu_37 &
+          , Nu_38
    
    use planck, only: CONVERT_RADIANCE
    
@@ -62,12 +64,12 @@ contains
       integer :: i_line
       
      
-      modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 43 ,  27 , 28  &
-               , 29 , 30 , 44 , 31 , 32 , 33 ]
+      modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 37 ,  27 , 28,  &
+                        29 , 30 , 38 , 31 , 32 , 33 ]
       
       ! List of solar constant values for radiance transformation
-      nu_list(7:16) = [ nu_20, 0., nu_27, nu_28 &
-            , nu_29, nu_30, 0. , nu_31, nu_32, nu_33]
+      nu_list(7:16) = [ Nu_20, Nu_37, Nu_27, Nu_28, &
+                        Nu_29, Nu_30, Nu_38 , Nu_31, Nu_32, Nu_33]
       
       
       is_solar_channel(7:16) = .false.
@@ -94,8 +96,6 @@ contains
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon
       
-      
-      
       geo % sataz(:,1:c_seg_lines)        = ahi_data % geo % sataz
       geo % satzen(:,1:c_seg_lines)       = ahi_data % geo % satzen
       geo % solaz (:,1:c_seg_lines)       = ahi_data % geo % solaz 
@@ -106,6 +106,7 @@ contains
       ! nav % ascend (1:c_seg_lines)     = ahi_data % geo % ascend
   
       do i_chn = 1, NUM_CHN_AHI
+
          modis_chn = modis_chn_list (i_chn)
          
          if ( .not. ahi_data % chn ( i_chn ) % is_read ) then
@@ -119,7 +120,7 @@ contains
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
             
          else
-            if ( modis_chn > 36 .and. modis_chn < 43) then
+            if ( modis_chn > 38) then
                cycle
             end if
             

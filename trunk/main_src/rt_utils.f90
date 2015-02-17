@@ -30,22 +30,24 @@
 !
 ! Description of RTM Structure Members given in rtm_common.f90
 !
-! CLAVR-x has 42 channels.  
+! CLAVR-x has 44 channels.  
 ! Channels 1-36 are MODIS
-! Channels 37-41 are the VIIRS I-bands
-! Channel 42 is the VIIRS DNB
+! Channels 37-38 are ABI channels not on MODIS
+! Channels 39-43 are the VIIRS I-bands
+! Channel 44 is the VIIRS DNB
 !
 ! Not all members of the RTM structure are populated for all channels.
 ! However, all members are allocated for any active cell
 !
 ! Here is the current implementation
 !
-! There are 5 types of channels
+! There are 6 types of channels
 ! 1. MODIS IR-only channels = 21-36 excluding 26. 
-! 2. MODIS (Solar + IR) channels = Channel 20
-! 3. Supported Solar Channels = Channels 1,2,5,6,7 and 42
-! 4. Unsupported Solar Channels = Channels 3,4,8-19,26,37-40
-! 5. Unsupported IR Channels = Channels 41
+! 2. Non-MODIS IR-only channels  37-38
+! 3. MODIS (Solar + IR) channels = Channel 20
+! 4. Supported Solar Channels = Channels 1,2,5,6,7 and 44
+! 5. Unsupported Solar Channels = Channels 3,4,8-19,26,39-41
+! 6. Unsupported IR Channels = Channels 42 and 43
 !
 ! For each type described above, the following profiles are made:
 ! 1. Rad_Atm_Prof, Trans_Atm_Profile, Rad_BB_Cloud_Profile
@@ -54,7 +56,7 @@
 ! 4. No Profiles
 ! 5. No Profiles
 ! 
-! Viirs I-band support is limited (channels 37-41) and is being developed. No
+! Viirs I-band support is limited (channels 39-43) and is being developed. No
 ! pixel-level toa clear-sky fields are generated for the I-band variables yet.
 ! 
 !--------------------------------------------------------------------------------------
@@ -165,7 +167,7 @@ module RT_UTILITIES
     real, parameter :: Co2_Ratio = 380.0 !in ppmv
 
     integer, parameter :: Chan_Idx_Min = 1
-    integer, parameter :: Chan_Idx_Max = 42
+    integer, parameter :: Chan_Idx_Max = 44
 
     real(kind=real4),  save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
 
@@ -500,7 +502,7 @@ contains
 
          if (Chan_Idx < 20) cycle
          if (Chan_Idx == 26) cycle
-         if (Chan_Idx > 36) cycle
+         if (Chan_Idx > 38) cycle
          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
          Rad_Atm_Prof(1,Chan_Idx) = 0.0
@@ -713,7 +715,7 @@ contains
 
                      if (Chan_Idx < 20) cycle
                      if (Chan_Idx == 26) cycle
-                     if (Chan_Idx == 42) cycle
+                     if (Chan_Idx == 44) cycle
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
                      if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
@@ -1269,83 +1271,82 @@ contains
       !----------------------------------------------------------------
       select case(WMO_Id)
 
-      !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
       case(3:5) !AVHRR (METOP-A,B,C)
          Pfaast_Name(:) = "tranmavhrr"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
          if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(55:57) !MSG
          Pfaast_Name(:) = "tranmetsg101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
       case(252:259)    !GOES
          Pfaast_Name(:) = "goestran"
          if (trim(Sensor%Sensor_Name) /= 'GOES-IP-IMAGER') then
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          else
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
       case(171:172) !MTSAT
          Pfaast_Name(:) = "tranmts101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
       case(173:174) !HIMAWARI-8/9
          Pfaast_Name(:) = "ahi_transm"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 9,10,11,12,14,15,16, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 9,10,11,12,14,15,16, 0, 0, 0, 8,13, 0, 0, 0, 0, 0, 0/)
          
       case(200:209,223,706:708) !AVHRR 
          Pfaast_Name(:) = "tranmavhrr"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
          if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(224) !VIIRS
          Pfaast_Name(:) = "tran_viirsm"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
          if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
           Pfaast_Name(27:28) = "tran_modisd101"
           Pfaast_Name(33:36) = "tran_modisd101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
       case(783:784) !MODIS
          Pfaast_Name(:) = "tran_modisd101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0, 0, 0/)
           
 
       case(810) !COMS
          Pfaast_Name(:) = "fy2_coms_trn101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/) 
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/) 
 
       case(514:515) !FY2D/E
          Pfaast_Name(:) = "fy2_coms_trn101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
       case default
          print *, "Instrument not supported by PFAAST in CLAVR-x "
@@ -1585,7 +1586,7 @@ contains
 
       if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
 
-      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 42) return
+      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
 
       Trans_Prof_Rtm = 1.0
 
@@ -1667,12 +1668,12 @@ contains
       Solar_Rtm%Tau_CO2(20) = 0.00
       Solar_Rtm%Tau_CH4(20) = 0.000
 
-      Solar_Rtm%Tau_H2O_Coef(42,:) = 0.0
-      Solar_Rtm%Tau_Ray(42) = 0.00
-      Solar_Rtm%Tau_O3(42) = 0.00
-      Solar_Rtm%Tau_O2(42) = 0.00
-      Solar_Rtm%Tau_CO2(42) = 0.00
-      Solar_Rtm%Tau_CH4(42) = 0.000
+      Solar_Rtm%Tau_H2O_Coef(44,:) = 0.0
+      Solar_Rtm%Tau_Ray(44) = 0.00
+      Solar_Rtm%Tau_O3(44) = 0.00
+      Solar_Rtm%Tau_O2(44) = 0.00
+      Solar_Rtm%Tau_CO2(44) = 0.00
+      Solar_Rtm%Tau_CH4(44) = 0.000
 
       !---- define channel aerosol properties
       Solar_Rtm%Tau_Aer(1) = 0.12
@@ -1693,9 +1694,9 @@ contains
       Solar_Rtm%Tau_Aer(20) = 0.00
       Solar_Rtm%Wo_Aer(20) = 0.8
       Solar_Rtm%G_Aer(20) = 0.6
-      Solar_Rtm%Tau_Aer(42) = 0.00
-      Solar_Rtm%Wo_Aer(42) = 0.8
-      Solar_Rtm%G_Aer(42) = 0.6
+      Solar_Rtm%Tau_Aer(44) = 0.00
+      Solar_Rtm%Wo_Aer(44) = 0.8
+      Solar_Rtm%G_Aer(44) = 0.6
 
 
       select case(WMO_Id)
@@ -2060,7 +2061,7 @@ contains
         Solar_Rtm%Tau_H2O_Coef(6,:)  = (/ -0.00000041, 0.00102500, 0.00000419/)
         Solar_Rtm%Tau_H2O_Coef(7,:)  = (/ -0.00010325, 0.00118721,-0.00003250/)
         Solar_Rtm%Tau_H2O_Coef(20,:) = (/  0.01060415, 0.06901925,-0.00374645/)
-        Solar_Rtm%Tau_H2O_Coef(42,:) = (/  0.00204467, 0.01079139,-0.00055673/)
+        Solar_Rtm%Tau_H2O_Coef(44,:) = (/  0.00204467, 0.01079139,-0.00055673/)
         Solar_Rtm%Tau_Ray(1) = 0.04338
         Solar_Rtm%Tau_O3(1) =  0.01210
         Solar_Rtm%Tau_O2(1) =  0.00154
@@ -2091,11 +2092,11 @@ contains
         Solar_Rtm%Tau_O2(20) =  0.00000
         Solar_Rtm%Tau_CO2(20) = 0.00056
         Solar_Rtm%Tau_CH4(20) = 0.02148
-        Solar_Rtm%Tau_Ray(42) = 0.04478
-        Solar_Rtm%Tau_O3(42) =  0.01100
-        Solar_Rtm%Tau_O2(42) =  0.02543
-        Solar_Rtm%Tau_CO2(42) = 0.00000
-        Solar_Rtm%Tau_CH4(42) = 0.00000
+        Solar_Rtm%Tau_Ray(44) = 0.04478
+        Solar_Rtm%Tau_O3(44) =  0.01100
+        Solar_Rtm%Tau_O2(44) =  0.02543
+        Solar_Rtm%Tau_CO2(44) = 0.00000
+        Solar_Rtm%Tau_CH4(44) = 0.00000
 
 
       case(252)    !GOES-8
@@ -2443,14 +2444,14 @@ contains
       real:: Rad_Ch20_Temp
 
       !--------------------------------------------------------------
-      ! Solar-Only channels, 1,2,6,7,DNB(42)
+      ! Solar-Only channels, 1,2,6,7,DNB(44)
       !--------------------------------------------------------------
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-         if (Chan_Idx > 21 .and. Chan_Idx /= 26 .and. Chan_Idx /= 42) cycle
+         if (Chan_Idx > 21 .and. Chan_Idx /= 26 .and. Chan_Idx /= 44) cycle
          
          select case (Chan_Idx)
          
-         case (1,2,5,6,7,42)
+         case (1,2,5,6,7,44)
             if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                if (allocated(  Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile )) then
                   ch(Chan_Idx)%Trans_Atm_Total(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx) +  &

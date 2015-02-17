@@ -30,6 +30,7 @@
 !      2014/04/21:  add fire mask input (AW)
 !      2014/05/07:  added diagnostic type (Denis B)
 !      2014/05/09:  added version (Denis B)
+!      2015/02/16   New channel numbers for VIIRS i-band and DNB (AW)
 !
 !  GLOBAL VARIABLES:
 !
@@ -186,17 +187,16 @@ contains
       real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
       real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, cld_mask_probab_thresh_hi_tmp
       
-      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
+      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/static/luts/nb_cloud_mask/'//trim(Bayesian_Cloud_Mask_Name) 
       
       if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
-         mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/bayes/'//trim(Bayesian_Cloud_Mask_Name)
-         if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
+        
             print*,'Classifier file not there: '
             print*, 'check location: '
             print*, mask_inp % bayesian_mask_classifier
             print*,'stopping.........'
             stop
-         end if
+       
       end if
                  
                  
@@ -270,35 +270,35 @@ contains
             
             ! - ibands of viirs
             
-            if ( sensor % chan_on_flag_default(37) == 1 ) then
+            if ( sensor % chan_on_flag_default(39) == 1 ) then
                mask_inp % sat % iband(1) % ref % min =   Ref_Min_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % max =   Ref_Max_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % mean =  Ref_Mean_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % std =   Ref_Uni_ChI1 ( i , j )
             end if
             
-            if ( sensor % chan_on_flag_default(38) == 1 ) then
+            if ( sensor % chan_on_flag_default(40) == 1 ) then
                mask_inp % sat % iband(2) % ref % min =   Ref_Min_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % max =   Ref_Max_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % mean =  Ref_Mean_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % std =   Ref_Uni_ChI2 ( i , j )
             end if
 
-            if ( sensor %  chan_on_flag_default(39) == 1 ) then
+            if ( sensor %  chan_on_flag_default(41) == 1 ) then
                mask_inp % sat % iband(3) % ref % min =   Ref_Min_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % max =   Ref_Max_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % mean =  Ref_Mean_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % std =   Ref_Uni_ChI3 ( i , j )
             end if
 
-            if ( sensor % chan_on_flag_default(40) == 1 ) then
+            if ( sensor % chan_on_flag_default(42) == 1 ) then
                mask_inp % sat % iband(4) % bt % min =   Bt_Min_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % max =   Bt_Max_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % mean =  Bt_Mean_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % std =   Bt_Uni_ChI4 ( i , j )
             end if
             
-            if ( sensor % chan_on_flag_default(41) == 1 ) then
+            if ( sensor % chan_on_flag_default(43) == 1 ) then
                mask_inp % sat % iband(5) % bt % min =   Bt_Min_ChI5 ( i , j )
                mask_inp % sat % iband(5) % bt % max =   Bt_Max_ChI5 ( i , j )
                mask_inp % sat % iband(5) % bt % mean =  Bt_Mean_ChI5 ( i , j )
@@ -308,10 +308,10 @@ contains
             
             
             ! - dnb cloud mask addition at night
-            if ( sensor % chan_on_flag_default(42) == 1 .and. allocated( Ch (42) % Ref_Lunar_Toa ) ) then
-               mask_inp % sat % ref_dnb_lunar    = Ch (42) % Ref_Lunar_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(44) == 1 .and. allocated( Ch (44) % Ref_Lunar_Toa ) ) then
+               mask_inp % sat % ref_dnb_lunar    = Ch (44) % Ref_Lunar_Toa ( i , j )
                mask_inp % geo % lunar_zen        = geo % Lunzen ( i , j )
-               mask_inp % rtm % ref_dnb_clear    = Ch (42) % Ref_Lunar_Toa_Clear( i , j )
+               mask_inp % rtm % ref_dnb_clear    = Ch (44) % Ref_Lunar_Toa_Clear( i , j )
                mask_inp % sfc % is_city          = sfc % City_Mask ( i , j ) == 1
                mask_inp % sat % ref_dnb_3x3_std  = Ref_ChDNB_Lunar_Std_3x3 ( i , j )
                mask_inp % sat % ref_dnb_3x3_min  = Ref_ChDNB_Lunar_Min_3x3 ( i , j )

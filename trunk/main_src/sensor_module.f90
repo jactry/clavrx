@@ -64,9 +64,6 @@ module SENSOR_MODULE
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
     use AHI_CLAVRX_BRIDGE 
-    
-    
-       
 #endif
 
    use clavrx_message_module
@@ -162,24 +159,21 @@ module SENSOR_MODULE
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'AHI') > 0) then
          
-         
          call ahi_time_from_filename ( trim(Image%Level1b_Name) , time0_obj, time1_obj )
-         
          
          call time0_obj % get_date ( year =  year &
                                , doy = doy  &
                                , msec_of_day = Image%Start_Time  )
          
          call time1_obj % get_date ( msec_of_day = Image%End_Time  )                                                
+
          Image%Start_Year  = year
          Image%Start_Doy   = doy   
          Image%End_Year  = year
          Image%End_Doy   = doy  
          
-
       endif
       
-
       !----------------------------------------------
       ! for IFF take time and set some constants
       ! could be VIIRS, MODIS AVHRR sensor
@@ -1404,8 +1398,8 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
   read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
   read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
-  read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43 !Band 8
-  read(unit=Instr_Const_lun,fmt=*) a1_44, a2_44,nu_44 !Band 13
+  read(unit=Instr_Const_lun,fmt=*) a1_37, a2_37,nu_37 !Band 8
+  read(unit=Instr_Const_lun,fmt=*) a1_38, a2_38,nu_38 !Band 13
   read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 

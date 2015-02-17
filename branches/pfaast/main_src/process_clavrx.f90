@@ -147,7 +147,7 @@
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
-   use cr_config_mod    
+   
       
    implicit none
  
@@ -249,7 +249,7 @@
    character ( len = 30) :: string_30
    character ( len = 100) :: string_100
    
-   type (conf_user_opt_type) :: config
+   
    
    !------------- VIIRS variables --------------
    real(kind=real4), dimension(:,:), pointer :: lunar_ref

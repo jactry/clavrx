@@ -102,7 +102,9 @@ INTEGER                 :: i, nt, nr
 INTEGER                 :: last_i  ! to avoid overwriting 
 outs = s 
 nt = LEN_TRIM(text) 
- nr = LEN_TRIM(rep)
+nr = LEN_TRIM(rep)
+
+last_i = 0
 
 DO
    i = INDEX(outs,text(:nt)) 

@@ -70,12 +70,14 @@
 !     34            -          -         -       13.635
 !     35            -          -         -       13.935
 !     36            -          -         -       14.235
-!     37            -          -         I1       0.640
-!     38            -          -         I2       0.865
-!     39            -          -         I3       1.610
-!     40            -          -         I4       3.740
-!     41            -          -         I5      11.450
-!     42            -          -         DNB      0.700
+!     37            -          8         -        6.2
+!     38            -         13         -       10.4
+!     39            -          -         I1       0.640
+!     40            -          -         I2       0.865
+!     41            -          -         I3       1.610
+!     42            -          -         I4       3.740
+!     43            -          -         I5      11.450
+!     44            -          -         DNB      0.700
 !
 !  Description of variables in "ch" structure:
 !
@@ -296,7 +298,7 @@ module PIXEL_COMMON
 
 
   !---- declare strucutres using above types
-  type(observations), dimension(42), public, save, target :: Ch
+  type(observations), dimension(44), public, save, target :: Ch
   type(sensor_definition), public, save, target :: Sensor
   type(image_definition), public, save, target :: Image
   type(geometry_definition), public, save, target :: Geo
@@ -833,15 +835,15 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
 
   !--- Solar RTM Terms
   type, public :: solar_rtm_struct
-      real, dimension(42,3):: Tau_H2O_Coef
-      real, dimension(42):: Tau_Ray
-      real, dimension(42):: Tau_O2
-      real, dimension(42):: Tau_O3
-      real, dimension(42):: Tau_CH4
-      real, dimension(42):: Tau_CO2
-      real, dimension(42):: Tau_Aer
-      real, dimension(42):: Wo_Aer
-      real, dimension(42):: G_Aer
+      real, dimension(44,3):: Tau_H2O_Coef
+      real, dimension(44):: Tau_Ray
+      real, dimension(44):: Tau_O2
+      real, dimension(44):: Tau_O3
+      real, dimension(44):: Tau_CH4
+      real, dimension(44):: Tau_CO2
+      real, dimension(44):: Tau_Aer
+      real, dimension(44):: Wo_Aer
+      real, dimension(44):: G_Aer
   end type solar_rtm_struct
  
   type (solar_rtm_struct), public, save:: Solar_Rtm
@@ -866,7 +868,7 @@ subroutine CREATE_PIXEL_ARRAYS()
   dim1 = Image%Number_Of_Elements
   dim2 = Image%Number_Of_Lines_Per_Segment
 
-  do idx = 1,36
+  do idx = 1,38
       if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
          allocate(Ch(idx)%Unc(dim1,dim2))
          if (idx <= 20 .or. idx == 26) then 
@@ -906,7 +908,7 @@ subroutine CREATE_PIXEL_ARRAYS()
    if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
 
    !--- DNB Variable
-   idx = 42
+   idx = 44
    if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
       allocate(Ch(idx)%Rad_Toa(dim1,dim2))
       allocate(Ch(idx)%Ref_Toa(dim1,dim2))
@@ -1027,7 +1029,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
 
   integer:: idx
 
-  do idx = 1,42
+  do idx = 1,44
       if (allocated(Ch(idx)%Rad_Toa)) deallocate(Ch(idx)%Rad_Toa)
       if (allocated(Ch(idx)%Bt_Toa)) deallocate(Ch(idx)%Bt_Toa)
       if (allocated(Ch(idx)%Rad_Toa_Clear)) deallocate(Ch(idx)%Rad_Toa_Clear)
@@ -1280,7 +1282,7 @@ subroutine CREATE_GEO_ARRAYS(dim1,dim2)
     allocate (Geo%Cossolzen(dim1,dim2))
     allocate (Geo%Scatangle(dim1,dim2))
     allocate (Geo%Airmass(dim1,dim2))
-    if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
            allocate(Geo%Lunzen(dim1,dim2))
            allocate(Geo%Lunaz(dim1,dim2))
            allocate(Geo%LunRelaz(dim1,dim2))
@@ -1497,7 +1499,7 @@ end subroutine CREATE_REF_CHANNEL_ARRAYS
 subroutine RESET_REF_CHANNEL_ARRAYS
    integer:: idx
 
-   do idx = 1,42
+   do idx = 1,44
       if (allocated(Ch(idx)%Rad_Toa)) Ch(idx)%Rad_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Bt_Toa)) Ch(idx)%Bt_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Toa_Clear)) Ch(idx)%Rad_Toa_Clear = Missing_Value_Real4
@@ -1715,42 +1717,42 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Bt_11um_Sounder(dim1,dim2))
            allocate(Bt_12um_Sounder(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
            allocate(Ref_Min_ChI1(dim1,dim2))
            allocate(Ref_Uni_ChI1(dim1,dim2))
            allocate(Ref_Mean_ChI1(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
            allocate(Ref_ChI2(2*dim1,2*dim2))
            allocate(Ref_Max_ChI2(dim1,dim2))
            allocate(Ref_Min_ChI2(dim1,dim2))
            allocate(Ref_Uni_ChI2(dim1,dim2))
            allocate(Ref_Mean_ChI2(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
            allocate(Ref_ChI3(2*dim1,2*dim2))
            allocate(Ref_Max_ChI3(dim1,dim2))
            allocate(Ref_Min_ChI3(dim1,dim2))
            allocate(Ref_Uni_ChI3(dim1,dim2))
            allocate(Ref_Mean_ChI3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
            allocate(Bt_ChI4(2*dim1,2*dim2))
            allocate(Bt_Max_ChI4(dim1,dim2))
            allocate(Bt_Min_ChI4(dim1,dim2))
            allocate(Bt_Uni_ChI4(dim1,dim2))
            allocate(Bt_Mean_ChI4(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(43) == sym%YES) then
            allocate(Bt_ChI5(2*dim1,2*dim2))
            allocate(Bt_Max_ChI5(dim1,dim2))
            allocate(Bt_Min_ChI5(dim1,dim2))
            allocate(Bt_Uni_ChI5(dim1,dim2))
            allocate(Bt_Mean_ChI5(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
            allocate(Ref_ChDNB_Lunar_Mean_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Max_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Min_3x3(dim1,dim2))
@@ -1759,35 +1761,35 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
 end subroutine CREATE_EXTRA_CHANNEL_ARRAYS
 
 subroutine RESET_EXTRA_CHANNEL_ARRAYS()
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(38) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(37) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Bt_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
           Bt_375um_Sounder = Missing_Value_Real4
           Bt_11um_Sounder = Missing_Value_Real4
@@ -1829,35 +1831,6 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
   if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
-!------------------------------------------------------------------------------
-!
-!------------------------------------------------------------------------------
-!subroutine CREATE_LUNAR_ARRAYS(dim1,dim2)
-!   integer, intent(in):: dim1, dim2
-!   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-!           allocate(Lunzen(dim1,dim2))
-!           allocate(Lunaz(dim1,dim2))
-!           allocate(LunRelaz(dim1,dim2))
-!           allocate(Scatangle_Lunar(dim1,dim2))
-!           allocate(Glintzen_Lunar(dim1,dim2))
-!   endif
-!end subroutine CREATE_LUNAR_ARRAYS
-!subroutine RESET_LUNAR_ARRAYS()
-!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Lunzen = Missing_Value_Real4
-!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Lunaz = Missing_Value_Real4
-!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) LunRelaz = Missing_Value_Real4
-!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Moon_Phase_Angle = Missing_Value_Real4
-!      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Moon_Illum_Frac = Missing_Value_Real4
-!      if (allocated(Scatangle_Lunar)) Scatangle_Lunar = Missing_Value_Real4
-!      if (allocated(Glintzen_Lunar)) Glintzen_Lunar = Missing_Value_Real4
-!end subroutine RESET_LUNAR_ARRAYS
-!subroutine DESTROY_LUNAR_ARRAYS()
-!  if (allocated(Lunzen))deallocate(Lunzen)
-!  if (allocated(Lunaz)) deallocate(Lunaz)
-!  if (allocated(LunRelaz)) deallocate(LunRelaz)
-!  if (allocated(Scatangle_Lunar)) deallocate(Scatangle_Lunar)
-!  if (allocated(Glintzen_Lunar)) deallocate(Glintzen_Lunar)
-!end subroutine DESTROY_LUNAR_ARRAYS
 
 !------------------------------------------------------------------------------
 !

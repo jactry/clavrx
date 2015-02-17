@@ -1262,10 +1262,11 @@ contains
 
 
    !--------------------------------------------------------------------------------------------------
-   ! subroutine NAME: sensor_name_for_rtm
-   !
-   ! Description:
-   ! Knowing the WMO Satellite Identification Number, put needed constants for pfaast into memory
+   !> subroutine NAME: sensor_name_for_rtm
+   !!
+   !! Description:
+   !! Knowing the WMO Satellite Identification Number
+   !!
    !--------------------------------------------------------------------------------------------------
    
    function sensor_name_for_rtm ( wmo_id, sensorname, chan_idx ) result ( sensor_name_rtm)

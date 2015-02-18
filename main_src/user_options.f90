@@ -966,13 +966,13 @@ contains
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
       
-      if ( .not. ANY ( acha_mode_User_Set == possible_acha_modes ) ) then
+      if ( acha_mode_user_set /= 0 .and. .not. ANY ( acha_mode_User_Set == possible_acha_modes ) ) then
          acha % mode = default_acha_mode ( SensorName )
          
          print*, 'User set ACHA mode not possible for '//trim(SensorName)//' switched to default ', default_acha_mode ( SensorName )
       end if
- 
-      if ( .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
+      
+      if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( SensorName )
          print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( SensorName )
       end if

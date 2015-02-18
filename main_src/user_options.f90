@@ -838,11 +838,11 @@ contains
       case ( 'AVHRR-3')   
          filename  = 'avhrr_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-MP-IMAGER')      
-         filename  = 'goesnp_default_nb_cloud_mask_lut.nc'
+         filename  = 'goesmp_default_nb_cloud_mask_lut.nc'
       case ( 'GOES-IL-IMAGER')      
-         filename  = 'goesim_default_nb_cloud_mask_lut.nc'   
+         filename  = 'goesil_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-IP-SOUNDER')
-         filename  = 'goesnp_default_nb_cloud_mask_lut.nc' 
+         filename  = 'goesmp_default_nb_cloud_mask_lut.nc' 
       case ( 'MTSAT-IMAGER')
           filename  = 'mtsat_default_nb_cloud_mask_lut.nc'
       case ('SEVIRI')

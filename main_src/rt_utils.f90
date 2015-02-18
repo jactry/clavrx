@@ -2471,7 +2471,7 @@ contains
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx < 20) cycle    
          if (Chan_Idx == 26) cycle    
-         if (Chan_Idx > 36) cycle    
+         if (Chan_Idx > 38) cycle    
          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
          
          call COMPUTE_CHANNEL_ATM_SFC_RAD_BT( &

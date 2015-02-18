@@ -16,7 +16,7 @@
 
  !--- missing value
  real, parameter, public :: MISSING_VALUE_REAL4 = -999.0
- real, parameter, public :: MISSING_VALUE_INT1 = -128
+ integer(kind=int1), parameter, public :: MISSING_VALUE_INT1 = -128
 
  !--- numerical constants
  real, parameter, public:: pi = 3.14159265

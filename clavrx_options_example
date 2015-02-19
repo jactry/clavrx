@@ -29,7 +29,7 @@ default
 1   !E5 MASK lrc_flag (0=no,1=yes) 
 1   !E5 NWP smooth nwp flag (0=no, 1=yes)   
 0   !E5 process_undetected_flag (0=no,1=yes) (means process all pixels cloudy and cloud-free)
-90.0 -90.0  180.0 -180.0 180.0 0.0    !E6 Latitude, longitude, sun angle high and low limits (dummy for now)
+0 90.0 -90.0 180.0 -180.0 85.0 0.0 180.0 0.0    !E6 on_flag Lat_Max,Lat_Min,Lon_Max,Lon_Min,Zen_Max,Zen_Min,Solzen_Max,Solzen_Min
 1 1 1 1 1 1    !E6 chan on flags of channels 1,2,3,4,5,6
 1 1 1 1 1 1    !E6 chan on flags of channels 7,8,9,10,11,12
 1 1 1 1 1 1    !E6 chan on flags of channels 13,14,15,16,17,18

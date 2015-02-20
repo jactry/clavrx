@@ -54,7 +54,6 @@ module SIMPLE_COD
       real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
       integer:: Elem_Idx, Line_Idx
 
-!print *, "considering to read table ", Table_Read_Flag
       if (Table_Read_Flag == 0) then
          call READ_LUT(Read_Table_Error)
          if (Read_Table_Error /= 0) return
@@ -120,7 +119,7 @@ module SIMPLE_COD
 
        lun = get_lun()
 
-       open(unit=lun,file=trim(ancil_data_dir)//"luts/simple_cod_table/"//trim(filename), &
+       open(unit=lun,file=trim(ancil_data_dir)//"static/luts/simple_cod_table/"//trim(filename), &
             action="read",form="unformatted",access="stream",iostat=ierror)
 
        if (ierror /= 0) return

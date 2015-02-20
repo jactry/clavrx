@@ -64,6 +64,7 @@ contains
       integer :: i_line
       
      
+      error_out = 0
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 37 ,  27 , 28,  &
                         29 , 30 , 38 , 31 , 32 , 33 ]
       

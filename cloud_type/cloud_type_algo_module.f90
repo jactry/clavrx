@@ -396,7 +396,7 @@ contains
       !--- tests for ice
      
       !---- don't detect cirrus if very high 11 um std deviation
-      if ( inp % rtm % bt_ch31_3x3_std < BT_11UM_STD_CIRRUS_THRESH ) then
+      if ( inp % rtm % bt_ch31_3x3_std < BT_11UM_STD_CIRRUS_THRESH .and. .not. is_water) then
       
          ! - split window test
          if ( inp % sat % chan_on ( 31 ) &

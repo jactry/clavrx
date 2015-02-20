@@ -190,7 +190,7 @@ subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
    end where
 
    !--- Satzen limit
-   where (Geo%Satzen >= Satzen_Thresh_Processing .or. Geo%Satzen == Missing_Value_Real4)
+   where (Geo%Satzen >= Geo%Satzen_Max_Limit .or. Geo%Satzen <= Geo%Satzen_Min_Limit)
         Space_Mask = sym%YES
    end where
 
@@ -1376,6 +1376,16 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
             Covar_Ch27_Ch31_5x5(Elem_Idx,Line_Idx) = Covariance(&
                ch(31)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
                ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+               Elem_Idx_width, Line_Idx_width, &
+               Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
+        endif
+
+        if ((Sensor%Chan_On_Flag_Per_Line(1,Line_Idx) == sym%YES) .and. & 
+            (Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES)) then
+
+            Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Covariance(&
+               ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+               ch(1)%Ref_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
                Elem_Idx_width, Line_Idx_width, &
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         endif

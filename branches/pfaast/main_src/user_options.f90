@@ -162,11 +162,13 @@ contains
       Aer_Flag = sym%YES
       Ash_Flag = sym%NO
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
-      output_scaled_reflectances = sym%NO !default is to output ref / cosSolzen
+      output_scaled_reflectances = sym%NO !default is to output ref / cossolzen
       
       !--- default solar zenith limits
       Geo%Solzen_Min_Limit= 0 
       Geo%Solzen_Max_Limit= 180.0
+      Geo%Satzen_Min_Limit= 0 
+      Geo%Satzen_Max_Limit= 85.0
        
       !--- default what can be changed for expert mode
       Cloud_Mask_Bayesian_Flag = 1
@@ -210,6 +212,8 @@ contains
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
       Nav%Lon_Min_Limit = -180.0
+      Geo%Satzen_Max_Limit = 85.0
+      Geo%Satzen_Min_Limit = 0.0
       Geo%Solzen_Max_Limit = 180.0
       Geo%Solzen_Min_Limit = 0.0
       
@@ -226,6 +230,7 @@ contains
       integer::ios0
       integer::erstat
       integer:: Default_Lun
+      integer:: GeoNav_Limit_Flag
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
       call MESG ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
@@ -316,9 +321,36 @@ contains
       end if
 
       ! --- Read lat, lon and sun angle high - low limits
-      read(unit=Default_Lun,fmt=*) Nav%Lat_Max_Limit, Nav%Lat_Min_Limit, &
-                                   Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &
-                                   Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
+      read(unit=Default_Lun,fmt=*) GeoNav_Limit_Flag
+
+      if (GeoNav_Limit_Flag == 0) then
+         Nav%Lat_Max_Limit = 90.0
+         Nav%Lat_Min_Limit = -90.0
+         Nav%Lon_Max_Limit = 180.0
+         Nav%Lon_Min_Limit = -180.0
+         Geo%Satzen_Max_Limit = 85.0
+         Geo%Satzen_Min_Limit = 0.0
+         Geo%Solzen_Max_Limit = 180.0
+         Geo%Solzen_Min_Limit = 0.0
+      else
+         backspace(unit=Default_Lun)
+         read(unit=Default_Lun,fmt=*) GeoNav_Limit_Flag, &
+                                      Nav%Lat_Max_Limit, Nav%Lat_Min_Limit, &
+                                      Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &
+                                      Geo%Satzen_Max_Limit, Geo%Satzen_Min_Limit, &
+                                      Geo%Solzen_Max_Limit, Geo%Solzen_Min_Limit
+      endif
+
+      !--- constrain values
+      Nav%Lat_Max_Limit = min(Nav%Lat_Max_Limit, 90.0)
+      Nav%Lat_Min_Limit = max(Nav%Lat_Min_Limit, -90.0)
+      Nav%Lon_Max_Limit = min(Nav%Lon_Max_Limit, 180.0)
+      Nav%Lon_Min_Limit = max(Nav%Lon_Min_Limit, -180.0)
+      Geo%Satzen_Max_Limit = min(Geo%Satzen_Max_Limit, 85.0)
+      Geo%Satzen_Min_Limit = max(Geo%Satzen_Min_Limit, 0.0)
+      Geo%Solzen_Max_Limit = min(Geo%Solzen_Max_Limit, 180.0)
+      Geo%Solzen_Min_Limit = max(Geo%Solzen_Min_Limit, 0.0)
+
 
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(1:6)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(7:12)
@@ -349,7 +381,7 @@ contains
       integer :: Temp_Scans_Arg !--- temporary integer for number of scanlines
       integer :: iargc
 
-      temp_string = '.'  !--- tempoary string to search for in angle commandline
+      temp_string = '.'  !--- temporary string to search for in angle commandline
 
       !---- SET DEFAULT OPTIONS
   
@@ -838,11 +870,11 @@ contains
       case ( 'AVHRR-3')   
          filename  = 'avhrr_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-MP-IMAGER')      
-         filename  = 'goesnp_default_nb_cloud_mask_lut.nc'
+         filename  = 'goesmp_default_nb_cloud_mask_lut.nc'
       case ( 'GOES-IL-IMAGER')      
-         filename  = 'goesim_default_nb_cloud_mask_lut.nc'   
+         filename  = 'goesil_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-IP-SOUNDER')
-         filename  = 'goesnp_default_nb_cloud_mask_lut.nc' 
+         filename  = 'goesmp_default_nb_cloud_mask_lut.nc' 
       case ( 'MTSAT-IMAGER')
           filename  = 'mtsat_default_nb_cloud_mask_lut.nc'
       case ('SEVIRI')
@@ -966,13 +998,13 @@ contains
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
       
-      if ( .not. ANY ( acha_mode_User_Set == possible_acha_modes ) ) then
+      if ( acha_mode_user_set /= 0 .and. .not. ANY ( acha_mode_User_Set == possible_acha_modes ) ) then
          acha % mode = default_acha_mode ( SensorName )
          
          print*, 'User set ACHA mode not possible for '//trim(SensorName)//' switched to default ', default_acha_mode ( SensorName )
       end if
- 
-      if ( .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
+      
+      if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( SensorName )
          print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( SensorName )
       end if

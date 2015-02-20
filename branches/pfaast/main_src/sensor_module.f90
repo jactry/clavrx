@@ -305,6 +305,12 @@ module SENSOR_MODULE
       write(string_7,'(f7.1)' ) Nav%Lat_Min_Limit
       call mesg ( "Minimum Latitude for Processing = "//string_7, level = verb_lev % DEFAULT)
 
+      write(string_7,'(f7.1)' ) Geo%Satzen_Max_Limit
+      call mesg ( "Maximum Sensor Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Geo%Satzen_Min_Limit
+      call mesg ( "Minimum Sensor Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
       write(string_7,'(f7.1)' ) Geo%Solzen_Max_Limit
       call mesg ( "Maximum Solar Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
 

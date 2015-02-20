@@ -59,7 +59,6 @@ module CONSTANTS
 
   !--- other often used constants
   real(kind=real4), parameter, public:: Day_Solzen_Thresh_Mask = 85.0
-  real(kind=real4), parameter, public:: Satzen_Thresh_Processing = 85.0
   REAL (KIND=REAL4), PARAMETER, PUBLIC:: TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH = 60.0
 
   !--- parameters used in retrievals

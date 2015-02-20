@@ -83,7 +83,7 @@ contains
       !********
       ! NEW 3/26/2014 based on Gauss curve-fits to Obs/Mod ratio data between -120(wax) and 120(wane) degrees
       ! Note: "lpds" means "lunar phase, degrees, signed"
-      !DOUBLE PRECISION ::  lpds
+      DOUBLE PRECISION ::  lpds
  
       ! DOUBLE PRECISION :: waxp1=6.052e-12,waxp2=2.550e-9,waxp3=4.265e-7,waxp4=3.520e-5,&
       !       waxp5=1.449e-3,waxp6=2.590e-2,waxp7=1.135

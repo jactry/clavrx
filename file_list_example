@@ -1,8 +1,3 @@
-/Users/awalther/Satellite_Input/test_new_filelist/
-/Users/awalther/Satellite_Input/
-met9_1_2008_165_1200.area
-NSS.GHRR.NN.D08080.S0003.E0154.B1458990.GC.gz
-mtsat-2_1_2013_365_0701.area.gz
-MOD021KM.A2014222.0200.005.2014222092715.hdf
-GMTCO_npp_d20140111_t1159339_e1200581_b11437_c20140111181613833009_noaa_ops.h5
-goes11_1_2006_213_1300.area
+/DATA/Satellite_Input/viirs/2015/34/
+./
+GMTCO_npp_d20150203_t0613292_e0614534_b16938_c20150203185110311878_noaa_ops.h5

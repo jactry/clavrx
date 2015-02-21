@@ -68,6 +68,8 @@ module CLOUD_TYPE_ALGO_MODULE
       real :: ref_ch20
       real :: rad_ch27
       real :: bt_ch27
+      real :: rad_ch29
+      real :: bt_ch29      
       real :: rad_ch31 
       real :: bt_ch31 
       real :: bt_ch32   
@@ -296,6 +298,7 @@ contains
       real, parameter:: FMFT_COLD_OFFSET = 0.5 !K
       real, parameter:: FMFT_CIRRUS_THRESH = 1.0 !K
       real, parameter :: BT_11UM_STD_CIRRUS_THRESH = 4.0 ! K
+      real, parameter :: BT_85_MINUS_BT_11_TEST = -1. ! K
       
       real :: fmft
       real :: h2o_correct
@@ -374,18 +377,23 @@ contains
             .and. inp % sat % ref_ch6 > 30. )  is_water = .true. 
          
          ! - 3.75 day   
-         if ( ice_prob /= 0.0 &
-            .and. inp % sat % chan_on ( 20 ) &
+         if (  inp % sat % chan_on ( 20 ) &
             .and. inp % geo % sol_zen < 80. &
             .and. inp % sfc % emiss_ch20 > 0.9 &
             .and. inp % sat % ref_ch20 > 20.0 ) is_water = .true.
          
          
          ! -3.75 night 
-         if ( ice_prob /= 0.0 &
-            .and. inp % sat % chan_on ( 20 ) &
+         if (  inp % sat % chan_on ( 20 ) &
             .and. inp % geo % sol_zen > 80. &          
             .and. inp % sat % ref_ch20 > 5.0 ) is_water = .true. 
+         
+        ! -  8.5-11 test
+        if (  inp % sat % chan_on(29)  &
+            .and. inp % sat % chan_on ( 31 ) ) then
+            
+            if (  (inp % sat % bt_ch29 - inp % sat % bt_ch31 ) < - BT_85_MINUS_BT_11_TEST ) is_water = .true.
+        end if      
          
           !--- modify ice_prob based on water tests
          if ( is_water) ice_prob = 0.0

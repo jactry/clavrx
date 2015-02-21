@@ -392,7 +392,7 @@ contains
         if (  inp % sat % chan_on(29)  &
             .and. inp % sat % chan_on ( 31 ) ) then
             
-            if (  (inp % sat % bt_ch29 - inp % sat % bt_ch31 ) < - BT_85_MINUS_BT_11_TEST ) is_water = .true.
+            if (  (inp % sat % bt_ch29 - inp % sat % bt_ch31 ) <  BT_85_MINUS_BT_11_TEST ) is_water = .true.
         end if      
          
           !--- modify ice_prob based on water tests

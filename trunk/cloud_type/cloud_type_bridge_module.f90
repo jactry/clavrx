@@ -308,7 +308,12 @@ contains
       if (sensor % chan_on_flag_default(27) == 1 ) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
-      end if   
+      end if  
+      
+      if (sensor % chan_on_flag_default(29) == 1 ) then
+         type_inp % sat % rad_ch29 = ch(29) % rad_toa (i,j)
+         type_inp % sat % bt_ch29 =  ch(29) % bt_toa  (i,j)
+      end if         
       
       !-----------------------------------------------------------------------------------
       ! - rtm

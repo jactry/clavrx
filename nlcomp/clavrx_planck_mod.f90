@@ -68,9 +68,10 @@ contains
       if (self % tbl % is_set) return
       
       call main % sensor % read_coeffs ( sensor )
+    
       c1_times_nu__3 =  c1 * self%coef%nu ** 3
       c2_times_nu = c2 * self%coef%nu
-      
+
       do i = 1 , nplanck 
          self % tbl % t_planck(i) = T_planck_min + ( i - 1 ) * delta_T_planck
          self % tbl % B_vec(i) = c1_times_nu__3  / ( exp ( ( c2_times_nu ) / &
@@ -93,7 +94,7 @@ contains
       real :: a1 , a2 , nu 
       
       
-      file = '/DATA/Ancil_Data/clavrx_ancil_data/avhrr_data/planck_coeff.dat'
+      file = '/DATA/Ancil_Data/clavrx_ancil_data/planck_coeff.dat'
       
       
       
@@ -171,6 +172,8 @@ contains
       
       dB_dT_tmp = (B_vec(l+1)-B_vec(l))/(T_vec(l+1)-T_vec(l))
       tmp = t_vec(l) + ( rad - b_vec ( l)) / dB_dT_tmp 
+      
+     
    
    end function planck_rad2tmp
    

@@ -112,13 +112,13 @@ contains
       
       print*,'vergleich: ', rad20_sfc , rad_clear_toc(20)
       
-      print*,pixel % ctt
+       print*,pixel % ctt
       print*, planck_rad20, planck_rad31, planck_rad32
       
       bt20 =  planck_rad2tmp ( planck_rad20, 'VIIRS' , 20)
          bt31 =  planck_rad2tmp ( planck_rad31, 'VIIRS' , 31)
          bt32 =  planck_rad2tmp ( planck_rad32, 'VIIRS' , 32) 
-      print*,'bt: ', bt20,bt31,bt32
+       print*,'bt: ', bt20,bt31,bt32
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
       
@@ -134,7 +134,9 @@ contains
       !do j=1,29
       !   cod_used = j/10. - 0.6
       !   print*
-      do i = 1, 9 
+      print*
+      do i = 1, 9
+         print*,i 
          call lut_obj % get_data ( 20, phase_num , cod_used, cps_vec_lut (i) , lut_data20) 
          call lut_obj % get_data ( 31, phase_num , cod_used, cps_vec_lut (i) , lut_data31)   
          call lut_obj % get_data ( 32,phase_num , cod_used, cps_vec_lut (i) , lut_data32)
@@ -150,6 +152,7 @@ contains
          print*, '         ',  lut_data20 %  ems * planck_rad20 , lut_data20 % trn_ems * rad_clear_toc(20),lut_data20 % trn_ems,lut_data20 %  ems
          
          print*,i, rad20,bt31-bt32 , bt20 - bt31
+         
       end do      
       !end do  
    

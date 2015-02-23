@@ -92,9 +92,7 @@ module dcomp_rtm_module
          , zen_idx_rtm &
          , ch &
          , bad_pixel_mask &
-         , Rad_Clear_Ch20_Solar_Rtm &
-         , Rad_Clear_Ch31_Rtm_unbiased &
-         , Rad_Clear_Ch32_Rtm_unbiased
+         , Rad_Clear_Ch20_Solar_Rtm
         
       use nwp_common, only: &
            t_prof_nwp &
@@ -235,7 +233,7 @@ module dcomp_rtm_module
                                   & rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % trans_atm_profile(idx_lev_rtm))
                   
             dcomp_rtm % trans_ir_ac_nadir_ch31(elem_idx,line_idx) = &
-                                 & dcomp_rtm % trans_ir_ac_ch31(elem_idx,line_idx) ** (cos ( satzen(elem_idx, line_idx) * PI / 180.  ))
+                                 & dcomp_rtm % trans_ir_ac_ch31(elem_idx,line_idx) ** (cos ( geo%satzen(elem_idx, line_idx) * PI / 180.  ))
             
             dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
             
@@ -243,7 +241,7 @@ module dcomp_rtm_module
             clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(31) % rad_atm_profile
 
             dcomp_rtm % rad_clear_sky_toc_ch31 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)           
-            dcomp_rtm % rad_clear_sky_toa_ch31 (elem_idx,line_idx) = Rad_Clear_Ch31_Rtm_unbiased (Elem_Idx,Line_Idx)
+            dcomp_rtm % rad_clear_sky_toa_ch31 (elem_idx,line_idx) = ch(31) % rad_toa_clear (Elem_Idx,Line_Idx)
             
             
             ! - channel 32
@@ -253,7 +251,7 @@ module dcomp_rtm_module
                                   & rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % trans_atm_profile(idx_lev_rtm))
                   
             dcomp_rtm % trans_ir_ac_nadir_ch32(elem_idx,line_idx) = &
-                                 & dcomp_rtm % trans_ir_ac_ch32(elem_idx,line_idx) ** (cos ( satzen(elem_idx, line_idx) * PI / 180.  ))
+                                 & dcomp_rtm % trans_ir_ac_ch32(elem_idx,line_idx) ** (cos ( geo % satzen(elem_idx, line_idx) * PI / 180.  ))
             
             dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
             
@@ -261,7 +259,7 @@ module dcomp_rtm_module
             clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(32) % rad_atm_profile
 
             dcomp_rtm % rad_clear_sky_toc_ch32 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)           
-            dcomp_rtm % rad_clear_sky_toa_ch32 (elem_idx,line_idx) = Rad_Clear_Ch32_Rtm_unbiased(Elem_Idx,Line_Idx)
+            dcomp_rtm % rad_clear_sky_toa_ch32 (elem_idx,line_idx) = ch(32) % rad_toa_clear (Elem_Idx,Line_Idx)
          
          end do element_loop
       end do line_loop

@@ -69,9 +69,9 @@ module nlcomp_bridge_mod
       , ch &
       , dcomp_mode  &
       , zen_idx_rtm , solar_rtm &
-      , sc_id_wmo &
-      , chan_on_flag &
-      , lunzen , lunrelaz &
+     
+      
+      
       , tsfc_nwp_pix
    
    use pixel_common, only: &
@@ -228,22 +228,22 @@ contains
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa(1:dim_1,1:dim_2)
       if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa(1:dim_1,1:dim_2)
       
-      nlcomp_input % sat % d = satzen(1:dim_1,1:dim_2)
-      nlcomp_input % sol % d = solzen(1:dim_1,1:dim_2)
-      nlcomp_input % azi % d = relaz(1:dim_1,1:dim_2)
-      nlcomp_input % zen_lunar % d = lunzen(1:dim_1,1:dim_2)
-      nlcomp_input % azi_lunar % d = lunrelaz(1:dim_1,1:dim_2)
+      nlcomp_input % sat % d = geo % satzen(1:dim_1,1:dim_2)
+      nlcomp_input % sol % d = geo % solzen(1:dim_1,1:dim_2)
+      nlcomp_input % azi % d = geo % relaz(1:dim_1,1:dim_2)
+      nlcomp_input % zen_lunar % d = geo % lunzen(1:dim_1,1:dim_2)
+      nlcomp_input % azi_lunar % d = geo % lunrelaz(1:dim_1,1:dim_2)
              
              
          ! - Cloud products
-      nlcomp_input % cloud_press % d = pc_acha(1:dim_1,1:dim_2)
-      nlcomp_input % cloud_temp % d  = tc_acha(1:dim_1,1:dim_2)    
-      nlcomp_input % tau_acha % d    = tau_acha(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_press % d = acha % pc(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_temp % d  = acha % tc (1:dim_1,1:dim_2)    
+      nlcomp_input % tau_acha % d    = acha % tau(1:dim_1,1:dim_2)
       nlcomp_input % cloud_mask % d  = cld_mask(1:dim_1,1:dim_2)
       nlcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
                   
          ! - Flags
-      nlcomp_input % is_land % d = land_mask(1:dim_1,1:dim_2) == 1 
+      nlcomp_input % is_land % d = sfc % land_mask(1:dim_1,1:dim_2) == 1 
       nlcomp_input % is_valid % d = bad_pixel_mask(1:dim_1,1:dim_2) /= 1
       
             
@@ -262,7 +262,7 @@ contains
       if ( nlcomp_input % is_channel_on (32)) nlcomp_input % emiss_sfc ( 32) % d = ch(32)%sfc_emiss
       
       nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp(1:dim_1,1:dim_2)
-      nlcomp_input % snow_class % d = snow(1:dim_1,1:dim_2)
+      nlcomp_input % snow_class % d = sfc % snow(1:dim_1,1:dim_2)
       nlcomp_input % temp_sfc % d = tsfc_nwp_pix ( 1:dim_1,1:dim_2)
             
          ! - Atmospheric contents

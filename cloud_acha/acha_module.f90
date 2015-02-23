@@ -1775,10 +1775,10 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
              Line_Idx_1 = min(num_line,max(1,Line_Idx-dline))
              Line_Idx_2 = min(num_line,max(1,Line_Idx+dline))
 
-             count_Valid = sum(mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+             count_Valid = sum(1*mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
 
              !---STW Debug
-             count_Valid2 = sum(mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+             count_Valid2 = sum(1*mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
              !---STW End Debug
 
              !---STW if (count_Valid > 0) then
@@ -3965,7 +3965,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
           j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
           j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
-          Count_Temporary = sum(Mask(i1:i2,j1:j2))
+          Count_Temporary = sum(1*Mask(i1:i2,j1:j2))
           Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2)*Mask(i1:i2,j1:j2))
           if (Count_Temporary > Count_Thresh) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary

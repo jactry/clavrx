@@ -6,7 +6,7 @@
 !  processing systems and the ACHA code.
 !
 !------------------------------------------------------------------------------
-module ACHA_CLAVRX_BRIDGE_MOD
+module ACHA_SAPF_BRIDGE_MOD
 
  use ACHA_SERVICES_MOD
  use AWG_CLOUD_HEIGHT_ACHA
@@ -24,6 +24,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
  private :: SET_SYMBOL
  private :: COVARIANCE_LOCAL
  private :: WMO_Sensor_KM
+ private :: ACHA_MODE_CHN_FLG
    
  REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
  REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy !for opaque stuff right now
@@ -81,20 +82,21 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
    !--- store integer values
    call SET_INPUT()
-
+   
    !---- initalize Output structure
    call SET_OUTPUT()
   
    !----set symbols to local values
    call SET_SYMBOL()
-     
+       
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   
+      
    call AWG_CLOUD_HEIGHT_ALGORITHM_ACHA(Input, &
                                     Symbol, &
                                     Output)
+                                       
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
    !-----------------------------------------------------------------------
@@ -360,11 +362,16 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
    Input%Number_of_Elements = Ctxt_ACHA%SegmentInfo%Current_Column_Size
    Input%Number_of_Lines = Ctxt_ACHA%SegmentInfo%Current_Row_Size
+   
    Input%Num_Line_Max = Ctxt_ACHA%SegmentInfo%Current_Row_Size
+   
    Input%Process_Undetected_Cloud_Flag = sym%NO
    Input%Smooth_Nwp_Fields_Flag = sym%YES
+   
    CALL NFIP_CloudHeight_AchaMode(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Input%ACHA_Mode_Flag_In)
    
+   CALL ACHA_MODE_CHN_FLG()
+      
    ! McIDAS sensor ID
    CALL NFIP_Sat_Sat_ID(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, McIDAS_ID)
    
@@ -377,16 +384,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Input%Chan_Idx_11um = 14     !channel number for 11
    Input%Chan_Idx_12um = 15     !channel number for 12
    Input%Chan_Idx_133um = 16  !channel number for 13.3
-
-!    CALL NFIA_CloudHeight_ChanOn(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Chan_On_Flag_Default)
-     Chan_On_Flag_Default = (/0 , 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0,0,1,1,0/)
-
-
-     Input%Chan_On_67um = Chan_On_Flag_Default(Input%Chan_Idx_67um)
-     Input%Chan_On_85um = Chan_On_Flag_Default(Input%Chan_Idx_85um)
-     Input%Chan_On_11um = Chan_On_Flag_Default(Input%Chan_Idx_11um)
-     Input%Chan_On_12um = Chan_On_Flag_Default(Input%Chan_Idx_12um)
-     Input%Chan_On_133um = Chan_On_Flag_Default(Input%Chan_Idx_133um)
+       
      
     CALL NFIA_Sat_L1b_BadPixMsk(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14, Input%Invalid_Data_Mask)
      
@@ -401,29 +399,35 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
     CALL NFIA_RTM_ViewZenAngIndex(Ctxt_ACHA%RTM_Src1_T00, Input%Viewing_Zenith_Angle_Idx_Rtm)   
    
-     if (Chan_On_Flag_Default(Input%Chan_Idx_67um) == sym%YES) then
+      if (Input%Chan_On_67um == sym%YES) then
         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9,  Input%Bt_67um)
         CALL NFIA_Sat_L1b_Rad(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9,  Input%Rad_67um)
         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI9,  Input%Rad_Clear_67um)
-     endif
+      endif
 
-      if (Chan_On_Flag_Default(Input%Chan_Idx_85um) == sym%YES) then
+      if (Input%Chan_On_85um == sym%YES) then
         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI11, Input%Bt_85um)
         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI11, Input%Rad_Clear_85um)
       endif
 
-     if (Chan_On_Flag_Default(Input%Chan_Idx_11um) == sym%YES) then
-        CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14,  Input%Bt_11um)
-        CALL NFIA_Sat_L1b_Rad(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14,  Input%Rad_11um)
-        CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI14, Input%Rad_Clear_11um)
-     endif
+      if (Input%Chan_On_11um == sym%YES) then
+         
+         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14,  Input%Bt_11um)        
+         CALL NFIA_Sat_L1b_Rad(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14,  Input%Rad_11um)
+         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI14, Input%Rad_Clear_11um)
+        
+      endif
+     
 
-      if (Chan_On_Flag_Default(Input%Chan_Idx_12um) == sym%YES) then
-        CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI15, Input%Bt_12um)
-        CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI15, Input%Rad_Clear_12um)
+      if (Input%Chan_On_12um == sym%YES) then
+      
+         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI15, Input%Bt_12um)
+         
+         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI15, Input%Rad_Clear_12um)
+         
       endif
           
-      if (Chan_On_Flag_Default(Input%Chan_Idx_133um) == sym%YES) then
+      if (Input%Chan_On_133um == sym%YES) then
         CALL NFIA_Sat_L1b_BrtTemp(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI16, Input%Bt_133um)
         CALL NFIA_RTM_Pixel_RadClr(Ctxt_ACHA%RTM_Src1_T00, CHN_ABI16, Input%Rad_Clear_133um)
       endif
@@ -497,7 +501,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
     allocate(Input%Surface_Pressure(Input%Number_of_Elements,Input%Number_of_Lines ))
 
       !Fill the pixel level NWP stuff for now
-      CALL ACHA_NWP_Fill(Input)
+    CALL ACHA_NWP_Fill(Input)
 
     CALL NFIA_SfcElev_Elevation(Ctxt_ACHA%SURFACE_ELEVATION_Src1_T00, Input%Surface_Elevation)
      
@@ -510,9 +514,13 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
    CALL NFIA_SfcEmis_SfcEmiss(Ctxt_ACHA%SURFACE_EMISSIVITY_Src1_T00, CHN_ABI7, Input%Surface_Emissivity_39um)
 
+!   CALL NFIA_PseudoEmiss_Chn7(Ctxt_ACHA%PSEUDO_EMISSIVITY_Src1_T00, Input%Surface_Emissivity_39um)
+
    Input%Elem_Idx_LRC_Input => null()
    Input%Line_Idx_LRC_Input =>  null()
    Input%Tc_Cirrus_Sounder =>  null()
+   
+   
 
  end subroutine SET_INPUT
 
@@ -736,6 +744,51 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
 
  end function WMO_Sensor_KM
+ 
+ subroutine ACHA_MODE_CHN_FLG()
+
+      !Initialize channel flags to "NO"
+      Input%Chan_On_67um = sym%NO
+      Input%Chan_On_85um = sym%NO
+      Input%Chan_On_11um = sym%NO
+      Input%Chan_On_12um = sym%NO
+      Input%Chan_On_133um = sym%NO
+
+      select case (Input%ACHA_Mode_Flag_In)
+      case(1)   ! 11um
+            Input%Chan_On_11um = sym%YES
+      case(2)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_67um = sym%YES
+      case(3)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_12um = sym%YES
+      case(4)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_133um = sym%YES
+      case(5)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_85um = sym%YES
+            Input%Chan_On_12um = sym%YES
+      case(6)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_67um = sym%YES
+            Input%Chan_On_12um = sym%YES
+      case(7)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_67um = sym%YES
+            Input%Chan_On_133um = sym%YES
+      case(8)   !
+            Input%Chan_On_11um = sym%YES
+            Input%Chan_On_12um = sym%YES
+            Input%Chan_On_133um = sym%YES
+      case default
+             print*,'This is an invalid ACHA Mode ', Input%ACHA_Mode_Flag_In
+             stop
+      end select
+ 
+ 
+ end subroutine ACHA_MODE_CHN_FLG
 
 
-end module ACHA_CLAVRX_BRIDGE_MOD
+end module ACHA_SAPF_BRIDGE_MOD

@@ -165,7 +165,7 @@ contains
       ! - which channels do we need? possibles are 
       nlcomp_input % is_channel_on = .false.
       
-      nlcomp_possible_channels = [  20 , 31, 32, 42 ]
+      nlcomp_possible_channels = [  20 , 31, 32, 44 ]
       do i = 1 , size ( nlcomp_possible_channels )   
          if ( sensor % chan_on_flag_default ( nlcomp_possible_channels ( i) ) == 1 ) then
             nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
@@ -225,12 +225,13 @@ contains
       if ( nlcomp_input % is_channel_on (31)) nlcomp_input % rad ( 31 ) % d = ch(31)%rad_toa(1:dim_1,1:dim_2)
       if ( nlcomp_input % is_channel_on (32)) nlcomp_input % rad ( 32 ) % d = ch(32)%rad_toa(1:dim_1,1:dim_2)
       
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % refl ( 42 ) % d = ch(42)%ref_lunar_toa(1:dim_1,1:dim_2)
-      if ( nlcomp_input % is_channel_on (42)) nlcomp_input % rad ( 42 ) % d = ch(42)%rad_toa(1:dim_1,1:dim_2)
+      if ( nlcomp_input % is_channel_on (44)) nlcomp_input % refl ( 44 ) % d = ch(44)%ref_lunar_toa(1:dim_1,1:dim_2)
+      if ( nlcomp_input % is_channel_on (44)) nlcomp_input % rad ( 44 ) % d = ch(44)%rad_toa(1:dim_1,1:dim_2)
       
       nlcomp_input % sat % d = geo % satzen(1:dim_1,1:dim_2)
       nlcomp_input % sol % d = geo % solzen(1:dim_1,1:dim_2)
       nlcomp_input % azi % d = geo % relaz(1:dim_1,1:dim_2)
+      
       nlcomp_input % zen_lunar % d = geo % lunzen(1:dim_1,1:dim_2)
       nlcomp_input % azi_lunar % d = geo % lunrelaz(1:dim_1,1:dim_2)
              

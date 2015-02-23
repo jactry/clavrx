@@ -148,7 +148,7 @@ contains
 #ifdef HDF5LIBS  
 #ifdef NLCOMPLIBS   
       if ( iseg_in == 1 ) then
-        call mesg ('NL-COMP starts ... ', color=46 , level = -1 ) 
+        call mesg ('NL-COMP starts ... ', color=46  ) 
       end if
       
       ! - compute DCOMP related RTM 

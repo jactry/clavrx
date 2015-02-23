@@ -145,7 +145,7 @@ contains
       
       
       if ( iseg_in == 1 ) then
-        call mesg ('dcomp start ' ) 
+        call mesg ('DCOMP starts ',color = 46 ) 
       end if
       
       

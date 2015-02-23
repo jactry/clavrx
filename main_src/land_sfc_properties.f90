@@ -129,7 +129,7 @@ END FUNCTION open_land_sfc_hdf
 !-------------------------------------------------------------------
 
 SUBROUTINE close_land_sfc_hdf(id)
-  INTEGER(kind=int4), intent(in) :: id
+  INTEGER(kind=int4), intent(inout) :: id
   
   INTEGER(kind=int4) :: istatus  
   INTEGER :: sfend
@@ -139,6 +139,8 @@ SUBROUTINE close_land_sfc_hdf(id)
     print "(/,a,'Error closing land surface hdf file.')",EXE_PROMPT
     stop
   endif
+  
+  id = -999
   
 
 END SUBROUTINE close_land_sfc_hdf

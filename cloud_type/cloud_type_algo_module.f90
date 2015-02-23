@@ -303,6 +303,13 @@ contains
       is_water = .false.
       is_cirrus = .false.
       
+      
+      if ( .not. inp % sat % chan_on ( 31) ) then
+         print*, ' channel 31 (10.8 micron) was not read '
+         print*, '  check your settings in clavrx_options '
+         return
+      
+      end if
 
       !------------------------------------------------------------------------
       !  Determine the Cloud Height and Cloud Temperature for Typing
@@ -332,7 +339,7 @@ contains
       end if
      
       !---- if no water vapor, use the atmos-corrected 11 micron
-      if ( t_cld == MISSING_VALUE_REAL) then
+      if ( t_cld == MISSING_VALUE_REAL .and. inp % sat % chan_on ( 31)  ) then
         call HEIGHT_OPAQUE ( &
            inp % sat % rad_ch31 &
            , inp % rtm % rad_ch31_bb_prof &

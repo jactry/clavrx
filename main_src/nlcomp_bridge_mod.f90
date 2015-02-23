@@ -79,7 +79,8 @@ module nlcomp_bridge_mod
       , zen_idx_rtm , solar_rtm &
       , sc_id_wmo &
       , chan_on_flag &
-      , lunzen , lunrelaz
+      , lunzen , lunrelaz &
+      , tsfc_nwp_pix
    
    use pixel_common, only: &
         dcomp_diag_1 , dcomp_diag_2 &
@@ -215,6 +216,7 @@ contains
       call  alloc_nlcomp ( nlcomp_input % azi,          dim_1,dim_2 )
       call  alloc_nlcomp ( nlcomp_input % zen_lunar,          dim_1,dim_2 )
       call  alloc_nlcomp ( nlcomp_input % azi_lunar,          dim_1,dim_2 )
+      call alloc_nlcomp ( nlcomp_input % temp_sfc , dim_1, dim_2 )
      
       ! -- configure
       
@@ -244,7 +246,7 @@ contains
              
          ! - Cloud products
       nlcomp_input % cloud_press % d = pc_acha(1:dim_1,1:dim_2)
-      nlcomp_input % cloud_temp % d  = tc_acha(1:dim_1,1:dim_2)
+      nlcomp_input % cloud_temp % d  = tc_acha(1:dim_1,1:dim_2)    
       nlcomp_input % tau_acha % d    = tau_acha(1:dim_1,1:dim_2)
       nlcomp_input % cloud_mask % d  = cld_mask(1:dim_1,1:dim_2)
       nlcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
@@ -270,6 +272,7 @@ contains
       
       nlcomp_input % press_sfc % d =  nlcomp_rtm % sfc_nwp(1:dim_1,1:dim_2)
       nlcomp_input % snow_class % d = snow(1:dim_1,1:dim_2)
+      nlcomp_input % temp_sfc % d = tsfc_nwp_pix ( 1:dim_1,1:dim_2)
             
          ! - Atmospheric contents
          ! ozone column in Dobson
@@ -308,7 +311,7 @@ contains
         
       end if  
      
-      
+      print*,'start ....'
       call nlcomp_array_loop_sub (nlcomp_input,nlcomp_output )
        
    

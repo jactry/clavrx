@@ -68,8 +68,8 @@ MODULE Message_Handler
                           'WARNING    ', &
                           'END-OF-FILE', &
                           'UNDEFINED  ', &
-			  'EXISTS     ', &
-			  'EXIT       ' /)
+  'EXISTS     ', &
+  'EXIT       ' /)
 
 
 CONTAINS
@@ -190,7 +190,7 @@ CONTAINS
     ELSE
       WRITE( File_ID, FMT = FMT_STRING ) &
                       TRIM( EXE_PROMPT ), &
-		      TRIM( Routine_Name ), &
+                     TRIM( Routine_Name ), &
                       TRIM( STATE_DESCRIPTOR( Error_State_To_Use ) ), &
                       TRIM( Message )
       CLOSE( File_ID )

@@ -117,7 +117,7 @@ program COMPILE_MONTHLY
 !--- global attributes for composite
  integer(kind=int4):: sd_id_comp
  integer(kind=int4):: num_cells_comp
- integer:: therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp, &
+ integer:: therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp, &
                         sst_anal_opt_comp, modis_clr_alb_flag_comp, nwp_flag_comp
  integer(kind=int4)::  start_time_comp,end_time_comp
  integer(kind=int4)::  acha_mode_comp, dcomp_mode_comp, wmo_sc_code_comp
@@ -473,7 +473,7 @@ call READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES(sd_id_first,data_type_comp,file_name_comp
                            resolution_km, &
                            start_year_comp,end_year_comp,start_day_comp,end_day_comp,start_time_comp,end_time_comp,&
                            num_cells_comp,num_cells_comp,grid_format_comp,grid_resolution_comp, &
-                           therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp,sst_anal_opt_comp, &
+                           therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp,sst_anal_opt_comp, &
                            modis_clr_alb_flag_comp, nwp_flag_comp, ch1_gain_low_comp, ch1_gain_high_comp, &
                            ch1_switch_count_comp, ch1_dark_count_comp, &
                            ch2_gain_low_comp, ch2_gain_high_comp, &
@@ -557,7 +557,7 @@ call READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES(sd_id_first,data_type_comp,file_name_comp
          resolution_km, &
          start_year_comp,end_year_comp,start_day_comp,end_day_comp,start_time_comp,end_time_comp,&
          num_cells_comp,num_cells_comp,grid_format_comp,grid_resolution_comp, &
-         therm_cal_1b_comp,Ref_cal_1b_comp,nav_flag_comp,use_sst_anal_comp,sst_anal_opt_comp, &
+         therm_cal_1b_comp,Ref_cal_1b_comp,nav_opt_comp,use_sst_anal_comp,sst_anal_opt_comp, &
          modis_clr_alb_flag_comp, nwp_flag_comp, ch1_gain_low_comp, ch1_gain_high_comp, &
          ch1_switch_count_comp, ch1_dark_count_comp, &
          ch2_gain_low_comp, ch2_gain_high_comp, &

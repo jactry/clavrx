@@ -320,13 +320,18 @@ contains
       allocate ( type_inp % rtm % z_prof(n_rtm_prof ) , source = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%z_prof )
       type_inp % rtm % tropo_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
       type_inp % rtm % sfc_lev = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%sfc_Level
+      
+      
+      
       if (chan_on_flag_default(6) == 1 )  then
          type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
       endif
       if (chan_on_flag_default(31) == 1 )  then
          
+         
          allocate ( type_inp % rtm % rad_ch31_bb_prof (n_rtm_prof ) &
               , source = Rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Idx)%ch(31)%Rad_BB_Cloud_Profile)
+          
          type_inp % rtm % bt_ch31_3x3_max    = Bt_Ch31_Max_3x3( i,j )
          type_inp % rtm % bt_ch31_3x3_std    = Bt_Ch31_Std_3x3( i,j )
          type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)

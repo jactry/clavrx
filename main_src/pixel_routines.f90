@@ -73,7 +73,6 @@ MODULE PIXEL_ROUTINES
           QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
-          TURN_OFF_CHANNELS_BASED_ON_SENSOR, &
           DETERMINE_LEVEL1B_COMPRESSION, &
           TERM_REFL_NORM, &
           MERGE_NWP_HIRES_ZSFC, &
@@ -92,211 +91,59 @@ MODULE PIXEL_ROUTINES
             COMPUTE_TSFC
 
   contains
-!----------------------------------------------------------------------------
-! Routine to modify Chan_On_Default_Flag based on channels that are available
-!----------------------------------------------------------------------------
-subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
-                                              Goes_Flag, Goes_Mop_Flag, &
-                                              Goes_Sndr_Flag, &
-                                              Seviri_Flag, Mtsat_Flag, &
-                                              Viirs_Flag, Iff_Viirs_Flag, &
-                                              Iff_Avhrr_flag, &
-                                              FY2_Flag, COMS_Flag)
 
-   integer, intent(in):: Avhrr_Flag
-   integer, intent(in):: Avhrr_1_Flag
-   integer, intent(in):: Goes_Flag
-   integer, intent(in):: Goes_Mop_Flag
-   integer, intent(in):: Goes_Sndr_Flag
-   integer, intent(in):: Seviri_Flag
-   integer, intent(in):: Mtsat_Flag
-   integer, intent(in):: Iff_Viirs_Flag
-   integer, intent(in):: Iff_Avhrr_Flag
-   integer, intent(in):: FY2_Flag
-   integer, intent(in):: Viirs_Flag
-   integer, intent(in):: COMS_Flag
+   !----------------------------------------------------------------------
+   ! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
+   !
+   ! this logic allows the default values to also be used to turn off
+   ! channels
+   !
+   !  called by process_clavrx inside segment loop
+   !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
+   !----------------------------------------------------------------------
+   subroutine SET_CHAN_ON_FLAG(jmin,nj)
 
-   if (Avhrr_Flag == sym%YES) then
-      Chan_On_Flag_Default(3:5) = sym%NO
-      Chan_On_Flag_Default(7:19) = sym%NO
-      Chan_On_Flag_Default(21:30) = sym%NO
-      Chan_On_Flag_Default(33:36) = sym%NO
-      if (Avhrr_1_Flag == sym%YES) then
-            Chan_On_Flag_Default(32) = sym%NO
-      endif
-      Chan_On_Flag_Default(37:42) = sym%NO
-   endif 
+      integer (kind=int4), intent(in):: jmin
+      integer (kind=int4), intent(in):: nj
+      integer:: Line_Idx
+      
+      
+      Ch6_On_Pixel_Mask = sym%NO
 
-  !GOES
-  if (Goes_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(34:36) = sym%NO
+      line_loop: DO Line_Idx = jmin, nj - jmin + 1
+      
+         ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
+         Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default   
+         
+         
+         ! two exceptions
+         if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES &
+                .and. Chan_On_Flag_Default(6) == sym%YES ) then
+            
+            if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
+                     Chan_On_Flag(6,Line_Idx) = sym%NO 
+            end if  
+         end if
+         
+         
+         if (Avhrr_Flag == sym%YES) then
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
+               Chan_On_Flag(6,Line_Idx) = Chan_On_Flag_Default(6)   
+               Chan_On_Flag(20,Line_Idx) = sym%NO   
+            end if
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
+               Chan_On_Flag(6,Line_Idx) = sym%NO   
+               Chan_On_Flag(20,Line_Idx) = Chan_On_Flag_Default(20)   
+            end if
+         endif
 
-       if (Goes_Mop_Flag == sym%YES) then
-             Chan_On_Flag_Default(32) = sym%NO
-       else
-             Chan_On_Flag_Default(33) = sym%NO
-       endif
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
 
-  !GOES Sounder
-  if (Goes_Sndr_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(22) = sym%NO
-       Chan_On_Flag_Default(26) = sym%NO
-       Chan_On_Flag_Default(29) = sym%NO
-  endif
+         !--- set 2d mask used for channel-6 (1.6 um)
+         Ch6_On_Pixel_Mask(:,Line_Idx) = Chan_On_Flag(6,Line_Idx)
 
-  !MTSAT
-  if (Mtsat_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
+      end do line_loop
 
-  ! SEVIRI
-  !note 3.9 channel mapped to channel 20
-  if (Seviri_Flag == sym%YES) then
-       Chan_On_Flag_Default(3:5) = sym%NO
-       Chan_On_Flag_Default(7:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(34:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-
-  !FY2-D/E
-  if (FY2_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  ENDIF
-
-  ! VIIRS  
-  IF (Viirs_Flag == sym%YES) THEN
-       Chan_On_Flag_Default(10:14) = sym%NO
-       Chan_On_Flag_Default(16:19) = sym%NO
-       Chan_On_Flag_Default(21) = sym%NO
-       Chan_On_Flag_Default(23:25) = sym%NO
-       Chan_On_Flag_Default(27:28) = sym%NO
-       Chan_On_Flag_Default(30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-  ENDIF
-
-  ! VIIRS + CrIS in IFF
-  ! note CrIS uses 33:36 channels
-  IF (Iff_Viirs_Flag == sym%YES) THEN
-       Chan_On_Flag_Default(10:14) = sym%NO
-       Chan_On_Flag_Default(16:19) = sym%NO
-       Chan_On_Flag_Default(21) = sym%NO
-       Chan_On_Flag_Default(23:25) = sym%NO
-       Chan_On_Flag_Default(27:28) = sym%NO
-       Chan_On_Flag_Default(30) = sym%NO
-  ENDIF
-
-   ! AVHRR + HIRS in IFF
-   ! note HIRS uses 21,23:25,27:30,33:36
-   if (Iff_Avhrr_Flag == sym%YES) then
-      Chan_On_Flag_Default(3:5) = sym%NO
-      Chan_On_Flag_Default(7:19) = sym%NO
-      Chan_On_Flag_Default(26) = sym%NO
-      Chan_On_Flag_Default(37:42) = sym%NO
-   endif
-  
-  !COMS
-  if (COMS_Flag == sym%YES) then
-       Chan_On_Flag_Default(2:19) = sym%NO
-       Chan_On_Flag_Default(21:26) = sym%NO
-       Chan_On_Flag_Default(28:30) = sym%NO
-       Chan_On_Flag_Default(33:36) = sym%NO
-       Chan_On_Flag_Default(37:42) = sym%NO
-  endif
-  
-end subroutine TURN_OFF_CHANNELS_BASED_ON_SENSOR
-!----------------------------------------------------------------------
-! set Chan_On_Flag for each to account for Ch3a/b switching on avhrr
-!
-! this logic allows the default values to also be used to turn off
-! channels
-!----------------------------------------------------------------------
-  subroutine SET_CHAN_ON_FLAG(jmin,nj)
-
-     integer (kind=int4), intent(in):: jmin
-     integer (kind=int4), intent(in):: nj
-     integer:: Line_Idx
-
-     Chan_On_Flag = sym%NO
-     Ch6_On_Pixel_Mask = sym%NO
-
-     line_loop: DO Line_Idx = jmin, nj - jmin + 1
-
-       if (Modis_Flag == sym%YES) then
-
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default   
-
-          !--- Steve Platnick suggested to use UNC_Ch6 (Uncertainty of channel6)
-          if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES ) then
-             if (Chan_On_Flag_Default(6) == sym%YES) then
-               if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                 Chan_On_Flag(6,Line_Idx) = sym%NO 
-               endif
-             endif  
-          endif
-
-          !--- set ch3a_on flag for AVHRR algorithms
-          Ch3a_On_Avhrr(Line_Idx) = -1
-          if ((Chan_On_Flag_Default(20) == sym%NO) .and. &
-              (Chan_On_Flag_Default(6) == sym%YES)) then
-               Ch3a_On_Avhrr(Line_Idx) = 1
-          endif
-          if (Chan_On_Flag_Default(20) == sym%YES) then
-               Ch3a_On_Avhrr(Line_Idx) = 0
-          endif
-       endif
-
-       if (Avhrr_Flag == sym%YES) then
-          Chan_On_Flag(:,Line_Idx) = sym%NO  
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default
-          if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-             Chan_On_Flag(6,Line_Idx) = Chan_On_Flag_Default(6)   
-             Chan_On_Flag(20,Line_Idx) = sym%NO   
-          endif
-          if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-             Chan_On_Flag(6,Line_Idx) = sym%NO   
-             Chan_On_Flag(20,Line_Idx) = Chan_On_Flag_Default(20)   
-          endif
-       endif
-
-       if (Goes_Flag == sym%YES .or. Goes_Sndr_Flag == sym%YES .or. &
-           Seviri_Flag == sym%YES .or. &
-           Mtsat_Flag == sym%YES .or. Viirs_Flag == sym%YES ) then
-          Chan_On_Flag(:,Line_Idx) = sym%NO         
-          Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default
-
-          !--- set ch3a_on flag for AVHRR algorithms
-          Ch3a_On_Avhrr(Line_Idx) = -1
-          if ((Chan_On_Flag_Default(20) == sym%NO) .and. &
-              (Chan_On_Flag_Default(6) == sym%YES)) then
-               Ch3a_On_Avhrr(Line_Idx) = 1
-          endif
-          if (Chan_On_Flag_Default(20) == sym%YES) then
-               Ch3a_On_Avhrr(Line_Idx) = 0
-          endif
-              
-       endif
-
-       !--- set 2d mask used for channel-6 (1.6 um)
-       Ch6_On_Pixel_Mask(:,Line_Idx) = Chan_On_Flag(6,Line_Idx)
-
-     end do line_loop
-
-  end subroutine SET_CHAN_ON_FLAG
+   end subroutine SET_CHAN_ON_FLAG
 
 !----------------------------------------------------------------------
 ! rudimentary quality check of modis
@@ -496,7 +343,7 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
         endif
 
         !--- NWP
-        if (Nwp_Flag /= 0) then
+        if (Nwp_Opt /= 0) then
             Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
             Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
             if (Lon_Nwp_Idx < 1 .or. Lat_Nwp_Idx < 1) then
@@ -731,7 +578,7 @@ j_loop:    DO j = j1,j2
       if (ihires == sym%NO) then
 
         !use nwp and/or Sst analysis
-        if (Nwp_Flag > 0) then
+        if (Nwp_Opt > 0) then
           if ((inwp > 0) .and. (jnwp > 0)) then
             if (Weasd_Nwp(inwp, jnwp) > 0.1) then  !this is Snow depth
                 Snow(i,j) = sym%SNOW
@@ -2603,58 +2450,61 @@ subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS(Dcomp_Processed_Count,Dcomp_Valid_C
 
 end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
 
-!-----------------------------------------------------------
-! Determine a Fraction of pixels with a confident cloud mask
-!
-!-----------------------------------------------------------
-subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS(Cloud_Mask_Count,Nonconfident_Cloud_Mask_Count)
-
-  integer:: Num_Elements
-  integer:: Num_Lines
-  real(kind=real4), intent(inout):: Cloud_Mask_Count
-  real(kind=real4), intent(inout):: Nonconfident_Cloud_Mask_Count
-  integer(kind=int1), dimension(:,:), allocatable:: Mask
-  integer(kind=int1), dimension(:,:), allocatable:: Nonconfident_Mask
-  integer, parameter:: Count_Min = 10
-  real:: Count_Segment
-  real:: Nonconfident_Count_Segment
+   !-----------------------------------------------------------
+   ! Determine a Fraction of pixels with a confident cloud mask
+   !
+   !-----------------------------------------------------------
+   subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS(Cloud_Mask_Count,Nonconfident_Cloud_Mask_Count)
+      
+     
+      integer:: Num_Elements
+      integer:: Num_Lines
+      real(kind=real4), intent(inout):: Cloud_Mask_Count
+      real(kind=real4), intent(inout):: Nonconfident_Cloud_Mask_Count
+      integer(kind=int1), dimension(:,:), allocatable:: Mask_local
+      integer(kind=int1), dimension(:,:), allocatable:: Nonconfident_Mask_local
+      integer, parameter:: Count_Min = 10
+      real:: Count_Segment
+      real:: Nonconfident_Count_Segment
   
+      Num_Elements = Num_Pix  !make local copy of a global variable
+      Num_Lines = Num_Scans_Per_Segment  !make local copy of a global variable
 
-  Num_Elements = Num_Pix  !make local copy of a global variable
-  Num_Lines = Num_Scans_Per_Segment  !make local copy of a global variable
+      allocate(Mask_local(Num_Elements,Num_Lines))
+      allocate(Nonconfident_Mask_local(Num_Elements,Num_Lines))
 
-  allocate(Mask(Num_Elements,Num_Lines))
-  allocate(Nonconfident_Mask(Num_Elements,Num_Lines))
+      Mask_local = 0
+      Nonconfident_Mask_local = 0
 
-  Mask = 0
-  Nonconfident_Mask = 0
+      where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
+         Mask_local = 1
+      end where
 
-  where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
-     Mask = 1
-  endwhere
+      where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
+         Nonconfident_Mask_local = 1
+      end where
 
-  where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
-     Nonconfident_Mask = 1
-  endwhere
-
-  Count_Segment = sum(real(Mask))
-  if (Count_Segment < Count_Min) then
-      return
-  endif
-
-  Nonconfident_Count_Segment = sum(real(Nonconfident_Mask))
-
-  Cloud_Mask_Count = Cloud_Mask_Count + Count_Segment
-  Nonconfident_Cloud_Mask_Count = Nonconfident_Cloud_Mask_Count + Nonconfident_Count_Segment
-
-  if (Cloud_Mask_Count > Count_Min) then
-    Nonconfident_Cloud_Mask_Fraction = Nonconfident_Cloud_Mask_Count / Cloud_Mask_Count
-  else
-    Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4 
-  endif
+      Count_Segment = sum(real(Mask_local))
+      if (Count_Segment < Count_Min) then
+         return
+      end if
   
+      deallocate ( mask_local)
 
-end subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS
+      Nonconfident_Count_Segment = sum(real(Nonconfident_Mask_local))
+   
+      deallocate (Nonconfident_Mask_local) 
+   
+      Cloud_Mask_Count = Cloud_Mask_Count + Count_Segment
+      Nonconfident_Cloud_Mask_Count = Nonconfident_Cloud_Mask_Count + Nonconfident_Count_Segment
+
+      if (Cloud_Mask_Count > Count_Min) then
+         Nonconfident_Cloud_Mask_Fraction = Nonconfident_Cloud_Mask_Count / Cloud_Mask_Count
+      else
+         Nonconfident_Cloud_Mask_Fraction = Missing_Value_Real4 
+      end if
+  
+   end subroutine COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS
 
 
 !==============================================================================

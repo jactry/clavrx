@@ -881,7 +881,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
   
       !-- read geolocation (and compute scan time)
       if (Modis_1km_Flag == sym%YES) then
-         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(dir_nav_in),  &
+         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(dir_1b),  &
                                             trim(Modis_Geo_Name), &
                                             lon_1b, lat_1b, & 
                                             Satzen, Sataz, Solzen, Solaz, Relaz, &

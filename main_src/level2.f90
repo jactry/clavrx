@@ -115,11 +115,10 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    Sun_Earth_Distance, &
    Therm_Cal_1b,  &
    Ref_Cal_1b, &
-   Nav_Flag, &
+   nav_opt, &
    Use_Sst_anal, &
-   Sst_Anal_opt, &
    Modis_clr_alb_flag, &
-   Nwp_Flag, &
+   Nwp_Opt, &
    Ch1_gain_low, &
    Ch1_gain_high, &
    Ch1_switch_count, &
@@ -146,11 +145,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  character(len=*), intent(in):: File_1b
  integer, intent(in):: Rtm_File_Flag
  integer, intent(in):: Level2_File_Flag
- integer, intent(in):: Sst_Anal_Opt
+ 
  integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
- integer(kind=int4), intent(in) :: Nwp_Flag
+ integer(kind=int4), intent(in) :: Nwp_Opt
  integer, intent(in):: therm_cal_1b
- integer, intent(in):: nav_flag
+ integer, intent(in):: nav_opt
  integer, intent(in):: use_sst_anal
  integer, intent(in):: Ref_cal_1b
  real(kind=real4), intent(in):: c1,c2,a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32, &
@@ -314,7 +313,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      file_Rtm = trim(file_1b_root)//".rtm.hdf"
      call mesg ("creating RTM file "//trim(file_Rtm))
 
-     Sd_Id_Rtm = sfstart(trim(dir_Rtm)//trim(file_Rtm),DFACC_CREATE)
+     Sd_Id_Rtm = sfstart(trim(dir_Level2)//trim(file_Rtm),DFACC_CREATE)
 
      if (Sd_Id_Rtm < 0) then
         print *, EXE_PROMPT, MOD_PROMPT, "Creation of RTM product file failed.  Exiting..."
@@ -327,8 +326,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                            resolution_km, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, Ch1_gain_low, Ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, Ch1_gain_low, Ch1_gain_high, &
                            Ch1_switch_count, Ch1_dark_count, &
                            Ch2_gain_low, Ch2_gain_high, &
                            Ch2_switch_count, Ch2_dark_count, &
@@ -674,8 +673,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                            Resolution_KM, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
-                           therm_cal_1b,Ref_cal_1b,nav_flag,use_sst_anal,sst_anal_opt, &
-                           modis_clr_alb_flag, nwp_flag, Ch1_gain_low, Ch1_gain_high, &
+                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
+                           modis_clr_alb_flag, nwp_opt, Ch1_gain_low, Ch1_gain_high, &
                            Ch1_switch_count, Ch1_dark_count, &
                            Ch2_gain_low, Ch2_gain_high, &
                            Ch2_switch_count, Ch2_dark_count, &
@@ -1537,6 +1536,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud optical depth for Mask
+     if (Cld_Flag == sym%YES .and. Chan_On_Flag_Default(1)==sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
+                               "cld_opd_mask", &
+                               "atmosphere_optical_thickness_due_to_cloud_assuming_water_phase", &
+                               "cloud optical depth at the nominal wavelength of 0.65 microns, "//&
+                               "and water phase with 10 micron particle size determined for cloud mask use", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Tau, Max_Tau, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud type
      if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Type),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -2251,7 +2262,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- outgoing longwave radiation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Olr_Flag == sym%YES) then
+     if (Sds_Num_Level2_Olr_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Olr),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "olr", &
                                "toa_net_upward_longwave_flux", &
@@ -2262,7 +2273,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Insol),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               !"test_product_1", &
                               !"test_product_1", &
@@ -2276,7 +2287,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- insolation diffuse
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Insol_Dif),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               !"test_product_2", &
                               !"test_product_2", &
@@ -3898,6 +3909,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Fire_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- cld optical depth from mask
+     if (Cld_Flag == sym%YES .and. Chan_On_Flag_Default(1) == sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ch(1)%Opd,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld type
      if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
@@ -4307,7 +4325,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- olr
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Olr_Flag == sym%YES) then
+     if ( Sds_Num_Level2_Olr_Flag == sym%YES) then
         call SCALE_VECTOR_I1_RANK2(olr, &
                                  sym%LINEAR_SCALING,Min_olr,Max_olr,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_olr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4315,7 +4333,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
         call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4323,7 +4341,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      endif
 
      !--- diffuse insolation
-     if (Erb_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
+     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
         call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky_Diffuse, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
@@ -4915,7 +4933,8 @@ subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
     Istatus = sfsnatt(Sd_Id_Rtm, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
     Istatus = sfsnatt(Sd_Id_Rtm, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
     do Isds = 1, Num_Rtm_Sds
-     Istatus = sfendacc(Sds_Id_Rtm(Isds)) + Istatus
+      if (sds_id_rtm(isds) /= 0 ) Istatus = sfendacc(Sds_Id_Rtm(Isds)) + Istatus
+      sds_id_rtm(isds) = 0
     enddo
     Istatus = sfend(Sd_Id_Rtm) + Istatus
   endif
@@ -4933,7 +4952,13 @@ subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
   Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
   if (Level2_File_Flag == sym%YES) then
    do Isds = 1, Num_Level2_Sds
-     Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+      
+      if (sds_Id_Level2(Isds) /= 0 ) Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+      ! - do this if sds_id_level2 is saved from last file and not used here..
+      ! - some compilers with ceratin flags save also without save attribute
+      ! - 20141225-AW
+      sds_Id_Level2(Isds) = 0
+     
    enddo
    Istatus = sfend(Sd_Id_Level2) + Istatus
 !--- errors are expected on close since all sds were not opened

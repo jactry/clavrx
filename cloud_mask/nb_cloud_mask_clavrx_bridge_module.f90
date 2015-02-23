@@ -30,6 +30,7 @@
 !      2014/04/21:  add fire mask input (AW)
 !      2014/05/07:  added diagnostic type (Denis B)
 !      2014/05/09:  added version (Denis B)
+!      2015/02/16   New channel numbers for VIIRS i-band and DNB (AW)
 !
 !  GLOBAL VARIABLES:
 !
@@ -100,17 +101,10 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
       , Cloud_Mask_Thresholds_Version
       
    use PIXEL_COMMON, only: &
-        Lon &
-      , Lat &
-      , Solzen &
-      , Airmass &
-      , Scatangle &
-      , Glint_mask &
-      , Land &
-      , Sfc_Type &
-      , Coast &
-      , Snow &
-      , Zsfc &
+         Nav &
+      ,  Geo &
+      , sfc &
+      , sensor &
       , Sst_Anal_Uni &
       , Bt_Ch31_Max_3x3 &
       , Bt_Ch31_Std_3x3 &
@@ -121,13 +115,10 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
       , Ch &
       , Ref_Ch1_Std_3x3 &
       , Ref_Ch1_Min_3x3 &
-      , Chan_On_Flag_Default &
+      
       , Posterior_Cld_Probability &
       , Bayes_Mask_Sfc_Type_Global &
       , Cld_Test_Vector_Packed &
-      , Num_Pix &
-      , Num_Scans_Read &
-      , Cld_Mask &
       , Ancil_Data_Dir &
       , Bayesian_Cloud_Mask_Name &
       , Solar_Contamination_Mask &
@@ -135,12 +126,11 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
       , Diag_Pix_Array_2 &
       , Diag_Pix_Array_3 &
       , Space_Mask &
-      , City_Mask &
+      
       , Ref_ChDNB_Lunar_Std_3x3 &
       , Ref_ChDNB_Lunar_Min_3x3 &
-      , Scatangle_Lunar &
-      , Glint_Mask_Lunar &
-      , Lunzen  &
+     , cld_mask &
+     
       , Ref_Min_ChI1 &
       , Ref_Max_ChI1 &
       , Ref_Mean_ChI1 &
@@ -197,57 +187,56 @@ contains
       real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
       real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, cld_mask_probab_thresh_hi_tmp
       
-      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/naive_bayes_mask/'//trim(Bayesian_Cloud_Mask_Name) 
+      mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/static/luts/nb_cloud_mask/'//trim(Bayesian_Cloud_Mask_Name) 
       
       if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
-         mask_inp % bayesian_mask_classifier = trim(Ancil_Data_Dir)//'/bayes/'//trim(Bayesian_Cloud_Mask_Name)
-         if ( .not. file_test ( mask_inp % bayesian_mask_classifier ) ) then
+        
             print*,'Classifier file not there: '
             print*, 'check location: '
             print*, mask_inp % bayesian_mask_classifier
             print*,'stopping.........'
             stop
-         end if
+       
       end if
                  
                  
       ! -----------    loop over pixels -----   
-      line_loop: do i = 1, num_pix
-         elem_loop: do  j = 1,num_scans_read
+      line_loop: do i = 1, ubound ( nav % lat ,1 )
+         elem_loop: do  j = 1,ubound ( nav % lat ,2 )
             
             if ( Space_Mask (i,j) == 1) cycle
             
-            if ( Land (i,j) < 0 ) cycle
+            if ( Sfc % Land (i,j) < 0 ) cycle
             
-            mask_inp % geo % lat         = Lat ( i , j )            
-            mask_inp % geo % lon         = Lon ( i , j )
-            mask_inp % geo % sol_zen     = Solzen ( i , j )
-            mask_inp % geo % airmass     = Airmass ( i , j )
-            mask_inp % geo % scat_angle  = Scatangle ( i , j )
-            mask_inp % geo % glint       = Glint_Mask ( i ,j ) == 1
+            mask_inp % geo % lat         = nav % Lat ( i , j )            
+            mask_inp % geo % lon         = nav % Lon ( i , j )
+            mask_inp % geo % sol_zen     = geo % Solzen ( i , j )
+            mask_inp % geo % airmass     = geo % Airmass ( i , j )
+            mask_inp % geo % scat_angle  = Geo % Scatangle ( i , j )
+            mask_inp % geo % glint       = sfc % Glint_Mask ( i ,j ) == 1
             
             mask_inp % geo % solar_conta = Solar_Contamination_Mask ( i , j ) == 1
    
-            mask_inp % sfc % land_class  = Land ( i , j )
-            mask_inp % sfc % coast_mask  = Coast ( i , j ) == 1 
-            mask_inp % sfc % snow_class  = Snow ( i , j )
-            mask_inp % sfc % sfc_type    = Sfc_Type ( i , j ) 
-            mask_inp % sfc % dem         = Zsfc ( i , j )
+            mask_inp % sfc % land_class  = sfc % Land ( i , j )
+            mask_inp % sfc % coast_mask  = sfc % Coast_mask ( i , j ) == 1 
+            mask_inp % sfc % snow_class  = sfc % Snow ( i , j )
+            mask_inp % sfc % sfc_type    = sfc % Sfc_Type ( i , j ) 
+            mask_inp % sfc % dem         = sfc % Zsfc ( i , j )
             mask_inp % sfc % sst_anal_uni = Sst_Anal_Uni ( i, j )
             
-            if ( chan_on_flag_default(1) == 1 ) then
+            if ( sensor % chan_on_flag_default(1) == 1 ) then
                mask_inp % rtm % ref_ch1_clear   = ch(1) % Ref_Toa_Clear ( i , j )
                mask_inp % sat % ref_ch1         = ch(1) % Ref_Toa ( i , j )
                mask_inp % sat % ref_ch1_3x3_std = Ref_Ch1_Std_3x3 ( i , j )
                mask_inp % sat % ref_ch1_3x3_min = Ref_Ch1_Min_3x3 ( i , j )
             end if
             
-            if ( chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = Ch (2) % Ref_Toa ( i , j )
-            if ( chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = Ch (6) % Ref_Toa ( i , j )
-            if ( chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch7 = Ch (7) % Ref_Toa ( i , j )
-            if ( chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch8 = Ch (8) % Ref_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(2) == 1 ) mask_inp % sat % ref_ch2 = Ch (2) % Ref_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(6) == 1 ) mask_inp % sat % ref_ch6 = Ch (6) % Ref_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(7) == 1 ) mask_inp % sat % ref_ch7 = Ch (7) % Ref_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(8) == 1 ) mask_inp % sat % ref_ch8 = Ch (8) % Ref_Toa ( i , j )
             
-            if ( chan_on_flag_default(20) == 1 ) then 
+            if ( sensor % chan_on_flag_default(20) == 1 ) then 
                 mask_inp % rtm % bt_ch20_3x3_std = Bt_Ch20_Std_3x3( i , j )
                 mask_inp % rtm % emis_ch20_clear = Ems_Ch20_Clear_Solar_Rtm( i , j )
                 mask_inp % sat % bt_ch20         = Ch (20) % Bt_Toa ( i , j )
@@ -257,23 +246,23 @@ contains
             ! -  sfc emissivity is always on 
             mask_inp % sfc % emis_ch20 =  ch(20) % sfc_emiss ( i , j )
             
-            if ( chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = Ch (26) % Ref_Toa ( i , j )
-            if ( chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = Ch (27) % Bt_Toa ( i , j )
-            if ( chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29  = Ch (29) % Bt_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(26) == 1 ) mask_inp % sat % ref_ch26 = Ch (26) % Ref_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(27) == 1 ) mask_inp % sat % bt_ch27  = Ch (27) % Bt_Toa ( i , j )
+            if ( sensor % chan_on_flag_default(29) == 1 ) mask_inp % sat % bt_ch29  = Ch (29) % Bt_Toa ( i , j )
             
-            if ( chan_on_flag_default(31) == 1 ) then
+            if ( sensor % chan_on_flag_default(31) == 1 ) then
                
                mask_inp % rtm % bt_ch31_3x3_max = Bt_Ch31_Max_3x3 ( i , j )
                mask_inp % rtm % bt_ch31_3x3_std = Bt_Ch31_Std_3x3 ( i , j )
                mask_inp % rtm % emis_ch31_tropo = Ch (31) % Emiss_Tropo ( i , j )
                mask_inp % rtm % bt_ch31_atm_sfc = Ch (31) % Bt_Toa_Clear( i , j )
                mask_inp % sat % bt_ch31         = Ch (31) % Bt_Toa ( i , j )
-               if ( chan_on_flag_default(27) == 1 ) then
+               if ( sensor % chan_on_flag_default(27) == 1 ) then
                   mask_inp % rtm % bt_ch31_ch27_covar = Covar_Ch27_Ch31_5x5 ( i , j )
                end if   
             end if   
                
-            if ( chan_on_flag_default(32) == 1 ) then
+            if (sensor %  chan_on_flag_default(32) == 1 ) then
                mask_inp % rtm % emis_ch32_tropo    = Ch (32) % Emiss_Tropo ( i , j )
                mask_inp % rtm % bt_ch32_atm_sfc    = Ch (32) % Bt_Toa_Clear( i , j ) 
                mask_inp % sat % bt_ch32            = Ch (32) % Bt_Toa ( i , j )
@@ -281,35 +270,35 @@ contains
             
             ! - ibands of viirs
             
-            if ( chan_on_flag_default(37) == 1 ) then
+            if ( sensor % chan_on_flag_default(39) == 1 ) then
                mask_inp % sat % iband(1) % ref % min =   Ref_Min_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % max =   Ref_Max_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % mean =  Ref_Mean_ChI1 ( i , j )
                mask_inp % sat % iband(1) % ref % std =   Ref_Uni_ChI1 ( i , j )
             end if
             
-            if ( chan_on_flag_default(38) == 1 ) then
+            if ( sensor % chan_on_flag_default(40) == 1 ) then
                mask_inp % sat % iband(2) % ref % min =   Ref_Min_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % max =   Ref_Max_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % mean =  Ref_Mean_ChI2 ( i , j )
                mask_inp % sat % iband(2) % ref % std =   Ref_Uni_ChI2 ( i , j )
             end if
 
-            if ( chan_on_flag_default(39) == 1 ) then
+            if ( sensor %  chan_on_flag_default(41) == 1 ) then
                mask_inp % sat % iband(3) % ref % min =   Ref_Min_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % max =   Ref_Max_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % mean =  Ref_Mean_ChI3 ( i , j )
                mask_inp % sat % iband(3) % ref % std =   Ref_Uni_ChI3 ( i , j )
             end if
 
-            if ( chan_on_flag_default(40) == 1 ) then
+            if ( sensor % chan_on_flag_default(42) == 1 ) then
                mask_inp % sat % iband(4) % bt % min =   Bt_Min_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % max =   Bt_Max_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % mean =  Bt_Mean_ChI4 ( i , j )
                mask_inp % sat % iband(4) % bt % std =   Bt_Uni_ChI4 ( i , j )
             end if
             
-            if ( chan_on_flag_default(41) == 1 ) then
+            if ( sensor % chan_on_flag_default(43) == 1 ) then
                mask_inp % sat % iband(5) % bt % min =   Bt_Min_ChI5 ( i , j )
                mask_inp % sat % iband(5) % bt % max =   Bt_Max_ChI5 ( i , j )
                mask_inp % sat % iband(5) % bt % mean =  Bt_Mean_ChI5 ( i , j )
@@ -319,18 +308,18 @@ contains
             
             
             ! - dnb cloud mask addition at night
-            if ( chan_on_flag_default(42) == 1 .and. allocated( Ch (42) % Ref_Lunar_Toa ) ) then
-               mask_inp % sat % ref_dnb_lunar    = Ch (42) % Ref_Lunar_Toa ( i , j )
-               mask_inp % geo % lunar_zen        = Lunzen ( i , j )
-               mask_inp % rtm % ref_dnb_clear    = Ch (42) % Ref_Lunar_Toa_Clear( i , j )
-               mask_inp % sfc % is_city          = City_Mask ( i , j ) == 1
+            if ( sensor % chan_on_flag_default(44) == 1 .and. allocated( Ch (44) % Ref_Lunar_Toa ) ) then
+               mask_inp % sat % ref_dnb_lunar    = Ch (44) % Ref_Lunar_Toa ( i , j )
+               mask_inp % geo % lunar_zen        = geo % Lunzen ( i , j )
+               mask_inp % rtm % ref_dnb_clear    = Ch (44) % Ref_Lunar_Toa_Clear( i , j )
+               mask_inp % sfc % is_city          = sfc % City_Mask ( i , j ) == 1
                mask_inp % sat % ref_dnb_3x3_std  = Ref_ChDNB_Lunar_Std_3x3 ( i , j )
                mask_inp % sat % ref_dnb_3x3_min  = Ref_ChDNB_Lunar_Min_3x3 ( i , j )
-               mask_inp % geo % scat_angle_lunar = Scatangle_Lunar ( i , j )
-               mask_inp % geo % lunar_glint_mask = Glint_Mask_Lunar ( i , j ) == 1 
+               mask_inp % geo % scat_angle_lunar = geo % Scatangle_Lunar ( i , j )
+               mask_inp % geo % lunar_glint_mask = sfc % Glint_Mask_Lunar ( i , j ) == 1 
             end if
 
-            mask_inp % sat % chan_on             = Chan_On_Flag_Default == 1
+            mask_inp % sat % chan_on             = sensor % Chan_On_Flag_Default == 1
              
             call NB_CLOUD_MASK_ALGORITHM ( mask_inp, Posterior_Cld_Probability ( i , j ) , info_flags &
                                          , diag , vers )
@@ -373,7 +362,7 @@ contains
                Cld_Mask ( i , j ) = ET_cloudiness_class % SPACE
             end if
 
-            if ( Land ( i , j ) < 0 .and. Space_Mask ( i , j ) /= 1) then
+            if ( sfc % Land ( i , j ) < 0 .and. Space_Mask ( i , j ) /= 1) then
                Cld_Mask ( i , j ) = ET_cloudiness_class % MISSING
             end if
 

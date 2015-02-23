@@ -129,6 +129,7 @@ program nlcomp_one_pixel_run
    inp_retr % geo % sat_zen = sat_zen
    inp_retr % geo % rel_azi = rel_azi
    inp_retr % geo % lun_rel_azi = rel_azi
+   inp_retr % geo % tsfc = 280.
 
    inp_retr % prd % ctt = cld_temp  
    inp_retr % prd % cph = water_phase
@@ -159,11 +160,11 @@ program nlcomp_one_pixel_run
    inp_retr % chn ( 32 ) % alb_sfc = 0.05
    inp_retr % chn ( 32 ) % alb_sfc_u = 0.05
          
-   inp_retr % chn ( 42 ) % rfl   = obs(1)
-   inp_retr % chn ( 42 ) % rfl_u = obs_u(1)
-   inp_retr % chn ( 42 ) % alb_sfc = alb_sfc ( 1)
-   inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
-   inp_retr % chn ( 42 ) % trans_air_abvcld =0.9
+   inp_retr % chn ( 44 ) % rfl   = obs(1)
+   inp_retr % chn ( 44 ) % rfl_u = obs_u(1)
+   inp_retr % chn ( 44 ) % alb_sfc = alb_sfc ( 1)
+   inp_retr % chn ( 44 ) % alb_sfc_u = 0.05
+   inp_retr % chn ( 44 ) % trans_air_abvcld =0.9
    
    
    call nlcomp_algorithm ( inp_retr &

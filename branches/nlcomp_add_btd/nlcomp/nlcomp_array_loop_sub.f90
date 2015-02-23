@@ -72,9 +72,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real( kind = real4 ) :: assumed_tpw_error 
    real( kind = real4 ), parameter :: OZONE_COEFF (3)    = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ]
    
-   real ( kind = real4 ) :: refl_toc(42)
-   real ( kind = real4 ) :: alb_sfc(42)
-   real ( kind = real4 ) :: alb_unc_sfc(42)
+   real ( kind = real4 ) :: refl_toc(44)
+   real ( kind = real4 ) :: alb_sfc(44)
+   real ( kind = real4 ) :: alb_unc_sfc(44)
    real ( kind = real4 ) :: rad_to_refl_factor
    real (kind = real4)   :: refl_toa = -999.
    
@@ -124,8 +124,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    ! - flag masks
    air_mass_array = 1.0 / cos (input % sat % d * pi / 180. ) &
                 & + 1.0 / cos ( input % zen_lunar % d * pi / 180.)
-  
-  
+ 
    is_obs = input % is_valid % d   &
                        & .and. input % sat % d <= SAT_ZEN_MAX &
                        & .and. input % sol % d > SOL_ZEN_MIN &

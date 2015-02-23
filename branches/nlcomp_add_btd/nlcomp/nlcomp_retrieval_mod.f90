@@ -55,7 +55,7 @@ module nlcomp_retrieval_mod
    end type nlcomp_state_type
    
    type, public :: nlcomp_input_type
-      type ( nlcomp_input_chan_type ) :: chn ( 42)
+      type ( nlcomp_input_chan_type ) :: chn ( 44)
       type ( nlcomp_geo_type ) :: geo
       type ( nlcomp_prd_type ) :: prd
       type ( nlcomp_conf_type) :: conf
@@ -96,8 +96,8 @@ contains
       real  :: state_apr (2)
       real  :: sol_zen, sat_zen , rel_azi , cld_temp
       logical :: cld_phase 
-      real :: rad_abv_cld (42)
-      real :: rad_clear_toc (42)
+      real :: rad_abv_cld (44)
+      real :: rad_clear_toc (44)
       
       
       real :: cod, cps, codu, cpsu
@@ -156,7 +156,7 @@ contains
       
       ! -  observation vector
       
-      obs_vec ( 1 ) = inp % chn ( 42 ) % rfl
+      obs_vec ( 1 ) = inp % chn ( 44 ) % rfl
       obs_vec ( 2 ) = inp % chn ( 20 ) % rad
        
        
@@ -169,7 +169,7 @@ contains
       pxl % ctt = inp % prd %ctt
       pxl % is_water_phase = inp % prd %cph
       dcomp_ancil_path = trim ( inp % conf % ancil_path )
-      alb_sfc ( 1) = inp % chn ( 42 ) % alb_sfc 
+      alb_sfc ( 1) = inp % chn ( 44 ) % alb_sfc 
       
 
       bt_20 = planck_rad2tmp ( inp % chn ( 20 ) % rad , 'VIIRS' , 20 )
@@ -180,9 +180,10 @@ contains
       obs_vec ( 4 ) = bt_20 - bt_31
       
       print*,'bt s 20 31 32',bt_20,bt_31,bt_32, inp % geo % tsfc
-      print*, 
+      
       cod = -999.
       cps= -999.
+      
       
       if ( obs_vec ( 1 ) > 1.0 ) return
       call vis_channel_cod (obs_vec ( 1 ),  pxl, alb_sfc ( 1) , dcomp_ancil_path , cod) 
@@ -196,7 +197,7 @@ contains
          nlcomp_out % cod = 10**cod
          nlcomp_out % cps = 10**cps
       end if
-     
+      print*, 'NLCOMP ended ...'
       
      
    end subroutine nlcomp_algorithm

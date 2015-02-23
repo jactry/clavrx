@@ -42,13 +42,12 @@ use VIEWING_GEOMETRY_MODULE
  public:: READ_NAVIGATION_BLOCK_COMS
  public:: GET_COMS_IMAGE
  public:: READ_COMS_INSTR_CONSTANTS
- public:: ASSIGN_COMS_ID_NUM_INTERNAL
          
  private :: COMS_RADIANCE_BT, &
             COMS_REFLECTANCE_PRELAUNCH, &
             COMS_NAVIGATION
  
- TYPE (GVAR_NAV), PRIVATE    :: NAVstr_COMS_NAV
+ type (GVAR_NAV), PRIVATE    :: NAVstr_COMS_NAV
  integer, PARAMETER, PRIVATE :: Nchan_COMS= 5
  integer, PARAMETER, PRIVATE :: Ndet_COMS = 4
  integer, PARAMETER, PRIVATE :: Ntable_COMS = 1024
@@ -74,25 +73,6 @@ use VIEWING_GEOMETRY_MODULE
  integer(kind=int4), private :: ptr
 
  CONTAINS
-!--------------------------------------------------------------------
-! assign internal sat id's and const file names for COMS
-!--------------------------------------------------------------------
-subroutine ASSIGN_COMS_ID_NUM_INTERNAL(Mcidas_Id_Num)
-    integer(kind=int4), intent(in):: Mcidas_Id_Num
-
-    !COMS-1
-    if (Mcidas_Id_Num == 250)   then
-        Sc_Id_WMO = 810
-        Instr_Const_file = 'coms1_instr.dat'
-        Algo_Const_file = 'coms1_algo.dat'
-        Platform_Name_Attribute = 'COMS-1'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
-
-end subroutine ASSIGN_COMS_ID_NUM_INTERNAL
 !----------------------------------------------------------------
 ! read the COMS constants into memory
 !-----------------------------------------------------------------
@@ -142,8 +122,8 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
    integer(kind=int4), intent(in):: segment_number
    character(len=*), intent(in):: channel_1_filename
-   TYPE (AREA_STRUCT), intent(in) :: AREAstr
-   TYPE (GVAR_NAV), intent(in)    :: NAVstr_COMS
+   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (GVAR_NAV), intent(in)    :: NAVstr_COMS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
@@ -173,14 +153,14 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    ipos = index(channel_1_filename, "_1_")
    ilen = len(channel_1_filename)
     
-   first_line_in_segment = (segment_number-1)*num_scans_per_segment
+   first_line_in_segment = (segment_number-1)*Image%Number_Of_Lines_Per_Segment
 
    !---------------------------------------------------------------------------
    ! COMS Navigation (Do Navigation and Solar angles first)
    !---------------------------------------------------------------------------
    
-   call COMS_navigation(1,first_line_in_segment,&
-                              num_pix,Num_Scans_Per_Segment,1,&
+   call COMS_NAVIGATION(1,first_line_in_segment,&
+                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                               AREAstr,NAVstr_COMS)
    
    if (segment_number == 1) then
@@ -206,7 +186,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        write(ichan_goes_string,fmt="(I1.1)") ichan_goes
        if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
 
-       if (Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
 
           channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -214,10 +194,10 @@ end subroutine READ_COMS_INSTR_CONSTANTS
           if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
           else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
           endif
 
-          channel_x_filename_full_uncompressed = trim(Dir_1b)//trim(channel_x_filename)
+          channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
           if (l1b_gzip == sym%YES) then
               System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
                                 " > "//trim(channel_x_filename_full)
@@ -248,7 +228,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
         call mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
     else
-        call mread_open(trim(Dir_1b)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
+        call mread_open(trim(Image%Level1b_Path)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
     endif  
 
     call load_COMS_calibration(COMS_file_id, AREAstr)
@@ -259,19 +239,19 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    
    
    !---   read channel 1 (COMS channel 1)
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_1_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_1_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_1_filename)
        endif
 
        call GET_COMS_IMAGE(trim(channel_x_filename_full), &
                                     AREAstr, &
                                     segment_number, &
-                                    num_scans_per_segment, &
-                                    num_scans_read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp)
                                     
         call COMS_REFLECTANCE_PRELAUNCH(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
@@ -282,7 +262,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    endif
    
    !---   read channel 20 (COMS channel 2)
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_2_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -290,14 +270,14 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
        call GET_COMS_IMAGE(trim(channel_x_filename_full), &
                                     AREAstr, &
                                     segment_number, &
-                                    num_scans_per_segment, &
-                                    num_scans_read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(2_int1, Two_Byte_Temp, ch(20)%Rad_Toa, ch(20)%Bt_Toa)
 !cspp call COMS_RADIANCE_BT(2_int1, Two_Byte_Temp, Rad_Ch20, Bt_Ch20)
@@ -306,7 +286,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                     
    
    !---   read channel 27 (COMS channel 3)
-   if (Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_3_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -314,14 +294,14 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
        call GET_COMS_IMAGE(trim(channel_x_filename_full), &
                                     AREAstr, &
                                     segment_number, &
-                                    num_scans_per_segment, &
-                                    num_scans_read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(3_int1, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
 !cspp call COMS_RADIANCE_BT(3_int1, Two_Byte_Temp, Rad_Ch27, Bt_Ch27)
@@ -331,7 +311,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
    
    !---   read channel 31 (COMS channel 4)
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_4_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -339,14 +319,14 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
        
        call GET_COMS_IMAGE(trim(channel_x_filename_full), &
                                     AREAstr, &
                                     segment_number, &
-                                    num_scans_per_segment, &
-                                    num_scans_read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(4_int1, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
 !cspp call COMS_RADIANCE_BT(4_int1, Two_Byte_Temp, Rad_Ch31, Bt_Ch31)
@@ -355,7 +335,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    
    
    !---   read channel 32 (COMS channel 5)
-   if (Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_5_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -363,21 +343,21 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
        call GET_COMS_IMAGE(trim(channel_x_filename_full), &
                                     AREAstr, &
                                     segment_number, &
-                                    num_scans_per_segment, &
-                                    num_scans_read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp)
       call COMS_RADIANCE_BT(5_int1, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
 !cspp call COMS_RADIANCE_BT(5_int1, Two_Byte_Temp, Rad_Ch32, Bt_Ch32)
 
    endif
     
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + num_scans_read - 1
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_Number(Line_Idx) = first_line_in_segment + Line_Idx
      Scan_Time(Line_Idx) = image_time_ms + (Scan_Number(Line_Idx)-1) * Scan_rate
    enddo
@@ -389,30 +369,27 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 !------------------------------------------------------------------------------
    image_jday = jday
    image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + num_scans_read - 1
-     do Elem_Idx = 1,num_pix
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_time_hours, &
-                    Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx), &
-                    Solzen(Elem_Idx,Line_Idx),Solaz(Elem_Idx,Line_Idx))
+                    Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
+                    Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
      enddo
-      call COMPUTE_SATELLITE_ANGLES(goes_sub_satellite_longitude,  &
-                      goes_sub_satellite_latitude, Line_Idx)
+      call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                                    Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
 
-   !--- ascending node
-   Elem_Idx = num_pix/2
-   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + num_scans_read - 1
-     ascend(Line_Idx) = 0
-     if (lat_1b(Elem_Idx,Line_Idx) < lat_1b(Elem_Idx,Line_Idx-1)) then
-       ascend(Line_Idx) = 1
+   !--- Ascending node
+   Elem_Idx = Image%Number_Of_Elements/2
+   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Nav%Ascend(Line_Idx) = 0
+     if (Nav%Lat_1b(Elem_Idx,Line_Idx) < Nav%Lat_1b(Elem_Idx,Line_Idx-1)) then
+       Nav%Ascend(Line_Idx) = 1
      endif
    enddo
-   ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
-
+   Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
     
  end subroutine READ_COMS
- 
- 
  
  subroutine load_COMS_calibration(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
@@ -507,18 +484,18 @@ end subroutine READ_COMS_INSTR_CONSTANTS
  subroutine COMS_REFLECTANCE_PRELAUNCH(COMS_Counts, alb_temp)
                               
     integer (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
-    real (KIND=real4), dimension(:,:), intent(out):: alb_temp
+    real (kind=real4), dimension(:,:), intent(out):: alb_temp
 
     integer :: i, j
     integer :: index
     
-    do j=1, num_scans_read
-      do i=1, num_pix
+    do j=1, Image%Number_Of_Lines_Read_This_Segment
+      do i=1, Image%Number_Of_Elements
         if (Space_Mask(i,j) == sym%NO_SPACE) then
           
             !Not sure if I need to add 1 here.  Seems to be necessary
             !to match McIDAS-X.
-            index = int(COMS_Counts(i,j),KIND=int2) + 1
+            index = int(COMS_Counts(i,j),kind=int2) + 1
             
             ! until Mc-X is fixed, will use MTSAT HRIT scaling - WCS3
             !alb_temp(i,j) = 0.000978494701531316*(index) - 0.00197851402698724
@@ -538,25 +515,26 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  ! Perform COMS Navigation
 
- subroutine COMS_navigation(xstart,ystart,xsize,ysize,xstride, &
+ subroutine COMS_NAVIGATION(xstart,ystart,xsize,ysize,xstride, &
                             AREAstr,NAVstr_COMS)
-    integer(KIND=int4) :: xstart, ystart
-    integer(KIND=int4) :: xsize, ysize
-    integer(KIND=int4) :: xstride  
+    integer(kind=int4) :: xstart, ystart
+    integer(kind=int4) :: xsize, ysize
+    integer(kind=int4) :: xstride  
     type (AREA_STRUCT) :: AREAstr
-    TYPE (GVAR_NAV), intent(in)    :: NAVstr_COMS
+    type (GVAR_NAV), intent(in)    :: NAVstr_COMS
     
     integer :: i, j, ii, jj, imode
-    real(KIND(0.0d0)) :: latitude, longitude
-    real(KIND=real4) :: height
+    real(kind(0.0d0)) :: latitude, longitude
+    real(kind=real4) :: height
+    integer :: FGF_type = 3 !COMS uses JMA GEOS navigation, so set type here
 
     NAVstr_COMS_NAV = NAVstr_COMS
     
     imode = -1
     height = 0.0   !Used for parallax correction
     
-    lat = Missing_Value_Real4
-    lon = Missing_Value_Real4
+    Nav%Lat = Missing_Value_Real4
+    Nav%Lon = Missing_Value_Real4
     
     if (NAVstr_COMS%nav_type == 'GEOS') then      
         !HRIT requires actual line and element of being processed.
@@ -575,30 +553,44 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                 ii = ii  + (AREAstr%west_vis_pixel / real(AREAstr%elem_res))
 
                 ! again, use common algorithm for CGMS navigation
-                call pixcoord2geocoord_cgms(ii,                  &
-                                            jj,                  &
-                                            NAVstr_COMS%LOFF,   &
-                                            NAVstr_COMS%COFF,   & 
-                                            NAVstr_COMS%LFAC,   &
-                                            NAVstr_COMS%CFAC,   &
-                                            1,             &
-                                            NAVstr_COMS%sub_lon, &
-                                            latitude,            &
-                                            longitude)
-                                          
+                !call pixcoord2geocoord_cgms(ii,                  &
+                !                            jj,                  &
+                !                            NAVstr_COMS%LOFF,   &
+                !                            NAVstr_COMS%COFF,   & 
+                !                            NAVstr_COMS%LFAC,   &
+                !                            NAVstr_COMS%CFAC,   &
+                !                            1,             &
+                !                            NAVstr_COMS%sub_lon, &
+                !                            latitude,            &
+                !                            longitude)
+
+                 ! Putting in hooks for updated navigation code
+                 ! to be edited after 1/12
+
+                CALL fgf_to_earth(FGF_type,                  &
+                                  DBLE(ii),                  &
+                                  DBLE(jj),                  &
+                                  DBLE(NAVstr_COMS%CFAC),    &
+                                  DBLE(NAVstr_COMS%COFF),    &
+                                  DBLE(NAVstr_COMS%LFAC),    &
+                                  DBLE(NAVstr_COMS%LOFF),    &
+                                  DBLE(NAVstr_COMS%sub_lon), &
+                                  longitude,                 &
+                                  latitude)
+
              if (latitude .LE. -999.0) then  ! -999.99 is MSV nav missing value
-                    Lat_1b(i,j) = Missing_Value_Real4
-                    Lon_1b(i,j) = Missing_Value_Real4
+                    Nav%Lat_1b(i,j) = Missing_Value_Real4
+                    Nav%Lon_1b(i,j) = Missing_Value_Real4
                     Space_Mask(i,j) = sym%SPACE
                 else
-                    Lat_1b(i,j) = real(latitude,kind=real4)
-                    Lon_1b(i,j) = real(longitude,kind=real4)
+                    Nav%Lat_1b(i,j) = real(latitude,kind=real4)
+                    Nav%Lon_1b(i,j) = real(longitude,kind=real4)
                     
                     ! BecaUSE JMA sets their longitudes from 0 to 360, and
                     ! we want 180 to -180, one last check.
                     
                     if (longitude .GT. 180.0 ) then
-                        Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
+                        Nav%Lon_1b(i,j) = real(longitude,kind=real4) - 360.0
                     endif
                                         
                     Space_Mask(i,j) = sym%NO_SPACE
@@ -611,7 +603,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
         
     endif
       
- end subroutine COMS_navigation
+ end subroutine COMS_NAVIGATION
  
  
 !------------------------------------------------------------------
@@ -623,17 +615,16 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
     integer (kind=INT2), dimension(:,:), intent(in):: COMS_Counts
     integer (kind=int1), INTENT(in) :: chan_num
-    real (kind=real4), DIMENSION(:,:), INTENT(out):: temp1, rad2
+    real (kind=real4), dimension(:,:), INTENT(out):: temp1, rad2
     
     integer :: i, j, index
                                    
-    do j = 1, num_scans_read
-      do i = 1, num_pix
+    do j = 1, Image%Number_Of_Lines_Read_This_Segment
+      do i = 1, Image%Number_Of_Elements
         if (Space_Mask(i,j) == sym%NO_SPACE) then
-          index = int(COMS_Counts(i,j),KIND=int2) + 1
-
-          rad2(i,j) = real(rad_table(chan_num,1,index),KIND=real4)/1000.0
-          temp1(i,j) = real(bt_table(chan_num,1,index),KIND=real4)/100.0                    
+          index = int(COMS_Counts(i,j),kind=int2) + 1
+          rad2(i,j) = real(rad_table(chan_num,1,index),kind=real4)/1000.0
+          temp1(i,j) = real(bt_table(chan_num,1,index),kind=real4)/100.0                    
         else
           rad2(i,j) = Missing_Value_Real4
           temp1(i,j) = Missing_Value_Real4
@@ -647,13 +638,13 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  subroutine READ_NAVIGATION_BLOCK_COMS(filename, AREAstr, NAVstr)
   CHARACTER(len=*), intent(in):: filename
-  TYPE(AREA_STRUCT), intent(in):: AREAstr
-  TYPE(GVAR_NAV), intent(inout):: NAVstr
+  type(AREA_STRUCT), intent(in):: AREAstr
+  type(GVAR_NAV), intent(inout):: NAVstr
  
   integer :: geos_nav
   integer(kind=int4)nav_offset
   integer:: number_of_words_read
-  integer(kind=int4), DIMENSION(640) :: i4buf
+  integer(kind=int4), dimension(640) :: i4buf
   
   nav_offset = AREAstr%sec_key_nav
     
@@ -685,7 +676,7 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
                                     num_lines_read, image)
 
  character(len=*), intent(in):: filename 
- TYPE (AREA_STRUCT), intent(in) :: AREAstr
+ type (AREA_STRUCT), intent(in) :: AREAstr
  integer(kind=int4), intent(in):: segment_number
  integer(kind=int4), intent(in):: num_lines_per_segment
  integer(kind=int4), intent(out):: num_lines_read
@@ -709,7 +700,7 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
  integer(kind=int4):: Line_Idx
  integer(kind=int2), dimension(:), allocatable:: word_buffer
  integer (kind=int1), dimension(:), allocatable :: buffer1
- integer(kind=int4), DIMENSION(64) :: i4buf_temp
+ integer(kind=int4), dimension(64) :: i4buf_temp
  integer:: nwords
 
  bytemove = 0 !COMS IS 0 byte offset

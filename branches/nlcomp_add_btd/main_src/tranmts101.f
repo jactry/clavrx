@@ -69,7 +69,7 @@ c           * = error return in case of coefficient-file I/O trouble
       dimension xdry(nxd,nm),xozo(nxo,nm),xcon(nxc,nm),xwet(nxw,nm)
    
       character*16 cfile
-      character*72 ancil_data_path,pfast_path
+      character*72 ancil_data_path,pfaast_path
       character*3 comp(nk)
       data comp /'dry','ozo','wco','wtl','wts'/
       integer lencf(nk)
@@ -84,14 +84,14 @@ C        integer*4 lencf(nk)
 C        data lencf /lencdb,lencob,lenccb,lenclb,lencsb/
 C        logical newang,newatm
     
-C        character*72 ancil_data_path,pfast_path   
+C        character*72 ancil_data_path,pfaast_path   
 C        data init/0/,tlas/nl*0./,wlas/nl*0./,olas/nl*0./,zlas/-999./
        
     
         secant(z)=1./cos(0.01745329*z)
 
         cfile = 'mtsatccc_101.dat'
-        pfast_path = trim(ancil_data_path)//"pfast/"
+        pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
 
         if(init.ne.isat) then
@@ -102,7 +102,7 @@ c * define and open the coefficient files
               !iux=iux+1       !akh commented 
               iux=get_lun()    !akh added
 C   WCS3 - Line 55 edited to edit file name correctly
-              open(iux,file=trim(pfast_path)//cfile,recl=lencf(l),
+              open(iux,file=trim(pfaast_path)//cfile,recl=lencf(l),
      +           access='direct',
      +           status='old',err=200)
               iuc(l)=iux

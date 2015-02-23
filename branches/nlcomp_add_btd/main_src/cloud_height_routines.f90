@@ -36,6 +36,8 @@ module CLOUD_HEIGHT_ROUTINES
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
   public::  CO2_SLICING_CLOUD_HEIGHT
+  public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
+  public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -74,17 +76,17 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
   integer:: Vza_Idx
 
   !--- intialize local variables using global variables
-  Number_Of_Elements = num_pix
+  Number_Of_Elements = Image%Number_Of_Elements
 
   !--- initialize output
-  Tc_Acha =  Missing_Value_Real4
-  Ec_Acha =  Missing_Value_Real4
-  Beta_Acha =  Missing_Value_Real4
-  Pc_Acha =  Missing_Value_Real4
-  Zc_Acha =  Missing_Value_Real4
-  Acha_Quality_Flag = 0
-  Acha_OE_Quality_Flags = 0
-  Cld_Layer_Acha = 0
+  ACHA%Tc =  Missing_Value_Real4
+  ACHA%Ec =  Missing_Value_Real4
+  ACHA%Beta =  Missing_Value_Real4
+  ACHA%Pc =  Missing_Value_Real4
+  ACHA%Zc =  Missing_Value_Real4
+  ACHA%Quality_Flag = 0
+  ACHA%OE_Quality_Flags = 0
+  ACHA%Cld_Layer = 0
 
   !--------------------------------------------------------------------------
   ! loop over pixels in scanlines
@@ -100,36 +102,36 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
 
     !--- combine heights into a coherent product
     if (Tc_H2O(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-       Pc_Acha(Elem_Idx,Line_Idx) = Pc_H2O(Elem_Idx,Line_Idx)
-       Tc_Acha(Elem_Idx,Line_Idx) = Tc_H2O(Elem_Idx,Line_Idx)
-       Zc_Acha(Elem_Idx,Line_Idx) = Zc_H2O(Elem_Idx,Line_Idx)
-       Ec_Acha(Elem_Idx,Line_Idx) = 1.0
-       Acha_Quality_Flag(Elem_Idx,Line_Idx) = 1
+       ACHA%Pc(Elem_Idx,Line_Idx) = Pc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Tc(Elem_Idx,Line_Idx) = Tc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Zc(Elem_Idx,Line_Idx) = Zc_H2O(Elem_Idx,Line_Idx)
+       ACHA%Ec(Elem_Idx,Line_Idx) = 1.0
+       ACHA%Quality_Flag(Elem_Idx,Line_Idx) = 1
 
     elseif (Tc_Opaque_Cloud(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-       Pc_Acha(Elem_Idx,Line_Idx) = Pc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Tc_Acha(Elem_Idx,Line_Idx) = Tc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Zc_Acha(Elem_Idx,Line_Idx) = Zc_Opaque_Cloud(Elem_Idx,Line_Idx)
-       Ec_Acha(Elem_Idx,Line_Idx) = 1.0
-       Acha_Quality_Flag(Elem_Idx,Line_Idx) = 1
+       ACHA%Pc(Elem_Idx,Line_Idx) = Pc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Tc(Elem_Idx,Line_Idx) = Tc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Zc(Elem_Idx,Line_Idx) = Zc_Opaque_Cloud(Elem_Idx,Line_Idx)
+       ACHA%Ec(Elem_Idx,Line_Idx) = 1.0
+       ACHA%Quality_Flag(Elem_Idx,Line_Idx) = 1
     else
        cycle
     endif
 
     !------- determine cloud layer based on pressure
-    if (Pc_Acha(Elem_Idx,Line_Idx) <= 440.0) then
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 3
-    elseif (Pc_Acha(Elem_Idx,Line_Idx) < 680.0) then
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 2
+    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 440.0) then
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 3
+    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 680.0) then
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 2
     else
-        Cld_Layer_Acha(Elem_Idx,Line_Idx) = 1
+        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 1
     endif
 
     !----- set beta passed on temp
-    if (Tc_Acha(Elem_Idx,Line_Idx) < 260.0) then
-        Beta_Acha(Elem_Idx,Line_Idx) = Beta_Ap_Ice
+    if (ACHA%Tc(Elem_Idx,Line_Idx) < 260.0) then
+        ACHA%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Ice
     else
-        Beta_Acha(Elem_Idx,Line_Idx) = Beta_Ap_Water
+        ACHA%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Water
     endif
 
     end do Element_loop
@@ -161,7 +163,7 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min,Num_Lines)
   !--- save elements
   Line_Start = Line_Idx_Min 
   Line_End = Line_Start + Num_Lines - 1
-  Num_Elem = Num_Pix      !Num_Pix is a global variable
+  Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
   Wnd_Spd_Cld_Top_Nwp_Pix = Missing_Value_Real4
@@ -185,12 +187,12 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min,Num_Lines)
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
      !-- check if cld-top pressure is valid
-     if (Pc_Acha(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (ACHA%Pc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- determine Level in profiles 
      !--- note, wind profiles are at the native nwp resolution
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
-                                    Pc_Acha(Elem_Idx,Line_Idx), &
+                                    ACHA%Pc(Elem_Idx,Line_Idx), &
                                     Tc_Temp,Zc_Temp,Level)
 
      !--- assign u and v winds
@@ -245,10 +247,10 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
   !--- save elements
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
-  Num_Elem = Num_Pix      !Num_Pix is a global variable
+  Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
-  Alt_Acha = Missing_Value_Real4
+  ACHA%Alt = Missing_Value_Real4
 
   !----------------------------------------------------------
   ! loop through segment
@@ -273,12 +275,12 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
      !--- check if cld-top pressure is valid
-     if (Pc_Acha(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (ACHA%Pc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- Place valid pressure in temp variable for readability in the
      !--- calculations below.
-     Pc_Temp = Pc_Acha(Elem_Idx,Line_Idx)
-     Tc_Temp = Tc_Acha(Elem_Idx,Line_Idx)
+     Pc_Temp = ACHA%Pc(Elem_Idx,Line_Idx)
+     Tc_Temp = ACHA%Tc(Elem_Idx,Line_Idx)
 
      !--- calculated altitude, in feet, from pressure.
      !--- 1st pivot point is directly from the pressure to
@@ -305,7 +307,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      endif
 
      !--- Assign final altitude, in feet, to the level2 array.
-     Alt_Acha(Elem_Idx,Line_Idx) = Alt_Temp
+     ACHA%Alt(Elem_Idx,Line_Idx) = Alt_Temp
 
   enddo Element_Loop_1
   enddo Line_Loop_1
@@ -359,10 +361,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Tc_Cirrus_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Chan_On_Flag_Default(33) == sym%NO .or. &
-      Chan_On_Flag_Default(34) == sym%NO .or. &
-      Chan_On_Flag_Default(35) == sym%NO .or. &
-      Chan_On_Flag_Default(36) == sym%NO) then
+  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
      return
   endif
 
@@ -526,6 +528,95 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)
 
 end subroutine  CO2_SLICING_CLOUD_HEIGHT
+!----------------------------------------------------------------------
+! Compute CO2 Slicing for SWI Channels - 24 & 25
+!----------------------------------------------------------------------
+subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
+                                    Beta_Target, &
+                                    Num_Elem,Line_Idx_min,Num_Lines, &
+                                    Pressure_Profile,Cloud_Type, &
+                                    Pc_Co2)
+  integer, intent(in):: Chan_Idx_1
+  integer, intent(in):: Chan_Idx_2
+  real, intent(in):: Beta_Target
+  integer, intent(in):: Num_Elem
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
+  real, intent(in), dimension(:):: Pressure_Profile
+  real, intent(out), dimension(:,:):: Pc_Co2
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Line_Start
+  integer:: Line_End
+  integer:: Nwp_Lon_Idx
+  integer:: Nwp_Lat_Idx
+  integer:: Vza_Rtm_Idx
+  integer:: Tropo_Level_Idx
+  integer:: Sfc_Level_Idx
+  integer:: Lev_Idx_Temp
+  integer:: Pc_Lev_Idx
+
+  Line_Start = Line_Idx_Min
+  Line_End = Line_Start + Num_Lines - 1
+
+  !--- intialize output
+  Pc_CO2 = Missing_Value_Real4
+
+  !---- check that all co2 channels are available
+  if (Sensor%Chan_On_Flag_Default(Chan_Idx_1) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(Chan_Idx_2) == sym%NO) then
+     return
+  endif
+
+  Line_Loop: do Line_Idx = Line_Start, Line_End
+  Element_Loop: do Elem_Idx = 1, Num_Elem
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     !--- skip missing data
+     if (ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     if (ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- indice aliases
+     Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     !-- check if indices are valid
+     if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+     Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+     Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+
+     !--- only do this for appropriate cloud types
+     if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and.   & 
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE .and.  &
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERSHOOTING_TYPE .and.  &
+         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
+          cycle
+     endif
+
+     !--- compute cloud top pressure using each channel pair
+     call COMPUTE_BETA_PROFILE(ch(Chan_Idx_1)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(Chan_Idx_1)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_1)%Rad_BB_Cloud_Profile, &
+                               ch(Chan_Idx_2)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(Chan_Idx_2)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(Chan_Idx_2)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               Pressure_Profile, &
+                               Beta_Target, &
+                               Pc_CO2(Elem_Idx,Line_Idx),Pc_Lev_Idx)
+
+  enddo Element_Loop
+  enddo Line_Loop
+
+end subroutine  SINGLE_CO2_SLICING_CLOUD_HEIGHT
+!==================================================================================================
 !==================================================================================================
 !
 !==================================================================================================
@@ -587,6 +678,8 @@ subroutine COMPUTE_BETA_PROFILE(Ch_X_Rad_Toa, &
       !--- make beta ratio
       Beta_X_Y = BETA_RATIO(Ch_X_Emissivity, Ch_Y_Emissivity)
 
+!print *, "Channel Emiss = ", Lev_Idx, Ch_X_Emissivity, Ch_Y_Emissivity, Beta_X_Y
+
       if (Beta_X_Y == Missing_Value_Real4) cycle
 
       !--- check is target beta is achieved
@@ -621,18 +714,21 @@ end subroutine COMPUTE_BETA_PROFILE
    !
    ! Output: Beta - the beta value from the two emissivities
    !
+   !  Traditional Beta 11,12 um = BETA_RATIO(11,12)
+   !
    !====================================================================
-   function BETA_RATIO(Emiss_top, Emiss_bot) result(beta)
-      real(kind=real4), intent(in) :: Emiss_top
-      real(kind=real4), intent(in) :: Emiss_bot
-      real(kind=real4) :: beta
+   function BETA_RATIO(Emiss_Bot, Emiss_Top) result(Beta)
+      real(kind=real4), intent(in) :: Emiss_Top
+      real(kind=real4), intent(in) :: Emiss_Bot
+      real(kind=real4) :: Beta
 
-      beta = Missing_Value_Real4
+      Beta = Missing_Value_Real4
 
-      if (Emiss_top > 0.0 .and. Emiss_top < 1.0 .and. &
-          Emiss_bot > 0.0 .and. Emiss_bot < 1.0) then
+      if (Emiss_Top > 0.0 .and. Emiss_Top < 1.0 .and. &
+          Emiss_Bot > 0.0 .and. Emiss_Bot < 1.0) then
 
-         beta = alog(1.0 - Emiss_top)/alog(1.0 - Emiss_bot)
+         Beta = alog(1.0 - Emiss_Top)/alog(1.0 - Emiss_Bot)
+
       end if
 
       return
@@ -691,6 +787,110 @@ subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
 
 end subroutine COMPUTE_BOX_WIDTH
 
+!----------------------------------------------------------------------
+! Compute Ch27 height where level transmission to space is opaque
+!----------------------------------------------------------------------
+subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Lon_Idx
+  integer:: Lat_Idx
+  integer:: Zen_Idx
+  integer:: Chan_Idx
+  integer:: Lev_Idx
+  real, dimension(:), pointer:: Trans_Prof
+  real, dimension(:), pointer:: Z_Prof
+  real, parameter:: Trans_Limit = 0.01
+
+
+   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+  Ch27_Opaque_Height = Missing_Value_Real4
+
+
+  do Elem_Idx = 1, Image%Number_Of_Elements
+     do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+      
+     !--- indice aliases
+     Chan_Idx = 27
+     Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     !-- check if indices are valid
+     if (Lon_Idx < 0 .or. Lat_Idx < 0) cycle
+
+     Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
+     Z_Prof => Rtm(Lon_Idx,Lat_Idx)%Z_Prof
+
+     Lev_Idx = minloc(abs(Trans_Prof-Trans_Limit),1)   
+     Ch27_Opaque_Height(Elem_Idx,Line_Idx) = Z_Prof(Lev_Idx)
+
+     Trans_Prof => null()
+     Z_Prof => null()
+        
+     enddo
+  enddo
+
+end subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT
+
+!----------------------------------------------------------------------
+! Compute CSBT Cloud Masks
+! must be called at end of cloud processing chain (After ACHA)
+!----------------------------------------------------------------------
+subroutine COMPUTE_CSBT_CLOUD_MASKS()
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Lon_Idx
+  integer:: Lat_Idx
+  integer:: Zen_Idx
+  integer:: Chan_Idx
+  integer:: Lev_Idx
+  real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
+  real, parameter:: Covar_Ch27_Ch31_Max = 1.0
+   
+   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+   
+  Ch27_CSBT_Mask = Missing_Value_Int1
+  Ch31_CSBT_Mask = Missing_Value_Int1
+
+  do Elem_Idx = 1, Image%Number_Of_Elements
+     do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- initialize to cloudy
+     Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 3
+     Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 3
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
+         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 0
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 0
+         cycle
+     endif
+
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
+         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 1
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 1
+         cycle
+     endif
+
+     if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
+       if (Acha%Zc(Elem_Idx,Line_Idx) <= Ch27_Opaque_Height(Elem_Idx,Line_Idx)) then
+         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 2
+       endif
+     endif
+
+     enddo
+  enddo
+      
+
+end subroutine COMPUTE_CSBT_CLOUD_MASKS
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

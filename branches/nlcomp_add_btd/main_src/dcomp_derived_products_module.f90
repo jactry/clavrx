@@ -82,7 +82,7 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
   Reff = Missing_Value_Real4
 
   line_loop: DO Line_Idx = jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx = 1, Num_Pix
+    element_loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
      !------------------------------------------------
      ! determine phase from cloud type
@@ -124,7 +124,7 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
 
      !--- assign optical depth and particle size
-     if (Solzen(Elem_Idx,Line_Idx) < 90.0) then 
+     if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0) then 
        Tau = Tau_Dcomp(Elem_Idx,Line_Idx)
        Reff = Reff_Dcomp(Elem_Idx,Line_Idx)
      else
@@ -152,15 +152,15 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
      !--- skip if invalid nwp indices
      if (Lat_Nwp_Idx <= 0 .or. Lon_Nwp_Idx <= 0) cycle
 
-     Cloud_Geometrical_Thickness = Zc_Top_Acha(Elem_Idx,Line_Idx) - Zc_Base_Acha(Elem_Idx,Line_Idx)
+     Cloud_Geometrical_Thickness = ACHA%Zc_Top(Elem_Idx,Line_Idx) - ACHA%Zc_Base(Elem_Idx,Line_Idx)
      !--- skip if failed cloud boundares
-     if (Cloud_Geometrical_Thickness <= 0.00 .or. Zc_Top_Acha(Elem_Idx,Line_Idx) <= 0.00) cycle
+     if (Cloud_Geometrical_Thickness <= 0.00 .or. ACHA%Zc_Top(Elem_Idx,Line_Idx) <= 0.00) cycle
 
      Ice_Layer_Fraction = 0.0
      Water_Layer_Fraction = 0.0
      Scwater_Layer_Fraction = 0.0
 
-     if (Zc_Base_Acha(Elem_Idx,Line_Idx) >= Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
+     if (ACHA%Zc_Base(Elem_Idx,Line_Idx) >= Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
 
          Ice_Layer_Fraction  = 1.0
          Water_Layer_Fraction  = 0.0
@@ -168,40 +168,40 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
      else
 
-         Ice_Layer_Fraction = (Zc_Top_Acha(Elem_Idx,Line_Idx) - Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
+         Ice_Layer_Fraction = (ACHA%Zc_Top(Elem_Idx,Line_Idx) - Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                Cloud_Geometrical_Thickness
 
      endif
 
      if (Ice_Layer_Fraction /= 1.0) then
 
-         if (Zc_Top_Acha(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
+         if (ACHA%Zc_Top(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) then
 
            Water_Layer_Fraction = 1.0
 
          else
-           Water_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-Zc_Base_Acha(Elem_Idx,Line_Idx)) / &
+           Water_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-ACHA%Zc_Base(Elem_Idx,Line_Idx)) / &
                                   Cloud_Geometrical_Thickness
          endif
 
-         if ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-             (Zc_Base_Acha(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         if ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+             (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
 
             Scwater_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) - &
                                      Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                      Cloud_Geometrical_Thickness
 
-         elseif ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-                   (Zc_Base_Acha(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         elseif ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+                   (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
   
               Scwater_Layer_Fraction = (Upper_Limit_Water_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) - &
-                                       Zc_Base_Acha(Elem_Idx,Line_Idx)) / &
+                                       ACHA%Zc_Base(Elem_Idx,Line_Idx)) / &
                                        Cloud_Geometrical_Thickness
 
-         elseif ((Zc_Top_Acha(Elem_Idx,Line_Idx) > Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
-                   (Zc_Base_Acha(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
+         elseif ((ACHA%Zc_Top(Elem_Idx,Line_Idx) > Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) .and. &
+                   (ACHA%Zc_Base(Elem_Idx,Line_Idx) < Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx))) then
 
-              Scwater_Layer_Fraction = (Zc_Top_Acha(Elem_Idx,Line_Idx) - Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
+              Scwater_Layer_Fraction = (ACHA%Zc_Top(Elem_Idx,Line_Idx) - Freezing_Level_Height_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                                         Cloud_Geometrical_Thickness
 
           endif
@@ -239,7 +239,7 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
   real(kind=real4)::  T_Cloud, Reff_Cloud, Tau_Cloud
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -270,7 +270,7 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
 
       !--- make local aliases of global variables
       Water_Path_Cloud = Cwp_Dcomp(Elem_Idx,Line_Idx) / 1000.0   !kg/m^2
-      T_Cloud = Tc_Acha(Elem_Idx,Line_Idx)
+      T_Cloud = ACHA%Tc(Elem_Idx,Line_Idx)
       Reff_Cloud = Reff_Dcomp(Elem_Idx,Line_Idx)
       Tau_Cloud = Tau_Dcomp(Elem_Idx,Line_Idx)
 
@@ -380,7 +380,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -404,10 +404,10 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       endif
 
       CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
-      CTT_Pix = Tc_Acha(Elem_Idx,Line_Idx)
+      CTT_Pix = ACHA%Tc(Elem_Idx,Line_Idx)
       Reff_Pix = Reff_Dcomp(Elem_Idx,Line_Idx)
 
-      if (Solzen(Elem_Idx,Line_Idx) > 90.0) then
+      if (Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) then
         Reff_Pix = Reff_Nlcomp(Elem_Idx,Line_Idx)
       endif
 
@@ -435,7 +435,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       Line_Idx_2  = min(Line_Idx_Max,max(2,Line_Idx + N_box /2))
       Elem_Idx_1  = min(Elem_Idx_Max-1,max(1,Elem_Idx - N_box /2))
       Elem_Idx_2  = min(Elem_Idx_Max,max(2,Elem_Idx + N_box /2))
-      CTT_Max = maxval(Tc_Acha(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))  
+      CTT_Max = maxval(ACHA%Tc(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))  
 
 
       !--- compute precip height
@@ -515,7 +515,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
 
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -530,8 +530,8 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       Lat_Nwp_Idx = J_Nwp(Elem_Idx,Line_Idx)
 
       Cloud_Optical_Depth = Tau_Dcomp(Elem_Idx,Line_Idx)  
-      Solar_Zenith_Angle = Solzen(Elem_Idx,Line_Idx)
-      Land_Class = Land(Elem_Idx,Line_Idx)
+      Solar_Zenith_Angle = Geo%Solzen(Elem_Idx,Line_Idx)
+      Land_Class = Sfc%Land(Elem_Idx,Line_Idx)
       TPW = Tpw_Nwp_Pix(Elem_Idx,Line_Idx)
       Tozone = 0.0
       Surface_Pressure = 1010.00
@@ -541,7 +541,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       endif
 
       !--- adjust gases for slant path
-      Cosine_Solar_Zenith_Angle = cos(Solzen(Elem_Idx,Line_Idx)*DTOR)
+      Cosine_Solar_Zenith_Angle = cos(Geo%Solzen(Elem_Idx,Line_Idx)*DTOR)
 
 !     H2O_Trans_Direct = 1.0 - 2.9*TPW / ((1.0 + 141.5*TPW)**(0.635) + 5.925*TPW)
 !     Ozone_Trans_Direct = 1.0 - 0.02118*Ozone / (1.0 + 0.042*Ozone + 0.000323*(Ozone**2))

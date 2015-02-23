@@ -150,6 +150,7 @@ clavrxorb_objs = process_clavrx.o \
                  tranmetsg101.o\
                  tranmts101.o\
                  seviri_module.o \
+                 abi_transm.o \
                  ahi_transm.o \
 	         reposnx.o \
                  reposition_module.o \
@@ -184,8 +185,11 @@ clavrxorb_objs = process_clavrx.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
-                 cr_config_mod.o \
-                 area_file_mod.o
+                 ahi_clavrx_bridge.o \
+                 cx_read_ahi_mod.o \
+                 string_functions.o \
+                 date_tools_mod.o \
+                 geos_transform_pix.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -295,12 +299,13 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_module.f90
 
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
-area_file_mod.o:area_file_mod.f90
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
 calibration_constants.o: calibration_constants.f90 constant.o 
+ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o
 dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o
@@ -309,8 +314,8 @@ cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_commo
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 comp_asc_des_level2b.o: comp_asc_des_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
-cr_config_mod.o:cr_config_mod.f90 area_file_mod.o file_tools.o
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
+date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o constant.o file_utility.o avhrr_module.o
@@ -342,17 +347,18 @@ sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
+string_functions.o:string_functions.f90
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o ahi_transm.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o tranmavhrr.o hirstran_101.o tran_modisd101.o goestran.o tranmetsg101.o tranmts101.o tran_viirsm.o sfc_prop_umd.o fy2_coms_trn101.o abi_transm.o ahi_transm.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
 viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clavrx_message_module.o viirs_read_mod.o
 viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
 #cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
@@ -377,12 +383,12 @@ sub_routine = constant.o pixel_common.o pixel_routines.o gfs_hdf_module.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o \
-              rt_utils.o rtm_common.o reposnx.o reposition_module.o \
+              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
+              rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o getmod.o \
               seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o cr_config_mod.o area_file_mod.o
+              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
 
 
@@ -406,6 +412,9 @@ conver.o : conver.f90
 
 getmod.o : getmod.f90
 	        $(fc) -c $(fflags_sasrab_f90) getmod.f90
+
+abi_transm.o : abi_transm.f get_lun.o
+	        $(fc) -c $(fflags_pfast) abi_transm.f 
 
 ahi_transm.o : ahi_transm.f get_lun.o
 	        $(fc) -c $(fflags_pfast) ahi_transm.f 
@@ -479,6 +488,9 @@ mreadf.o: mreadf.c
 
 move_bytes.o: move_bytes.c
 	$(CC) -c -O2 move_bytes.c
+
+geos_transform_pix.o: geos_transform_pix.c
+	$(CC) -c -O2 geos_transform_pix.c
 
 ################################ Misc. Targets #################################
 

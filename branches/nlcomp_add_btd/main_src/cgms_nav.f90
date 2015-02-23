@@ -1,5 +1,5 @@
 !$Id$
-!--------------------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
 ! NAME: cgms_nav.f90 (src)
@@ -28,19 +28,18 @@
 ! SUPPORT TO USERS.
 !
 !--------------------------------------------------------------------------------------
-MODULE CGMS_NAV
+module CGMS_NAV
 
-  REAL(KIND(0.0d0)), PARAMETER, PRIVATE :: PI=3.14159265359d0
+  real(kind(0.0d0)), PARAMETER, PRIVATE :: PI=3.14159265359d0
 
-  REAL(KIND(0.0d0)), PARAMETER, PRIVATE ::  SAT_HEIGHT= 42164.0d0  ! distance from Earth centre to satellite    
-  REAL(KIND(0.0d0)), PARAMETER, PRIVATE ::  R_EQ = 6378.169d0      ! radius from Earth centre to equator
-  REAL(KIND(0.0d0)), PARAMETER, PRIVATE ::  R_POL= 6356.5838d0     !
+  real(kind(0.0d0)), PARAMETER, PRIVATE ::  SAT_HEIGHT= 42164.0d0  ! distance from Earth centre to satellite    
+  real(kind(0.0d0)), PARAMETER, PRIVATE ::  R_EQ = 6378.169d0      ! radius from Earth centre to equator
+  real(kind(0.0d0)), PARAMETER, PRIVATE ::  R_POL= 6356.5838d0     !
   
-  CONTAINS
-
+  contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
-! subroutine pixcoord2geocoord_cgms
+! subroutine PIXCOORD2GEOCOORD_CGMS
 !  
 !  PURPOSE: 
 !  return the geograhic latitude and longitude of an Fixed image   
@@ -77,24 +76,24 @@ MODULE CGMS_NAV
 !                                                        
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-SUBROUTINE pixcoord2geocoord_cgms( column,  row,  ccoff,  lloff, lfac, cfac, deg_space, sub_lon, latitude, longitude)
+subroutine PIXCOORD2GEOCOORD_CGMS( column,  row,  ccoff,  lloff, lfac, cfac, deg_space, sub_lon, latitude, longitude)
 
-  IMPLICIT NONE
+  implicit none
 
-  INTEGER, INTENT (IN) :: column, row, ccoff, lloff, lfac, cfac
-  INTEGER, INTENT (IN) :: deg_space
-  REAL(KIND(0.0d0)) , INTENT (IN) :: sub_lon
-  REAL(KIND(0.0d0)) , INTENT (OUT) :: latitude, longitude
+  integer, intent (in) :: column, row, ccoff, lloff, lfac, cfac
+  integer, intent (in) :: deg_space
+  real(kind(0.0d0)) , intent (in) :: sub_lon
+  real(kind(0.0d0)) , intent (out) :: latitude, longitude
 
   
-  REAL(KIND(0.0d0)) :: s1, s2, s3, sn, sd, sxy
-  REAL(KIND(0.0d0)) :: x, y
-  REAL(KIND(0.0d0)) :: longi, lati, sub_loni
+  real(kind(0.0d0)) :: s1, s2, s3, sn, sd, sxy
+  real(kind(0.0d0)) :: x, y
+  real(kind(0.0d0)) :: longi, lati, sub_loni
 
 
-  REAL(KIND(0.0d0)) :: sa
+  real(kind(0.0d0)) :: sa
 
-  INTEGER ::  c, l
+  integer ::  c, l
 
 
   c=column
@@ -155,11 +154,11 @@ SUBROUTINE pixcoord2geocoord_cgms( column,  row,  ccoff,  lloff, lfac, cfac, deg
   latitude = (lati*(180.0d0/PI)) 
   longitude = longi*(180.0d0/PI)
 
-END SUBROUTINE pixcoord2geocoord_cgms
+end subroutine PIXCOORD2GEOCOORD_CGMS
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! subroutine geocoord2pixcoord_cgms                                    
+! subroutine GEOCOORD2PIXCOORD_CGMS                                    
 !                                                       
 ! PURPOSE:                                              
 !   return the pixel column and line of an fixed grid image 
@@ -203,32 +202,31 @@ END SUBROUTINE pixcoord2geocoord_cgms
 !                                                       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-SUBROUTINE geocoord2pixcoord_cgms( latitude,  longitude,  ccoff,  lloff, lfac, cfac, deg_space, sub_lon, column, row)
+subroutine GEOCOORD2PIXCOORD_CGMS( latitude,  longitude,  ccoff,  lloff, lfac, cfac, deg_space, sub_lon, column, row)
 
-  IMPLICIT NONE
+  implicit none
 
-
-  REAL(KIND(0.0d0)), INTENT (IN) :: latitude, longitude
-  REAL(KIND(0.0d0)), INTENT (IN) :: sub_lon
-  INTEGER, INTENT (IN)  :: ccoff, lloff, lfac, cfac
-  INTEGER, INTENT (IN)  :: deg_space
-  INTEGER, INTENT (OUT) :: column, row
+  real(kind(0.0d0)), intent (in) :: latitude, longitude
+  real(kind(0.0d0)), intent (in) :: sub_lon
+  integer, intent (in)  :: ccoff, lloff, lfac, cfac
+  integer, intent (in)  :: deg_space
+  integer, intent (out) :: column, row
   
 
-  INTEGER :: ccc=0, lll=0
+  integer :: ccc=0, lll=0
 
-  REAL(KIND(0.0d0)) :: lati, longi, subloni
-  REAL(KIND(0.0d0)) :: c_lat
-  REAL(KIND(0.0d0)) :: lat
-  REAL(KIND(0.0d0)) :: lon
-  REAL(KIND(0.0d0)) :: r1, r2, r3, rn, re, rl
-  REAL(KIND(0.0d0)) :: xx, yy
-  REAL(KIND(0.0d0)) :: cc, ll
-  REAL(KIND(0.0d0)) :: dotprod
+  real(kind(0.0d0)) :: lati, longi, subloni
+  real(kind(0.0d0)) :: c_lat
+  real(kind(0.0d0)) :: lat
+  real(kind(0.0d0)) :: lon
+  real(kind(0.0d0)) :: r1, r2, r3, rn, re, rl
+  real(kind(0.0d0)) :: xx, yy
+  real(kind(0.0d0)) :: cc, ll
+  real(kind(0.0d0)) :: dotprod
 
 
-  lati= latitude
-  longi= longitude
+  lati = latitude
+  longi = longitude
   
   ! Convert for international date line
   IF(longi .gt. 180.0d0) longi= longi - 360.0d0
@@ -308,13 +306,13 @@ SUBROUTINE geocoord2pixcoord_cgms( latitude,  longitude,  ccoff,  lloff, lfac, c
 
 
   ccc=nint(cc)
-  lll=nint(ll)		
+  lll=nint(ll)
 
   column = ccc
   row = lll
      
 
-END SUBROUTINE geocoord2pixcoord_cgms
+end subroutine GEOCOORD2PIXCOORD_CGMS
 
 
-END MODULE CGMS_NAV
+end module CGMS_NAV

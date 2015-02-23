@@ -773,7 +773,8 @@ C
 C                       ** Check local dimension
          First  = .FALSE.
          Dimerr = .FALSE.
-         IF ( Nwlint.GT.Maxwvl ) Dimerr = Wrtdim( 'Maxwvl', Nwlint )
+         IF ( Nwlint.GT.Maxwvl ) Dimerr = Wrtdim( Unit16,'Maxwvl'
+     &      , Nwlint )
          IF ( Dimerr ) CALL Errmsg(Unit16, 'FLUXES--DIM ERROR', .TRUE. )
 
       END IF
@@ -1419,7 +1420,8 @@ C
 C                       ** SCALE ALBEDO OF REFERENCE SURFACE-MODEL TO
 C                       ** THAT OF MATTHEWS
 C
-         CALL Matalb( Jday, Ilat, Ilon, Glat, Nwlint, Solirr, Snowfr,
+         CALL Matalb( Unit16,
+     &                Jday, Ilat, Ilon, Glat, Nwlint, Solirr, Snowfr,
      &                Isrmod, Waveln, Diralb, Difalb, Noretr )
          IF ( Noretr ) RETURN
 
@@ -1759,12 +1761,17 @@ C
 C                       ** CHECK DIMENSIONS IN COMMON BLOCK *TABLES*
          First  = .FALSE.
          Dimerr = .FALSE.
-         IF ( Maxtau.NE.Mxntau ) Dimerr = Wrtdm2( 'MAXTAU', Mxntau )
-         IF ( Maxsun.NE.Mxnsun ) Dimerr = Wrtdm2( 'MAXSUN', Mxnsun )
-         IF ( Maxwvl.NE.Mxnwvl ) Dimerr = Wrtdm2( 'MAXWVL', Mxnwvl )
-         IF ( Maxh2o.NE.Mxnh2o ) Dimerr = Wrtdm2( 'MAXH2O', Mxnh2o )
-         IF ( Maxo3.NE.Mxno3 ) Dimerr = Wrtdm2( 'MAXO3 ', Mxno3 )
-         IF ( Maxtab.NE.Mxntab ) Dimerr = Wrtdm2( 'MAXTAB', Mxntab )
+         IF ( Maxtau.NE.Mxntau ) Dimerr = Wrtdm2( Unit16,'MAXTAU'
+     &      , Mxntau )
+         IF ( Maxsun.NE.Mxnsun ) Dimerr = Wrtdm2( Unit16,'MAXSUN'
+     &      , Mxnsun )
+         IF ( Maxwvl.NE.Mxnwvl ) Dimerr = Wrtdm2( Unit16,'MAXWVL'
+     &      , Mxnwvl )
+         IF ( Maxh2o.NE.Mxnh2o ) Dimerr = Wrtdm2( Unit16,'MAXH2O'
+     &      , Mxnh2o )
+         IF ( Maxo3.NE.Mxno3 ) Dimerr = Wrtdm2( Unit16,'MAXO3 ', Mxno3 )
+         IF ( Maxtab.NE.Mxntab ) Dimerr = Wrtdm2( Unit16,'MAXTAB'
+     &      , Mxntab )
          IF ( Dimerr ) 
      &      CALL Errmsg(Unit16, 'INTPOL--DIM ERROR(S)',.TRUE.)
 
@@ -2746,7 +2753,7 @@ C
       IF ( First ) THEN
          First  = .FALSE.
          Dimerr = .FALSE.
-         IF ( Maxtau.LT.Ntau ) Dimerr = Wrtdim( 'MAXTAU', Ntau )
+         IF ( Maxtau.LT.Ntau ) Dimerr = Wrtdim( Unit16,'MAXTAU', Ntau )
          IF ( Dimerr ) 
      &       CALL Errmsg( Unit16,'MATCHA--DIMENSION ERROR', .TRUE. )
 
@@ -3072,6 +3079,7 @@ C     ..
 C     .. Local Scalars ..
       LOGICAL  Inperr, Newtab
       INTEGER  I
+      INTEGER Unit16
       REAL  Astar, Asystr, Bstar, Ome, Omestr, P, Prvtab, Rcomp1,
      &      Rcomp2, Refdif, Refdir, Zai
 C     ..
@@ -3157,9 +3165,10 @@ C
       IF ( Newtab ) THEN
          Prvtab = Itable
          Inperr = .FALSE.
-         IF ( Nwlint.NE.Nint ) Inperr = Wrtbad( 'NWLINT' )
+         IF ( Nwlint.NE.Nint ) Inperr = Wrtbad( Unit16,'NWLINT' )
          DO 10 I = 1, Nint + 1
-            IF ( Wvl(I).NE.Waveln(I) ) Inperr = Wrtbad( 'WAVELN' )
+            IF ( Wvl(I).NE.Waveln(I) ) Inperr = Wrtbad( Unit16
+     &           ,'WAVELN' )
 10       CONTINUE
          IF ( Inperr ) CALL Errmsg( Unit16, 
      &                     'REFSUR--INCOMPATIBLE SPEC INTVLS',
@@ -3464,24 +3473,26 @@ C     ..
 C
 C                            * CHECK DIMENSIONS
 C
-         IF ( Ntable.GT.Mxtabs ) Dimer1 = Wrtdim( 'MXTABS', Ntable )
-         IF ( Nwlint(Ib).GT.Mxwvls ) Dimer1 = Wrtdim( 'MXWVLS',
+         IF ( Ntable.GT.Mxtabs ) Dimer1 = Wrtdim( Unit16,'MXTABS', 
+     &        Ntable )
+         IF ( Nwlint(Ib).GT.Mxwvls ) Dimer1 = Wrtdim( Unit16,'MXWVLS',
      &        Nwlint(Ib) )
-         IF ( Ntaumx(Ib).GT.Mxtaus ) Dimer1 = Wrtdim( 'MXTAUS',
+         IF ( Ntaumx(Ib).GT.Mxtaus ) Dimer1 = Wrtdim( Unit16,'MXTAUS',
      &        Ntaumx(Ib) )
          IF ( Dimer1 ) CALL Errmsg(Unit16, 'Reftra--DIMENSION ERROR(S)',
      &                              .TRUE. )
 
-         IF ( Ntable.GT.Maxtab ) Dimer2 = Wrtdim( 'MAXTAB', Ntable )
-         IF ( Nwlint(Ib).GT.Maxwvl ) Dimer2 = Wrtdim( 'MAXWVL',
+         IF ( Ntable.GT.Maxtab ) Dimer2 = Wrtdim( Unit16, 'MAXTAB', 
+     &        Ntable )
+         IF ( Nwlint(Ib).GT.Maxwvl ) Dimer2 = Wrtdim( Unit16,'MAXWVL',
      &        Nwlint(Ib) )
-         IF ( Nwavap(Ib).GT.Maxh2o ) Dimer2 = Wrtdim( 'MAXH2O',
+         IF ( Nwavap(Ib).GT.Maxh2o ) Dimer2 = Wrtdim( Unit16,'MAXH2O',
      &        Nwavap(Ib) )
-         IF ( No3amt(Ib).GT.Maxo3 ) Dimer2 = Wrtdim( 'MAXO3 ',
+         IF ( No3amt(Ib).GT.Maxo3 ) Dimer2 = Wrtdim( Unit16,'MAXO3 ',
      &        No3amt(Ib) )
-         IF ( Nmusun(Ib).GT.Maxsun ) Dimer2 = Wrtdim( 'MAXSUN',
+         IF ( Nmusun(Ib).GT.Maxsun ) Dimer2 = Wrtdim( Unit16,'MAXSUN',
      &        Nmusun(Ib) )
-         IF ( Ntaumx(Ib).GT.Maxtau ) Dimer2 = Wrtdim( 'MAXTAU',
+         IF ( Ntaumx(Ib).GT.Maxtau ) Dimer2 = Wrtdim( Unit16,'MAXTAU',
      &        Ntaumx(Ib) )
          IF ( Dimer2 ) CALL Errmsg(Unit16,'Reftra--DIMENSION ERROR(S)',
      &                              .TRUE. )

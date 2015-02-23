@@ -48,21 +48,14 @@ module nlcomp_bridge_mod
         mesg
    
    use pixel_common, only: &
-        num_pix &
+        sensor &
+      , geo &
+      , sfc &
+      , image &
       , ch  &
-      , num_scans_read &
-      , coszen &
-      , satzen &
-      , relaz  &
-      , solzen &
-      , snow &
+      , acha &
       , cld_type &
       , cld_mask &
-      , land_mask &
-      , zc_acha  &
-      , pc_acha  &
-      , tc_acha &
-      , tau_acha &
       , bad_pixel_mask &
       , reff_nlcomp, tau_nlcomp  &
       , tau_dcomp_qf, reff_dcomp_qf &
@@ -73,7 +66,6 @@ module nlcomp_bridge_mod
       , cloud_063um_spherical_albedo, cloud_063um_albedo &
       , ancil_data_dir &
       , i_nwp , j_nwp &
-      , num_scans_per_segment &
       , ch &
       , dcomp_mode  &
       , zen_idx_rtm , solar_rtm &
@@ -83,8 +75,7 @@ module nlcomp_bridge_mod
       , tsfc_nwp_pix
    
    use pixel_common, only: &
-        dcomp_diag_1 , dcomp_diag_2 &
-        , chan_on_flag_default
+        dcomp_diag_1 , dcomp_diag_2
    
    use calibration_constants, only: &
         sun_earth_distance  &      !---- check this is defined in three routines   
@@ -161,14 +152,14 @@ contains
 #ifdef HDF5LIBS  
 #ifdef NLCOMPLIBS   
       if ( iseg_in == 1 ) then
-        call mesg ('NL-COMP starts ... ', color=46 , level = -1 ) 
+        call mesg ('NL-COMP starts ... ', color=46  ) 
       end if
       
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( nlcomp_rtm ) 
       
-      dim_1 = num_pix
-      dim_2 = num_scans_read
+      dim_1 = Image%Number_Of_Elements
+      dim_2 = Image%Number_Of_Lines_Read_This_Segment
       
       
       ! - which channels do we need? possibles are 
@@ -176,7 +167,7 @@ contains
       
       nlcomp_possible_channels = [  20 , 31, 32, 42 ]
       do i = 1 , size ( nlcomp_possible_channels )   
-         if ( Chan_On_Flag_Default ( nlcomp_possible_channels ( i) ) == 1 ) then
+         if ( sensor % chan_on_flag_default ( nlcomp_possible_channels ( i) ) == 1 ) then
             nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
@@ -184,7 +175,7 @@ contains
       
       
        ! === ALLOCATION
-      do idx_chn = 1 , 42
+      do idx_chn = 1 , 44
          if ( .not. nlcomp_input % is_channel_on (idx_chn) ) cycle
         
          call  alloc_nlcomp ( nlcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
@@ -221,9 +212,9 @@ contains
       ! -- configure
       
            ! - ancil/lut path
-      nlcomp_input % lut_path = trim(ancil_data_dir)//"/luts/cld/"   
+      nlcomp_input % lut_path = trim(ancil_data_dir)//"static//luts/cld/"   
          ! - wmo sensor id
-      nlcomp_input % sensor_wmo_id = sc_id_wmo
+      nlcomp_input % sensor_wmo_id = sensor % wmo_id
       nlcomp_input % sun_earth_dist = sun_earth_distance
             
          ! -  Satellite Data
@@ -257,8 +248,8 @@ contains
       
             
          ! - Surface  
-      ! - we use for DNB (channel 42) channel 1  
-      if ( nlcomp_input % is_channel_on (42 )) nlcomp_input % alb_sfc ( 42 ) % d = ch(1)%sfc_ref_white_sky  
+      ! - we use for DNB (channel 44) channel 1  
+      if ( nlcomp_input % is_channel_on (44 )) nlcomp_input % alb_sfc ( 44 ) % d = ch(1)%sfc_ref_white_sky  
      
 
       if ( nlcomp_input % is_channel_on (20)) nlcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    !check this AKH

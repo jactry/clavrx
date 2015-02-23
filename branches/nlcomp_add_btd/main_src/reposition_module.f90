@@ -36,7 +36,6 @@
 ! Public routines used in this module:
 ! REPOSITION_FOR_CLOCK_ERROR - compute the time for each pixel from the scan value
 !--------------------------------------------------------------------------------------
-
 module AVHRR_REPOSITION_ROUTINES
  use CONSTANTS
  use PIXEL_COMMON
@@ -518,11 +517,10 @@ module AVHRR_REPOSITION_ROUTINES
     !--- convert time and date
     ileap = 0
     ileap = leap_year_fct(int(start_year,kind=int4))
-    start_month = COMPUTE_MONTH(int(start_day,kind=real4),ileap)
-    end_month = COMPUTE_MONTH(int(end_day,kind=int4),ileap)
-    start_dom = COMPUTE_DAY(int(start_day,kind=int4),ileap)
-    end_dom = COMPUTE_DAY(int(end_day,kind=int4),ileap)
-
+    start_month = COMPUTE_MONTH(int(Image%Start_Doy,kind=real4),ileap)
+    end_month = COMPUTE_MONTH(int(Image%End_Doy,kind=int4),ileap)
+    start_dom = COMPUTE_DAY(int(Image%Start_Doy,kind=int4),ileap)
+    end_dom = COMPUTE_DAY(int(Image%End_Doy,kind=int4),ileap)
 
     !--- determine MJDN at start of orbit
     day = start_dom
@@ -622,8 +620,8 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
              start_month, end_month, start_dom, end_dom,ileap
    integer (kind=int4):: Pixel_offset, Pixel_spacing, ipixel
 
-   real (kind=real4), dimension(num_pix,j2):: lat_temp,lon_temp
-   real (kind=real8), dimension(num_pix,j2):: Pixel_time_mjdn
+   real (kind=real4), dimension(Image%Number_Of_Elements,j2):: lat_temp,lon_temp
+   real (kind=real8), dimension(Image%Number_Of_Elements,j2):: Pixel_time_mjdn
    integer, dimension(j2):: valid_scan_number
    integer, dimension(j2):: valid_scan_index
    integer:: num_valid_scans, jj
@@ -635,30 +633,30 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
 
 
 !--- initialize lat and lon from level-1b values
-    lat = lat_1b
-    lon = lon_1b
+    nav % lat = nav % lat_1b
+    nav % lon = nav % lon_1b
 
     valid_scan_index = 0
     scan_time_mjdn = missing_value_real4
 
 !--- a convenient parameter
-    alpha = 2.0*senzen_max / 360.0 / num_pix
+    alpha = 2.0*senzen_max / 360.0 / Image%Number_Of_Elements
 
 !--- compute date terms
     ileap = 0
-    if ((start_year == 1984) .or. &
-        (start_year == 1988) .or. &
-        (start_year == 1992) .or. &
-        (start_year == 1996) .or. &
-        (start_year == 2000) .or. &
-        (start_year == 2004) .or. &
-        (start_year == 2008) .or. &
-        (start_year == 2012)) ileap = 1
+    if ((Image%start_year == 1984) .or. &
+        (Image%start_year == 1988) .or. &
+        (Image%start_year == 1992) .or. &
+        (Image%start_year == 1996) .or. &
+        (Image%start_year == 2000) .or. &
+        (Image%start_year == 2004) .or. &
+        (Image%start_year == 2008) .or. &
+        (Image%start_year == 2012)) ileap = 1
 
-    start_month = COMPUTE_MONTH(int(start_day,kind=real4),ileap)
-    end_month = COMPUTE_MONTH(int(end_day,kind=int4),ileap)
-    start_dom = COMPUTE_DAY(int(start_day,kind=int4),ileap)
-    end_dom = COMPUTE_DAY(int(end_day,kind=int4),ileap)
+    start_month = COMPUTE_MONTH(int(Image%Start_Doy,kind=real4),ileap)
+    end_month = COMPUTE_MONTH(int(Image%End_Doy,kind=int4),ileap)
+    start_dom = COMPUTE_DAY(int(Image%Start_Doy,kind=int4),ileap)
+    end_dom = COMPUTE_DAY(int(Image%End_Doy,kind=int4),ileap)
     
 !--- convert scan line times to MJDN
  jj = 1
@@ -675,14 +673,14 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
       valid_scan_number(jj) = scan_number(j)
 
 !--- determine date of scan
-      if (scan_time(j) >= start_time) then
+      if (scan_time(j) >= image%start_time) then
          day = start_dom
          month = start_month
-         year = start_year
+         year = image%start_year
       else
          day = end_dom
          month = end_month
-         year = end_year
+         year = image%end_year
       endif
 
 !--- determine hour, minute and second
@@ -707,6 +705,7 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
 !-- set parameters based on data resolution
 Pixel_Offset = 0
 Pixel_Spacing = 1
+
 if (AVHRR_GAC_Flag == sym%YES) then
         Pixel_offset = 8
         Pixel_spacing = 5
@@ -726,12 +725,12 @@ Pixel_time_loop:   do jj = 1, num_valid_scans
 
    !--- interpolate time for each pixel in scan
    ipixel = Pixel_offset
-   do i = 1, num_pix
+   do i = 1, Image%Number_Of_Elements
       Pixel_time_mjdn(i,jj) = scan_time_mjdn(jj) + (ipixel-1) * alpha * time_between_scans
       ipixel = ipixel + Pixel_spacing
    enddo
-   lat_temp(:,jj) = lat(:,valid_scan_index(jj))
-   lon_temp(:,jj) = lon(:,valid_scan_index(jj))
+   lat_temp(:,jj) = nav % lat(:,valid_scan_index(jj))
+   lon_temp(:,jj) = nav % lon(:,valid_scan_index(jj))
 
   end do Pixel_time_loop
 
@@ -741,16 +740,16 @@ Pixel_time_loop:   do jj = 1, num_valid_scans
         call REPOSN (Pixel_time_mjdn(:,1:num_valid_scans), &
                      lat_temp(:,1:num_valid_scans), &
                      lon_temp(:,1:num_valid_scans), &
-                     timerr,num_pix,num_valid_scans)
+                     timerr,Image%Number_Of_Elements,num_valid_scans)
 
         !--- initialize output lat, lon to missing
-        lat = missing_value_real4
-        lon = missing_value_real4
+        nav % lat = missing_value_real4
+        nav % lon = missing_value_real4
 
         !--- populate output lat, lon with valid scans
         do jj = 1, num_valid_scans
-         lat(:,valid_scan_index(jj)) = lat_temp(:,jj)
-         lon(:,valid_scan_index(jj)) = lon_temp(:,jj)
+         nav % lat(:,valid_scan_index(jj)) = lat_temp(:,jj)
+         nav % lon(:,valid_scan_index(jj)) = lon_temp(:,jj)
 !         print *, "nadir valid = ", bad_scan_flag(valid_scan_index(jj)),  &
 !                       lat(205,valid_scan_index(jj)), lat_temp(205,jj), &
 !                       Pixel_time_mjdn(205,jj)

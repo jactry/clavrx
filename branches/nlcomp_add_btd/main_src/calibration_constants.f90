@@ -56,8 +56,10 @@ module CALIBRATION_CONSTANTS
   real (kind=real4), public,save:: A1_34,A2_34,Nu_34
   real (kind=real4), public,save:: A1_35,A2_35,Nu_35
   real (kind=real4), public,save:: A1_36,A2_36,Nu_36
-  real (kind=real4), public,save:: A1_40,A2_40,Nu_40
-  real (kind=real4), public,save:: A1_41,A2_41,Nu_41
+  real (kind=real4), public,save:: A1_37,A2_37,Nu_37
+  real (kind=real4), public,save:: A1_38,A2_38,Nu_38
+  real (kind=real4), public,save:: A1_42,A2_42,Nu_42
+  real (kind=real4), public,save:: A1_43,A2_43,Nu_43
 
 !----- variables read in from instrument constant files (planck stored in constants module)
  real (kind=real4), save, public:: B0_3b,B1_3b,B2_3b,B0_4,B1_4,B2_4,B0_5,B1_5,B2_5, &
@@ -115,8 +117,6 @@ module CALIBRATION_CONSTANTS
 
  real(kind=real8),save,public:: Goes_Input_Time = 0
  real(kind=real8),save,public:: Goes_Epoch_Time = 0
- real(kind=real8),save,public:: Goes_Sub_Satellite_Longitude
- real(kind=real8),save,public:: Goes_Sub_Satellite_Latitude
 
  !--- MCSST values
  real(kind=real4),save,public:: B1_day_mask,B2_day_mask, &

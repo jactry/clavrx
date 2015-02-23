@@ -334,14 +334,17 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 32 ) % rad_abvcld_nwp = input % rad_clear_sky_toc ( 32) % d (elem_idx, line_idx)
          inp_retr % chn ( 32 ) % rad_sfc_nwp =  input % rad_clear_sky_toa ( 32) % d (elem_idx, line_idx)
          
-            
-         inp_retr % chn ( 42 ) % rfl   = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
-         inp_retr % chn ( 42 ) % rfl_u = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
-         inp_retr % chn ( 42 ) % alb_sfc = alb_sfc ( CHN_VIS)
-         inp_retr % chn ( 42 ) % alb_sfc_u = 0.05
-         inp_retr % chn ( 42 ) % trans_air_abvcld = trans_total ( CHN_VIS )
+            inp_retr % chn ( 44 ) % rfl   = - 999.
+         inp_retr % chn ( 44 ) % rfl   = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
+         inp_retr % chn ( 44 ) % rfl_u = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         inp_retr % chn ( 44 ) % alb_sfc = alb_sfc ( CHN_VIS)
+         inp_retr % chn ( 44 ) % alb_sfc_u = 0.05
+         inp_retr % chn ( 44 ) % trans_air_abvcld = trans_total ( CHN_VIS )
          
         print*, 'sfc temperature: ',input % temp_sfc % d ( elem_idx , line_idx )
+        
+        
+        
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )
                          

@@ -30,22 +30,24 @@
 !
 ! Description of RTM Structure Members given in rtm_common.f90
 !
-! CLAVR-x has 42 channels.  
+! CLAVR-x has 44 channels.  
 ! Channels 1-36 are MODIS
-! Channels 37-41 are the VIIRS I-bands
-! Channel 42 is the VIIRS DNB
+! Channels 37-38 are ABI channels not on MODIS
+! Channels 39-43 are the VIIRS I-bands
+! Channel 44 is the VIIRS DNB
 !
 ! Not all members of the RTM structure are populated for all channels.
 ! However, all members are allocated for any active cell
 !
 ! Here is the current implementation
 !
-! There are 5 types of channels
+! There are 6 types of channels
 ! 1. MODIS IR-only channels = 21-36 excluding 26. 
-! 2. MODIS (Solar + IR) channels = Channel 20
-! 3. Supported Solar Channels = Channels 1,2,5,6,7 and 42
-! 4. Unsupported Solar Channels = Channels 3,4,8-19,26,37-40
-! 5. Unsupported IR Channels = Channels 41
+! 2. Non-MODIS IR-only channels  37-38
+! 3. MODIS (Solar + IR) channels = Channel 20
+! 4. Supported Solar Channels = Channels 1,2,5,6,7 and 44
+! 5. Unsupported Solar Channels = Channels 3,4,8-19,26,39-41
+! 6. Unsupported IR Channels = Channels 42 and 43
 !
 ! For each type described above, the following profiles are made:
 ! 1. Rad_Atm_Prof, Trans_Atm_Profile, Rad_BB_Cloud_Profile
@@ -54,7 +56,7 @@
 ! 4. No Profiles
 ! 5. No Profiles
 ! 
-! Viirs I-band support is limited (channels 37-41) and is being developed. No
+! Viirs I-band support is limited (channels 39-43) and is being developed. No
 ! pixel-level toa clear-sky fields are generated for the I-band variables yet.
 ! 
 !--------------------------------------------------------------------------------------
@@ -90,46 +92,32 @@ module RT_UTILITIES
       
    use PIXEL_COMMON, only: &
       Nwp_Opt &
-      , Num_Pix &
+      , Sensor &
+      , Ch &
+      , Geo &
+      , Sfc &
+      , Image &
       , Bad_Pixel_Mask &
       , Zen_Idx_Rtm &
-      , Coszen &
       , I_Nwp &
       , J_Nwp &
       , I_Nwp_X &
       , J_Nwp_X &
       , Lon_Nwp_Fac &
       , Lat_Nwp_Fac &
-      , Chan_On_Flag_Default &
-      , Cossolzen &
       , Sfc_Level_Rtm_Pixel &
-      , Land &
-      , Zsfc &
-      , Land_Mask &
       , Solar_Rtm &
-      , Ch &
-      , Sfc_Type &
       , Space_Mask &
-      , Snow &
       , Use_Sst_Anal &
       , Sst_Anal &
       , Tsfc_Nwp_Pix &
-      , Sc_Id_Wmo &
-      , Goes_Sndr_Flag &
-      , Iff_Viirs_Flag &
-      , Iff_Avhrr_Flag &
       , Trans_Atm_Ch20_Solar_Rtm &
       , Trans_Atm_Ch20_Solar_Total_Rtm &
       , rad_clear_Ch20_Solar_Rtm &
       , Bt_Clear_Ch20_Solar_Rtm &
-      , Bt_Clear_Ch31_Rtm_Unbiased &
-      , Bt_Clear_Ch32_Rtm_Unbiased &
-      , Rad_Clear_Ch31_Rtm_Unbiased &
-      , Rad_Clear_Ch32_Rtm_Unbiased &
       , Ems_Ch20_Clear_Solar_Rtm &
       , Ems_Ch20_Clear_Rtm &
       , Ems_Ch20_Clear_Solar_Sfc_Rtm &
-      , Num_Scans_Per_Segment &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_85um_Tropo_Rtm &
       , Beta_11um_67um_Tropo_Rtm &
@@ -179,7 +167,7 @@ module RT_UTILITIES
     real, parameter :: Co2_Ratio = 380.0 !in ppmv
 
     integer, parameter :: Chan_Idx_Min = 1
-    integer, parameter :: Chan_Idx_Max = 42
+    integer, parameter :: Chan_Idx_Max = 44
 
     real(kind=real4),  save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
 
@@ -514,8 +502,8 @@ contains
 
          if (Chan_Idx < 20) cycle
          if (Chan_Idx == 26) cycle
-         if (Chan_Idx > 36) cycle
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (Chan_Idx > 38) cycle
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
          Rad_Atm_Prof(1,Chan_Idx) = 0.0
          Rad_BB_Cloud_Prof(1,Chan_Idx) = 0.0
@@ -542,7 +530,7 @@ contains
 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx /= 31) cycle
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
          Trans_Total = 1.0
          Rad_Atm_Dwn_Prof(1,Chan_Idx) = 0.0
@@ -585,9 +573,9 @@ contains
       integer:: Lat_Idx
       integer:: Lon_Idx_x
       integer:: Lat_Idx_x
-      integer:: Lon_Idx_prev
-      integer:: Lat_Idx_prev
-      integer:: Zen_Idx_prev
+      integer:: Lon_Idx_Prev
+      integer:: Lat_Idx_Prev
+      integer:: Zen_Idx_Prev
       real:: Lat_x
       real:: Lon_x
       real:: Prof_Weight
@@ -606,14 +594,13 @@ contains
       !--------------------------------------------------------------------------
       call COMPUTE_GAMMA_FACTOR()
 
-
-      Lon_Idx_prev = 0
-      Lat_Idx_prev = 0
-      Zen_Idx_prev = 0
+      Lon_Idx_Prev = 0
+      Lat_Idx_Prev = 0
+      Zen_Idx_Prev = 0
 
       !--- loop over pixels in segment
       line_loop: do Line_Idx = Line_Idx_Min, Num_Lines + Line_Idx_Min - 1
-         element_loop: do Elem_Idx = 1, Num_Pix
+         element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
                                                                        
             !--- check for bad scans
             if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -627,7 +614,7 @@ contains
 
             !--- compute viewing zenith bin for Rtm calculation
             Zen_Idx_Rtm(Elem_Idx,Line_Idx) =  &
-              max(1,min(Rtm_Nvzen,ceiling(Coszen(Elem_Idx,Line_Idx)/Rtm_Vza_Binsize)))
+              max(1,min(Rtm_Nvzen,ceiling(Geo%Coszen(Elem_Idx,Line_Idx)/Rtm_Vza_Binsize)))
 
             !--- store cell and angular indices
             Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
@@ -637,7 +624,6 @@ contains
             Lon_x = Lon_Nwp_Fac(Elem_Idx,Line_Idx)
             Lat_x = Lat_Nwp_Fac(Elem_Idx,Line_Idx)
             Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
-
 
             !--- if this is the first time this nwp cell is being processed do the following
             if (Rtm(Lon_Idx,Lat_Idx)%Flag == 0) then
@@ -716,9 +702,9 @@ contains
                !--------------------------------------------------------------
 
                !--- decide if this can be skipped
-               if ((Lon_Idx_prev == 0) .or. (abs(Lon_Idx-Lon_Idx_prev) >= Ilon_Stride) .or. &
-                  (Lat_Idx_prev == 0) .or. (abs(Lat_Idx-Lat_Idx_prev) >= Ilat_Stride) .or. &
-                  (Zen_Idx_prev == 0) .or. (abs(Zen_Idx - Zen_Idx_prev) >= Ivza_Stride)) then  
+               if ((Lon_Idx_Prev == 0) .or. (abs(Lon_Idx-Lon_Idx_Prev) >= Ilon_Stride) .or. &
+                  (Lat_Idx_Prev == 0) .or. (abs(Lat_Idx-Lat_Idx_Prev) >= Ilat_Stride) .or. &
+                  (Zen_Idx_Prev == 0) .or. (abs(Zen_Idx - Zen_Idx_Prev) >= Ivza_Stride)) then  
 
                   Start_Time_Point_Hours_Temp = COMPUTE_TIME_HOURS()
 
@@ -729,11 +715,10 @@ contains
 
                      if (Chan_Idx < 20) cycle
                      if (Chan_Idx == 26) cycle
-                     if (Chan_Idx == 42) cycle
-                     if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+                     if (Chan_Idx == 44) cycle
+                     if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
                      if (Rtm_Chan_Idx(Chan_Idx) == 0) cycle
-
 
                      call PFAAST_CALLER(Chan_Idx,Satzen_Mid_Bin,Error_Status)
 
@@ -774,7 +759,7 @@ contains
                   ! Apply Gamma Scaling
                   !----------------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-                     if (Chan_On_Flag_Default(Chan_Idx) == sym%YES .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
+                     if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
                         Trans_Atm_Prof(:,Chan_Idx)  = Trans_Atm_Prof(:,Chan_Idx) ** Gamma_Trans_Factor(Chan_Idx)
                      end if
                   end do
@@ -786,16 +771,16 @@ contains
                      if (Chan_Idx > 21 .and. Chan_Idx /= 26) cycle
 
                      Trans_Atm_Total_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
-                                           (1.0/Cossolzen(Elem_Idx,Line_Idx))
+                                           (1.0/Geo%Cossolzen(Elem_Idx,Line_Idx))
 
                      Trans_Atm_Solar_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
-                                           (Coszen(Elem_Idx,Line_Idx)/Cossolzen(Elem_Idx,Line_Idx))
+                                           (Geo%Coszen(Elem_Idx,Line_Idx)/Geo%Cossolzen(Elem_Idx,Line_Idx))
 
                   end do
 
-                  Lon_Idx_prev = Lon_Idx
-                  Lat_Idx_prev = Lat_Idx
-                  Zen_Idx_prev = Zen_Idx
+                  Lon_Idx_Prev = Lon_Idx
+                  Lat_Idx_Prev = Lat_Idx
+                  Zen_Idx_Prev = Zen_Idx
                   Trans_Atm_Prof_Prev = Trans_Atm_Prof
                   Trans_Atm_Solar_Prof_Prev = Trans_Atm_Solar_Prof
                   Trans_Atm_Total_Prof_Prev = Trans_Atm_Total_Prof
@@ -827,8 +812,8 @@ contains
             !---- compute the surface level for this pixel based on high-res elevation
             Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%Sfc_Level
 
-            if ((Land(Elem_Idx,Line_Idx) == sym%LAND) .and. (Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4)) then
-               call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Zsfc(Elem_Idx,Line_Idx),Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
+            if ((Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) .and. (Sfc%Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4)) then
+               call LOCATE(Rtm(Lon_Idx,Lat_Idx)%Z_Prof,NLevels_Rtm,Sfc%Zsfc(Elem_Idx,Line_Idx),Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx))
             endif
             Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx) = max(1,min(NLevels_Rtm-1,Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)))
 
@@ -836,16 +821,15 @@ contains
             Sfc_Level_Idx = Sfc_Level_Rtm_Pixel(Elem_Idx,Line_Idx)
 
             !--- if an sst analysis is available, use that
-            if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
-              (Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
+            if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
+              (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
               (Use_Sst_Anal == sym%YES) .and.  &
               (Sst_Anal(Elem_Idx,Line_Idx) > 270.0 )) then
-              
                  Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Sst_Anal(Elem_Idx,Line_Idx)
             end if 
 
             !-- vertical interp weight
-            Prof_Weight = (Zsfc(Elem_Idx,Line_Idx) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
+            Prof_Weight = (Sfc%Zsfc(Elem_Idx,Line_Idx) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx)) / &
               (Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx+1) - Rtm(Lon_Idx,Lat_Idx)%Z_Prof(Sfc_Level_Idx))
 
             !--- constrain - important when high res topo differs from low res nwp topo
@@ -865,13 +849,10 @@ contains
             !--- compute split-window beta ratio at tropopause
             call COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
 
-            !--- compute split-window beta ratio at tropopause
-            call COMPUTE_SPLIT_WINDOW_BIAS(Elem_Idx,Line_Idx)
-
          end do element_loop
       end do line_loop
 
-         return
+      return
 
    end subroutine GET_PIXEL_NWP_RTM
 
@@ -1191,7 +1172,7 @@ contains
       Gamma_Trans_Factor = 1.0
 
       !--- GOES-10
-      if (Sc_Id_WMO == 254) then
+      if (Sensor%WMO_Id == 254) then
          if (Nwp_Opt == 3) then
             Gamma_Trans_Factor(20) = 1.25
             Gamma_Trans_Factor(27) = 0.79
@@ -1201,7 +1182,7 @@ contains
        endif
        
       !--- GOES-11
-      if (Sc_Id_WMO == 255) then
+      if (Sensor%WMO_Id == 255) then
          if (Nwp_opt == 3) then
             Gamma_Trans_Factor(20) = 1.35
             Gamma_Trans_Factor(27) = 0.74
@@ -1211,7 +1192,7 @@ contains
       endif
       
       !--- GOES-12
-      if (Sc_Id_WMO == 256) then
+      if (Sensor%WMO_Id == 256) then
          if (nwp_opt == 1 .or. nwp_opt == 3) then    !repeat of cfsr
             Gamma_Trans_Factor(20) = 1.45 
             Gamma_Trans_Factor(27) = 0.79 
@@ -1221,7 +1202,7 @@ contains
       end if
       
       !--- GOES-13
-      if (Sc_Id_WMO == 257) then
+      if (Sensor%WMO_Id == 257) then
          if (nwp_opt == 1 .or. nwp_opt == 3) then
             Gamma_Trans_Factor(20) = 1.45
             Gamma_Trans_Factor(27) = 0.83
@@ -1231,7 +1212,7 @@ contains
       end if
 
       !--- GOES-15
-      if (Sc_Id_WMO == 259) then
+      if (Sensor%WMO_Id == 259) then
          Gamma_Trans_Factor(20) = 1.55
          Gamma_Trans_Factor(27) = 0.728
          Gamma_Trans_Factor(31) = 1.05
@@ -1239,7 +1220,7 @@ contains
       end if
     
       !--- MET-09
-      if (Sc_Id_WMO == 56) then
+      if (Sensor%WMO_Id == 56) then
      
          Gamma_Trans_Factor(20) = 1.55
          Gamma_Trans_Factor(27) = 0.96
@@ -1251,7 +1232,7 @@ contains
       endif
       
       !--- MTSAT-02
-      if (Sc_Id_WMO == 172) then
+      if (Sensor%WMO_Id == 172) then
          if (nwp_opt == 1) then
             Gamma_Trans_Factor(20) = 1.25
             Gamma_Trans_Factor(27) = 0.87
@@ -1261,7 +1242,7 @@ contains
       end if
       
       !--- COMS-1
-      if (Sc_Id_WMO == 810) then
+      if (Sensor%WMO_Id == 810) then
          Gamma_Trans_Factor(20) = 1.25
          Gamma_Trans_Factor(27) = 0.936
          Gamma_Trans_Factor(31) = 1.05
@@ -1290,84 +1271,82 @@ contains
       !----------------------------------------------------------------
       select case(WMO_Id)
 
-      !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
       case(3:5) !AVHRR (METOP-A,B,C)
          Pfaast_Name(:) = "tranmavhrr"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
-
-         if (Iff_Avhrr_Flag == sym%YES) then
+         if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(55:57) !MSG
          Pfaast_Name(:) = "tranmetsg101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 5, 6, 7, 8, 9,10,11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          
       case(252:259)    !GOES
          Pfaast_Name(:) = "goestran"
-         if (Goes_Sndr_Flag == sym%NO) then
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         if (trim(Sensor%Sensor_Name) /= 'GOES-IP-IMAGER') then
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,22, 0, 0, 0, 0, 0, 0,23, 0, 0, 0,24,25,26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
          else
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,18,17, 0,16,14,13, 0,12,10, 0, 9, 8, 7, 5, 4, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
       case(171:172) !MTSAT
          Pfaast_Name(:) = "tranmts101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
       case(173:174) !HIMAWARI-8/9
          Pfaast_Name(:) = "ahi_transm"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 9,10,11,12,14,15,16, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 9,10,11,12,14,15,16, 0, 0, 0, 8,13, 0, 0, 0, 0, 0, 0/)
          
       case(200:209,223,706:708) !AVHRR 
          Pfaast_Name(:) = "tranmavhrr"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
-         if (Iff_Avhrr_Flag == sym%YES) then
+         if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
           Pfaast_Name(21:30) = "hirstran_101"
           Pfaast_Name(33:36) = "hirstran_101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx =(/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,19, 0,18,16,15, 0,12,11, 0, 9, 4, 5, 7, 6, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
         case(224) !VIIRS
          Pfaast_Name(:) = "tran_viirsm"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
-         if (Iff_Viirs_Flag == sym%YES) then
+         if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
           Pfaast_Name(27:28) = "tran_modisd101"
           Pfaast_Name(33:36) = "tran_modisd101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+          Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0,27,28, 3, 0, 4, 5,33,34,35,36, 0, 0, 0, 0, 0, 0, 0, 0/)
          endif
 
       case(783:784) !MODIS
          Pfaast_Name(:) = "tran_modisd101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,20,21,22,23,24,25, 0,27,28,29,30,31,32,33,34,35,36, 0, 0, 0, 0, 0, 0, 0, 0/)
           
 
       case(810) !COMS
          Pfaast_Name(:) = "fy2_coms_trn101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/) 
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/) 
 
       case(514:515) !FY2D/E
          Pfaast_Name(:) = "fy2_coms_trn101"
-         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42
-         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
+         !Chan_Idx        1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44
+         Rtm_Chan_Idx = (/0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/)
 
       case default
          print *, "Instrument not supported by PFAAST in CLAVR-x "
@@ -1507,7 +1486,7 @@ contains
 
       Error_Status = 1
 
-      if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
 
       if (Rtm_Chan_Idx(Chan_Idx) <= 0) return
 
@@ -1515,41 +1494,45 @@ contains
 
       select case (trim(Pfaast_Name(Chan_Idx)))
 
-    case("tranmavhrr")
-       call tranmavhrr(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
+      case("tranmavhrr")
+         call tranmavhrr(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
-    case("hirstran_101")
-       call hirstran_101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
+      case("hirstran_101")
+         call hirstran_101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
                      Sc_Name_Rtm,Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-    case("goestran") 
-       call goestran(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+      case("goestran") 
+         call goestran(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
                      Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-    case("tranmts101") 
-       call tranmts101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+      case("tranmts101") 
+         call tranmts101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-    case("tranmetsg101")
-       call tranmetsg101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
+      case("tranmetsg101")
+         call tranmetsg101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_Rtm, &
                          Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200)
 
-    case("tran_modisd101")
-       call tran_modisd101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
+      case("tran_modisd101")
+         call tran_modisd101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Name_Rtm, &
                            Rtm_Chan_Idx(Chan_Idx),0,Trans_Prof_Rtm,Error_Status) 
 
-    case("fy2_coms_trn101")
-       call fy2_coms_trn101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_RTM, &
+      case("fy2_coms_trn101")
+         call fy2_coms_trn101(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Sc_Id_RTM, &
                             Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
-    case("tran_viirsm") 
-       call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
+      case("tran_viirsm") 
+         call tran_viirsm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
-    case("ahi_transm") 
-       call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang,Co2_Ratio, &
-                        Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+      case("ahi_transm") 
+         call ahi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
+                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
+
+      case("abi_transm") 
+         call abi_transm(Ancil_Data_Dir,T_Prof_Rtm,Wvmr_Prof_Rtm,Ozmr_Prof_Rtm,Zen_Ang, &
+                         Rtm_Chan_Idx(Chan_Idx),Trans_Prof_Rtm, *200) 
 
       case default
 
@@ -1601,9 +1584,9 @@ contains
 
       Error_Status = 1
 
-      if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
 
-      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 42) return
+      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
 
       Trans_Prof_Rtm = 1.0
 
@@ -1685,12 +1668,12 @@ contains
       Solar_Rtm%Tau_CO2(20) = 0.00
       Solar_Rtm%Tau_CH4(20) = 0.000
 
-      Solar_Rtm%Tau_H2O_Coef(42,:) = 0.0
-      Solar_Rtm%Tau_Ray(42) = 0.00
-      Solar_Rtm%Tau_O3(42) = 0.00
-      Solar_Rtm%Tau_O2(42) = 0.00
-      Solar_Rtm%Tau_CO2(42) = 0.00
-      Solar_Rtm%Tau_CH4(42) = 0.000
+      Solar_Rtm%Tau_H2O_Coef(44,:) = 0.0
+      Solar_Rtm%Tau_Ray(44) = 0.00
+      Solar_Rtm%Tau_O3(44) = 0.00
+      Solar_Rtm%Tau_O2(44) = 0.00
+      Solar_Rtm%Tau_CO2(44) = 0.00
+      Solar_Rtm%Tau_CH4(44) = 0.000
 
       !---- define channel aerosol properties
       Solar_Rtm%Tau_Aer(1) = 0.12
@@ -1711,9 +1694,9 @@ contains
       Solar_Rtm%Tau_Aer(20) = 0.00
       Solar_Rtm%Wo_Aer(20) = 0.8
       Solar_Rtm%G_Aer(20) = 0.6
-      Solar_Rtm%Tau_Aer(42) = 0.00
-      Solar_Rtm%Wo_Aer(42) = 0.8
-      Solar_Rtm%G_Aer(42) = 0.6
+      Solar_Rtm%Tau_Aer(44) = 0.00
+      Solar_Rtm%Wo_Aer(44) = 0.8
+      Solar_Rtm%G_Aer(44) = 0.6
 
 
       select case(WMO_Id)
@@ -2078,7 +2061,7 @@ contains
         Solar_Rtm%Tau_H2O_Coef(6,:)  = (/ -0.00000041, 0.00102500, 0.00000419/)
         Solar_Rtm%Tau_H2O_Coef(7,:)  = (/ -0.00010325, 0.00118721,-0.00003250/)
         Solar_Rtm%Tau_H2O_Coef(20,:) = (/  0.01060415, 0.06901925,-0.00374645/)
-        Solar_Rtm%Tau_H2O_Coef(42,:) = (/  0.00204467, 0.01079139,-0.00055673/)
+        Solar_Rtm%Tau_H2O_Coef(44,:) = (/  0.00204467, 0.01079139,-0.00055673/)
         Solar_Rtm%Tau_Ray(1) = 0.04338
         Solar_Rtm%Tau_O3(1) =  0.01210
         Solar_Rtm%Tau_O2(1) =  0.00154
@@ -2109,11 +2092,11 @@ contains
         Solar_Rtm%Tau_O2(20) =  0.00000
         Solar_Rtm%Tau_CO2(20) = 0.00056
         Solar_Rtm%Tau_CH4(20) = 0.02148
-        Solar_Rtm%Tau_Ray(42) = 0.04478
-        Solar_Rtm%Tau_O3(42) =  0.01100
-        Solar_Rtm%Tau_O2(42) =  0.02543
-        Solar_Rtm%Tau_CO2(42) = 0.00000
-        Solar_Rtm%Tau_CH4(42) = 0.00000
+        Solar_Rtm%Tau_Ray(44) = 0.04478
+        Solar_Rtm%Tau_O3(44) =  0.01100
+        Solar_Rtm%Tau_O2(44) =  0.02543
+        Solar_Rtm%Tau_CO2(44) = 0.00000
+        Solar_Rtm%Tau_CH4(44) = 0.00000
 
 
       case(252)    !GOES-8
@@ -2461,15 +2444,15 @@ contains
       real:: Rad_Ch20_Temp
 
       !--------------------------------------------------------------
-      ! Solar-Only channels, 1,2,6,7,DNB(42)
+      ! Solar-Only channels, 1,2,6,7,DNB(44)
       !--------------------------------------------------------------
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-         if (Chan_Idx > 21 .and. Chan_Idx /= 26 .and. Chan_Idx /= 42) cycle
+         if (Chan_Idx > 21 .and. Chan_Idx /= 26 .and. Chan_Idx /= 44) cycle
          
          select case (Chan_Idx)
          
-         case (1,2,5,6,7,42)
-            if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+         case (1,2,5,6,7,44)
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                if (allocated(  Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile )) then
                   ch(Chan_Idx)%Trans_Atm_Total(Elem_Idx,Line_Idx) = Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx) +  &
                      (Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx+1) -  &
@@ -2488,8 +2471,8 @@ contains
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx < 20) cycle    
          if (Chan_Idx == 26) cycle    
-         if (Chan_Idx > 36) cycle    
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (Chan_Idx > 38) cycle    
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
          
          call COMPUTE_CHANNEL_ATM_SFC_RAD_BT( &
                 Chan_Idx, &
@@ -2522,7 +2505,7 @@ contains
       !--- downwelling (only channel 31) 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx /= 31) cycle    
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
          call COMPUTE_CHANNEL_ATM_DWN_SFC_RAD( &
                 Sfc_Level_Idx, &
@@ -2535,7 +2518,7 @@ contains
       !-- Ch20 Solar
       !--------------------------------------------------------------
       
-      if (Chan_On_Flag_Default(20) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 
          !--- add in solar component - does not account for glint
          Trans_Atm_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) =  &
@@ -2553,13 +2536,13 @@ contains
          Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
          Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
-         if (Cossolzen(Elem_Idx,Line_Idx) >= 0.0) then
+         if (Geo%Cossolzen(Elem_Idx,Line_Idx) >= 0.0) then
 
             Sfc_Ref = 1.0 - ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx)
 
             Rad_Ch20_Temp = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx) +  &
                    Trans_Atm_Ch20_Solar_Total_Rtm(Elem_Idx,Line_Idx) *  &
-                   Sfc_Ref * (Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi)
+                   Sfc_Ref * (Geo%Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi)
 
             Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = Rad_Ch20_Temp
             Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,Rad_Ch20_Temp)
@@ -2578,7 +2561,7 @@ contains
       real:: Rad_Ch20_Temp
       real:: Ch20_Sfc_Rad
 
-      if ((Chan_On_Flag_Default(20) == sym%YES) .and. (Chan_On_Flag_Default(31)==sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(20) == sym%YES) .and. (Sensor%Chan_On_Flag_Default(31)==sym%YES)) then
 
          Ch20_Sfc_Rad = ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx) * PLANCK_RAD_FAST(20,Tsfc_Nwp_Pix(Elem_Idx,Line_Idx))
 
@@ -2590,7 +2573,7 @@ contains
          Ems_Ch20_Clear_Solar_Sfc_Rtm(Elem_Idx,Line_Idx) = Ch20_Sfc_Rad +  &
                      Trans_Atm_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) * &
                      (1.0 - ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx))* &
-                     Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi
+                     Geo%Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi
       end if
 
    end subroutine COMPUTE_CH20_EMISSIVITY
@@ -2609,8 +2592,8 @@ contains
       integer:: dim1
       integer:: dim2
 
-      dim1 = Num_Pix
-      dim2 = Num_Scans_Per_Segment
+      dim1 = Image%Number_Of_Elements
+      dim2 = Image%Number_Of_Lines_Per_Segment
 
       Lev_Bnd = Rtm(Lon_Idx,Lat_Idx)%Tropo_Level  
 
@@ -2625,8 +2608,9 @@ contains
          select case (Chan_Idx)
          
          case(27,29,31,32,33) 
-            if (Chan_On_Flag_Default(Chan_Idx)==sym%YES) then
-               if (.not. allocated(ch(Chan_Idx)%Emiss_Tropo)) allocate(ch(Chan_Idx)%Emiss_Tropo(dim1,dim2))
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx)==sym%YES) then
+
+!              if (.not. allocated(ch(Chan_Idx)%Emiss_Tropo)) allocate(ch(Chan_Idx)%Emiss_Tropo(dim1,dim2))
                
                ch(Chan_Idx)%Emiss_Tropo(Elem_Idx,Line_Idx) =  &
                         EMISSIVITY(ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx),  &
@@ -2649,8 +2633,8 @@ contains
       integer, intent(in):: Zen_Idx
 
       !--- compute 11 and 12 beta ratio at tropopause
-      if (Chan_On_Flag_Default(31) == sym%YES .and. &
-         Chan_On_Flag_Default(32) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
          Beta_11um_12um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(32)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2658,8 +2642,8 @@ contains
       end if
       
       !--- compute 11 and 8.5 beta ratio at tropopause
-      if (Chan_On_Flag_Default(31) == sym%YES .and. &
-          Chan_On_Flag_Default(29) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(29) == sym%YES) then
 
          Beta_11um_85um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(29)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2667,8 +2651,8 @@ contains
       endif
   
       !--- compute 11 and 6.7 beta ratio at tropopause
-      if (Chan_On_Flag_Default(31) == sym%YES .and. &
-         Chan_On_Flag_Default(27) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(27) == sym%YES) then
 
          Beta_11um_67um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(27)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2676,8 +2660,8 @@ contains
       end if
       
       !--- compute 11 and 13.3 beta ratio at tropopause
-      if (Chan_On_Flag_Default(31) == sym%YES .and. &
-         Chan_On_Flag_Default(33) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(33) == sym%YES) then
 
          Beta_11um_133um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(33)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2686,54 +2670,6 @@ contains
 
    end subroutine COMPUTE_BETA_RATIOES
    
-   !----------------------------------------------------------------------
-   ! perform a bias correction here - only for bt's
-   ! yd - daytime value, yn = nightime value
-   !----------------------------------------------------------------------
-   subroutine COMPUTE_SPLIT_WINDOW_BIAS(Elem_Idx,Line_Idx)
-      integer, intent(in):: Elem_Idx
-      integer, intent(in):: Line_Idx
-      real:: yd
-      real:: yn
-      real:: Bt_Clear_Ch31_Bias
-      real:: Bt_Clear_Ch32_Bias
-
-      !--- Ch31
-      if (Chan_On_Flag_Default(31)==sym%YES) then
-         if (Sfc_Type(Elem_Idx,Line_Idx) /= sym%WATER_SFC) then
-            yd = 9.0
-            yn = -2.0
-            Bt_Clear_Ch31_Bias = 0.5*(yd-yn)*sin(2.0*pi*(Pixel_Local_Time_Hours(Elem_Idx,Line_Idx)-8.0)/24.0) + (yd-yn)/2.0 + yn
-         else
-            yd = 0.4
-            yn = 0.2
-            Bt_Clear_Ch31_Bias = 0.5*(yd-yn)*sin(2.0*pi*(Pixel_Local_Time_Hours(Elem_Idx,Line_Idx)-8.0)/24.0) + (yd-yn)/2.0 + yn
-         end if
-         Bt_Clear_Ch31_Rtm_unbiased(Elem_Idx,Line_Idx) = ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) + Bt_Clear_Ch31_Bias
-          Rad_Clear_Ch31_Rtm_unbiased(Elem_Idx,Line_Idx) = PLANCK_RAD_FAST(31,Bt_Clear_Ch31_Rtm_unbiased(Elem_Idx,Line_Idx))
-      end if
-
-      !--- Ch32
-      if (Chan_On_Flag_Default(32)==sym%YES) then
-         if (Sfc_Type(Elem_Idx,Line_Idx) /= sym%WATER_SFC) then
-           yd = 0.82
-           yn = -0.51
-
-           !-- line below is actually bias of T4 - T5
-           Bt_Clear_Ch32_Bias = 0.5*(yd-yn)*sin(2.0*pi*(Pixel_Local_Time_Hours(Elem_Idx,Line_Idx)-8.0)/24.0) + (yd-yn)/2.0 + yn
-
-         else
-           Bt_Clear_Ch32_Bias = -0.4
-        end if
-
-         !-- convert to a T5 bias
-         Bt_Clear_Ch32_Bias = Bt_Clear_Ch31_Bias - Bt_Clear_Ch32_Bias
-         Bt_Clear_Ch32_Rtm_unbiased(Elem_Idx,Line_Idx) = ch(32)%Bt_Toa_Clear(Elem_Idx,Line_Idx) + Bt_Clear_Ch32_Bias
-         Rad_Clear_Ch32_Rtm_unbiased(Elem_Idx,Line_Idx) = PLANCK_RAD_FAST(32,Bt_Clear_Ch32_Rtm_unbiased(Elem_Idx,Line_Idx))
-
-      end if
-   end subroutine COMPUTE_SPLIT_WINDOW_BIAS
-
    !====================================================================
    ! FUNCTION Name: BETA_RATIO
    !
@@ -2831,7 +2767,7 @@ contains
       integer:: Chan_Idx    
 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile = Trans_Atm_Total_Prof(:,Chan_Idx)
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Solar_Profile = Trans_Atm_Solar_Prof(:,Chan_Idx)
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile = Trans_Atm_Prof(:,Chan_Idx)
@@ -2840,7 +2776,7 @@ contains
       end do
 
       Chan_Idx = 31
-      if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile = Rad_Atm_Dwn_Prof(:,Chan_Idx)
       end if
 
@@ -2858,7 +2794,7 @@ contains
       integer:: Chan_Idx
 
       do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
-         if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile(NLevels_Rtm),stat=Alloc_Status)
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Solar_Profile(NLevels_Rtm),stat=Alloc_Status)
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(NLevels_Rtm),stat=Alloc_Status)
@@ -2868,7 +2804,7 @@ contains
       enddo
 
       Chan_Idx = 31
-      if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
          allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile(NLevels_Rtm),stat=Alloc_Status)
       endif
    end subroutine ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT

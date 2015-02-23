@@ -82,7 +82,7 @@ c--------------------------------------------------------------------------
       dimension tauc(nl),tlas(nl),wlas(nl),olas(nl)
       dimension xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
       character*12 cfile/'avhrncom.dat'/
-      character*72 ancil_data_path,pfast_path
+      character*72 ancil_data_path,pfaast_path
       character*6 craft
       character*6 clast/'999999'/
       character*3 comp(nk)/'dry','ozo','wco','wtl','wts'/
@@ -94,14 +94,13 @@ c--------------------------------------------------------------------------
       secant(z)=1./cos(0.01745329*z)
 
       !--- this path is specific to CLAVR-x
-      pfast_path = trim(ancil_data_path)//"pfast/"
-
+      pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
        if(craft.ne.clast) then     !begin check clast if test
           do l=1,nk
              cfile(6:8)=comp(l)
              iuc(l)=GET_LUN()
-             open(iuc(l),file=trim(pfast_path)//cfile,
+             open(iuc(l),file=trim(pfaast_path)//cfile,
      +            recl=lencf(l),access='direct',
      +             status='old',err=200)
           enddo

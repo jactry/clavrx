@@ -52,19 +52,14 @@ module dcomp_clavrx_bridge_mod
         mesg
    
     use pixel_common, only: &
-   
          ch &
-       , satzen &
-       , relaz  &
-       , solzen &
-       , snow &
+       , geo &
+       , sfc &
+       , sensor &
+       , image &
+       , acha &
        , cld_type &
        , cld_mask &
-       , land_mask &
-!      , zc_acha  &
-       , pc_acha  &
-       , tc_acha &
-       , tau_acha &
        , bad_pixel_mask &
        , lwp_dcomp, reff_dcomp, tau_dcomp, iwp_dcomp &
        , tau_dcomp_qf, reff_dcomp_qf &
@@ -77,12 +72,8 @@ module dcomp_clavrx_bridge_mod
        , ancil_data_dir &
        , ch &
        , dcomp_mode &
-       , zen_idx_rtm , solar_rtm &
-       , sc_id_wmo &
-       , chan_on_flag  &
-       , num_scans_read &
-       , num_pix &
-       , chan_on_flag_default
+       , zen_idx_rtm &
+       , solar_rtm
    
    use pixel_common, only: &
         dcomp_diag_1 , dcomp_diag_2 , dcomp_diag_3 , dcomp_diag_4 &
@@ -149,27 +140,27 @@ contains
       dcomp_run = .false.
       
       ! - do we need to run dcomp at all? ( night  etc..)
-      if ( count ( solzen < 75. .and. solzen >= 0 .and. satzen < 75. ) < 1 ) return
+      if ( count ( geo % solzen < 75. .and. geo % solzen >= 0 .and. geo % satzen < 75. ) < 1 ) return
       dcomp_run = .true.
       
       
       if ( iseg_in == 1 ) then
-        call mesg ('dcomp start ' ) 
+        call mesg ('DCOMP starts ',color = 46 ) 
       end if
       
       
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( dcomp_rtm ) 
             
-      dim_1 = num_pix
-      dim_2 = num_scans_read
+      dim_1 = Image%Number_Of_Elements
+      dim_2 = Image%Number_Of_Lines_Read_This_Segment
   
       ! - which channels do we need? possibles are 
       dcomp_input % is_channel_on = .false.
       
       dcomp_possible_channels = [ 1, 5, 6, 7, 20 ]
       do i = 1 , size ( dcomp_possible_channels )   
-         if ( Chan_On_Flag_Default ( dcomp_possible_channels ( i) ) == 1 ) then
+         if ( sensor % chan_on_flag_default ( dcomp_possible_channels ( i) ) == 1 ) then
             dcomp_input % is_channel_on (dcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
@@ -242,9 +233,9 @@ contains
          ! - dcomp-mode
       dcomp_input % mode = dcomp_mode
          ! - ancil/lut path
-      dcomp_input % lut_path = trim(ancil_data_dir)//"/luts/cld/"   
+      dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
          ! - wmo sensor id
-      dcomp_input % sensor_wmo_id = sc_id_wmo
+      dcomp_input % sensor_wmo_id = sensor % wmo_id
       dcomp_input % sun_earth_dist = sun_earth_distance
             
          ! -  Satellite Data
@@ -255,19 +246,19 @@ contains
       if ( dcomp_input % is_channel_on (7))  dcomp_input % refl ( 7 ) % d = ch(7)%ref_toa
       if ( dcomp_input % is_channel_on (20)) dcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
       
-      dcomp_input % sat % d = satzen
-      dcomp_input % sol % d = solzen
-      dcomp_input % azi % d = relaz
+      dcomp_input % sat % d = geo % satzen
+      dcomp_input % sol % d = geo % solzen
+      dcomp_input % azi % d = geo % relaz
               
          ! - Cloud products
-      dcomp_input % cloud_press % d = pc_acha
-      dcomp_input % cloud_temp % d  = tc_acha
-      dcomp_input % tau_acha % d    = tau_acha
+      dcomp_input % cloud_press % d = acha % pc
+      dcomp_input % cloud_temp % d  = acha % tc
+      dcomp_input % tau_acha % d    = acha % tau
       dcomp_input % cloud_mask % d  = cld_mask
       dcomp_input % cloud_type % d  = cld_type
                   
          ! - Flags
-      dcomp_input % is_land % d = land_mask == 1 
+      dcomp_input % is_land % d = sfc % land_mask == 1 
       dcomp_input % is_valid % d = bad_pixel_mask /= 1
       
             
@@ -278,7 +269,7 @@ contains
       if ( dcomp_input % is_channel_on (20)) dcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)    
       if ( dcomp_input % is_channel_on (20)) dcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
       dcomp_input % press_sfc % d =  dcomp_rtm % sfc_nwp
-      dcomp_input % snow_class % d = snow
+      dcomp_input % snow_class % d = sfc % snow
             
          ! - Atmospheric contents
          ! ozone column in Dobson

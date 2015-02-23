@@ -42,7 +42,7 @@ end type verbose_type
 type (verbose_type ) , save :: verb_lev 
 
 
-character(len = *) , parameter :: PROMPT = 'CLAVR-x>>'
+character(len = *) , parameter :: PROMPT = 'CLAVR-x >'
 integer :: VERBOSE_LEVEL = 5  ! from quiet (0) to verbose(10)
 
 public :: mesg
@@ -50,6 +50,7 @@ public :: mesg
 interface mesg
    module procedure mesg_pure
    module procedure mesg_1r
+   module procedure mesg_1d
 end interface mesg
 
 
@@ -66,14 +67,18 @@ contains
       verbose_level = verb_lev % DEFAULT
       if ( file_test ( 'verbose_level.txt') ) then
          open ( 37, file = 'verbose_level.txt' )
-         read (37,'(i1)'),verbose_level
+         read (37,'(i1)') verbose_level
          close (37)
       end if
       
    
       
       if ( message_level <= verbose_level ) then
-         print*,PROMPT//achar(27)//'['//color_string//'m '//text//achar(27)//'[0m'      
+         
+         print*,PROMPT,' ', text 
+        
+         ! switch off color because of deifferent bahvor for different shells. (AW 2015/02/05)   
+        ! print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it
@@ -122,6 +127,30 @@ contains
     
  
    end subroutine mesg_1r
+
+   subroutine mesg_1d ( text,  param_d, level , color , stop_evt )
+      character (len = *) , intent(in) :: text
+      real(8), intent(in) :: param_d
+      integer, optional, intent(in) :: level
+      integer, optional, intent(in) :: color
+      logical, optional, intent(in) :: stop_evt
+      character( len = 2) :: color_string
+      integer :: lev
+      character ( len =100 ) :: string_100
+      character ( len =200) :: text_1
+
+
+      write ( string_100, '(f25.4)') param_d
+
+      lev = verb_lev % DEFAULT
+      if ( present (level)) lev = level
+      text_1 = text//trim(string_100)
+      color_string=''
+      if (present(color)) write(color_string,'(I2)') color
+
+      call do_it ( trim(text_1), color_string, lev )
+
+   end subroutine mesg_1d
 
 
 end module clavrx_message_module

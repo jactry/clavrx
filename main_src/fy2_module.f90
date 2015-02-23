@@ -42,22 +42,21 @@ use VIEWING_GEOMETRY_MODULE
  implicit none
  public :: FY_navigation, READ_FY
  public:: READ_FY_INSTR_CONSTANTS
- public:: ASSIGN_FY_SAT_ID_NUM_INTERNAL
  private :: FY_RADIANCE_BT,FY_Reflectance, MGIVSR
 
 
  TYPE (GVAR_NAV), PRIVATE    :: NAVstr_FY_NAV
  integer, PARAMETER, PRIVATE :: nchan_FY= 5
- INTEGER, PARAMETER, PRIVATE :: ndet_FY = 4
- INTEGER, PARAMETER, PRIVATE :: ntable_FY = 1024
+ integer, PARAMETER, PRIVATE :: ndet_FY = 4
+ integer, PARAMETER, PRIVATE :: ntable_FY = 1024
 
- INTEGER, PRIVATE :: nref_table_FY
- INTEGER, PRIVATE :: nbt_table_FY
+ integer, PRIVATE :: nref_table_FY
+ integer, PRIVATE :: nbt_table_FY
  CHARACTER(len=4), PRIVATE:: calib_type
 
- INTEGER (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: ref_table
- INTEGER (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: bt_table
- INTEGER (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: rad_table
+ integer (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: ref_table
+ integer (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: bt_table
+ integer (kind=int4), dimension(nchan_FY,ndet_FY,ntable_FY), PRIVATE  :: rad_table
 
  integer(kind=int4), private, parameter:: FY_Xstride = 1
  integer(kind=int4), private, parameter:: num_4km_scans_fd = 3712
@@ -70,16 +69,16 @@ use VIEWING_GEOMETRY_MODULE
 !----------------------------------------------------------------
 ! read the FY2 constants into memory
 !-----------------------------------------------------------------
-subroutine READ_FY_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
+subroutine READ_FY_INSTR_CONSTANTS(Instr_Const_File)
+ character(len=*), intent(in):: Instr_Const_File
  integer:: ios0, erstat
  integer:: Instr_Const_lun
 
  Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
 
- print *, "opening ", trim(Instr_Const_file)
+ print *, "opening ", trim(Instr_Const_File)
  erstat = 0
  if (ios0 /= 0) then
     erstat = 19
@@ -103,36 +102,10 @@ subroutine READ_FY_INSTR_CONSTANTS(Instr_Const_file)
   Ch1_Dark_Count = 29
 
 end subroutine READ_FY_INSTR_CONSTANTS
-
-!--------------------------------------------------------------------
-! assign internal sat id's and const file names for FY
-!--------------------------------------------------------------------
-subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL(Mcidas_Id_Num)
-    integer(kind=int4), intent(in):: Mcidas_Id_Num
-
-    if (Mcidas_Id_Num == 36)   then
-        Sc_Id_WMO = 514
-        Instr_Const_file = 'fy2d_instr.dat'
-        Algo_Const_file = 'fy2d_algo.dat'
-        Platform_Name_Attribute = 'FY-2D'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-    if (Mcidas_Id_Num == 37)   then
-        Sc_Id_WMO = 515
-        Instr_Const_file = 'fy2e_instr.dat'
-        Algo_Const_file = 'fy2e_algo.dat'
-        Goes_Mop_Flag = sym%NO
-        Platform_Name_Attribute = 'FY-2E'
-        Sensor_Name_Attribute = 'IMAGER'
-    endif
-
-   Instr_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Instr_Const_file)
-   Algo_Const_file = trim(ancil_data_dir)//"avhrr_data/"//trim(Algo_Const_file)
-
-end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
-
- ! Perform fy Reflectance and BT calibration
-    SUBROUTINE READ_FY(segment_number,channel_1_filename, &
+!============================================================================
+! Perform fy Reflectance and BT calibration
+!============================================================================
+    subroutine READ_FY(segment_number,channel_1_filename, &
                      jday, image_time_ms, Time_Since_Launch, &
                      AREAstr,NAVstr_FY)
 
@@ -167,14 +140,14 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
    ipos = index(channel_1_filename, "_1_")
    ilen = len(channel_1_filename)
     
-   first_line_in_segment = (segment_number-1)*num_scans_per_segment
+   first_line_in_segment = (segment_number-1)*Image%Number_Of_Lines_Per_Segment
 
    !---------------------------------------------------------------------------
    ! FY Navigation (Do Navigation first)
    !---------------------------------------------------------------------------
    
    call FY_navigation(1,first_line_in_segment,&
-                              num_pix,Num_Scans_Per_Segment,1,&
+                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                               AREAstr,NAVstr_FY)
 
    if (segment_number == 1) then
@@ -200,7 +173,7 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        write(ichan_goes_string,fmt="(I1.1)") ichan_goes
        if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
 
-       if (Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
 
           channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -208,10 +181,10 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
           if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
           else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
           endif
 
-          channel_x_filename_full_uncompressed = trim(Dir_1b)//trim(channel_x_filename)
+          channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
                     
           if (l1b_gzip == sym%YES) then
               System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
@@ -239,52 +212,43 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
     
     ! On first segment, reflectance, BT and rad tables from McIDAS Header
     fy_file_id = get_lun()   
-    IF (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) THEN
-        CALL mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), fy_file_id)
-    ELSE
-      CALL mread_open(trim(Dir_1b)//trim(channel_1_filename)//CHAR(0), fy_file_id)
-    ENDIF  
+    if(l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) THEN
+      call MREAD_OPEN(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), fy_file_id)
+    else 
+      call MREAD_OPEN(trim(Image%Level1b_Path)//trim(channel_1_filename)//CHAR(0), fy_file_id)
+    endif  
 
-    CALL load_fy_calibration(fy_file_id, AREAstr)
-    CALL mread_close(fy_file_id)
-
+    call LOAD_FY_CALIBRATION(fy_file_id, AREAstr)
+    call MREAD_CLOSE(fy_file_id)
 
    endif
   
         
-    IF(Chan_On_Flag_Default(1) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(1) == sym%YES) THEN
 
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_1_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_1_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_1_filename)
        endif
 
         call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     FY2_Byte_Shift, &
                                     AREAstr, FY_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
      
        
-!       call GET_MTSAT_IMAGE(trim(channel_x_filename_full), &
-!                                    AREAstr, &
-!                                    segment_number, &
-!                                    num_scans_per_segment, &
-!                                    Num_Scans_Read,   &
-!                                    Two_Byte_Temp)
-
-           
-       CALL FY_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
+       call FY_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
        
     
-    ENDIF
+    endif
     
         
-    IF(Chan_On_Flag_Default(20) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(20) == sym%YES) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_5_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -292,7 +256,7 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
        
@@ -300,8 +264,8 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
                                     FY2_Byte_Shift, &
                                     AREAstr, FY_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
      
@@ -310,11 +274,11 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        
       call FY_RADIANCE_BT(5_int1, Two_Byte_Temp, ch(20)%Rad_Toa, ch(20)%Bt_Toa)
         
-    ENDIF
+    endif
 
 
 
-    IF (Chan_On_Flag_Default(27) == sym%YES) THEN
+    if (Sensor%Chan_On_Flag_Default(27) == sym%YES) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_4_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -322,24 +286,24 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
         call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     FY2_Byte_Shift, &
                                     AREAstr, FY_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
      
        
       call FY_RADIANCE_BT(4_int1, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
            
-    ENDIF    
+    ENDif    
     
-    IF(Chan_On_Flag_Default(31) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(31) == sym%YES) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_2_" // &
                             channel_1_filename(ipos+3:ilen)
@@ -347,26 +311,26 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
         call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     FY2_Byte_Shift, &
                                     AREAstr, FY_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
      
        
          call FY_RADIANCE_BT(2_int1, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
          
-    ENDIF
+    endif
     
 
 
-    IF(Chan_On_Flag_Default(32) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(32) == sym%YES) THEN
            
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_3_" // &
@@ -375,28 +339,28 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
-               channel_x_filename_full = trim(Dir_1b)//trim(channel_x_filename)
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
        endif
 
         call GET_IMAGE_FROM_AREAFILE(trim(Channel_X_Filename_Full), &
                                     FY2_Byte_Shift, &
                                     AREAstr, FY_Xstride, &
                                     Segment_Number, &
-                                    Num_Scans_Per_Segment, &
-                                    Num_Scans_Read,   &
+                                    Image%Number_Of_Lines_Per_Segment, &
+                                    Image%Number_Of_Lines_Read_This_Segment,   &
                                     Two_Byte_Temp, &
                                     Goes_Scan_Line_Flag)
      
          call FY_RADIANCE_BT(3_int1, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
     
-    ENDIF
+    endif
 
 
 
 !to here
 
     
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_Number(Line_Idx) = first_line_in_segment + Line_Idx
      Scan_Time(Line_Idx) = image_time_ms + (Scan_Number(Line_Idx)-1) * Scan_rate
    enddo
@@ -409,162 +373,152 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
    image_jday = jday
    image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
    
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     do Elem_Idx = 1,num_pix
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_time_hours, &
-                    Lon_1b(Elem_Idx,Line_Idx),Lat_1b(Elem_Idx,Line_Idx), &
-                    Solzen(Elem_Idx,Line_Idx),Solaz(Elem_Idx,Line_Idx))
+                    Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
+                    Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
      enddo
-      call COMPUTE_SATELLITE_ANGLES(goes_sub_satellite_longitude,  &
-                      goes_sub_satellite_latitude, Line_Idx)
+      call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
+                                    Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
       
-
-
    !--- ascending node
-   Elem_Idx = num_pix/2
-   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Num_Scans_Read - 1
-     ascend(Line_Idx) = 0
-     if (lat_1b(Elem_Idx,Line_Idx) < lat_1b(Elem_Idx,Line_Idx-1)) then
-       ascend(Line_Idx) = 1
+   Elem_Idx = Image%Number_Of_Elements/2
+   do Line_Idx = Line_Idx_Min_Segment+1, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Nav%Ascend(Line_Idx) = 0
+     if (Nav%Lat_1b(Elem_Idx,Line_Idx) < Nav%Lat_1b(Elem_Idx,Line_Idx-1)) then
+       Nav%Ascend(Line_Idx) = 1
      endif
    enddo
-   ascend(Line_Idx_Min_Segment) = ascend(Line_Idx_Min_Segment+1)
-
-
-
-
+   Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
     
- END SUBROUTINE READ_FY
+ end subroutine READ_FY
 
 
  ! Perform fy Reflectance calculation
+ subroutine FY_Reflectance(FY_Counts, Alb_Temp)
 
- SUBROUTINE FY_Reflectance(FY_Counts, Alb_Temp)
+    integer (kind=INT2), dimension(:,:), intent(in):: FY_Counts
+    real (kind=real4), dimension(:,:), intent(out):: Alb_Temp
 
-    INTEGER (kind=INT2), dimension(:,:), intent(in):: FY_Counts
-    REAL (KIND=real4), dimension(:,:), intent(out):: Alb_Temp
+    integer :: i, j
+    integer :: index
 
-    INTEGER :: i, j
-    INTEGER :: index
-
-    DO j=1, Num_Scans_Read
-      DO i=1, num_pix
-        IF (space_mask(i,j) == sym%NO_SPACE .and. solzen(i,j) < 90.0) THEN
+    DO j=1, Image%Number_Of_Lines_Read_This_Segment
+      DO i=1, Image%Number_Of_Elements
+        if (space_mask(i,j) == sym%NO_SPACE .and. Geo%solzen(i,j) < 90.0) THEN
          
             !Not sure if I need to add 1 here
-            index = int(FY_Counts(i,j),KIND=int2)
+            index = int(FY_Counts(i,j),kind=int2)
 
             alb_temp(i,j) = Missing_Value_Real4
 
             IF((index .GT. 0) .AND. (index .LE. 1024)) THEN
                         
                 Alb_Temp(i,j) = &
-                    (REAL(ref_table(2,1,index),KIND=real4) / &
+                    (real(ref_table(2,1,index),kind=real4) / &
                      100.)
-            ENDIF                        
+            ENDif                        
  
         ELSE
             Alb_Temp(i,j) = Missing_Value_Real4
-        ENDIF      
+        ENDif      
       END DO
     END DO
 
- END SUBROUTINE FY_Reflectance
+ end subroutine FY_Reflectance
 
  ! Perform FY-2 Navigation
 
- SUBROUTINE FY_navigation(xstart,ystart,xsize,ysize,xstride, &
+ subroutine FY_navigation(xstart,ystart,xsize,ysize,xstride, &
                             AREAstr,NAVstr_FY)
-    INTEGER(KIND=int4) :: xstart, ystart
-    INTEGER(KIND=int4) :: xsize, ysize
-    INTEGER(KIND=int4) :: xstride  
-	type (AREA_STRUCT) :: AREAstr
-    TYPE (GVAR_NAV), intent(in)    :: NAVstr_FY
+    integer(kind=int4) :: xstart, ystart
+    integer(kind=int4) :: xsize, ysize
+    integer(kind=int4) :: xstride  
+    type (AREA_STRUCT) :: AREAstr
+    type (GVAR_NAV), intent(in)    :: NAVstr_FY
     
-    INTEGER :: i, j, ii, jj, ierr, imode
-    REAL(KIND=REAL4) :: elem, line, height
-    REAL(KIND=REAL4) :: dlon, dlat
-    REAL(KIND=REAL8) :: mjd
-    REAL(KIND=REAL4), dimension(8) :: angles
+    integer :: i, j, ii, jj, ierr, imode
+    real(kind=real4) :: elem, line, height
+    real(kind=real4) :: dlon, dlat
+    real(kind=real8) :: mjd
+    real(kind=real4), dimension(8) :: angles
 
     NAVstr_FY_NAV = NAVstr_FY
     
     imode = -1
-    height = 0.0	!Used for parallax correction
+    height = 0.0     !Used for parallax correction
     
-    lat = Missing_Value_Real4
-    lon = Missing_Value_Real4
+    Nav%Lat = Missing_Value_Real4
+    Nav%Lon = Missing_Value_Real4
     
                
-    IF (NAVstr_FY%nav_type == 'GMSX') THEN
+    if (NAVstr_FY%nav_type == 'GMSX') THEN
     
         jj = 1 + (ystart)*AREAstr%line_res
             
         DO j=1, ysize
-            line = REAL(AREAstr%north_bound) + REAL(jj - 1) + &
-                    REAL(AREAstr%line_res)/2.0
+            line = real(AREAstr%north_bound) + real(jj - 1) + &
+                    real(AREAstr%line_res)/2.0
                
             DO i=1, xsize
                 ii = ((i+(xstart-1)) - 1)*(AREAstr%elem_res*(xstride)) + 1
         
-                elem = REAL(AREAstr%west_vis_pixel) + REAL(ii - 1) + &
-	                   REAL(AREAstr%elem_res*(xstride))/2.0
+                elem = real(AREAstr%west_vis_pixel) + real(ii - 1) + &
+	                   real(AREAstr%elem_res*(xstride))/2.0
                    
-                CALL MGIVSR(imode,elem,line,dlon,dlat,height,&
+                call MGIVSR(imode,elem,line,dlon,dlat,height,&
                             angles,mjd,ierr)
                 
                 Space_Mask(i,j) = sym%SPACE
             
-                IF (ierr == 0) THEN
+                if (ierr == 0) THEN
                      Space_Mask(i,j) = sym%NO_SPACE
-                     Lat_1b(i,j) = dlat
-                     Lon_1b(i,j) = dlon
-                ENDIF
+                     Nav%Lat_1b(i,j) = dlat
+                     Nav%Lon_1b(i,j) = dlon
+                endif
                 
-            END DO
+            enddo
             
             jj = jj + AREAstr%line_res
-        END DO
+        enddo
         
-    ENDIF
+    endif
     
       
- END SUBROUTINE FY_navigation
- 
- 
-
+ end subroutine FY_NAVIGATION
 
 !------------------------------------------------------------------
-! SUBROUTINE to convert fy counts to radiance and brightness
+! subroutine to convert fy counts to radiance and brightness
 ! temperature
 !------------------------------------------------------------------
-  SUBROUTINE FY_RADIANCE_BT(Chan_Num,FY_Counts, rad2, temp1)
+  subroutine FY_RADIANCE_BT(Chan_Num,FY_Counts, rad2, temp1)
 
-    INTEGER (kind=INT2), dimension(:,:), intent(in):: FY_Counts
-    INTEGER (kind=int1), INTENT(in) :: chan_num
-    REAL (kind=real4), DIMENSION(:,:), INTENT(out):: temp1, rad2
+    integer (kind=INT2), dimension(:,:), intent(in):: FY_Counts
+    integer (kind=int1), intent(in) :: chan_num
+    real (kind=real4), DIMENSION(:,:), intent(out):: temp1, rad2
     
-    INTEGER :: i, j, index
+    integer :: i, j, index
 
-    DO j = 1, Num_Scans_Read
-      DO i = 1, num_pix
-        index = int(FY_Counts(i,j),KIND=int2) + 1
+    DO j = 1, Image%Number_Of_Lines_Read_This_Segment
+      DO i = 1, Image%Number_Of_Elements
+        index = int(FY_Counts(i,j),kind=int2) + 1
         
-        IF (space_mask(i,j) == sym%NO_SPACE  .AND. &
-           (index .LE. 1024) .AND. (index .GE. 1)) THEN 
+        if (space_mask(i,j) == sym%NO_SPACE  .AND. &
+           (index <= 1024) .AND. (index >= 1)) THEN 
            
-         rad2(i,j) = REAL(rad_table(chan_num,1,index),KIND=REAL4)/1000.0
-         temp1(i,j) = REAL(bt_table(chan_num,1,index),KIND=REAL4)/100.0
+         rad2(i,j) = real(rad_table(chan_num,1,index),kind=real4)/1000.0
+         temp1(i,j) = real(bt_table(chan_num,1,index),kind=real4)/100.0
         ELSE
          rad2(i,j) = Missing_Value_Real4
          temp1(i,j) = Missing_Value_Real4
-        ENDIF
+        endif
       END DO
     END DO
     
   
-  END SUBROUTINE FY_RADIANCE_BT
+  end subroutine FY_RADIANCE_BT
   
 
 
@@ -573,15 +527,15 @@ end subroutine ASSIGN_FY_SAT_ID_NUM_INTERNAL
 ! spacecraft structure.
 !---------------------------------------------------------------------
 
-SUBROUTINE load_fy_calibration(lun, AREAstr)
-  INTEGER(kind=int4), intent(in) :: lun
+subroutine load_fy_calibration(lun, AREAstr)
+  integer(kind=int4), intent(in) :: lun
   type(AREA_STRUCT), intent(in):: AREAstr
-  INTEGER(kind=int4), dimension(6528) :: ibuf
-  INTEGER :: nref, nbt, i, j, offset
-  INTEGER(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
+  integer(kind=int4), dimension(6528) :: ibuf
+  integer :: nref, nbt, i, j, offset
+  integer(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
                         band_offset_9, band_offset_7, dir_offset, avoid_warning
-  REAL(kind=real4) :: albedo, temperature, radiance
-  REAL(kind=real4), dimension(5)  :: a_fy, b_fy, nu_fy
+  real(kind=real4) :: albedo, temperature, radiance
+  real(kind=real4), dimension(5)  :: a_fy, b_fy, nu_fy
     
   avoid_warning = lun
   
@@ -589,7 +543,7 @@ SUBROUTINE load_fy_calibration(lun, AREAstr)
   ! http://fengyunuds.cma.gov.cn/FYCV_EN/PublishInfo/PublishPage.aspx?SuperiorID=1&ChildCatalogID=%2010082-1
   ! GSICS calibrations
   
-  IF (AREAstr%sat_id_num == 36) THEN
+  if (AREAstr%sat_id_num == 36) THEN
   
     nu_fy(5) = 2601.9680
     nu_fy(4) = 1429.0728
@@ -605,9 +559,9 @@ SUBROUTINE load_fy_calibration(lun, AREAstr)
     b_fy(4) = 1.5094
     b_fy(2) = 0.3865
     b_fy(3) = 0.3710
-  ENDIF
+  endif
 
-  IF (AREAstr%sat_id_num  == 37) THEN
+  if (AREAstr%sat_id_num  == 37) THEN
   
     nu_fy(5) = 2568.2084
     nu_fy(4) = 1436.5964
@@ -623,7 +577,7 @@ SUBROUTINE load_fy_calibration(lun, AREAstr)
     b_fy(4) = 1.3981
     b_fy(2) = 0.3609
     b_fy(3) = 0.2661
-  ENDIF
+  endif
      
   !---------------------------------------------------------------------
   ! Read from the calibration block.
@@ -698,13 +652,13 @@ SUBROUTINE load_fy_calibration(lun, AREAstr)
     rad_table(3,1,i) = nint(radiance * 1000.) 
   end do
  
-END SUBROUTINE load_fy_calibration
+end subroutine load_fy_calibration
 
 
 !FY2 Navigation
 
 
-SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
+subroutine MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
                   RINF,DSCT,IRTN)
  !
  !***********************************************************************
@@ -725,8 +679,8 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !
  !***********************************************************************
  !            I/O  TYPE
- !   IMODE     I   I*4   CONVERSION MODE & IMAGE KIND
- !                         IMAGE KIND
+ !   IMODE     I   I*4   CONVERSION MODE & IMAGE kind
+ !                         IMAGE kind
  !                               GMS-4 GMS-5  MTSAT
  !                          1,-1  VIS   VIS    VIS
  !                          2,-2  IR    IR1  IR1,IR4
@@ -749,7 +703,7 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !                       (7) SUN DISTANCE (KIRO-METER)
  !                       (8) SUN GRINT ANGLE (DEGREES)
  !   DSCT      O   R*8   SCAN TIME (MJD)
- !   IRTN      O   I*4   RETURN CODE (0=O.K.)
+ !   IRTN      O   I*4   return CODE (0=O.K.)
  !
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !
@@ -765,28 +719,28 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !!!!!!!!!!!!!!!!!! DEFINITION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !      COMMON /MMAP1/MAP
  !
-       INTEGER, INTENT(in) :: IMODE
-       REAL(KIND=REAL4), INTENT(inout) :: RPIX, RLIN, RLON, RLAT
-       REAL(KIND=REAL4), INTENT(in) :: RHGT
-       REAL(KIND=REAL4), dimension(8), INTENT(out) :: RINF
-       REAL(KIND=REAL8), INTENT(out) :: DSCT
-       INTEGER, INTENT(out) :: IRTN
+       integer, intent(in) :: IMODE
+       real(kind=real4), intent(inout) :: RPIX, RLIN, RLON, RLAT
+       real(kind=real4), intent(in) :: RHGT
+       real(kind=real4), dimension(8), intent(out) :: RINF
+       real(kind=real8), intent(out) :: DSCT
+       integer, intent(out) :: IRTN
        
-       INTEGER :: LMODE
-       REAL(KIND=REAL8) :: WKCOS, WKSIN
+       integer :: LMODE
+       real(kind=real8) :: WKCOS, WKSIN
     
-!       REAL*4     RPIX,RLIN,RLON,RLAT,RHGT,RINF(8)
-!      INTEGER*4  MAP(672,4)
+!       real*4     RPIX,RLIN,RLON,RLAT,RHGT,RINF(8)
+!      integer*4  MAP(672,4)
  !
-       REAL*4     EPS,RI0,RI,RJ,RSTEP,RSAMP,RFCL,RFCP,SENS,RFTL,RFTP
-       REAL*4     RESLIN(4),RESELM(4),RLIC(4),RELMFC(4),SENSSU(4), &
+       real*4     EPS,RI0,RI,RJ,RSTEP,RSAMP,RFCL,RFCP,SENS,RFTL,RFTP
+       real*4     RESLIN(4),RESELM(4),RLIC(4),RELMFC(4),SENSSU(4), &
                   VMIS(3),ELMIS(3,3),RLINE(4),RELMNT(4)
-       REAL*8     BC,BETA,BS,CDR,CRD,DD,DDA,DDB,DDC,DEF,DK,DK1,DK2, &
+       real*8     BC,BETA,BS,CDR,CRD,DD,DDA,DDB,DDC,DEF,DK,DK1,DK2, &
                   DLAT,DLON,DPAI,DSPIN,DTIMS,EA,EE,EF,EN,HPAI,PC,PI,PS, &
                   QC,QS,RTIM,TF,TL,TP, &
                   SAT(3),SL(3),SLV(3),SP(3),SS(3),STN1(3),STN2(3), &
                   SX(3),SY(3),SW1(3),SW2(3),SW3(3)
-       REAL*8     DSATZ,DSATA,DSUNZ,DSUNA,DSSDA,DSATD,SUNM,SDIS, &
+       real*8     DSATZ,DSATA,DSUNZ,DSUNA,DSSDA,DSATD,SUNM,SDIS, &
                   DLATN,DLONN,STN3(3),DSUNG
  !
  !!!!!!!!!!!!!!!!!! EQUIVALENCE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -823,7 +777,7 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        IRTN  =  0
        IF(ABS(IMODE).GT.4)  IRTN=1
        IF(ABS(RLAT).GT.90. .AND. IMODE.GT.0)  IRTN=2
-       IF(IRTN.NE.0)  RETURN
+       IF(IRTN.NE.0)  return
  !!!!!!!!!!!!!!!!!! VISSR FRAME INFORMATION SET !!!!!!!!!!!!!!!!!!!!!!!!!
        LMODE   = ABS(IMODE)                                         ![3.1]
        RSTEP   = RESLIN(LMODE)
@@ -848,27 +802,27 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          RTIM    = DTIMS+DBLE(RI0/SENS/1440.)/DSPIN                 ![3.3]
  !
    100   CONTINUE
-         CALL  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                      ![3.4]
+         call  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                      ![3.4]
  !-----------------------------------------------------------------------
-         CALL  MGI220(SP,SS,SW1)                                    ![3.5]
-         CALL  MGI220(SW1,SP,SW2)
+         call  MGI220(SP,SS,SW1)                                    ![3.5]
+         call  MGI220(SW1,SP,SW2)
          BC      = DCOS(BETA)
          BS      = DSIN(BETA)
          SW3(1)  = SW1(1)*BS+SW2(1)*BC
          SW3(2)  = SW1(2)*BS+SW2(2)*BC
          SW3(3)  = SW1(3)*BS+SW2(3)*BC
-         CALL  MGI200(SW3,SX)
-         CALL  MGI220(SP,SX,SY)
+         call  MGI200(SW3,SX)
+         call  MGI220(SP,SX,SY)
          SLV(1)  = STN1(1)-SAT(1)                                  ![3.6]
          SLV(2)  = STN1(2)-SAT(2)
          SLV(3)  = STN1(3)-SAT(3)
-         CALL  MGI200(SLV,SL)                                      ![3.7]
-         CALL  MGI210(SP,SL,SW2)
-         CALL  MGI210(SY,SW2,SW3)
-         CALL  MGI230(SY,SW2,TP)
+         call  MGI200(SLV,SL)                                      ![3.7]
+         call  MGI210(SP,SL,SW2)
+         call  MGI210(SY,SW2,SW3)
+         call  MGI230(SY,SW2,TP)
          TF      = SP(1)*SW3(1)+SP(2)*SW3(2)+SP(3)*SW3(3)
          IF(TF.LT.0.D0)  TP=-TP
-         CALL  MGI230(SP,SL,TL)
+         call  MGI230(SP,SL,TL)
  !
          RI      = SNGL(HPAI-TL)/RSTEP+RFCL-VMIS(2)/RSTEP
          RJ      = SNGL(TP)/RSAMP+RFCP &
@@ -879,7 +833,7 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
                    (DSPIN*1440.D0)+DTIMS
            RI0   = RI
            GO TO  100
-         ENDIF
+         endif
          RLIN    = RI
          RPIX    = RJ
          DSCT    = RTIM
@@ -891,16 +845,16 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
  !
          RTIM    = DBLE(AINT((RLIN-1.)/SENS)+RPIX*RSAMP/SNGL(DPAI))/ &
                    (DSPIN*1440.D0)+DTIMS                           ![3.9]
-         CALL  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                     ![3.10]
-         CALL  MGI220(SP,SS,SW1)                                   ![3.11]
-         CALL  MGI220(SW1,SP,SW2)
+         call  MGI100(RTIM,CDR,SAT,SP,SS,BETA)                     ![3.10]
+         call  MGI220(SP,SS,SW1)                                   ![3.11]
+         call  MGI220(SW1,SP,SW2)
          BC      = DCOS(BETA)
          BS      = DSIN(BETA)
          SW3(1)  = SW1(1)*BS+SW2(1)*BC
          SW3(2)  = SW1(2)*BS+SW2(2)*BC
          SW3(3)  = SW1(3)*BS+SW2(3)*BC
-         CALL  MGI200(SW3,SX)
-         CALL  MGI220(SP,SX,SY)
+         call  MGI200(SW3,SX)
+         call  MGI220(SP,SX,SY)
          PC      = DCOS(DBLE(RSTEP*(RLIN-RFCL)))                   ![3.12]
          PS      = DSIN(DBLE(RSTEP*(RLIN-RFCL)))
          QC      = DCOS(DBLE(RSAMP*(RPIX-RFCP)))
@@ -914,7 +868,7 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          SW3(1)  = SX(1)*SW2(1)+SY(1)*SW2(2)+SP(1)*SW2(3)          ![3.13]
          SW3(2)  = SX(2)*SW2(1)+SY(2)*SW2(2)+SP(2)*SW2(3)
          SW3(3)  = SX(3)*SW2(1)+SY(3)*SW2(2)+SP(3)*SW2(3)
-         CALL  MGI200(SW3,SL)                                      ![3.14]
+         call  MGI200(SW3,SL)                                      ![3.14]
          DEF     = (1.D0-EF)*(1.D0-EF)
          DDA     = DEF*(SL(1)*SL(1)+SL(2)*SL(2))+SL(3)*SL(3)
          DDB     = DEF*(SAT(1)*SL(1)+SAT(2)*SL(2))+SAT(3)*SL(3)
@@ -926,12 +880,12 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
          ELSE
            IRTN    = 6
            GO TO  9000
-         ENDIF
+         endif
          IF(DABS(DK1).LE.DABS(DK2))  THEN
            DK    = DK1
          ELSE
            DK    = DK2
-         ENDIF
+         endif
          STN1(1) = SAT(1)+DK*SL(1)
          STN1(2) = SAT(2)+DK*SL(2)
          STN1(3) = SAT(3)+DK*SL(3)
@@ -946,12 +900,12 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
              DLON=HPAI
            ELSE
              DLON=-HPAI
-           ENDIF
-         ENDIF
+           endif
+         endif
          RLAT    = SNGL(DLAT*CRD)
          RLON    = SNGL(DLON*CRD)
          DSCT    = RTIM
-       ENDIF
+       endif
  !
  !!!!!!!!!!!!!!!!!! TRANSFORMATION (ZENITH/AZIMUTH) !!!!!!!!!!!!!!![3.16]
        STN2(1)   = DCOS(DLAT)*DCOS(DLON)                           ![3.17]
@@ -960,9 +914,9 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        SLV(1)    = SAT(1)-STN1(1)                                  ![3.18]
        SLV(2)    = SAT(2)-STN1(2)
        SLV(3)    = SAT(3)-STN1(3)
-       CALL  MGI200(SLV,SL)
+       call  MGI200(SLV,SL)
  !
-       CALL  MGI230(STN2,SL,DSATZ)                                 ![3.19]
+       call  MGI230(STN2,SL,DSATZ)                                 ![3.19]
        IF(DSATZ.GT.HPAI)  IRTN = 7
  !
        SUNM    = 315.253D0+0.985600D0*RTIM                         ![3.20]
@@ -977,31 +931,31 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        ELSE
          DLATN   = HPAI+DLAT
          DLONN   = DLON
-       ENDIF
+       endif
        STN3(1) = DCOS(DLATN)*DCOS(DLONN)
        STN3(2) = DCOS(DLATN)*DSIN(DLONN)
        STN3(3) = DSIN(DLATN)
        SW1(1)  = SLV(1)+SS(1)*SDIS*1.D3                            ![3.22]
        SW1(2)  = SLV(2)+SS(2)*SDIS*1.D3
        SW1(3)  = SLV(3)+SS(3)*SDIS*1.D3
-       CALL  MGI200(SW1,SW2)                                       ![3.23]
-       CALL  MGI230(STN2,SW2,DSUNZ)
-       CALL  MGI230(SL,SW2,DSSDA)                                  ![3.24]
-       CALL  MGI240(SL,STN2,STN3,DPAI,DSATA)                       ![3.25]
-       CALL  MGI240(SW2,STN2,STN3,DPAI,DSUNA)                      ![3.26]
+       call  MGI200(SW1,SW2)                                       ![3.23]
+       call  MGI230(STN2,SW2,DSUNZ)
+       call  MGI230(SL,SW2,DSSDA)                                  ![3.24]
+       call  MGI240(SL,STN2,STN3,DPAI,DSATA)                       ![3.25]
+       call  MGI240(SW2,STN2,STN3,DPAI,DSUNA)                      ![3.26]
        DSATD   = DSQRT(SLV(1)*SLV(1)+SLV(2)*SLV(2)+SLV(3)*SLV(3))  ![3.27]
  !
  !
-       CALL  MGI200(STN1,SL)                                       ![3.28]
-       CALL  MGI230(SW2,SL,DSUNG)
-       CALL  MGI220(SL, SW2,SW3)
-       CALL  MGI220(SW3,SL, SW1)
+       call  MGI200(STN1,SL)                                       ![3.28]
+       call  MGI230(SW2,SL,DSUNG)
+       call  MGI220(SL, SW2,SW3)
+       call  MGI220(SW3,SL, SW1)
        WKCOS=DCOS(DSUNG)
        WKSIN=DSIN(DSUNG)
        SW2(1)=WKCOS*SL(1)-WKSIN*SW1(1)
        SW2(2)=WKCOS*SL(2)-WKSIN*SW1(2)
        SW2(3)=WKCOS*SL(3)-WKSIN*SW1(3)
-       CALL  MGI230(SW2,SLV,DSUNG)
+       call  MGI230(SW2,SLV,DSUNG)
  !
        RINF(6) = SNGL(DSATD)
        RINF(7) = SNGL(SDIS)
@@ -1013,29 +967,29 @@ SUBROUTINE MGIVSR(IMODE,RPIX,RLIN,RLON,RLAT,RHGT, &
        RINF(8) = SNGL(DSUNG*CRD)
  !!!!!!!!!!!!!!!!!!! STOP/END !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   9000 CONTINUE
-       RETURN
-END SUBROUTINE MGIVSR
+       return
+end subroutine MGIVSR
 
-SUBROUTINE  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
+subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
 !       COMMON /MMAP1/MAP
-       REAL*8    ATTALP,ATTDEL,BETA,CDR,DELT,RTIM,SITAGT,SUNALP,SUNDEL, &
+       real*8    ATTALP,ATTDEL,BETA,CDR,DELT,RTIM,SITAGT,SUNALP,SUNDEL, &
                  WKCOS,WKSIN
-       REAL*8    ATT1(3),ATT2(3),ATT3(3),NPA(3,3), &
+       real*8    ATT1(3),ATT2(3),ATT3(3),NPA(3,3), &
                  SAT(3),SP(3),SS(3)
- !     INTEGER*4 MAP(672,4)
-       INTEGER :: I
+ !     integer*4 MAP(672,4)
+       integer :: I
  !
  !      EQUIVALENCE (MAP(13,3),ORBT1(1,1))
  !      EQUIVALENCE (MAP(13,2),ATIT(1,1))
  !
        DO 1000 I=1,7
          IF(RTIM.GE.NAVstr_FY_NAV%ORBT1(1,I).AND.RTIM.LT.NAVstr_FY_NAV%ORBT1(1,I+1))  THEN
-!          CALL  MGI110 &
+!          call  MGI110 &
 !               (I,RTIM,CDR,NAVstr_FY_NAV%ORBT1,ORBT2,SAT,SITAGT,SUNALP,SUNDEL,NPA)
-           CALL  MGI110 &
+           call  MGI110 &
                 (I,RTIM,CDR,NAVstr_FY_NAV%ORBT1,SAT,SITAGT,SUNALP,SUNDEL,NPA)
            GO TO  1200
-         ENDIF
+         endif
   1000 CONTINUE
   1200 CONTINUE
  !
@@ -1048,7 +1002,7 @@ SUBROUTINE  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
            IF( (NAVstr_FY_NAV%ATIT(5,I+1)-NAVstr_FY_NAV%ATIT(5,I)).GT.0.D0 ) &
              BETA   = NAVstr_FY_NAV%ATIT(5,I)+(NAVstr_FY_NAV%ATIT(5,I+1)-NAVstr_FY_NAV%ATIT(5,I)-360.D0*CDR)*DELT
            GO TO  3001
-         ENDIF
+         endif
   3000 CONTINUE
   3001 CONTINUE
  !
@@ -1064,22 +1018,22 @@ SUBROUTINE  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        ATT3(1)  = WKCOS*ATT2(1)+WKSIN*ATT2(2)
        ATT3(2)  =-WKSIN*ATT2(1)+WKCOS*ATT2(2)
        ATT3(3)  = ATT2(3)
-       CALL  MGI200(ATT3,SP)
+       call  MGI200(ATT3,SP)
  !
        WKCOS    = DCOS(SUNDEL)
        SS(1)    = WKCOS       *DCOS(SUNALP)
        SS(2)    = WKCOS       *DSIN(SUNALP)
        SS(3)    = DSIN(SUNDEL)
  !
-       RETURN
-END SUBROUTINE MGI100
+       return
+end subroutine MGI100
 
-!SUBROUTINE MGI110(I,RTIM,CDR,ORBTA,ORBTB,SAT,SITAGT,SUNALP,SUNDEL,NPA)
-!      REAL*8    CDR,SAT(3),RTIM,ORBTA(35,8),ORBTB(35,8)
-SUBROUTINE MGI110(I,RTIM,CDR,ORBTA,SAT,SITAGT,SUNALP,SUNDEL,NPA)
-       REAL*8    CDR,SAT(3),RTIM,ORBTA(35,8)
-       REAL*8    SITAGT,SUNDEL,SUNALP,NPA(3,3),DELT
-       INTEGER*4 I
+!subroutine MGI110(I,RTIM,CDR,ORBTA,ORBTB,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+!      real*8    CDR,SAT(3),RTIM,ORBTA(35,8),ORBTB(35,8)
+subroutine MGI110(I,RTIM,CDR,ORBTA,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+       real*8    CDR,SAT(3),RTIM,ORBTA(35,8)
+       real*8    SITAGT,SUNDEL,SUNALP,NPA(3,3),DELT
+       integer*4 I
        IF(I.NE.8)  THEN
          DELT=(RTIM-ORBTA(1,I))/(ORBTA(1,I+1)-ORBTA(1,I))
          SAT(1)   = ORBTA( 9,I)+(ORBTA( 9,I+1)-ORBTA( 9,I))*DELT
@@ -1103,58 +1057,58 @@ SUBROUTINE MGI110(I,RTIM,CDR,ORBTA,SAT,SITAGT,SUNALP,SUNDEL,NPA)
          NPA(1,3) = ORBTA(26,I)
          NPA(2,3) = ORBTA(27,I)
          NPA(3,3) = ORBTA(28,I)
-       ENDIF
-       RETURN
-END SUBROUTINE MGI110
+       endif
+       return
+end subroutine MGI110
 
-SUBROUTINE MGI200(VECT,VECTU)
-       REAL*8  VECT(3),VECTU(3),RV1,RV2
+subroutine MGI200(VECT,VECTU)
+       real*8  VECT(3),VECTU(3),RV1,RV2
        RV1=VECT(1)*VECT(1)+VECT(2)*VECT(2)+VECT(3)*VECT(3)
-       IF(RV1 == 0.D0)  RETURN
+       IF(RV1 == 0.D0)  return
        RV2=DSQRT(RV1)
        VECTU(1)=VECT(1)/RV2
        VECTU(2)=VECT(2)/RV2
        VECTU(3)=VECT(3)/RV2
-       RETURN
-END SUBROUTINE MGI200
+       return
+end subroutine MGI200
 
-SUBROUTINE MGI210(VA,VB,VC)
-       REAL*8  VA(3),VB(3),VC(3)
+subroutine MGI210(VA,VB,VC)
+       real*8  VA(3),VB(3),VC(3)
        VC(1)= VA(2)*VB(3)-VA(3)*VB(2)
        VC(2)= VA(3)*VB(1)-VA(1)*VB(3)
        VC(3)= VA(1)*VB(2)-VA(2)*VB(1)
-       RETURN
-END SUBROUTINE MGI210
+       return
+end subroutine MGI210
 
-SUBROUTINE MGI220(VA,VB,VD)
-       REAL*8  VA(3),VB(3),VC(3),VD(3)
+subroutine MGI220(VA,VB,VD)
+       real*8  VA(3),VB(3),VC(3),VD(3)
        VC(1)= VA(2)*VB(3)-VA(3)*VB(2)
        VC(2)= VA(3)*VB(1)-VA(1)*VB(3)
        VC(3)= VA(1)*VB(2)-VA(2)*VB(1)
-       CALL  MGI200(VC,VD)
-       RETURN
-END SUBROUTINE MGI220
+       call  MGI200(VC,VD)
+       return
+end subroutine MGI220
 
-SUBROUTINE MGI230(VA,VB,ASITA)
-       REAL*8  VA(3),VB(3),ASITA,AS1,AS2
+subroutine MGI230(VA,VB,ASITA)
+       real*8  VA(3),VB(3),ASITA,AS1,AS2
        AS1= VA(1)*VB(1)+VA(2)*VB(2)+VA(3)*VB(3)
        AS2=(VA(1)*VA(1)+VA(2)*VA(2)+VA(3)*VA(3))* &
            (VB(1)*VB(1)+VB(2)*VB(2)+VB(3)*VB(3))
-       IF(AS2 == 0.D0)  RETURN
+       IF(AS2 == 0.D0)  return
        ASITA=DACOS(AS1/DSQRT(AS2))
-       RETURN
-END SUBROUTINE MGI230
+       return
+end subroutine MGI230
 
-SUBROUTINE MGI240(VA,VH,VN,DPAI,AZI)
-       REAL*8  VA(3),VH(3),VN(3),VB(3),VC(3),VD(3),DPAI,AZI,DNAI
-       CALL  MGI220(VN,VH,VB)
-       CALL  MGI220(VA,VH,VC)
-       CALL  MGI230(VB,VC,AZI)
-       CALL  MGI220(VB,VC,VD)
+subroutine MGI240(VA,VH,VN,DPAI,AZI)
+       real*8  VA(3),VH(3),VN(3),VB(3),VC(3),VD(3),DPAI,AZI,DNAI
+       call  MGI220(VN,VH,VB)
+       call  MGI220(VA,VH,VC)
+       call  MGI230(VB,VC,AZI)
+       call  MGI220(VB,VC,VD)
        DNAI = VD(1)*VH(1)+VD(2)*VH(2)+VD(3)*VH(3)
        IF(DNAI.GT.0.D0)  AZI=DPAI-AZI
-       RETURN
-END SUBROUTINE MGI240
+       return
+end subroutine MGI240
 
 
 

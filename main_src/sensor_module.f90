@@ -26,14 +26,14 @@
 ! 
 ! Routines in this module and their purpose:
 !
-!  the routines are called i process_ckavrx.f90 in this order
+!  the routines are called from process_ckavrx.f90 in this order
 !   file_loop
-!      detect_sensor_from_file
-!      SET_FILE_DIMENSIONS(
-!      SET_SENSOR_CONSTANTS 
+!      DETECT_SENSOR_FROM_FILE()
+!      SET_FILE_DIMENSIONS()
+!      SET_DATA_DATE_AND_TIME()
 !      READ_INSTR_CONSTANTS()
 !      READ_ALGO_CONSTANTS()
-!      READ_LEVEL1B_DATA
+!      READ_LEVEL1B_DATA()
 !       ...
 !       ... 
 ! end loop
@@ -63,471 +63,320 @@ module SENSOR_MODULE
        , READ_VIIRS_DATA &
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
+    use AHI_CLAVRX_BRIDGE 
 #endif
 
    use clavrx_message_module
 
    implicit none
 
-   public:: SET_SENSOR_CONSTANTS
+   public:: SET_DATA_DATE_AND_TIME
    public:: READ_INSTR_CONSTANTS
    public:: READ_ALGO_CONSTANTS
    public:: DETECT_SENSOR_FROM_FILE
    public:: SET_FILE_DIMENSIONS
    public:: READ_LEVEL1B_DATA 
+   public:: OUTPUT_SENSOR_TO_SCREEN
+   public:: OUTPUT_IMAGE_TO_SCREEN
+   private:: READ_AHI_INSTR_CONSTANTS
 
    character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
-   character(38) :: orbit_identifier
+   character(38) :: Orbit_Identifier
   
-   character ( len = 3) :: string_3
-   character ( len = 6) :: string_6
-contains
+   character (len = 3), private :: string_3
+   character (len = 4), private :: string_4
+   character (len = 6), private :: string_6
+   character (len = 7), private :: string_7
+   character (len = 30), private :: string_30
+
+   contains
+
    !==============================================================================
-   !
+   !   Determine date and time of the data and store in image structure
    !==============================================================================
-   subroutine SET_SENSOR_CONSTANTS(AREAstr)
+   subroutine SET_DATA_DATE_AND_TIME(AREAstr)
+      
+      
+      use DATE_TOOLS_MOD
+      use CX_READ_AHI_MOD, only: &
+         ahi_time_from_filename
+      
+      type ( date_type ) :: time0_obj, time1_obj
 
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr
+      type (AREA_STRUCT), intent(in) :: AREAstr
 
-      INTEGER:: Idx
-      INTEGER(kind=int4):: Start_Year_Tmp
-      INTEGER(kind=int4):: Start_Day_Tmp
-      INTEGER(kind=int4):: End_Year_Tmp
-      INTEGER(kind=int4):: End_Day_Tmp
-      INTEGER(kind=int4):: Start_Time_Tmp
-      INTEGER(kind=int4):: End_Time_Tmp
-      INTEGER(kind=int4):: Orbit_Number_Tmp
-      INTEGER(kind=int4):: Hour
-      INTEGER(kind=int4):: Minute
-      INTEGER(kind=int4):: Second
-      INTEGER(kind=int4):: Avhrr_Number
-
-      if (Avhrr_Flag == sym%YES) then
-
-         !-----------------------------------------------------------------
-         !-- determine if this data is from the AVHRR/1 series
-         !-----------------------------------------------------------------
-         call DETERMINE_AVHRR_1(Start_Year,AVHRR_KLM_Flag,Avhrr_1_Flag)
-
-         !-------------------------------------------------------------------
-         !-- define a sc_Id that is unique value for each satellite
-         !-------------------------------------------------------------------
-         if (Avhrr_Flag == sym%YES) then
-            call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id,Avhrr_Number,Sc_Id_Char)
-         end if
-
-         !--------------------------------------------------------------
-         !--- make an INTEGER Orbit_Number from proc_block_Id
-         !--------------------------------------------------------------
-         Orbit_Number = 0
-         do Idx = 1,len(Proc_Block_Id)
-            Orbit_Number = Orbit_Number + (ichar(Proc_Block_Id(Idx:Idx))-48)* &
-            (10**(len(Proc_Block_Id) - Idx))
-         end do
- 
-         !--------------------------------------------------------------
-         !--- based on spacecraft id, set up constants
-         !--------------------------------------------------------------
-         if (Avhrr_Number < 10) then
-            Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-              "avhrr_"//char(Avhrr_Number+48)//"_instr.dat"
-            Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-              "avhrr_"//char(Avhrr_Number+48)//"_algo.dat"
-         else
-            Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-             "avhrr_1"//char(Avhrr_Number - 10 + 48)//"_instr.dat" 
-            Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"// &
-             "avhrr_1"//char(Avhrr_Number - 10 + 48)//"_algo.dat" 
-         end if
-
-      end if
+      integer:: Idx
+      integer(kind=int4):: Start_Year_Tmp
+      integer(kind=int4):: Start_Day_Tmp
+      integer(kind=int4):: End_Year_Tmp
+      integer(kind=int4):: End_Day_Tmp
+      integer(kind=int4):: Start_Time_Tmp
+      integer(kind=int4):: End_Time_Tmp
+      integer(kind=int4):: Orbit_Number_Tmp
+      integer(kind=int4):: Hour
+      integer(kind=int4):: Minute
+      integer(kind=int4):: Second
+      integer :: year, doy
+      !----------------------------------------------
+      ! for AVHRR, this is read in with level-1b data
+      !----------------------------------------------
 
       !----------------------------------------------
       ! for Modis, take time from file name
       !----------------------------------------------
-      if (Modis_Flag == sym%YES) then
+      if (index(Sensor%Sensor_Name,'MODIS') > 0) then
 
-         CALL READ_MODIS_TIME_ATTR(trim(dir_1b), trim(File_1b), Start_Year, &
-                            Start_Day, Start_Time, End_Year, End_Day, &
-                            End_Time)
+         call READ_MODIS_TIME_ATTR(trim(Image%Level1b_Path), trim(Image%Level1b_Name), Image%Start_Year, &
+                            Image%Start_Doy, Image%Start_Time, Image%End_Year, Image%End_Doy, &
+                            Image%End_Time)
   
-         if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES) then
-            Sc_Id_WMO = 784
-            Instr_Const_File = 'modis_aqua_instr.dat'
-            Algo_Const_File = 'modis_aqua_algo.dat'
-            Platform_Name_Attribute = 'AQUA'
-            Sensor_Name_Attribute = 'MODIS'
-         end if
-      
-         if (Modis_Terra_Flag == sym%YES) then
-            Sc_Id_WMO = 783
-            Instr_Const_File = 'modis_terra_instr.dat'
-            Algo_Const_File = 'modis_terra_algo.dat'
-            Platform_Name_Attribute = 'TERRA'
-            Sensor_Name_Attribute = 'MODIS'
-         end if
-         Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Instr_Const_File)
-         Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Algo_Const_File)
-
       end if
 
       !----------------------------------------------
       ! for VIIRS take time from file's name
       !----------------------------------------------
-      if (Viirs_Flag == sym%YES) then
+      if (trim(Sensor%Sensor_Name) == 'VIIRS') then
 #ifdef HDF5LIBS
-         call READ_VIIRS_DATE_TIME(trim(File_1b),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
-                             End_Time_Tmp,Orbit_Number_Tmp ,orbit_identifier, end_year_tmp , end_day_tmp)
-         Start_Year = Start_Year_tmp
-         End_Year = End_Year_tmp
-         Start_Day = Start_Day_tmp
-         End_Day = End_Day_tmp
+         call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Name),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
+                             End_Time_Tmp,Orbit_Number_Tmp,Orbit_Identifier, End_Year_Tmp , End_Day_Tmp)
+         Image%Start_Year = Start_Year_Tmp
+         Image%End_Year = End_Year_Tmp
+         Image%Start_Doy = Start_Day_Tmp
+         Image%End_Doy = End_Day_Tmp
  
-         Start_Time = Start_Time_tmp
-         End_Time = End_Time_tmp
-         Orbit_Number = Orbit_Number_tmp
-         Sc_Id_WMO = 224
-         Instr_Const_File = 'viirs_npp_instr.dat'
-         Algo_Const_File = 'viirs_npp_algo.dat'
-         Platform_Name_Attribute = 'NPP'
-         Sensor_Name_Attribute = 'VIIRS'
-
-         Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Instr_Const_File)
-         Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Algo_Const_File)
-
+         Image%Start_Time = Start_Time_Tmp
+         Image%End_Time = End_Time_Tmp
 #else
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
 #endif
 
       end if 
-
+      
       !----------------------------------------------
       ! for IFF take time and set some constants
-      ! could be VIRRS, MODIS AVHRR sensor
+      ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
-      if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES .or. Iff_Avhrr_Flag == sym%YES) then
-         call READ_IFF_DATE_TIME(trim(File_1b),Start_Year_tmp,Start_Day_tmp,Start_Time_tmp, &
-                      End_Year_tmp,End_Day_tmp,End_Time_tmp)
-         Start_Year = Start_Year_tmp
-         End_Year = End_Year_tmp
-         Start_Day = Start_Day_tmp
-         End_Day = End_Day_tmp
-         Start_Time = Start_Time_tmp
-         End_Time = End_Time_tmp
+      if (index(Sensor%Sensor_Name,'AHI') > 0) then
+         
+         call ahi_time_from_filename ( trim(Image%Level1b_Name) , time0_obj, time1_obj )
+         
+         call time0_obj % get_date ( year =  year &
+                               , doy = doy  &
+                               , msec_of_day = Image%Start_Time  )
+         
+         call time1_obj % get_date ( msec_of_day = Image%End_Time  )                                                
 
-         if (Iff_Viirs_Flag == sym%YES) then
-            Sc_Id_WMO = 224
-            Instr_Const_File = 'iff_viirs_npp_instr.dat'
-            Algo_Const_File = 'viirs_npp_algo.dat'
-            Platform_Name_Attribute = 'NPP'
-            Sensor_Name_Attribute = 'VIIRS'
-         else if (Iff_Modis_Flag == sym%YES) then
-            Sc_Id_WMO = 784
-            Instr_Const_File = 'modis_aqua_instr.dat'
-            Algo_Const_File = 'modis_aqua_algo.dat'
-            Platform_Name_Attribute = 'AQUA'      
-            Sensor_Name_Attribute = 'MODIS'      
-         else if (Iff_Avhrr_Flag == sym%YES) then
-            if (index(File_1b, 'IFF_noaa06') == 1) then
-               Avhrr_1_Flag = sym%YES
-               Sc_Id = 2
-               Avhrr_Number = 6
-               Sc_Id_WMO = 706
-               Sc_Id_Char = 'noaa06'
-               Platform_Name_Attribute = 'NOAA-6'
-               Sensor_Name_Attribute = 'AVHRR-1'
-            end if
-            if (index(File_1b, 'IFF_noaa07') == 1) then
-               AVHRR_KLM_Flag = sym%NO
-               Sc_Id = 4
-               Avhrr_Number = 7
-               Sc_Id_WMO = 707
-               Sc_Id_Char = 'noaa07'
-               Platform_Name_Attribute = 'NOAA-7'
-               Sensor_Name_Attribute = 'AVHRR-2'
-            end if
-            if (index(File_1b, 'IFF_noaa08') == 1) then
-               Avhrr_1_Flag = sym%YES
-               Sc_Id = 6
-               Avhrr_Number = 8
-               Sc_Id_WMO = 200
-               Sc_Id_Char = 'noaa08'
-               Platform_Name_Attribute = 'NOAA-8'
-               Sensor_Name_Attribute = 'AVHRR-1'
-            end if
-            if (index(File_1b, 'IFF_noaa09') == 1) then
-               Avhrr_1_Flag = sym%NO
-               Sc_Id = 7
-               Avhrr_Number = 9
-               Sc_Id_WMO = 201
-               Sc_Id_Char = 'noaa09'
-               Platform_Name_Attribute = 'NOAA-9'
-               Sensor_Name_Attribute = 'AVHRR-2'
-            end if
-            if (index(File_1b, 'IFF_noaa10') == 1) then
-               Avhrr_1_Flag = sym%YES
-               Sc_Id = 8
-               Avhrr_Number = 10
-               Sc_Id_WMO = 202
-               Sc_Id_Char = 'noaa10'
-               Platform_Name_Attribute = 'NOAA-10'
-               Sensor_Name_Attribute = 'AVHRR-1'
-            end if
-            if (index(File_1b, 'IFF_noaa11') == 1) then
-               Avhrr_1_Flag = sym%NO
-               Sc_Id = 1
-               Avhrr_Number = 11
-               Sc_Id_WMO = 203
-               Sc_Id_Char = 'noaa11'
-               Platform_Name_Attribute = 'NOAA-11'
-               Sensor_Name_Attribute = 'AVHRR-2'
-            endif
-            if (index(File_1b, 'IFF_noaa12') == 1) then
-               AVHRR_KLM_Flag = sym%NO
-               Sc_Id = 5
-               Avhrr_Number = 12
-               Sc_Id_WMO = 204
-               Sc_Id_Char = 'noaa12'
-               Platform_Name_Attribute = 'NOAA-12'
-               Sensor_Name_Attribute = 'AVHRR-2'
-            end if
-            if (index(File_1b, 'IFF_noaa14') == 1) then
-               AVHRR_KLM_Flag = sym%NO
-               Sc_Id = 3
-               Avhrr_Number = 14
-               Sc_Id_WMO = 205
-               Sc_Id_Char = 'noaa14'
-               Platform_Name_Attribute = 'NOAA-14'
-               Sensor_Name_Attribute = 'AVHRR-2'
-            end if
-            if (index(File_1b, 'IFF_noaa15') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 4
-               Avhrr_Number = 15
-               Sc_Id_WMO = 206
-               Sc_Id_Char = 'noaa15'
-               Platform_Name_Attribute = 'NOAA-15'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_noaa16') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 2
-               Avhrr_Number = 16
-               Sc_Id_WMO = 207
-               Sc_Id_Char = 'noaa16'
-               Platform_Name_Attribute = 'NOAA-16'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_noaa17') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 6
-               Avhrr_Number = 17
-               Sc_Id_WMO = 208
-               Sc_Id_Char = 'noaa17'
-               Platform_Name_Attribute = 'NOAA-17'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_noaa18') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 7
-               Avhrr_Number = 18
-               Sc_Id_WMO = 209
-               Sc_Id_Char = 'noaa18'
-               Platform_Name_Attribute = 'NOAA-18'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_noaa19') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 8
-               Avhrr_Number = 19
-               Sc_Id_WMO = 223
-               Sc_Id_Char = 'noaa19'
-               Platform_Name_Attribute = 'NOAA-19'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_metop02') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 12
-               Avhrr_Number = 2
-               Sc_Id_WMO = 4
-               Sc_Id_Char = 'metopa'
-               Platform_Name_Attribute = 'METOP-A'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_metop01') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 11
-               Avhrr_Number = 1
-               Sc_Id_WMO = 3
-               Sc_Id_Char = 'metopb'
-               Platform_Name_Attribute = 'METOP-B'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
-            if (index(File_1b, 'IFF_metop03') == 1) then
-               AVHRR_KLM_Flag = sym%YES
-               Sc_Id = 13 ! Metop-C Sc_Id numbers are not known at this time
-               Avhrr_Number = 4
-               Sc_Id_WMO = 5
-               Sc_Id_Char = 'metopc'
-               Platform_Name_Attribute = 'METOP-C'
-               Sensor_Name_Attribute = 'AVHRR-3'
-            end if
+         Image%Start_Year  = year
+         Image%Start_Doy   = doy   
+         Image%End_Year  = year
+         Image%End_Doy   = doy  
+         
+      endif
+      
+      !----------------------------------------------
+      ! for IFF take time and set some constants
+      ! could be VIIRS, MODIS AVHRR sensor
+      !----------------------------------------------
+      if (index(Sensor%Sensor_Name,'IFF') > 0) then
+         call READ_IFF_DATE_TIME(trim(Image%Level1b_Name),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
+                      End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
+         Image%Start_Year = Start_Year_Tmp
+         Image%End_Year = End_Year_Tmp
+         Image%Start_Doy = Start_Day_Tmp
+         Image%End_Doy = End_Day_Tmp
+         Image%Start_Time = Start_Time_Tmp
+         Image%End_Time = End_Time_Tmp
 
-            ! --- set instrument and algorithm file
-            if (Avhrr_Number < 10) then
-               Instr_Const_File = "iff_avhrr_"//char(Avhrr_Number + 48)//"_instr.dat"
-               Algo_Const_File = "avhrr_"//char(Avhrr_Number + 48)//"_algo.dat"
-            else
-               Instr_Const_File = "iff_avhrr_1"//char(Avhrr_Number - 10 + 48)//"_instr.dat"
-               Algo_Const_File = "avhrr_1"//char(Avhrr_Number - 10 + 48)//"_algo.dat"
-            end if
-
-         end if ! Iff_Avhrr_Flag
-
-         Instr_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Instr_Const_File)
-         Algo_Const_File = trim(Ancil_Data_Dir)//"avhrr_data/"//trim(Algo_Const_File)
-
-      end if ! Iff files
-
+      endif
       !----------------------------------------------
       ! for GOES, MTSAT and MSG, take time from AREAstr
       !----------------------------------------------
-      if (Goes_Flag == sym%YES .OR. Goes_Sndr_Flag == sym%YES .OR. &
-            Seviri_Flag == sym%YES .OR. &
-            FY2_Flag == sym%YES .OR. Mtsat_Flag==sym%YES .OR. Coms_Flag == sym%YES) then
-         Start_Year = 1900 + int(AREAstr%act_img_Date / 1000)
-         End_Year = Start_Year
-         Start_Day = AREAstr%act_img_Date - (Start_Year - 1900) * 1000
-         End_Day = Start_Day
+      if (index(Sensor%Sensor_Name,'GOES') > 0 .or.  &
+          index(Sensor%Sensor_Name,'COMS') > 0 .or.  &
+          index(Sensor%Sensor_Name,'MTSAT') > 0 .or.  &
+          index(Sensor%Sensor_Name,'SEVIRI') > 0 .or.  &
+          index(Sensor%Sensor_Name,'FY2') > 0) then
+
+        !--- check if area file
+        if (AREAstr%Version_Num == 4) then
+
+         Image%Start_Year = 1900 + int(AREAstr%act_img_Date / 1000)
+         Image%End_Year = Image%Start_Year
+         Image%Start_Doy = AREAstr%act_img_Date - (Image%Start_Year - 1900) * 1000
+         Image%End_Doy = Image%Start_Doy
          hour = AREAstr%act_img_Time / 10000 
          minute = (AREAstr%act_img_Time - hour * 10000) / 100
          second = (AREAstr%act_img_Time - hour * 10000 - minute * 100) / 100
-         Start_Time = ((hour * 60 + minute) * 60 + second) * 1000 !millisec
-         End_Time = Start_Time
+         Image%Start_Time = ((hour * 60 + minute) * 60 + second) * 1000 !millisec
+         Image%End_Time = Image%Start_Time
     
-         !--- assign id numbers
-         if (Goes_Flag == sym%YES) call ASSIGN_GOES_SAT_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num,AREAstr%Elem_Res)
-
-         if (Goes_Sndr_Flag == sym%YES) call ASSIGN_GOES_SNDR_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num)
-    
-         if (Seviri_Flag == sym%YES) call ASSIGN_MSG_SAT_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num)
-
-         if (Mtsat_Flag == sym%YES) call ASSIGN_MTSAT_SAT_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num)
-
-         if (FY2_Flag == sym%YES) call ASSIGN_FY_SAT_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num)
-
-         if (Coms_Flag == sym%YES) call ASSIGN_COMS_ID_NUM_INTERNAL(AREAstr%Sat_Id_Num)
-
+        endif
+ 
       end if
 
-      !--- screen output
-      call mesg ( "Satellite : Sensor = "//Platform_Name_Attribute//' : '//Sensor_Name_Attribute)
-      write(string_3,'(i3)' ) sc_id_wmo
+   end subroutine SET_DATA_DATE_AND_TIME
+   !--------------------------------------------------------------------------------------
+   !   screen output of sensor structure
+   !--------------------------------------------------------------------------------------
+   subroutine OUTPUT_SENSOR_TO_SCREEN()
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+      call mesg ( "SENSOR DEFINITION",level = verb_lev % DEFAULT)
+
+      call mesg ( "Satellite = "//trim(Sensor%Platform_Name), level = verb_lev % DEFAULT)
+      call mesg ( "Sensor = "//trim(Sensor%Sensor_Name), level = verb_lev % DEFAULT)
+
+      write(string_3,'(i3)' ) Sensor%WMO_ID 
       call mesg ( "Spacecraft WMO number = "//trim(string_3) , level = verb_lev % DEFAULT)
-      write(string_3,'(i3)' ) start_day
-      call mesg ("Start Day of Year= "//trim(string_3))
 
-      call mesg ( "Start Time of Day = ", Start_Time / 1000.0 / 60.0 / 60.0 )
-      write(string_6,'(i5)') num_scans
-      call mesg ( "Number of Scans = "//string_6)
+      write ( string_6,'(i6)')   Sensor%Spatial_Resolution_Meters
+      call mesg ( "Pixel Resolution (m) = "//string_6, level = verb_lev % DEFAULT)
 
-      if (Avhrr_Flag == sym%YES) then
-         print *,EXE_PROMPT, "Sensor = AVHRR"
-         print *,EXE_PROMPT, "spacecraft number = ", Avhrr_Number
-         print *,EXE_PROMPT, "data type = ", Data_Type
-         print *,EXE_PROMPT, "level 1b version = ", Ver_1b
-         print *,EXE_PROMPT, "Gac flag = ", AVHRR_GAC_Flag
-         print *,EXE_PROMPT, "AVHRR_KLM_Flag flag = ", AVHRR_KLM_Flag
-         print *,EXE_PROMPT, "AAPP_Flag flag = ", AVHRR_AAPP_Flag
-         print *,EXE_PROMPT, "avhrr/1 flag = ", Avhrr_1_Flag
+      !--- some avhrr specific output
+      if (index(Sensor%Sensor_Name,'AVHRR-1') > 0 .or. &
+          index(Sensor%Sensor_Name,'AVHRR-2') > 0 .or. &
+          index(Sensor%Sensor_Name,'AVHRR-3') > 0) then
+
+         write ( string_3,'(i3)')   AVHRR_Data_Type
+         call mesg ( "AVHRR data type = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_Ver_1b
+         call mesg ( "AVHRR Level1b Version = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_GAC_FLAG
+         call mesg ( "AVHRR GAC Flag = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_KLM_FLAG
+         call mesg ( "AVHRR KLM Flag = "//string_3, level = verb_lev % DEFAULT)
+
+         write ( string_3,'(i3)')   AVHRR_AAPP_FLAG
+         call mesg ( "AVHRR AAPP Flag = "//string_3, level = verb_lev % DEFAULT)
+    
       end if
 
-      if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or.  &
-         SEVIRI_Flag == sym%YES .or. FY2_FLAG == sym%YES .or. &
-         COMS_Flag == sym%YES) then
-          write ( string_6,'(i2)')    AREAstr%Elem_Res
-          call mesg ( "Pixel Resolution (km) = "//string_6)
-      endif
+   end subroutine OUTPUT_SENSOR_TO_SCREEN
+   !--------------------------------------------------------------------------------------
+   !   screen output of some members of the image structure
+   !--------------------------------------------------------------------------------------
+   subroutine OUTPUT_IMAGE_TO_SCREEN()
 
+      call mesg ( " ",level = verb_lev % DEFAULT)
+      call mesg ( "IMAGE DEFINITION",level = verb_lev % DEFAULT)
 
-      !--- set Resolution_KM for global attribute
-      Sensor_Resolution_KM = -999.0
+      call mesg ("Level1b Name = "//trim(Image%Level1b_Name) , level = verb_lev % MINIMAL )
 
-      if (Goes_Flag == sym%YES) then
-         Sensor_Resolution_KM = 4.0
-         if (GOES_1km_Flag == sym%YES) Sensor_Resolution_KM = 1.0
-      end if
-      
-      if (MODIS_Flag == sym%YES .or. Iff_MODIS_Flag == sym%YES) Sensor_Resolution_KM = 1.0
-      if (VIIRS_Flag == sym%YES .or. Iff_VIIRS_Flag == sym%YES) Sensor_Resolution_KM = 0.75
-      if (AVHRR_Flag == sym%YES .or. Iff_AVHRR_Flag == sym%YES) then
-         Sensor_Resolution_KM = 1.1
-         if (AVHRR_GAC_Flag == sym%YES) then
-            Sensor_Resolution_KM = 4.0
-         end if
-      end if
-      if (SEVIRI_Flag == sym%YES) Sensor_Resolution_KM = 3.0
-      if (COMS_Flag == sym%YES) Sensor_Resolution_KM = 4.0
-      if (FY2_Flag == sym%YES) Sensor_Resolution_KM = 4.0
-      if (MTSAT_Flag == sym%YES) Sensor_Resolution_KM = 4.0
-      if (GOES_Sndr_Flag == sym%YES) Sensor_Resolution_KM = 10.0
+      write(string_6,'(i6)' ) Image%Number_Of_Elements
+      call mesg ( "Number of Elements Per Line = "//string_6,level = verb_lev % DEFAULT)
 
-   end subroutine SET_SENSOR_CONSTANTS
+      write(string_6,'(i6)' ) Image%Number_Of_Lines
+      call mesg ( "Number of Lines in File = "//string_6,level = verb_lev % DEFAULT)
+
+      write(string_6,'(i6)' ) Image%Number_Of_Lines_Per_Segment
+      call mesg ( "Number of Lines in each Segment = "//string_6,level = verb_lev % DEFAULT)
+
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%Start_Year,Image%Start_Doy, &
+             Image%Start_Time/60.0/60.0/1000.0
+      call mesg ("Start Year, Doy, Time = "//string_30,level = verb_lev % DEFAULT)
+
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Image%End_Year,Image%End_Doy, &
+             Image%End_Time/60.0/60.0/1000.0
+      call mesg ("End Year, Doy, Time = "//string_30,level = verb_lev % DEFAULT)
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+
+   end subroutine OUTPUT_IMAGE_TO_SCREEN
+
+   !--------------------------------------------------------------------------------------
+   !   screen output of the spatial or viewing limits imposed on this processing
+   !--------------------------------------------------------------------------------------
+   subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
+      call mesg ( "PROCESSING LIMITS",level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.2)' ) Nav%Lon_Max_Limit
+      call mesg ( "Maximum Longitude for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.2)' ) Nav%Lon_Min_Limit
+      call mesg ( "Minimum Longitude for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Nav%Lat_Max_Limit
+      call mesg ( "Maximum Latitude for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Nav%Lat_Min_Limit
+      call mesg ( "Minimum Latitude for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Geo%Satzen_Max_Limit
+      call mesg ( "Maximum Sensor Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Geo%Satzen_Min_Limit
+      call mesg ( "Minimum Sensor Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Geo%Solzen_Max_Limit
+      call mesg ( "Maximum Solar Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      write(string_7,'(f7.1)' ) Geo%Solzen_Min_Limit
+      call mesg ( "Minimum Solar Zenith Angle for Processing = "//string_7, level = verb_lev % DEFAULT)
+
+      call mesg ( " ",level = verb_lev % DEFAULT)
+
+   end subroutine OUTPUT_PROCESSING_LIMITS_TO_SCREEN
 
    !--------------------------------------------------------------------------------------------------
-   !
+   !  Read the values from instrument constant files
    !--------------------------------------------------------------------------------------------------
    subroutine READ_INSTR_CONSTANTS()
+ 
+      select case(trim(Sensor%Sensor_Name))
 
-      if (Avhrr_Flag == sym%YES) call READ_AVHRR_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Modis_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES) call READ_MODIS_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Goes_Flag == sym%YES) call READ_GOES_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Goes_Sndr_Flag == sym%YES) call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Seviri_Flag == sym%YES) call READ_MSG_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Mtsat_Flag == sym%YES) call READ_MTSAT_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (FY2_Flag == sym%YES) call READ_FY_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Coms_Flag == sym%YES) call READ_COMS_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Viirs_Flag == sym%YES) then
-   
-      !--- read in Viirs Instrument Constants from appropriate file
+         case('AVHRR-1','AVHRR-2','AVHRR-3')
+              call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('MODIS','MODIS-MAC','MODIS-CSPP','AQUA-IFF')
+              call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('GOES-IL-IMAGER','GOES-MP-IMAGER')
+              call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('GOES-IP-SOUNDER')
+              call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('SEVIRI')
+              call READ_MSG_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('MTSAT-IMAGER')
+              call READ_MTSAT_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('FY-IMAGER')
+              call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('COMS-IMAGER')
+              call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('AHI')
+              call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('VIIRS')
 #ifdef HDF5LIBS 
-         call READ_VIIRS_INSTR_CONSTANTS(trim(Instr_Const_File))
+              call READ_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
 #else
          print *, "No HDF5 library installed, stopping"
          stop
 #endif
-      end if
+         case('VIIRS-IFF')
+            call READ_IFF_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('AVHRR-IFF')
+            call READ_IFF_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
 
-      if (Iff_Viirs_Flag == sym%YES) call READ_IFF_VIIRS_INSTR_CONSTANTS(trim(Instr_Const_File))
-
-      if (Iff_Avhrr_Flag == sym%YES) call READ_IFF_AVHRR_INSTR_CONSTANTS(trim(Instr_Const_File))
+      end select
 
    end subroutine READ_INSTR_CONSTANTS
 
    !----------------------------------------------------------------
    ! read the avhrr algorithm constants into memory
    !-----------------------------------------------------------------
-   SUBROUTINE READ_ALGO_CONSTANTS()
+   subroutine READ_ALGO_CONSTANTS()
       integer:: ios
       integer:: Algo_Lun
 
       Algo_Lun = GET_LUN()
 
-      open(unit=Algo_Lun,file=trim(Algo_Const_File),status="old",position="rewind",action="read",iostat = ios)
+      open(unit=Algo_Lun,file=trim(Sensor%Algo_Const_File),status="old",position="rewind",action="read",iostat = ios)
 
-      IF (ios /= 0) THEN
+      if (ios /= 0) then
          print *, "Error opening algorithm constant file, iostat = ", ios
          stop
-      ENDIF
+      endif
 
       !nlSst
       read(unit=Algo_Lun,fmt=*)
@@ -542,276 +391,782 @@ contains
 
       close(unit=Algo_Lun)
 
-   END SUBROUTINE READ_ALGO_CONSTANTS
+   end subroutine READ_ALGO_CONSTANTS
 
    !--------------------------------------------------------------------------------------------------
    !  Apply various tests to determine from which sensor this data comes
+   !
+   !  output is sesnorname and platform name
+   !
+   !
+   !   AVHRR 
+   !        sensors:  AVHRR-1, AVHRR-2, AVHRR-3
+   !        platforms: NOAA-5 - NOAA-19, METOP-A - METOP-C
+   !        spatial_resolution:  1.1, 4
+   !  
+   !   GOES
+   !        sensors:   GOES-IL-IMAGERMAGER, GOES-MP-IMAGER, GOES-IP-SOUNDER
+   !        platforms: GOES-8 - GOES-15
+   !        spatial_resolution:  1, 4
+   !
+   !   METEOSAT
+   !        sensors:  SEVIRI
+   !        platform:  Meteosat-8 - Meteosat-11
+   !        spatial_resolution:  3
+   ! 
+   !   MTSAT
+   !        sensors:  MTSAT-IMAGER
+   !        platform:  MTSAT-1R, MTSAT-2
+   !        spatial_resolution:  4
+   !
+   !   COMS
+   !        sensors:  COMS-IMAGER
+   !        platform:  COMS-1
+   !        spatial_resolution:  4
+   !
+   !   MODIS
+   !        sensors:  MODIS, AQUA-IFF, MODIS-MAC, MODIS-CSPP
+   !        platform:  AQUA, TERRA
+   !        spatial_resolution:  1, 5
+   !
+   !   VIIRS
+   !        sensors:  VIIRS, VIIRS-IFF
+   !        platform:  SNPP
+   !        spatial_resolution:  0.75
+   !        
+   !
+   !  Output: The sensor structure which is global does not appear as an argument
    !--------------------------------------------------------------------------------------------------
    subroutine DETECT_SENSOR_FROM_FILE( &
-           File_1b_Full &
-         , File_1b_Temp &
-         , AREAstr &
+           AREAstr &
          , NAVstr &
-         , sensorname &
          , Ierror)
 
-      CHARACTER(len=*), intent(in) :: File_1b_Full
-      CHARACTER(len=*), intent(in) :: File_1b_Temp
       TYPE (AREA_STRUCT), intent(out) :: AREAstr
       TYPE (GVAR_NAV), intent(out)    :: NAVstr
-      CHARACTER(len=10), intent(out) :: sensorname
-      INTEGER(kind=int4) :: Ierror
+      integer(kind=int4) :: Ierror
+      integer(kind=int4) :: Ifound
 
-      INTEGER(kind=int4) :: Itest_Aqua_5km
-      INTEGER(kind=int4) :: Itest_Terra_5km
-      INTEGER(kind=int4) :: Itest_Aqua_1km
-      INTEGER(kind=int4) :: Itest_Terra_1km
-      INTEGER(kind=int4) :: Itest_Aqua_Mac
-      INTEGER(kind=int4) :: Itest_Aqua_CSPP
-      INTEGER(kind=int4) :: Itest_Terra_CSPP
+      !-------------------------------------------------------------------------
+      !-- Initialize Sensor Structure
+      !-------------------------------------------------------------------------
+      Sensor%Sensor_Name = ''
+      Sensor%Spatial_Resolution_Meters = Missing_Value_Int4
+      Sensor%Platform_Name = ''
+      Sensor%WMO_Id = Missing_Value_Int4
+      Sensor%Instr_Const_File = 'no_file'
+      Sensor%Algo_Const_File = 'no_file'
+      Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
+      Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
 
-      INTEGER(kind=int4) :: Itest_Viirs
-      INTEGER(kind=int4) :: Itest_Iff_Viirs
-      INTEGER(kind=int4) :: Itest_Iff_Modis
-      INTEGER(kind=int4) :: Itest_Iff_Avhrr
-
+      !-------------------------------------------------------------------------
+      !-- Loop through tests for each file type, if not found assume avhrr
+      !-------------------------------------------------------------------------
       Ierror = sym%NO
-      Goes_Flag = sym%NO
-      Goes_Sndr_Flag = sym%NO
-      Modis_Flag = sym%NO
-      Avhrr_Flag = sym%NO
-      Seviri_Flag = sym%NO
-      FY2_Flag = sym%NO
-      Mtsat_Flag = sym%NO
-      Coms_Flag = sym%NO
-      Modis_Aqua_Flag = sym%NO
-      Modis_Terra_Flag = sym%NO
-      Modis_1km_Flag = sym%NO
-      Modis_5km_Flag = sym%NO
-      Modis_Aqua_Mac_Flag = sym%NO
-      Viirs_Flag = sym%NO
-      Iff_Viirs_Flag = sym%NO
-      Iff_Modis_Flag = sym%NO
-      Iff_Avhrr_Flag = sym%NO
+      ifound = sym%NO
+      
+      print*,'=============================='
 
-      !-------------------------------------------------------------------------
-      !--- First, test for a modis file
-      !-------------------------------------------------------------------------
-      Itest_Aqua_5km = index(File_1b_Temp, 'MYD02SSH')
-      Itest_Aqua_1km = index(File_1b_Temp, 'MYD021KM')
-      Itest_Terra_5km = index(File_1b_Temp, 'MOD02SSH')
-      Itest_Terra_1km = index(File_1b_Temp, 'MOD021KM')
-      Itest_Aqua_Mac = index(File_1b_Temp, 'MAC02')
-      Itest_Aqua_CSPP = index(File_1b_Temp, 'a1.')
-      Itest_Terra_CSPP = index(File_1b_Temp, 't1.')
-
-      if (Itest_Aqua_1km == 1 .or. Itest_Aqua_5km == 1 .or. &
-            Itest_Terra_1km == 1 .or. Itest_Terra_5km == 1 .or. &
-            Itest_Aqua_Mac == 1 .or. Itest_Aqua_CSPP == 1 .or. &
-            Itest_Terra_CSPP == 1) then 
-         Modis_Flag = sym%YES
-      end if
-
-      if (Modis_Flag == sym%YES) then
-         if (Itest_Aqua_5km == 1 .or. Itest_Aqua_1km == 1) Modis_Aqua_Flag = sym%YES
-         if (Itest_Terra_5km == 1 .or. Itest_Terra_1km == 1) Modis_Terra_Flag = sym%YES
-         if (Itest_Terra_5km == 1 .or. Itest_Aqua_5km == 1) Modis_5km_Flag = sym%YES
-         if (Itest_Terra_1km == 1 .or. Itest_Aqua_1km == 1 .or.&
-              Itest_Aqua_Mac ==1 .or. Itest_Aqua_CSPP == 1 .or. &
-              Itest_Terra_CSPP == 1) Modis_1km_Flag = sym%YES
-         if (Itest_Aqua_CSPP == 1 .or. &
-              Itest_Terra_CSPP == 1) Modis_CSPP_Flag = sym%YES
-         if (Itest_Aqua_Mac ==1 ) Modis_Aqua_Mac_Flag = sym%YES
-      end if
-  
-      !-- for 1 km MODIS, determine name of separate geolocation file
-      if (Modis_1km_Flag == sym%YES) then
-         call DETERMINE_MODIS_GEOLOCATION_FILE(File_1b_Temp,Dir_1b,Modis_Geo_Name)
-          
-         if (trim(Modis_Geo_Name) == "no_file") then
-            Ierror = sym%YES
-         endif
+      test_loop: do while (ifound == sym%NO)
+      
+      !--- HIMAWARI-8 AHI Test
+      if (index(Image%Level1b_Name, 'HS_H08') > 0) then
+        Sensor%Sensor_Name = 'AHI'
+        Sensor%Platform_Name = 'HIM8'
+        Sensor%Spatial_Resolution_Meters = 2000
+        Sensor%WMO_Id = 173
+        Sensor%Instr_Const_File = 'him8_instr.dat'
+        Sensor%Algo_Const_File = 'him8_algo.dat'
+        Sensor%Geo_Sub_Satellite_Longitude = 140.0
+        Sensor%Geo_Sub_Satellite_Latitude = 0.0
+        exit test_loop
       endif
       
-      !-- determine modis cloud mask name
-      if (Modis_Flag == sym%YES .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
-         call DETERMINE_MODIS_CLOUD_MASK_FILE(File_1b_Temp,Dir_1b,Modis_Cloud_Mask_Name)
-         if (trim(Modis_Cloud_Mask_Name) == "no_file") then
+      
+
+      !--- MODIS Test
+      if (index(Image%Level1b_Name, 'MYD021KM') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 1000
+        Sensor%WMO_Id = 784
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 'MYD02SSH') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 5000
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        Sensor%WMO_Id = 784
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 'MOD021KM') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'TERRA'
+        Sensor%Spatial_Resolution_Meters = 1000
+        Sensor%WMO_Id = 783
+        Sensor%Instr_Const_File = 'modis_terra_instr.dat'
+        Sensor%Algo_Const_File = 'modis_terra_algo.dat'
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 'MOD02SSH') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'TERRA'
+        Sensor%Spatial_Resolution_Meters = 5000
+        Sensor%WMO_Id = 783
+        Sensor%Instr_Const_File = 'modis_terra_instr.dat'
+        Sensor%Algo_Const_File = 'modis_terra_algo.dat'
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 'MAC02') > 0) then
+        Sensor%Sensor_Name = 'MODIS-MAC'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 1000
+        Sensor%WMO_Id = 784
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 'a1.') > 0) then
+        Sensor%Sensor_Name = 'MODIS-CSPP'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 1000
+        Sensor%WMO_Id = 784
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        exit test_loop
+      endif
+
+      if (index(Image%Level1b_Name, 't1.') > 0) then
+        Sensor%Sensor_Name = 'MODIS-CSPP'
+        Sensor%Platform_Name = 'TERRA'
+        Sensor%Spatial_Resolution_Meters = 1000
+        Sensor%WMO_Id = 783
+        Sensor%Instr_Const_File = 'modis_terra_instr.dat'
+        Sensor%Algo_Const_File = 'modis_terra_algo.dat'
+        exit test_loop
+      endif
+
+      !---  Check Geostationary (assumed to be areafiles)
+      call GET_GOES_HEADERS(Image%Level1b_Full_Name, AREAstr, NAVstr)
+
+      if (AREAstr%Version_Num == 4) then                          !begin valid Areafile test
+
+         !--- set spatial resolution  !(AKH??? - Is this valid for all sensors)
+         Sensor%Spatial_Resolution_Meters = real(AREAstr%Elem_Res)
+
+         !--- based on McIdas Id, set sensor struc parameters
+         select case(AREAstr%Sat_Id_Num)
+ 
+            !test for SEVIRI
+            case (51:54)
+               Sensor%Sensor_Name = 'SEVIRI'
+               Sensor%Spatial_Resolution_Meters = 3000
+              
+               if (AREAstr%Sat_Id_Num == 51) then
+                  Sensor%Platform_Name = 'Meteosat-8'
+                  Sensor%WMO_Id = 55
+                  Sensor%Instr_Const_File = 'met8_instr.dat'
+                  Sensor%Algo_Const_File = 'met8_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 52)  then
+                  Sensor%Platform_Name = 'Meteosat-9'
+                  Sensor%WMO_Id = 56
+                  Sensor%Instr_Const_File = 'met9_instr.dat'
+                  Sensor%Algo_Const_File = 'met9_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 53) then
+                  Sensor%Platform_Name = 'Meteosat-10'
+                  Sensor%WMO_Id = 57
+                  Sensor%Instr_Const_File = 'met10_instr.dat'
+                  Sensor%Algo_Const_File = 'met10_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 54) then
+                  Sensor%Platform_Name = 'Meteosat-11'
+                  Sensor%WMO_Id = 58
+                  Sensor%Instr_Const_File = 'met11_instr.dat'
+                  Sensor%Algo_Const_File = 'met11_algo.dat'
+                  exit test_loop
+               endif
+
+            case (84,85)
+               Sensor%Sensor_Name = 'MTSAT-IMAGER'
+               Sensor%Spatial_Resolution_Meters = 4000
+               if (AREAstr%Sat_Id_Num == 84) then
+                  Sensor%Platform_Name = 'MTSAT-1R'
+                  Sensor%WMO_Id = 172
+                  Sensor%Instr_Const_File = 'mtsat1r_instr.dat'
+                  Sensor%Algo_Const_File = 'mtsat1r_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 85) then
+                  Sensor%Platform_Name = 'MTSAT-2'
+                  Sensor%WMO_Id = 172
+                  Sensor%Instr_Const_File = 'mtsat2_instr.dat'
+                  Sensor%Algo_Const_File = 'mtsat2_algo.dat'
+                  exit test_loop
+               endif
+
+            case (36, 37)
+               Sensor%Sensor_Name = 'FY-IMAGER'
+               Sensor%Spatial_Resolution_Meters = 4000
+               if (AREAstr%Sat_Id_Num == 36) then
+                  Sensor%Platform_Name = 'FY-2D'
+                  Sensor%WMO_Id = 514
+                  Sensor%Instr_Const_File = 'fy2d_instr.dat'
+                  Sensor%Algo_Const_File = 'fy2d_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 37) then
+                  Sensor%Platform_Name = 'FY-2E'
+                  Sensor%WMO_Id = 515
+                  Sensor%Instr_Const_File = 'fy2e_instr.dat'
+                  Sensor%Algo_Const_File = 'fy2e_algo.dat'
+                  exit test_loop
+               endif
+
+            case (250)
+               Sensor%Sensor_Name = 'COMS-IMAGER'
+               Sensor%Spatial_Resolution_Meters = 4000
+               Sensor%Platform_Name = 'COMS-1'
+               Sensor%WMO_Id = 810
+               Sensor%Instr_Const_File = 'coms1_instr.dat'
+               Sensor%Algo_Const_File = 'coms1_algo.dat'
+               exit test_loop
+
+            case (70,72,74,76,78,180,182,184)
+
+               if (AREAstr%Sat_Id_Num == 70) then
+                  Sensor%Sensor_Name = 'GOES-IL-IMAGER'
+                  Sensor%Platform_Name = 'GOES-8'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 252
+                  Sensor%Instr_Const_File = 'goes_08_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_08_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 72) then
+                  Sensor%Sensor_Name = 'GOES-IL-IMAGER'
+                  Sensor%Platform_Name = 'GOES-9'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 253
+                  Sensor%Instr_Const_File = 'goes_09_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_09_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 74) then
+                  Sensor%Sensor_Name = 'GOES-IL-IMAGER'
+                  Sensor%Platform_Name = 'GOES-10'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 254
+                  Sensor%Instr_Const_File = 'goes_10_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_10_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 76) then
+                  Sensor%Sensor_Name = 'GOES-IL-IMAGER'
+                  Sensor%Platform_Name = 'GOES-11'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 255
+                  Sensor%Instr_Const_File = 'goes_11_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_11_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 78) then
+                  Sensor%Sensor_Name = 'GOES-MP-IMAGER'
+                  Sensor%Platform_Name = 'GOES-12'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 256
+                  Sensor%Instr_Const_File = 'goes_12_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_12_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 180) then
+                  Sensor%Sensor_Name = 'GOES-MP-IMAGER'
+                  Sensor%Platform_Name = 'GOES-13'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 257
+                  Sensor%Instr_Const_File = 'goes_13_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_13_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 182) then
+                  Sensor%Sensor_Name = 'GOES-MP-IMAGER'
+                  Sensor%Platform_Name = 'GOES-14'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 258
+                  Sensor%Instr_Const_File = 'goes_14_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_14_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 184) then
+                  Sensor%Sensor_Name = 'GOES-MP-IMAGER'
+                  Sensor%Platform_Name = 'GOES-15'
+                  Sensor%Spatial_Resolution_Meters = 4000
+                  Sensor%WMO_Id = 259
+                  Sensor%Instr_Const_File = 'goes_15_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_15_algo.dat'
+                  exit test_loop
+               endif
+
+            case (71,73,75,77,79,181,183,185)
+               if (AREAstr%Sat_Id_Num == 71) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-8'
+                  Sensor%WMO_Id = 252
+                  Sensor%Instr_Const_File = 'goes_08_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_08_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 73) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-9'
+                  Sensor%WMO_Id = 253
+                  Sensor%Instr_Const_File = 'goes_09_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_09_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 75) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-10'
+                  Sensor%WMO_Id = 254
+                  Sensor%Instr_Const_File = 'goes_10_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_10_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 77) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-11'
+                  Sensor%WMO_Id = 255
+                  Sensor%Instr_Const_File = 'goes_11_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_11_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 79) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-12'
+                  Sensor%WMO_Id = 256
+                  Sensor%Instr_Const_File = 'goes_12_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_12_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 181) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-13'
+                  Sensor%WMO_Id = 257
+                  Sensor%Instr_Const_File = 'goes_13_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_13_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 183) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 10000
+                  Sensor%Platform_Name = 'GOES-14'
+                  Sensor%WMO_Id = 258
+                  Sensor%Instr_Const_File = 'goes_14_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_14_sndr_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 185) then
+                  Sensor%Sensor_Name = 'GOES-IL-SOUNDER'
+                  Sensor%Spatial_Resolution_Meters = 100000
+                  Sensor%Platform_Name = 'GOES-15'
+                  Sensor%WMO_Id = 259
+                  Sensor%Instr_Const_File = 'goes_15_sndr_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_15_sndr_algo.dat'
+                  exit test_loop
+               endif
+
+            end select
+      endif
+
+      !---  VIIRS
+      if (index(Image%Level1b_Name, 'GMTCO') > 0) then 
+         Sensor%Sensor_Name = 'VIIRS'
+         Sensor%Spatial_Resolution_Meters = 750
+         Sensor%Platform_Name = 'SNPP'
+         Sensor%WMO_Id = 224
+         Sensor%Instr_Const_File = 'viirs_npp_instr.dat'
+         Sensor%Algo_Const_File = 'viirs_npp_algo.dat'
+         exit test_loop
+      endif
+
+      !--- NPP/JPSS IFF 
+      if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0) then
+         Sensor%Sensor_Name = 'VIIRS-IFF'
+         Sensor%Spatial_Resolution_Meters = 750
+         Sensor%Platform_Name = 'SNPP'
+         Sensor%WMO_Id = 224
+         Sensor%Instr_Const_File = 'iff_viirs_npp_instr.dat'
+         Sensor%Algo_Const_File = 'viirs_npp_algo.dat'
+         exit test_loop
+      endif
+
+      !--- AQUA IFF
+      if (index(Image%Level1b_Name, 'IFFSDR_aqua') > 0) then
+         Sensor%Sensor_Name = 'AQUA-IFF'
+         Sensor%Spatial_Resolution_Meters = 1000
+         Sensor%Platform_Name = 'AQUA'
+         Sensor%WMO_Id = 784
+         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+         exit test_loop
+      endif
+
+      !--- AVHRR IFF
+      if (index(Image%Level1b_Name, 'IFFSDR_noaa') > 0) then
+            Sensor%Spatial_Resolution_Meters = 4000
+            if (index(Image%Level1b_Name, 'IFF_noaa06') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 2
+               Sensor%Platform_Name = 'NOAA-6'
+               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%WMO_Id = 706
+               Sensor%Instr_Const_File = "iff_avhrr_6_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_6_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa07') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 4
+               Sensor%Platform_Name = 'NOAA-7'
+               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%WMO_Id = 707
+               Sensor%Instr_Const_File = "iff_avhrr_7_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_7_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa08') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 6
+               Sensor%Platform_Name = 'NOAA-8'
+               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%WMO_Id = 200
+               Sensor%Instr_Const_File = "iff_avhrr_8_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_8_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa09') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 7
+               Sensor%Platform_Name = 'NOAA-9'
+               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%WMO_Id = 201
+               Sensor%Instr_Const_File = "iff_avhrr_9_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_9_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa10') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 8
+               Sensor%Platform_Name = 'NOAA-10'
+               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%WMO_Id = 202
+               Sensor%Instr_Const_File = "iff_avhrr_10_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_10_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa11') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 1
+               Sensor%Platform_Name = 'NOAA-11'
+               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%WMO_Id = 203
+               Sensor%Instr_Const_File = "iff_avhrr_11_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_11_algo.dat"
+               exit test_loop
+            endif
+            if (index(Image%Level1b_Name, 'IFF_noaa12') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 5
+               Sensor%Platform_Name = 'NOAA-12'
+               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%WMO_Id = 204
+               Sensor%Instr_Const_File = "iff_avhrr_12_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_12_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa14') == 1) then
+               AVHRR_KLM_Flag = sym%NO
+               Sc_Id_AVHRR = 3
+               Sensor%Platform_Name = 'NOAA-14'
+               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%WMO_Id = 205
+               Sensor%Instr_Const_File = "iff_avhrr_14_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_14_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa15') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 4
+               Sensor%Platform_Name = 'NOAA-15'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 206
+               Sensor%Instr_Const_File = "iff_avhrr_15_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_15_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa16') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 2
+               Sensor%Platform_Name = 'NOAA-16'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 207
+               Sensor%Instr_Const_File = "iff_avhrr_16_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_16_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa17') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 6
+               Sensor%Platform_Name = 'NOAA-17'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 208
+               Sensor%Instr_Const_File = "iff_avhrr_17_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_17_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa18') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 7
+               Sensor%Platform_Name = 'NOAA-18'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 209
+               Sensor%Instr_Const_File = "iff_avhrr_18_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_18_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_noaa19') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 8
+               Sensor%Platform_Name = 'NOAA-19'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 223
+               Sensor%Instr_Const_File = "iff_avhrr_19_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_19_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_metop02') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 12
+               Sensor%Platform_Name = 'METOP-A'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 12
+               Sensor%Instr_Const_File = "iff_avhrr_2_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_2_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_metop01') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 11
+               Sensor%Platform_Name = 'METOP-B'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 11
+               Sensor%Instr_Const_File = "iff_avhrr_1_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_1_algo.dat"
+               exit test_loop
+            end if
+            if (index(Image%Level1b_Name, 'IFF_metop03') == 1) then
+               AVHRR_KLM_Flag = sym%YES
+               Sc_Id_AVHRR = 13 ! Metop-C Sc_Id numbers are not known at this time
+               Sensor%Platform_Name = 'METOP-C'
+               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%WMO_Id = 13
+               Sensor%Instr_Const_File = "iff_avhrr_3_instr.dat"
+               Sensor%Algo_Const_File = "iff_avhrr_3_algo.dat"
+               exit test_loop
+            end if
+
+      endif
+
+
+      !-------------------------------------------------------------------------------
+      !---if sensor not detected, assume AVHRR
+      !-------------------------------------------------------------------------------
+
+      !--- from a preliminary header read, set some global AVHRR flags and parameters
+      call DETERMINE_AVHRR_FILE_TYPE(trim(Image%Level1b_Full_Name), &
+                                     AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
+                                     AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
+
+      !-- determine if this data is from the AVHRR/1 series
+      call DETERMINE_AVHRR_1(Image%Start_Year,AVHRR_KLM_Flag,AVHRR_1_Flag)
+
+      !--- knowing Sc_Id_AVHRR and the above flags, populate sensor structure for AVHRR
+      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id_AVHRR)
+
+      if (AVHRR_GAC_Flag == sym%YES) then
+         Sensor%Spatial_Resolution_Meters = 4000
+      else
+         Sensor%Spatial_Resolution_Meters = 1000
+      endif
+     
+      ifound = sym%YES   ! force exit need to develop logic for setting Ierror
+
+      enddo test_loop
+
+      !---------------------------------------------------------------------------------
+      ! Set sub-satellite point for geostationary satellites that are Areafiles
+      !---------------------------------------------------------------------------------
+      call DETERMINE_GEO_SUB_SATELLITE_POSITION(trim(Image%Level1b_Full_Name),AREAstr,NAVstr)
+
+      !---------------------------------------------------------------------------------
+      ! append full path on constant files
+      !---------------------------------------------------------------------------------
+      Sensor%Instr_Const_File = trim(Ancil_Data_Dir)//"static/clavrx_constant_files/"//trim(Sensor%Instr_Const_File)
+      Sensor%Algo_Const_File = trim(Ancil_Data_Dir)//"static/clavrx_constant_files/"//trim(Sensor%Algo_Const_File)
+
+      !---------------------------------------------------------------------------------
+      ! For MODIS, determine names of additional files for level-1b processing
+      !---------------------------------------------------------------------------------
+
+      !-- for 1 km MODIS, determine name of separate geolocation file
+      if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
+          .and.  Sensor%Spatial_Resolution_Meters == 1000) then
+         call DETERMINE_MODIS_GEOLOCATION_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Geolocation_File_Name)
+         if (trim(Image%Auxiliary_Geolocation_File_Name) == "no_file") then
             Ierror = sym%YES
          endif
       endif
- 
-  
-      ! Set AQUA/Terra flags here for CSPP files
-      if (Itest_Aqua_CSPP == 1) Modis_Aqua_Flag = sym%YES 
-      if (Itest_Terra_CSPP == 1) Modis_Terra_Flag = sym%YES
-    
-      !-------------------------------------------------------------------------------------------------
-      !--- Second, if not MODIS, test if this is a valid  McIdas Areafile.
-      !--- If it is, assume it is GOES unless it's satellite id indicates otherwise
-      !-------------------------------------------------------------------------------------------------
-      if (Modis_Flag == sym%NO) then                                !begin MODIS test
 
-         call GET_GOES_HEADERS(File_1b_Full, AREAstr, NAVstr)
+      !-- determine modis cloud mask name
+      if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
+          .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+         call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
+         if (trim(Image%Auxiliary_Cloud_Mask_File_Name ) == "no_file") then
+            Ierror = sym%YES
+         endif
+      endif
 
-         if (AREAstr%version_Num == 4) then                          !begin valid Areafile test
+   end subroutine DETECT_SENSOR_FROM_FILE
 
-            Seviri_Flag = sym%NO
-            FY2_Flag = sym%NO
-            Goes_Flag = sym%YES
-            Mtsat_Flag = sym%NO
-            Coms_Flag = sym%NO
-         
-            select case(AREAstr%Sat_Id_Num)
+   !=====================================================================
+   !
+   !=====================================================================
+   subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION(Level1b_Full_Name,AREAstr,NAVstr)
+
+    character(len=*), intent(in):: Level1b_Full_Name
+    type (AREA_STRUCT), intent(inout) :: AREAstr
+    type (GVAR_NAV), intent(inout)    :: NAVstr
+
+    Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
+    Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
+
+    if (AREAstr%Version_Num == 4) then                          !begin valid Areafile test
+
+      select case(AREAstr%Sat_Id_Num)
  
             !test for SEVIRI
             case (51:53)
-               Seviri_Flag = sym%YES
-               Goes_Flag = sym%NO
-               Goes_Sub_Satellite_Latitude = 0.0
-               if (AREAstr%Sat_Id_Num == 51 ) Goes_Sub_Satellite_Longitude = -3.477996     ! Longitude of actual Sub-Satellite Point for Met-8
-               if (AREAstr%Sat_Id_Num == 52 ) Goes_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-9
-               if (AREAstr%Sat_Id_Num == 53 ) Goes_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-10 (?? TBD ??)
-               AREAstr%cal_Offset = AREAstr%reserved(3)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat 
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
+               if (AREAstr%Sat_Id_Num == 51 ) Sensor%Geo_Sub_Satellite_Longitude = -3.477996     ! Longitude of actual Sub-Satellite Point for Met-8
+               if (AREAstr%Sat_Id_Num == 52 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-9
+               if (AREAstr%Sat_Id_Num == 53 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-10 (?? TBD ??)
+               AREAstr%Cal_Offset = AREAstr%reserved(3)
                     
             !test for MTSAT
             case (84,85)
-               Goes_Flag = sym%NO
-               Mtsat_Flag = sym%YES
                !This is needed to determine type of navigation
                !as Nav coefficents specific to MTSAT (and FY2)
-               CALL READ_NAVIGATION_BLOCK_MTSAT_FY(trim(File_1b_Full), AREAstr, NAVstr)
-               Goes_Sub_Satellite_Latitude = NAVstr%sublat
-               Goes_Sub_Satellite_longitude = NAVstr%sublon
+               call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
           
             !WCS3 - FY2-D AREA files have the subsat lat/lon flipped. Fix here
             !        Fix with McIDAS-X is fixed.
             case (36, 37)
-               Goes_Flag = sym%NO
-               FY2_Flag = sym%YES
                !This is needed to determine type of navigation
                !as Nav coefficents specific to FY2D/E. They are stored in
                ! the same manner as MTSAT, hence using the same routine
-               CALL READ_NAVIGATION_BLOCK_MTSAT_FY(trim(File_1b_Full), AREAstr, NAVstr)
-               Goes_Sub_Satellite_Latitude = NAVstr%sublat
-               Goes_Sub_Satellite_Longitude = NAVstr%sublon
-
+               call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
             !test for COMS
             case (250)
-               Goes_Flag = sym%NO
-               Coms_Flag=sym%YES
                !This is needed to determine type of navigation
                !as Nav coefficents specific to COMS
-               CALL READ_NAVIGATION_BLOCK_COMS(trim(File_1b_Full), AREAstr,NAVstr)
-               Goes_Sub_Satellite_Latitude = NAVstr%sublat
-               Goes_Sub_Satellite_Longitude = NAVstr%sublon
-                                          
-            !Test for the Goes Sounder
-            case (71,73,75,77,79,181,183,185)
-               Goes_Flag = sym%NO
-               Goes_Sndr_Flag = sym%YES
-            end select
-          
-            if (Goes_Flag == sym%YES .or. Goes_Sndr_Flag == sym%YES) THEN
-               CALL LMODEL(Goes_Input_Time,  &
-                      Goes_Epoch_Time, &
-                      NAVstr, &
-                      Goes_Sub_Satellite_Latitude, &
-                      Goes_Sub_Satellite_Longitude)
-                      Goes_Sub_Satellite_Longitude = Goes_Sub_Satellite_Longitude / Dtor
-                      Goes_Sub_Satellite_Latitude = Goes_Sub_Satellite_Latitude  / Dtor
-            end if
+               call READ_NAVIGATION_BLOCK_COMS(trim(Level1b_Full_Name), AREAstr,NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
-         end if                                                        !end Valid Areafile test
-      end if                                                          !end MODIS test
+            !test for GOES Imagers or Sounders
+            case (70:79,180:185)
 
-      !--------------------------------------------------------------------------------------
-      !--- Third, Test for a IDPS VIIRS data set 
-      !--------------------------------------------------------------------------------------
-      Itest_Viirs = index(File_1b_Temp, 'GMTCO')
-      if (Itest_Viirs == 1) then
-         Viirs_Flag = sym%YES
-      end if
+               call LMODEL(Goes_Input_Time,  &
+                           Goes_Epoch_Time, &
+                           NAVstr, &
+                           Sensor%Geo_Sub_Satellite_Latitude, &
+                           Sensor%Geo_Sub_Satellite_Longitude)
 
-      !--------------------------------------------------------------------------------------
-      !--- Fourth, Test for a PEATE Intermediate File Format (IFF) VIIRS or MODIS or AVHRR data set 
-      !--------------------------------------------------------------------------------------
-      Itest_Iff_Viirs = index(File_1b_Temp, 'IFFSDR_npp')
-      if (Itest_Iff_Viirs == 1) Iff_Viirs_Flag = sym%YES
-      Itest_Iff_Modis = index(File_1b_Temp, 'IFFSDR_aqua')
-      if (Itest_Iff_Modis == 1) Iff_Modis_Flag = sym%YES
-      Itest_Iff_Avhrr = index(File_1b_Temp, 'IFF_noaa')
-      if (Itest_Iff_Avhrr == 1) Iff_Avhrr_Flag = sym%YES
+                      Sensor%Geo_Sub_Satellite_Longitude = Sensor%Geo_Sub_Satellite_Longitude / Dtor
+                      Sensor%Geo_Sub_Satellite_Latitude = Sensor%Geo_Sub_Satellite_Latitude  / Dtor
 
-      !--------------------------------------------------------------------------------------
-      !--- Fifth, if none of the above, set to AVHRR
-      !--------------------------------------------------------------------------------------
-      if (Modis_Flag == sym%NO .and.  &
-            Goes_Flag == sym%NO .and. Goes_Sndr_Flag == sym%NO .and. &
-            Seviri_Flag == sym%NO .and. Mtsat_Flag == sym%NO .and. &
-            Viirs_Flag == sym%NO .and. Iff_Viirs_Flag == sym%NO .and. &
-            Iff_Modis_Flag == sym%NO .and. Iff_Avhrr_Flag == sym%NO .and. &
-            FY2_Flag == sym%NO .and. Coms_Flag == sym%NO) then
-         AVHRR_Flag = sym%YES
-      endif
-  
-  
-  
-  
-      if ( Goes_Flag == sym%YES)         sensorname = 'GOES'
-      if ( Goes_Sndr_Flag == sym%YES ) sensorname = 'GOES_SNDR'
-      if ( Modis_Flag == sym%YES ) sensorname = 'MODIS'
-      if ( Avhrr_Flag == sym%YES ) sensorname = 'AVHRR'
-      if ( Seviri_Flag == sym%YES ) sensorname = 'SEVIRI'
-      if ( FY2_Flag == sym%YES ) sensorname = 'FY2'
-      if ( Mtsat_Flag == sym%YES ) sensorname = 'MTSAT'
-      if ( Coms_Flag == sym%YES ) sensorname = 'COMS'
-      if ( Modis_Aqua_Flag == sym%YES ) sensorname = 'MODIS_AQUA'
-      if ( Modis_Terra_Flag == sym%YES ) sensorname = 'MODIS_TERRA'
-      if ( Modis_1km_Flag == sym%YES ) sensorname = 'MODIS_1KM'
-      if ( Modis_5km_Flag == sym%YES ) sensorname = 'MODIS_5KM'
-      if ( Modis_Aqua_Mac_Flag == sym%YES ) sensorname = 'MODIS_MAC'
-      if ( Viirs_Flag == sym%YES ) sensorname = 'VIIRS'
-      if ( Iff_Viirs_Flag == sym%YES ) sensorname = 'IFF_VIIRS'
-      if ( Iff_Modis_Flag == sym%YES ) sensorname = 'IFF_MODIS'
-      if ( Iff_Avhrr_Flag == sym%YES ) sensorname = 'IFF_AVHRR'
+            case default
+                print *, "Could not determine geostationary sub-satellite point"
+                stop
 
-   end subroutine DETECT_SENSOR_FROM_FILE
+      end select
 
+    endif
+
+   end subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION
    !---------------------------------------------------------------------------------------------
-   ! Determine the number of elements (Num_Pix) and Number of Scans (Num_Scans)
+   ! Determine the number of elements (Image%Number_Of_Elements) and Number of Scans (Image%Number_Of_Lines)
    ! expected.  Also, 
    !---------------------------------------------------------------------------------------------
-   subroutine SET_FILE_DIMENSIONS(File_1b_Full,AREAstr,Nrec_Avhrr_Header,Nword_Clavr, &
+   subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr, &
                                  Nword_Clavr_Start,Ierror)
 
-      CHARACTER(len=*), intent(in) :: File_1b_Full
+      CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      INTEGER:: Erstat
-      INTEGER(kind=int4), intent(out) :: Nword_Clavr
-      INTEGER(kind=int4), intent(out) :: Nword_Clavr_Start
-      INTEGER(kind=int4), intent(out) :: Nrec_Avhrr_Header
-      INTEGER(kind=int4), intent(out) :: Ierror
+      integer:: Erstat
+      integer(kind=int4), intent(out) :: Nword_Clavr
+      integer(kind=int4), intent(out) :: Nword_Clavr_Start
+      integer(kind=int4), intent(out) :: Nrec_Avhrr_Header
+      integer(kind=int4), intent(out) :: Ierror
 
-      INTEGER(kind=int4) :: Ierror_Viirs_Nscans
+      integer(kind=int4) :: Ierror_Viirs_Nscans
       CHARACTER(len=355) :: Dir_File
 
       Ierror = sym%NO
-      if ((Modis_1km_Flag == sym%YES) .or. (Modis_5km_Flag == sym%YES) )then
-         CALL READ_MODIS_SIZE_ATTR(trim(File_1b_Full),Num_Pix,Num_Scans)
+      if (index(Sensor%Sensor_Name,'MODIS') > 0) then
+         call READ_MODIS_SIZE_ATTR(trim(Level1b_Full_Name),Image%Number_Of_Elements,Image%Number_Of_Lines)
       endif
    
-      if (Modis_Aqua_Mac_Flag == sym%YES) then
-         Num_Pix =  11
-         Num_Scans = 2030
+      if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+         Image%Number_Of_Elements =  11
+         Image%Number_Of_Lines = 2030
       endif
+      
+      if ( trim(Sensor%Sensor_Name) == 'AHI') then
+         Image%Number_Of_Elements =  5500
+         Image%Number_Of_Lines = 5500
+      end if
    
-      if (Viirs_Flag == sym%YES) then
-         Num_Pix = 3200
-         Dir_File = trim(Dir_1b) // trim(File_1b)
+      if (trim(Sensor%Sensor_Name) == 'VIIRS') then
+         Image%Number_Of_Elements = 3200
+         Dir_File = trim(Image%Level1b_Path) // trim(Image%Level1b_Name)
 #ifdef HDF5LIBS
-         call GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE (trim(Dir_File),Num_Scans,Ierror_Viirs_Nscans)
+         call GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE (trim(Dir_File),Image%Number_Of_Lines,Ierror_Viirs_Nscans)
 
          ! If error reading, then go to next file
          if (ierror_viirs_nscans /= 0) then
@@ -820,10 +1175,10 @@ contains
          endif
 
          ! Check if VIIRS Number of scans is regular (48) and calculate Number of y pixels
-         if (Num_Scans .ge. 48) then
-            Num_Scans = Num_Scans * 16      !16pix per Scan
-         else if (Num_Scans == 47) then
-            Num_Scans = (Num_Scans+1) * 16
+         if (Image%Number_Of_Lines .ge. 48) then
+            Image%Number_Of_Lines = Image%Number_Of_Lines * 16      !16pix per Scan
+         else if (Image%Number_Of_Lines == 47) then
+            Image%Number_Of_Lines = (Image%Number_Of_Lines+1) * 16
          else
             Ierror = sym%YES
             return      !skips file
@@ -836,57 +1191,62 @@ contains
       end if
       
       !--- if an IFF, call routine to determine dimensions from latitude sds
-      if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES .or. Iff_Avhrr_Flag == sym%YES) then
-         call GET_IFF_DIMS_BRIDGE(trim(Dir_1b)//trim(File_1b),Num_Pix,Num_Scans)
+      if (index(Sensor%Sensor_Name,'IFF') > 0) then
+         call GET_IFF_DIMS_BRIDGE(trim(Image%Level1b_Path)//trim(Image%Level1b_Name),Image%Number_Of_Elements,Image%Number_Of_Lines)
       end if
      
-      if (Avhrr_Flag == sym%YES) then
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-3') then
 
          !-------------------------------------------------------
          ! Determine the type of level 1b file
          !-------------------------------------------------------
-         call DETERMINE_AVHRR_FILE_TYPE(trim(File_1b_Full),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                  Ver_1b,Data_Type,Byte_Swap_1b)
-
+         call DETERMINE_AVHRR_FILE_TYPE(trim(Level1b_Full_Name),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
+                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
+  
          !-------------------------------------------------------------------
          !-- based on file type (AVHRR_KLM_Flag and Gac), determine parameters needed
          !-- to read in header and data records for this orbit
          !------------------------------------------------------------------- 
          call DEFINE_1B_DATA(AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag,Nrec_Avhrr_Header, &
-                          Nword_Clavr_Start,Nword_Clavr)
+                             Nword_Clavr_Start,Nword_Clavr)
 
          !-------------------------------------------------------------------
          !-- read in header
          !-------------------------------------------------------------------
-         call READ_AVHRR_LEVEL1B_HEADER(trim(File_1b_Full))
+         call READ_AVHRR_LEVEL1B_HEADER(trim(Level1b_Full_Name))
 
       end if
 
       !------------------------------------------------------------------------
       !  if GOES, SEVIRI and MTSAT, use elements of AREAstr to determine filesize
       !------------------------------------------------------------------------
-      if (Goes_Flag == sym%YES) then
-         Num_Pix =  int(AREAstr%Num_Elem / Goes_Xstride)
-         Num_Scans = AREAstr%Num_Line
+      if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or. &
+          trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem / Goes_Xstride)
+         Image%Number_Of_Lines = AREAstr%Num_Line
          L1b_Rec_Length = AREAstr%Num_Byte_Ln_Prefix +  &
                      (AREAstr%Num_Elem*AREAstr%Bytes_Per_Pixel)
       end if
 
-      if (Goes_Sndr_Flag == sym%YES) then
-         Num_Pix =  int(AREAstr%Num_Elem / Goes_Sndr_Xstride)
-         Num_Scans = AREAstr%Num_Line
+      if (trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem / Goes_Sndr_Xstride)
+         Image%Number_Of_Lines = AREAstr%Num_Line
          L1b_Rec_Length = AREAstr%Num_Byte_Ln_Prefix +  &
                      (AREAstr%Num_Elem*AREAstr%Bytes_Per_Pixel)
       end if
 
-      if (Seviri_Flag == sym%YES) then
-         Num_Pix =  int(AREAstr%Num_Elem)
-         Num_Scans = AREAstr%Num_Line
+      if (trim(Sensor%Sensor_Name) == 'SEVIRI') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem)
+         Image%Number_Of_Lines = AREAstr%Num_Line
       end if
 
-      if (Mtsat_Flag == sym%YES .OR. FY2_Flag == sym%YES .OR. Coms_Flag == sym%YES) then
-         Num_Pix =  int(AREAstr%Num_Elem)
-         Num_Scans = AREAstr%Num_Line
+      if (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER' .or. &
+          trim(Sensor%Sensor_Name) == 'FY2-IMAGER' .or. &
+          trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem)
+         Image%Number_Of_Lines = AREAstr%Num_Line
       end if
 
    end subroutine SET_FILE_DIMENSIONS
@@ -894,9 +1254,9 @@ contains
    !--------------------------------------------------------------------------------------------------
    !
    !--------------------------------------------------------------------------------------------------
-   subroutine READ_LEVEL1B_DATA(File_1b_Full,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
+   subroutine READ_LEVEL1B_DATA(Level1b_Full_Name,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
 
-      character(len=*), intent(in):: File_1b_Full
+      character(len=*), intent(in):: Level1b_Full_Name
       integer, intent(in):: Segment_Number
       integer, intent(in):: Nrec_Avhrr_Header
       TYPE (AREA_STRUCT), intent(in) :: AREAstr
@@ -907,18 +1267,19 @@ contains
       Ierror_Level1b = 0
       Cloud_Mask_Aux_Read_Flag = sym%NO
 
-      if (Modis_Flag == sym%YES) then
+      if (index(Sensor%Sensor_Name,'MODIS') > 0) then
          call READ_MODIS(Segment_Number,Ierror_Level1b)
          if (Ierror_Level1b /= 0) return
       end if
 
-      if (Goes_Flag == sym%YES) then
-         call READ_GOES(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or. &
+          trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') then
+         call READ_GOES(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
 
-         if (Chan_On_Flag_Default(1)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(1)==sym%YES) then
             call READ_DARK_COMPOSITE_COUNTS(Segment_Number, Goes_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
             call CALIBRATE_GOES_DARK_COMPOSITE(Two_Byte_Temp,Time_Since_Launch,Ref_Ch1_Dark_Composite)
@@ -926,17 +1287,17 @@ contains
 
       end if
 
-      if (Goes_Sndr_Flag == sym%YES) then
-         call READ_GOES_SNDR(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') then
+         call READ_GOES_SNDR(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
       !--------  MSG/SEVIRI
-      if (Seviri_Flag == sym%YES) then
-         call READ_SEVIRI(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'SEVIRI') then
+         call READ_SEVIRI(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Seviri_Xstride, &
@@ -946,9 +1307,9 @@ contains
 
 
       !--- MTSAT
-      if (Mtsat_Flag == sym%YES) then
-         call READ_MTSAT(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER') then
+         call READ_MTSAT(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Mtsat_Xstride, &
@@ -957,45 +1318,50 @@ contains
       end if
 
       !--- FY2
-      if (FY2_Flag == sym%YES) then
-         call READ_FY(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'FY2-IMAGER') then
+         call READ_FY(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
       !--- COMS
-      if (Coms_Flag == sym%YES) then
-         call READ_COMS(Segment_Number,File_1b, &
-                     Start_Day, Start_Time, &
+      if (trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
+         call READ_COMS(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
       
-      if (Avhrr_Flag == sym%YES) then
-         call READ_AVHRR_LEVEL1B_DATA(trim(File_1b_Full), &
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
+          trim(Sensor%Sensor_Name) == 'AVHRR-3') then
+         call READ_AVHRR_LEVEL1B_DATA(trim(Level1b_Full_Name), &
               AVHRR_KLM_Flag,AVHRR_AAPP_Flag,Therm_Cal_1b,&
               Time_Since_Launch,Nrec_Avhrr_Header,Segment_Number)
       end if
 
-      if (Viirs_Flag == sym%YES) then
+      if (trim(Sensor%Sensor_Name) == 'VIIRS') then
 #ifdef HDF5LIBS
-         call READ_VIIRS_DATA ( segment_number , trim(File_1b),Ierror_Level1b)
+         call READ_VIIRS_DATA ( Segment_Number , trim(Image%Level1b_Name),Ierror_Level1b)
       
          ! If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
-
-  
 #else
          print *, "No HDF5 library installed, stopping"
          stop
 #endif
       end if
+      
+      if ( trim(sensor%sensor_name ) == 'AHI' ) then
+         call READ_AHI_DATA (Segment_Number ,trim (Image%level1b_name), ierror_level1b )
+      
+      end if
 
-      if (Iff_Viirs_Flag == sym%YES .or. Iff_Modis_Flag == sym%YES .or. Iff_Avhrr_Flag == sym%YES) then
-         IFF_File = trim(File_1b)
-         call READ_IFF_DATA (Segment_Number, trim(File_1b_Full), Ierror_Level1b)
+      !--- IFF data (all sensors same format)
+      if (index(Sensor%Sensor_Name,'IFF') > 0) then
+         call READ_IFF_DATA (Segment_Number, trim(Level1b_Full_Name), Ierror_Level1b)
 
          ! If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
@@ -1003,6 +1369,53 @@ contains
       end if
 
    end subroutine READ_LEVEL1B_DATA
+
+
+!----------------------------------------------------------------
+! read the AHI constants into memory
+!-----------------------------------------------------------------
+subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
+ character(len=*), intent(in):: Instr_Const_file
+ integer:: ios0, erstat
+ integer:: Instr_Const_lun
+
+ Instr_Const_lun = GET_LUN()
+
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+
+ print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_file)
+ erstat = 0
+ if (ios0 /= 0) then
+    erstat = 19
+    print *, EXE_PROMPT, MODULE_PROMPT, "Error opening AHI constants file, ios0 = ", ios0
+    stop 19
+ endif
+
+  read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20 ! Band 7
+  !Note AHI has a 6.2 (Band 8), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27 !Band 9
+  read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28,nu_28 !Band 10
+  read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29 !Band 11
+  read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30,nu_30 !Band 12
+  !NOTE AHI as a 10.4 (Band 13), but MODIS doesn't have one
+  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
+  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
+  read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
+  read(unit=Instr_Const_lun,fmt=*) a1_37, a2_37,nu_37 !Band 8
+  read(unit=Instr_Const_lun,fmt=*) a1_38, a2_38,nu_38 !Band 13
+  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
+  close(unit=Instr_Const_lun)
+
+  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+
+end subroutine READ_AHI_INSTR_CONSTANTS
+
+
+
 
 
 end module SENSOR_MODULE

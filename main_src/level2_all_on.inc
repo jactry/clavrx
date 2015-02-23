@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 215
+ integer, parameter, private:: Num_Level2_Sds = 219
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -23,7 +23,7 @@
      Sds_Num_Level2_Solzen = 11,         Sds_Num_Level2_Solzen_Flag = 1, &      !critical for level2b
      Sds_Num_Level2_Relaz = 12 ,         Sds_Num_Level2_Relaz_Flag = 1, &       
      Sds_Num_Level2_Solaz = 13 ,         Sds_Num_Level2_Solaz_Flag = 1, &       
-     Sds_Num_Level2_Packed_Land = 14,    Sds_Num_Level2_Packed_Land_Flag = 1, &
+     Sds_Num_Level2_Packed_Land = 14,    Sds_Num_Level2_Packed_Land_Flag = 0, &
      Sds_Num_Level2_Ch1 = 15 ,           Sds_Num_Level2_Ch1_Flag = 1, &         !critical for level2b
      Sds_Num_Level2_Ch2 = 16 ,           Sds_Num_Level2_Ch2_Flag = 1, &
      Sds_Num_Level2_Ch3 = 17 ,           Sds_Num_Level2_Ch3_Flag = 1, &
@@ -87,10 +87,10 @@
      Sds_Num_Level2_Ndvi = 75,           Sds_Num_Level2_Ndvi_Flag = 1, & !off for GOES
      Sds_Num_Level2_Tsfc = 76,           Sds_Num_Level2_Tsfc_Flag = 1, &
      Sds_Num_Level2_Tair = 77,           Sds_Num_Level2_Tair_Flag = 1, &
-     Sds_Num_Level2_Trad = 78,           Sds_Num_Level2_Trad_Flag = 1, &
-     Sds_Num_Level2_Rsr = 79,            Sds_Num_Level2_Rsr_Flag = 1, &
-     Sds_Num_Level2_Qf1 = 80,            Sds_Num_Level2_Qf1_Flag = 1, &		!deprecated
-     Sds_Num_Level2_Qf2 = 81,            Sds_Num_Level2_Qf2_Flag = 1, &		!deprecated
+     Sds_Num_Level2_Trad = 78,           Sds_Num_Level2_Trad_Flag = 0, &
+     Sds_Num_Level2_Rsr = 79,            Sds_Num_Level2_Rsr_Flag = 0, &
+     Sds_Num_Level2_Qf1 = 80,            Sds_Num_Level2_Qf1_Flag = 0, &		!deprecated
+     Sds_Num_Level2_Qf2 = 81,            Sds_Num_Level2_Qf2_Flag = 0, &		!deprecated
      Sds_Num_Level2_Cod_Dcomp_Uncer = 82,Sds_Num_Level2_Cod_Dcomp_Uncer_Flag = 1, &
      Sds_Num_Level2_Ceps_Dcomp_Uncer = 83,Sds_Num_Level2_Ceps_Dcomp_Uncer_Flag = 1, &
      Sds_Num_Level2_Cth_Acha_Uncer = 84, Sds_Num_Level2_Cth_Acha_Uncer_Flag = 1, &
@@ -105,10 +105,10 @@
      Sds_Num_Level2_Ref_Ch1_Sfc = 93,    Sds_Num_Level2_Ref_Ch1_Sfc_Flag = 1, &
      Sds_Num_Level2_Ref_Ch2_Sfc = 94,    Sds_Num_Level2_Ref_Ch2_Sfc_Flag = 1, &
      Sds_Num_Level2_Ref_Ch6_Sfc = 95,    Sds_Num_Level2_Ref_Ch6_Sfc_Flag = 1, &
-     Sds_Num_Level2_Sst_Masked = 96,     Sds_Num_Level2_Sst_Masked_Flag = 1, &
-     Sds_Num_Level2_Ch1_Unnorm = 97,     Sds_Num_Level2_Ch1_Unnorm_Flag = 1, &
-     Sds_Num_Level2_Ch2_Unnorm = 98,     Sds_Num_Level2_Ch2_Unnorm_Flag = 1, &
-     Sds_Num_Level2_Ch6_Unnorm = 99,     Sds_Num_Level2_Ch6_Unnorm_Flag = 1, &
+     Sds_Num_Level2_Sst_Masked = 96,     Sds_Num_Level2_Sst_Masked_Flag = 0, &
+     Sds_Num_Level2_Ch1_Unnorm = 97,     Sds_Num_Level2_Ch1_Unnorm_Flag = 0, &
+     Sds_Num_Level2_Ch2_Unnorm = 98,     Sds_Num_Level2_Ch2_Unnorm_Flag = 0, &
+     Sds_Num_Level2_Ch6_Unnorm = 99,     Sds_Num_Level2_Ch6_Unnorm_Flag = 0, &
      Sds_Num_Level2_Ch1_Clear = 100,     Sds_Num_Level2_Ch1_Clear_Flag = 1, &
      Sds_Num_Level2_Ch1_Mean = 101,      Sds_Num_Level2_Ch1_Mean_Flag = 1, &
      Sds_Num_Level2_Sst_Unmasked = 102,  Sds_Num_Level2_Sst_Unmasked_Flag = 1, &
@@ -129,8 +129,8 @@
      Sds_Num_Level2_Cth_Acha_Qf = 117,   Sds_Num_Level2_Cth_Acha_Qf_Flag = 1, &
      Sds_Num_Level2_Ec_Acha_Qf = 118,    Sds_Num_Level2_Ec_Acha_Qf_Flag = 1, &
      Sds_Num_Level2_Beta_Acha_Qf = 119,  Sds_Num_Level2_Beta_Acha_Qf_Flag = 1, &
-     Sds_Num_Level2_Aot2 = 120,          Sds_Num_Level2_Aot2_Flag = 1, &
-     Sds_Num_Level2_Aot6 = 121,          Sds_Num_Level2_Aot6_Flag = 1, &
+     Sds_Num_Level2_Aot2 = 120,          Sds_Num_Level2_Aot2_Flag = 0, &
+     Sds_Num_Level2_Aot6 = 121,          Sds_Num_Level2_Aot6_Flag = 0, &
      Sds_Num_Level2_Aot_QF = 122,        Sds_Num_Level2_Aot_QF_Flag = 1, &
      Sds_Num_Level2_Zsfc = 123,          Sds_Num_Level2_Zsfc_Flag = 1, &
      Sds_Num_Level2_Cth_H2O = 124,       Sds_Num_Level2_Cth_H2O_Flag = 1, &
@@ -207,14 +207,14 @@
      Sds_Num_Level2_Ch31_Trans_Atm = 195, Sds_Num_Level2_Ch31_Trans_Atm_Flag = 1, &
      Sds_Num_Level2_Ch31_Sfc_Emiss = 196, Sds_Num_Level2_Ch31_Sfc_Emiss_Flag = 1, &
      Sds_Num_Level2_Ch20_Sfc_Emiss = 197, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 1, &
-     Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 1, &
+     Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 198, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
      Sds_Num_Level2_Ozone = 199,          Sds_Num_Level2_Ozone_Flag = 1, &
      Sds_Num_Level2_Acha_Cost = 200,      Sds_Num_Level2_Acha_Cost_Flag = 1, &
      Sds_Num_Level2_Hcld_Dcomp = 201,     Sds_Num_Level2_Hcld_Dcomp_Flag = 1, &
      Sds_Num_Level2_Cdnc_Dcomp = 202,     Sds_Num_Level2_Cdnc_Dcomp_Flag = 1, &
-     Sds_Num_Level2_Bt375_Snd = 203,      Sds_Num_Level2_Bt375_Snd_Flag = 1, &
-     Sds_Num_Level2_Bt11_Snd = 204,       Sds_Num_Level2_Bt11_Snd_Flag = 1, &
-     Sds_Num_Level2_Bt12_Snd = 205,       Sds_Num_Level2_Bt12_Snd_Flag = 1, &
+     Sds_Num_Level2_Bt375_Snd = 203,      Sds_Num_Level2_Bt375_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt11_Snd = 204,       Sds_Num_Level2_Bt11_Snd_Flag = 0, &
+     Sds_Num_Level2_Bt12_Snd = 205,       Sds_Num_Level2_Bt12_Snd_Flag = 0, &
      Sds_Num_Level2_High_Cld = 206,       Sds_Num_Level2_High_Cld_Flag = 1, &
      Sds_Num_Level2_Mid_Cld = 207,        Sds_Num_Level2_Mid_Cld_Flag = 1, &
      Sds_Num_Level2_Low_Cld = 208,        Sds_Num_Level2_Low_Cld_Flag = 1, &
@@ -224,4 +224,8 @@
      Sds_Num_Level2_Fire = 212,           Sds_Num_Level2_Fire_Flag = 1, &
      Sds_Num_Level2_Zc_Lower = 213,       Sds_Num_Level2_Zc_Lower_Flag = 1, &
      Sds_Num_Level2_Pc_Lower = 214,       Sds_Num_Level2_Pc_Lower_Flag = 1, &
-     Sds_Num_Level2_Cod_Mask = 215,       Sds_Num_Level2_Cod_Mask_Flag = 1
+     Sds_Num_Level2_Cod_Mask = 215,       Sds_Num_Level2_Cod_Mask_Flag = 1, &
+     Sds_Num_Level2_Ch37 = 216,           Sds_Num_Level2_Ch37_Flag = 1, &
+     Sds_Num_Level2_Ch38 = 217,           Sds_Num_Level2_Ch38_Flag = 1, &
+     Sds_Num_Level2_Ch37_Clear = 218,     Sds_Num_Level2_Ch37_Clear_Flag = 1, &
+     Sds_Num_Level2_Ch38_Clear = 219,     Sds_Num_Level2_Ch38_Clear_Flag = 1

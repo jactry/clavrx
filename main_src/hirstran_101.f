@@ -72,7 +72,7 @@ c--------------------------------------------------------------------------
       character*3 comp(nk),csat
       logical newang,newatm
       data cfile/'hirsccom.dat'/
-      character*72 ancil_data_path,pfast_path
+      character*72 ancil_data_path,pfaast_path
       data clast/'999999'/
       data comp/'dry','ozo','wco','wtl','wts'/
       data lencf/lencdb,lencob,lenccb,lenclb,lencsb/
@@ -80,7 +80,7 @@ c--------------------------------------------------------------------------
       secant(z)=1./cos(0.01745329*z)
 
       !--- this path is specific to CLAVR-x
-      pfast_path = trim(ancil_data_path)//"pfast/"
+      pfaast_path = trim(ancil_data_path)//"static/pfaast/"
 
       if(craft.ne.clast) then
 !           call getallsc(craft,csat,noff)
@@ -91,7 +91,7 @@ c--------------------------------------------------------------------------
            do l=1,nk
              cfile(6:8)=comp(l)
              iux=iux+1
-             open(iux,file=trim(pfast_path)//cfile,recl=lencf(l),
+             open(iux,file=trim(pfaast_path)//cfile,recl=lencf(l),
      +           access='direct',status='old',err=200)
              iuc(l)=iux
            enddo

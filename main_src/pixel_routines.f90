@@ -5,7 +5,7 @@
 ! NAME: pixel_routines.f90 (src)
 !       PIXEL_ROUTINES (program)
 !
-! PURPOSE: this MODULE houses routines for computing some needed pixel-level arrays
+! PURPOSE: this module houses routines for computing some needed pixel-level arrays
 !
 ! DESCRIPTION: 
 !
@@ -63,6 +63,8 @@ MODULE PIXEL_ROUTINES
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
           COMPUTE_SNOW_FIELD, &
+          EXPAND_SPACE_MASK_FOR_USER_LIMITS, &
+          SET_SOLAR_CONTAMINATION_MASK, &
           SET_BAD_PIXEL_MASK, &
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           READ_MODIS_WHITE_SKY_ALBEDO,      &
@@ -101,45 +103,40 @@ MODULE PIXEL_ROUTINES
    !  called by process_clavrx inside segment loop
    !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
    !----------------------------------------------------------------------
-   subroutine SET_CHAN_ON_FLAG(jmin,nj)
+   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line)
 
-      integer (kind=int4), intent(in):: jmin
-      integer (kind=int4), intent(in):: nj
-      integer:: Line_Idx
-      
-      
-      Ch6_On_Pixel_Mask = sym%NO
+     integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
+     integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
+     integer:: Number_of_Elements
+     integer:: Number_of_Lines
+     integer:: Elem_Idx
+     integer:: Line_Idx
 
-      line_loop: DO Line_Idx = jmin, nj - jmin + 1
+     Number_of_Elements = Image%Number_Of_Elements
+     Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+      
+     line_loop: do Line_Idx = 1, Number_Of_Lines
       
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
-         Chan_On_Flag(:,Line_Idx) = Chan_On_Flag_Default   
-         
+         Chan_On_Flag_Per_Line(:,Line_Idx) = Chan_On_Flag_Default   
          
          ! two exceptions
-         if (Modis_Aqua_Flag == sym%YES .OR. Modis_Aqua_Mac_Flag == sym%YES &
-                .and. Chan_On_Flag_Default(6) == sym%YES ) then
-            
+         if (trim(Sensor%Platform_Name)=='AQUA' .and. Chan_On_Flag_Default(6) == sym%YES ) then
             if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                     Chan_On_Flag(6,Line_Idx) = sym%NO 
+                 Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
             end if  
          end if
          
-         
-         if (Avhrr_Flag == sym%YES) then
+         if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
             if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-               Chan_On_Flag(6,Line_Idx) = Chan_On_Flag_Default(6)   
-               Chan_On_Flag(20,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(6,Line_Idx) = Chan_On_Flag_Default(6)   
+               Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
             end if
             if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-               Chan_On_Flag(6,Line_Idx) = sym%NO   
-               Chan_On_Flag(20,Line_Idx) = Chan_On_Flag_Default(20)   
+               Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(20,Line_Idx) = Chan_On_Flag_Default(20)   
             end if
          endif
-
-
-         !--- set 2d mask used for channel-6 (1.6 um)
-         Ch6_On_Pixel_Mask(:,Line_Idx) = Chan_On_Flag(6,Line_Idx)
 
       end do line_loop
 
@@ -155,24 +152,150 @@ subroutine QC_MODIS(jmin,nj)
 
   Bad_Pixel_Mask = sym%NO
 
-  line_loop: DO Line_Idx= jmin, nj- jmin + 1
+  line_loop: do Line_Idx= jmin, nj- jmin + 1
      if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
         Bad_Pixel_Mask(:,Line_Idx) = sym%YES
      endif
-     if (maxval(lat_1b(:,Line_Idx)) < -100.0) then
+     if (maxval(Nav%Lat_1b(:,Line_Idx)) < -100.0) then
         Bad_Pixel_Mask(:,Line_Idx) = sym%YES
      endif
   enddo line_loop
 
 end subroutine QC_MODIS
+
+!======================================================================
+! Modify the space mask based the limits on lat, lon, satzen and solzen 
+! Space mask was initially determined in the Level-1b Navigation
+!======================================================================
+subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
+
+   integer(kind=int1), dimension(:,:), intent(inout):: Space_Mask
+
+   where(Nav%Lat_1b /= Missing_Value_Real4 .and. Nav%Lon_1b /= Missing_Value_Real4)
+        Space_Mask = sym%NO
+   elsewhere 
+        Space_Mask = sym%YES
+   end where
+
+   where(isnan(Nav%Lat_1b) .or. isnan(Nav%Lon_1b))
+        Space_Mask = sym%YES
+   end where
+
+   where(Nav%Lat_1b < Nav%Lat_Min_Limit .or. Nav%Lat_1b > Nav%Lat_Max_Limit)
+        Space_Mask = sym%YES
+   end where
+
+   where(Nav%Lon_1b < Nav%Lon_Min_Limit .or. Nav%Lon_1b > Nav%Lon_Max_Limit)
+        Space_Mask = sym%YES
+   end where
+
+   !--- Satzen limit
+   where (Geo%Satzen >= Geo%Satzen_Max_Limit .or. Geo%Satzen <= Geo%Satzen_Min_Limit)
+        Space_Mask = sym%YES
+   end where
+
+   !--- Solzen limit
+   where (Geo%Solzen < Geo%Solzen_Min_Limit .or. Geo%Solzen > Geo%Solzen_Max_Limit .or. Geo%Satzen == Missing_Value_Real4)
+        Space_Mask = sym%YES
+   end where
+
+end subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS
  
 !======================================================================
-! Check for bad pixels
+! Check for solar contamination of what should be nighttime data
+! 
+! this is common in AVHRR and GOES.  Pixels with solar contamination
+!
+! are treated as bad pixel in the bad_pixel_mask
+!
 !======================================================================
-subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
+subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask) 
 
-   integer, intent(in):: Number_of_Elements
-   integer, intent(in):: Number_of_Lines
+   integer(kind=int1), dimension(:,:), intent(out):: Solar_Contamination_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
+   integer:: Elem_Idx
+   integer:: Line_Idx
+
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+   !--- initialize 
+   Solar_Contamination_Mask(:,1:Number_Of_Lines) = sym%NO
+
+   !---  loop through lines and elements
+   line_loop: do Line_Idx = 1, Number_of_Lines
+      element_loop: do Elem_Idx = 1, Number_of_Elements
+
+        !--- check for solar contamination of nighttime data in AVHRR
+        if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+
+          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
+
+            if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+              if (therm_cal_1b == sym%NO) then
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                endif
+             else
+               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+               endif 
+             endif
+            endif
+  
+          endif
+
+          !--- check for solar contamination of nighttime data in GOES
+          if (index(Sensor%Sensor_Name,'GOES') > 0) then
+             if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                endif 
+             endif
+          endif
+
+        endif
+
+        !--- check for solar contamination of nighttime data in GOES
+        if (index(Sensor%Sensor_Name,'GOES') > 0) then
+          if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Geo%Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
+            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+            endif
+          endif
+        endif
+
+      end do element_loop
+   end do line_loop
+
+end subroutine SET_SOLAR_CONTAMINATION_MASK
+
+!======================================================================
+! Check for bad pixels
+!
+! Apply tests to detect pixels that should not be processed.
+!
+!
+! Bad_Pixel_Mask is meant to single mask that captures all reasons
+! why a pixel should be skipped. This includes
+!
+! Space_Mask
+! Solar_Contamination_Mask
+! Missing NWP
+! any one of channel tests
+!
+! Also, if many pixels in a line are bad, the whole line is set to bad
+!
+! Output:  Bad_Pixel_Mask 
+! Input: taken from pixel common
+!  
+!======================================================================
+subroutine SET_BAD_PIXEL_MASK(Bad_Pixel_Mask)
+
+   integer(kind=int1), dimension(:,:), intent(out):: Bad_Pixel_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
    integer:: Elem_Idx
    integer:: Line_Idx
    integer:: Number_Bad_Pixels
@@ -180,7 +303,10 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
    integer:: Lon_Nwp_Idx
    integer:: Lat_Nwp_Idx
 
-   Number_Bad_Pixels_Thresh = 0.9 * Num_Pix
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+   Number_Bad_Pixels_Thresh = 0.9 * Image%Number_Of_Elements
 
 !----------------------------------------------------------------------
 !--- assign bad pixel mask based on scanline fatal flag
@@ -188,62 +314,36 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
    !---- this is needed to ensure extra lines (beyond Num_Scans_Read) are bad
    Bad_Pixel_Mask = sym%YES
 
-   line_loop: DO Line_Idx = 1, Number_of_Lines
+   line_loop: do Line_Idx = 1, Number_of_Lines
 
       !--- initialize
-      Solar_Contamination_Mask(:,Line_Idx) = sym%NO
       Bad_Pixel_Mask(:,Line_Idx) = sym%NO
-      Space_Mask(:,Line_Idx) = sym%NO_SPACE
 
      !--- check for a bad scan
      if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
 
        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
-       Space_Mask(:,Line_Idx) = sym%SPACE
 
      else
 
       !--- if not a bad scan, check pixels on this scan
-      element_loop: DO Elem_Idx = 1, Number_of_Elements
+      element_loop: do Elem_Idx = 1, Number_of_Elements
 
-        !--- missing geolocation
-        if ((Lat(Elem_Idx,Line_Idx) == Missing_Value_Real4) .or.  &
-            (Lon(Elem_Idx,Line_Idx) == Missing_Value_Real4)) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
+        Bad_Pixel_Mask(Elem_Idx,Line_Idx) = Space_Mask(Elem_Idx,Line_Idx)
 
         !--- NaN checks on geolocation and geometry
-        if (isnan(Lat(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Lon(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Satzen(Elem_Idx,Line_Idx)) .or.  &
-            isnan(Solzen(Elem_Idx,Line_Idx))) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
+        if (isnan(Geo%Satzen(Elem_Idx,Line_Idx)) .or.  &
+            isnan(Geo%Solzen(Elem_Idx,Line_Idx))) then
+            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
-        !--- Satzen limit
-        if (Satzen(Elem_Idx,Line_Idx) >= Satzen_Thresh_Processing) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
- 
-        !--- Satzen limit
-        if (Satzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
+        !--- Bad Relazimuth
+        if (Geo%Relaz(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
 
-        !--- Relaz limit
-        if (Relaz(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- Solzen limit
-        if (Solzen(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Chan_On_Flag_Default(32) == sym%YES)) then
+        if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(32) == sym%YES)) then
 
           !--- CALL any scan with a ridiculous pixel as bad 
           !--- this is attempt data like NOAA-16 2004 023 where
@@ -254,13 +354,8 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
 
         endif
 
-        !--- space views for considered as bad pixels
-        if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
         !--- missing 11 um observations
-        if (Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
          if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 150.0) then
            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
@@ -281,10 +376,10 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
         !--- as bad data.  In these regions there is no ch3b
 !       if ((AVHRR_Flag == sym%YES) .and. &
 !           ((Sc_Id_WMO <= 5) .or. (Sc_Id_WMO >= 206 .and. Sc_Id_WMO <= 223)) .and. &   !AVHRR/3 only
-!           (Chan_On_Flag_Default(6) == sym%YES) .and. &
-!           (Chan_On_Flag_Default(20) == sym%YES) .and. &
+!           (Sensor%Chan_On_Flag_Default(6) == sym%YES) .and. &
+!           (Sensor%Chan_On_Flag_Default(20) == sym%YES) .and. &
 !           (Solzen(Elem_Idx,Line_Idx) > 90.0)) then
-!           if (Chan_On_Flag_Default(20) == sym%YES) then
+!           if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
 !            if (ch(20)%Bt_Toa(Elem_Idx,Line_Idx) < 0.0) then
 !               Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
 !            endif
@@ -293,53 +388,9 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
         
 
         !--- check for solar zenith angle limits
-        if ((Solzen(Elem_Idx,Line_Idx) < Solzen_Min_limit) .or. (Solzen(Elem_Idx,Line_Idx) > Solzen_Max_limit)) then
+        if ((Geo%Solzen(Elem_Idx,Line_Idx) < Geo%Solzen_Min_Limit) .or. &
+            (Geo%Solzen(Elem_Idx,Line_Idx) > Geo%Solzen_Max_Limit)) then
              Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
-        endif
-
-        !--- check for solar contamination of nighttime data in AVHRR
-        if (Chan_On_Flag_Default(1) == sym%YES) then
-
-          if (AVHRR_Flag == sym%YES) then
-
-            if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-              if (therm_cal_1b == sym%NO) then
-!               if (Ch1_Counts(Elem_Idx,Line_Idx) - Scan_Space_Counts_Avhrr(1,Line_Idx) > 2) then 
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif
-             else
-               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-               endif 
-             endif
-            endif
-  
-          endif
-
-          !--- check for solar contamination of nighttime data in GOES
-          if (GOES_Flag == sym%YES) then
-             if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-                endif 
-             endif
-          endif
-
-        endif
-
-        !--- CALL any bad pixel as being space (for ancil data interp)
-        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-           Space_Mask(Elem_Idx,Line_Idx) = sym%SPACE
-        endif
-
-        !--- check for solar contamination of nighttime data in GOES
-        if (GOES_Flag == sym%YES) then
-          if ((Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
-            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
-              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-            endif
-          endif
         endif
 
         !--- NWP
@@ -381,7 +432,7 @@ subroutine SET_BAD_PIXEL_MASK(Number_of_Elements,Number_of_Lines)
   ! if the IDPS cloud mask is to be used for product generation, make sure that
   ! pixels within the gaps are considered bad
   !-----------------------------------------------------------------------------------
-  if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Viirs_Flag == sym%YES) then
+  if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. trim(Sensor%Sensor_Name) == 'VIIRS') then
       where(Gap_Pixel_Mask == sym%YES)
          Bad_Pixel_Mask = sym%YES
       endwhere
@@ -398,22 +449,27 @@ end subroutine SET_BAD_PIXEL_MASK
 !QUALITY_CONTROL_ANCILLARY_DATA
 !
 ! Apply some checks on ancillary data.  Call pixels bad when checks fail
+!
+! Note, Bad_Pixel_Mask is modified but not created here. Do not initialize
 !--------------------------------------------------------------------------
-subroutine QUALITY_CONTROL_ANCILLARY_DATA (j1,nj)
-   integer, intent(in):: j1, nj
-   integer:: j2, Elem_Idx,Line_Idx
+subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
+   integer(kind=int1), dimension(:,:), intent(inout):: Bad_Pixel_Mask
+   integer:: Number_of_Elements
+   integer:: Number_of_Lines
+   integer:: Elem_Idx
+   integer:: Line_Idx
 
-   j2 = j1 + nj - 1
+   Number_of_Elements = Image%Number_Of_Elements
+   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
 
-   DO Line_Idx = j1,j2+j1-1
+   do Line_Idx = 1, Number_of_Lines
 
-      DO Elem_Idx = 1, Num_Pix
+      do Elem_Idx = 1, Number_Of_Elements
 
         !--- invalid sfc type observations
-        if (Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc_Type(Elem_Idx,Line_Idx) > 15) then
+        if (Sfc%Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) > 15) then
            Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
         endif
-
 
       enddo
 
@@ -438,7 +494,7 @@ subroutine CONVERT_TIME(j1,j2)
    do j = j1,j1+j2-1
 
     !--- loop over pixels
-    do i = 1, Num_Pix
+    do i = 1, Image%Number_Of_Elements
 
       !--- check for a bad pixel
       if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -449,7 +505,7 @@ subroutine CONVERT_TIME(j1,j2)
       Utc_Scan_Time_Hours(j) = Scan_Time(j) / 60.0 / 60.0/ 1000.0
 
       !--- compute local time based on utc and longitude
-      Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + lon(i,j) / 15.0
+      Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + Nav%Lon(i,j) / 15.0
 
       !--- constrain local time to be between 0 and 24 
       if (Pixel_Local_Time_Hours(i,j) > 24.0) then 
@@ -488,39 +544,39 @@ end subroutine CONVERT_TIME
 
    j2 = j1 + nj - 1
 
-   Coszen(:,j1:j2) = cos(Satzen(:,j1:j2)*dtor)
+   Geo%Coszen(:,j1:j2) = cos(Geo%Satzen(:,j1:j2)*dtor)
 
-   Seczen(:,j1:j2) = 1.0 / Coszen(:,j1:j2)
+   Geo%Seczen(:,j1:j2) = 1.0 / Geo%Coszen(:,j1:j2)
 
-   Cossolzen(:,j1:j2) = cos(Solzen(:,j1:j2)*dtor)
+   Geo%Cossolzen(:,j1:j2) = cos(Geo%Solzen(:,j1:j2)*dtor)
 
-   Airmass(:,j1:j2) = 1.0
-   where(Solzen(:,j1:j2) /= 0.0 .and. Coszen(:,j1:j2) /= 0.0) 
-    Airmass(:,j1:j2) = 1.0/Cossolzen(:,j1:j2) + 1.0/Coszen(:,j1:j2)
+   Geo%Airmass(:,j1:j2) = 1.0
+   where(Geo%Solzen(:,j1:j2) /= 0.0 .and. Geo%Coszen(:,j1:j2) /= 0.0) 
+    Geo%Airmass(:,j1:j2) = 1.0/Geo%Cossolzen(:,j1:j2) + 1.0/Geo%Coszen(:,j1:j2)
    endwhere
 
 !--- other useful arrays 
 
    !--- channel 31 and channel 32 brightness temperature difference
-   if ((Chan_On_Flag_Default(31) == sym%YES) .and. &
-       (Chan_On_Flag_Default(32) == sym%YES)) then
+   if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+       (Sensor%Chan_On_Flag_Default(32) == sym%YES)) then
         Btd_Ch31_Ch32(:,j1:j2) = ch(31)%Bt_Toa(:,j1:j2) - ch(32)%Bt_Toa(:,j1:j2)
    endif
 
    !--- SST for cloud masking - MCSST
    ! --- edited by Denis Botambekov Oct,2012
-   if (Viirs_Flag == sym%NO .and. Iff_Viirs_Flag == sym%NO) then
-      if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+   if (index(Sensor%Sensor_Name,'VIIRS') == 0) then
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
          Sst_Unmasked(:,j1:j2) = b1_day_Mask * ch(31)%Bt_Toa(:,j1:j2) + b2_day_Mask * &
                     (Btd_Ch31_Ch32(:,j1:j2)) + b3_day_Mask * (Btd_Ch31_Ch32(:,j1:j2)) * &
-                    (seczen(:,j1:j2)-1.0) + b4_day_Mask + 273.15
+                    (Geo%Seczen(:,j1:j2)-1.0) + b4_day_Mask + 273.15
       else
          Sst_Unmasked(:,j1:j2) = Missing_Value_Real4
       endif
    endif
 
    !--- channel 20 and channel 31 brightness temperature difference
-    if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      Btd_Ch20_Ch31 = ch(20)%Bt_Toa - ch(31)%Bt_Toa
      where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(31)%Bt_Toa == Missing_Value_Real4)
        Btd_Ch20_Ch31 = Missing_Value_Real4
@@ -528,7 +584,7 @@ end subroutine CONVERT_TIME
     endif
 
    !--- channel 20 and channel 32 brightness temperature difference
-    if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
      Btd_Ch20_Ch32 = ch(20)%Bt_Toa - ch(32)%Bt_Toa
      where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(32)%Bt_Toa == Missing_Value_Real4)
        Btd_Ch20_Ch32 = Missing_Value_Real4
@@ -547,13 +603,13 @@ end subroutine CONVERT_TIME
 
    j2 = j1 + nj - 1
 
-   Snow = Missing_Value_Int1
+   Sfc%Snow = Missing_Value_Int1
 
-j_loop:    DO j = j1,j2
+j_loop:    do j = j1,j2
                                                                                                                                          
-  i_loop:    DO i = 1, Num_Pix
+  i_loop:    do i = 1, Image%Number_Of_Elements
 
-      Snow(i,j) = Missing_Value_Int1
+      Sfc%Snow(i,j) = Missing_Value_Int1
 
       !--- check for bad scans
       if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -561,7 +617,7 @@ j_loop:    DO j = j1,j2
       endif
 
       !--- initialize valid pixels to NO_SNOW
-      Snow(i,j) = sym%NO_SNOW
+      Sfc%Snow(i,j) = sym%NO_SNOW
 
       !--- save nwp indices for convenience
       inwp = i_nwp(i,j)
@@ -569,9 +625,9 @@ j_loop:    DO j = j1,j2
      
       !--- if hires available, use it and ignore other sources
       ihires = sym%NO
-      if (read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
+      if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
           Failed_Hires_Snow_Mask_flag == sym%NO) then
-          Snow(i,j) = Snow_Hires(i,j)
+          Sfc%Snow(i,j) = Sfc%Snow_Hires(i,j)
           ihires = sym%YES
       endif
 
@@ -581,10 +637,10 @@ j_loop:    DO j = j1,j2
         if (Nwp_Opt > 0) then
           if ((inwp > 0) .and. (jnwp > 0)) then
             if (Weasd_Nwp(inwp, jnwp) > 0.1) then  !this is Snow depth
-                Snow(i,j) = sym%SNOW
+                Sfc%Snow(i,j) = sym%SNOW
              endif
              if (Use_Sst_Anal == sym%NO .and. Ice_Nwp(inwp, jnwp) > 0.5) then
-               Snow(i,j) = sym%SEA_ICE
+               Sfc%Snow(i,j) = sym%SEA_ICE
              endif
            endif
          endif
@@ -592,11 +648,11 @@ j_loop:    DO j = j1,j2
          !--- GlobSnow (Land Only)
          if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and.   &
           Failed_Glob_Snow_Mask_Flag == sym%NO  .and.       &
-          Land(i,j) == sym%LAND  .and.       &
-          lat(i,j) >= 35.0 .and. &     !note, globSnow is NH only (35-85)
-          lat(i,j) <= 85.0) then
+          Sfc%Land(i,j) == sym%LAND  .and.       &
+          Nav%Lat(i,j) >= 35.0 .and. &     !note, globSnow is NH only (35-85)
+          Nav%Lat(i,j) <= 85.0) then
 
-            Snow(i,j)  = Snow_Glob(i,j)
+            Sfc%Snow(i,j)  = Sfc%Snow_Glob(i,j)
 
          endif  
 
@@ -604,26 +660,24 @@ j_loop:    DO j = j1,j2
          !-- correct for GlobSnow missing snow over Greenland and Arctic Islands
          !-- that have a barren surface type
          if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc_Type(i,j) == sym%Bare_Sfc .or. Sfc_Type(i,j) == sym%OPEN_SHRUBS_SFC) .and. &
-             (abs(Lat(i,j)) > 60.0) .and. &
+          if ((Sfc%Sfc_Type(i,j) == sym%Bare_Sfc .or. Sfc%Sfc_Type(i,j) == sym%OPEN_SHRUBS_SFC) .and. &
+             (abs(Nav%Lat(i,j)) > 60.0) .and. &
              (Weasd_Nwp(inwp, jnwp) > 0.1)) then
-
-                Snow(i,j) = sym%SNOW
-
+                Sfc%Snow(i,j) = sym%SNOW
           endif
          endif
 
          !-- correct for GlobSnow missing snow over mountains in v1.0
          !-- this will be fixed in future versions
          if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Zsfc(i,j) > 1000.0) .and.  (Weasd_Nwp(inwp, jnwp) > 0.001)) then
-                Snow(i,j) = sym%SNOW
+          if ((Sfc%Zsfc(i,j) > 1000.0) .and.  (Weasd_Nwp(inwp, jnwp) > 0.001)) then
+                Sfc%Snow(i,j) = sym%SNOW
           endif
          endif
 
          !--- pick up small lakes in regions marked snowy in glob snow 
-         if ((Land(i,j) /= sym%LAND) .and. (Snow_Glob(i,j) == sym%SNOW .or. Snow_Glob(i,j) == sym%SEA_ICE)) then
-          Snow(i,j)  = sym%SEA_ICE
+         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sfc%Snow_Glob(i,j) == sym%SNOW .or. Sfc%Snow_Glob(i,j) == sym%SEA_ICE)) then
+          Sfc%Snow(i,j)  = sym%SEA_ICE
          endif
 
 
@@ -634,25 +688,25 @@ j_loop:    DO j = j1,j2
          !--- under these conditions believe SST Analysis
          !--- and allow it to remove ice 
          if (use_Sst_anal == sym%YES .and. &
-             (Land(i,j) == sym%DEEP_OCEAN .or.     &
-              Land(i,j) == sym%DEEP_INLAND_WATER .or. &
-              Land(i,j) == sym%MODERATE_OCEAN .or. &
-              Land(i,j) == sym%SHALLOW_OCEAN))  then
+             (Sfc%Land(i,j) == sym%DEEP_OCEAN .or.     &
+              Sfc%Land(i,j) == sym%DEEP_INLAND_WATER .or. &
+              Sfc%Land(i,j) == sym%MODERATE_OCEAN .or. &
+              Sfc%Land(i,j) == sym%SHALLOW_OCEAN))  then
 
            if (Sst_Anal_Cice(i,j) > 0.50) then     
-             Snow(i,j) = sym%SEA_ICE
+             Sfc%Snow(i,j) = sym%SEA_ICE
            else
-             Snow(i,j) = sym%NO_SNOW
+             Sfc%Snow(i,j) = sym%NO_SNOW
            endif
 
          endif
 
          !--- OISST does not capture sea-ice in shallow water near AntArctica
          if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Land(i,j) == sym%SHALLOW_OCEAN) .and. &
-              (Lat(i,j) < -60.0) .and. &
+          if ((Sfc%Land(i,j) == sym%SHALLOW_OCEAN) .and. &
+              (Nav%Lat(i,j) < -60.0) .and. &
               ((Ice_Nwp(inwp,jnwp) > 0.50).or.(Weasd_Nwp(inwp,jnwp)>0.1))) then
-                Snow(i,j) = sym%SEA_ICE
+                Sfc%Snow(i,j) = sym%SEA_ICE
           endif
          endif
 
@@ -660,16 +714,16 @@ j_loop:    DO j = j1,j2
          !--- allow sst analysis to detect any ice (but not remove it)
          !--- this is needed since Lake Erie is cover the OISST but
          !--- classified as shallow_inland_water
-         if ((Land(i,j) /= sym%LAND) .and. (Sst_Anal_Cice(i,j) > 0.50)) then     
-             Snow(i,j) = sym%SEA_ICE
+         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sst_Anal_Cice(i,j) > 0.50)) then     
+             Sfc%Snow(i,j) = sym%SEA_ICE
          endif
           
          !-- final check for consistnecy of land and snow masks
-         if ((Snow(i,j) == sym%SNOW) .and. (Land(i,j) /= sym%LAND)) then
-             Snow(i,j) = sym%SEA_ICE
+         if ((Sfc%Snow(i,j) == sym%SNOW) .and. (Sfc%Land(i,j) /= sym%LAND)) then
+             Sfc%Snow(i,j) = sym%SEA_ICE
          endif
-         if ((Snow(i,j) == sym%SEA_ICE) .and. (Land(i,j) == sym%LAND)) then
-             Snow(i,j) = sym%SNOW
+         if ((Sfc%Snow(i,j) == sym%SEA_ICE) .and. (Sfc%Land(i,j) == sym%LAND)) then
+             Sfc%Snow(i,j) = sym%SNOW
          endif
 
           
@@ -677,25 +731,25 @@ j_loop:    DO j = j1,j2
 
        !-------------------------------------------------------
        ! use some basic tests to modify Snow
-       ! only DO this when hires Snow field is unavailable
+       ! only do this when hires Snow field is unavailable
        !-------------------------------------------------------
 
        if (ihires == sym%NO) then
 
           !-- can't be Snow if warm
-         if (Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
           if (ch(31)%Bt_Toa(i,j) > 277.0) then
-           Snow(i,j) = sym%NO_SNOW
+           Sfc%Snow(i,j) = sym%NO_SNOW
           endif
          endif
 
          !--- some day-specific tests
-         if (Solzen(i,j) < 75.0) then  ! day check
+         if (Geo%Solzen(i,j) < 75.0) then  ! day check
 
          !--- conditions where Snow is not possible
-           if (Chan_On_Flag_Default(1) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             if(ch(1)%Ref_Toa(i,j) < 10.0) then
-             Snow(i,j) = sym%NO_SNOW
+             Sfc%Snow(i,j) = sym%NO_SNOW
             endif
            endif
 
@@ -745,12 +799,12 @@ j_loop:    DO j = j1,j2
   Tsfc_Qf = 0
 
   !--- if no ch31, abort
-  if (Chan_On_Flag_Default(31) == sym%NO) then
+  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) then
      return 
   endif
 
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Num_Pix
+  line_loop: do Line_Idx=jmin, jmax - jmin + 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
       !--- check for a bad pixel pixel
       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -781,8 +835,8 @@ j_loop:    DO j = j1,j2
 
       !--- if water and a valid SST exists, use this as the surface temperature
       !--- or if no Sst is available, use the Tsfc computed above
-      if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
-          (Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW)) then
+      if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
+          (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW)) then
 
           if (Sst_Unmasked(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
             Sst_Unmasked(Elem_Idx,Line_Idx) = Tsfc_Retrieved(Elem_Idx,Line_Idx)
@@ -833,37 +887,37 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
    real:: Scattering_Angle
 
    Elem_Idx_Min = 1
-   Num_Elements = Num_Pix
+   Num_Elements = Image%Number_Of_Elements
    Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
    Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
   !---------- loop over scan lines
-  line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
+  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
-  element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
+  element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
 
-     channel_loop: do Chan_Idx = 1,42
+     channel_loop: do Chan_Idx = 1,44
 
-       if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+       if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
        if (Chan_Idx /= 1 .and. Chan_Idx /= 2 .and. Chan_Idx /= 5 .and. &
-           Chan_Idx /= 6 .and. Chan_Idx /= 7 .and. Chan_Idx /= 42) cycle
+           Chan_Idx /= 6 .and. Chan_Idx /= 7 .and. Chan_Idx /= 44) cycle
 
        !--- check for valid data
-       if (Chan_Idx /= 42 .and. ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-       if (Chan_Idx == 42) then
+       if (Chan_Idx /= 44 .and. ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+       if (Chan_Idx == 44) then
          if (ch(Chan_Idx)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
        endif
 
        !--- set source angle
-       Source_Zen = SolZen(Elem_Idx,Line_Idx)
-       Scattering_Angle = Scatangle(Elem_Idx,Line_Idx)
-       if (Chan_Idx == 42) then
-            Source_Zen = LunZen(Elem_Idx,Line_Idx)
-            Scattering_Angle = Scatangle_Lunar(Elem_Idx,Line_Idx)
+       Source_Zen = Geo%SolZen(Elem_Idx,Line_Idx)
+       Scattering_Angle = Geo%Scatangle(Elem_Idx,Line_Idx)
+       if (Chan_Idx == 44) then
+            Source_Zen = Geo%LunZen(Elem_Idx,Line_Idx)
+            Scattering_Angle = Geo%Scatangle_Lunar(Elem_Idx,Line_Idx)
        endif
 
        !--- check for appropriate illumination
@@ -887,62 +941,62 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) / 100.0
          else 
-              Albedo_View = Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+              Albedo_View = Ch1_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = Ch1_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
        case(2)
          if (ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) / 100.0
          else 
-              Albedo_View = Ch2_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+              Albedo_View = Ch2_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = Ch2_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
        case(5)
          if (ch(5)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = ch(5)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) / 100.0
          else 
-              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0 !Note there is no Ch5_Sfc_Alb_Umd
+              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0 !Note there is no Ch5_Sfc_Alb_Umd
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = Ch5_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = Ch5_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
        case(6)
          if (ch(6)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = ch(6)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) / 100.0
          else 
-              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = Ch6_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = Ch6_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
        case(7)
          if (ch(7)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = ch(7)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) / 100.0
          else 
-              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0   !Note there is no Ch7_Sfc_Alb_Umd
+              Albedo_View = Ch6_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0   !Note there is no Ch7_Sfc_Alb_Umd
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = Ch7_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = Ch7_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
 
-       case(42)  !DNB - use mean of ch1 and ch2 for sfc reflectance
+       case(44)  !DNB - use mean of ch1 and ch2 for sfc reflectance
          if (ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4 &
             .and. ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
               Albedo_View = 0.5*(ch(1)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)+ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx)) / 100.0
          else 
-              Albedo_View = 0.5*(Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
+              Albedo_View = 0.5*(Ch1_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) + Ch2_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif 
-         if (Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
-              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx)) &
-               + Ch2_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
+         if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
+              Albedo_View = 0.5*(Ch1_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) &
+               + Ch2_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx))) / 100.0
          endif
        end select
 
@@ -952,7 +1006,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        Cos_Source_Zen = Missing_Value_Real4
        if (Source_Zen >= 0.0 .and. Source_Zen < 90.0) Cos_Source_Zen = cos(Source_Zen*DTOR)
 
-       Airmass_Factor = 1.0 / CosZen(Elem_Idx,Line_Idx) + &
+       Airmass_Factor = 1.0 / Geo%CosZen(Elem_Idx,Line_Idx) + &
                         1.0 / Cos_Source_Zen
 
        !--- compute atmospheric scattering
@@ -962,7 +1016,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
                                      Tau_Ray, &
                                      Tau_Gas, &
                                      Scattering_Angle, &
-                                     Coszen(Elem_Idx,Line_Idx), &
+                                     Geo%Coszen(Elem_Idx,Line_Idx), &
                                      Cos_Source_Zen, &
                                      Albedo_View, &
                                      Albedo_Sun, &
@@ -972,7 +1026,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        Tau_Total = Tau_Aer + Tau_Ray + Tau_Gas
        Trans_Total = exp(-Tau_Total*Airmass_Factor)
 
-       if (Chan_Idx /= 42) then
+       if (Chan_Idx /= 44) then
 
          !--- compute atmospherically corrected reflectance (at sfc level)s
          ch(Chan_Idx)%Ref_Sfc(Elem_Idx,Line_Idx) = (ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_ss) / Trans_Total
@@ -997,7 +1051,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
 
       if (Chan_Idx == 26) cycle
 
-      if (Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 
       ch(Chan_Idx)%Rad_Sfc(Elem_Idx,Line_Idx) = max(0.0,(ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx) -  &
                                                          ch(Chan_Idx)%Rad_Atm(Elem_Idx,Line_Idx))/ &
@@ -1005,8 +1059,8 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
    enddo
 
    !--- channel 20 reflectance correction
-   if (Chan_On_Flag_Default(20) == sym%YES .and.   &
-       Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.   &
+       Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
        if (ch(31)%Bt_Sfc(Elem_Idx,Line_Idx) > 180.0) then
           Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = PLANCK_RAD_FAST(20,ch(31)%Bt_Sfc(Elem_Idx,Line_Idx))
@@ -1015,15 +1069,15 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
          Ems_Ch20_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
        endif
-       if ((Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0) &
+       if ((Geo%Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0) &
          .and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
          ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*pi*(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)-Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)) /  &
-                  ((Solar_Ch20_Nu*Cossolzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2) - &
+                  ((Solar_Ch20_Nu*Geo%Cossolzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2) - &
                   pi*Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) )
        endif
 
        !----- during the night, derive Ref_Ch20_Sfc from Ems_Ch20_Sfc
-       if ((Solzen(Elem_Idx,Line_Idx)>=90.0).and.(Ems_Ch20_Sfc(Elem_Idx,Line_Idx)/=Missing_Value_Real4)) then
+       if ((Geo%Solzen(Elem_Idx,Line_Idx)>=90.0).and.(Ems_Ch20_Sfc(Elem_Idx,Line_Idx)/=Missing_Value_Real4)) then
          ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*(1.0-Ems_Ch20_Sfc(Elem_Idx,Line_Idx))
        endif
 
@@ -1061,8 +1115,8 @@ end subroutine ATMOS_CORR
    Olr_Qf(:,Line_Idx_Min:Line_Idx_Max) = 0
 
    !--- check for required channels
-   if (Chan_On_Flag_Default(31) == sym%NO) return
-   if (Chan_On_Flag_Default(32) == sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
 
    where(ch(31)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) > 100.0 .and. &
          ch(31)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) < 350.0 .and. &
@@ -1070,14 +1124,14 @@ end subroutine ATMOS_CORR
 
     !-- this makes the window eff flux temp (K) (win_Olr = sigma*win_temp^4)
     Olr(:,Line_Idx_Min:Line_Idx_Max) = win_0 + win_1*ch(32)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) + &
-                   win_2*ch(32)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max)*seczen(:,Line_Idx_Min:Line_Idx_Max) + &
-                   win_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*seczen(:,Line_Idx_Min:Line_Idx_Max)
+                   win_2*ch(32)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max)*Geo%seczen(:,Line_Idx_Min:Line_Idx_Max) + &
+                   win_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*Geo%seczen(:,Line_Idx_Min:Line_Idx_Max)
 
     !--- this make the Olr temp (K)
     Olr(:,Line_Idx_Min:Line_Idx_Max) = Olr_0 + Olr_1*Olr(:,Line_Idx_Min:Line_Idx_Max) + &
                        Olr_2*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max)) + &
-                       Olr_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*seczen(:,Line_Idx_Min:Line_Idx_Max) + &
-                       Olr_4*Olr(:,Line_Idx_Min:Line_Idx_Max)*seczen(:,Line_Idx_Min:Line_Idx_Max)
+                       Olr_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*Geo%Seczen(:,Line_Idx_Min:Line_Idx_Max) + &
+                       Olr_4*Olr(:,Line_Idx_Min:Line_Idx_Max)*Geo%Seczen(:,Line_Idx_Min:Line_Idx_Max)
 
     !--- this make the Olr  flux (W/m^2)
     Olr(:,Line_Idx_Min:Line_Idx_Max) = stefan_boltzmann_constant * (Olr(:,Line_Idx_Min:Line_Idx_Max)**4)
@@ -1095,71 +1149,90 @@ end subroutine ATMOS_CORR
   integer, intent(in):: j1
   integer, intent(in):: nj
   integer:: i,j,j2, Chan_Idx
+  real:: Factor
 
-  j2 = j1 + nj - 1
+  ! for these sensors, no correction is needed
+  if (index(Sensor%Sensor_Name,'VIIRS') > 0) return 
+  if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') return 
 
-  DO j = j1,j2
+  !--------------------------------------------------------------------
+  ! loop through pixels and apply normalization factor
+  !--------------------------------------------------------------------
+  do j = 1, Image%Number_Of_Lines_Read_This_Segment
 
-     DO i = 1, Num_Pix
+     do i = 1, Image%Number_Of_Elements
 
-      if (Bad_Pixel_Mask(i,j) == sym%NO .and. Cossolzen(i,j) > 0.0) then
+      if (Bad_Pixel_Mask(i,j) == sym%NO .and. Geo%Cossolzen(i,j) > 0.0) then
 
+       Factor = 1.0 / Geo%Cossolzen(i,j)
+
+       ! for these sensors, a correction for sun earth distance is also needed
+       if ( (trim(Sensor%Sensor_Name) == 'AVHRR-1') .or. &
+            (trim(Sensor%Sensor_Name) == 'AVHRR-2') .or. &
+            (trim(Sensor%Sensor_Name) == 'AVHRR-3') .or. &
+            (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER') .or. &
+            (trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') .or. &
+            (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') .or. &
+            (trim(Sensor%Sensor_Name) == 'SEVIRI') .or. &
+            (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER') .or. &
+            (trim(Sensor%Sensor_Name) == 'COMS-IMAGER') .or. &
+            (trim(Sensor%Sensor_Name) == 'FY2-IMAGER')) then
+
+            Factor = Factor * (Sun_Earth_Distance**2) 
+
+       endif
+
+       ! apply correction
        do Chan_Idx = 1,19
-          if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) ch(Chan_Idx)%Ref_Toa(i,j) = ch(Chan_Idx)%Ref_Toa(i,j) / Cossolzen(i,j)
+          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+            if (ch(Chan_Idx)%Ref_Toa(i,j) /= Missing_Value_Real4) then
+             ch(Chan_Idx)%Ref_Toa(i,j) = ch(Chan_Idx)%Ref_Toa(i,j) * Factor
+            endif
+          endif
        enddo
-       if (Chan_On_Flag_Default(26) == sym%YES) ch(26)%Ref_Toa(i,j) = ch(26)%Ref_Toa(i,j) / Cossolzen(i,j)
+       if (Sensor%Chan_On_Flag_Default(26) == sym%YES) then
+          if (ch(26)%Ref_Toa(i,j) /= Missing_Value_Real4) then
+            ch(26)%Ref_Toa(i,j) = ch(26)%Ref_Toa(i,j) * Factor
+          endif
+       endif
 
-       if ((Chan_On_Flag_Default(1) == sym%YES)) then
+       !  normalize by sun angle the dark sky composite
+       if ((Sensor%Chan_On_Flag_Default(1) == sym%YES)) then
          if (Ref_Ch1_Dark_Composite(i,j) /= Missing_Value_Real4) then
-           Ref_Ch1_Dark_Composite(i,j) = (Ref_Ch1_Dark_Composite(i,j) / Cossolzen(i,j)) 
+           Ref_Ch1_Dark_Composite(i,j) = Ref_Ch1_Dark_Composite(i,j) * Factor
          endif
        endif
 
-       if (Chan_On_Flag_Default(6) == sym%YES) then
+
+       !--- for avhrr, handle absense of ch6
+       if (index(Sensor%Sensor_Name,'AVHRR') > 0 .and. &
+           Sensor%Chan_On_Flag_Default(6) == sym%YES) then
            if (ch(6)%Ref_Toa(i,j) < 0) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
-           if (AVHRR_Flag == sym%YES .and. Ch3a_On_Avhrr(j) /= sym%YES) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
+           if (Ch3a_On_Avhrr(j) /= sym%YES) ch(6)%Ref_Toa(i,j) = Missing_Value_Real4
        endif
-
-       if (Avhrr_Flag == sym%YES ) then
-        if (Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(i,j) = ch(1)%Ref_Toa(i,j) * (Sun_Earth_Distance**2)
-        if (Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa(i,j) = ch(2)%Ref_Toa(i,j) * (Sun_Earth_Distance**2)
-        if (Chan_On_Flag_Default(6) == sym%YES .and. Ch3a_On_Avhrr(j)==sym%YES) then
-              ch(6)%Ref_Toa(i,j) = ch(6)%Ref_Toa(i,j) * (Sun_Earth_Distance**2)
-        endif
-       endif
-
-       if (Goes_Flag == sym%YES) then
-        if (Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(i,j) = ch(1)%Ref_Toa(i,j) * (Sun_Earth_Distance**2)
-        if ((Chan_On_Flag_Default(1) == sym%YES)) then
-           if (Ref_Ch1_Dark_Composite(i,j) /= Missing_Value_Real4) then
-                   Ref_Ch1_Dark_Composite(i,j) = Ref_Ch1_Dark_Composite(i,j) * (Sun_Earth_Distance**2)
-           endif
-        endif
-       endif
-
 
        !--- in terminator region, renormalize Channel 1 (maybe extend to all?)
-       if (Solzen(i,j) > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) then
-          if (Chan_On_Flag_Default(1) == sym%YES)  &
-              ch(1)%Ref_Toa(i,j) = TERM_REFL_NORM(Cossolzen(i,j),ch(1)%Ref_Toa(i,j))
+       if (Geo%Solzen(i,j) > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) then
+          if (Sensor%Chan_On_Flag_Default(1) == sym%YES)  &
+              ch(1)%Ref_Toa(i,j) = TERM_REFL_NORM(Geo%Cossolzen(i,j),ch(1)%Ref_Toa(i,j))
        endif
 
-       !---- make unnormalized relflectances for AWIPS display
-        if (Chan_On_Flag_Default(1) == sym%YES)  then
+       !---- make unnormalized relflectances for AWIPS display ( can we retire this)
+        if (Sensor%Chan_On_Flag_Default(1) == sym%YES)  then
           if (ch(1)%Ref_Toa(i,j) /= Missing_Value_Real4) then
-            ch(1)%Ref_Toa_Unnorm(i,j) = ch(1)%Ref_Toa(i,j) * Cossolzen(i,j)
+            ch(1)%Ref_Toa_Unnorm(i,j) = ch(1)%Ref_Toa(i,j) * Geo%Cossolzen(i,j)
           endif
         endif
 
-        if (Chan_On_Flag_Default(2) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
           if (ch(2)%Ref_Toa(i,j) /= Missing_Value_Real4) then
-            ch(2)%Ref_Toa_Unnorm(i,j) = ch(2)%Ref_Toa(i,j) * Cossolzen(i,j)
+            ch(2)%Ref_Toa_Unnorm(i,j) = ch(2)%Ref_Toa(i,j) * Geo%Cossolzen(i,j)
           endif
         endif
 
-        if (Chan_On_Flag_Default(6) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
           if (ch(6)%Ref_Toa(i,j) /= Missing_Value_Real4) then
-            ch(6)%Ref_Toa_Unnorm(i,j) = ch(6)%Ref_Toa(i,j) * Cossolzen(i,j)
+            ch(6)%Ref_Toa_Unnorm(i,j) = ch(6)%Ref_Toa(i,j) * Geo%Cossolzen(i,j)
           endif
         endif
 
@@ -1167,14 +1240,14 @@ end subroutine ATMOS_CORR
 
        !--- set to missing
        do Chan_Idx = 1,19
-          if (Chan_On_Flag_Default(Chan_Idx) == sym%YES) ch(Chan_Idx)%Ref_Toa(i,j) = Missing_Value_Real4
+          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) ch(Chan_Idx)%Ref_Toa(i,j) = Missing_Value_Real4
        enddo
-       if (Chan_On_Flag_Default(26) == sym%YES) ch(26)%Ref_Toa(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(26) == sym%YES) ch(26)%Ref_Toa(i,j) = Missing_Value_Real4
 
        !--- un-normalized refs for AWIPS
-       if (Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
-       if (Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa_Unnorm(i,j) = Missing_Value_Real4
 
 
       endif
@@ -1213,16 +1286,16 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
   integer:: i,j
   real :: solar_irradiance
 
-  DO j = j1,j1+j2-1
+  do j = j1,j1+j2-1
 
     !---- compute channel 3b albedo
-    if ((Chan_On_Flag_Default(20) == sym%YES) .and.  &
-        (Chan_On_Flag_Default(31) == sym%YES)) then   !start Ch3a_on check
+    if ((Sensor%Chan_On_Flag_Default(20) == sym%YES) .and.  &
+        (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then   !start Ch3a_on check
 
       !----------------------------------------------------------------------------
       !--- standard Ref_Ch20 computation
       !---------------------------------------------------------------------------
-      DO i = 1, Num_Pix
+      do i = 1, Image%Number_Of_Elements
 
 
       !--- check for bad scans
@@ -1248,7 +1321,7 @@ subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
          !   http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=297984
          !
         if ((Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
-            solar_irradiance = max ( 0., (Solar_Ch20_nu*Cossolzen(i,j))/(Sun_Earth_Distance**2))
+            solar_irradiance = max ( 0., (Solar_Ch20_nu*Geo%Cossolzen(i,j))/(Sun_Earth_Distance**2))
            ch(20)%Ref_Toa(i,j) = 100.0*pi*(ch(20)%Rad_Toa(i,j)-Rad_Ch20_ems(i,j)) /  &
                         ( solar_irradiance - pi*Rad_Ch20_ems(i,j) )
         endif
@@ -1283,11 +1356,11 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
     integer:: Line_Idx_width
     integer:: Line_Idx_segment_max
 
-    Elem_Idx_segment_max = Num_Pix
+    Elem_Idx_segment_max = Image%Number_Of_Elements
     Line_Idx_segment_max = Line_Idx_Min_Segment + Line_Idx_Max_Segment - 1
 
-    DO Elem_Idx = 1, Elem_Idx_segment_max
-       DO Line_Idx = 1, Line_Idx_segment_max
+    do Elem_Idx = 1, Elem_Idx_segment_max
+       do Line_Idx = 1, Line_Idx_segment_max
 
         !--- compute 5x5 arrays
         Elem_Idx_min = max(1,min(Elem_Idx - 2,Elem_Idx_segment_max))
@@ -1297,12 +1370,22 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
         Line_Idx_width = Line_Idx_max - Line_Idx_min + 1
         Elem_Idx_width = Elem_Idx_max - Elem_Idx_min + 1
 
-        if ((Chan_on_flag(27,Line_Idx) == sym%YES) .and. & 
-            (Chan_on_flag(31,Line_Idx) == sym%YES)) then
+        if ((Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES) .and. & 
+            (Sensor%Chan_On_Flag_Per_Line(31,Line_Idx) == sym%YES)) then
 
             Covar_Ch27_Ch31_5x5(Elem_Idx,Line_Idx) = Covariance(&
                ch(31)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
                ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+               Elem_Idx_width, Line_Idx_width, &
+               Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
+        endif
+
+        if ((Sensor%Chan_On_Flag_Per_Line(1,Line_Idx) == sym%YES) .and. & 
+            (Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES)) then
+
+            Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Covariance(&
+               ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+               ch(1)%Ref_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
                Elem_Idx_width, Line_Idx_width, &
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         endif
@@ -1331,13 +1414,13 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
  Rsr_Qf = 0
 
 
- DO j = jmin, jmin+jmax-1
+ do j = jmin, jmin+jmax-1
                                                                                                                                                 
    !--- determine y-dimensions of array to check
    j1 = max(jmin,j-n)
    j2 = min(jmax,j+n)
                                                                                                                                                 
-    DO i = 1, Num_Pix
+    do i = 1, Image%Number_Of_Elements
 
       !--- check for bad scans
       if (Bad_Pixel_Mask(i,j) == sym%YES) then
@@ -1346,7 +1429,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
                                                                                                                                                 
       !--- determine x-dimensions of array to check
       i1 = max(1,i-n)
-      i2 = min(Num_Pix,i+n)
+      i2 = min(Image%Number_Of_Elements,i+n)
         
       !--- initial cloud mask based
       if (cld_Mask(i,j) == sym%CLEAR) then
@@ -1371,26 +1454,26 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
       endif
 
       !--- assign Ndvi over water to be low quality
-      if (Land_Mask(i,j) == sym%NO) then
+      if (Sfc%Land_Mask(i,j) == sym%NO) then
         Ndvi_Qf(i,j) = 0
       endif
 
       !--- assign Ndvi at high angles to be low quality
-      if (Solzen(i,j) > 75.0) then
+      if (Geo%Solzen(i,j) > 75.0) then
        Ndvi_Qf(i,j) = min(1,int(Ndvi_Qf(i,j)))
       endif
 
       !--- modifcations of Rsr quality
-      if (Land_Mask(i,j) == sym%YES) then    !ocean only
+      if (Sfc%Land_Mask(i,j) == sym%YES) then    !ocean only
         Rsr_Qf(i,j) = 0
       endif
-      if (Solzen(i,j) > 75.0) then    !sufficient light
+      if (Geo%Solzen(i,j) > 75.0) then    !sufficient light
         Rsr_Qf(i,j) = min(1,int(Rsr_Qf(i,j)))
       endif
-      if (Glintzen(i,j) < Glint_Zen_Thresh) then   !outside glint
+      if (Geo%Glintzen(i,j) < Glint_Zen_Thresh) then   !outside glint
        Rsr_Qf(i,j) = min(1,int(Rsr_Qf(i,j)))
       endif
-      if (Snow(i,j) /= sym%NO_SNOW) then    !Snow
+      if (Sfc%Snow(i,j) /= sym%NO_SNOW) then    !Snow
        Rsr_Qf(i,j) = min(1,int(Rsr_Qf(i,j)))
       endif
 
@@ -1401,12 +1484,12 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
         Aot_Qf(i,j) = 0
         
         if ((Cld_Mask(i,j) == sym%CLEAR) .and.  &
-            (Land_Mask(i,j) == sym%NO) .and.  &
-            (Solzen(i,j) < 70.00) .and.  &
-            (Snow(i,j) == sym%NO_SNOW)) then
+            (Sfc%Land_Mask(i,j) == sym%NO) .and.  &
+            (Geo%Solzen(i,j) < 70.00) .and.  &
+            (Sfc%Snow(i,j) == sym%NO_SNOW)) then
           Aot_Qf(i,j) = 1
-          if (Glintzen(i,j) > Glint_Zen_Thresh) then
-            if (Relaz(i,j) > 90.0) then
+          if (Geo%Glintzen(i,j) > Glint_Zen_Thresh) then
+            if (Geo%Relaz(i,j) > 90.0) then
               Aot_Qf(i,j) = 3
             else
              Aot_Qf(i,j) = 2 - 1
@@ -1415,7 +1498,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
         endif
                                                                                                                               
         !--- assign aerosol over Snow to be of low quality
-        if (Snow(i,j) /= sym%NO_SNOW) then
+        if (Sfc%Snow(i,j) /= sym%NO_SNOW) then
          Aot_Qf(i,j) = 0
         endif
 
@@ -1451,7 +1534,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 !
 !  note this can handle nx2 uniformity calculations.  If n /= 2, then make
 !  sure this routine is called for each pixel in the scanline.  However,
-!  because we still process two scanlines, we only DO this once for each
+!  because we still process two scanlines, we only do this once for each
 !  scanline in the pair
 !
 ! note, this routine attempts to return the local standard deviation of area
@@ -1481,8 +1564,8 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    !----------------------------------------------------------------------
    ! determine size of input arrays
    !----------------------------------------------------------------------
-   Nx = size(Lat_1b,1)
-   Ny = size(Lat_1b,2)
+   Nx = size(Nav%Lat_1b,1)
+   Ny = size(Nav%Lat_1b,2)
 
    !----------------------------------------------------------------------
    ! allocate memory for temporary arrays
@@ -1509,12 +1592,12 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    nbox = 1   !1 gives a 3x3 box
 
    !--- Bt_Ch31 
-   if (Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       ch(31)%Bt_Toa,nbox, uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       ch(31)%Bt_Toa,nbox, Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Bt_Ch31_Mean_3x3,Bt_Ch31_Min_3x3, &
                                        Bt_Ch31_Max_3x3,Bt_Ch31_Std_3x3, &
                                        Elem_Idx_Max,Line_Idx_Max,Elem_Idx_Min,Line_Idx_Min)
@@ -1527,24 +1610,24 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
 
    !--- Ref_Ch1
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        ch(1)%Ref_Toa,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_flag_no, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ref_Ch1_Mean_3x3,Ref_Ch1_Min_3x3, &
                                        Ref_Ch1_Max_3x3,Ref_Ch1_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
 
    !--- Ref_ChDNB_Lunar
-   if (Chan_On_Flag_Default(42) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       ch(42)%Ref_Lunar_Toa,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       ch(44)%Ref_Lunar_Toa,nbox,  &
+                                       Uni_Land_Mask_flag_no, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ref_ChDNB_Lunar_Mean_3x3,Ref_ChDNB_Lunar_Min_3x3, &
                                        Ref_ChDNB_Lunar_Max_3x3,Ref_ChDNB_Lunar_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
@@ -1552,12 +1635,12 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
 
 
    !--- Ems_Ch20
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        Ems_Ch20,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_flag_no, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ems_Ch20_Mean_3x3,Ems_Ch20_Min_3x3, &
                                        Ems_Ch20_Max_3x3,Ems_Ch20_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
@@ -1565,21 +1648,21 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
 
    !--- Zsfc
    CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( & 
-                                       Zsfc,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
-                                       zsfc_Mean_3x3,zsfc_Min_3x3, &
-                                       zsfc_Max_3x3,zsfc_Std_3x3, &
+                                       Sfc%Zsfc,nbox,  &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
+                                       Sfc%Zsfc_Mean_3x3,Sfc%Zsfc_Min_3x3, &
+                                       Sfc%Zsfc_Max_3x3,Sfc%Zsfc_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
    !--- Ref_Ch1 clear white sky from MODIS
-   if (Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        ch(1)%Sfc_Ref_White_Sky,nbox, &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ref_Ch1_Sfc_White_Sky_Mean_3x3, &
                                        Ref_Ch1_Sfc_White_Sky_Min_3x3, &
                                        Ref_Ch1_Sfc_White_Sky_Max_3x3, &
@@ -1593,33 +1676,33 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
 
    !--- Bt_Ch20
-   if (Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        ch(20)%Bt_Toa,nbox,  & 
                                        !uni_Land_Mask_flag_yes, &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Bt_Ch20_Mean_3x3,Bt_Ch20_Min_3x3, &
                                        Bt_Ch20_Max_3x3,Bt_Ch20_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
 
    !--- Btd_Ch31_Ch32
-   if (Chan_On_Flag_Default(31)==sym%YES .and. Chan_On_Flag_Default(32)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(32)==sym%YES) then
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        Btd_Ch31_Ch32,nbox,  &
                                        !uni_Land_Mask_flag_yes, &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Btd_Ch31_Ch32_Mean_3x3,Btd_Ch31_Ch32_Min_3x3, &
                                        Btd_Ch31_Ch32_Max_3x3,Btd_Ch31_Ch32_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
     !----- store Btd_Ch31_Ch32 at maximum Bt_Ch31 in surrounding pixels
-    line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-      element_loop: DO Elem_Idx= 1, Num_Pix
+    line_loop: do Line_Idx=jmin, jmax - jmin + 1
+      element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
        if ((Elem_Idx_Max_Bt_Ch31_3x3(Elem_Idx,Line_Idx) > 0) .and. &
            (Line_Idx_Max_Bt_Ch31_3x3(Elem_Idx,Line_Idx) > 0)) then
           Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(Elem_Idx,Line_Idx) =  &
@@ -1630,47 +1713,47 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
 
    !--- Btd_Ch31_Ch33
-   if (Chan_On_Flag_Default(31)==sym%YES .and. Chan_On_Flag_Default(33)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(33)==sym%YES) then
      Temp_Pix_Array = ch(31)%Bt_Toa - ch(33)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(33)%Bt_Toa == Missing_Value_Real4)
              Temp_Pix_Array = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        Temp_Pix_Array,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Btd_Ch31_Ch33_Mean_3x3,Btd_Ch31_Ch33_Min_3x3, &
                                        Btd_Ch31_Ch33_Max_3x3,Btd_Ch31_Ch33_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
    endif
    !--- Btd_Ch31_Ch29
-   if (Chan_On_Flag_Default(31)==sym%YES .and. Chan_On_Flag_Default(29)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(29)==sym%YES) then
      Temp_Pix_Array = ch(31)%Bt_Toa - ch(29)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(29)%Bt_Toa == Missing_Value_Real4)
              Temp_Pix_Array = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        Temp_Pix_Array,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Btd_Ch31_Ch29_Mean_3x3,Btd_Ch31_Ch29_Min_3x3, &
                                        Btd_Ch31_Ch29_Max_3x3,Btd_Ch31_Ch29_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
    !--- Btd_Ch31_Ch27
-   if (Chan_On_Flag_Default(31)==sym%YES .and. Chan_On_Flag_Default(27)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(27)==sym%YES) then
      Temp_Pix_Array = ch(31)%Bt_Toa - ch(27)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(27)%Bt_Toa == Missing_Value_Real4)
              Temp_Pix_Array = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        Temp_Pix_Array,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Btd_Ch31_Ch27_Mean_3x3,Btd_Ch31_Ch27_Min_3x3, &
                                        Btd_Ch31_Ch27_Max_3x3,Btd_Ch31_Ch27_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
@@ -1678,24 +1761,24 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
   
    !--- Ref_Ch1_Clear
-   if (Chan_On_Flag_Default(1)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1)==sym%YES) then
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        ch(1)%Ref_Toa_Clear,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ref_Ch1_Clear_Mean_3x3,Ref_Ch1_Clear_Min_3x3, &
                                        Ref_Ch1_Clear_Max_3x3, Ref_Ch1_Clear_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
 
    !--- Bt_Ch27
-   if (Chan_On_Flag_Default(27)==sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27)==sym%YES) then
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                        ch(27)%Bt_Toa,nbox,  &
-                                       uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Land_Mask, &
-                                       1,Num_Pix,jmin,jmax, &
+                                       Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
                                        Bt_Ch27_Mean_3x3,Bt_Ch27_Min_3x3, &
                                        Bt_Ch27_Max_3x3,Bt_Ch27_Std_3x3, &
                                        Elem_Idx_max,Line_Idx_max, Elem_Idx_min, Line_Idx_min)
@@ -1724,14 +1807,14 @@ subroutine COMPUTE_GLINT()
 
 
   !--- alias some global sizes into local values
-  Number_Of_Lines = Num_Scans_Per_Segment
-  Number_Of_Elements = Num_Pix
+  Number_Of_Lines = Image%Number_Of_Lines_Per_Segment
+  Number_Of_Elements = Image%Number_Of_Elements
 
-  Glint_Mask = Missing_Value_Int1
+  Sfc%Glint_Mask = Missing_Value_Int1
 
-     line_loop: DO Line_Idx = 1, Number_Of_Lines
+     line_loop: do Line_Idx = 1, Number_Of_Lines
 
-     element_loop: DO Elem_Idx = 1, Number_Of_Elements
+     element_loop: do Elem_Idx = 1, Number_Of_Elements
 
      !--- skip bad pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -1739,46 +1822,46 @@ subroutine COMPUTE_GLINT()
      endif
 
      !--- initialize valid pixel to no
-     Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+     Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
 
      !--- skip land pixels
-     if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
-          Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
+     if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
+          Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
 
        !--- turn on in geometric glint cone and sufficient Ref_Ch1
-       if ((Glintzen(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
+       if ((Geo%Glintzen(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
 
           !--- assume to be glint if in geometric zone
-          Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
+          Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
 
-          if (Chan_On_Flag_Default(31) == sym%YES) then
+          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
             !--- exclude pixels colder than the freezing temperature
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 273.15) then
-              Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
             !--- exclude pixels colder than the surface
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) - 5.0) then
-              Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
           endif
 
           !-turn off if non-uniform
-          if (Chan_On_Flag_Default(31) == sym%YES) then
+          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
             if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
-             Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
           endif
 
           !-turn off if dark
-          if (Chan_On_Flag_Default(1) == sym%YES) then
+          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) < 5.0) then
-             Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
           endif
@@ -1807,14 +1890,14 @@ subroutine COMPUTE_GLINT_LUNAR()
 
 
   !--- alias some global sizes into local values
-  Number_Of_Lines = Num_Scans_Per_Segment
-  Number_Of_Elements = Num_Pix
+  Number_Of_Lines = Image%Number_Of_Lines_Per_Segment
+  Number_Of_Elements = Image%Number_Of_Elements
 
-  Glint_Mask_Lunar = Missing_Value_Int1
+  Sfc%Glint_Mask_Lunar = Missing_Value_Int1
 
-     line_loop: DO Line_Idx = 1, Number_Of_Lines
+     line_loop: do Line_Idx = 1, Number_Of_Lines
 
-     element_loop: DO Elem_Idx = 1, Number_Of_Elements
+     element_loop: do Elem_Idx = 1, Number_Of_Elements
 
      !--- skip bad pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
@@ -1822,47 +1905,47 @@ subroutine COMPUTE_GLINT_LUNAR()
      endif
 
      !--- initialize valid pixel to no
-     Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
+     Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
 
 
      !--- skip land pixels
-     if ((Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
-          Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
+     if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
+          Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
 
        !--- turn on in geometric glint cone and sufficient Ref_Ch1
-       if ((Glintzen_Lunar(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
+       if ((Geo%Glintzen_Lunar(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
 
           !--- assume to be glint if in geometric zone
-          Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%YES
+          Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%YES
 
-          if (Chan_On_Flag_Default(31) == sym%YES) then
+          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
             !--- exclude pixels colder than the freezing temperature
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 273.15) then
-              Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
+              Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
             !--- exclude pixels colder than the surface
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) - 5.0) then
-              Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
+              Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
           endif
 
           !-turn off if non-uniform
-          if (Chan_On_Flag_Default(31) == sym%YES) then
+          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
             if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
-             Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
+             Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
           endif
 
           !-turn off if dark
-          if (Chan_On_Flag_Default(42) == sym%YES) then
-            if (ch(42)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) < 5.0) then
-             Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
+          if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+            if (ch(44)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) < 5.0) then
+             Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
           endif
@@ -1886,8 +1969,8 @@ subroutine READ_MODIS_WHITE_SKY_ALBEDO(modis_alb_id,modis_alb_str,Ref_Sfc_White_
     TYPE(Land_grid_description), intent(in) :: modis_alb_str
     real(kind=real4), dimension(:,:), intent(out):: Ref_Sfc_White_Sky
 
-    CALL READ_LAND_SFC_HDF(modis_alb_id, modis_alb_str, lat, &
-                          lon, Space_Mask, Two_Byte_Temp)
+    CALL READ_LAND_SFC_HDF(modis_alb_id, modis_alb_str, Nav%Lat, &
+                          Nav%Lon, Space_Mask, Two_Byte_Temp)
     Ref_Sfc_White_Sky = 0.1*Two_Byte_Temp
 
     Ref_Sfc_White_Sky = 1.10*Ref_Sfc_White_Sky   !EMPIRICAL ADJUSTMENT
@@ -1897,7 +1980,7 @@ subroutine READ_MODIS_WHITE_SKY_ALBEDO(modis_alb_id,modis_alb_str,Ref_Sfc_White_
     endwhere
 
     !--- modify for water
-    where(Land_Mask == sym%NO)
+    where(Sfc%Land_Mask == sym%NO)
             Ref_Sfc_White_Sky = Ref_Sfc_White_Sky_Water
     endwhere
 
@@ -2004,12 +2087,12 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
 
   Sst_Masked = Missing_Value_Real4
 
-  line_loop: DO Line_Idx=jmin, jmax - jmin + 1
-    element_loop: DO Elem_Idx= 1, Num_Pix
+  line_loop: do Line_Idx=jmin, jmax - jmin + 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
  
-     if (Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
+     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
         if (Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or. Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
           Sst_Masked(Elem_Idx,Line_Idx) = Sst_Unmasked(Elem_Idx,Line_Idx)
         endif
@@ -2023,13 +2106,11 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
 !==============================================================================
 !
 !==============================================================================
- subroutine DETERMINE_LEVEL1B_COMPRESSION(File_1b_Original,L1b_Gzip,L1b_bzip2,File_1b_Full)
+ subroutine DETERMINE_LEVEL1B_COMPRESSION(File_1b_Original,L1b_Gzip,L1b_Bzip2)
    character(len=*), intent(in):: File_1b_Original
    integer(kind=int4), intent(out):: L1b_Gzip
-   integer(kind=int4), intent(out):: L1b_bzip2
-   character(len=*), intent(out):: File_1b_Full
+   integer(kind=int4), intent(out):: L1b_Bzip2
    character(len=200):: System_String
-
    character(len=7):: L1b_ext
 
 
@@ -2046,39 +2127,39 @@ subroutine COMPUTE_MASKED_SST(jmin,jmax)
 
   !--- check if bzipped
   if (trim(L1b_ext) == 'bz2') then
-     L1b_bzip2 = sym%YES
+     L1b_Bzip2 = sym%YES
   else
-     L1b_bzip2 = sym%NO
+     L1b_Bzip2 = sym%NO
   endif
 
   !--- uncompress
   if (L1b_Gzip == sym%YES) then
-     File_1b = File_1b_Original(1:len(trim(File_1b_Original))-3)
-     System_String = "gunzip -c "//trim(dir_1b)//trim(File_1b_Original)// &
-        " > "//trim(Temporary_Data_Dir)//trim(File_1b)
-     CALL SYSTEM(System_String)
+     Image%Level1b_Name = File_1b_Original(1:len(trim(File_1b_Original))-3)
+     System_String = "gunzip -c "//trim(Image%Level1b_Path)//trim(File_1b_Original)// &
+        " > "//trim(Temporary_Data_Dir)//trim(Image%Level1b_Name)
+     call SYSTEM(System_String)
 
      Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-     Temporary_File_Name(Number_of_Temporary_Files) = trim(File_1b)
+     Temporary_File_Name(Number_of_Temporary_Files) = trim(Image%Level1b_Name)
 
-  elseif (L1b_bzip2 == sym%YES) then
-     File_1b = File_1b_Original(1:len(trim(File_1b_Original))-4)
-     System_String = "bunzip2 -c "//trim(dir_1b)//trim(File_1b_Original)// &
-        " > "//trim(Temporary_Data_Dir)//trim(File_1b)
-     CALL SYSTEM(System_String)
+  elseif (L1b_Bzip2 == sym%YES) then
+     Image%Level1b_Name = File_1b_Original(1:len(trim(File_1b_Original))-4)
+     System_String = "bunzip2 -c "//trim(Image%Level1b_Path)//trim(File_1b_Original)// &
+        " > "//trim(Temporary_Data_Dir)//trim(Image%Level1b_Name)
+     call SYSTEM(System_String)
 
      Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-     Temporary_File_Name(Number_of_Temporary_Files) = trim(File_1b)
+     Temporary_File_Name(Number_of_Temporary_Files) = trim(Image%Level1b_Name)
 
   else
-     File_1b = trim(File_1b_Original)
+     Image%Level1b_Name = trim(File_1b_Original)
   endif
 
    !--- make a full file name
    if (L1b_Gzip == sym%YES .or. L1b_bzip2 == sym%YES) then
-     File_1b_Full = trim(Temporary_Data_Dir)//trim(File_1b)
+     Image%Level1b_Full_Name = trim(Temporary_Data_Dir)//trim(Image%Level1b_Name)
    else
-     File_1b_Full = trim(dir_1b)//trim(File_1b)
+    Image%Level1b_Full_Name = trim(Image%Level1b_Path)//trim(Image%Level1b_Name)
    endif
 
  end subroutine DETERMINE_LEVEL1B_COMPRESSION
@@ -2109,7 +2190,7 @@ subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
   real, parameter:: Ref_Ch2_Threshold = 60.0
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
@@ -2117,21 +2198,21 @@ subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
     element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
-    if (Chan_On_Flag_Default(1) == sym%NO) cycle
-    if (Chan_On_Flag_Default(2) == sym%NO) cycle
-    if (Solzen(Elem_Idx,Line_Idx) > Solzen_Threshold) cycle
-    if (Modis_Flag == sym%YES) cycle                         !modis ch2 saturates, need to modify for MODIS
+    if (Sensor%Chan_On_Flag_Default(1) == sym%NO) cycle
+    if (Sensor%Chan_On_Flag_Default(2) == sym%NO) cycle
+    if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Threshold) cycle
+    if (index(Sensor%Sensor_Name,'MODIS') > 0) cycle                         !modis ch2 saturates, need to modify for MODIS
 
     Ndvi_Temp = (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) - ch(1)%Ref_Toa(Elem_idx,Line_Idx)) / &
                 (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) + ch(1)%Ref_Toa(Elem_idx,Line_Idx)) 
 
     if (Ndvi_Temp > Ndvi_Land_Threshold) then
-      Land(Elem_Idx,Line_Idx) = sym%LAND
+      Sfc%Land(Elem_Idx,Line_Idx) = sym%LAND
     endif
 
     if (Ndvi_Temp < Ndvi_Water_Threshold .and. &
-        Land(Elem_Idx,Line_Idx) == sym%LAND) then
-        Land(Elem_Idx,Line_Idx) = sym%SHALLOW_INLAND_WATER
+        Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
+        Sfc%Land(Elem_Idx,Line_Idx) = sym%SHALLOW_INLAND_WATER
     endif
 
     enddo element_loop
@@ -2211,30 +2292,30 @@ subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
 
 
   Elem_Idx_Min = 1
-  Num_Elements = Num_Pix
+  Num_Elements = Image%Number_Of_Elements
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
-    element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
+  line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
+    element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
       !--- if no, geolocation, set to missing and go to next pixel
       if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-          Zsfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
+          Sfc%Zsfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
           cycle
       endif
  
       !--- if hires value available use it, or try NWP
-      if (Zsfc_Hires(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then 
+      if (Sfc%Zsfc_Hires(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then 
 
-           Zsfc(Elem_Idx,Line_Idx) = Zsfc_Hires(Elem_Idx,Line_Idx)
+           Sfc%Zsfc(Elem_Idx,Line_Idx) = Sfc%Zsfc_Hires(Elem_Idx,Line_Idx)
 
       !--- if this is ocean pixel, assume zero
-      elseif (Land(Elem_Idx,Line_Idx) == sym%SHALLOW_OCEAN .or. &
-              Land(Elem_Idx,Line_Idx) == sym%MODERATE_OCEAN .or. &
-              Land(Elem_Idx,Line_Idx) == sym%DEEP_OCEAN) then
+      elseif (Sfc%Land(Elem_Idx,Line_Idx) == sym%SHALLOW_OCEAN .or. &
+              Sfc%Land(Elem_Idx,Line_Idx) == sym%MODERATE_OCEAN .or. &
+              Sfc%Land(Elem_Idx,Line_Idx) == sym%DEEP_OCEAN) then
 
-              Zsfc(Elem_Idx,Line_Idx) = 0.0     
+              Sfc%Zsfc(Elem_Idx,Line_Idx) = 0.0     
 
       !--- try NWP
       else
@@ -2244,9 +2325,9 @@ subroutine MERGE_NWP_HIRES_ZSFC(Line_Idx_Min,Num_Lines)
 
          !--- if nwp not available, assume zero
          if (Lon_Nwp_Idx > 0 .and. Lat_Nwp_Idx > 0) then
-           Zsfc(Elem_Idx,Line_Idx) = Zsfc_Nwp(Lon_Nwp_Idx, Lat_Nwp_Idx)
+           Sfc%Zsfc(Elem_Idx,Line_Idx) = Zsfc_Nwp(Lon_Nwp_Idx, Lat_Nwp_Idx)
          else
-           Zsfc(Elem_Idx,Line_Idx) = 0.0     
+           Sfc%Zsfc(Elem_Idx,Line_Idx) = 0.0     
          endif
 
       endif
@@ -2278,16 +2359,16 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
   integer:: Number_of_Elements
   integer:: i1,i2,j1,j2
 
-  Number_of_Elements = Num_Pix
+  Number_of_Elements = Image%Number_Of_Elements
 
   Adj_Pix_Cld_Mask = Missing_Value_Int1
 
-  line_loop: DO Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
+  line_loop: do Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
 
     j1 = max(1,Line_Idx - 1)
     j2 = min(Number_of_Lines,Line_Idx + 1)
 
-    element_loop: DO Elem_Idx = 1, Number_of_Elements
+    element_loop: do Elem_Idx = 1, Number_of_Elements
 
       i1 = max(1,Elem_Idx - 1)
       i2 = min(Number_of_Elements,Elem_Idx + 1)
@@ -2323,32 +2404,32 @@ subroutine COMPUTE_VIIRS_SST(jmin,jmax)
 
   Sst_Unmasked = Missing_Value_Real4
 
-  if (Chan_On_Flag_Default(20) == sym%NO) return
-  if (Chan_On_Flag_Default(31) == sym%NO) return
-  if (Chan_On_Flag_Default(32) == sym%NO) return
+  if (Sensor%Chan_On_Flag_Default(20) == sym%NO) return
+  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
+  if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
 
-  line_loop: DO Line_Idx=jmin, jmax + jmin - 1
-    element_loop: DO Elem_Idx= 1, Num_Pix
+  line_loop: do Line_Idx=jmin, jmax + jmin - 1
+    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
   ! Day time
-     if (Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
-        if (Solzen(Elem_Idx,Line_Idx) < 90.0 .and. sst_anal(Elem_Idx,Line_Idx) > 150.0) then
-           if (Chan_On_Flag_Default(31) == sym%YES .and. Chan_On_Flag_Default(32) == sym%YES) then
+     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
+        if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0 .and. sst_anal(Elem_Idx,Line_Idx) > 150.0) then
+           if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
               Sst_Unmasked(Elem_Idx,Line_Idx) = a0_day + a1_day * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
                    a2_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (sst_anal(Elem_Idx,Line_Idx) - 273.15) + &
-                   a3_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (Seczen(Elem_Idx,Line_Idx) - 1)
+                   a3_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
            endif
         endif
 
   ! Night time
-        if (Solzen(Elem_Idx,Line_Idx) .ge. 90.0) then
-           if (Chan_On_Flag_Default(20) == sym%YES .and. Chan_On_Flag_Default(31) == sym%YES .and. &
-                 Chan_On_Flag_Default(32) == sym%YES) then
+        if (Geo%Solzen(Elem_Idx,Line_Idx) .ge. 90.0) then
+           if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+                 Sensor%Chan_On_Flag_Default(32) == sym%YES) then
 
                    Sst_Unmasked(Elem_Idx,Line_Idx) = a0_night + a1_night * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
                    a2_night * ch(20)%Bt_Toa(Elem_Idx,Line_Idx) + a3_night * ch(32)%Bt_Toa(Elem_Idx,Line_Idx) + &
                    a4_night * (ch(20)%Bt_Toa(Elem_Idx,Line_Idx) - ch(32)%Bt_Toa(Elem_Idx,Line_Idx)) * &
-                   (Seczen(Elem_Idx,Line_Idx)-1) + a5_night * (Seczen(Elem_Idx,Line_Idx) - 1)
+                   (Geo%Seczen(Elem_Idx,Line_Idx)-1) + a5_night * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
            endif 
         endif
      endif
@@ -2378,27 +2459,28 @@ end subroutine COMPUTE_VIIRS_SST
 ! 6 - degraded ec Retrieval (1 = yes, 0 = no)
 ! 7 - degraded beta Retrieval (1 = yes, 0 = no)! 
 !-----------------------------------------------------------
-subroutine COMPUTE_ACHA_PERFORMANCE_METRICS(Acha_Processed_Count,Acha_Valid_Count)
+subroutine COMPUTE_ACHA_PERFORMANCE_METRICS(Processed_Count,Valid_Count,Success_Fraction)
 
-  real(kind=real4), intent(inout):: ACHA_Processed_Count
-  real(kind=real4), intent(inout):: ACHA_Valid_Count
+  real(kind=real4), intent(inout):: Processed_Count
+  real(kind=real4), intent(inout):: Valid_Count
+  real(kind=real4), intent(out):: Success_Fraction
   integer, parameter:: Count_Min = 10
   real:: Processed_Count_Segment
   real:: Valid_Count_Segment
 
-  Processed_Count_Segment = count(btest(ACHA_Packed_Quality_Flags,0))
+  Processed_Count_Segment = count(btest(ACHA%Packed_Quality_Flags,0))
 
-  Valid_Count_Segment = count((btest(int(ACHA_Packed_Quality_Flags),1)) .and.  &
-                              (btest(int(ACHA_Packed_Quality_Flags),2)) .and. &
-                              (btest(int(ACHA_Packed_Quality_Flags),3)))
+  Valid_Count_Segment = count((btest(int(ACHA%Packed_Quality_Flags),1)) .and.  &
+                              (btest(int(ACHA%Packed_Quality_Flags),2)) .and. &
+                              (btest(int(ACHA%Packed_Quality_Flags),3)))
   
-  ACHA_Processed_Count = ACHA_Processed_Count + Processed_Count_Segment
-  ACHA_Valid_Count = ACHA_Valid_Count + Valid_Count_Segment
+  Processed_Count = Processed_Count + Processed_Count_Segment
+  Valid_Count = Valid_Count + Valid_Count_Segment
 
-  if (ACHA_Processed_Count > Count_Min) then
-    ACHA_Success_Fraction = ACHA_Valid_Count / ACHA_Processed_Count
+  if (Processed_Count > Count_Min) then
+    Success_Fraction = Valid_Count / Processed_Count
   else
-    ACHA_Success_Fraction = Missing_Value_Real4 
+    Success_Fraction = Missing_Value_Real4 
   endif
 
 end subroutine COMPUTE_ACHA_PERFORMANCE_METRICS
@@ -2467,8 +2549,8 @@ end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
       real:: Count_Segment
       real:: Nonconfident_Count_Segment
   
-      Num_Elements = Num_Pix  !make local copy of a global variable
-      Num_Lines = Num_Scans_Per_Segment  !make local copy of a global variable
+      Num_Elements = Image%Number_Of_Elements  !make local copy of a global variable
+      Num_Lines = Image%Number_Of_Lines_Per_Segment  !make local copy of a global variable
 
       allocate(Mask_local(Num_Elements,Num_Lines))
       allocate(Nonconfident_Mask_local(Num_Elements,Num_Lines))
@@ -2598,46 +2680,46 @@ end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Line_Idx_max
 
-  if (Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      call COMPUTE_TSFC(Line_Idx_Min,Line_Idx_Max)
   endif
 
-  if (Chan_On_Flag_Default(1) == sym%YES .and. &
-      Chan_On_Flag_Default(6) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(1) == sym%YES .and. &
+      Sensor%Chan_On_Flag_Default(6) == sym%YES) then
 
        Ndsi_Toa = NORMALIZED_DIFFERENCE_SNOW_INDEX(  &
                              ch(1)%Ref_Toa, &
                              ch(6)%Ref_Toa, &
-                             Solzen)
+                             Geo%Solzen)
 
        Ndsi_Sfc = NORMALIZED_DIFFERENCE_SNOW_INDEX(  &
                              ch(1)%Ref_Sfc, &
                              ch(6)%Ref_Sfc, &
-                             Solzen)
+                             Geo%Solzen)
   endif
 
-  if (Chan_On_Flag_Default(1) == sym%YES .and. &
-      Chan_On_Flag_Default(2) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(1) == sym%YES .and. &
+      Sensor%Chan_On_Flag_Default(2) == sym%YES) then
 
        Ndvi_Toa = NORMALIZED_DIFFERENCE_VEGETATION_INDEX(  &
                              ch(1)%Ref_Toa, &
                              ch(2)%Ref_Toa, &
-                             Solzen)
+                             Geo%Solzen)
 
        Ndvi_Sfc = NORMALIZED_DIFFERENCE_VEGETATION_INDEX(  &
                              ch(1)%Ref_Sfc, &
                              ch(2)%Ref_Sfc, &
-                             Solzen)
+                             Geo%Solzen)
 
        Ndvi_Sfc_White_Sky = NORMALIZED_DIFFERENCE_VEGETATION_INDEX(  &
                              ch(1)%Sfc_Ref_White_Sky, &
                              ch(2)%Sfc_Ref_White_Sky, &
-                             Solzen)
+                             Geo%Solzen)
 
        Rsr = REMOTE_SENSING_REFLECTANCE( ch(1)%Ref_Sfc, &
                                          ch(2)%Ref_Sfc, &
-                                         Airmass,       &
-                                         Solzen)
+                                         Geo%Airmass,       &
+                                         Geo%Solzen)
   endif
 
  end subroutine SURFACE_REMOTE_SENSING
@@ -2703,7 +2785,7 @@ integer(kind=int1) elemental function CITY_MASK_FOR_CLOUD_DETECTION( &
    !--- surface surfaces of light that we treat as cities
    !--- note, need to check if lunar radiance is available.
    !----------------------------------------------------------------------------
-   if (allocated(ch(42)%Rad_Toa)) then
+   if (allocated(ch(44)%Rad_Toa)) then
      if (Rad_Lunar > Radiance_Lunar_City_Thresh) then
        City_Mask_For_Cloud_Detection = 1
      endif

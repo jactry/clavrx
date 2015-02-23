@@ -60,16 +60,16 @@ contains
 !----------------------------------------------------------------
 ! read the modis constants into memory
 !-----------------------------------------------------------------
-subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
+subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_File)
+ character(len=*), intent(in):: Instr_Const_File
  integer:: ios0, erstat
  integer:: Instr_Const_lun
 
  Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+ open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
 
- print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_file)
+ print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_File)
  erstat = 0
  if (ios0 /= 0) then
     erstat = 19
@@ -105,10 +105,10 @@ subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_file)
 end subroutine READ_MODIS_INSTR_CONSTANTS
 
 !----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Modis_Geo_Name)
+subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Auxiliary_Geolocation_File_Name)
     character(len=*), intent(in):: Modis_1b_Name
     character(len=*), intent(in):: Dir_Modis_Geo
-    character(len=*), intent(out):: Modis_Geo_Name
+    character(len=*), intent(out):: Auxiliary_Geolocation_File_Name
     integer, parameter:: nc = 24
     character(len=nc):: Search_String
     integer:: ilen
@@ -117,11 +117,11 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Modis_
 
     Search_String = trim(Modis_1b_Name(1:nc))
     
-    if (Modis_Aqua_Flag == sym%YES) then
+    if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
        Search_String = "MYD03"//trim(Search_String(9:nc) )//"*"
-    else if (Modis_Aqua_Mac_Flag == sym%YES) then
+    else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
        Search_String = "MAC03S0"//trim(Search_String(9:nc))//"*"   
-    else if (Modis_CSPP_Flag == sym%YES) then
+    else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
        Search_String = trim(Modis_1b_Name(1:13)) //".geo.hdf"    
     else
        Search_String = "MOD03"//trim(Search_String(9:nc)//"*" )
@@ -133,38 +133,38 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Modis_
 
     if (Num_Files == 0) then 
        print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Geolocation File Found"
-       Modis_Geo_Name = "no_file"
+       Auxiliary_Geolocation_File_Name = "no_file"
        return
     endif
 
     if (Num_Files > 1) then
        print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Geolocation Files Found"
-       Modis_Geo_Name = "no_file"
+       Auxiliary_Geolocation_File_Name = "no_file"
     endif
 
-    Modis_Geo_Name = Files(1)
+    Auxiliary_Geolocation_File_Name = Files(1)
 
     Files => null()
   
     !--- if an AQUA Mac Name, trim something off
-    ilen = len_trim(Modis_Geo_Name)
-    if (Modis_Aqua_Mac_Flag == sym%YES) THEN
-        Modis_Geo_Name = Modis_Geo_Name(ilen-42:ilen)
-    else if (Modis_CSPP_Flag == sym%YES) THEN
-        Modis_Geo_Name = TRIM(Modis_Geo_Name)
+    ilen = len_trim(Auxiliary_Geolocation_File_Name)
+    if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+        Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-42:ilen)
+    else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
+        Auxiliary_Geolocation_File_Name = TRIM(Auxiliary_Geolocation_File_Name)
     else  
-        Modis_Geo_Name = Modis_Geo_Name(ilen-40:ilen)
+        Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
     endif
 
-    print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Modis_Geo_Name)
+    print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Auxiliary_Geolocation_File_Name)
    
 end subroutine DETERMINE_MODIS_GEOLOCATION_FILE
 
 !----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, Modis_Cloud_Mask_Name)
+subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, Auxiliary_Cloud_Mask_File_Name)
     character(len=*), intent(in):: Modis_1b_Name
     character(len=*), intent(in):: Dir_Modis_Cloud_Mask
-    character(len=*), intent(out):: Modis_Cloud_Mask_Name
+    character(len=*), intent(out):: Auxiliary_Cloud_Mask_File_Name
     integer, parameter:: nc = 25
     character(len=nc):: Search_String
     integer:: ilen
@@ -173,16 +173,16 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, 
 
     Search_String = trim(Modis_1b_Name(1:nc-1))
 
-    if (Modis_1km_Flag == sym%YES) then
-      if (Modis_Aqua_Flag == sym%YES) then
+    if (Sensor%Spatial_Resolution_Meters == 1000) then
+      if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
         Search_String = "MYD35_L2"//trim(Search_String(9:nc))//"*"
-      else if (Modis_Aqua_Mac_Flag == sym%YES) then
+      else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
         Search_String = "MAC35S0"//trim(Search_String(9:nc))//"*"
       else
         Search_String = "MOD35"//trim(Search_String(9:nc))//"*"
       endif
     else
-      if (Modis_Aqua_Flag == sym%YES) then
+      if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
         Search_String = "MYDATML2"//trim(Search_String(9:nc))//"*"
       else
         Search_String = "MODATML2"//trim(Search_String(9:nc))//"*"
@@ -193,41 +193,27 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, 
 
     if (Num_Files == 0) then 
        print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Cloud Mask File Found"
-       Modis_Cloud_Mask_Name = "no_file"
+       Auxiliary_Cloud_Mask_File_Name = "no_file"
        return
     endif
 
     if (Num_Files > 1) then
        print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Cloud Mask Files Found"
-       Modis_Cloud_Mask_Name = "no_file"
+       Auxiliary_Cloud_Mask_File_Name = "no_file"
     endif
 
-    Modis_Cloud_Mask_Name = Files(1)
+    Auxiliary_Cloud_Mask_File_Name = Files(1)
 
     Files => null()
    
-    ilen = len_trim(Modis_Cloud_Mask_Name)
-    if (Modis_Aqua_Mac_Flag == sym%YES) THEN
-      Modis_Cloud_Mask_Name = Modis_Cloud_Mask_Name(ilen-45:ilen)
+    ilen = len_trim(Auxiliary_Cloud_Mask_File_Name)
+    if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+      Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-45:ilen)
     else  
-      Modis_Cloud_Mask_Name = Modis_Cloud_Mask_Name(ilen-43:ilen)
+      Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-43:ilen)
     endif
 
 end subroutine DETERMINE_MODIS_CLOUD_MASK_FILE
-
-!----------------------------------------------------------------------
-subroutine CONVERT_RADIANCE(radiance,nu,missing_value)
- real (kind=real4), dimension(:,:), intent(inout):: radiance
- real (kind=real4), intent(in):: nu
- real (kind=real4), intent(in):: missing_value
-
- where(radiance /= missing_value) 
-       radiance = radiance * (((10000.0 / nu )**2) / 10.0)
- end where
-
- return
-
-end subroutine CONVERT_RADIANCE
 
 !----------------------------------------------------------------------
 ! Read MODIS data. 
@@ -278,6 +264,7 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
                            sfginfo, sfn2index
       integer(kind=int4):: num_attrs, sds_data_type, sds_rank
       integer(kind=int4), dimension(3):: sds_dims
+      integer(kind=int4), dimension(:,:), allocatable:: i4_buffer
       integer(kind=int2), dimension(:,:,:), allocatable:: i2_buffer
       integer(kind=int2), dimension(:,:,:), allocatable:: i1_buffer
       real(kind=int4), dimension(:), allocatable:: scales
@@ -304,7 +291,7 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
       character(len=120):: band_name
       integer:: num_char_band_names
       integer::ii
-  
+
       Error_Status = 0
       iend = 0
       Status_Flag = 0
@@ -421,6 +408,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       nx_min = min(nx,nx_local)
       ny_min = min(ny,ny_local_temp)
 
+      allocate(i4_buffer(nx_local,ny_local_temp))
       allocate(i2_buffer(nx_local,ny_local_temp,1))
       allocate(i1_buffer(nx_local,ny_local_temp,1))
 
@@ -450,11 +438,15 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- close file
       Status_Flag = sfend(Sd_Id)
 
+      !--- convert from i2 to i4 because it's unsigned integer (Denis B.)
+      i4_buffer=i2_buffer(:,:,1)
+      where (i4_buffer < 0 .and. i4_buffer .ne. fill_value) i4_buffer=i4_buffer+2**16
+
       !----- calibrate counts
       !--radiances have units of  Watts/m^2/micrometer/steradian
       !--reflectances range from 0.0 to 1.0
 
-      calibrated_data = scales(iband_sds)*(i2_buffer(:,:,1) - offsets(iband_sds))
+      calibrated_data = scales(iband_sds)*(i4_buffer - offsets(iband_sds))
 
       !--- scale reflectaces to 0 to 100%
       if (therm_flag == sym%NO) then
@@ -464,7 +456,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
                    endwhere
       endif
 
-      where(i2_buffer(:,:,1) == fill_value) 
+      where(i4_buffer == fill_value) 
               calibrated_data = missing_value
       endwhere
       
@@ -481,6 +473,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- deallocate memory
       if (allocated(band_names)) deallocate(band_names)
       if (allocated(band_int_names)) deallocate(band_int_names)
+      if (allocated(i4_buffer)) deallocate(i4_buffer)
       if (allocated(i2_buffer)) deallocate(i2_buffer)
       if (allocated(i1_buffer)) deallocate(i1_buffer)
       if (allocated(scales)) deallocate(scales)
@@ -514,7 +507,7 @@ end subroutine READ_MODIS_LEVEL1B
 ! ny_local = actual number of lines in this file
 ! ny_local_temp = actual number of lines from this file for this segment
 ! time_ms_start = millisecond time at start of file (line=1)
-! time_ms_end = millisecond time at end of file (line=Num_Scans)
+! time_ms_end = millisecond time at end of file (line=Image%Number_Of_Lines)
 ! scan_number = number of line within this file
 ! asc_des_flag = 0 for ascending, 1 for descednding
 !----------------------------------------------------------------------
@@ -575,7 +568,8 @@ subroutine READ_MODIS_LEVEL1B_GEOLOCATION(path,file_name,  &
       real(kind=real4):: dtime_dline
       integer(kind=int4):: iend
 
-
+      integer(kind=int4), parameter:: time_last_gran_start = 86100000
+      integer(kind=int4), parameter:: time_last_gran_end   = 86400000 
 
       Status_Flag = 0
       Error_Status = 0
@@ -670,18 +664,24 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !---- compute additional angles
 
       !--- compute the cosine of the glint zenith angle
-      Glintzen = glint_angle ( Solzen , Satzen , Relaz  )
+      Geo%Glintzen = glint_angle ( Geo%Solzen , Geo%Satzen , Geo%Relaz  )
 
       !--- compute the cosine of the scattering angle
-      Scatangle = scattering_angle( Solzen , Satzen , Relaz )
+      Geo%Scatangle = scattering_angle( Geo%Solzen , Geo%Satzen , Geo%Relaz )
 
       !--- redefine solar azimuth to be consistent with avhrr
-      where (Solaz /= Missing_Value_Real4)
-       Solaz = 180.0 - abs(Solaz)
+      where (Geo%Solaz /= Missing_Value_Real4)
+       Geo%Solaz = 180.0 - abs(Geo%Solaz)
       end where
 
       !---- compute time
-      dtime_dline = (time_ms_end - time_ms_start) / (Num_Scans-1)
+      if (time_ms_end .eq. 0 .and. time_ms_start .eq. time_last_gran_start) then
+      ! end time of last granule is adjusted from 0 so time increment is positive
+         dtime_dline = (time_ms_end + time_last_gran_end - time_ms_start) / (Image%Number_Of_Lines-1) 
+      else
+         dtime_dline = (time_ms_end - time_ms_start) / (Image%Number_Of_Lines-1)
+      endif
+
       do iline = 1,ny_local_temp
         scan_number(iline) = ny_start + iline - 1
         time_ms(iline) = int(float(iline - 1 + ny_start-1)*dtime_dline) + time_ms_start 
@@ -806,7 +806,7 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       ny_min = min(ny,ny_local_temp)
 
       !--- allocate space for data to be read in
-      if (Modis_1km_Flag == sym%YES) then
+      if (Sensor%Spatial_Resolution_Meters == 1000) then
         allocate(i1_buffer(nx_local,ny_local_temp,6))
         sds_start = (/0, ny_start-1, 0/)
         sds_edges = (/nx_local, ny_local_temp,6/)
@@ -869,6 +869,8 @@ subroutine READ_MODIS(Seg_Idx,Error_Status)
 
     real, dimension(20:36):: Eff_Wavenumber
 
+    character (len=250) :: File_Name_Tmp
+
     Error_Status = 0
     End_Flag = 0
 
@@ -877,103 +879,76 @@ subroutine READ_MODIS(Seg_Idx,Error_Status)
 
 error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
-    if (Modis_Flag == sym%YES) then
+    if (trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
   
-      !-- read geolocation (and compute scan time)
-      if (Modis_1km_Flag == sym%YES) then
-         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(dir_1b),  &
-                                            trim(Modis_Geo_Name), &
-                                            lon_1b, lat_1b, & 
-                                            Satzen, Sataz, Solzen, Solaz, Relaz, &
-                                            Num_Pix,Num_Scans_Per_Segment, &
-                                            Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            start_time,end_time,scan_time, &
-                                            scan_number,ascend,Error_Status)
+       !-- read geolocation (and compute scan time)
+       if (Sensor%Spatial_Resolution_Meters == 1000) then
+          File_Name_Tmp = trim(Image%Auxiliary_Geolocation_File_Name)
+       else
+          File_Name_Tmp = trim(Image%Level1b_Name)
+       endif
 
-        if (Error_Status /= 0) exit
-
-        !--- read cloud mask - assume path is same as level-1b
-        Cloud_Mask_Aux_Read_Flag = sym%NO
-
-        if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
-
-         call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Dir_1b),  &
-                                            trim(Modis_Cloud_Mask_Name), &
-                                            Cld_Mask_Aux, & 
-                                            Num_Pix,Num_Scans_Per_Segment, &
-                                            Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            Error_Status)
+       call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Image%Level1b_Path),  &
+                                           trim(File_Name_Tmp), &
+                                           Nav%Lon_1b, Nav%Lat_1b, & 
+                                           Geo%Satzen, Geo%Sataz, Geo%Solzen, Geo%Solaz, Geo%Relaz, &
+                                           Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                                           Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                                           Image%start_Time,Image%End_Time,scan_time, &
+                                           Scan_Number,Nav%Ascend,Error_Status)
 
 
-         if (Error_Status == 0) then
-            Cloud_Mask_Aux_Read_Flag = sym%YES
-         endif
+       if (Error_Status /= 0) exit
 
-        endif
+       !--- read cloud mask - assume path is same as level-1b
+       Cloud_Mask_Aux_Read_Flag = sym%NO
+ 
+       if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
 
-      else
-
-         call READ_MODIS_LEVEL1B_GEOLOCATION(trim(Dir_1b),  &
-                                            trim(File_1b), &
-                                            lon_1b, lat_1b, & 
-                                            Satzen, Sataz, Solzen, Solaz, Relaz, &
-                                            Num_Pix,Num_Scans_Per_Segment, &
-                                            Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            start_time,end_time,scan_time, &
-                                            scan_number,ascend,Error_Status)
-        if (Error_Status /= 0) exit
-
-        !--- read cloud mask - assume path is same as level-1b
-        Cloud_Mask_Aux_Read_Flag = sym%NO
-
-        if (Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
-
-         call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Dir_1b),  &
-                                            trim(Modis_Cloud_Mask_Name), &
-                                            Cld_Mask_Aux, &
-                                            Num_Pix,Num_Scans_Per_Segment, &
-                                            Seg_Idx,Num_Scans,Num_Scans_Read, &
-                                            Error_Status)
+          call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
+                                             trim(Image%Auxiliary_Cloud_Mask_File_Name), &
+                                             Cld_Mask_Aux, & 
+                                             Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                                             Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                                             Error_Status)
 
 
-         if (Error_Status == 0) then
-            Cloud_Mask_Aux_Read_Flag = sym%YES
-         endif
+          if (Error_Status == 0) then
+             Cloud_Mask_Aux_Read_Flag = sym%YES
+          endif
 
-        endif
+       endif
 
-      endif
+       do Chan_Idx = 1,36
 
-      do Chan_Idx = 1,36
-
-         if (Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
+         if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
 
          if (Chan_Idx < 20 .or. Chan_Idx == 26) then
-            call READ_MODIS_LEVEL1B(trim(Dir_1b),trim(File_1b), &
+            call READ_MODIS_LEVEL1B(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
                                Chan_Idx, &
                                ch(Chan_Idx)%Ref_Toa,  &
                                ch(Chan_Idx)%Unc, &
-                               Num_Pix,Num_Scans_Per_Segment, &
-                               Seg_Idx,Num_Scans,Num_Scans_Read,Error_Status)
+                               Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                               Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment,Error_Status)
          endif
 
          if (Chan_Idx >= 20 .and. Chan_Idx /= 26) then
            call READ_MODIS_THERMAL_BAND(Chan_Idx, &
                                         Seg_Idx, &
                                         Eff_Wavenumber(Chan_Idx), &
-                                        Num_Pix, &
-                                        Num_Scans_Per_Segment, &
-                                        trim(Dir_1b), &
-                                        trim(File_1b), &
+                                        Image%Number_Of_Elements, &
+                                        Image%Number_Of_Lines_Per_Segment, &
+                                        trim(Image%Level1b_Path), &
+                                        trim(Image%Level1b_Name), &
                                         ch(Chan_Idx)%Rad_Toa, &
                                         ch(Chan_Idx)%Bt_Toa, &
                                         ch(Chan_Idx)%Unc,Error_Status)
          endif
 
-      enddo
+       enddo
 
-      !--- Quality check MODIS data
-      call QC_MODIS(Line_Idx_Min_Segment,Num_Scans_Read)
+       !--- Quality check MODIS data
+       call QC_MODIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
     endif
 
@@ -1041,9 +1016,9 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       integer(kind=int4):: jday
 
       Status_Flag = 0
-      
+     
       !---- open file
-      Sd_Id = sfstart(trim(path)//trim(file_name), DFACC_read)
+      Sd_Id = sfstart(trim(Path)//trim(File_Name), DFACC_read)
 
       !--- determine attribute index
       Sds_Id = sffattr(Sd_Id, "CoreMetadata.0")
@@ -1115,10 +1090,10 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       End_Day = jday
     
     end subroutine READ_MODIS_TIME_ATTR
-!======================================================================
-! READ_MODIS_SIZE_ATTR
-! Gets the size of the array from metadata
-!======================================================================
+    !======================================================================
+    ! READ_MODIS_SIZE_ATTR
+    ! Gets the size of the array from metadata
+    !======================================================================
 
     subroutine READ_MODIS_SIZE_ATTR(File_Name_Full, Num_Elements, Num_Lines)
 
@@ -1270,7 +1245,7 @@ subroutine READ_MODIS_THERMAL_BAND(Chan_Idx, &
 
    call READ_MODIS_LEVEL1B(File_Path,File_Name, &
                            Chan_Idx, Radiance, Uncertainty, Number_Elements,Number_Lines, &
-                           Seg_Idx,Num_Scans,Num_Scans_Read,Error_Status)
+                           Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment,Error_Status)
    call CONVERT_RADIANCE(Radiance,Eff_Wavenumber,Missing_Value_Real4)
    call COMPUTE_BT_ARRAY(Brightness_Temp,Radiance,Chan_Idx,Missing_Value_Real4)
 

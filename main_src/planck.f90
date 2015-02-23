@@ -72,6 +72,7 @@
   public:: PLANCK_RAD
   public:: PLANCK_TEMP
   public:: COMPUTE_BT_ARRAY
+  public:: CONVERT_RADIANCE
 
 !-- planck tables arrays
   integer, parameter, private:: nplanck = 161
@@ -93,8 +94,10 @@
   real(kind=int4), dimension(nplanck), save, private:: B34
   real(kind=int4), dimension(nplanck), save, private:: B35
   real(kind=int4), dimension(nplanck), save, private:: B36
-  real(kind=int4), dimension(nplanck), save, private:: B40
-  real(kind=int4), dimension(nplanck), save, private:: B41
+  real(kind=int4), dimension(nplanck), save, private:: B37
+  real(kind=int4), dimension(nplanck), save, private:: B38
+  real(kind=int4), dimension(nplanck), save, private:: B42
+  real(kind=int4), dimension(nplanck), save, private:: B43
   real(kind=int4), dimension(nplanck), save, private:: T_planck
 
   contains
@@ -142,8 +145,10 @@
                                    a1_34,a2_34,nu_34, &
                                    a1_35,a2_35,nu_35, &
                                    a1_36,a2_36,nu_36, &
-                                   a1_40,a2_40,nu_40, &
-                                   a1_41,a2_41,nu_41)
+                                   a1_37,a2_37,nu_37, &
+                                   a1_38,a2_38,nu_38, &
+                                   a1_42,a2_42,nu_42, &
+                                   a1_43,a2_43,nu_43)
 
 
   real, intent(in):: a1_20,a2_20,nu_20, &
@@ -159,8 +164,10 @@
                      a1_34,a2_34,nu_34, &
                      a1_35,a2_35,nu_35, &
                      a1_36,a2_36,nu_36, &
-                     a1_40,a2_40,nu_40, &
-                     a1_41,a2_41,nu_41
+                     a1_37,a2_37,nu_37, &
+                     a1_38,a2_38,nu_38, &
+                     a1_42,a2_42,nu_42, &
+                     a1_43,a2_43,nu_43
   integer:: i
 
   do i = 1, nplanck
@@ -197,10 +204,14 @@
               ((T_planck(i)-a1_35)/a2_35))-1.0)
     B36(i) = c1*(nu_36**3)/(exp((c2*nu_36)/ &
               ((T_planck(i)-a1_36)/a2_36))-1.0)
-    B40(i) = c1*(nu_40**3)/(exp((c2*nu_40)/ &
-              ((T_planck(i)-a1_40)/a2_40))-1.0)
-    B41(i) = c1*(nu_41**3)/(exp((c2*nu_41)/ &
-              ((T_planck(i)-a1_41)/a2_41))-1.0)
+    B37(i) = c1*(nu_37**3)/(exp((c2*nu_37)/ &
+              ((T_planck(i)-a1_37)/a2_37))-1.0)
+    B38(i) = c1*(nu_38**3)/(exp((c2*nu_38)/ &
+              ((T_planck(i)-a1_38)/a2_38))-1.0)
+    B42(i) = c1*(nu_42**3)/(exp((c2*nu_42)/ &
+              ((T_planck(i)-a1_42)/a2_42))-1.0)
+    B43(i) = c1*(nu_43**3)/(exp((c2*nu_43)/ &
+              ((T_planck(i)-a1_43)/a2_43))-1.0)
   enddo
   
 
@@ -271,12 +282,18 @@
     elseif (ichan == 36) then 
       dB_dT_tmp = (B36(l+1)-B36(l))/(T_planck(l+1)-T_planck(l))
       B = B36(l) + (T - T_planck(l)) * (dB_dT_tmp)
-    elseif (ichan == 40) then 
-      dB_dT_tmp = (B40(l+1)-B40(l))/(T_planck(l+1)-T_planck(l))
-      B = B40(l) + (T - T_planck(l)) * (dB_dT_tmp)
-    elseif (ichan == 41) then 
-      dB_dT_tmp = (B41(l+1)-B41(l))/(T_planck(l+1)-T_planck(l))
-      B = B41(l) + (T - T_planck(l)) * (dB_dT_tmp)
+    elseif (ichan == 37) then 
+      dB_dT_tmp = (B37(l+1)-B37(l))/(T_planck(l+1)-T_planck(l))
+      B = B37(l) + (T - T_planck(l)) * (dB_dT_tmp)
+    elseif (ichan == 38) then 
+      dB_dT_tmp = (B38(l+1)-B38(l))/(T_planck(l+1)-T_planck(l))
+      B = B38(l) + (T - T_planck(l)) * (dB_dT_tmp)
+    elseif (ichan == 42) then 
+      dB_dT_tmp = (B42(l+1)-B42(l))/(T_planck(l+1)-T_planck(l))
+      B = B42(l) + (T - T_planck(l)) * (dB_dT_tmp)
+    elseif (ichan == 43) then 
+      dB_dT_tmp = (B43(l+1)-B43(l))/(T_planck(l+1)-T_planck(l))
+      B = B43(l) + (T - T_planck(l)) * (dB_dT_tmp)
     else
       print *, "unsupported channel number in Planck Computation, stopping"
       stop
@@ -381,16 +398,26 @@
       l = max(1,min(nplanck-1,l))
       dB_dT_tmp = (B36(l+1)-B36(l))/(T_planck(l+1)-T_planck(l))
       T = T_planck(l) + (B - B36(l)) / (dB_dT_tmp)
-    elseif (ichan == 40) then 
-      call locate(B40,nplanck,B,l)
+    elseif (ichan == 37) then 
+      call locate(B37,nplanck,B,l)
       l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B40(l+1)-B40(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B40(l)) / (dB_dT_tmp)
-    elseif (ichan == 41) then 
-      call locate(B41,nplanck,B,l)
+      dB_dT_tmp = (B37(l+1)-B37(l))/(T_planck(l+1)-T_planck(l))
+      T = T_planck(l) + (B - B37(l)) / (dB_dT_tmp)
+    elseif (ichan == 38) then 
+      call locate(B38,nplanck,B,l)
       l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B41(l+1)-B41(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B41(l)) / (dB_dT_tmp)
+      dB_dT_tmp = (B38(l+1)-B38(l))/(T_planck(l+1)-T_planck(l))
+      T = T_planck(l) + (B - B38(l)) / (dB_dT_tmp)
+    elseif (ichan == 42) then 
+      call locate(B42,nplanck,B,l)
+      l = max(1,min(nplanck-1,l))
+      dB_dT_tmp = (B42(l+1)-B42(l))/(T_planck(l+1)-T_planck(l))
+      T = T_planck(l) + (B - B42(l)) / (dB_dT_tmp)
+    elseif (ichan == 43) then 
+      call locate(B43,nplanck,B,l)
+      l = max(1,min(nplanck-1,l))
+      dB_dT_tmp = (B43(l+1)-B43(l))/(T_planck(l+1)-T_planck(l))
+      T = T_planck(l) + (B - B43(l)) / (dB_dT_tmp)
     else
       print *, "unsupported channel number in Planck Computation, stopping"
       stop
@@ -443,10 +470,14 @@
        B = c1*(nu_35**3)/(exp((c2*nu_35)/((T-a1_35)/a2_35))-1.0)
     elseif (ichan == 36) then 
        B = c1*(nu_36**3)/(exp((c2*nu_36)/((T-a1_36)/a2_36))-1.0)
-    elseif (ichan == 40) then 
-       B = c1*(nu_40**3)/(exp((c2*nu_40)/((T-a1_40)/a2_40))-1.0)
-    elseif (ichan == 41) then 
-       B = c1*(nu_41**3)/(exp((c2*nu_41)/((T-a1_41)/a2_41))-1.0)
+    elseif (ichan == 37) then 
+       B = c1*(nu_37**3)/(exp((c2*nu_37)/((T-a1_37)/a2_37))-1.0)
+    elseif (ichan == 38) then 
+       B = c1*(nu_38**3)/(exp((c2*nu_38)/((T-a1_38)/a2_38))-1.0)
+    elseif (ichan == 42) then 
+       B = c1*(nu_42**3)/(exp((c2*nu_42)/((T-a1_42)/a2_42))-1.0)
+    elseif (ichan == 43) then 
+       B = c1*(nu_43**3)/(exp((c2*nu_43)/((T-a1_43)/a2_43))-1.0)
     else
       print *, "unsupported channel number in PLANCK_RAD, stopping"
       stop
@@ -496,10 +527,14 @@
        T = a1_35 + a2_35 * ((c2*nu_35) / log( 1.0 + (c1*(nu_35**3))/B))
     elseif (ichan == 36) then 
        T = a1_36 + a2_36 * ((c2*nu_36) / log( 1.0 + (c1*(nu_36**3))/B))
+    elseif (ichan == 37) then 
+       T = a1_37 + a2_37 * ((c2*nu_37) / log( 1.0 + (c1*(nu_37**3))/B))
+    elseif (ichan == 38) then 
+       T = a1_38 + a2_38 * ((c2*nu_38) / log( 1.0 + (c1*(nu_38**3))/B))
     elseif (ichan == 40) then 
-       T = a1_40 + a2_40 * ((c2*nu_40) / log( 1.0 + (c1*(nu_40**3))/B))
+       T = a1_42 + a2_42 * ((c2*nu_42) / log( 1.0 + (c1*(nu_42**3))/B))
     elseif (ichan == 41) then 
-       T = a1_41 + a2_41 * ((c2*nu_41) / log( 1.0 + (c1*(nu_41**3))/B))
+       T = a1_43 + a2_43 * ((c2*nu_43) / log( 1.0 + (c1*(nu_43**3))/B))
     else
       print *, "unsupported channel number in PLANCK_TEMP, stopping"
       stop
@@ -509,4 +544,23 @@
 
   end function PLANCK_TEMP
 
- end module PLANCK
+ !----------------------------------------------------------------------
+ ! Convert radiances based on channel centroid wavenumber (nu)
+ ! from NASA standad (W m-2 um-1 sr-1) 
+ ! to NOAA standard (mW/cm^2/cm^-1/str)
+ !
+ !----------------------------------------------------------------------
+ subroutine CONVERT_RADIANCE(Radiance,Nu,Missing_Value)
+  real (kind=real4), dimension(:,:), intent(inout):: Radiance
+  real (kind=real4), intent(in):: Nu
+  real (kind=real4), intent(in):: Missing_Value
+ 
+  where(Radiance /= Missing_Value)
+       Radiance = Radiance * (((10000.0 / Nu )**2) / 10.0)
+  end where
+
+  return
+
+ end subroutine CONVERT_RADIANCE
+
+end module PLANCK

@@ -141,6 +141,8 @@ contains
 
      
       ! - okay lets start
+      print*, 'NLCOMP starts ...'
+      
       
       rad_abv_cld (20)  = inp % chn ( 20 ) % rad_abvcld_nwp
       rad_abv_cld (31)  = inp % chn ( 31 ) % rad_abvcld_nwp

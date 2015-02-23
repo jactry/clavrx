@@ -16,7 +16,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    integer , intent(in) , optional :: debug_mode_user
    
    ! parameters
-   integer , parameter :: N_CHAN = 42
+   integer , parameter :: N_CHAN = 44
    real  :: ALBEDO_OCEAN (N_CHAN)
    real, parameter :: SAT_ZEN_MAX = 80.
    real, parameter :: SOL_ZEN_MIN = 90.
@@ -58,7 +58,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    integer :: line_idx , elem_idx
    
    integer :: chn_idx
-   integer , parameter :: CHN_VIS = 42
+   integer , parameter :: CHN_VIS = 44
    integer , parameter :: CHN_NIR = 20
    real(kind=real4) :: gas_coeff (3)
    
@@ -130,10 +130,10 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
                        & .and. input % sat % d <= SAT_ZEN_MAX &
                        & .and. input % sol % d > SOL_ZEN_MIN &
                        & .and. input % zen_lunar % d < 80 &
-                       & .and. input % refl (42) % d  >= 0. &
+                       & .and. input % refl (44) % d  >= 0. &
                        & .and. air_mass_array >= 2.
 	
-   has_city_lights = input % rad (42) % d > 1.E-06
+   has_city_lights = input % rad (44) % d > 1.E-06
    
     
   
@@ -206,7 +206,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          air_mass = air_mass_array  (elem_idx,line_idx)  
          ! - compute transmission 
             
-         loop_chn: do chn_idx = 1 , 42
+         loop_chn: do chn_idx = 1 , 44
           
             if ( .not. input % is_channel_on (chn_idx) ) cycle  loop_chn
             

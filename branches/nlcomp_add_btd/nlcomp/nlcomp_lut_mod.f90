@@ -152,7 +152,7 @@ contains
 	  	n_channels = size ( channels )
 	  	sensor_current = trim(sensor_name)
 	  
-	  	lut_path_loc = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
+	  	lut_path_loc = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
 	 
 		if (  present ( lut_path ))  lut_path_loc = trim(lut_path) 
 	   

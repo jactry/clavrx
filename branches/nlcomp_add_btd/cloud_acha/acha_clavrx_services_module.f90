@@ -6,9 +6,51 @@ module ACHA_SERVICES_MOD
 
  use PLANCK
  use CONSTANTS
- use PIXEL_COMMON
  use NWP_COMMON
  use RTM_COMMON
+ use PIXEL_COMMON, only: &
+       Ch, &
+       Nav, &
+       Geo, &
+       Sensor, &
+       Image, &
+       ACHA, &
+       Sfc, &
+       Bad_Pixel_Mask, &
+       I_Lrc, &
+       J_Lrc, &
+       I_Nwp, &
+       J_Nwp, &
+       I_Nwp_x, &
+       J_Nwp_x, &
+       Lon_Nwp_Fac, &
+       Lat_Nwp_Fac, &
+       Zen_Idx_Rtm, &
+       Tair_Nwp_Pix, &
+       Tsfc_Nwp_Pix, &
+       Ttropo_Nwp_Pix, &
+       Psfc_Nwp_Pix, &
+       Smooth_Nwp_Flag, &
+       Process_Undetected_Cloud_Flag, &
+       Posterior_Cld_Probability, &
+       Cld_Mask, &
+       Cld_Type, &
+       Cld_Test_Vector_Packed, &
+       Shadow_Mask, &
+       Cloud_Fraction_Uncer_3x3, &
+       Tc_Cirrus_Co2, &
+       Tc_Opaque_Cloud, &
+       Pc_Opaque_Cloud, &
+       Zc_Opaque_Cloud, &
+       Tc_H2O, &
+       Pc_H2O, &
+       Cloud_Fraction_3x3, &
+       Low_Cloud_Fraction_3x3, &
+       Mid_Cloud_Fraction_3x3, &
+       High_Cloud_Fraction_3x3, &
+       Diag_Pix_Array_1, &
+       Diag_Pix_Array_2, &
+       Diag_Pix_Array_3
 
  implicit none
 

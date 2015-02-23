@@ -1,6 +1,6 @@
 !$Id: level2_ncdc_minimal.inc 536 2014-09-15 17:51:27Z heidinger $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 214
+ integer, parameter, private:: Num_Level2_Sds = 215
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 1
@@ -223,4 +223,5 @@
      Sds_Num_Level2_Shadow = 211,         Sds_Num_Level2_Shadow_Flag = 0, &
      Sds_Num_Level2_Fire = 212,           Sds_Num_Level2_Fire_Flag = 0, &
      Sds_Num_Level2_Zc_Lower = 213,       Sds_Num_Level2_Zc_Lower_Flag = 0, &
-     Sds_Num_Level2_Pc_Lower = 214,       Sds_Num_Level2_Pc_Lower_Flag = 0
+     Sds_Num_Level2_Pc_Lower = 214,       Sds_Num_Level2_Pc_Lower_Flag = 0, &
+     Sds_Num_Level2_Cod_Mask = 215,       Sds_Num_Level2_Cod_Mask_Flag = 0

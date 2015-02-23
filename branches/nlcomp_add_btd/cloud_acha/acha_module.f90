@@ -48,6 +48,17 @@ module AWG_CLOUD_HEIGHT
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
 !----------------------------------------------------------------------
+!Changes needed to get into SAPF
+!
+! - Renamed AWG_CLOUD_HEIGHT_ALGORITHM to AWG_CLOUD_HEIGHT_ALGORITHM_ACHA
+! - Renamed LOCAL_LINEAR_RADIATIVE_CENTER to LOCAL_LINEAR_RADIATIVE_CENTER_ACHA
+! - Renamed module from AWG_CLOUD_HEIGHT to AWG_CLOUD_HEIGHT_ACHA
+! - Had to redo Skip_LRC_Mask due to issues in Framework
+!
+! ** Note:  These changes are in the Framework repository only.
+!
+!----------------------------------------------------------------------
+
   use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
 
   implicit none
@@ -592,15 +603,17 @@ module AWG_CLOUD_HEIGHT
 
     !---  filter pixels for last pass for cirrus correction
     if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == sym%YES) then
+
         if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. &
             Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
-
-           !--- don't redo cirrus with valid lrc values
-           if (ilrc > 0 .and. jlrc > 0) then 
-            if (Output%Ec(ilrc,jlrc) > 0.7) cycle
-           endif
-
+             cycle
         endif
+
+        !--- don't redo cirrus with valid lrc values
+        if (ilrc > 0 .and. jlrc > 0) then 
+            if (Output%Ec(ilrc,jlrc) > 0.7) cycle
+        endif
+
     endif
 
     !-----------------------------------------------------------------------
@@ -1405,7 +1418,8 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
      Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
      ((Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) .or. &
       (Cloud_Type == sym%WATER_TYPE) .or. &
-      (Cloud_Type == sym%FOG_TYPE))) then
+      (Cloud_Type == sym%FOG_TYPE) .or. & 
+      (abs(Input%Latitude(Elem_Idx,Line_Idx)) >=60 .and. Cloud_Type == sym%SUPERCOOLED_TYPE))) then
 
        !-- select lapse rate  (k/km)
        Lapse_Rate =  -0.061  + &
@@ -1680,9 +1694,9 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Line_Idx_1
       integer:: Line_Idx_2
       integer:: count_Valid
-      integer, dimension(:,:), allocatable:: mask
+      integer(kind=int1), dimension(:,:), allocatable:: mask
       !---STW Debug
-      integer, dimension(:,:), allocatable:: mask2
+      integer(kind=int1), dimension(:,:), allocatable:: mask2
       integer:: count_Valid2
       !---STW End Debug
 
@@ -1785,6 +1799,8 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
          
              end do Element_Loop_2
           end do Line_loop_2
+          
+          deallocate(mask2)
 
           !--- fill missing values with default value
           Line_loop_3: do Line_Idx = Line_start, Line_end 
@@ -1839,6 +1855,9 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
                                         Ilev)
         end do Element_Loop_4
        end do Line_loop_4
+
+       if (allocated(mask)) deallocate(mask)
+       if (allocated(mask2)) deallocate(mask2)
 
    end subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION
 
@@ -2260,22 +2279,22 @@ subroutine OPTIMAL_ESTIMATION(symbol,Iter_Idx,Iter_Idx_Max,nx,ny, &
   Sy = 0.0
   Sy(1,1) = T11um_Cal_Uncer**2 + ((1.0-Ec)*T11um_Clr_Uncer)**2 + (T11um_Cld_Uncer)**2
 
-  if (Acha_Mode_Flag == 1 .or. Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 8) then
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + ((1.0-Ec)*T11um_12um_Clr_Uncer)**2 + (T11um_12um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 2) then
+  if (Acha_Mode_Flag == 4) then
     Sy(2,2) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 6) then
+  if (Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 4) then
+  if (Acha_Mode_Flag == 5) then
     Sy(3,3) = T11um_85um_Cal_Uncer**2 + ((1.0-Ec)*T11um_85um_Clr_Uncer)**2 + (T11um_85um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
 
@@ -2766,12 +2785,13 @@ end subroutine DETERMINE_SFC_TYPE_FORWARD_MODEL
 ! Using Andy's simpler expression
 !
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!            6=11+6.7+13um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !
 ! Input:
 ! Emiss_Vector = a vector of emissivities in each channel. 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 ! Sfc_Type_Forward_Model = the surface type used for covariance calcs 
 ! y_variance = the variance computed a 3x3 array for each element of y
 !
@@ -2898,8 +2918,8 @@ end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 !----------------------------------------------------------------------
 ! Compute Sy based on the clear-sky error covariance calcuLations.
 ! This assumes that 
-! Acha_Mode_Flag: 0=11um,1=11+12um,2=11+13.3um,3=11+12+13.3um,4=8.5+11+12um
-!                 5=11+6.7+13.3um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
 !----------------------------------------------------------------------
 subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
 
@@ -3687,30 +3707,30 @@ subroutine CHECK_ACHA_MODE(symbol, &
    endif
 
    if ((Chan_On_67um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 5) .or. &
+       ((Acha_Mode_Input == 2) .or. &
         (Acha_Mode_Input == 6) .or. &
         (Acha_Mode_Input == 7))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
-   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 4)) then
+   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 5)) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_12um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 1) .or. &
-        (Acha_Mode_Input == 4) .or. &
-        (Acha_Mode_Input == 5))) then
+       ((Acha_Mode_Input == 3) .or. &
+        (Acha_Mode_Input == 5) .or. &
+        (Acha_Mode_Input == 6))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
 
    if ((Chan_On_133um == symbol%NO) .and. &
-       ((Acha_Mode_Input == 2) .or. &
-        (Acha_Mode_Input == 3) .or. &
-        (Acha_Mode_Input == 6))) then
+       ((Acha_Mode_Input == 4) .or. &
+        (Acha_Mode_Input == 7) .or. &
+        (Acha_Mode_Input == 8))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
@@ -3906,7 +3926,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
    real(kind=real4), intent(out), dimension(:,:):: Temperature_Cirrus
-   logical, dimension(:,:), allocatable:: Mask
+   integer(kind=int1), dimension(:,:), allocatable:: Mask
 
    integer:: Num_Elements
    integer:: Num_Lines
@@ -3915,19 +3935,19 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
 
    Temperature_Cirrus = Missing
 
-   Num_Elements = size(Type,1)
-   Num_Lines = size(Type,2)
+   Num_Elements = size(Temperature_Cirrus,1)
+   Num_Lines = size(Temperature_Cirrus,2)
 
    allocate(Mask(Num_Elements,Num_Lines))
 
-   mask = .false.
+   Mask = 0
 
    where( (Type == sym%CIRRUS_TYPE .or. &
            Type == sym%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud > Emissivity_Thresh)
 
-      Mask = .true.
+      Mask = 1
 
    end where
 
@@ -3937,11 +3957,16 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
       i2 = min(Num_Elements,max(1,Elem_Idx + Box_Width))
 
       do Line_Idx = 1, Num_Lines, Box_Width
+
+          Temperature_Temporary = Missing
+          Count_Temporary = 0
+          Sum_Temporary = 0.0
+
           j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
           j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
-          Count_Temporary = count(Mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
+          Count_Temporary = sum(Mask(i1:i2,j1:j2))
+          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2)*Mask(i1:i2,j1:j2))
           if (Count_Temporary > Count_Thresh) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary
           else
@@ -3987,8 +4012,8 @@ subroutine COMPUTE_PROCESSING_ORDER(symbol,Invalid_Data_Mask,Cloud_Type, &
   integer:: Line_Idx, Elem_Idx
   integer:: ilrc, jlrc
 
-  Number_of_Elements = size(Processing_Order,1)
-  Number_of_Lines = size(Processing_Order,2)
+  Number_of_Elements = size(Elem_Idx_LRC,1)
+  Number_of_Lines = size(Elem_Idx_LRC,2)
 
   Processing_Order = Missing_Value_Int1
   where(Invalid_Data_Mask == symbol%NO) 

@@ -147,6 +147,8 @@
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
+   use cr_config_mod    
+      
    implicit none
  
    !***********************************************************************
@@ -248,6 +250,9 @@
    character ( len = 30) :: string_30
    character ( len = 100) :: string_100
    
+   type (conf_user_opt_type) :: config
+   
+   character(len = 10) :: sensorname
    
   
    !------------- VIIRS variables --------------
@@ -266,11 +271,9 @@
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
-   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' , level = verb_lev % MINIMAL , color = 43 )
+   call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
+      , level = verb_lev % MINIMAL , color = 43 )
 
-#ifdef HDF5LIBS
-   call mesg ( "HDF5 USED" , level = verb_lev % VERBOSE )
-#endif
    
    !----------------------------------------------------------------------------
    ! Initialize some flags
@@ -291,6 +294,8 @@
   
  
    Skip_Processing_Flag = sym%NO
+   
+   
 
    !----------------------------------------------------------------------------
    ! Determine time of the start of all processing
@@ -308,7 +313,8 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
-  
+   
+
    call SETUP_USER_DEFINED_OPTIONS()
 
    !*************************************************************************
@@ -392,7 +398,7 @@
     !--------------------------------------------------------------------
     !--- setup clock corrections in memory
     !--------------------------------------------------------------------
-    if (Nav_Flag == 2) then
+    if (nav_opt== 2) then
       call SETUP_CLOCK_CORRECTIONS()
     endif
 
@@ -414,18 +420,8 @@
 
    !--- read directories from clavrxorb_input_Files
    read(unit=File_List_Lun,fmt="(a)") Dir_1b
-   read(unit=File_List_Lun,fmt="(a)") Dir_1bx
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_in
-   read(unit=File_List_Lun,fmt="(a)") Dir_Nav_Out
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cmr
-   read(unit=File_List_Lun,fmt="(a)") Dir_Sst
-   read(unit=File_List_Lun,fmt="(a)") Dir_Cld
-   read(unit=File_List_Lun,fmt="(a)") Dir_Obs
-   read(unit=File_List_Lun,fmt="(a)") Dir_Geo
-   read(unit=File_List_Lun,fmt="(a)") Dir_Rtm
-   read(unit=File_List_Lun,fmt="(a)") Dir_Ash
    read(unit=File_List_Lun,fmt="(a)") Dir_Level2
-   read(unit=File_List_Lun,fmt="(a)") Dir_Level3
+  
 
    !--- reset file counter
    File_Number = 1
@@ -440,6 +436,7 @@
       ! Marker: READ IN CLAVRXORB_FILE_LIST AND SET FLAGS 
       !----------------------------------------------------------------------
       read(unit=File_list_lun,fmt="(a)",iostat=ios) File_1b_Temp
+      if ( file_1b_temp == "") exit
       if (ios /= 0) then
          if (ios /= -1) then
             !-- non eof error
@@ -486,8 +483,10 @@
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
       !------------------------------------------------------------------------
-      call DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,Ierror)
-
+      call DETECT_SENSOR_FROM_FILE(File_1b_Full,File_1b_Temp,AREAstr,NAVstr,sensorname, Ierror)
+      
+      
+      
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Sensor could not be detected, skipping file "
          cycle file_loop
@@ -522,6 +521,7 @@
   
       !-----------------------------------------------------------------------
       !--- Compute the time stamp for use in all generated HDF output files
+      !  AW-2014-12-22 Why now? Why here?
       !-----------------------------------------------------------------------
       call HDF_TSTAMP()
    
@@ -538,19 +538,15 @@
 
       !----------------------------------------------------------------------
       ! Knowing the sensor, setup internal parameters needed for processing
+      !  not only: also assigns sensor flags as goes_mop_flag ..  ...
       !----------------------------------------------------------------------
       call SET_SENSOR_CONSTANTS ( AREAstr)
+      
+      if ( goes_mop_flag == sym%YES) sensorname = 'GOES_MOP'
+      if ( avhrr_1_flag == sym % YES ) sensorname='AVHRR_1'
+    
 
-      !------------------------------------------------------------------
-      ! Turn off selected channels based on sensor
-      !------------------------------------------------------------------
-      call TURN_OFF_CHANNELS_BASED_ON_SENSOR(Avhrr_Flag,Avhrr_1_Flag, &
-                                          Goes_Flag, Goes_Mop_Flag, &
-                                          Goes_Sndr_Flag,Seviri_Flag,  &
-                                          Mtsat_Flag, Viirs_Flag,  &
-                                          Iff_Viirs_Flag, Iff_Avhrr_flag, &
-                                          FY2_Flag, COMS_Flag)
-   
+     
       !------------------------------------------------------------------
       ! Setup PFAAST (FAST IR RTM) for this particular sensor
       !------------------------------------------------------------------
@@ -562,15 +558,15 @@
       call SETUP_SOLAR_RTM(Sc_Id_WMO)
 
       !------------------------------------------------------------------
+      ! update settings according sensor ( algo mode and channel settings 
+      !    including turn-on and off)
+      !------------------------------------------------------------------
+      call UPDATE_CONFIGURATION ( sensorname )
+     
+      !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
       call CREATE_PIXEL_ARRAYS()
-
-      !------------------------------------------------------------------
-      ! Check to see if the channels available and selected allow
-      ! for the generation of the algorithms
-      !------------------------------------------------------------------
-      call CHECK_ALGORITHM_CHOICES()
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite
@@ -591,10 +587,10 @@
       Day_Of_Month = COMPUTE_DAY(int(Start_Day, kind=int4), int(ileap, kind=int4))
 
       !--- continue output to screen
-      write ( string_30, '(I4,X,I3,X,F9.5)') Start_Year,Start_Day, &
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') Start_Year,Start_Day, &
              Start_Time/60.0/60.0/1000.0
       call mesg ("start year, day, time = "//string_30 ) 
-      write ( string_30, '(I4,X,I3,X,F9.5)') End_Year,End_Day, &
+      write ( string_30, '(I4,1X,I3,1X,F9.5)') End_Year,End_Day, &
              End_Time/60.0/60.0/1000.0
       call mesg ("End year, day, time = "//string_30 ) 
       
@@ -619,28 +615,24 @@
       !--------------------------------------------------------------------
 
       !Set to use default options. This will be turned off if there is NO daily OISST data
-      Use_Sst_Anal = Use_Sst_Anal_Default
+      Use_Sst_Anal = 0
 
-      if (Use_Sst_Anal == sym%YES ) then  
-         if (Sst_Anal_Opt < 2) then
-            if(Start_Year /= Start_Year_Prev .or. Start_Day /= Start_Day_Prev) then
+      if (Start_Year /= Start_Year_Prev .or. Start_Day /= Start_Day_Prev) then
+         OiSst_File_Name= GET_OISST_MAP_FILENAME(Start_Year,Start_Day, &
+                                                 trim(OiSst_Data_Dir) )
 
-               OiSst_File_Name= GET_OISST_MAP_FILENAME(Start_Year,Start_Day, &
-                                                 trim(OiSst_Data_Dir), &
-                                                 Sst_Anal_Opt)
-
-               if (trim(OiSst_File_Name) == "no_file") then
-                  ! insert temp sst flag off here
-                  Use_Sst_Anal = sym%NO
-                  call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
-               else
-                  call READ_OISST_ANALYSIS_MAP(oiSst_File_Name)
-               end if
-            endif
+         if (trim(OiSst_File_Name) == "no_file") then
+            Use_Sst_Anal = sym%NO
+            call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
          else
-            print *, EXE_PROMPT, "WARNING: NESDIS 100 km SST Option not yet available"
+            call READ_OISST_ANALYSIS_MAP(oiSst_File_Name)
+            use_sst_anal = 1
          end if
       end if
+      
+       !------- store previous day and year to prevent reading of same data for next orbit
+      Start_Year_Prev = Start_Year
+      Start_Day_Prev = Start_Day  
 
       !--------------------------------------------------------------------
       !--- 5 km surface emiss
@@ -761,27 +753,27 @@
       !*************************************************************************
 
       !--- GFS
-      if (Nwp_Flag == 1) then
-         call READ_GFS_DATA(Nwp_Flag, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, gfs_Data_Dir, ierror_Nwp) 
+      if (nwp_opt == 1) then
+         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, gfs_Data_Dir, ierror_Nwp) 
       end if
 
       !--- NCEP Reanalysis
-      if (Nwp_Flag == 2) then
+      if (nwp_opt == 2) then
          call READ_NCEP_REANALYSIS_DATA(Start_Year, Start_Day, Start_Time, End_Day, End_Time, ncep_Data_Dir)
       end if
 
       !--- CFSR
-      if (Nwp_Flag == 3) then
-         call READ_GFS_DATA(Nwp_Flag, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
+      if (nwp_opt == 3) then
+         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
       endif
 
       !--- GDAS
-      if (Nwp_Flag == 4) then
-         call READ_GFS_DATA(Nwp_Flag, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
+      if (nwp_opt == 4) then
+         call READ_GFS_DATA(nwp_opt, Start_Year, Start_Day, Start_Time, End_Year, End_Day, End_Time, cfsr_Data_Dir, ierror_Nwp) 
       endif
      
       !---- if NWP is being read in, then proceeed in allocating RTM, NWP arrays
-      if (Nwp_Flag /= 0) then
+      if (nwp_opt /= 0) then
          
          !--- Quality control NWP fields
          call QC_NWP()
@@ -801,9 +793,7 @@
 
       end if
 
-      !------- store previous day and year to prevent reading of same data for next orbit
-      Start_Year_Prev = Start_Year
-      Start_Day_Prev = Start_Day
+     
 
       !*************************************************************************
       ! Marker: Populate or read in other lookup tables
@@ -836,12 +826,7 @@
  
       end if
  
-      !--------------------------------------------------------------
-      !--- name and open and write header to lbx file
-      !--------------------------------------------------------------
-      if (bx_File_Flag == sym%YES) then
-         call WRITE_HEADER_1BX(File_1b)
-      endif
+ 
 
       !--- compute Sun-Earth distance
       Sun_Earth_Distance = 1.0 - 0.016729*cos(0.9856*(Start_Day-4.0)*dtor)
@@ -852,7 +837,7 @@
       !--------------------------------------------------------------
       !-- Marker: Interpolate a clock correction for this orbit
       !--------------------------------------------------------------
-      if (Avhrr_Flag == sym%YES .and. Nav_Flag == 2) then
+      if (Avhrr_Flag == sym%YES .and. nav_opt== 2) then
          call INTERPOLATE_CLOCK_ERROR(Start_Year, Start_Time,  &
                                    End_Year, End_Time, &
                                    Sc_Id_WMO,timerr_seconds)
@@ -882,7 +867,7 @@
       Segment_Time_Point_Seconds_temp = 0.0
 
       Segment_loop: do Segment_Number = 1,Num_Segments
-   
+        
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
 
@@ -976,8 +961,8 @@
                               c1,c2,a1_20,a2_20,nu_20, &
                               a1_31,a2_31,nu_31,a1_32,a2_32,nu_32,Solar_Ch20_Nu,&
                               Sun_Earth_Distance,Therm_Cal_1b, &
-                              Ref_Cal_1b,Nav_Flag,Use_Sst_Anal, &
-                              Sst_Anal_Opt, Modis_Clr_Alb_Flag,Nwp_Flag, &
+                              Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
+                               Modis_Clr_Alb_Flag,nwp_opt, &
                               Ch1_Gain_Low,Ch1_gain_High, &
                               Ch1_Switch_Count_Cal,Ch1_Dark_Count_Cal, &
                               Ch2_Gain_low,Ch2_Gain_High, &
@@ -1013,7 +998,7 @@
             ! Marker: Recompute geolocation
             !*******************************************************************
             !--- use level 1b navigation
-            if (Nav_Flag == 0 .or. Modis_Flag == sym%YES .or.  &
+            if (nav_opt== 0 .or. Modis_Flag == sym%YES .or.  &
                 &  Seviri_Flag == sym%YES .or. Mtsat_Flag == sym%YES .or. &
                 &  Goes_Flag == sym%YES .or. Viirs_Flag == sym%YES .or. &
                 &  FY2_Flag == sym%YES .or. COMS_Flag == sym%YES .or. &
@@ -1024,7 +1009,7 @@
             end if
 
             !---  Repositioning
-            if (Nav_Flag == 2 .and. Avhrr_Flag == sym%YES) then
+            if (nav_opt== 2 .and. Avhrr_Flag == sym%YES) then
                if ((timerr_seconds /= Missing_Value_Real4) .and. &
                       & (timerr_seconds /= 0.0)) then 
                   call REPOSITION_FOR_CLOCK_ERROR(Line_Idx_Min_Segment,Num_Scans_Read, &
@@ -1038,7 +1023,7 @@
             !--- compute time (local and utc) variables for this segment
             call CONVERT_TIME(Line_Idx_Min_Segment,Num_Scans_Read)
 
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
 
                !--- map each each into correct NWP cell
                call MAP_PIXEL_NWP(Num_Pix,Num_Scans_Read)
@@ -1098,7 +1083,7 @@
             end if
 
             !--- merge with nwp surface elevation
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
                 call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Num_Scans_Read)
             endif
 
@@ -1145,13 +1130,13 @@
 
             !--- interpolate sst analyses to each pixel
             if (Use_Sst_Anal == 1) then
-               if (Sst_Anal_Opt < 2) then
-                  call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Num_Scans_Read)
-               end if
+               
+               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Num_Scans_Read)
+              
             end if
 
             !--- compute a coast mask relative to nwp data
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
                call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Num_Scans_Read)
             end if
 
@@ -1227,7 +1212,7 @@
             call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Num_Scans_Read)
 
             !--- compute pixel level Snow map based on all ancillary data
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
                call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Num_Scans_Read)
             end if
 
@@ -1254,17 +1239,17 @@
             !*******************************************************************
 
             !--- needs an NWP to run.
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                !-- temporally interp skin temp for each segment (only ncep reanalysis)
-               if (Nwp_Flag == 2) then
+               if (nwp_opt == 2) then
                   call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment), Scan_Time(Line_Idx_Min_Segment+Num_Scans_Read-1))
                end if
 
                !--- compute desired nwp parameters 
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
+               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_nwp_flag)
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Num_Pix,Line_Idx_Min_Segment,Num_Scans_Read)
@@ -1361,7 +1346,7 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-            if (Cld_Flag == sym%YES .and. Nwp_Flag > 0) then
+            if (Cld_Flag == sym%YES .and. nwp_opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1419,7 +1404,7 @@
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
-            if (Cld_Flag == sym%YES .and. Nwp_Flag > 0) then
+            if (Cld_Flag == sym%YES .and. nwp_opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
               
@@ -1536,22 +1521,22 @@
     
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-            if (erb_Flag == sym%YES) then
-               if (AVHRR_1_Flag == sym%NO) then    !currently, no AVHRR/1 algorithm
-                  call COMPUTE_ERB(Line_Idx_Min_Segment,Num_Scans_Read)
-               end if
-
-               !--- don't run if not a geostationary satellite
-               if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or. SEVIRI_Flag == sym%YES) then
-                  call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
-               end if
-
+            
+            if (AVHRR_1_Flag == sym%NO) then    !currently, no AVHRR/1 algorithm
+               call COMPUTE_ERB(Line_Idx_Min_Segment,Num_Scans_Read)
             end if
+
+            !--- don't run if not a geostationary satellite
+            if (GOES_Flag == sym%YES .or. MTSAT_Flag == sym%YES .or. SEVIRI_Flag == sym%YES) then
+               if ( sasrab_flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,num_scans_read)
+            end if
+
+            
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(12) =  Segment_Time_Point_Seconds(12) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-            if (Nwp_Flag > 0) then
+            if (nwp_opt > 0) then
 
                !--- assign clear sky quality flags
                call ASSIGN_CLEAR_SKY_QUALITY_FLAGS(Line_Idx_Min_Segment,Num_Scans_Read)
@@ -1559,7 +1544,7 @@
             end if
 
             !--- generated cloud masked sst field
-            if (Nwp_Flag > 0) then
+            if (nwp_opt > 0) then
                 call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Num_Scans_Read)
             end if
 
@@ -1581,7 +1566,7 @@
             !*************************************************************************
 
             !--- deallocate rtm profile arrays (only do if NWP is used)
-            if (Nwp_Flag /= 0) then
+            if (nwp_opt /= 0) then
 
                do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Num_Scans_Read - 1
                   do Elem_Idx = 1, Num_Pix
@@ -1657,7 +1642,7 @@
       !Marker: Deallocate remaining arrays
       !*************************************************************************
       !--- main RTM structures and NWP arrays
-      if (Nwp_Flag > 0) then
+      if (nwp_opt > 0) then
          call DESTROY_NWP_ARRAYS()
          call DESTROY_TEMP_NWP_VECTORS()
          call DEALLOCATE_RTM()

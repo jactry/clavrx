@@ -36,8 +36,8 @@
 !      1. work as input
 !        1.1 configuration
 !             Chan_On_Flag_Default                       integer (42)
-!             num_pix                                    integer
-!             num_scans_read                             integer
+!             Image%Number_Of_Elements                                    integer
+!             Image%Number_Of_Lines_Read_This_Segment                             integer
 !        1.2 geo data:                   
 !              solzen                                    real (:,:)
 !              satzen                                    real (:,:)
@@ -81,13 +81,11 @@ module cloud_type_bridge_module
 
    
    use PIXEL_COMMON, only : &
-        solzen  &
-      , satzen &   
+        image &
+      , sensor &
+      , geo &
       , zen_idx_rtm &
-      , Chan_On_Flag_Default &
       , ch &
-      , num_pix &
-      , num_scans_read &
       , i_nwp &
       , j_nwp &
       , Bt_Ch27_Max_3x3 &
@@ -156,11 +154,11 @@ contains
       ! ------  Executable  ------------------------------------
       ice_prob = -999.0
       
-      type_inp % sat % chan_on = Chan_On_Flag_Default == 1
+      type_inp % sat % chan_on = Sensor%Chan_On_Flag_Default == 1
       
       !-----------    loop over LRC core pixels to get ice probabbilty -----         
-      elem_loop: do  j = 1,num_scans_read
-         line_loop: do i = 1, num_pix  
+      elem_loop: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
+         line_loop: do i = 1, Image%Number_Of_Elements  
             
             if ( bad_pixel_mask (i,j) == 1 ) then
                cld_type (i,j ) = et_cloud_type % MISSING
@@ -191,8 +189,8 @@ contains
 
  
       ! - now loop over all non lrc-cores
-      elem_loop1: do  j = 1,num_scans_read
-         line_loop1: do i = 1, num_pix  
+      elem_loop1: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
+         line_loop1: do i = 1, Image%Number_Of_Elements  
             
             if ( bad_pixel_mask (i,j) == 1 ) then
                cld_type (i,j ) = et_cloud_type % MISSING
@@ -301,16 +299,21 @@ contains
       !-----------------------------------------------------------------------------------
       ! - sat
       !-----------------------------------------------------------------------------------
-      if (chan_on_flag_default(31) == 1 ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
-      if (chan_on_flag_default(31) == 1 ) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
-      if (chan_on_flag_default(32) == 1 ) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
-      if (chan_on_flag_default(6) == 1 ) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
-      if (chan_on_flag_default(20) == 1 ) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
+      if (sensor % chan_on_flag_default(31) == 1 ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
+      if (sensor % chan_on_flag_default(31) == 1 ) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
+      if (sensor % chan_on_flag_default(32) == 1 ) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
+      if (sensor % chan_on_flag_default(6) == 1 ) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
+      if (sensor % chan_on_flag_default(20) == 1 ) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
 
-      if (chan_on_flag_default(27) == 1 ) then
+      if (sensor % chan_on_flag_default(27) == 1 ) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
-      end if   
+      end if  
+      
+      if (sensor % chan_on_flag_default(29) == 1 ) then
+         type_inp % sat % rad_ch29 = ch(29) % rad_toa (i,j)
+         type_inp % sat % bt_ch29 =  ch(29) % bt_toa  (i,j)
+      end if         
       
       !-----------------------------------------------------------------------------------
       ! - rtm
@@ -323,10 +326,10 @@ contains
       
       
       
-      if (chan_on_flag_default(6) == 1 )  then
+      if (sensor % chan_on_flag_default(6) == 1 )  then
          type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
       endif
-      if (chan_on_flag_default(31) == 1 )  then
+      if (sensor % chan_on_flag_default(31) == 1 )  then
          
          
          allocate ( type_inp % rtm % rad_ch31_bb_prof (n_rtm_prof ) &
@@ -337,19 +340,19 @@ contains
          type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)
          type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
-         if (chan_on_flag_default(27) == 1 )  then
+         if (sensor % chan_on_flag_default(27) == 1 )  then
             type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
-         if (chan_on_flag_default(32) ==1 )  then
+         if (sensor % chan_on_flag_default(32) ==1 )  then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )
             type_inp % rtm % bt_ch32_atm_sfc       = ch(32)%Bt_Toa_Clear( i,j )
          endif
-         if (chan_on_flag_default(33) ==1 )  then
+         if (sensor % chan_on_flag_default(33) ==1 )  then
             type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
          endif
       endif
       
-      if (chan_on_flag_default(27) == 1) then
+      if (sensor % chan_on_flag_default(27) == 1) then
          type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
          type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
          allocate ( type_inp % rtm % rad_ch27_bb_prof(n_rtm_prof ) &
@@ -359,8 +362,8 @@ contains
       !-----------------------------------------------------------------------------------
       ! - geo
       !-----------------------------------------------------------------------------------
-      type_inp % geo % sol_zen     = solzen ( i , j )
-      type_inp % geo % sat_zen     = satzen ( i , j )
+      type_inp % geo % sol_zen     = geo % solzen ( i , j )
+      type_inp % geo % sat_zen     = geo % satzen ( i , j )
       
       !-----------------------------------------------------------------------------------
       !- sfc

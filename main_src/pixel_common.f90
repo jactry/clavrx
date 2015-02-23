@@ -187,6 +187,8 @@ module PIXEL_COMMON
      real (kind=real4):: Moon_Illum_Frac
      real(kind=real4):: Solzen_Min_Limit
      real(kind=real4):: Solzen_Max_Limit
+     real(kind=real4):: Satzen_Min_Limit
+     real(kind=real4):: Satzen_Max_Limit
   end type geometry_definition
 
   type :: navigation_definition

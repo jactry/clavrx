@@ -180,6 +180,7 @@ contains
       obs_vec ( 4 ) = bt_20 - bt_31
       
       print*,'bt s 20 31 32',bt_20,bt_31,bt_32, inp % geo % tsfc
+      print*,'obs vec: ',obs_vec
       
       cod = -999.
       cps= -999.
@@ -198,7 +199,7 @@ contains
          nlcomp_out % cps = 10**cps
       end if
       print*, 'NLCOMP ended ...'
-      
+     
      
    end subroutine nlcomp_algorithm
 end module nlcomp_retrieval_mod

@@ -15,6 +15,9 @@ module nlcomp_hybrid_mod
     
 
 contains
+   !>
+   !!
+   !!
    subroutine vis_channel_cod ( &
         rfl_dnb &
       , pixel &
@@ -31,16 +34,16 @@ contains
    
       type ( lut_output) :: lut_data
       integer :: i 
-     
-   
       real :: rfl_toa(29)
       integer :: cps_pos
       real :: cod_vec_lut(29)
       real :: cod_wgt
       integer :: phase_num
+      
+      
       cps_pos = -999
       cod = -999.
-      cod_vec_lut = (/(i,i=-6,22,1)/)/10.
+      cod_vec_lut = [(i/10.,i=-6,22,1)]
      
       
         phase_num = 2
@@ -67,10 +70,14 @@ contains
          cod = cod_vec_lut ( cps_pos ) + cod_wgt * 0.1 
       end if
       
-      !print*,cps_pos,rfl_dnb,  10**cod
+      print*,cps_pos,rfl_dnb,  10**cod
   
    end subroutine vis_channel_cod
    
+   
+   !>
+   !!
+   !!
    subroutine cps_known_cod ( &
         obs &
       , cod &
@@ -136,7 +143,7 @@ contains
       !   print*
       print*
       do i = 1, 9
-         print*,i 
+         
          call lut_obj % get_data ( 20, phase_num , cod_used, cps_vec_lut (i) , lut_data20) 
          call lut_obj % get_data ( 31, phase_num , cod_used, cps_vec_lut (i) , lut_data31)   
          call lut_obj % get_data ( 32,phase_num , cod_used, cps_vec_lut (i) , lut_data32)
@@ -149,7 +156,7 @@ contains
          bt32 =  planck_rad2tmp ( rad32, 'VIIRS' , 32)
          
          
-         print*, '         ',  lut_data20 %  ems * planck_rad20 , lut_data20 % trn_ems * rad_clear_toc(20),lut_data20 % trn_ems,lut_data20 %  ems
+        ! print*, '         ',  lut_data20 %  ems * planck_rad20 , lut_data20 % trn_ems * rad_clear_toc(20),lut_data20 % trn_ems,lut_data20 %  ems
          
          print*,i, rad20,bt31-bt32 , bt20 - bt31
          

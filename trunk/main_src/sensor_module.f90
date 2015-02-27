@@ -137,7 +137,8 @@ module SENSOR_MODULE
       !----------------------------------------------
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
 #ifdef HDF5LIBS
-         call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Name),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
+         call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
+                             Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
                              End_Time_Tmp,Orbit_Number_Tmp,Orbit_Identifier, End_Year_Tmp , End_Day_Tmp)
          Image%Start_Year = Start_Year_Tmp
          Image%End_Year = End_Year_Tmp

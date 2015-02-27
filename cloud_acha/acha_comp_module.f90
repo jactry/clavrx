@@ -10,7 +10,10 @@ module ACHA_COMP
 ! Reference:
 !
 !----------------------------------------------------------------------
-  use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
+  use ACHA_SERVICES_MOD, only : &
+           real4, int1, int4, &
+           acha_output_struct,symbol_acha, &
+           acha_input_struct
 
   implicit none
 
@@ -23,6 +26,7 @@ module ACHA_COMP
 
   real, private, parameter:: MISSING_VALUE_REAL = -999.0
   integer, private, parameter:: MISSING_VALUE_INTEGER = -999
+  type(symbol_acha), private :: symbol
 
   contains 
 
@@ -49,13 +53,12 @@ module ACHA_COMP
 ! modification history
 !
 !------------------------------------------------------------------------------
-  subroutine ACHA_COMP_ALGORITHM(Input, Symbol, Output)
+  subroutine ACHA_COMP_ALGORITHM(Input, Output)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
-  type(symbol_acha), intent(inout) :: Symbol
   type(acha_input_struct), intent(inout) :: Input
   type(acha_output_struct), intent(inout) :: Output
 
@@ -98,14 +101,18 @@ module ACHA_COMP
     if ( (Cloud_Type  == symbol%FOG_TYPE) .or. &
        (Cloud_Type  == symbol%WATER_TYPE) .or. &
        (Cloud_Type  == symbol%SUPERCOOLED_TYPE)) then
+
        Cloud_Phase = symbol%WATER_PHASE
+
     endif
 
     if ( (Cloud_Type  == symbol%CIRRUS_TYPE) .or. &
         (Cloud_Type  == symbol%OVERLAP_TYPE) .or. &
         (Cloud_Type  == symbol%TICE_TYPE) .or. &
         (Cloud_Type  == symbol%OVERSHOOTING_TYPE)) then
+
         Cloud_Phase = symbol%ICE_PHASE
+
     endif
 
     !-----------------------------------------------------------------------------

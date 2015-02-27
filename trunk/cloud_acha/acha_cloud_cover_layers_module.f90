@@ -28,26 +28,28 @@
 !--------------------------------------------------------------------------------------
 module ACHA_CLOUD_COVER_LAYERS
 
- use ACHA_SERVICES_MOD
+  use ACHA_SERVICES_MOD, only : &
+           real4, int1, int4, acha_output_struct,symbol_acha, &
+           acha_input_struct, acha_rtm_nwp_struct
 
  implicit none
  public:: COMPUTE_CLOUD_COVER_LAYERS
 
- real, private, PARAMETER:: MISSING_VALUE_REAL = -999.0
- integer, private, PARAMETER:: MISSING_VALUE_INTEGER = -999
+ real, private, PARAMETER:: MISSING_VALUE_REAL4 = -999.0
+ integer, private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
+ type(symbol_acha), private :: symbol
 
  contains
 
 !------------------------------------------------------------------------------
 ! compute cloud fraction over a 3x3 array using the Bayesian probability
 !------------------------------------------------------------------------------
- subroutine COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output)
+ subroutine COMPUTE_CLOUD_COVER_LAYERS(Input, Output)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
-  type(symbol_acha), intent(inout) :: Symbol
   type(acha_input_struct), intent(inout) :: Input
   type(acha_output_struct), intent(inout) :: Output
 
@@ -65,7 +67,6 @@ module ACHA_CLOUD_COVER_LAYERS
   integer,parameter :: N=1
   real, parameter:: HIGH_CLOUD_MAX_PRESSURE_THRESH = 440.0
   real, parameter:: LOW_CLOUD_MIN_PRESSURE_THRESH = 680.0
-  real, parameter:: MISSING_VALUE_REAL = -999.0
 
 
   !-------------------------------------------------------------------------------
@@ -73,8 +74,8 @@ module ACHA_CLOUD_COVER_LAYERS
   !-------------------------------------------------------------------------------
 
   !--- initialize
-  Output%Total_Cloud_Fraction = MISSING_VALUE_REAL
-  Output%Total_Cloud_Fraction_Uncer = MISSING_VALUE_REAL
+  Output%Total_Cloud_Fraction = MISSING_VALUE_REAL4
+  Output%Total_Cloud_Fraction_Uncer = MISSING_VALUE_REAL4
 
   line_loop_total: DO j= 1, Input%Number_of_Lines
 
@@ -92,7 +93,7 @@ module ACHA_CLOUD_COVER_LAYERS
       endif
 
       !--- compute cloud amount
-      Ngood = count(Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL)        
+      Ngood = count(Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL4)        
 
       !--- see if there are any valid points
       if (Ngood == 0 ) then
@@ -184,9 +185,9 @@ module ACHA_CLOUD_COVER_LAYERS
  !--------------------------------------------------------------------
 
  !--- initialize
- Output%High_Cloud_Fraction = MISSING_VALUE_REAL
- Output%Mid_Cloud_Fraction = MISSING_VALUE_REAL
- Output%Low_Cloud_Fraction = MISSING_VALUE_REAL
+ Output%High_Cloud_Fraction = MISSING_VALUE_REAL4
+ Output%Mid_Cloud_Fraction = MISSING_VALUE_REAL4
+ Output%Low_Cloud_Fraction = MISSING_VALUE_REAL4
 
  line_loop_cover: DO j = 1, Input%Number_of_Lines
 

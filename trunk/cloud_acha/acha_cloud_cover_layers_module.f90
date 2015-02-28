@@ -29,7 +29,7 @@
 module ACHA_CLOUD_COVER_LAYERS
 
   use ACHA_SERVICES_MOD, only : &
-           real4, int1, int4, acha_output_struct,symbol_acha, &
+           real4, int1, int4, acha_output_struct,acha_symbol_struct, &
            acha_input_struct, acha_rtm_nwp_struct
 
  implicit none
@@ -37,20 +37,21 @@ module ACHA_CLOUD_COVER_LAYERS
 
  real, private, PARAMETER:: MISSING_VALUE_REAL4 = -999.0
  integer, private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
- type(symbol_acha), private :: symbol
+ type(acha_symbol_struct), private :: symbol
 
  contains
 
 !------------------------------------------------------------------------------
 ! compute cloud fraction over a 3x3 array using the Bayesian probability
 !------------------------------------------------------------------------------
- subroutine COMPUTE_CLOUD_COVER_LAYERS(Input, Output)
+ subroutine COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol_In, Output)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
   type(acha_input_struct), intent(inout) :: Input
+  type(acha_symbol_struct), intent(inout) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
 
   integer :: i
@@ -72,6 +73,11 @@ module ACHA_CLOUD_COVER_LAYERS
   !-------------------------------------------------------------------------------
   ! Total Cloud Fraction and Its Uncertainty
   !-------------------------------------------------------------------------------
+
+  !-------------------------------------------------------------------------------
+  ! copy input symbol to a module-wide variable
+  !-------------------------------------------------------------------------------
+  symbol = Symbol_In
 
   !--- initialize
   Output%Total_Cloud_Fraction = MISSING_VALUE_REAL4

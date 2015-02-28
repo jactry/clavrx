@@ -60,7 +60,7 @@ module AWG_CLOUD_HEIGHT
 !----------------------------------------------------------------------
   use ACHA_SERVICES_MOD, only : &
            real4, int1, int4, real8, dtor, &
-           acha_output_struct,symbol_acha, &
+           acha_output_struct,acha_symbol_struct, &
            acha_input_struct, acha_rtm_nwp_struct, &
            PLANCK_RAD_FAST, PLANCK_TEMP_FAST, &
            INVERT_MATRIX, ACHA_FETCH_PIXEL_NWP_RTM, &
@@ -150,7 +150,7 @@ module AWG_CLOUD_HEIGHT
   real, private, PARAMETER:: MISSING_VALUE_REAL4 = -999.0
   integer(kind=int1), private, PARAMETER:: MISSING_VALUE_INTEGER1 = -128
   integer(kind=int4), private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
-  type(symbol_acha), private :: symbol
+  type(acha_symbol_struct), private :: symbol
 
   contains 
 
@@ -224,13 +224,14 @@ module AWG_CLOUD_HEIGHT
 !
 !
 !------------------------------------------------------------------------------
-  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, Output)
+  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol_In, Output)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
   type(acha_input_struct), intent(inout) :: Input
+  type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
 
   !===============================================================================
@@ -381,6 +382,11 @@ module AWG_CLOUD_HEIGHT
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
 !-----------------------------------------------------------------------
+
+   !--------------------------------------------------------------------
+   ! copy symbol to a module-wide structure
+   !--------------------------------------------------------------------
+   symbol = Symbol_In 
 
   !----------------------------------------------------------------------------
   ! abort if no 11 um channel

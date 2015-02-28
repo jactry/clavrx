@@ -22,7 +22,7 @@ module ACHA_CLAVRX_BRIDGE
  !--------------------------------------------------------------------
  ! define structures that will be arguments to ACHA
  !--------------------------------------------------------------------
- type(symbol_acha), private :: Symbol
+ type(acha_symbol_struct), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
 
@@ -55,14 +55,12 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
-                                   Output)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
    !-----------------------------------------------------------------------
-   call ACHA_COMP_ALGORITHM(Input, &
-                            Output)
+   call ACHA_COMP_ALGORITHM(Input, Symbol, Output)
 
    !-----------------------------------------------------------------------
    !--- Call to Geometrical Shadow Algorithm
@@ -83,7 +81,7 @@ module ACHA_CLAVRX_BRIDGE
    end where
 
    !--- cloud cover layers
-   call COMPUTE_CLOUD_COVER_LAYERS(Input, Output)
+   call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished

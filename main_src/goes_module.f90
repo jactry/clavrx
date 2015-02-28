@@ -390,8 +390,8 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    integer:: Line_Idx
    integer:: Ichan_Goes
    integer:: Ichan_Modis
-   real(kind=real4):: image_Time_Hours
-   integer(kind=int4):: image_jday
+   real(kind=real4):: Image_Time_Hours
+   integer(kind=int4):: Image_jday
    integer(kind=int4):: First_Line_In_Segment
    character(len=1):: Ichan_Goes_String
 
@@ -649,11 +649,27 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    call GET_GOES_NAVIGATION(Segment_Number, Image%Number_Of_Lines_Per_Segment,  &
                             Image%Number_Of_Lines_Read_This_Segment, NAVstr, AREAstr, Goes_Xstride)
 
+   !--- scan number and time
+   First_Line_In_Segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
+   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
+     Scan_Number(Line_Idx) = First_Line_In_Segment + Line_Idx
+         ! - if normal (header-based) scan_time detection failed use==>  (AW 2012/02/23)
+         if (Scan_Time(Line_Idx) == 0) then
+           Scan_Time(Line_Idx) = Image_Time_MS + (Scan_Number(Line_Idx)-1) * Scan_Rate
+         endif
+   enddo
+
    !------------------------------------------------------------------------------
-   ! Goes Angles
+   ! Solar and Sensor Angles
    !------------------------------------------------------------------------------
-   image_jday = jday
-   image_Time_Hours = image_Time_ms / 60.0 / 60.0 / 1000.0
+   Image_jday = jday
+
+   Image_Time_Hours = real(sum(real(Scan_Time,kind=real8), Scan_Time > 0) / real(max(1,count(Scan_Time > 0)),kind=real8),kind=real4)
+   if (Image_Time_Hours <= 0.0) then
+      Image_Time_Hours = Image_Time_MS
+   endif
+   Image_Time_Hours = Image_Time_Hours / 60.0 / 60.0 / 1000.0
+
    do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_Time_Hours, &
@@ -662,16 +678,6 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
      enddo
      call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
                       Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
-   enddo
-
-   !--- scan number and time
-   First_Line_In_Segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
-   do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
-     Scan_number(Line_Idx) = First_Line_In_Segment + Line_Idx
-         ! - if normal (header-based) scan_Time detection failed use==>  (AW 2012/02/23)
-         if (Scan_Time(Line_Idx) == 0) then
-           Scan_Time(Line_Idx) = image_Time_ms + (Scan_number(Line_Idx)-1) * Scan_rate
-         endif
    enddo
 
    !--- ascending node

@@ -426,93 +426,38 @@ contains
 
    end subroutine READ_VIIRS_INSTR_CONSTANTS
 
- !-----------------------------------------------------------------------------------------
-   !  Extract time information from VIIRS filename - should explore use of header for this
-   !   assumingly called from outside  ...
+   !-----------------------------------------------------------------------------------------
+   !  Get information from VIIRS 
    !-----------------------------------------------------------------------------------------
   
-   subroutine READ_VIIRS_DATE_TIME ( infile &
-                , year , doy , start_time , end_time , orbit , orbit_identifier , end_year, end_doy )
+   subroutine READ_VIIRS_DATE_TIME ( Path, Infile &
+                , Year , Doy , Start_Time , End_Time , Orbit , Orbit_Identifier &
+                , End_Year, End_Doy )
+
+      use VIIRS_READ_MOD, only : &                                                                                                                    
+            READ_VIIRS_DATE_TIME_ATT
+          
+
       ! Get the date & time from the file's name
       implicit none
       
-      character(len=*), intent(in) :: infile   
-      integer, intent(out) , optional :: year
-      integer, intent(out)  , optional:: doy    !day of year
-      integer, intent(out) , optional :: start_time  !millisec
-      integer, intent(out)  , optional:: end_time    !millisec
-      integer, intent(out)  , optional:: orbit
-      character(38), intent(out) , optional :: orbit_identifier
-      integer , intent(out) , optional :: end_year
-      integer, intent(out)  , optional:: end_doy    !day of year
+      character(len=*), intent(in) :: Path
+      character(len=*), intent(in) :: Infile
+      integer, intent(inout) , optional :: Year
+      integer, intent(inout)  , optional:: Doy    !day of year
+      integer, intent(inout) , optional :: Start_Time  !millisec
+      integer, intent(inout)  , optional:: End_Time    !millisec
+      integer, intent(inout)  , optional:: Orbit
+      character(38), intent(inout) , optional :: Orbit_Identifier
+      integer , intent(inout) , optional :: End_Year
+      integer, intent(inout)  , optional:: End_Doy    !day of year
   
-      integer :: month
-      integer :: day
-      integer :: start_hour
-      integer :: start_minute
-      integer :: start_sec
 
-      integer :: days_of_year
-      integer :: end_hour
-      integer :: end_minute
-      integer :: end_sec
-      integer:: year_loc
-      integer:: doy_loc    !day of year
-      integer:: end_year_loc
-      integer:: end_doy_loc    !day of year
-      integer :: start_time_loc  !millisec
-      integer:: end_time_loc    !millisec
-      integer:: orbit_loc
-      character(38):: orbit_identifier_loc
- 
-  
-      !         1	    2	      3	        4	  5	    6	      7	        8
-      !12345678901234567890123456789012345678901234567890123456789012345678901234567890
-      !GMODO_npp_d20100906_t2110510_e2112156_b00012_c20110707160532497848_noaa_ops.h5
+      !--- call READ_VIIRS_DATE_TIME_ATT from module
+      call READ_VIIRS_DATE_TIME_ATT (Path, Infile &
+                , Year , Doy , Start_Time , End_Time , Orbit , Orbit_Identifier &
+                , End_Year, End_Doy )
 
-      ! --- Read data from the file name
-      read(Infile(12:15), fmt="(I4)") year_loc
-      read(Infile(16:17), fmt="(I2)") month
-      read(Infile(18:19), fmt="(I2)") day
-      read(Infile(22:23), fmt="(I2)") start_hour
-      read(Infile(24:25), fmt="(I2)") start_minute
-      read(Infile(26:27), fmt="(I2)") start_sec
-      read(Infile(31:32), fmt="(I2)") end_hour
-      read(Infile(33:34), fmt="(I2)") end_minute
-      read(Infile(35:36), fmt="(I2)") end_sec
-      read(Infile(40:44), fmt="(I5)") orbit_loc
-
-      !---- store orbit number
-      orbit_identifier_loc = infile(7:44)
-
-      !--- compute day of year
-      call JULIAN(day,month,year_loc,doy_loc)
-
-      ! --- Calculate start and end time
-      start_time_loc = ((start_hour * 60 + start_minute) * 60 + start_sec) * 1000
-      end_time_loc = ((end_hour * 60 + end_minute) * 60 + end_sec) * 1000
-  
-      end_doy_loc = doy_loc
-      end_year_loc = year_loc
-      if ( end_time_loc <= start_time_loc) then
-         end_doy_loc = end_doy_loc + 1
-         days_of_year = 365
-         if ( modulo(year_loc,4) == 0)  days_of_year = 366
-         if ( end_doy_loc > days_of_year) then
-            end_doy_loc = 1
-            end_year_loc = end_year_loc + 1
-         end if  
-      end if
-      
-      if ( present ( year)) year = year_loc
-      if ( present ( doy)) doy = doy_loc
-      if ( present ( start_time)) start_time = start_time_loc
-      if ( present ( end_time)) end_time = end_time_loc
-      if ( present ( orbit)) orbit = orbit_loc
-      if ( present ( orbit_identifier)) orbit_identifier = orbit_identifier_loc
-      if ( present ( end_year)) end_year = end_year_loc
-      if ( present ( end_doy)) end_doy = end_doy_loc
-      
    end subroutine READ_VIIRS_DATE_TIME 
 
 !---------------------------------------------------------------------------------

@@ -45,39 +45,39 @@ contains
          solar = 4.204
          ew = 270.43962  
       case ( 'GOES-13')
-      solar = 3.2502353
-      ew = 222.80349
-   case ( 'GOES-14')
-      solar = 3.4876949 
-      ew = 237.43905 
-   case ( 'GOES-15')
-      solar = 3.5111240
-      ew = 241.02064
-   case ( 'MODIS-AQUA' , 'MODIS-TERRA')
-       solar = 1.9553725
-       ew = 127.12892
-   case ( 'VIIRS')
-      solar = 2.2671891
-      ew = 140.86442
-    case ('NOAA-05','TIROS-N')
-      solar =  4.1604741 
-      ew = 267.14124
-   case ( 'NOAA-06')
-      solar = 3.9980827
-      ew = 254.00470
-   case ('NOAA-07')
-      solar =  4.5634907 
-      ew = 287.01810
-   case ( 'NOAA-08')
-      solar = 4.0794900
-      ew = 262.90717
-   case ( 'NOAA-09')
-      solar = 4.611
-      ew = 288.84289   
-   case ('NOAA-10')
-      solar =  4.2889941 
-	  ew = 272.12618
-   case ( 'NOAA-11')
+         solar = 3.2502353
+         ew = 222.80349
+      case ( 'GOES-14')
+         solar = 3.4876949 
+         ew = 237.43905 
+      case ( 'GOES-15')
+         solar = 3.5111240
+         ew = 241.02064
+      case ( 'MODIS-AQUA' , 'MODIS-TERRA')
+         solar = 1.9553725
+         ew = 127.12892
+      case ( 'VIIRS')
+         solar = 2.2671891
+         ew = 140.86442
+      case ('NOAA-05','TIROS-N')
+         solar =  4.1604741 
+         ew = 267.14124
+      case ( 'NOAA-06')
+         solar = 3.9980827
+         ew = 254.00470
+      case ('NOAA-07')
+         solar =  4.5634907 
+         ew = 287.01810
+      case ( 'NOAA-08')
+         solar = 4.0794900
+         ew = 262.90717
+      case ( 'NOAA-09')
+         solar = 4.611
+         ew = 288.84289   
+      case ('NOAA-10')
+         solar =  4.2889941 
+	      ew = 272.12618
+      case ( 'NOAA-11')
       solar = 4.448
 	  ew = 278.85792	  	   
    case ( 'NOAA-12')
@@ -128,7 +128,9 @@ contains
 	case('COMS-1')
       solar = 4.8461549
       ew = 306.29122
-         
+    case('AHI')! faked
+      solar = 4.8461549
+      ew = 306.29122     
    case default
       print*,'missing sensor calibration'
 	  print*, 'add to get_rad_refl_factor.f90'
@@ -312,7 +314,10 @@ end function get_rad_refl_factor
          nu_20 = 2675.0265
 	      a1_20 = -2.2829416
 	      a2_20 = 1.0037865   
-    
+    case('AHI')  ! faked
+         nu_20 = 2675.0265
+	      a1_20 = -2.2829416
+	      a2_20 = 1.0037865   
 	  
       case default
          print*,'missing sensor calibration for sensor ', sensor

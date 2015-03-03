@@ -126,10 +126,10 @@ program dcomp_one_pixel_run
    
    
    ancil_path = '/home/wstraka/geocat/data_algorithms/baseline_cloud_micro_day/version_1/'
-   ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-   if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-   if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
-   if ( host(1:4) == 'odin' ) ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+   ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
+   if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
+   if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
+   if ( host(1:4) == 'odin' ) ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
    
    
    !  - this is the example forpopulation in advance

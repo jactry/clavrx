@@ -142,7 +142,7 @@ contains
      
       call self % initialize ( trim(sensor), trim(ancil_path))
        
-      do idx_chn = 1 , 42 
+      do idx_chn = 1 , 44 
          do idx_phase = 1, 2 
             data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
             if ( .not. data_loc % is_set ) then 
@@ -235,7 +235,7 @@ contains
          chan_string(6) = '5'
          chan_string(20) = '7'
          
-      case('ABI') sensor_block
+      case('ABI','AHI') sensor_block
          has_sol_table(1) = .true.
          has_sol_table(6) = .true.
          has_sol_table(20) = .true.
@@ -283,7 +283,7 @@ contains
          has_ems_table(20) = .true.
          chan_string(1) = '1'
          chan_string(20) = '5'  
-                
+         sensor_identifier = trim(self % lut_path) //'MTSAT'       
       case default
           print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
           stop
@@ -343,8 +343,8 @@ contains
      
       
       ! - some lut paths
-      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
-      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
+      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
       

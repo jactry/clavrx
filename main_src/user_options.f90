@@ -69,6 +69,7 @@ module USER_OPTIONS
       , therm_cal_1b &
       , ancil_data_dir &
       , Cfsr_Data_Dir &
+      , Gdas_Data_Dir &
       , file_list &
       , geo_file_flag &
       , Gfs_Data_Dir &
@@ -550,6 +551,7 @@ contains
       Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
       Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
+      Gdas_Data_Dir = trim(Data_Base_Path)//'/dynamic/gdas/'
       Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'

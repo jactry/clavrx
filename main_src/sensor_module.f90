@@ -137,7 +137,8 @@ module SENSOR_MODULE
       !----------------------------------------------
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
 #ifdef HDF5LIBS
-         call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Name),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
+         call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
+                             Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
                              End_Time_Tmp,Orbit_Number_Tmp,Orbit_Identifier, End_Year_Tmp , End_Day_Tmp)
          Image%Start_Year = Start_Year_Tmp
          Image%End_Year = End_Year_Tmp
@@ -154,8 +155,8 @@ module SENSOR_MODULE
       end if 
       
       !----------------------------------------------
-      ! for IFF take time and set some constants
-      ! could be VIIRS, MODIS AVHRR sensor
+      ! for AHI ???????
+      ! 
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'AHI') > 0) then
          
@@ -179,8 +180,8 @@ module SENSOR_MODULE
       ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
-         call READ_IFF_DATE_TIME(trim(Image%Level1b_Name),Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
-                      End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
+         call READ_IFF_DATE_TIME(trim(Image%Level1b_Path), trim(Image%Level1b_Name),Start_Year_Tmp, &
+                      Start_Day_Tmp,Start_Time_Tmp, End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
          Image%Start_Year = Start_Year_Tmp
          Image%End_Year = End_Year_Tmp
          Image%Start_Doy = Start_Day_Tmp

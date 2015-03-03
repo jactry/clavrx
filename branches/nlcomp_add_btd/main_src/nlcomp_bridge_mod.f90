@@ -240,6 +240,8 @@ contains
       nlcomp_input % cloud_press % d = acha % pc(1:dim_1,1:dim_2)
       nlcomp_input % cloud_temp % d  = acha % tc (1:dim_1,1:dim_2)    
       nlcomp_input % tau_acha % d    = acha % tau(1:dim_1,1:dim_2)
+      nlcomp_input % emiss31_acha % d    = acha % ec(1:dim_1,1:dim_2)
+      nlcomp_input % beta_acha % d    = acha % beta(1:dim_1,1:dim_2)
       nlcomp_input % cloud_mask % d  = cld_mask(1:dim_1,1:dim_2)
       nlcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
                   

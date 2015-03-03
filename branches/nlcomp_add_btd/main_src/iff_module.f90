@@ -652,13 +652,14 @@ end subroutine READ_IFF_LEVEL1B
 !   Get the date & time from the file's name
 !
 
-subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
+subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
                   end_year,end_doy,end_time)
 
  use NUMERICAL_ROUTINES, only: &
      LEAP_YEAR_FCT &
      , JULIAN
 
+   CHARACTER(Len=*), INTENT(IN) :: Path
    CHARACTER(Len=*), INTENT(IN) :: Infile
    INTEGER, INTENT(OUT) :: year
    INTEGER, INTENT(OUT) :: doy    !day of year
@@ -666,6 +667,16 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
    INTEGER, INTENT(OUT) :: end_time    !millisec
    INTEGER, INTENT(OUT) :: end_year
    INTEGER, INTENT(OUT) :: end_doy    !day of year
+
+   integer(kind=int4):: Status_Flag
+   integer(kind=int4):: Sd_Id
+   integer(kind=int4):: Sds_Id
+   integer(kind=int4):: DFACC_read
+   integer(kind=int4):: sfend
+   integer(kind=int4):: sfstart
+   integer(kind=int4):: sfrcatt
+   integer(kind=int4):: sffattr
+   character(len=200):: Metadata_Temp
 
    INTEGER :: ileap
    INTEGER :: month
@@ -679,35 +690,30 @@ subroutine READ_IFF_DATE_TIME(Infile,year,doy,start_time, &
    INTEGER :: days_in_year
 
 
-!0        1         2         3         4         5         6
-!1234567890123456789012345678901234567890123456789012345678901234567890
-!IFFCMO_aqua_d20130806_t100000_c20140207033616_ssec_dev.hdf
-!IFFCMO_npp_d20130806_t100000_c20140207034800_ssec_dev.hdf
-!IFF_noaa19_avhrr_nss_d20120929_t153700_e161100_c20140722185339.hdf
+Status_Flag = 0
 
-! --- Read data from the file name
-if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
-  read(Infile(13:16), fmt="(I4)") year
-  read(Infile(17:18), fmt="(I2)") month
-  read(Infile(19:20), fmt="(I2)") day
-  read(Infile(23:24), fmt="(I2)") start_hour
-  read(Infile(25:26), fmt="(I2)") start_minute
-  read(Infile(27:28), fmt="(I2)") start_sec
-elseif (trim(Sensor%Sensor_Name)== 'AQUA-IFF' ) then
-  read(Infile(14:17), fmt="(I4)") year
-  read(Infile(18:19), fmt="(I2)") month
-  read(Infile(20:21), fmt="(I2)") day
-  read(Infile(24:25), fmt="(I2)") start_hour
-  read(Infile(26:27), fmt="(I2)") start_minute
-  read(Infile(28:29), fmt="(I2)") start_sec
-elseif (trim(Sensor%Sensor_Name)== 'AVHRR-IFF' ) then
-  read(Infile(23:26), fmt="(I4)") year
-  read(Infile(27:28), fmt="(I2)") month
-  read(Infile(29:30), fmt="(I2)") day
-  read(Infile(33:34), fmt="(I2)") start_hour
-  read(Infile(35:36), fmt="(I2)") start_minute
-  read(Infile(37:38), fmt="(I2)") start_sec
-endif
+!---- open file
+Sd_Id = sfstart(trim(Path)//trim(Infile), DFACC_read)
+
+!--- determine attribute index                                                                                                 
+Sds_Id = sffattr(Sd_Id, "granule_start_time")
+
+!--- read start attribute
+Status_Flag = sfrcatt(Sd_Id, Sds_Id, Metadata_Temp) + Status_Flag
+
+!0        1         2
+!12345678901234567890
+!2013-01-13 00:00:00
+!2013-01-13 00:04:59
+
+
+! --- Read data 
+read(Metadata_Temp(1:4), fmt="(I4)") year
+read(Metadata_Temp(6:7), fmt="(I2)") month
+read(Metadata_Temp(9:10), fmt="(I2)") day
+read(Metadata_Temp(12:13), fmt="(I2)") start_hour
+read(Metadata_Temp(15:16), fmt="(I2)") start_minute
+read(Metadata_Temp(18:19), fmt="(I2)") start_sec
 
 ! --- Calculate the date of year
 ileap = 0
@@ -717,14 +723,19 @@ days_in_year = 365 + ileap
 !--- compute day of the year based on month
 call JULIAN(day,month,year,doy)
 
-! --- Calculate end time
-end_sec = 59
-end_minute = start_minute + 4
-end_hour = start_hour
-if ( end_minute > 60 ) then
-   end_minute = end_minute - 60
-   end_hour = end_hour + 1
-endif
+! --- read end time
+!--- determine attribute index
+Sds_Id = sffattr(Sd_Id, "granule_end_time")
+
+!--- read end attribute
+Status_Flag = sfrcatt(Sd_Id, Sds_Id, Metadata_Temp) + Status_Flag
+
+read(Metadata_Temp(12:13), fmt="(I2)") end_hour
+read(Metadata_Temp(15:16), fmt="(I2)") end_minute
+read(Metadata_Temp(18:19), fmt="(I2)") end_sec
+
+!--- close file
+Status_Flag = sfend(Sd_Id) + Status_Flag
 
 ! --- Calculate start END time
 start_time = ((start_hour * 60 + start_minute) * 60 + start_sec) * 1000

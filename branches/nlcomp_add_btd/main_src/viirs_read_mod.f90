@@ -36,8 +36,9 @@ module viirs_read_mod
    implicit none
    
    private
-   public :: get_viirs_data
+   public :: GET_VIIRS_DATA
    public :: READ_NUMBER_OF_SCANS_FROM_VIIRS
+   public :: READ_VIIRS_DATE_TIME_ATT
   
    integer, parameter, public:: int1 = selected_int_kind(1)
    integer, parameter, public:: int2 = selected_int_kind(3)
@@ -514,7 +515,7 @@ contains
          
             if (.not. allocated ( out % dnb_mgrid % ref ) ) allocate ( out % dnb_mgrid %  ref (dim_seg(1), dim_seg(2)) )
          
-            call read_viirs_date_time(file_gdnbo  , doy = day_of_year  )
+            !call read_viirs_date_time(file_gdnbo  , doy = day_of_year  )
             call convert_rad_2_sol_ref_dnb ( out % dnb_mgrid % rad &
                                 , out % geo % solzen &
                                 , day_of_year &
@@ -912,90 +913,109 @@ contains
    !   assumingly called from outside  ...
    !-----------------------------------------------------------------------------------------
   
-   subroutine read_viirs_date_time(infile &
-                , year , doy , start_time , end_time , orbit , orbit_identifier , end_year, end_doy )
+   subroutine READ_VIIRS_DATE_TIME_ATT (Path, Infile, Year , Doy , Start_Time &
+                , End_Time , Orbit , Orbit_Identifier , End_Year, End_Doy )
       ! Get the date & time from the file's name
       implicit none
       
-      character(len=*), intent(in) :: infile   
-      integer, intent(out) , optional :: year
-      integer, intent(out)  , optional:: doy    !day of year
-      integer, intent(out) , optional :: start_time  !millisec
-      integer, intent(out)  , optional:: end_time    !millisec
-      integer, intent(out)  , optional:: orbit
-      character(38), intent(out) , optional :: orbit_identifier
-      integer , intent(out) , optional :: end_year
-      integer, intent(out)  , optional:: end_doy    !day of year
+      character(len=*), intent(in) :: Path
+      character(len=*), intent(in) :: Infile   
+      integer, intent(out) , optional :: Year
+      integer, intent(out)  , optional:: Doy    !day of year
+      integer, intent(out) , optional :: Start_Time  !millisec
+      integer, intent(out)  , optional:: End_Time    !millisec
+      integer, intent(out)  , optional:: Orbit
+      character(38), intent(out) , optional :: Orbit_Identifier
+      integer , intent(out) , optional :: End_Year
+      integer, intent(out)  , optional:: End_Doy    !day of year
   
-      integer :: month
-      integer :: day
-      integer :: start_hour
-      integer :: start_minute
-      integer :: start_sec
+      integer :: Month
+      integer :: Day
+      integer :: Start_Hour
+      integer :: Start_Minute
+      integer :: Start_Sec
 
-      integer :: days_of_year
-      integer :: end_hour
-      integer :: end_minute
-      integer :: end_sec
-      integer:: year_loc
-      integer:: doy_loc    !day of year
-      integer:: end_year_loc
-      integer:: end_doy_loc    !day of year
-      integer :: start_time_loc  !millisec
-      integer:: end_time_loc    !millisec
-      integer:: orbit_loc
-      character(38):: orbit_identifier_loc
+      integer :: Days_Of_Year
+      integer :: End_Hour
+      integer :: End_Minute
+      integer :: End_Sec
+      integer :: Year_Loc
+      integer :: Doy_Loc    !day of year
+      integer :: End_Year_Loc
+      integer :: End_Doy_Loc    !day of year
+      integer :: Start_Time_Loc  !millisec
+      integer :: End_Time_Loc    !millisec
+      integer :: Orbit_Loc
+      character(38):: Orbit_Identifier_Loc
+      character(50) :: String_Tmp
  
+
+      print *,trim(Path)
+      print *,trim(Infile)
+
+      ! --- read time and date from the attributes      
+      call H5ReadAttribute( trim(Path)//trim(Infile), &
+           'Data_Products/VIIRS-MOD-GEO-TC/VIIRS-MOD-GEO-TC_Aggr/AggregateBeginningOrbitNumber', Orbit_Loc)
+
+      call H5ReadAttribute( trim(Path)//trim(Infile), &
+           'Data_Products/VIIRS-MOD-GEO-TC/VIIRS-MOD-GEO-TC_Aggr/AggregateBeginningTime', String_Tmp)
+
+      read(String_Tmp(1:2), fmt="(I2)") Start_Hour
+      read(String_Tmp(3:4), fmt="(I2)") Start_Minute
+      read(String_Tmp(5:6), fmt="(I2)") Start_Sec
+
+      call H5ReadAttribute( trim(Path)//trim(Infile), &
+           'Data_Products/VIIRS-MOD-GEO-TC/VIIRS-MOD-GEO-TC_Aggr/AggregateEndingTime', String_Tmp)
+
+      read(String_Tmp(1:2), fmt="(I2)") End_Hour
+      read(String_Tmp(3:4), fmt="(I2)") End_Minute
+      read(String_Tmp(5:6), fmt="(I2)") End_Sec
+
+      call H5ReadAttribute( trim(Path)//trim(Infile), &
+           'Data_Products/VIIRS-MOD-GEO-TC/VIIRS-MOD-GEO-TC_Gran_0/Beginning_Date', String_Tmp)
+
+      read(String_Tmp(1:4), fmt="(I4)") Year_Loc
+      read(String_Tmp(5:6), fmt="(I2)") Month
+      read(String_Tmp(7:8), fmt="(I2)") Day
+      
   
-      !         1	    2	      3	        4	  5	    6	      7	        8
+      !         1         2	    3	      4	        5	  6	    7	      8
       !12345678901234567890123456789012345678901234567890123456789012345678901234567890
       !GMODO_npp_d20100906_t2110510_e2112156_b00012_c20110707160532497848_noaa_ops.h5
 
-      ! --- Read data from the file name
-      read(Infile(12:15), fmt="(I4)") year_loc
-      read(Infile(16:17), fmt="(I2)") month
-      read(Infile(18:19), fmt="(I2)") day
-      read(Infile(22:23), fmt="(I2)") start_hour
-      read(Infile(24:25), fmt="(I2)") start_minute
-      read(Infile(26:27), fmt="(I2)") start_sec
-      read(Infile(31:32), fmt="(I2)") end_hour
-      read(Infile(33:34), fmt="(I2)") end_minute
-      read(Infile(35:36), fmt="(I2)") end_sec
-      read(Infile(40:44), fmt="(I5)") orbit_loc
-
       !---- store orbit number
-      orbit_identifier_loc = infile(7:44)
+      Orbit_Identifier_Loc = Infile(7:44)
 
       !--- compute day of year
-      call JULIAN(day,month,year_loc,doy_loc)
+      call JULIAN ( Day, Month, Year_Loc, Doy_Loc )
  
 
       ! --- Calculate start and end time
-      start_time_loc = ((start_hour * 60 + start_minute) * 60 + start_sec) * 1000
-      end_time_loc = ((end_hour * 60 + end_minute) * 60 + end_sec) * 1000
+      Start_Time_Loc = ((Start_Hour * 60 + Start_Minute) * 60 + Start_Sec) * 1000
+      End_Time_Loc = ((End_Hour * 60 + End_Minute) * 60 + End_Sec) * 1000
   
-      end_doy_loc = doy_loc
-      end_year_loc = year_loc
-      if ( end_time_loc <= start_time_loc) then
-         end_doy_loc = end_doy_loc + 1
-         days_of_year = 365
-         if ( modulo(year_loc,4) == 0)  days_of_year = 366
-         if ( end_doy_loc > days_of_year) then
-            end_doy_loc = 1
-            end_year_loc = end_year_loc + 1
+      End_Doy_Loc = Doy_Loc
+      End_Year_Loc = Year_Loc
+      if ( End_time_loc <= start_time_loc) then
+         End_Doy_Loc = End_Doy_Loc + 1
+         Days_Of_Year = 365
+         if ( modulo(Year_Loc,4) == 0)  Days_Of_Year = 366
+         if ( End_Doy_Loc > Days_Of_Year) then
+            End_Doy_Loc = 1
+            End_Year_Loc = End_Year_Loc + 1
          end if  
       end if
       
-      if ( present ( year)) year = year_loc
-      if ( present ( doy)) doy = doy_loc
-      if ( present ( start_time)) start_time = start_time_loc
-      if ( present ( end_time)) end_time = end_time_loc
-      if ( present ( orbit)) orbit = orbit_loc
-      if ( present ( orbit_identifier)) orbit_identifier = orbit_identifier_loc
-      if ( present ( end_year)) end_year = end_year_loc
-      if ( present ( end_doy)) end_doy = end_doy_loc
+      if ( present ( Year )) Year = Year_Loc
+      if ( present ( Doy )) Doy = Doy_Loc
+      if ( present ( Start_Time )) Start_Time = Start_Time_Loc
+      if ( present ( End_Time )) End_Time = End_Time_Loc
+      if ( present ( Orbit )) Orbit = Orbit_Loc
+      if ( present ( Orbit_Identifier )) Orbit_Identifier = Orbit_Identifier_Loc
+      if ( present ( End_Year )) End_Year = End_Year_Loc
+      if ( present ( End_Doy )) End_Doy = End_Doy_Loc
       
-   end subroutine read_viirs_date_time
+   end subroutine READ_VIIRS_DATE_TIME_ATT
 
 
 !---------------------------------------------------------------------------------

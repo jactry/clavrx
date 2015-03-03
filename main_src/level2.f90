@@ -2981,7 +2981,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Max of ChI1 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_65um_nom_iband_max", &
                               "refl_0_65um_nom_iband_max", &
@@ -2992,7 +2992,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Min of ChI1 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Min_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Min_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_65um_nom_iband_min", &
                               "refl_0_65um_nom_iband_min", &
@@ -3003,7 +3003,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Mean of ChI1 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Mean_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Mean_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_65um_nom_iband_mean", &
                               "refl_0_65um_nom_iband_mean", &
@@ -3014,7 +3014,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Uniformity Parameter of ChI1 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Uni_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Uni_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_65um_nom_iband_uni", &
                               "refl_0_65um_nom_iband_uni", &
@@ -3025,7 +3025,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Max of ChI2 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Max_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Max_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_86um_nom_iband_max", &
                               "refl_0_86um_nom_iband_max", &
@@ -3036,7 +3036,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Min of ChI2 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Min_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Min_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_86um_nom_iband_min", &
                               "refl_0_86um_nom_iband_min", &
@@ -3047,7 +3047,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Mean of ChI2 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Mean_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Mean_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_86um_nom_iband_mean", &
                               "refl_0_86um_nom_iband_mean", &
@@ -3058,7 +3058,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Uniformity Parameter of ChI2 at the M-band resolution
-     if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
+     if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_86um_nom_iband_uni", &
                               "refl_0_86um_nom_iband_uni", &
@@ -3068,8 +3068,96 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Max of ChI3 at the M-band resolution
+     if (Sds_Num_Level2_Ref_Max_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_1_61um_nom_iband_max", &
+                              "refl_1_61um_nom_iband_max", &
+                              "refl_1_61um_nom_iband_max", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Ref_Ch6, Max_Ref_Ch6, "%", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Min of ChI3 at the M-band resolution
+     if (Sds_Num_Level2_Ref_Min_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_1_61um_nom_iband_min", &
+                              "refl_1_61um_nom_iband_min", &
+                              "refl_1_61um_nom_iband_min", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Ref_Ch6, Max_Ref_Ch6, "%", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Mean of ChI3 at the M-band resolution
+     if (Sds_Num_Level2_Ref_Mean_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then                         
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_1_61um_nom_iband_mean", &
+                              "refl_1_61um_nom_iband_mean", &
+                              "refl_1_61um_nom_iband_mean", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Ref_Ch6, Max_Ref_Ch6, "%", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Uniformity Parameter of ChI3 at the M-band resolution                                                                      
+     if (Sds_Num_Level2_Ref_Uni_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "refl_1_61um_nom_iband_uni", &
+                              "refl_1_61um_nom_iband_uni", &
+                              "refl_1_61um_nom_iband_uni", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Uni_Ch6, Max_Uni_Ch6, "none", Missing_Value_Real4, Istatus)                                        
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Max of ChI4 at the M-band resolution
+     if (Sds_Num_Level2_Bt_Max_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI4),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_74um_nom_iband_max", &
+                              "temp_3_74um_nom_iband_max", &
+                              "temp_3_74um_nom_iband_max", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Min of ChI4 at the M-band resolution
+     if (Sds_Num_Level2_Bt_Min_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI4),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_74um_nom_iband_min", &
+                              "temp_3_74um_nom_iband_min", &
+                              "temp_3_74um_nom_iband_min", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Mean of ChI4 at the M-band resolution
+     if (Sds_Num_Level2_Bt_Mean_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then                          
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI4),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_74um_nom_iband_mean", &
+                              "temp_3_74um_nom_iband_mean", &
+                              "temp_3_74um_nom_iband_mean", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Uniformity Parameter of ChIs4 at the M-band resolution
+     if (Sds_Num_Level2_Bt_Uni_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI4),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_3_74um_nom_iband_uni", &
+                              "temp_3_74um_nom_iband_uni", &
+                              "temp_3_74um_nom_iband_uni", &
+                              DFNT_INT8, sym%LINEAR_SCALING, & 
+                              Min_Uni_Ch5, Max_Uni_Ch5, "none", Missing_Value_Real4, Istatus)                                        
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Max of ChI5 at the M-band resolution
-     if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+     if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_iband_max", &
                               "temp_11_0um_nom_iband_max", &
@@ -3080,7 +3168,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Min of ChI5 at the M-band resolution
-     if (Sds_Num_Level2_Bt_Min_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+     if (Sds_Num_Level2_Bt_Min_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_iband_min", &
                               "temp_11_0um_nom_iband_min", &
@@ -3091,7 +3179,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Mean of ChI5 at the M-band resolution
-     if (Sds_Num_Level2_Bt_Mean_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+     if (Sds_Num_Level2_Bt_Mean_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_iband_mean", &
                               "temp_11_0um_nom_iband_mean", &
@@ -3102,7 +3190,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Uniformity Parameter of ChI5 at the M-band resolution
-     if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+     if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_iband_uni", &
                               "temp_11_0um_nom_iband_uni", &
@@ -4830,6 +4918,70 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI2,sym%LINEAR_SCALING,Min_Uni_Ch2, &
                                    Max_Uni_Ch2,Missing_Value_Real4,One_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Max of I3 at M-band
+    if (Sds_Num_Level2_Ref_Max_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
+                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Min of I3 at M-band
+    if (Sds_Num_Level2_Ref_Min_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
+                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Mean of I3 at M-band
+    if (Sds_Num_Level2_Ref_Mean_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
+                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Uni of I3 at M-band
+    if (Sds_Num_Level2_Ref_Uni_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI3,sym%LINEAR_SCALING,Min_Uni_Ch6, &
+                                   Max_Uni_Ch6,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Max of I4 at M-band
+    if (Sds_Num_Level2_Bt_Max_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Bt_Max_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
+                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+                                                                                                                                     
+    !--- Min of I4 at M-band
+    if (Sds_Num_Level2_Bt_Min_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Bt_Min_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
+                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Mean of I4 at M-band
+    if (Sds_Num_Level2_Bt_Mean_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Bt_Mean_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
+                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Uni of I4 at M-band
+    if (Sds_Num_Level2_Bt_Uni_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI4,sym%LINEAR_SCALING,Min_Uni_Ch5, &
+                                   Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

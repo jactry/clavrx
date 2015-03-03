@@ -10,7 +10,10 @@ module ACHA_COMP
 ! Reference:
 !
 !----------------------------------------------------------------------
-  use ACHA_SERVICES_MOD !acha_services_mod.f90 in akh_clavrx_src
+  use ACHA_SERVICES_MOD, only : &
+           real4, int1, int4, &
+           acha_output_struct,acha_symbol_struct, &
+           acha_input_struct
 
   implicit none
 
@@ -23,6 +26,7 @@ module ACHA_COMP
 
   real, private, parameter:: MISSING_VALUE_REAL = -999.0
   integer, private, parameter:: MISSING_VALUE_INTEGER = -999
+  type(acha_symbol_struct), private :: symbol
 
   contains 
 
@@ -49,14 +53,14 @@ module ACHA_COMP
 ! modification history
 !
 !------------------------------------------------------------------------------
-  subroutine ACHA_COMP_ALGORITHM(Input, Symbol, Output)
+  subroutine ACHA_COMP_ALGORITHM(Input, Symbol_In, Output)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
-  type(symbol_acha), intent(inout) :: Symbol
   type(acha_input_struct), intent(inout) :: Input
+  type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
 
   !===============================================================================
@@ -79,7 +83,7 @@ module ACHA_COMP
    !-------------------------------------------------------------------------
    ! Initialization
    !-------------------------------------------------------------------------
-
+   symbol = symbol_in   !symbol is a module-wide variable
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
    !--------------------------------------------------------------------------
@@ -98,14 +102,18 @@ module ACHA_COMP
     if ( (Cloud_Type  == symbol%FOG_TYPE) .or. &
        (Cloud_Type  == symbol%WATER_TYPE) .or. &
        (Cloud_Type  == symbol%SUPERCOOLED_TYPE)) then
+
        Cloud_Phase = symbol%WATER_PHASE
+
     endif
 
     if ( (Cloud_Type  == symbol%CIRRUS_TYPE) .or. &
         (Cloud_Type  == symbol%OVERLAP_TYPE) .or. &
         (Cloud_Type  == symbol%TICE_TYPE) .or. &
         (Cloud_Type  == symbol%OVERSHOOTING_TYPE)) then
+
         Cloud_Phase = symbol%ICE_PHASE
+
     endif
 
     !-----------------------------------------------------------------------------
@@ -121,7 +129,7 @@ module ACHA_COMP
      !--- save nadir adjusted emissivity and optical depth
      if (Output%Ec(Elem_Idx,Line_Idx) < 1.00) then
 
-       call COMPUTE_TAU_REFF_ACHA(symbol, &
+       call COMPUTE_TAU_REFF_ACHA(&
                               Output%Beta(Elem_Idx,Line_Idx), &
                               Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                               Cloud_Phase, &
@@ -155,8 +163,7 @@ end subroutine  ACHA_COMP_ALGORITHM
 !---------------------------------------------------------------------------
 !
 !---------------------------------------------------------------------------
-subroutine COMPUTE_TAU_REFF_ACHA(symbol,  &
-                                 Beta, &
+subroutine COMPUTE_TAU_REFF_ACHA(Beta, &
                                  Cosine_Zenith_Angle, &
                                  Cloud_Phase, &
                                  Ec_Slant, & 
@@ -164,7 +171,6 @@ subroutine COMPUTE_TAU_REFF_ACHA(symbol,  &
                                  Tau, &
                                  Reff)
 
-   type(symbol_acha), intent(in) :: symbol
    real(kind=real4), intent(in):: Beta
    real(kind=real4), intent(in):: Cosine_Zenith_Angle
    real(kind=real4), intent(in):: Ec_Slant

@@ -394,6 +394,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Gfs_Data_Dir
   character(len=355),public,save:: Ncep_Data_Dir
   character(len=355),public,save:: Cfsr_Data_Dir
+  character(len=355),public,save:: Gdas_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
   character(len=355),public,save:: GlobSnow_Data_Dir

@@ -204,7 +204,7 @@ end type acha_rtm_nwp_struct
   
 !Symbol stucture
 
- type, public :: symbol_acha
+ type, public :: acha_symbol_struct
     integer(kind=int1) :: CLOUDY
     integer(kind=int1) :: PROB_CLOUDY
     integer(kind=int1) :: PROB_CLEAR
@@ -263,7 +263,7 @@ end type acha_rtm_nwp_struct
     integer(kind=int1) :: MIXED_PHASE
     integer(kind=int1) :: ICE_PHASE
     integer(kind=int1) :: UNKNOWN_PHASE
- end type symbol_acha
+ end type acha_symbol_struct
  
  contains
 
@@ -276,7 +276,7 @@ end type acha_rtm_nwp_struct
                                       
    type(acha_input_struct), intent(inout) :: Acha_Input
    type(acha_rtm_nwp_struct), intent(inout) :: Acha_RTM_NWP
-   type(symbol_acha), intent(inout) :: symbol
+   type(acha_symbol_struct), intent(inout) :: symbol
    integer, intent(in) :: Elem_Idx
    integer, intent(in) :: Line_Idx
    integer:: Ivza

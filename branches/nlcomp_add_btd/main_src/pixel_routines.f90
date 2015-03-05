@@ -594,40 +594,50 @@ end subroutine CONVERT_TIME
  end subroutine COMPUTE_PIXEL_ARRAYS
 
 !-------------------------------------------------------------------------------
-!--- populate the Snow array based on all available sources of Snow data
+!--- populate the snow_class array based on all available sources of Snow data
+!--
+!--- Input:
+!---  NWP_Wat_Eqv_Snow_Depth - water equivalent snow depth from nwp
+!---  NWP_Sea_Ice_Frac - sea ice fracion from nwp
+!---  SST_Sea_Ice_Frac - sea ice fracion from sst data source
+!---  Snow_Class_Hires - high resolution snow class field (highest priority)
+!---  Snow_Class_Global - ESA GlobSnow products (lower priority)
+!---
+!--- Output:
+!---  Snow_Class_Final - final classificiation
+!---
+!--- Symbology:
+!---  1 = sym%NO_SNOW
+!---  2 = sym%SEA_ICE
+!---  3 = sym%SNOW
 !-------------------------------------------------------------------------------
- subroutine COMPUTE_SNOW_FIELD(j1,nj)
+ subroutine COMPUTE_SNOW_FIELD(NWP_Wat_Eqv_Snow_Depth,NWP_Sea_Ice_Frac, SST_Sea_Ice_Frac,  &
+                               Snow_Class_Hires,Snow_Class_Glob,Snow_Class_Final)
 
-   integer, intent(in):: j1,nj
-   integer(kind=int4):: i,j, j2, inwp,jnwp, ihires
+   real(kind=real4), intent(in), dimension(:,:):: NWP_Wat_Eqv_Snow_Depth,  &
+                                                  NWP_Sea_Ice_Frac, SST_Sea_Ice_Frac
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_Hires, Snow_Class_Glob
+   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_Final
+   integer(kind=int4):: Elem_Idx,Line_Idx,ihires
 
-   j2 = j1 + nj - 1
+   Snow_Class_Final = Missing_Value_Int1
 
-   Sfc%Snow = Missing_Value_Int1
-
-j_loop:    do j = j1,j2
-                                                                                                                                         
-  i_loop:    do i = 1, Image%Number_Of_Elements
-
-      Sfc%Snow(i,j) = Missing_Value_Int1
+   line_loop: do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
+     element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
 
       !--- check for bad scans
-      if (Bad_Pixel_Mask(i,j) == sym%YES) then
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
        cycle
       endif
 
       !--- initialize valid pixels to NO_SNOW
-      Sfc%Snow(i,j) = sym%NO_SNOW
+      Snow_Class_Final(Elem_Idx,Line_Idx) = sym%NO_SNOW
 
-      !--- save nwp indices for convenience
-      inwp = i_nwp(i,j)
-      jnwp = j_nwp(i,j)
-     
-      !--- if hires available, use it and ignore other sources
+      !--- if hires field is available, use it and ignore other sources
       ihires = sym%NO
       if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
           Failed_Hires_Snow_Mask_flag == sym%NO) then
-          Sfc%Snow(i,j) = Sfc%Snow_Hires(i,j)
+          Snow_Class_Final(Elem_Idx,Line_Idx) = Snow_Class_Hires(Elem_Idx,Line_Idx)
           ihires = sym%YES
       endif
 
@@ -635,49 +645,41 @@ j_loop:    do j = j1,j2
 
         !use nwp and/or Sst analysis
         if (Nwp_Opt > 0) then
-          if ((inwp > 0) .and. (jnwp > 0)) then
-            if (Weasd_Nwp(inwp, jnwp) > 0.1) then  !this is Snow depth
-                Sfc%Snow(i,j) = sym%SNOW
+            if (NWP_Wat_Eqv_Snow_Depth(Elem_Idx,Line_Idx) > 0.1) then  !this is Snow depth
+                Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SNOW
              endif
-             if (Use_Sst_Anal == sym%NO .and. Ice_Nwp(inwp, jnwp) > 0.5) then
-               Sfc%Snow(i,j) = sym%SEA_ICE
+             if (Use_Sst_Anal == sym%NO .and. NWP_Sea_Ice_Frac(Elem_Idx,Line_Idx) > 0.5) then
+               Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SEA_ICE
              endif
-           endif
-         endif
+        endif
 
          !--- GlobSnow (Land Only)
          if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and.   &
           Failed_Glob_Snow_Mask_Flag == sym%NO  .and.       &
-          Sfc%Land(i,j) == sym%LAND  .and.       &
-          Nav%Lat(i,j) >= 35.0 .and. &     !note, globSnow is NH only (35-85)
-          Nav%Lat(i,j) <= 85.0) then
+          Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND  .and.       &
+          Nav%Lat(Elem_Idx,Line_Idx) >= 35.0 .and. &     !note, globSnow is NH only (35-85)
+          Nav%Lat(Elem_Idx,Line_Idx) <= 85.0) then
 
-            Sfc%Snow(i,j)  = Sfc%Snow_Glob(i,j)
-
+            Snow_Class_Final(Elem_Idx,Line_Idx)  = Snow_Class_Glob(Elem_Idx,Line_Idx)
          endif  
-
 
          !-- correct for GlobSnow missing snow over Greenland and Arctic Islands
          !-- that have a barren surface type
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Sfc_Type(i,j) == sym%Bare_Sfc .or. Sfc%Sfc_Type(i,j) == sym%OPEN_SHRUBS_SFC) .and. &
-             (abs(Nav%Lat(i,j)) > 60.0) .and. &
-             (Weasd_Nwp(inwp, jnwp) > 0.1)) then
-                Sfc%Snow(i,j) = sym%SNOW
-          endif
+         if ((Sfc%Sfc_Type(Elem_Idx,Line_Idx) == sym%Bare_Sfc .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) == sym%OPEN_SHRUBS_SFC) .and. &
+             (abs(Nav%Lat(Elem_Idx,Line_Idx)) > 60.0) .and. &
+             (NWP_Wat_Eqv_Snow_Depth(Elem_Idx,Line_Idx) > 0.1)) then
+                Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SNOW
          endif
 
          !-- correct for GlobSnow missing snow over mountains in v1.0
          !-- this will be fixed in future versions
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Zsfc(i,j) > 1000.0) .and.  (Weasd_Nwp(inwp, jnwp) > 0.001)) then
-                Sfc%Snow(i,j) = sym%SNOW
-          endif
+         if ((Sfc%Zsfc(Elem_Idx,Line_Idx) > 1000.0) .and.  (NWP_Wat_Eqv_Snow_Depth(Elem_Idx,Line_Idx) > 0.001)) then
+                Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SNOW
          endif
 
          !--- pick up small lakes in regions marked snowy in glob snow 
-         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sfc%Snow_Glob(i,j) == sym%SNOW .or. Sfc%Snow_Glob(i,j) == sym%SEA_ICE)) then
-          Sfc%Snow(i,j)  = sym%SEA_ICE
+         if ((Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND) .and. (Snow_Class_Glob(Elem_Idx,Line_Idx) == sym%SNOW .or. Snow_Class_Glob(Elem_Idx,Line_Idx) == sym%SEA_ICE)) then
+          Snow_Class_Final(Elem_Idx,Line_Idx)  = sym%SEA_ICE
          endif
 
 
@@ -688,44 +690,42 @@ j_loop:    do j = j1,j2
          !--- under these conditions believe SST Analysis
          !--- and allow it to remove ice 
          if (use_Sst_anal == sym%YES .and. &
-             (Sfc%Land(i,j) == sym%DEEP_OCEAN .or.     &
-              Sfc%Land(i,j) == sym%DEEP_INLAND_WATER .or. &
-              Sfc%Land(i,j) == sym%MODERATE_OCEAN .or. &
-              Sfc%Land(i,j) == sym%SHALLOW_OCEAN))  then
+             (Sfc%Land(Elem_Idx,Line_Idx) == sym%DEEP_OCEAN .or.     &
+              Sfc%Land(Elem_Idx,Line_Idx) == sym%DEEP_INLAND_WATER .or. &
+              Sfc%Land(Elem_Idx,Line_Idx) == sym%MODERATE_OCEAN .or. &
+              Sfc%Land(Elem_Idx,Line_Idx) == sym%SHALLOW_OCEAN))  then
 
-           if (Sst_Anal_Cice(i,j) > 0.50) then     
-             Sfc%Snow(i,j) = sym%SEA_ICE
+           if (Sst_Sea_Ice_Frac(Elem_Idx,Line_Idx) > 0.50) then     
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SEA_ICE
            else
-             Sfc%Snow(i,j) = sym%NO_SNOW
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%NO_SNOW
            endif
 
          endif
 
          !--- OISST does not capture sea-ice in shallow water near AntArctica
-         if ((inwp > 0) .and. (jnwp > 0)) then
-          if ((Sfc%Land(i,j) == sym%SHALLOW_OCEAN) .and. &
-              (Nav%Lat(i,j) < -60.0) .and. &
-              ((Ice_Nwp(inwp,jnwp) > 0.50).or.(Weasd_Nwp(inwp,jnwp)>0.1))) then
-                Sfc%Snow(i,j) = sym%SEA_ICE
-          endif
+         if ((Sfc%Land(Elem_Idx,Line_Idx) == sym%SHALLOW_OCEAN) .and. &
+             (Nav%Lat(Elem_Idx,Line_Idx) < -60.0) .and. &
+             ((NWP_Sea_Ice_Frac(Elem_Idx,Line_Idx) > 0.50).or. &
+              (NWP_Wat_Eqv_Snow_Depth(Elem_Idx,Line_Idx)>0.1))) then
+                Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SEA_ICE
          endif
 
 
          !--- allow sst analysis to detect any ice (but not remove it)
          !--- this is needed since Lake Erie is cover the OISST but
          !--- classified as shallow_inland_water
-         if ((Sfc%Land(i,j) /= sym%LAND) .and. (Sst_Anal_Cice(i,j) > 0.50)) then     
-             Sfc%Snow(i,j) = sym%SEA_ICE
+         if ((Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND) .and. (Sst_Sea_Ice_Frac(Elem_Idx,Line_Idx) > 0.50)) then     
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SEA_ICE
          endif
           
          !-- final check for consistnecy of land and snow masks
-         if ((Sfc%Snow(i,j) == sym%SNOW) .and. (Sfc%Land(i,j) /= sym%LAND)) then
-             Sfc%Snow(i,j) = sym%SEA_ICE
+         if ((Snow_Class_Final(Elem_Idx,Line_Idx) == sym%SNOW) .and. (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND)) then
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SEA_ICE
          endif
-         if ((Sfc%Snow(i,j) == sym%SEA_ICE) .and. (Sfc%Land(i,j) == sym%LAND)) then
-             Sfc%Snow(i,j) = sym%SNOW
+         if ((Snow_Class_Final(Elem_Idx,Line_Idx) == sym%SEA_ICE) .and. (Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND)) then
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%SNOW
          endif
-
           
        endif
 
@@ -736,20 +736,20 @@ j_loop:    do j = j1,j2
 
        if (ihires == sym%NO) then
 
-          !-- can't be Snow if warm
+          !-- can't be snow if warm
          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-          if (ch(31)%Bt_Toa(i,j) > 277.0) then
-           Sfc%Snow(i,j) = sym%NO_SNOW
+          if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) > 277.0) then
+           Snow_Class_FInal(Elem_Idx,Line_Idx) = sym%NO_SNOW
           endif
          endif
 
          !--- some day-specific tests
-         if (Geo%Solzen(i,j) < 75.0) then  ! day check
+         if (Geo%Solzen(Elem_Idx,Line_Idx) < 75.0) then  ! day check
 
          !--- conditions where Snow is not possible
            if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-            if(ch(1)%Ref_Toa(i,j) < 10.0) then
-             Sfc%Snow(i,j) = sym%NO_SNOW
+            if(ch(1)%Ref_Toa(Elem_Idx,Line_Idx) < 10.0) then
+             Snow_Class_Final(Elem_Idx,Line_Idx) = sym%NO_SNOW
             endif
            endif
 
@@ -757,8 +757,8 @@ j_loop:    do j = j1,j2
 
        endif            !hires Snow check
 
-    end do i_loop
- end do   j_loop
+    end do element_loop
+ end do   line_loop
 
  end subroutine COMPUTE_SNOW_FIELD
 
@@ -1380,15 +1380,15 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         endif
 
-        if ((Sensor%Chan_On_Flag_Per_Line(1,Line_Idx) == sym%YES) .and. & 
-            (Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES)) then
+!       if ((Sensor%Chan_On_Flag_Per_Line(1,Line_Idx) == sym%YES) .and. & 
+!           (Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES)) then
 
-            Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Covariance(&
-               ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-               ch(1)%Ref_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-               Elem_Idx_width, Line_Idx_width, &
-               Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
-        endif
+!           Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Covariance(&
+!              ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+!              ch(1)%Ref_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+!              Elem_Idx_width, Line_Idx_width, &
+!              Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
+!       endif
 
       enddo
 
@@ -1634,28 +1634,6 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    endif
 
 
-   !--- Ems_Ch20
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-    CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       Ems_Ch20,nbox,  &
-                                       Uni_Land_Mask_flag_no, &
-                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
-                                       1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Ems_Ch20_Mean_3x3,Ems_Ch20_Min_3x3, &
-                                       Ems_Ch20_Max_3x3,Ems_Ch20_Std_3x3, &
-                                       Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
-   endif
-
-   !--- Zsfc
-   CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( & 
-                                       Sfc%Zsfc,nbox,  &
-                                       Uni_Land_Mask_Flag_No, &
-                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
-                                       1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Sfc%Zsfc_Mean_3x3,Sfc%Zsfc_Min_3x3, &
-                                       Sfc%Zsfc_Max_3x3,Sfc%Zsfc_Std_3x3, &
-                                       Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
-
    !--- Ref_Ch1 clear white sky from MODIS
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
     CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
@@ -1664,9 +1642,9 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
                                        Ref_Ch1_Sfc_White_Sky_Mean_3x3, &
-                                       Ref_Ch1_Sfc_White_Sky_Min_3x3, &
-                                       Ref_Ch1_Sfc_White_Sky_Max_3x3, &
-                                       Ref_Ch1_Sfc_White_Sky_Std_3x3, &
+                                       Temp_Pix_Array_1, &
+                                       Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
     !--- fill in wholes in white sky albedo
     where(ch(1)%Sfc_Ref_White_Sky == Missing_Value_Real4 .and. &
@@ -1683,8 +1661,8 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Bt_Ch20_Mean_3x3,Bt_Ch20_Min_3x3, &
-                                       Bt_Ch20_Max_3x3,Bt_Ch20_Std_3x3, &
+                                       Temp_Pix_Array_1, Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3,Bt_Ch20_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
 
@@ -1696,8 +1674,8 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Btd_Ch31_Ch32_Mean_3x3,Btd_Ch31_Ch32_Min_3x3, &
-                                       Btd_Ch31_Ch32_Max_3x3,Btd_Ch31_Ch32_Std_3x3, &
+                                       Temp_Pix_Array_1, Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3, Btd_Ch31_Ch32_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
     !----- store Btd_Ch31_Ch32 at maximum Bt_Ch31 in surrounding pixels
@@ -1714,48 +1692,48 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
 
    !--- Btd_Ch31_Ch33
    if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(33)==sym%YES) then
-     Temp_Pix_Array = ch(31)%Bt_Toa - ch(33)%Bt_Toa
+     Temp_Pix_Array_1 = ch(31)%Bt_Toa - ch(33)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(33)%Bt_Toa == Missing_Value_Real4)
-             Temp_Pix_Array = Missing_Value_Real4
+             Temp_Pix_Array_1 = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       Temp_Pix_Array,nbox,  &
+                                       Temp_Pix_Array_1,nbox,  &
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Btd_Ch31_Ch33_Mean_3x3,Btd_Ch31_Ch33_Min_3x3, &
-                                       Btd_Ch31_Ch33_Max_3x3,Btd_Ch31_Ch33_Std_3x3, &
+                                       Temp_Pix_Array_1, Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3, Btd_Ch31_Ch33_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
    endif
    !--- Btd_Ch31_Ch29
    if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(29)==sym%YES) then
-     Temp_Pix_Array = ch(31)%Bt_Toa - ch(29)%Bt_Toa
+     Temp_Pix_Array_1 = ch(31)%Bt_Toa - ch(29)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(29)%Bt_Toa == Missing_Value_Real4)
-             Temp_Pix_Array = Missing_Value_Real4
+             Temp_Pix_Array_1 = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       Temp_Pix_Array,nbox,  &
+                                       Temp_Pix_Array_1,nbox,  &
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Btd_Ch31_Ch29_Mean_3x3,Btd_Ch31_Ch29_Min_3x3, &
-                                       Btd_Ch31_Ch29_Max_3x3,Btd_Ch31_Ch29_Std_3x3, &
+                                       Temp_Pix_Array_1,Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3,Btd_Ch31_Ch29_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
    endif
    !--- Btd_Ch31_Ch27
    if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. Sensor%Chan_On_Flag_Default(27)==sym%YES) then
-     Temp_Pix_Array = ch(31)%Bt_Toa - ch(27)%Bt_Toa
+     Temp_Pix_Array_1 = ch(31)%Bt_Toa - ch(27)%Bt_Toa
      where(ch(31)%Bt_Toa == Missing_Value_Real4 .or. ch(27)%Bt_Toa == Missing_Value_Real4)
-             Temp_Pix_Array = Missing_Value_Real4
+             Temp_Pix_Array_1 = Missing_Value_Real4
      end where
      CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       Temp_Pix_Array,nbox,  &
+                                       Temp_Pix_Array_1,nbox,  &
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Btd_Ch31_Ch27_Mean_3x3,Btd_Ch31_Ch27_Min_3x3, &
-                                       Btd_Ch31_Ch27_Max_3x3,Btd_Ch31_Ch27_Std_3x3, &
+                                       Temp_Pix_Array_1, Temp_Pix_Array_2, &
+                                       Temp_Pix_Array_3,  Btd_Ch31_Ch27_Std_3x3, &
                                        Elem_Idx_max, Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
    endif
@@ -1779,8 +1757,8 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
                                        Uni_Land_Mask_Flag_No, &
                                        Bad_Pixel_Mask, Sfc%Land_Mask, &
                                        1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Bt_Ch27_Mean_3x3,Bt_Ch27_Min_3x3, &
-                                       Bt_Ch27_Max_3x3,Bt_Ch27_Std_3x3, &
+                                       Temp_Pix_Array_1,Temp_Pix_Array_2, &
+                                       Bt_Ch27_Max_3x3,Temp_Pix_Array_3, &
                                        Elem_Idx_max,Line_Idx_max, Elem_Idx_min, Line_Idx_min)
 
   endif

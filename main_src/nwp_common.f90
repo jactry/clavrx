@@ -160,7 +160,7 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Spd_10m_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Dir_10m_Nwp
   integer (kind=int1), dimension(:,:), allocatable, public, save :: Land_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Ice_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save :: Sea_Ice_Frac_Nwp
   integer (kind=int1), dimension(:,:), allocatable, public, save :: Tropo_Level_Nwp
   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level850_Nwp
   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level700_Nwp
@@ -252,7 +252,7 @@ contains
 end subroutine QC_NWP
 
 !----------------------------------------------------------------------
-! subroutine COMPUTE_TSFC_NWP(i1,nx,j1,ny,Smooth_nwp_opt)
+! subroutine COMPUTE_TSFC_NWP(i1,nx,j1,ny,Smooth_Nwp_Opt)
 !
 ! compute a pixel level surface temperature from the NWP fields
 ! and smooth if option chosen
@@ -261,7 +261,7 @@ end subroutine QC_NWP
 ! nx = number of element indices
 ! j1 = first element index
 ! ny = number of element indices
-! Smooth_nwp_opt = flag to smooth nwp
+! Smooth_Nwp_Opt = flag to smooth nwp
 !
 ! This must be called After MAP_PIXEL_NWP
 !----------------------------------------------------------------------
@@ -359,37 +359,39 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
 end subroutine MODIFY_TSFC_NWP_PIX
 
 !----------------------------------------------------------------------
-! subroutine COMPUTE_NWP_PARAMETERS(Smooth_nwp_opt)
+! subroutine COMPUTE_NWP_PARAMETERS(Smooth_Nwp_Opt)
 !
 ! compute parameters from NWP fields and smooth if option chosen
 !
 ! This must be called After MAP_PIXEL_NWP
 !----------------------------------------------------------------------
-subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_nwp_opt)
+subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
 
-  integer(kind=int4), intent(in):: Smooth_nwp_opt
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tpw_Nwp,Tpw_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ozone_Nwp,Ozone_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(K_Index_Nwp,K_Index_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sc_Lwp_Nwp,Sc_Lwp_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lwp_Nwp,Lwp_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Iwp_Nwp,Iwp_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cwp_Nwp,Cwp_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pc_Nwp,Pc_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cloud_Fraction_Satellite_Nwp,Cfrac_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ncld_Layers_Nwp,Ncld_Layers_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cld_Type_Nwp,Cld_Type_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Spd_10m_Nwp,Wnd_Spd_10m_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Dir_10m_Nwp,Wnd_Dir_10m_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lifting_Condensation_Level_Height_Nwp,LCL_Height_Nwp_Pix,Smooth_nwp_opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Convective_Condensation_Level_Height_Nwp,CCL_Height_Nwp_Pix,Smooth_nwp_opt)
+  integer(kind=int4), intent(in):: Smooth_Nwp_Opt
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Weasd_Nwp,Weasd_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sea_Ice_Frac_Nwp,Sea_Ice_Frac_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tpw_Nwp,Tpw_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ozone_Nwp,Ozone_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(K_Index_Nwp,K_Index_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sc_Lwp_Nwp,Sc_Lwp_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lwp_Nwp,Lwp_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Iwp_Nwp,Iwp_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cwp_Nwp,Cwp_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pc_Nwp,Pc_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cloud_Fraction_Satellite_Nwp,Cfrac_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ncld_Layers_Nwp,Ncld_Layers_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cld_Type_Nwp,Cld_Type_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Spd_10m_Nwp,Wnd_Spd_10m_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Dir_10m_Nwp,Wnd_Dir_10m_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lifting_Condensation_Level_Height_Nwp,LCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Convective_Condensation_Level_Height_Nwp,CCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
 
 end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
 
@@ -827,7 +829,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(U_Wnd_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
     allocate(V_Wnd_Prof_Nwp(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
     allocate(Land_Nwp(Nlon_Nwp, Nlat_Nwp))
-    allocate(Ice_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Sea_Ice_Frac_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Sfc_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tropo_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Inversion_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -904,7 +906,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     U_Wnd_Prof_Nwp = 0.0
     V_Wnd_Prof_Nwp = 0.0
     Land_Nwp = 0
-    ice_Nwp = 0.0
+    Sea_Ice_Frac_Nwp = 0.0
     temp3d_Nwp_1 = 0
     temp3d_Nwp_2 = 0
     temp3d = 0
@@ -964,7 +966,7 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Solzen_Nwp))        deallocate(Solzen_Nwp)
 
     if (allocated(Land_Nwp))           deallocate(Land_Nwp)
-    if (allocated(ice_Nwp))            deallocate(ice_Nwp)
+    if (allocated(Sea_Ice_Frac_Nwp))   deallocate(Sea_Ice_Frac_Nwp)
     if (allocated(Sfc_Level_Nwp))      deallocate(Sfc_Level_Nwp)
     if (allocated(Tropo_Level_Nwp))    deallocate(Tropo_Level_Nwp)
     if (allocated(Level850_Nwp))       deallocate(Level850_Nwp)
@@ -1572,7 +1574,7 @@ end subroutine FIND_NWP_LEVELS
   real, parameter:: Iwp_Threshold  = 1.0
   real, parameter:: Frac_Min_Threshold  = 1.0e-06
   real, parameter:: Clwmr_Min_Threshold  = 0.0
-  real, parameter:: Cwp_Min_Threshold  = 2.0     !g/m^2 - arbitrary need to investigate
+  real, parameter:: Cwp_Min_Threshold  = 5.0     !g/m^2 - arbitrary need to investigate
   real, parameter:: Max_Temperature_Ice = 273.15
   real, parameter:: Min_Temperature_Water  = 253.15
   real, parameter:: Max_Temperature_Sc_Water = 273.15

@@ -413,15 +413,17 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
+print *, "here 1"
       call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
+print *, "here 2"
  
       if (Ierror == sym%YES) then
-         print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "
+         print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
          cycle file_loop
       end if
 
       if (Image%Number_Of_Lines <= 0) then
-         print*,' File dimesnions were not set correctly for this sensor ', sensor%sensor_name
+         print*,' File dimensions were not set correctly for this sensor ', sensor%sensor_name
          cycle file_loop    
       end if
   
@@ -430,7 +432,7 @@
       !  AW-2014-12-22 Why now? Why here?
       !-----------------------------------------------------------------------
       call HDF_TSTAMP()
-   
+print *, "here 2.1"   
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
@@ -873,7 +875,9 @@
 
             !--- compute pixel level Snow map based on all ancillary data
             if (Nwp_Opt /= 0) then
-               call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               call COMPUTE_SNOW_FIELD(Weasd_Nwp_Pix,Sea_Ice_Frac_Nwp_Pix, &
+                                       Sst_Anal_Cice,Sfc%Snow_Glob,Sfc%Snow_Hires, &
+                                       Sfc%Snow)
             end if
 
             !--- interpolate surface type field to each pixel in segment
@@ -886,9 +890,6 @@
             if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
              Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(44)%Rad_Toa, Sfc%Sfc_Type)
             endif
-
-            End_Time_Point_Hours = COMPUTE_TIME_HOURS()
-                        
 
             !--- update time summation for level-1b processing
             Segment_Time_Point_Seconds(2) =  Segment_Time_Point_Seconds(2) + &
@@ -992,7 +993,6 @@
 
             !--- compute the glint mask
             call COMPUTE_GLINT()
-
 
             !*******************************************************************
             ! Marker: Generate pixel-level products
@@ -1680,9 +1680,7 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
 
             !--- interpolate sst analyses to each pixel
             if (Use_Sst_Anal == 1) then
-               
                call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-              
             end if
 
             !--- compute a coast mask relative to nwp data

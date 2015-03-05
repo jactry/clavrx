@@ -3705,7 +3705,7 @@ subroutine POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark, Land_Class_Local)
    Num_Lines = size(Ref_Ch1_Dark(1,:)) 
 
    !--- copy to a global scratch array
-   Temp_Pix_Array = Ref_Ch1_Dark
+   Temp_Pix_Array_1 = Ref_Ch1_Dark
 
 element_loop:   Do Elem_Idx = 1, Num_Elements
 
@@ -3721,7 +3721,7 @@ line_loop:  DO Line_Idx = 1, Num_Lines
    Line_Idx_2 = max(1,min(Num_Lines,Line_Idx + N_box))
 
 !  if (Land_Class_Local(Elem_Idx,Line_Idx) /= Land_Class_Allowed) cycle 
-!  Ref_Ch1_Dark_Min = minval(Temp_Pix_Array(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+!  Ref_Ch1_Dark_Min = minval(Temp_Pix_Array_1(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
 !  if (Ref_Ch1_Dark_Min /= Missing_Value_Real4) then
 !     Ref_Ch1_Dark(Elem_Idx,Line_Idx) = Ref_Ch1_Dark_Min
 !  endif 
@@ -3741,7 +3741,7 @@ end do line_loop
 end do element_loop
 
    !--- wipe clean to a global scratch array
-   Temp_Pix_Array =  0.0
+   Temp_Pix_Array_1 =  0.0
 
 end subroutine POST_PROCESS_GOES_DARK_COMPOSITE
 !---------------------------------------------------------------------------

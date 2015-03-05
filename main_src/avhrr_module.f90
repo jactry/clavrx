@@ -1201,10 +1201,10 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
   !------------------------------------------------------------------------
   if ((Sensor%WMO_Id >= 706 .and. Sensor%WMO_Id <= 708) .or. (Sensor%WMO_Id >= 200 .and. Sensor%WMO_Id <= 202)) then
 
-       Temp_Pix_Array = Chan_Counts_Avhrr(3,:,:)
+       Temp_Pix_Array_1 = Chan_Counts_Avhrr(3,:,:)
        Ch20_Counts_Filtered = Chan_Counts_Avhrr(3,:,:)
        One_Byte_Temp = 1
-       where(Temp_Pix_Array <= 100 .or. Temp_Pix_Array > 1024)
+       where(Temp_Pix_Array_1 <= 100 .or. Temp_Pix_Array_1 > 1024)
               One_Byte_Temp = 0
        endwhere
 
@@ -1222,7 +1222,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
              if (Num_Valid > 1) then
               Ch20_Counts_Filtered(Elem_Idx,Line_Idx) =  &
                     sum(One_Byte_Temp(Elem_Idx_Min:Elem_Idx_Max,Line_Idx_Min:Line_Idx_Max)* &
-                        Temp_Pix_Array(Elem_Idx_Min:Elem_Idx_Max,Line_Idx_Min:Line_Idx_Max)) / Num_Valid
+                        Temp_Pix_Array_1(Elem_Idx_Min:Elem_Idx_Max,Line_Idx_Min:Line_Idx_Max)) / Num_Valid
              endif
            endif
           enddo

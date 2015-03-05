@@ -42,6 +42,9 @@ module nlcomp_retrieval_mod
    
    type :: nlcomp_prd_type
       real :: ctt
+      real :: emiss31_acha
+      real :: emiss32_acha
+      real :: beta_acha
       logical :: cph
    end type nlcomp_prd_type
    
@@ -178,9 +181,9 @@ contains
       
       obs_vec ( 3 ) = bt_31 - bt_32
       obs_vec ( 4 ) = bt_20 - bt_31
-      
+      print*, inp % chn ( 20 ) % rad, inp % chn ( 31 ) % rad, inp % chn ( 32 ) % rad
       print*,'bt s 20 31 32',bt_20,bt_31,bt_32, inp % geo % tsfc
-      print*,'obs vec: ',obs_vec
+      print*,'obs vec: ',obs_vec, inp % prd % emiss31_acha,inp % prd % beta_acha 
       
       cod = -999.
       cps= -999.
@@ -189,16 +192,18 @@ contains
       if ( obs_vec ( 1 ) > 1.0 ) return
       call vis_channel_cod (obs_vec ( 1 ),  pxl, alb_sfc ( 1) , dcomp_ancil_path , cod) 
       print*,'------  coputed cod ------- '
-      call cps_known_cod ( obs_vec ,  cod , rad_clear_toc,  pxl , dcomp_ancil_path , cps ,inp % geo % tsfc )
+      call cps_known_cod ( obs_vec,  cod, rad_clear_toc,  pxl , dcomp_ancil_path &
+               , inp % prd % emiss31_acha, inp % prd % beta_acha & 
+               , cps ,inp % geo % tsfc )
       
      
       
       
       if ( cod > 0. ) then  
-         nlcomp_out % cod = 10**cod
-         nlcomp_out % cps = 10**cps
+         nlcomp_out % cod = 10.**cod
+         nlcomp_out % cps = 10.**cps
       end if
-      print*, 'NLCOMP ended ...'
+      print*, 'NLCOMP ended ...',10.**cod,10.**cps
      
      
    end subroutine nlcomp_algorithm

@@ -129,7 +129,7 @@ program nlcomp_one_pixel_run
    inp_retr % geo % sat_zen = sat_zen
    inp_retr % geo % rel_azi = rel_azi
    inp_retr % geo % lun_rel_azi = rel_azi
-   inp_retr % geo % tsfc = 280.
+   inp_retr % geo % tsfc = 302.2
 
    inp_retr % prd % ctt = cld_temp  
    inp_retr % prd % cph = water_phase
@@ -142,6 +142,7 @@ program nlcomp_one_pixel_run
 
 
    inp_retr % chn ( 20 ) % rad = obs(2)
+   inp_retr % chn ( 20 ) % rad = 5.71621070E-03
    inp_retr % chn ( 20 ) % rad_u = obs_u(2)
    inp_retr % chn ( 20 ) % alb_sfc = alb_sfc ( 2)
    inp_retr % chn ( 20 ) % alb_sfc_u =alb_sfc_u(2)
@@ -149,18 +150,19 @@ program nlcomp_one_pixel_run
    inp_retr % chn ( 20 ) % rad_abvcld_nwp = rad_abv_cld
    inp_retr % chn ( 20 ) % rad_sfc_nwp = rad_sfc
 
-   inp_retr % chn ( 31 ) % rad = 33.
+   inp_retr % chn ( 31 ) % rad = 19.8389282
    inp_retr % chn ( 31 ) % rad_u = 0.
    inp_retr % chn ( 31 ) % alb_sfc = 0.05
    inp_retr % chn ( 31 ) % alb_sfc_u = 0.05
    inp_retr % chn ( 31 ) % rad_sfc_nwp = 11
 
-   inp_retr % chn ( 32 ) % rad = 34.8
+   inp_retr % chn ( 32 ) % rad = 26.16
    inp_retr % chn ( 32 ) % rad_u = 5.
    inp_retr % chn ( 32 ) % alb_sfc = 0.05
    inp_retr % chn ( 32 ) % alb_sfc_u = 0.05
          
    inp_retr % chn ( 44 ) % rfl   = obs(1)
+   inp_retr % chn ( 44 ) % rfl   = 0.5808
    inp_retr % chn ( 44 ) % rfl_u = obs_u(1)
    inp_retr % chn ( 44 ) % alb_sfc = alb_sfc ( 1)
    inp_retr % chn ( 44 ) % alb_sfc_u = 0.05

@@ -52,6 +52,8 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real :: cld_height
    real :: cld_press
    real :: cld_temp
+   real :: cld_emiss31
+   real :: cld_beta
    
    real :: rel_azi , lunar_rel_azi
    real :: sol_zen , sat_zen , lunar_zen
@@ -195,6 +197,8 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          cld_height     = input % cloud_hgt % d (elem_idx,line_idx)
          cld_press      = input % cloud_press % d (elem_idx,line_idx)
          cld_temp       = input % cloud_temp % d (elem_idx,line_idx)
+         cld_emiss31    = input % emiss31_acha % d (elem_idx,line_idx)
+         cld_beta       = input % beta_acha % d (elem_idx,line_idx)
          sol_zen        = input % sol % d (elem_idx,line_idx)
          lunar_zen      = input % zen_lunar % d (elem_idx,line_idx)
          sat_zen        = input % sat % d (elem_idx,line_idx)
@@ -300,7 +304,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % geo % lun_rel_azi = lunar_rel_azi
          inp_retr % geo % tsfc = input % temp_sfc % d ( elem_idx , line_idx )
          
-         inp_retr % prd % ctt = cld_temp  
+         inp_retr % prd % ctt = cld_temp 
+         inp_retr % prd % emiss31_acha = cld_emiss31 
+         inp_retr % prd % beta_acha =  cld_beta 
          inp_retr % prd % cph = is_water_phase(elem_idx, line_idx)
             
          ! - apriori
@@ -334,7 +340,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 32 ) % rad_abvcld_nwp = input % rad_clear_sky_toc ( 32) % d (elem_idx, line_idx)
          inp_retr % chn ( 32 ) % rad_sfc_nwp =  input % rad_clear_sky_toa ( 32) % d (elem_idx, line_idx)
          
-            inp_retr % chn ( 44 ) % rfl   = - 999.
+         inp_retr % chn ( 44 ) % rfl   = - 999.
          inp_retr % chn ( 44 ) % rfl   = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
          inp_retr % chn ( 44 ) % rfl_u = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
          inp_retr % chn ( 44 ) % alb_sfc = alb_sfc ( CHN_VIS)
@@ -357,6 +363,8 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          
          output % cod_unc % d ( elem_idx, line_idx) = nlcomp_out % codu
          output % ref_unc % d ( elem_idx, line_idx) = nlcomp_out % cpsu 
+         
+         !if (inp_retr % chn ( 44 ) % rfl .lt. 1.0 .and. inp_retr % chn ( 44 ) % rfl .gt. 0.1 ) stop
         
       end do elem_loop
    end do   line_loop 

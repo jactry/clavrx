@@ -84,6 +84,7 @@ contains
       , rad_clear_toc &
       , pixel &
       , lut_path &
+      , emis_cld_ch31, beta_cld_e31_e32 &
       , cps, tsfc )
       
        use clavrx_planck_mod, only: &
@@ -93,10 +94,13 @@ contains
       implicit none
       real, intent(in) :: obs(4)
       real, intent(in) :: cod
-      type ( pixel_vec ) , intent ( in) :: pixel
+      type ( pixel_vec ) , intent ( inout) :: pixel
       character ( len = 1024 ) , intent ( in ) , optional :: lut_path
+      real, intent(in) :: emis_cld_ch31
+      real, intent(in) :: beta_cld_e31_e32
+      
       real, intent(out) :: cps
-      real :: tsfc
+      real, intent(in) :: tsfc
       real :: cps_vec_lut(9)
       real :: rad20, rad31, rad32
       real :: bt20, bt31, bt32
@@ -109,23 +113,22 @@ contains
       
       
       cps_vec_lut = (/(i,i=4,20,2)/)/10.
-      
+ 
       planck_rad20 = planck_tmp2rad ( pixel % ctt, 'VIIRS' , 20)
       planck_rad31 = planck_tmp2rad ( pixel % ctt, 'VIIRS' , 31)
       planck_rad32 = planck_tmp2rad ( pixel % ctt, 'VIIRS' , 32)
-      
-      
+ 
       rad20_sfc = planck_tmp2rad ( tsfc , 'VIIRS' , 20)
       
       print*,'vergleich: ', rad20_sfc , rad_clear_toc(20)
-      
-       print*,pixel % ctt
-      print*, planck_rad20, planck_rad31, planck_rad32
+      print*,pixel % ctt
+      print*, planck_rad20, planck_rad31, planck_rad32      
       
       bt20 =  planck_rad2tmp ( planck_rad20, 'VIIRS' , 20)
-         bt31 =  planck_rad2tmp ( planck_rad31, 'VIIRS' , 31)
-         bt32 =  planck_rad2tmp ( planck_rad32, 'VIIRS' , 32) 
-       print*,'bt: ', bt20,bt31,bt32
+      bt31 =  planck_rad2tmp ( planck_rad31, 'VIIRS' , 31)
+      bt32 =  planck_rad2tmp ( planck_rad32, 'VIIRS' , 32) 
+      
+      print*,'bt: ', bt20, bt31, bt32
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
       
@@ -135,30 +138,53 @@ contains
             , pixel % lun_rel_azi )
       
        print*,'obs: ',obs, 'cod: ',cod
+      
        
       cod_used = cod
       if ( cod < -100. ) cod_used = 1.02
-      !do j=1,29
-      !   cod_used = j/10. - 0.6
-      !   print*
-      print*
+
+      
+      do i = 1, 9          
+         call lut_obj % get_data ( 31, phase_num, cod_used , cps_vec_lut (i) , lut_data31)
+          call lut_obj % get_data ( 32, phase_num, cod_used , cps_vec_lut (i) , lut_data32)
+          print*,i,lut_data31 %  ems ,  log(lut_data31 %  ems )/ log(lut_data32 %  ems)
+         !rfl_toa(i) =  lut_data%refl + lut_data%trn_sol* lut_data%trn_sat * alb_sfc &
+         !   / (1- alb_sfc * lut_data % albsph)
+         !if ( i > 1 ) then
+         !    if ( rfl_toa(i) .gt. rfl_dnb .and. rfl_toa(i-1) .lt. rfl_dnb ) cps_pos = i 
+         !end if        
+         ! print*,i, phase_num, rfl_toa(i), lut_data%refl
+      end do  
+      
+      
       do i = 1, 9
          
          call lut_obj % get_data ( 20, phase_num , cod_used, cps_vec_lut (i) , lut_data20) 
          call lut_obj % get_data ( 31, phase_num , cod_used, cps_vec_lut (i) , lut_data31)   
-         call lut_obj % get_data ( 32,phase_num , cod_used, cps_vec_lut (i) , lut_data32)
+         call lut_obj % get_data ( 32, phase_num , cod_used, cps_vec_lut (i) , lut_data32)
          
-         rad20 = lut_data20 %  ems * planck_rad20+ lut_data20 % trn_ems * rad_clear_toc(20)
-         rad31 = lut_data31 %  ems * planck_rad31+ lut_data31 % trn_ems * rad_clear_toc(31)
+         rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)
+         rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
          rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32)
          bt20 =  planck_rad2tmp ( rad20, 'VIIRS' , 20)
          bt31 =  planck_rad2tmp ( rad31, 'VIIRS' , 31)
          bt32 =  planck_rad2tmp ( rad32, 'VIIRS' , 32)
          
+         ! - first thin clouds,We can use emis_acha or beta_acha to be consistent
+         ! - later we can do our own ?? Probably not
          
-        ! print*, '         ',  lut_data20 %  ems * planck_rad20 , lut_data20 % trn_ems * rad_clear_toc(20),lut_data20 % trn_ems,lut_data20 %  ems
+         
+         
+         print*
+        print*, '',  lut_data20 %  ems * planck_rad20 
+        print*, 'TRN_EMS * RAD_CLEAR_TOC: ', lut_data20 % trn_ems * rad_clear_toc(20)
+        print*,'TRN_EMS: ',lut_data20 % trn_ems
+        print*,'EMS: ',lut_data20 %  ems
+        
+        
          
          print*,i, rad20,bt31-bt32 , bt20 - bt31
+         print*
          
       end do      
       !end do  

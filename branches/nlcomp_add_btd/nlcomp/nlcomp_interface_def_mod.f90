@@ -79,6 +79,8 @@ module nlcomp_interface_def_mod
       TYPE ( d2_real4_TYPE ) :: cloud_temp
       TYPE ( d2_real4_TYPE ) :: cloud_press
       TYPE ( d2_real4_TYPE ) :: tau_acha
+      TYPE ( d2_real4_TYPE ) :: emiss31_acha
+       TYPE ( d2_real4_TYPE ) ::beta_acha
       
       ! - flags
       TYPE ( d2_flag_TYPE )  :: is_land 
@@ -269,7 +271,8 @@ contains
       if ( allocated (nlcomp_str % cloud_temp % d) )  deallocate ( nlcomp_str % cloud_temp  % d )
       if ( allocated (nlcomp_str % cloud_press % d) ) deallocate ( nlcomp_str % cloud_press  % d )
       if ( allocated (nlcomp_str % tau_acha % d) )    deallocate ( nlcomp_str % tau_acha  % d )
-      
+      if ( allocated (nlcomp_str % emiss31_acha % d) )    deallocate ( nlcomp_str % emiss31_acha  % d )
+      if ( allocated (nlcomp_str % beta_acha % d) )    deallocate ( nlcomp_str % beta_acha  % d )
       if ( allocated (nlcomp_str % snow_class % d) ) deallocate ( nlcomp_str % snow_class  % d )
       if ( allocated (nlcomp_str % is_land % d) ) deallocate ( nlcomp_str % is_land  % d )
     	if ( allocated (nlcomp_str % ozone_nwp % d) )    deallocate ( nlcomp_str %  ozone_nwp   % d )

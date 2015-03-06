@@ -1098,7 +1098,7 @@ contains
       integer :: i
       logical :: Not_Run_Flag
       
-      if ( Expert_Mode < 7 ) return
+      if ( Expert_Mode < 6 ) return
 
       Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
 
@@ -1170,6 +1170,12 @@ contains
          print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
       endif
   
+print *,Sensor%Chan_On_Flag_Default
+print *,'---------------'
+print *,Chan_On_Flag_Default_User_Set
+print *,'---------------'
+stop
+
    end subroutine EXPERT_MODE_CHANNEL_ALGORITHM_CHECK
    
 end module USER_OPTIONS

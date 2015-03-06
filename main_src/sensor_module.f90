@@ -105,7 +105,6 @@ module SENSOR_MODULE
 
       type (AREA_STRUCT), intent(in) :: AREAstr
 
-      integer:: Idx
       integer(kind=int4):: Start_Year_Tmp
       integer(kind=int4):: Start_Day_Tmp
       integer(kind=int4):: End_Year_Tmp
@@ -1139,7 +1138,6 @@ module SENSOR_MODULE
 
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      integer:: Erstat
       integer(kind=int4), intent(out) :: Nword_Clavr
       integer(kind=int4), intent(out) :: Nword_Clavr_Start
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header

@@ -566,8 +566,6 @@ contains
    !-------------------------------------------------------------------------------
    subroutine QC_CLAVRXORB_OPTIONS()
 
-      integer:: erstat
-
       !---- Since the NWP controls everything, we first check if an NWP is being used
       !---- before anything else is checked.  If no nwp, we stop processing
 
@@ -915,7 +913,6 @@ contains
    !----------------------------------------------------------------------------
    subroutine CHECK_ALGORITHM_CHOICES(SensorName)
       character (len=*) , intent(in) :: SensorName
-      character (len = 1 ) :: string_1
       
       integer :: possible_acha_modes ( 8 )
       integer :: possible_dcomp_modes ( 3)

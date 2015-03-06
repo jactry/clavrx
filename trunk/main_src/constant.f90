@@ -134,15 +134,6 @@ module CONSTANTS
     INTEGER(kind=int1) :: ICE_PHASE = 4
     INTEGER(kind=int1) :: UNKNOWN_PHASE = 5
                                                                                 
-    INTEGER(kind=int1) :: NO_AEROSOL_AERO = 0
-    INTEGER(kind=int1) :: MOSTLY_ASH_AERO = 1
-    INTEGER(kind=int1) :: ASH_ICE_AERO = 2
-    INTEGER(kind=int1) :: ASH_WATER_AERO = 3
-    INTEGER(kind=int1) :: DUST_AERO = 4
-    INTEGER(kind=int1) :: SMOKE_AERO = 5
-    INTEGER(kind=int1) :: SULFATE_AERO = 6
-    INTEGER(kind=int1) :: UNKNOWN_AERO = 7
-                                                                                
     INTEGER(kind=int1) :: NO_SPACE = 0
     INTEGER(kind=int1) :: SPACE = 1
                                                                                 

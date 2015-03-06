@@ -360,11 +360,11 @@ contains
                            .and. sfc_idx /= 6
                             
       use_lunar_refl_for_vis_tests = .false.
-      if ( inp % sat % chan_on(42) ) then
+      if ( inp % sat % chan_on(44) ) then
 
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-           ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-             inp % geo % lunar_zen < Lunar_Zen_Thresh ) .and. &
+             inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .and. &
+             inp % geo % lunar_zen < Lunar_Zen_Thresh .and. &
             .not. inp % sfc % is_city  .and. &
             .not. is_mountain .and. &
             .not. inp % sfc % coast_mask .and. &

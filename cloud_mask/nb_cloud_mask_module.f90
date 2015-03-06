@@ -364,8 +364,8 @@ contains
 
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
            ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-             inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-             inp % sfc % is_city  .and. &
+             inp % geo % lunar_zen < Lunar_Zen_Thresh ) .and. &
+            .not. inp % sfc % is_city  .and. &
             .not. is_mountain .and. &
             .not. inp % sfc % coast_mask .and. &
             .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &

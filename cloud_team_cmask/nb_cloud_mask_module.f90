@@ -1616,7 +1616,7 @@ module NB_CLOUD_MASK
       character(len=30), allocatable, dimension(:,:) :: var
 
       integer :: nc_var_id
-      integer :: status, tmp1, tmp2, i, j
+      integer :: status, tmp1, tmp2, i
       integer, dimension(2) ::dimIDs
 
       status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)

@@ -56,29 +56,9 @@ module CLOUD_MASK_ADDONS
   type(mask_output), intent(out) :: Output
   type(diag_output), intent(out), Optional :: Diag
 
-  !internal variables
-!  integer :: Line_Start
-!  integer :: Line_End
-!  integer :: Elem_Idx
-!  integer :: Line_Idx
-!!  integer:: Num_Elem
-!  integer:: Num_Line
-!  integer:: Num_Line_Max
-  integer:: i1, i2, j1, j2
-  integer:: N_Median
-  real, dimension(:,:), allocatable:: Median_Input, Median_Output
-  integer(kind=int1), dimension(:,:), allocatable:: Median_Mask
-
   !------------------------------------------------------------------------------------------
   !---  begin executable code
   !------------------------------------------------------------------------------------------
-!  Num_Elem = Input%Num_Elem
-!  Num_Line = Input%Num_Line
-!  Num_Line_Max = Input%Num_Line_Max
-
-  !--- determine ending line number (Line_Start can differ from 1)
-!  Line_Start = 1
-!  Line_End = Line_Start + Num_Line - 1
 
   !--- initialize to missing
   Output%Dust_Mask = MISSING_VALUE_INT1
@@ -88,8 +68,6 @@ module CLOUD_MASK_ADDONS
   !------------------------------------------------------------------------------------------
   !  MAIN LOOP
   !------------------------------------------------------------------------------------------
-!  line_loop:   do Line_Idx = Line_Start, Line_End
-!   elem_loop:   do Elem_Idx = 1, Num_Elem
 
    !--- check for valid data
    if (Input%Invalid_Data_Mask == Symbol%NO) then
@@ -98,39 +76,6 @@ module CLOUD_MASK_ADDONS
     ! Dust Detection 
     !-------------------------------------------------------------------------
 
-        !-------------------------------------------------------------------------
-        ! CLAVR-x IR Dust Detection 
-        !-------------------------------------------------------------------------
-!        if (Input%Chan_On_11um == symbol%YES  .and. Input%Chan_On_12um == symbol%YES) then
-!
-!             Output%Dust_Mask = IR_DUST_TEST( &
-!                    Input%Solzen,  &
-!                    Input%Emiss_375um,  &
-!                    Input%Bt_11um,  &
-!                    Input%Bt_12um,  &
-!                    Input%Emiss_375um_Clear,  &
-!                    Input%Bt_11um_Clear,  &
-!                    Input%Bt_12um_Clear,  &
-!                    Input%Bt_11um_Std)
-!                
-!
-!           Diag%Array_1 = Input%Bt_11um - Input%Bt_12um
-!
-!          Diag%Array_2 = (Input%Bt_11um_Clear - Input%Bt_12um_Clear)* &
-!                                           (Input%Bt_11um-260.0) / (Input%Bt_11um_Clear-260.0)
-!          if (Input%Bt_11um < 260.0) Diag%Array_2 = 0.0
-!          Diag%Array_3 = Diag%Array_1 - Diag%Array_2
-!
-!          Diag%Array_2 = (Input%Bt_11um_Clear - Input%Bt_12um_Clear)
-!
-!          !Diag%Array_2 = Input%Ref_375um / Input%Ref_063um
-!
-!           Diag%Array_2 = Input%Solzen
-!
-!           Diag%Array_3 = abs(Input%Emiss_375um - Input%Emiss_375um_Clear)
-!
-!        endif
-   
      
        !--------------------------------------------------------------------------
        !  VCM Daytime Dust Detection
@@ -222,38 +167,7 @@ module CLOUD_MASK_ADDONS
       endif
 
     endif ! if Invalid_Data_Mask = NO
-!   enddo elem_loop
-!  enddo line_loop
 
-
-!!!!!!!! Disabled until Andy's explanation (Denis B. 11/10/2014) !!!!!!!!!
-  !----------------------------------------------------------------------------
-  ! Apply Median Filter to Smoke and Dust
-  !----------------------------------------------------------------------------
-!   N_Median = 4
-!   allocate(Median_Input(Num_Elem,Num_Line),Median_Mask(Num_Elem,Num_Line_Max),Median_Output(Num_Elem,Num_Line_Max))
-!   Median_Input = real(Output%Dust_Mask)
-!   Median_Mask = Input%Invalid_Data_Mask
-!
-!   do Line_Idx = Line_Start, Line_End
-!     do Elem_Idx = 1, Num_Elem
-!
-!     j1 = max(Line_Start,Line_Idx-N_Median) !top index of local array
-!     j2 = min(Line_End,Line_Idx+N_Median)   !bottom index of local array
-!     i1 = max(1,Elem_Idx-N_Median)          !left index of local array
-!     i2 = min(Num_Elem,Elem_Idx+N_Median)   !right index of local array
-!
-!     !--- compute median
-!     call MEDIAN_FILTER_MASK(Median_Input(i1:i2,j1:j2),Median_Mask(i1:i2,j1:j2),Median_Output(Elem_Idx,Line_Idx))
-!!    print *, "median filter test ", Elem_Idx, Line_Idx, i1, i2, j1,j2
-!!    print *, "input = ", Median_Input(i1:i2,j1:j2)
-!!    print *, "mask = ", Median_Mask(i1:i2,j1:j2)
-!!    print *, "Output = ", Median_Output(Elem_Idx,Line_Idx)
-!     enddo
-!  enddo
-!  Output%Dust_Mask = nint(Median_Output,kind=int1)
-!
-!  deallocate(Median_Input, Median_Mask, Median_Output)
 
  end subroutine NB_CLOUD_MASK_ADDONS_ALGORITHM
 !----------------------------------------------------------------------------

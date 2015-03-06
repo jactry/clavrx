@@ -413,9 +413,7 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-print *, "here 1"
       call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
-print *, "here 2"
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
@@ -432,7 +430,6 @@ print *, "here 2"
       !  AW-2014-12-22 Why now? Why here?
       !-----------------------------------------------------------------------
       call HDF_TSTAMP()
-print *, "here 2.1"   
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------

@@ -773,6 +773,8 @@ module NB_CLOUD_MASK
                          if (Sfc_Idx == 4) cycle
                          if (Input%Ref_Lunar_Clear == Missing_Value_Real4) cycle
                          if (Input%Ref_Lunar == Missing_Value_Real4) cycle
+                         if (Input%Ref_Lunar_Clear <= 0.) cycle
+                         if (Input%Ref_Lunar <= 0.0) cycle
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_Lunar_Clear, &
                                                              Input%Ref_Lunar)
@@ -793,6 +795,7 @@ module NB_CLOUD_MASK
                          if (Coastal_Flag == symbol%YES) cycle
                          if (City_Flag == symbol%YES) cycle  
                          if (Input%Ref_Lunar_Std == Missing_Value_Real4) cycle
+                         if (Input%Ref_Lunar_Std <= 0.0) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std
                        endif
 
@@ -815,6 +818,8 @@ module NB_CLOUD_MASK
                          if (City_Flag == symbol%YES) cycle  
                          if (Input%Ref_Lunar == Missing_Value_Real4) cycle
                          if (Input%Ref_Lunar_Min == Missing_Value_Real4) cycle
+                         if (Input%Ref_Lunar <= 0.0) cycle
+                         if (Input%Ref_Lunar_Min <= 0.0) cycle
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_Lunar_Min, Input%Ref_Lunar)
                        endif

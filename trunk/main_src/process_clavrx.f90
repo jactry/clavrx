@@ -872,7 +872,7 @@
 
             !--- compute pixel level Snow map based on all ancillary data
             if (Nwp_Opt /= 0) then
-               call COMPUTE_SNOW_CLASS(Sfc%Snow_NWP, Sfc%Snow_SST, &
+               call COMPUTE_SNOW_CLASS(Sfc%Snow_NWP, Sfc%Snow_OISST, &
                                        Sfc%Snow_IMS,Sfc%Snow_GLOB, &
                                        Sfc%Land,Sfc%Snow)
             end if
@@ -1666,7 +1666,7 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
         !--- interpolate sst analyses to each pixel
         if (Use_Sst_Anal == 1) then
                call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-               call COMPUTE_SNOW_CLASS_SST(SST_Anal_Cice,Sfc%Snow_SST)
+               call COMPUTE_SNOW_CLASS_OISST(SST_Anal_Cice,Sfc%Snow_OISST)
         end if
 
         !--- compute a coast mask relative to nwp data
@@ -1687,7 +1687,7 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
                Sfc%Snow_IMS = Missing_Value_Int1
                Sfc%Snow_GLOB = Missing_Value_Int1
                Sfc%Snow_NWP = Missing_Value_Int1
-               Sfc%Snow_SST = Missing_Value_Int1
+               Sfc%Snow_OISST = Missing_Value_Int1
                Sfc%Volcano_Mask = Missing_Value_Int1
                Sfc%Sfc_Type = Missing_Value_Int1
         end where

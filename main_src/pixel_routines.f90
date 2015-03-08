@@ -64,7 +64,7 @@ MODULE PIXEL_ROUTINES
           CONVERT_TIME, &
           COMPUTE_SNOW_CLASS, &
           COMPUTE_SNOW_CLASS_NWP, &
-          COMPUTE_SNOW_CLASS_SST, &
+          COMPUTE_SNOW_CLASS_OISST, &
           EXPAND_SPACE_MASK_FOR_USER_LIMITS, &
           SET_SOLAR_CONTAMINATION_MASK, &
           SET_BAD_PIXEL_MASK, &
@@ -612,11 +612,11 @@ end subroutine CONVERT_TIME
 !---  2 = sym%SEA_ICE
 !---  3 = sym%SNOW
 !-------------------------------------------------------------------------------
- subroutine COMPUTE_SNOW_CLASS(Snow_Class_NWP, Snow_Class_SST, Snow_Class_IMS, &
-                              Snow_Class_Glob,Land_Class,Snow_Class_Final)
-
+ subroutine COMPUTE_SNOW_CLASS(Snow_Class_NWP, Snow_Class_OISST, Snow_Class_IMS, &
+                               Snow_Class_Glob,Land_Class,Snow_Class_Final)
+ 
    integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_NWP
-   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_SST
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_OISST
    integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_IMS
    integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_Glob
    integer(kind=int1), intent(in), dimension(:,:):: Land_Class
@@ -645,10 +645,9 @@ end subroutine CONVERT_TIME
 
       Snow_Class_Final = Snow_Class_Nwp
 
-
       !--- overwrite with oisst
-      where(Snow_Class_SST == sym%SEA_ICE)
-        Snow_Class_Final = Snow_Class_SST
+      where(Snow_Class_OISST == sym%SEA_ICE)
+        Snow_Class_Final = Snow_Class_OISST
       endwhere
       Finished_Flag = 1
        
@@ -690,32 +689,47 @@ end subroutine CONVERT_TIME
                                                   NWP_Sea_Ice_Frac
    integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_NWP
 
+   !--- initialize all pixels as missing
    Snow_Class_NWP = Missing_Value_Int1
 
-   where (NWP_Wat_Eqv_Snow_Depth > 0.1) 
-          Snow_Class_NWP = sym%SNOW
+   !--- initialize pixel with valid data as no_snow
+   where (NWP_Wat_Eqv_Snow_Depth >= 0.0 .or. NWP_Sea_Ice_Frac >=0.0) 
+          Snow_Class_NWP = sym%NO_SNOW
    end where 
+
+   !--- detect sea ice
    where (NWP_Sea_Ice_Frac > 0.5) 
           Snow_Class_NWP = sym%SEA_ICE
    end where
+
+   !--- detect snow  (note snow can cover sea-ice so do this after sea-ice check)
+   where (NWP_Wat_Eqv_Snow_Depth > 0.1) 
+          Snow_Class_NWP = sym%SNOW
+   end where 
 
  end subroutine COMPUTE_SNOW_CLASS_NWP
  !---------------------------------------------------------------------------------------
  ! Compute a Sea-Ice Classification from OISST Analysis
  ! Note =- OISST only provides Sea Ice, not Snow
  !---------------------------------------------------------------------------------------
- subroutine COMPUTE_SNOW_CLASS_SST(SST_Sea_Ice_Frac, Snow_Class_SST)
+ subroutine COMPUTE_SNOW_CLASS_OISST(SST_Sea_Ice_Frac, Snow_Class_OISST)
 
    real(kind=real4), intent(in), dimension(:,:):: SST_Sea_Ice_Frac
-   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_SST
+   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_OISST
 
-   Snow_Class_SST = Missing_Value_Int1
+   !--- initialize all to missing
+   Snow_Class_OISST = Missing_Value_Int1
 
+   !--- initialize valid values as no_snow
+   where (SST_Sea_Ice_Frac >= 0.0) 
+          Snow_Class_OISST = sym%NO_SNOW
+   end where
+   !--- detect sea ice
    where (SST_Sea_Ice_Frac > 0.5) 
-          Snow_Class_SST = sym%SEA_ICE
+          Snow_Class_OISST = sym%SEA_ICE
    end where
 
- end subroutine COMPUTE_SNOW_CLASS_SST
+ end subroutine COMPUTE_SNOW_CLASS_OISST
 
 !-------------------------------------------------------------------------------
 !--- populate the snow_class array based on all available sources of Snow data

@@ -216,7 +216,7 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Desert_Mask
      integer(kind=int1), dimension(:,:), allocatable:: City_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Volcano_Mask
-     integer(kind=int1), dimension(:,:), allocatable:: Snow_SST
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_OISST
      integer(kind=int1), dimension(:,:), allocatable:: Snow_NWP
      integer(kind=int1), dimension(:,:), allocatable:: Snow_IMS
      integer(kind=int1), dimension(:,:), allocatable:: Snow_GLOB
@@ -1826,7 +1826,7 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%City_Mask(dim1,dim2))
    allocate(Sfc%Volcano_Mask(dim1,dim2))
    allocate(Sfc%Snow_NWP(dim1,dim2))
-   allocate(Sfc%Snow_SST(dim1,dim2))
+   allocate(Sfc%Snow_OISST(dim1,dim2))
    allocate(Sfc%Snow_IMS(dim1,dim2))
    allocate(Sfc%Snow_GLOB(dim1,dim2))
    allocate(Sfc%Snow(dim1,dim2))
@@ -1846,7 +1846,7 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%City_Mask = Missing_Value_Int1
    Sfc%Volcano_Mask = Missing_Value_Int1
    Sfc%Snow_NWP = Missing_Value_Int1
-   Sfc%Snow_SST = Missing_Value_Int1
+   Sfc%Snow_OISST = Missing_Value_Int1
    Sfc%Snow_IMS = Missing_Value_Int1
    Sfc%Snow_GLOB = Missing_Value_Int1
    Sfc%Snow = Missing_Value_Int1
@@ -1866,7 +1866,7 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%City_Mask)
    deallocate(Sfc%Volcano_Mask)
    deallocate(Sfc%Snow_NWP)
-   deallocate(Sfc%Snow_SST)
+   deallocate(Sfc%Snow_OISST)
    deallocate(Sfc%Snow_IMS)
    deallocate(Sfc%Snow_GLOB)
    deallocate(Sfc%Snow)

@@ -337,7 +337,7 @@ contains
       
       ! - set mask and thresholds version id
       vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
-      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $"
+      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 1068 2015-03-06 23:31:56z dbotambekov $"
 
       ! - determine sfc type
       sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lon &

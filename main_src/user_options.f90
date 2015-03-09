@@ -197,7 +197,7 @@ contains
       Ref_Cal_1b = 1
       Therm_Cal_1b = 1    
       Nav_Opt = 0  
-      goes_stride = 2
+      goes_stride = 1
       Lrc_Flag = 1 
       Smooth_Nwp_Flag = 1  
       Process_Undetected_Cloud_Flag = 0

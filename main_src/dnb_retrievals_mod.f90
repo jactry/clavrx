@@ -85,27 +85,27 @@ contains
       ! Note: "lpds" means "lunar phase, degrees, signed"
       DOUBLE PRECISION ::  lpds
  
-      ! DOUBLE PRECISION :: waxp1=6.052e-12,waxp2=2.550e-9,waxp3=4.265e-7,waxp4=3.520e-5,&
-      !       waxp5=1.449e-3,waxp6=2.590e-2,waxp7=1.135
+      DOUBLE PRECISION :: waxp1=6.052e-12,waxp2=2.550e-9,waxp3=4.265e-7,waxp4=3.520e-5,&
+             waxp5=1.449e-3,waxp6=2.590e-2,waxp7=1.135
       
       
 
 
       ! WAX VIS08
-    !  DOUBLE PRECISION :: wanp1=5.119e-12,wanp2=-2.113e-9,wanp3=3.485e-7,wanp4=-2.835e-5,&
-      !    wanp5=1.151e-3,wanp6=-2.205e-2,wanp7=1.112
+      DOUBLE PRECISION :: wanp1=5.119e-12,wanp2=-2.113e-9,wanp3=3.485e-7,wanp4=-2.835e-5,&
+          wanp5=1.151e-3,wanp6=-2.205e-2,wanp7=1.112
       
       
        ! USE 12/18/2014
       !  updated coeffcients sent from Steve on 26 Jan 2015 (AW)
-       DOUBLE PRECISION :: waxp1=5.2228e-12,waxp2=2.2411e-9,waxp3=3.7994e-7,waxp4=3.1637e-5,&
+      !   DOUBLE PRECISION :: waxp1=5.2228e-12,waxp2=2.2411e-9,waxp3=3.7994e-7,waxp4=3.1637e-5,&
 
-       waxp5=1.308e-3,waxp6=2.333e-2,waxp7=1.1448
+      !  waxp5=1.308e-3,waxp6=2.333e-2,waxp7=1.1448
 
       ! WANE VIS08
 
-      DOUBLE PRECISION :: wanp1=6.3456e-12,wanp2=-2.6096e-9,wanp3=4.2557e-7,wanp4=-3.4088e-5,&
-       wanp5=1.1356e-3,wanp6=-2.504e-2,wanp7=1.1451
+      !DOUBLE PRECISION :: wanp1=6.3456e-12,wanp2=-2.6096e-9,wanp3=4.2557e-7,wanp4=-3.4088e-5,&
+      ! wanp5=1.1356e-3,wanp6=-2.504e-2,wanp7=1.1451
       
       
          !- other params

@@ -201,13 +201,13 @@ module SENSOR_MODULE
         !--- check if area file
         if (AREAstr%Version_Num == 4) then
 
-         Image%Start_Year = 1900 + int(AREAstr%act_img_Date / 1000)
+         Image%Start_Year = 1900 + int(AREAstr%img_Date / 1000)
          Image%End_Year = Image%Start_Year
-         Image%Start_Doy = AREAstr%act_img_Date - (Image%Start_Year - 1900) * 1000
+         Image%Start_Doy = AREAstr%img_Date - (Image%Start_Year - 1900) * 1000
          Image%End_Doy = Image%Start_Doy
-         hour = AREAstr%act_img_Time / 10000 
-         minute = (AREAstr%act_img_Time - hour * 10000) / 100
-         second = (AREAstr%act_img_Time - hour * 10000 - minute * 100) / 100
+         hour = AREAstr%img_Time / 10000 
+         minute = (AREAstr%img_Time - hour * 10000) / 100
+         second = (AREAstr%img_Time - hour * 10000 - minute * 100) / 100
          Image%Start_Time = ((hour * 60 + minute) * 60 + second) * 1000 !millisec
          Image%End_Time = Image%Start_Time
     

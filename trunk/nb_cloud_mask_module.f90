@@ -1370,6 +1370,7 @@ module NB_CLOUD_MASK
    integer:: ncid
    integer:: status
    character(30):: var_name
+   integer:: Sfc_Idx
 
    Is_Classifiers_Read = .FALSE.
 
@@ -1378,7 +1379,7 @@ module NB_CLOUD_MASK
       print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
       print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
       cloud_mask_bayesian_flag = symbol%NO
-		print*, EXE_PROMPT_CM ,' filename is: ', Naive_Bayes_File_Name_Full_Path
+      print*, EXE_PROMPT_CM ,' filename is: ', Naive_Bayes_File_Name_Full_Path
       return
    endif
 
@@ -1426,6 +1427,13 @@ module NB_CLOUD_MASK
 
    var_name="optimal_posterior_prob"
    call read_netcdf_1d_real( ncid, N_sfc_bayes, var_name, Optimal_Posterior_Prob)
+
+   !--- if data are missing, skip this surface type
+   do Sfc_Idx = 1, N_sfc_bayes
+      if (Optimal_Posterior_Prob(Sfc_Idx) == Missing_Value_Real4) then
+            Skip_Sfc_Type_Flag(Sfc_Idx) = symbol%YES
+      endif
+   end do
 
    !Now the 2D variables
 

@@ -889,6 +889,7 @@
             endif
 
             !--- update time summation for level-1b processing
+            End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(2) =  Segment_Time_Point_Seconds(2) + &
                 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 

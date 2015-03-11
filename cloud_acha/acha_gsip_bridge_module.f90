@@ -19,7 +19,7 @@ module ACHA_GSIP_BRIDGE_MOD
  !--------------------------------------------------------------------
  ! define structures that will be arguments to ACHA
  !--------------------------------------------------------------------
- type(symbol_acha), private :: Symbol
+ type(acha_symbol_struct), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
 

@@ -173,6 +173,7 @@ module ACHA_CLAVRX_BRIDGE
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+     Output%Inversion_Flag  =>  null()
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
      Output%Zc_Opaque =>  null()
@@ -274,6 +275,7 @@ module ACHA_CLAVRX_BRIDGE
    Output%Packed_Qf => ACHA%Packed_Quality_Flags
    Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
    Output%Processing_Order  => ACHA%Processing_Order
+   Output%Inversion_Flag  => ACHA%Inversion_Flag
    Output%Pc_Opaque => Pc_Opaque_Cloud
    Output%Tc_Opaque => Tc_Opaque_Cloud
    Output%Zc_Opaque => Zc_Opaque_Cloud

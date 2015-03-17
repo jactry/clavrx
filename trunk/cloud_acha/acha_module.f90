@@ -485,6 +485,7 @@ module AWG_CLOUD_HEIGHT
   Bc_85um = 0
   Bc_11um = 0
   Bc_12um = 0
+  Output%Inversion_Flag = 0
   
   !--------------------------------------------------------------------------
   ! spatial processing pixels
@@ -1444,6 +1445,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
        !--- set meta data flag
        Meta_Data_Flags(7) = symbol%YES
+       Output%Inversion_Flag(Elem_Idx,Line_Idx) = 1
 
 
  else   !the general top-down solution

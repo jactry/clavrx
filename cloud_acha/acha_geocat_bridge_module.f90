@@ -25,7 +25,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
  !--------------------------------------------------------------------
  ! define structures that will be arguments to ACHA
  !--------------------------------------------------------------------
- type(symbol_acha) :: Symbol
+ type(acha_symbol_struct) :: Symbol
  type(acha_input_struct) :: Input
  type(acha_output_struct) :: Output
 
@@ -190,6 +190,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+     Output%Inversion_Flag  =>  null()
      Output%Cost  => null()
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
@@ -356,6 +357,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      out2(Ialgo)%Zc_Top_Acha = MISSING_VALUE_REAL4
      out2(Ialgo)%Zc_Base_Acha = MISSING_VALUE_REAL4
      out2(Ialgo)%Processing_Order = MISSING_VALUE_INT4
+     out2(Ialgo)%Inversion_Flag = MISSING_VALUE_INT1
      out2(Ialgo)%Acha_Cost = MISSING_VALUE_REAL4
      out2(Ialgo)%Pc_Opaque_Cloud = MISSING_VALUE_REAL4
      out2(Ialgo)%Tc_Opaque_Cloud = MISSING_VALUE_REAL4
@@ -392,6 +394,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      Output%Packed_Qf => out2(Ialgo)%Acha_Packed_Quality_Flags
      Output%Packed_Meta_Data => out2(Ialgo)%Acha_Packed_Meta_Data_Flags
      Output%Processing_Order  => out2(Ialgo)%Processing_Order
+     Output%Inversion_Flag  => out2(Ialgo)%Inversion_Flag
      Output%Cost  => out2(Ialgo)%Acha_Cost
      Output%Pc_Opaque => out2(Ialgo)%Pc_Opaque_Cloud
      Output%Tc_Opaque => out2(Ialgo)%Tc_Opaque_Cloud

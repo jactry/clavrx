@@ -356,7 +356,7 @@ module ACHA_GEOCAT_BRIDGE_MODULE
      out2(Ialgo)%Zc_Lower_Cloud = MISSING_VALUE_REAL4
      out2(Ialgo)%Zc_Top_Acha = MISSING_VALUE_REAL4
      out2(Ialgo)%Zc_Base_Acha = MISSING_VALUE_REAL4
-     out2(Ialgo)%Processing_Order = MISSING_VALUE_INT4
+     out2(Ialgo)%Processing_Order = MISSING_VALUE_INT1
      out2(Ialgo)%Inversion_Flag = MISSING_VALUE_INT1
      out2(Ialgo)%Acha_Cost = MISSING_VALUE_REAL4
      out2(Ialgo)%Pc_Opaque_Cloud = MISSING_VALUE_REAL4

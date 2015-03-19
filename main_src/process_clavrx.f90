@@ -415,12 +415,12 @@
       call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
  
       if (Ierror == sym%YES) then
-         print *, EXE_PROMPT, "ERROR: Could not set file dimentions, skipping file "
+         print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
          cycle file_loop
       end if
 
       if (Image%Number_Of_Lines <= 0) then
-         print*,' File dimesnions were not set correctly for this sensor ', sensor%sensor_name
+         print*,' File dimensions were not set correctly for this sensor ', sensor%sensor_name
          cycle file_loop    
       end if
   
@@ -429,7 +429,6 @@
       !  AW-2014-12-22 Why now? Why here?
       !-----------------------------------------------------------------------
       call HDF_TSTAMP()
-   
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
@@ -508,19 +507,15 @@
       !--------------------------------------------------------------------
 
       !Set to use default options. This will be turned off if there is NO daily OISST data
-      Use_Sst_Anal = 0
-
-      if (Image%Start_Year /= Start_Year_Prev .or. Image%Start_Doy /= Start_Day_Prev) then
-         OiSst_File_Name= GET_OISST_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
+      Oisst_File_Name= GET_OISST_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(OiSst_Data_Dir) )
 
-         if (trim(OiSst_File_Name) == "no_file") then
-            Use_Sst_Anal = sym%NO
-            call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
-         else
-            call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
-            use_sst_anal = 1
-         end if
+      if (trim(OiSst_File_Name) == "no_file") then
+          Use_Sst_Anal = sym%NO
+          call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
+      else
+          call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
+          Use_Sst_Anal = sym%YES
       end if
       
        !------- store previous day and year to prevent reading of same data for next orbit
@@ -824,6 +819,9 @@
                !--- map each each into correct NWP cell
                call MAP_PIXEL_NWP(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
+               !--- compute selected pixel nwp parameters
+               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
+
                !--- compute needed NWP levels (sfc, tropo, inversion, ...)
                call COMPUTE_NWP_LEVELS_SEGMENT(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
@@ -840,6 +838,7 @@
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
+            !--- map ancillary data to the pixel projection
             call MAP_ANCIL_DATA_TO_PIXEL_GRID()
 
             !--- post process dark composite if one read in
@@ -861,14 +860,16 @@
             end if
 
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
-            call NORMALIZE_REFLECTANCES(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
             !--- compute the channel 3b albedo arrays
             call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             !--- compute pixel level Snow map based on all ancillary data
             if (Nwp_Opt /= 0) then
-               call COMPUTE_SNOW_FIELD(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               call COMPUTE_SNOW_CLASS(Sfc%Snow_NWP, Sfc%Snow_OISST, &
+                                       Sfc%Snow_IMS,Sfc%Snow_GLOB, &
+                                       Sfc%Land,Sfc%Snow)
             end if
 
             !--- interpolate surface type field to each pixel in segment
@@ -882,10 +883,8 @@
              Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(44)%Rad_Toa, Sfc%Sfc_Type)
             endif
 
-            End_Time_Point_Hours = COMPUTE_TIME_HOURS()
-                        
-
             !--- update time summation for level-1b processing
+            End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(2) =  Segment_Time_Point_Seconds(2) + &
                 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
@@ -905,7 +904,6 @@
 
                !--- compute desired nwp parameters 
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -987,7 +985,6 @@
 
             !--- compute the glint mask
             call COMPUTE_GLINT()
-
 
             !*******************************************************************
             ! Marker: Generate pixel-level products
@@ -1476,13 +1473,13 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
   subroutine GET_SNOW_MASK()
 
       if (Read_Snow_Mask == sym%READ_SNOW_HIRES) then
-         Failed_Hires_Snow_Mask_Flag = sym%NO
+         Failed_IMS_Snow_Mask_Flag = sym%NO
 
          Snow_Mask_Str%sds_Name = SNOW_MASK_SDS_NAME
          Snow_Mask_File_Name = GET_SNOW_MAP_FILENAME(Image%Start_Year,Image%Start_Doy, &
                                                  trim(Snow_Data_Dir))
          if (trim(Snow_Mask_File_Name) == "no_file") then
-            Failed_Hires_Snow_Mask_Flag = sym%YES
+            Failed_IMS_Snow_Mask_Flag = sym%YES
             call mesg ( "WARNING: Could not find Snow mask file ==> "// &
               Snow_Mask_File_Name, level = verb_lev % WARNING)
          else
@@ -1490,10 +1487,10 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
                                       Snow_Mask_File_Name, &
                                       grid_Str=Snow_Mask_Str)
             if (Snow_Mask_Id > 0) then
-               Failed_Hires_Snow_Mask_Flag = sym%NO
+               Failed_IMS_Snow_Mask_Flag = sym%NO
                print *, EXE_PROMPT, "Snow mask file opened successfully "
             else
-               Failed_Hires_Snow_Mask_Flag = sym%YES
+               Failed_IMS_Snow_Mask_Flag = sym%YES
                print *, EXE_PROMPT, "WARNING: Snow mask file open failed "
             end if
          end if
@@ -1625,67 +1622,74 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
                   Sfc%Zsfc_Hires = 0.0
                end where
 
-            end if
+        end if
 
-            !--- merge with nwp surface elevation
-            if (Nwp_Opt /= 0) then
+        !--- merge with nwp surface elevation
+        if (Nwp_Opt /= 0) then
                 call MERGE_NWP_HIRES_ZSFC(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            endif
+        endif
 
-            !--- read coast mask
-            if (Read_Coast_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
-            end if
+        !--- read coast mask
+        if (Read_Coast_Mask == sym%YES) then
+             call READ_LAND_SFC_HDF(Coast_Mask_Id, Coast_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Coast)
+        end if
 
-            !--- read land mask
-            if (Read_Land_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Land)
-            end if
+        !--- read land mask
+        if (Read_Land_Mask == sym%YES) then
+            call READ_LAND_SFC_HDF(Land_Mask_Id, Land_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Land)
+        end if
 
-            !--- modify land class with ndvi if available (helps mitigate navigation errors)
-            call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+        !--- modify land class with ndvi if available (helps mitigate navigation errors)
+        call MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            !--- read volcano mask
-            if (Read_Volcano_Mask == sym%YES) then
-               call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
-            end if
+        !--- read volcano mask
+        if (Read_Volcano_Mask == sym%YES) then
+            call READ_LAND_SFC_HDF(Volcano_Mask_Id, Volcano_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Volcano_Mask)
+        end if
 
-            !--- read Snow mask
-            if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_Hires_Snow_Mask_Flag == sym%NO) then
-               call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_Hires)
-            end if
+        !--- read Snow mask
+        if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_IMS_Snow_Mask_Flag == sym%NO) then
+             call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_IMS)
+        end if
    
-            if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
-               CALL GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
-            end if
+        if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
+            call GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
+        end if
    
-            !--- define binary land and coast masks (yes/no) from land and coast flags
-            call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
+        !--- define binary land and coast masks (yes/no) from land and coast flags
+        call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
 
-            !---- ensure missing values for space scenes
-            where (Space_Mask == sym%YES) 
+        !--- interpolate sst analyses to each pixel
+        if (Use_Sst_Anal == 1) then
+               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+               call COMPUTE_SNOW_CLASS_OISST(SST_Anal_Cice,Sfc%Snow_OISST)
+        end if
+
+        !--- compute a coast mask relative to nwp data
+        if (Nwp_Opt /= 0) then
+            call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+        end if
+
+        !--- compute a snow classification from NWP
+        if (Nwp_Opt /= 0) then
+                call COMPUTE_SNOW_CLASS_NWP(Weasd_NWP_Pix, Sea_Ice_Frac_NWP_Pix,Sfc%Snow_NWP)
+        end if
+
+        !---- ensure missing values for space scenes
+        where (Space_Mask == sym%YES) 
                Sfc%Zsfc_Hires = Missing_Value_Real4
                Sfc%Coast = Missing_Value_Int1
                Sfc%Land = Missing_Value_Int1
-               Sfc%Snow_Hires = Missing_Value_Int1
-               Sfc%Snow_Glob = Missing_Value_Int1
+               Sfc%Snow_IMS = Missing_Value_Int1
+               Sfc%Snow_GLOB = Missing_Value_Int1
+               Sfc%Snow_NWP = Missing_Value_Int1
+               Sfc%Snow_OISST = Missing_Value_Int1
                Sfc%Volcano_Mask = Missing_Value_Int1
                Sfc%Sfc_Type = Missing_Value_Int1
-            end where
+        end where
 
-            !--- interpolate sst analyses to each pixel
-            if (Use_Sst_Anal == 1) then
-               
-               call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-              
-            end if
 
-            !--- compute a coast mask relative to nwp data
-            if (Nwp_Opt /= 0) then
-               call COMPUTE_COAST_MASK_NWP(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
-
-            !--- interpolate white sky albedoes to each pixel in segment
+          !--- interpolate white sky albedoes to each pixel in segment
             if (Modis_Clr_Alb_Flag == sym%YES) then
                if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
                     if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then

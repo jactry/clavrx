@@ -119,7 +119,6 @@ module PIXEL_COMMON
   private:: CREATE_REF_CHANNEL_ARRAYS, RESET_REF_CHANNEL_ARRAYS, DESTROY_REF_CHANNEL_ARRAYS
   private:: CREATE_THERM_CHANNEL_ARRAYS, RESET_THERM_CHANNEL_ARRAYS, DESTROY_THERM_CHANNEL_ARRAYS
   private:: CREATE_EXTRA_CHANNEL_ARRAYS, RESET_EXTRA_CHANNEL_ARRAYS, DESTROY_EXTRA_CHANNEL_ARRAYS
-! private:: CREATE_LUNAR_ARRAYS, RESET_LUNAR_ARRAYS, DESTROY_LUNAR_ARRAYS
   private:: CREATE_BTD_ARRAYS, RESET_BTD_ARRAYS, DESTROY_BTD_ARRAYS
   private:: CREATE_SURFACE_ARRAYS, RESET_SURFACE_ARRAYS, DESTROY_SURFACE_ARRAYS
   private:: CREATE_ACHA_ARRAYS, RESET_ACHA_ARRAYS, DESTROY_ACHA_ARRAYS
@@ -208,7 +207,6 @@ module PIXEL_COMMON
 
   type :: surface_definition
      integer(kind=int1), dimension(:,:), allocatable:: Land
-     integer(kind=int1), dimension(:,:), allocatable:: Land_Modified
      integer(kind=int1), dimension(:,:), allocatable:: Land_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Coast
      integer(kind=int1), dimension(:,:), allocatable:: Coast_Mask 
@@ -218,16 +216,14 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Desert_Mask
      integer(kind=int1), dimension(:,:), allocatable:: City_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Volcano_Mask
-     integer(kind=int1), dimension(:,:), allocatable:: Snow_Hires
-     integer(kind=int1), dimension(:,:), allocatable:: Snow_Glob
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_OISST
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_NWP
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_IMS
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_GLOB
      integer(kind=int1), dimension(:,:), allocatable:: Snow
      integer(kind=int1), dimension(:,:), allocatable:: Sfc_Type
      real (kind=real4), dimension(:,:), allocatable:: Zsfc
      real (kind=real4), dimension(:,:), allocatable:: Zsfc_Hires
-     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Mean_3x3
-     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Min_3x3
-     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Max_3x3
-     real(kind=real4), dimension(:,:), allocatable:: Zsfc_Std_3x3
   end type surface_definition
 
   type :: sensor_definition
@@ -299,7 +295,7 @@ module PIXEL_COMMON
   end type acha_definition
 
 
-  !---- declare strucutres using above types
+  !---- declare structures using above types
   type(observations), dimension(44), public, save, target :: Ch
   type(sensor_definition), public, save, target :: Sensor
   type(image_definition), public, save, target :: Image
@@ -324,7 +320,6 @@ module PIXEL_COMMON
   integer,public, save:: Ash_File_Flag
   integer,public, save:: Level2_File_Flag
   integer,public, save:: Use_Sst_Anal
-  integer,public, save:: Use_Sst_Anal_Default
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
   
@@ -335,7 +330,7 @@ module PIXEL_COMMON
   integer,public, save:: Read_Surface_Elevation
   integer,public, save:: Read_Hires_Sfc_Type
   integer,public, save:: Read_Snow_Mask
-  integer,public, save:: Read_GlobSnow_Mask
+  integer,public, save:: Read_GLOBSnow_Mask
   integer,public, save:: Read_Dark_Comp
   integer,public, save:: Machine_Byte_Ordering
   integer,public, save:: LRC_Flag  !local radiative center flag
@@ -367,8 +362,8 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! Internal Flags to communicate ancillary data information
   !---------------------------------------------------------------------------------
-  integer,public, save:: Failed_Hires_Snow_Mask_Flag
-  integer,public, save:: Failed_Glob_Snow_Mask_Flag
+  integer,public, save:: Failed_IMS_Snow_Mask_Flag
+  integer,public, save:: Failed_GLOB_Snow_Mask_Flag
   integer,public, save:: Output_Scaled_Reflectances
   integer,public, save:: Ncdc_Level2_Flag
 
@@ -397,7 +392,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Gdas_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
-  character(len=355),public,save:: GlobSnow_Data_Dir
+  character(len=355),public,save:: GLOBSnow_Data_Dir
   character(len=355),public,save:: Dark_Comp_Data_Dir
   character(len=355),public,save:: Temporary_Data_Dir
   character(len=255),public,save:: File_Nav
@@ -509,8 +504,9 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save:: Tsfc_Retrieved
   real (kind=real4), dimension(:,:), allocatable, public, save:: Trad_Retrieved
 
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Temp_Pix_Array
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Temp_Pix_Array_1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Temp_Pix_Array_2
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Temp_Pix_Array_3
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Diag_Pix_Array_1
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Diag_Pix_Array_2
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Diag_Pix_Array_3
@@ -525,43 +521,18 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Ch1_Min_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Ch1_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_Ch1_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch20_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch20_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch20_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch20_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch27_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch27_Min_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch27_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Ch27_Std_3x3
 
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch27_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch27_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch27_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch27_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch29_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch29_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch29_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch29_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch32_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch32_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch32_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch33_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch33_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Btd_Ch31_Ch33_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch33_Std_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Std_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ems_Ch20_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Mean_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Min_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Std_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
   real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_3x3
   real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer_3x3
@@ -724,50 +695,12 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Dark_Composite
      real (kind=real4), dimension(:,:), allocatable, public:: Ndvi_Sfc
      real (kind=real4), dimension(:,:), allocatable, public:: Bt_Ch31_Sfc
-     real (kind=real4), dimension(:,:), allocatable, public:: Rad_Ch20_ems_Sfc
+     real (kind=real4), dimension(:,:), allocatable, public:: Rad_Ch20_Ems_Sfc
      real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Sfc
 
   !--- integers values for output to files
   integer(kind=int1), dimension(:,:), public,save,allocatable, target:: One_Byte_Temp
   integer(kind=int2), dimension(:,:), public,save,allocatable, target:: Two_Byte_Temp
-
-  !---volcanic ash parameters
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Probability
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Probability_IR
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_mass_Loading
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_height
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_pressure
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_temperature
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Ir_optical_depth
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_vis_optical_depth
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_effective_radius
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_emiss
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_temperature_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_Emiss_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_beta1112_Qf
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Emiss_tot
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_Opaque
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot_multi_Low
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot_multi_mid
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_generic1
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_generic2
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_tpw
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_emissivity_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_temperature_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_height_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_Error
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_LRC_mask
-  integer(kind=int4), allocatable, dimension(:,:), public, save:: ash_x_LRC
-  integer(kind=int4), allocatable, dimension(:,:), public, save:: ash_y_LRC
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_ref_rat_nir_LRC
-  integer(kind=int1), pointer, dimension(:,:), public, save:: ash_obj_mask
-  integer(kind=int1), pointer, dimension(:,:), public, save:: ice_obj_mask
-  integer(kind=int1), pointer, dimension(:,:), public, save:: hot_obj_mask
-  real(kind=real4), allocatable, dimension(:), public, save:: pixel_area
-  integer(kind=int4), public, save :: pixel_area_status
 
 !--- nwp parameters
  integer, allocatable, dimension(:,:), public, save, target :: Zen_Idx_Rtm
@@ -790,6 +723,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, save:: Rh_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Pmsl_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: Psfc_Nwp_Pix ! changed to target
+  real (kind=real4), dimension(:,:), allocatable, public:: Weasd_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public:: Sea_Ice_Frac_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Tpw_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Ozone_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: K_Index_Nwp_Pix
@@ -943,10 +878,7 @@ subroutine CREATE_PIXEL_ARRAYS()
 
    !--- 3x3 uni
    if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-          allocate (Bt_Ch27_Mean_3x3(dim1,dim2))
           allocate (Bt_Ch27_Max_3x3(dim1,dim2))
-          allocate (Bt_Ch27_Min_3x3(dim1,dim2))
-          allocate (Bt_Ch27_Std_3x3(dim1,dim2))
    endif
 
    allocate(   &
@@ -1119,10 +1051,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
 
 !--- pixel rtm parameters
   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-    if (allocated(Bt_Ch27_Mean_3x3)) deallocate(Bt_Ch27_Mean_3x3)
     if (allocated(Bt_Ch27_Max_3x3)) deallocate(Bt_Ch27_Max_3x3)
-    if (allocated(Bt_Ch27_Min_3x3)) deallocate(Bt_Ch27_Min_3x3)
-    if (allocated(Bt_Ch27_Std_3x3)) deallocate(Bt_Ch27_Std_3x3)
   endif
 
   !--- ir cloud layer
@@ -1159,7 +1088,6 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_REF_CHANNEL_ARRAYS()
       call RESET_THERM_CHANNEL_ARRAYS()
       call RESET_EXTRA_CHANNEL_ARRAYS()
-!     call RESET_LUNAR_ARRAYS()
       call RESET_BTD_ARRAYS()
       call RESET_ACHA_ARRAYS()
       call RESET_DCOMP_ARRAYS()
@@ -1174,14 +1102,14 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_CLOUD_PROD_ARRAYS()
 
       if (Sensor%Chan_On_Flag_Default(27) == sym%YES) THEN
-        Bt_Ch27_Mean_3x3 = Missing_Value_Real4
-        Bt_Ch27_Min_3x3 = Missing_Value_Real4
         Bt_Ch27_Max_3x3 = Missing_Value_Real4
-        Bt_Ch27_Std_3x3 = Missing_Value_Real4
       endif
 
       
       Sst_Anal = Missing_Value_Real4
+      Sst_Anal_Err = Missing_Value_Real4
+      Sst_Anal_Cice = Missing_Value_Real4
+      Sst_Anal_Uni = Missing_Value_Real4
 
       Zen_Idx_Rtm = Missing_Value_Int1
 
@@ -1217,6 +1145,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
       IFF_Gap_Mask = sym%NO     
+
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
 !-------------------------------------------------------------
@@ -1389,6 +1318,8 @@ subroutine CREATE_NWP_PIX_ARRAYS(dim1,dim2)
    allocate(Cfrac_Nwp_Pix(dim1,dim2))
    allocate(Ncld_Layers_Nwp_Pix(dim1,dim2))
    allocate(Cld_Type_Nwp_Pix(dim1,dim2))
+   allocate(Weasd_Nwp_Pix(dim1,dim2))
+   allocate(Sea_Ice_Frac_Nwp_Pix(dim1,dim2))
    allocate(Tpw_Nwp_Pix(dim1,dim2))
    allocate(Ozone_Nwp_Pix(dim1,dim2))
    allocate(Ttropo_Nwp_Pix(dim1,dim2))
@@ -1420,6 +1351,8 @@ subroutine RESET_NWP_PIX_ARRAYS()
    Cfrac_Nwp_Pix = Missing_Value_Real4
    Ncld_Layers_Nwp_Pix = Missing_Value_Int1
    Cld_Type_Nwp_Pix = Missing_Value_Int1
+   Sea_Ice_Frac_Nwp_Pix = Missing_Value_Real4
+   Weasd_Nwp_Pix = Missing_Value_Real4
    Tpw_Nwp_Pix = Missing_Value_Real4
    Ozone_Nwp_Pix = Missing_Value_Real4
    Ttropo_Nwp_Pix = Missing_Value_Real4
@@ -1451,6 +1384,8 @@ subroutine DESTROY_NWP_PIX_ARRAYS()
    deallocate(Cfrac_Nwp_Pix)
    deallocate(Ncld_Layers_Nwp_Pix)
    deallocate(Cld_Type_Nwp_Pix)
+   deallocate(Sea_Ice_Frac_Nwp_Pix)
+   deallocate(Weasd_Nwp_Pix)
    deallocate(Tpw_Nwp_Pix)
    deallocate(Ozone_Nwp_Pix)
    deallocate(Ttropo_Nwp_Pix)
@@ -1484,9 +1419,6 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Ref_Ch1_Clear_Std_3x3(dim1,dim2))
            allocate(Ref_Ch1_Dark_Composite(dim1,dim2))
            allocate(Ref_Ch1_Sfc_White_Sky_Mean_3x3(dim1,dim2))
-           allocate(Ref_Ch1_Sfc_White_Sky_Max_3x3(dim1,dim2))
-           allocate(Ref_Ch1_Sfc_White_Sky_Min_3x3(dim1,dim2))
-           allocate(Ref_Ch1_Sfc_White_Sky_Std_3x3(dim1,dim2))
    endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
@@ -1538,9 +1470,6 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       Ref_Ch1_Clear_Std_3x3 = Missing_Value_Real4
       Ref_Ch1_Dark_Composite = Missing_Value_Real4
       Ref_Ch1_Sfc_White_Sky_Mean_3x3 = Missing_Value_Real4
-      Ref_Ch1_Sfc_White_Sky_Max_3x3 = Missing_Value_Real4
-      Ref_Ch1_Sfc_White_Sky_Min_3x3 = Missing_Value_Real4
-      Ref_Ch1_Sfc_White_Sky_Std_3x3 = Missing_Value_Real4
    endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
@@ -1566,9 +1495,6 @@ subroutine DESTROY_REF_CHANNEL_ARRAYS
    if (allocated(Ref_Ch1_Clear_Std_3x3)) deallocate (Ref_Ch1_Clear_Std_3x3)
    if (allocated(Ref_Ch1_Dark_Composite)) deallocate (Ref_Ch1_Dark_Composite)
    if (allocated(Ref_Ch1_Sfc_White_Sky_Mean_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Mean_3x3)
-   if (allocated(Ref_Ch1_Sfc_White_Sky_Max_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Max_3x3)
-   if (allocated(Ref_Ch1_Sfc_White_Sky_Min_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Min_3x3)
-   if (allocated(Ref_Ch1_Sfc_White_Sky_Std_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Std_3x3)
   endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
@@ -1589,14 +1515,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        allocate(Rad_Ch20_ems(dim1,dim2))
        allocate(Ems_Ch20(dim1,dim2))
-       allocate(Bt_Ch20_Mean_3x3(dim1,dim2))
-       allocate(Bt_Ch20_Max_3x3(dim1,dim2))
-       allocate(Bt_Ch20_Min_3x3(dim1,dim2))
        allocate(Bt_Ch20_Std_3x3(dim1,dim2))
-       allocate(Ems_Ch20_Mean_3x3(dim1,dim2))
-       allocate(Ems_Ch20_Max_3x3(dim1,dim2))
-       allocate(Ems_Ch20_Min_3x3(dim1,dim2))
-       allocate(Ems_Ch20_Std_3x3(dim1,dim2))
        allocate(Bt_Ch20_Median_3x3(dim1,dim2))
        allocate(Ems_Ch20_Median_3x3(dim1,dim2))
        allocate(Ems_Ch20_Std_Median_3x3(dim1,dim2))
@@ -1609,7 +1528,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Ems_Ch20_Clear_Rtm(dim1,dim2))
        allocate(Ems_Ch20_Clear_Solar_Rtm(dim1,dim2))
        allocate(Ems_Ch20_Clear_Solar_Sfc_Rtm(dim1,dim2))
-       allocate(Rad_Ch20_ems_Sfc(dim1,dim2))
+       allocate(Rad_Ch20_Ems_Sfc(dim1,dim2))
        allocate(Ems_Ch20_Sfc(dim1,dim2))
    endif
 
@@ -1632,14 +1551,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        Rad_Ch20_ems = Missing_Value_Real4
        Ems_Ch20 = Missing_Value_Real4
-       Bt_Ch20_Mean_3x3 = Missing_Value_Real4
-       Bt_Ch20_Max_3x3 = Missing_Value_Real4
-       Bt_Ch20_Min_3x3 = Missing_Value_Real4
        Bt_Ch20_Std_3x3 = Missing_Value_Real4
-       Ems_Ch20_Mean_3x3 = Missing_Value_Real4
-       Ems_Ch20_Max_3x3 = Missing_Value_Real4
-       Ems_Ch20_Min_3x3 = Missing_Value_Real4
-       Ems_Ch20_Std_3x3 = Missing_Value_Real4
        Bt_Ch20_Median_3x3 = Missing_Value_Real4
        Ems_Ch20_Median_3x3 = Missing_Value_Real4
        Ems_Ch20_Std_Median_3x3 = Missing_Value_Real4
@@ -1652,7 +1564,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Ems_Ch20_Clear_Rtm = Missing_Value_Real4
        Ems_Ch20_Clear_Solar_Rtm = Missing_Value_Real4
        Ems_Ch20_Clear_Solar_Sfc_Rtm = Missing_Value_Real4
-       Rad_Ch20_ems_Sfc = Missing_Value_Real4
+       Rad_Ch20_Ems_Sfc = Missing_Value_Real4
        Ems_Ch20_Sfc = Missing_Value_Real4
    endif
 
@@ -1674,14 +1586,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        deallocate(Rad_Ch20_ems)
        deallocate(Ems_Ch20)
-       deallocate(Bt_Ch20_Mean_3x3)
-       deallocate(Bt_Ch20_Max_3x3)
-       deallocate(Bt_Ch20_Min_3x3)
        deallocate(Bt_Ch20_Std_3x3)
-       deallocate(Ems_Ch20_Mean_3x3)
-       deallocate(Ems_Ch20_Max_3x3)
-       deallocate(Ems_Ch20_Min_3x3)
-       deallocate(Ems_Ch20_Std_3x3)
        deallocate(Bt_Ch20_Median_3x3)
        deallocate(Ems_Ch20_Median_3x3)
        deallocate(Ems_Ch20_Std_Median_3x3)
@@ -1694,7 +1599,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Ems_Ch20_Clear_Rtm)
        deallocate(Ems_Ch20_Clear_Solar_Rtm)
        deallocate(Ems_Ch20_Clear_Solar_Sfc_Rtm)
-       deallocate(Rad_Ch20_ems_Sfc)
+       deallocate(Rad_Ch20_Ems_Sfc)
        deallocate(Ems_Ch20_Sfc)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
@@ -1848,28 +1753,16 @@ subroutine CREATE_BTD_ARRAYS(dim1,dim2)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       allocate(Btd_Ch31_Ch32(dim1,dim2))
-      allocate(Btd_Ch31_Ch32_Mean_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch32_Max_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch32_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Std_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(dim1,dim2))
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-      allocate(Btd_Ch31_Ch27_Mean_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch27_Max_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch27_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch27_Std_3x3(dim1,dim2))
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-      allocate(Btd_Ch31_Ch29_Mean_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch29_Max_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch29_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch29_Std_3x3(dim1,dim2))
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-      allocate(Btd_Ch31_Ch33_Mean_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch33_Max_3x3(dim1,dim2))
-      allocate(Btd_Ch31_Ch33_Min_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch33_Std_3x3(dim1,dim2))
    endif
 end subroutine CREATE_BTD_ARRAYS
@@ -1882,28 +1775,16 @@ subroutine RESET_BTD_ARRAYS()
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       Btd_Ch31_Ch32 = Missing_Value_Real4
-      Btd_Ch31_Ch32_Mean_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch32_Max_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch32_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch32_Std_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch32_Bt_Ch31_Max_3x3 = Missing_Value_Real4
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-      Btd_Ch31_Ch27_Mean_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch27_Max_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch27_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch27_Std_3x3 = Missing_Value_Real4
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-      Btd_Ch31_Ch29_Mean_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch29_Max_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch29_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch29_Std_3x3 = Missing_Value_Real4
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-      Btd_Ch31_Ch33_Mean_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch33_Max_3x3 = Missing_Value_Real4
-      Btd_Ch31_Ch33_Min_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch33_Std_3x3 = Missing_Value_Real4
    endif
 end subroutine RESET_BTD_ARRAYS
@@ -1916,28 +1797,16 @@ subroutine DESTROY_BTD_ARRAYS()
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
       deallocate(Btd_Ch31_Ch32)
-      deallocate(Btd_Ch31_Ch32_Mean_3x3)
-      deallocate(Btd_Ch31_Ch32_Max_3x3)
-      deallocate(Btd_Ch31_Ch32_Min_3x3)
       deallocate(Btd_Ch31_Ch32_Std_3x3)
       deallocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-      deallocate(Btd_Ch31_Ch27_Mean_3x3)
-      deallocate(Btd_Ch31_Ch27_Max_3x3)
-      deallocate(Btd_Ch31_Ch27_Min_3x3)
       deallocate(Btd_Ch31_Ch27_Std_3x3)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-      deallocate(Btd_Ch31_Ch29_Mean_3x3)
-      deallocate(Btd_Ch31_Ch29_Max_3x3)
-      deallocate(Btd_Ch31_Ch29_Min_3x3)
       deallocate(Btd_Ch31_Ch29_Std_3x3)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-      deallocate(Btd_Ch31_Ch33_Mean_3x3)
-      deallocate(Btd_Ch31_Ch33_Max_3x3)
-      deallocate(Btd_Ch31_Ch33_Min_3x3)
       deallocate(Btd_Ch31_Ch33_Std_3x3)
    endif
 end subroutine DESTROY_BTD_ARRAYS
@@ -1947,7 +1816,6 @@ end subroutine DESTROY_BTD_ARRAYS
 subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    allocate(Sfc%Land(dim1,dim2))
-   allocate(Sfc%Land_Modified(dim1,dim2))
    allocate(Sfc%Land_Mask(dim1,dim2))
    allocate(Sfc%Coast(dim1,dim2))
    allocate(Sfc%Coast_Mask(dim1,dim2))
@@ -1957,20 +1825,17 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Desert_Mask(dim1,dim2))
    allocate(Sfc%City_Mask(dim1,dim2))
    allocate(Sfc%Volcano_Mask(dim1,dim2))
-   allocate(Sfc%Snow_Hires(dim1,dim2))
-   allocate(Sfc%Snow_Glob(dim1,dim2))
+   allocate(Sfc%Snow_NWP(dim1,dim2))
+   allocate(Sfc%Snow_OISST(dim1,dim2))
+   allocate(Sfc%Snow_IMS(dim1,dim2))
+   allocate(Sfc%Snow_GLOB(dim1,dim2))
    allocate(Sfc%Snow(dim1,dim2))
    allocate(Sfc%Sfc_Type(dim1,dim2))
    allocate(Sfc%Zsfc(dim1,dim2))
    allocate(Sfc%Zsfc_Hires(dim1,dim2))
-   allocate(Sfc%Zsfc_Mean_3x3(dim1,dim2))
-   allocate(Sfc%Zsfc_Max_3x3(dim1,dim2))
-   allocate(Sfc%Zsfc_Min_3x3(dim1,dim2))
-   allocate(Sfc%Zsfc_Std_3x3(dim1,dim2))
 end subroutine CREATE_SURFACE_ARRAYS
 subroutine RESET_SURFACE_ARRAYS
    Sfc%Land = Missing_Value_Int1
-   Sfc%Land_Modified = Missing_Value_Int1
    Sfc%Land_Mask = Missing_Value_Int1
    Sfc%Coast = Missing_Value_Int1
    Sfc%Coast_Mask = Missing_Value_Int1
@@ -1980,20 +1845,17 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Desert_Mask = Missing_Value_Int1
    Sfc%City_Mask = Missing_Value_Int1
    Sfc%Volcano_Mask = Missing_Value_Int1
-   Sfc%Snow_Hires = Missing_Value_Int1
-   Sfc%Snow_Glob = Missing_Value_Int1
+   Sfc%Snow_NWP = Missing_Value_Int1
+   Sfc%Snow_OISST = Missing_Value_Int1
+   Sfc%Snow_IMS = Missing_Value_Int1
+   Sfc%Snow_GLOB = Missing_Value_Int1
    Sfc%Snow = Missing_Value_Int1
    Sfc%Sfc_Type = Missing_Value_Int1
    Sfc%Zsfc = Missing_Value_Real4
    Sfc%Zsfc_Hires = Missing_Value_Real4
-   Sfc%Zsfc_Mean_3x3 = Missing_Value_Real4
-   Sfc%Zsfc_Max_3x3 = Missing_Value_Real4
-   Sfc%Zsfc_Min_3x3 = Missing_Value_Real4
-   Sfc%Zsfc_Std_3x3 = Missing_Value_Real4
 end subroutine RESET_SURFACE_ARRAYS
 subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Land)
-   deallocate(Sfc%Land_Modified)
    deallocate(Sfc%Land_Mask)
    deallocate(Sfc%Coast)
    deallocate(Sfc%Coast_Mask)
@@ -2003,16 +1865,14 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Desert_Mask)
    deallocate(Sfc%City_Mask)
    deallocate(Sfc%Volcano_Mask)
-   deallocate(Sfc%Snow_Hires)
-   deallocate(Sfc%Snow_Glob)
+   deallocate(Sfc%Snow_NWP)
+   deallocate(Sfc%Snow_OISST)
+   deallocate(Sfc%Snow_IMS)
+   deallocate(Sfc%Snow_GLOB)
    deallocate(Sfc%Snow)
    deallocate(Sfc%Sfc_Type)
    deallocate(Sfc%Zsfc)
    deallocate(Sfc%Zsfc_Hires)
-   deallocate(Sfc%Zsfc_Mean_3x3)
-   deallocate(Sfc%Zsfc_Max_3x3)
-   deallocate(Sfc%Zsfc_Min_3x3)
-   deallocate(Sfc%Zsfc_Std_3x3)
 end subroutine DESTROY_SURFACE_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2020,33 +1880,62 @@ end subroutine DESTROY_SURFACE_ARRAYS
 subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
-    if (.not. allocated(ACHA%Tc)) allocate(ACHA%Tc(dim1,dim2)) 
-    if (.not. allocated(ACHA%Ec)) allocate(ACHA%Ec(dim1,dim2)) 
-    if (.not. allocated(ACHA%Pc)) allocate(ACHA%Pc(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc)) allocate(ACHA%Zc(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Top)) allocate(ACHA%Zc_Top(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Base)) allocate(ACHA%Zc_Base(dim1,dim2)) 
-    if (.not. allocated(ACHA%Beta)) allocate(ACHA%Beta(dim1,dim2)) 
-    if (.not. allocated(ACHA%Tau)) allocate(ACHA%Tau(dim1,dim2)) 
-    if (.not. allocated(ACHA%Reff)) allocate(ACHA%Reff(dim1,dim2)) 
-    if (.not. allocated(ACHA%Tc_Uncertainty)) allocate(ACHA%Tc_Uncertainty(dim1,dim2)) 
-    if (.not. allocated(ACHA%Ec_Uncertainty)) allocate(ACHA%Ec_Uncertainty(dim1,dim2)) 
-    if (.not. allocated(ACHA%Beta_Uncertainty)) allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Uncertainty)) allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
-    if (.not. allocated(ACHA%Pc_Uncertainty)) allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
-    if (.not. allocated(ACHA%Alt)) allocate(ACHA%Alt(dim1,dim2)) 
-    if (.not. allocated(ACHA%Cost)) allocate(ACHA%Cost(dim1,dim2)) 
-    if (.not. allocated(ACHA%Pc_Lower_Cloud)) allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
-    if (.not. allocated(ACHA%Zc_Lower_Cloud)) allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
-    if (.not. allocated(ACHA%Tc_Lower_Cloud)) allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
-    if (.not. allocated(ACHA%Processing_Order)) allocate(ACHA%Processing_Order(dim1,dim2)) 
-    if (.not. allocated(ACHA%Inversion_Flag)) allocate(ACHA%Inversion_Flag(dim1,dim2)) 
-    if (.not. allocated(ACHA%Quality_Flag)) allocate(ACHA%Quality_Flag(dim1,dim2)) 
-    if (.not. allocated(ACHA%Cld_Layer)) allocate(ACHA%Cld_Layer(dim1,dim2)) 
-    if (.not. allocated(ACHA%Meta_Data)) allocate(ACHA%Meta_Data(dim1,dim2)) 
-    if (.not. allocated(ACHA%OE_Quality_Flags)) allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
-    if (.not. allocated(ACHA%Packed_Quality_Flags)) allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
-    if (.not. allocated(ACHA%Packed_Meta_Data_Flags)) allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
+
+!   if (.not. allocated(ACHA%Tc)) allocate(ACHA%Tc(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Ec)) allocate(ACHA%Ec(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Pc)) allocate(ACHA%Pc(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Zc)) allocate(ACHA%Zc(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Zc_Top)) allocate(ACHA%Zc_Top(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Zc_Base)) allocate(ACHA%Zc_Base(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Beta)) allocate(ACHA%Beta(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Tau)) allocate(ACHA%Tau(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Reff)) allocate(ACHA%Reff(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Tc_Uncertainty)) allocate(ACHA%Tc_Uncertainty(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Ec_Uncertainty)) allocate(ACHA%Ec_Uncertainty(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Beta_Uncertainty)) allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Zc_Uncertainty)) allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Pc_Uncertainty)) allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Alt)) allocate(ACHA%Alt(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Cost)) allocate(ACHA%Cost(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Pc_Lower_Cloud)) allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Zc_Lower_Cloud)) allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Tc_Lower_Cloud)) allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Processing_Order)) allocate(ACHA%Processing_Order(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Inversion_Flag)) allocate(ACHA%Inversion_Flag(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Quality_Flag)) allocate(ACHA%Quality_Flag(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Cld_Layer)) allocate(ACHA%Cld_Layer(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Meta_Data)) allocate(ACHA%Meta_Data(dim1,dim2)) 
+!   if (.not. allocated(ACHA%OE_Quality_Flags)) allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
+!   if (.not. allocated(ACHA%Packed_Quality_Flags)) allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
+!   if (.not. allocated(ACHA%Packed_Meta_Data_Flags)) allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
+
+    allocate(ACHA%Tc(dim1,dim2)) 
+    allocate(ACHA%Ec(dim1,dim2)) 
+    allocate(ACHA%Pc(dim1,dim2)) 
+    allocate(ACHA%Zc(dim1,dim2)) 
+    allocate(ACHA%Zc_Top(dim1,dim2)) 
+    allocate(ACHA%Zc_Base(dim1,dim2)) 
+    allocate(ACHA%Beta(dim1,dim2)) 
+    allocate(ACHA%Tau(dim1,dim2)) 
+    allocate(ACHA%Reff(dim1,dim2)) 
+    allocate(ACHA%Tc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Ec_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Alt(dim1,dim2)) 
+    allocate(ACHA%Cost(dim1,dim2)) 
+    allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
+    allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
+    allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
+    allocate(ACHA%Processing_Order(dim1,dim2)) 
+    allocate(ACHA%Inversion_Flag(dim1,dim2)) 
+    allocate(ACHA%Quality_Flag(dim1,dim2)) 
+    allocate(ACHA%Cld_Layer(dim1,dim2)) 
+    allocate(ACHA%Meta_Data(dim1,dim2)) 
+    allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
+    allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
+    allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2057,60 +1946,122 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
 end subroutine CREATE_ACHA_ARRAYS
 
 subroutine RESET_ACHA_ARRAYS()
-    if (allocated(ACHA%Pc)) ACHA%Pc = Missing_Value_Real4
-    if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
-    if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
-    if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
-    if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
-    if (allocated(ACHA%Tc_Uncertainty)) ACHA%Tc_Uncertainty = Missing_Value_Real4
-    if (allocated(ACHA%Ec_Uncertainty)) ACHA%Ec_Uncertainty = Missing_Value_Real4
-    if (allocated(ACHA%Beta_Uncertainty)) ACHA%Beta_Uncertainty = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Uncertainty)) ACHA%Zc_Uncertainty = Missing_Value_Real4
-    if (allocated(ACHA%Pc_Uncertainty)) ACHA%Pc_Uncertainty = Missing_Value_Real4
-    if (allocated(ACHA%Alt)) ACHA%Alt = Missing_Value_Real4
-    if (allocated(ACHA%Cost)) ACHA%Cost = Missing_Value_Real4
-    if (allocated(ACHA%Zc_Lower_Cloud)) ACHA%Zc_Lower_Cloud = Missing_Value_Real4
-    if (allocated(ACHA%Pc_Lower_Cloud)) ACHA%Pc_Lower_Cloud = Missing_Value_Real4
-    if (allocated(ACHA%Tc_Lower_Cloud)) ACHA%Tc_Lower_Cloud = Missing_Value_Real4
-    if (allocated(ACHA%Processing_Order)) ACHA%Processing_Order = Missing_Value_Int1
-    if (allocated(ACHA%Inversion_Flag)) ACHA%Inversion_Flag = Missing_Value_Int1
-    if (allocated(ACHA%Cld_Layer)) ACHA%Cld_Layer = Missing_Value_Int1
-    if (allocated(ACHA%Quality_Flag)) ACHA%Quality_Flag = Missing_Value_Int1
-    if (allocated(ACHA%Meta_Data)) ACHA%Meta_Data = 0
-    if (allocated(ACHA%OE_Quality_Flags)) ACHA%OE_Quality_Flags = 0
-    if (allocated(ACHA%Packed_Quality_Flags)) ACHA%Packed_Quality_Flags = 0
-    if (allocated(ACHA%Packed_Meta_Data_Flags)) ACHA%Packed_Meta_Data_Flags = 0
+
+!   if (allocated(ACHA%Tc)) ACHA%Tc = Missing_Value_Real4
+!   if (allocated(ACHA%Ec)) ACHA%Ec = Missing_Value_Real4
+!   if (allocated(ACHA%Pc)) ACHA%Pc = Missing_Value_Real4
+!   if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
+!   if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
+!   if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
+!   if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
+!   if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
+!   if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
+!   if (allocated(ACHA%Tc_Uncertainty)) ACHA%Tc_Uncertainty = Missing_Value_Real4
+!   if (allocated(ACHA%Ec_Uncertainty)) ACHA%Ec_Uncertainty = Missing_Value_Real4
+!   if (allocated(ACHA%Beta_Uncertainty)) ACHA%Beta_Uncertainty = Missing_Value_Real4
+!   if (allocated(ACHA%Zc_Uncertainty)) ACHA%Zc_Uncertainty = Missing_Value_Real4
+!   if (allocated(ACHA%Pc_Uncertainty)) ACHA%Pc_Uncertainty = Missing_Value_Real4
+!   if (allocated(ACHA%Alt)) ACHA%Alt = Missing_Value_Real4
+!   if (allocated(ACHA%Cost)) ACHA%Cost = Missing_Value_Real4
+!   if (allocated(ACHA%Pc_Lower_Cloud)) ACHA%Pc_Lower_Cloud = Missing_Value_Real4
+!   if (allocated(ACHA%Zc_Lower_Cloud)) ACHA%Zc_Lower_Cloud = Missing_Value_Real4
+!   if (allocated(ACHA%Tc_Lower_Cloud)) ACHA%Tc_Lower_Cloud = Missing_Value_Real4
+!   if (allocated(ACHA%Processing_Order)) ACHA%Processing_Order = Missing_Value_Int1
+!   if (allocated(ACHA%Inversion_Flag)) ACHA%Inversion_Flag = Missing_Value_Int1
+!   if (allocated(ACHA%Quality_Flag)) ACHA%Quality_Flag = Missing_Value_Int1
+!   if (allocated(ACHA%Cld_Layer)) ACHA%Cld_Layer = Missing_Value_Int1
+!   if (allocated(ACHA%Meta_Data)) ACHA%Meta_Data = 0
+!   if (allocated(ACHA%OE_Quality_Flags)) ACHA%OE_Quality_Flags = 0
+!   if (allocated(ACHA%Packed_Quality_Flags)) ACHA%Packed_Quality_Flags = 0
+!   if (allocated(ACHA%Packed_Meta_Data_Flags)) ACHA%Packed_Meta_Data_Flags = 0
+
+    ACHA%Tc = Missing_Value_Real4
+    ACHA%Ec = Missing_Value_Real4
+    ACHA%Pc = Missing_Value_Real4
+    ACHA%Zc = Missing_Value_Real4
+    ACHA%Zc_Top = Missing_Value_Real4
+    ACHA%Zc_Base  = Missing_Value_Real4
+    ACHA%Beta = Missing_Value_Real4
+    ACHA%Tau = Missing_Value_Real4
+    ACHA%Reff = Missing_Value_Real4
+    ACHA%Tc_Uncertainty = Missing_Value_Real4
+    ACHA%Ec_Uncertainty = Missing_Value_Real4
+    ACHA%Beta_Uncertainty = Missing_Value_Real4
+    ACHA%Zc_Uncertainty = Missing_Value_Real4
+    ACHA%Pc_Uncertainty = Missing_Value_Real4
+    ACHA%Alt = Missing_Value_Real4
+    ACHA%Cost = Missing_Value_Real4
+    ACHA%Pc_Lower_Cloud = Missing_Value_Real4
+    ACHA%Zc_Lower_Cloud = Missing_Value_Real4
+    ACHA%Tc_Lower_Cloud = Missing_Value_Real4
+    ACHA%Processing_Order = Missing_Value_Int1
+    ACHA%Inversion_Flag = Missing_Value_Int1
+    ACHA%Quality_Flag = Missing_Value_Int1
+    ACHA%Cld_Layer = Missing_Value_Int1
+    ACHA%Meta_Data = 0
+    ACHA%OE_Quality_Flags = 0
+    ACHA%Packed_Quality_Flags = 0
+    ACHA%Packed_Meta_Data_Flags = 0
+
 end subroutine RESET_ACHA_ARRAYS
 
 subroutine DESTROY_ACHA_ARRAYS()
-    if (allocated(ACHA%Tc)) deallocate(ACHA%Tc) 
-    if (allocated(ACHA%Pc)) deallocate(ACHA%Pc) 
-    if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
-    if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 
-    if (allocated(ACHA%Zc_Base)) deallocate(ACHA%Zc_Base) 
-    if (allocated(ACHA%Beta)) deallocate(ACHA%Beta) 
-    if (allocated(ACHA%Tau)) deallocate(ACHA%Tau) 
-    if (allocated(ACHA%Reff)) deallocate(ACHA%Reff) 
-    if (allocated(ACHA%Tc_Uncertainty)) deallocate(ACHA%Tc_Uncertainty) 
-    if (allocated(ACHA%Ec_Uncertainty)) deallocate(ACHA%Ec_Uncertainty) 
-    if (allocated(ACHA%Beta_Uncertainty)) deallocate(ACHA%Beta_Uncertainty) 
-    if (allocated(ACHA%Zc_Uncertainty)) deallocate(ACHA%Zc_Uncertainty) 
-    if (allocated(ACHA%Pc_Uncertainty)) deallocate(ACHA%Pc_Uncertainty) 
-    if (allocated(ACHA%Alt)) deallocate(ACHA%Alt) 
-    if (allocated(ACHA%Cost)) deallocate(ACHA%Cost) 
-    if (allocated(ACHA%Zc_Lower_Cloud)) deallocate(ACHA%Zc_Lower_Cloud) 
-    if (allocated(ACHA%Pc_Lower_Cloud)) deallocate(ACHA%Pc_Lower_Cloud) 
-    if (allocated(ACHA%Tc_Lower_Cloud)) deallocate(ACHA%Tc_Lower_Cloud) 
-    if (allocated(ACHA%Processing_Order)) deallocate(ACHA%Processing_Order) 
-    if (allocated(ACHA%Inversion_Flag)) deallocate(ACHA%Inversion_Flag) 
-    if (allocated(ACHA%Quality_Flag)) deallocate(ACHA%Quality_Flag) 
-    if (allocated(ACHA%Cld_Layer)) deallocate(ACHA%Cld_Layer) 
-    if (allocated(ACHA%Meta_Data)) deallocate(ACHA%Meta_Data) 
-    if (allocated(ACHA%OE_Quality_Flags)) deallocate(ACHA%OE_Quality_Flags) 
-    if (allocated(ACHA%Packed_Quality_Flags)) deallocate(ACHA%Packed_Quality_Flags) 
-    if (allocated(ACHA%Packed_Meta_Data_Flags)) deallocate(ACHA%Packed_Meta_Data_Flags) 
+!   if (allocated(ACHA%Tc)) deallocate(ACHA%Tc) 
+!   if (allocated(ACHA%Ec)) deallocate(ACHA%Ec) 
+!   if (allocated(ACHA%Pc)) deallocate(ACHA%Pc) 
+!   if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
+!   if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 
+!   if (allocated(ACHA%Zc_Base)) deallocate(ACHA%Zc_Base) 
+!   if (allocated(ACHA%Beta)) deallocate(ACHA%Beta) 
+!   if (allocated(ACHA%Tau)) deallocate(ACHA%Tau) 
+!   if (allocated(ACHA%Reff)) deallocate(ACHA%Reff) 
+!   if (allocated(ACHA%Tc_Uncertainty)) deallocate(ACHA%Tc_Uncertainty) 
+!   if (allocated(ACHA%Ec_Uncertainty)) deallocate(ACHA%Ec_Uncertainty) 
+!   if (allocated(ACHA%Beta_Uncertainty)) deallocate(ACHA%Beta_Uncertainty) 
+!   if (allocated(ACHA%Zc_Uncertainty)) deallocate(ACHA%Zc_Uncertainty) 
+!   if (allocated(ACHA%Pc_Uncertainty)) deallocate(ACHA%Pc_Uncertainty) 
+!   if (allocated(ACHA%Alt)) deallocate(ACHA%Alt) 
+!   if (allocated(ACHA%Cost)) deallocate(ACHA%Cost) 
+!   if (allocated(ACHA%Pc_Lower_Cloud)) deallocate(ACHA%Pc_Lower_Cloud) 
+!   if (allocated(ACHA%Zc_Lower_Cloud)) deallocate(ACHA%Zc_Lower_Cloud) 
+!   if (allocated(ACHA%Tc_Lower_Cloud)) deallocate(ACHA%Tc_Lower_Cloud) 
+!   if (allocated(ACHA%Processing_Order)) deallocate(ACHA%Processing_Order) 
+!   if (allocated(ACHA%Inversion_Flag)) deallocate(ACHA%Inversion_Flag) 
+!   if (allocated(ACHA%Quality_Flag)) deallocate(ACHA%Quality_Flag) 
+!   if (allocated(ACHA%Cld_Layer)) deallocate(ACHA%Cld_Layer) 
+!   if (allocated(ACHA%Meta_Data)) deallocate(ACHA%Meta_Data) 
+!   if (allocated(ACHA%OE_Quality_Flags)) deallocate(ACHA%OE_Quality_Flags) 
+!   if (allocated(ACHA%Packed_Quality_Flags)) deallocate(ACHA%Packed_Quality_Flags) 
+!   if (allocated(ACHA%Packed_Meta_Data_Flags)) deallocate(ACHA%Packed_Meta_Data_Flags) 
+
+    deallocate(ACHA%Tc) 
+    deallocate(ACHA%Ec) 
+    deallocate(ACHA%Pc) 
+    deallocate(ACHA%Zc) 
+    deallocate(ACHA%Zc_Top) 
+    deallocate(ACHA%Zc_Base) 
+    deallocate(ACHA%Beta) 
+    deallocate(ACHA%Tau) 
+    deallocate(ACHA%Reff) 
+    deallocate(ACHA%Tc_Uncertainty) 
+    deallocate(ACHA%Ec_Uncertainty) 
+    deallocate(ACHA%Beta_Uncertainty) 
+    deallocate(ACHA%Zc_Uncertainty) 
+    deallocate(ACHA%Pc_Uncertainty) 
+    deallocate(ACHA%Alt) 
+    deallocate(ACHA%Cost) 
+    deallocate(ACHA%Pc_Lower_Cloud) 
+    deallocate(ACHA%Zc_Lower_Cloud) 
+    deallocate(ACHA%Tc_Lower_Cloud) 
+    deallocate(ACHA%Processing_Order) 
+    deallocate(ACHA%Inversion_Flag) 
+    deallocate(ACHA%Quality_Flag) 
+    deallocate(ACHA%Cld_Layer) 
+    deallocate(ACHA%Meta_Data) 
+    deallocate(ACHA%OE_Quality_Flags) 
+    deallocate(ACHA%Packed_Quality_Flags) 
+    deallocate(ACHA%Packed_Meta_Data_Flags) 
+
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------
 !
@@ -2424,8 +2375,9 @@ end subroutine DESTROY_CLOUD_TYPE_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_DIAGNOSTIC_ARRAYS(dim1,dim2)
   integer, intent(in):: dim1, dim2
-  allocate(Temp_Pix_Array(dim1,dim2))
+  allocate(Temp_Pix_Array_1(dim1,dim2))
   allocate(Temp_Pix_Array_2(dim1,dim2))
+  allocate(Temp_Pix_Array_3(dim1,dim2))
   allocate(Diag_Pix_Array_1(dim1,dim2))
   allocate(Diag_Pix_Array_2(dim1,dim2))
   allocate(Diag_Pix_Array_3(dim1,dim2))
@@ -2434,8 +2386,9 @@ subroutine CREATE_DIAGNOSTIC_ARRAYS(dim1,dim2)
   allocate(Two_Byte_Temp(dim1,dim2))
 end subroutine CREATE_DIAGNOSTIC_ARRAYS
 subroutine RESET_DIAGNOSTIC_ARRAYS()
-  Temp_Pix_Array = Missing_Value_Real4
+  Temp_Pix_Array_1 = Missing_Value_Real4
   Temp_Pix_Array_2 = Missing_Value_Real4
+  Temp_Pix_Array_3 = Missing_Value_Real4
   Diag_Pix_Array_1 = Missing_Value_Real4
   Diag_Pix_Array_2 = Missing_Value_Real4
   Diag_Pix_Array_3 = Missing_Value_Real4
@@ -2444,8 +2397,9 @@ subroutine RESET_DIAGNOSTIC_ARRAYS()
   Two_Byte_Temp = Missing_Value_Int2
 end subroutine RESET_DIAGNOSTIC_ARRAYS
 subroutine DESTROY_DIAGNOSTIC_ARRAYS()
-  deallocate(Temp_Pix_Array)
+  deallocate(Temp_Pix_Array_1)
   deallocate(Temp_Pix_Array_2)
+  deallocate(Temp_Pix_Array_3)
   deallocate(Diag_Pix_Array_1)
   deallocate(Diag_Pix_Array_2)
   deallocate(Diag_Pix_Array_3)

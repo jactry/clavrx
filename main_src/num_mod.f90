@@ -991,7 +991,7 @@ subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
   else  
    i=nelem/2
    z_median=(x(i)+x(i+1))/2
-  end if
+   end if
 
 !--- compute standard deviation wrt median
   z_mean = sum(x(1:nelem))/nelem
@@ -1042,7 +1042,7 @@ subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax, &
      i1 = max(imin,i-n)   !left index of local array
      i2 = min(imax,i+n)   !right index of local array
 
-!--- compute median
+     !--- compute median
      call COMPUTE_MEDIAN(z(i1:i2,j1:j2),mask(i1:i2,j1:j2),z_median(i,j), &
                          z_mean,z_std_median(i,j))
 

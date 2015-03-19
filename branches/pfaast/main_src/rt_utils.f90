@@ -582,7 +582,6 @@ contains
       real:: Prof_Weight
       real:: Satzen_Mid_Bin
       integer:: Zen_Idx
-      integer:: Alloc_Status
       integer:: Error_Status
       integer:: Chan_Idx
 
@@ -856,7 +855,7 @@ contains
             call COMPUTE_TROPOPAUSE_EMISSIVITIES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
 
             !--- compute split-window beta ratio at tropopause
-            call COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
+            call COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx)
 
          end do element_loop
       end do line_loop
@@ -2480,12 +2479,9 @@ contains
    !-------------------------------------------------------------------------------------------
    !
    !-------------------------------------------------------------------------------------------
-   subroutine COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx,Lon_Idx,Lat_Idx,Zen_Idx)
+   subroutine COMPUTE_BETA_RATIOES(Elem_Idx,Line_Idx)
       integer, intent(in):: Elem_Idx
       integer, intent(in):: Line_Idx
-      integer, intent(in):: Lon_Idx
-      integer, intent(in):: Lat_Idx
-      integer, intent(in):: Zen_Idx
 
       !--- compute 11 and 12 beta ratio at tropopause
       if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &

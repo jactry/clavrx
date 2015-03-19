@@ -80,8 +80,8 @@ module CALIBRATION_CONSTANTS
                 Ref_Ch6_Switch,Ch1_Switch_Count_Cal,Ch2_Switch_Count_Cal, &
                 Ch3a_Switch_Count_Cal
 
- real(kind=real4),save,public:: sun_Earth_distance
- real(kind=real4),save,public:: launch_date
+ real(kind=real4),save,public:: Sun_Earth_Distance
+ real(kind=real4),save,public:: Launch_Date
 
 
  real(kind=real4),save,public:: Goes_Ch2_Thermal_Intercept

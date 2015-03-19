@@ -446,7 +446,7 @@ endif
 
 !- ice mask
     call READ_DATA_2D(sd_Id_1,sd_Id_2,"ice fraction",Sds_Start_2d, Sds_Stride_2d, &
-                      Sds_Edges_2d,x,Missing_Nwp,ice_Nwp )
+                      Sds_Edges_2d,x,Missing_Nwp,Sea_Ice_Frac_Nwp )
 
 !--- read in two dimensional arrays
     call READ_DATA_2D(sd_Id_1,sd_Id_2,"MSL pressure",Sds_Start_2d, Sds_Stride_2d, &

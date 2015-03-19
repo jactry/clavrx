@@ -197,7 +197,7 @@ contains
       Ref_Cal_1b = 1
       Therm_Cal_1b = 1    
       Nav_Opt = 0  
-      goes_stride = 2
+      goes_stride = 1
       Lrc_Flag = 1 
       Smooth_Nwp_Flag = 1  
       Process_Undetected_Cloud_Flag = 0
@@ -566,8 +566,6 @@ contains
    !-------------------------------------------------------------------------------
    subroutine QC_CLAVRXORB_OPTIONS()
 
-      integer:: erstat
-
       !---- Since the NWP controls everything, we first check if an NWP is being used
       !---- before anything else is checked.  If no nwp, we stop processing
 
@@ -915,7 +913,6 @@ contains
    !----------------------------------------------------------------------------
    subroutine CHECK_ALGORITHM_CHOICES(SensorName)
       character (len=*) , intent(in) :: SensorName
-      character (len = 1 ) :: string_1
       
       integer :: possible_acha_modes ( 8 )
       integer :: possible_dcomp_modes ( 3)
@@ -1101,7 +1098,7 @@ contains
       integer :: i
       logical :: Not_Run_Flag
       
-      if ( Expert_Mode < 7 ) return
+      if ( Expert_Mode < 6 ) return
 
       Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
 

@@ -119,38 +119,39 @@ module OISST_ANALYSIS
   use FILE_UTILITY
   implicit none
   private
-!  public:: READ_OISST_ANALYSIS_MAP, GET_PIXEL_SST_ANALYSIS
-  public:: GET_PIXEL_SST_ANALYSIS, get_oisst_map_filename, READ_OISST_ANALYSIS_MAP
-  integer, parameter, public:: num_lon_sst_anal =1440, num_lat_sst_anal= 720 
-  real, parameter, public:: first_lon_sst_anal = 0.125, first_lat_sst_anal = -89.875, & 
+  public:: GET_PIXEL_SST_ANALYSIS, GET_OISST_MAP_FILENAME, READ_OISST_ANALYSIS_MAP
+  integer, parameter, private:: num_lon_sst_anal =1440, num_lat_sst_anal= 720 
+  real, parameter, private:: first_lon_sst_anal = 0.125, first_lat_sst_anal = -89.875, & 
                             last_lon_sst_anal = 359.875, last_lat_sst_anal = 89.875
-  real, parameter, public:: del_lon_sst_anal = (last_lon_sst_anal - first_lon_sst_anal)/(num_lon_sst_anal-1)
-  real, parameter, public:: del_lat_sst_anal = (last_lat_sst_anal - first_lat_sst_anal)/(num_lat_sst_anal-1)
+  real, parameter, private:: del_lon_sst_anal = (last_lon_sst_anal - first_lon_sst_anal)/(num_lon_sst_anal-1)
+  real, parameter, private:: del_lat_sst_anal = (last_lat_sst_anal - first_lat_sst_anal)/(num_lat_sst_anal-1)
   real, parameter, private:: min_sst_anal = -4.0, max_sst_anal=36.0
-  integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_err_map
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_anal_map_uni
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), public, save:: oisst_cice_map
 
-  INTEGER(kind=int4), parameter, private :: MAX_OISST_LATENCY = 5 !including current day
+  integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
+  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_anal_map
+  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_err_map
+  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_anal_map_uni
+  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_cice_map
+
+  integer(kind=int4), parameter, private :: MAX_OISST_LATENCY = 5 !including current day
 
   contains
 
   !-------------------------------------------------------------------
   ! Function to find the oisst map name.
   !-------------------------------------------------------------------
-  FUNCTION get_oisst_map_filename(year_in,day_of_year,oisst_path) result(oisst_filename)
-   CHARACTER(*), intent(in) :: oisst_path
-   INTEGER(kind=int2), intent(in):: year_in
-   INTEGER(kind=int2), intent(in):: day_of_year
+  function GET_OISST_MAP_FILENAME(year_in,day_of_year,oisst_path) result(oisst_filename)
+
+   character(*), intent(in) :: oisst_path
+   integer(kind=int2), intent(in):: year_in
+   integer(kind=int2), intent(in):: day_of_year
   
-   CHARACTER(len=256) :: oisst_filename
-   CHARACTER(len=256) :: oisst_filename_tmp
-   CHARACTER(len=256) :: oisst_filename_tmp_preliminary
-   INTEGER(kind=int4) :: iday, year, month, day, jday, ileap
-   CHARACTER (len=2)   :: day_string, month_string
-   CHARACTER (len=4)   :: year_string
+   character(len=256) :: oisst_filename
+   character(len=256) :: oisst_filename_tmp
+   character(len=256) :: oisst_filename_tmp_preliminary
+   integer(kind=int4) :: iday, year, month, day, jday, ileap
+   character (len=2)   :: day_string, month_string
+   character (len=4)   :: year_string
 
     oisst_filename = "no_file"
 
@@ -194,7 +195,7 @@ module OISST_ANALYSIS
       
    return
 
-END FUNCTION get_oisst_map_filename
+end function GET_OISST_MAP_FILENAME
 
 !----------------------------------------------------------------------
 ! Read the Data
@@ -208,7 +209,6 @@ END FUNCTION get_oisst_map_filename
    integer:: ios0,ios1,ios2,ios3,ios4,ios5,erstat
    integer:: ii,jj
 
-   
    !--- uncompress
    system_string = "gunzip -c "//trim(sst_anal_name)// &
         " > "//trim(Temporary_Data_Dir)//"temp_oisst_file"
@@ -350,6 +350,19 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
 
     end do
   end do
+
+  where(sst_anal < 0.0)
+    sst_anal = missing_value_real4
+  endwhere
+  where(sst_anal_cice < 0.0)
+    sst_anal_cice = missing_value_real4
+  endwhere
+  where(sst_anal_uni < 0.0)
+    sst_anal_uni = missing_value_real4
+  endwhere
+  where(sst_anal_err < 0.0)
+    sst_anal_err = missing_value_real4
+  endwhere
 
 end subroutine GET_PIXEL_SST_ANALYSIS
 

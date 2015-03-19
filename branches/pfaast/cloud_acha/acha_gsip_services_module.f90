@@ -18,66 +18,66 @@ implicit none
 ! input structure
 
  type, public :: acha_input_struct
-   integer :: ACHA_Mode_Flag_In
-   integer (kind=int4):: Number_of_Elements
-   integer (kind=int4):: Number_Of_Lines
-   integer (kind=int4):: Num_Line_Max
-   integer (kind=int4):: Smooth_Nwp_Fields_Flag
-   integer (kind=int4):: Process_Undetected_Cloud_Flag
-   real (kind=real4):: Sensor_Resolution_KM
+ integer :: ACHA_Mode_Flag_In
+ integer (kind=int4):: Number_of_Elements
+ integer (kind=int4):: Number_Of_Lines
+ integer (kind=int4):: Num_Line_Max
+ integer (kind=int4):: Smooth_Nwp_Fields_Flag
+ integer (kind=int4):: Process_Undetected_Cloud_Flag
+ real (kind=real4):: Sensor_Resolution_KM
 
-   !-- local pointers that point to global variables
-   integer:: Chan_Idx_67um
-   integer:: Chan_Idx_85um
-   integer:: Chan_Idx_11um
-   integer:: Chan_Idx_12um
-   integer:: Chan_Idx_133um 
-   integer:: Chan_On_67um
-   integer:: Chan_On_85um
-   integer:: Chan_On_11um
-   integer:: Chan_On_12um
-   integer:: Chan_On_133um
+ !-- local pointers that point to global variables
+ integer:: Chan_Idx_67um
+ integer:: Chan_Idx_85um
+ integer:: Chan_Idx_11um
+ integer:: Chan_Idx_12um
+ integer:: Chan_Idx_133um 
+ integer:: Chan_On_67um
+ integer:: Chan_On_85um
+ integer:: Chan_On_11um
+ integer:: Chan_On_12um
+ integer:: Chan_On_133um
 
-   integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
-   real, dimension(:,:), pointer:: Bt_67um
-   real, dimension(:,:), pointer:: Bt_85um
-   real, dimension(:,:), pointer:: Bt_11um
-   real, dimension(:,:), pointer:: Bt_12um
-   real, dimension(:,:), pointer:: Bt_133um
-   real, dimension(:,:), pointer:: Rad_11um
-   real, dimension(:,:), pointer:: Cosine_Zenith_Angle
-   real, dimension(:,:), pointer:: Sensor_Zenith_Angle
-   real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
-   real, dimension(:,:), pointer:: Surface_Temperature
-   real, dimension(:,:), pointer:: Surface_Air_Temperature
-   real, dimension(:,:), pointer:: Tropopause_Temperature
-   real, dimension(:,:), pointer:: Surface_Pressure
-   real, dimension(:,:), pointer:: Surface_Elevation
-   real, dimension(:,:), pointer:: Latitude
-   real, dimension(:,:), pointer:: Longitude
-   real, dimension(:,:), pointer:: Rad_Clear_67um
-   real, dimension(:,:), pointer:: Rad_Clear_85um
-   real, dimension(:,:), pointer:: Rad_Clear_11um
-   real, dimension(:,:), pointer:: Rad_Clear_12um
-   real, dimension(:,:), pointer:: Rad_Clear_133um
-   real, dimension(:,:), pointer:: Surface_Emissivity_39um 
-   integer (kind=int1),dimension(:,:), pointer:: Snow_Class
-   integer (kind=int1),dimension(:,:), pointer:: Surface_Type
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
-   integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
-   integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
-   integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
-   real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
-   real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
-
-   !--- optional variables
-   integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
-   integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+ integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ real, dimension(:,:), pointer:: Bt_67um
+ real, dimension(:,:), pointer:: Bt_85um
+ real, dimension(:,:), pointer:: Bt_11um
+ real, dimension(:,:), pointer:: Bt_12um
+ real, dimension(:,:), pointer:: Bt_133um
+ real, dimension(:,:), pointer:: Rad_67um
+ real, dimension(:,:), pointer:: Rad_11um
+ real, dimension(:,:), pointer:: Cosine_Zenith_Angle
+ real, dimension(:,:), pointer:: Sensor_Zenith_Angle
+ real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
+ real, dimension(:,:), pointer:: Surface_Temperature
+ real, dimension(:,:), pointer:: Surface_Air_Temperature
+ real, dimension(:,:), pointer:: Tropopause_Temperature
+ real, dimension(:,:), pointer:: Surface_Pressure
+ real, dimension(:,:), pointer:: Surface_Elevation
+ real, dimension(:,:), pointer:: Latitude
+ real, dimension(:,:), pointer:: Longitude
+ real, dimension(:,:), pointer:: Rad_Clear_67um
+ real, dimension(:,:), pointer:: Rad_Clear_85um
+ real, dimension(:,:), pointer:: Rad_Clear_11um
+ real, dimension(:,:), pointer:: Rad_Clear_12um
+ real, dimension(:,:), pointer:: Rad_Clear_133um
+ real, dimension(:,:), pointer:: Surface_Emissivity_39um 
+ integer (kind=int1),dimension(:,:), pointer:: Snow_Class
+ integer (kind=int1),dimension(:,:), pointer:: Surface_Type
+ integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
+ real, dimension(:,:), pointer:: Cloud_Probability
+ integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
+ integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
+ real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
+ real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP
+ integer(kind=int4), dimension(:,:), pointer :: Elem_Idx_LRC_Input
+ integer(kind=int4), dimension(:,:), pointer :: Line_Idx_LRC_Input
+ real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
-  
  end type acha_input_struct
 
 
@@ -139,20 +139,30 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Cloud_Pressure
    real, dimension(:,:), pointer:: Lower_Cloud_Temperature
    real, dimension(:,:), pointer:: Lower_Cloud_Height
-   real, dimension(:,:), pointer:: Zc_Top
-   real, dimension(:,:), pointer:: Zc_Base
    real, dimension(:,:), pointer:: Cost
-
+   real, dimension(:,:), pointer:: Total_Cloud_Fraction
+   real, dimension(:,:), pointer:: Total_Cloud_Fraction_Uncer
+   real, dimension(:,:), pointer:: High_Cloud_Fraction
+   real, dimension(:,:), pointer:: Mid_Cloud_Fraction
+   real, dimension(:,:), pointer:: Low_Cloud_Fraction
+   integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
+   real, dimension(:,:), pointer:: Pc_Opaque
+   real, dimension(:,:), pointer:: Tc_Opaque
+   real, dimension(:,:), pointer:: Zc_Opaque
+   real, dimension(:,:), pointer:: Pc_H2O
+   real, dimension(:,:), pointer:: Tc_H2O
+   real, dimension(:,:), pointer:: Zc_H2O
   end type acha_output_struct
   
 !Symbol stucture
+!Symbol stucture
 
- type, public :: symbol_acha
+ type, public :: acha_symbol_struct
     integer(kind=int1) :: CLOUDY
     integer(kind=int1) :: PROB_CLOUDY
     integer(kind=int1) :: PROB_CLEAR
@@ -211,7 +221,8 @@ end type acha_rtm_nwp_struct
     integer(kind=int1) :: MIXED_PHASE
     integer(kind=int1) :: ICE_PHASE
     integer(kind=int1) :: UNKNOWN_PHASE
- end type symbol_acha
+ end type acha_symbol_struct
+
  
  contains
 
@@ -224,7 +235,7 @@ end type acha_rtm_nwp_struct
                                       
    type(acha_input_struct), intent(inout) :: Acha_Input
    type(acha_rtm_nwp_struct), intent(inout) :: Acha_RTM_NWP
-   type(symbol_acha), intent(inout) :: symbol
+   type(acha_symbol_struct), intent(inout) :: symbol
    integer, intent(in) :: Elem_Idx
    integer, intent(in) :: Line_Idx
    integer:: Ivza

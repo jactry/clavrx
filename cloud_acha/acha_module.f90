@@ -244,7 +244,6 @@ module AWG_CLOUD_HEIGHT
   !  Local Variable Declaration
   !===============================================================================
 
-  integer (kind=int4):: Smooth_Nwp_Fields_Flag_Temp
   integer :: ACHA_Mode_Flag
   integer:: Elem_Idx
   integer:: Line_Idx
@@ -377,7 +376,6 @@ module AWG_CLOUD_HEIGHT
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
   integer (kind=int4):: NWP_Profile_Inversion_Flag
-  integer (kind=int4):: Itemp
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -487,6 +485,7 @@ module AWG_CLOUD_HEIGHT
   Bc_85um = 0
   Bc_11um = 0
   Bc_12um = 0
+  Output%Inversion_Flag = 0
   
   !--------------------------------------------------------------------------
   ! spatial processing pixels
@@ -1446,6 +1445,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
        !--- set meta data flag
        Meta_Data_Flags(7) = symbol%YES
+       Output%Inversion_Flag(Elem_Idx,Line_Idx) = 1
 
 
  else   !the general top-down solution
@@ -1687,8 +1687,6 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Elem_Idx
       integer:: Inwp
       integer:: Jnwp
-      integer:: Inwp_x
-      integer:: Jnwp_x
       integer:: Ilev
       integer:: Num_Elem
       integer:: num_line

@@ -173,6 +173,7 @@ module ACHA_CLAVRX_BRIDGE
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+     Output%Inversion_Flag  =>  null()
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
      Output%Zc_Opaque =>  null()
@@ -262,18 +263,19 @@ module ACHA_CLAVRX_BRIDGE
    Output%Lower_Cloud_Pressure => ACHA%Pc_Lower_Cloud
    Output%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
    Output%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
-   Output%Qf => ACHA%Quality_Flag
-   Output%OE_Qf => ACHA%OE_Quality_Flags
-   Output%Packed_Qf => ACHA%Packed_Quality_Flags
-   Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
-   Output%Processing_Order  => ACHA%Processing_Order
    Output%Cost  => ACHA%Cost
-   Output%Cloud_Layer  => ACHA%Cld_Layer
    Output%Total_Cloud_Fraction => Cloud_Fraction_3x3
    Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer_3x3
    Output%High_Cloud_Fraction => High_Cloud_Fraction_3x3
    Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction_3x3
    Output%Low_Cloud_Fraction => Low_Cloud_Fraction_3x3
+   Output%Cloud_Layer  => ACHA%Cld_Layer
+   Output%Qf => ACHA%Quality_Flag
+   Output%OE_Qf => ACHA%OE_Quality_Flags
+   Output%Packed_Qf => ACHA%Packed_Quality_Flags
+   Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
+   Output%Processing_Order  => ACHA%Processing_Order
+   Output%Inversion_Flag  => ACHA%Inversion_Flag
    Output%Pc_Opaque => Pc_Opaque_Cloud
    Output%Tc_Opaque => Tc_Opaque_Cloud
    Output%Zc_Opaque => Zc_Opaque_Cloud
@@ -283,68 +285,60 @@ module ACHA_CLAVRX_BRIDGE
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
+
+   Input%ACHA_Mode_Flag_In = ACHA%Mode
    Input%Number_of_Elements = Image%Number_Of_Elements
    Input%Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
    Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
-   Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
-   Input%ACHA_Mode_Flag_In = ACHA%Mode
+   Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
-
-   Input%Chan_Idx_67um = 27     !channel number for 6.7
-   Input%Chan_Idx_85um = 29     !channel number for 8.5
-   Input%Chan_Idx_11um = 31     !channel number for 11
-   Input%Chan_Idx_12um = 32     !channel number for 12
-   Input%Chan_Idx_133um = 33  !channel number for 13.3
-
+   Input%Chan_Idx_67um = 27      !channel number for 6.7
+   Input%Chan_Idx_85um = 29      !channel number for 8.5
+   Input%Chan_Idx_11um = 31      !channel number for 11
+   Input%Chan_Idx_12um = 32      !channel number for 12
+   Input%Chan_Idx_133um = 33     !channel number for 13.3
    Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
    Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
    Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
    Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
    Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(33)
-
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
-   Input%Elem_Idx_Nwp =>  I_Nwp
-   Input%Line_Idx_Nwp => J_Nwp
-   Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
-   Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
-   Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
-   Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
-   Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
    Input%Bt_11um => ch(31)%Bt_Toa
    Input%Bt_12um => ch(32)%Bt_Toa
    Input%Bt_133um => ch(33)%Bt_Toa
-
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
    Input%Cosine_Zenith_Angle => Geo%Coszen
    Input%Sensor_Zenith_Angle => Geo%Satzen
    Input%Sensor_Azimuth_Angle => Geo%Sataz
-   Input%Latitude => Nav%Lat
-   Input%Longitude => Nav%Lon
-
-   Input%Snow_Class => Sfc%Snow
-   Input%Surface_Type => Sfc%Sfc_Type
-
    Input%Surface_Temperature =>Tsfc_Nwp_Pix
    Input%Surface_Air_Temperature => Tair_Nwp_Pix
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
-
    Input%Surface_Elevation => Sfc%Zsfc
-   Input%Cloud_Mask => Cld_Mask
-   Input%Cloud_Type => Cld_Type
-   Input%Cloud_Probability => Posterior_Cld_Probability
-
+   Input%Latitude => Nav%Lat
+   Input%Longitude => Nav%Lon
    Input%Rad_Clear_67um => ch(27)%Rad_Toa_Clear
    Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
    Input%Rad_Clear_133um => ch(33)%Rad_Toa_Clear
    Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
-
+   Input%Snow_Class => Sfc%Snow
+   Input%Surface_Type => Sfc%Sfc_Type
+   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Probability => Posterior_Cld_Probability
+   Input%Cloud_Type => Cld_Type
+   Input%Elem_Idx_Nwp =>  I_Nwp
+   Input%Line_Idx_Nwp => J_Nwp
+   Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
+   Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
+   Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
+   Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
+   Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC
    Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Co2

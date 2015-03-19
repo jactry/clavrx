@@ -168,5 +168,16 @@
              numtype="real4">
    </out_var>    
 
+   <out_var sdsname="Inversion_Flag" 
+            varname="Inversion_Flag" 
+            dimstr="NX_NY"
+            units="none"
+            scaling="NO_SCALE"
+            output_type="DFNT_INT8"
+            min="-999.0"
+            max="-999.0"
+            numtype="int1">
+   </out_var>
+
     </out_list>
 </geocat_out2>

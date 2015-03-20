@@ -30,7 +30,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
 
    ! - atmos correction
-   integer , parameter :: N_CHAN = 40
+   integer , parameter :: N_CHAN = 44
   
    real :: refl_toa = -999.
    

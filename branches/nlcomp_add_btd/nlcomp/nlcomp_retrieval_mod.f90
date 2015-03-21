@@ -181,17 +181,18 @@ contains
       
       obs_vec ( 3 ) = bt_31 - bt_32
       obs_vec ( 4 ) = bt_20 - bt_31
-      print*, inp % chn ( 20 ) % rad, inp % chn ( 31 ) % rad, inp % chn ( 32 ) % rad
-      print*,'bt s 20 31 32',bt_20,bt_31,bt_32, inp % geo % tsfc
-      print*,'obs vec: ',obs_vec, inp % prd % emiss31_acha,inp % prd % beta_acha 
+      print*, 'rad_20 , rad31, rad32 : ', inp % chn ( 20 ) % rad, inp % chn ( 31 ) % rad, inp % chn ( 32 ) % rad
+      print*,'bts ch20 ch31 ch32 T_sfc',bt_20,bt_31,bt_32, inp % geo % tsfc
+      print*,'obs vec, emiss31 acha, beta_acha: ',obs_vec, inp % prd % emiss31_acha,inp % prd % beta_acha 
       
       cod = -999.
-      cps= -999.
+      cps = -999.
       
       
       if ( obs_vec ( 1 ) > 1.0 ) return
       call vis_channel_cod (obs_vec ( 1 ),  pxl, alb_sfc ( 1) , dcomp_ancil_path , cod) 
-      print*,'------  coputed cod ------- '
+      print*,'------  computed cod ------- '
+      print*, 'COD: ', cod
       call cps_known_cod ( obs_vec,  cod, rad_clear_toc,  pxl , dcomp_ancil_path &
                , inp % prd % emiss31_acha, inp % prd % beta_acha & 
                , cps ,inp % geo % tsfc )

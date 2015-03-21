@@ -1,4 +1,6 @@
 ! $Id:$
+!
+!
 module nlcomp_hybrid_mod
    
    use dcomp_lut_mod , only : &
@@ -40,20 +42,17 @@ contains
       real :: cod_wgt
       integer :: phase_num
       
-      
       cps_pos = -999
       cod = -999.
       cod_vec_lut = [(i/10.,i=-6,22,1)]
      
-      
-        phase_num = 2
+      phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
       
       call lut_obj % initialize ( 'VIIRS' , ancil_path = lut_path)
       call lut_obj % set_angles ( pixel % sat_zen , pixel % lun_zen &
             , pixel % lun_rel_azi )   
-     
-   
+        
       do i = 1, 29          
          call lut_obj % get_data ( 1, phase_num, cod_vec_lut (i) , 1.0 , lut_data) 
          rfl_toa(i) =  lut_data%refl + lut_data%trn_sol* lut_data%trn_sat * alb_sfc &
@@ -61,7 +60,7 @@ contains
          if ( i > 1 ) then
              if ( rfl_toa(i) .gt. rfl_dnb .and. rfl_toa(i-1) .lt. rfl_dnb ) cps_pos = i 
          end if        
-          print*,i, phase_num, rfl_toa(i), lut_data%refl
+          print*,'COD SEARCH: ',i, phase_num, rfl_toa(i), lut_data%refl
       end do  
  
       
@@ -88,8 +87,8 @@ contains
       , cps, tsfc )
       
        use clavrx_planck_mod, only: &
-      planck_tmp2rad &
-      , planck_rad2tmp
+         planck_tmp2rad &
+         , planck_rad2tmp
       
       implicit none
       real, intent(in) :: obs(4)
@@ -112,7 +111,7 @@ contains
       real :: planck_rad20 , planck_rad31 , planck_rad32
       
       
-      cps_vec_lut = (/(i,i=4,20,2)/)/10.
+      cps_vec_lut = (/(i,i = 4 , 20 , 2 )/)/10.
  
       planck_rad20 = planck_tmp2rad ( pixel % ctt, 'VIIRS' , 20)
       planck_rad31 = planck_tmp2rad ( pixel % ctt, 'VIIRS' , 31)
@@ -120,9 +119,9 @@ contains
  
       rad20_sfc = planck_tmp2rad ( tsfc , 'VIIRS' , 20)
       
-      print*,'vergleich: ', rad20_sfc , rad_clear_toc(20)
-      print*,pixel % ctt
-      print*, planck_rad20, planck_rad31, planck_rad32      
+      print*,'vergleich PLanck sfc20, rad_clear_toc20: ', rad20_sfc , rad_clear_toc(20)
+      print*, 'CTT: ',pixel % ctt
+      print*, 'rad20,rad31, rad32: ', planck_rad20, planck_rad31, planck_rad32      
       
       bt20 =  planck_rad2tmp ( planck_rad20, 'VIIRS' , 20)
       bt31 =  planck_rad2tmp ( planck_rad31, 'VIIRS' , 31)
@@ -146,8 +145,8 @@ contains
       
       do i = 1, 9          
          call lut_obj % get_data ( 31, phase_num, cod_used , cps_vec_lut (i) , lut_data31)
-          call lut_obj % get_data ( 32, phase_num, cod_used , cps_vec_lut (i) , lut_data32)
-          print*,i,lut_data31 %  ems ,  log(lut_data31 %  ems )/ log(lut_data32 %  ems)
+         call lut_obj % get_data ( 32, phase_num, cod_used , cps_vec_lut (i) , lut_data32)
+         print*,'CPS: ems,beta: ',i,lut_data31 %  ems ,  log(lut_data31 %  ems )/ log(lut_data32 %  ems)
          !rfl_toa(i) =  lut_data%refl + lut_data%trn_sol* lut_data%trn_sat * alb_sfc &
          !   / (1- alb_sfc * lut_data % albsph)
          !if ( i > 1 ) then
@@ -166,6 +165,7 @@ contains
          rad20 = lut_data20 %  ems * planck_rad20 + lut_data20 % trn_ems * rad_clear_toc(20)
          rad31 = lut_data31 %  ems * planck_rad31 + lut_data31 % trn_ems * rad_clear_toc(31)
          rad32 = lut_data32 %  ems * planck_rad32 + lut_data32 % trn_ems * rad_clear_toc(32)
+         
          bt20 =  planck_rad2tmp ( rad20, 'VIIRS' , 20)
          bt31 =  planck_rad2tmp ( rad31, 'VIIRS' , 31)
          bt32 =  planck_rad2tmp ( rad32, 'VIIRS' , 32)
@@ -184,6 +184,7 @@ contains
         
          
          print*,i, rad20,bt31-bt32 , bt20 - bt31
+         print*,i,obs(2), obs(3),obs(4)
          print*
          
       end do      

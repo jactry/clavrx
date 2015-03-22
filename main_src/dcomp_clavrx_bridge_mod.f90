@@ -44,9 +44,7 @@ module dcomp_clavrx_bridge_mod
     use dcomp_interface_types_mod , only: &
          dcomp_in_type &
        , dcomp_out_type &
-       , alloc_dcomp &
-       , deallocate_dcompin &
-       , deallocate_dcompout
+       , alloc_dcomp 
    
    use  clavrx_message_module, only: &
         mesg
@@ -120,8 +118,10 @@ contains
       integer :: idx_chn
       
       integer :: dcomp_possible_channels ( 5) 
+      logical :: chan_on ( 44 ) = .false.
       integer :: i
-      integer :: CHN_VIS, CHN_NIR
+      integer :: CHN_VIS
+      integer :: CHN_NIR
       
       interface
          subroutine dcomp_array_loop (a , b , debug_mode_user)
@@ -155,15 +155,17 @@ contains
       dim_1 = Image%Number_Of_Elements
       dim_2 = Image%Number_Of_Lines_Read_This_Segment
   
-      ! - which channels do we need? possibles are 
-      dcomp_input % is_channel_on = .false.
-      
+
       dcomp_possible_channels = [ 1, 5, 6, 7, 20 ]
       do i = 1 , size ( dcomp_possible_channels )   
          if ( sensor % chan_on_flag_default ( dcomp_possible_channels ( i) ) == 1 ) then
-            dcomp_input % is_channel_on (dcomp_possible_channels ( i)  )  = .true.
+            chan_on (dcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
+      
+      !-allocate input
+      dcomp_input = dcomp_in_type ( dim_1, dim_2, chan_on )
+      
       
       !- check mode
       CHN_VIS = 1
@@ -194,40 +196,7 @@ contains
          end if
          return
       end if
-   
-      
-      ! === ALLOCATION
-      do idx_chn = 1 , 40
-         if ( dcomp_input % is_channel_on (idx_chn) .eqv. .false.) cycle
-        
-         call  alloc_dcomp ( dcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
-         call  alloc_dcomp ( dcomp_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
-                 
-         if ( idx_chn >= 20 ) then   
-            call  alloc_dcomp ( dcomp_input % rad (  idx_chn  ) ,  dim_1,dim_2 )  
-            call  alloc_dcomp ( dcomp_input % emiss_sfc (  idx_chn  ) ,  dim_1,dim_2 )
-            call  alloc_dcomp ( dcomp_input % rad_clear_sky_toa ( idx_chn ),  dim_1,dim_2 )
-            call  alloc_dcomp ( dcomp_input % rad_clear_sky_toc ( idx_chn ), dim_1,dim_2 )
-            call alloc_dcomp (  dcomp_input % trans_ac_nadir ( idx_chn )   , dim_1,dim_2 )
-         end if   
-      end do
-      
-      call  alloc_dcomp ( dcomp_input % snow_class,   dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % is_land,      dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % cloud_press,  dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % cloud_temp,   dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % cloud_hgt,    dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % cloud_type,   dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % cloud_mask,   dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % tau_acha,   dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % ozone_nwp,    dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % tpw_ac,       dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % press_sfc,    dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % is_valid,     dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % sol,          dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % sat,          dim_1,dim_2 )
-      call  alloc_dcomp ( dcomp_input % azi,          dim_1,dim_2 )
-      
+
       ! == CONFIGURE 
       
          ! - dcomp-mode
@@ -296,10 +265,7 @@ contains
       ! === THE MAIN CALL of DCOMP ===          
       debug_mode = 1
       call dcomp_array_loop ( dcomp_input , dcomp_output , debug_mode_user = debug_mode)
-      
-      ! === DEALLOCATION
-      call deallocate_dcompin ( dcomp_input )
-      
+
       ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
       tau_dcomp (1:dim_1,1:dim_2)   = dcomp_output % cod % d
       reff_dcomp  (1:dim_1,1:dim_2) = dcomp_output % cps % d
@@ -317,10 +283,7 @@ contains
       cloud_063um_spherical_albedo(1:dim_1,1:dim_2)   = dcomp_output % cld_sph_alb % d
       
       DCOMP_RELEASE_VERSION = dcomp_output % version
-      
-      call deallocate_dcompout ( dcomp_output)
-      
-     
+
    end subroutine awg_cloud_dcomp_algorithm
 
   

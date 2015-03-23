@@ -1,4 +1,4 @@
-HDFDIR = $(HOME)/lib/hdf4_gcc
+HDFDIR = $(HOME)/lib/hdf4/
 COMP   = g95
 #COMP   = lf95
 #COMP   = ifort

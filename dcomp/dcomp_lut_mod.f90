@@ -33,8 +33,8 @@ module dcomp_lut_mod
    
    type lut_data_type
       logical :: is_set
-      logical :: has_sol
-      logical :: has_ems
+      logical :: has_sol = .false.
+      logical :: has_ems = .false.
       character (len = 300 ) :: file
       character (len = 300 ) :: file_ems
       real, allocatable :: cld_sph_alb ( : , : )
@@ -290,10 +290,13 @@ contains
           stop
   
       end select sensor_block
-    
+     
+      
+      
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
          loop_phase: do i_phase = 1 , 2
+  
             
             self%channel(i_chn)%phase(i_phase)%file = trim(sensor_identifier) & 
                        
@@ -302,6 +305,7 @@ contains
                    
                   
             if ( has_ems_table(i_chn) ) then  
+               
                self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
                      
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
@@ -453,14 +457,16 @@ contains
       
       type (lut_data_type), pointer :: data_loc => null()
       
-      
+      integer :: ii, jj
       out % ems = -999.
        
        data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
       
       ! test if this channel is available if not read it from hdf file     
       if ( .not. data_loc % is_set ) then 
+         
          call data_loc % read_hdf
+         
          data_loc % is_set  = .true.
       end if
      

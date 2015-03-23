@@ -349,10 +349,10 @@ contains
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
       
-      allocate ( self % channel (NUM_CHN))
+      if (.not. allocated (self % channel ) ) allocate ( self % channel (NUM_CHN))
       
       do i_chn = 1 , NUM_CHN
-         allocate ( self % channel (i_chn) % phase (NUM_PHASE) )
+         if (.not. allocated (self % channel (i_chn) % phase ) ) allocate ( self % channel (i_chn) % phase (NUM_PHASE) )
       
       end do
       

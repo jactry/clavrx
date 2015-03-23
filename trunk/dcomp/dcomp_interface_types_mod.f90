@@ -254,8 +254,10 @@ contains
       integer :: idx_chn
       
          ! === ALLOCATION
+      n_chn = size ( chan_on)      
          
       allocate (  new_input % refl (N_CHN) ) 
+      
       allocate (  new_input % rad (N_CHN) )
       
       allocate ( new_input %  alb_sfc (N_CHN) )
@@ -265,13 +267,16 @@ contains
       allocate ( new_input %  trans_ac_nadir (N_CHN) ) 
       
          
-      n_chn = size ( chan_on)   
+      new_input % is_channel_on = .false.
       do idx_chn = 1 , n_chn
         
          if ( .not. chan_on (idx_chn) ) cycle
          
          new_input % is_channel_on(idx_chn) = .true.
+         
+        
          call  alloc_dcomp ( new_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
+         
          call  alloc_dcomp ( new_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
                  
          if ( idx_chn >= 20 ) then   
@@ -328,7 +333,7 @@ contains
       type ( d2_real4_type ) :: str
       integer :: xdim , ydim
       integer :: alloc_stat = 0
-         
+        
       allocate ( str % d ( xdim,  ydim) , stat = alloc_stat)
       if ( alloc_stat /= 0 ) then
          print*,'alloc error'            

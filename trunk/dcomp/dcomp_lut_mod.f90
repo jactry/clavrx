@@ -21,6 +21,12 @@ module dcomp_lut_mod
    integer, parameter :: NUM_PHASE = 2
    integer, parameter :: NUM_CHN = 44
    
+   integer , parameter :: NUM_SOL = 45
+   integer , parameter :: NUM_SAT = 45
+   integer , parameter :: NUM_AZI = 45
+   integer , parameter :: NUM_COD = 29
+   integer , parameter :: NUM_REF = 9
+   
    logical :: is_initialized = .false.
    character(10) :: sensor_initialized
    
@@ -46,9 +52,8 @@ module dcomp_lut_mod
    end type lut_data_type
    
    type lut_chn_type
-      logical :: is_set
-     
-      type ( lut_data_type ) , dimension ( NUM_PHASE ) :: phase
+      logical :: is_set     
+      type ( lut_data_type ) , allocatable  :: phase(:)
    end type lut_chn_type
    
    type lut_dim_type
@@ -72,7 +77,7 @@ module dcomp_lut_mod
    
    type , public :: lut_type
       logical :: is_set
-      type ( lut_chn_type ) , dimension ( NUM_CHN ) :: channel 
+      type ( lut_chn_type ) , allocatable :: channel (:)
       type ( lut_dim_type ) ::  dims
       character ( len = 300) :: lut_path
       character ( len = 20 ) :: sensor = 'not_set'
@@ -285,10 +290,11 @@ contains
           stop
   
       end select sensor_block
-     
+    
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
          loop_phase: do i_phase = 1 , 2
+            
             self%channel(i_chn)%phase(i_phase)%file = trim(sensor_identifier) & 
                        
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
@@ -300,14 +306,16 @@ contains
                      
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ems_lut_'//phase_string(i_phase)//'_cld.hdf'
-            end if         
+                self % channel(i_chn) % phase(i_phase) % has_ems = .true.      
+            end if 
+            
+         
+            self % channel(i_chn) % phase(i_phase) % has_sol = .true.
+                    
          end do loop_phase
       end do loop_channel
       
-      do i =1,2 
-         self % channel(:) % phase(i) % has_ems = has_ems_table
-         self % channel(:) % phase(i) % has_sol = has_sol_table
-      end do
+   
    
    end subroutine lut__set_filename
    
@@ -321,6 +329,7 @@ contains
       character ( len = * ) , intent(in), optional :: ancil_path
       character ( len =300) :: file
       character ( len =20) :: host
+      integer :: i_chn
       
       ! - check if sensor is already initialized
       if ( self % sensor == sensor ) then
@@ -335,6 +344,13 @@ contains
       if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
+      
+      allocate ( self % channel (NUM_CHN))
+      
+      do i_chn = 1 , NUM_CHN
+         allocate ( self % channel (i_chn) % phase (NUM_PHASE) )
+      
+      end do
       
       ! - set filenames
       call self % set_filename
@@ -464,7 +480,7 @@ contains
       
       ! - parameter for kernel computation  
       ref_diff = 0.2
-   cod_diff = 0.1
+      cod_diff = 0.1
        
       call interpolate_2d ( rfl_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % refl    &
          & , out % dRefl_dcps      , out % dRefl_dcod ) 
@@ -594,13 +610,15 @@ contains
    subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
       character ( len = 300 )  :: hdf_file
-    
+      integer :: i_chn
+      
       hdf_file = self % channel ( 1) % phase (1 ) % file
     
       if ( .not. file_test(hdf_file) ) then
          print*,'lut file not existing! ==> ', trim(hdf_file)
          stop
       end if
+      
 
       ! this should be read from file, but this is also possible
       self %  dims% n_sat_zen = 45
@@ -609,7 +627,8 @@ contains
       self %  dims% n_cod = 29
       self %  dims% n_cps = 9
       
-     
+
+      
       call  self % dims % alloc 
       
       

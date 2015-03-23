@@ -50,7 +50,7 @@ module dcomp_interface_TYPEs_mod
    ! - object for gas coeff values
    type gas_coeff_type
       logical :: is_set
-      real ( kind = real4 )  :: d   
+      real ( kind = real4 )  :: d (3)  
    end type  gas_coeff_type
    
    
@@ -98,7 +98,7 @@ module dcomp_interface_TYPEs_mod
       
       ! - coeffecients,params
       real :: sun_earth_dist
-      TYPE ( gas_coeff_type ) ,allocatable :: gas_coeff (:)!( N_CHN)
+      TYPE ( gas_coeff_type )  :: gas_coeff ( N_CHN)
       real :: solar_irradiance(N_CHN)
       
       contains
@@ -263,7 +263,7 @@ contains
       allocate ( new_input %  rad_clear_sky_toa (N_CHN) ) 
       allocate ( new_input %  rad_clear_sky_toc (N_CHN) ) 
       allocate ( new_input %  trans_ac_nadir (N_CHN) ) 
-      allocate ( new_input % gas_coeff ( N_CHN))
+      
          
       n_chn = size ( chan_on)   
       do idx_chn = 1 , n_chn
@@ -386,7 +386,7 @@ contains
       if ( allocated (this % trans_ac_nadir) ) deallocate ( this % trans_ac_nadir )
       if ( allocated (this % rad_clear_sky_toa) ) deallocate ( this % rad_clear_sky_toa )
       if ( allocated (this % rad_clear_sky_toc) ) deallocate ( this % rad_clear_sky_toc ) 
-      if ( allocated (this % gas_coeff) ) deallocate ( this % gas_coeff ) 
+      
       
       if ( allocated (this % sol % d) ) deallocate ( this % sol  % d )
       if ( allocated (this % sat % d) ) deallocate ( this % sat  % d )

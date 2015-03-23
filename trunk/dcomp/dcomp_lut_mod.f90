@@ -19,7 +19,7 @@ module dcomp_lut_mod
    private
    
    integer, parameter :: NUM_PHASE = 2
-   integer, parameter :: NUM_CHN = 43
+   integer, parameter :: NUM_CHN = 44
    
    logical :: is_initialized = .false.
    character(10) :: sensor_initialized
@@ -142,7 +142,7 @@ contains
      
       call self % initialize ( trim(sensor), trim(ancil_path))
        
-      do idx_chn = 1 , 44 
+      do idx_chn = 1 , NUM_CHN
          do idx_phase = 1, 2 
             data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
             if ( .not. data_loc % is_set ) then 
@@ -164,8 +164,8 @@ contains
    subroutine lut__set_filename ( self)
       class ( lut_type ) :: self
       character ( len = 3 ) , dimension(30) :: chan_string ='no'
-      logical , dimension ( 43 ) :: has_ems_table = .false.
-	   logical , dimension ( 43 ) :: has_sol_table = .false.
+      logical , dimension ( NUM_CHN ) :: has_ems_table = .false.
+	   logical , dimension ( NUM_CHN ) :: has_sol_table = .false.
       
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]

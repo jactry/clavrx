@@ -374,6 +374,7 @@ contains
         
         
       do i = 1, N_CHN 
+         
          if ( allocated (this % refl(i) % d) ) deallocate ( this % refl(i) % d )
 			if ( allocated (this % alb_sfc(i) % d) ) deallocate ( this % alb_sfc(i) % d )
          if ( allocated (this % rad(i) % d) ) deallocate ( this % rad(i) % d )
@@ -391,7 +392,7 @@ contains
       if ( allocated (this % trans_ac_nadir) ) deallocate ( this % trans_ac_nadir )
       if ( allocated (this % rad_clear_sky_toa) ) deallocate ( this % rad_clear_sky_toa )
       if ( allocated (this % rad_clear_sky_toc) ) deallocate ( this % rad_clear_sky_toc ) 
-      
+       
       
       if ( allocated (this % sol % d) ) deallocate ( this % sol  % d )
       if ( allocated (this % sat % d) ) deallocate ( this % sat  % d )

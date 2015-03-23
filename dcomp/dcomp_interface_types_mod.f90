@@ -50,7 +50,7 @@ module dcomp_interface_TYPEs_mod
    ! - object for gas coeff values
    type gas_coeff_type
       logical :: is_set
-      real ( kind = real4 ) , dimension(3) :: d   
+      real ( kind = real4 )  :: d   
    end type  gas_coeff_type
    
    
@@ -64,8 +64,8 @@ module dcomp_interface_TYPEs_mod
       logical :: is_channel_on (N_CHN)
       
       ! - satellite input
-      TYPE ( d2_real4_TYPE) :: refl(N_CHN)
-      TYPE ( d2_real4_TYPE) :: rad (N_CHN)
+      TYPE ( d2_real4_TYPE) ,allocatable :: refl(:)!(N_CHN)
+      TYPE ( d2_real4_TYPE) , allocatable :: rad (:)!(N_CHN)
       TYPE ( d2_real4_TYPE) :: sat
       TYPE ( d2_real4_TYPE) :: sol
       TYPE ( d2_real4_TYPE) :: azi
@@ -84,21 +84,21 @@ module dcomp_interface_TYPEs_mod
       
       
       ! - surface
-      TYPE ( d2_real4_TYPE)  :: alb_sfc (N_CHN)
+      TYPE ( d2_real4_TYPE) ,allocatable :: alb_sfc (:)!( N_CHN )
       TYPE ( d2_real4_TYPE ) :: press_sfc
-      TYPE ( d2_real4_TYPE)  :: emiss_sfc(N_CHN)
+      TYPE ( d2_real4_TYPE) ,allocatable :: emiss_sfc (:)!( N_CHN )
       TYPE ( d2_int1_TYPE)   :: snow_class 
       
       ! - atmosphere
       TYPE ( d2_real4_TYPE ) :: ozone_nwp
       TYPE ( d2_real4_TYPE ) :: tpw_ac
-      TYPE ( d2_real4_TYPE ) :: trans_ac_nadir ( N_CHN )
-      TYPE ( d2_real4_TYPE ) :: rad_clear_sky_toc ( N_CHN )
-      TYPE ( d2_real4_TYPE ) :: rad_clear_sky_toa ( N_CHN )
+      TYPE ( d2_real4_TYPE ) ,allocatable:: trans_ac_nadir (:)!( N_CHN )
+      TYPE ( d2_real4_TYPE ) ,allocatable:: rad_clear_sky_toc(:)! ( N_CHN )
+      TYPE ( d2_real4_TYPE ),allocatable :: rad_clear_sky_toa(:)! ( N_CHN )
       
       ! - coeffecients,params
       real :: sun_earth_dist
-      TYPE ( gas_coeff_type ) :: gas_coeff ( N_CHN)
+      TYPE ( gas_coeff_type ) ,allocatable :: gas_coeff (:)!( N_CHN)
       real :: solar_irradiance(N_CHN)
       
       contains
@@ -254,6 +254,17 @@ contains
       integer :: idx_chn
       
          ! === ALLOCATION
+         
+      allocate (  new_input % refl (N_CHN) ) 
+      allocate (  new_input % rad (N_CHN) )
+      
+      allocate ( new_input %  alb_sfc (N_CHN) )
+      allocate ( new_input %  emiss_sfc (N_CHN) )
+      allocate ( new_input %  rad_clear_sky_toa (N_CHN) ) 
+      allocate ( new_input %  rad_clear_sky_toc (N_CHN) ) 
+      allocate ( new_input %  trans_ac_nadir (N_CHN) ) 
+      allocate ( new_input % gas_coeff ( N_CHN))
+         
       n_chn = size ( chan_on)   
       do idx_chn = 1 , n_chn
         
@@ -364,10 +375,19 @@ contains
          if ( allocated (this % emiss_sfc(i) % d) ) deallocate ( this % emiss_sfc(i) % d )
          if ( allocated (this % trans_ac_nadir(i) % d) ) deallocate ( this % trans_ac_nadir(i) % d )
 			if ( allocated (this % rad_clear_sky_toa(i) % d) ) deallocate ( this % rad_clear_sky_toa(i) % d )
-			if ( allocated (this % rad_clear_sky_toc(i) % d) ) deallocate ( this % rad_clear_sky_toc(i) % d )
-			
-            
+			if ( allocated (this % rad_clear_sky_toc(i) % d) ) deallocate ( this % rad_clear_sky_toc(i) % d ) 
+                    
       end do
+      
+      if ( allocated (this % refl) ) deallocate ( this % refl )
+      if ( allocated (this % alb_sfc) ) deallocate ( this % alb_sfc )
+      if ( allocated (this % rad) ) deallocate ( this % rad )
+      if ( allocated (this % emiss_sfc) ) deallocate ( this % emiss_sfc )
+      if ( allocated (this % trans_ac_nadir) ) deallocate ( this % trans_ac_nadir )
+      if ( allocated (this % rad_clear_sky_toa) ) deallocate ( this % rad_clear_sky_toa )
+      if ( allocated (this % rad_clear_sky_toc) ) deallocate ( this % rad_clear_sky_toc ) 
+      if ( allocated (this % gas_coeff) ) deallocate ( this % gas_coeff ) 
+      
       if ( allocated (this % sol % d) ) deallocate ( this % sol  % d )
       if ( allocated (this % sat % d) ) deallocate ( this % sat  % d )
       if ( allocated (this % azi % d) ) deallocate ( this % azi  % d )
@@ -385,6 +405,9 @@ contains
 		if ( allocated (this % tpw_ac % d) )    deallocate ( this %  tpw_ac   % d )
 		if ( allocated (this % press_sfc % d) )    deallocate ( this %  press_sfc % d )
 		if ( allocated (this % is_valid % d) ) deallocate ( this % is_valid  % d )
+      
+      
+      
    end subroutine in_destructor
    
    

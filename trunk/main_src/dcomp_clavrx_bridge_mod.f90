@@ -155,14 +155,14 @@ contains
       dim_1 = Image%Number_Of_Elements
       dim_2 = Image%Number_Of_Lines_Read_This_Segment
   
-
+       chan_on = .false.
       dcomp_possible_channels = [ 1, 5, 6, 7, 20 ]
       do i = 1 , size ( dcomp_possible_channels )   
          if ( sensor % chan_on_flag_default ( dcomp_possible_channels ( i) ) == 1 ) then
             chan_on (dcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
-      
+     
       !-allocate input
       dcomp_input = dcomp_in_type ( dim_1, dim_2, chan_on )
       

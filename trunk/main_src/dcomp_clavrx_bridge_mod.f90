@@ -165,8 +165,7 @@ contains
      
       !-allocate input
       dcomp_input = dcomp_in_type ( dim_1, dim_2, chan_on )
-      
-      
+            
       !- check mode
       CHN_VIS = 1
       select case ( dcomp_mode )

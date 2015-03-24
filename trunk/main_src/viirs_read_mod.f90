@@ -141,8 +141,8 @@ module viirs_read_mod
    end type
   
    type, public :: viirs_data_out
-      type (mband_str), dimension(16) :: mband
-      type  (iband_str), dimension(5) :: iband    
+      type (mband_str), allocatable  :: mband(:)
+      type  (iband_str), allocatable :: iband  (:)  
       type ( geo_str) :: geo
       type (dnb_str) :: dnb
       type ( dnb_on_mband_str ) :: dnb_mgrid
@@ -341,7 +341,7 @@ contains
       
       ! - channel 13 is the only without Factors in VIRRS file
       data_scaled_mband(13) = .false.
-      
+      allocate ( out % mband ( 16 ))
       do i_mband = 1 , 16
          
          out % mband (i_mband) % is_read = .false.
@@ -406,6 +406,7 @@ contains
       end do
    
       !- ibands
+      allocate ( out % mband ( 5 ))
       is_iband_on =config %  chan_on_iband
       dim_seg_iband = dim_seg * 2
       nx_start_iband = 1
@@ -1193,12 +1194,16 @@ contains
         if (allocated (this%mband (m) %ref )) deallocate ( this%mband (m) %ref )
         if (allocated (this%mband (m) %rad )) deallocate ( this%mband (m) %rad )
         if (allocated (this%mband (m) %bt )) deallocate ( this%mband (m) %bt )
-      end do  
+      end do 
+      
+      if ( allocated ( this % mband )) deallocate (  this % mband )
       
        do m = 1 , 5
         if (allocated (this%iband (m) %ref )) deallocate ( this%iband (m) %ref )        
         if (allocated (this%iband (m) %bt )) deallocate ( this%iband (m) %bt )
       end do  
+      
+      if ( allocated ( this % iband )) deallocate (  this % iband )
      
    end subroutine dealloc_viirs_data_out
    

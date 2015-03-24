@@ -37,17 +37,16 @@ module dcomp_lut_mod
       logical :: has_ems = .false.
       character (len = 300 ) :: file
       character (len = 300 ) :: file_ems
-      real, allocatable :: cld_sph_alb ( : , : )
-      real, allocatable :: cld_trn ( : , : , : )
-      real, allocatable :: cld_alb ( : , : , : )
-      real, allocatable :: cld_refl( : , : , : , : , : )
-      real, allocatable :: cld_ems ( : , : , : )
-      real, allocatable :: cld_trn_ems ( : , : , : )
+      real :: cld_sph_alb ( NUM_REF , NUM_COD )
+      real :: cld_trn ( NUM_REF , NUM_COD, 45 )
+      real :: cld_alb (NUM_REF , NUM_COD , 45 )
+      real :: cld_refl( NUM_REF , NUM_COD , 45 , 45 , 45 )
+      real :: cld_ems (NUM_REF , NUM_COD , 45 )
+      real :: cld_trn_ems ( NUM_REF , NUM_COD , 45 )
       
       contains
       procedure :: read_hdf => lut_data__read_hdf
-      procedure :: alloc => lut_data__alloc
-      procedure :: dealloc => lut_data__dealloc
+    
       
    end type lut_data_type
    
@@ -58,20 +57,17 @@ module dcomp_lut_mod
    
    type lut_dim_type
       logical :: is_set
-      real , allocatable :: sat_zen ( : )
-      real , allocatable :: sol_zen ( : )
-      real , allocatable :: rel_azi ( : )
-      real , allocatable :: cod ( : )
-      real , allocatable :: cps ( : )  
+      real  :: sat_zen ( NUM_SAT )
+      real  :: sol_zen ( NUM_SOL )
+      real  :: rel_azi ( NUM_AZI )
+      real  :: cod ( NUM_COD )
+      real  :: cps ( NUM_REF )  
       integer :: n_sat_zen
       integer :: n_sol_zen
       integer :: n_rel_azi
       integer :: n_cod
       integer :: n_cps
-      
-      contains
-      procedure :: alloc => lut_dim__alloc
-      procedure :: dealloc => lut_dim__dealloc
+
        
    end type lut_dim_type
    
@@ -174,7 +170,7 @@ contains
       
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
-      integer :: n_channels = 43
+      integer :: n_channels = 44
       character ( len =200) :: sensor_identifier
       
       ! mapping sensor channel emis yes/no
@@ -402,7 +398,7 @@ contains
    do idx_phase =1, NUM_PHASE
       do idx_chn =1, NUM_CHN
          data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
-         call data_loc % dealloc()
+        
          
       end do
    end do   
@@ -546,10 +542,7 @@ contains
       
       class ( lut_data_type ) :: self
          
-      
-      if ( self % has_sol .or. self % has_ems ) then
-         call self % alloc 
-      end if
+  
       
       if ( self % has_sol ) then 
          if ( .not. file_test ( self % file )) then 
@@ -577,38 +570,8 @@ contains
      
    end subroutine lut_data__read_hdf
    
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_data__alloc ( self)
-      class ( lut_data_type ) :: self
-      
-      allocate ( self % cld_alb (9,29,45))   
-      allocate ( self % cld_trn (9,29,45))
-      allocate ( self % cld_sph_alb (9,29))
-      allocate ( self % cld_refl (9,29,45,45,45))
-      allocate ( self % cld_ems (9,29,45))
-      allocate ( self % cld_trn_ems (9,29,45))
-   end subroutine lut_data__alloc
-   
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_data__dealloc ( self)
-      class ( lut_data_type ) :: self
-      
-      if ( allocated (self % cld_alb) ) deallocate ( self % cld_alb )   
-      if ( allocated (self % cld_trn) ) deallocate ( self % cld_trn )
-      if ( allocated (self % cld_sph_alb) ) deallocate ( self % cld_sph_alb )
-      if ( allocated (self % cld_refl) ) deallocate ( self % cld_refl )
-      if ( allocated (self % cld_ems) ) deallocate ( self % cld_ems )
-      if ( allocated (self % cld_trn_ems) ) deallocate ( self % cld_trn_ems )
-      
-      self % is_set = .false.
-      
-   end subroutine lut_data__dealloc   
-   
-   
+
+
     
    ! ----------------------------------------------------------------
    !
@@ -635,9 +598,6 @@ contains
       
 
       
-      call  self % dims % alloc 
-      
-      
       call read_hdf_dcomp_dims ( hdf_file &
                         , self %  dims% sat_zen &
                         , self %  dims% sol_zen &
@@ -649,34 +609,9 @@ contains
             
    end subroutine lut__init_dims
    
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_dim__alloc ( self )
-      class ( lut_dim_type) :: self
-       call  self  % dealloc
-      allocate ( self % sat_zen (self % n_sat_zen)  )
-      allocate ( self % sol_zen (self % n_sol_zen)  )
-      allocate ( self % rel_azi (self % n_rel_azi)  )
-      allocate ( self % cod (self % n_cod)  )
-      allocate ( self % cps (self % n_cps)  )
-      
-      
-   
-   end subroutine lut_dim__alloc
+
   
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_dim__dealloc ( self )
-      class ( lut_dim_type) :: self
-      
-      if ( allocated (self % sat_zen) ) deallocate ( self % sat_zen  )
-      if ( allocated (self % sol_zen) ) deallocate ( self % sol_zen   )
-      if ( allocated (self % rel_azi) ) deallocate ( self % rel_azi  )
-      if ( allocated (self % cod ) ) deallocate ( self % cod )
-      if ( allocated (self % cps ) ) deallocate ( self % cps  )
-   end subroutine lut_dim__dealloc
+
    
    ! ----------------------------------------------------------------
    !

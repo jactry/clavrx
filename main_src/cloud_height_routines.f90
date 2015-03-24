@@ -71,9 +71,6 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
   integer:: Elem_Idx
   integer:: Line_Idx
   integer:: Number_Of_Elements
-  integer:: Nwp_Lon_Idx
-  integer:: Nwp_Lat_Idx
-  integer:: Vza_Idx
 
   !--- intialize local variables using global variables
   Number_Of_Elements = Image%Number_Of_Elements
@@ -554,7 +551,6 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
   integer:: Vza_Rtm_Idx
   integer:: Tropo_Level_Idx
   integer:: Sfc_Level_Idx
-  integer:: Lev_Idx_Temp
   integer:: Pc_Lev_Idx
 
   Line_Start = Line_Idx_Min
@@ -843,11 +839,6 @@ end subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT
 subroutine COMPUTE_CSBT_CLOUD_MASKS()
   integer:: Elem_Idx
   integer:: Line_Idx
-  integer:: Lon_Idx
-  integer:: Lat_Idx
-  integer:: Zen_Idx
-  integer:: Chan_Idx
-  integer:: Lev_Idx
   real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
   real, parameter:: Covar_Ch27_Ch31_Max = 1.0
    

@@ -105,7 +105,6 @@ module SENSOR_MODULE
 
       type (AREA_STRUCT), intent(in) :: AREAstr
 
-      integer:: Idx
       integer(kind=int4):: Start_Year_Tmp
       integer(kind=int4):: Start_Day_Tmp
       integer(kind=int4):: End_Year_Tmp
@@ -202,13 +201,13 @@ module SENSOR_MODULE
         !--- check if area file
         if (AREAstr%Version_Num == 4) then
 
-         Image%Start_Year = 1900 + int(AREAstr%act_img_Date / 1000)
+         Image%Start_Year = 1900 + int(AREAstr%img_Date / 1000)
          Image%End_Year = Image%Start_Year
-         Image%Start_Doy = AREAstr%act_img_Date - (Image%Start_Year - 1900) * 1000
+         Image%Start_Doy = AREAstr%img_Date - (Image%Start_Year - 1900) * 1000
          Image%End_Doy = Image%Start_Doy
-         hour = AREAstr%act_img_Time / 10000 
-         minute = (AREAstr%act_img_Time - hour * 10000) / 100
-         second = (AREAstr%act_img_Time - hour * 10000 - minute * 100) / 100
+         hour = AREAstr%img_Time / 10000 
+         minute = (AREAstr%img_Time - hour * 10000) / 100
+         second = (AREAstr%img_Time - hour * 10000 - minute * 100) / 100
          Image%Start_Time = ((hour * 60 + minute) * 60 + second) * 1000 !millisec
          Image%End_Time = Image%Start_Time
     
@@ -1139,7 +1138,6 @@ module SENSOR_MODULE
 
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      integer:: Erstat
       integer(kind=int4), intent(out) :: Nword_Clavr
       integer(kind=int4), intent(out) :: Nword_Clavr_Start
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header

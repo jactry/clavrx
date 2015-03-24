@@ -1,4 +1,4 @@
-! $Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
+!$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
 module AWG_CLOUD_HEIGHT
 !---------------------------------------------------------------------
 ! This module houses the routines associated with...
@@ -244,7 +244,6 @@ module AWG_CLOUD_HEIGHT
   !  Local Variable Declaration
   !===============================================================================
 
-  integer (kind=int4):: Smooth_Nwp_Fields_Flag_Temp
   integer :: ACHA_Mode_Flag
   integer:: Elem_Idx
   integer:: Line_Idx
@@ -377,7 +376,6 @@ module AWG_CLOUD_HEIGHT
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
   integer (kind=int4):: NWP_Profile_Inversion_Flag
-  integer (kind=int4):: Itemp
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -487,6 +485,7 @@ module AWG_CLOUD_HEIGHT
   Bc_85um = 0
   Bc_11um = 0
   Bc_12um = 0
+  Output%Inversion_Flag = 0
   
   !--------------------------------------------------------------------------
   ! spatial processing pixels
@@ -995,15 +994,16 @@ module AWG_CLOUD_HEIGHT
   !------------------------------------------------------------------------
   ! Set Apriori to predetermined cirrus value if Use_Cirrus_Flag = Yes 
   !------------------------------------------------------------------------
-  if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES .and. &
-      Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
-      Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
-  endif
+! if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES .and. &
+!     Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+!     Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
+! endif
 
   if (associated(Input%Tc_Cirrus_Sounder)) then
     if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4 .and. &
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
       Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+      Tc_Ap_Uncer = 5.0
     endif
   endif
 
@@ -1052,19 +1052,19 @@ module AWG_CLOUD_HEIGHT
   Sa(1,2) = 0.0 
   Sa(3,3) = Beta_Ap_Uncer
 
-  !--- modify a priori values based on lrc
-  if (Pass_Idx /= Pass_Idx_Max .or. Use_Cirrus_Flag == symbol%NO) then
-    if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
-        (jlrc /= MISSING_VALUE_INTEGER4)) then
-         if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
-            (Output%Ec(ilrc,jlrc) > 0.00) .and. &
-            (Output%Ec(ilrc,jlrc) <= 1.0)) then
-          !-- use lrc value but weight uncertainty
-          x_Ap(1) = Output%Tc(ilrc,jlrc)
-          Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
-        endif
-    endif
-  endif
+! !--- modify a priori values based on lrc
+! if (Pass_Idx /= Pass_Idx_Max .or. Use_Cirrus_Flag == symbol%NO) then
+!   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
+!       (jlrc /= MISSING_VALUE_INTEGER4)) then
+!        if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
+!           (Output%Ec(ilrc,jlrc) > 0.00) .and. &
+!           (Output%Ec(ilrc,jlrc) <= 1.0)) then
+!         !-- use lrc value but weight uncertainty
+!         x_Ap(1) = Output%Tc(ilrc,jlrc)
+!         Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
+!       endif
+!   endif
+! endif
 
   !--- square the individual elements to convert to variances (not a matmul)
   Sa = Sa**2
@@ -1446,6 +1446,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
        !--- set meta data flag
        Meta_Data_Flags(7) = symbol%YES
+       Output%Inversion_Flag(Elem_Idx,Line_Idx) = 1
 
 
  else   !the general top-down solution
@@ -1687,34 +1688,28 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: Elem_Idx
       integer:: Inwp
       integer:: Jnwp
-      integer:: Inwp_x
-      integer:: Jnwp_x
       integer:: Ilev
       integer:: Num_Elem
-      integer:: num_line
-      integer:: Line_start
-      integer:: Line_end
-      integer:: delem
-      integer:: dline
-      integer:: Elem_Idx_1
-      integer:: Elem_Idx_2
-      integer:: Line_Idx_1
-      integer:: Line_Idx_2
+      integer:: Num_Line
+      integer:: Line_Start
+      integer:: Line_End
+      integer:: Elem_Width
+      integer:: Line_Width
+      integer:: i1
+      integer:: i2
+      integer:: j1
+      integer:: j2
       integer:: count_Valid
-      integer(kind=int1), dimension(:,:), allocatable:: mask
-      !---STW Debug
-      integer(kind=int1), dimension(:,:), allocatable:: mask2
-      integer:: count_Valid2
-      !---STW End Debug
+      real, parameter:: LOWER_LAYER_MAX_PRESS = 700.0
 
       Num_Elem = size(Cloud_Type,1)      !-----
       num_Line = size(Cloud_Type,2)      !-----
-      Line_start = Line_Idx_min
-      Line_end = Number_Of_Lines + Line_Idx_min - 1
+      Line_Start = Line_Idx_min
+      Line_End = Number_Of_Lines + Line_Idx_min - 1
 
       if (Interp_Flag == 0) then 
 
-       Line_loop_1: do Line_Idx = Line_start, Line_end 
+       Line_loop_1: do Line_Idx = Line_Start, Line_End 
          Element_Loop_1: do Elem_Idx = 1, Num_Elem 
            if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
                Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
@@ -1725,92 +1720,52 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
           Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
 
            if (Inwp == MISSING_VALUE_INTEGER4 .or. &
-               Jnwp == MISSING_VALUE_INTEGER4) THEN
+               Jnwp == MISSING_VALUE_INTEGER4) then
                
                cycle
                
            endif
+
           Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = Surface_Pressure(Elem_Idx,Line_Idx) - Pc_Lower_Cloud_offset
+
         end do Element_Loop_1
        end do Line_loop_1
 
 
-      else    !if Interp_Flag > 0 then do a spatial interpoLation
+      else    !if Interp_Flag > 0 then do a spatial interpolation
 
         !--- set box width
-        !---STW Debug
-        !delem = 1
-        !dline = 1
-        delem = 5
-        dline = 5
-        !---STW End Debug
+        Elem_Width = 5
+        Line_Width = 5
 
-        allocate(mask(Num_Elem,num_line))
-
-        !---STW Debug
-        allocate(mask2(Num_Elem,num_line))
-        !---STW End Debug
-
-         mask = 0
-
-         !---STW Debug
-         mask2 = 0
-         !---STW End Debug
-
-         where((Cloud_Type == symbol%FOG_TYPE .or. &
-             Cloud_Type == symbol%WATER_TYPE .or. &
-             Cloud_Type == symbol%SUPERCOOLED_TYPE) .and. &
-             Cloud_Pressure /= MISSING_VALUE_REAL4)
-             mask = 1
-         endwhere
-
-         !---STW Debug
-         where(Cloud_Pressure >= 700.0)
-           mask2 = 1
-         endwhere
-         !---STW End Debug
-
-         Line_loop_2: do Line_Idx = Line_start, Line_end 
-             Element_Loop_2: do Elem_Idx = 1, Num_Elem 
+        Line_loop_2: do Line_Idx = Line_Start, Line_End 
+            Element_Loop_2: do Elem_Idx = 1, Num_Elem 
 
              if (Cloud_Type(Elem_Idx,Line_Idx)  /= symbol%OVERLAP_TYPE) then
                  cycle
              endif
 
-             Elem_Idx_1 = min(Num_Elem,max(1,Elem_Idx-delem))
-             Elem_Idx_2 = min(Num_Elem,max(1,Elem_Idx+delem))
-             Line_Idx_1 = min(num_line,max(1,Line_Idx-dline))
-             Line_Idx_2 = min(num_line,max(1,Line_Idx+dline))
+             i1 = min(Num_Elem,max(1,Elem_Idx-Elem_Width))
+             i2 = min(Num_Elem,max(1,Elem_Idx+Elem_Width))
+             j1 = min(Num_Line,max(1,Line_Idx-Line_Width))
+             j2 = min(Num_Line,max(1,Line_Idx+Line_Width))
 
-             count_Valid = sum(1*mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
+             count_Valid = count(Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS)
 
-             !---STW Debug
-             count_Valid2 = sum(1*mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2))
-             !---STW End Debug
-
-             !---STW if (count_Valid > 0) then
-             if (count_Valid2 > 0) then
-
-                 !---STW Debug
-                 !---STWLower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
-                 !---STW             sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
-                 !---STW                     mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid
+             if (count_Valid > 0) then
 
                  Lower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
-                              sum(Cloud_Pressure(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
-                                  mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)* &
-                                  mask2(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)) / count_Valid2
-                 !---STW End Debug
+                              sum(Cloud_Pressure(i1:i2,j1:j2), &
+                                  mask = Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS) / &
+                                  count_valid
 
              endif
          
              end do Element_Loop_2
-          end do Line_loop_2
-          
-          deallocate(mask2)
+          end do Line_Loop_2
 
           !--- fill missing values with default value
-          Line_loop_3: do Line_Idx = Line_start, Line_end 
+          Line_loop_3: do Line_Idx = Line_Start, Line_End 
             Element_Loop_3: do Elem_Idx = 1, Num_Elem 
              if ((Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == MISSING_VALUE_REAL4) .and. &
                (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%NO)) then
@@ -1820,19 +1775,18 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
                    Jnwp == MISSING_VALUE_INTEGER4) THEN
                     cycle
                endif 
-               Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = Surface_Pressure(Elem_Idx,Line_Idx) - Pc_Lower_Cloud_offset
+               Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = max(LOWER_LAYER_MAX_PRESS, &
+                                                         Surface_Pressure(Elem_Idx,Line_Idx) - Pc_Lower_Cloud_offset)
              endif
             end do Element_Loop_3
            end do Line_loop_3
-
-      deallocate(mask)
 
       endif   !end of Interp_Flag check
 
       !----------------------------------------------------------------
       !  Compute Height and Temperature
       !----------------------------------------------------------------
-      Line_loop_4: do Line_Idx = Line_start, Line_end 
+      Line_loop_4: do Line_Idx = Line_Start, Line_End 
          Element_Loop_4: do Elem_Idx = 1, Num_Elem 
 
             !-- if a bad pixel, set to missing
@@ -1861,9 +1815,6 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
                                         Ilev)
         end do Element_Loop_4
        end do Line_loop_4
-
-       if (allocated(mask)) deallocate(mask)
-       if (allocated(mask2)) deallocate(mask2)
 
    end subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION
 

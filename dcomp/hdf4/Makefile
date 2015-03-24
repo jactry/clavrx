@@ -1,4 +1,5 @@
-FC=ifort
+FC=g95
+#FC=ifort
    ifdef COMP1
 		$(fc)=COMP1 
 	endif  

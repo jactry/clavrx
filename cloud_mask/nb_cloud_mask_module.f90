@@ -337,7 +337,7 @@ contains
       
       ! - set mask and thresholds version id
       vers % cloud_mask_thresh_version_id = bayes_coef % cvs_version 
-      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 629 2014-10-31 17:28:38Z awalther $"
+      vers % cloud_mask_version_id = "$Id: naive_bayesian_cloud_mask_module.f90 1068 2015-03-06 23:31:56z dbotambekov $"
 
       ! - determine sfc type
       sfc_type_number =  BAYES_SFC_TYPE ( inp% geo % lat , inp % geo % lon &
@@ -360,12 +360,12 @@ contains
                            .and. sfc_idx /= 6
                             
       use_lunar_refl_for_vis_tests = .false.
-      if ( inp % sat % chan_on(42) ) then
+      if ( inp % sat % chan_on(44) ) then
 
          if ( inp % sat % ref_dnb_lunar >= 0. .and. &
-           ( inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .or. &
-             inp % geo % lunar_zen > Lunar_Zen_Thresh ) .and. &
-             inp % sfc % is_city  .and. &
+             inp % geo %  scat_angle_lunar > Scat_Angle_Lunar_Thresh .and. &
+             inp % geo % lunar_zen < Lunar_Zen_Thresh .and. &
+            .not. inp % sfc % is_city  .and. &
             .not. is_mountain .and. &
             .not. inp % sfc % coast_mask .and. &
             .not. inp % sfc % snow_class == ET_snow_class % SNOW .and. &

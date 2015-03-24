@@ -216,8 +216,10 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Desert_Mask
      integer(kind=int1), dimension(:,:), allocatable:: City_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Volcano_Mask
-     integer(kind=int1), dimension(:,:), allocatable:: Snow_Hires
-     integer(kind=int1), dimension(:,:), allocatable:: Snow_Glob
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_OISST
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_NWP
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_IMS
+     integer(kind=int1), dimension(:,:), allocatable:: Snow_GLOB
      integer(kind=int1), dimension(:,:), allocatable:: Snow
      integer(kind=int1), dimension(:,:), allocatable:: Sfc_Type
      real (kind=real4), dimension(:,:), allocatable:: Zsfc
@@ -318,7 +320,6 @@ module PIXEL_COMMON
   integer,public, save:: Ash_File_Flag
   integer,public, save:: Level2_File_Flag
   integer,public, save:: Use_Sst_Anal
-  integer,public, save:: Use_Sst_Anal_Default
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
   
@@ -329,7 +330,7 @@ module PIXEL_COMMON
   integer,public, save:: Read_Surface_Elevation
   integer,public, save:: Read_Hires_Sfc_Type
   integer,public, save:: Read_Snow_Mask
-  integer,public, save:: Read_GlobSnow_Mask
+  integer,public, save:: Read_GLOBSnow_Mask
   integer,public, save:: Read_Dark_Comp
   integer,public, save:: Machine_Byte_Ordering
   integer,public, save:: LRC_Flag  !local radiative center flag
@@ -361,8 +362,8 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! Internal Flags to communicate ancillary data information
   !---------------------------------------------------------------------------------
-  integer,public, save:: Failed_Hires_Snow_Mask_Flag
-  integer,public, save:: Failed_Glob_Snow_Mask_Flag
+  integer,public, save:: Failed_IMS_Snow_Mask_Flag
+  integer,public, save:: Failed_GLOB_Snow_Mask_Flag
   integer,public, save:: Output_Scaled_Reflectances
   integer,public, save:: Ncdc_Level2_Flag
 
@@ -391,7 +392,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Gdas_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
-  character(len=355),public,save:: GlobSnow_Data_Dir
+  character(len=355),public,save:: GLOBSnow_Data_Dir
   character(len=355),public,save:: Dark_Comp_Data_Dir
   character(len=355),public,save:: Temporary_Data_Dir
   character(len=255),public,save:: File_Nav
@@ -700,44 +701,6 @@ module PIXEL_COMMON
   !--- integers values for output to files
   integer(kind=int1), dimension(:,:), public,save,allocatable, target:: One_Byte_Temp
   integer(kind=int2), dimension(:,:), public,save,allocatable, target:: Two_Byte_Temp
-
-  !---volcanic ash parameters
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Probability
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Probability_IR
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_mass_Loading
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_height
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_pressure
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_temperature
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Ir_optical_depth
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_vis_optical_depth
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_effective_radius
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_emiss
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_temperature_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_Emiss_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_beta1112_Qf
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_Emiss_tot
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_Opaque
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot_multi_Low
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_tot_multi_mid
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_generic1
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_generic2
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_tpw
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_emissivity_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_temperature_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_height_Error
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_beta1112_Error
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_Qf
-  integer(kind=int1), allocatable, dimension(:,:), public, save:: ash_LRC_mask
-  integer(kind=int4), allocatable, dimension(:,:), public, save:: ash_x_LRC
-  integer(kind=int4), allocatable, dimension(:,:), public, save:: ash_y_LRC
-  real(kind=real4), allocatable, dimension(:,:), public, save:: ash_ref_rat_nir_LRC
-  integer(kind=int1), pointer, dimension(:,:), public, save:: ash_obj_mask
-  integer(kind=int1), pointer, dimension(:,:), public, save:: ice_obj_mask
-  integer(kind=int1), pointer, dimension(:,:), public, save:: hot_obj_mask
-  real(kind=real4), allocatable, dimension(:), public, save:: pixel_area
-  integer(kind=int4), public, save :: pixel_area_status
 
 !--- nwp parameters
  integer, allocatable, dimension(:,:), public, save, target :: Zen_Idx_Rtm
@@ -1144,6 +1107,9 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
       
       Sst_Anal = Missing_Value_Real4
+      Sst_Anal_Err = Missing_Value_Real4
+      Sst_Anal_Cice = Missing_Value_Real4
+      Sst_Anal_Uni = Missing_Value_Real4
 
       Zen_Idx_Rtm = Missing_Value_Int1
 
@@ -1179,6 +1145,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
       IFF_Gap_Mask = sym%NO     
+
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
 !-------------------------------------------------------------
@@ -1858,8 +1825,10 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Desert_Mask(dim1,dim2))
    allocate(Sfc%City_Mask(dim1,dim2))
    allocate(Sfc%Volcano_Mask(dim1,dim2))
-   allocate(Sfc%Snow_Hires(dim1,dim2))
-   allocate(Sfc%Snow_Glob(dim1,dim2))
+   allocate(Sfc%Snow_NWP(dim1,dim2))
+   allocate(Sfc%Snow_OISST(dim1,dim2))
+   allocate(Sfc%Snow_IMS(dim1,dim2))
+   allocate(Sfc%Snow_GLOB(dim1,dim2))
    allocate(Sfc%Snow(dim1,dim2))
    allocate(Sfc%Sfc_Type(dim1,dim2))
    allocate(Sfc%Zsfc(dim1,dim2))
@@ -1876,8 +1845,10 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Desert_Mask = Missing_Value_Int1
    Sfc%City_Mask = Missing_Value_Int1
    Sfc%Volcano_Mask = Missing_Value_Int1
-   Sfc%Snow_Hires = Missing_Value_Int1
-   Sfc%Snow_Glob = Missing_Value_Int1
+   Sfc%Snow_NWP = Missing_Value_Int1
+   Sfc%Snow_OISST = Missing_Value_Int1
+   Sfc%Snow_IMS = Missing_Value_Int1
+   Sfc%Snow_GLOB = Missing_Value_Int1
    Sfc%Snow = Missing_Value_Int1
    Sfc%Sfc_Type = Missing_Value_Int1
    Sfc%Zsfc = Missing_Value_Real4
@@ -1894,8 +1865,10 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Desert_Mask)
    deallocate(Sfc%City_Mask)
    deallocate(Sfc%Volcano_Mask)
-   deallocate(Sfc%Snow_Hires)
-   deallocate(Sfc%Snow_Glob)
+   deallocate(Sfc%Snow_NWP)
+   deallocate(Sfc%Snow_OISST)
+   deallocate(Sfc%Snow_IMS)
+   deallocate(Sfc%Snow_GLOB)
    deallocate(Sfc%Snow)
    deallocate(Sfc%Sfc_Type)
    deallocate(Sfc%Zsfc)

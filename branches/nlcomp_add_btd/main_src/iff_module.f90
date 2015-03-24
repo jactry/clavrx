@@ -102,7 +102,7 @@ module IFF_MODULE
    end type cloud_products_str
 
    type, public :: iff_data_out
-      type (band_str), dimension ( 44 ) :: band
+      type (band_str), allocatable :: band(:)
       type (geo_str) :: geo
       type ( cloud_products_str) :: prd
       contains
@@ -479,7 +479,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! --- end loop over ref & rad
       enddo
-
+      
+      allocate ( out % band (44))
       ! --- read bands
       do i_band = 1, config % n_chan
 
@@ -774,11 +775,13 @@ end subroutine READ_IFF_DATE_TIME
       if (allocated ( this%geo%lon )) deallocate ( this%geo%lon )
       if (allocated ( this%geo%scan_time )) deallocate ( this%geo%scan_time )
 
-      do m = 1 , 36
+      do m = 1 , 44
         if (allocated (this%band (m) %ref )) deallocate ( this%band (m) %ref )
         if (allocated (this%band (m) %rad )) deallocate ( this%band (m) %rad )
         if (allocated (this%band (m) %bt )) deallocate ( this%band (m) %bt )
       end do
+      
+      if ( allocated ( this % band )) deallocate ( this % band)
 
    end subroutine dealloc_iff_data_out
 

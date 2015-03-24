@@ -9,7 +9,6 @@ program dcomp_one_pixel_run
 
    use dcomp_math_tools_mod, only: &
       findinv
-	  
    use M_kracken
    
    use dcomp_retrieval_mod, only: &
@@ -19,7 +18,6 @@ program dcomp_one_pixel_run
    use dcomp_lut_mod   , only : &
       lut_obj
      
-		   
    implicit none
    real, dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac
    real ::  state_apr(2)
@@ -55,9 +53,7 @@ program dcomp_one_pixel_run
 					 & -apr1 1.0 -apr2 1.0 -sen GOES-15 -snow ""#N#"" -wat ""#N#""  &
 					 & -radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 &
 					 & -obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01 -dcm 3 -tnr 0.8  -qq 0.8  ")
-					 
     
-	
    obs(1) = rget ("cmd_obs1")
    obs(2) = rget ("cmd_obs2")
    alb_sfc(1) = rget ("cmd_alb1")
@@ -130,16 +126,16 @@ program dcomp_one_pixel_run
    if ( host(1:4) == 'luna' ) ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
    if ( host(1:4) == 'saga' ) ancil_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
    if ( host(1:4) == 'odin' ) ancil_path = '/data3/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
-   
+    ancil_path ='/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
    
    !  - this is the example forpopulation in advance
    call lut_obj % populate_all_at_once ( sensor,ancil_path)
    
    call dcomp_algorithm ( obs , obs_u , alb_sfc , alb_sfc_u , state_apr , air_trans_ac &
                               & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase &
-							  & , rad_abv_cld , rad_sfc , sensor &
-							  & , dcomp_results , dcomp_mode = dcomp_mode &
-							  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
+	  & , rad_abv_cld , rad_sfc , sensor &
+	  & , dcomp_results , dcomp_mode = dcomp_mode &
+	  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
    write(color_string,'(I2)') 43
    text = '============= DCOMP RESULTS==============='
    print*,achar(27)//'['//color_string//'m '//trim(text)//achar(27)//'[0m'

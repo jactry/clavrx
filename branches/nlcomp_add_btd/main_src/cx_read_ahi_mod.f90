@@ -76,7 +76,7 @@ module cx_read_ahi_mod
    type, public :: ahi_config_type
       character ( len = 255 ) :: file_base
       character ( len = 400 ) :: data_path
-      logical :: chan_on(16)
+      logical :: chan_on(NUM_CHN)
       character (len = 500) :: filename ( NUM_CHN)
       character ( len =20) :: varname (NUM_CHN)
       integer :: h5_offset(2)
@@ -106,7 +106,7 @@ module cx_read_ahi_mod
    end type  geo_str
    
    type, public :: ahi_data_out_type
-      type ( ahi_chn_type ) :: chn (NUM_CHN)
+      type ( ahi_chn_type ) , allocatable :: chn (:)
       type ( geo_str ) :: geo
       type ( date_type ) :: time_start_obj
       type ( date_type ) :: time_end_obj
@@ -124,6 +124,8 @@ contains
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: out
       logical, optional, intent(in) :: only_nav
+      
+      allocate ( out % chn ( NUM_CHN))
       
       call set_filenames ( config )
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
@@ -440,6 +442,8 @@ contains
          if (allocated (  this  % chn(i_chn) % bt ) ) deallocate (this  % chn(i_chn) % bt)
          if (allocated (  this  % chn(i_chn) % ref )) deallocate (this  % chn(i_chn) % ref)
       end do
+      
+      if ( allocated ( this % chn)) deallocate (this % chn)
    
    
    end subroutine deallocate_all

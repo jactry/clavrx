@@ -43,9 +43,7 @@ program nlcomp_one_pixel_run
 					 & -apr1 1.0 -apr2 1.0  -snow ""#N#"" -wat ""#N#""  &
 					 & -radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 &
 					 & -obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01  -tnr 0.8  -qq 0.8  ")
-					 
     
-	
    obs(1) = rget ("cmd_obs1")
    obs(2) = rget ("cmd_obs2")
    alb_sfc(1) = rget ("cmd_alb1")

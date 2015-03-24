@@ -1,4 +1,4 @@
-! $Id: dcomp_lut_mod.f90 694 2014-12-08 18:28:04Z awalther $
+! $Id: dcomp_lut_mod.f90 1098 2015-03-23 22:42:16Z awalther $
 !
 ! HISTORY: 06/05/2014: change of filename 
 !
@@ -19,7 +19,13 @@ module dcomp_lut_mod
    private
    
    integer, parameter :: NUM_PHASE = 2
-   integer, parameter :: NUM_CHN = 43
+   integer, parameter :: NUM_CHN = 44
+   
+   integer , parameter :: NUM_SOL = 45
+   integer , parameter :: NUM_SAT = 45
+   integer , parameter :: NUM_AZI = 45
+   integer , parameter :: NUM_COD = 29
+   integer , parameter :: NUM_REF = 9
    
    logical :: is_initialized = .false.
    character(10) :: sensor_initialized
@@ -27,52 +33,47 @@ module dcomp_lut_mod
    
    type lut_data_type
       logical :: is_set
-      logical :: has_sol
-      logical :: has_ems
+      logical :: has_sol = .false.
+      logical :: has_ems = .false.
       character (len = 300 ) :: file
       character (len = 300 ) :: file_ems
-      real, allocatable :: cld_sph_alb ( : , : )
-      real, allocatable :: cld_trn ( : , : , : )
-      real, allocatable :: cld_alb ( : , : , : )
-      real, allocatable :: cld_refl( : , : , : , : , : )
-      real, allocatable :: cld_ems ( : , : , : )
-      real, allocatable :: cld_trn_ems ( : , : , : )
+      real :: cld_sph_alb ( NUM_REF , NUM_COD )
+      real :: cld_trn ( NUM_REF , NUM_COD, 45 )
+      real :: cld_alb (NUM_REF , NUM_COD , 45 )
+      real :: cld_refl( NUM_REF , NUM_COD , 45 , 45 , 45 )
+      real :: cld_ems (NUM_REF , NUM_COD , 45 )
+      real :: cld_trn_ems ( NUM_REF , NUM_COD , 45 )
       
       contains
       procedure :: read_hdf => lut_data__read_hdf
-      procedure :: alloc => lut_data__alloc
-      procedure :: dealloc => lut_data__dealloc
+    
       
    end type lut_data_type
    
    type lut_chn_type
-      logical :: is_set
-     
-      type ( lut_data_type ) , dimension ( NUM_PHASE ) :: phase
+      logical :: is_set     
+      type ( lut_data_type ) , allocatable  :: phase(:)
    end type lut_chn_type
    
    type lut_dim_type
       logical :: is_set
-      real , allocatable :: sat_zen ( : )
-      real , allocatable :: sol_zen ( : )
-      real , allocatable :: rel_azi ( : )
-      real , allocatable :: cod ( : )
-      real , allocatable :: cps ( : )  
+      real  :: sat_zen ( NUM_SAT )
+      real  :: sol_zen ( NUM_SOL )
+      real  :: rel_azi ( NUM_AZI )
+      real  :: cod ( NUM_COD )
+      real  :: cps ( NUM_REF )  
       integer :: n_sat_zen
       integer :: n_sol_zen
       integer :: n_rel_azi
       integer :: n_cod
       integer :: n_cps
-      
-      contains
-      procedure :: alloc => lut_dim__alloc
-      procedure :: dealloc => lut_dim__dealloc
+
        
    end type lut_dim_type
    
    type , public :: lut_type
       logical :: is_set
-      type ( lut_chn_type ) , dimension ( NUM_CHN ) :: channel 
+      type ( lut_chn_type ) , allocatable :: channel (:)
       type ( lut_dim_type ) ::  dims
       character ( len = 300) :: lut_path
       character ( len = 20 ) :: sensor = 'not_set'
@@ -142,7 +143,7 @@ contains
      
       call self % initialize ( trim(sensor), trim(ancil_path))
        
-      do idx_chn = 1 , 42 
+      do idx_chn = 1 , NUM_CHN
          do idx_phase = 1, 2 
             data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
             if ( .not. data_loc % is_set ) then 
@@ -164,12 +165,12 @@ contains
    subroutine lut__set_filename ( self)
       class ( lut_type ) :: self
       character ( len = 3 ) , dimension(42) :: chan_string ='no'
-      logical , dimension ( 43 ) :: has_ems_table = .false.
-	   logical , dimension ( 43 ) :: has_sol_table = .false.
+      logical , dimension ( NUM_CHN ) :: has_ems_table = .false.
+	   logical , dimension ( NUM_CHN ) :: has_sol_table = .false.
       
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
-      integer :: n_channels = 43
+      integer :: n_channels = 44
       character ( len =200) :: sensor_identifier
       
       ! mapping sensor channel emis yes/no
@@ -235,7 +236,7 @@ contains
          chan_string(6) = '5'
          chan_string(20) = '7'
          
-      case('ABI') sensor_block
+      case('ABI','AHI') sensor_block
          has_sol_table(1) = .true.
          has_sol_table(6) = .true.
          has_sol_table(20) = .true.
@@ -260,15 +261,11 @@ contains
          has_sol_table(7) = .true.
          has_sol_table(20) = .true.
          has_ems_table(20) = .true.
-            has_ems_table(31) = .true.
-         has_ems_table(32) = .true.
          chan_string(1) = '5'
          chan_string(5) = '8'
          chan_string(6) = '10'
          chan_string(7) = '11'
          chan_string(20) ='12'
-          chan_string(31) ='15'
-         chan_string(32) ='16'
          
       case ('MTSAT-1R')   sensor_block
          has_sol_table(1) = .true.
@@ -283,43 +280,42 @@ contains
          has_ems_table(20) = .true.
          chan_string(1) = '1'
          chan_string(20) = '5'  
-                
+         sensor_identifier = trim(self % lut_path) //'MTSAT'       
       case default
           print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
           stop
   
       end select sensor_block
      
+      
+      
       loop_channel : do i_chn = 1 , n_channels
          if ( .not. has_sol_table ( i_chn ) )  cycle
          loop_phase: do i_phase = 1 , 2
+  
+            
             self%channel(i_chn)%phase(i_phase)%file = trim(sensor_identifier) & 
                        
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ref_lut_'//phase_string(i_phase)//'_cld.hdf'
                    
                   
-                 
-         end do loop_phase
-      end do loop_channel
-      
-            do i_chn = 1 , n_channels
-         if ( .not. has_ems_table ( i_chn ) )  cycle
-         do i_phase = 1 , 2      
-            self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
+            if ( has_ems_table(i_chn) ) then  
+               
+               self%channel(i_chn)%phase(i_phase)%file_ems = trim(sensor_identifier) & 
                      
                        & // '_ch'//trim ( chan_string ( i_chn ) ) &
                        & //'_ems_lut_'//phase_string(i_phase)//'_cld.hdf'
-                     
-         end do           
-      end do    
+                self % channel(i_chn) % phase(i_phase) % has_ems = .true.      
+            end if 
+            
+         
+            self % channel(i_chn) % phase(i_phase) % has_sol = .true.
+                    
+         end do loop_phase
+      end do loop_channel
       
-      
-      
-      do i =1,2 
-         self % channel(:) % phase(i) % has_ems = has_ems_table
-         self % channel(:) % phase(i) % has_sol = has_sol_table
-      end do
+   
    
    end subroutine lut__set_filename
    
@@ -333,6 +329,7 @@ contains
       character ( len = * ) , intent(in), optional :: ancil_path
       character ( len =300) :: file
       character ( len =20) :: host
+      integer :: i_chn
       
       ! - check if sensor is already initialized
       if ( self % sensor == sensor ) then
@@ -343,10 +340,17 @@ contains
      
       
       ! - some lut paths
-      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'
-      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/luts/cld/' 
+      self % lut_path = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
+      if ( host(1:4) == 'saga' ) self % lut_path = '/data/Ancil_Data/clavrx_ancil_data/static/luts/cld/' 
       if ( present(ancil_path)) self % lut_path = trim(ancil_path)
       self % sensor = trim(sensor)
+      
+      if (.not. allocated (self % channel ) ) allocate ( self % channel (NUM_CHN))
+      
+      do i_chn = 1 , NUM_CHN
+         if (.not. allocated (self % channel (i_chn) % phase ) ) allocate ( self % channel (i_chn) % phase (NUM_PHASE) )
+      
+      end do
       
       ! - set filenames
       call self % set_filename
@@ -394,7 +398,7 @@ contains
    do idx_phase =1, NUM_PHASE
       do idx_chn =1, NUM_CHN
          data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
-         call data_loc % dealloc()
+        
          
       end do
    end do   
@@ -449,15 +453,16 @@ contains
       
       type (lut_data_type), pointer :: data_loc => null()
       
-      
+      integer :: ii, jj
       out % ems = -999.
        
        data_loc => self % channel ( idx_chn ) % phase ( idx_phase)
       
       ! test if this channel is available if not read it from hdf file     
       if ( .not. data_loc % is_set ) then 
-        
+         
          call data_loc % read_hdf
+         
          data_loc % is_set  = .true.
       end if
      
@@ -467,9 +472,8 @@ contains
       call dcomp_interpolation_weight(self%dims%n_cps, cps_log10,self%dims%cps &
          & , weight_out = wgt_cps, index_out= pos_cps)
         
-        
+         
       rfl_cld_2x2       = data_loc%cld_refl( pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol,self%pos_sat,self%pos_azi)
-     
      
       trn_sol_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sol)
       trn_sat_cld_2x2   = data_loc%cld_trn(pos_cps:pos_cps+1,pos_cod:pos_cod+1,self%pos_sat)
@@ -478,7 +482,7 @@ contains
       
       ! - parameter for kernel computation  
       ref_diff = 0.2
-   cod_diff = 0.1
+      cod_diff = 0.1
        
       call interpolate_2d ( rfl_cld_2x2 , wgt_cps , wgt_cod , ref_diff , cod_diff , out % refl    &
          & , out % dRefl_dcps      , out % dRefl_dcod ) 
@@ -542,11 +546,7 @@ contains
       
       class ( lut_data_type ) :: self
          
-     
-      if ( self % has_sol .or. self % has_ems ) then
-         call self % alloc 
-      end if
-      
+  
       
       if ( self % has_sol ) then 
          if ( .not. file_test ( self % file )) then 
@@ -560,7 +560,7 @@ contains
             , self % cld_sph_alb &
             , self % cld_refl )
       end if 
-      
+        
       if ( self % has_ems ) then
          if ( .not. file_test ( self % file_ems )) then 
             print*, 'file ems not available channel ',  self % file_ems
@@ -574,38 +574,8 @@ contains
      
    end subroutine lut_data__read_hdf
    
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_data__alloc ( self)
-      class ( lut_data_type ) :: self
-      
-      allocate ( self % cld_alb (9,29,45))   
-      allocate ( self % cld_trn (9,29,45))
-      allocate ( self % cld_sph_alb (9,29))
-      allocate ( self % cld_refl (9,29,45,45,45))
-      allocate ( self % cld_ems (9,29,45))
-      allocate ( self % cld_trn_ems (9,29,45))
-   end subroutine lut_data__alloc
-   
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_data__dealloc ( self)
-      class ( lut_data_type ) :: self
-      
-      if ( allocated (self % cld_alb) ) deallocate ( self % cld_alb )   
-      if ( allocated (self % cld_trn) ) deallocate ( self % cld_trn )
-      if ( allocated (self % cld_sph_alb) ) deallocate ( self % cld_sph_alb )
-      if ( allocated (self % cld_refl) ) deallocate ( self % cld_refl )
-      if ( allocated (self % cld_ems) ) deallocate ( self % cld_ems )
-      if ( allocated (self % cld_trn_ems) ) deallocate ( self % cld_trn_ems )
-      
-      self % is_set = .false.
-      
-   end subroutine lut_data__dealloc   
-   
-   
+
+
     
    ! ----------------------------------------------------------------
    !
@@ -613,13 +583,15 @@ contains
    subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
       character ( len = 300 )  :: hdf_file
-    
+      integer :: i_chn
+      
       hdf_file = self % channel ( 1) % phase (1 ) % file
     
       if ( .not. file_test(hdf_file) ) then
          print*,'lut file not existing! ==> ', trim(hdf_file)
          stop
       end if
+      
 
       ! this should be read from file, but this is also possible
       self %  dims% n_sat_zen = 45
@@ -628,9 +600,7 @@ contains
       self %  dims% n_cod = 29
       self %  dims% n_cps = 9
       
-     
-      call  self % dims % alloc 
-      
+
       
       call read_hdf_dcomp_dims ( hdf_file &
                         , self %  dims% sat_zen &
@@ -643,34 +613,9 @@ contains
             
    end subroutine lut__init_dims
    
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_dim__alloc ( self )
-      class ( lut_dim_type) :: self
-       call  self  % dealloc
-      allocate ( self % sat_zen (self % n_sat_zen)  )
-      allocate ( self % sol_zen (self % n_sol_zen)  )
-      allocate ( self % rel_azi (self % n_rel_azi)  )
-      allocate ( self % cod (self % n_cod)  )
-      allocate ( self % cps (self % n_cps)  )
-      
-      
-   
-   end subroutine lut_dim__alloc
+
   
-   ! ----------------------------------------------------------------
-   !
-   ! ----------------------------------------------------------------
-   subroutine lut_dim__dealloc ( self )
-      class ( lut_dim_type) :: self
-      
-      if ( allocated (self % sat_zen) ) deallocate ( self % sat_zen  )
-      if ( allocated (self % sol_zen) ) deallocate ( self % sol_zen   )
-      if ( allocated (self % rel_azi) ) deallocate ( self % rel_azi  )
-      if ( allocated (self % cod ) ) deallocate ( self % cod )
-      if ( allocated (self % cps ) ) deallocate ( self % cps  )
-   end subroutine lut_dim__dealloc
+
    
    ! ----------------------------------------------------------------
    !

@@ -140,7 +140,6 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_etropo = -0.5, Max_etropo = 1.2 
  real, parameter, public:: Min_Ttropo = 160.0, Max_Ttropo = 260
  real, parameter, public:: Min_rsr = -2.0, Max_rsr = 10.0, Min_rsr_std = 0.0, Max_rsr_std = 2.0
- real, parameter, public:: Min_ash_mass = 0.0, Max_ash_mass = 100.0, Min_ash_mass_std = 0.0, Max_ash_mass_std = 100.0   !ton/km^2
  real, parameter, public:: Min_albedo = 0.0, Max_albedo = 1.0, Min_transmission = 0.0, Max_transmission = 1.0 
  real, parameter, public:: Min_dcomp_atmos_vis = 0.0,Max_dcomp_atmos_vis = 1.5, &
                            Min_dcomp_atmos_ir = 0.0, Max_dcomp_atmos_ir = 1.5 

@@ -34,7 +34,7 @@
 ! SPECTRAL_CORRECT_NDVI - apply a spectral correct to Ndvi to look like NOAA14
 ! ASSIGN_CLEAR_SKY_QUALITY_FLAGS - assign quality flags to clear-sky products
 ! CONVERT_TIME - compute a time in hours based on millisecond time in leveL1b
-! COMPUTE_SNOW_FIELD - based on Snow information, make a Snow field.
+! COMPUTE_SNOW_CLASS - based on Snow information, make a Snow Classification
 ! COMPUTE_GLINT - derive a glint mask
 ! COMPUTE_GLINT_LUNAR - derive a glint mask for lunar reflectance
 !
@@ -62,7 +62,9 @@ MODULE PIXEL_ROUTINES
           COMPUTE_SPATIAL_UNIFORMITY, &
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
-          COMPUTE_SNOW_FIELD, &
+          COMPUTE_SNOW_CLASS, &
+          COMPUTE_SNOW_CLASS_NWP, &
+          COMPUTE_SNOW_CLASS_OISST, &
           EXPAND_SPACE_MASK_FOR_USER_LIMITS, &
           SET_SOLAR_CONTAMINATION_MASK, &
           SET_BAD_PIXEL_MASK, &
@@ -109,7 +111,6 @@ MODULE PIXEL_ROUTINES
      integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
      integer:: Number_of_Elements
      integer:: Number_of_Lines
-     integer:: Elem_Idx
      integer:: Line_Idx
 
      Number_of_Elements = Image%Number_Of_Elements
@@ -600,7 +601,144 @@ end subroutine CONVERT_TIME
 !---  NWP_Wat_Eqv_Snow_Depth - water equivalent snow depth from nwp
 !---  NWP_Sea_Ice_Frac - sea ice fracion from nwp
 !---  SST_Sea_Ice_Frac - sea ice fracion from sst data source
-!---  Snow_Class_Hires - high resolution snow class field (highest priority)
+!---  Snow_Class_IMS - high resolution snow class field (highest priority)
+!---  Snow_Class_Global - ESA GlobSnow products (lower priority)
+!---
+!--- Output:
+!---  Snow_Class_Final - final classificiation
+!---
+!--- Symbology:
+!---  1 = sym%NO_SNOW
+!---  2 = sym%SEA_ICE
+!---  3 = sym%SNOW
+!-------------------------------------------------------------------------------
+ subroutine COMPUTE_SNOW_CLASS(Snow_Class_NWP, Snow_Class_OISST, Snow_Class_IMS, &
+                               Snow_Class_Glob,Land_Class,Snow_Class_Final)
+ 
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_NWP
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_OISST
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_IMS
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_Glob
+   integer(kind=int1), intent(in), dimension(:,:):: Land_Class
+   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_Final
+   integer(kind=int1):: Finished_Flag
+
+   Snow_Class_Final = Missing_Value_Int1
+
+   Finished_Flag = 0
+
+   do while (Finished_Flag == 0)
+
+      !--- High Res
+      if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
+          Failed_IMS_Snow_Mask_flag == sym%NO) then
+          Snow_Class_Final = Snow_Class_IMS
+          Finished_Flag = 1
+      endif
+
+      !-- GlobSnow - does not work
+      if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and.   &
+          Failed_Glob_Snow_Mask_Flag == sym%NO) then
+          Snow_Class_Final = Snow_Class_Glob
+          Finished_Flag = 1
+      endif
+
+      Snow_Class_Final = Snow_Class_Nwp
+
+      !--- overwrite with oisst
+      where(Snow_Class_OISST == sym%SEA_ICE)
+        Snow_Class_Final = Snow_Class_OISST
+      endwhere
+      Finished_Flag = 1
+       
+   enddo
+
+   !-- check for consistnecy of land and snow masks
+   where(Snow_Class_Final == sym%SNOW .and. Land_Class /= sym%LAND)
+             Snow_Class_Final = sym%SEA_ICE
+   endwhere
+   where(Snow_Class_Final == sym%SEA_ICE .and. Land_Class == sym%LAND)
+             Snow_Class_Final = sym%SNOW
+   endwhere
+
+   !---- remove snow under certain conditions
+
+   !-- can't be snow if warm
+   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where (ch(31)%Bt_Toa > 277.0)
+        Snow_Class_Final = sym%NO_SNOW
+    endwhere
+   endif
+
+   !--- some day-specific tests
+   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+    where (ch(1)%Ref_Toa < 10.0 .and. Geo%Solzen < 75.0)
+        Snow_Class_Final = sym%NO_SNOW
+    endwhere
+   endif
+
+ end subroutine COMPUTE_SNOW_CLASS
+ !---------------------------------------------------------------------------------------
+ ! Compute a Snow Classification from the NWP
+ ! 
+ ! threshold are empirically derived by comparing NWP fields to IMS (A.  Heidinger)
+ !---------------------------------------------------------------------------------------
+ subroutine COMPUTE_SNOW_CLASS_NWP(NWP_Wat_Eqv_Snow_Depth,NWP_Sea_Ice_Frac, Snow_Class_Nwp)
+
+   real(kind=real4), intent(in), dimension(:,:):: NWP_Wat_Eqv_Snow_Depth,  &
+                                                  NWP_Sea_Ice_Frac
+   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_NWP
+
+   !--- initialize all pixels as missing
+   Snow_Class_NWP = Missing_Value_Int1
+
+   !--- initialize pixel with valid data as no_snow
+   where (NWP_Wat_Eqv_Snow_Depth >= 0.0 .or. NWP_Sea_Ice_Frac >=0.0) 
+          Snow_Class_NWP = sym%NO_SNOW
+   end where 
+
+   !--- detect sea ice
+   where (NWP_Sea_Ice_Frac > 0.5) 
+          Snow_Class_NWP = sym%SEA_ICE
+   end where
+
+   !--- detect snow  (note snow can cover sea-ice so do this after sea-ice check)
+   where (NWP_Wat_Eqv_Snow_Depth > 0.1) 
+          Snow_Class_NWP = sym%SNOW
+   end where 
+
+ end subroutine COMPUTE_SNOW_CLASS_NWP
+ !---------------------------------------------------------------------------------------
+ ! Compute a Sea-Ice Classification from OISST Analysis
+ ! Note =- OISST only provides Sea Ice, not Snow
+ !---------------------------------------------------------------------------------------
+ subroutine COMPUTE_SNOW_CLASS_OISST(SST_Sea_Ice_Frac, Snow_Class_OISST)
+
+   real(kind=real4), intent(in), dimension(:,:):: SST_Sea_Ice_Frac
+   integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_OISST
+
+   !--- initialize all to missing
+   Snow_Class_OISST = Missing_Value_Int1
+
+   !--- initialize valid values as no_snow
+   where (SST_Sea_Ice_Frac >= 0.0) 
+          Snow_Class_OISST = sym%NO_SNOW
+   end where
+   !--- detect sea ice
+   where (SST_Sea_Ice_Frac > 0.5) 
+          Snow_Class_OISST = sym%SEA_ICE
+   end where
+
+ end subroutine COMPUTE_SNOW_CLASS_OISST
+
+!-------------------------------------------------------------------------------
+!--- populate the snow_class array based on all available sources of Snow data
+!--
+!--- Input:
+!---  NWP_Wat_Eqv_Snow_Depth - water equivalent snow depth from nwp
+!---  NWP_Sea_Ice_Frac - sea ice fracion from nwp
+!---  SST_Sea_Ice_Frac - sea ice fracion from sst data source
+!---  Snow_Class_IMS - high resolution snow class field (highest priority)
 !---  Snow_Class_Global - ESA GlobSnow products (lower priority)
 !---
 !--- Output:
@@ -612,11 +750,11 @@ end subroutine CONVERT_TIME
 !---  3 = sym%SNOW
 !-------------------------------------------------------------------------------
  subroutine COMPUTE_SNOW_FIELD(NWP_Wat_Eqv_Snow_Depth,NWP_Sea_Ice_Frac, SST_Sea_Ice_Frac,  &
-                               Snow_Class_Hires,Snow_Class_Glob,Snow_Class_Final)
+                               Snow_Class_IMS,Snow_Class_Glob,Snow_Class_Final)
 
    real(kind=real4), intent(in), dimension(:,:):: NWP_Wat_Eqv_Snow_Depth,  &
                                                   NWP_Sea_Ice_Frac, SST_Sea_Ice_Frac
-   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_Hires, Snow_Class_Glob
+   integer(kind=int1), intent(in), dimension(:,:):: Snow_Class_IMS, Snow_Class_Glob
    integer(kind=int1), intent(out), dimension(:,:):: Snow_Class_Final
    integer(kind=int4):: Elem_Idx,Line_Idx,ihires
 
@@ -636,8 +774,8 @@ end subroutine CONVERT_TIME
       !--- if hires field is available, use it and ignore other sources
       ihires = sym%NO
       if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and.     &
-          Failed_Hires_Snow_Mask_flag == sym%NO) then
-          Snow_Class_Final(Elem_Idx,Line_Idx) = Snow_Class_Hires(Elem_Idx,Line_Idx)
+          Failed_IMS_Snow_Mask_flag == sym%NO) then
+          Snow_Class_Final(Elem_Idx,Line_Idx) = Snow_Class_IMS(Elem_Idx,Line_Idx)
           ihires = sym%YES
       endif
 
@@ -1144,11 +1282,9 @@ end subroutine ATMOS_CORR
 !======================================================================
 ! Normalize the reflectances by the solar zenith angle cosine
 !======================================================================
- subroutine NORMALIZE_REFLECTANCES(Sun_Earth_Distance,j1,nj)
+ subroutine NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
   real(kind=real4), intent(in):: Sun_Earth_Distance
-  integer, intent(in):: j1
-  integer, intent(in):: nj
-  integer:: i,j,j2, Chan_Idx
+  integer:: i,j, Chan_Idx
   real:: Factor
 
   ! for these sensors, no correction is needed
@@ -1379,16 +1515,6 @@ subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
                Elem_Idx_width, Line_Idx_width, &
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         endif
-
-!       if ((Sensor%Chan_On_Flag_Per_Line(1,Line_Idx) == sym%YES) .and. & 
-!           (Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) == sym%YES)) then
-
-!           Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Covariance(&
-!              ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-!              ch(1)%Ref_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-!              Elem_Idx_width, Line_Idx_width, &
-!              Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
-!       endif
 
       enddo
 

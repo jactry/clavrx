@@ -406,7 +406,7 @@ contains
       end do
    
       !- ibands
-      allocate ( out % mband ( 5 ))
+      allocate ( out % iband ( 5 ))
       is_iband_on =config %  chan_on_iband
       dim_seg_iband = dim_seg * 2
       nx_start_iband = 1

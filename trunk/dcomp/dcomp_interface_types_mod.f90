@@ -194,29 +194,12 @@ module dcomp_interface_TYPEs_mod
       module procedure new_input
    end interface dcomp_in_type
    
-   !interface alloc_dcomp
-   !   subroutine alloc_it_d2_real ( str , xdim , ydim )
-   !      import   d2_real4_type
-   !      type ( d2_real4_type ) :: str
-   !      integer :: xdim , ydim     
-   !   end subroutine alloc_it_d2_real
-      
-   !   subroutine alloc_it_d2_int ( str , xdim , ydim )
-   !      import d2_int1_type
-   !      type ( d2_int1_type ) :: str
-   !      integer :: xdim , ydim 
-   !   end subroutine alloc_it_d2_int
-      
-   !   subroutine alloc_it_d2_log ( str , xdim , ydim )
-   !      import d2_flag_type
-   !      type ( d2_flag_type ) :: str
-   !      integer :: xdim , ydim 
-   !   end subroutine alloc_it_d2_log
-   !end interface alloc_dcomp 
-   
+    
 contains
-   
-   
+
+   !  Constructs new DCOMP output derived type
+   !
+   !      
    function new_output ( dim_1, dim_2 )
       integer , intent(in) :: dim_1, dim_2
       type ( dcomp_out_type ) :: new_output
@@ -245,7 +228,9 @@ contains
   
    end function new_output
    
-   
+   !  Constructs new DCOMP input derived type
+   !
+   !
    function new_input ( dim_1, dim_2, chan_on )
       integer, intent(in) :: dim_1, dim_2
       logical, intent(in) :: chan_on ( :)
@@ -274,9 +259,7 @@ contains
          
          new_input % is_channel_on(idx_chn) = .true.
          
-        
-         call  alloc_dcomp ( new_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
-         
+         call  alloc_dcomp ( new_input % refl    (  idx_chn  ) , dim_1,dim_2 )          
          call  alloc_dcomp ( new_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
                  
          if ( idx_chn >= 20 ) then   
@@ -304,12 +287,12 @@ contains
       call  alloc_dcomp ( new_input % sat,          dim_1,dim_2 )
       call  alloc_dcomp ( new_input % azi,          dim_1,dim_2 )
       
-     
-   
-   
-   
+
    end function new_input
    
+   !
+   !
+   !
    subroutine out_destructor ( this )
       type ( dcomp_out_type) :: this
       
@@ -367,33 +350,52 @@ contains
    
    
    
-   
+   !  Finalization tool for dcomp_input
+   !
+   !
    subroutine in_destructor ( this )
       type ( dcomp_in_type ) :: this
       integer :: i
-        
-        
-      do i = 1, N_CHN 
-         
-         if ( allocated (this % refl(i) % d) ) deallocate ( this % refl(i) % d )
-			if ( allocated (this % alb_sfc(i) % d) ) deallocate ( this % alb_sfc(i) % d )
-         if ( allocated (this % rad(i) % d) ) deallocate ( this % rad(i) % d )
-         if ( allocated (this % emiss_sfc(i) % d) ) deallocate ( this % emiss_sfc(i) % d )
-         if ( allocated (this % trans_ac_nadir(i) % d) ) deallocate ( this % trans_ac_nadir(i) % d )
-			if ( allocated (this % rad_clear_sky_toa(i) % d) ) deallocate ( this % rad_clear_sky_toa(i) % d )
-			if ( allocated (this % rad_clear_sky_toc(i) % d) ) deallocate ( this % rad_clear_sky_toc(i) % d ) 
-                    
-      end do
       
+     
+      do i = 1, N_CHN
+         if  ( allocated (this % refl) )  then      
+            if ( allocated (this % refl(i) % d) ) deallocate ( this % refl(i) % d )
+			end if
+         
+         if ( allocated (this % alb_sfc)) then
+            if ( allocated (this % alb_sfc(i) % d) ) deallocate ( this % alb_sfc(i) % d )
+         end if
+         
+         if ( allocated ( this % rad ) ) then
+            if ( allocated (this % rad(i) % d) ) deallocate ( this % rad(i) % d )
+         end if
+         
+         if ( allocated ( this % emiss_sfc )) then
+            if ( allocated (this % emiss_sfc(i) % d) ) deallocate ( this % emiss_sfc(i) % d )
+         end if
+         
+         if ( allocated (this % trans_ac_nadir )) then
+            if ( allocated (this % trans_ac_nadir(i) % d) ) deallocate ( this % trans_ac_nadir(i) % d )
+			end if
+         
+         if ( allocated (this % rad_clear_sky_toa )) then
+            if ( allocated (this % rad_clear_sky_toa(i) % d) ) deallocate ( this % rad_clear_sky_toa(i) % d )        
+			end if
+         
+         if ( allocated (this % rad_clear_sky_toc )) then
+            if ( allocated (this % rad_clear_sky_toc(i) % d) ) deallocate ( this % rad_clear_sky_toc(i) % d ) 
+         end if   
+      end do
+              
       if ( allocated (this % refl) ) deallocate ( this % refl )
       if ( allocated (this % alb_sfc) ) deallocate ( this % alb_sfc )
       if ( allocated (this % rad) ) deallocate ( this % rad )
       if ( allocated (this % emiss_sfc) ) deallocate ( this % emiss_sfc )
       if ( allocated (this % trans_ac_nadir) ) deallocate ( this % trans_ac_nadir )
       if ( allocated (this % rad_clear_sky_toa) ) deallocate ( this % rad_clear_sky_toa )
-      if ( allocated (this % rad_clear_sky_toc) ) deallocate ( this % rad_clear_sky_toc ) 
-       
-      
+      if ( allocated (this % rad_clear_sky_toc) ) deallocate ( this % rad_clear_sky_toc )  
+
       if ( allocated (this % sol % d) ) deallocate ( this % sol  % d )
       if ( allocated (this % sat % d) ) deallocate ( this % sat  % d )
       if ( allocated (this % azi % d) ) deallocate ( this % azi  % d )
@@ -412,12 +414,9 @@ contains
 		if ( allocated (this % press_sfc % d) )    deallocate ( this %  press_sfc % d )
 		if ( allocated (this % is_valid % d) ) deallocate ( this % is_valid  % d )
       
-      
+     
       
    end subroutine in_destructor
    
-   
-   
-      
-   
+
 end module dcomp_interface_types_mod

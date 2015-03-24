@@ -11,7 +11,7 @@ RTM_MOD = /home/awalther/SOFTWARE/RTM/RTTOV/mod
 RTM_LIB = /home/awalther/SOFTWARE/RTM/RTTOV/lib
 RTMODEL = rttov10.2.0
 
-HDFDIR = $(HOME)/lib/hdf4/
+HDFDIR = $(HOME)/lib/hdf4_gcc/
 HDFINC = $(HDFDIR)/include
 HDFLIB = $(HDFDIR)/lib
 ICAINC = hdf4/include
@@ -49,6 +49,7 @@ dcomp_math_tools_mod.o \
 dcomp_science_tools_mod.o \
 M_kracken.o \
 dcomp_lut_mod.o \
+dcomp_lut_hdf_mod.o \
 nlcomp_interface_def_mod.o \
 file_tools.o
 
@@ -73,7 +74,8 @@ nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_
 nlcomp_array_loop_sub.o:nlcomp_array_loop_sub.f90 
 nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_math_tools_mod.o  M_kracken.o dcomp_lut_mod.o dcomp_science_tools_mod.o
 dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
-dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o
+dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_hdf_mod.o
+dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90 
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 nlcomp_interface_def_mod.o:nlcomp_interface_def_mod.f90
 

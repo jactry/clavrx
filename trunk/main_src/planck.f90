@@ -63,6 +63,7 @@
   use CONSTANTS
   use CALIBRATION_CONSTANTS
   use NUMERICAL_ROUTINES
+  use PIXEL_COMMON, only: Sensor
 
   implicit none
    
@@ -75,30 +76,30 @@
   public:: CONVERT_RADIANCE
 
 !-- planck tables arrays
-  integer, parameter, private:: nplanck = 161
-  real (kind=int4), parameter, private:: T_planck_min = 180.0,  &
-                                         delta_T_planck = 1.0
-  real(kind=int4), dimension(nplanck), save, private:: B20
-  real(kind=int4), dimension(nplanck), save, private:: B21
-  real(kind=int4), dimension(nplanck), save, private:: B22
-  real(kind=int4), dimension(nplanck), save, private:: B23
-  real(kind=int4), dimension(nplanck), save, private:: B24
-  real(kind=int4), dimension(nplanck), save, private:: B25
-  real(kind=int4), dimension(nplanck), save, private:: B27
-  real(kind=int4), dimension(nplanck), save, private:: B28
-  real(kind=int4), dimension(nplanck), save, private:: B29
-  real(kind=int4), dimension(nplanck), save, private:: B30
-  real(kind=int4), dimension(nplanck), save, private:: B31
-  real(kind=int4), dimension(nplanck), save, private:: B32
-  real(kind=int4), dimension(nplanck), save, private:: B33
-  real(kind=int4), dimension(nplanck), save, private:: B34
-  real(kind=int4), dimension(nplanck), save, private:: B35
-  real(kind=int4), dimension(nplanck), save, private:: B36
-  real(kind=int4), dimension(nplanck), save, private:: B37
-  real(kind=int4), dimension(nplanck), save, private:: B38
-  real(kind=int4), dimension(nplanck), save, private:: B42
-  real(kind=int4), dimension(nplanck), save, private:: B43
-  real(kind=int4), dimension(nplanck), save, private:: T_planck
+  integer, parameter, private:: Nplanck = 161
+  real (kind=int4), parameter, private:: T_Planck_min = 180.0,  &
+                                         delta_T_Planck = 1.0
+  real(kind=int4), dimension(Nplanck), save, private:: B20 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B21 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B22 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B23 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B24 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B25 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B27 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B28 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B29 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B30 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B31 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B32 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B33 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B34 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B35 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B36 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B37 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B38 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B42 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: B43 = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: T_Planck = Missing_Value_Real4
 
   contains
 
@@ -135,6 +136,9 @@
  subroutine POPULATE_PLANCK_TABLES(a1_20,a2_20,nu_20, &
                                    a1_21,a2_21,nu_21, &
                                    a1_22,a2_22,nu_22, &
+                                   a1_23,a2_23,nu_23, &
+                                   a1_24,a2_24,nu_24, &
+                                   a1_25,a2_25,nu_25, &
                                    a1_27,a2_27,nu_27, &
                                    a1_28,a2_28,nu_28, &
                                    a1_29,a2_29,nu_29, &
@@ -154,6 +158,9 @@
   real, intent(in):: a1_20,a2_20,nu_20, &
                      a1_21,a2_21,nu_21, &
                      a1_22,a2_22,nu_22, &
+                     a1_23,a2_23,nu_23, &
+                     a1_24,a2_24,nu_24, &
+                     a1_25,a2_25,nu_25, &
                      a1_27,a2_27,nu_27, &
                      a1_28,a2_28,nu_28, &
                      a1_29,a2_29,nu_29, &
@@ -169,51 +176,30 @@
                      a1_42,a2_42,nu_42, &
                      a1_43,a2_43,nu_43
   integer:: i
-
-  do i = 1, nplanck
-    T_planck(i) = T_planck_min + (i-1)*delta_T_planck
-    B20(i) = c1*(nu_20**3)/(exp((c2*nu_20)/ &
-              ((T_planck(i)-a1_20)/a2_20))-1.0)
-    B21(i) = c1*(nu_21**3)/(exp((c2*nu_21)/ &
-              ((T_planck(i)-a1_21)/a2_21))-1.0)
-    B22(i) = c1*(nu_22**3)/(exp((c2*nu_22)/ &
-              ((T_planck(i)-a1_22)/a2_22))-1.0)
-    B23(i) = c1*(nu_23**3)/(exp((c2*nu_23)/ &
-              ((T_planck(i)-a1_23)/a2_23))-1.0)
-    B24(i) = c1*(nu_24**3)/(exp((c2*nu_24)/ &
-              ((T_planck(i)-a1_24)/a2_24))-1.0)
-    B25(i) = c1*(nu_25**3)/(exp((c2*nu_25)/ &
-              ((T_planck(i)-a1_25)/a2_25))-1.0)
-    B27(i) = c1*(nu_27**3)/(exp((c2*nu_27)/ &
-              ((T_planck(i)-a1_27)/a2_27))-1.0)
-    B28(i) = c1*(nu_28**3)/(exp((c2*nu_28)/ &
-              ((T_planck(i)-a1_28)/a2_28))-1.0)
-    B29(i) = c1*(nu_29**3)/(exp((c2*nu_29)/ &
-              ((T_planck(i)-a1_29)/a2_29))-1.0)
-    B30(i) = c1*(nu_30**3)/(exp((c2*nu_30)/ &
-              ((T_planck(i)-a1_30)/a2_30))-1.0)
-    B31(i) = c1*(nu_31**3)/(exp((c2*nu_31)/ &
-              ((T_planck(i)-a1_31)/a2_31))-1.0)
-    B32(i) = c1*(nu_32**3)/(exp((c2*nu_32)/ &
-              ((T_planck(i)-a1_32)/a2_32))-1.0)
-    B33(i) = c1*(nu_33**3)/(exp((c2*nu_33)/ &
-              ((T_planck(i)-a1_33)/a2_33))-1.0)
-    B34(i) = c1*(nu_34**3)/(exp((c2*nu_34)/ &
-              ((T_planck(i)-a1_34)/a2_34))-1.0)
-    B35(i) = c1*(nu_35**3)/(exp((c2*nu_35)/ &
-              ((T_planck(i)-a1_35)/a2_35))-1.0)
-    B36(i) = c1*(nu_36**3)/(exp((c2*nu_36)/ &
-              ((T_planck(i)-a1_36)/a2_36))-1.0)
-    B37(i) = c1*(nu_37**3)/(exp((c2*nu_37)/ &
-              ((T_planck(i)-a1_37)/a2_37))-1.0)
-    B38(i) = c1*(nu_38**3)/(exp((c2*nu_38)/ &
-              ((T_planck(i)-a1_38)/a2_38))-1.0)
-    B42(i) = c1*(nu_42**3)/(exp((c2*nu_42)/ &
-              ((T_planck(i)-a1_42)/a2_42))-1.0)
-    B43(i) = c1*(nu_43**3)/(exp((c2*nu_43)/ &
-              ((T_planck(i)-a1_43)/a2_43))-1.0)
+  do i = 1, Nplanck
+    T_Planck(i) = T_Planck_min + (i-1)*delta_T_Planck
   enddo
-  
+
+  if (Sensor%Chan_On_Flag_Default(20)) B20 = c1*(nu_20**3)/(exp((c2*nu_20)/((T_Planck-a1_20)/a2_20))-1.0)
+  if (Sensor%Chan_On_Flag_Default(21)) B21 = c1*(nu_21**3)/(exp((c2*nu_21)/((T_Planck-a1_21)/a2_21))-1.0)
+  if (Sensor%Chan_On_Flag_Default(22)) B22 = c1*(nu_22**3)/(exp((c2*nu_22)/((T_Planck-a1_22)/a2_22))-1.0)
+  if (Sensor%Chan_On_Flag_Default(23)) B23 = c1*(nu_23**3)/(exp((c2*nu_23)/((T_Planck-a1_23)/a2_23))-1.0)
+  if (Sensor%Chan_On_Flag_Default(24)) B24 = c1*(nu_24**3)/(exp((c2*nu_24)/((T_Planck-a1_24)/a2_24))-1.0)
+  if (Sensor%Chan_On_Flag_Default(25)) B25 = c1*(nu_25**3)/(exp((c2*nu_25)/((T_Planck-a1_25)/a2_25))-1.0)
+  if (Sensor%Chan_On_Flag_Default(27)) B27 = c1*(nu_27**3)/(exp((c2*nu_27)/((T_Planck-a1_27)/a2_27))-1.0)
+  if (Sensor%Chan_On_Flag_Default(28)) B28 = c1*(nu_28**3)/(exp((c2*nu_28)/((T_Planck-a1_28)/a2_28))-1.0)
+  if (Sensor%Chan_On_Flag_Default(29)) B29 = c1*(nu_29**3)/(exp((c2*nu_29)/((T_Planck-a1_29)/a2_29))-1.0)
+  if (Sensor%Chan_On_Flag_Default(30)) B30 = c1*(nu_30**3)/(exp((c2*nu_30)/((T_Planck-a1_30)/a2_30))-1.0)
+  if (Sensor%Chan_On_Flag_Default(31)) B31 = c1*(nu_31**3)/(exp((c2*nu_31)/((T_Planck-a1_31)/a2_31))-1.0)
+  if (Sensor%Chan_On_Flag_Default(32)) B32 = c1*(nu_32**3)/(exp((c2*nu_32)/((T_Planck-a1_32)/a2_32))-1.0)
+  if (Sensor%Chan_On_Flag_Default(33)) B33 = c1*(nu_33**3)/(exp((c2*nu_33)/((T_Planck-a1_33)/a2_33))-1.0)
+  if (Sensor%Chan_On_Flag_Default(34)) B34 = c1*(nu_34**3)/(exp((c2*nu_34)/((T_Planck-a1_34)/a2_34))-1.0)
+  if (Sensor%Chan_On_Flag_Default(35)) B35 = c1*(nu_35**3)/(exp((c2*nu_35)/((T_Planck-a1_35)/a2_35))-1.0)
+  if (Sensor%Chan_On_Flag_Default(36)) B36 = c1*(nu_36**3)/(exp((c2*nu_36)/((T_Planck-a1_36)/a2_36))-1.0)
+  if (Sensor%Chan_On_Flag_Default(37)) B37 = c1*(nu_37**3)/(exp((c2*nu_37)/((T_Planck-a1_37)/a2_37))-1.0)
+  if (Sensor%Chan_On_Flag_Default(38)) B38 = c1*(nu_38**3)/(exp((c2*nu_38)/((T_Planck-a1_38)/a2_38))-1.0)
+  if (Sensor%Chan_On_Flag_Default(42)) B42 = c1*(nu_42**3)/(exp((c2*nu_42)/((T_Planck-a1_42)/a2_42))-1.0)
+  if (Sensor%Chan_On_Flag_Default(43)) B43 = c1*(nu_43**3)/(exp((c2*nu_43)/((T_Planck-a1_43)/a2_43))-1.0)
 
   end subroutine POPULATE_PLANCK_TABLES
 
@@ -231,69 +217,69 @@
     integer:: l
 
 !--- compute planck emission for cloud temperature
-     l = (T - T_planck_min)/delta_T_planck
-     l = max(1,min(nplanck-1,l))
+     l = (T - T_Planck_min)/delta_T_Planck
+     l = max(1,min(Nplanck-1,l))
 
     if (ichan == 20) then 
-      dB_dT_tmp = (B20(l+1)-B20(l))/(T_planck(l+1)-T_planck(l))
-      B = B20(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B20(l+1)-B20(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B20(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 21) then 
-      dB_dT_tmp = (B21(l+1)-B21(l))/(T_planck(l+1)-T_planck(l))
-      B = B21(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B21(l+1)-B21(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B21(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 22) then 
-      dB_dT_tmp = (B22(l+1)-B22(l))/(T_planck(l+1)-T_planck(l))
-      B = B22(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B22(l+1)-B22(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B22(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 23) then 
-      dB_dT_tmp = (B23(l+1)-B23(l))/(T_planck(l+1)-T_planck(l))
-      B = B23(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B23(l+1)-B23(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B23(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 24) then 
-      dB_dT_tmp = (B24(l+1)-B24(l))/(T_planck(l+1)-T_planck(l))
-      B = B24(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B24(l+1)-B24(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B24(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 25) then 
-      dB_dT_tmp = (B25(l+1)-B24(l))/(T_planck(l+1)-T_planck(l))
-      B = B25(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B25(l+1)-B24(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B25(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 27) then 
-      dB_dT_tmp = (B27(l+1)-B27(l))/(T_planck(l+1)-T_planck(l))
-      B = B27(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B27(l+1)-B27(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B27(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 28) then 
-      dB_dT_tmp = (B28(l+1)-B28(l))/(T_planck(l+1)-T_planck(l))
-      B = B28(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B28(l+1)-B28(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B28(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 29) then 
-      dB_dT_tmp = (B29(l+1)-B29(l))/(T_planck(l+1)-T_planck(l))
-      B = B29(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B29(l+1)-B29(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B29(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 30) then 
-      dB_dT_tmp = (B30(l+1)-B30(l))/(T_planck(l+1)-T_planck(l))
-      B = B30(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B30(l+1)-B30(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B30(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 31) then 
-      dB_dT_tmp = (B31(l+1)-B31(l))/(T_planck(l+1)-T_planck(l))
-      B = B31(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B31(l+1)-B31(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B31(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 32) then 
-      dB_dT_tmp = (B32(l+1)-B32(l))/(T_planck(l+1)-T_planck(l))
-      B = B32(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B32(l+1)-B32(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B32(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 33) then 
-      dB_dT_tmp = (B33(l+1)-B33(l))/(T_planck(l+1)-T_planck(l))
-      B = B33(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B33(l+1)-B33(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B33(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 34) then 
-      dB_dT_tmp = (B34(l+1)-B34(l))/(T_planck(l+1)-T_planck(l))
-      B = B34(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B34(l+1)-B34(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B34(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 35) then 
-      dB_dT_tmp = (B35(l+1)-B35(l))/(T_planck(l+1)-T_planck(l))
-      B = B35(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B35(l+1)-B35(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B35(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 36) then 
-      dB_dT_tmp = (B36(l+1)-B36(l))/(T_planck(l+1)-T_planck(l))
-      B = B36(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B36(l+1)-B36(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B36(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 37) then 
-      dB_dT_tmp = (B37(l+1)-B37(l))/(T_planck(l+1)-T_planck(l))
-      B = B37(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B37(l+1)-B37(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B37(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 38) then 
-      dB_dT_tmp = (B38(l+1)-B38(l))/(T_planck(l+1)-T_planck(l))
-      B = B38(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B38(l+1)-B38(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B38(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 42) then 
-      dB_dT_tmp = (B42(l+1)-B42(l))/(T_planck(l+1)-T_planck(l))
-      B = B42(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B42(l+1)-B42(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B42(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     elseif (ichan == 43) then 
-      dB_dT_tmp = (B43(l+1)-B43(l))/(T_planck(l+1)-T_planck(l))
-      B = B43(l) + (T - T_planck(l)) * (dB_dT_tmp)
+      dB_dT_tmp = (B43(l+1)-B43(l))/(T_Planck(l+1)-T_Planck(l))
+      B = B43(l) + (T - T_Planck(l)) * (dB_dT_tmp)
     else
       print *, "unsupported channel number in Planck Computation, stopping"
       stop
@@ -315,109 +301,113 @@
     integer (kind=int4), intent(in) :: ichan
     real (kind=real4), intent(in) :: B 
     real (kind=real4), optional, intent(out) :: dB_dT
-    real (kind=real4) :: T, dB_dT_tmp
+    real (kind=real4) :: T
+    real (kind=real4) :: dB_dT_Tmp
     integer:: l
 
+    T = Missing_Value_Real4
+    dB_dT_Tmp = Missing_Value_Real4
+
     if (ichan == 20) then 
-      call locate(B20,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B20(l+1)-B20(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B20(l)) / (dB_dT_tmp)
+      call locate(B20,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B20(l+1)-B20(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B20(l)) / (dB_dT_tmp)
     elseif (ichan == 21) then 
-      call locate(B21,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B21(l+1)-B21(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B21(l)) / (dB_dT_tmp)
+      call locate(B21,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B21(l+1)-B21(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B21(l)) / (dB_dT_tmp)
     elseif (ichan == 22) then 
-      call locate(B22,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B22(l+1)-B22(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B22(l)) / (dB_dT_tmp)
+      call locate(B22,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B22(l+1)-B22(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B22(l)) / (dB_dT_tmp)
     elseif (ichan == 23) then 
-      call locate(B23,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B23(l+1)-B23(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B23(l)) / (dB_dT_tmp)
+      call locate(B23,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B23(l+1)-B23(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B23(l)) / (dB_dT_tmp)
     elseif (ichan == 24) then 
-      call locate(B24,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B24(l+1)-B24(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B24(l)) / (dB_dT_tmp)
+      call locate(B24,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B24(l+1)-B24(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B24(l)) / (dB_dT_tmp)
     elseif (ichan == 25) then 
-      call locate(B25,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B25(l+1)-B25(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B25(l)) / (dB_dT_tmp)
+      call locate(B25,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B25(l+1)-B25(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B25(l)) / (dB_dT_tmp)
     elseif (ichan == 27) then 
-      call locate(B27,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B27(l+1)-B27(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B27(l)) / (dB_dT_tmp)
+      call locate(B27,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B27(l+1)-B27(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B27(l)) / (dB_dT_tmp)
     elseif (ichan == 28) then 
-      call locate(B28,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B28(l+1)-B28(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B28(l)) / (dB_dT_tmp)
+      call locate(B28,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B28(l+1)-B28(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B28(l)) / (dB_dT_tmp)
     elseif (ichan == 29) then 
-      call locate(B29,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B29(l+1)-B29(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B29(l)) / (dB_dT_tmp)
+      call locate(B29,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B29(l+1)-B29(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B29(l)) / (dB_dT_tmp)
     elseif (ichan == 30) then 
-      call locate(B30,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B30(l+1)-B30(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B30(l)) / (dB_dT_tmp)
+      call locate(B30,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B30(l+1)-B30(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B30(l)) / (dB_dT_tmp)
     elseif (ichan == 31) then 
-      call locate(B31,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B31(l+1)-B31(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B31(l)) / (dB_dT_tmp)
+      call locate(B31,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B31(l+1)-B31(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B31(l)) / (dB_dT_tmp)
     elseif (ichan == 32) then 
-      call locate(B32,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B32(l+1)-B32(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B32(l)) / (dB_dT_tmp)
+      call locate(B32,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B32(l+1)-B32(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B32(l)) / (dB_dT_tmp)
     elseif (ichan == 33) then 
-      call locate(B33,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B33(l+1)-B33(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B33(l)) / (dB_dT_tmp)
+      call locate(B33,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B33(l+1)-B33(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B33(l)) / (dB_dT_tmp)
     elseif (ichan == 34) then 
-      call locate(B34,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B34(l+1)-B34(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B34(l)) / (dB_dT_tmp)
+      call locate(B34,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B34(l+1)-B34(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B34(l)) / (dB_dT_tmp)
     elseif (ichan == 35) then 
-      call locate(B35,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B35(l+1)-B35(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B35(l)) / (dB_dT_tmp)
+      call locate(B35,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B35(l+1)-B35(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B35(l)) / (dB_dT_tmp)
     elseif (ichan == 36) then 
-      call locate(B36,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B36(l+1)-B36(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B36(l)) / (dB_dT_tmp)
+      call locate(B36,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B36(l+1)-B36(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B36(l)) / (dB_dT_tmp)
     elseif (ichan == 37) then 
-      call locate(B37,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B37(l+1)-B37(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B37(l)) / (dB_dT_tmp)
+      call locate(B37,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B37(l+1)-B37(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B37(l)) / (dB_dT_tmp)
     elseif (ichan == 38) then 
-      call locate(B38,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B38(l+1)-B38(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B38(l)) / (dB_dT_tmp)
+      call locate(B38,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B38(l+1)-B38(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B38(l)) / (dB_dT_tmp)
     elseif (ichan == 42) then 
-      call locate(B42,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B42(l+1)-B42(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B42(l)) / (dB_dT_tmp)
+      call locate(B42,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B42(l+1)-B42(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B42(l)) / (dB_dT_tmp)
     elseif (ichan == 43) then 
-      call locate(B43,nplanck,B,l)
-      l = max(1,min(nplanck-1,l))
-      dB_dT_tmp = (B43(l+1)-B43(l))/(T_planck(l+1)-T_planck(l))
-      T = T_planck(l) + (B - B43(l)) / (dB_dT_tmp)
+      call locate(B43,Nplanck,B,l)
+      l = max(1,min(Nplanck-1,l))
+      dB_dT_tmp = (B43(l+1)-B43(l))/(T_Planck(l+1)-T_Planck(l))
+      T = T_Planck(l) + (B - B43(l)) / (dB_dT_tmp)
     else
       print *, "unsupported channel number in Planck Computation, stopping"
       stop

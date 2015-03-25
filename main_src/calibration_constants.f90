@@ -40,89 +40,173 @@ module CALIBRATION_CONSTANTS
   real (kind=real4), parameter, public:: c1 = 1.191062e-5, &
                                          c2 = 1.4387863
 
-  real (kind=real4), public,save:: A1_20,A2_20,Nu_20
-  real (kind=real4), public,save:: A1_21,A2_21,Nu_21
-  real (kind=real4), public,save:: A1_22,A2_22,Nu_22
-  real (kind=real4), public,save:: A1_23,A2_23,Nu_23
-  real (kind=real4), public,save:: A1_24,A2_24,Nu_24
-  real (kind=real4), public,save:: A1_25,A2_25,Nu_25
-  real (kind=real4), public,save:: A1_27,A2_27,Nu_27
-  real (kind=real4), public,save:: A1_28,A2_28,Nu_28
-  real (kind=real4), public,save:: A1_29,A2_29,Nu_29
-  real (kind=real4), public,save:: A1_30,A2_30,Nu_30
-  real (kind=real4), public,save:: A1_31,A2_31,Nu_31
-  real (kind=real4), public,save:: A1_32,A2_32,Nu_32
-  real (kind=real4), public,save:: A1_33,A2_33,Nu_33
-  real (kind=real4), public,save:: A1_34,A2_34,Nu_34
-  real (kind=real4), public,save:: A1_35,A2_35,Nu_35
-  real (kind=real4), public,save:: A1_36,A2_36,Nu_36
-  real (kind=real4), public,save:: A1_37,A2_37,Nu_37
-  real (kind=real4), public,save:: A1_38,A2_38,Nu_38
-  real (kind=real4), public,save:: A1_42,A2_42,Nu_42
-  real (kind=real4), public,save:: A1_43,A2_43,Nu_43
+  real (kind=real4), public,save:: A1_20 = 0.0
+  real (kind=real4), public,save:: A2_20 = 1.0
+  real (kind=real4), public,save:: Nu_20 = 0.0
+  real (kind=real4), public,save:: A1_21 = 0.0
+  real (kind=real4), public,save:: A2_21 = 1.0
+  real (kind=real4), public,save:: Nu_21 = 0.0
+  real (kind=real4), public,save:: A1_22 = 0.0
+  real (kind=real4), public,save:: A2_22 = 1.0
+  real (kind=real4), public,save:: Nu_22 = 0.0
+  real (kind=real4), public,save:: A1_23 = 0.0
+  real (kind=real4), public,save:: A2_23 = 1.0
+  real (kind=real4), public,save:: Nu_23 = 0.0
+  real (kind=real4), public,save:: A1_24 = 0.0
+  real (kind=real4), public,save:: A2_24 = 1.0
+  real (kind=real4), public,save:: Nu_24 = 0.0
+  real (kind=real4), public,save:: A1_25 = 0.0
+  real (kind=real4), public,save:: A2_25 = 1.0
+  real (kind=real4), public,save:: Nu_25 = 0.0
+  real (kind=real4), public,save:: A1_27 = 0.0
+  real (kind=real4), public,save:: A2_27 = 1.0
+  real (kind=real4), public,save:: Nu_27 = 0.0
+  real (kind=real4), public,save:: A1_28 = 0.0
+  real (kind=real4), public,save:: A2_28 = 1.0
+  real (kind=real4), public,save:: Nu_28 = 0.0
+  real (kind=real4), public,save:: A1_29 = 0.0
+  real (kind=real4), public,save:: A2_29 = 1.0
+  real (kind=real4), public,save:: Nu_29 = 0.0
+  real (kind=real4), public,save:: A1_30 = 0.0
+  real (kind=real4), public,save:: A2_30 = 1.0
+  real (kind=real4), public,save:: Nu_30 = 0.0
+  real (kind=real4), public,save:: A1_31 = 0.0
+  real (kind=real4), public,save:: A2_31 = 1.0
+  real (kind=real4), public,save:: Nu_31 = 0.0
+  real (kind=real4), public,save:: A1_32 = 0.0
+  real (kind=real4), public,save:: A2_32 = 1.0
+  real (kind=real4), public,save:: Nu_32 = 0.0
+  real (kind=real4), public,save:: A1_33 = 0.0
+  real (kind=real4), public,save:: A2_33 = 1.0
+  real (kind=real4), public,save:: Nu_33 = 0.0
+  real (kind=real4), public,save:: A1_34 = 0.0
+  real (kind=real4), public,save:: A2_34 = 1.0
+  real (kind=real4), public,save:: Nu_34 = 0.0
+  real (kind=real4), public,save:: A1_35 = 0.0
+  real (kind=real4), public,save:: A2_35 = 1.0
+  real (kind=real4), public,save:: Nu_35 = 0.0
+  real (kind=real4), public,save:: A1_36 = 0.0
+  real (kind=real4), public,save:: A2_36 = 1.0
+  real (kind=real4), public,save:: Nu_36 = 0.0
+  real (kind=real4), public,save:: A1_37 = 0.0
+  real (kind=real4), public,save:: A2_37 = 1.0
+  real (kind=real4), public,save:: Nu_37 = 0.0
+  real (kind=real4), public,save:: A1_38 = 0.0
+  real (kind=real4), public,save:: A2_38 = 1.0
+  real (kind=real4), public,save:: Nu_38 = 0.0
+  real (kind=real4), public,save:: A1_42 = 0.0
+  real (kind=real4), public,save:: A2_42 = 1.0
+  real (kind=real4), public,save:: Nu_42 = 0.0
+  real (kind=real4), public,save:: A1_43 = 0.0
+  real (kind=real4), public,save:: A2_43 = 1.0
+  real (kind=real4), public,save:: Nu_43 = 0.0
+
 
 !----- variables read in from instrument constant files (planck stored in constants module)
- real (kind=real4), save, public:: B0_3b,B1_3b,B2_3b,B0_4,B1_4,B2_4,B0_5,B1_5,B2_5, &
-                      space_Rad_3b,space_Rad_4,space_Rad_5
- real(kind=real4), dimension(0:4,4),public,save:: Prt_Coef
- real(kind=real4), dimension(4),public,save:: Prt_Weight
- real(kind=real4),save,public:: Ch1_Gain_Low_0,Ch1_Gain_High_0,Ch2_Gain_Low_0,&
-                Ch2_Gain_High_0,Ch3a_Gain_Low_0,Ch3a_Gain_High_0, &
-                Ch1_Degrad_Low_1,Ch2_Degrad_Low_1,Ch3a_Degrad_Low_1, &
-                Ch1_Degrad_High_1,Ch2_Degrad_High_1,Ch3a_Degrad_High_1, &
-                Ch1_Degrad_Low_2,Ch2_Degrad_Low_2,Ch3a_Degrad_Low_2, &
-                Ch1_Degrad_High_2,Ch2_Degrad_High_2,Ch3a_Degrad_High_2, &
-                Ch1_Dark_Count,Ch2_Dark_Count,Ch3a_Dark_Count, &
-                Ch1_Dark_Count_Cal,Ch2_Dark_Count_Cal,Ch3a_Dark_Count_Cal, &
-                Ch1_Switch_Count,Ch2_Switch_Count, Ch3a_Switch_Count, &
-                Ch1_Gain_Low,Ch1_Gain_High,Ch2_Gain_Low,Ch2_Gain_High, &
-                Ch3a_Gain_Low,Ch3a_Gain_High, Ref_Ch1_Switch,Ref_Ch2_Switch, &
-                Ref_Ch6_Switch,Ch1_Switch_Count_Cal,Ch2_Switch_Count_Cal, &
-                Ch3a_Switch_Count_Cal
+ real (kind=real4), save, public:: B0_3b = 0.0
+ real (kind=real4), save, public:: B1_3b = 0.0
+ real (kind=real4), save, public:: B2_3b = 0.0
+ real (kind=real4), save, public:: B0_4 = 0.0
+ real (kind=real4), save, public:: B1_4 = 0.0
+ real (kind=real4), save, public:: B2_4 = 0.0
+ real (kind=real4), save, public:: B0_5 = 0.0
+ real (kind=real4), save, public:: B1_5 = 0.0
+ real (kind=real4), save, public:: B2_5 = 0.0
+ real (kind=real4), save, public:: Space_Rad_3b = 0.0
+ real (kind=real4), save, public:: Space_Rad_4 = 0.0
+ real (kind=real4), save, public:: Space_Rad_5 = 0.0
 
- real(kind=real4),save,public:: Sun_Earth_Distance
- real(kind=real4),save,public:: Launch_Date
+ real(kind=real4), dimension(0:4,4),public,save:: Prt_Coef = 0.0
+ real(kind=real4), dimension(4),public,save:: Prt_Weight = 0.0
 
+ real(kind=real4),save,public:: Ch1_Gain_Low = 0.0
+ real(kind=real4),save,public:: Ch1_Gain_High = 0.0
+ real(kind=real4),save,public:: Ch1_Gain_Low_0 = 0.0
+ real(kind=real4),save,public:: Ch1_Gain_High_0 = 0.0
+ real(kind=real4),save,public:: Ch1_Degrad_Low_1 = 0.0
+ real(kind=real4),save,public:: Ch1_Degrad_High_1 = 0.0
+ real(kind=real4),save,public:: Ch1_Degrad_Low_2 = 0.0
+ real(kind=real4),save,public:: Ch1_Degrad_High_2 = 0.0
+ real(kind=real4),save,public:: Ch1_Dark_Count = 0.0
+ real(kind=real4),save,public:: Ch1_Dark_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ch1_Switch_Count = 0.0
+ real(kind=real4),save,public:: Ch1_Switch_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ref_Ch1_Switch = 0.0
 
- real(kind=real4),save,public:: Goes_Ch2_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch3_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch4_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch5_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch6_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch7_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch8_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch9_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch10_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch12_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch13_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch14_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch16_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch17_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch18_Thermal_Intercept
- real(kind=real4),save,public:: Goes_Ch2_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch3_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch4_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch5_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch6_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch7_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch8_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch9_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch10_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch12_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch13_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch14_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch16_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch17_Thermal_Slope
- real(kind=real4),save,public:: Goes_Ch18_Thermal_Slope
+ real(kind=real4),save,public:: Ch2_Gain_Low = 0.0
+ real(kind=real4),save,public:: Ch2_Gain_High = 0.0
+ real(kind=real4),save,public:: Ch2_Gain_Low_0 = 0.0
+ real(kind=real4),save,public:: Ch2_Gain_High_0 = 0.0
+ real(kind=real4),save,public:: Ch2_Degrad_Low_1 = 0.0
+ real(kind=real4),save,public:: Ch2_Degrad_High_1 = 0.0
+ real(kind=real4),save,public:: Ch2_Degrad_Low_2 = 0.0
+ real(kind=real4),save,public:: Ch2_Degrad_High_2 = 0.0
+ real(kind=real4),save,public:: Ch2_Dark_Count = 0.0
+ real(kind=real4),save,public:: Ch2_Dark_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ch2_Switch_Count = 0.0
+ real(kind=real4),save,public:: Ch2_Switch_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ref_Ch2_Switch = 0.0
+
+ real(kind=real4),save,public:: Ch3a_Gain_Low = 0.0
+ real(kind=real4),save,public:: Ch3a_Gain_High = 0.0
+ real(kind=real4),save,public:: Ch3a_Gain_Low_0 = 0.0
+ real(kind=real4),save,public:: Ch3a_Gain_High_0 = 0.0
+ real(kind=real4),save,public:: Ch3a_Degrad_Low_1 = 0.0
+ real(kind=real4),save,public:: Ch3a_Degrad_High_1 = 0.0
+ real(kind=real4),save,public:: Ch3a_Degrad_Low_2 = 0.0
+ real(kind=real4),save,public:: Ch3a_Degrad_High_2 = 0.0
+ real(kind=real4),save,public:: Ch3a_Dark_Count = 0.0
+ real(kind=real4),save,public:: Ch3a_Dark_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ch3a_Switch_Count = 0.0
+ real(kind=real4),save,public:: Ch3a_Switch_Count_Cal = 0.0
+ real(kind=real4),save,public:: Ref_Ch6_Switch = 0.0
+
+ real(kind=real4),save,public:: Sun_Earth_Distance = 0.0
+ real(kind=real4),save,public:: Launch_Date = 0.0
+
+ real(kind=real4),save,public:: Goes_Ch2_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch3_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch4_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch5_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch6_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch7_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch8_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch9_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch10_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch12_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch13_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch14_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch16_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch17_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch18_Thermal_Intercept = 0.0
+ real(kind=real4),save,public:: Goes_Ch2_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch3_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch4_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch5_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch6_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch7_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch8_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch9_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch10_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch12_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch13_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch14_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch16_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch17_Thermal_Slope = 0.0
+ real(kind=real4),save,public:: Goes_Ch18_Thermal_Slope = 0.0
 
  real(kind=real8),save,public:: Goes_Input_Time = 0
  real(kind=real8),save,public:: Goes_Epoch_Time = 0
 
  !--- MCSST values
- real(kind=real4),save,public:: B1_day_mask,B2_day_mask, &
-                                B3_day_mask,B4_day_mask
+ real(kind=real4),save,public:: B1_day_mask = 0.0
+ real(kind=real4),save,public:: B2_day_mask = 0.0
+ real(kind=real4),save,public:: B3_day_mask = 0.0
+ real(kind=real4),save,public:: B4_day_mask = 0.0
 
- real(kind=real4),save,public:: Solar_Ch20,Solar_Ch20_Nu,Ew_Ch20
- character(len=7),save,public:: Sat_Name
+ real(kind=real4),save,public:: Solar_Ch20 = 0.0
+ real(kind=real4),save,public:: Solar_Ch20_Nu = 0.0
+ real(kind=real4),save,public:: Ew_Ch20 = 0.0
+ character(len=7),save,public:: Sat_Name = ' '
 
 end module CALIBRATION_CONSTANTS

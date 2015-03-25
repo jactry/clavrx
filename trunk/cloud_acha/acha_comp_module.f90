@@ -93,7 +93,7 @@ module ACHA_COMP
 
     !--- for convenience, save nwp indices to local variables
     Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
-    
+   
     !----------------------------------------------------------------------
     ! determine cloud phase from cloud type for convenience
     !----------------------------------------------------------------------
@@ -185,6 +185,8 @@ subroutine COMPUTE_TAU_REFF_ACHA(Beta, &
    real(kind=real4):: Tau_Abs_11um
    real(kind=real4):: Temp_R4
    real(kind=real4):: log10_Reff
+   real(kind=real4), parameter:: Reff_Min = 1.0
+   real(kind=real4), parameter:: Reff_Max = 100.0
 
    Tau = MISSING_VALUE_REAL
    Reff = MISSING_VALUE_REAL
@@ -202,7 +204,7 @@ subroutine COMPUTE_TAU_REFF_ACHA(Beta, &
               D_Re_Beta_FIT_WATER*Beta**3
    endif
 
-   Reff = 10.0**(1.0/Temp_R4)
+   Reff = max(Reff_Min,min(Reff_Max,10.0**(1.0/Temp_R4)))
 
    if (Reff > 0.0) then
      log10_Reff = alog10(Reff)

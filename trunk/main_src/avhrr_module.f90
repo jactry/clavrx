@@ -328,15 +328,15 @@ subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) Space_Rad_3b, b0_3b, b1_3b, b2_3b
   read(unit=Instr_Const_lun,fmt=*) Space_Rad_4, b0_4, b1_4, b2_4
   read(unit=Instr_Const_lun,fmt=*) Space_Rad_5, b0_5, b1_5, b2_5
-  read(unit=Instr_Const_lun,fmt=*) nu_20
-  read(unit=Instr_Const_lun,fmt=*) a1_20
-  read(unit=Instr_Const_lun,fmt=*) a2_20
-  read(unit=Instr_Const_lun,fmt=*) nu_31
-  read(unit=Instr_Const_lun,fmt=*) a1_31
-  read(unit=Instr_Const_lun,fmt=*) a2_31
-  read(unit=Instr_Const_lun,fmt=*) nu_32
-  read(unit=Instr_Const_lun,fmt=*) a1_32
-  read(unit=Instr_Const_lun,fmt=*) a2_32
+  read(unit=Instr_Const_lun,fmt=*) Planck_Nu(20)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A1(20)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A2(20)
+  read(unit=Instr_Const_lun,fmt=*) Planck_Nu(31)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A1(31)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A2(31)
+  read(unit=Instr_Const_lun,fmt=*) Planck_Nu(32)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A1(32)
+  read(unit=Instr_Const_lun,fmt=*) Planck_A2(32)
   read(unit=Instr_Const_lun,fmt=*) Ch1_Dark_Count
   read(unit=Instr_Const_lun,fmt=*) Ch2_Dark_Count
   read(unit=Instr_Const_lun,fmt=*) Ch3a_Dark_Count

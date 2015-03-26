@@ -40,22 +40,7 @@ module IFF_MODULE
      , real8 & 
      , ipre
  use CALIBRATION_CONSTANTS, only: &
-     Nu_20 &
-     , Nu_21 &
-     , Nu_22 &
-     , Nu_23 &
-     , Nu_24 &
-     , Nu_25 &
-     , Nu_27 &
-     , Nu_28 &
-     , Nu_29 &
-     , Nu_30 &
-     , Nu_31 &
-     , Nu_32 &
-     , Nu_33 &
-     , Nu_34 &
-     , Nu_35 &
-     , Nu_36
+     Planck_Nu
 
  implicit none
 
@@ -270,11 +255,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! set nu numbes for radiance conversion
       nu_list = 0
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-         nu_list(20:25) = [Nu_20, Nu_20, Nu_31, Nu_23, Nu_24, Nu_25]
-         nu_list(27:36) = [Nu_27, Nu_28, Nu_32, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(20), Planck_Nu(31), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
+         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(32), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
+                           Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
       else
-         nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
-         nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(21), Planck_Nu(22), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
+         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30),  &
+                           Planck_Nu(31), Planck_Nu(32), Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
       endif
 
       ! open file

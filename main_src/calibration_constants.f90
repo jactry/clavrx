@@ -40,67 +40,9 @@ module CALIBRATION_CONSTANTS
   real (kind=real4), parameter, public:: c1 = 1.191062e-5, &
                                          c2 = 1.4387863
 
-  real (kind=real4), public,save:: A1_20 = 0.0
-  real (kind=real4), public,save:: A2_20 = 1.0
-  real (kind=real4), public,save:: Nu_20 = 0.0
-  real (kind=real4), public,save:: A1_21 = 0.0
-  real (kind=real4), public,save:: A2_21 = 1.0
-  real (kind=real4), public,save:: Nu_21 = 0.0
-  real (kind=real4), public,save:: A1_22 = 0.0
-  real (kind=real4), public,save:: A2_22 = 1.0
-  real (kind=real4), public,save:: Nu_22 = 0.0
-  real (kind=real4), public,save:: A1_23 = 0.0
-  real (kind=real4), public,save:: A2_23 = 1.0
-  real (kind=real4), public,save:: Nu_23 = 0.0
-  real (kind=real4), public,save:: A1_24 = 0.0
-  real (kind=real4), public,save:: A2_24 = 1.0
-  real (kind=real4), public,save:: Nu_24 = 0.0
-  real (kind=real4), public,save:: A1_25 = 0.0
-  real (kind=real4), public,save:: A2_25 = 1.0
-  real (kind=real4), public,save:: Nu_25 = 0.0
-  real (kind=real4), public,save:: A1_27 = 0.0
-  real (kind=real4), public,save:: A2_27 = 1.0
-  real (kind=real4), public,save:: Nu_27 = 0.0
-  real (kind=real4), public,save:: A1_28 = 0.0
-  real (kind=real4), public,save:: A2_28 = 1.0
-  real (kind=real4), public,save:: Nu_28 = 0.0
-  real (kind=real4), public,save:: A1_29 = 0.0
-  real (kind=real4), public,save:: A2_29 = 1.0
-  real (kind=real4), public,save:: Nu_29 = 0.0
-  real (kind=real4), public,save:: A1_30 = 0.0
-  real (kind=real4), public,save:: A2_30 = 1.0
-  real (kind=real4), public,save:: Nu_30 = 0.0
-  real (kind=real4), public,save:: A1_31 = 0.0
-  real (kind=real4), public,save:: A2_31 = 1.0
-  real (kind=real4), public,save:: Nu_31 = 0.0
-  real (kind=real4), public,save:: A1_32 = 0.0
-  real (kind=real4), public,save:: A2_32 = 1.0
-  real (kind=real4), public,save:: Nu_32 = 0.0
-  real (kind=real4), public,save:: A1_33 = 0.0
-  real (kind=real4), public,save:: A2_33 = 1.0
-  real (kind=real4), public,save:: Nu_33 = 0.0
-  real (kind=real4), public,save:: A1_34 = 0.0
-  real (kind=real4), public,save:: A2_34 = 1.0
-  real (kind=real4), public,save:: Nu_34 = 0.0
-  real (kind=real4), public,save:: A1_35 = 0.0
-  real (kind=real4), public,save:: A2_35 = 1.0
-  real (kind=real4), public,save:: Nu_35 = 0.0
-  real (kind=real4), public,save:: A1_36 = 0.0
-  real (kind=real4), public,save:: A2_36 = 1.0
-  real (kind=real4), public,save:: Nu_36 = 0.0
-  real (kind=real4), public,save:: A1_37 = 0.0
-  real (kind=real4), public,save:: A2_37 = 1.0
-  real (kind=real4), public,save:: Nu_37 = 0.0
-  real (kind=real4), public,save:: A1_38 = 0.0
-  real (kind=real4), public,save:: A2_38 = 1.0
-  real (kind=real4), public,save:: Nu_38 = 0.0
-  real (kind=real4), public,save:: A1_42 = 0.0
-  real (kind=real4), public,save:: A2_42 = 1.0
-  real (kind=real4), public,save:: Nu_42 = 0.0
-  real (kind=real4), public,save:: A1_43 = 0.0
-  real (kind=real4), public,save:: A2_43 = 1.0
-  real (kind=real4), public,save:: Nu_43 = 0.0
-
+  real (kind=real4), dimension(20:43), public,save:: Planck_A1 = 0.0
+  real (kind=real4), dimension(20:43), public,save:: Planck_A2 = 1.0
+  real (kind=real4), dimension(20:43), public,save:: Planck_Nu = 0.0
 
 !----- variables read in from instrument constant files (planck stored in constants module)
  real (kind=real4), save, public:: B0_3b = 0.0

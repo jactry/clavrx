@@ -126,11 +126,7 @@ contains
           , relative_azimuth
 
       use calibration_constants, only: &
-          Nu_20 &
-          , Nu_22 &
-          , Nu_29 &
-          , Nu_31 &
-          , Nu_32
+            Planck_Nu
       
       
       implicit none
@@ -180,7 +176,8 @@ contains
       v_conf % file_gmtco_base =  trim(file_gmtco_base)
 
       v_conf % Nu_List = 0.0
-      v_conf % Nu_List(12:16) = [Nu_20 , Nu_22 , Nu_29 , Nu_31 , Nu_32]
+      v_conf % Nu_List(12:16) = [Planck_Nu(20) , Planck_Nu(22) ,  &
+                                Planck_Nu(29) , Planck_Nu(31) , Planck_Nu(32)]
 
       ! - read the data 
       call get_viirs_data ( v_conf, out )
@@ -411,13 +408,13 @@ contains
       read(unit=Instr_Const_lun,fmt="(a3)") sat_name
       read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-      read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20
-      read(unit=Instr_Const_lun,fmt=*) a1_22, a2_22,nu_22
-      read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29
-      read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
-      read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
-      read(unit=Instr_Const_lun,fmt=*) a1_42, a2_42,nu_42
-      read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20),planck_nu(20)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22),planck_nu(22)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29),planck_nu(29)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31),planck_nu(31)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32),planck_nu(32)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(42), planck_a2(42),planck_nu(42)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(43), planck_a2(43),planck_nu(43)
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
   

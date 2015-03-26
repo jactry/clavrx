@@ -131,78 +131,29 @@
 
  end subroutine
 !-------------------------------------------------------------------------
-! subroutine POPULATE_PLANCK_TABLES(a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32,a2_32,nu_32)
+! subroutine POPULATE_PLANCK_TABLES()
 !
 ! compute planck function tables
 !
 !-------------------------------------------------------------------------
- subroutine POPULATE_PLANCK_TABLES(a1_20,a2_20,nu_20, &
-                                   a1_21,a2_21,nu_21, &
-                                   a1_22,a2_22,nu_22, &
-                                   a1_23,a2_23,nu_23, &
-                                   a1_24,a2_24,nu_24, &
-                                   a1_25,a2_25,nu_25, &
-                                   a1_27,a2_27,nu_27, &
-                                   a1_28,a2_28,nu_28, &
-                                   a1_29,a2_29,nu_29, &
-                                   a1_30,a2_30,nu_30, &
-                                   a1_31,a2_31,nu_31, &
-                                   a1_32,a2_32,nu_32, &
-                                   a1_33,a2_33,nu_33, &
-                                   a1_34,a2_34,nu_34, &
-                                   a1_35,a2_35,nu_35, &
-                                   a1_36,a2_36,nu_36, &
-                                   a1_37,a2_37,nu_37, &
-                                   a1_38,a2_38,nu_38, &
-                                   a1_42,a2_42,nu_42, &
-                                   a1_43,a2_43,nu_43)
+ subroutine POPULATE_PLANCK_TABLES()
 
+  integer:: i, ichan
 
-  real, intent(in):: a1_20,a2_20,nu_20, &
-                     a1_21,a2_21,nu_21, &
-                     a1_22,a2_22,nu_22, &
-                     a1_23,a2_23,nu_23, &
-                     a1_24,a2_24,nu_24, &
-                     a1_25,a2_25,nu_25, &
-                     a1_27,a2_27,nu_27, &
-                     a1_28,a2_28,nu_28, &
-                     a1_29,a2_29,nu_29, &
-                     a1_30,a2_30,nu_30, &
-                     a1_31,a2_31,nu_31, &
-                     a1_32,a2_32,nu_32, &
-                     a1_33,a2_33,nu_33, &
-                     a1_34,a2_34,nu_34, &
-                     a1_35,a2_35,nu_35, &
-                     a1_36,a2_36,nu_36, &
-                     a1_37,a2_37,nu_37, &
-                     a1_38,a2_38,nu_38, &
-                     a1_42,a2_42,nu_42, &
-                     a1_43,a2_43,nu_43
-  integer:: i
   do i = 1, Nplanck
     T_Planck(i) = T_Planck_min + (i-1)*delta_T_Planck
   enddo
 
-  if (Sensor%Chan_On_Flag_Default(20)==sym%YES) BB_Rad(20,:) = c1*(nu_20**3)/(exp((c2*nu_20)/((T_Planck-a1_20)/a2_20))-1.0)
-  if (Sensor%Chan_On_Flag_Default(21)==sym%YES) BB_Rad(21,:) = c1*(nu_21**3)/(exp((c2*nu_21)/((T_Planck-a1_21)/a2_21))-1.0)
-  if (Sensor%Chan_On_Flag_Default(22)==sym%YES) BB_Rad(22,:) = c1*(nu_22**3)/(exp((c2*nu_22)/((T_Planck-a1_22)/a2_22))-1.0)
-  if (Sensor%Chan_On_Flag_Default(23)==sym%YES) BB_Rad(23,:) = c1*(nu_23**3)/(exp((c2*nu_23)/((T_Planck-a1_23)/a2_23))-1.0)
-  if (Sensor%Chan_On_Flag_Default(24)==sym%YES) BB_Rad(24,:) = c1*(nu_24**3)/(exp((c2*nu_24)/((T_Planck-a1_24)/a2_24))-1.0)
-  if (Sensor%Chan_On_Flag_Default(25)==sym%YES) BB_Rad(25,:) = c1*(nu_25**3)/(exp((c2*nu_25)/((T_Planck-a1_25)/a2_25))-1.0)
-  if (Sensor%Chan_On_Flag_Default(27)==sym%YES) BB_Rad(27,:) = c1*(nu_27**3)/(exp((c2*nu_27)/((T_Planck-a1_27)/a2_27))-1.0)
-  if (Sensor%Chan_On_Flag_Default(28)==sym%YES) BB_Rad(28,:) = c1*(nu_28**3)/(exp((c2*nu_28)/((T_Planck-a1_28)/a2_28))-1.0)
-  if (Sensor%Chan_On_Flag_Default(29)==sym%YES) BB_Rad(29,:) = c1*(nu_29**3)/(exp((c2*nu_29)/((T_Planck-a1_29)/a2_29))-1.0)
-  if (Sensor%Chan_On_Flag_Default(30)==sym%YES) BB_Rad(30,:) = c1*(nu_30**3)/(exp((c2*nu_30)/((T_Planck-a1_30)/a2_30))-1.0)
-  if (Sensor%Chan_On_Flag_Default(31)==sym%YES) BB_Rad(31,:) = c1*(nu_31**3)/(exp((c2*nu_31)/((T_Planck-a1_31)/a2_31))-1.0)
-  if (Sensor%Chan_On_Flag_Default(32)==sym%YES) BB_Rad(32,:) = c1*(nu_32**3)/(exp((c2*nu_32)/((T_Planck-a1_32)/a2_32))-1.0)
-  if (Sensor%Chan_On_Flag_Default(33)==sym%YES) BB_Rad(33,:) = c1*(nu_33**3)/(exp((c2*nu_33)/((T_Planck-a1_33)/a2_33))-1.0)
-  if (Sensor%Chan_On_Flag_Default(34)==sym%YES) BB_Rad(34,:) = c1*(nu_34**3)/(exp((c2*nu_34)/((T_Planck-a1_34)/a2_34))-1.0)
-  if (Sensor%Chan_On_Flag_Default(35)==sym%YES) BB_Rad(35,:) = c1*(nu_35**3)/(exp((c2*nu_35)/((T_Planck-a1_35)/a2_35))-1.0)
-  if (Sensor%Chan_On_Flag_Default(36)==sym%YES) BB_Rad(36,:) = c1*(nu_36**3)/(exp((c2*nu_36)/((T_Planck-a1_36)/a2_36))-1.0)
-  if (Sensor%Chan_On_Flag_Default(37)==sym%YES) BB_Rad(37,:) = c1*(nu_37**3)/(exp((c2*nu_37)/((T_Planck-a1_37)/a2_37))-1.0)
-  if (Sensor%Chan_On_Flag_Default(38)==sym%YES) BB_Rad(38,:) = c1*(nu_38**3)/(exp((c2*nu_38)/((T_Planck-a1_38)/a2_38))-1.0)
-  if (Sensor%Chan_On_Flag_Default(42)==sym%YES) BB_Rad(42,:) = c1*(nu_42**3)/(exp((c2*nu_42)/((T_Planck-a1_42)/a2_42))-1.0)
-  if (Sensor%Chan_On_Flag_Default(43)==sym%YES) BB_Rad(43,:) = c1*(nu_43**3)/(exp((c2*nu_43)/((T_Planck-a1_43)/a2_43))-1.0)
+  do ichan = 20,43
+     if (ichan == 26) cycle
+     if (ichan == 39) cycle
+     if (ichan == 40) cycle
+     if (ichan == 41) cycle
+     if (Sensor%Chan_On_Flag_Default(ichan)==sym%YES) then
+         BB_Rad(ichan,:) = c1*(Planck_Nu(ichan)**3)/ &
+               (exp((c2*Planck_Nu(ichan))/((T_Planck-Planck_A1(ichan))/Planck_A2(ichan)))-1.0)
+     endif
+  enddo
 
   end subroutine POPULATE_PLANCK_TABLES
 
@@ -290,50 +241,19 @@
     real (kind=real4), intent(in) :: T 
     real (kind=real4) :: B
 
-    if (ichan == 20) then 
-       B = c1*(nu_20**3)/(exp((c2*nu_20)/((T-a1_20)/a2_20))-1.0)
-    elseif (ichan == 21) then 
-       B = c1*(nu_21**3)/(exp((c2*nu_21)/((T-a1_21)/a2_21))-1.0)
-    elseif (ichan == 22) then 
-       B = c1*(nu_22**3)/(exp((c2*nu_22)/((T-a1_22)/a2_22))-1.0)
-    elseif (ichan == 23) then 
-       B = c1*(nu_23**3)/(exp((c2*nu_23)/((T-a1_23)/a2_23))-1.0)
-    elseif (ichan == 24) then 
-       B = c1*(nu_24**3)/(exp((c2*nu_24)/((T-a1_24)/a2_24))-1.0)
-    elseif (ichan == 25) then 
-       B = c1*(nu_25**3)/(exp((c2*nu_25)/((T-a1_25)/a2_25))-1.0)
-    elseif (ichan == 27) then 
-       B = c1*(nu_27**3)/(exp((c2*nu_27)/((T-a1_27)/a2_27))-1.0)
-    elseif (ichan == 28) then 
-       B = c1*(nu_28**3)/(exp((c2*nu_28)/((T-a1_28)/a2_28))-1.0)
-    elseif (ichan == 29) then 
-       B = c1*(nu_29**3)/(exp((c2*nu_29)/((T-a1_29)/a2_29))-1.0)
-    elseif (ichan == 30) then 
-       B = c1*(nu_30**3)/(exp((c2*nu_30)/((T-a1_30)/a2_30))-1.0)
-    elseif (ichan == 31) then 
-       B = c1*(nu_31**3)/(exp((c2*nu_31)/((T-a1_31)/a2_31))-1.0)
-    elseif (ichan == 32) then 
-       B = c1*(nu_32**3)/(exp((c2*nu_32)/((T-a1_32)/a2_32))-1.0)
-    elseif (ichan == 33) then 
-       B = c1*(nu_33**3)/(exp((c2*nu_33)/((T-a1_33)/a2_33))-1.0)
-    elseif (ichan == 34) then 
-       B = c1*(nu_34**3)/(exp((c2*nu_34)/((T-a1_34)/a2_34))-1.0)
-    elseif (ichan == 35) then 
-       B = c1*(nu_35**3)/(exp((c2*nu_35)/((T-a1_35)/a2_35))-1.0)
-    elseif (ichan == 36) then 
-       B = c1*(nu_36**3)/(exp((c2*nu_36)/((T-a1_36)/a2_36))-1.0)
-    elseif (ichan == 37) then 
-       B = c1*(nu_37**3)/(exp((c2*nu_37)/((T-a1_37)/a2_37))-1.0)
-    elseif (ichan == 38) then 
-       B = c1*(nu_38**3)/(exp((c2*nu_38)/((T-a1_38)/a2_38))-1.0)
-    elseif (ichan == 42) then 
-       B = c1*(nu_42**3)/(exp((c2*nu_42)/((T-a1_42)/a2_42))-1.0)
-    elseif (ichan == 43) then 
-       B = c1*(nu_43**3)/(exp((c2*nu_43)/((T-a1_43)/a2_43))-1.0)
-    else
-      print *, "unsupported channel number in PLANCK_RAD, stopping"
+    !--- check for appropriate channel
+    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
+      print *, "unsupported channel number in Planck Computation, stopping"
       stop
     endif
+    if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
+      print *, "unsupported channel number in Planck Computation, stopping"
+      stop
+    endif
+
+    B = c1*(Planck_Nu(ichan)**3)/ &
+        (exp((c2*Planck_Nu(ichan))/ &
+        ((T-Planck_A1(ichan))/Planck_A2(ichan)))-1.0)
 
     return
 
@@ -347,50 +267,17 @@
     real (kind=real4), intent(in) :: B 
     real (kind=real4) :: T
 
-    if (ichan == 20) then 
-       T = a1_20 + a2_20 * ((c2*nu_20) / log( 1.0 + (c1*(nu_20**3))/B))
-    elseif (ichan == 21) then 
-       T = a1_21 + a2_21 * ((c2*nu_21) / log( 1.0 + (c1*(nu_21**3))/B))
-    elseif (ichan == 22) then 
-       T = a1_22 + a2_22 * ((c2*nu_22) / log( 1.0 + (c1*(nu_22**3))/B))
-    elseif (ichan == 23) then 
-       T = a1_23 + a2_23 * ((c2*nu_23) / log( 1.0 + (c1*(nu_23**3))/B))
-    elseif (ichan == 24) then 
-       T = a1_24 + a2_24 * ((c2*nu_24) / log( 1.0 + (c1*(nu_24**3))/B))
-    elseif (ichan == 25) then 
-       T = a1_25 + a2_25 * ((c2*nu_25) / log( 1.0 + (c1*(nu_25**3))/B))
-    elseif (ichan == 27) then 
-       T = a1_27 + a2_27 * ((c2*nu_27) / log( 1.0 + (c1*(nu_27**3))/B))
-    elseif (ichan == 28) then 
-       T = a1_28 + a2_28 * ((c2*nu_28) / log( 1.0 + (c1*(nu_28**3))/B))
-    elseif (ichan == 29) then 
-       T = a1_29 + a2_29 * ((c2*nu_29) / log( 1.0 + (c1*(nu_29**3))/B))
-    elseif (ichan == 30) then 
-       T = a1_30 + a2_30 * ((c2*nu_30) / log( 1.0 + (c1*(nu_30**3))/B))
-    elseif (ichan == 31) then 
-       T = a1_31 + a2_31 * ((c2*nu_31) / log( 1.0 + (c1*(nu_31**3))/B))
-    elseif (ichan == 32) then 
-       T = a1_32 + a2_32 * ((c2*nu_32) / log( 1.0 + (c1*(nu_32**3))/B))
-    elseif (ichan == 33) then 
-       T = a1_33 + a2_33 * ((c2*nu_33) / log( 1.0 + (c1*(nu_33**3))/B))
-    elseif (ichan == 34) then 
-       T = a1_34 + a2_34 * ((c2*nu_34) / log( 1.0 + (c1*(nu_34**3))/B))
-    elseif (ichan == 35) then 
-       T = a1_35 + a2_35 * ((c2*nu_35) / log( 1.0 + (c1*(nu_35**3))/B))
-    elseif (ichan == 36) then 
-       T = a1_36 + a2_36 * ((c2*nu_36) / log( 1.0 + (c1*(nu_36**3))/B))
-    elseif (ichan == 37) then 
-       T = a1_37 + a2_37 * ((c2*nu_37) / log( 1.0 + (c1*(nu_37**3))/B))
-    elseif (ichan == 38) then 
-       T = a1_38 + a2_38 * ((c2*nu_38) / log( 1.0 + (c1*(nu_38**3))/B))
-    elseif (ichan == 40) then 
-       T = a1_42 + a2_42 * ((c2*nu_42) / log( 1.0 + (c1*(nu_42**3))/B))
-    elseif (ichan == 41) then 
-       T = a1_43 + a2_43 * ((c2*nu_43) / log( 1.0 + (c1*(nu_43**3))/B))
-    else
-      print *, "unsupported channel number in PLANCK_TEMP, stopping"
+    !--- check for appropriate channel
+    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
+      print *, "unsupported channel number in Planck Computation, stopping"
       stop
     endif
+    if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
+      print *, "unsupported channel number in Planck Computation, stopping"
+      stop
+    endif
+
+    T = Planck_A1(ichan) + Planck_A2(ichan) * ((c2*Planck_Nu(ichan)) / log( 1.0 + (c1*(Planck_Nu(ichan)**3))/B))
 
     return
 

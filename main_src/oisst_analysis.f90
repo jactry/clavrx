@@ -304,7 +304,13 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
   real:: lon_weight
   real:: lat_weight
 
-    do j = j1, j1+j2-1
+  !--- initialize output
+  sst_anal =  missing_value_real4
+  sst_anal_err =  missing_value_real4
+  sst_anal_cice =  missing_value_real4
+  sst_anal_uni =  missing_value_real4
+
+  do j = j1, j1+j2-1
 
      do i = 1, Image%Number_Of_Elements
 

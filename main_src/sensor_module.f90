@@ -1371,7 +1371,7 @@ module SENSOR_MODULE
 
 
 !----------------------------------------------------------------
-! read the AHI constants into memory
+! read the AHI constants into memory  - AKH: Move this to AHI Module 
 !-----------------------------------------------------------------
 subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
  character(len=*), intent(in):: Instr_Const_file
@@ -1393,18 +1393,18 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt="(a3)") sat_name
   read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
   read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20 ! Band 7
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20),planck_nu(20) ! Band 7
   !Note AHI has a 6.2 (Band 8), but MODIS doesn't have one
-  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27 !Band 9
-  read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28,nu_28 !Band 10
-  read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29 !Band 11
-  read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30,nu_30 !Band 12
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27),planck_nu(27) !Band 9
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28),planck_nu(28) !Band 10
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29),planck_nu(29) !Band 11
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30),planck_nu(30) !Band 12
   !NOTE AHI as a 10.4 (Band 13), but MODIS doesn't have one
-  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
-  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
-  read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
-  read(unit=Instr_Const_lun,fmt=*) a1_37, a2_37,nu_37 !Band 8
-  read(unit=Instr_Const_lun,fmt=*) a1_38, a2_38,nu_38 !Band 13
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31),planck_nu(31) !Band 14
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32),planck_nu(32) !Band 15
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33),planck_nu(33) !Band 16
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(37), planck_a2(37),planck_nu(37) !Band 8
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(38), planck_a2(38),planck_nu(38) !Band 13
   read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 

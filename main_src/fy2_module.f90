@@ -88,10 +88,10 @@ subroutine READ_FY_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt="(a3)") sat_name
   read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
   read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-  read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20
-  read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27,nu_27
-  read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
-  read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
+  read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
   read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 

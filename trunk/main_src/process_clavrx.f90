@@ -809,9 +809,6 @@
                !--- map each each into correct NWP cell
                call MAP_PIXEL_NWP(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
-               !--- compute selected pixel nwp parameters
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
-
                !--- compute needed NWP levels (sfc, tropo, inversion, ...)
                call COMPUTE_NWP_LEVELS_SEGMENT(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
@@ -894,6 +891,9 @@
 
                !--- compute desired nwp parameters 
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
+
+               !--- compute selected pixel nwp parameters
+               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)

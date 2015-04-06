@@ -442,7 +442,7 @@ contains
       if ( allocated  (  this % geo % glintzen    ) ) deallocate (  this % geo % glintzen   )
       if ( allocated  (  this % geo % scatangle   ) ) deallocate (  this % geo % scatangle   )
       if ( allocated  (  this % geo % is_space    ) ) deallocate (  this % geo % is_space  )
-      
+      if ( allocated  (  this % geo % scan_time    ) ) deallocate (  this % geo % scan_time )
    
    
    end subroutine deallocate_geo 
@@ -457,7 +457,7 @@ contains
        
        call this % deallocate_geo
       
-      do i_chn = 1 ,16
+      do i_chn = 1 , size (  this  % chn )
          if (allocated (  this  % chn(i_chn) % rad )) deallocate (this  % chn(i_chn) % rad)
          if (allocated (  this  % chn(i_chn) % bt ) ) deallocate (this  % chn(i_chn) % bt)
          if (allocated (  this  % chn(i_chn) % ref )) deallocate (this  % chn(i_chn) % ref)

@@ -207,6 +207,8 @@ contains
       use readh5dataset, only: &
          h5readattribute 
       
+      
+      
       implicit none
       
       type ( ahi_config_type ) :: config
@@ -270,7 +272,7 @@ contains
             x_full_disk = ii + config % h5_offset(1)
             y_full_disk = jj + config % h5_offset(2)
             
-            call fgf_to_earth ( 3, dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
+            call fgf_to_earth ( 3,  dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
            
             ahi % geo % lat (ii,jj) = latx  
@@ -319,7 +321,7 @@ contains
      
       integer :: status
            
-      integer(kind = 2), pointer :: i2d_buffer( : , : )
+      integer(kind = 2), pointer :: i2d_buffer( : , : ) => null()
       integer:: i_chn
       character (len=120) :: attr_name
       real (8) :: scale_factor, add_offset
@@ -333,6 +335,7 @@ contains
       ! - executable
       
       ! - channel data read 
+      
       do i_chn = 1 ,16
         
          if ( .not. config % chan_on ( i_chn ) ) cycle
@@ -340,10 +343,14 @@ contains
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
                , config % h5_offset,config % h5_count, i2d_buffer )
-         allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
+             
+         if ( .not. allocated (buffer_fake_i4) ) allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
         
          ! - fortran does not support unsigned integer
+         
          buffer_fake_i4 = i2d_buffer
+         
+         deallocate ( i2d_buffer )
          where ( buffer_fake_i4 < 0 )
             buffer_fake_i4 = buffer_fake_i4 + 65536
          end where
@@ -378,7 +385,7 @@ contains
          end if
        
          ahi % chn(i_chn) % is_read = .true.
-         i2d_buffer => null()
+        
          
       end do
    
@@ -458,6 +465,7 @@ contains
        call this % deallocate_geo
       
       do i_chn = 1 , size (  this  % chn )
+         
          if (allocated (  this  % chn(i_chn) % rad )) deallocate (this  % chn(i_chn) % rad)
          if (allocated (  this  % chn(i_chn) % bt ) ) deallocate (this  % chn(i_chn) % bt)
          if (allocated (  this  % chn(i_chn) % ref )) deallocate (this  % chn(i_chn) % ref)

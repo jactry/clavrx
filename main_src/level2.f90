@@ -209,6 +209,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
     File_1b_Root = File_1b_Root(7:len_trim(File_1b_Root)-34)
   endif
 
+  !--- special processing for ahi - remove B01.nc suffix - this hard coded for
+  if (trim(Sensor%Sensor_Name) == 'AHI') then
+    File_1b_Root = File_1b_Root(4:len_trim(File_1b_Root)-12)
+  endif
+
   !--- special processing for IFF - remove hdf suffix - this hard coded for
 ! !PEATE files
 ! if (trim(Sensor%Sensor_Name) == 'AQUA-IFF' .or. trim(Sensor%Sensor_Name) == 'AQUA-IFF') then

@@ -84,6 +84,18 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
   line_loop: DO Line_Idx = jmin, jmax - jmin + 1
     element_loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
+     !--- assign optical depth and particle size
+     if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0) then 
+       Tau = Tau_Dcomp(Elem_Idx,Line_Idx)
+       Reff = Reff_Dcomp(Elem_Idx,Line_Idx)
+     else
+       Tau = Tau_Nlcomp(Elem_Idx,Line_Idx)
+       Reff = Reff_Nlcomp(Elem_Idx,Line_Idx)
+     endif
+
+     if (Tau == Missing_Value_Real4) cycle
+     if (Reff == Missing_Value_Real4) cycle
+
      !------------------------------------------------
      ! determine phase from cloud type
      ! -1 = undetermined, 0 = water, 1 = ice
@@ -121,20 +133,6 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
      !--- check conditions where this calc should be skipped
      if (Iphase == -1) cycle
-
-
-     !--- assign optical depth and particle size
-     if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0) then 
-       Tau = Tau_Dcomp(Elem_Idx,Line_Idx)
-       Reff = Reff_Dcomp(Elem_Idx,Line_Idx)
-     else
-       Tau = Tau_Nlcomp(Elem_Idx,Line_Idx)
-       Reff = Reff_Nlcomp(Elem_Idx,Line_Idx)
-     endif
-
-
-     if (Tau == Missing_Value_Real4) cycle
-     if (Reff == Missing_Value_Real4) cycle
 
      !--- compute cloud water path
      if (Iphase == 0) then

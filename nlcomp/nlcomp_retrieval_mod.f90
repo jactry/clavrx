@@ -141,6 +141,14 @@ contains
       real :: bt_32
 
       ! - executable
+      
+      print*, 'input geo'
+      print*,inp % geo
+      print*, inp % geo % lun_zen
+      print*
+      print*,'prd'
+      print*,inp % prd
+      
 
      
       ! - okay lets start
@@ -154,6 +162,9 @@ contains
       rad_clear_toc(20) = inp % chn ( 20 ) % rad_sfc_nwp
       rad_clear_toc(31) = inp % chn ( 31 ) % rad_sfc_nwp
       rad_clear_toc(32) = inp % chn ( 32 ) % rad_sfc_nwp
+      
+      print*,'==> ABV CLD: ',rad_abv_cld (20),rad_abv_cld (31),rad_abv_cld (32)
+      print*,'=> rad TOC : ' , rad_clear_toc(20),rad_clear_toc(31),rad_clear_toc(32) 
       
       ! - first define the observation vector
       
@@ -193,9 +204,9 @@ contains
       call vis_channel_cod (obs_vec ( 1 ),  pxl, alb_sfc ( 1) , dcomp_ancil_path , cod) 
       print*,'------  computed cod ------- '
       print*, 'COD: ', cod
-      call cps_known_cod ( obs_vec,  cod, rad_clear_toc,  pxl , dcomp_ancil_path &
+      call cps_known_cod ( obs_vec,  cod, rad_clear_toc, rad_abv_cld,  pxl , dcomp_ancil_path &
                , inp % prd % emiss31_acha, inp % prd % beta_acha & 
-               , cps ,inp % geo % tsfc )
+               , cps ,inp % geo % tsfc, inp % chn ( 20 ) % rad,inp % chn ( 31 ) % rad,inp % chn ( 32 ) % rad )
       
      
       

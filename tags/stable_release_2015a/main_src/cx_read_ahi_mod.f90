@@ -1,4 +1,4 @@
-! $Id:$
+! $Id: cx_read_ahi_mod.f90 1223 2015-04-08 17:15:12Z awalther $
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -112,6 +112,7 @@ module cx_read_ahi_mod
       type ( date_type ) :: time_end_obj
       contains
       procedure :: deallocate_all
+      procedure :: deallocate_geo
       procedure :: allocate_geo
    end type ahi_data_out_type
    
@@ -129,13 +130,13 @@ contains
       
       call set_filenames ( config )
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
-      
       call read_navigation ( config , out )
-      
+       
       if ( .not. present ( only_nav )) then
+        
          call read_ahi_level1b ( config , out )
       end if
-      
+       
    end subroutine get_ahi_data
    ! --------------------------------------------------------------------------------------
    !
@@ -206,6 +207,8 @@ contains
       use readh5dataset, only: &
          h5readattribute 
       
+      
+      
       implicit none
       
       type ( ahi_config_type ) :: config
@@ -235,7 +238,7 @@ contains
       real :: hour_frac
       
        ! - navigation
-      
+     
       ! - should be removed later then we trust the values in the file! 
       cfac = 20466276.
       coff = 2750.
@@ -260,7 +263,7 @@ contains
       call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), sub_lon )
 
       call ahi % allocate_geo (config % h5_count(1),config % h5_count(2)) 
-      
+     
       call ahi % time_start_obj % get_date ( doy = day_of_year, hour_frac = hour_frac )
 
       do jj = 1 , config % h5_count(2)     
@@ -269,7 +272,7 @@ contains
             x_full_disk = ii + config % h5_offset(1)
             y_full_disk = jj + config % h5_offset(2)
             
-            call fgf_to_earth ( 3, dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
+            call fgf_to_earth ( 3,  dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
            
             ahi % geo % lat (ii,jj) = latx  
@@ -294,7 +297,7 @@ contains
   
          end do
       end do   
-      
+     
       where ( ahi % geo % lat == -999.0)
          ahi % geo % is_space = .false.
       end where
@@ -318,7 +321,7 @@ contains
      
       integer :: status
            
-      integer(kind = 2), pointer :: i2d_buffer( : , : )
+      integer(kind = 2), pointer :: i2d_buffer( : , : ) => null()
       integer:: i_chn
       character (len=120) :: attr_name
       real (8) :: scale_factor, add_offset
@@ -330,19 +333,24 @@ contains
       integer :: ii,jj
             
       ! - executable
-
+      
       ! - channel data read 
+      
       do i_chn = 1 ,16
-       
+        
          if ( .not. config % chan_on ( i_chn ) ) cycle
-         
+        
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
                , config % h5_offset,config % h5_count, i2d_buffer )
-         allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
-         
+             
+         if ( .not. allocated (buffer_fake_i4) ) allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
+        
          ! - fortran does not support unsigned integer
+         
          buffer_fake_i4 = i2d_buffer
+         
+         deallocate ( i2d_buffer )
          where ( buffer_fake_i4 < 0 )
             buffer_fake_i4 = buffer_fake_i4 + 65536
          end where
@@ -356,16 +364,16 @@ contains
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), fillvalue )
          if ( fillvalue < 0 ) fillvalue = fillvalue + 65536
          
-         
+        
          allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
-          
+         
          ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
          where ( buffer_fake_i4 == fillvalue )
             ahi % chn(i_chn) % rad = -999.
          end where
          
          if (allocated ( buffer_fake_i4 ) )  deallocate ( buffer_fake_i4 )
-         
+        
          is_solar_channel = .false.
          if ( i_chn < 7 ) is_solar_channel = .true.
          
@@ -375,13 +383,18 @@ contains
             allocate ( ahi % chn(i_chn) % ref (config % h5_count(1),config % h5_count(2)))
             ahi % chn(i_chn) % ref =100. *  ahi % chn(i_chn) % rad * cprime
          end if
-        
+       
          ahi % chn(i_chn) % is_read = .true.
-         i2d_buffer => null()
+        
          
       end do
- 
+   
    end subroutine read_ahi_level1b
+   
+   
+   
+   
+   
    
    ! --------------------------------------------------------------------------------------
    !
@@ -391,7 +404,7 @@ contains
       integer, intent(in) :: nx 
       integer, intent(in) :: ny
       
-      call this % deallocate_all 
+      call this % deallocate_geo 
           
       allocate (  this % geo % lon        (nx , ny) )
       allocate (  this % geo % lat        (nx , ny) )
@@ -421,7 +434,7 @@ contains
    ! --------------------------------------------------------------------------------------
    !
    ! --------------------------------------------------------------------------------------
-   subroutine deallocate_all (this )
+   subroutine deallocate_geo (this )
       class ( ahi_data_out_type ) :: this
       integer :: i_chn
       if (allocated ( this % geo % lon)) deallocate ( this % geo % lon) 
@@ -436,8 +449,23 @@ contains
       if ( allocated  (  this % geo % glintzen    ) ) deallocate (  this % geo % glintzen   )
       if ( allocated  (  this % geo % scatangle   ) ) deallocate (  this % geo % scatangle   )
       if ( allocated  (  this % geo % is_space    ) ) deallocate (  this % geo % is_space  )
+      if ( allocated  (  this % geo % scan_time    ) ) deallocate (  this % geo % scan_time )
+   
+   
+   end subroutine deallocate_geo 
+   
+   
+   ! --------------------------------------------------------------------------------------
+   !
+   ! --------------------------------------------------------------------------------------
+   subroutine deallocate_all (this )
+      class ( ahi_data_out_type ) :: this
+      integer :: i_chn
+       
+       call this % deallocate_geo
       
-      do i_chn = 1 ,16
+      do i_chn = 1 , size (  this  % chn )
+         
          if (allocated (  this  % chn(i_chn) % rad )) deallocate (this  % chn(i_chn) % rad)
          if (allocated (  this  % chn(i_chn) % bt ) ) deallocate (this  % chn(i_chn) % bt)
          if (allocated (  this  % chn(i_chn) % ref )) deallocate (this  % chn(i_chn) % ref)

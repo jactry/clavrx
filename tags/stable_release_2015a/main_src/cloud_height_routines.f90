@@ -346,9 +346,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   integer:: Lev_Idx_Temp
   integer:: Pc_Lev_Idx
 
-
   logical, dimension(:,:), allocatable:: Mask
   real, dimension(:,:), allocatable:: Tc_Cirrus_Co2_Temp
+  real, dimension(3):: Pc_Temp
+  integer:: Count_Valid
 
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
@@ -407,11 +408,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Pressure_Profile, &
                                Beta_Target, &
                                Pc_35_36,Pc_Lev_Idx)
-
-     if (Pc_35_36 /= Missing_Value_Real4) then
-         Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_35_36
-         cycle
-     endif
+     Pc_Temp(1) = Pc_35_36
+!    if (Pc_35_36 /= Missing_Value_Real4) then
+!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_35_36
+!        cycle
+!    endif
 
      call COMPUTE_BETA_PROFILE(ch(34)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(34)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
@@ -425,10 +426,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Beta_Target, &
                                Pc_34_35,Pc_Lev_Idx)
 
-     if (Pc_34_35 /= Missing_Value_Real4) then
-         Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_34_35
-         cycle
-     endif
+     Pc_Temp(2) = Pc_34_35
+!    if (Pc_34_35 /= Missing_Value_Real4) then
+!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_34_35
+!        cycle
+!    endif
 
      call COMPUTE_BETA_PROFILE(ch(33)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
@@ -442,9 +444,15 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Beta_Target, &
                                Pc_33_34,Pc_Lev_Idx)
 
-     if (Pc_33_34 /= Missing_Value_Real4) then
-         Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_33_34
-         cycle
+     Pc_Temp(3) = Pc_33_34
+!    if (Pc_33_34 /= Missing_Value_Real4) then
+!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_33_34
+!        cycle
+!    endif
+
+     Count_Valid = count(Pc_Temp /= Missing_Value_Real4)
+     if (Count_Valid > 0) then
+        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
      endif
     
   enddo Element_Loop
@@ -472,6 +480,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   enddo Element_Loop_2
   enddo Line_Loop_2
 
+  Diag_Pix_Array_1 = Tc_Cirrus_Co2
   !-------------------------------------------------------------------------
   ! spatially interpolate
   !-------------------------------------------------------------------------
@@ -519,6 +528,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
    enddo Element_Loop_3
 
    Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
+
+  Diag_Pix_Array_2 = Tc_Cirrus_Co2
 
   if (allocated(Mask)) deallocate(Mask)
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)
@@ -797,8 +808,9 @@ subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
   real, dimension(:), pointer:: Z_Prof
   real, parameter:: Trans_Limit = 0.01
 
+   Chan_Idx = 27
 
-   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+  if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) return
   Ch27_Opaque_Height = Missing_Value_Real4
 
 
@@ -806,7 +818,6 @@ subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
       
      !--- indice aliases
-     Chan_Idx = 27
      Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
      Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
      Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)

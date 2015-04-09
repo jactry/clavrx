@@ -252,17 +252,17 @@ contains
       read(unit=Instr_Const_lun,fmt="(a3)") sat_name
       read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-      read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20,nu_20
-      read(unit=Instr_Const_lun,fmt=*) a1_22, a2_22,nu_22
-      read(unit=Instr_Const_lun,fmt=*) a1_29, a2_29,nu_29
-      read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31
-      read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32
-      read(unit=Instr_Const_lun,fmt=*) a1_42, a2_42,nu_42
-      read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43
-      read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33
-      read(unit=Instr_Const_lun,fmt=*) a1_34, a2_34,nu_34
-      read(unit=Instr_Const_lun,fmt=*) a1_35, a2_35,nu_35
-      read(unit=Instr_Const_lun,fmt=*) a1_36, a2_36,nu_36
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22), planck_nu(22)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29), planck_nu(29)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(42), planck_a2(42), planck_nu(42)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(43), planck_a2(43), planck_nu(43)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
 
@@ -298,20 +298,20 @@ contains
       read(unit=Instr_Const_lun,fmt="(a3)") sat_name
       read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-      read(unit=Instr_Const_lun,fmt=*) a1_20, a2_20, nu_20
-      read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31, nu_31
-      read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32, nu_32
-      read(unit=Instr_Const_lun,fmt=*) a1_36, a2_36, nu_36
-      read(unit=Instr_Const_lun,fmt=*) a1_35, a2_35, nu_35
-      read(unit=Instr_Const_lun,fmt=*) a1_34, a2_34, nu_34
-      read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33, nu_33
-      read(unit=Instr_Const_lun,fmt=*) a1_30, a2_30, nu_30
-      read(unit=Instr_Const_lun,fmt=*) a1_28, a2_28, nu_28
-      read(unit=Instr_Const_lun,fmt=*) a1_27, a2_27, nu_27
-      read(unit=Instr_Const_lun,fmt=*) a1_25, a2_25, nu_25
-      read(unit=Instr_Const_lun,fmt=*) a1_24, a2_24, nu_24
-      read(unit=Instr_Const_lun,fmt=*) a1_23, a2_23, nu_23
-      read(unit=Instr_Const_lun,fmt=*) a1_21, a2_21, nu_21
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(25), planck_a2(25), planck_nu(25)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(24), planck_a2(24), planck_nu(24)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(23), planck_a2(23), planck_nu(23)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask, b2_day_mask, b3_day_mask, b4_day_mask
       close(unit=Instr_Const_lun)
 

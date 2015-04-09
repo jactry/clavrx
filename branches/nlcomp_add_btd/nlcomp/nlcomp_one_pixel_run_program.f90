@@ -122,49 +122,54 @@ program nlcomp_one_pixel_run
 
    inp_retr % conf % debug_in = 4
      
-   inp_retr % geo % sol_zen = sol_zen   
-   inp_retr % geo % lun_zen = lun_zen   
-   inp_retr % geo % sat_zen = sat_zen
-   inp_retr % geo % rel_azi = rel_azi
-   inp_retr % geo % lun_rel_azi = rel_azi
-   inp_retr % geo % tsfc = 302.2
+   inp_retr % geo % sol_zen =  159.447235  
+   inp_retr % geo % lun_zen = 77.2039261   
+   inp_retr % geo % sat_zen = 16.0435085
+   inp_retr % geo % rel_azi =   1.66557312    
+   inp_retr % geo % lun_rel_azi = 0.455375671
+   inp_retr % geo % tsfc =   302.165131
 
-   inp_retr % prd % ctt = cld_temp  
-   inp_retr % prd % cph = water_phase
+   inp_retr % prd % ctt = 213.943192 
+   inp_retr % prd % emiss31_acha  = 0.993813276
+   inp_retr % prd % beta_acha =  1.05178821 
+   inp_retr % prd % cph = .false.
     
    ! - apriori
-   inp_retr % state % a_priori (1) = state_apr(1)
+   inp_retr % state % a_priori (1) = 1.0
   
-   inp_retr % state % a_priori (2) =state_apr(2)
+   inp_retr % state % a_priori (2) =1.299
 
 
 
-   inp_retr % chn ( 20 ) % rad = obs(2)
-   inp_retr % chn ( 20 ) % rad = 5.71621070E-03
-   inp_retr % chn ( 20 ) % rad_u = obs_u(2)
-   inp_retr % chn ( 20 ) % alb_sfc = alb_sfc ( 2)
-   inp_retr % chn ( 20 ) % alb_sfc_u =alb_sfc_u(2)
-   inp_retr % chn ( 20 ) % trans_air_abvcld = 0.9
-   inp_retr % chn ( 20 ) % rad_abvcld_nwp = rad_abv_cld
-   inp_retr % chn ( 20 ) % rad_sfc_nwp = rad_sfc
+   inp_retr % chn ( 20 ) % rad = 3.59909609E-03
+   
+   inp_retr % chn ( 20 ) % rad_u = 3.99999991E-02
+   inp_retr % chn ( 20 ) % alb_sfc = 2.99999993E-02
+   inp_retr % chn ( 20 ) % alb_sfc_u =5.00000007E-02
+   inp_retr % chn ( 20 ) % trans_air_abvcld = 0.996154130
+   inp_retr % chn ( 20 ) % rad_abvcld_nwp = 1.70255644E-05
+   inp_retr % chn ( 20 ) % rad_sfc_nwp = 0.517212749
 
-   inp_retr % chn ( 31 ) % rad = 19.8389282
-   inp_retr % chn ( 31 ) % rad_u = 0.
-   inp_retr % chn ( 31 ) % alb_sfc = 0.05
-   inp_retr % chn ( 31 ) % alb_sfc_u = 0.05
-   inp_retr % chn ( 31 ) % rad_sfc_nwp = 11
+   inp_retr % chn ( 31 ) % rad = 18.6542225
+   inp_retr % chn ( 31 ) % rad_u = 3.99999991E-02
+   inp_retr % chn ( 31 ) % alb_sfc = 2.99999993E-02
+   inp_retr % chn ( 31 ) % alb_sfc_u = 5.00000007E-02
+   inp_retr % chn ( 31 ) % rad_abvcld_nwp = 4.29529734E-02
+   inp_retr % chn ( 31 ) % rad_sfc_nwp = 101.671051
 
-   inp_retr % chn ( 32 ) % rad = 26.16
-   inp_retr % chn ( 32 ) % rad_u = 5.
-   inp_retr % chn ( 32 ) % alb_sfc = 0.05
+   inp_retr % chn ( 32 ) % rad = 24.8905258
+   inp_retr % chn ( 32 ) % rad_u = 3.99999991E-02
+   inp_retr % chn ( 32 ) % alb_sfc =2.99999993E-02
    inp_retr % chn ( 32 ) % alb_sfc_u = 0.05
+   inp_retr % chn ( 32 ) % rad_abvcld_nwp = 1.02384137E-02
+   inp_retr % chn ( 32 ) % rad_sfc_nwp = 112.857239
          
-   inp_retr % chn ( 44 ) % rfl   = obs(1)
-   inp_retr % chn ( 44 ) % rfl   = 0.5808
-   inp_retr % chn ( 44 ) % rfl_u = obs_u(1)
-   inp_retr % chn ( 44 ) % alb_sfc = alb_sfc ( 1)
-   inp_retr % chn ( 44 ) % alb_sfc_u = 0.05
-   inp_retr % chn ( 44 ) % trans_air_abvcld =0.9
+   
+   inp_retr % chn ( 44 ) % rfl   = 0.793957353
+   inp_retr % chn ( 44 ) % rfl_u = 3.21486294E-02
+   inp_retr % chn ( 44 ) % alb_sfc = 5.00000007E-02
+   inp_retr % chn ( 44 ) % alb_sfc_u =   5.00000007E-02
+   inp_retr % chn ( 44 ) % trans_air_abvcld =0.977730989
    
    
    call nlcomp_algorithm ( inp_retr &

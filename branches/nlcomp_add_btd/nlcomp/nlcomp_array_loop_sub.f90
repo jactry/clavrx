@@ -210,9 +210,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          ! - compute transmission 
             
          loop_chn: do chn_idx = 1 , 44
-          
+           
             if ( .not. input % is_channel_on (chn_idx) ) cycle  loop_chn
-            
+           
             trans_block : associate ( tpw_ac => input % tpw_ac % d (elem_idx,line_idx)  , &
                       & press_sfc => input % press_sfc  % d (elem_idx,line_idx) , &
                       & trans_chn20_ac_nadir => input % trans_ac_nadir(20) % d , & 
@@ -347,13 +347,66 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
          inp_retr % chn ( 44 ) % alb_sfc_u = 0.05
          inp_retr % chn ( 44 ) % trans_air_abvcld = trans_total ( CHN_VIS )
          
+         
+        print*,'input ================================'
+        print*,'      ch20'
+         print*,  inp_retr % chn ( 20 ) % rad 
+         print*,  inp_retr % chn ( 20 ) % rad_u 
+         print*,  inp_retr % chn ( 20 ) % alb_sfc 
+         print*,  inp_retr % chn ( 20 ) % alb_sfc_u 
+         print*,  inp_retr % chn ( 20 ) % trans_air_abvcld
+         print*,  inp_retr % chn ( 20 ) % rad_abvcld_nwp 
+         print*,  inp_retr % chn ( 20 ) % rad_sfc_nwp
+          print*,'      ch31'
+         print*,  inp_retr % chn ( 31 ) % rad 
+         print*,  inp_retr % chn ( 31 ) % rad_u 
+         print*,  inp_retr % chn ( 31 ) % alb_sfc 
+         print*,  inp_retr % chn ( 31 ) % alb_sfc_u 
+        
+         print*,  inp_retr % chn ( 31 ) % rad_abvcld_nwp 
+         print*,  inp_retr % chn ( 31 ) % rad_sfc_nwp
+          print*,'      ch32'
+         print*,  inp_retr % chn ( 32 ) % rad 
+         print*,  inp_retr % chn ( 32 ) % rad_u 
+         print*,  inp_retr % chn ( 32 ) % alb_sfc 
+         print*,  inp_retr % chn ( 32 ) % alb_sfc_u 
+         
+         print*,  inp_retr % chn ( 32 ) % rad_abvcld_nwp 
+         print*,  inp_retr % chn ( 32 ) % rad_sfc_nwp
+          print*,'      ch44'
+         print*,  inp_retr % chn ( 44 ) % rfl
+       
+         print*,  inp_retr % chn ( 44 ) % rfl_u
+         print*,  inp_retr % chn ( 44 ) % alb_sfc_u 
+         print*,  inp_retr % chn ( 44 ) % alb_sfc
+         print*,  inp_retr % chn ( 44 ) % alb_sfc_u
+         print*,  inp_retr % chn ( 44 ) % trans_air_abvcld
+          print*,'      geo'
+          print*, inp_retr % geo % sol_zen 
+          print*, inp_retr % geo % lun_zen 
+          print*, inp_retr % geo % sat_zen 
+          print*, inp_retr % geo % rel_azi 
+          print*, inp_retr % geo % lun_rel_azi 
+          print*, inp_retr % geo % tsfc 
+ print*,'      cdl'
+          print*, inp_retr % prd % ctt 
+          print*, inp_retr % prd % emiss31_acha 
+          print*, inp_retr % prd % beta_acha 
+          print*, inp_retr % prd % cph 
+              print*,'      apriori'
+          ! - apriori
+          print*, inp_retr % state % a_priori (1)
+          print*, inp_retr % state % a_priori (1)
+          print*, inp_retr % state % a_priori (1)
+          print*, inp_retr % state % a_priori (2)
+         
         print*, 'sfc temperature: ',input % temp_sfc % d ( elem_idx , line_idx )
         
         
-        
+        print*, 'ELEM LINE: ',elem_idx , line_idx
          call nlcomp_algorithm ( inp_retr  &
                 & , nlcomp_out )
-                         
+        !if ( elem_idx > 842 .and. line_idx == 1 ) stop                 
         ! quality_flag (elem_idx,line_idx) = ibset ( quality_flag(elem_idx,line_idx) , 0)
         ! quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 1)
        !  quality_flag (elem_idx,line_idx) = ibclr ( quality_flag(elem_idx,line_idx) , 2)       

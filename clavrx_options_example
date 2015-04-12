@@ -24,8 +24,8 @@ viirs_default_bayes_mask.txt
 0   !E3 SFC read volcano mask flag (0=no, 1=yes) (volcano_mask_1km.hdf)
 1   !E3 SFC read snow mask flag (0=no, 1 = ims, 2 = GlobSnow)
 0   !E3 SFC read dark composite flag (0=no, 1 = yes) only GEO
-0   !E4 AVHRR-ONLY specific ref_cal_1b flag (0 = use default level1b cal, 1 = recalibrate using PATMOS-x numbers (AVHRR-only))
-0   !E4 AVHRR-ONLY therm_cal_1b flag (0 = use defauly level1b cal, 1= recalibrate using PATMOS-x numbers (AVHRR-only))
+0   !E4 AVHRR-ONLY specific ref_cal_1b flag (1 = use default level1b cal, 0 = recalibrate using PATMOS-x numbers (AVHRR-only))
+0   !E4 AVHRR-ONLY therm_cal_1b flag (1 = use default level1b cal, 0 = recalibrate using PATMOS-x numbers (AVHRR-only))
 1   !E5 MASK lrc_flag (0=no,1=yes) 
 1   !E5 NWP smooth nwp flag (0=no, 1=yes)   
 0   !E5 process_undetected_flag (0=no,1=yes) ( means process all pixels cloudy and cloud-free

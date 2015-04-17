@@ -831,7 +831,7 @@ module SENSOR_MODULE
       endif
 
       !--- AVHRR IFF
-      if (index(Image%Level1b_Name, 'IFFSDR_noaa') > 0) then
+      if (index(Image%Level1b_Name, 'IFF') > 0) then  ! MJH XXX why was this IFFSDR...
             Sensor%Spatial_Resolution_Meters = 4000
             if (index(Image%Level1b_Name, 'IFF_noaa06') == 1) then
                AVHRR_KLM_Flag = sym%NO
@@ -947,10 +947,10 @@ module SENSOR_MODULE
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 7
                Sensor%Platform_Name = 'NOAA-18'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF' ! MJH XXX
                Sensor%WMO_Id = 209
                Sensor%Instr_Const_File = "iff_avhrr_18_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_18_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_18_algo.dat" ! MJH XXX really not sure about this one??
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa19') == 1) then

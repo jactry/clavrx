@@ -84,6 +84,7 @@ module IFF_MODULE
 
    type :: cloud_products_str
       integer , dimension(:,:) , allocatable :: cld_mask
+      integer , dimension(:,:) , allocatable :: sndr_cld_temp ! MJH
    end type cloud_products_str
 
    type, public :: iff_data_out
@@ -227,6 +228,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                          , 'SolarAzimuth'        & ! 5
                          , 'SolarZenith'         & ! 6
                          , 'ScanStartTime'      /) ! 7
+      character (len=100) :: sndr_cld_temp_strg = 'SounderCloudTemperature' !MJH
       character (len = 150) :: setname_band
       character (len = 255) , pointer , dimension (:) :: file_arr_dummy
       character (len = 250) :: file_cld_mask
@@ -294,9 +296,22 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             out % geo % solzen = r2d_buffer
         end select
 
-        deallocate ( r2d_buffer )
-
       end do ! read geo info
+
+      ! MJH if AVHRR, read in aux fields like sounder collocation indices
+      ! and Menzel HIRS cloud heights
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+          print *, 'Reading AVHRR-IFF aux fields'
+          Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(sndr_cld_temp_strg),start_2d, &
+                      stride_2d,edge_2d,r2d_buffer) + Status
+          if (.not. allocated ( out % prd % sndr_cld_temp ) ) allocate &
+              ( out % prd % sndr_cld_temp (dim_seg(1), dim_seg(2)) )
+          out % prd % sndr_cld_temp = r2d_buffer
+      endif
+
+      ! MJH Moved this out of geo loop 
+      ! (it never gets allocated?? see https://software.intel.com/en-us/forums/topic/295774)
+      deallocate ( r2d_buffer )
 
       ! read scan time and convert to milliseconds
       Status = READ_HDF_SDS_FLOAT64_1D(Id,TRIM(setname_geo_list(7)),start_2d(2), &
@@ -752,6 +767,7 @@ end subroutine READ_IFF_DATE_TIME
       integer :: m
 
       if (allocated ( this%prd%cld_mask )) deallocate ( this%prd%cld_mask )
+      if (allocated ( this%prd%sndr_cld_temp )) deallocate ( this%prd%sndr_cld_temp ) ! MJH
 
       if (allocated ( this%geo%solzen )) deallocate ( this%geo%solzen )
       if (allocated ( this%geo%satzen )) deallocate ( this%geo%satzen )

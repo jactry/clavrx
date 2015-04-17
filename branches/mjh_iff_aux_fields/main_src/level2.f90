@@ -3238,6 +3238,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- MJH Menzel HIRS Cloud Heights for AVHRR-IFF 
+     if (Sds_Num_Level2_HIRS_Cld_Temp_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Temp),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_cloud_temp", &
+                              "hirs_cloud_temp", &
+                              "Menzel's HIRS cloud top temperature from AVHRR-IFF", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt32, Max_Bt32, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
@@ -5083,6 +5094,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I2_RANK2(Bt_12um_Sounder,sym%LINEAR_SCALING,Min_Bt32, &
                                    Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- MJH Menzel HIRS cloud heights for AVHRR/HIRS IFF
+    if (Sds_Num_Level2_HIRS_Cld_Temp_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        print *, 'Adding HIRS Cloud Heights to level2'
+        call SCALE_VECTOR_I2_RANK2(HIRS_Cld_Temp,sym%LINEAR_SCALING,Min_Bt32, &
+                                   Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Temp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

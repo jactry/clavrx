@@ -460,6 +460,9 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_375um_Sounder
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_11um_Sounder
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_12um_Sounder
+
+  !--- MJH HIRS/AVHRR aux fields
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Temp 
    
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
@@ -1625,6 +1628,11 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Bt_11um_Sounder(dim1,dim2))
            allocate(Bt_12um_Sounder(dim1,dim2))
    endif
+   if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+           ! MJH HIRS/AVHRR aux fields.
+           ! Does this belong in CREATE_EXTRA_CHANNEL_ARRAYS??
+           allocate(HIRS_Cld_Temp(dim1,dim2))
+   endif
    if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
@@ -1703,6 +1711,9 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
           Bt_11um_Sounder = Missing_Value_Real4
           Bt_12um_Sounder = Missing_Value_Real4
       endif
+      if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+          HIRS_Cld_Temp = Missing_Value_Real4 ! MJH
+      endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
 subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
@@ -1738,6 +1749,7 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Bt_375um_Sounder)) deallocate(Bt_375um_Sounder)
   if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
   if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
+  if (allocated(HIRS_Cld_Temp)) deallocate(HIRS_Cld_Temp) ! MJH
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 
 !------------------------------------------------------------------------------

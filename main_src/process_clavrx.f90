@@ -602,23 +602,7 @@
       !--- planck and aerosol tables
       if (Sensor%WMO_Id /= Sensor%WMO_Id_Previous) then
 
-         call  POPULATE_PLANCK_TABLES(a1_20,a2_20,nu_20, &
-                                   a1_21,a2_21,nu_21, &
-                                   a1_22,a2_22,nu_22, &
-                                   a1_27,a2_27,nu_27, &
-                                   a1_28,a2_28,nu_28, &
-                                   a1_29,a2_29,nu_29, &
-                                   a1_30,a2_30,nu_30, &
-                                   a1_31,a2_31,nu_31, &
-                                   a1_32,a2_32,nu_32, &
-                                   a1_33,a2_33,nu_33, &
-                                   a1_34,a2_34,nu_34, &
-                                   a1_35,a2_35,nu_35, &
-                                   a1_36,a2_36,nu_36, &
-                                   a1_37,a2_37,nu_37, &
-                                   a1_38,a2_38,nu_38, &
-                                   a1_42,a2_42,nu_42, &
-                                   a1_43,a2_43,nu_43)
+         call POPULATE_PLANCK_TABLES()
  
          if (Aer_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
             call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sensor%WMO_Id)
@@ -768,8 +752,9 @@
                               Image%Level1b_Name, &
                               Rtm_File_Flag, &
                               Level2_File_Flag, &
-                              c1,c2,a1_20,a2_20,nu_20, &
-                              a1_31,a2_31,nu_31,a1_32,a2_32,nu_32,Solar_Ch20_Nu,&
+                              c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
+                              planck_a1(31),planck_a2(31),planck_nu(31), &
+                              planck_a1(32),planck_a2(32),planck_nu(32),Solar_Ch20_Nu,&
                               Sun_Earth_Distance,Therm_Cal_1b, &
                               Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
                               Modis_Clr_Alb_Flag,Nwp_Opt, &
@@ -818,9 +803,6 @@
 
                !--- map each each into correct NWP cell
                call MAP_PIXEL_NWP(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
-
-               !--- compute selected pixel nwp parameters
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute needed NWP levels (sfc, tropo, inversion, ...)
                call COMPUTE_NWP_LEVELS_SEGMENT(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
@@ -904,6 +886,9 @@
 
                !--- compute desired nwp parameters 
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
+
+               !--- compute selected pixel nwp parameters
+               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)

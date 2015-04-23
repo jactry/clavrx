@@ -22,16 +22,7 @@ module ahi_clavrx_bridge
       
       
     use calibration_constants, only: &
-            Nu_20 &
-          , Nu_27 &
-          , Nu_28 &
-          , Nu_29 &
-          , Nu_30 &
-          , Nu_31 &
-          , Nu_32 &
-          , Nu_33 &
-          , Nu_37 &
-          , Nu_38
+            Planck_Nu
    
    use planck, only: CONVERT_RADIANCE
    
@@ -69,8 +60,10 @@ contains
                         29 , 30 , 38 , 31 , 32 , 33 ]
       
       ! List of solar constant values for radiance transformation
-      nu_list(7:16) = [ Nu_20, Nu_37, Nu_27, Nu_28, &
-                        Nu_29, Nu_30, Nu_38 , Nu_31, Nu_32, Nu_33]
+      nu_list(7:16) = [ Planck_Nu(20), Planck_Nu(37), Planck_Nu(27),  &
+                        Planck_Nu(28), Planck_Nu(29), Planck_Nu(30),  &
+                        Planck_Nu(38), Planck_Nu(31), Planck_Nu(32),  &
+                        Planck_Nu(33)]
       
       
       is_solar_channel(7:16) = .false.

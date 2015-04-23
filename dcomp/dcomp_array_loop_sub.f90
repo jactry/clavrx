@@ -16,7 +16,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    implicit none
    type (dcomp_in_type) , intent(in) :: input
-   type (dcomp_out_type), intent(out) :: output
+   type (dcomp_out_type) :: output
    integer , intent(in) , optional :: debug_mode_user
    
    integer, parameter :: real4 = selected_real_kind(6,37)
@@ -28,9 +28,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
   
     !- scalar local variables
 
-
-   ! - atmos correction
-   integer , parameter :: N_CHAN = 40
+   ! - number of possible channels in CLAVR-x
+   integer , parameter :: N_CHAN = 44
   
    real :: refl_toa = -999.
    
@@ -88,25 +87,26 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    real :: rel_azi
    
-   real ( kind = real4 ) :: refl_toc(40)
-   real ( kind = real4 ) :: alb_sfc(40)
-   real ( kind = real4 ) :: alb_unc_sfc(40)
+   real ( kind = real4 ) :: refl_toc(N_CHAN)
+   real ( kind = real4 ) :: alb_sfc(N_CHAN)
+   real ( kind = real4 ) :: alb_unc_sfc(N_CHAN)
    real ( kind = real4 ) :: rad_to_refl_factor
-   
    
    real, parameter :: SAT_ZEN_MAX = 75.
    real, parameter :: SOL_ZEN_MAX = 75.
-   real, parameter :: PI = 3.14159265359
+   real, parameter :: PI = 4. * ATAN(1.)
    
-   real ( kind = real4) :: ALBEDO_OCEAN (40)
+   real ( kind = real4) :: ALBEDO_OCEAN (N_CHAN)
       
    type ( dcomp_output_structure ) :: dcomp_out
       
-   real :: sol_zen , sat_zen 
+   real :: sol_zen 
+   real :: sat_zen 
    
-   integer :: line_idx , elem_idx
+   integer :: line_idx 
+   integer ::  elem_idx
    
-   real ( kind = real4), parameter :: MISSING_REAL4 = -999.
+   
    
    integer :: tried 
    integer :: success
@@ -140,7 +140,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    allocate ( air_mass_array  ( dim_1 , dim_2 ) )		   
    
       
-   air_mass_array = 1.0 / cos (input % sat % d * pi / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
+   air_mass_array = 1.0 / cos (input % sat % d * PI / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
       
    obs_array = input % is_valid % d   &
                        & .and. input % sat % d <= sat_zen_max &
@@ -224,29 +224,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
   
    ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    
-   allocate ( output % cod % d         ( dim_1 , dim_2))
-   allocate ( output % cps % d         ( dim_1 , dim_2))
-   allocate ( output % cod_unc % d     ( dim_1 , dim_2))
-   allocate ( output % ref_unc % d     ( dim_1 , dim_2))
-   allocate ( output % cld_trn_sol % d ( dim_1 , dim_2))
-   allocate ( output % cld_trn_obs % d ( dim_1 , dim_2))
-   allocate ( output % cld_alb % d     ( dim_1 , dim_2))
-   allocate ( output % cld_sph_alb % d ( dim_1 , dim_2))
-   allocate ( output % info % d        ( dim_1 , dim_2))
-   allocate ( output % quality % d     ( dim_1 , dim_2))
-   allocate ( output % lwp % d         ( dim_1 , dim_2))
-   allocate ( output % iwp % d         ( dim_1 , dim_2))
-   
-   
-   output % cod % d           =  MISSING_REAL4 
-   output % cps % d           =  MISSING_REAL4 
-   output % cod_unc % d       =  MISSING_REAL4
-   output % ref_unc % d       =  MISSING_REAL4 
-   output % cld_trn_sol % d   =  MISSING_REAL4  
-   output % cld_trn_obs % d   =  MISSING_REAL4   
-   output % cld_alb % d       =  MISSING_REAL4  
-   output % cld_sph_alb % d   =  MISSING_REAL4  
-   
+   output = dcomp_out_type ( dim_1, dim_2 )
+
    where ( obs_array .and. .not. cloud_array )
       output % cld_trn_sol % d   =  1. 
       output % cld_trn_obs % d   =  1.  
@@ -572,12 +551,13 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    output % nr_success_cps = count (btest ( quality_flag , 2 ))
    
    tried =  count (btest(quality_flag,0))
+    
 	output % successrate = 0.0	
       if ( tried > 0 ) then
          success = count(.not. btest(quality_flag,1) .and. .not. btest ( quality_flag,2) ) 
          output % successrate = success / tried
       end if
-      
+     
    deallocate ( obs_array &
 	               ,  cloud_array  )
    deallocate ( water_phase_array )	
@@ -585,6 +565,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    deallocate ( air_mass_array ) 	
    
    output % version = '$Id$'	  
+   
 
 end subroutine dcomp_array_loop
 

@@ -98,6 +98,11 @@
 !  Additionally available outside the module is the LengString function,
 !  which determines the length of a string, that is: the last non-space
 !  character in a string.
+!
+!   HISTORY: 
+!      2014:Added sub array routines (2104) AW
+!      04/08/2015: close dsapce and memspace in H5Read2Integer2DSub, which caused memory leak.
+!                 may be also have to close in other routines (AW)
 !--------------------------------------------------------------------------------------
 MODULE ReadH5Dataset
 ! *******************************************************************
@@ -165,7 +170,7 @@ MODULE ReadH5Dataset
   ! If set true here all routines show debugging messages.
   ! If set false here only routines that have their own debug
   ! activated show debugging messages.
-  !LOGICAL             :: DebugMsg = .true.
+   !LOGICAL             :: DebugMsg = .true.
   LOGICAL             :: DebugMsg = .false.
 
 
@@ -1437,14 +1442,14 @@ CONTAINS
 
     dataset = H5dataset
 
-    DEALLOCATE(H5dataset)
+    DEALLOCATE(H5dataset,stat = AllocStat)
     IF ( AllocStat.ne.0 ) THEN
        ErrorFlag=-1
        ErrorMessage=" *** Error deallocating H5dataset"
        return
     ENDIF
 
-    DEALLOCATE(dims)
+    DEALLOCATE(dims,stat = AllocStat)
     IF ( AllocStat.ne.0 ) THEN
        ErrorFlag=-1
        ErrorMessage=" *** Error deallocating dims"
@@ -1480,7 +1485,7 @@ CONTAINS
     INTEGER , DIMENSION(2) , INTENT(in) :: offset_in, count_in   
 
     !Going out:
-    INTEGER(kind = 2),  DIMENSION(:,:), POINTER                    :: dataset
+    INTEGER(kind = 2),  DIMENSION(:,:), POINTER                    :: dataset 
 
     !<<<<<<<<<<<<<<<<<<<<<<< Local variables >>>>>>>>>>>>>>>>>>>>>>>>
     INTEGER, PARAMETER                                   :: maxdims = 4
@@ -1495,7 +1500,7 @@ CONTAINS
     integer ( hid_t ) :: memspace
     integer , parameter :: memrank = 2
     INTEGER(HSIZE_T), DIMENSION(2) :: offset_out       !offset writing
-     INTEGER(HSIZE_T), DIMENSION(2) :: count_out       !offset writing 
+    INTEGER(HSIZE_T), DIMENSION(2) :: count_out       !offset writing 
 
     !<<<<<<<<<<<<<<<<<<<<<<< Start of routine code >>>>>>>>>>>>>>>>>>
 
@@ -1544,7 +1549,7 @@ CONTAINS
        ErrorMessage=" *** Error determining dataspace size"
        return
     ENDIF
-
+    
    
     
     dims(1) = count(1)
@@ -1566,15 +1571,15 @@ CONTAINS
     CALL h5sselect_hyperslab_f(dspace, H5S_SELECT_SET_F, &
                                 offset , count , ErrorFlag)
                                 
-     !
-     ! Create memory dataspace.
-     !
+    !
+    ! Create memory dataspace.
+    !
      
       CALL h5screate_simple_f(memrank, dims , memspace, errorFlag)
 
-     !
-     ! Select hyperslab in memory.
-     !
+    !
+    ! Select hyperslab in memory.
+    !
       CALL h5sselect_hyperslab_f(memspace, H5S_SELECT_SET_F, &
                                 offset_out, count_out, errorFlag)               
                                             
@@ -1593,17 +1598,19 @@ CONTAINS
        ErrorMessage=" *** Error allocating dataset"
        return
     ENDIF
-
+    
+   
     dataset = H5dataset
-
-    DEALLOCATE(H5dataset)
+     
+    DEALLOCATE(H5dataset,stat = AllocStat)
     IF ( AllocStat.ne.0 ) THEN
        ErrorFlag=-1
        ErrorMessage=" *** Error deallocating H5dataset"
+       print *, errormessage
        return
     ENDIF
 
-    DEALLOCATE(dims)
+    DEALLOCATE(dims,stat = AllocStat)
     IF ( AllocStat.ne.0 ) THEN
        ErrorFlag=-1
        ErrorMessage=" *** Error deallocating dims"
@@ -1611,7 +1618,9 @@ CONTAINS
     ENDIF
 
     ! Close all that is open
-
+    
+    call h5sclose_f(memspace,errorFlag)
+    call h5sclose_f(dspace,errorFlag)
     CALL H5Read_close
 
   END SUBROUTINE H5Read2Integer2DSub

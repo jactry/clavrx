@@ -40,22 +40,7 @@ module IFF_MODULE
      , real8 & 
      , ipre
  use CALIBRATION_CONSTANTS, only: &
-     Nu_20 &
-     , Nu_21 &
-     , Nu_22 &
-     , Nu_23 &
-     , Nu_24 &
-     , Nu_25 &
-     , Nu_27 &
-     , Nu_28 &
-     , Nu_29 &
-     , Nu_30 &
-     , Nu_31 &
-     , Nu_32 &
-     , Nu_33 &
-     , Nu_34 &
-     , Nu_35 &
-     , Nu_36
+     Planck_Nu
 
  implicit none
 
@@ -102,7 +87,7 @@ module IFF_MODULE
    end type cloud_products_str
 
    type, public :: iff_data_out
-      type (band_str), dimension ( 44 ) :: band
+      type (band_str), allocatable :: band(:)
       type (geo_str) :: geo
       type ( cloud_products_str) :: prd
       contains
@@ -270,11 +255,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! set nu numbes for radiance conversion
       nu_list = 0
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-         nu_list(20:25) = [Nu_20, Nu_20, Nu_31, Nu_23, Nu_24, Nu_25]
-         nu_list(27:36) = [Nu_27, Nu_28, Nu_32, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(20), Planck_Nu(31), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
+         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(32), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
+                           Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
       else
-         nu_list(20:25) = [Nu_20, Nu_21, Nu_22, Nu_23, Nu_24, Nu_25]
-         nu_list(27:36) = [Nu_27, Nu_28, Nu_29, Nu_30, Nu_31, Nu_32, Nu_33, Nu_34, Nu_35, Nu_36]
+         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(21), Planck_Nu(22), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
+         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30),  &
+                           Planck_Nu(31), Planck_Nu(32), Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
       endif
 
       ! open file
@@ -479,7 +466,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! --- end loop over ref & rad
       enddo
-
+      
+      allocate ( out % band (44))
       ! --- read bands
       do i_band = 1, config % n_chan
 
@@ -774,11 +762,13 @@ end subroutine READ_IFF_DATE_TIME
       if (allocated ( this%geo%lon )) deallocate ( this%geo%lon )
       if (allocated ( this%geo%scan_time )) deallocate ( this%geo%scan_time )
 
-      do m = 1 , 36
+      do m = 1 , 44
         if (allocated (this%band (m) %ref )) deallocate ( this%band (m) %ref )
         if (allocated (this%band (m) %rad )) deallocate ( this%band (m) %rad )
         if (allocated (this%band (m) %bt )) deallocate ( this%band (m) %bt )
       end do
+      
+      if ( allocated ( this % band )) deallocate ( this % band)
 
    end subroutine dealloc_iff_data_out
 

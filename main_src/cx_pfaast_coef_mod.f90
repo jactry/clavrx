@@ -107,7 +107,7 @@ contains
          call this % read_general ( device, satellite  )
       
       case default
-         print*,'sensor not found',sensor,device       
+         print*,'sensor not found in cx_pfaast:  ',sensor,device       
       end select
 
    end subroutine read_coef

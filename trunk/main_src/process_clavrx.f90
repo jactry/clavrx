@@ -42,6 +42,7 @@
 ! Version 5.2.7 - MTSAT, COMS Support
 ! Version 5.2.8 - GOES Sounder Support
 ! Version 5.3.0 - NCDC Delivery
+! Version 2015a - Stable Release for CSPP
 !
 !
 ! Basic Running Instruction
@@ -812,6 +813,9 @@
                !--- compute needed NWP levels (sfc, tropo, inversion, ...)
                call COMPUTE_NWP_LEVELS_SEGMENT(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
 
+               !--- compute desired nwp parameters 
+               call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
+
             end if
    
             !--- determine a pixel-level mask to exclude data solar contaminiation
@@ -825,7 +829,10 @@
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-            !--- map ancillary data to the pixel projection
+            !--- map nwp parameters to pixel projection
+            call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
+
+            !--- map non-nwp ancillary data to the pixel projection
             call MAP_ANCIL_DATA_TO_PIXEL_GRID()
 
             !--- post process dark composite if one read in
@@ -889,11 +896,8 @@
                                 Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
                end if
 
-               !--- compute desired nwp parameters 
-               call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
-
-               !--- compute selected pixel nwp parameters
-               call COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Flag)
+!              !--- compute desired nwp parameters 
+!              call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1679,49 +1683,51 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
         end where
 
 
-          !--- interpolate white sky albedoes to each pixel in segment
-            if (Modis_Clr_Alb_Flag == sym%YES) then
-               if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-                    if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
+        !--- interpolate white sky albedoes to each pixel in segment
+        if (Modis_Clr_Alb_Flag == sym%YES) then
+
+           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+                if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
                      allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
-                  endif
-                  call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
-                                          ch(1)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+                endif
+                call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
+                                        ch(1)%Sfc_Ref_White_Sky)
+           endif
+           if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
                   if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
                      allocate(ch(2)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
                                           ch(2)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
+           endif
+           if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
                   if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
                      allocate(ch(5)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
                                           ch(5)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+           endif
+           if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
                   if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
                      allocate(ch(6)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
                                           ch(6)%Sfc_Ref_White_Sky)
-               endif
-               if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
+           endif
+           if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
                   if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
                      allocate(ch(7)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4
                   endif
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_2_13_Id, Modis_Alb_2_13_Str, &
                                           ch(7)%Sfc_Ref_White_Sky)
-               endif
-            endif
+           endif
+
+        endif
 
     end subroutine  MAP_ANCIL_DATA_TO_PIXEL_GRID
 

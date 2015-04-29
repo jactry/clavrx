@@ -480,7 +480,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   enddo Element_Loop_2
   enddo Line_Loop_2
 
-  Diag_Pix_Array_1 = Tc_Cirrus_Co2
   !-------------------------------------------------------------------------
   ! spatially interpolate
   !-------------------------------------------------------------------------
@@ -528,8 +527,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
    enddo Element_Loop_3
 
    Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
-
-  Diag_Pix_Array_2 = Tc_Cirrus_Co2
 
   if (allocated(Mask)) deallocate(Mask)
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)

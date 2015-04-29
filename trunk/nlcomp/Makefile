@@ -6,10 +6,7 @@ RM := rm -rf
 include config.mk
 
 # Where to find the RTM. Replace this with your own path to the object files and modules.
-RTM_INC = /home/awalther/SOFTWARE/RTM/RTTOV/include
-RTM_MOD = /home/awalther/SOFTWARE/RTM/RTTOV/mod 
-RTM_LIB = /home/awalther/SOFTWARE/RTM/RTTOV/lib
-RTMODEL = rttov10.2.0
+
 
 HDFDIR = $(HOME)/lib/hdf4/
 HDFINC = $(HDFDIR)/include
@@ -21,7 +18,7 @@ CFLAGS = -O2 -w -I$(ICAINC) -I$(HDFINC)
 LFLAGS = -L$(ICALIB) -L$(HDFLIB) -licaf90hdf -lmfhdf -ldf -ljpeg -lz -lm
 COMSRC = hdf4/src/prntutil.f90
 COMOBJ = prntutil.o
-NCDF_LIB = /usr/local/lib
+
 
 TEST_PATH = ./tests/
 SUB_PATH = ./subtools/

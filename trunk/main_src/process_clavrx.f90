@@ -110,7 +110,6 @@
    
    use RT_UTILITIES, only: &
         rtm_nvzen &
-      , setup_pfaast &
       , setup_solar_rtm &
       , map_nwp_rtm  &
       , create_temp_nwp_vectors  &
@@ -454,10 +453,6 @@
       call OUTPUT_IMAGE_TO_SCREEN()
       call OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
       
-      !------------------------------------------------------------------
-      ! Setup PFAAST (FAST IR RTM) for this particular sensor
-      !------------------------------------------------------------------
-      call SETUP_PFAAST(Sensor%WMO_Id)
 
       !------------------------------------------------------------------
       ! Setup Solar-channel RTM terms for this particular sensor

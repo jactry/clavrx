@@ -1300,7 +1300,10 @@ contains
       
       case(172) !MTSAT-2
          sensor_name_rtm = 'MTSAT-2'
-      
+         
+      case(173) !AHI
+         sensor_name_rtm = 'AHI'
+               
       case(200) !NOAA-8
         sensor_name_rtm = 'AVHRR-NOAA08'
 

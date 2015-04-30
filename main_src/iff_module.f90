@@ -642,11 +642,11 @@ end subroutine READ_IFF_LEVEL1B
 
 subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
                   end_year,end_doy,end_time)
-
+   
  use NUMERICAL_ROUTINES, only: &
      LEAP_YEAR_FCT &
      , JULIAN
-
+   implicit none
    CHARACTER(Len=*), INTENT(IN) :: Path
    CHARACTER(Len=*), INTENT(IN) :: Infile
    INTEGER, INTENT(OUT) :: year
@@ -664,7 +664,7 @@ subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
    integer(kind=int4):: sfstart
    integer(kind=int4):: sfrcatt
    integer(kind=int4):: sffattr
-   character(len=200):: Metadata_Temp
+   character(len=20):: Metadata_Temp
 
    INTEGER :: ileap
    INTEGER :: month
@@ -677,24 +677,28 @@ subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
    INTEGER :: end_sec
    INTEGER :: days_in_year
 
-
+!print*,'start'
 Status_Flag = 0
 
 !---- open file
 Sd_Id = sfstart(trim(Path)//trim(Infile), DFACC_read)
-
+!print*,sd_id,trim(Path)//trim(Infile), DFACC_read
 !--- determine attribute index                                                                                                 
 Sds_Id = sffattr(Sd_Id, "granule_start_time")
 
 !--- read start attribute
 Status_Flag = sfrcatt(Sd_Id, Sds_Id, Metadata_Temp) + Status_Flag
-
+!print*,sd_id,status_flag
 !0        1         2
 !12345678901234567890
 !2013-01-13 00:00:00
 !2013-01-13 00:04:59
 
-
+if ( status_flag /= 0) then
+   print*,sd_id,status_flag
+   print*,'IFF MODULE: error reading granule'
+   stop
+end if
 ! --- Read data 
 read(Metadata_Temp(1:4), fmt="(I4)") year
 read(Metadata_Temp(6:7), fmt="(I2)") month

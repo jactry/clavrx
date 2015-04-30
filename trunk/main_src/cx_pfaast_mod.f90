@@ -13,6 +13,8 @@ module cx_pfaast_mod
       , tauwtr
    
    type ( coef_type ) :: coef
+   type (coef_type) :: coef_1
+   type (coef_type) :: coef_2
    
    type profile_type
       real, allocatable :: temp(:)
@@ -78,9 +80,20 @@ contains
       tauo = 1.
       
       ! - start
-     
-      ! - read coef data if needed      
-      call coef % read_it ( trim(sensor) , ancil_data_path ) 
+      !-  this saves coefs for up to two sensors for IFF data )
+      if ( trim(sensor) == trim(coef_1 % sensor) ) then
+         coef = coef_1       
+      else if ( trim(sensor) == trim(coef_2 % sensor) ) then
+         coef = coef_2
+      else
+         ! - read coef data if needed      
+         call coef % read_it ( trim(sensor) , ancil_data_path ) 
+         if ( trim(coef_1 % sensor) == 'not_set' ) then
+             coef_1 = coef
+        else
+             coef_2 = coef
+          end if      
+      end if
       
       if ( present ( use_modis_channel_equivalent  )) then
          if (  use_modis_channel_equivalent ) then

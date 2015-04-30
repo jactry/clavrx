@@ -8,7 +8,7 @@ ICAINC = ../include
 ICALIB = ../lib
 LIBPTH = $(ICALIB)/libicaf90hdf.a
 
-CFLAGS = -O2 -w -I$(ICAINC) -I$(HDFINC)
+CFLAGS = -O2 -I$(ICAINC) -I$(HDFINC)
 
 LIBSRC = ica_f90_hdf_sds.f90 ica_f90_hdf_dim_sds.f90
 LIBOBJ = ica_f90_hdf_sds.o   ica_f90_hdf_dim_sds.o

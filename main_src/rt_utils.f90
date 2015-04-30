@@ -1388,7 +1388,13 @@ contains
       case(515) !FY2E          
          sensor_name_rtm ='FY2-3'
       
+      case default
+         print*,'sensor for WMO number not found in RT Utils  ', WMO_id  
+         print*,'stopping ... Please fix this in rt_utils.F90'
+         print*,' better tell andi.walther@ssec.wisc.edu'
+         stop    
       end select
+     
       
       
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then

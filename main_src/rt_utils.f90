@@ -1397,13 +1397,13 @@ contains
      
       
       
-      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+      if (trim ( Sensorname) == 'AVHRR-IFF') then
         
          !  sensor for channels 21:30 and 33:36 is HIRS
          if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) sensor_name_rtm   = 'HIRS'
       end if
    
-      if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
+      if (trim ( Sensorname) == 'VIIRS-IFF') then
          
          !  sensor for channels 27:28 and 33:36 is CRISP this is similar to MODIS-AQUA
          if ( any ( chan_idx ==  [27,28, 33,34,35,36] ) ) sensor_name_rtm   = 'MODIS-AQUA'

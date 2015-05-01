@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 227
+ integer, parameter, private:: Num_Level2_Sds = 233
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -237,4 +237,9 @@
      Sds_Num_Level2_Ch38 = 225,           Sds_Num_Level2_Ch38_Flag = 1, &
      Sds_Num_Level2_Ch37_Clear = 226,     Sds_Num_Level2_Ch37_Clear_Flag = 1, &
      Sds_Num_Level2_Ch38_Clear = 227,     Sds_Num_Level2_Ch38_Clear_Flag = 1, &
-     Sds_Num_Level2_HIRS_Cld_Temp = 228,  Sds_Num_Level2_HIRS_Cld_Temp_Flag = 1
+     Sds_Num_Level2_HIRS_Cld_Temp = 228,  Sds_Num_Level2_HIRS_Cld_Temp_Flag = 1, &
+     Sds_Num_Level2_HIRS_Cld_Pres = 229,  Sds_Num_Level2_HIRS_Cld_Pres_Flag = 1, &
+     Sds_Num_Level2_HIRS_Cld_Height = 230,  Sds_Num_Level2_HIRS_Cld_Height_Flag = 1, &
+     Sds_Num_Level2_HIRS_Mask = 231,  Sds_Num_Level2_HIRS_Mask_Flag = 1, &
+     Sds_Num_Level2_HIRS_ele_index = 232,  Sds_Num_Level2_HIRS_ele_index_Flag = 1, &
+     Sds_Num_Level2_HIRS_line_index = 233,  Sds_Num_Level2_HIRS_line_index_Flag = 1

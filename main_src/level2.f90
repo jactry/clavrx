@@ -5172,12 +5172,16 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     endif
     !--- MJH HIRS ele collocation indices
     if (Sds_Num_Level2_HIRS_ele_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        ! is this the wrong place to do this?
+        where(HIRS_ele_index == -999) HIRS_ele_index = Missing_Value_Int2
         Two_Byte_Temp = HIRS_ele_index
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_ele_index), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
     !--- MJH HIRS line collocation indices
     if (Sds_Num_Level2_HIRS_line_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        ! is this the wrong place to do this?
+        where(HIRS_line_index == -999) HIRS_line_index = Missing_Value_Int2
         Two_Byte_Temp = HIRS_line_index
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_line_index), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus

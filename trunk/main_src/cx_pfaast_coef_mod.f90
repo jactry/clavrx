@@ -107,7 +107,9 @@ contains
          call this % read_general ( device, satellite  )
       
       case default
-         print*,'sensor not found in cx_pfaast:  ',sensor,device       
+         print*,'sensor not found in cx_pfaast:  ',sensor,device   
+         print*,'stopping ...'
+         stop    
       end select
 
    end subroutine read_coef
@@ -208,7 +210,9 @@ contains
       this % wvp_solid  = coefs 
       this % wvp_liquid = coefl 
          
-      this % modis_channel_eqv = [ 20,27,28,29,30,31,32,33,37,38 ]
+      
+      
+      this % modis_channel_eqv = [ 20,37,27,28,29,30,38,31,32,33 ]
       this % native_channel = [(i , i=7 , 16 ) , 1 ]
         
    end subroutine read_ahi

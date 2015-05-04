@@ -92,7 +92,10 @@ module nlcomp_bridge_mod
    use planck, only: &
       planck_rad_fast 
 
-   use dcomp_rtm_module
+   use dcomp_rtm_module, only: &
+      perform_rtm_dcomp &
+      , dcomp_rtm_type
+      
 #ifdef HDF5LIBS   
 #ifdef NLCOMPLIBS 
    use nlcomp_interface_def_mod , only: &
@@ -181,7 +184,7 @@ contains
          call  alloc_nlcomp ( nlcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
          call  alloc_nlcomp ( nlcomp_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
                  
-         if ( idx_chn >= 20 .and. idx_chn /= 40 ) then   
+         if ( idx_chn >= 20 .and. idx_chn /= 44 ) then   
             call  alloc_nlcomp ( nlcomp_input % rad (  idx_chn  ) ,  dim_1,dim_2 )  
             call  alloc_nlcomp ( nlcomp_input % emiss_sfc (  idx_chn  ) ,  dim_1,dim_2 )
             call  alloc_nlcomp ( nlcomp_input % rad_clear_sky_toa ( idx_chn ),  dim_1,dim_2 )

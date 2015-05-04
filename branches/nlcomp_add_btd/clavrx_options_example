@@ -10,7 +10,7 @@
 1   !E2 PRC Cloud flag  
 200 !E2 Num scan lines
 0   !E2 SASRAB switch on/off SASRAB parameters 
-1   !E2 NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
+3   !E2 NWP nwp option  (1=gfs,2=ncep reanalysis,3=cfsr)
 1   !E2 RTM rtm option  (0=crtm,1=pfast, (2=rttov))
 0   !E2 NAV nav option  (0 =  Use  level-1b,1 = external (future) 2 = Reposnx ( fred nagle): For non-AVHRR, use 0) 
 1   !E2 OUT output compression flag (0=no,1=gzip)

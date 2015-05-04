@@ -179,6 +179,8 @@ module SENSOR_MODULE
       ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
+
+print *, "It is IFF"
          call READ_IFF_DATE_TIME(trim(Image%Level1b_Path), trim(Image%Level1b_Name),Start_Year_Tmp, &
                       Start_Day_Tmp,Start_Time_Tmp, End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
          Image%Start_Year = Start_Year_Tmp
@@ -809,7 +811,8 @@ module SENSOR_MODULE
       endif
 
       !--- NPP/JPSS IFF 
-      if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0) then
+      if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0 .or. &
+          index(Image%Level1b_Name, 'IFF_npp') > 0) then
          Sensor%Sensor_Name = 'VIIRS-IFF'
          Sensor%Spatial_Resolution_Meters = 750
          Sensor%Platform_Name = 'SNPP'

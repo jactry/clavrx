@@ -736,7 +736,10 @@ end subroutine READ_MODIS_LEVEL1B_GEOLOCATION
 ! scan_number = number of line within this file
 !----------------------------------------------------------------------
 subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
-                              cloud_mask_out,  &
+                              Cloud_Mask_Out,  &
+                              Cloud_Phase_Out,  &
+                              Cloud_Type_Out,  &
+                              Cloud_Height_Out,  &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
 
@@ -748,9 +751,13 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int4), intent(in):: ny_total
       integer(kind=int4), intent(out):: ny_local_temp
       integer(kind=int4), intent(out):: Error_Status
-      integer(kind=int1), dimension(:,:), intent(out):: cloud_mask_out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Mask_Out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Phase_Out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Type_Out
+      real(kind=real4), dimension(:,:), intent(out):: Cloud_Height_Out
 
       integer(kind=int1), allocatable, dimension(:,:,:):: i1_buffer
+      integer(kind=int2), allocatable, dimension(:,:):: i2_buffer
       character(len=120):: sds_name
       integer(kind=int4), dimension(3):: sds_dims
       integer(kind=int4), dimension(3):: sds_start
@@ -770,12 +777,16 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int4):: sfend, sfstart, sfselect, sfrdata, sfendacc, &
                            sfginfo, sfn2index
       integer(kind=int4):: iend
+      logical:: Atml2_File
 
 
 
       Status_Flag = 0
       Error_Status = 0
       iend = 0
+
+      Atml2_File = .false.
+      if (index(file_name, "ATML2") > 0) Atml2_File = .true.
 
 error_check: do while (Status_Flag == 0 .and. iend == 0)
 
@@ -808,10 +819,12 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- allocate space for data to be read in
       if (Sensor%Spatial_Resolution_Meters == 1000) then
         allocate(i1_buffer(nx_local,ny_local_temp,6))
+        allocate(i2_buffer(nx_local,ny_local_temp))
         sds_start = (/0, ny_start-1, 0/)
         sds_edges = (/nx_local, ny_local_temp,6/)
       else
         allocate(i1_buffer(nx_local,ny_local_temp,1))
+        allocate(i2_buffer(nx_local,ny_local_temp))
         sds_start = (/0, ny_start-1, 0/)
         sds_edges = (/nx_local, ny_local_temp,1/)
       endif
@@ -822,6 +835,21 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       Cloud_Mask_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
 
+      if (Atml2_File) then
+       !--- Read IR Cloud Phase
+       !--- 0 = cloud free, 1 = water, 2 = ice, 3 = mixed, 6 = unknown)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Phase_Infrared_1km')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i1_buffer) + Status_Flag
+       Cloud_Phase_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+
+       !--- Read Cloud Top Height (i2, scale = 1, add_offset = 0, fill=-999)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Top_Height_1km')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
+       Cloud_Height_Out(1:nx_min,1:ny_min) = real(i2_buffer(1:nx_min,1:ny_min))
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+      endif
+
       !--- close file
       Status_Flag = sfend(Sd_Id) + Status_Flag
 
@@ -830,14 +858,41 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       enddo  error_check ! end of while loop
 
       !--- unpacked needed information for 4-level cloud mask
-      cloud_mask_out = ishft(ishft(cloud_mask_out,5),-6)
+      Cloud_Mask_Out = ishft(ishft(Cloud_Mask_Out,5),-6)
 
-      !--- switch CLAVR-x convection
-      cloud_mask_out = 3-cloud_mask_out
+      !--- switch CLAVR-x convection for mask
+      Cloud_Mask_Out = 3-Cloud_Mask_Out
+
+      !--- switch CLAVR-x convection for phase
+      where(Cloud_Phase_Out == 0)
+          Cloud_Type_Out = sym%CLEAR_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 1)
+          Cloud_Type_Out = sym%WATER_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 2)
+          Cloud_Type_Out = sym%OPAQUE_ICE_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 3)
+          Cloud_Type_Out = sym%MIXED_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 6)
+          Cloud_Type_Out = sym%UNKNOWN_TYPE
+      endwhere
+
+      !--- modify phase (0,1,3 have same meaning as CLAVR-x)
+      where(Cloud_Phase_Out == 2)
+          Cloud_Phase_Out = sym%ICE_PHASE
+      endwhere
+      where(Cloud_Phase_Out == 5)
+          Cloud_PHASE_Out = sym%UNKNOWN_PHASE
+      endwhere
+
 
       !--- deallocate memory
       !--- clean up memory
       if (allocated(i1_buffer)) deallocate(i1_buffer)
+      if (allocated(i2_buffer)) deallocate(i2_buffer)
 
       if (Status_Flag /= 0) then
 
@@ -911,6 +966,9 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
           call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
                                              trim(Image%Auxiliary_Cloud_Mask_File_Name), &
                                              Cld_Mask_Aux, & 
+                                             Cld_Phase_Aux, & 
+                                             Cld_Type_Aux, & 
+                                             Zc_Aux, & 
                                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
                                              Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
                                              Error_Status)
@@ -922,6 +980,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
        endif
 
+       !--- read channel data
        do Chan_Idx = 1,36
 
          if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle

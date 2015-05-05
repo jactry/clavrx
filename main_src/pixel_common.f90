@@ -765,6 +765,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
 
 !--- modis white sky albedo maps
@@ -2481,6 +2482,7 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
     allocate(Tc_Cirrus_Co2(dim1,dim2))
     allocate(Pc_Cirrus_Co2(dim1,dim2))
+    allocate(Zc_Cirrus_Co2(dim1,dim2))
     allocate(Ec_Cirrus_Co2(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
@@ -2500,6 +2502,7 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Low_Cloud_Fraction_3x3 = Missing_Value_Real4
      Tc_Cirrus_Co2 = Missing_Value_Real4
      Pc_Cirrus_Co2 = Missing_Value_Real4
+     Zc_Cirrus_Co2 = Missing_Value_Real4
      Ec_Cirrus_Co2 = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
@@ -2519,6 +2522,7 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Low_Cloud_Fraction_3x3)
      deallocate(Tc_Cirrus_Co2)
      deallocate(Pc_Cirrus_Co2)
+     deallocate(Zc_Cirrus_Co2)
      deallocate(Ec_Cirrus_Co2)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS

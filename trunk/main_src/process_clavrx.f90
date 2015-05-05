@@ -1064,7 +1064,8 @@
                    call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
                                     P_Std_Rtm,Cld_Type, &
-                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2)
+                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2,Zc_Cirrus_Co2)
+
                endif
 
                if (ACHA%Mode == 0) then

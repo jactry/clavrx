@@ -1461,18 +1461,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- cloud mask from 1b
-     if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then
-      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "cloud_mask_1b", &
-                               "cloud_mask_1b", &
-                               "integer classification of the cloud mask including clear=0, probably-clear=1, "// &
-                               "probably-cloudy=2, cloudy=3 from mask read from level-1b file", &
-                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Mask, Max_Cld_Mask, &
-                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
-      Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
      !--- bayesian mask surface type
      if (Sds_Num_Level2_Bayes_Sfc_Type_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Bayes_Sfc_Type),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -1567,15 +1555,49 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- cloud type 1b
+     !--- auxiliary cloud mask
+     if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "cloud_mask_aux", &
+                               "cloud_mask_aux", &
+                               "integer classification of the cloud mask including clear=0, probably-clear=1, "// &
+                               "probably-cloudy=2, cloudy=3 from mask read from auxiliary data source", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Mask, Max_Cld_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- auxiliary cloud type
      if (Sds_Num_Level2_Cld_Type_Aux_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "cloud_type_1b", &
-                               "cloud_type_1b", &
+                               "cloud_type_aux", &
+                               "cloud_type_aux", &
                                "integer classification of the cloud type including clear "// &
-                               "and aerosol type read from level-1b file", &
+                               "and aerosol type read from auxiliary data source", &
                                DFNT_INT8, sym%NO_SCALING, Min_Cld_Type, Max_Cld_Type, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- auxiliary cloud height
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_height_aux", &
+                               "height_at_cloud_top_aux", &
+                               "cloud height from the auxiliary data source", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
+                               "m", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- sounder cloud height
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_height_sndr", &
+                               "height_at_cloud_top_sndr", &
+                               "cloud height from the sounder data source", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
+                               "m", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4001,12 +4023,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Cld_Test_Vector_Packed(:,:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
-     !--- cld mask 1b
-     if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Mask_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
      !--- bayes mask sfc type
      if (Sds_Num_Level2_Bayes_Sfc_Type_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bayes_Sfc_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
@@ -4056,10 +4072,30 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Cld_Phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
-     !--- cld type
+     !--- auxiliary cld mask
+     if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Cld_Mask_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- auxiliary cld type
      if (Sds_Num_Level2_Cld_Type_Aux_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         Cld_Type_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- auxiliary cld height
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Aux_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(Zc_Aux,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- sndr cld height
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(Zc_Cirrus_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld pressure

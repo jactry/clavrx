@@ -1962,6 +1962,13 @@ subroutine COMPUTE_GLINT()
             endif
           endif
 
+          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+            if (Ref_Ch1_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
+             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+             cycle
+            endif
+          endif
+
           !-turn off if dark
           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) < 5.0) then

@@ -1079,7 +1079,7 @@ end subroutine DESTROY_PIXEL_ARRAYS
 subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
       Bad_Scan_Flag = sym%NO        !not initialized to missing
-      Bad_Pixel_Mask = sym%YES      !not initialized to missing
+      Bad_Pixel_Mask = sym%NO      !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
 
       call RESET_SENSOR_ARRAYS()

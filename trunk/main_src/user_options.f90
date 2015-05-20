@@ -776,7 +776,7 @@ contains
      
       call CHANNEL_SWITCH_ON (SensorName)
 
-      if ( Expert_Mode < 3 .or. trim(Bayesian_Cloud_Mask_Name) == 'default') then
+      if ( Expert_Mode < 2 .or. trim(Bayesian_Cloud_Mask_Name) == 'default') then
          Bayesian_Cloud_Mask_Name = default_nb_mask_classifier_file ( SensorName )
       end if
       

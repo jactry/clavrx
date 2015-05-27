@@ -263,7 +263,7 @@ algorithm_constants.o: algorithm_constants.f90 constant.o
 avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_utility.o
 
 acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \
-                     rtm_common.o constant.o planck.o rtm_common.o 
+                     rtm_common.o constant.o planck.o rtm_common.o num_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_services_module.f90                    
 
 acha_clavrx_bridge_module.o: acha_clavrx_bridge_module.f90 acha_module.o acha_comp_module.o \
@@ -296,7 +296,7 @@ dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pi
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
 pixel_common.o: pixel_common.f90 constant.o
-pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o
+pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o
@@ -327,7 +327,7 @@ hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o 
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o
+modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o calibration_constants.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o
 iff_module.o: iff_module.f90 hdf.o pixel_common.o file_utility.o hdf_read_module.o 
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o avhrr_module.o
@@ -349,7 +349,7 @@ sort_module.o: sort_module.f90
 string_functions.o:string_functions.f90
 strings.o:strings.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o calibration_constants.o
 
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90

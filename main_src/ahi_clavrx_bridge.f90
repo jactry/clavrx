@@ -18,7 +18,8 @@ module ahi_clavrx_bridge
       , Ch 
    
     use constants, only: &
-      int4 
+      int4 &
+		, Missing_Value_Real4
       
       
     use calibration_constants, only: &

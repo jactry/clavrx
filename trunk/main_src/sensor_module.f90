@@ -46,7 +46,13 @@ module SENSOR_MODULE
    use FILE_UTILITY
    use AVHRR_MODULE
    use GOES_MODULE
-   use MODIS_MODULE
+   use MODIS_MODULE, only : &
+		DETERMINE_MODIS_CLOUD_MASK_FILE &
+		, READ_MODIS_INSTR_CONSTANTS &
+		, READ_MODIS &
+		, READ_MODIS_SIZE_ATTR &
+		, DETERMINE_MODIS_GEOLOCATION_FILE &
+		, READ_MODIS_TIME_ATTR
    use FY2_MODULE
    use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
@@ -80,7 +86,7 @@ module SENSOR_MODULE
    public:: OUTPUT_IMAGE_TO_SCREEN
    private:: READ_AHI_INSTR_CONSTANTS
 
-   character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
+   character(24), parameter, private :: MODULE_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier
   
    character (len = 3), private :: string_3

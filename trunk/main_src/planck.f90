@@ -66,7 +66,7 @@
   use PIXEL_COMMON, only: Sensor
 
   implicit none
-   
+  private
   public:: POPULATE_PLANCK_TABLES
   public:: PLANCK_RAD_FAST
   public:: PLANCK_TEMP_FAST
@@ -80,28 +80,6 @@
   real (kind=int4), parameter, private:: T_Planck_min = 180.0,  &
                                          delta_T_Planck = 1.0
   real(kind=int4), dimension(20:43,Nplanck), save, private:: BB_Rad = Missing_Value_Real4
-
-! real(kind=int4), dimension(Nplanck), save, private:: B20 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B21 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B22 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B23 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B24 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B25 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B27 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B28 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B29 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B30 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B31 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B32 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B33 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B34 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B35 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B36 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B37 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B38 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B42 = Missing_Value_Real4
-! real(kind=int4), dimension(Nplanck), save, private:: B43 = Missing_Value_Real4
-
   real(kind=int4), dimension(Nplanck), save, private:: T_Planck = Missing_Value_Real4
 
   contains

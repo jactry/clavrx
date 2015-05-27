@@ -132,8 +132,10 @@ module RT_UTILITIES
       
    use PLANCK, only: &
         PLANCK_RAD_FAST &
-      , PLANCK_TEMP_FAST &
-      , SOLAR_CH20_NU
+      , PLANCK_TEMP_FAST 
+	
+	use calibration_constants, only: &	
+       SOLAR_CH20_NU
       
    ! use SURFACE_PROPERTIES, only: 
    

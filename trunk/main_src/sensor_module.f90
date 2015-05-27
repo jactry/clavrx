@@ -39,7 +39,7 @@
 ! end loop
 !--------------------------------------------------------------------------------------
 module SENSOR_MODULE
-   use PIXEL_COMMON
+   use PIXEL_COMMON, only:
    use CALIBRATION_CONSTANTS
    use ALGORITHM_CONSTANTS
    use CONSTANTS
@@ -53,7 +53,11 @@ module SENSOR_MODULE
 		, READ_MODIS_SIZE_ATTR &
 		, DETERMINE_MODIS_GEOLOCATION_FILE &
 		, READ_MODIS_TIME_ATTR
-   use FY2_MODULE
+		
+   use FY2_MODULE, only: &
+		READ_FY &
+		, READ_FY_INSTR_CONSTANTS
+		
    use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
@@ -75,16 +79,18 @@ module SENSOR_MODULE
    use clavrx_message_module
 
    implicit none
-
-   public:: SET_DATA_DATE_AND_TIME
-   public:: READ_INSTR_CONSTANTS
-   public:: READ_ALGO_CONSTANTS
-   public:: DETECT_SENSOR_FROM_FILE
-   public:: SET_FILE_DIMENSIONS
-   public:: READ_LEVEL1B_DATA 
-   public:: OUTPUT_SENSOR_TO_SCREEN
-   public:: OUTPUT_IMAGE_TO_SCREEN
-   private:: READ_AHI_INSTR_CONSTANTS
+	
+	private
+   public :: SET_DATA_DATE_AND_TIME
+   public :: READ_INSTR_CONSTANTS
+   public :: READ_ALGO_CONSTANTS
+   public :: DETECT_SENSOR_FROM_FILE
+   public :: SET_FILE_DIMENSIONS
+   public :: READ_LEVEL1B_DATA 
+   public :: OUTPUT_SENSOR_TO_SCREEN
+   public :: OUTPUT_IMAGE_TO_SCREEN
+	public :: OUTPUT_PROCESSING_LIMITS_TO_SCREEN
+   
 
    character(24), parameter, private :: MODULE_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier

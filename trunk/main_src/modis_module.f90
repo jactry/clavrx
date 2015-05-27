@@ -28,21 +28,67 @@
 !--------------------------------------------------------------------------------------
 module MODIS_MODULE
 
- use CONSTANTS
- use HDF
- use FILE_UTILITY
- use PIXEL_COMMON
- use PIXEL_ROUTINES
- use PLANCK
- use VIEWING_GEOMETRY_MODULE
- use FILE_TOOLS
-
+ use CONSTANTS, only: &
+ 	int4, real4 &
+	, int2 &
+	, int1 &
+	, exe_prompt &
+	, Missing_Value_Real4 &
+	, sym
+	
+ use HDF, only: &
+ 	DFACC_read
+ 
+ use FILE_UTILITY,only: &
+ 	get_lun
+ 
+ use PIXEL_COMMON, only: &
+ 	sensor &
+	, geo &
+	, image &
+	, nav &
+	, ch &
+	, scan_time &
+	, scan_number &
+	, Cloud_Mask_Aux_Read_Flag &
+	, Cloud_Mask_Aux_Flag &
+	, Cld_mask_Aux &
+	, Cld_Phase_Aux &
+	, Cld_Type_Aux &
+	, Zc_Aux &
+	, Line_Idx_Min_segment
+	
+ use PIXEL_ROUTINES,only: &
+ 	julian &
+	, qc_modis
+ 
+ use PLANCK , only: &
+ 	convert_radiance &
+	, compute_bt_array
+	
+ use VIEWING_GEOMETRY_MODULE, only: &
+ 	glint_angle &
+	, scattering_angle
+ 
+ use FILE_TOOLS, only: &
+ 	file_search
+ 
+ use CALIBRATION_CONSTANTS, only: &
+ 	sat_name &
+	, solar_ch20 &
+	, solar_ch20_nu &
+	, ew_ch20 &
+	, planck_a1 &
+	, planck_a2 &
+	, planck_nu &
+	, b1_day_mask &
+	, b2_day_mask &
+	, b3_day_mask &
+	, b4_day_mask
+	
  implicit none
+ private
 
- private:: READ_MODIS_LEVEL1B_GEOLOCATION
- private:: READ_MODIS_LEVEL1B
- private:: READ_MODIS_LEVEL1B_CLOUD_MASK
- private:: CONVERT_RADIANCE
  public:: DETERMINE_MODIS_GEOLOCATION_FILE
  public:: DETERMINE_MODIS_CLOUD_MASK_FILE
  public:: READ_MODIS

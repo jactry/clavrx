@@ -103,11 +103,13 @@ module VIIRS_CLAVRX_BRIDGE
       , Bt_Min_ChI5 &
       , Bt_Max_ChI5 &
       , Bt_Mean_ChI5 &
-      , Bt_Uni_ChI5
+      , Bt_Uni_ChI5 
       
 
    use constants, only: &
-      int4
+      int4 &
+		, sym &
+		, Missing_Value_Real4
       
    use clavrx_message_module   
    

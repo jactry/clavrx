@@ -51,7 +51,10 @@ module ACHA_SERVICES_MOD
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
-
+		 
+	use NUMERICAL_ROUTINES, only: &
+		invert_matrix &
+		, locate
  implicit none
 
  public:: ACHA_FETCH_PIXEL_NWP_RTM 

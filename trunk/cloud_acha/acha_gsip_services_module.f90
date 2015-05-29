@@ -1,4 +1,4 @@
-!$Id: acha_services_gsip_mod.f90 582 2014-10-08 03:40:18Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------

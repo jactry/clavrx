@@ -1,4 +1,4 @@
-!$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
+!$Id$
 module AWG_CLOUD_HEIGHT
 !---------------------------------------------------------------------
 ! This module houses the routines associated with...
@@ -3866,7 +3866,7 @@ end subroutine NULL_PIX_POINTERS
 !====================================================================
 subroutine SET_ACHA_VERSION(Acha_Version)
    character(len=*):: Acha_Version
-   Acha_Version = "$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $"
+   Acha_Version = "$Id$"
 end subroutine SET_ACHA_VERSION
 !====================================================================
 ! 

@@ -1159,6 +1159,7 @@ print *, "It is IFF"
       integer(kind=int4), intent(out) :: Ierror
 
       integer(kind=int4) :: Ierror_Viirs_Nscans
+      integer(kind=int4) :: Ierror_AHI_Nscans
       CHARACTER(len=355) :: Dir_File
 
       Ierror = sym%NO
@@ -1172,9 +1173,15 @@ print *, "It is IFF"
       endif
       
       if ( trim(Sensor%Sensor_Name) == 'AHI') then
-         Image%Number_Of_Elements =  5500
-         Image%Number_Of_Lines = 5500
+         Dir_File = trim(Image%Level1b_Path) // trim(Image%Level1b_Name)
+#ifdef HDF5LIBS
+         call get_number_of_lines_from_ahi_bridge (trim(Dir_File),Image%Number_Of_Lines,Ierror_AHI_Nscans)
+         call get_number_of_elements_from_ahi_bridge (trim(Dir_File),Image%Number_Of_Elements,Ierror_AHI_Nscans)
       end if
+#else
+      print *, "No HDF5 library installed. AHI unable to process. Stopping"
+      stop
+#endif
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
          Image%Number_Of_Elements = 3200

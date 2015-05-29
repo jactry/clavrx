@@ -203,7 +203,7 @@
    character(len=100):: Modis_White_Sky_1_64_Name
    character(len=100):: Modis_White_Sky_2_13_Name
    character(len=100):: Snow_Mask_File_Name
-   character(len=100):: oiSst_File_Name
+   character(len=256):: oiSst_File_Name
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
    integer(kind=int4):: Emiss_File_Id = missing_value_int4

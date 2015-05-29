@@ -19,7 +19,7 @@ module ahi_clavrx_bridge
    
     use constants, only: &
       int4 &
-		, Missing_Value_Real4
+	, Missing_Value_Real4
       
       
     use calibration_constants, only: &
@@ -149,5 +149,45 @@ contains
  
  
    end subroutine read_ahi_data
+
+!---------------------------------------------------------------------------------
+!  subroutine get_number_of_lines_from_ahi_bridge ( Infile , Number_Of_AHI_Lines , Error_Out )
+!  it's asking to read number of lines in the cx_read_ahi_read_mod
+!---------------------------------------------------------------------------------
+   subroutine get_number_of_lines_from_ahi_bridge (Infile, Number_Of_AHI_Lines, Error_Out)
+      use cx_read_ahi_mod , only : &
+          read_number_of_lines_from_ahi
+
+      character(len=*), intent(in) :: Infile
+      integer(kind=int4), intent(out) :: Error_Out
+      integer(kind=int4), intent(out):: Number_of_AHI_Lines
+
+      error_out = 0
+
+      !--- Part of cx_read_ahi_mod.f90.  We should look into a generic reader
+      !--- for fixed grid satellites.
+      call read_number_of_lines_from_ahi (Infile, Number_of_AHI_Lines, Error_Out)
+
+   end subroutine get_number_of_lines_from_ahi_bridge
+
+!---------------------------------------------------------------------------------
+!  subroutine get_number_of_elements_from_ahi_bridge ( Infile , Number_Of_AHI_Elements , Error_Out )
+!  it's asking to read number of elements in the cx_read_ahi_read_mod
+!---------------------------------------------------------------------------------
+   subroutine get_number_of_elements_from_ahi_bridge (Infile, Number_Of_AHI_Elements, Error_Out)
+      use cx_read_ahi_mod , only : &
+          read_number_of_elements_from_ahi
+
+      character(len=*), intent(in) :: Infile
+      integer(kind=int4), intent(out) :: Error_Out
+      integer(kind=int4), intent(out):: Number_of_AHI_Elements
+
+      error_out = 0
+
+      !--- Part of cx_read_ahi_mod.f90.  We should look into a generic reader
+      !--- for fixed grid satellites.
+      call read_number_of_elements_from_ahi (Infile, Number_of_AHI_Elements, Error_Out)
+
+   end subroutine get_number_of_elements_from_ahi_bridge
 
 end module ahi_clavrx_bridge

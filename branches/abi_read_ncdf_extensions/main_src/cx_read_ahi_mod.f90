@@ -70,6 +70,8 @@ module cx_read_ahi_mod
    private
    public :: get_ahi_data
    public :: ahi_time_from_filename
+   public :: read_number_of_lines_from_ahi
+   public :: read_number_of_elements_from_ahi
 
    integer, parameter :: NUM_CHN = 16
    
@@ -240,12 +242,12 @@ contains
        ! - navigation
      
       ! - should be removed later then we trust the values in the file! 
-      cfac = 20466276.
-      coff = 2750.
-      lfac = 20466276.
-      loff = 2750.
-      sub_lon =  140.70
-      sub_lat = 0.
+      !cfac = 20466276.
+      !coff = 2750.
+      !lfac = 20466276.
+      !loff = 2750.
+      !sub_lon =  140.70
+      !sub_lat = 0.
       
       ! - read in the constants fom file
 
@@ -475,5 +477,59 @@ contains
    
    
    end subroutine deallocate_all
+
+!---------------------------------------------------------------------------------
+!  subroutine read_number_of_lines_from_ahi (Infile, Number_Of_AHI_Lines, Error_Out)
+!  to read number of lines, called from the bridge.
+!---------------------------------------------------------------------------------
+   subroutine read_number_of_lines_from_ahi (Infile, Number_Of_AHI_Lines, Error_Out)
+
+      use readh5dataset, only : &
+          H5ReadGlobalDimension
+
+      character(len=*), intent(in) :: Infile
+      integer, intent(out) :: Error_Out
+      integer, intent(out):: Number_of_AHI_Lines
+      character(len=100) :: Setname
+      integer :: dims
+
+      Error_Out = 0
+
+      ! Varialbe to read line dimension out of the Ray Garcia converted NetCDF
+      ! file. "y" represents lines of image.
+      Setname = ('/y')
+
+      call H5ReadGlobalDimension(Infile, Setname, dims)
+
+      Number_Of_AHI_Lines = dims
+
+   end subroutine read_number_of_lines_from_ahi
+
+!---------------------------------------------------------------------------------
+!  subroutine read_number_of_elements_from_ahi (Infile, Number_Of_AHI_Elements, Error_Out)
+!  to read number of Elements, called from the bridge.
+!---------------------------------------------------------------------------------
+   subroutine read_number_of_elements_from_ahi (Infile, Number_Of_AHI_Elements, Error_Out)
+
+      use readh5dataset, only : &
+          H5ReadGlobalDimension
+
+      character(len=*), intent(in) :: Infile
+      integer, intent(out) :: Error_Out
+      integer, intent(out):: Number_of_AHI_Elements
+      character(len=100) :: Setname
+      integer :: dims
+
+      Error_Out = 0
+
+      ! Varialbe to read line dimension out of the Ray Garcia converted NetCDF
+      ! file. "x" represents elements of image.
+      Setname = ('/x')
+
+      call H5ReadGlobalDimension(Infile, Setname, dims)
+
+      Number_Of_AHI_Elements = dims
+
+   end subroutine read_number_of_elements_from_ahi
 
 end module cx_read_ahi_mod

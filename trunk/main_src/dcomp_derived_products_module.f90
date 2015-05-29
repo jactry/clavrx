@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

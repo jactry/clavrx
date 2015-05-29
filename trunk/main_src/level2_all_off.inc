@@ -1,4 +1,4 @@
-!$Id: level2_ncdc_minimal.inc 536 2014-09-15 17:51:27Z heidinger $
+!$Id$
  !--- level2 indices
  integer, parameter, private:: Num_Level2_Sds = 229
  integer, private, save:: Sd_Id_Level2

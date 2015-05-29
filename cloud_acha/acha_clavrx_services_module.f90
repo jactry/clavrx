@@ -1,4 +1,4 @@
-!$Id: acha_services_clavrx_mod.f90 581 2014-10-08 03:39:08Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------

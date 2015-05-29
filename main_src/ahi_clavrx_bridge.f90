@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 module ahi_clavrx_bridge
    
       use Pixel_Common , only : &

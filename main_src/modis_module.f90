@@ -510,7 +510,14 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       where(i4_buffer == fill_value) 
               calibrated_data = missing_value
       endwhere
-      
+
+      ! --- specific of aqua 1.6um fix (Denis B. - 06.05.2015)
+      if (iband == 6) then
+         where(i4_buffer == 65528)
+            calibrated_data = missing_value                                                                                                    
+         endwhere
+      endif
+
       calibrated_data_out = missing_value
       calibrated_data_out(1:nx_min,1:ny_min) = calibrated_data(1:nx_min,1:ny_min)
 

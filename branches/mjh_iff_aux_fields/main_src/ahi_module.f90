@@ -1,4 +1,4 @@
-!$Id: AHI_module.f90 113 2014-03-14 17:18:02Z awalther $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

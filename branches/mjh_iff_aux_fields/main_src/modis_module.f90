@@ -28,192 +28,243 @@
 !--------------------------------------------------------------------------------------
 module MODIS_MODULE
 
- use CONSTANTS
- use HDF
- use FILE_UTILITY
- use PIXEL_COMMON
- use PIXEL_ROUTINES
- use PLANCK
- use VIEWING_GEOMETRY_MODULE
- use FILE_TOOLS
+ 	use CONSTANTS, only: &
+ 		int4, real4 &
+		, int2 &
+		, int1 &
+		, exe_prompt &
+		, Missing_Value_Real4 &
+		, sym &
+		, missing_value_int1
+	
+ 	use HDF, only: &
+ 		DFACC_read
+ 
+ 	use FILE_UTILITY,only: &
+ 		get_lun
+ 
+ 	use PIXEL_COMMON, only: &
+ 		sensor &
+		, geo &
+		, image &
+		, nav &
+		, ch &
+		, scan_time &
+		, scan_number &
+		, Cloud_Mask_Aux_Read_Flag &
+		, Cloud_Mask_Aux_Flag &
+		, Cld_mask_Aux &
+		, Cld_Phase_Aux &
+		, Cld_Type_Aux &
+		, Zc_Aux &
+		, Line_Idx_Min_segment
+	
+ 	use PIXEL_ROUTINES,only: &
+ 		julian &
+		, qc_modis
+ 
+ 	use PLANCK , only: &
+ 		convert_radiance &
+		, compute_bt_array
+	
+ 	use VIEWING_GEOMETRY_MODULE, only: &
+ 		glint_angle &
+		, scattering_angle
+ 
+ 	use FILE_TOOLS, only: &
+ 		file_search
+ 
+ 	use CALIBRATION_CONSTANTS, only: &
+ 		sat_name &
+		, solar_ch20 &
+		, solar_ch20_nu &
+		, ew_ch20 &
+		, planck_a1 &
+		, planck_a2 &
+		, planck_nu &
+		, b1_day_mask &
+		, b2_day_mask &
+		, b3_day_mask &
+		, b4_day_mask
+	
+ 	implicit none
+ 	private
 
- implicit none
+ 	public:: DETERMINE_MODIS_GEOLOCATION_FILE
+ 	public:: DETERMINE_MODIS_CLOUD_MASK_FILE
+ 	public:: READ_MODIS
+ 	public:: READ_MODIS_INSTR_CONSTANTS
+ 	public:: READ_MODIS_TIME_ATTR
+ 	public:: READ_MODIS_SIZE_ATTR
 
- private:: READ_MODIS_LEVEL1B_GEOLOCATION
- private:: READ_MODIS_LEVEL1B
- private:: READ_MODIS_LEVEL1B_CLOUD_MASK
- private:: CONVERT_RADIANCE
- public:: DETERMINE_MODIS_GEOLOCATION_FILE
- public:: DETERMINE_MODIS_CLOUD_MASK_FILE
- public:: READ_MODIS
- public:: READ_MODIS_INSTR_CONSTANTS
- public:: READ_MODIS_TIME_ATTR
- public:: READ_MODIS_SIZE_ATTR
+ 	private:: READ_MODIS_THERMAL_BAND
 
- private:: READ_MODIS_THERMAL_BAND
-
- integer(kind=int2), parameter, private:: fill_value = 32767
- real(kind=real4), parameter, private:: missing_value = -999.0
- character(len=13), parameter:: MODULE_PROMPT="MODIS_MODULE:"
+ 	integer(kind=int2), parameter, private:: fill_value = 32767
+ 	real(kind=real4), parameter, private:: missing_value = -999.0
+ 	character(len=13), parameter:: MODULE_PROMPT="MODIS_MODULE:"
 
 contains
-!----------------------------------------------------------------
-! read the modis constants into memory
-!-----------------------------------------------------------------
-subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_File)
- character(len=*), intent(in):: Instr_Const_File
- integer:: ios0, erstat
- integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+	!----------------------------------------------------------------
+	! read the modis constants into memory
+	!-----------------------------------------------------------------
+	subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_File)
+ 		character(len=*), intent(in):: Instr_Const_File
+ 		integer:: ios0, erstat
+ 		integer:: Instr_Const_lun
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
+ 		Instr_Const_lun = GET_LUN()
 
- print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_File)
- erstat = 0
- if (ios0 /= 0) then
-    erstat = 19
-    print *, EXE_PROMPT, MODULE_PROMPT, "Error opening MODIS constants file, ios0 = ", ios0
-    stop 19
- endif
+ 		open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
 
-  read(unit=Instr_Const_lun,fmt="(a3)") sat_name
-  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
-  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22), planck_nu(22)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(23), planck_a2(23), planck_nu(23)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(24), planck_a2(24), planck_nu(24)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(25), planck_a2(25), planck_nu(25)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29), planck_nu(29)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
-  close(unit=Instr_Const_lun)
+ 		print *, EXE_PROMPT, MODULE_PROMPT, " Opening ", trim(Instr_Const_File)
+ 		erstat = 0
+ 		if (ios0 /= 0) then
+    		erstat = 19
+    		print *, EXE_PROMPT, MODULE_PROMPT, "Error opening MODIS constants file, ios0 = ", ios0
+    		stop 19
+ 		endif
 
-  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
-  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
+   	read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+   	read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+   	read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22), planck_nu(22)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(23), planck_a2(23), planck_nu(23)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(24), planck_a2(24), planck_nu(24)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(25), planck_a2(25), planck_nu(25)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29), planck_nu(29)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
+   	read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
+   	read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
+   	close(unit=Instr_Const_lun)
 
-end subroutine READ_MODIS_INSTR_CONSTANTS
+   	!-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+   	Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
 
-!----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name, Dir_Modis_Geo, Auxiliary_Geolocation_File_Name)
-    character(len=*), intent(in):: Modis_1b_Name
-    character(len=*), intent(in):: Dir_Modis_Geo
-    character(len=*), intent(out):: Auxiliary_Geolocation_File_Name
-    integer, parameter:: nc = 24
-    character(len=nc):: Search_String
-    integer:: ilen
-    integer(kind=int4):: Num_Files
-    character(len=255), dimension(:), pointer:: Files
+	end subroutine READ_MODIS_INSTR_CONSTANTS
 
-    Search_String = trim(Modis_1b_Name(1:nc))
+	!----------------------------------------------------------------------
+	subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name &
+		, Dir_Modis_Geo &
+		, Auxiliary_Geolocation_File_Name)
+		
+    	character(len=*), intent(in):: Modis_1b_Name
+    	character(len=*), intent(in):: Dir_Modis_Geo
+    	character(len=*), intent(out):: Auxiliary_Geolocation_File_Name
+    	integer, parameter:: nc = 24
+    	character(len=nc):: Search_String
+    	integer:: ilen
+    	integer(kind=int4):: Num_Files
+    	character(len=255), dimension(:), pointer:: Files
+
+    	Search_String = trim(Modis_1b_Name(1:nc))
     
-    if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
-       Search_String = "MYD03"//trim(Search_String(9:nc) )//"*"
-    else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
-       Search_String = "MAC03S0"//trim(Search_String(9:nc))//"*"   
-    else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
-       Search_String = trim(Modis_1b_Name(1:13)) //".geo.hdf"    
-    else
-       Search_String = "MOD03"//trim(Search_String(9:nc)//"*" )
-    endif
+    	if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
+      	Search_String = "MYD03"//trim(Search_String(9:nc) )//"*"
+    	else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+       	Search_String = "MAC03S0"//trim(Search_String(9:nc))//"*"   
+    	else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
+       	Search_String = trim(Modis_1b_Name(1:13)) //".geo.hdf"    
+    	else
+       	Search_String = "MOD03"//trim(Search_String(9:nc)//"*" )
+    	end if
     
-    Files => FILE_SEARCH(Dir_Modis_Geo,Search_String)
+    	Files => FILE_SEARCH(Dir_Modis_Geo,Search_String)
 
-    Num_Files = size(Files)
+    	Num_Files = size(Files)
 
-    if (Num_Files == 0) then 
-       print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Geolocation File Found"
-       Auxiliary_Geolocation_File_Name = "no_file"
-       return
-    endif
+    	if (Num_Files == 0) then 
+       	print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Geolocation File Found"
+       	Auxiliary_Geolocation_File_Name = "no_file"
+       	return
+    	end	if
 
-    if (Num_Files > 1) then
-       print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Geolocation Files Found"
-       Auxiliary_Geolocation_File_Name = "no_file"
-    endif
+    	if (Num_Files > 1) then
+       	print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Geolocation Files Found"
+       	Auxiliary_Geolocation_File_Name = "no_file"
+    	endif
 
-    Auxiliary_Geolocation_File_Name = Files(1)
+    	Auxiliary_Geolocation_File_Name = Files(1)
 
-    Files => null()
+    	Files => null()
   
-    !--- if an AQUA Mac Name, trim something off
-    ilen = len_trim(Auxiliary_Geolocation_File_Name)
-    if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
-        Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-42:ilen)
-    else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
-        Auxiliary_Geolocation_File_Name = TRIM(Auxiliary_Geolocation_File_Name)
-    else  
-        Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
-    endif
+    	!--- if an AQUA Mac Name, trim something off
+    	ilen = len_trim(Auxiliary_Geolocation_File_Name)
+    	if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-42:ilen)
+    	else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
+         Auxiliary_Geolocation_File_Name = TRIM(Auxiliary_Geolocation_File_Name)
+    	else  
+         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
+    	endif
 
-    print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Auxiliary_Geolocation_File_Name)
+    	print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Auxiliary_Geolocation_File_Name)
    
-end subroutine DETERMINE_MODIS_GEOLOCATION_FILE
+	end subroutine DETERMINE_MODIS_GEOLOCATION_FILE
 
 !----------------------------------------------------------------------
-subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, Auxiliary_Cloud_Mask_File_Name)
-    character(len=*), intent(in):: Modis_1b_Name
-    character(len=*), intent(in):: Dir_Modis_Cloud_Mask
-    character(len=*), intent(out):: Auxiliary_Cloud_Mask_File_Name
-    integer, parameter:: nc = 25
-    character(len=nc):: Search_String
-    integer:: ilen
-    integer(kind=int4):: Num_Files
-    character(len=255), dimension(:), pointer:: Files
+	subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, Auxiliary_Cloud_Mask_File_Name)
+    	character(len=*), intent(in):: Modis_1b_Name
+    	character(len=*), intent(in):: Dir_Modis_Cloud_Mask
+    	character(len=*), intent(out):: Auxiliary_Cloud_Mask_File_Name
+    	integer, parameter:: nc = 25
+    	character(len=nc):: Search_String
+    	integer:: ilen
+    	integer(kind=int4):: Num_Files
+    	character(len=255), dimension(:), pointer:: Files
 
-    Search_String = trim(Modis_1b_Name(1:nc-1))
+    	Search_String = trim(Modis_1b_Name(1:nc-1))
 
-    if (Sensor%Spatial_Resolution_Meters == 1000) then
-      if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
-        Search_String = "MYD35_L2"//trim(Search_String(9:nc))//"*"
-      else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
-        Search_String = "MAC35S0"//trim(Search_String(9:nc))//"*"
-      else
-        Search_String = "MOD35"//trim(Search_String(9:nc))//"*"
-      endif
-    else
-      if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
-        Search_String = "MYDATML2"//trim(Search_String(9:nc))//"*"
-      else
-        Search_String = "MODATML2"//trim(Search_String(9:nc))//"*"
-      endif
-    endif
+    	if (Sensor%Spatial_Resolution_Meters == 1000) then
+      	if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
+         	Search_String = "MYD35_L2"//trim(Search_String(9:nc))//"*"
+       	else if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+         	Search_String = "MAC35S0"//trim(Search_String(9:nc))//"*"
+      	else
+         	Search_String = "MOD35"//trim(Search_String(9:nc))//"*"
+      	endif
+    	else
+      	if (trim(Sensor%Sensor_Name) == 'MODIS' .and. trim(Sensor%Platform_Name)  == 'AQUA') then
+         	Search_String = "MYDATML2"//trim(Search_String(9:nc))//"*"
+      	else
+         	Search_String = "MODATML2"//trim(Search_String(9:nc))//"*"
+       	endif
+    	endif
 
-    Files => FILE_SEARCH(trim(Dir_Modis_Cloud_Mask),trim(Search_String),count=Num_Files)
+    	Files => FILE_SEARCH(trim(Dir_Modis_Cloud_Mask),trim(Search_String),count=Num_Files)
 
-    if (Num_Files == 0) then 
-       print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Cloud Mask File Found"
-       Auxiliary_Cloud_Mask_File_Name = "no_file"
-       return
-    endif
+    	if (Num_Files == 0) then 
+       	print *, EXE_PROMPT, MODULE_PROMPT, "No MODIS Cloud Mask File Found"
+       	Auxiliary_Cloud_Mask_File_Name = "no_file"
+       	return
+    	endif
 
-    if (Num_Files > 1) then
-       print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Cloud Mask Files Found"
-       Auxiliary_Cloud_Mask_File_Name = "no_file"
-    endif
+    	if (Num_Files > 1) then
+       	print *, EXE_PROMPT, MODULE_PROMPT, "Multiple MODIS Cloud Mask Files Found"
+       	Auxiliary_Cloud_Mask_File_Name = "no_file"
+    	endif
 
-    Auxiliary_Cloud_Mask_File_Name = Files(1)
+    	Auxiliary_Cloud_Mask_File_Name = Files(1)
 
-    Files => null()
+    	Files => null()
    
-    ilen = len_trim(Auxiliary_Cloud_Mask_File_Name)
-    if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
-      Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-45:ilen)
-    else  
-      Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-43:ilen)
-    endif
+    	ilen = len_trim(Auxiliary_Cloud_Mask_File_Name)
+    	if (trim(Sensor%Sensor_Name) == 'MODIS-MAC') then
+      	Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-45:ilen)
+    	else  
+      	Auxiliary_Cloud_Mask_File_Name = Auxiliary_Cloud_Mask_File_Name(ilen-43:ilen)
+    	endif
 
-end subroutine DETERMINE_MODIS_CLOUD_MASK_FILE
+	end subroutine DETERMINE_MODIS_CLOUD_MASK_FILE
 
 !----------------------------------------------------------------------
 ! Read MODIS data. 
@@ -230,8 +281,8 @@ subroutine READ_MODIS_LEVEL1B(path,file_name,iband, &
                               uncert_data_out, &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
-      use CONSTANTS
-      use HDF
+      ! use CONSTANTS
+      ! use HDF
 
       character(len=*), intent(in):: path
       character(len=*), intent(in):: file_name
@@ -459,7 +510,14 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       where(i4_buffer == fill_value) 
               calibrated_data = missing_value
       endwhere
-      
+
+      ! --- specific of aqua 1.6um fix (Denis B. - 06.05.2015)
+      if (iband == 6) then
+         where(i4_buffer == 65528)
+            calibrated_data = missing_value                                                                                                    
+         endwhere
+      endif
+
       calibrated_data_out = missing_value
       calibrated_data_out(1:nx_min,1:ny_min) = calibrated_data(1:nx_min,1:ny_min)
 
@@ -736,7 +794,10 @@ end subroutine READ_MODIS_LEVEL1B_GEOLOCATION
 ! scan_number = number of line within this file
 !----------------------------------------------------------------------
 subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
-                              cloud_mask_out,  &
+                              Cloud_Mask_Out,  &
+                              Cloud_Phase_Out,  &
+                              Cloud_Type_Out,  &
+                              Cloud_Height_Out,  &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
 
@@ -748,9 +809,13 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int4), intent(in):: ny_total
       integer(kind=int4), intent(out):: ny_local_temp
       integer(kind=int4), intent(out):: Error_Status
-      integer(kind=int1), dimension(:,:), intent(out):: cloud_mask_out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Mask_Out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Phase_Out
+      integer(kind=int1), dimension(:,:), intent(out):: Cloud_Type_Out
+      real(kind=real4), dimension(:,:), intent(out):: Cloud_Height_Out
 
       integer(kind=int1), allocatable, dimension(:,:,:):: i1_buffer
+      integer(kind=int2), allocatable, dimension(:,:):: i2_buffer
       character(len=120):: sds_name
       integer(kind=int4), dimension(3):: sds_dims
       integer(kind=int4), dimension(3):: sds_start
@@ -770,12 +835,16 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int4):: sfend, sfstart, sfselect, sfrdata, sfendacc, &
                            sfginfo, sfn2index
       integer(kind=int4):: iend
+      logical:: Atml2_File
 
 
 
       Status_Flag = 0
       Error_Status = 0
       iend = 0
+
+      Atml2_File = .false.
+      if (index(file_name, "ATML2") > 0) Atml2_File = .true.
 
 error_check: do while (Status_Flag == 0 .and. iend == 0)
 
@@ -808,10 +877,12 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       !--- allocate space for data to be read in
       if (Sensor%Spatial_Resolution_Meters == 1000) then
         allocate(i1_buffer(nx_local,ny_local_temp,6))
+        allocate(i2_buffer(nx_local,ny_local_temp))
         sds_start = (/0, ny_start-1, 0/)
         sds_edges = (/nx_local, ny_local_temp,6/)
       else
         allocate(i1_buffer(nx_local,ny_local_temp,1))
+        allocate(i2_buffer(nx_local,ny_local_temp))
         sds_start = (/0, ny_start-1, 0/)
         sds_edges = (/nx_local, ny_local_temp,1/)
       endif
@@ -822,6 +893,21 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       Cloud_Mask_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
       Status_Flag = sfendacc(Sds_Id) + Status_Flag
 
+      if (Atml2_File) then
+       !--- Read IR Cloud Phase
+       !--- 0 = cloud free, 1 = water, 2 = ice, 3 = mixed, 6 = unknown)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Phase_Infrared_1km')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i1_buffer) + Status_Flag
+       Cloud_Phase_Out(1:nx_min,1:ny_min) = i1_buffer(1:nx_min,1:ny_min,1)
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+
+       !--- Read Cloud Top Height (i2, scale = 1, add_offset = 0, fill=-999)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Top_Height_1km')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
+       Cloud_Height_Out(1:nx_min,1:ny_min) = real(i2_buffer(1:nx_min,1:ny_min))
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+      endif
+
       !--- close file
       Status_Flag = sfend(Sd_Id) + Status_Flag
 
@@ -830,14 +916,41 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
       enddo  error_check ! end of while loop
 
       !--- unpacked needed information for 4-level cloud mask
-      cloud_mask_out = ishft(ishft(cloud_mask_out,5),-6)
+      Cloud_Mask_Out = ishft(ishft(Cloud_Mask_Out,5),-6)
 
-      !--- switch CLAVR-x convection
-      cloud_mask_out = 3-cloud_mask_out
+      !--- switch CLAVR-x convection for mask
+      Cloud_Mask_Out = 3-Cloud_Mask_Out
+
+      !--- switch CLAVR-x convection for phase
+      where(Cloud_Phase_Out == 0)
+          Cloud_Type_Out = sym%CLEAR_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 1)
+          Cloud_Type_Out = sym%WATER_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 2)
+          Cloud_Type_Out = sym%OPAQUE_ICE_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 3)
+          Cloud_Type_Out = sym%MIXED_TYPE
+      endwhere
+      where(Cloud_Phase_Out == 6)
+          Cloud_Type_Out = sym%UNKNOWN_TYPE
+      endwhere
+
+      !--- modify phase (0,1,3 have same meaning as CLAVR-x)
+      where(Cloud_Phase_Out == 2)
+          Cloud_Phase_Out = sym%ICE_PHASE
+      endwhere
+      where(Cloud_Phase_Out == 5)
+          Cloud_PHASE_Out = sym%UNKNOWN_PHASE
+      endwhere
+
 
       !--- deallocate memory
       !--- clean up memory
       if (allocated(i1_buffer)) deallocate(i1_buffer)
+      if (allocated(i2_buffer)) deallocate(i2_buffer)
 
       if (Status_Flag /= 0) then
 
@@ -911,6 +1024,9 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
           call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
                                              trim(Image%Auxiliary_Cloud_Mask_File_Name), &
                                              Cld_Mask_Aux, & 
+                                             Cld_Phase_Aux, & 
+                                             Cld_Type_Aux, & 
+                                             Zc_Aux, & 
                                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
                                              Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
                                              Error_Status)
@@ -922,6 +1038,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
        endif
 
+       !--- read channel data
        do Chan_Idx = 1,36
 
          if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle

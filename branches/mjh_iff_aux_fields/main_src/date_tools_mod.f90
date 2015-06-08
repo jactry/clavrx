@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 
 module date_tools_mod
    

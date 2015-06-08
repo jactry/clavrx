@@ -316,13 +316,15 @@ end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
 !----------------------------------------------------------------------
 subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                     Pressure_Profile,Cloud_Type, &
-                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2)
+                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2,Zc_Cirrus_Co2)
   integer, intent(in):: Num_Elem
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Num_Lines
   integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
   real, intent(in), dimension(:):: Pressure_Profile
-  real, intent(out), dimension(:,:):: Pc_Cirrus_Co2, Tc_Cirrus_Co2
+  real, intent(out), dimension(:,:):: Pc_Cirrus_Co2
+  real, intent(out), dimension(:,:):: Tc_Cirrus_Co2
+  real, intent(out), dimension(:,:):: Zc_Cirrus_Co2
   integer:: Elem_Idx
   integer:: Line_Idx
   integer:: Line_Start
@@ -340,7 +342,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
   integer (kind=int4):: Box_Width
-  real:: Zc_Cirrus_Co2
   real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
   integer:: i1, i2, j1, j2
   integer:: Lev_Idx_Temp
@@ -470,7 +471,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
                                     Pc_Cirrus_Co2(Elem_Idx,Line_Idx), &
                                     Tc_Cirrus_Co2(Elem_Idx,Line_Idx), &
-                                    Zc_Cirrus_Co2,Lev_Idx_Temp)
+                                    Zc_Cirrus_Co2(Elem_Idx,Line_Idx), &
+                                    Lev_Idx_Temp)
 
      !-- compute emissivity
      Ec_Cirrus_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
@@ -480,7 +482,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   enddo Element_Loop_2
   enddo Line_Loop_2
 
-  Diag_Pix_Array_1 = Tc_Cirrus_Co2
   !-------------------------------------------------------------------------
   ! spatially interpolate
   !-------------------------------------------------------------------------
@@ -528,8 +529,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
    enddo Element_Loop_3
 
    Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
-
-  Diag_Pix_Array_2 = Tc_Cirrus_Co2
 
   if (allocated(Mask)) deallocate(Mask)
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)

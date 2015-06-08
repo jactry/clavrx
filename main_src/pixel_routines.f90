@@ -51,6 +51,7 @@ MODULE PIXEL_ROUTINES
  use LAND_SFC_PROPERTIES
  use FILE_UTILITY
  use SURFACE_PROPERTIES
+ use CALIBRATION_CONSTANTS
 
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &
@@ -1957,6 +1958,13 @@ subroutine COMPUTE_GLINT()
           !-turn off if non-uniform
           if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
             if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
+             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+             cycle
+            endif
+          endif
+
+          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+            if (Ref_Ch1_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif

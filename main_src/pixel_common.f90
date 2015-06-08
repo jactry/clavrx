@@ -590,22 +590,23 @@ module PIXEL_COMMON
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Adj_Pix_Cld_Mask
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Qf
-  real (kind=int4),dimension(:,:),allocatable, public, save, target:: &
+  real (kind=real4),dimension(:,:),allocatable, public, save, target:: &
                                                        Posterior_Cld_Probability
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cirrus_Quality
 
-  integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Temp_Mask
+  !--- Auxilliary variables
+  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
+  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
+  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
+  real (kind=real4),dimension(:,:),allocatable, public, save, target::Zc_Aux
 
-!--- pixel level cloud props
+  !--- pixel level cloud props
 
      !--- h2o heights
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_H2O
@@ -706,9 +707,10 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public:: Rad_Ch20_Ems_Sfc
      real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Sfc
 
-  !--- integers values for output to files
+  !--- scratch arrays
   integer(kind=int1), dimension(:,:), public,save,allocatable, target:: One_Byte_Temp
   integer(kind=int2), dimension(:,:), public,save,allocatable, target:: Two_Byte_Temp
+  integer(kind=int1),dimension(:,:),allocatable, public, save, target:: Temp_Mask
 
 !--- nwp parameters
  integer, allocatable, dimension(:,:), public, save, target :: Zen_Idx_Rtm
@@ -771,6 +773,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
 
 !--- modis white sky albedo maps
@@ -1084,7 +1087,7 @@ end subroutine DESTROY_PIXEL_ARRAYS
 subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
       Bad_Scan_Flag = sym%NO        !not initialized to missing
-      Bad_Pixel_Mask = sym%YES      !not initialized to missing
+      Bad_Pixel_Mask = sym%NO      !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
 
       call RESET_SENSOR_ARRAYS()
@@ -2382,6 +2385,7 @@ subroutine CREATE_CLOUD_TYPE_ARRAYS(dim1,dim2)
      allocate(Cld_Phase(dim1,dim2))
      allocate(Cld_Type(dim1,dim2))
      allocate(Cirrus_Quality(dim1,dim2))
+     allocate(Zc_Aux(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_TYPE_ARRAYS
 subroutine RESET_CLOUD_TYPE_ARRAYS()
@@ -2391,6 +2395,7 @@ subroutine RESET_CLOUD_TYPE_ARRAYS()
       Cld_Phase_Aux = Missing_Value_Int1
       Cld_Type_Aux = Missing_Value_Int1
       Cirrus_Quality = 1
+      Zc_Aux = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_TYPE_ARRAYS
 subroutine DESTROY_CLOUD_TYPE_ARRAYS
@@ -2400,6 +2405,7 @@ subroutine DESTROY_CLOUD_TYPE_ARRAYS
      deallocate(Cld_Phase)
      deallocate(Cld_Type)
      deallocate(Cirrus_Quality)
+     deallocate(Zc_Aux)
   endif
 end subroutine DESTROY_CLOUD_TYPE_ARRAYS
 !-----------------------------------------------------------
@@ -2508,6 +2514,7 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
     allocate(Tc_Cirrus_Co2(dim1,dim2))
     allocate(Pc_Cirrus_Co2(dim1,dim2))
+    allocate(Zc_Cirrus_Co2(dim1,dim2))
     allocate(Ec_Cirrus_Co2(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
@@ -2527,6 +2534,7 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Low_Cloud_Fraction_3x3 = Missing_Value_Real4
      Tc_Cirrus_Co2 = Missing_Value_Real4
      Pc_Cirrus_Co2 = Missing_Value_Real4
+     Zc_Cirrus_Co2 = Missing_Value_Real4
      Ec_Cirrus_Co2 = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
@@ -2546,6 +2554,7 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Low_Cloud_Fraction_3x3)
      deallocate(Tc_Cirrus_Co2)
      deallocate(Pc_Cirrus_Co2)
+     deallocate(Zc_Cirrus_Co2)
      deallocate(Ec_Cirrus_Co2)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS

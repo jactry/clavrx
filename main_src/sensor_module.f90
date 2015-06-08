@@ -39,15 +39,25 @@
 ! end loop
 !--------------------------------------------------------------------------------------
 module SENSOR_MODULE
-   use PIXEL_COMMON
+   use PIXEL_COMMON, only:
    use CALIBRATION_CONSTANTS
    use ALGORITHM_CONSTANTS
    use CONSTANTS
    use FILE_UTILITY
    use AVHRR_MODULE
    use GOES_MODULE
-   use MODIS_MODULE
-   use FY2_MODULE
+   use MODIS_MODULE, only : &
+		DETERMINE_MODIS_CLOUD_MASK_FILE &
+		, READ_MODIS_INSTR_CONSTANTS &
+		, READ_MODIS &
+		, READ_MODIS_SIZE_ATTR &
+		, DETERMINE_MODIS_GEOLOCATION_FILE &
+		, READ_MODIS_TIME_ATTR
+		
+   use FY2_MODULE, only: &
+		READ_FY &
+		, READ_FY_INSTR_CONSTANTS
+		
    use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
@@ -69,18 +79,20 @@ module SENSOR_MODULE
    use clavrx_message_module
 
    implicit none
+	
+	private
+   public :: SET_DATA_DATE_AND_TIME
+   public :: READ_INSTR_CONSTANTS
+   public :: READ_ALGO_CONSTANTS
+   public :: DETECT_SENSOR_FROM_FILE
+   public :: SET_FILE_DIMENSIONS
+   public :: READ_LEVEL1B_DATA 
+   public :: OUTPUT_SENSOR_TO_SCREEN
+   public :: OUTPUT_IMAGE_TO_SCREEN
+	public :: OUTPUT_PROCESSING_LIMITS_TO_SCREEN
+   
 
-   public:: SET_DATA_DATE_AND_TIME
-   public:: READ_INSTR_CONSTANTS
-   public:: READ_ALGO_CONSTANTS
-   public:: DETECT_SENSOR_FROM_FILE
-   public:: SET_FILE_DIMENSIONS
-   public:: READ_LEVEL1B_DATA 
-   public:: OUTPUT_SENSOR_TO_SCREEN
-   public:: OUTPUT_IMAGE_TO_SCREEN
-   private:: READ_AHI_INSTR_CONSTANTS
-
-   character(24), parameter, private :: MOD_PROMPT = " SENSOR_MODULE: "
+   character(24), parameter, private :: MODULE_PROMPT = " SENSOR_MODULE: "
    character(38) :: Orbit_Identifier
   
    character (len = 3), private :: string_3
@@ -179,6 +191,8 @@ module SENSOR_MODULE
       ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
+
+print *, "It is IFF"
          call READ_IFF_DATE_TIME(trim(Image%Level1b_Path), trim(Image%Level1b_Name),Start_Year_Tmp, &
                       Start_Day_Tmp,Start_Time_Tmp, End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
          Image%Start_Year = Start_Year_Tmp
@@ -809,7 +823,8 @@ module SENSOR_MODULE
       endif
 
       !--- NPP/JPSS IFF 
-      if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0) then
+      if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0 .or. &
+          index(Image%Level1b_Name, 'IFF_npp') > 0) then
          Sensor%Sensor_Name = 'VIIRS-IFF'
          Sensor%Spatial_Resolution_Meters = 750
          Sensor%Platform_Name = 'SNPP'

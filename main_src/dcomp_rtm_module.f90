@@ -200,7 +200,7 @@ module dcomp_rtm_module
             ivza = zen_idx_rtm(elem_idx,line_idx) 
             if ( ivza .lt. 1) cycle
            
-            
+           ! print*, elem_idx,line_idx, ivza, idx_lev_rtm,x_nwp,y_nwp
             dcomp_rtm % trans_ir_ac(elem_idx,line_idx) =  &
                                   & rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile(idx_lev_rtm) +    &
                                   & prof_wgt_rtm * ( rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile(idx_lev_rtm+1) -  &

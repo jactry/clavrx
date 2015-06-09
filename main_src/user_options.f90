@@ -782,6 +782,7 @@ contains
       
       call EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( SensorName ) 
 
+
    end subroutine UPDATE_CONFIGURATION
    
    !----------------------------------------------------------------------
@@ -1104,14 +1105,14 @@ contains
 
       ! - turn off channels not available for this sensor
       
+
       Valid_Channels = Existing_Channels ( SensorName )
 
       do i = 1, 44 
          if ( any ( i == Valid_Channels )) cycle
          Sensor%Chan_On_Flag_Default ( i ) = 0
       end do
-      
-      
+
       !--- check ACHA mode based on available channels
       Not_Run_Flag = .false.
       if (ACHA%Mode > 0 .and. &

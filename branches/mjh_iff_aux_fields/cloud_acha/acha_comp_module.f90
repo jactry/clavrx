@@ -1,4 +1,4 @@
-! $Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
+! $Id$
 module ACHA_COMP
 !---------------------------------------------------------------------
 ! This module houses the routines associated with...

@@ -1,4 +1,4 @@
-!$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $
+!$Id$
 module AWG_CLOUD_HEIGHT
 !---------------------------------------------------------------------
 ! This module houses the routines associated with...
@@ -325,7 +325,11 @@ module AWG_CLOUD_HEIGHT
   real:: Beta_Ap
   real:: Tc_Ap_Uncer
   real:: Ec_Ap_Uncer
+  real:: Tc_Ap_Imager
+  real:: Tc_Ap_Sounder
   real:: Beta_Ap_Uncer
+  real:: Sa_Tc_Imager
+  real:: Sa_Tc_Sounder
   real:: T11um_Clr_Uncer
   real:: T11um_12um_Clr_Uncer
   real:: T11um_133um_Clr_Uncer
@@ -994,17 +998,9 @@ module AWG_CLOUD_HEIGHT
   !------------------------------------------------------------------------
   ! Set Apriori to predetermined cirrus value if Use_Cirrus_Flag = Yes 
   !------------------------------------------------------------------------
-! if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES .and. &
-!     Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
-!     Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
-! endif
-
-  if (associated(Input%Tc_Cirrus_Sounder)) then
-    if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4 .and. &
-      (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
-      Tc_Ap =Input% Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
-      Tc_Ap_Uncer = 5.0
-    endif
+  if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES .and. &
+      Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+      Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
   !------------------------------------------------------------------------
@@ -1052,22 +1048,46 @@ module AWG_CLOUD_HEIGHT
   Sa(1,2) = 0.0 
   Sa(3,3) = Beta_Ap_Uncer
 
-! !--- modify a priori values based on lrc
-! if (Pass_Idx /= Pass_Idx_Max .or. Use_Cirrus_Flag == symbol%NO) then
-!   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
-!       (jlrc /= MISSING_VALUE_INTEGER4)) then
-!        if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
-!           (Output%Ec(ilrc,jlrc) > 0.00) .and. &
-!           (Output%Ec(ilrc,jlrc) <= 1.0)) then
-!         !-- use lrc value but weight uncertainty
-!         x_Ap(1) = Output%Tc(ilrc,jlrc)
-!         Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
-!       endif
-!   endif
-! endif
+  !--- modify a priori values based on lrc
+  if (Pass_Idx /= Pass_Idx_Max .or. Use_Cirrus_Flag == symbol%NO) then
+    if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
+        (jlrc /= MISSING_VALUE_INTEGER4)) then
+         if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
+            (Output%Ec(ilrc,jlrc) > 0.00) .and. &
+            (Output%Ec(ilrc,jlrc) <= 1.0)) then
+          !-- use lrc value but weight uncertainty
+          x_Ap(1) = Output%Tc(ilrc,jlrc)
+          Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
+        endif
+    endif
+  endif
 
   !--- square the individual elements to convert to variances (not a matmul)
   Sa = Sa**2
+
+  !------------------------------------------------------------------------
+  ! If a sounder value is available for Tc apriori, combine it with 
+  ! other value.  Do this for all passes and only cirrus or overlap
+  !------------------------------------------------------------------------
+  if (associated(Input%Tc_Cirrus_Sounder)) then
+    if (Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4 .and. &
+      (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
+
+      Tc_Ap_Imager = x_Ap(1)  !K
+      Sa_Tc_Imager = Sa(1,1)  !K^2
+      Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
+      Sa_Tc_Sounder = 25.0   ! K^2
+
+      Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
+
+      x_Ap(1) = (Tc_Ap_Imager/Sa_Tc_Imager + Tc_Ap_Sounder/Sa_Tc_Sounder) *  Sa(1,1)
+
+!     print *, "Sounder Test 1: ", Tc_Ap_Imager, Tc_Ap_Sounder, x_Ap(1)
+!     print *, "Sounder Test 2: ", Sa_Tc_Imager, Sa_Tc_Sounder, Sa(1,1)
+            
+    endif
+  endif
+
 
   !--- compute inverse of Sa matrix
   Singular_Flag =  INVERT_MATRIX(Sa, Sa_Inv, Num_Param)
@@ -1699,7 +1719,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       integer:: i2
       integer:: j1
       integer:: j2
-      integer:: count_Valid
+      integer:: Count_Valid
       real, parameter:: LOWER_LAYER_MAX_PRESS = 700.0
 
       Num_Elem = size(Cloud_Type,1)      !-----
@@ -1750,9 +1770,9 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
              j1 = min(Num_Line,max(1,Line_Idx-Line_Width))
              j2 = min(Num_Line,max(1,Line_Idx+Line_Width))
 
-             count_Valid = count(Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS)
+             Count_Valid = count(Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS)
 
-             if (count_Valid > 0) then
+             if (Count_Valid > 0) then
 
                  Lower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
                               sum(Cloud_Pressure(i1:i2,j1:j2), &
@@ -3846,7 +3866,7 @@ end subroutine NULL_PIX_POINTERS
 !====================================================================
 subroutine SET_ACHA_VERSION(Acha_Version)
    character(len=*):: Acha_Version
-   Acha_Version = "$Id: awg_cloud_height.f90 583 2014-10-08 03:43:36Z heidinger $"
+   Acha_Version = "$Id$"
 end subroutine SET_ACHA_VERSION
 !====================================================================
 ! 

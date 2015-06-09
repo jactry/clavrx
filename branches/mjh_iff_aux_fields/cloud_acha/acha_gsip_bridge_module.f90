@@ -1,4 +1,4 @@
-!$Id: acha_gsip_bridge_mod.f90 582 2014-10-08 03:40:18Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !

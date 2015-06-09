@@ -1425,8 +1425,4 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
 
 end subroutine READ_AHI_INSTR_CONSTANTS
 
-
-
-
-
 end module SENSOR_MODULE

@@ -466,7 +466,6 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
     integer(kind=int2), dimension(2):: data_byte
     integer(kind=int2):: Start_Year_Temp
 
-print *, "In DETERMINE FILE ROUTINE"
     !--- use c-routine
     bytes_per_word = 1
     word_start = 0
@@ -557,8 +556,6 @@ print *, "In DETERMINE FILE ROUTINE"
       if (Sc_Id_AVHRR == 6) AVHRR_1_Flag = sym%YES   !NOAA-8
       if (Sc_Id_AVHRR == 8) AVHRR_1_Flag = sym%YES   !NOAA-10
      endif
-
-print *, "Out DETERMINE FILE ROUTINE"
 
 end subroutine DETERMINE_AVHRR_FILE_TYPE
 
@@ -1716,7 +1713,11 @@ subroutine COMPUTE_NEW_THERM_CAL_COEF(Line_Idx)
        !--- blackbody radiance
        NBB_3b = PLANCK_RAD_FAST(20,Mean_T_Prt)
        NBB_4 = PLANCK_RAD_FAST(31,Mean_T_Prt)
-       NBB_5 = PLANCK_RAD_FAST(32,Mean_T_Prt)
+       if (AVHRR_1_Flag /= sym%YES) then
+           NBB_5 = PLANCK_RAD_FAST(32,Mean_T_Prt)
+       else
+           NBB_5 = PLANCK_RAD_FAST(31,Mean_T_Prt)
+       endif
 
        !--- compute new linear slopes     (Ref 7.1.2.4-5)
        if (Ch3a_On_AVHRR(Line_Idx) == 0) then
@@ -1734,7 +1735,7 @@ subroutine COMPUTE_NEW_THERM_CAL_COEF(Line_Idx)
                   IR_Linear_Slope_New(4,Line_Idx)*Mean_Space_Count_4
 
        IR_Linear_Slope_New(5,Line_Idx) = (Space_Rad_5 - NBB_5) / &
-                                (Mean_Space_Count_5 - Mean_BB_Count_5)
+                                 (Mean_Space_Count_5 - Mean_BB_Count_5)
        IR_Linear_Intercept_New(5,Line_Idx) = Space_Rad_5 - &
                   IR_Linear_Slope_New(5,Line_Idx)*Mean_Space_Count_5
 

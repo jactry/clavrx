@@ -1,4 +1,4 @@
-!$Id: ACHA_GEOCAT_BRIDGE_MOD.f90 9 2014-01-31 08:19:35Z awalther $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Height Algorithm (ACHA) Bridge Code
 !

@@ -1,4 +1,4 @@
-!$Id: acha_services_clavrx_mod.f90 581 2014-10-08 03:39:08Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
@@ -51,7 +51,10 @@ module ACHA_SERVICES_MOD
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
-
+		 
+	use NUMERICAL_ROUTINES, only: &
+		invert_matrix &
+		, locate
  implicit none
 
  public:: ACHA_FETCH_PIXEL_NWP_RTM 

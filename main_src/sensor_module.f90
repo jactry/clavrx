@@ -47,17 +47,17 @@ module SENSOR_MODULE
    use AVHRR_MODULE
    use GOES_MODULE
    use MODIS_MODULE, only : &
-		DETERMINE_MODIS_CLOUD_MASK_FILE &
-		, READ_MODIS_INSTR_CONSTANTS &
-		, READ_MODIS &
-		, READ_MODIS_SIZE_ATTR &
-		, DETERMINE_MODIS_GEOLOCATION_FILE &
-		, READ_MODIS_TIME_ATTR
-		
+       DETERMINE_MODIS_CLOUD_MASK_FILE &
+     , READ_MODIS_INSTR_CONSTANTS &
+     , READ_MODIS &
+     , READ_MODIS_SIZE_ATTR &
+     , DETERMINE_MODIS_GEOLOCATION_FILE &
+     , READ_MODIS_TIME_ATTR
+
    use FY2_MODULE, only: &
-		READ_FY &
-		, READ_FY_INSTR_CONSTANTS
-		
+      READ_FY &
+    , READ_FY_INSTR_CONSTANTS
+
    use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
@@ -79,8 +79,8 @@ module SENSOR_MODULE
    use clavrx_message_module
 
    implicit none
-	
-	private
+
+   private
    public :: SET_DATA_DATE_AND_TIME
    public :: READ_INSTR_CONSTANTS
    public :: READ_ALGO_CONSTANTS
@@ -89,7 +89,7 @@ module SENSOR_MODULE
    public :: READ_LEVEL1B_DATA 
    public :: OUTPUT_SENSOR_TO_SCREEN
    public :: OUTPUT_IMAGE_TO_SCREEN
-	public :: OUTPUT_PROCESSING_LIMITS_TO_SCREEN
+   public :: OUTPUT_PROCESSING_LIMITS_TO_SCREEN
    
 
    character(24), parameter, private :: MODULE_PROMPT = " SENSOR_MODULE: "
@@ -191,8 +191,6 @@ module SENSOR_MODULE
       ! could be VIIRS, MODIS AVHRR sensor
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
-
-print *, "It is IFF"
          call READ_IFF_DATE_TIME(trim(Image%Level1b_Path), trim(Image%Level1b_Name),Start_Year_Tmp, &
                       Start_Day_Tmp,Start_Time_Tmp, End_Year_Tmp,End_Day_Tmp,End_Time_Tmp)
          Image%Start_Year = Start_Year_Tmp
@@ -1019,10 +1017,7 @@ print *, "It is IFF"
       !--- from a preliminary header read, set some global AVHRR flags and parameters
       call DETERMINE_AVHRR_FILE_TYPE(trim(Image%Level1b_Full_Name), &
                                      AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                     AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
-
-      !-- determine if this data is from the AVHRR/1 series
-      call DETERMINE_AVHRR_1(Image%Start_Year,AVHRR_KLM_Flag,AVHRR_1_Flag)
+                                     AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
 
       !--- knowing Sc_Id_AVHRR and the above flags, populate sensor structure for AVHRR
       call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id_AVHRR)
@@ -1209,6 +1204,7 @@ print *, "It is IFF"
          call GET_IFF_DIMS_BRIDGE(trim(Image%Level1b_Path)//trim(Image%Level1b_Name),Image%Number_Of_Elements,Image%Number_Of_Lines)
       end if
      
+      !--- AVHRR
       if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
           trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
           trim(Sensor%Sensor_Name) == 'AVHRR-3') then
@@ -1217,7 +1213,7 @@ print *, "It is IFF"
          ! Determine the type of level 1b file
          !-------------------------------------------------------
          call DETERMINE_AVHRR_FILE_TYPE(trim(Level1b_Full_Name),AVHRR_GAC_FLAG,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
+                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
   
          !-------------------------------------------------------------------
          !-- based on file type (AVHRR_KLM_Flag and Gac), determine parameters needed
@@ -1348,6 +1344,7 @@ print *, "It is IFF"
       end if
 
       
+      !--- AVHRR
       if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
           trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
           trim(Sensor%Sensor_Name) == 'AVHRR-3') then

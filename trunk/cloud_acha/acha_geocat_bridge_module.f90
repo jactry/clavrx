@@ -231,6 +231,8 @@ module ACHA_GEOCAT_BRIDGE_MODULE
              Sensor_KM = 4.0
       case(172) ! MTSAT-2
              Sensor_KM = 4.0
+      case(173) ! Himawari-08
+             Sensor_KM = 2.0
       case(200:209) ! NOAA-08 - NOAA-18
              Sensor_KM = 1.0
       case(223) ! NOAA-19

@@ -150,11 +150,11 @@
 
     !--- check for appropriate channel
     if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number ",ichan," in Fast Planck Rad Computation, stopping"
       stop
     endif
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then 
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number ",ichan," in Fast Planck Rad Computation, stopping"
       stop
     endif
 
@@ -190,11 +190,11 @@
 
     !--- check for appropriate channel
     if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number in Fast Planck Temp Computation, stopping"
       stop
     endif
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number in Fast Planck Temp Computation, stopping"
       stop
     endif
 

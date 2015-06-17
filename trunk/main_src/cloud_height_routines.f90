@@ -38,6 +38,7 @@ module CLOUD_HEIGHT_ROUTINES
   public::  CO2_SLICING_CLOUD_HEIGHT
   public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
   public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
+  public::  CONVECTIVE_CLOUD_MASK
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -58,6 +59,49 @@ module CLOUD_HEIGHT_ROUTINES
 
   contains
 
+!----------------------------------------------------------------------
+! Compute the ACHA values without calling ACHA (mode = 0)
+!----------------------------------------------------------------------
+subroutine CONVECTIVE_CLOUD_MASK(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Mask)
+  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
+  integer(kind=int1), dimension(:,:), intent(out):: Conv_Cld_Mask
+
+  real, parameter:: Btd_Thresh = -2.0
+  real, parameter:: Etrop_Thresh_1 = 0.95
+  real, parameter:: Etrop_Thresh_2 = 0.90
+  real, parameter:: Tsfc_Thresh = 30.0
+
+  !--- initialize to 0 (no)
+  Conv_Cld_Mask = 0
+
+  !--- set bad data to missing
+  where(Bad_Pixel_Mask ==sym%YES)
+    Conv_Cld_Mask = Missing_Value_Int1
+  endwhere
+
+  !--- if only 11 micron, use a tight threshold
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_1) 
+      Conv_Cld_Mask = 1
+    endwhere
+  endif
+
+  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
+      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
+     Conv_Cld_Mask = 1
+    endwhere
+  endif
+
+  !--- limit false alarms over elevated terrain
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Tsfc - Bt11 < Tsfc_Thresh)
+       Conv_Cld_Mask = 0
+    endwhere
+  endif
+
+end subroutine CONVECTIVE_CLOUD_MASK
 !----------------------------------------------------------------------
 ! Compute the ACHA values without calling ACHA (mode = 0)
 ! 
@@ -116,9 +160,9 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
     endif
 
     !------- determine cloud layer based on pressure
-    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 440.0) then
+    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 350.0) then
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 3
-    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 680.0) then
+    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 642.0) then
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 2
     else
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 1

@@ -1092,6 +1092,9 @@
 
                end if
 
+               !--- Convective Cloud Mask
+               call CONVECTIVE_CLOUD_MASK(Bad_Pixel_Mask,ch(31)%Bt_TOA,ch(27)%Bt_TOA,Ch(31)%Emiss_Tropo,Tsfc_Nwp_Pix,ACHA%Conv_Cld_Mask)
+
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(8) =  Segment_Time_Point_Seconds(8) + &
                    &   60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)

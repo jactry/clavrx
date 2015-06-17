@@ -1711,6 +1711,28 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !---  acha cld layer
+     if (Sds_Num_Level2_Cld_Layer_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Layer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "cld_layer", &
+                               "cloud_layer", &
+                               "cloud layer: 0-none,1:sfc-642 hpa, 2:642-350 hPa, 3:350 hpa -toa", &
+                               DFNT_INT8, sym%NO_SCALING, 0.0, 0.0, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  acha conv cld mask
+     if (Sds_Num_Level2_Conv_Mask_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Conv_Mask),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "conv_cld_mask", &
+                               "convective_cloud_mask", &
+                               "convective cloud mask: 0-none,1-conv cloud, 2-growing conv cloud, 3-dieing conv cloud", &
+                               DFNT_INT8, sym%NO_SCALING, 0.0, 0.0, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
 
      !--- cloud height from h2o
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_H2O_Flag == sym%YES) then
@@ -4164,6 +4186,18 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Sds_Num_Level2_Acha_Inver_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Inver), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         ACHA%Inversion_Flag(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha cloud layer
+     if (Sds_Num_Level2_Cld_Layer_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Layer), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ACHA%Cld_Layer(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha convective cloud mask
+     if (Sds_Num_Level2_Conv_Mask_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Conv_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ACHA%Conv_Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld height from h2o

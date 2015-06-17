@@ -13,6 +13,7 @@ module ACHA_CLAVRX_BRIDGE
  use ACHA_SHADOW
  use ACHA_SERVICES_MOD
  use ACHA_CLOUD_COVER_LAYERS
+ use CLAVRX_MESSAGE_MODULE, only: MESG
    
  implicit none
 
@@ -34,6 +35,12 @@ module ACHA_CLAVRX_BRIDGE
  subroutine AWG_CLOUD_HEIGHT_BRIDGE()
  
    implicit none
+
+   logical, save:: First_Call = .true.
+
+   if (First_Call .eqv. .true.) then
+       call MESG('ACHA starts ', color = 46)
+   endif
 
    !---null pointers before filling them
    call NULL_INPUT()
@@ -93,6 +100,9 @@ module ACHA_CLAVRX_BRIDGE
    !---  read CVS Tag from ACHA and store in global variable for output
    !-----------------------------------------------------------------------
    call SET_ACHA_VERSION(Acha_Version)
+
+  
+   First_Call = .false.
 
  end subroutine AWG_CLOUD_HEIGHT_BRIDGE
 

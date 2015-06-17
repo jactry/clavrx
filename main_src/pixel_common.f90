@@ -289,6 +289,7 @@ module PIXEL_COMMON
     integer (kind=int1), dimension(:,:,:), allocatable:: OE_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Meta_Data_Flags
+    integer (kind=int1), dimension(:,:), allocatable:: Conv_Cld_Mask
     real(kind=real4):: Success_Fraction
     real(kind=real4):: Processed_Count
     real(kind=real4):: Valid_Count
@@ -1884,34 +1885,6 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
 
-!   if (.not. allocated(ACHA%Tc)) allocate(ACHA%Tc(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Ec)) allocate(ACHA%Ec(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Pc)) allocate(ACHA%Pc(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Zc)) allocate(ACHA%Zc(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Zc_Top)) allocate(ACHA%Zc_Top(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Zc_Base)) allocate(ACHA%Zc_Base(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Beta)) allocate(ACHA%Beta(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Tau)) allocate(ACHA%Tau(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Reff)) allocate(ACHA%Reff(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Tc_Uncertainty)) allocate(ACHA%Tc_Uncertainty(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Ec_Uncertainty)) allocate(ACHA%Ec_Uncertainty(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Beta_Uncertainty)) allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Zc_Uncertainty)) allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Pc_Uncertainty)) allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Alt)) allocate(ACHA%Alt(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Cost)) allocate(ACHA%Cost(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Pc_Lower_Cloud)) allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Zc_Lower_Cloud)) allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Tc_Lower_Cloud)) allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Processing_Order)) allocate(ACHA%Processing_Order(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Inversion_Flag)) allocate(ACHA%Inversion_Flag(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Quality_Flag)) allocate(ACHA%Quality_Flag(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Cld_Layer)) allocate(ACHA%Cld_Layer(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Meta_Data)) allocate(ACHA%Meta_Data(dim1,dim2)) 
-!   if (.not. allocated(ACHA%OE_Quality_Flags)) allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
-!   if (.not. allocated(ACHA%Packed_Quality_Flags)) allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
-!   if (.not. allocated(ACHA%Packed_Meta_Data_Flags)) allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
-
     allocate(ACHA%Tc(dim1,dim2)) 
     allocate(ACHA%Ec(dim1,dim2)) 
     allocate(ACHA%Pc(dim1,dim2)) 
@@ -1939,6 +1912,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
     allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
     allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
+    allocate(ACHA%Conv_Cld_Mask(dim1,dim2)) 
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2005,37 +1979,11 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%OE_Quality_Flags = 0
     ACHA%Packed_Quality_Flags = 0
     ACHA%Packed_Meta_Data_Flags = 0
+    ACHA%Conv_Cld_Mask = 0
 
 end subroutine RESET_ACHA_ARRAYS
 
 subroutine DESTROY_ACHA_ARRAYS()
-!   if (allocated(ACHA%Tc)) deallocate(ACHA%Tc) 
-!   if (allocated(ACHA%Ec)) deallocate(ACHA%Ec) 
-!   if (allocated(ACHA%Pc)) deallocate(ACHA%Pc) 
-!   if (allocated(ACHA%Zc)) deallocate(ACHA%Zc) 
-!   if (allocated(ACHA%Zc_Top)) deallocate(ACHA%Zc_Top) 
-!   if (allocated(ACHA%Zc_Base)) deallocate(ACHA%Zc_Base) 
-!   if (allocated(ACHA%Beta)) deallocate(ACHA%Beta) 
-!   if (allocated(ACHA%Tau)) deallocate(ACHA%Tau) 
-!   if (allocated(ACHA%Reff)) deallocate(ACHA%Reff) 
-!   if (allocated(ACHA%Tc_Uncertainty)) deallocate(ACHA%Tc_Uncertainty) 
-!   if (allocated(ACHA%Ec_Uncertainty)) deallocate(ACHA%Ec_Uncertainty) 
-!   if (allocated(ACHA%Beta_Uncertainty)) deallocate(ACHA%Beta_Uncertainty) 
-!   if (allocated(ACHA%Zc_Uncertainty)) deallocate(ACHA%Zc_Uncertainty) 
-!   if (allocated(ACHA%Pc_Uncertainty)) deallocate(ACHA%Pc_Uncertainty) 
-!   if (allocated(ACHA%Alt)) deallocate(ACHA%Alt) 
-!   if (allocated(ACHA%Cost)) deallocate(ACHA%Cost) 
-!   if (allocated(ACHA%Pc_Lower_Cloud)) deallocate(ACHA%Pc_Lower_Cloud) 
-!   if (allocated(ACHA%Zc_Lower_Cloud)) deallocate(ACHA%Zc_Lower_Cloud) 
-!   if (allocated(ACHA%Tc_Lower_Cloud)) deallocate(ACHA%Tc_Lower_Cloud) 
-!   if (allocated(ACHA%Processing_Order)) deallocate(ACHA%Processing_Order) 
-!   if (allocated(ACHA%Inversion_Flag)) deallocate(ACHA%Inversion_Flag) 
-!   if (allocated(ACHA%Quality_Flag)) deallocate(ACHA%Quality_Flag) 
-!   if (allocated(ACHA%Cld_Layer)) deallocate(ACHA%Cld_Layer) 
-!   if (allocated(ACHA%Meta_Data)) deallocate(ACHA%Meta_Data) 
-!   if (allocated(ACHA%OE_Quality_Flags)) deallocate(ACHA%OE_Quality_Flags) 
-!   if (allocated(ACHA%Packed_Quality_Flags)) deallocate(ACHA%Packed_Quality_Flags) 
-!   if (allocated(ACHA%Packed_Meta_Data_Flags)) deallocate(ACHA%Packed_Meta_Data_Flags) 
 
     deallocate(ACHA%Tc) 
     deallocate(ACHA%Ec) 
@@ -2064,6 +2012,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%OE_Quality_Flags) 
     deallocate(ACHA%Packed_Quality_Flags) 
     deallocate(ACHA%Packed_Meta_Data_Flags) 
+    deallocate(ACHA%Conv_Cld_Mask) 
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------

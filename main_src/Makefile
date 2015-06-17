@@ -299,7 +299,7 @@ pixel_common.o: pixel_common.f90 constant.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
-cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o
 cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
 cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o

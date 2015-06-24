@@ -1,4 +1,4 @@
-FC=g95
+FC=gfortran
 #FC=ifort
    ifdef COMP1
 		$(fc)=COMP1 

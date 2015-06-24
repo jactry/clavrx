@@ -267,7 +267,9 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Pc
     real (kind=real4), dimension(:,:), allocatable:: Zc
     real (kind=real4), dimension(:,:), allocatable:: Zc_Top
+    real (kind=real4), dimension(:,:), allocatable:: Pc_Top
     real (kind=real4), dimension(:,:), allocatable:: Zc_Base
+    real (kind=real4), dimension(:,:), allocatable:: Pc_Base
     real (kind=real4), dimension(:,:), allocatable:: Beta
     real (kind=real4), dimension(:,:), allocatable:: Tau
     real (kind=real4), dimension(:,:), allocatable:: Reff
@@ -1890,7 +1892,9 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Pc(dim1,dim2)) 
     allocate(ACHA%Zc(dim1,dim2)) 
     allocate(ACHA%Zc_Top(dim1,dim2)) 
+    allocate(ACHA%Pc_Top(dim1,dim2)) 
     allocate(ACHA%Zc_Base(dim1,dim2)) 
+    allocate(ACHA%Pc_Base(dim1,dim2)) 
     allocate(ACHA%Beta(dim1,dim2)) 
     allocate(ACHA%Tau(dim1,dim2)) 
     allocate(ACHA%Reff(dim1,dim2)) 
@@ -1929,7 +1933,9 @@ subroutine RESET_ACHA_ARRAYS()
 !   if (allocated(ACHA%Pc)) ACHA%Pc = Missing_Value_Real4
 !   if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
 !   if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
+!   if (allocated(ACHA%Pc_Top)) ACHA%Pc_Top = Missing_Value_Real4
 !   if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
+!   if (allocated(ACHA%Pc_Base)) ACHA%Pc_Base  = Missing_Value_Real4
 !   if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
 !   if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
 !   if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
@@ -1957,7 +1963,9 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Pc = Missing_Value_Real4
     ACHA%Zc = Missing_Value_Real4
     ACHA%Zc_Top = Missing_Value_Real4
+    ACHA%Pc_Top = Missing_Value_Real4
     ACHA%Zc_Base  = Missing_Value_Real4
+    ACHA%Pc_Base  = Missing_Value_Real4
     ACHA%Beta = Missing_Value_Real4
     ACHA%Tau = Missing_Value_Real4
     ACHA%Reff = Missing_Value_Real4
@@ -1990,7 +1998,9 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Pc) 
     deallocate(ACHA%Zc) 
     deallocate(ACHA%Zc_Top) 
+    deallocate(ACHA%Pc_Top) 
     deallocate(ACHA%Zc_Base) 
+    deallocate(ACHA%Pc_Base) 
     deallocate(ACHA%Beta) 
     deallocate(ACHA%Tau) 
     deallocate(ACHA%Reff) 

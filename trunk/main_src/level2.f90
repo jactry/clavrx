@@ -1645,6 +1645,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud pressure from acha cloud top
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_top_acha", &
+                               "top_press_of_cloud", &
+                               "estimate of actual cloud-top pressure computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud height from acha cloud base
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Base),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -1653,6 +1664,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "estimate of actual cloud-base height computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
                                "m", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud pressure from acha cloud base
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Base_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Base),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_base_acha", &
+                               "base_press_of_cloud", &
+                               "estimate of actual cloud-base pressure computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4148,10 +4170,24 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- estimated cld top pressure
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Top,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld base height
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(ACHA%Zc_Base,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- estimated cld base pressure
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Base_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Base,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

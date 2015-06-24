@@ -124,6 +124,8 @@ end type acha_rtm_nwp_struct
  type, public :: acha_output_struct
    real, dimension(:,:), pointer:: Zc_Top
    real, dimension(:,:), pointer:: Zc_Base
+   real, dimension(:,:), pointer:: Pc_Top
+   real, dimension(:,:), pointer:: Pc_Base
  end type acha_output_struct
 
 !Symbol stucture

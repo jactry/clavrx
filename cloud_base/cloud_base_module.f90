@@ -9,6 +9,7 @@ module CLOUD_BASE
 !
 !----------------------------------------------------------------------
   use CLOUD_BASE_SERVICES
+  use ACHA_SERVICES_MOD, only : LOCATE
 
   implicit none
 
@@ -16,6 +17,7 @@ module CLOUD_BASE
 
   private:: INTERPOLATE_PROFILE_LOCAL
   private:: NULL_PIX_POINTERS 
+  private:: KNOWING_Z_COMPUTE_T_P 
 
   !--- include the non-system specific variables
   include 'cloud_base_parameters.inc'
@@ -51,6 +53,8 @@ module CLOUD_BASE
 !      Output%Reff
 !      Output%Zc_Top
 !      Output%Zc_Base
+!      Output%Pc_Top
+!      Output%Pc_Base
 !
 !----------------------------------------------------------------------
 ! modification history
@@ -90,8 +94,10 @@ module CLOUD_BASE
   real (kind=real4):: Cloud_Geometrical_Thickness_Top_Offset
   real (kind=real4):: Zc_Top_Max
   real (kind=real4):: Zc_Base_Min
+  real (kind=real4):: R4_Dummy
 
   integer (kind=int4):: Itemp
+  integer (kind=int4):: Ilev
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -102,6 +108,8 @@ module CLOUD_BASE
    !-------------------------------------------------------------------------
    Output%Zc_Top = MISSING_VALUE_REAL
    Output%Zc_Base = MISSING_VALUE_REAL
+   Output%Pc_Top = MISSING_VALUE_REAL
+   Output%Pc_Base = MISSING_VALUE_REAL
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
@@ -212,15 +220,26 @@ module CLOUD_BASE
        !-- new code
        if (Input%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
           Output%Zc_Top(Elem_Idx,Line_Idx) = Input%Zc(Elem_Idx,Line_Idx)
+
+          ! compute Pc_Top from Zc_Top
+          call KNOWING_Z_COMPUTE_T_P(Output%Pc_Top(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Top(Elem_Idx,Line_Idx),Ilev)
+
        else
           Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
                                              Input%Zc(Elem_Idx,Line_Idx) +  &
                                              Cloud_Geometrical_Thickness_Top_Offset)
+
+          ! compute Pc_Top from Zc_Top
+          call KNOWING_Z_COMPUTE_T_P(Output%Pc_Top(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Top(Elem_Idx,Line_Idx),Ilev)
+
        endif
 
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
+
+       ! compute Pc_Base from Zc_Base
+       call KNOWING_Z_COMPUTE_T_P(Output%Pc_Base(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Base(Elem_Idx,Line_Idx),Ilev)
 
  endif
 
@@ -311,6 +330,38 @@ subroutine NULL_PIX_POINTERS(Input, RTM_NWP)
    endif
  
 end subroutine NULL_PIX_POINTERS
+
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing Z to determine T and P
+!-----------------------------------------------------------------
+   subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Ilev)
+
+     real, intent(in):: Z
+     real, intent(out):: T
+     real, intent(out):: P
+     integer, intent(out):: Ilev
+     real:: dp
+     real:: dt
+     real:: dz
+
+     !--- interpoLate pressure profile
+     call LOCATE(Hght_Prof_RTM,Num_Levels_RTM_Prof,Z,Ilev)
+     Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
+
+     dp = Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)
+     dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
+     dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
+
+     !--- perform interpoLation
+     if (dz /= 0.0) then
+           T = Temp_Prof_RTM(Ilev) + dt/dz * (Z - Hght_Prof_RTM(Ilev))
+           P = Press_Prof_RTM(Ilev) + dp/dz * (Z - Hght_Prof_RTM(Ilev))
+     else
+           T = Temp_Prof_RTM(Ilev)
+           P = Press_Prof_RTM(Ilev)
+     endif
+
+   end subroutine KNOWING_Z_COMPUTE_T_P
 
 !----------------------------------------------------------------------
 ! End of Module

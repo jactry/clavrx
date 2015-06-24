@@ -116,6 +116,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  subroutine NULL_OUTPUT_POINTERS()
      Output%Zc_Top =>  null()
      Output%Zc_Base =>  null()
+     Output%Pc_Top =>  null()
+     Output%Pc_Base =>  null()
  end subroutine NULL_OUTPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -184,6 +186,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  subroutine SET_OUTPUT()
    Output%Zc_Top => ACHA%Zc_Top
    Output%Zc_Base => ACHA%Zc_Base
+   Output%Pc_Top => ACHA%Pc_Top
+   Output%Pc_Base => ACHA%Pc_Base
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()

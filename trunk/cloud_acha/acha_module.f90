@@ -3633,8 +3633,8 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
      Delta_Lat = cos(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lat_Spacing_Per_m
 
      !--- generate output positions
-     Lat_Pc(Elem_Idx,Line_Idx) = Lat(Elem_Idx,Line_Idx) - Delta_Lat
-     Lon_Pc(Elem_Idx,Line_Idx) = Lon(Elem_Idx,Line_Idx) - Delta_Lon
+     Lat_Pc(Elem_Idx,Line_Idx) = Lat(Elem_Idx,Line_Idx) + Delta_Lat
+     Lon_Pc(Elem_Idx,Line_Idx) = Lon(Elem_Idx,Line_Idx) + Delta_Lon
 
     enddo line_loop
    enddo element_loop

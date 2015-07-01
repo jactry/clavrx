@@ -2274,6 +2274,54 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- tropopause beta from 11 and 6.7
+     if (Sds_Num_Level2_Beta_11_67_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_67),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_67um_tropopause", &
+                               "beta_11um_67um_tropopause", &
+                               "cloud 11/6.7 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 8.5
+     if (Sds_Num_Level2_Beta_11_85_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_85),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_85um_tropopause", &
+                               "beta_11um_85um_tropopause", &
+                               "cloud 11/8.5 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 12
+     if (Sds_Num_Level2_Beta_11_12_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_12um_tropopause", &
+                               "beta_11um_12um_tropopause", &
+                               "cloud 11/12 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 13
+     if (Sds_Num_Level2_Beta_11_13_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_133um_tropopause", &
+                               "beta_11um_133um_tropopause", &
+                               "cloud 11/13.3 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- ch 1 aerosol optical thickness
      if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot1_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_aot1),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d, &
@@ -4529,6 +4577,38 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Etrop), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
+
+    !--- Beta_11_67
+    if (Sds_Num_Level2_Beta_11_67_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(27)) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_67um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_67), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_85
+    if (Sds_Num_Level2_Beta_11_85_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(29)) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_85um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_85), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_12
+    if (Sds_Num_Level2_Beta_11_12_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(32)) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_12um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_133
+    if (Sds_Num_Level2_Beta_11_13_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(33)) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_133um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
 
      !--- aot1
      if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot1_Flag == sym%YES) then

@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 235
+ integer, parameter, private:: Num_Level2_Sds = 237
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -244,4 +244,6 @@
      Sds_Num_Level2_Beta_11_67 = 232,     Sds_Num_Level2_Beta_11_67_Flag = 1, &
      Sds_Num_Level2_Beta_11_85 = 233,     Sds_Num_Level2_Beta_11_85_Flag = 1, &
      Sds_Num_Level2_Beta_11_12 = 234,     Sds_Num_Level2_Beta_11_12_Flag = 1, &
-     Sds_Num_Level2_Beta_11_13 = 235,     Sds_Num_Level2_Beta_11_13_Flag = 1
+     Sds_Num_Level2_Beta_11_13 = 235,     Sds_Num_Level2_Beta_11_13_Flag = 1, &
+     Sds_Num_Level2_Ctp_Top = 236,        Sds_Num_Level2_Ctp_Top_Flag = 1, &
+     Sds_Num_Level2_Ctp_Base = 237,       Sds_Num_Level2_Ctp_Base_Flag = 1

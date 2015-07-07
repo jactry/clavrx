@@ -651,7 +651,6 @@ module PIXEL_COMMON
 
      !--- pixel level radiative flux props from DCOMP
      real (kind=real4), dimension(:,:), allocatable, public, save:: Olr
-     integer (kind=int1), dimension(:,:), allocatable, public, save:: Olr_Qf
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Albedo
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Spherical_Albedo
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Transmission_View
@@ -2202,19 +2201,16 @@ subroutine CREATE_OLR_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    
       allocate(Olr(dim1,dim2))
-      allocate(Olr_Qf(dim1,dim2))
    
 end subroutine CREATE_OLR_ARRAYS
 subroutine RESET_OLR_ARRAYS
    
       Olr = Missing_Value_Real4
-      Olr_Qf = Missing_Value_Int1
    
 end subroutine RESET_OLR_ARRAYS
 subroutine DESTROY_OLR_ARRAYS
    
       deallocate(Olr)
-      deallocate(Olr_Qf)
    
 end subroutine DESTROY_OLR_ARRAYS
 !-----------------------------------------------------------

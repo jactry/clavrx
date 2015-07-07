@@ -32,7 +32,6 @@
 !      SET_FILE_DIMENSIONS()
 !      SET_DATA_DATE_AND_TIME()
 !      READ_INSTR_CONSTANTS()
-!      READ_ALGO_CONSTANTS()
 !      READ_LEVEL1B_DATA()
 !       ...
 !       ... 
@@ -83,7 +82,6 @@ module SENSOR_MODULE
    private
    public :: SET_DATA_DATE_AND_TIME
    public :: READ_INSTR_CONSTANTS
-   public :: READ_ALGO_CONSTANTS
    public :: DETECT_SENSOR_FROM_FILE
    public :: SET_FILE_DIMENSIONS
    public :: READ_LEVEL1B_DATA 
@@ -373,37 +371,6 @@ module SENSOR_MODULE
       end select
 
    end subroutine READ_INSTR_CONSTANTS
-
-   !----------------------------------------------------------------
-   ! read the avhrr algorithm constants into memory
-   !-----------------------------------------------------------------
-   subroutine READ_ALGO_CONSTANTS()
-      integer:: ios
-      integer:: Algo_Lun
-
-      Algo_Lun = GET_LUN()
-
-      open(unit=Algo_Lun,file=trim(Sensor%Algo_Const_File),status="old",position="rewind",action="read",iostat = ios)
-
-      if (ios /= 0) then
-         print *, "Error opening algorithm constant file, iostat = ", ios
-         stop
-      endif
-
-      !nlSst
-      read(unit=Algo_Lun,fmt=*)
-      
-
-      !triple Sst
-      read(unit=Algo_Lun,fmt=*)
-
-      !-- Olr
-      read(unit=Algo_Lun,fmt=*) Win_0,Win_1,Win_2,Win_3
-      read(unit=Algo_Lun,fmt=*) Olr_0,Olr_1,Olr_2,Olr_3,Olr_4
-
-      close(unit=Algo_Lun)
-
-   end subroutine READ_ALGO_CONSTANTS
 
    !--------------------------------------------------------------------------------------------------
    !  Apply various tests to determine from which sensor this data comes

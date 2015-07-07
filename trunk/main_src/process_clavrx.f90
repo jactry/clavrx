@@ -107,6 +107,8 @@
    use GFS
    use NCEP_REANALYSIS
    use DCOMP_DERIVED_PRODUCTS_MODULE
+   use CLAVRX_OLR_MODULE
+   use CLAVRX_SST_MODULE
    
    use RT_UTILITIES, only: &
         rtm_nvzen &
@@ -458,6 +460,8 @@
       ! Setup Solar-channel RTM terms for this particular sensor
       !------------------------------------------------------------------
       call SETUP_SOLAR_RTM(Sensor%WMO_Id)
+      call SETUP_OLR()
+      call SETUP_SST()
 
       !------------------------------------------------------------------
       ! update settings according sensor ( algo mode and channel settings 
@@ -496,8 +500,6 @@
       !--- read in Instrument Constants from appropriate file
       call READ_INSTR_CONSTANTS()
 
-      !--- read in Algorithm Constants from appropriate file
-      call READ_ALGO_CONSTANTS()
 
       !*************************************************************************
       ! Marker:  Open non-static high spatial resolution ancillary data
@@ -844,10 +846,6 @@
             !--- compute some common used pixel arrays 
             call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            if (index(Sensor%Sensor_Name, 'VIIRS') > 0) then
-               call COMPUTE_VIIRS_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
-
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
@@ -860,6 +858,10 @@
                                        Sfc%Snow_IMS,Sfc%Snow_GLOB, &
                                        Sfc%Land,Sfc%Snow)
             end if
+
+            !--- SST if possible for this sensor (needs snow info for masking)
+            call COMPUTE_SST()
+print *, "Range in sst unmasked = ", minval(Sst_Unmasked), maxval(Sst_Unmasked)
 
             !--- interpolate surface type field to each pixel in segment
             call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
@@ -1174,11 +1176,11 @@
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             
-            if (AVHRR_1_Flag == sym%NO) then    !currently, no AVHRR/1 algorithm
-               call COMPUTE_ERB(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
 
-            !---  Run SASRAB
+            !---  OLR
+            call COMPUTE_OLR()
+
+            !---  SASRAB
             if ( Sasrab_Flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1193,9 +1195,7 @@
             end if
 
             !--- generated cloud masked sst field
-            if (Nwp_Opt > 0) then
-                call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
+            call COMPUTE_MASKED_SST()
 
             !  endif   !end Skip_Processing_Flag condition
 

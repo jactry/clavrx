@@ -861,7 +861,6 @@
 
             !--- SST if possible for this sensor (needs snow info for masking)
             call COMPUTE_SST()
-print *, "Range in sst unmasked = ", minval(Sst_Unmasked), maxval(Sst_Unmasked)
 
             !--- interpolate surface type field to each pixel in segment
             call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   

@@ -151,8 +151,8 @@ select case (Sensor%WMO_Id)
       case(515) !FY2E          
 
       case default
-         print*,'sensor for WMO number not found in OLR  ', Sensor%WMO_id
-         print*,'OLR will not be computed'
+         print*,'sensor for WMO number not found in SST  ', Sensor%WMO_id
+         print*,'SST will not be computed'
       end select
 
 end subroutine SETUP_SST
@@ -163,8 +163,6 @@ subroutine COMPUTE_SST()
 
       Sst_Unmasked = MISSING_VALUE_REAL4
 
-print *, "Here in compute sst ", sst_coef
-
       if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. &
           Sensor%Chan_On_Flag_Default(32)==sym%YES .and. &
           maxval(sst_coef) /= MISSING_VALUE_REAL4) then
@@ -172,8 +170,6 @@ print *, "Here in compute sst ", sst_coef
           Sst_Unmasked = MCSST(ch(31)%Bt_Toa,ch(32)%Bt_Toa,Geo%Seczen)
 
       endif
-
-print *, "range 1 = ", maxval(Sst_Unmasked), minval(Sst_Unmasked), maxval(Sfc%Snow), minval(Sfc%Snow)
 
       !--- mask bad pixels, land and snow/ice
       where(Bad_Pixel_Mask == sym%YES .or.  &
@@ -183,7 +179,6 @@ print *, "range 1 = ", maxval(Sst_Unmasked), minval(Sst_Unmasked), maxval(Sfc%Sn
               Sst_Unmasked = MISSING_VALUE_REAL4
 
       endwhere
-print *, "range 2 = ", maxval(Sst_Unmasked), minval(Sst_Unmasked)
 
 
 end subroutine COMPUTE_SST

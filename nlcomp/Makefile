@@ -8,7 +8,7 @@ include config.mk
 # Where to find the RTM. Replace this with your own path to the object files and modules.
 
 
-HDFDIR = $(HOME)/lib/hdf4/
+HDFDIR = $(HOME)/lib/hdf4_gcc/
 HDFINC = $(HDFDIR)/include
 HDFLIB = $(HDFDIR)/lib
 ICAINC = hdf4/include

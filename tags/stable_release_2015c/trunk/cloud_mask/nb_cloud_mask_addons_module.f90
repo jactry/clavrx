@@ -1,0 +1,21 @@
+! THIS IS A DUMMY FILE FOR NOW TO RUN BOTH ANDY AND ANDI CLOUD MASKS
+! WITH JUST CHANGING A LINE IN config.mk
+
+ module CLOUD_MASK_ADDONS
+
+ implicit none
+
+
+
+
+
+
+
+
+
+
+
+
+
+ end module CLOUD_MASK_ADDONS
+

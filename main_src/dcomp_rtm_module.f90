@@ -82,7 +82,6 @@ module dcomp_rtm_module
          , i_nwp &
          , j_nwp &
          , zen_idx_rtm &
-         , ch &
          , bad_pixel_mask &
          , Rad_Clear_Ch20_Solar_Rtm
         
@@ -132,7 +131,7 @@ module dcomp_rtm_module
       real( kind = real4 ), dimension(:), pointer :: hgt_prof_nwp
       real( kind = real4 ), dimension(:), pointer :: wv_prof_nwp 
       
-      integer :: dim_outdata(2)
+     
       
       ! -----------------------------------------
       

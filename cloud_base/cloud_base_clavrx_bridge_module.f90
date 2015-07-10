@@ -109,6 +109,7 @@ module CLOUD_BASE_CLAVRX_BRIDGE
      Input%Hcld =>  null()
      Input%LCL =>  null()
      Input%CCL =>  null()
+     Input%CWP => null()
  end subroutine NULL_INPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output
@@ -253,6 +254,7 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Hcld => Hcld_DCOMP
    Input%LCL => LCL_Height_Nwp_Pix
    Input%CCL => CCL_Height_Nwp_Pix
+   Input%CWP => Cwp_Dcomp
 
  end subroutine SET_INPUT
 

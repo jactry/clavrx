@@ -5,6 +5,18 @@
 !  This module houses the routines that serve as a bridge between
 !  the CLAVR-x processing system and the ACBA code.
 !
+! cld_height_acha    Zc_Acha
+! cld_opd_dcomp      Tau_Dcomp
+! cloud_water_path   Cwp
+! surface_elevation
+! ccl_nwp
+! cloud_type
+! land_class
+! solar_zenith_angle
+! latitude
+! Fill_Value = -999.0
+! QF_Fill = 1 
+!
 !------------------------------------------------------------------------------
 module CLOUD_BASE_CLAVRX_BRIDGE
 

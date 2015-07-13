@@ -38,7 +38,8 @@ module CLOUD_HEIGHT_ROUTINES
   public::  CO2_SLICING_CLOUD_HEIGHT
   public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
   public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
-  public::  CONVECTIVE_CLOUD_MASK
+  public::  CONVECTIVE_CLOUD_PROBABILITY
+  public::  SUPERCOOLED_CLOUD_PROBABILITY
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -62,10 +63,10 @@ module CLOUD_HEIGHT_ROUTINES
 !----------------------------------------------------------------------
 ! Compute the ACHA values without calling ACHA (mode = 0)
 !----------------------------------------------------------------------
-subroutine CONVECTIVE_CLOUD_MASK(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Mask)
+subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Prob)
   integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
   real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
-  integer(kind=int1), dimension(:,:), intent(out):: Conv_Cld_Mask
+  real(kind=real4), dimension(:,:), intent(out):: Conv_Cld_Prob
 
   real, parameter:: Btd_Thresh = -2.0
   real, parameter:: Etrop_Thresh_1 = 0.95
@@ -73,35 +74,78 @@ subroutine CONVECTIVE_CLOUD_MASK(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Co
   real, parameter:: Tsfc_Thresh = 30.0
 
   !--- initialize to 0 (no)
-  Conv_Cld_Mask = 0
+  Conv_Cld_Prob = 0.0
 
   !--- set bad data to missing
   where(Bad_Pixel_Mask ==sym%YES)
-    Conv_Cld_Mask = Missing_Value_Int1
+    Conv_Cld_Prob = Missing_Value_Real4
   endwhere
 
   !--- if only 11 micron, use a tight threshold
   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
     where(Emiss_11_Tropo >= Etrop_Thresh_1) 
-      Conv_Cld_Mask = 1
+      Conv_Cld_Prob = 1.0
     endwhere
   endif
 
   if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
       Sensor%Chan_On_Flag_Default(31) == sym%YES) then
     where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
-     Conv_Cld_Mask = 1
+     Conv_Cld_Prob = 1.0
     endwhere
   endif
 
   !--- limit false alarms over elevated terrain
   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
     where(Tsfc - Bt11 < Tsfc_Thresh)
-       Conv_Cld_Mask = 0
+       Conv_Cld_Prob = 0.0
     endwhere
   endif
 
-end subroutine CONVECTIVE_CLOUD_MASK
+end subroutine CONVECTIVE_CLOUD_PROBABILITY
+!--------------------------------------------------------------------------------------------------
+! Supercooled Cloud Probability
+!--------------------------------------------------------------------------------------------------
+subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Supercooled_Cld_Prob)
+  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
+  real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob
+
+  real, parameter:: Btd_Thresh = -2.0
+  real, parameter:: Etrop_Thresh_1 = 0.95
+  real, parameter:: Etrop_Thresh_2 = 0.90
+  real, parameter:: Tsfc_Thresh = 30.0
+
+  !--- initialize to 0 (no)
+  Supercooled_Cld_Prob = 0.0
+
+  !--- set bad data to missing
+  where(Bad_Pixel_Mask ==sym%YES)
+    Supercooled_Cld_Prob = Missing_Value_Real4
+  endwhere
+
+  !--- if only 11 micron, use a tight threshold
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_1) 
+      Supercooled_Cld_Prob = 1.0
+    endwhere
+  endif
+
+  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
+      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
+     Supercooled_Cld_Prob = 1.0
+    endwhere
+  endif
+
+  !--- limit false alarms over elevated terrain
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Tsfc - Bt11 < Tsfc_Thresh)
+       Supercooled_Cld_Prob = 0.0
+    endwhere
+  endif
+end subroutine SUPERCOOLED_CLOUD_PROBABILITY
+
 !----------------------------------------------------------------------
 ! Compute the ACHA values without calling ACHA (mode = 0)
 ! 
@@ -402,6 +446,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   !--- intialize output
   Pc_Cirrus_Co2 = Missing_Value_Real4
   Tc_Cirrus_Co2 = Missing_Value_Real4
+  Zc_Cirrus_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
   if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
@@ -541,6 +586,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
 
   Mask = .false.
 
+  Diag_Pix_Array_1 = Tc_Cirrus_Co2
+
   !--- create mask which identifies pixels to be included in analysis
   where(Pc_Cirrus_Co2 /= Missing_Value_Real4 .and. &
         Pc_Cirrus_Co2 < PC_CIRRUS_MAX_THRESH .and. &
@@ -573,6 +620,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
    enddo Element_Loop_3
 
    Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
+
+   Diag_Pix_Array_2 = Tc_Cirrus_Co2
 
   if (allocated(Mask)) deallocate(Mask)
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)

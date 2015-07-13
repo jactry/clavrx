@@ -291,7 +291,8 @@ module PIXEL_COMMON
     integer (kind=int1), dimension(:,:,:), allocatable:: OE_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Meta_Data_Flags
-    integer (kind=int1), dimension(:,:), allocatable:: Conv_Cld_Mask
+    real (kind=real4), dimension(:,:), allocatable:: Conv_Cld_Prob
+    real (kind=real4), dimension(:,:), allocatable:: Supercooled_Cld_Prob
     real(kind=real4):: Success_Fraction
     real(kind=real4):: Processed_Count
     real(kind=real4):: Valid_Count
@@ -1915,7 +1916,8 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%OE_Quality_Flags(3,dim1,dim2)) 
     allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
     allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
-    allocate(ACHA%Conv_Cld_Mask(dim1,dim2)) 
+    allocate(ACHA%Conv_Cld_Prob(dim1,dim2)) 
+    allocate(ACHA%Supercooled_Cld_Prob(dim1,dim2)) 
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -1986,7 +1988,8 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%OE_Quality_Flags = 0
     ACHA%Packed_Quality_Flags = 0
     ACHA%Packed_Meta_Data_Flags = 0
-    ACHA%Conv_Cld_Mask = 0
+    ACHA%Conv_Cld_Prob = Missing_Value_Real4
+    ACHA%Supercooled_Cld_Prob = Missing_Value_Real4
 
 end subroutine RESET_ACHA_ARRAYS
 
@@ -2021,7 +2024,8 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%OE_Quality_Flags) 
     deallocate(ACHA%Packed_Quality_Flags) 
     deallocate(ACHA%Packed_Meta_Data_Flags) 
-    deallocate(ACHA%Conv_Cld_Mask) 
+    deallocate(ACHA%Conv_Cld_Prob) 
+    deallocate(ACHA%Supercooled_Cld_Prob) 
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------

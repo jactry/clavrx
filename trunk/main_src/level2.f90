@@ -1744,14 +1744,25 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !---  acha conv cld mask
-     if (Sds_Num_Level2_Conv_Mask_Flag == sym%YES) then
-      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Conv_Mask),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "conv_cld_mask", &
-                               "convective_cloud_mask", &
-                               "convective cloud mask: 0-none,1-conv cloud, 2-growing conv cloud, 3-dieing conv cloud", &
-                               DFNT_INT8, sym%NO_SCALING, 0.0, 0.0, &
-                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+     !---  acha conv cld prob
+     if (Sds_Num_Level2_Conv_Prob_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Conv_Prob),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "conv_cloud_probability", &
+                               "convective_cloud_probability", &
+                               "convective cloud probility: 0-1", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Prob, Max_Prob, &
+                               "none",Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  acha supercooled cld prob
+     if (Sds_Num_Level2_Supercool_Prob_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "supercooled_cloud_probability", &
+                               "supercooled_cloud_probability", &
+                               "convective cloud probility: 0-1", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Prob, Max_Prob, &
+                               "none",Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4278,10 +4289,18 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         ACHA%Cld_Layer(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
-     !--- acha convective cloud mask
-     if (Sds_Num_Level2_Conv_Mask_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Conv_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ACHA%Conv_Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     !--- acha convective cloud probability
+     if (Sds_Num_Level2_Conv_Prob_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Conv_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Conv_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha supercooled cloud probability
+     if (Sds_Num_Level2_Supercool_Prob_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Supercooled_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld height from h2o

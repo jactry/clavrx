@@ -98,6 +98,7 @@ module CLOUD_BASE
 
   integer (kind=int4):: Itemp
   integer (kind=int4):: Ilev
+  integer (kind=int4):: base_flag     ! 0 for current, 1 for CIRA
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -110,6 +111,7 @@ module CLOUD_BASE
    Output%Zc_Base = MISSING_VALUE_REAL
    Output%Pc_Top = MISSING_VALUE_REAL
    Output%Pc_Base = MISSING_VALUE_REAL
+   base_flag = 1
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
@@ -178,6 +180,7 @@ module CLOUD_BASE
     !-----------------------------------------------------------------------------
     if (Input%Zc(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL .and. &
         Input%Tau(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL) then
+     if (base_flag == 0) then
 
        Cloud_Extinction = WATER_EXTINCTION
 
@@ -240,6 +243,16 @@ module CLOUD_BASE
 
        ! compute Pc_Base from Zc_Base
        call KNOWING_Z_COMPUTE_T_P(Output%Pc_Base(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Base(Elem_Idx,Line_Idx),Ilev)
+
+     else
+
+      if (Input%Zc(Elem_Idx,Line_Idx) > 0 .and. Input%CWP(Elem_Idx,Line_Idx) > 0) then
+       call CIRA_base_hgt(Input%Zc(Elem_Idx,Line_Idx),Input%CWP(Elem_Idx,Line_Idx), &
+            Cloud_Type,Input%CCL(Elem_Idx,Line_Idx),Input%Surface_Elevation(Elem_Idx,Line_Idx), &
+            Cloud_Geometrical_Thickness,Output%Zc_Base(Elem_Idx,Line_Idx))
+      endif
+
+     endif
 
  endif
 
@@ -362,6 +375,107 @@ end subroutine NULL_PIX_POINTERS
      endif
 
    end subroutine KNOWING_Z_COMPUTE_T_P
+
+!-----------------------------------------------------------------
+! CIRA's base code, interpret from IDL codes 
+!-----------------------------------------------------------------
+subroutine CIRA_base_hgt(Zc,Cwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base)
+
+  real(kind=real4), intent(in) :: Zc,Cwp,CCL,Surf_Elev
+  integer,intent(in) :: Cloud_Type
+  real(kind=real4), intent(out) :: Cloud_Geometrical_Thickness,Zc_base
+
+! local variables
+  real(kind=real4) :: Zc_local, Cwp_local
+  integer :: ibin
+  integer :: ibin_max
+  real :: zdelta
+  real :: icwp
+  real :: slope
+  real :: yint
+  integer, parameter :: nbin = 9, npara = 6, ncwp = 2
+  real,dimension(nbin,npara,ncwp) :: regr_coeff
+  real,parameter :: mincbh = 0.0, maxcbh = 20.0*1000
+  integer, dimension(5) :: qf
+  integer :: cbh_qf
+  integer :: statusflag,status_below_sfc,status_high_top
+
+!                      min cth       ;slope         y-int          r2      n    median CWP
+  regr_coeff(1,:,1) = [0.00000,      2.25812,     0.405590,    0.0236532, 5921, 0.0710000]
+  regr_coeff(1,:,2) = [0.00000,     0.997031,     0.516989,    0.0900793, 5881, 0.0710000]
+  regr_coeff(2,:,1) = [2.00000,      6.10980,     0.664818,    0.0664282, 3624, 0.114000]
+  regr_coeff(2,:,2) = [2.00000,     0.913021,      1.35698,    0.0735795, 3621, 0.114000]
+  regr_coeff(3,:,1) = [4.00000,      11.5574,      1.22527,    0.0519277, 2340, 0.110000]
+  regr_coeff(3,:,2) = [4.00000,      1.37922,      2.58661,    0.0695758, 2329, 0.110000]
+  regr_coeff(4,:,1) = [6.00000,      14.5382,      1.70570,    0.0568334, 2535, 0.123000]
+  regr_coeff(4,:,2) = [6.00000,      1.68711,      3.62280,    0.0501604, 2511, 0.123000]
+  regr_coeff(5,:,1) = [8.00000,      9.09855,      2.14247,    0.0218789, 3588, 0.131000]
+  regr_coeff(5,:,2) = [8.00000,      2.45953,      3.86957,    0.0727178, 3579, 0.131000]
+  regr_coeff(6,:,1) = [10.0000,      13.5772,      1.86554,    0.0497041, 4249, 0.127000]
+  regr_coeff(6,:,2) = [10.0000,      4.83087,      3.53141,     0.160008, 4218, 0.127000]
+  regr_coeff(7,:,1) = [12.0000,      16.0793,      1.64965,    0.0695903, 3154, 0.115000]
+  regr_coeff(7,:,2) = [12.0000,      5.05173,      3.98610,     0.180965, 3121, 0.115000]
+  regr_coeff(8,:,1) = [14.0000,      14.6030,      2.00010,    0.0429476, 2744, 0.116000]
+  regr_coeff(8,:,2) = [14.0000,      6.06439,      4.03301,     0.239837, 2717, 0.116000]
+  regr_coeff(9,:,1) = [16.0000,      9.26580,      2.29640,    0.0113376, 1455, 0.0990000]
+  regr_coeff(9,:,2) = [16.0000,      6.60431,      3.26442,     0.227116, 1449, 0.0990000]
+
+  qf = [0,1,2,3,4]
+  cbh_qf = qf(1)
+  statusflag = 0
+  status_below_sfc = -1
+  status_high_top = -2
+
+! start retrieval
+       Zc_local = Zc/1000.
+       CWP_local = CWP/1000.
+
+       zdelta = 2.0
+       ibin = floor(Zc_local)/floor(zdelta)+1
+       ibin_max = 9
+
+       if (Zc_local > 18.0 .or. ibin > ibin_max)    ibin = ibin_max
+
+       icwp = 1
+       if (CWP_local > regr_coeff(ibin,6,1))  icwp = 2
+
+       slope = regr_coeff(ibin,2,icwp)
+       yint = regr_coeff(ibin,3,icwp)
+       Cloud_Geometrical_Thickness = slope*CWP_local+yint
+
+       if (Cloud_Geometrical_Thickness > Zc) statusflag = status_below_sfc
+
+       Zc_Base = Zc-Cloud_Geometrical_Thickness*1000.
+
+! adjustment based on cloud type
+! type 9 is overshooting
+       if (Cloud_Type == 9 .and. CCL > 0.0 .and. CCL < Zc_Base) then
+           if (Zc_Base < Zc .and. Zc_Base > 2000. .and. Cloud_Geometrical_Thickness > 9000.) then
+               Zc_Base = CCL
+           endif
+
+           if (Zc < 10000. .and. Cloud_Geometrical_Thickness > 8000.) then
+               Zc_Base = CCL
+           endif
+       endif
+
+! apply quality flag
+       if (Zc_Base >= 0.0 .and. Zc_Base < Surf_Elev) then
+           Zc_Base = Surf_Elev
+           cbh_qf = qf(3)
+       endif
+
+       if (Zc_Base < mincbh .or. Zc_Base > maxcbh) then
+           Zc_Base = MISSING_VALUE_REAL
+           cbh_qf = qf(4)
+       endif
+
+       if (Zc_Base >= Zc) then
+           Zc_Base = MISSING_VALUE_REAL
+           cbh_qf = qf(5)
+       endif
+
+end subroutine CIRA_base_hgt
 
 !----------------------------------------------------------------------
 ! End of Module

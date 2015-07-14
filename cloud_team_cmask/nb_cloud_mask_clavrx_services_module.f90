@@ -82,6 +82,7 @@
     real(kind=real4), pointer:: Bt_67um                                !6.7 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_85um                                !8.5 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_11um                                !11 um toa brightness temperature (K)
+    real(kind=real4), pointer:: Bt_11um_Sounder_Br                     !11 um toa brightness temp from sounder (K) 
     real(kind=real4), pointer:: Bt_11um_Std                            !11 um toa brightness temp 3x3 Std Dev (K)
     real(kind=real4), pointer:: Bt_11um_Max                            !11 um toa brightness temp 3x3 Max (K)
     real(kind=real4), pointer:: Bt_11um_Clear                          !11 um toa brightness temperature (K)

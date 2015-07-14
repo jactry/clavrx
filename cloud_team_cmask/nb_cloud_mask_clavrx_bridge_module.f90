@@ -28,6 +28,8 @@
 !--------------------------------------------------------------------------------------
 module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
+! temp_11_0um_nom_sounder
+
    ! -- MODULES USED
    use PIXEL_COMMON, only: &
        Ch, &
@@ -48,6 +50,8 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Smoke_Mask, &
        SST_Anal_Uni, &
        Solar_Contamination_Mask, &
+       Bt_11um_Sounder, &
+       AVHRR_IFF_Flag, &
        Ref_Ch1_Std_3x3, &
        Ref_Ch1_Min_3x3, &
        Bt_Ch20_Std_3x3, &
@@ -358,6 +362,10 @@ contains
         if (Input%Chan_On_11um == sym%YES)  then 
            Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5(i,j)
         endif
+      endif
+      if (AVHRR_IFF_Flag == 1)  then
+        Input%Bt_11um_Sounder_Br => Bt_11um_Sounder(i,j)
+        Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
       endif
       if (Input%Chan_On_85um == sym%YES)  then 
         Input%Bt_85um => ch(29)%Bt_Toa(i,j)

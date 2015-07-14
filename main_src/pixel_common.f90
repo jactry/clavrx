@@ -356,6 +356,7 @@ module PIXEL_COMMON
   integer,public, save:: AVHRR_KLM_Flag
   integer,public, save:: AVHRR_AAPP_Flag
   integer,public, save:: AVHRR_1_Flag
+  integer,public, save:: AVHRR_IFF_Flag
   integer,public, save:: Goes_Scan_Line_Flag
   
 
@@ -389,6 +390,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Gfs_Data_Dir
   character(len=355),public,save:: Ncep_Data_Dir
   character(len=355),public,save:: Cfsr_Data_Dir
+  character(len=355),public,save:: Merra_Data_Dir
   character(len=355),public,save:: Gdas_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir

@@ -339,6 +339,8 @@ print *, "It is IFF"
    !  Read the values from instrument constant files
    !--------------------------------------------------------------------------------------------------
    subroutine READ_INSTR_CONSTANTS()
+
+      AVHRR_IFF_Flag = 0
  
       select case(trim(Sensor%Sensor_Name))
 
@@ -371,7 +373,7 @@ print *, "It is IFF"
             call READ_IFF_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AVHRR-IFF')
             call READ_IFF_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-
+            AVHRR_IFF_Flag = 1
       end select
 
    end subroutine READ_INSTR_CONSTANTS

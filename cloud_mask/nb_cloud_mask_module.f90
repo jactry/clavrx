@@ -608,7 +608,7 @@ contains
              
             Classifier_Value = inp % sat % bt_ch31 - inp % sat % bt_ch27
             
-            is_on_test = .true.
+            is_on_test = .false.
             pos_info_flag = 6
             idx_info_flag = 4
         

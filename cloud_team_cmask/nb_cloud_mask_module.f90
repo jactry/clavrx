@@ -684,17 +684,24 @@ module NB_CLOUD_MASK
 
                     case("Btd_11_67") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
+                       
+                       !if (Input%Chan_On_11um == symbol%YES) cycle
+
                        if (Input%Chan_On_67um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_67um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um - Input%Bt_67um
+                       if (Input%Bt_11um_Sounder_Br > 0.0) then
+                         Classifier_Value(Class_Idx) = Input%Bt_11um_Sounder_Br - Input%Bt_67um
+                       endif
 
                     case("Bt_11_67_Covar") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
                        if (Cold_Scene_Btd_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
+                       if (Input%Bt_11um_Sounder_Br > 0.0) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
                     case("Btd_11_85") 

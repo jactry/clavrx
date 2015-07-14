@@ -69,6 +69,7 @@ module USER_OPTIONS
       , therm_cal_1b &
       , ancil_data_dir &
       , Cfsr_Data_Dir &
+      , Merra_Data_Dir &
       , Gdas_Data_Dir &
       , file_list &
       , geo_file_flag &
@@ -551,6 +552,7 @@ contains
       Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
       Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
+      Merra_Data_Dir = trim(Data_Base_Path)//'/dynamic/merra/'
       Gdas_Data_Dir = trim(Data_Base_Path)//'/dynamic/gdas/'
       Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
@@ -586,6 +588,8 @@ contains
          call MESG ( "NCEP Climate Forecast System Reanalysis data will be used",level = verb_lev % DEFAULT)
       case ( 4 )
          call MESG ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
+      case ( 5 )
+         call MESG ( "MERRA Reanalysis data will be used",level = verb_lev % DEFAULT)
       case default
          print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
          stop "6-Nwp_Flag"

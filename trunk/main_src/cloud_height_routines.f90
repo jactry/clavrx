@@ -58,6 +58,16 @@ module CLOUD_HEIGHT_ROUTINES
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Moist_Thresh = 0.25
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
 
+
+  integer, private, parameter:: N_Sc_Lut = 20
+  real(kind=real4), dimension(N_Sc_Lut), private, parameter:: &
+  Sc_Tc_Lut = (/202.21,206.77,211.33,215.88,220.44,225.00,229.56,234.11,238.67,243.23, &
+                247.79,252.34,256.90,261.46,266.01,270.57,275.13,279.69,284.24,288.80/)
+
+  real(kind=real4), dimension(N_Sc_Lut), private, parameter:: &
+  Sc_Prob_Lut = (/0.004,0.004,0.004,0.004,0.004,0.004,0.004,0.002,0.051,0.243, &
+                  0.470,0.658,0.800,0.886,0.888,0.870,0.142,0.004,0.004,0.004 /)
+
   contains
 
 !----------------------------------------------------------------------
@@ -106,44 +116,54 @@ end subroutine CONVECTIVE_CLOUD_PROBABILITY
 !--------------------------------------------------------------------------------------------------
 ! Supercooled Cloud Probability
 !--------------------------------------------------------------------------------------------------
-subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Supercooled_Cld_Prob)
+subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Temperature,Supercooled_Cld_Prob)
   integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
-  real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
+  integer(kind=int1), dimension(:,:), intent(in):: Cloud_Type
+  real(kind=real4), dimension(:,:), intent(in):: Cloud_Temperature
   real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob
 
-  real, parameter:: Btd_Thresh = -2.0
-  real, parameter:: Etrop_Thresh_1 = 0.95
-  real, parameter:: Etrop_Thresh_2 = 0.90
-  real, parameter:: Tsfc_Thresh = 30.0
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Number_Of_Elements
+  integer:: Number_Of_Lines
+  integer:: Tc_Idx
 
-  !--- initialize to 0 (no)
-  Supercooled_Cld_Prob = 0.0
+  !--- intialize local variables using global variables
+  Number_Of_Elements = Image%Number_Of_Elements
+  Number_Of_Lines = Image%Number_Of_Lines_Read_This_Segment
 
-  !--- set bad data to missing
-  where(Bad_Pixel_Mask ==sym%YES)
-    Supercooled_Cld_Prob = Missing_Value_Real4
-  endwhere
+  !--- initialize to Missing
+  Supercooled_Cld_Prob = Missing_Value_Real4
 
-  !--- if only 11 micron, use a tight threshold
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-    where(Emiss_11_Tropo >= Etrop_Thresh_1) 
-      Supercooled_Cld_Prob = 1.0
-    endwhere
-  endif
+  !--- Loop through each pixel
+  do Elem_Idx = 1, Number_Of_Elements 
+     do Line_Idx = 1, Number_Of_Lines
+        
+       !--- filter bad
+       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+       !--- filter missing temps
+       if (Cloud_Temperature(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+       !--- filter with cloud type
+       if (Cloud_Type(Elem_Idx,Line_Idx) == Missing_Value_Int1) cycle
 
-  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
-      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-    where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
-     Supercooled_Cld_Prob = 1.0
-    endwhere
-  endif
+       if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .and. &
+           Cloud_Type(Elem_Idx,Line_Idx) /= sym%WATER_TYPE .and. &
+           Cloud_Type(Elem_Idx,Line_Idx) /= sym%SUPERCOOLED_TYPE) then
+           Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = 0.0
+           cycle
+       endif
 
-  !--- limit false alarms over elevated terrain
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-    where(Tsfc - Bt11 < Tsfc_Thresh)
-       Supercooled_Cld_Prob = 0.0
-    endwhere
-  endif
+       Tc_Idx = minloc(abs(Cloud_Temperature(Elem_Idx,Line_Idx) - Sc_Tc_Lut),1) 
+
+       Tc_Idx = max(1,min(N_Sc_Lut,Tc_Idx))
+
+       Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = Sc_Prob_Lut(Tc_Idx) 
+
+       !print *, "TEST SC LUT ", Cloud_Temperature(Elem_Idx,Line_Idx), Tc_Idx, N_Sc_Lut, Supercooled_Cld_Prob(Elem_Idx,Line_Idx)
+
+     enddo
+  enddo
+
 end subroutine SUPERCOOLED_CLOUD_PROBABILITY
 
 !----------------------------------------------------------------------

@@ -1076,7 +1076,7 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap_Imager = x_Ap(1)  !K
       Sa_Tc_Imager = Sa(1,1)  !K^2
       Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
-      Sa_Tc_Sounder = 25.0   ! K^2
+      Sa_Tc_Sounder = 81.0    !25.0   ! K^2
 
       Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
 
@@ -1456,6 +1456,10 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
                      -0.124*(Delta_Cld_Temp_Sfc_Temp**2)   &
                      +0.00343*(Delta_Cld_Temp_Sfc_Temp**3)
 
+       !--- constrain lapse rate to be with 2 and 10 K/km
+       Lapse_Rate = max(2.0,min(10.0,Lapse_Rate))
+
+       !--- convert lapse rate to K/m
        Lapse_Rate = Lapse_Rate / 1000.0  !(K/m)
 
        !-- compute height

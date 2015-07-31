@@ -736,7 +736,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Sc_Lwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Lwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Iwp_Nwp_Pix
-  real (kind=real4), dimension(:,:), allocatable, public:: Cwp_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Cwp_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Pc_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: LCL_Height_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: CCL_Height_Nwp_Pix

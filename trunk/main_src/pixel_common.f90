@@ -101,6 +101,8 @@
 !  Bt_Toa_Clear = Simulated Toa Reflectance under clear-sky
 !  Unc = Uncertainty Flag (relevant only to MODIS)
 !  Opd = Optical Depth
+!  CSBT_Mask = Clear Sky Brighntess Temperature Mask
+!  Opaque_Height = Maximum Height at which trans to space is 0.
 !--------------------------------------------------------------------------------------
 module PIXEL_COMMON
 
@@ -163,6 +165,8 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Sfc_Ref_White_Sky
     real, dimension(:,:), allocatable:: Opd
     integer (kind=int1), dimension(:,:), allocatable:: Unc
+    integer (kind=int1), dimension(:,:), allocatable:: CSBT_Mask
+    real (kind=real4), dimension(:,:), allocatable:: Opaque_Height
   end type observations
 
   type :: geometry_definition
@@ -545,9 +549,6 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
-  real(kind=real4), dimension(:,:), allocatable, public, save, target:: Ch27_Opaque_Height
-  integer(kind=int1), dimension(:,:), allocatable, public, save, target:: Ch27_CSBT_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, save, target:: Ch31_CSBT_Mask
 
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Elem_Idx_Max_Bt_Ch31_3x3
   integer(kind=int4), dimension(:,:), allocatable, public, save:: Line_Idx_Max_Bt_Ch31_3x3
@@ -766,11 +767,11 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Opaque_Cloud
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Opaque_Cloud
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Cirrus_Co2
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Co2
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Cirrus_Co2
-
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Co2
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2 
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
 
@@ -843,6 +844,10 @@ subroutine CREATE_PIXEL_ARRAYS()
          if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) then
             allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
          endif
+         if (idx >= 27 .and. idx <= 38) then
+             allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
+             allocate(Ch(idx)%Opaque_Height(dim1,dim2))
+         endif
 
       endif
 
@@ -866,9 +871,6 @@ subroutine CREATE_PIXEL_ARRAYS()
    if ((Sensor%Chan_On_Flag_Default(27) == sym%YES) .and.   &
        (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then
            allocate(Covar_Ch27_Ch31_5x5(dim1,dim2))
-           allocate(Ch27_Opaque_Height(dim1,dim2))
-           allocate(Ch27_CSBT_Mask(dim1,dim2))
-           allocate(Ch31_CSBT_Mask(dim1,dim2))
    endif
 
    allocate(Bad_Pixel_Mask(dim1,dim2), &
@@ -993,6 +995,8 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) deallocate(Ch(idx)%Sfc_Ref_White_Sky)
       if (allocated(Ch(idx)%Emiss_Tropo)) deallocate(Ch(idx)%Emiss_Tropo)
       if (allocated(Ch(idx)%Unc)) deallocate(Ch(idx)%Unc)
+      if (allocated(Ch(idx)%CSBT_Mask)) deallocate(Ch(idx)%CSBT_Mask)
+      if (allocated(Ch(idx)%Opaque_Height)) deallocate(Ch(idx)%Opaque_Height)
   enddo
 
   if (allocated(Temp_Mask)) deallocate(Temp_Mask)
@@ -1004,9 +1008,6 @@ subroutine DESTROY_PIXEL_ARRAYS()
              Pixel_Local_Time_Hours,Pixel_Time)
 
   if (allocated(Covar_Ch27_Ch31_5x5)) deallocate(Covar_Ch27_Ch31_5x5)
-  if (allocated(Ch27_Opaque_Height)) deallocate(Ch27_Opaque_Height)
-  if (allocated(Ch27_CSBT_Mask)) deallocate(Ch27_CSBT_Mask)
-  if (allocated(Ch31_CSBT_Mask)) deallocate(Ch31_CSBT_Mask)
 
   deallocate(Bad_Pixel_Mask)
 
@@ -1462,6 +1463,8 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) Ch(idx)%Sfc_Ref_White_Sky = Missing_Value_Real4
       if (allocated(Ch(idx)%Emiss_Tropo)) Ch(idx)%Emiss_Tropo = Missing_Value_Real4
       if (allocated(Ch(idx)%Unc)) Ch(idx)%Unc = Missing_Value_Int1
+      if (allocated(Ch(idx)%CSBT_Mask)) Ch(idx)%CSBT_Mask = Missing_Value_Int1
+      if (allocated(Ch(idx)%Opaque_Height)) Ch(idx)%Opaque_Height = Missing_Value_Real4
    enddo
 
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
@@ -2439,10 +2442,11 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(High_Cloud_Fraction_3x3(dim1,dim2))
     allocate(Mid_Cloud_Fraction_3x3(dim1,dim2))
     allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Tc_Co2(dim1,dim2))
+    allocate(Pc_Co2(dim1,dim2))
+    allocate(Zc_Co2(dim1,dim2))
+    allocate(Ec_Co2(dim1,dim2))
     allocate(Tc_Cirrus_Co2(dim1,dim2))
-    allocate(Pc_Cirrus_Co2(dim1,dim2))
-    allocate(Zc_Cirrus_Co2(dim1,dim2))
-    allocate(Ec_Cirrus_Co2(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
 subroutine RESET_CLOUD_PROD_ARRAYS()
@@ -2459,10 +2463,11 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      High_Cloud_Fraction_3x3 = Missing_Value_Real4
      Mid_Cloud_Fraction_3x3 = Missing_Value_Real4
      Low_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Tc_Co2 = Missing_Value_Real4
+     Pc_Co2 = Missing_Value_Real4
+     Zc_Co2 = Missing_Value_Real4
+     Ec_Co2 = Missing_Value_Real4
      Tc_Cirrus_Co2 = Missing_Value_Real4
-     Pc_Cirrus_Co2 = Missing_Value_Real4
-     Zc_Cirrus_Co2 = Missing_Value_Real4
-     Ec_Cirrus_Co2 = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
 subroutine DESTROY_CLOUD_PROD_ARRAYS()
@@ -2479,10 +2484,11 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(High_Cloud_Fraction_3x3)
      deallocate(Mid_Cloud_Fraction_3x3)
      deallocate(Low_Cloud_Fraction_3x3)
+     deallocate(Tc_Co2)
+     deallocate(Pc_Co2)
+     deallocate(Zc_Co2)
+     deallocate(Ec_Co2)
      deallocate(Tc_Cirrus_Co2)
-     deallocate(Pc_Cirrus_Co2)
-     deallocate(Zc_Cirrus_Co2)
-     deallocate(Ec_Cirrus_Co2)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS
 !-----------------------------------------------------------

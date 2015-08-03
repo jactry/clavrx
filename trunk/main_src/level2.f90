@@ -1411,7 +1411,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "cloud_probability", &
                               "not specified", &
                               "probability of a pixel being cloudy from the Bayesian cloud mask", &
-                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_frac, Max_frac, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -4086,10 +4086,10 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- cloud probability
      if (Sds_Num_Level2_Cldprob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(posterior_cld_probability, &
-                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(posterior_cld_probability, &
+                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldprob), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld mask
@@ -4196,7 +4196,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- sndr cld height
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_Cirrus_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(Zc_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif

@@ -2,9 +2,7 @@ module cx_pfaast_tools_mod
 
    use cx_pfaast_constants_mod
 
-	
-   
-contains
+   contains
    
 !ccccccccc
    subroutine calpir(t_avg_ref,  amt_wet_ref, amt_ozo_ref, &
@@ -366,7 +364,7 @@ contains
 !       ---------------------------------
 
         pred_con(1,l) = sec_theta(l) * wet_ratio(l) / &
-     	 	    ( t_ratio(l) * t_ratio(l) )  
+                       ( t_ratio(l) * t_ratio(l) )  
         pred_con(2,l) = pred_con(1,l) * pred_con(1,l) / sec_theta(l)
         pred_con(3,l) = sec_theta(l) * wet_ratio(l) / t_ratio(l) 
         pred_con(4,l) = pred_con(3,l) * wet_ratio(l)
@@ -898,7 +896,7 @@ contains
 !!
 !! @history  made it f90 ( 02/10/2015 AW)
 !
-	subroutine taudoc(cc,xx,tau)
+subroutine taudoc(cc,xx,tau)
    
       implicit none
       
@@ -910,8 +908,8 @@ contains
       
 ! * Strow-Woolf model ... for dry, ozo(ne), and wco (water-vapor continuum)
 ! .... version of 05.09.02
-	
-	   integer :: n_lay
+
+      integer :: n_lay
       integer :: i , j
      
       integer :: nc , nx
@@ -923,7 +921,7 @@ contains
       nx = ubound ( xx, 1)
 
       tau    = 0.
-	   tau(1) = 1.
+      tau(1) = 1.
       taulyr = 1.
     
   !  -loop over all layers from top 
@@ -937,14 +935,13 @@ contains
       
    end do
    
-
-	end subroutine taudoc
+   end subroutine taudoc
    !
    !
    !
    ! * Strow-Woolf model ... for 'wet' (water-vapor other than continuum)
    ! .... version of 05.09.02
-	subroutine tauwtr( ccs , ccl , xx , tau )
+subroutine tauwtr( ccs , ccl , xx , tau )
       implicit none
    
       real, intent(in) , target :: ccs (:,:)
@@ -964,7 +961,7 @@ contains
       nx = ubound ( xx, 1)
       
       tau    = 0.
-	   tau(1) = 1.
+      tau(1) = 1.
       taulyr = 1.
       
       od_sum = 0.
@@ -972,8 +969,18 @@ contains
       cc => ccs
       
       do j = 1 , n_lay
+
+
          ! differentiate between ice and water
-         if ( od_sum >= 5. ) cc => ccl
+!---old
+!        if ( od_sum >= 5.0 ) cc => ccl
+!--- heidinger fix begin
+         if ( od_sum >= 5.0 ) then
+               cc => ccl
+               nc = ubound ( ccl,1 )
+         endif
+!--- heidinger fix end
+
          ! assume background stored in last column of coeffecients
          yy = cc(nc,j)
       
@@ -983,10 +990,11 @@ contains
          tau ( j + 1) = tau ( j ) * taulyr   
             
       end do
-        cc=> null() 
+      cc=> null() 
      
-	return
-	end subroutine tauwtr
+      return
+
+  end subroutine tauwtr
    
    
    end module cx_pfaast_tools_mod

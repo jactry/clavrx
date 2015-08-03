@@ -892,9 +892,6 @@
                                 Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
                end if
 
-!              !--- compute desired nwp parameters 
-!              call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
-
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
@@ -1031,6 +1028,7 @@
                Segment_Time_Point_Seconds(6) =  Segment_Time_Point_Seconds(6) + &
                      & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
+
                !--- cloud type 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. trim(Sensor%Sensor_Name) == 'VIIRS') then
@@ -1060,12 +1058,17 @@
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
-               if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
-                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+               if (index(Sensor%Sensor_Name,'IFF') > 0) then
+                  call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
-                                    P_Std_Rtm,Cld_Type, &
-                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2,Zc_Cirrus_Co2)
+                                    P_Std_Rtm,Cld_Mask, &
+                                    Pc_Co2,Tc_Co2,Zc_Co2)
+
+                  call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
+
+
+                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
 
                endif
 
@@ -1088,7 +1091,7 @@
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
 
                   !-- make CSBT masks (Clear Sky Brightness Temperature)
-                  call CH27_OPAQUE_TRANSMISSION_HEIGHT()
+                  call OPAQUE_TRANSMISSION_HEIGHT()
                   call COMPUTE_CSBT_CLOUD_MASKS()
 
                end if

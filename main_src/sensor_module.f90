@@ -1027,7 +1027,8 @@ module SENSOR_MODULE
       if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
           .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
          call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
-         if (trim(Image%Auxiliary_Cloud_Mask_File_Name ) == "no_file") then
+         if (trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file" .and. &
+                  Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
       endif

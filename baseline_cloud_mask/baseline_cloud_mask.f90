@@ -330,7 +330,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    REAL(KIND=REAL4):: Aerosol_Optical_Depth_Chn2
    REAL(KIND=REAL4):: NDSI
    
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Clear
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear
 
    REAL(KIND=REAL4):: RGCT_Threshold
 
@@ -412,10 +412,12 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !-----------------------------------------------------------------
    ! Read IN background Chn2 Reflectance Field 
    !-----------------------------------------------------------------
-   CALL Clear_Chn2_Reflectance_Field(Num_Elem, &
-                                     Max_Num_Lines_per_Seg, &
-                                     Refl_Chn2_Clear)
+   !CALL Clear_Chn2_Reflectance_Field(Num_Elem, &
+   !                                  Max_Num_Lines_per_Seg, &
+   !                                  Refl_Chn2_Clear)
 
+   ! Data is already normalized in CLAVRx
+   Refl_Chn2_Clear => ch(1)%Ref_Toa_Clear
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
@@ -465,23 +467,23 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !=======================================================================
    ! Compute spatial uniformity metrics
    !=======================================================================
-   IF ((out2(Algo_Num)%ch_flg(9) > 0) .OR. (out2(Algo_Num)%ch_flg(10) > 0)) THEN
-      IF (out2(Algo_Num)%ch_flg(10) > 0) THEN     !Choose Chn10 if available
-        CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%bt10, BT_WaterVapor_Mean_3x3, &
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(28)  > 0)) THEN
+      IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN     !Choose Chn10 if available
+        CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(28)%Bt_Toa, BT_WaterVapor_Mean_3x3, &
                                         BT_WaterVapor_Max_3x3, BT_WaterVapor_Min_3x3, BT_WaterVapor_Stddev_3x3)
       ELSE                                        !If Chn10 not available, use Chn9
-        CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%bt9, BT_WaterVapor_Mean_3x3, &
+        CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(27)%Bt_Toa, BT_WaterVapor_Mean_3x3, &
                                         BT_WaterVapor_Max_3x3, BT_WaterVapor_Min_3x3, BT_WaterVapor_Stddev_3x3)
       ENDIF
    ENDIF
 
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, ch(31)%Bt_Toa, BT_Chn14_Mean_3x3, &
+   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(31)%Bt_Toa, BT_Chn14_Mean_3x3, &
                                    BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, ch(1)%Ref_Toa, Refl_Chn2_Mean_3X3, &
+   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(1)%Ref_Toa, Refl_Chn2_Mean_3X3, &
                                    Refl_Chn2_Max_3x3, Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%zsfc, Sfc_Hgt_Mean_3X3, &
+   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3X3, &
                                    Sfc_Hgt_Max_3X3, Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
+   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
                                    Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3X3, Refl_Chn2_Clear_Stddev_3X3)
 
    ! Temporal commented out due to CLAVR-x not having that capability
@@ -507,7 +509,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 !   Have_Prev_BT_Chn15_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
 !                                            temporal(minus_i_01hrs)%bt15)
 !   Have_Prev_Cmask_1Hr = Load_Temporal_Data(minus_i_01hrs,TRIM(Algo_Name), &
-                                            temporal(minus_i_01hrs)%cldmask)
+!                                            temporal(minus_i_01hrs)%cldmask)
 
    !=======================================================================
    ! Compute 11 micron emissivity at Tropopause
@@ -612,7 +614,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !----------------------------------------------------------------------
    ! compute Correlation of Chn10 and Chn14
    !----------------------------------------------------------------------
-   IF ((out2(Algo_Num)%ch_flg(9) > 0) .OR. (out2(Algo_Num)%ch_flg(10) > 0) .AND. &
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(28)  > 0) .AND. &
         (out2(Algo_Num)%ch_flg(14) > 0)) THEN
    
         Alloc_Status_Total = 0 
@@ -655,7 +657,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     Array_Width = Array_Left -Array_Right + 1
                     Array_Hgt = Array_Bottom -Array_Top + 1
 
-                    IF (sat%space_mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
+                    IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
                     
                         BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Missing_Value_Real4
                         
@@ -664,19 +666,19 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     ENDIF
 
                     
-                    IF (out2(Algo_Num)%ch_flg(10) > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
-                                                       sat%bt10(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       ch(28)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%Bad_Pixel_Mask(10,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
                     ELSE
                     
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
-                                                       sat%bt9(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%Bad_Pixel_Mask(9,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
                     ENDIF
@@ -697,7 +699,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !--- check for space pixel. QF already set to invalid
          !
-         IF (sat%space_mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
+         IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
            
             CYCLE
 
@@ -706,7 +708,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !--- check for pixel located beyond zone of operation. Set QF
          !
-         IF (sat%satzen(Elem_Idx,Line_Idx) > SENSOR_ZEN_THRESH) THEN
+         IF (Geo%Solzen(Elem_Idx,Line_Idx) > SENSOR_ZEN_THRESH) THEN
 
             Cloud_Mask_QF(Elem_Idx,Line_Idx) = CMASK_OUTSIDE_SEN_ZEN_RANGE
             
@@ -728,12 +730,12 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---nwp longitude cell
          !
-         X_NWP_Idx =          sat%x_nwp(Elem_Idx,Line_Idx)         
+         X_NWP_Idx =          I_Nwp(Elem_Idx,Line_Idx)         
 
          !
          !---nwp latitude cell
          !
-         Y_NWP_Idx =          sat%y_nwp(Elem_Idx,Line_Idx)     
+         Y_NWP_Idx =          J_Nwp(Elem_Idx,Line_Idx)     
 
          !
          !--- LRC indices
@@ -751,27 +753,27 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !--- store BTD_Chn14_Chn15 at NWC
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
-         IF (out2(Algo_Num)%ch_flg(14) > 0 .and. out2(Algo_Num)%ch_flg(15) > 0) THEN
+         IF (out2(Algo_Num)%ch_flg(14) > 0 .and. Sensor%Chan_On_Flag_Default(32) > 0) THEN
            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
-                                      sat%bt15(Elem_NWC_Idx,Line_NWC_Idx)
+                                      ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
            ENDIF
          ENDIF
 
          !
          !---cosine of satellite viewing zenith angle
          !
-         Cos_Sat_Zen  =       sat%cos_satzen(Elem_Idx,Line_Idx)    
+         Cos_Sat_Zen  =       Geo%Coszen(Elem_Idx,Line_Idx)    
 
          !
          !---cosine of solar viewing zenith angle
          !
-         Cos_Sol_Zen =     sat%cos_solzen(Elem_Idx,Line_Idx)    
+         Cos_Sol_Zen =     Geo%CosSolzen(Elem_Idx,Line_Idx)    
 
          !
          !---cosine of scattering zenith angle
          !
-         Cos_Scat_Zen =     cos(sat%scatzen(Elem_Idx,Line_Idx)*dtor)
+         Cos_Scat_Zen =     cos(Geo%Scatangle(Elem_Idx,Line_Idx)*dtor)
 
          !
          !---cosine of scattering zenith angle
@@ -781,34 +783,34 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---nwp level associated with surface
          !
-         Sfc_Idx_NWP =          nwp%dat(X_NWP_Idx,Y_NWP_Idx)%sfc_level  
+         Sfc_Idx_NWP =          Rtm(X_NWP_Idx,Y_NWP_Idx)%Sfc_Level
 
          !
          !---nwp level associated with tropopause
          !
-         Tropo_Idx_NWP =        nwp%dat(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level 
+         Tropo_Idx_NWP =        Rtm(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level 
 
          !
          !---viewing zenith angle bin
          !
-         View_Zen_Idx =          sat%ivza(Elem_Idx,Line_Idx)        
+         View_Zen_Idx =          Zen_Idx_Rtm(Elem_Idx,Line_Idx)        
 
          !
          !--- Surface Temperature and its 3x3 uniformity
          !
-         Sfc_Temp_Uni_NWP =  nwp%dat(X_NWP_Idx,Y_NWP_Idx)%tsfc_uni
+         Sfc_Temp_Uni_NWP =  Tmpsfc_uni_Nwp(X_NWP_Idx,Y_NWP_Idx)
      
-         Sfc_Temp         =  nwp%dat(X_NWP_Idx,Y_NWP_Idx)%tsfc
+         Sfc_Temp         =  Tmpsfc_Nwp(X_NWP_Idx,Y_NWP_Idx)
 
          !
          !--- Total Precipitable Water (g/m^2 or cm)
          !
-         Total_Precipitable_Water_NWP =  nwp%dat(X_NWP_Idx,Y_NWP_Idx)%tpw
+         Total_Precipitable_Water_NWP =  Tpw_Nwp(X_NWP_Idx,Y_NWP_Idx)
 
          !
          !--- Total Ozone (Dobson Unit)
          !
-         Total_Ozone_Path_NWP =  nwp%dat(X_NWP_Idx,Y_NWP_Idx)%o3col
+         Total_Ozone_Path_NWP =  Ozone_Nwp(X_NWP_Idx,Y_NWP_Idx)
 
          !
          !---sun earth distance factor
@@ -818,7 +820,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---glint zenith angle
          !
-         Glint_Zen =      sat%glintzen(Elem_Idx,Line_Idx)       
+         Glint_Zen =      Sfc%Glint_Mask(Elem_Idx,Line_Idx)       
 
          !
          !---land type
@@ -828,39 +830,39 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---coast type
          !
-         Coast_Type =     sat%coast_mask(Elem_Idx,Line_Idx)    
+         Coast_Type =     Sfc%Coast_Mask(Elem_Idx,Line_Idx)    
 
          !
          !---Surface Height 
          !
-         Sfc_Hgt =      sat%zsfc(Elem_Idx,Line_Idx)         
+         Sfc_Hgt =      Sfc%zsfc(Elem_Idx,Line_Idx)         
 
          !
          !---solar zenith angle
          !
-         Sol_Zen =      sat%solzen(Elem_Idx,Line_Idx)         
+         Sol_Zen =      Geo%Solzen(Elem_Idx,Line_Idx)         
 
          !
          !---solar scattering zenith angle
          !
-         Scat_Zen =      sat%scatzen(Elem_Idx,Line_Idx)         
+         Scat_Zen =      Geo%Scatangle(Elem_Idx,Line_Idx)         
 
          !
          !---desert Mask
          !
-         Desert_Mask =    sat%desert_mask(Elem_Idx,Line_Idx)    
+         Desert_Mask =    Sfc%Desert_Mask(Elem_Idx,Line_Idx)    
 
          !
          !---snow Mask
          !
-         Snow_Mask =      sat%snow_mask(Elem_Idx,Line_Idx)     
+         Snow_Mask =      Sfc%Snow(Elem_Idx,Line_Idx)     
 
          !--------------------------------------------------------
          !--- local aliases for observations that are available
          !--------------------------------------------------------
 
          !--- Channel 2 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(2) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(1) > 0) THEN
 
             Is_Chn(2) = sym%YES
 
@@ -877,14 +879,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 5 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(4) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(26) > 0) THEN
 
             Is_Chn(4) = sym%YES
 
             !
             !---1.38 micron reflectance
             !
-            Refl_Chn4 =          sat%ref4(Elem_Idx,Line_Idx)       
+            Refl_Chn4 =          ch(26)%Ref_Toa(Elem_Idx,Line_Idx)       
 
             !--- renormalize for improved terminator performance
             IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
@@ -894,14 +896,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 5 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(5) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(6) > 0) THEN
 
             Is_Chn(5) = sym%YES
 
             !
             !---1.60 micron reflectance
             !
-            Refl_Chn5 =          sat%ref5(Elem_Idx,Line_Idx)          
+            Refl_Chn5 =          ch(6)%Ref_Toa(Elem_Idx,Line_Idx)          
 
             !--- renormalize for improved terminator performance
             IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
@@ -911,24 +913,24 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 7 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(7) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(20) > 0) THEN
 
             Is_Chn(7) = sym%YES
 
             !
             !---3.9 micron brightness temperature
             !
-            BT_Chn7  =         sat%bt7(Elem_Idx,Line_Idx)        
+            BT_Chn7  =         ch(20)%Bt_Toa(Elem_Idx,Line_Idx)        
 
             !
             !---3.9 micron radiance
             !
-            Rad_Chn7  =         sat%rad7(Elem_Idx,Line_Idx)        
+            Rad_Chn7  =         ch(20)%Rad_Toa(Elem_Idx,Line_Idx)        
 
             !
             !---3.9 um pseudo reflectance
             !
-            Refl_Chn7 =        sat%ref7(Elem_Idx,Line_Idx)      
+            Refl_Chn7 =        ch(20)%Ref_Toa(Elem_Idx,Line_Idx)      
 
             !--- renormalize for improved terminator performance
             IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
@@ -939,27 +941,27 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !---3.9 um emissivity
             !
 
-            Emiss_Chn7 =        sat%ems7(Elem_Idx,Line_Idx)
+            Emiss_Chn7 =        Ems_Ch20(Elem_Idx,Line_Idx)
                   
             Emiss_Chn7_NWC = Missing_Value_Real4
             IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
-                Emiss_Chn7_NWC = sat%ems7(Elem_NWC_Idx,Line_NWC_Idx)
+                Emiss_Chn7_NWC = Ems_Ch20(Elem_NWC_Idx,Line_NWC_Idx)
             ENDIF
            
             !
             !---3.9 um surface emissivity
             !
-            Sfc_Emiss_Chn7_RTM =   sat%sfc_emiss7(Elem_Idx,Line_Idx)    
+            Sfc_Emiss_Chn7_RTM =   ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx)    
 
             !
             !---clear 4 micron radiance
             !
-            Rad_Chn7_Clr =      sat%rad_clr7(Elem_Idx,Line_Idx)     
+            Rad_Chn7_Clr =      ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)     
 
             !
             !--- Atmospheric Transmission IN Channel 7
             !
-            Atm_Trans_Chn7_RTM =   rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%trans_atm_clr7(Sfc_Idx_NWP) 
+            Atm_Trans_Chn7_RTM =   rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%ch(20)%trans_atm_clr7(Sfc_Idx_NWP) 
 
             !
             !---solar energy IN channel 7
@@ -970,44 +972,44 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
 
          !--- Channel 10 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(9) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
 
             Is_Chn(9) = sym%YES
 
             !
             !---6.7 micron bt
             !
-            BT_Chn9  =         sat%bt9(Elem_Idx,Line_Idx)
+            BT_Chn9  =         ch(27)%Bt_Toa(Elem_Idx,Line_Idx)
 
          ENDIF
 
          !--- Channel 10 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(10) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
 
             Is_Chn(10) = sym%YES
 
             !
             !---7.3 micron bt
             !
-            BT_Chn10  =         sat%bt10(Elem_Idx,Line_Idx)
+            BT_Chn10  =         ch(28)%Bt_Toa(Elem_Idx,Line_Idx)
 
          ENDIF
 
          !--- Channel 11 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(11) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(29) > 0) THEN
 
             Is_Chn(11) = sym%YES
 
             !
             !---8.5 micron bt
             !
-            BT_Chn11  =         sat%bt11(Elem_Idx,Line_Idx)
+            BT_Chn11  =         ch(29)%Bt_Toa(Elem_Idx,Line_Idx)
 
          ENDIF
 
 
          !--- Channel 14 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(14) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(31) > 0) THEN
 
             Is_Chn(14) = sym%YES
 
@@ -1019,7 +1021,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !---11 um clear bt
             !
-            BT_Chn14_Clr =      sat%bt_clr14(Elem_Idx,Line_Idx)     
+            BT_Chn14_Clr =      ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx)     
 
             BT_Chn14_NWC = Missing_Value_Real4
 
@@ -1030,19 +1032,19 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 15 Aliases and Derived Parameters
-         IF (out2(Algo_Num)%ch_flg(15) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(32) > 0) THEN
 
             Is_Chn(15) = sym%YES
 
             !
             !---12 micron bt
             !
-            BT_Chn15  =  sat%bt15(Elem_Idx,Line_Idx)         
+            BT_Chn15  =  ch(32)%Bt_Toa(Elem_Idx,Line_Idx)         
 
             !
             !---12 um clear bt
             !
-            BT_Chn15_Clr =  sat%bt_clr15(Elem_Idx,Line_Idx)     
+            BT_Chn15_Clr =  ch(32)%Bt_Toa_Clear(Elem_Idx,Line_Idx)     
 
          ENDIF
 
@@ -1162,7 +1164,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
            DO Chn_Num = 1, 6 
 
             IF ((out2(Algo_Num)%ch_flg(Chn_Num) > 0).AND.                  &
-                (sat%Bad_Pixel_Mask(Chn_Num,Elem_Idx,Line_Idx)==sym%YES)) THEN
+                (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
@@ -1178,7 +1180,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          DO Chn_Num = 7, Nchan_Max
 
             IF ((out2(Algo_Num)%ch_flg(Chn_Num) > 0).AND.                  &
-                (sat%Bad_Pixel_Mask(Chn_Num,Elem_Idx,Line_Idx)==sym%YES)) THEN
+                (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
@@ -1358,54 +1360,56 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !--------------------------------------------------------------------
          Refl_Sing_Scat = 0.0
          
-         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
+         ! WCS - clear sky reflectance in CLAVRX is already corrected.
+         
+!         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
 
-            IF (Is_Land == sym%YES) THEN 
-                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Land
-            ELSE
-                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Ocean
-            ENDIF
-
-            CALL Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
-                                           Aerosol_Single_Scatter_Albedo_Chn2, &
-                                           Aerosol_Asymmetry_Parameter, &
-                                           Rayleigh_Optical_Depth_Chn2, &
-                                           Sat_Name, &
-                                           Total_Precipitable_Water_NWP, &
-                                           Total_Ozone_Path_NWP, &
-                                           Scat_Zen, &
-                                           Cos_Sat_Zen, &
-                                           Cos_Sol_Zen, &
-                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
-                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
-                                           Transmission_Sing_Scat, &
-                                           Refl_Sing_Scat)
+!            IF (Is_Land == sym%YES) THEN 
+!                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Land
+!            ELSE
+!                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Ocean
+!            ENDIF
+!
+!            CALL Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
+!                                           Aerosol_Single_Scatter_Albedo_Chn2, &
+!                                           Aerosol_Asymmetry_Parameter, &
+!                                           Rayleigh_Optical_Depth_Chn2, &
+!                                           Sat_Name, &
+!                                           Total_Precipitable_Water_NWP, &
+!                                           Total_Ozone_Path_NWP, &
+!                                           Scat_Zen, &
+!                                           Cos_Sat_Zen, &
+!                                           Cos_Sol_Zen, &
+!                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
+!                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
+!                                           Transmission_Sing_Scat, &
+!                                           Refl_Sing_Scat)
 
             !--- add it IN to the clear-sky estimate
-            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
-                    Refl_Chn2_Clear(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+ !           Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+ !                   Refl_Chn2_Clear(Elem_Idx,Line_Idx) + Refl_Sing_Scat
                     
-            Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
-                    Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+ !           Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+ !                   Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
                     
-            Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
-                    Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+ !           Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+  !                  Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+  !          IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
             
-              Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-                                    Refl_Chn2_Clear(Elem_Idx,Line_Idx))
+  !            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+  !                                  Refl_Chn2_Clear(Elem_Idx,Line_Idx))
                                     
-              Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-                                    Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx))
+   !           Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+   !                                 Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx))
                                     
-              Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-                                    Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
+   !           Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+   !                                 Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
                                     
-            ENDIF
+   !         ENDIF
 
-         ENDIF
+   !      ENDIF
 
          
          
@@ -1876,21 +1880,21 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          ! Set QF's based on available information
         
-         IF ((out2(Algo_Num)%ch_flg(7) > 0) .AND. (Is_Chn(7) == sym%NO)) THEN
+         IF ((Sensor%Chan_On_Flag_Default(20) > 0) .AND. (Is_Chn(7) == sym%NO)) THEN
              
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN7
          
-         ELSE IF ((out2(Algo_Num)%ch_flg(2) > 0) .AND. &
+         ELSE IF ((Sensor%Chan_On_Flag_Default(1) > 0) .AND. &
                   (Is_Day == sym%YES) .AND. (Is_Chn(2) == sym%NO)) THEN
          
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN2
              
           ELSE IF (((Is_Day == sym%YES) .AND. &
-                    (((out2(Algo_Num)%ch_flg(4) > 0) .AND. (Is_Chn(4) == sym%NO)) .OR. &
-                    ((out2(Algo_Num)%ch_flg(5) > 0) .AND. (Is_Chn(5) == sym%NO))))  .OR. &
-                    ((out2(Algo_Num)%ch_flg(10) > 0) .AND. (Is_Chn(10) == sym%NO))  .OR. &             
-                    ((out2(Algo_Num)%ch_flg(11) > 0) .AND. (Is_Chn(11) == sym%NO))  .OR. &             
-                    ((out2(Algo_Num)%ch_flg(15) > 0) .AND. (Is_Chn(15) == sym%NO))) THEN
+                    (((Sensor%Chan_On_Flag_Default(26) > 0) .AND. (Is_Chn(4) == sym%NO)) .OR. &
+                    ((Sensor%Chan_On_Flag_Default(6) > 0) .AND. (Is_Chn(5) == sym%NO))))  .OR. &
+                    ((Sensor%Chan_On_Flag_Default(28)  > 0) .AND. (Is_Chn(10) == sym%NO))  .OR. &             
+                    ((Sensor%Chan_On_Flag_Default(29) > 0) .AND. (Is_Chn(11) == sym%NO))  .OR. &             
+                    ((Sensor%Chan_On_Flag_Default(32) > 0) .AND. (Is_Chn(15) == sym%NO))) THEN
 
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_OTHER
  
@@ -2035,9 +2039,11 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !======================================================================
    ! deallocate 2nd darkest composite data array
    !======================================================================
-   IF (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
-   Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
+  ! IF (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
+   !Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
+   Refl_Chn2_Clear => null()
+   
    IF (Alloc_Status /= 0) THEN
 
        WRITE (Err_Message, *) &
@@ -2321,34 +2327,35 @@ END SUBROUTINE Compute_Probably_Cloudy
 ! Restrictions:  None
 !
 !====================================================================
- SUBROUTINE Clear_Chn2_Reflectance_Field(Num_Elem, &
-                                         Max_Num_Lines_per_Seg, &
-                                         Refl_Chn2_Clear)
+! WCS - commented out this routine since CLAVR-x does this already
 
-   REAL(KIND=REAL4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
-   INTEGER(KIND=INT4),INTENT(IN) :: Num_Elem
-   INTEGER(KIND=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
+! SUBROUTINE Clear_Chn2_Reflectance_Field(Num_Elem, &
+!                                         Max_Num_Lines_per_Seg, &
+!                                         Refl_Chn2_Clear)
+!
+!   REAL(KIND=REAL4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
+!   INTEGER(KIND=INT4),INTENT(IN) :: Num_Elem
+!   INTEGER(KIND=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
 
 
    !--- If create one and populate background reflectance using default or global WS albedo data
-       IF (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
-                           Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
+!       IF (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
+!                           Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
 
-       Refl_Chn2_Clear = 5.0
-       WHERE(Sfc%Land == sym%LAND)
-          Refl_Chn2_Clear = 45.0
-       ENDWHERE 
-       !--- use MODIS white sky from mapped data if available
-       WHERE(sat%ws_albedo2 /= Missing_Value_Real4)
-          Refl_Chn2_Clear = sat%ws_albedo2
-       ENDWHERE 
-       !--- ensure consistent missing value
-       WHERE(Refl_Chn2_Clear <= 0.0)
-          Refl_Chn2_Clear = Missing_Value_Real4
-       ENDWHERE
-
-
- END SUBROUTINE Clear_Chn2_Reflectance_Field
+!       Refl_Chn2_Clear = 5.0
+!       WHERE(Sfc%Land == sym%LAND)
+!          Refl_Chn2_Clear = 45.0
+!       ENDWHERE 
+!       !--- use MODIS white sky from mapped data if available
+!       WHERE(sat%ws_albedo2 /= Missing_Value_Real4)
+!          Refl_Chn2_Clear = sat%ws_albedo2
+!       ENDWHERE 
+!       !--- ensure consistent missing value
+!       WHERE(Refl_Chn2_Clear <= 0.0)
+!          Refl_Chn2_Clear = Missing_Value_Real4
+!       ENDWHERE
+!
+! END SUBROUTINE Clear_Chn2_Reflectance_Field
 
 
 !====================================================================
@@ -2396,42 +2403,42 @@ END SUBROUTINE Compute_Probably_Cloudy
     Line_Loop: DO Line_Idx=1, Number_of_Lines_in_this_Segment
       Element_Loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
-       IF (sat%space_mask(Elem_Idx,Line_Idx) == sym%NO) THEN
+       IF (Space_Mask(Elem_Idx,Line_Idx) == sym%NO) THEN
 
             !
             !---nwp longitude cell
             !
-            X_NWP_Idx =          sat%x_nwp(Elem_Idx,Line_Idx)         
+            X_NWP_Idx =          I_Nwp(Elem_Idx,Line_Idx)         
 
             !
             !---nwp latitude cell
             !
-            Y_NWP_Idx =          sat%y_nwp(Elem_Idx,Line_Idx)     
+            Y_NWP_Idx =          J_Nwp(Elem_Idx,Line_Idx)     
 
             !
             !---nwp level associated with tropopause
             !
-            Tropo_Idx_NWP =        nwp%dat(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level 
+            Tropo_Idx_NWP =        Rtm(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level 
 
             !
             !---viewing zenith angle bin
             !
-            View_Zen_Idx =          sat%ivza(Elem_Idx,Line_Idx)        
+            View_Zen_Idx =          Zen_Idx_Rtm(Elem_Idx,Line_Idx)        
 
             !
             !---11 um radiance
             !
-            Rad_Chn14  =        sat%rad14(Elem_Idx,Line_Idx)
+            Rad_Chn14  =        ch(31)%Rad_Toa(Elem_Idx,Line_Idx)
 
             !
             !---clear 11 micron radiance
             !
-            Clr_Rad_Chn14 =     sat%rad_clr14(Elem_Idx,Line_Idx)
+            Clr_Rad_Chn14 =     ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
 
             !
             !---BB 11 um rad at tropopause
             !
-            Blkbdy_Tropo_Rad_Chn14 = rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%cloud_prof14(Tropo_Idx_NWP)
+            Blkbdy_Tropo_Rad_Chn14 = rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%ch(31)%cloud_prof14(Tropo_Idx_NWP)
 
             !
             !---Tropopause Emissivity
@@ -4414,9 +4421,9 @@ END FUNCTION EMISS4_Routine
 ! Description: Pearson's product-moment coefficient
 !   
 ! Calling Sequence: BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
-!                       sat%bt10(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
+!                       ch(28)%Bt_Toa(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
 !                       ch(31)%Bt_Toa(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
-!                       sat%Bad_Pixel_Mask(10,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+!                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
 !                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
 !                      Array_Width, Array_Hgt)
 !   

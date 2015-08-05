@@ -237,7 +237,7 @@ module CLOUD_BASE
 
 
 !  Compute cloud base 
-     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10.0) then
+     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10000.0) then
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
@@ -468,7 +468,7 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometric
        endif
 
 ! apply quality flag
-       if (Zc_Base >= 0.0 .and. Zc_Base < Surf_Elev) then
+       if (Zc_Base < Surf_Elev) then
            Zc_Base = Surf_Elev
            cbh_qf = qf(3)
        endif

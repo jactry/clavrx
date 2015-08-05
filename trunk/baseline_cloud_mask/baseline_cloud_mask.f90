@@ -388,15 +388,16 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !----------------------------------------------------------------------
 
    !--- store size of this segment into local variables
-   Num_Elem = sat%nx
-   Number_of_Lines_in_this_Segment = sat%ny
-   Max_Num_Lines_per_Seg = size(sat%lat,2)
+   Num_Elem = Image%Number_Of_Elements
+   Number_of_Lines_in_this_Segment = Image%Number_Of_Lines_Read_This_Segment
+   Max_Num_Lines_per_Seg = Image%Number_Of_Lines_Per_Segment
 
 
    !set the initial cloud mask algorithm name here (for usage in the temporal term test)
    Algo_Name = 'baseline_cmask_'
 
    !--- store name of sensor
+   ! WCS - FIXME
    Sat_Name = trim(scinfo(sc_ind)%name)
    
    !-----------------------------------------------------------------
@@ -418,18 +419,18 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
-   Cloud_Mask => out2(Algo_Num)%cldmask
-   Cloud_Mask_Binary => out2(Algo_Num)%cldmask_binary
-   Cloud_Mask_IR => out2(Algo_Num)%cldmask_packed(6,:,:)
-   Cloud_Mask_SST => out2(Algo_Num)%cldmask_packed(7,:,:)
-   Cloud_Mask_Packed => out2(Algo_Num)%cldmask_packed
-   Test_Results => out2(Algo_Num)%qcflg1
-   Cloud_Mask_QF => out2(Algo_Num)%Cloud_Mask_QF
-   Cloud_Mask_Tmpy => out2(Algo_Num)%Cloud_Mask_Tmpy
-   X_LRC_Idx => out2(Algo_Num)%X_LRC_Idx
-   Y_LRC_Idx => out2(Algo_Num)%Y_LRC_Idx
-   LRC_Mask => out2(Algo_Num)%LRC_Mask
-   Emiss_Tropo_Chn14 => out2(Algo_Num)%emiss11_high
+   Cloud_Mask => Cld_Mask(i,j)
+   Cloud_Mask_Binary => null()
+   Cloud_Mask_IR => null()
+   Cloud_Mask_SST => null()
+   Cloud_Mask_Packed => Cld_Test_Vector_Packed(:,i,j)
+   Test_Results =>
+   Cloud_Mask_QF => 
+   Cloud_Mask_Tmpy => 
+   X_LRC_Idx => 
+   Y_LRC_Idx => 
+   LRC_Mask => 
+   Emiss_Tropo_Chn14 => 
    
    !
    !--- set bit depths for packed Output (all here are 1 bit)
@@ -474,37 +475,38 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
       ENDIF
    ENDIF
 
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%bt14, BT_Chn14_Mean_3x3, &
+   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, ch(31)%Bt_Toa, BT_Chn14_Mean_3x3, &
                                    BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
-   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%ref2, Refl_Chn2_Mean_3X3, &
+   CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, ch(1)%Ref_Toa, Refl_Chn2_Mean_3X3, &
                                    Refl_Chn2_Max_3x3, Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
    CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, sat%zsfc, Sfc_Hgt_Mean_3X3, &
                                    Sfc_Hgt_Max_3X3, Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
    CALL Compute_Spatial_Uniformity(1, 1, sat%space_mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
                                    Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3X3, Refl_Chn2_Clear_Stddev_3X3)
 
+   ! Temporal commented out due to CLAVR-x not having that capability
 
    !=======================================================================
    ! Load temporal information   (status = sym%FAILURE or sym%SUCCESS)
    !=======================================================================
 
    !--- previous 11 micron temp
-   Have_Prev_BT_Chn14_15min = Load_Temporal_Data(minus_i_15min,"",           &
-                                            temporal(minus_i_15min)%bt14)
-   Have_Prev_BT_Chn14_Clr_15min = Load_Temporal_Data(minus_i_15min,"",       &
-                                        temporal(minus_i_15min)%bt_clr14)
+!   Have_Prev_BT_Chn14_15min = Load_Temporal_Data(minus_i_15min,"",           &
+!                                            temporal(minus_i_15min)%bt14)
+!   Have_Prev_BT_Chn14_Clr_15min = Load_Temporal_Data(minus_i_15min,"",       &
+!                                        temporal(minus_i_15min)%bt_clr14)
 
    !=======================================================================
    ! Load TERM_THERM_STAB temporal information   
    ! (status = sym%FAILURE or sym%SUCCESS)
    !=======================================================================
-   Have_Prev_BT_Chn11_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
-                                            temporal(minus_i_01hrs)%bt11)
-   Have_Prev_BT_Chn14_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
-                                            temporal(minus_i_01hrs)%bt14)
-   Have_Prev_BT_Chn15_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
-                                            temporal(minus_i_01hrs)%bt15)
-   Have_Prev_Cmask_1Hr = Load_Temporal_Data(minus_i_01hrs,TRIM(Algo_Name), &
+!   Have_Prev_BT_Chn11_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
+!                                            temporal(minus_i_01hrs)%bt11)
+!   Have_Prev_BT_Chn14_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
+!                                            temporal(minus_i_01hrs)%bt14)
+!   Have_Prev_BT_Chn15_1Hr = Load_Temporal_Data(minus_i_01hrs,"",           &
+!                                            temporal(minus_i_01hrs)%bt15)
+!   Have_Prev_Cmask_1Hr = Load_Temporal_Data(minus_i_01hrs,TRIM(Algo_Name), &
                                             temporal(minus_i_01hrs)%cldmask)
 
    !=======================================================================
@@ -530,8 +532,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
    !--- call routines to compute emiss lrc indices
    CALL Gradient2d(Emiss_Tropo_Chn14, &
-                  sat%nx, &
-                  sat%ny, &
+                  Image%Number_Of_Elements, &
+                  Image%Number_Of_Lines_Read_This_Segment, &
                   LRC_Mask, &
                   EMISS_TROPO_CHN14_GRADIENT_MIN, & 
                   EMISS_TROPO_CHN14_GRADIENT_MAX, & 
@@ -595,11 +597,11 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! Call Routine to Compute Neighboring Warm Center
    !------------------------------------------------------------------------
    CALL Compute_NWC( &
-                     sat%bt14, &
+                     ch(31)%Bt_Toa, &
                      NWC_PIXEL_RADIUS, &  !nbox
                      Uni_Land_Mask_Flag_Yes, &  !uni_land_mask_flag
-                     sat%Bad_Pixel_Mask(14,:,:), &
-                     sat%land_mask, &
+                     Bad_Pixel_Mask(:,:), &
+                     Sfc%Land, &
                      1, &
                      Num_Elem, &
                      1, &
@@ -665,17 +667,17 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     IF (out2(Algo_Num)%ch_flg(10) > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
                                                        sat%bt10(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%bt14(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        sat%Bad_Pixel_Mask(10,Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%Bad_Pixel_Mask(14,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
                     ELSE
                     
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
                                                        sat%bt9(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%bt14(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        sat%Bad_Pixel_Mask(9,Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       sat%Bad_Pixel_Mask(14,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
                     ENDIF
                     
@@ -751,7 +753,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
          IF (out2(Algo_Num)%ch_flg(14) > 0 .and. out2(Algo_Num)%ch_flg(15) > 0) THEN
            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
-                BTD_Chn14_Chn15_NWC = sat%bt14(Elem_NWC_Idx,Line_NWC_Idx) - &
+                BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
                                       sat%bt15(Elem_NWC_Idx,Line_NWC_Idx)
            ENDIF
          ENDIF
@@ -821,7 +823,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---land type
          !
-         Land_Type =      sat%land_mask(Elem_Idx,Line_Idx)    
+         Land_Type =      Sfc%Land(Elem_Idx,Line_Idx)    
 
          !
          !---coast type
@@ -865,7 +867,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !---0.63 micron reflectance
             !
-            Refl_Chn2 = sat%ref2(Elem_Idx,Line_Idx)         
+            Refl_Chn2 = ch(1)%Ref_Toa(Elem_Idx,Line_Idx)         
 
             !--- renormalize for improved terminator performance
             IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
@@ -1012,7 +1014,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !---11.0 micron bt
             !
-            BT_Chn14  =         sat%bt14(Elem_Idx,Line_Idx)         
+            BT_Chn14  =         ch(31)%Bt_Toa(Elem_Idx,Line_Idx)         
 
             !
             !---11 um clear bt
@@ -1022,7 +1024,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             BT_Chn14_NWC = Missing_Value_Real4
 
             IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
-                BT_Chn14_NWC = sat%bt14(Elem_NWC_Idx,Line_NWC_Idx)
+                BT_Chn14_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
             ENDIF
 
          ENDIF
@@ -1957,7 +1959,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! Pack test results into bytes for Output
    !======================================================================
 
-   Line_Loop_3: DO Line_Idx=1, sat%ny
+   Line_Loop_3: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       Element_Loop_3: DO Elem_Idx=1, Num_Elem
 
@@ -1974,7 +1976,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! Make Binary Cloud Mask - WCS 03052012
    !======================================================================
 
-   Line_Loop_4: DO Line_Idx=1, sat%ny
+   Line_Loop_4: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       Element_Loop_4: DO Elem_Idx=1, Num_Elem
 
@@ -2133,15 +2135,15 @@ SUBROUTINE Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_P
    !
    !--- loop over scan lines IN segment
    !
-   Line_Loop: DO Line_Idx=1, sat%ny
+   Line_Loop: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       !
       !--- determine y-dimensions of array to check
       !
       Array_Top = max(1,Line_Idx-Num_Pix)
-      Array_Bottom = min(sat%ny,Line_Idx+Num_Pix)
+      Array_Bottom = min(Image%Number_Of_Lines_Read_This_Segment,Line_Idx+Num_Pix)
 
-      Element_Loop: DO Elem_Idx = 1, sat%nx
+      Element_Loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
          !
          !--- check to see if Mask is valid, if not cycle to next
@@ -2154,7 +2156,7 @@ SUBROUTINE Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_P
          !--- determine x-dimensions of array to check
          !
          Array_Right = max(1,Elem_Idx-Num_Pix)
-         Array_Left = min(sat%nx,Elem_Idx+Num_Pix)
+         Array_Left = min(Image%Number_Of_Elements,Elem_Idx+Num_Pix)
 
          IF (input(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) THEN
 
@@ -2244,21 +2246,21 @@ SUBROUTINE  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
    !
    !--- loop over scan lines IN segment
    !
-   Line_Loop: DO Line_Idx=1, sat%ny
+   Line_Loop: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       !
       !--- determine y-dimensions of array to check
       !
       Array_Top = max(1,Line_Idx-Num_Pix)
-      Array_Bottom = min(sat%ny,Line_Idx+Num_Pix)
+      Array_Bottom = min(Image%Number_Of_Lines_Read_This_Segment,Line_Idx+Num_Pix)
 
-      Element_Loop: DO Elem_Idx=1, sat%nx
+      Element_Loop: DO Elem_Idx=1, Image%Number_Of_Elements
 
          !
          !--- determine x-dimensions of array to check
          !
          Array_Right = max(1,Elem_Idx-Num_Pix)
-         Array_Left = min(sat%nx,Elem_Idx+Num_Pix)
+         Array_Left = min(Image%Number_Of_Elements,Elem_Idx+Num_Pix)
 
          !
          !--- check to see if a cloudy pixel neighbors a non-cloudy pixel
@@ -2333,7 +2335,7 @@ END SUBROUTINE Compute_Probably_Cloudy
                            Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
 
        Refl_Chn2_Clear = 5.0
-       WHERE(sat%land_mask == sym%LAND)
+       WHERE(Sfc%Land == sym%LAND)
           Refl_Chn2_Clear = 45.0
        ENDWHERE 
        !--- use MODIS white sky from mapped data if available
@@ -2392,7 +2394,7 @@ END SUBROUTINE Compute_Probably_Cloudy
    Emiss_Tropo_Chn14 = Missing_Value_Real4
 
     Line_Loop: DO Line_Idx=1, Number_of_Lines_in_this_Segment
-      Element_Loop: DO Elem_Idx = 1, sat%nx
+      Element_Loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
        IF (sat%space_mask(Elem_Idx,Line_Idx) == sym%NO) THEN
 
@@ -4413,9 +4415,9 @@ END FUNCTION EMISS4_Routine
 !   
 ! Calling Sequence: BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
 !                       sat%bt10(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
-!                       sat%bt14(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
+!                       ch(31)%Bt_Toa(Arr_Right:Arr_Left,Arr_Top:Arr_Bottom), &
 !                       sat%Bad_Pixel_Mask(10,Array_Right:Array_Left,Array_Top:Array_Bottom), &
-!                       sat%Bad_Pixel_Mask(14,Array_Right:Array_Left,Array_Top:Array_Bottom), &
+!                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
 !                      Array_Width, Array_Hgt)
 !   
 !

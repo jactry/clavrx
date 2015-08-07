@@ -19,7 +19,7 @@ module ahi_clavrx_bridge
    
     use constants, only: &
       int4 &
-		, Missing_Value_Real4
+     , Missing_Value_Real4
       
       
     use calibration_constants, only: &
@@ -87,6 +87,15 @@ contains
    
  
       call get_ahi_data ( ahi_c, ahi_data )
+      
+      if ( .not. ahi_data % success ) then
+         print*,'AHI Read had errors '
+         print*,'Please check messages above'
+         print*,'stopping -- '
+         print*,' In a later version of CLAVR-x the next file should be start now...'
+         stop
+      end if
+      
   
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon

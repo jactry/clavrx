@@ -119,6 +119,8 @@ module cloud_type_bridge_module
    use RTM_COMMON , only: &
       p_std_rtm &
       , rtm
+
+   use CLAVRX_MESSAGE_MODULE, only: MESG
    
    implicit none
    
@@ -149,9 +151,14 @@ contains
       integer :: ii , jj
       real :: ice_prob 
       integer :: cld_type_lrc
+      logical, save:: First_Call = .true.
       
       
       ! ------  Executable  ------------------------------------
+      if (First_Call .eqv. .true.) then
+        call MESG('Cloud Type starts ', color = 46)
+      endif
+
       ice_prob = -999.0
       
       type_inp % sat % chan_on = Sensor%Chan_On_Flag_Default == 1
@@ -274,6 +281,9 @@ contains
       end do elem_loop1      
       
       call set_cloud_phase ( cld_type, cld_phase) 
+
+
+      First_Call = .false.
       
    end subroutine cloud_type_bridge
    

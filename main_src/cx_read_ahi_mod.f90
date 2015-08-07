@@ -110,6 +110,7 @@ module cx_read_ahi_mod
       type ( geo_str ) :: geo
       type ( date_type ) :: time_start_obj
       type ( date_type ) :: time_end_obj
+      logical :: success
       contains
       procedure :: deallocate_all
       procedure :: deallocate_geo
@@ -127,6 +128,8 @@ contains
       logical, optional, intent(in) :: only_nav
       
       allocate ( out % chn ( NUM_CHN))
+      
+      out % success = .true.
       
       call set_filenames ( config )
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
@@ -313,6 +316,8 @@ contains
          h5readattribute  &
          , h5readdataset
       
+      use file_tools, only: &
+         file_test
       
       implicit none
       
@@ -339,6 +344,13 @@ contains
       do i_chn = 1 ,16
         
          if ( .not. config % chan_on ( i_chn ) ) cycle
+        
+         if ( .not. file_test ( trim(config % filename ( i_chn ) ) ) ) then 
+            print*, 'AHI READER ERROR>> file '// trim(config % filename ( i_chn )) // ' not existing !!'
+            ahi % success = .false.
+            return
+         end if
+        
         
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &

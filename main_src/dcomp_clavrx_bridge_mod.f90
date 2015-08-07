@@ -129,7 +129,7 @@ contains
             import dcomp_out_type
             type (dcomp_in_type) , intent(in) :: a
             type (dcomp_out_type), intent(out) :: b
-            integer , optional :: debug_mode_user
+            integer , intent(in), optional :: debug_mode_user
          end subroutine
 
       end interface

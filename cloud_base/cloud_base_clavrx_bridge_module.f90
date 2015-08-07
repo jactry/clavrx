@@ -5,6 +5,18 @@
 !  This module houses the routines that serve as a bridge between
 !  the CLAVR-x processing system and the ACBA code.
 !
+! cld_height_acha    Zc_Acha
+! cld_opd_dcomp      Tau_Dcomp
+! cloud_water_path   Cwp
+! surface_elevation
+! ccl_nwp
+! cloud_type
+! land_class
+! solar_zenith_angle
+! latitude
+! Fill_Value = -999.0
+! QF_Fill = 1 
+!
 !------------------------------------------------------------------------------
 module CLOUD_BASE_CLAVRX_BRIDGE
 
@@ -109,6 +121,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
      Input%Hcld =>  null()
      Input%LCL =>  null()
      Input%CCL =>  null()
+     Input%CWP => null()
+     Input%CWP_nwp => null()
  end subroutine NULL_INPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output
@@ -116,6 +130,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  subroutine NULL_OUTPUT_POINTERS()
      Output%Zc_Top =>  null()
      Output%Zc_Base =>  null()
+     Output%Pc_Top =>  null()
+     Output%Pc_Base =>  null()
  end subroutine NULL_OUTPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -184,6 +200,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
  subroutine SET_OUTPUT()
    Output%Zc_Top => ACHA%Zc_Top
    Output%Zc_Base => ACHA%Zc_Base
+   Output%Pc_Top => ACHA%Pc_Top
+   Output%Pc_Base => ACHA%Pc_Base
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()
@@ -249,7 +267,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Hcld => Hcld_DCOMP
    Input%LCL => LCL_Height_Nwp_Pix
    Input%CCL => CCL_Height_Nwp_Pix
-
+   Input%CWP => Cwp_Dcomp
+   Input%CWP_nwp => Cwp_Nwp_Pix
  end subroutine SET_INPUT
 
 end module CLOUD_BASE_CLAVRX_BRIDGE

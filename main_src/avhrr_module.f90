@@ -446,13 +446,14 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 ! note, AVHRR_Data_Type and AVHRR_Ver_1b are read in again later
 !-------------------------------------------------------
    subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b)
+                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
 
     character(len=*), intent(in):: file_1b_local
     integer(kind=int4), intent(out):: AVHRR_GAC_Flag
     integer(kind=int4), intent(out):: AVHRR_KLM_Flag
     integer(kind=int4), intent(out):: AVHRR_AAPP_Flag
     integer(kind=int2), intent(out):: AVHRR_Ver_1b
+    integer(kind=int4), intent(out):: AVHRR_1_Flag
     integer(kind=int2), intent(out):: AVHRR_Data_Type
     integer(kind=int4), intent(out):: Byte_Swap_1b
 
@@ -461,6 +462,9 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
     integer:: bytes_per_word
     integer:: Number_Of_Words
     integer:: Number_Of_Words_Read
+    integer(kind=int4):: i4word
+    integer(kind=int2), dimension(2):: data_byte
+    integer(kind=int2):: Start_Year_Temp
 
     !--- use c-routine
     bytes_per_word = 1
@@ -528,20 +532,47 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
        AVHRR_GAC_Flag = sym%YES
      endif
 
+
+!--- extract start year so we can send to DETERMINE_AVHRR_1
+     if (AVHRR_KLM_Flag == sym%YES) then
+      Start_Year_Temp = MAKE_I2WORD(Header_Buffer_Temp(85:86),sym%UNSIGNED,Byte_Swap_1b)
+     else
+      data_byte(1) = Header_Buffer_Temp(3)
+      data_byte(2) = Header_Buffer_Temp(4)
+      where (data_byte < 0)
+         data_byte = data_byte + 256
+      end where
+      i4word =  data_byte(1)*256 + data_byte(2)
+      Start_Year_Temp = 1900  + i4word / (2**9)
+     endif
+
+!--- Determine AVHRR-1 Flag
+     AVHRR_1_Flag = sym%NO
+
+     !--- check Sc_Id for pre-AVHRR_KLM_Flag data
+     if (AVHRR_KLM_Flag == sym%NO) then
+      if (Sc_Id_AVHRR == 1 .and. Start_Year_Temp < 1985) AVHRR_1_Flag = sym%YES   !TIROS-N (NOAA-11 repeat) 
+      if (Sc_Id_AVHRR == 2) AVHRR_1_Flag = sym%YES   !NOAA-6
+      if (Sc_Id_AVHRR == 6) AVHRR_1_Flag = sym%YES   !NOAA-8
+      if (Sc_Id_AVHRR == 8) AVHRR_1_Flag = sym%YES   !NOAA-10
+     endif
+
 end subroutine DETERMINE_AVHRR_FILE_TYPE
 
 !==================================================================================================
 !--- determine if this data is from AVHRR/1 which has no channel 5
 !==================================================================================================
-subroutine DETERMINE_AVHRR_1(year, AVHRR_KLM_Flag_Flag, AVHRR_1_Flag)
+subroutine DETERMINE_AVHRR_1(Year, AVHRR_KLM_Flag_Flag, AVHRR_1_Flag)
 
-    integer(kind=int2), intent(in):: year       !year of this data-set
+    integer(kind=int2), intent(in):: Year       !year of this data-set
     integer(kind=int4), intent(in):: AVHRR_KLM_Flag_Flag   !AVHRR_KLM_Flag flag (yes/no)
     integer(kind=int4), intent(out):: AVHRR_1_Flag  !AVHRR/1 flag (yes/no)
 
      !--- initialize to no
      AVHRR_1_Flag = sym%NO
 
+print *, "In routine"
+print *, Sc_Id_AVHRR, Year
      !--- check Sc_Id for pre-AVHRR_KLM_Flag data
      if (AVHRR_KLM_Flag_Flag == sym%NO) then
       if (Sc_Id_AVHRR == 1 .and. year < 1985) AVHRR_1_Flag = sym%YES   !TIROS-N (NOAA-11 repeat) 
@@ -897,8 +928,6 @@ end subroutine READ_AVHRR_LEVEL1B_DATA
                    Image%Start_Doy,Image%Start_Time,Image%Number_Of_Lines,Image%End_Year, &
                    Image%End_Doy,Image%End_Time, &
                    tip_parity,aux_sync,ramp_auto_Cal,proc_block_Id,AVHRR_Ver_1b)
-
-print *, "After header read ", Sc_Id_AVHRR
 
       !--- pre AVHRR_KLM_Flag used a 2 digit year
       if (Image%End_Year > 50) then
@@ -1684,7 +1713,11 @@ subroutine COMPUTE_NEW_THERM_CAL_COEF(Line_Idx)
        !--- blackbody radiance
        NBB_3b = PLANCK_RAD_FAST(20,Mean_T_Prt)
        NBB_4 = PLANCK_RAD_FAST(31,Mean_T_Prt)
-       NBB_5 = PLANCK_RAD_FAST(32,Mean_T_Prt)
+       if (AVHRR_1_Flag /= sym%YES) then
+           NBB_5 = PLANCK_RAD_FAST(32,Mean_T_Prt)
+       else
+           NBB_5 = PLANCK_RAD_FAST(31,Mean_T_Prt)
+       endif
 
        !--- compute new linear slopes     (Ref 7.1.2.4-5)
        if (Ch3a_On_AVHRR(Line_Idx) == 0) then
@@ -1702,7 +1735,7 @@ subroutine COMPUTE_NEW_THERM_CAL_COEF(Line_Idx)
                   IR_Linear_Slope_New(4,Line_Idx)*Mean_Space_Count_4
 
        IR_Linear_Slope_New(5,Line_Idx) = (Space_Rad_5 - NBB_5) / &
-                                (Mean_Space_Count_5 - Mean_BB_Count_5)
+                                 (Mean_Space_Count_5 - Mean_BB_Count_5)
        IR_Linear_Intercept_New(5,Line_Idx) = Space_Rad_5 - &
                   IR_Linear_Slope_New(5,Line_Idx)*Mean_Space_Count_5
 

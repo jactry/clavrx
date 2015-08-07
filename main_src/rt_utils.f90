@@ -133,8 +133,8 @@ module RT_UTILITIES
    use PLANCK, only: &
         PLANCK_RAD_FAST &
       , PLANCK_TEMP_FAST 
-	
-	use calibration_constants, only: &	
+
+    use calibration_constants, only: &
        SOLAR_CH20_NU
       
    ! use SURFACE_PROPERTIES, only: 
@@ -723,7 +723,6 @@ contains
                      
                 
                      Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
-
                      
                      CALL compute_transmission_pfaast( &
                            trim(Ancil_data_Dir) &

@@ -107,6 +107,8 @@
    use GFS
    use NCEP_REANALYSIS
    use DCOMP_DERIVED_PRODUCTS_MODULE
+   use CLAVRX_OLR_MODULE
+   use CLAVRX_SST_MODULE
    
    use RT_UTILITIES, only: &
         rtm_nvzen &
@@ -203,7 +205,7 @@
    character(len=100):: Modis_White_Sky_1_64_Name
    character(len=100):: Modis_White_Sky_2_13_Name
    character(len=100):: Snow_Mask_File_Name
-   character(len=100):: oiSst_File_Name
+   character(len=256):: oiSst_File_Name
    character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
 
    integer(kind=int4):: Emiss_File_Id = missing_value_int4
@@ -458,6 +460,8 @@
       ! Setup Solar-channel RTM terms for this particular sensor
       !------------------------------------------------------------------
       call SETUP_SOLAR_RTM(Sensor%WMO_Id)
+      call SETUP_OLR()
+      call SETUP_SST()
 
       !------------------------------------------------------------------
       ! update settings according sensor ( algo mode and channel settings 
@@ -496,8 +500,6 @@
       !--- read in Instrument Constants from appropriate file
       call READ_INSTR_CONSTANTS()
 
-      !--- read in Algorithm Constants from appropriate file
-      call READ_ALGO_CONSTANTS()
 
       !*************************************************************************
       ! Marker:  Open non-static high spatial resolution ancillary data
@@ -850,10 +852,6 @@
             !--- compute some common used pixel arrays 
             call COMPUTE_PIXEL_ARRAYS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
-            if (index(Sensor%Sensor_Name, 'VIIRS') > 0) then
-               call COMPUTE_VIIRS_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
-
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
@@ -866,6 +864,9 @@
                                        Sfc%Snow_IMS,Sfc%Snow_GLOB, &
                                        Sfc%Land,Sfc%Snow)
             end if
+
+            !--- SST if possible for this sensor (needs snow info for masking)
+            call COMPUTE_SST()
 
             !--- interpolate surface type field to each pixel in segment
             call GET_PIXEL_SFC_EMISS_FROM_SFC_TYPE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
@@ -896,9 +897,6 @@
                   call TEMPORAL_INTERP_TMPSFC_NWP(Scan_Time(Line_Idx_Min_Segment),  &
                                 Scan_Time(Line_Idx_Min_Segment+Image%Number_Of_Lines_Read_This_Segment-1))
                end if
-
-!              !--- compute desired nwp parameters 
-!              call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
 
                !--- compute a surface temperature from the NWP
                call MODIFY_TSFC_NWP_PIX(1,Image%Number_Of_Elements,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1036,6 +1034,7 @@
                Segment_Time_Point_Seconds(6) =  Segment_Time_Point_Seconds(6) + &
                      & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
+
                !--- cloud type 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. trim(Sensor%Sensor_Name) == 'VIIRS') then
@@ -1065,12 +1064,17 @@
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
-               if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
-                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+               if (index(Sensor%Sensor_Name,'IFF') > 0) then
+                  call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
-                                    P_Std_Rtm,Cld_Type, &
-                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2,Zc_Cirrus_Co2)
+                                    P_Std_Rtm,Cld_Mask, &
+                                    Pc_Co2,Tc_Co2,Zc_Co2)
+
+                  call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
+
+
+                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
 
                endif
 
@@ -1093,10 +1097,14 @@
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
 
                   !-- make CSBT masks (Clear Sky Brightness Temperature)
-                  call CH27_OPAQUE_TRANSMISSION_HEIGHT()
+                  call OPAQUE_TRANSMISSION_HEIGHT()
                   call COMPUTE_CSBT_CLOUD_MASKS()
 
                end if
+
+               !--- Convective Cloud Probability
+               call CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,ch(31)%Bt_TOA,ch(27)%Bt_TOA,Ch(31)%Emiss_Tropo,Tsfc_Nwp_Pix,ACHA%Conv_Cld_Prob)
+               call SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cld_Type,ACHA%Tc,ACHA%Supercooled_Cld_Prob)
 
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(8) =  Segment_Time_Point_Seconds(8) + &
@@ -1177,11 +1185,11 @@
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             
-            if (AVHRR_1_Flag == sym%NO) then    !currently, no AVHRR/1 algorithm
-               call COMPUTE_ERB(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
 
-            !---  Run SASRAB
+            !---  OLR
+            call COMPUTE_OLR()
+
+            !---  SASRAB
             if ( Sasrab_Flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1196,9 +1204,7 @@
             end if
 
             !--- generated cloud masked sst field
-            if (Nwp_Opt > 0) then
-                call COMPUTE_MASKED_SST(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-            end if
+            call COMPUTE_MASKED_SST()
 
             !  endif   !end Skip_Processing_Flag condition
 

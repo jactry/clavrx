@@ -78,6 +78,8 @@ module CLOUD_BASE_SERVICES
  real, dimension(:,:), pointer:: Hcld                                !cloud geometrical thickness
  real, dimension(:,:), pointer:: LCL                                 !lifting condensation level
  real, dimension(:,:), pointer:: CCL                                 !convective condensation level
+ real, dimension(:,:), pointer:: CWP                                 !cloud water path
+ real, dimension(:,:), pointer:: CWP_nwp
 
  end type acha_input_struct
 
@@ -124,6 +126,8 @@ end type acha_rtm_nwp_struct
  type, public :: acha_output_struct
    real, dimension(:,:), pointer:: Zc_Top
    real, dimension(:,:), pointer:: Zc_Base
+   real, dimension(:,:), pointer:: Pc_Top
+   real, dimension(:,:), pointer:: Pc_Base
  end type acha_output_struct
 
 !Symbol stucture

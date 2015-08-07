@@ -1411,7 +1411,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "cloud_probability", &
                               "not specified", &
                               "probability of a pixel being cloudy from the Bayesian cloud mask", &
-                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_frac, Max_frac, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -1645,6 +1645,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud pressure from acha cloud top
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_top_acha", &
+                               "top_press_of_cloud", &
+                               "estimate of actual cloud-top pressure computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud height from acha cloud base
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Base),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -1653,6 +1664,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "estimate of actual cloud-base height computed using the AWG cloud height algorithm", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
                                "m", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud pressure from acha cloud base
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Base_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Base),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_base_acha", &
+                               "base_press_of_cloud", &
+                               "estimate of actual cloud-base pressure computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -1708,6 +1730,39 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "flag stating whether ACHA was processed assuming an inversion(1) or not(0)", &
                                DFNT_INT8, sym%NO_SCALING, 0.0, 0.0, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  acha cld layer
+     if (Sds_Num_Level2_Cld_Layer_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Layer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "cld_layer", &
+                               "cloud_layer", &
+                               "cloud layer: 0-none,1:sfc-642 hpa, 2:642-350 hPa, 3:350 hpa -toa", &
+                               DFNT_INT8, sym%NO_SCALING, 0.0, 0.0, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  acha conv cld prob
+     if (Sds_Num_Level2_Conv_Prob_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Conv_Prob),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "conv_cloud_probability", &
+                               "convective_cloud_probability", &
+                               "convective cloud probility: 0-1", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Prob, Max_Prob, &
+                               "none",Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  acha supercooled cld prob
+     if (Sds_Num_Level2_Supercool_Prob_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "supercooled_cloud_probability", &
+                               "supercooled_cloud_probability", &
+                               "convective cloud probility: 0-1", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Prob, Max_Prob, &
+                               "none",Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -2227,6 +2282,54 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "assuming the cloud was located at the Tropopause", &
                                DFNT_INT8, sym%LINEAR_SCALING, &
                                Min_Etropo, Max_Etropo, "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 6.7
+     if (Sds_Num_Level2_Beta_11_67_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_67),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_67um_tropopause", &
+                               "beta_11um_67um_tropopause", &
+                               "cloud 11/6.7 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 8.5
+     if (Sds_Num_Level2_Beta_11_85_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_85),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_85um_tropopause", &
+                               "beta_11um_85um_tropopause", &
+                               "cloud 11/8.5 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 12
+     if (Sds_Num_Level2_Beta_11_12_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_12um_tropopause", &
+                               "beta_11um_12um_tropopause", &
+                               "cloud 11/12 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- tropopause beta from 11 and 13
+     if (Sds_Num_Level2_Beta_11_13_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Beta_11_13),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "beta_11um_133um_tropopause", &
+                               "beta_11um_133um_tropopause", &
+                               "cloud 11/13.3 micron beta value assuming cloud resides at tropopause", &
+                                DFNT_INT8, sym%LINEAR_SCALING, Min_Beta, Max_Beta, &
+                               "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4039,10 +4142,10 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- cloud probability
      if (Sds_Num_Level2_Cldprob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(posterior_cld_probability, &
-                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(posterior_cld_probability, &
+                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldprob), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld mask
@@ -4149,7 +4252,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- sndr cld height
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_Cirrus_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(Zc_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
@@ -4182,10 +4285,24 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- estimated cld top pressure
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Top,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld base height
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(ACHA%Zc_Base,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- estimated cld base pressure
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Base_Flag == sym%YES) then     
+      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Base,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
@@ -4220,6 +4337,26 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Sds_Num_Level2_Acha_Inver_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Inver), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         ACHA%Inversion_Flag(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha cloud layer
+     if (Sds_Num_Level2_Cld_Layer_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Layer), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ACHA%Cld_Layer(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha convective cloud probability
+     if (Sds_Num_Level2_Conv_Prob_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Conv_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Conv_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha supercooled cloud probability
+     if (Sds_Num_Level2_Supercool_Prob_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Supercooled_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld height from h2o
@@ -4515,6 +4652,38 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Etrop), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
+
+    !--- Beta_11_67
+    if (Sds_Num_Level2_Beta_11_67_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_67um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_67), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_85
+    if (Sds_Num_Level2_Beta_11_85_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_85um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_85), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_12
+    if (Sds_Num_Level2_Beta_11_12_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_12um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Beta_11_133
+    if (Sds_Num_Level2_Beta_11_13_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Beta_11um_133um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
 
      !--- aot1
      if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot1_Flag == sym%YES) then

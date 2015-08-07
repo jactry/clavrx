@@ -1076,7 +1076,7 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap_Imager = x_Ap(1)  !K
       Sa_Tc_Imager = Sa(1,1)  !K^2
       Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
-      Sa_Tc_Sounder = 25.0   ! K^2
+      Sa_Tc_Sounder = 81.0    !25.0   ! K^2
 
       Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
 
@@ -1456,6 +1456,10 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
                      -0.124*(Delta_Cld_Temp_Sfc_Temp**2)   &
                      +0.00343*(Delta_Cld_Temp_Sfc_Temp**3)
 
+       !--- constrain lapse rate to be with 2 and 10 K/km
+       Lapse_Rate = max(2.0,min(10.0,Lapse_Rate))
+
+       !--- convert lapse rate to K/m
        Lapse_Rate = Lapse_Rate / 1000.0  !(K/m)
 
        !-- compute height
@@ -3633,8 +3637,8 @@ subroutine PARALLAX_ACHA(Zcld,Zsfc,Lat,Lon,Senzen,Senaz,Lat_Pc,Lon_Pc)
      Delta_Lat = cos(Senaz(Elem_Idx,Line_Idx)*Dtor)*Total_Displacement * Lat_Spacing_Per_m
 
      !--- generate output positions
-     Lat_Pc(Elem_Idx,Line_Idx) = Lat(Elem_Idx,Line_Idx) - Delta_Lat
-     Lon_Pc(Elem_Idx,Line_Idx) = Lon(Elem_Idx,Line_Idx) - Delta_Lon
+     Lat_Pc(Elem_Idx,Line_Idx) = Lat(Elem_Idx,Line_Idx) + Delta_Lat
+     Lon_Pc(Elem_Idx,Line_Idx) = Lon(Elem_Idx,Line_Idx) + Delta_Lon
 
     enddo line_loop
    enddo element_loop

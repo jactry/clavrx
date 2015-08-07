@@ -22,7 +22,7 @@ module ACHA_SERVICES_MOD
  use RTM_Data_Access_Mod
  use RTM_Access_Mod         !rchen added RTM access module
  USE SfcType_Access_Mod     !rchen added surface type access module
- USE PseudoEmiss_Access_Mod !rchen added pseudoemiss access module
+ !USE PseudoEmiss_Access_Mod !rchen added pseudoemiss access module
  use CloudHeight_Access_Mod !rchen added cloud height access module
  use CloudMask_Access_Mod
  use CloudPhase_Access_Mod
@@ -180,13 +180,14 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
-   integer(kind=int1), dimension(:,:), pointer :: Processing_Order  
-   real, dimension(:,:), pointer:: Pc_Opaque
-   real, dimension(:,:), pointer:: Tc_Opaque
-   real, dimension(:,:), pointer:: Zc_Opaque
-   real, dimension(:,:), pointer:: Pc_H2O
-   real, dimension(:,:), pointer:: Tc_H2O
-   real, dimension(:,:), pointer:: Zc_H2O
+   integer(kind=int1), dimension(:,:), pointer :: Processing_Order
+   !rchen change type to allocatable 05/29/2015
+   real, dimension(:,:), ALLOCATABLE:: Pc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Tc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Zc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Pc_H2O
+   real, dimension(:,:), ALLOCATABLE:: Tc_H2O
+   real, dimension(:,:), ALLOCATABLE:: Zc_H2O
  end type acha_output_struct
   
 !Symbol stucture
@@ -314,12 +315,18 @@ end type acha_rtm_nwp_struct
     if (Inwp_x  /= MISSING_VALUE_INT4 .and. Jnwp_x /= MISSING_VALUE_INT4) then
         Acha_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%YES
 
-        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_NWP%T_prof_1)
-        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_NWP%T_prof_2)
-        CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_NWP%T_prof_3)
-        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_NWP%Z_prof_1)
-        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_NWP%Z_prof_2)
-        CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_NWP%Z_prof_3)
+        !CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_NWP%T_prof_1)
+        !CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_NWP%T_prof_2)
+        !CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_NWP%T_prof_3)
+        !CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp, Acha_NWP%Z_prof_1)
+        !CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp, Jnwp_x, Acha_NWP%Z_prof_2)
+        !CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Inwp_x, Jnwp_x, Acha_NWP%Z_prof_3)
+        Acha_NWP%T_prof_1 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp_x, Jnwp, :)
+        Acha_NWP%T_prof_2 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp, Jnwp_x, :)
+        Acha_NWP%T_prof_3 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp_x, Jnwp_x, :)
+        Acha_NWP%Z_prof_1 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp_x, Jnwp, :)
+        Acha_NWP%Z_prof_2 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp, Jnwp_x, :)
+        Acha_NWP%Z_prof_3 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp_x, Jnwp_x, :)
    endif
    
    !---- RTM profiles
@@ -333,16 +340,13 @@ end type acha_rtm_nwp_struct
    
    if (Acha_Input%Chan_On_85um == sym%YES) then
      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, Acha_NWP%Atm_Rad_Prof_85um)
-     
      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, Acha_NWP%Atm_Trans_Prof_85um)
-     
    endif
    
    if (Acha_Input%Chan_On_11um == sym%YES) then
       CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Atm_Rad_Prof_11um)
       CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Atm_Trans_Prof_11um)
       CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, Acha_NWP%Black_Body_Rad_Prof_11um)
-      
    endif
    
    if (Acha_Input%Chan_On_12um == sym%YES) then
@@ -355,9 +359,6 @@ end type acha_rtm_nwp_struct
       CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Rad_Prof_133um)
       CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Trans_Prof_133um)
    endif
-   
-   
-   
 
    Ctxt => null()
 

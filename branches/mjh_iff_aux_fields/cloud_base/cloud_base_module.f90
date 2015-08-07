@@ -9,6 +9,7 @@ module CLOUD_BASE
 !
 !----------------------------------------------------------------------
   use CLOUD_BASE_SERVICES
+  use ACHA_SERVICES_MOD, only : LOCATE
 
   implicit none
 
@@ -16,6 +17,7 @@ module CLOUD_BASE
 
   private:: INTERPOLATE_PROFILE_LOCAL
   private:: NULL_PIX_POINTERS 
+  private:: KNOWING_Z_COMPUTE_T_P 
 
   !--- include the non-system specific variables
   include 'cloud_base_parameters.inc'
@@ -51,6 +53,8 @@ module CLOUD_BASE
 !      Output%Reff
 !      Output%Zc_Top
 !      Output%Zc_Base
+!      Output%Pc_Top
+!      Output%Pc_Base
 !
 !----------------------------------------------------------------------
 ! modification history
@@ -88,10 +92,13 @@ module CLOUD_BASE
   real (kind=real4):: Cloud_Extinction
   real (kind=real4):: Cloud_Geometrical_Thickness
   real (kind=real4):: Cloud_Geometrical_Thickness_Top_Offset
+  real (kind=real4):: Cloud_Geometrical_Thickness_eff
   real (kind=real4):: Zc_Top_Max
   real (kind=real4):: Zc_Base_Min
+  real (kind=real4):: R4_Dummy
 
   integer (kind=int4):: Itemp
+  integer (kind=int4):: Ilev
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -102,6 +109,8 @@ module CLOUD_BASE
    !-------------------------------------------------------------------------
    Output%Zc_Top = MISSING_VALUE_REAL
    Output%Zc_Base = MISSING_VALUE_REAL
+   Output%Pc_Top = MISSING_VALUE_REAL
+   Output%Pc_Base = MISSING_VALUE_REAL
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
@@ -212,15 +221,36 @@ module CLOUD_BASE
        !-- new code
        if (Input%Zc(Elem_Idx,Line_Idx) > Zc_Top_Max .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
           Output%Zc_Top(Elem_Idx,Line_Idx) = Input%Zc(Elem_Idx,Line_Idx)
+
+          ! compute Pc_Top from Zc_Top
+          call KNOWING_Z_COMPUTE_T_P(Output%Pc_Top(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Top(Elem_Idx,Line_Idx),Ilev)
+
        else
           Output%Zc_Top(Elem_Idx,Line_Idx) = min(Zc_Top_Max, &
                                              Input%Zc(Elem_Idx,Line_Idx) +  &
                                              Cloud_Geometrical_Thickness_Top_Offset)
+
+          ! compute Pc_Top from Zc_Top
+          call KNOWING_Z_COMPUTE_T_P(Output%Pc_Top(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Top(Elem_Idx,Line_Idx),Ilev)
+
        endif
 
+
+!  Compute cloud base 
+     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10000.0) then
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
+     else
+       if (Input%Zc(Elem_Idx,Line_Idx) > 0 .and. (Input%CWP(Elem_Idx,Line_Idx)  > 0 .or. Input%CWP_nwp(Elem_Idx,Line_Idx) > 0)) then
+         call CIRA_base_hgt(Input%Zc(Elem_Idx,Line_Idx),Input%CWP(Elem_Idx,Line_Idx), Input%CWP_NWP(Elem_Idx,Line_Idx) ,&
+              Cloud_Type,Input%CCL(Elem_Idx,Line_Idx),Input%Surface_Elevation(Elem_Idx,Line_Idx), &
+              Cloud_Geometrical_Thickness_eff,Output%Zc_Base(Elem_Idx,Line_Idx))
+       endif
+     endif 
+
+       ! compute Pc_Base from Zc_Base
+       call KNOWING_Z_COMPUTE_T_P(Output%Pc_Base(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc_Base(Elem_Idx,Line_Idx),Ilev)
 
  endif
 
@@ -311,6 +341,149 @@ subroutine NULL_PIX_POINTERS(Input, RTM_NWP)
    endif
  
 end subroutine NULL_PIX_POINTERS
+
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing Z to determine T and P
+!-----------------------------------------------------------------
+   subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Ilev)
+
+     real, intent(in):: Z
+     real, intent(out):: T
+     real, intent(out):: P
+     integer, intent(out):: Ilev
+     real:: dp
+     real:: dt
+     real:: dz
+
+     !--- interpoLate pressure profile
+     call LOCATE(Hght_Prof_RTM,Num_Levels_RTM_Prof,Z,Ilev)
+     Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
+
+     dp = Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)
+     dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
+     dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
+
+     !--- perform interpoLation
+     if (dz /= 0.0) then
+           T = Temp_Prof_RTM(Ilev) + dt/dz * (Z - Hght_Prof_RTM(Ilev))
+           P = Press_Prof_RTM(Ilev) + dp/dz * (Z - Hght_Prof_RTM(Ilev))
+     else
+           T = Temp_Prof_RTM(Ilev)
+           P = Press_Prof_RTM(Ilev)
+     endif
+
+   end subroutine KNOWING_Z_COMPUTE_T_P
+
+!-----------------------------------------------------------------
+! CIRA's base code, interpret from IDL codes 
+!-----------------------------------------------------------------
+subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base)
+
+  real(kind=real4), intent(in) :: Zc,Cwp,Cwp_nwp,CCL,Surf_Elev
+  integer,intent(in) :: Cloud_Type
+  real(kind=real4), intent(out) :: Cloud_Geometrical_Thickness,Zc_base
+
+! local variables
+  real(kind=real4) :: Zc_local, Cwp_local,Cwp_nwp_local
+  integer :: ibin
+  integer :: ibin_max
+  real :: zdelta
+  real :: icwp
+  real :: slope
+  real :: yint
+  integer, parameter :: nbin = 9, npara = 6, ncwp = 2
+  real,dimension(nbin,npara,ncwp) :: regr_coeff
+  real,parameter :: mincbh = 0.0, maxcbh = 20.0*1000
+  integer, dimension(5) :: qf
+  integer :: cbh_qf
+  integer :: statusflag,status_below_sfc,status_high_top
+
+!                      min cth       ;slope         y-int          r2      n    median CWP
+  regr_coeff(1,:,1) = [0.00000,      2.25812,     0.405590,    0.0236532, 5921, 0.0710000]
+  regr_coeff(1,:,2) = [0.00000,     0.997031,     0.516989,    0.0900793, 5881, 0.0710000]
+  regr_coeff(2,:,1) = [2.00000,      6.10980,     0.664818,    0.0664282, 3624, 0.114000]
+  regr_coeff(2,:,2) = [2.00000,     0.913021,      1.35698,    0.0735795, 3621, 0.114000]
+  regr_coeff(3,:,1) = [4.00000,      11.5574,      1.22527,    0.0519277, 2340, 0.110000]
+  regr_coeff(3,:,2) = [4.00000,      1.37922,      2.58661,    0.0695758, 2329, 0.110000]
+  regr_coeff(4,:,1) = [6.00000,      14.5382,      1.70570,    0.0568334, 2535, 0.123000]
+  regr_coeff(4,:,2) = [6.00000,      1.68711,      3.62280,    0.0501604, 2511, 0.123000]
+  regr_coeff(5,:,1) = [8.00000,      9.09855,      2.14247,    0.0218789, 3588, 0.131000]
+  regr_coeff(5,:,2) = [8.00000,      2.45953,      3.86957,    0.0727178, 3579, 0.131000]
+  regr_coeff(6,:,1) = [10.0000,      13.5772,      1.86554,    0.0497041, 4249, 0.127000]
+  regr_coeff(6,:,2) = [10.0000,      4.83087,      3.53141,     0.160008, 4218, 0.127000]
+  regr_coeff(7,:,1) = [12.0000,      16.0793,      1.64965,    0.0695903, 3154, 0.115000]
+  regr_coeff(7,:,2) = [12.0000,      5.05173,      3.98610,     0.180965, 3121, 0.115000]
+  regr_coeff(8,:,1) = [14.0000,      14.6030,      2.00010,    0.0429476, 2744, 0.116000]
+  regr_coeff(8,:,2) = [14.0000,      6.06439,      4.03301,     0.239837, 2717, 0.116000]
+  regr_coeff(9,:,1) = [16.0000,      9.26580,      2.29640,    0.0113376, 1455, 0.0990000]
+  regr_coeff(9,:,2) = [16.0000,      6.60431,      3.26442,     0.227116, 1449, 0.0990000]
+
+  qf = [0,1,2,3,4]
+  cbh_qf = qf(1)
+  statusflag = 0
+  status_below_sfc = -1
+  status_high_top = -2
+
+! start retrieval
+       Zc_local = Zc/1000.
+       CWP_local = CWP/1000.
+       Cwp_nwp_local = Cwp_nwp/1000.
+
+! force large cwp to cap at 1.2 kg/m2
+       if (CWP_local > 1.2)    CWP_local = 1.2
+       if (Zc_local > 20.0)    Zc_local = 20.0
+       if (Cwp_nwp_local > 1.2) Cwp_nwp_local = 1.2
+
+       if (Cwp_local < 0 .and. Cwp_nwp_local > 0) Cwp_local = Cwp_nwp_local
+
+
+       zdelta = 2.0
+       ibin = floor(Zc_local)/floor(zdelta)+1
+       ibin_max = 9
+
+       if (Zc_local > 18.0 .or. ibin > ibin_max)    ibin = ibin_max
+
+       icwp = 1
+       if (CWP_local > regr_coeff(ibin,6,1))  icwp = 2
+
+       slope = regr_coeff(ibin,2,icwp)
+       yint = regr_coeff(ibin,3,icwp)
+       Cloud_Geometrical_Thickness = slope*CWP_local+yint
+       Cloud_Geometrical_Thickness = Cloud_Geometrical_Thickness*1000.
+
+       if (Cloud_Geometrical_Thickness > Zc_local*1000) statusflag = status_below_sfc
+
+       Zc_Base = Zc_local*1000-Cloud_Geometrical_Thickness
+
+! adjustment based on cloud type
+! type 9 is overshooting
+       if (Cloud_Type == 9 .and. CCL > 0.0 .and. CCL < Zc_Base) then
+           if (Zc_Base < Zc_local*1000 .and. Zc_Base > 2000. .and. Cloud_Geometrical_Thickness > 9000.) then
+               Zc_Base = CCL
+           endif
+
+           if (Zc_local < 10000./1000 .and. Cloud_Geometrical_Thickness > 8000.) then
+               Zc_Base = CCL
+           endif
+       endif
+
+! apply quality flag
+       if (Zc_Base < Surf_Elev) then
+           Zc_Base = Surf_Elev
+           cbh_qf = qf(3)
+       endif
+
+       if (Zc_Base < mincbh .or. Zc_Base > maxcbh) then
+           Zc_Base = MISSING_VALUE_REAL
+           cbh_qf = qf(4)
+       endif
+
+       if (Zc_Base >= Zc_local*1000) then
+           Zc_Base = MISSING_VALUE_REAL
+           cbh_qf = qf(5)
+       endif
+
+end subroutine CIRA_base_hgt
 
 !----------------------------------------------------------------------
 ! End of Module

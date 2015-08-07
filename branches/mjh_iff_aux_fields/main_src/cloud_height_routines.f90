@@ -37,7 +37,10 @@ module CLOUD_HEIGHT_ROUTINES
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
   public::  CO2_SLICING_CLOUD_HEIGHT
   public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
-  public::  CH27_OPAQUE_TRANSMISSION_HEIGHT
+  public::  OPAQUE_TRANSMISSION_HEIGHT
+  public::  CONVECTIVE_CLOUD_PROBABILITY
+  public::  SUPERCOOLED_CLOUD_PROBABILITY
+  public::  MODIFY_CLOUD_TYPE_WITH_SOUNDER
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -56,7 +59,157 @@ module CLOUD_HEIGHT_ROUTINES
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Moist_Thresh = 0.25
   real, private, parameter:: Bt_Ch27_Ch31_Covar_Cirrus_Thresh = 1.0 !0.5
 
+
+  integer, private, parameter:: N_Sc_Lut = 20
+  real(kind=real4), dimension(N_Sc_Lut), private, parameter:: &
+  Sc_Tc_Lut = (/202.21,206.77,211.33,215.88,220.44,225.00,229.56,234.11,238.67,243.23, &
+                247.79,252.34,256.90,261.46,266.01,270.57,275.13,279.69,284.24,288.80/)
+
+  real(kind=real4), dimension(N_Sc_Lut), private, parameter:: &
+  Sc_Prob_Lut = (/0.004,0.004,0.004,0.004,0.004,0.004,0.004,0.002,0.051,0.243, &
+                  0.470,0.658,0.800,0.886,0.888,0.870,0.142,0.004,0.004,0.004 /)
+
   contains
+
+!----------------------------------------------------------------------
+! Compute the ACHA values without calling ACHA (mode = 0)
+!----------------------------------------------------------------------
+subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Prob)
+  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
+  real(kind=real4), dimension(:,:), intent(out):: Conv_Cld_Prob
+
+  real, parameter:: Btd_Thresh = -2.0
+  real, parameter:: Etrop_Thresh_1 = 0.95
+  real, parameter:: Etrop_Thresh_2 = 0.90
+  real, parameter:: Tsfc_Thresh = 30.0
+
+  !--- initialize to 0 (no)
+  Conv_Cld_Prob = 0.0
+
+  !--- set bad data to missing
+  where(Bad_Pixel_Mask ==sym%YES)
+    Conv_Cld_Prob = Missing_Value_Real4
+  endwhere
+
+  !--- if only 11 micron, use a tight threshold
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_1) 
+      Conv_Cld_Prob = 1.0
+    endwhere
+  endif
+
+  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
+      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
+     Conv_Cld_Prob = 1.0
+    endwhere
+  endif
+
+  !--- limit false alarms over elevated terrain
+  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+    where(Tsfc - Bt11 < Tsfc_Thresh)
+       Conv_Cld_Prob = 0.0
+    endwhere
+  endif
+
+end subroutine CONVECTIVE_CLOUD_PROBABILITY
+!--------------------------------------------------------------------------------------------------
+! Supercooled Cloud Probability
+!--------------------------------------------------------------------------------------------------
+subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Temperature,Supercooled_Cld_Prob)
+  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  integer(kind=int1), dimension(:,:), intent(in):: Cloud_Type
+  real(kind=real4), dimension(:,:), intent(in):: Cloud_Temperature
+  real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob
+
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Number_Of_Elements
+  integer:: Number_Of_Lines
+  integer:: Tc_Idx
+
+  !--- intialize local variables using global variables
+  Number_Of_Elements = Image%Number_Of_Elements
+  Number_Of_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+  !--- initialize to Missing
+  Supercooled_Cld_Prob = Missing_Value_Real4
+
+  !--- Loop through each pixel
+  do Elem_Idx = 1, Number_Of_Elements 
+     do Line_Idx = 1, Number_Of_Lines
+        
+       !--- filter bad
+       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+       !--- filter missing temps
+       if (Cloud_Temperature(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+       !--- filter with cloud type
+       if (Cloud_Type(Elem_Idx,Line_Idx) == Missing_Value_Int1) cycle
+
+       if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .and. &
+           Cloud_Type(Elem_Idx,Line_Idx) /= sym%WATER_TYPE .and. &
+           Cloud_Type(Elem_Idx,Line_Idx) /= sym%SUPERCOOLED_TYPE) then
+           Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = 0.0
+           cycle
+       endif
+
+       Tc_Idx = minloc(abs(Cloud_Temperature(Elem_Idx,Line_Idx) - Sc_Tc_Lut),1) 
+
+       Tc_Idx = max(1,min(N_Sc_Lut,Tc_Idx))
+
+       Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = Sc_Prob_Lut(Tc_Idx) 
+
+       !print *, "TEST SC LUT ", Cloud_Temperature(Elem_Idx,Line_Idx), Tc_Idx, N_Sc_Lut, Supercooled_Cld_Prob(Elem_Idx,Line_Idx)
+
+     enddo
+  enddo
+
+end subroutine SUPERCOOLED_CLOUD_PROBABILITY
+
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
+subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cloud_Type)
+   real(kind=real4), intent(in), dimension(:,:):: Tc_CO2
+   real(kind=real4), intent(in), dimension(:,:):: Ec_CO2
+   integer(kind=int1), intent(inout), dimension(:,:):: Cloud_Type
+
+   real(kind=real4), parameter:: Ec_Thresh = 0.2
+   real(kind=real4), parameter:: Tc_Thresh = 240.0 !K
+   integer:: Elem_Idx,Line_Idx,Num_Elem, Num_Lines
+   integer:: Elem_Lrc_Idx,Line_Lrc_Idx
+
+   Num_Elem = Image%Number_Of_Elements
+   Num_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+   where((Cloud_Type == sym%FOG_TYPE .or.  &
+         Cloud_Type == sym%WATER_TYPE .or. &
+         Cloud_Type == sym%SUPERCOOLED_TYPE) .and. &
+         Ec_CO2 > Ec_Thresh .and. &
+         Tc_CO2 /= Missing_Value_Real4 .and. &
+         Tc_CO2 < Tc_Thresh)
+
+     Cloud_Type = 99
+
+   endwhere
+
+   do Line_Idx = 1, Num_Lines
+      do Elem_Idx = 1, Num_Elem
+         Elem_Lrc_Idx = i_lrc(Elem_Idx,Line_Idx)
+         Line_Lrc_Idx = j_lrc(Elem_Idx,Line_Idx)
+         if (Elem_Lrc_Idx > 0 .and. Line_Lrc_Idx > 0) then
+            if (Cloud_Type(Elem_Lrc_Idx,Line_Lrc_Idx) == 99) then
+               Cloud_Type(Elem_Idx,Line_Idx) = 99
+            endif
+         endif
+      enddo
+   enddo
+
+   where(Cloud_Type == 99)
+    Cloud_Type = sym%OVERLAP_TYPE
+   endwhere
+end subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER
 
 !----------------------------------------------------------------------
 ! Compute the ACHA values without calling ACHA (mode = 0)
@@ -116,9 +269,9 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
     endif
 
     !------- determine cloud layer based on pressure
-    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 440.0) then
+    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 350.0) then
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 3
-    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 680.0) then
+    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 642.0) then
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 2
     else
         ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 1
@@ -315,16 +468,16 @@ end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
 ! Compute CO2 Slicing
 !----------------------------------------------------------------------
 subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
-                                    Pressure_Profile,Cloud_Type, &
-                                    Pc_Cirrus_Co2,Tc_Cirrus_Co2,Zc_Cirrus_Co2)
+                                    Pressure_Profile,Cloud_Mask, &
+                                    Pc_Co2,Tc_Co2,Zc_Co2)
   integer, intent(in):: Num_Elem
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Num_Lines
-  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Mask
   real, intent(in), dimension(:):: Pressure_Profile
-  real, intent(out), dimension(:,:):: Pc_Cirrus_Co2
-  real, intent(out), dimension(:,:):: Tc_Cirrus_Co2
-  real, intent(out), dimension(:,:):: Zc_Cirrus_Co2
+  real, intent(out), dimension(:,:):: Pc_Co2
+  real, intent(out), dimension(:,:):: Tc_Co2
+  real, intent(out), dimension(:,:):: Zc_Co2
   integer:: Elem_Idx
   integer:: Line_Idx
   integer:: Line_Start
@@ -343,12 +496,9 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
   integer (kind=int4):: Box_Width
   real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
-  integer:: i1, i2, j1, j2
   integer:: Lev_Idx_Temp
   integer:: Pc_Lev_Idx
 
-  logical, dimension(:,:), allocatable:: Mask
-  real, dimension(:,:), allocatable:: Tc_Cirrus_Co2_Temp
   real, dimension(3):: Pc_Temp
   integer:: Count_Valid
 
@@ -356,8 +506,9 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Line_End = Line_Start + Num_Lines - 1
 
   !--- intialize output
-  Pc_Cirrus_Co2 = Missing_Value_Real4
-  Tc_Cirrus_Co2 = Missing_Value_Real4
+  Pc_Co2 = Missing_Value_Real4
+  Tc_Co2 = Missing_Value_Real4
+  Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
   if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
@@ -388,12 +539,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
 
      !--- only do this for appropriate cloud types
-     if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and.   & 
-!        Cloud_Type(Elem_Idx,Line_Idx) /= sym%PROB_CLEAR_TYPE .and.  &
-!        Cloud_Type(Elem_Idx,Line_Idx) /= sym%CLEAR_TYPE .and.  &
-         Cloud_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) then
-          cycle
-     endif
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE) cycle
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) cycle
 
      !--- compute cloud top pressure using each channel pair
      Beta_Target = 1.0
@@ -410,10 +557,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Beta_Target, &
                                Pc_35_36,Pc_Lev_Idx)
      Pc_Temp(1) = Pc_35_36
-!    if (Pc_35_36 /= Missing_Value_Real4) then
-!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_35_36
-!        cycle
-!    endif
+     if (Pc_35_36 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_35_36
+         cycle
+     endif
 
      call COMPUTE_BETA_PROFILE(ch(34)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(34)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
@@ -428,10 +575,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Pc_34_35,Pc_Lev_Idx)
 
      Pc_Temp(2) = Pc_34_35
-!    if (Pc_34_35 /= Missing_Value_Real4) then
-!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_34_35
-!        cycle
-!    endif
+     if (Pc_34_35 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_34_35
+         cycle
+     endif
 
      call COMPUTE_BETA_PROFILE(ch(33)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
@@ -446,14 +593,14 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Pc_33_34,Pc_Lev_Idx)
 
      Pc_Temp(3) = Pc_33_34
-!    if (Pc_33_34 /= Missing_Value_Real4) then
-!        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = Pc_33_34
-!        cycle
-!    endif
+     if (Pc_33_34 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_33_34
+         cycle
+     endif
 
      Count_Valid = count(Pc_Temp /= Missing_Value_Real4)
      if (Count_Valid > 0) then
-        Pc_Cirrus_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
+        Pc_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
      endif
     
   enddo Element_Loop
@@ -465,26 +612,60 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Line_Loop_2: do Line_Idx = Line_Start, Line_End
   Element_Loop_2: do Elem_Idx = 1, Num_Elem
 
-     if (Pc_Cirrus_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Pc_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- compute temperature
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
-                                    Pc_Cirrus_Co2(Elem_Idx,Line_Idx), &
-                                    Tc_Cirrus_Co2(Elem_Idx,Line_Idx), &
-                                    Zc_Cirrus_Co2(Elem_Idx,Line_Idx), &
+                                    Pc_Co2(Elem_Idx,Line_Idx), &
+                                    Tc_Co2(Elem_Idx,Line_Idx), &
+                                    Zc_Co2(Elem_Idx,Line_Idx), &
                                     Lev_Idx_Temp)
 
      !-- compute emissivity
-     Ec_Cirrus_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                                   ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+     Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                            ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
                              rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
 
   enddo Element_Loop_2
   enddo Line_Loop_2
 
-  !-------------------------------------------------------------------------
-  ! spatially interpolate
-  !-------------------------------------------------------------------------
+end subroutine  CO2_SLICING_CLOUD_HEIGHT
+
+!-------------------------------------------------------------------------
+! spatially interpolate
+!-------------------------------------------------------------------------
+subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cloud_Type, Tc_Cirrus_Co2)
+
+  real, intent(in), dimension(:,:):: Tc_Co2
+  real, intent(in), dimension(:,:):: Pc_Co2
+  real, intent(in), dimension(:,:):: Ec_Co2
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
+  real, intent(out), dimension(:,:):: Tc_Cirrus_Co2
+
+  integer:: Num_Elem
+  integer:: Num_Lines
+  integer:: Elem_Idx
+  integer:: Line_Idx
+
+  integer (kind=int4), parameter:: COUNT_MIN_TEMPERATURE_CIRRUS = 2
+  integer (kind=int4), parameter:: BOX_WIDTH_KM = 300
+  real (kind=real4), parameter:: SOUNDER_RESOLUTION_KM = 20.0
+  real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
+  real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
+  integer (kind=int4):: Box_Width
+  real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
+  integer:: i1, i2, j1, j2
+  integer:: Lev_Idx_Temp
+  integer:: Pc_Lev_Idx
+
+  logical, dimension(:,:), allocatable:: Mask
+  real, dimension(:,:), allocatable:: Tc_Cirrus_Co2_Temp
+  real, dimension(3):: Pc_Temp
+  integer:: Count_Valid
+
+
+  Num_Elem = Image%Number_Of_Elements
+  Num_Lines = Image%Number_Of_Lines_Read_This_Segment
 
   !--- compute size of averaging window
   call COMPUTE_BOX_WIDTH(SOUNDER_RESOLUTION_KM,Box_Width_KM,Box_Width)
@@ -498,23 +679,23 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Mask = .false.
 
   !--- create mask which identifies pixels to be included in analysis
-  where(Pc_Cirrus_Co2 /= Missing_Value_Real4 .and. &
-        Pc_Cirrus_Co2 < PC_CIRRUS_MAX_THRESH .and. &
-        Ec_Cirrus_Co2 > EC_CIRRUS_MIN_THRESH)
+  where(Pc_Co2 /= Missing_Value_Real4 .and. &
+        Pc_Co2 < PC_CIRRUS_MAX_THRESH .and. &
+        Ec_Co2 > EC_CIRRUS_MIN_THRESH)
       Mask = .true.
   end where
 
-  Element_Loop_3: do Elem_Idx = 1, Num_Elem, Box_Width/2
+  Element_Loop: do Elem_Idx = 1, Num_Elem, Box_Width/2
 
       i1 = min(Num_Elem,max(1,Elem_Idx - Box_Width))
       i2 = min(Num_Elem,max(1,Elem_Idx + Box_Width))
 
-      Line_Loop_3: do Line_Idx = Line_Start, Line_End, Box_Width/2
+      Line_Loop: do Line_Idx = 1, Num_Lines, Box_Width/2
           j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
           j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
 
           Count_Temporary = count(Mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Tc_Cirrus_Co2(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
+          Sum_Temporary = sum(Tc_Co2(i1:i2,j1:j2),Mask(i1:i2,j1:j2))
           if (Count_Temporary > COUNT_MIN_TEMPERATURE_CIRRUS) then
               Temperature_Temporary = Sum_Temporary / Count_Temporary
           else
@@ -525,15 +706,16 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
              Tc_Cirrus_Co2_Temp(i1:i2,j1:j2) = Temperature_Temporary
           endif
 
-      enddo Line_Loop_3
-   enddo Element_Loop_3
+      enddo Line_Loop
+   enddo Element_Loop
 
    Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
 
   if (allocated(Mask)) deallocate(Mask)
   if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)
 
-end subroutine  CO2_SLICING_CLOUD_HEIGHT
+end subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE
+
 !----------------------------------------------------------------------
 ! Compute CO2 Slicing for SWI Channels - 24 & 25
 !----------------------------------------------------------------------
@@ -793,9 +975,9 @@ subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
 end subroutine COMPUTE_BOX_WIDTH
 
 !----------------------------------------------------------------------
-! Compute Ch27 height where level transmission to space is opaque
+! Compute height where level transmission to space is opaque
 !----------------------------------------------------------------------
-subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
+subroutine OPAQUE_TRANSMISSION_HEIGHT()
   integer:: Elem_Idx
   integer:: Line_Idx
   integer:: Lon_Idx
@@ -806,12 +988,6 @@ subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
   real, dimension(:), pointer:: Trans_Prof
   real, dimension(:), pointer:: Z_Prof
   real, parameter:: Trans_Limit = 0.01
-
-   Chan_Idx = 27
-
-  if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) return
-  Ch27_Opaque_Height = Missing_Value_Real4
-
 
   do Elem_Idx = 1, Image%Number_Of_Elements
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
@@ -827,35 +1003,42 @@ subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT()
      !-- check if indices are valid
      if (Lon_Idx < 0 .or. Lat_Idx < 0) cycle
 
-     Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
      Z_Prof => Rtm(Lon_Idx,Lat_Idx)%Z_Prof
 
-     Lev_Idx = minloc(abs(Trans_Prof-Trans_Limit),1)   
-     Ch27_Opaque_Height(Elem_Idx,Line_Idx) = Z_Prof(Lev_Idx)
+     do Chan_Idx = 27,38
 
-     Trans_Prof => null()
-     Z_Prof => null()
+         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+
+         Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
+
+         Lev_Idx = minloc(abs(Trans_Prof-Trans_Limit),1)   
+         ch(Chan_Idx)%Opaque_Height(Elem_Idx,Line_Idx) = max(Z_Prof(Lev_Idx),sfc%Zsfc(Elem_Idx,Line_Idx))
+
+         Trans_Prof => null()
+
+      enddo
+
+      Z_Prof => null()
         
      enddo
   enddo
 
-end subroutine CH27_OPAQUE_TRANSMISSION_HEIGHT
+end subroutine OPAQUE_TRANSMISSION_HEIGHT
 
 !----------------------------------------------------------------------
 ! Compute CSBT Cloud Masks
 ! must be called at end of cloud processing chain (After ACHA)
 !----------------------------------------------------------------------
 subroutine COMPUTE_CSBT_CLOUD_MASKS()
+
   integer:: Elem_Idx
   integer:: Line_Idx
+  integer:: Chan_Idx
   real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
   real, parameter:: Covar_Ch27_Ch31_Max = 1.0
    
-   if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+  if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
    
-  Ch27_CSBT_Mask = Missing_Value_Int1
-  Ch31_CSBT_Mask = Missing_Value_Int1
-
   do Elem_Idx = 1, Image%Number_Of_Elements
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
 
@@ -864,30 +1047,42 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
      if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
-     !--- initialize to cloudy
-     Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 3
-     Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 3
+     do Chan_Idx = 27, 38
 
-     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
-         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 0
-         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 0
-         cycle
-     endif
+         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
 
-     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
-         Ch31_CSBT_Mask(Elem_Idx,Line_Idx) = 1
-         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 1
-         cycle
-     endif
+           !--- initialize to cloudy
+           ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 3
+           ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 3
 
-     if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
-       if (Acha%Zc(Elem_Idx,Line_Idx) <= Ch27_Opaque_Height(Elem_Idx,Line_Idx)) then
-         Ch27_CSBT_Mask(Elem_Idx,Line_Idx) = 2
-       endif
-     endif
+           !--- if full mask is clear, set channel masks to clear
+           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
+              ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 0
+              cycle
+           endif
+
+           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
+              ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 1
+             cycle
+           endif
+
+           if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
+              if (Acha%Zc(Elem_Idx,Line_Idx) <= ch(Chan_Idx)%Opaque_Height(Elem_Idx,Line_Idx)) then
+                ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 2
+              endif
+          endif
+
+       enddo
 
      enddo
   enddo
+
+! Diag_Pix_Array_1 = ch(27)%CSBT_Mask
+! Diag_Pix_Array_2 = ch(28)%CSBT_Mask
+! Diag_Pix_Array_3 = ch(37)%CSBT_Mask
+! print *, "ch27 csbt range = ", minval(Ch(27)%CSBT_Mask),maxval(ch(27)%CSBT_Mask)
+! print *, "ch31 csbt range = ", minval(Ch(31)%CSBT_Mask),maxval(ch(31)%CSBT_Mask)
+! print *, "ch33 csbt range = ", minval(Ch(33)%CSBT_Mask),maxval(ch(33)%CSBT_Mask)
       
 
 end subroutine COMPUTE_CSBT_CLOUD_MASKS

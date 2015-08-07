@@ -25,7 +25,6 @@
 ! Public routines used in this MODULE:
 ! COMPUTE_PIXEL_ARRAYS - compute some commonly used arrays
 ! COMPUTE_TSFC - derive pixel-level surface temperature 
-! COMPUTE_ERB - compute outgoing longwave radiation (OLR)
 ! ATMOS_CORR - perform atmospheric correction
 ! NORMALIZE_REFLECTANCES - divide reflectances by cosine solar zenith angle
 ! CH3B_ALB - compute the channel 20 reflectance
@@ -56,7 +55,6 @@ MODULE PIXEL_ROUTINES
  implicit none
  public:: COMPUTE_PIXEL_ARRAYS, &
           SURFACE_REMOTE_SENSING,  &
-          COMPUTE_ERB,  &
           ATMOS_CORR,&
           NORMALIZE_REFLECTANCES,  &
           CH3B_ALB,  &
@@ -72,7 +70,6 @@ MODULE PIXEL_ROUTINES
           QUALITY_CONTROL_ANCILLARY_DATA,   &
           READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
-          COMPUTE_MASKED_SST,               &
           COMPUTE_GLINT,                    &
           COMPUTE_GLINT_LUNAR,              &
           QC_MODIS,                         &
@@ -82,7 +79,6 @@ MODULE PIXEL_ROUTINES
           TERM_REFL_NORM, &
           MERGE_NWP_HIRES_ZSFC, &
           ADJACENT_PIXEL_CLOUD_MASK, &
-          COMPUTE_VIIRS_SST, &
           COMPUTE_ACHA_PERFORMANCE_METRICS, &
           COMPUTE_DCOMP_PERFORMANCE_METRICS, &
           COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS, &
@@ -565,18 +561,6 @@ end subroutine CONVERT_TIME
         Btd_Ch31_Ch32(:,j1:j2) = ch(31)%Bt_Toa(:,j1:j2) - ch(32)%Bt_Toa(:,j1:j2)
    endif
 
-   !--- SST for cloud masking - MCSST
-   ! --- edited by Denis Botambekov Oct,2012
-   if (index(Sensor%Sensor_Name,'VIIRS') == 0) then
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-         Sst_Unmasked(:,j1:j2) = b1_day_Mask * ch(31)%Bt_Toa(:,j1:j2) + b2_day_Mask * &
-                    (Btd_Ch31_Ch32(:,j1:j2)) + b3_day_Mask * (Btd_Ch31_Ch32(:,j1:j2)) * &
-                    (Geo%Seczen(:,j1:j2)-1.0) + b4_day_Mask + 273.15
-      else
-         Sst_Unmasked(:,j1:j2) = Missing_Value_Real4
-      endif
-   endif
-
    !--- channel 20 and channel 31 brightness temperature difference
     if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      Btd_Ch20_Ch31 = ch(20)%Bt_Toa - ch(31)%Bt_Toa
@@ -972,19 +956,6 @@ end subroutine CONVERT_TIME
       !--- compute to a temperature
       Tsfc_Retrieved(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,B11_Sfc)
 
-      !--- if water and a valid SST exists, use this as the surface temperature
-      !--- or if no Sst is available, use the Tsfc computed above
-      if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
-          (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW)) then
-
-          if (Sst_Unmasked(Elem_Idx,Line_Idx) == Missing_Value_Real4) then
-            Sst_Unmasked(Elem_Idx,Line_Idx) = Tsfc_Retrieved(Elem_Idx,Line_Idx)
-          else
-            Tsfc_Retrieved(Elem_Idx,Line_Idx) = Sst_Unmasked(Elem_Idx,Line_Idx)
-          endif 
-
-      endif  
-
     end do element_loop
   end do line_loop
 
@@ -1233,52 +1204,6 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
  end do line_loop
 
 end subroutine ATMOS_CORR
-!------------------------------------------------------------------
-! derive the earth radiation budget parameters 
-!------------------------------------------------------------------
- subroutine COMPUTE_ERB(Line_Idx_Min,Num_Lines)
-
-  integer, intent(in):: Line_Idx_Min
-  integer, intent(in):: Num_Lines
-  integer:: Line_Idx_Max
-
-  Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
-
-  !--- OLR------------------------------------------------------------------
-  ! this algorithm assumes that the window channels on avhrr are best used
-  ! to derive the Olr component in the 8.5 to 12 micron window region.
-  ! A seperate regression is used to predict the broadband Olr from the
-  ! window-component of the Olr
-  !--------------------------------------------------------------------------
-   Olr(:,Line_Idx_Min:Line_Idx_Max) = Missing_Value_Real4
-   Olr_Qf(:,Line_Idx_Min:Line_Idx_Max) = 0
-
-   !--- check for required channels
-   if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
-
-   where(ch(31)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) > 100.0 .and. &
-         ch(31)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) < 350.0 .and. &
-         Bad_Pixel_Mask == sym%NO)
-
-    !-- this makes the window eff flux temp (K) (win_Olr = sigma*win_temp^4)
-    Olr(:,Line_Idx_Min:Line_Idx_Max) = win_0 + win_1*ch(32)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max) + &
-                   win_2*ch(32)%Bt_Toa(:,Line_Idx_Min:Line_Idx_Max)*Geo%seczen(:,Line_Idx_Min:Line_Idx_Max) + &
-                   win_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*Geo%seczen(:,Line_Idx_Min:Line_Idx_Max)
-
-    !--- this make the Olr temp (K)
-    Olr(:,Line_Idx_Min:Line_Idx_Max) = Olr_0 + Olr_1*Olr(:,Line_Idx_Min:Line_Idx_Max) + &
-                       Olr_2*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max)) + &
-                       Olr_3*(Btd_Ch31_Ch32(:,Line_Idx_Min:Line_Idx_Max))*Geo%Seczen(:,Line_Idx_Min:Line_Idx_Max) + &
-                       Olr_4*Olr(:,Line_Idx_Min:Line_Idx_Max)*Geo%Seczen(:,Line_Idx_Min:Line_Idx_Max)
-
-    !--- this make the Olr  flux (W/m^2)
-    Olr(:,Line_Idx_Min:Line_Idx_Max) = stefan_boltzmann_constant * (Olr(:,Line_Idx_Min:Line_Idx_Max)**4)
-    Olr_Qf(:,Line_Idx_Min:Line_Idx_Max) = 3
-   endwhere
-
-
- end subroutine COMPUTE_ERB 
 
 !======================================================================
 ! Normalize the reflectances by the solar zenith angle cosine
@@ -2186,34 +2111,6 @@ subroutine COMPUTE_CLEAR_SKY_SCATTER(Tau_Aer, &
 end subroutine COMPUTE_CLEAR_SKY_SCATTER
 
 
-!===========================================================================
-!-- Compute Cloud and Land Masked SST
-!===========================================================================
-subroutine COMPUTE_MASKED_SST(jmin,jmax)
-
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-
-  Sst_Masked = Missing_Value_Real4
-
-  line_loop: do Line_Idx=jmin, jmax - jmin + 1
-    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
-
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
- 
-     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
-        if (Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or. Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
-          Sst_Masked(Elem_Idx,Line_Idx) = Sst_Unmasked(Elem_Idx,Line_Idx)
-        endif
-     endif
-
-    end do element_loop
-  end do line_loop
-
- end subroutine COMPUTE_MASKED_SST
 
 !==============================================================================
 !
@@ -2491,65 +2388,6 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
   enddo line_loop
 
 end subroutine ADJACENT_PIXEL_CLOUD_MASK
-!---------------------------------------------------------------------------------------
-! COMPUTE_VIIRS_SST is used to compute Sst_Masked for VIIRS
-! It purpouse is to replicate VIIRS SST team algorithm results
-! called from process_clavrx.f90
-!---------------------------------------------------------------------------------------
-subroutine COMPUTE_VIIRS_SST(jmin,jmax)
-
-  integer, intent(in):: jmin
-  integer, intent(in):: jmax
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-  real:: a0_day = 2.74438
-  real:: a1_day = 0.996818
-  real:: a2_day = 0.0720411
-  real:: a3_day = 1.35385
-  real:: a0_night = -5.31302
-  real:: a1_night = 0.788114
-  real:: a2_night = 1.04555
-  real:: a3_night = -0.810677
-  real:: a4_night = 0.145501
-  real:: a5_night = 1.11931
-
-  Sst_Unmasked = Missing_Value_Real4
-
-  if (Sensor%Chan_On_Flag_Default(20) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
-
-  line_loop: do Line_Idx=jmin, jmax + jmin - 1
-    element_loop: do Elem_Idx= 1, Image%Number_Of_Elements
-
-  ! Day time
-     if (Sfc%Land(Elem_Idx,Line_Idx) /= sym%LAND .and. Sfc%Land(Elem_Idx,Line_Idx) /= sym%COASTLINE) then
-        if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0 .and. sst_anal(Elem_Idx,Line_Idx) > 150.0) then
-           if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-              Sst_Unmasked(Elem_Idx,Line_Idx) = a0_day + a1_day * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a2_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (sst_anal(Elem_Idx,Line_Idx) - 273.15) + &
-                   a3_day * Btd_Ch31_Ch32(Elem_Idx,Line_Idx) * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
-           endif
-        endif
-
-  ! Night time
-        if (Geo%Solzen(Elem_Idx,Line_Idx) .ge. 90.0) then
-           if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-                 Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-
-                   Sst_Unmasked(Elem_Idx,Line_Idx) = a0_night + a1_night * ch(31)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a2_night * ch(20)%Bt_Toa(Elem_Idx,Line_Idx) + a3_night * ch(32)%Bt_Toa(Elem_Idx,Line_Idx) + &
-                   a4_night * (ch(20)%Bt_Toa(Elem_Idx,Line_Idx) - ch(32)%Bt_Toa(Elem_Idx,Line_Idx)) * &
-                   (Geo%Seczen(Elem_Idx,Line_Idx)-1) + a5_night * (Geo%Seczen(Elem_Idx,Line_Idx) - 1)
-           endif 
-        endif
-     endif
-
-    end do element_loop
-  end do line_loop
-
-end subroutine COMPUTE_VIIRS_SST
 
 !-----------------------------------------------------------
 ! Determine an ACHA Success fraction

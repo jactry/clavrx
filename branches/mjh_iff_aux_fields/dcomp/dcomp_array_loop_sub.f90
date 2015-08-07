@@ -121,9 +121,9 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    ! - executable ---------
    
-   debug_mode = 1
+   debug_mode = 4
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
-   
+  
    array_dim = shape ( input % sat % d )
    dim_1 = array_dim (1) 
    dim_2 = array_dim (2)
@@ -336,7 +336,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                           & + gas_coeff(2) * tpw_ac  &
                           & + gas_coeff(3) * ( tpw_ac ** 2 ) ) )
                                 
-               trans_unc_wvp ( chn_vis ) = abs(trans_wvp( chn_idx ) - exp ( -1. * (gas_coeff(1)   &
+               trans_unc_wvp ( chn_idx ) = abs(trans_wvp( chn_idx ) - exp ( -1. * (gas_coeff(1)   &
                            & + gas_coeff(2) * (assumed_tpw_error * tpw_ac) &
 	                        & + gas_coeff(3) * ( ( assumed_tpw_error * tpw_ac ) **2 ) ) ) )       
                         
@@ -381,10 +381,15 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          trans_vec ( 1) = trans_total ( CHN_VIS )
               
          ! - nir channel
-         obs_vec( 2 ) = input % refl ( CHN_NIR)  % d (elem_idx, line_idx) /100.
-         if ( input % mode == 3) obs_vec( 2 ) = refl_toc ( 20 )
+       
+         if ( input % mode == 3) then
+            obs_vec( 2 ) = refl_toc ( 20 )
+            obs_unc( 2 ) = obs_vec( 2 ) * 0.1 
+         else
+            obs_vec( 2 ) = input % refl ( CHN_NIR)  % d (elem_idx, line_idx) /100.
+            obs_unc( 2 ) = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
+         end if
          
-         obs_unc( 2 ) = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
          
          alb_vec( 2 ) = alb_sfc ( CHN_NIR)
          alb_unc( 2 ) = 0.05
@@ -418,8 +423,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , input % lut_path &
                 & , debug_mode  )
         
-        if ( debug_mode == 4 ) then
-            print*,'=======================> input:'
+        if ( debug_mode == 4  ) then
+            print*,'=======================> input:',CHN_NIR
             print*,'Elem Line: ', elem_idx,line_idx
             print*,' Obs vector: ',obs_vec
             print*,' Obs uncert: ',obs_unc

@@ -140,18 +140,19 @@ contains
             ,xdry,xwet,xozo,xcon)
       ! - matrix multiplication coef x predictors
       
-         ! - dry
+      ! - dry
       call taudoc(coef % dry (:,:,kban),xdry,taud)  
       
-         ! - ozone
+      ! - ozone
       call taudoc(coef % ozon (:,:,kban),xozo,tauo)   
-         ! - wvp cont
+
+      ! - wvp cont
       call taudoc ( coef % wvp_cont (:,:,kban),xcon,tauc)   
-         ! - wavp solid+liquid
+
+      ! -  avp solid+liquid
       call tauwtr(coef % wvp_solid(:,:,kban), &
-               coef % wvp_liquid (:,:,kban),xwet,tauw) 
+                  coef % wvp_liquid(:,:,kban),xwet,tauw) 
              
-        
       ! - build total transmisison
       taut = taud * tauo * tauc * tauw
       ! - done    

@@ -159,5 +159,6 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Coast_Class = 1.0, Max_Coast_Class = 10.0
  real, parameter, public:: Min_Cld_Phase = 0.0, Max_Cld_Phase = 5.0
  real, parameter, public:: Min_Alt = 0.0, Max_Alt = 100000.0
+ real, parameter, public:: Min_Prob = 0.0, Max_Prob = 1.0
 
 end module SCALING_PARAMETERS

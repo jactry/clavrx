@@ -254,4 +254,3 @@
      Sds_Num_Level2_HIRS_Mask = 242,  Sds_Num_Level2_HIRS_Mask_Flag = 1, &
      Sds_Num_Level2_HIRS_ele_index = 243,  Sds_Num_Level2_HIRS_ele_index_Flag = 1, &
      Sds_Num_Level2_HIRS_line_index = 244,  Sds_Num_Level2_HIRS_line_index_Flag = 1
->>>>>>> .merge-right.r1315

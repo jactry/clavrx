@@ -84,7 +84,6 @@ program COMPILE_ASC_DES_LEVEL2B
  integer(kind=int4):: N_Command_Line_Args
  integer, parameter:: Source_Length_Max = 1000
 
- 
  integer(kind=int4):: First_Valid_Input
  integer(kind=int4):: Sd_Id_Input
  integer(kind=int4):: Sd_Id_Output
@@ -238,7 +237,6 @@ program COMPILE_ASC_DES_LEVEL2B
  integer:: sfginfo
  integer:: sfselect
 
- 
  integer:: sfendacc
  integer:: sfend
 

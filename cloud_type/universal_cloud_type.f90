@@ -438,7 +438,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
           Cloud_Phase(Elem_Idx,Line_Idx) = sym%WATER_PHASE
      endif
 
-  enddo Element_Loop_LRC
+  cnddo Element_Loop_LRC
   enddo Line_Loop_LRC
 
   !----------------------------------------------------------------------------

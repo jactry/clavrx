@@ -33,51 +33,54 @@
 !
 !  CLAVR-x uses MODIS channel numbers for all sensors
 !
-!   Modis    Avhrr   ABI    AHI    VIIRS   Wavelength
-!     01       1      2      3      M5       0.659
-!     02       2      3      4      M7       0.865
-!     03       -      1      1      M3       0.470 
-!     04       -      -      2      M4       0.555
-!     05       -      -      -      M8       1.240
-!     06       3a     5      5     M10       1.640
-!     07       -      6      6     M11       2.130
-!     08       -      -      -      M1       0.415
-!     09       -      -      -      M2       0.443
-!     10       -      -      -       -       0.490
-!     11       -      -      -       -       0.531
-!     12       -      -      -       -       0.565
-!     13       -      -      -       -       0.653
-!     14       -      -      -       -       0.681
-!     15       -      -      -      M6       0.750
-!     16       -      -      -       -       0.865
-!     17       -      -      -       -       0.905
-!     18       -      -      -       -       0.936
-!     19       -      -      -       -       0.940
-!     20       3b     7      7     M12       3.750
-!     21       -      -      -       -       3.959
-!     22       -      -      -     M13       3.959
-!     23       -      -      -       -       4.050
-!     24       -      -      -       -       4.465
-!     25       -      -      -       -       4.515
-!     26       -      4      -      M9       1.375
-!     27       -      9      9       -       6.715
-!     28       -     10     10       -       7.325
-!     29       -     11     11     M14       8.550
-!     30       -     12     12       -       9.730
-!     31       4     14     14     M15      11.030
-!     32       5     15     15     M16      12.020
-!     33       -     16     16       -      13.335
-!     34       -      -      -       -      13.635
-!     35       -      -      -       -      13.935
-!     36       -      -      -       -      14.235
-!     37       -      8      8       -       6.200
-!     38       -     13     13       -      10.400
-!     39       -      -      -      I1       0.640
-!     40       -      -      -      I2       0.865
-!     41       -      -      -      I3       1.610
-!     42       -      -      -      I4       3.740
-!     43       -      -      -      I5      11.450
-!     44       -      -      -     DNB       0.700
+!   CLAVR-x  Modis    Avhrr   ABI    AHI    VIIRS   Wavelength  Obs_Type
+!     01       1       1      2      3      M5       0.659      solar
+!     02       2       2      3      4      M7       0.865      solar
+!     03       3       -      1      1      M3       0.470       solar
+!     04       4       -      -      2      M4       0.555      solar
+!     05       5       -      -      -      M8       1.240      solar
+!     06       6       3a     5      5     M10       1.640      solar
+!     07       7       -      6      6     M11       2.130      solar
+!     08       8       -      -      -      M1       0.415      solar
+!     09       9       -      -      -      M2       0.443      solar
+!     10       10      -      -      -       -       0.490      solar
+!     11       11      -      -      -       -       0.531      solar
+!     12       12      -      -      -       -       0.565      solar
+!     13       13      -      -      -       -       0.653      solar
+!     14       14      -      -      -       -       0.681      solar
+!     15       15      -      -      -      M6       0.750      solar
+!     16       16      -      -      -       -       0.865      solar
+!     17       17      -      -      -       -       0.905      solar
+!     18       18      -      -      -       -       0.936      solar
+!     19       19      -      -      -       -       0.940      solar
+!     20       20      3b     7      7     M12       3.750      mixed
+!     21       21      -      -      -       -       3.959      mixed
+!     22       22      -      -      -     M13       3.959      mixed
+!     23       23      -      -      -       -       4.050      therm
+!     24       24      -      -      -       -       4.465      therm
+!     25       25      -      -      -       -       4.515      therm
+!     26       26      -      4      -      M9       1.375      solar
+!     27       27      -      9      9       -       6.715      therm
+!     28       28      -     10     10       -       7.325      therm
+!     29       29      -     11     11     M14       8.550      therm
+!     30       30      -     12     12       -       9.730      therm
+!     31       31      4     14     14     M15      11.030      therm
+!     32       32      5     15     15     M16      12.020      therm
+!     33       32      -     16     16       -      13.335      therm
+!     34       33      -      -      -       -      13.635      therm
+!     35       34      -      -      -       -      13.935      therm
+!     36       35      -      -      -       -      14.235      therm
+!     37       36      -      8      8       -       6.200      therm
+!     38       -       -     13     13       -      10.400      therm
+!     39       -       -      -      -      I1       0.640      solar
+!     40       -       -      -      -      I2       0.865      solar
+!     41       -       -      -      -      I3       1.610      solar
+!     42       -       -      -      -      I4       3.740      mixed
+!     43       -       -      -      -      I5      11.450      therm
+!     44       -       -      -      -     DNB       0.700      lunar
+!     45*      -       -      -      -      -       13.335      therm
+!
+!     * = a pseudo 13.3 channel only AVHRR/HIRS and VIIRS/CRIS IFF
 !
 !  Description of variables in "ch" structure:
 !
@@ -103,10 +106,12 @@
 !  Opd = Optical Depth
 !  CSBT_Mask = Clear Sky Brighntess Temperature Mask
 !  Opaque_Height = Maximum Height at which trans to space is 0.
+!  Obs_Type = type of observation (solar,lunar,mixed,thermal).  Controls what is allocated
 !--------------------------------------------------------------------------------------
 module PIXEL_COMMON
 
   use CONSTANTS
+  use CLAVRX_MESSAGE_MODULE, only: MESG, VERB_LEV
   implicit none
   private
   public:: CREATE_PIXEL_ARRAYS, &
@@ -167,6 +172,7 @@ module PIXEL_COMMON
     integer (kind=int1), dimension(:,:), allocatable:: Unc
     integer (kind=int1), dimension(:,:), allocatable:: CSBT_Mask
     real (kind=real4), dimension(:,:), allocatable:: Opaque_Height
+    character(len=5) :: Obs_Type
   end type observations
 
   type :: geometry_definition
@@ -304,7 +310,7 @@ module PIXEL_COMMON
 
 
   !---- declare structures using above types
-  type(observations), dimension(44), public, save, target :: Ch
+  type(observations), dimension(Nchan_Clavrx), public, save, target :: Ch
   type(sensor_definition), public, save, target :: Sensor
   type(image_definition), public, save, target :: Image
   type(geometry_definition), public, save, target :: Geo
@@ -780,15 +786,15 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
 
   !--- Solar RTM Terms
   type, public :: solar_rtm_struct
-      real, dimension(44,3):: Tau_H2O_Coef
-      real, dimension(44):: Tau_Ray
-      real, dimension(44):: Tau_O2
-      real, dimension(44):: Tau_O3
-      real, dimension(44):: Tau_CH4
-      real, dimension(44):: Tau_CO2
-      real, dimension(44):: Tau_Aer
-      real, dimension(44):: Wo_Aer
-      real, dimension(44):: G_Aer
+      real, dimension(Nchan_Clavrx,3):: Tau_H2O_Coef
+      real, dimension(Nchan_Clavrx):: Tau_Ray
+      real, dimension(Nchan_Clavrx):: Tau_O2
+      real, dimension(Nchan_Clavrx):: Tau_O3
+      real, dimension(Nchan_Clavrx):: Tau_CH4
+      real, dimension(Nchan_Clavrx):: Tau_CO2
+      real, dimension(Nchan_Clavrx):: Tau_Aer
+      real, dimension(Nchan_Clavrx):: Wo_Aer
+      real, dimension(Nchan_Clavrx):: G_Aer
   end type solar_rtm_struct
  
   type (solar_rtm_struct), public, save:: Solar_Rtm
@@ -813,20 +819,49 @@ subroutine CREATE_PIXEL_ARRAYS()
   dim1 = Image%Number_Of_Elements
   dim2 = Image%Number_Of_Lines_Per_Segment
 
-  do idx = 1,38
+  !---- new
+!----------------------------------------------------------------------
+!  begin allocation of ch structure
+!----------------------------------------------------------------------
+
+  !--- set obs type for each channel
+  ch(1:19)%Obs_Type = SOLAR_OBS_TYPE
+  ch(20)%Obs_Type = MIXED_OBS_TYPE
+  ch(21)%Obs_Type = MIXED_OBS_TYPE
+  ch(22:25)%Obs_Type = THERMAL_OBS_TYPE
+  ch(26)%Obs_Type = SOLAR_OBS_TYPE
+  ch(27:38)%Obs_Type = THERMAL_OBS_TYPE
+  ch(39:41)%Obs_Type = SOLAR_OBS_TYPE
+  ch(42)%Obs_Type = MIXED_OBS_TYPE
+  ch(43)%Obs_Type = THERMAL_OBS_TYPE
+  ch(44)%Obs_Type = LUNAR_OBS_TYPE
+  ch(45)%Obs_Type = THERMAL_OBS_TYPE
+
+  !--- loop through each that is on, allocate fields based on obs type 
+  do idx = 1,Nchan_Clavrx
       if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
-         allocate(Ch(idx)%Unc(dim1,dim2))
-         if (idx <= 20 .or. idx == 26) then 
+
+print *, 'hello ', idx, ch(idx)%Obs_Type
+        select case (ch(idx)%Obs_Type)
+
+        case(SOLAR_OBS_TYPE)
             allocate(Ch(idx)%Ref_Toa(dim1,dim2))
             allocate(Ch(idx)%Ref_Toa_Unnorm(dim1,dim2))
             allocate(Ch(idx)%Ref_Sfc(dim1,dim2))
             allocate(Ch(idx)%Ref_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
-         endif
-         if (idx == 1) then 
-            allocate(Ch(idx)%Opd(dim1,dim2))
-         endif
-         if (idx >= 20 .and. idx /= 26) then 
+            if (idx == 1) allocate(Ch(idx)%Opd(dim1,dim2))
+
+        case(LUNAR_OBS_TYPE)
+            allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+            allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+            allocate(Ch(idx)%Ref_Lunar_Toa(dim1,dim2))
+            allocate(Ch(idx)%Ref_Lunar_Toa_Clear(dim1,dim2))
+            allocate(Ch(idx)%Ref_Lunar_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+            allocate(Ch(idx)%Unc(dim1,dim2))
+
+        case(THERMAL_OBS_TYPE)
             allocate(Ch(idx)%Rad_Toa(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa(dim1,dim2))
             allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
@@ -836,37 +871,100 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Rad_Atm(dim1,dim2))
             allocate(Ch(idx)%Trans_Atm(dim1,dim2))
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
-         endif
-         !-- at present only 11 micron downward atm emission needed
-         if (idx == 31) then 
-            allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
-         endif
-         if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) then
-            allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
-         endif
-         if (idx >= 27 .and. idx <= 38) then
-             allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
-             allocate(Ch(idx)%Opaque_Height(dim1,dim2))
-         endif
+            if (idx == 31) allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
+            if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+            if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
+            if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%Opaque_Height(dim1,dim2))
+
+        case(MIXED_OBS_TYPE)
+            allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+            allocate(Ch(idx)%Ref_Toa_Unnorm(dim1,dim2))
+            allocate(Ch(idx)%Ref_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Ref_Toa_Clear(dim1,dim2))
+            allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+            allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+            allocate(Ch(idx)%Bt_Toa(dim1,dim2))
+            allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Rad_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Rad_Toa_Clear(dim1,dim2))
+            allocate(Ch(idx)%Bt_Toa_Clear(dim1,dim2))
+            allocate(Ch(idx)%Rad_Atm(dim1,dim2))
+            allocate(Ch(idx)%Trans_Atm(dim1,dim2))
+            allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
+
+        case default
+
+           call MESG ("Arrays not allocated for unknown channel = ",idx) 
+
+        end select
 
       endif
 
-   enddo
+  enddo
 
-   !--- force allocation of channel 20 surface emissivity for use in mask
-   if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
+  !--- force allocation of channel 20 surface emissivity for use in mask
+  if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
+  
+  !---  old
+
+! do idx = 1,38
+!     if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
+!        allocate(Ch(idx)%Unc(dim1,dim2))
+!        if (idx <= 20 .or. idx == 26) then 
+!           allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Toa_Unnorm(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+!        endif
+!        if (idx == 1) then 
+!           allocate(Ch(idx)%Opd(dim1,dim2))
+!        endif
+!        if ((idx >= 20 .and. idx <= 38 .and. idx /= 26)) then 
+!           allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Atm(dim1,dim2))
+!           allocate(Ch(idx)%Trans_Atm(dim1,dim2))
+!           allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
+!        endif
+!        !-- at present only 11 micron downward atm emission needed
+!        if (idx == 31) then 
+!           allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
+!        endif
+!        if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) then
+!           allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+!        endif
+!        if (idx >= 27 .and. idx <= 38) then
+!            allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
+!            allocate(Ch(idx)%Opaque_Height(dim1,dim2))
+!        endif
+
+!     endif
+
+!  enddo
+
+!  !--- force allocation of channel 20 surface emissivity for use in mask
+!  if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
 
    !--- DNB Variable
-   idx = 44
-   if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
-      allocate(Ch(idx)%Rad_Toa(dim1,dim2))
-      allocate(Ch(idx)%Ref_Toa(dim1,dim2))
-      allocate(Ch(idx)%Ref_Lunar_Toa(dim1,dim2))
-      allocate(Ch(idx)%Ref_Lunar_Toa_Clear(dim1,dim2))
-      allocate(Ch(idx)%Ref_Lunar_Sfc(dim1,dim2))
-      allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
-      allocate(Ch(idx)%Unc(dim1,dim2))
-   endif
+!  idx = 44
+!  if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
+!     allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Toa_Clear(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Sfc(dim1,dim2))
+!     allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+!     allocate(Ch(idx)%Unc(dim1,dim2))
+!  endif
+
+!----------------------------------------------------------------------
+!  end allocation of ch structure
+!----------------------------------------------------------------------
 
    if ((Sensor%Chan_On_Flag_Default(27) == sym%YES) .and.   &
        (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then
@@ -972,7 +1070,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
 
   integer:: idx
 
-  do idx = 1,44
+  do idx = 1,Nchan_Clavrx
       if (allocated(Ch(idx)%Rad_Toa)) deallocate(Ch(idx)%Rad_Toa)
       if (allocated(Ch(idx)%Bt_Toa)) deallocate(Ch(idx)%Bt_Toa)
       if (allocated(Ch(idx)%Rad_Toa_Clear)) deallocate(Ch(idx)%Rad_Toa_Clear)
@@ -1441,7 +1539,7 @@ end subroutine CREATE_REF_CHANNEL_ARRAYS
 subroutine RESET_REF_CHANNEL_ARRAYS
    integer:: idx
 
-   do idx = 1,44
+   do idx = 1,Nchan_Clavrx
       if (allocated(Ch(idx)%Rad_Toa)) Ch(idx)%Rad_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Bt_Toa)) Ch(idx)%Bt_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Toa_Clear)) Ch(idx)%Rad_Toa_Clear = Missing_Value_Real4

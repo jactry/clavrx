@@ -472,7 +472,9 @@
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
+print *, "Before Create"
       call CREATE_PIXEL_ARRAYS()
+print *, "After Create"
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite
@@ -1131,6 +1133,8 @@
                   end if
                   
                end if
+
+print *, "After DCOMP"
     
                !--- compute precipation from optical properties
                if (Dcomp_Mode > 0 ) then

@@ -30,18 +30,19 @@
 !
 ! Description of RTM Structure Members given in rtm_common.f90
 !
-! CLAVR-x has 44 channels.  
+! CLAVR-x has 45 channels.  
 ! Channels 1-36 are MODIS
 ! Channels 37-38 are ABI channels not on MODIS
 ! Channels 39-43 are the VIIRS I-bands
 ! Channel 44 is the VIIRS DNB
+! Channel 45 is the IFF Pseudo MODIS ch 33
 !
 ! Not all members of the RTM structure are populated for all channels.
 ! However, all members are allocated for any active cell
 !
 ! Here is the current implementation
 !
-! There are 6 types of channels
+! There are 6 types of channels (FIX THIS)
 ! 1. MODIS IR-only channels = 21-36 excluding 26. 
 ! 2. Non-MODIS IR-only channels  37-38
 ! 3. MODIS (Solar + IR) channels = Channel 20
@@ -71,7 +72,11 @@ module RT_UTILITIES
       , Missing_Value_Real4  &
       , Exe_Prompt &
       , G &
-      , PI
+      , PI &
+      , SOLAR_OBS_TYPE &
+      , LUNAR_OBS_TYPE &
+      , MIXED_OBS_TYPE &
+      , THERMAL_OBS_TYPE
       
    use NWP_COMMON, only : &
         Nlevels_Nwp &
@@ -170,7 +175,7 @@ module RT_UTILITIES
     real, parameter :: Co2_Ratio = 380.0 !in ppmv
 
     integer, parameter :: Chan_Idx_Min = 1
-    integer, parameter :: Chan_Idx_Max = 44
+    integer, parameter :: Chan_Idx_Max = 45
 
     real(kind=real4),  save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
 
@@ -716,10 +721,13 @@ contains
                   !--------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
 
-                     if (Chan_Idx < 20) cycle
-                     if (Chan_Idx == 26) cycle
-                     if (Chan_Idx == 44) cycle
+               !     if (Chan_Idx < 20) cycle
+               !     if (Chan_Idx == 26) cycle
+               !     if (Chan_Idx == 44) cycle
+
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+                     if (ch(Chan_Idx)%Obs_Type == SOLAR_OBS_TYPE) cycle
+                     if (ch(Chan_Idx)%Obs_Type == LUNAR_OBS_TYPE) cycle
                      
                 
                      Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
@@ -1450,7 +1458,9 @@ contains
 
       if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
 
-      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
+!     if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
+
+      if (ch(Chan_Idx)%Obs_Type /= SOLAR_OBS_TYPE .or. ch(Chan_Idx)%Obs_Type /= LUNAR_OBS_TYPE) return
 
       Trans_Prof_Rtm = 1.0
 

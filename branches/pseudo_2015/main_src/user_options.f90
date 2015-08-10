@@ -103,7 +103,7 @@ module USER_OPTIONS
    use CONSTANTS, only: &
       sym &
       , exe_prompt &
-      , nchan_clavrx
+      , Nchan_Clavrx
       
    use FILE_UTILITY, only: &
       get_lun
@@ -125,7 +125,7 @@ module USER_OPTIONS
    integer :: Mask_Mode_User_Set
    integer :: Expert_Mode
    
-   integer :: Chan_On_Flag_Default_User_Set (nchan_clavrx)
+   integer :: Chan_On_Flag_Default_User_Set (Nchan_Clavrx)
    
    ! ---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
@@ -158,7 +158,7 @@ contains
    ! ---------------------------------------------------------------------------------
    !
    ! ---------------------------------------------------------------------------------
-   subroutine set_default_values
+   subroutine SET_DEFAULT_VALUES
            
       Aer_Flag = sym%YES
       Ash_Flag = sym%NO
@@ -208,7 +208,7 @@ contains
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(37:42) = [1,1,0,0,0,0]
-      Chan_On_Flag_Default_User_Set(43:44) = [0,1]
+      Chan_On_Flag_Default_User_Set(43:45) = [0,0,0]
       Nav%Lat_Max_Limit = 90.0
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
@@ -218,7 +218,7 @@ contains
       Geo%Solzen_Max_Limit = 180.0
       Geo%Solzen_Min_Limit = 0.0
       
-   end subroutine
+   end subroutine SET_DEFAULT_VALUES
    
 
    !---------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ contains
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(25:30)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(31:36)
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(37:42)
-      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:44)
+      read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:45)
              
       close(unit=Default_Lun)
 
@@ -1017,7 +1017,7 @@ contains
    function Existing_Channels  (SensorName)  result( Valid_Channels )
       character (len = *) , intent(in) :: SensorName
       
-      integer , target :: Valid_Channels ( 44 ) 
+      integer , target :: Valid_Channels (Nchan_Clavrx) 
       integer :: i 
       
       Valid_Channels = -99
@@ -1044,11 +1044,11 @@ contains
       case ('VIIRS')
          Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,39,40,41,42,43,44]
       case ('VIIRS-IFF')
-         Valid_Channels (1:20) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36]
+         Valid_Channels (1:21) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,45]
       case ('AQUA-IFF')
          Valid_Channels (1:36) = [(i,i=1,36,1)]
       case ('AVHRR-IFF')
-         Valid_Channels (1:19) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36]
+         Valid_Channels (1:20) = [1,2,6,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36,45]
       case ('COMS-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]
       case ('MODIS')
@@ -1072,7 +1072,7 @@ contains
    !----------------------------------------------------------------------
    subroutine CHANNEL_SWITCH_ON (SensorName)
       character (len=*) , intent(in) :: SensorName
-      integer :: Valid_Channels ( 44)
+      integer :: Valid_Channels (Nchan_Clavrx)
       integer :: i
  
       ! expert can decide themselves
@@ -1082,7 +1082,7 @@ contains
           
       Sensor%Chan_On_Flag_Default =  0
 
-      do i = 1, 44 
+      do i = 1, Nchan_Clavrx
          if (Valid_Channels (i) < 0 ) cycle
          Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = 1
       end do
@@ -1095,7 +1095,7 @@ contains
    subroutine  EXPERT_MODE_CHANNEL_ALGORITHM_CHECK ( SensorName ) 
       character (len=*) , intent(in) :: SensorName  
       
-      integer :: Valid_Channels ( 44 )
+      integer :: Valid_Channels (Nchan_Clavrx)
       integer :: i
       logical :: Not_Run_Flag
       
@@ -1108,7 +1108,7 @@ contains
 
       Valid_Channels = Existing_Channels ( SensorName )
 
-      do i = 1, 44 
+      do i = 1, Nchan_Clavrx
          if ( any ( i == Valid_Channels )) cycle
          Sensor%Chan_On_Flag_Default ( i ) = 0
       end do

@@ -301,6 +301,11 @@ contains
       do i = 1 , Image%Number_Of_Lines_Read_This_Segment - 1
          if ( nav % lat_1b(Image%Number_Of_Elements / 2 , i + 1) <= nav % lat_1b( Image%Number_Of_Elements / 2 , i ) ) nav % ascend ( i )  = 1
       end do
+      ! --- fix for the last line Denis B.
+      if ( nav % lat_1b(Image%Number_Of_Elements / 2 , Image%Number_Of_Lines_Read_This_Segment) <= &
+           nav % lat_1b(Image%Number_Of_Elements / 2 , Image%Number_Of_Lines_Read_This_Segment - 1) ) &
+            nav % ascend ( Image%Number_Of_Lines_Read_This_Segment ) = 1
+
       
       !---  statistics I-Band on M-band grid
       if ( is_iband_on( 1 ) ) call COMPUTE_IBAND_STATISTICS (Ref_ChI1 , Ref_Min_ChI1 , Ref_Max_ChI1 , Ref_Mean_ChI1 , Ref_Uni_ChI1)

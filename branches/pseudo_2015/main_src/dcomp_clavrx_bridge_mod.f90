@@ -44,7 +44,8 @@ module dcomp_clavrx_bridge_mod
     use dcomp_interface_types_mod , only: &
          dcomp_in_type &
        , dcomp_out_type &
-       , alloc_dcomp 
+       , alloc_dcomp &
+       , n_chn
    
    use  clavrx_message_module, only: &
         mesg
@@ -118,7 +119,7 @@ contains
       integer :: idx_chn
       
       integer :: dcomp_possible_channels ( 5) 
-      logical :: chan_on ( 44 ) = .false.
+      logical :: chan_on ( N_CHN ) = .false.
       integer :: i
       integer :: CHN_VIS
       integer :: CHN_NIR

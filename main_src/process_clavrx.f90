@@ -1120,7 +1120,7 @@ print *, "After Create"
      
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-    
+ print*,'start dcomp..'   
                if (Dcomp_Mode > 0) then
         
                   call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)

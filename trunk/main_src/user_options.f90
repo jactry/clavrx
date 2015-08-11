@@ -125,7 +125,7 @@ module USER_OPTIONS
    integer :: Mask_Mode_User_Set
    integer :: Expert_Mode
    
-   integer :: Chan_On_Flag_Default_User_Set (nchan_clavrx)
+   integer :: Chan_On_Flag_Default_User_Set (Nchan_Clavrx)
    
    ! ---------------------------------------------------------------------------------
    ! Default Algorithm Modes - 
@@ -158,7 +158,7 @@ contains
    ! ---------------------------------------------------------------------------------
    !
    ! ---------------------------------------------------------------------------------
-   subroutine set_default_values
+   subroutine SET_DEFAULT_VALUES
            
       Aer_Flag = sym%YES
       Ash_Flag = sym%NO
@@ -194,8 +194,8 @@ contains
       Read_Volcano_Mask = 0
       Read_Snow_Mask = 1
       Read_Dark_Comp = 0
-      Ref_Cal_1b = 1
-      Therm_Cal_1b = 1    
+      Ref_Cal_1b = 0
+      Therm_Cal_1b = 0    
       Nav_Opt = 0  
       goes_stride = 1
       Lrc_Flag = 1 
@@ -218,7 +218,7 @@ contains
       Geo%Solzen_Max_Limit = 180.0
       Geo%Solzen_Min_Limit = 0.0
       
-   end subroutine
+   end subroutine SET_DEFAULT_VALUES
    
 
    !---------------------------------------------------------------------------------

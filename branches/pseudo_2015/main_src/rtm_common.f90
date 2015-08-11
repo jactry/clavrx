@@ -143,7 +143,7 @@ module RTM_COMMON
 
   type, public :: Chan_Rtm_Prof
      integer (kind=int1) :: Flag = 0
-     type(Rtm_Prof):: ch(44)
+     type(Rtm_Prof):: ch(45)
   end type Chan_Rtm_Prof
 
   type, public :: Rtm_Params

@@ -209,8 +209,9 @@ module dcomp_rtm_module
                                  & dcomp_rtm % trans_ir_ac(elem_idx,line_idx) ** (cos ( geo % satzen(elem_idx, line_idx) * PI / 180.  ))
             
             dcomp_rtm % sfc_nwp  (elem_idx,line_idx)  = psfc_nwp(x_nwp,y_nwp)
-            
+          
             clear_trans_prof_rtm = rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % trans_atm_profile
+           
             clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % rad_atm_profile
 
             dcomp_rtm % rad_clear_sky_toc_ch20 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)

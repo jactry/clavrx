@@ -1049,7 +1049,7 @@ print *, "After Create"
                   & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
             end if   !end of Cld_Flag check
-
+print*,'cloud start..'
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
@@ -1179,7 +1179,7 @@ print *, "After DCOMP"
                end if
 
             end if
-   
+  
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             

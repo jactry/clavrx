@@ -152,7 +152,7 @@ contains
       
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( dcomp_rtm ) 
-            
+           
       dim_1 = Image%Number_Of_Elements
       dim_2 = Image%Number_Of_Lines_Read_This_Segment
   

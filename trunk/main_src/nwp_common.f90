@@ -1776,9 +1776,9 @@ end subroutine FIND_NWP_LEVELS
 
           endif
 
-          if (Pressure_Profile(Ilev) <= 440.0) then
+          if (Pressure_Profile(Ilev) <= 350.0) then
                High_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite
-          elseif (Pressure_Profile(Ilev) > 440.0 .and. Pressure_Profile(Ilev) <= 680.0) then
+          elseif (Pressure_Profile(Ilev) > 350.0 .and. Pressure_Profile(Ilev) <= 642.0) then
                Mid_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite - High_Cloud_Fraction_Satellite
           else
                Low_Cloud_Fraction_Satellite = Cloud_Fraction_Satellite &

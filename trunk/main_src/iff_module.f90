@@ -48,17 +48,17 @@ module IFF_MODULE
  public :: READ_IFF_DATE_TIME
 
    type , public :: iff_data_config
-      integer(2) :: year_int
-      integer(2) :: doy_int
+      integer , dimension( 2 ) :: year_int
+      integer , dimension( 2 ) :: doy_int
       integer :: n_chan
-      integer :: chan_list ( 36 )
+      integer , dimension( 37 ) :: chan_list
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count
-      logical :: chan_on ( 36 )
+      logical , dimension( 37 ) :: chan_on
       logical :: iff_cloud_mask_on
       character ( len = 255 ) :: iff_file
       character ( len = 355 ) :: dir_1b
-      character (len = 355 ) :: Ancil_Data_Dir
+      character ( len = 355 ) :: Ancil_Data_Dir
    end type iff_data_config
 
    type :: geo_str
@@ -71,6 +71,9 @@ module IFF_MODULE
       real , dimension (:,:) , allocatable :: lon
       real , dimension (:) , allocatable :: scan_time
       integer , dimension (:) , allocatable :: ascend
+      integer(kind=int1) , dimension (:,:) , allocatable :: sounder_fov
+      integer(kind=int2) , dimension (:,:) , allocatable :: sounder_x
+      integer(kind=int2) , dimension (:,:) , allocatable :: sounder_y
    end type  geo_str
 
    type :: band_str
@@ -211,11 +214,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       integer(kind=int4), dimension (2) :: start_2d, stride_2d, edge_2d
       integer(kind=int4), dimension (3) :: start_3d, stride_3d, edge_3d
       integer(kind=int1), dimension( : , : , : ) , allocatable :: i3d_buffer
-      integer(kind=int4) , dimension(2) :: dim_seg
+      integer(kind=int4), dimension(2) :: dim_seg
+      integer(kind=int1), dimension( : , : ) , allocatable :: i2d_8_buffer
+      integer(kind=int2), dimension( : , : ) , allocatable :: i2d_16_buffer
       real(kind=int4), parameter :: fill_value = 65535.
       real(kind=int8), parameter :: sec_per_day = 86400.
       real(kind=int4), dimension(36) :: nu_list
-      real(kind=int4) , dimension ( : ) , allocatable:: time_msec_day
+      real(kind=int4), dimension ( : ) , allocatable:: time_msec_day
       real(kind=int8), dimension( : ) , allocatable :: r1d_buffer
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
       real(kind=int4), dimension( : , : , : ) , allocatable :: r3d_buffer
@@ -260,8 +265,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                            Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
       else
          nu_list(20:25) = [Planck_Nu(20), Planck_Nu(21), Planck_Nu(22), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
-         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30),  &
-                           Planck_Nu(31), Planck_Nu(32), Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
+         nu_list(27:37) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
+                           Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36), Planck_Nu(33)]
       endif
 
       ! open file
@@ -331,15 +336,16 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          ! for CrIS, HIRS and AIRS channels add 1 (131 - 136)
          ! for MODIS set low 13 & 14 channels to 913 and 914 to ignore it
          do ii = 1, num_char_band_names
-            Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'-','1','before') + Status
+            Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'-','1','before') + Status ! Sounder
+            Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'o','9','before') + Status ! Pseudo
             select case (trim(Sensor%Sensor_Name))
             case('VIIRS-IFF')
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'M',' ','before') + Status
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'M',' ','before') + Status ! M-Bands
             case('AQUA-IFF')
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'l','9','after') + Status ! lo/hi
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'h',' ','after') + Status  
             case('AVHRR-IFF')
-               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'a',' ','after') + Status
+               Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'a',' ','after') + Status ! 3a/3b
                Status = REPLACE_CHAR_IN_STRG (band_names_char_arr(ii),'b',' ','after') + Status               
             case default
             
@@ -398,24 +404,26 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
                do ii = 1, num_char_band_names
                   select case ( band_names_int_rad(ii) )
-                     case (12)
+                     case (12) ! M-Bands
                         band_names_int_rad(ii) = 20
-                     case (13)
+                     case (13) ! M-Bands
                         band_names_int_rad(ii) = 22
-                     case (14)
+                     case (14) ! M-Bands
                         band_names_int_rad(ii) = 29
-                     case (15)
+                     case (15) ! M-Bands
                         band_names_int_rad(ii) = 31
-                     case (16)
+                     case (16) ! M-Bands
                         band_names_int_rad(ii) = 32
-                     case (133)
+                     case (133) ! Sounder
                         band_names_int_rad(ii) = 33
-                     case (134)
+                     case (134) ! Sounder
                         band_names_int_rad(ii) = 34
-                     case (135)
+                     case (135) ! Sounder
                         band_names_int_rad(ii) = 35
-                     case (136)
+                     case (136) ! Sounder
                         band_names_int_rad(ii) = 36
+                     case (933) ! Pseudo
+                        band_names_int_rad(ii) = 45
                   end select
                enddo
             elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
@@ -456,7 +464,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                      ! Attn: Use unused ch. to save HIRS 3.75um
                      case (119) ! HIRS-19 ! same as AVHRR ch3
                         band_names_int_rad(ii) = 21
+                     case (933) ! Pseudo
+                        band_names_int_rad(ii) = 45
                   end select
+               enddo
+            elseif (trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
+               do ii = 1, num_char_band_names                                                                                                                                      
+                  if ( band_names_int_rad(ii) == 933 ) band_names_int_rad(ii) = 45
                enddo
             endif
          endif
@@ -467,7 +481,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! --- end loop over ref & rad
       enddo
       
-      allocate ( out % band (44))
+      allocate ( out % band (config % n_chan))
       ! --- read bands
       do i_band = 1, config % n_chan
 
@@ -487,8 +501,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                endif
             enddo
 
-         elseif (config % chan_list(i_band) >= 20 .and. config % chan_list(i_band) <= 36 &
-            .and. i_band /= 26) then
+         elseif ((config % chan_list(i_band) >= 20 .and. config % chan_list(i_band) <= 36 &
+            .and. config % chan_list(i_band) /= 26) .or. config % chan_list(i_band) == 45) then
             setname_band = 'EmissiveBands'
 
             ! find what current channel has array number
@@ -521,14 +535,14 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             where(r3d_buffer .LT. 0.)
                r3d_buffer = missing_value
             endwhere
-            if (.not. allocated ( out % band ( i_band ) % ref ) ) &
-                      allocate (out % band ( i_band ) % ref (dim_seg(1), dim_seg(2)) )
-            out % band ( i_band ) % ref =  r3d_buffer(:,:,1)
+            if (.not. allocated ( out % band (i_band) % ref ) ) &
+                      allocate (out % band (i_band) % ref (dim_seg(1), dim_seg(2)) )
+            out % band (i_band) % ref =  r3d_buffer(:,:,1)
          elseif (trim(setname_band) == 'EmissiveBands') then
             call CONVERT_RADIANCE(r3d_buffer(:,:,1),nu_list(i_band),missing_value)
-            if (.not. allocated ( out % band ( i_band ) % rad ) ) &
-                     allocate (out % band ( i_band ) % rad (dim_seg(1), dim_seg(2)) )
-            out % band ( i_band ) % rad =  r3d_buffer(:,:,1)
+            if (.not. allocated ( out % band (i_band) % rad ) ) &
+                     allocate (out % band (i_band) % rad (dim_seg(1), dim_seg(2)) )
+            out % band (i_band) % rad =  r3d_buffer(:,:,1)
 
          endif
             
@@ -541,6 +555,52 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       deallocate ( band_names_int_ref )                                                                                        
       deallocate ( band_names_int_rad )
+
+
+      ! --- Read indices from sounder
+      setname_band = 'SounderFOV'
+      stride_2d = (/ 1, 1 /)
+      start_2d = (/ 0, ny_start /)
+      edge_2d = (/ dim_seg(1), dim_seg(2) /)
+      allocate ( i2d_8_buffer(dim_seg(1), dim_seg(2)) )
+      allocate ( i2d_16_buffer(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_fov(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
+
+      Status = READ_HDF_SDS_INT8_2D(Id,TRIM(setname_band),start_2d, &
+                  stride_2d,edge_2d,i2d_8_buffer) + Status
+      out % geo % sounder_fov = i2d_8_buffer
+
+      ! change fill values to missing
+      where(i2d_8_buffer .lt. 0)
+         out % geo % sounder_fov = -128
+      endwhere
+
+      setname_band = 'SounderX'
+      Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
+                  stride_2d,edge_2d,i2d_16_buffer) + Status
+      out % geo % sounder_x = i2d_16_buffer
+
+      ! change fill values to missing
+      where(i2d_16_buffer .lt. 0)
+         out % geo % sounder_x = -32768
+      endwhere
+
+      i2d_16_buffer = -1
+      setname_band = 'SounderY'
+      Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
+                  stride_2d,edge_2d,i2d_16_buffer) + Status
+      out % geo % sounder_y = i2d_16_buffer
+
+      ! change fill values to missing
+      where(i2d_16_buffer .lt. 0)
+         out % geo % sounder_y = -32768
+      endwhere
+
+      ! --- dealocate variables
+      deallocate ( i2d_8_buffer )
+      deallocate ( i2d_16_buffer )
 
       !Close main file
       call CLOSE_FILE_HDF_READ(Id,TRIM(config%iff_file))
@@ -765,8 +825,11 @@ end subroutine READ_IFF_DATE_TIME
       if (allocated ( this%geo%lat )) deallocate ( this%geo%lat )
       if (allocated ( this%geo%lon )) deallocate ( this%geo%lon )
       if (allocated ( this%geo%scan_time )) deallocate ( this%geo%scan_time )
+      if (allocated ( this%geo%sounder_fov )) deallocate ( this%geo%sounder_fov )
+      if (allocated ( this%geo%sounder_x )) deallocate ( this%geo%sounder_x )
+      if (allocated ( this%geo%sounder_y )) deallocate ( this%geo%sounder_y )
 
-      do m = 1 , 44
+      do m = 1 , 37
         if (allocated (this%band (m) %ref )) deallocate ( this%band (m) %ref )
         if (allocated (this%band (m) %rad )) deallocate ( this%band (m) %rad )
         if (allocated (this%band (m) %bt )) deallocate ( this%band (m) %bt )

@@ -1118,7 +1118,7 @@
      
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-    
+
                if (Dcomp_Mode > 0) then
         
                   call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)
@@ -1131,7 +1131,7 @@
                   end if
                   
                end if
-    
+
                !--- compute precipation from optical properties
                if (Dcomp_Mode > 0 ) then
                   call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1175,7 +1175,7 @@
                end if
 
             end if
-   
+  
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             

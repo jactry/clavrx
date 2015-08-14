@@ -297,7 +297,7 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
-pixel_common.o: pixel_common.f90 constant.o
+pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o

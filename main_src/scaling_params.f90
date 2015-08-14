@@ -79,6 +79,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Bt36 = 180.0, Max_Bt36 = 340.0
  real, parameter, public:: Min_Bt37 = 180.0, Max_Bt37 = 340.0
  real, parameter, public:: Min_Bt38 = 180.0, Max_Bt38 = 340.0
+ real, parameter, public:: Min_Bt45 = 180.0, Max_Bt45 = 340.0
  real, parameter, public:: Min_Btd_Ch31_Ch32 = -4.0, Max_Btd_Ch31_Ch32 = 12.0
  real, parameter, public:: Min_Btd_3b_4 = -20.0, Max_Btd_3b_4 = 100.0
  real, parameter, public:: Min_Ref_Ch1_std = 0.0, Max_Ref_Ch1_std = 20.0

@@ -151,8 +151,8 @@ module RT_UTILITIES
       , T_Std_Rtm &
       , Wvmr_Std_Rtm &
       , Ozmr_Std_Rtm 
-    use cx_pfaast_mod,only: &
-      compute_transmission_pfaast
+    use CX_PFAAST_MOD, only: &
+       COMPUTE_TRANSMISSION_PFAAST
    implicit none
    
    private:: EMISSIVITY, &
@@ -591,6 +591,7 @@ contains
       integer:: Zen_Idx
       integer:: Error_Status
       integer:: Chan_Idx
+      integer:: Chan_Idx_For_Pfaast
 
       real(kind=real4),save :: Segment_Time_Point_Seconds_Temp = 0
       real(kind=real4) :: Start_Time_Point_Hours_Temp
@@ -730,19 +731,21 @@ contains
                      if (ch(Chan_Idx)%Obs_Type == LUNAR_OBS_TYPE) cycle
                      
                 
+                     Chan_Idx_For_Pfaast = Chan_Idx
+                     if (Chan_Idx .eq. 45) Chan_Idx_For_Pfaast = 33
                      Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
                      
-                     CALL compute_transmission_pfaast( &
-                           trim(Ancil_data_Dir) &
+                     CALL COMPUTE_TRANSMISSION_PFAAST( &
+                           trim(Ancil_Data_Dir) &
                         ,  T_Prof_rtm &
                         ,  Wvmr_Prof_Rtm &
                         ,  Ozmr_Prof_Rtm &
                         ,  Satzen_Mid_Bin &
                         ,  CO2_RATIO &
                         ,  Sc_Name_Rtm &
-                        ,  chan_idx &
+                        ,  Chan_Idx_For_Pfaast &
                         ,  Trans_Prof_Rtm &
-                        ,  use_modis_channel_equivalent = .true.  ) 
+                        ,  Use_Modis_Channel_Equivalent = .true.  ) 
 
                      !---- Copy the output to appropriate channel's tranmission vector
                      Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
@@ -1415,7 +1418,7 @@ contains
       if (trim ( Sensorname) == 'VIIRS-IFF') then
          
          !  sensor for channels 27:28 and 33:36 is CRISP this is similar to MODIS-AQUA
-         if ( any ( chan_idx ==  [27,28, 33,34,35,36] ) ) sensor_name_rtm   = 'MODIS-AQUA'
+         if ( any ( chan_idx ==  [27,28, 33,34,35,36,45] ) ) sensor_name_rtm   = 'MODIS-AQUA'
          
       end if
    
@@ -1457,9 +1460,7 @@ contains
       Error_Status = 1
 
       if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
-
 !     if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
-
       if (ch(Chan_Idx)%Obs_Type /= SOLAR_OBS_TYPE .or. ch(Chan_Idx)%Obs_Type /= LUNAR_OBS_TYPE) return
 
       Trans_Prof_Rtm = 1.0

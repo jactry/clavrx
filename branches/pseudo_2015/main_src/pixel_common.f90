@@ -202,6 +202,9 @@ module PIXEL_COMMON
 
   type :: navigation_definition
    integer (kind=int1), dimension(:), allocatable:: Ascend
+   integer (kind=int1), dimension(:,:), allocatable:: Sounder_Fov
+   integer (kind=int2), dimension(:,:), allocatable:: Sounder_X
+   integer (kind=int2), dimension(:,:), allocatable:: Sounder_Y
    real (kind=real4), dimension(:,:), allocatable:: Lat
    real (kind=real4), dimension(:,:), allocatable:: Lon
    real (kind=real4), dimension(:,:), allocatable:: Lat_Pc
@@ -841,7 +844,6 @@ subroutine CREATE_PIXEL_ARRAYS()
   do idx = 1,Nchan_Clavrx
       if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
 
-print *, 'hello ', idx, ch(idx)%Obs_Type
         select case (ch(idx)%Obs_Type)
 
         case(SOLAR_OBS_TYPE)
@@ -1278,6 +1280,9 @@ end subroutine DESTROY_SENSOR_ARRAYS
 subroutine CREATE_NAV_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    allocate(Nav%Ascend(dim2))
+   allocate(Nav%Sounder_Fov(dim1,dim2))
+   allocate(Nav%Sounder_X(dim1,dim2))
+   allocate(Nav%Sounder_Y(dim1,dim2))
    allocate(Nav%Lat(dim1,dim2))
    allocate(Nav%Lon(dim1,dim2))
    allocate(Nav%Lat_1b(dim1,dim2))
@@ -1287,6 +1292,9 @@ subroutine CREATE_NAV_ARRAYS(dim1,dim2)
 end subroutine CREATE_NAV_ARRAYS
 subroutine DESTROY_NAV_ARRAYS()
   deallocate(Nav%Ascend)
+  deallocate(Nav%Sounder_Fov)
+  deallocate(Nav%Sounder_X)
+  deallocate(Nav%Sounder_Y)
   deallocate(Nav%Lat)
   deallocate(Nav%Lon)
   deallocate(Nav%Lat_1b)
@@ -1296,6 +1304,9 @@ subroutine DESTROY_NAV_ARRAYS()
 end subroutine
 subroutine RESET_NAV_ARRAYS()
   Nav%Ascend = Missing_Value_Int1
+  Nav%Sounder_Fov = Missing_Value_Int1
+  Nav%Sounder_X = Missing_Value_Int2
+  Nav%Sounder_Y = Missing_Value_Int2
   Nav%Lat = Missing_Value_Real4
   Nav%Lon = Missing_Value_Real4
   Nav%Lat_1b = Missing_Value_Real4

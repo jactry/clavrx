@@ -199,7 +199,7 @@
     endif
 
     !---- compute brightness temperature
-    call locate(BB_Rad(ichan,:),Nplanck,B,l)
+    call LOCATE(BB_Rad(ichan,:),Nplanck,B,l)
     l = max(1,min(Nplanck-1,l))
     dB_dT_tmp = (BB_Rad(ichan,l+1)-BB_Rad(ichan,l))/(T_Planck(l+1)-T_Planck(l))
     T = T_Planck(l) + (B - BB_Rad(ichan,l)) / (dB_dT_tmp)

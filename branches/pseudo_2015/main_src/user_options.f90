@@ -61,56 +61,56 @@ module USER_OPTIONS
       , Sasrab_Flag &
       , Nav_Opt &
       , Nwp_Opt &
-      , ref_cal_1b &
-      , rtm_file_flag &
-      , rtm_opt &
-      , sst_file_flag &
-      , temporary_data_dir &
-      , therm_cal_1b &
-      , ancil_data_dir &
+      , Ref_Cal_1b &
+      , Rtm_File_Flag &
+      , Rtm_Opt &
+      , Sst_File_Flag &
+      , Temporary_Data_Dir &
+      , Therm_Cal_1b &
+      , Ancil_Data_Dir &
       , Cfsr_Data_Dir &
       , Gdas_Data_Dir &
-      , file_list &
-      , geo_file_flag &
+      , File_List &
+      , Geo_File_Flag &
       , Gfs_Data_Dir &
-      , level2_file_flag &
-      , lrc_flag &
-      , modis_clr_alb_flag &
+      , Level2_File_Flag &
+      , Lrc_Flag &
+      , Modis_Clr_Alb_Flag &
       , Ncep_Data_Dir &
-      , obs_file_flag &
-      , oisst_data_dir &
-      , output_scaled_reflectances &
-      , process_undetected_cloud_flag &
-      , read_coast_mask &
-      , read_hires_sfc_type &
-      , read_land_mask &
-      , read_snow_mask &
-      , read_surface_elevation &
-      , read_volcano_mask &
-      , smooth_nwp_flag &
-      , snow_data_dir &
-      , use_default &
-      , use_seebor &
-      , bayesian_cloud_mask_name &
+      , Obs_File_Flag &
+      , Oisst_Data_Dir &
+      , Output_Scaled_Reflectances &
+      , Process_Undetected_Cloud_Flag &
+      , Read_Coast_Mask &
+      , Read_Hires_Sfc_Type &
+      , Read_Land_Mask &
+      , Read_Snow_Mask &
+      , Read_Surface_Elevation &
+      , Read_Volcano_Mask &
+      , Smooth_Nwp_Flag &
+      , Snow_Data_Dir &
+      , Use_Default &
+      , Use_Seebor &
+      , Bayesian_Cloud_Mask_Name &
       , Compress_Flag &
       , Nlcomp_Mode &
-      , dcomp_mode &
-      , avhrr_1_flag &
-      , read_dark_comp &
-      , globsnow_data_dir
+      , Dcomp_mode &
+      , Avhrr_1_flag &
+      , Read_Dark_Comp &
+      , Globsnow_Data_Dir
       
       
    use CONSTANTS, only: &
-      sym &
-      , exe_prompt &
+      Sym &
+      , Exe_Prompt &
       , Nchan_Clavrx
       
    use FILE_UTILITY, only: &
-      get_lun
+      Get_Lun
  
-   use  clavrx_message_module, only: &
-      mesg &
-    , verb_lev
+   use  CLAVRX_MESSAGE_MODULE, only: &
+      Mesg &
+    , Verb_Lev
 
    implicit none
    private
@@ -194,8 +194,8 @@ contains
       Read_Volcano_Mask = 0
       Read_Snow_Mask = 1
       Read_Dark_Comp = 0
-      Ref_Cal_1b = 1
-      Therm_Cal_1b = 1    
+      Ref_Cal_1b = 0
+      Therm_Cal_1b = 0    
       Nav_Opt = 0  
       goes_stride = 1
       Lrc_Flag = 1 
@@ -208,7 +208,7 @@ contains
       Chan_On_Flag_Default_User_Set(25:30) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(31:36) = [1,1,1,1,1,1]
       Chan_On_Flag_Default_User_Set(37:42) = [1,1,0,0,0,0]
-      Chan_On_Flag_Default_User_Set(43:45) = [0,0,0]
+      Chan_On_Flag_Default_User_Set(43:45) = [0,1,0]
       Nav%Lat_Max_Limit = 90.0
       Nav%Lat_Min_Limit = -90.0
       Nav%Lon_Max_Limit = 180.0
@@ -916,7 +916,7 @@ contains
       character (len=*) , intent(in) :: SensorName
       
       integer :: possible_acha_modes ( 8 )
-      integer :: possible_dcomp_modes ( 3)
+      integer :: possible_dcomp_modes ( 3 )
  
       !------------------------------------------------------------------------
       !--- ACHA MODE Check

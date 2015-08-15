@@ -4,7 +4,7 @@
 !!
 !!
 
-module cx_pfaast_mod
+module CX_PFAAST_MOD
    use cx_pfaast_constants_mod, only: &
       pstd, tstd, wstd, ostd, nl
    use cx_pfaast_coef_mod   , only: &
@@ -31,7 +31,7 @@ contains
    !!    each file seems to have own definitions
    !!    encourage Pfaast people to amke better files ..
    !!
-   subroutine compute_transmission_pfaast ( &
+   subroutine COMPUTE_TRANSMISSION_PFAAST ( &
        ancil_data_path &
        & ,temp &
        & ,wvmr &
@@ -120,7 +120,6 @@ contains
       end if  
       
       
-      
       ! - computes mid-layer values for reference
       if ( .not. are_ref_profiles_set ) then
          call conpir ( pstd,tstd,wstd,ostd,nl,1,pavg,tref,wref,oref )
@@ -157,11 +156,7 @@ contains
       taut = taud * tauo * tauc * tauw
       ! - done    
        
-   
-   end subroutine compute_transmission_pfaast
+   end subroutine COMPUTE_TRANSMISSION_PFAAST
 
-  
+end module CX_PFAAST_MOD
 
-
-
-end module cx_pfaast_mod

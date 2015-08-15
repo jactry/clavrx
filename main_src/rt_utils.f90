@@ -1413,6 +1413,7 @@ contains
         
          !  sensor for channels 21:30 and 33:36 is HIRS
          if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) sensor_name_rtm   = 'HIRS'
+         if ( chan_idx ==  45 ) sensor_name_rtm   = 'HIRS'
       end if
    
       if (trim ( Sensorname) == 'VIIRS-IFF') then

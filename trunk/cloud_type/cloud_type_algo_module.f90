@@ -63,7 +63,7 @@ module CLOUD_TYPE_ALGO_MODULE
    type ( et_cloudphase_class_type ),save  :: et_cloud_phase  
    
    type cloud_type_sat_type
-      logical , dimension(44) :: chan_on
+      logical , dimension(45) :: chan_on
       real :: ref_ch6
       real :: ref_ch20
       real :: rad_ch27

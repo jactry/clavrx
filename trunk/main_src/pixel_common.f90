@@ -844,6 +844,8 @@ subroutine CREATE_PIXEL_ARRAYS()
   do idx = 1,Nchan_Clavrx
       if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
 
+        allocate(Ch(idx)%Unc(dim1,dim2))
+
         select case (ch(idx)%Obs_Type)
 
         case(SOLAR_OBS_TYPE)
@@ -861,7 +863,6 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Ref_Lunar_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Ref_Lunar_Sfc(dim1,dim2))
             allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
-            allocate(Ch(idx)%Unc(dim1,dim2))
 
         case(THERMAL_OBS_TYPE)
             allocate(Ch(idx)%Rad_Toa(dim1,dim2))

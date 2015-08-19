@@ -1106,7 +1106,8 @@
     
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes) then
+               
+               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
                      call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
                   end if   

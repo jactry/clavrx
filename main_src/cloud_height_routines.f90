@@ -206,12 +206,6 @@ subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cloud_Type)
       enddo
    enddo
 
-   print *, 'Number of modified types = ', count(Cloud_Type == 99)
-
-   Diag_Pix_Array_1 = Ec_CO2
-   Diag_Pix_Array_2 = Tc_CO2
-   Diag_Pix_Array_3 = Cloud_Type
-
    where(Cloud_Type == 99)
     Cloud_Type = sym%OVERLAP_TYPE
    endwhere

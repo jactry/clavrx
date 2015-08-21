@@ -995,7 +995,8 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                !--- simple cloud optical depth
-               call COMPUTE_SIMPLE_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
+               call COMPUTE_SIMPLE_SOLAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
+               call COMPUTE_SIMPLE_LUNAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then

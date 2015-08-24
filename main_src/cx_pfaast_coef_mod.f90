@@ -82,7 +82,7 @@ contains
       if ( trim(sensor) == trim(this % sensor)  ) return
       this % sensor = sensor
       
-      print*,'start reading coef ', sensor 
+!      print*,'start reading coef ', sensor 
      
       if ( index(sensor,'-') /= 0 ) then
          satellite=sensor

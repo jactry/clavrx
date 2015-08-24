@@ -245,8 +245,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       character (len=100) :: sndr_cld_pres_strg = 'SounderCloudPressure' 
       character (len=100) :: sndr_cld_height_strg = 'SounderCloudHeights' 
       character (len=100) :: sndr_mask_strg = 'HirsMask' 
-      character (len=100) :: sndr_ele_idx_strg = 'SounderElementIndex' 
-      character (len=100) :: sndr_line_idx_strg = 'SounderLineIndex' 
+      character (len=100) :: sndr_ele_idx_strg = 'SounderX' 
+      character (len=100) :: sndr_line_idx_strg = 'SounderY' 
       character (len = 150) :: setname_band
       character (len = 255) , pointer , dimension (:) :: file_arr_dummy
       character (len = 250) :: file_cld_mask

@@ -95,19 +95,21 @@ contains
 
       type ( iff_data_config )  :: iff_conf
       type ( iff_data_out )  :: out
-      integer :: num_chan = 36
-      integer , dimension(36) :: modis_chn_list
+      integer :: num_chan = 37
+      integer , dimension(37) :: modis_chn_list
       integer :: i_band
       integer :: y_start , c_seg_lines
       integer :: iline
-      logical, dimension(36) :: is_band_on
+      integer :: ch_tmp
+      logical, dimension(37) :: is_band_on
+      logical :: sounder_flag
 
 
       error_out = 0
       ! - modis ch to read
       modis_chn_list = [  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, &
                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, &
-                         29, 30, 31, 32, 33, 34, 35, 36 ]
+                         29, 30, 31, 32, 33, 34, 35, 36, 45 ]
       is_band_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
 
       y_start = ( segment_number - 1 ) * Image%Number_Of_Lines_Per_Segment + 1
@@ -118,7 +120,7 @@ contains
       iff_conf % year_int = Image % Start_Year
       iff_conf % doy_int = Image % Start_Doy
       iff_conf % n_chan = num_chan
-      iff_conf % chan_list = modis_chn_list
+      iff_conf % chan_list = Modis_Chn_List
       iff_conf % chan_on = Sensor%Chan_On_Flag_Default ( modis_chn_list ) == sym%YES
       iff_conf % iff_cloud_mask_on = Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK
 
@@ -182,6 +184,7 @@ contains
       end do
 
       ! - save all channel data that were read to global
+      sounder_flag = .false.
       do i_band = 1 , iff_conf % n_chan
          if ( .not. out % band ( i_band ) % is_read ) then
             Sensor%Chan_On_Flag_Per_Line (modis_chn_list (i_band) ,1:c_seg_lines) = sym % no
@@ -192,35 +195,50 @@ contains
               .and. size(out % band (i_band) % rad) < 1) ) cycle
 
          ! - ref channels
-         if (i_band < 20 .or. i_band == 26) then
-            ch(i_band)%Ref_Toa( : ,1:c_seg_lines)  = out % band (i_band) % ref
+         if (modis_chn_list(i_band) < 20 .or. modis_chn_list(i_band) == 26) then
+            Ch(modis_chn_list(i_band))%Ref_Toa(:,1:c_seg_lines) = out % band (i_band) % ref
 
          ! - rad/bt channels
-         elseif ((i_band >= 20 .and. i_band < 26) &
-            .or. (i_band > 26 .and. i_band <=36)) then
+         elseif ((modis_chn_list(i_band) >= 20 .and. modis_chn_list(i_band) < 26) &
+            .or. (modis_chn_list(i_band) > 26 .and. modis_chn_list(i_band) <= 45)) then
 
             !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS (SPECIAL CASE) !!!
-            if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 21) then ! 3.75um 
+            if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 21) then ! 3.75um 
                call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
                                        20 , missing_value_real4 )
-            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 22) then ! 11.00um 
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 22) then ! 11.00um 
                call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (22) % rad , &
                                        31 , missing_value_real4 )
-            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. i_band == 29) then ! 12.00um 
+            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 29) then ! 12.00um 
                call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (29) % rad , &
                                        32 , missing_value_real4 )
             else ! the rest of channels are normal
-               ch(i_band)%Rad_Toa( : ,1:c_seg_lines)  = out % band (i_band) % rad
-               call COMPUTE_BT_ARRAY ( ch(i_band)%Bt_Toa , ch(i_band)%Rad_Toa , &
-                                       i_band , missing_value_real4 )
+               Ch(modis_chn_list(i_band))%Rad_Toa(:,1:c_seg_lines) = out % band (i_band) % rad
+               ch_tmp = modis_chn_list(i_band)
+               if (modis_chn_list(i_band) == 45) ch_tmp = 33 ! Pseudo
+               call COMPUTE_BT_ARRAY ( Ch(modis_chn_list(i_band))%Bt_Toa , Ch(modis_chn_list(i_band))%Rad_Toa , &
+                                       ch_tmp , missing_value_real4 )
             endif
             ! --- make Iff_Gap_Mask out of CRIS channel
             ! --- 0 = data in 13.3, 1=no data in 13.3
             if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF' .and. i_band == 33) then
                IFF_Gap_Mask = 0
-               where (ch(33)%Bt_Toa == missing_value_real4) 
+               where (Ch(33)%Bt_Toa == missing_value_real4) 
                   IFF_Gap_Mask = 1
                endwhere
+            endif
+
+            ! --- check if any sounder channel was read
+            if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. &
+               ((modis_chn_list(i_band) >= 21 .and. modis_chn_list(i_band) <= 30) &
+            .or.(modis_chn_list(i_band) >= 33 .and. modis_chn_list(i_band) <= 45))) then
+                sounder_flag = .true.
+            elseif (trim(Sensor%Sensor_Name) == 'VIIRS-IFF' .and. &
+                modis_chn_list(i_band) >= 33 .and. modis_chn_list(i_band) <= 45) then
+                sounder_flag = .true.
+            elseif (trim(Sensor%Sensor_Name) == 'AQUA-IFF' .and. &
+                modis_chn_list(i_band) == 45)then
+                sounder_flag = .true.
             endif
 
          ! - skip all not listed channels
@@ -228,6 +246,13 @@ contains
             cycle
          endif 
       end do
+
+      ! --- if sounder channels on read x-y
+      if (sounder_flag) then
+         Nav % Sounder_Fov(:,1:c_seg_lines) = out % geo % sounder_fov
+         Nav % Sounder_X(:,1:c_seg_lines) = out % geo % sounder_x
+         Nav % Sounder_Y(:,1:c_seg_lines) = out % geo % sounder_y
+      endif
 
       ! --- check if we need to read cloud mask aux
       if ( iff_conf % iff_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
@@ -237,9 +262,7 @@ contains
          Cloud_Mask_Aux_Read_Flag = 0
       end if
 
-
       call out % dealloc ()
-
 
    end subroutine READ_IFF_DATA
 

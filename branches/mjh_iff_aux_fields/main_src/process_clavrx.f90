@@ -1001,7 +1001,8 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                !--- simple cloud optical depth
-               call COMPUTE_SIMPLE_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
+               call COMPUTE_SIMPLE_SOLAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
+               call COMPUTE_SIMPLE_LUNAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
@@ -1112,7 +1113,8 @@
     
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes) then
+               
+               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
                      call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
                   end if   
@@ -1124,7 +1126,7 @@
      
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-    
+
                if (Dcomp_Mode > 0) then
         
                   call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)
@@ -1137,7 +1139,7 @@
                   end if
                   
                end if
-    
+
                !--- compute precipation from optical properties
                if (Dcomp_Mode > 0 ) then
                   call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1181,7 +1183,7 @@
                end if
 
             end if
-   
+  
             !--- radiative flux parameters
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
             

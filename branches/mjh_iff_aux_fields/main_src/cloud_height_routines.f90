@@ -175,7 +175,7 @@ subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cloud_Type)
    real(kind=real4), intent(in), dimension(:,:):: Ec_CO2
    integer(kind=int1), intent(inout), dimension(:,:):: Cloud_Type
 
-   real(kind=real4), parameter:: Ec_Thresh = 0.2
+   real(kind=real4), parameter:: Ec_Thresh = 0.3
    real(kind=real4), parameter:: Tc_Thresh = 240.0 !K
    integer:: Elem_Idx,Line_Idx,Num_Elem, Num_Lines
    integer:: Elem_Lrc_Idx,Line_Lrc_Idx
@@ -209,6 +209,8 @@ subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cloud_Type)
    where(Cloud_Type == 99)
     Cloud_Type = sym%OVERLAP_TYPE
    endwhere
+
+
 end subroutine MODIFY_CLOUD_TYPE_WITH_SOUNDER
 
 !----------------------------------------------------------------------

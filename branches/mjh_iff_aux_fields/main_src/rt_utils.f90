@@ -30,18 +30,19 @@
 !
 ! Description of RTM Structure Members given in rtm_common.f90
 !
-! CLAVR-x has 44 channels.  
+! CLAVR-x has 45 channels.  
 ! Channels 1-36 are MODIS
 ! Channels 37-38 are ABI channels not on MODIS
 ! Channels 39-43 are the VIIRS I-bands
 ! Channel 44 is the VIIRS DNB
+! Channel 45 is the IFF Pseudo MODIS ch 33
 !
 ! Not all members of the RTM structure are populated for all channels.
 ! However, all members are allocated for any active cell
 !
 ! Here is the current implementation
 !
-! There are 6 types of channels
+! There are 6 types of channels (FIX THIS)
 ! 1. MODIS IR-only channels = 21-36 excluding 26. 
 ! 2. Non-MODIS IR-only channels  37-38
 ! 3. MODIS (Solar + IR) channels = Channel 20
@@ -71,7 +72,11 @@ module RT_UTILITIES
       , Missing_Value_Real4  &
       , Exe_Prompt &
       , G &
-      , PI
+      , PI &
+      , SOLAR_OBS_TYPE &
+      , LUNAR_OBS_TYPE &
+      , MIXED_OBS_TYPE &
+      , THERMAL_OBS_TYPE
       
    use NWP_COMMON, only : &
         Nlevels_Nwp &
@@ -146,8 +151,9 @@ module RT_UTILITIES
       , T_Std_Rtm &
       , Wvmr_Std_Rtm &
       , Ozmr_Std_Rtm 
-    use cx_pfaast_mod,only: &
-      compute_transmission_pfaast
+
+    use CX_PFAAST_MOD, only: &
+       COMPUTE_TRANSMISSION_PFAAST
    implicit none
    
    private:: EMISSIVITY, &
@@ -170,7 +176,7 @@ module RT_UTILITIES
     real, parameter :: Co2_Ratio = 380.0 !in ppmv
 
     integer, parameter :: Chan_Idx_Min = 1
-    integer, parameter :: Chan_Idx_Max = 44
+    integer, parameter :: Chan_Idx_Max = 45
 
     real(kind=real4),  save, dimension(Chan_Idx_Min:Chan_Idx_Max):: Gamma_Trans_Factor
 
@@ -586,6 +592,7 @@ contains
       integer:: Zen_Idx
       integer:: Error_Status
       integer:: Chan_Idx
+      integer:: Chan_Idx_For_Pfaast
 
       real(kind=real4),save :: Segment_Time_Point_Seconds_Temp = 0
       real(kind=real4) :: Start_Time_Point_Hours_Temp
@@ -716,25 +723,30 @@ contains
                   !--------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
 
-                     if (Chan_Idx < 20) cycle
-                     if (Chan_Idx == 26) cycle
-                     if (Chan_Idx == 44) cycle
+               !     if (Chan_Idx < 20) cycle
+               !     if (Chan_Idx == 26) cycle
+               !     if (Chan_Idx == 44) cycle
+
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+                     if (ch(Chan_Idx)%Obs_Type == SOLAR_OBS_TYPE) cycle
+                     if (ch(Chan_Idx)%Obs_Type == LUNAR_OBS_TYPE) cycle
                      
                 
+                     Chan_Idx_For_Pfaast = Chan_Idx
+                     if (Chan_Idx .eq. 45) Chan_Idx_For_Pfaast = 33
                      Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
                      
-                     CALL compute_transmission_pfaast( &
-                           trim(Ancil_data_Dir) &
+                     CALL COMPUTE_TRANSMISSION_PFAAST( &
+                           trim(Ancil_Data_Dir) &
                         ,  T_Prof_rtm &
                         ,  Wvmr_Prof_Rtm &
                         ,  Ozmr_Prof_Rtm &
                         ,  Satzen_Mid_Bin &
                         ,  CO2_RATIO &
                         ,  Sc_Name_Rtm &
-                        ,  chan_idx &
+                        ,  Chan_Idx_For_Pfaast &
                         ,  Trans_Prof_Rtm &
-                        ,  use_modis_channel_equivalent = .true.  ) 
+                        ,  Use_Modis_Channel_Equivalent = .true.  ) 
 
                      !---- Copy the output to appropriate channel's tranmission vector
                      Trans_Atm_Prof(:,Chan_Idx) = Trans_Prof_Rtm
@@ -1407,17 +1419,13 @@ contains
       if (trim ( Sensorname) == 'VIIRS-IFF') then
          
          !  sensor for channels 27:28 and 33:36 is CRISP this is similar to MODIS-AQUA
-         if ( any ( chan_idx ==  [27,28, 33,34,35,36] ) ) sensor_name_rtm   = 'MODIS-AQUA'
+         if ( any ( chan_idx ==  [27,28, 33,34,35,36,45] ) ) sensor_name_rtm   = 'MODIS-AQUA'
          
       end if
    
    
    end function sensor_name_for_rtm 
    
-   
-   
-   
-  
 
    !--------------------------------------------------------------------------------------------------
    !  set up values for the solar rtm calculations for this sensor
@@ -1449,8 +1457,8 @@ contains
       Error_Status = 1
 
       if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
-
-      if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
+!     if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
+      if (ch(Chan_Idx)%Obs_Type /= SOLAR_OBS_TYPE .or. ch(Chan_Idx)%Obs_Type /= LUNAR_OBS_TYPE) return
 
       Trans_Prof_Rtm = 1.0
 
@@ -2235,7 +2243,7 @@ contains
               (Trans_Atm_Profile(Sfc_Idx+1) - Trans_Atm_Profile(Sfc_Idx)) * Profile_Weight
 
       Rad_Atm_Sfc = Rad_Atm + Trans_Atm * Sfc_Rad
-
+    
       Bt_Atm_Sfc = PLANCK_TEMP_FAST(Chan_Idx,Rad_Atm_Sfc)
 
    end subroutine COMPUTE_CHANNEL_ATM_SFC_RAD_BT
@@ -2333,10 +2341,10 @@ contains
 
       !--- upwelling
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-         if (Chan_Idx < 20) cycle    
-         if (Chan_Idx == 26) cycle    
-         if (Chan_Idx > 38) cycle    
+
          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+    
+         if (ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE .and. ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE ) cycle
          
          call COMPUTE_CHANNEL_ATM_SFC_RAD_BT( &
                 Chan_Idx, &
@@ -2351,17 +2359,7 @@ contains
                 ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx))
 
-!       print *, "After compute ", Chan_Idx, &
-!               ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx), &
-!               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx), &
-!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Profile, &
-!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile, &
-!               ch(Chan_Idx)%Rad_Atm(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
-!      print *, "---------------------"
 
 
       end do
@@ -2398,6 +2396,7 @@ contains
                   Prof_Weight
 
          Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
+         
          Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
          if (Geo%Cossolzen(Elem_Idx,Line_Idx) >= 0.0) then

@@ -1009,7 +1009,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
 
-     channel_loop: do Chan_Idx = 1,44
+     channel_loop: do Chan_Idx = 1,Nchan_Clavrx
 
        if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
 

@@ -1380,6 +1380,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Ch45 temperature Pseudo 13um
+     if (Sds_Num_Level2_Ch45_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch45),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_13_3um_nom_pseudo", &
+                              "toa_brightness_temperature_13_3_micron_nominal_pseudo", &
+                              "top of atmosphere brightness temperature at the nominal wavelength of 13.3 microns pseudo", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt45, Max_Bt45, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Ch1_Ref_std_3x3
      if (Sds_Num_Level2_Ch1_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_std),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -4120,6 +4131,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch38), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
+
+      !--- Ch45 temperature 13um Pseudo
+      if (Sds_Num_Level2_Ch45_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+       call SCALE_VECTOR_I2_RANK2(Ch(45)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt45,Max_Bt45,&
+                                 Missing_Value_Real4,Two_Byte_Temp)
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch45), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+      endif
+
 
       !--- Ch1_std_3x3
       if (Sds_Num_Level2_Ch1_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then

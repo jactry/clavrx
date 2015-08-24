@@ -19,7 +19,7 @@ module dcomp_lut_mod
    private
    
    integer, parameter :: NUM_PHASE = 2
-   integer, parameter :: NUM_CHN = 44
+   integer, parameter :: NUM_CHN = 45
    
    integer , parameter :: NUM_SOL = 45
    integer , parameter :: NUM_SAT = 45
@@ -171,7 +171,7 @@ contains
       
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
-      integer :: n_channels = 44
+      integer :: n_channels = 45
       character ( len =200) :: sensor_identifier
       
       ! mapping sensor channel emis yes/no

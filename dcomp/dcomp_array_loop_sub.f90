@@ -29,7 +29,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
     !- scalar local variables
 
    ! - number of possible channels in CLAVR-x
-   integer , parameter :: N_CHAN = 44
+   integer , parameter :: N_CHAN = 45
   
    real :: refl_toa = -999.
    
@@ -338,7 +338,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                                 
                trans_unc_wvp ( chn_idx ) = abs(trans_wvp( chn_idx ) - exp ( -1. * (gas_coeff(1)   &
                            & + gas_coeff(2) * (assumed_tpw_error * tpw_ac) &
-	                        & + gas_coeff(3) * ( ( assumed_tpw_error * tpw_ac ) **2 ) ) ) )       
+                           & + gas_coeff(3) * ( ( assumed_tpw_error * tpw_ac ) **2 ) ) ) )       
                         
             end associate trans_block
            

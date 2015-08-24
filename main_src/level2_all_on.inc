@@ -1,10 +1,6 @@
 !$Id$
  !--- level2 indices
-<<<<<<< .working
- integer, parameter, private:: Num_Level2_Sds = 244
-=======
- integer, parameter, private:: Num_Level2_Sds = 240
->>>>>>> .merge-right.r1336
+ integer, parameter, private:: Num_Level2_Sds = 245
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0

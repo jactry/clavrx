@@ -2243,7 +2243,7 @@ contains
               (Trans_Atm_Profile(Sfc_Idx+1) - Trans_Atm_Profile(Sfc_Idx)) * Profile_Weight
 
       Rad_Atm_Sfc = Rad_Atm + Trans_Atm * Sfc_Rad
-
+    
       Bt_Atm_Sfc = PLANCK_TEMP_FAST(Chan_Idx,Rad_Atm_Sfc)
 
    end subroutine COMPUTE_CHANNEL_ATM_SFC_RAD_BT
@@ -2343,8 +2343,8 @@ contains
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
 
          if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
-
-         if (ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE) cycle
+    
+         if (ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE .and. ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE ) cycle
          
          call COMPUTE_CHANNEL_ATM_SFC_RAD_BT( &
                 Chan_Idx, &
@@ -2359,17 +2359,7 @@ contains
                 ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                 ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx))
 
-!       print *, "After compute ", Chan_Idx, &
-!               ch(Chan_Idx)%Sfc_Emiss(Elem_Idx,Line_Idx), &
-!               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx), &
-!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Profile, &
-!               Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile, &
-!               ch(Chan_Idx)%Rad_Atm(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-!               ch(Chan_Idx)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
-!      print *, "---------------------"
 
 
       end do
@@ -2406,6 +2396,7 @@ contains
                   Prof_Weight
 
          Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
+         
          Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
          if (Geo%Cossolzen(Elem_Idx,Line_Idx) >= 0.0) then

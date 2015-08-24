@@ -814,115 +814,118 @@ module SENSOR_MODULE
 
       !--- AVHRR IFF
       if (index(Image%Level1b_Name, 'IFF') > 0) then  ! MJH XXX why was this IFFSDR...
+            ! MJH changed all Sensor_Name to 'AVHRR-IFF'
+            ! MJH changed all Algo_Const_File to just e.g. avhrr_6_algo.dat, not iff_avhrr_6_algo.dat
+            !     XXX (do we need to create algo files for AVHRR-IFF ???)
             Sensor%Spatial_Resolution_Meters = 4000
             if (index(Image%Level1b_Name, 'IFF_noaa06') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 2
                Sensor%Platform_Name = 'NOAA-6'
-               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 706
                Sensor%Instr_Const_File = "iff_avhrr_6_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_6_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_6_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa07') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 4
                Sensor%Platform_Name = 'NOAA-7'
-               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 707
                Sensor%Instr_Const_File = "iff_avhrr_7_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_7_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_7_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa08') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 6
                Sensor%Platform_Name = 'NOAA-8'
-               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 200
                Sensor%Instr_Const_File = "iff_avhrr_8_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_8_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_8_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa09') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 7
                Sensor%Platform_Name = 'NOAA-9'
-               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 201
                Sensor%Instr_Const_File = "iff_avhrr_9_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_9_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_9_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa10') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 8
                Sensor%Platform_Name = 'NOAA-10'
-               Sensor%Sensor_Name = 'AVHRR-1'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 202
                Sensor%Instr_Const_File = "iff_avhrr_10_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_10_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_10_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa11') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 1
                Sensor%Platform_Name = 'NOAA-11'
-               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 203
                Sensor%Instr_Const_File = "iff_avhrr_11_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_11_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_11_algo.dat"
                exit test_loop
             endif
             if (index(Image%Level1b_Name, 'IFF_noaa12') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 5
                Sensor%Platform_Name = 'NOAA-12'
-               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 204
                Sensor%Instr_Const_File = "iff_avhrr_12_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_12_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_12_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa14') == 1) then
                AVHRR_KLM_Flag = sym%NO
                Sc_Id_AVHRR = 3
                Sensor%Platform_Name = 'NOAA-14'
-               Sensor%Sensor_Name = 'AVHRR-2'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 205
                Sensor%Instr_Const_File = "iff_avhrr_14_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_14_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_14_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa15') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 4
                Sensor%Platform_Name = 'NOAA-15'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 206
                Sensor%Instr_Const_File = "iff_avhrr_15_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_15_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_15_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa16') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 2
                Sensor%Platform_Name = 'NOAA-16'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 207
                Sensor%Instr_Const_File = "iff_avhrr_16_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_16_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_16_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa17') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 6
                Sensor%Platform_Name = 'NOAA-17'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 208
                Sensor%Instr_Const_File = "iff_avhrr_17_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_17_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_17_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa18') == 1) then
@@ -939,40 +942,40 @@ module SENSOR_MODULE
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 8
                Sensor%Platform_Name = 'NOAA-19'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 223
                Sensor%Instr_Const_File = "iff_avhrr_19_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_19_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_19_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_metop02') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 12
                Sensor%Platform_Name = 'METOP-A'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 12
                Sensor%Instr_Const_File = "iff_avhrr_2_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_2_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_2_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_metop01') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 11
                Sensor%Platform_Name = 'METOP-B'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 11
                Sensor%Instr_Const_File = "iff_avhrr_1_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_1_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_1_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_metop03') == 1) then
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 13 ! Metop-C Sc_Id numbers are not known at this time
                Sensor%Platform_Name = 'METOP-C'
-               Sensor%Sensor_Name = 'AVHRR-3'
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 13
                Sensor%Instr_Const_File = "iff_avhrr_3_instr.dat"
-               Sensor%Algo_Const_File = "iff_avhrr_3_algo.dat"
+               Sensor%Algo_Const_File = "avhrr_3_algo.dat"
                exit test_loop
             end if
 

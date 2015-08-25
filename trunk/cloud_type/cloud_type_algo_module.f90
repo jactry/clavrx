@@ -59,6 +59,7 @@ module CLOUD_TYPE_ALGO_MODULE
       integer :: ICE = 4
       integer :: UNKNOWN = 5
       integer :: LAST = 5
+      integer :: MISSING = -128
    end type    
    type ( et_cloudphase_class_type ),save  :: et_cloud_phase  
    
@@ -660,11 +661,15 @@ contains
       integer(INT1) , intent(in) ::  ctype (:,:)
       integer(INT1) , intent(out) :: cphase (:,:)
       
-      cphase = et_cloud_phase % UNKNOWN
+      cphase = et_cloud_phase % MISSING
       
       where ( ctype ==  et_cloud_type % CLEAR &
             .or. ctype ==  et_cloud_type % PROB_CLEAR )
          cphase = et_cloud_phase % CLEAR 
+      end where
+      
+         where ( ctype ==  et_cloud_type % UNKNOWN )
+         cphase = et_cloud_phase % UNKNOWN 
       end where
       
       where ( ctype >=  et_cloud_type % FIRST_WATER &

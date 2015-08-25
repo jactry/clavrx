@@ -45,7 +45,7 @@ module dcomp_clavrx_bridge_mod
          dcomp_in_type &
        , dcomp_out_type &
        , alloc_dcomp &
-       , n_chn
+       , n_chn 
    
    use  clavrx_message_module, only: &
         mesg
@@ -264,6 +264,7 @@ contains
       
       ! === THE MAIN CALL of DCOMP ===          
       debug_mode = 1
+      call dcomp_input % check_input ()
       call dcomp_array_loop ( dcomp_input , dcomp_output , debug_mode_user = debug_mode)
 
       ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON

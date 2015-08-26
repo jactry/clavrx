@@ -536,7 +536,7 @@ module SENSOR_MODULE
 
       !---  Check Geostationary (assumed to be areafiles)
       call GET_GOES_HEADERS(Image%Level1b_Full_Name, AREAstr, NAVstr)
-       print*,'area verion nmber ==> ',AREAstr%Version_Num 
+
       if (AREAstr%Version_Num == 4) then                          !begin valid Areafile test
 
          !--- set spatial resolution  !(AKH??? - Is this valid for all sensors)
@@ -809,8 +809,7 @@ module SENSOR_MODULE
          Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
          exit test_loop
       endif
-         print*,'===+++++=====> ', Image%Level1b_Name
-         print*,index(Image%Level1b_Name, 'IFFSDR_noaa') 
+
       !--- AVHRR IFF
       if (index(Image%Level1b_Name, 'IFFSDR_noaa') > 0) then
             Sensor%Spatial_Resolution_Meters = 4000
@@ -924,9 +923,7 @@ module SENSOR_MODULE
                Sensor%Algo_Const_File = "iff_avhrr_17_algo.dat"
                exit test_loop
             end if
-            print*,'test loop..'
             if (index(Image%Level1b_Name, 'IFF_noaa18') == 1) then
-               print*,'yesy'
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 7
                Sensor%Platform_Name = 'NOAA-18'
@@ -1169,7 +1166,7 @@ module SENSOR_MODULE
          stop
 #endif
       end if
-      print*,'==========> ',Sensor%Sensor_Name
+      
       !--- if an IFF, call routine to determine dimensions from latitude sds
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
          call GET_IFF_DIMS_BRIDGE(trim(Image%Level1b_Path)//trim(Image%Level1b_Name),Image%Number_Of_Elements,Image%Number_Of_Lines)

@@ -64,7 +64,7 @@ contains
     character(len=*), intent(in):: File_Name
     integer, intent(out):: Nx
     integer, intent(out):: Ny
-   print*,'ffggeeff'
+
     call GET_IFF_DIMS (File_Name, Nx, Ny)
 
    end subroutine GET_IFF_DIMS_BRIDGE

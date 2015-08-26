@@ -81,7 +81,7 @@ contains
  
       if ( trim(sensor) == trim(this % sensor)  ) return
       this % sensor = sensor
-      
+
 !      print*,'start reading coef ', sensor 
      
       if ( index(sensor,'-') /= 0 ) then
@@ -246,9 +246,8 @@ contains
                            'NOAA10','NOAA11','NOAA12','NOAA13','NOAA14', &
                            'NOAA15','NOAA16','NOAA17','NOAA18', &
                            'METOPA','NOAA19','METOPB','METOPC']
-   
+
       ! - Find satellite index from list
-      ! MJH XXX do we need to select correct sat index for AVHRR/HIRS?
       if (satellite /= 'HIRS') then
           do i_sat = 0 , n_sat -1
              
@@ -260,12 +259,8 @@ contains
                 stop
              end if   
           end do
-      else
-          ! MJH XXX hardcode NOAA18 for now
-          i_sat = 13
       end if
-      
-     
+
       select case ( trim(sensor) )
       
       case ('HIRS')

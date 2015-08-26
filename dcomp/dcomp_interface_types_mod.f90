@@ -103,6 +103,7 @@ module dcomp_interface_TYPEs_mod
       
       contains
       final :: in_destructor 
+      procedure :: check_input
          
    end type dcomp_in_type
    
@@ -289,6 +290,33 @@ contains
       
 
    end function new_input
+   
+   
+   !
+   !
+   !
+   subroutine check_input ( this , debug_mode_in)
+      class(dcomp_in_type) :: this 
+      integer, intent(in), optional :: debug_mode_in
+      integer :: debug_mode
+      integer :: n_pixels
+      real :: perc_dcomp
+      debug_mode = 0
+     
+      if (present(debug_mode_in)) debug_mode = debug_mode_in
+      
+      if ( debug_mode .le. 0 ) return
+      
+      n_pixels = size ( this % sol % d)
+      
+      print*,'Test input ranges '
+      print*,'Solar zenith range valid for ', 100.* float(count ( this % sol % d .lt. 65 )) / n_pixels
+      print*,'Sensor zenith range valid for ', 100.* float(count ( this % sat % d .lt. 65 )) / n_pixels 
+      print*,'Azimuth valid range ', 100.* float(count ( this % azi % d .ge. 0 .and.  this % azi % d .le.  180. )) / n_pixels 
+      
+      
+   
+   end subroutine check_input
    
    !
    !

@@ -124,15 +124,15 @@ subroutine GET_IFF_DIMS (File_Name, Nx, Ny)
    Sds_Name = "Latitude"
 
    error_check: do while (Status == 0)
+      print*,'hallo;'
+      Status = OPEN_FILE_HDF_READ ( TRIM(File_Name), Id ) + Status
+      Status = HDF_SDS_DIMENIONS_READER ( Id, TRIM(Sds_Name), Rank, Sds_Dims ) + Status
+      call CLOSE_FILE_HDF_READ( Id, TRIM(File_Name) )
 
-   Status = OPEN_FILE_HDF_READ ( TRIM(File_Name), Id ) + Status
-   Status = HDF_SDS_DIMENIONS_READER ( Id, TRIM(Sds_Name), Rank, Sds_Dims ) + Status
-   call CLOSE_FILE_HDF_READ( Id, TRIM(File_Name) )
-
-   Nx = Sds_Dims(1)
-   Ny = Sds_Dims(2)
-
-   Status = 1
+      Nx = Sds_Dims(1)
+      Ny = Sds_Dims(2)
+      print*,nx,ny,trim(file_name)
+      Status = 1
    enddo  error_check ! end of while loop
 
 end subroutine GET_IFF_DIMS

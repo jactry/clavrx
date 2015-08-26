@@ -1282,7 +1282,7 @@ contains
    !--------------------------------------------------------------------------------------------------
    
    function sensor_name_for_rtm ( wmo_id, sensorname, chan_idx ) result ( sensor_name_rtm)
-      use strings
+      
       integer, intent(in) :: wmo_id
       character (len =*) , intent(in) :: sensorname
       integer, intent(in) :: chan_idx

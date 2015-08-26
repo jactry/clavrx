@@ -1282,12 +1282,13 @@ contains
    !--------------------------------------------------------------------------------------------------
    
    function sensor_name_for_rtm ( wmo_id, sensorname, chan_idx ) result ( sensor_name_rtm)
+      use strings
       integer, intent(in) :: wmo_id
       character (len =*) , intent(in) :: sensorname
       integer, intent(in) :: chan_idx
       character (len =20 ) ::  sensor_name_rtm
       integer :: i
-      
+    
       select case(WMO_Id)
 
       case(4) !METOP-A
@@ -1413,7 +1414,70 @@ contains
       if (trim ( Sensorname) == 'AVHRR-IFF') then
         
          !  sensor for channels 21:30 and 33:36 is HIRS
-         if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) sensor_name_rtm   = 'HIRS'
+         if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) then
+            ! - for this IFF sensor_name_rtm is initially set to AVHRR-<Satellite>
+            select case(WMO_Id)
+            
+            case(4) !METOP-A
+               sensor_name_rtm = 'HIRS-METOPA'
+
+            case(3) !METOP-B
+               sensor_name_rtm = 'HIRS-METOPB'
+
+            case(5) !METOP-C
+               sensor_name_rtm = 'HIRS-METOPC'
+            
+            case(200) !NOAA-8
+               sensor_name_rtm = 'HIRS-NOAA08'
+
+            case(201) !NOAA-9
+               sensor_name_rtm = 'HIRS-NOAA09'
+
+            case(202) !NOAA-10
+               sensor_name_rtm = 'HIRS-NOAA10'
+
+            case(203) !NOAA-11
+               sensor_name_rtm = 'HIRS-NOAA11'
+
+            case(204) !NOAA-12
+               sensor_name_rtm = 'HIRS-NOAA12'
+
+            case(205) !NOAA-14
+               sensor_name_rtm = 'HIRS-NOAA14'
+
+            case(206) !NOAA-15
+               sensor_name_rtm = 'HIRS-NOAA15'
+
+            case(207) !NOAA-16
+               sensor_name_rtm = 'HIRS-NOAA16'
+
+            case(208) !NOAA-17
+               sensor_name_rtm = 'HIRS-NOAA17'
+
+            case(209) !NOAA-18
+               sensor_name_rtm = 'HIRS-NOAA18'
+
+            case(223) !NOAA-19
+               sensor_name_rtm = 'HIRS-NOAA19'
+            
+            case(706) !NOAA-6
+               sensor_name_rtm = 'HIRS-NOAA06'
+
+            case(707) !NOAA-7
+               sensor_name_rtm = 'HIRS-NOAA07'
+
+            case(708) !NOAA-5
+               sensor_name_rtm = 'HIRS-TIROSN'
+            
+            case default
+               print*,'sensor for WMO number not found in RT Utils for AVHRR-IFF  ', WMO_id  
+               print*,'stopping ... Please fix this in rt_utils.F90'
+               print*,' better tell andi.walther@ssec.wisc.edu'
+               stop    
+            end select
+            
+           
+         end if   
       end if
    
       if (trim ( Sensorname) == 'VIIRS-IFF') then

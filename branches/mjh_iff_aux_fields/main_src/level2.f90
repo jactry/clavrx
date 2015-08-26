@@ -5369,7 +5369,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
     !--- MJH Menzel HIRS cloud temp for AVHRR/HIRS IFF
     if (Sds_Num_Level2_HIRS_Cld_Temp_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
-        print *, 'Writing AVHRR/HIRS aux fields to level2'
         call SCALE_VECTOR_I2_RANK2(HIRS_Cld_Temp,sym%LINEAR_SCALING,Min_Tc, &
                                    Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Temp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &

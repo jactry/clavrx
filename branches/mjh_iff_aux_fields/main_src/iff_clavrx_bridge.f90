@@ -146,7 +146,6 @@ contains
 
       ! - MJH HIRS/AVHRR aux fields
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-          print *, 'Copying AVHRR/HIRS aux fields to pixel_common arrays'
           HIRS_Cld_Temp(:,1:c_seg_lines) = out % prd % sndr_cld_temp
           HIRS_Cld_Pres(:,1:c_seg_lines) = out % prd % sndr_cld_pres
           HIRS_Cld_Height(:,1:c_seg_lines) = out % prd % sndr_cld_height

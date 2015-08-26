@@ -335,8 +335,6 @@ module SENSOR_MODULE
    !  Read the values from instrument constant files
    !--------------------------------------------------------------------------------------------------
    subroutine READ_INSTR_CONSTANTS()
-
-      AVHRR_IFF_Flag = 0
  
       select case(trim(Sensor%Sensor_Name))
 
@@ -369,7 +367,7 @@ module SENSOR_MODULE
             call READ_IFF_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AVHRR-IFF')
             call READ_IFF_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-            AVHRR_IFF_Flag = 1
+
       end select
 
    end subroutine READ_INSTR_CONSTANTS
@@ -813,10 +811,10 @@ module SENSOR_MODULE
       endif
 
       !--- AVHRR IFF
-      if (index(Image%Level1b_Name, 'IFF') > 0) then  ! MJH XXX why was this IFFSDR...
-            ! MJH changed all Sensor_Name to 'AVHRR-IFF'
-            ! MJH changed all Algo_Const_File to just e.g. avhrr_6_algo.dat, not iff_avhrr_6_algo.dat
-            !     XXX (do we need to create algo files for AVHRR-IFF ???)
+      !--- MJH: is it ok to use avhrr algo files here? or do we need new
+      !         ones for AVHRR/HIRS?
+      if (index(Image%Level1b_Name, 'IFF_noaa') > 0 .or. &
+          index(Image%Level1b_Name, 'IFF_metop') > 0) then
             Sensor%Spatial_Resolution_Meters = 4000
             if (index(Image%Level1b_Name, 'IFF_noaa06') == 1) then
                AVHRR_KLM_Flag = sym%NO
@@ -932,10 +930,10 @@ module SENSOR_MODULE
                AVHRR_KLM_Flag = sym%YES
                Sc_Id_AVHRR = 7
                Sensor%Platform_Name = 'NOAA-18'
-               Sensor%Sensor_Name = 'AVHRR-IFF' ! MJH XXX
+               Sensor%Sensor_Name = 'AVHRR-IFF'
                Sensor%WMO_Id = 209
                Sensor%Instr_Const_File = "iff_avhrr_18_instr.dat"
-               Sensor%Algo_Const_File = "avhrr_18_algo.dat" ! MJH XXX really not sure about this one??
+               Sensor%Algo_Const_File = "avhrr_18_algo.dat"
                exit test_loop
             end if
             if (index(Image%Level1b_Name, 'IFF_noaa19') == 1) then

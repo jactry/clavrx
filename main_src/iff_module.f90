@@ -319,7 +319,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! MJH if AVHRR, read in aux fields like sounder collocation indices
       ! and Menzel HIRS cloud heights
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-          print *, 'Reading AVHRR-IFF aux fields'
           ! cld temp
           Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(sndr_cld_temp_strg),start_2d, &
                       stride_2d,edge_2d,r2d_buffer) + Status

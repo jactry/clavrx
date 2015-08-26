@@ -129,7 +129,7 @@ program COMPILE_ASC_DES_LEVEL2B
  integer:: Asc_Des_Node
  character(len=12):: Sensor_Name_Output
  integer(kind=int2):: Sc_Id_Output
- integer(kind=int2):: Sc_Id_Input
+ integer(kind=int4):: Sc_Id_Input
  integer:: Istatus_Sum
  integer:: ios
  integer(kind=int4):: Jday
@@ -1149,6 +1149,9 @@ Sds_Output_Stride_XY = (/1,1/)
 
             !--- this 3-d packed sds is not supported yet in this code
             if (trim(sds(Isds)%Variable_Name) == 'cloud_mask_test_packed_results') cycle    
+
+            !--- bad_scan_line_flag is 1d and should not be processed
+            if (trim(sds(Isds)%Variable_Name) == 'bad_scan_line_flag') cycle    
        
             !-----------------------------------------------------------
             !--- read from input input variable

@@ -1597,9 +1597,11 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
            do Chan_Idx = 21, 38
                if (Chan_Idx == 26) cycle
                if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
-                 call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, ch(Chan_Idx)%Sfc_Emiss)
+                 call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, Ch(Chan_Idx)%Sfc_Emiss)
                endif
            enddo
+           !--- set Ch45 13um pseudo Sfc_Emiss to Ch 33 Sfc_Emiss
+           if (Sensor%Chan_On_Flag_Default(45) == sym%YES) Ch(45)%Sfc_Emiss = Ch(33)%Sfc_Emiss
         end if
 
         !--- mandatory fields - check for substitution of Bad_Pixel for space 

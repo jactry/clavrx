@@ -828,17 +828,17 @@ subroutine CREATE_PIXEL_ARRAYS()
 !----------------------------------------------------------------------
 
   !--- set obs type for each channel
-  ch(1:19)%Obs_Type = SOLAR_OBS_TYPE
-  ch(20)%Obs_Type = MIXED_OBS_TYPE
-  ch(21)%Obs_Type = MIXED_OBS_TYPE
-  ch(22:25)%Obs_Type = THERMAL_OBS_TYPE
-  ch(26)%Obs_Type = SOLAR_OBS_TYPE
-  ch(27:38)%Obs_Type = THERMAL_OBS_TYPE
-  ch(39:41)%Obs_Type = SOLAR_OBS_TYPE
-  ch(42)%Obs_Type = MIXED_OBS_TYPE
-  ch(43)%Obs_Type = THERMAL_OBS_TYPE
-  ch(44)%Obs_Type = LUNAR_OBS_TYPE
-  ch(45)%Obs_Type = THERMAL_OBS_TYPE
+  Ch(1:19)%Obs_Type = SOLAR_OBS_TYPE
+  Ch(20)%Obs_Type = MIXED_OBS_TYPE
+  Ch(21)%Obs_Type = MIXED_OBS_TYPE
+  Ch(22:25)%Obs_Type = THERMAL_OBS_TYPE
+  Ch(26)%Obs_Type = SOLAR_OBS_TYPE
+  Ch(27:38)%Obs_Type = THERMAL_OBS_TYPE
+  Ch(39:41)%Obs_Type = SOLAR_OBS_TYPE
+  Ch(42)%Obs_Type = MIXED_OBS_TYPE
+  Ch(43)%Obs_Type = THERMAL_OBS_TYPE
+  Ch(44)%Obs_Type = LUNAR_OBS_TYPE
+  Ch(45)%Obs_Type = THERMAL_OBS_TYPE
 
   !--- loop through each that is on, allocate fields based on obs type 
   do idx = 1,Nchan_Clavrx

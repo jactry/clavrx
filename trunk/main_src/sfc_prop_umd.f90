@@ -364,33 +364,35 @@ i_loop:    do i = 1,Image%Number_Of_Elements
 !--- if the Sfc_Type is missing, treat pixel as bad
     if (use_seebor == sym%NO) then
       if (Sfc%Sfc_Type(i,j) >= 0 .and. Sfc%Sfc_Type(i,j) < 15) then     !limits depend on Sfc_Type
-       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Ch27_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Ch28_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Ch29_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Ch31_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Ch32_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
-       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) Ch(20)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) Ch(21)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(22)==sym%YES) Ch(22)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(23)==sym%YES) Ch(23)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(24)==sym%YES) Ch(24)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(25)==sym%YES) Ch(25)%Sfc_Emiss(i,j) = Ch20_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) Ch(27)%Sfc_Emiss(i,j) = Ch27_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) Ch(28)%Sfc_Emiss(i,j) = Ch28_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) Ch(29)%Sfc_Emiss(i,j) = Ch29_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) Ch(31)%Sfc_Emiss(i,j) = Ch31_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) Ch(32)%Sfc_Emiss(i,j) = Ch32_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) Ch(33)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) Ch(34)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) Ch(35)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) Ch(36)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
+       if (Sensor%Chan_On_Flag_Default(45)==sym%YES) Ch(45)%Sfc_Emiss(i,j) = Ch33_Sfc_Emiss_Umd(Sfc%Sfc_Type(i,j))
       else
-       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = Missing_Value_Real4
-       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(20)==sym%YES) Ch(20)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(21)==sym%YES) Ch(21)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(27)==sym%YES) Ch(27)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(28)==sym%YES) Ch(28)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(29)==sym%YES) Ch(29)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(31)==sym%YES) Ch(31)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(32)==sym%YES) Ch(32)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(33)==sym%YES) Ch(33)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(34)==sym%YES) Ch(34)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(35)==sym%YES) Ch(35)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(36)==sym%YES) Ch(36)%Sfc_Emiss(i,j) = Missing_Value_Real4
+       if (Sensor%Chan_On_Flag_Default(45)==sym%YES) Ch(45)%Sfc_Emiss(i,j) = Missing_Value_Real4
        Bad_Pixel_Mask(i,j) = sym%YES
       endif
     endif
@@ -400,22 +402,23 @@ i_loop:    do i = 1,Image%Number_Of_Elements
 !    Sfc_Emiss_Ch31(i,j) =  0.844780 + 0.328921 * coszen(i,j)  -0.182375*(coszen(i,j)**2)
 !    Sfc_Emiss_Ch32(i,j) =  0.775019 + 0.474005 * coszen(i,j)  -0.261739*(coszen(i,j)**2)
 !--- set to constant until we can verify the above
-     if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(21)==sym%YES) ch(21)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(22)==sym%YES) ch(22)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(23)==sym%YES) ch(23)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(24)==sym%YES) ch(24)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(25)==sym%YES) ch(25)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(30)==sym%YES) ch(30)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.985
-     if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(20)==sym%YES) Ch(20)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(21)==sym%YES) Ch(21)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(22)==sym%YES) Ch(22)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(23)==sym%YES) Ch(23)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(24)==sym%YES) Ch(24)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(25)==sym%YES) Ch(25)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(27)==sym%YES) Ch(27)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(28)==sym%YES) Ch(28)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(29)==sym%YES) Ch(29)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(30)==sym%YES) Ch(30)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(31)==sym%YES) Ch(31)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(32)==sym%YES) Ch(32)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(33)==sym%YES) Ch(33)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(34)==sym%YES) Ch(34)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(35)==sym%YES) Ch(35)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(36)==sym%YES) Ch(36)%Sfc_Emiss(i,j) = 0.985
+     if (Sensor%Chan_On_Flag_Default(45)==sym%YES) Ch(45)%Sfc_Emiss(i,j) = 0.985
     endif
 
     !--- if (snow_mask
@@ -424,16 +427,17 @@ i_loop:    do i = 1,Image%Number_Of_Elements
       if ((Sfc%Sfc_Type(i,j) /= sym%EVERGREEN_NEEDLE_SFC) .and. &
           (Sfc%Sfc_Type(i,j) /= sym%EVERGREEN_BROAD_SFC)) then
 
-      if (Sensor%Chan_On_Flag_Default(20)==sym%YES) ch(20)%Sfc_Emiss(i,j) = 0.984
-      if (Sensor%Chan_On_Flag_Default(27)==sym%YES) ch(27)%Sfc_Emiss(i,j) = 0.979
-      if (Sensor%Chan_On_Flag_Default(28)==sym%YES) ch(28)%Sfc_Emiss(i,j) = 0.979
-      if (Sensor%Chan_On_Flag_Default(29)==sym%YES) ch(29)%Sfc_Emiss(i,j) = 0.979
-      if (Sensor%Chan_On_Flag_Default(31)==sym%YES) ch(31)%Sfc_Emiss(i,j) = 0.979
-      if (Sensor%Chan_On_Flag_Default(32)==sym%YES) ch(32)%Sfc_Emiss(i,j) = 0.977
-      if (Sensor%Chan_On_Flag_Default(33)==sym%YES) ch(33)%Sfc_Emiss(i,j) = 0.977
-      if (Sensor%Chan_On_Flag_Default(34)==sym%YES) ch(34)%Sfc_Emiss(i,j) = 0.977
-      if (Sensor%Chan_On_Flag_Default(35)==sym%YES) ch(35)%Sfc_Emiss(i,j) = 0.977
-      if (Sensor%Chan_On_Flag_Default(36)==sym%YES) ch(36)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(20)==sym%YES) Ch(20)%Sfc_Emiss(i,j) = 0.984
+      if (Sensor%Chan_On_Flag_Default(27)==sym%YES) Ch(27)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(28)==sym%YES) Ch(28)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(29)==sym%YES) Ch(29)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(31)==sym%YES) Ch(31)%Sfc_Emiss(i,j) = 0.979
+      if (Sensor%Chan_On_Flag_Default(32)==sym%YES) Ch(32)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(33)==sym%YES) Ch(33)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(34)==sym%YES) Ch(34)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(35)==sym%YES) Ch(35)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(36)==sym%YES) Ch(36)%Sfc_Emiss(i,j) = 0.977
+      if (Sensor%Chan_On_Flag_Default(45)==sym%YES) Ch(45)%Sfc_Emiss(i,j) = 0.977
 
      endif
     endif

@@ -3407,7 +3407,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "hirs_mask", &
                               "hirs_mask", &
                               "1=there is real HIRS data covering this AVHRR pixel; 0=there is no (real) HIRS data covering this AVHRR pixel", &
-                              DFNT_UINT8, sym%NO_SCALING, &
+                              DFNT_INT8, sym%NO_SCALING, &
                               0., 1., "none", No_Attribute_Missing_Value, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif

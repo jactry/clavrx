@@ -344,6 +344,13 @@ module SENSOR_MODULE
               call READ_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MODIS','MODIS-MAC','MODIS-CSPP','AQUA-IFF')
               call READ_MODIS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+
+              !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
+              if (trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
+                 Planck_A1(45) = Planck_A1(33)
+                 Planck_A2(45) = Planck_A2(33)
+                 Planck_Nu(45) = Planck_Nu(33)
+              endif
          case('GOES-IL-IMAGER','GOES-MP-IMAGER')
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')

@@ -3018,6 +3018,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Ch45 temperature Pseudo 13um Clear Rtm
+     if (Sds_Num_Level2_Ch45_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch45_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_13_3um_nom_pseudo_clear_sky", &
+                              "toa_brightness_temperature_assuming_clear_sky_13_3_micron_nominal_pseudo", &
+                              "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                              "at the nominal wavelength of 13.3 microns pseudo", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt45, Max_Bt45, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Ref_Ch1_Mean_3x3
      if (Sds_Num_Level2_Ch1_Mean_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Mean),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -5002,79 +5014,86 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
     !--- Ref_Ch1 clear
     if (Sds_Num_Level2_Ch1_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
     !--- Ch20 temperature clear
     if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch27 temperature clear
     if (Sds_Num_Level2_Ch27_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(27)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(27)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch28 temperature clear
     if (Sds_Num_Level2_Ch28_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(28)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(28)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch28_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch29 temperature clear
     if (Sds_Num_Level2_Ch29_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(29)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(29)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch29_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch30 temperature clear
     if (Sds_Num_Level2_Ch30_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(30) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(30)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt30,Max_Bt30,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(30)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt30,Max_Bt30,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch30_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                 Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch31 temperature clear
     if (Sds_Num_Level2_Ch31_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(31)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(31)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch32 temperature clear
     if (Sds_Num_Level2_Ch32_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(32)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(32)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch32_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch33 temperature clear
     if (Sds_Num_Level2_Ch33_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch37 temperature clear
     if (Sds_Num_Level2_Ch37_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(37)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt37,Max_Bt37,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(37)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt37,Max_Bt37,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch37_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 
     !--- Ch38 temperature clear
     if (Sds_Num_Level2_Ch38_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(38)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt38,Max_Bt38,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(38)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt38,Max_Bt38,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch38_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
+    endif
+
+    !--- Ch45 Pseudo temperature clear
+    if (Sds_Num_Level2_Ch45_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ch(45)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt45,Max_Bt45,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch45_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
     !--- Ref_Ch1 3x3 Mean

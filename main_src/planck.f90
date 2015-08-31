@@ -63,7 +63,9 @@
   use CONSTANTS
   use CALIBRATION_CONSTANTS
   use NUMERICAL_ROUTINES
-  use PIXEL_COMMON, only: Sensor
+  use PIXEL_COMMON, only: &
+        Sensor, &
+        Ch
 
   implicit none
   private
@@ -79,7 +81,7 @@
   integer, parameter, private:: Nplanck = 161
   real (kind=int4), parameter, private:: T_Planck_min = 180.0,  &
                                          delta_T_Planck = 1.0
-  real(kind=int4), dimension(20:43,Nplanck), save, private:: BB_Rad = Missing_Value_Real4
+  real(kind=int4), dimension(20:Nchan_Clavrx,Nplanck), save, private:: BB_Rad = Missing_Value_Real4
   real(kind=int4), dimension(Nplanck), save, private:: T_Planck = Missing_Value_Real4
 
   contains
@@ -122,11 +124,9 @@
     T_Planck(i) = T_Planck_min + (i-1)*delta_T_Planck
   enddo
 
-  do ichan = 20,43
-     if (ichan == 26) cycle
-     if (ichan == 39) cycle
-     if (ichan == 40) cycle
-     if (ichan == 41) cycle
+  do ichan = 20,Nchan_Clavrx
+    if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
+        Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) cycle
      if (Sensor%Chan_On_Flag_Default(ichan)==sym%YES) then
          BB_Rad(ichan,:) = c1*(Planck_Nu(ichan)**3)/ &
                (exp((c2*Planck_Nu(ichan))/((T_Planck-Planck_A1(ichan))/Planck_A2(ichan)))-1.0)
@@ -149,10 +149,8 @@
     integer:: l
 
     !--- check for appropriate channel
-    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number ",ichan," in Fast Planck Rad Computation, stopping"
-      stop
-    endif
+    if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
+        Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then 
       print *, "unsupported channel number ",ichan," in Fast Planck Rad Computation, stopping"
       stop
@@ -189,10 +187,8 @@
     dB_dT_Tmp = Missing_Value_Real4
 
     !--- check for appropriate channel
-    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number in Fast Planck Temp Computation, stopping"
-      stop
-    endif
+    if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
+        Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
       print *, "unsupported channel number in Fast Planck Temp Computation, stopping"
       stop
@@ -220,10 +216,8 @@
     real (kind=real4) :: B
 
     !--- check for appropriate channel
-    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number in Planck Computation, stopping"
-      stop
-    endif
+    if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
+        Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
       print *, "unsupported channel number in Planck Computation, stopping"
       stop
@@ -246,10 +240,8 @@
     real (kind=real4) :: T
 
     !--- check for appropriate channel
-    if (ichan < 20 .or. ichan == 26 .or. ichan == 39 .or. ichan == 40 .or. ichan == 41 .or. ichan > 43) then
-      print *, "unsupported channel number in Planck Computation, stopping"
-      stop
-    endif
+    if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
+        Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
       print *, "unsupported channel number in Planck Computation, stopping"
       stop

@@ -34,8 +34,8 @@ module SFC_EMISS
    implicit none
   
    !--- routine access declaration
-   private :: read_integrated_seebor_hdf
-   public :: open_seebor_emiss, close_seebor_emiss, read_seebor_emiss
+   private :: READ_INTEGRATED_SEEBOR_HDF 
+   public :: OPEN_SEEBOR_EMISS, CLOSE_SEEBOR_EMISS, READ_SEEBOR_EMISS
 
    !---------------------------------------------------------------------------------------
    INTEGER, parameter, private :: Num_Lat_Emiss = 3600
@@ -140,7 +140,7 @@ subroutine close_seebor_Emiss(id)
 end subroutine close_seebor_emiss
 
    !====================================================================
-   ! subroutine Name: read_seebor_emiss
+   ! subroutine Name: READ_SEEBOR_EMISS
    !
    ! Function:
    !  Read a given channel from the surface emissivity file for a segment of
@@ -152,7 +152,7 @@ end subroutine close_seebor_emiss
    !   and outputs to the appropriate global array
    !====================================================================
   
-   subroutine read_seebor_Emiss(id, ichan, lat, lon, Space_Mask, emiss)
+   subroutine READ_SEEBOR_EMISS(id, ichan, lat, lon, Space_Mask, emiss)
    
       INTEGER(kind=int4), intent(in) :: id, ichan
       REAL(kind=real4), dimension(:,:), intent(in) :: lat, lon
@@ -191,7 +191,7 @@ end subroutine close_seebor_emiss
       nx = size(emiss,1)
       ny = size(emiss,2)
   
-      call find_bounds(lat,lon,wlon,elon,slat,nlat,dateline_flg)
+      call FIND_BOUNDS(lat,lon,wlon,elon,slat,nlat,dateline_flg)
      
       if (dateline_flg == 0) then
   
@@ -217,7 +217,7 @@ end subroutine close_seebor_emiss
          stride_2d = (/1, 1/)
          edge_2d = (/(ilon2-ilon1)+1, (ilat2-ilat1)+1/)
   
-         call read_integrated_seebor_hdf(id, trim(sds_name), start_2d, stride_2d, edge_2d, Emiss_Grid)
+         call READ_INTEGRATED_SEEBOR_HDF(id, trim(sds_name), start_2d, stride_2d, edge_2d, Emiss_Grid)
   
          do j = 1, ny
             do i = 1, nx
@@ -331,7 +331,7 @@ end subroutine close_seebor_emiss
     
    endif
   
-   end subroutine read_seebor_emiss
+   end subroutine READ_SEEBOR_EMISS
 
 !====================================================================
 ! subroutine Name: read_integrated_seebor_hdf

@@ -306,6 +306,11 @@ contains
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
 
+      !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
+      planck_a1(45) = planck_a1(33)
+      planck_a2(45) = planck_a2(33)
+      planck_nu(45) = planck_nu(33)
+
       !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
       Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
 
@@ -354,6 +359,11 @@ contains
       read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
       read(unit=Instr_Const_lun,fmt=*) b1_day_mask, b2_day_mask, b3_day_mask, b4_day_mask
       close(unit=Instr_Const_lun)
+ 
+      !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
+      planck_a1(45) = planck_a1(33)
+      planck_a2(45) = planck_a2(33)
+      planck_nu(45) = planck_nu(33)
 
       !-- convert solar flux in channel 20 & 21 to mean with units mW/m^2/cm^-1
       Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20

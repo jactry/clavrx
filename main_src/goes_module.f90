@@ -294,7 +294,6 @@ subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt=*) goes_Ch4_Thermal_Slope,goes_Ch4_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch5_Thermal_Slope,goes_Ch5_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch6_Thermal_Slope,goes_Ch6_Thermal_Intercept
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -355,7 +354,6 @@ subroutine READ_GOES_SNDR_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt=*) goes_Ch16_Thermal_Slope,goes_Ch16_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch17_Thermal_Slope,goes_Ch17_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch18_Thermal_Slope,goes_Ch18_Thermal_Intercept
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

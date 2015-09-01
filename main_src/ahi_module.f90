@@ -145,7 +145,6 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) a1_31, a2_31,nu_31 !Band 14
   read(unit=Instr_Const_lun,fmt=*) a1_32, a2_32,nu_32 !Band 15
   read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33 !Band 16
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -561,7 +560,6 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) a1_33, a2_33,nu_33
   read(unit=Instr_Const_lun,fmt=*) a1_43, a2_43,nu_43     
   read(unit=Instr_Const_lun,fmt=*) a1_44, a2_44,nu_44
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

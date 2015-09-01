@@ -1073,6 +1073,11 @@
 
                endif
 
+
+Diag_Pix_Array_1 = Nav%Sounder_Fov
+Diag_Pix_Array_2 = Nav%Sounder_X
+Diag_Pix_Array_3 = Nav%Sounder_Y
+
                if (ACHA%Mode == 0) then
                   call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                endif

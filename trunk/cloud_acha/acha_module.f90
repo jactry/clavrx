@@ -1448,7 +1448,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
      ((Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) .or. &
       (Cloud_Type == symbol%WATER_TYPE) .or. &
       (Cloud_Type == symbol%FOG_TYPE) .or. & 
-      (abs(Input%Latitude(Elem_Idx,Line_Idx)) >=60 .and. Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
+      (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
 
        !-- select lapse rate  (k/km)
        Lapse_Rate =  -0.061  + &

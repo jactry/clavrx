@@ -422,7 +422,6 @@ contains
       read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32),planck_nu(32)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(42), planck_a2(42),planck_nu(42)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(43), planck_a2(43),planck_nu(43)
-      read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
   
       !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

@@ -1071,12 +1071,11 @@
 
                   call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
 
+                      Diag_Pix_Array_1 = Nav%Sounder_Fov
+                      Diag_Pix_Array_2 = Nav%Sounder_X
+                      Diag_Pix_Array_3 = Nav%Sounder_Y
                endif
 
-
-Diag_Pix_Array_1 = Nav%Sounder_Fov
-Diag_Pix_Array_2 = Nav%Sounder_X
-Diag_Pix_Array_3 = Nav%Sounder_Y
 
                if (ACHA%Mode == 0) then
                   call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)

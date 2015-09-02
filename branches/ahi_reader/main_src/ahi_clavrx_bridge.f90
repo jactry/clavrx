@@ -54,7 +54,7 @@ contains
       
       integer :: modis_chn
       integer :: i_line
-      
+      integer :: offset(2) , count(2)
      
       error_out = 0
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 37 ,  27 , 28,  &
@@ -84,7 +84,12 @@ contains
  
       ahi_c % h5_offset = [0,y_start]
       ahi_c % h5_count = [Image%Number_Of_Elements  , c_seg_lines] 
-   
+      
+      ahi_c % lon_range =[178.,-179.]
+      ahi_c % lat_range =[17.,18.]
+      call ahi_segment_information_region ( ahi_c , offset, count )
+      ahi_c % h5_offset = offset
+      ahi_c % h5_count = count
  
       call get_ahi_data ( ahi_c, ahi_data )
       

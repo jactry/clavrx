@@ -108,11 +108,13 @@ module SENSOR_MODULE
       
       
       use DATE_TOOLS_MOD
+      
       use CX_READ_AHI_MOD, only: &
          ahi_time_from_filename
       
       type ( date_type ) :: time0_obj, time1_obj
-
+      
+      ! - this is only needed/used for AVHRR
       type (AREA_STRUCT), intent(in) :: AREAstr
 
       integer(kind=int4):: Start_Year_Tmp
@@ -1117,20 +1119,23 @@ module SENSOR_MODULE
     endif
 
    end subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION
+   
    !---------------------------------------------------------------------------------------------
    ! Determine the number of elements (Image%Number_Of_Elements) and Number of Scans (Image%Number_Of_Lines)
    ! expected.  Also, 
+   !
+   !    the output will be written in global Image structure
    !---------------------------------------------------------------------------------------------
-   subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr, &
-                                 Nword_Clavr_Start,Ierror)
-
+   subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header, &
+                                 Ierror)
+                                                               
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      integer(kind=int4), intent(out) :: Nword_Clavr
-      integer(kind=int4), intent(out) :: Nword_Clavr_Start
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header
       integer(kind=int4), intent(out) :: Ierror
 
+      integer(kind=int4) :: Nword_Clavr
+      integer(kind=int4) :: Nword_Clavr_Start
       integer(kind=int4) :: Ierror_Viirs_Nscans
       CHARACTER(len=355) :: Dir_File
 

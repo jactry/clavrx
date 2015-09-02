@@ -415,7 +415,10 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
+      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name &
+               ,AREAstr &
+               ,Nrec_Avhrr_Header &
+               ,Ierror) 
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "

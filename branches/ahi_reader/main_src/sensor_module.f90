@@ -1130,8 +1130,8 @@ module SENSOR_MODULE
                                  Ierror)
                                                                
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      integer(kind=int4), intent(out) :: Nrec_Avhrr_Header
+      TYPE (AREA_STRUCT), intent(in) :: AREAstr ! AVHRR only
+      integer(kind=int4), intent(out) :: Nrec_Avhrr_Header ! AVHRR only
       integer(kind=int4), intent(out) :: Ierror
 
       integer(kind=int4) :: Nword_Clavr
@@ -1400,7 +1400,6 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33),planck_nu(33) !Band 16
   read(unit=Instr_Const_lun,fmt=*) planck_a1(37), planck_a2(37),planck_nu(37) !Band 8
   read(unit=Instr_Const_lun,fmt=*) planck_a1(38), planck_a2(38),planck_nu(38) !Band 13
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

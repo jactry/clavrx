@@ -355,7 +355,6 @@ subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) Prt_Coef(:,3)
   read(unit=Instr_Const_lun,fmt=*) Prt_Coef(:,4)
   read(unit=Instr_Const_lun,fmt=*) prt_weight(:)
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
 !-- convert solar flux in channel 3b to mean with units mW/m^2/cm^-1

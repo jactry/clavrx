@@ -1282,39 +1282,41 @@ end subroutine DESTROY_SENSOR_ARRAYS
 subroutine CREATE_NAV_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    allocate(Nav%Ascend(dim2))
-   allocate(Nav%Sounder_Fov(dim1,dim2))
-   allocate(Nav%Sounder_X(dim1,dim2))
-   allocate(Nav%Sounder_Y(dim1,dim2))
    allocate(Nav%Lat(dim1,dim2))
    allocate(Nav%Lon(dim1,dim2))
    allocate(Nav%Lat_1b(dim1,dim2))
    allocate(Nav%Lon_1b(dim1,dim2))
    allocate(Nav%Lat_Pc(dim1,dim2))
    allocate(Nav%Lon_Pc(dim1,dim2))
+   if (index(Sensor%Sensor_Name,'IFF') > 0) then
+     allocate(Nav%Sounder_Fov(dim1,dim2))
+     allocate(Nav%Sounder_X(dim1,dim2))
+     allocate(Nav%Sounder_Y(dim1,dim2))
+   endif
 end subroutine CREATE_NAV_ARRAYS
 subroutine DESTROY_NAV_ARRAYS()
-  deallocate(Nav%Ascend)
-  deallocate(Nav%Sounder_Fov)
-  deallocate(Nav%Sounder_X)
-  deallocate(Nav%Sounder_Y)
-  deallocate(Nav%Lat)
-  deallocate(Nav%Lon)
-  deallocate(Nav%Lat_1b)
-  deallocate(Nav%Lon_1b)
-  deallocate(Nav%Lat_Pc)
-  deallocate(Nav%Lon_Pc)
+  if (allocated(Nav%Ascend)) deallocate(Nav%Ascend)
+  if (allocated(Nav%Sounder_Fov)) deallocate(Nav%Sounder_Fov)
+  if (allocated(Nav%Sounder_X)) deallocate(Nav%Sounder_X)
+  if (allocated(Nav%Sounder_Y)) deallocate(Nav%Sounder_Y)
+  if (allocated(Nav%Lat)) deallocate(Nav%Lat)
+  if (allocated(Nav%Lon)) deallocate(Nav%Lon)
+  if (allocated(Nav%Lat_1b)) deallocate(Nav%Lat_1b)
+  if (allocated(Nav%Lon_1b)) deallocate(Nav%Lon_1b)
+  if (allocated(Nav%Lat_Pc)) deallocate(Nav%Lat_Pc)
+  if (allocated(Nav%Lon_Pc)) deallocate(Nav%Lon_Pc)
 end subroutine
 subroutine RESET_NAV_ARRAYS()
-  Nav%Ascend = Missing_Value_Int1
-  Nav%Sounder_Fov = Missing_Value_Int1
-  Nav%Sounder_X = Missing_Value_Int2
-  Nav%Sounder_Y = Missing_Value_Int2
-  Nav%Lat = Missing_Value_Real4
-  Nav%Lon = Missing_Value_Real4
-  Nav%Lat_1b = Missing_Value_Real4
-  Nav%Lon_1b = Missing_Value_Real4
-  Nav%Lat_Pc = Missing_Value_Real4
-  Nav%Lon_Pc = Missing_Value_Real4
+  if (allocated(Nav%Ascend)) Nav%Ascend = Missing_Value_Int1
+  if (allocated(Nav%Sounder_Fov)) Nav%Sounder_Fov = Missing_Value_Int1
+  if (allocated(Nav%Sounder_X)) Nav%Sounder_X = Missing_Value_Int2
+  if (allocated(Nav%Sounder_Y)) Nav%Sounder_Y = Missing_Value_Int2
+  if (allocated(Nav%Lat)) Nav%Lat = Missing_Value_Real4
+  if (allocated(Nav%Lon)) Nav%Lon = Missing_Value_Real4
+  if (allocated(Nav%Lat_1b)) Nav%Lat_1b = Missing_Value_Real4
+  if (allocated(Nav%Lon_1b)) Nav%Lon_1b = Missing_Value_Real4
+  if (allocated(Nav%Lat_Pc)) Nav%Lat_Pc = Missing_Value_Real4
+  if (allocated(Nav%Lon_Pc)) Nav%Lon_Pc = Missing_Value_Real4
 end subroutine RESET_NAV_ARRAYS
 !------------------------------------------------------------------------------
 !  routines to create, destroy and reset geo structure

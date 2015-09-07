@@ -1128,6 +1128,9 @@ module SENSOR_MODULE
    !---------------------------------------------------------------------------------------------
    subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header, &
                                  Ierror)
+      use cx_read_ahi_mod, only : &
+         ahi_segment_information_region &
+         ,ahi_config_type
                                                                
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (AREA_STRUCT), intent(in) :: AREAstr ! AVHRR only
@@ -1138,6 +1141,9 @@ module SENSOR_MODULE
       integer(kind=int4) :: Nword_Clavr_Start
       integer(kind=int4) :: Ierror_Viirs_Nscans
       CHARACTER(len=355) :: Dir_File
+      
+      type ( ahi_config_type ) :: ahi_config
+      integer :: offset(2), count(2)
 
       Ierror = sym%NO
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
@@ -1152,6 +1158,20 @@ module SENSOR_MODULE
       if ( trim(Sensor%Sensor_Name) == 'AHI') then
          Image%Number_Of_Elements =  5500
          Image%Number_Of_Lines = 5500
+         
+         ahi_config % data_path = trim(Image%Level1b_Path)
+         ahi_config % file_base = trim (Image%level1b_name)
+         ahi_config % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
+         ahi_config % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+         call ahi_segment_information_region ( ahi_config , offset, count )
+           print*,'offset: ',offset
+         print*,'count: ',count
+         print*,'nav:',Nav%Lat_Max_Limit
+         
+         
+         Image%Number_Of_Elements =  count(1)
+         Image%Number_Of_Lines = count(2)
+         
       end if
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then

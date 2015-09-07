@@ -430,17 +430,13 @@
          cycle file_loop    
       end if
   
-      !-----------------------------------------------------------------------
-      !--- Compute the time stamp for use in all generated HDF output files
-      !  AW-2014-12-22 Why now? Why here?
-      !-----------------------------------------------------------------------
-      call HDF_TSTAMP()
+    
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
       !--- determine segment size here
       Line_Idx_Min_Segment = 1
-      Line_Idx_Max_Segment = Image%Number_Of_Lines_Per_Segment
+      Line_Idx_Max_Segment = Image % Number_Of_Lines_Per_Segment
 
       !*************************************************************************
       ! Marker:  READ IN HEADER AND DETERMINE SOME CONSTANTS
@@ -662,7 +658,7 @@
       Segment_Time_Point_Seconds_temp = 0.0
 
       Segment_loop: do Segment_Number = 1,Image%Number_Of_Segments
-        
+         print*,'start segement ...', Segment_Number
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
 
@@ -689,12 +685,12 @@
          ! Apply spatial limits
          !------------------------------------------------------------------
          call EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
-
+  
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
          call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line)
-         
+        
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------

@@ -133,14 +133,17 @@ contains
       allocate ( out % chn ( NUM_CHN))
       
       out % success = .true.
-      
+     
       call set_filenames ( config )
+     
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
+     
       call read_navigation ( config , out )
-       
+     
       if ( .not. present ( only_nav )) then
-        
+       
          call read_ahi_level1b ( config , out )
+         
       end if
        
    end subroutine get_ahi_data
@@ -199,6 +202,8 @@ contains
       integer :: y_1
       logical, allocatable :: inside (:,:)
       integer, allocatable :: line_g(:), elem_g(:)
+      integer, parameter :: N_ELEMENTS_FULL_DISK = 5500
+      integer, parameter :: N_LINES_FULL_DISK = 5500
       
       config_local = config
       config_local % h5_offset = [0,0]

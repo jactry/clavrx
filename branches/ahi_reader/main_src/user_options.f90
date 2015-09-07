@@ -315,7 +315,7 @@ contains
       read(unit=Default_Lun,fmt=*) Lrc_Flag
       read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
-               
+          print*,'undetected ..',     Process_Undetected_Cloud_Flag
       if ( Expert_Mode <= 5 ) then
           close(unit=Default_Lun)
           return
@@ -335,6 +335,7 @@ contains
          Geo%Solzen_Min_Limit = 0.0
       else
          backspace(unit=Default_Lun)
+         print*,'gggh'
          read(unit=Default_Lun,fmt=*) GeoNav_Limit_Flag, &
                                       Nav%Lat_Max_Limit, Nav%Lat_Min_Limit, &
                                       Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &

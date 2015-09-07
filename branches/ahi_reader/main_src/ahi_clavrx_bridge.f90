@@ -55,6 +55,7 @@ contains
       integer :: modis_chn
       integer :: i_line
       integer :: offset(2) , count(2)
+      integer :: offset_all(2), count_all(2)
      
       error_out = 0
       modis_chn_list = [ 3 , 4 , 1 , 2 , 6 , 7 , 20 , 37 ,  27 , 28,  &
@@ -74,23 +75,35 @@ contains
       ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) == SYM_YES
     
       ahi_c % data_path = trim(Image%Level1b_Path)
-   
-      y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment
+      
+      ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
+      ahi_c % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+      
+      print*,Nav%Lon_Min_Limit,Nav%Lon_Max_Limit
+      print*,Nav%Lat_Min_Limit,Nav%Lat_Max_Limit
+      
+      call ahi_segment_information_region ( ahi_c , offset_all, count_all )
+     
+      print*,'hhhh> ', Image%Number_Of_Lines_Per_Segment
+      
+      y_start = offset_all(2) + ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment
       c_seg_lines = Image%Number_Of_Lines_Per_Segment
-   
-      if ( (c_seg_lines + y_start) > Image%Number_Of_Lines ) then
-         c_seg_lines = Image%Number_Of_Lines - y_start   
+      print*,'start all',offset_all
+      print*,'y_start: ',y_start
+      print*,'c_seg_lines: ',c_seg_lines
+      print*,'segement_number: ', segment_number
+      print*,'number of lins :', Image%Number_Of_Lines 
+      
+      if ( (c_seg_lines + y_start) > (Image%Number_Of_Lines+offset_all(2)) ) then
+         c_seg_lines = Image%Number_Of_Lines - y_start + offset_all(2)  
       end if
  
-      ahi_c % h5_offset = [0,y_start]
+      ahi_c % h5_offset = [offset_all(1),y_start]
       ahi_c % h5_count = [Image%Number_Of_Elements  , c_seg_lines] 
       
-      ahi_c % lon_range =[178.,-179.]
-      ahi_c % lat_range =[17.,18.]
-      call ahi_segment_information_region ( ahi_c , offset, count )
-      ahi_c % h5_offset = offset
-      ahi_c % h5_count = count
- 
+
+         print*,'offset: ', ahi_c % h5_offset,ahi_c % h5_count
+       
       call get_ahi_data ( ahi_c, ahi_data )
       
       if ( .not. ahi_data % success ) then
@@ -100,8 +113,10 @@ contains
          print*,' In a later version of CLAVR-x the next file should be start now...'
          stop
       end if
-      
-  
+     
+     
+      print*,shape ( ahi_data % geo % lat )
+      print*,shape ( nav % lat_1b(:,1:c_seg_lines) )
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon
       
@@ -113,7 +128,7 @@ contains
       geo % glintzen (:,1:c_seg_lines)    = ahi_data % geo % glintzen
       geo % scatangle (:,1:c_seg_lines)   = ahi_data % geo % scatangle
       ! nav % ascend (1:c_seg_lines)     = ahi_data % geo % ascend
-  
+   
       do i_chn = 1, NUM_CHN_AHI
 
          modis_chn = modis_chn_list (i_chn)
@@ -135,14 +150,15 @@ contains
             
             ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
             call convert_radiance ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
-            call compute_bt_array ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) , ch(modis_chn)%rad_toa ( : ,1:c_seg_lines) &
+            call compute_bt_array ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &
+               , ch(modis_chn)%rad_toa ( : ,1:c_seg_lines) &
                 , modis_chn ,MISSING_VALUE_REAL4 )
  
          end if   
       
       end do
     
-   
+  
       Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
       scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment + 1 , 1)]
 

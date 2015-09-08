@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 
 module geo_sat_navigation_mod
 

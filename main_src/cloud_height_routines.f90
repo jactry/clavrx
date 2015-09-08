@@ -36,11 +36,13 @@ module CLOUD_HEIGHT_ROUTINES
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
   public::  CO2_SLICING_CLOUD_HEIGHT
+  public::  CO2_SLICING_CLOUD_HEIGHT_NEW
   public::  SINGLE_CO2_SLICING_CLOUD_HEIGHT
   public::  OPAQUE_TRANSMISSION_HEIGHT
   public::  CONVECTIVE_CLOUD_PROBABILITY
   public::  SUPERCOOLED_CLOUD_PROBABILITY
   public::  MODIFY_CLOUD_TYPE_WITH_SOUNDER
+  public::  COMPUTE_SOUNDER_MASK_SEGMENT
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -467,7 +469,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
 end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
 
 !----------------------------------------------------------------------
-! Compute CO2 Slicing
+! Compute CO2 Slicing using Ch33, 34, 35 and ch 36
 !----------------------------------------------------------------------
 subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                     Pressure_Profile,Cloud_Mask, &
@@ -632,6 +634,200 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   enddo Line_Loop_2
 
 end subroutine  CO2_SLICING_CLOUD_HEIGHT
+
+!----------------------------------------------------------------------
+! Compute CO2 Slicing using Ch33, 34, 35 and ch 36
+!----------------------------------------------------------------------
+subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
+                                    Pressure_Profile,Cloud_Mask, &
+                                    Pc_Co2,Tc_Co2,Zc_Co2)
+  integer, intent(in):: Num_Elem
+  integer, intent(in):: Line_Idx_Min
+  integer, intent(in):: Num_Lines
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Mask
+  real, intent(in), dimension(:):: Pressure_Profile
+  real, intent(out), dimension(:,:):: Pc_Co2
+  real, intent(out), dimension(:,:):: Tc_Co2
+  real, intent(out), dimension(:,:):: Zc_Co2
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  integer:: Line_Start
+  integer:: Line_End
+  integer:: Nwp_Lon_Idx
+  integer:: Nwp_Lat_Idx
+  integer:: Vza_Rtm_Idx
+  real:: Pc_33_34, Pc_34_35, Pc_35_36
+  integer:: Tropo_Level_Idx
+  integer:: Sfc_Level_Idx
+  real:: Beta_Target
+  integer (kind=int4), parameter:: COUNT_MIN_TEMPERATURE_CIRRUS = 2
+  integer (kind=int4), parameter:: BOX_WIDTH_KM = 300
+  real (kind=real4), parameter:: SOUNDER_RESOLUTION_KM = 20.0
+  real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
+  real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
+  integer (kind=int4):: Box_Width
+  real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
+  integer:: Lev_Idx_Temp
+  integer:: Pc_Lev_Idx
+
+  real, dimension(3):: Pc_Temp
+  integer:: Count_Valid
+  logical, allocatable, dimension(:):: Sounder_Fov_Mask
+  integer:: Number_Sounder_Fov
+
+  Line_Start = Line_Idx_Min
+  Line_End = Line_Start + Num_Lines - 1
+
+  !--- intialize output
+  Pc_Co2 = Missing_Value_Real4
+  Tc_Co2 = Missing_Value_Real4
+  Zc_Co2 = Missing_Value_Real4
+
+  !---- check that all co2 channels are available
+  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
+      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
+     return
+  endif
+
+  !------- make a mask
+  Number_Sounder_Fov = maxval(Nav%Sounder_Fov_Segment_Idx)
+  allocate(Sounder_Fov_Mask(Number_Sounder_Fov))
+  Sounder_Fov_Mask = .false.
+
+  print *, "Number of fovs = ", Number_Sounder_Fov
+
+  Line_Loop: do Line_Idx = Line_Start, Line_End
+  Element_Loop: do Elem_Idx = 1, Num_Elem
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+     !--- skip data without sounder data
+     if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- indice aliases
+     Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     !-- check if indices are valid
+     if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+     Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+     Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+
+     !--- only do this for appropriate cloud types
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE) cycle
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) cycle
+     if (Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) <= 0) cycle
+
+     !--- if already done, move on
+     if (Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) == .true.) cycle
+
+     !--- compute cloud top pressure using each channel pair
+     Beta_Target = 1.0
+
+     call COMPUTE_BETA_PROFILE(ch(35)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(35)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(35)%Rad_BB_Cloud_Profile, &
+                               ch(36)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(36)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(36)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               Pressure_Profile, &
+                               Beta_Target, &
+                               Pc_35_36,Pc_Lev_Idx)
+     Pc_Temp(1) = Pc_35_36
+     if (Pc_35_36 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_35_36
+         cycle
+     endif
+
+     call COMPUTE_BETA_PROFILE(ch(34)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(34)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(34)%Rad_BB_Cloud_Profile, &
+                               ch(35)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(35)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(35)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               Pressure_Profile, &
+                               Beta_Target, &
+                               Pc_34_35,Pc_Lev_Idx)
+
+     Pc_Temp(2) = Pc_34_35
+     if (Pc_34_35 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_34_35
+         cycle
+     endif
+
+     call COMPUTE_BETA_PROFILE(ch(33)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile, &
+                               ch(34)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(34)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(34)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               Pressure_Profile, &
+                               Beta_Target, &
+                               Pc_33_34,Pc_Lev_Idx)
+
+     Pc_Temp(3) = Pc_33_34
+     if (Pc_33_34 /= Missing_Value_Real4) then
+         Pc_Co2(Elem_Idx,Line_Idx) = Pc_33_34
+         cycle
+     endif
+
+     Count_Valid = count(Pc_Temp /= Missing_Value_Real4)
+     if (Count_Valid > 0) then
+        Pc_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
+     endif
+
+
+
+     !--- set this fov as being processed
+     print *, "spreading for fov = ", Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)
+     Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) = .true.
+
+     !--- spread out information over all imager pixels within the sounder fov
+     where(Nav%Sounder_Fov_Segment_Idx == Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx))
+         Pc_Co2 = Pc_Co2(Elem_Idx,Line_Idx)
+     end where
+    
+  enddo Element_Loop
+  enddo Line_Loop
+
+
+  deallocate(Sounder_Fov_Mask)
+
+  !-------------------------------------------------------------------------
+  ! determine temperature
+  !-------------------------------------------------------------------------
+  Line_Loop_2: do Line_Idx = Line_Start, Line_End
+  Element_Loop_2: do Elem_Idx = 1, Num_Elem
+
+     if (Pc_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- compute temperature
+     call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+                                    Pc_Co2(Elem_Idx,Line_Idx), &
+                                    Tc_Co2(Elem_Idx,Line_Idx), &
+                                    Zc_Co2(Elem_Idx,Line_Idx), &
+                                    Lev_Idx_Temp)
+
+     !-- compute emissivity
+     Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                            ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                             rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
+
+  enddo Element_Loop_2
+  enddo Line_Loop_2
+
+end subroutine CO2_SLICING_CLOUD_HEIGHT_NEW
 
 !-------------------------------------------------------------------------
 ! spatially interpolate
@@ -1088,6 +1284,96 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
       
 
 end subroutine COMPUTE_CSBT_CLOUD_MASKS
+!----------------------------------------------------------------------
+! compute a mask that uniquely identifies all sounder fovs and make
+! a mask that tells if that sounder fov has been processed
+!
+! input: 
+! Nav%Sounder_X = x index of each sounder fov grouping
+! Nav%Sounder_Y = y index of each sounder fov grouping (this is relative
+!                 to the whole file not the segment
+! Nav%Sounder_Fov = sounder index within each grouping
+!
+! output:
+! Nav%Sounder_Fov_Segment_Idx which is a pixel-level
+! index where each sounder fov in this segment is numbered from 1 to
+! the total number of sounder fovs.
+!----------------------------------------------------------------------
+subroutine  COMPUTE_SOUNDER_MASK_SEGMENT()
+  integer:: X_Idx, Y_Idx, Fov_Idx
+  integer:: Fov_Segment_Idx
+  integer:: Num_Line
+  integer:: Num_Elem
+  integer:: Sounder_X_Min
+  integer:: Sounder_X_Max
+  integer:: Sounder_Y_Min
+  integer:: Sounder_Y_Max
+  integer:: Sounder_Fov_Min
+  integer:: Sounder_Fov_Max
+  logical, allocatable, dimension(:,:):: Sounder_Valid_Mask
+
+  !--- make a logical mask for identifying pixels with sounder data
+  !--- needs to logical to be an argument for maxval and minval
+  Num_Elem = Image%Number_Of_Elements  
+  Num_Line = Image%Number_Of_Lines_Per_Segment
+  allocate(Sounder_Valid_Mask(Num_Elem,Num_Line))
+  Sounder_Valid_Mask =  .false.
+  where(Nav%Sounder_X > 0 .and. Nav%Sounder_Y > 0)
+     Sounder_Valid_Mask = .true.
+  end where
+
+  !--- determine ranges in sounder indices
+  Sounder_X_Min = minval(Nav%Sounder_X,Sounder_Valid_Mask)
+  Sounder_X_Max = maxval(Nav%Sounder_X,Sounder_Valid_Mask)
+  Sounder_Y_Min = minval(Nav%Sounder_Y,Sounder_Valid_Mask)
+  Sounder_Y_Max = maxval(Nav%Sounder_Y,Sounder_Valid_Mask)
+  Sounder_Fov_Min = minval(Nav%Sounder_Fov,Sounder_Valid_Mask)
+  Sounder_Fov_Max = maxval(Nav%Sounder_Fov,Sounder_Valid_Mask)
+
+  !--- for HIRS there are no valid values for Sounder_Fov, should
+  !--- treat as if all values are 1
+  if (Sounder_Fov_Min == 0) Sounder_Fov_Min = 1
+  if (Sounder_Fov_Max == 0) Sounder_Fov_Max = 1
+
+  !--- loop over sounder indices and construct soundef fov idx for this segment
+  Fov_Segment_Idx = 0
+  Nav%Sounder_Fov_Segment_Idx = 0
+  do X_Idx = Sounder_X_Min, Sounder_X_Max
+    do Y_Idx = Sounder_Y_Min, Sounder_Y_Max
+      do Fov_Idx = Sounder_Fov_Min, Sounder_Fov_Max
+
+        where(Nav%Sounder_X == X_Idx .and. &
+              Nav%Sounder_Y == Y_Idx .and. &
+              Nav%Sounder_Fov == Fov_Idx)
+
+          Nav%Sounder_Fov_Segment_Idx = Fov_Segment_Idx + 1
+
+        end where
+
+        Fov_Segment_Idx = maxval(Nav%Sounder_Fov_Segment_Idx)
+
+        !print *, X_Idx,Y_Idx,Fov_Idx, Fov_Segment_Idx
+     
+      enddo
+    enddo
+  enddo
+
+  !-- ensure missing value for pixels without sounder data
+  where(Nav%Sounder_Fov_Segment_Idx == 0)
+          Nav%Sounder_Fov_Segment_Idx = MISSING_VALUE_INT2
+  end where
+
+  !--- destroy logical mask created above
+  deallocate(Sounder_Valid_Mask)
+
+  print *, "end of sounder mask"
+  print *, Sounder_X_Min, Sounder_X_Max
+  print *, Sounder_Y_Min, Sounder_Y_Max
+  print *, Sounder_Fov_Min, Sounder_Fov_Max
+  print *, maxval(Nav%Sounder_Fov_Segment_Idx)
+    
+end subroutine  COMPUTE_SOUNDER_MASK_SEGMENT
+
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

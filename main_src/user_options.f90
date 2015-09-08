@@ -971,7 +971,7 @@ contains
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
          nlcomp_mode_User_Set       =  1  
       case ('VIIRS-IFF')      
-         possible_acha_modes(1:3)   =  [1, 3, 5]
+         possible_acha_modes(1:4)   =  [1, 3, 5, 9]
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ('AQUA-IFF')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]

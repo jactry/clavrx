@@ -307,18 +307,15 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_Idx_85um = 29      !channel number for 8.5
    Input%Chan_Idx_11um = 31      !channel number for 11
    Input%Chan_Idx_12um = 32      !channel number for 12
-   Input%Chan_Idx_133um = 33     !channel number for 13.3
    Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
    Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
    Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
    Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
-   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(33)
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
    Input%Bt_11um => ch(31)%Bt_Toa
    Input%Bt_12um => ch(32)%Bt_Toa
-   Input%Bt_133um => ch(33)%Bt_Toa
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
    Input%Cosine_Zenith_Angle => Geo%Coszen
@@ -335,7 +332,6 @@ module ACHA_CLAVRX_BRIDGE
    Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
-   Input%Rad_Clear_133um => ch(33)%Rad_Toa_Clear
    Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
@@ -352,6 +348,22 @@ module ACHA_CLAVRX_BRIDGE
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC
    Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Co2
+
+
+
+   !-------------------------------------------------------------------
+   ! handle use of ch45 instead of ch33 for MODE 9
+   !-------------------------------------------------------------------
+   if (ACHA%Mode == 9) then
+     Input%Chan_Idx_133um = 45     !channel number for 13.3
+   else
+     Input%Chan_Idx_133um = 33     !channel number for 13.3
+   endif
+
+   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um)
+   Input%Bt_133um => ch(Input%Chan_Idx_133um)%Bt_Toa
+   Input%Rad_Clear_133um => ch(Input%Chan_Idx_133um)%Rad_Toa_Clear
+
  end subroutine SET_INPUT
 
 end module ACHA_CLAVRX_BRIDGE

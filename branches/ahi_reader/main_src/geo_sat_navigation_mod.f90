@@ -9,7 +9,7 @@ module geo_sat_navigation_mod
    real ( kind = 8 ) , parameter :: R_POL = 6356.7523
    real ( kind = 8 ) , parameter :: R_EQ = 6378.1370
    real ( kind = 8 ) , parameter :: FLAT = 1.0/298.257222101
-   real ( kind = 8 ) , parameter :: FLAT_P = 1/((1.-FLAT) * ( 1.-FLAT))
+   real ( kind = 8 ) , parameter :: FLAT_P = 1/((1.- FLAT) * ( 1.- FLAT))
    
    real ( kind = 8 ) , parameter :: H_MSG = 42164.0
    real ( kind = 8 ) , parameter :: H_GOESR = 42164.16

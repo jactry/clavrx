@@ -211,7 +211,7 @@ if (hglibver(major_v, minor_v, release, hdf_ver) /= SUCCEED) then
    print *, "could not determine HDF library version"
    stop 961
 end if
-print*,'fff'
+
 !---- describe CLAVR-x
 !istatus = sfscatt(hdf_file_id, "PROCESSING_NOTE", DFNT_CHAR8, len_trim(PROCESSINGSTRING), trim(PROCESSINGSTRING))+istatus
 istatus = sfscatt(hdf_file_id, "HDF_LIB_VERSION", DFNT_CHAR8, len_trim(hdf_ver), trim(hdf_ver))+istatus
@@ -267,7 +267,7 @@ istatus = sfscatt(hdf_file_id, "NAIVE_BAYESIAN_CLOUD_MASK_NAME", DFNT_CHAR8, &
 !--- data type
 istatus = sfscatt(hdf_file_id, "DATA_TYPE", DFNT_CHAR8,len_trim(data_type),trim(data_type))+istatus
 
-print*,'ggg'
+
 !--- NCDC Attributes
 
 !-- other global attributes for the level3 file.

@@ -658,7 +658,7 @@
       Segment_Time_Point_Seconds_temp = 0.0
 
       Segment_loop: do Segment_Number = 1,Image%Number_Of_Segments
-         print*,'start segement ...', Segment_Number
+        
          !--- reset skip processing flag 
          Skip_Processing_Flag = sym%NO
 

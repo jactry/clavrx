@@ -76,23 +76,19 @@ contains
     
       ahi_c % data_path = trim(Image%Level1b_Path)
       
-      ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
-      ahi_c % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+      offset_all = [0,0]
       
-      print*,Nav%Lon_Min_Limit,Nav%Lon_Max_Limit
-      print*,Nav%Lat_Min_Limit,Nav%Lat_Max_Limit
+      if ( nav % lon_lat_limits_set ) then
       
-      call ahi_segment_information_region ( ahi_c , offset_all, count_all )
-     
-      print*,'hhhh> ', Image%Number_Of_Lines_Per_Segment
+         ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
+         ahi_c % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+   
+         call ahi_segment_information_region ( ahi_c , offset_all, count_all )
+      end if
       
       y_start = offset_all(2) + ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment
       c_seg_lines = Image%Number_Of_Lines_Per_Segment
-      print*,'start all',offset_all
-      print*,'y_start: ',y_start
-      print*,'c_seg_lines: ',c_seg_lines
-      print*,'segement_number: ', segment_number
-      print*,'number of lins :', Image%Number_Of_Lines 
+     
       
       if ( (c_seg_lines + y_start) > (Image%Number_Of_Lines+offset_all(2)) ) then
          c_seg_lines = Image%Number_Of_Lines - y_start + offset_all(2)  
@@ -102,7 +98,7 @@ contains
       ahi_c % h5_count = [Image%Number_Of_Elements  , c_seg_lines] 
       
 
-         print*,'offset: ', ahi_c % h5_offset,ahi_c % h5_count
+         
        
       call get_ahi_data ( ahi_c, ahi_data )
       
@@ -115,8 +111,7 @@ contains
       end if
      
      
-      print*,shape ( ahi_data % geo % lat )
-      print*,shape ( nav % lat_1b(:,1:c_seg_lines) )
+     
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon
       

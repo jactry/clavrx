@@ -205,6 +205,7 @@ module PIXEL_COMMON
    integer (kind=int1), dimension(:,:), allocatable:: Sounder_Fov
    integer (kind=int2), dimension(:,:), allocatable:: Sounder_X
    integer (kind=int2), dimension(:,:), allocatable:: Sounder_Y
+   integer (kind=int2), dimension(:,:), allocatable:: Sounder_Fov_Segment_Idx
    real (kind=real4), dimension(:,:), allocatable:: Lat
    real (kind=real4), dimension(:,:), allocatable:: Lon
    real (kind=real4), dimension(:,:), allocatable:: Lat_Pc
@@ -1291,6 +1292,7 @@ subroutine CREATE_NAV_ARRAYS(dim1,dim2)
    allocate(Nav%Lon_Pc(dim1,dim2))
    if (index(Sensor%Sensor_Name,'IFF') > 0) then
      allocate(Nav%Sounder_Fov(dim1,dim2))
+     allocate(Nav%Sounder_Fov_Segment_Idx(dim1,dim2))
      allocate(Nav%Sounder_X(dim1,dim2))
      allocate(Nav%Sounder_Y(dim1,dim2))
    endif
@@ -1298,6 +1300,7 @@ end subroutine CREATE_NAV_ARRAYS
 subroutine DESTROY_NAV_ARRAYS()
   if (allocated(Nav%Ascend)) deallocate(Nav%Ascend)
   if (allocated(Nav%Sounder_Fov)) deallocate(Nav%Sounder_Fov)
+  if (allocated(Nav%Sounder_Fov_Segment_Idx)) deallocate(Nav%Sounder_Fov_Segment_Idx)
   if (allocated(Nav%Sounder_X)) deallocate(Nav%Sounder_X)
   if (allocated(Nav%Sounder_Y)) deallocate(Nav%Sounder_Y)
   if (allocated(Nav%Lat)) deallocate(Nav%Lat)
@@ -1310,6 +1313,7 @@ end subroutine
 subroutine RESET_NAV_ARRAYS()
   if (allocated(Nav%Ascend)) Nav%Ascend = Missing_Value_Int1
   if (allocated(Nav%Sounder_Fov)) Nav%Sounder_Fov = Missing_Value_Int1
+  if (allocated(Nav%Sounder_Fov_Segment_Idx)) Nav%Sounder_Fov_Segment_Idx = Missing_Value_Int2
   if (allocated(Nav%Sounder_X)) Nav%Sounder_X = Missing_Value_Int2
   if (allocated(Nav%Sounder_Y)) Nav%Sounder_Y = Missing_Value_Int2
   if (allocated(Nav%Lat)) Nav%Lat = Missing_Value_Real4

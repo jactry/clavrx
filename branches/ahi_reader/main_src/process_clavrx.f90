@@ -257,7 +257,8 @@
    
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38
-   integer, dimension(20:38), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16,8,13/)     !Check this
+   integer, dimension(20:45), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16,8,13, &
+                                                              0, 0, 0, 0, 0, 0,16/)     !Check this
    integer:: Chan_Idx
    
    
@@ -454,7 +455,6 @@
       call OUTPUT_IMAGE_TO_SCREEN()
       call OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
       
-
       !------------------------------------------------------------------
       ! Setup Solar-channel RTM terms for this particular sensor
       !------------------------------------------------------------------
@@ -1060,6 +1060,7 @@
                !-------------------------------------------------------------------
 
                if (index(Sensor%Sensor_Name,'IFF') > 0) then
+
                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
                                     P_Std_Rtm,Cld_Mask, &
@@ -1070,9 +1071,6 @@
 
                   call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
 
-                      Diag_Pix_Array_1 = Nav%Sounder_Fov
-                      Diag_Pix_Array_2 = Nav%Sounder_X
-                      Diag_Pix_Array_3 = Nav%Sounder_Y
                endif
 
 
@@ -1594,17 +1592,19 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
        !--- surface emissivity
        if (Use_Seebor == sym%YES) then
 
-           !--- force channel 20 read
+           !--- force channel 20 read used for desert definition
            call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
 
-           do Chan_Idx = 21, 38
-               if (Chan_Idx == 26) cycle
+           do Chan_Idx = 21, Nchan_Clavrx
+               if (ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE .and. &
+                   ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE) cycle
+
                if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                  call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, Ch(Chan_Idx)%Sfc_Emiss)
                endif
+
            enddo
-           !--- set Ch45 13um pseudo Sfc_Emiss to Ch 33 Sfc_Emiss
-           if (Sensor%Chan_On_Flag_Default(45) == sym%YES) Ch(45)%Sfc_Emiss = Ch(33)%Sfc_Emiss
+
         end if
 
         !--- mandatory fields - check for substitution of Bad_Pixel for space 

@@ -66,17 +66,15 @@ module ACHA_CLOUD_COVER_LAYERS
   integer :: Ncloud
   real:: Total_Cloud_Fraction_Uncer_Temp
   integer,parameter :: N=1
-  real, parameter:: HIGH_CLOUD_MAX_PRESSURE_THRESH = 440.0
-  real, parameter:: LOW_CLOUD_MIN_PRESSURE_THRESH = 680.0
+  real, parameter:: HIGH_CLOUD_MAX_PRESSURE_THRESH = 350.0
+  real, parameter:: LOW_CLOUD_MIN_PRESSURE_THRESH = 642.0
 
 
   !-------------------------------------------------------------------------------
   ! Total Cloud Fraction and Its Uncertainty
   !-------------------------------------------------------------------------------
 
-  !-------------------------------------------------------------------------------
-  ! copy input symbol to a module-wide variable
-  !-------------------------------------------------------------------------------
+  !--- copy input symbol to a module-wide variable
   symbol = Symbol_In
 
   !--- initialize
@@ -163,6 +161,11 @@ module ACHA_CLOUD_COVER_LAYERS
  
       !--- check for a bad pixel pixel
       if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) then
+        cycle
+      endif
+
+      !--- check for missing pressure
+      if (Output%Pc(i,j) == MISSING_VALUE_REAL4) then
         cycle
       endif
 

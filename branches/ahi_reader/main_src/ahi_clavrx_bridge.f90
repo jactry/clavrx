@@ -84,6 +84,9 @@ contains
          ahi_c % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
    
          call ahi_segment_information_region ( ahi_c , offset_all, count_all )
+         
+        
+         
       end if
       
       y_start = offset_all(2) + ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment

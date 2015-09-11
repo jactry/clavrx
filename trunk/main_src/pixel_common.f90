@@ -217,6 +217,7 @@ module PIXEL_COMMON
    real(kind=real4):: Lon_Min_Limit
    real(kind=real4):: Lon_Max_Limit
    real(kind=real4):: Timerr_Seconds
+   logical :: lon_lat_limits_set
   end type navigation_definition
 
   type :: surface_definition

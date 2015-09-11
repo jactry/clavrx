@@ -715,7 +715,6 @@ end subroutine DETERMINE_AVHRR_1
          endif
        endif
 
-
        !----------------------------------------------------------------------
        ! generate new calibration coefficients
        !----------------------------------------------------------------------
@@ -1125,40 +1124,45 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
         Valid_Ref_Cal = .false.
    endif
 
-
    !--- Apply Calibration
    if (Valid_Ref_Cal .eqv. .true.) then
 
      !--- channel 1
-     where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
-       ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
-     elsewhere
-       ch(1)%Ref_Toa(:,Line_Idx) = Ref_Ch1_Switch + Ch1_Gain_High*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Switch_Count_Cal) 
-     end where
+     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+      where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
+        ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
+      elsewhere
+        ch(1)%Ref_Toa(:,Line_Idx) = Ref_Ch1_Switch + Ch1_Gain_High*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Switch_Count_Cal) 
+      end where
+     endif
 
      !--- channel 2
-     where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
-       ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
-     elsewhere
-       ch(2)%Ref_Toa(:,Line_Idx) = Ref_Ch2_Switch + Ch2_Gain_High*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Switch_Count_Cal) 
-     end where
+     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+      where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
+        ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
+      elsewhere
+        ch(2)%Ref_Toa(:,Line_Idx) = Ref_Ch2_Switch + Ch2_Gain_High*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Switch_Count_Cal) 
+      end where
+     endif
 
      !--- channel 3a
-     if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
-       ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-     else 
-       where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
-         ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
-       elsewhere
-         ch(6)%Ref_Toa(:,Line_Idx) = Ref_Ch6_Switch + Ch3a_Gain_High*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Switch_Count_Cal) 
-       end where
+     if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+       if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
+         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+       else 
+         where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
+           ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
+         elsewhere
+           ch(6)%Ref_Toa(:,Line_Idx) = Ref_Ch6_Switch + Ch3a_Gain_High*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Switch_Count_Cal) 
+         end where
+       endif
      endif
 
   else
 
-    ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
 
   endif
 

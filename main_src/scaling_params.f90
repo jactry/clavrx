@@ -29,10 +29,12 @@
 !
 !--------------------------------------------------------------------------------------
 module SCALING_PARAMETERS
-
- use CONSTANTS
+  
+ use CONSTANTS, only: &
+   int4 
  implicit none
-
+ 
+    private
  integer(kind=int4), parameter, public:: one_byte_max = 127, &   !(2**8)/2 -1
                                           one_byte_min = -127     !-(2**8)/2
  integer(kind=int4), parameter, public:: two_byte_max = 32767, & !(2**15)/2 - 1

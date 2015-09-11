@@ -1,4 +1,4 @@
-! $Id$
+   ! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -70,7 +70,8 @@ module cx_read_ahi_mod
    private
    public :: get_ahi_data
    public :: ahi_time_from_filename
-
+   public :: ahi_segment_information_region
+   
    integer, parameter :: NUM_CHN = 16
    
    type, public :: ahi_config_type
@@ -81,6 +82,8 @@ module cx_read_ahi_mod
       character ( len =20) :: varname (NUM_CHN)
       integer :: h5_offset(2)
       integer :: h5_count(2)
+      real :: lon_range (2)
+      real :: lat_range (2)
    end type ahi_config_type
    
    type ahi_chn_type
@@ -130,14 +133,17 @@ contains
       allocate ( out % chn ( NUM_CHN))
       
       out % success = .true.
-      
+     
       call set_filenames ( config )
+     
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
+     
       call read_navigation ( config , out )
-       
+     
       if ( .not. present ( only_nav )) then
-        
+       
          call read_ahi_level1b ( config , out )
+         
       end if
        
    end subroutine get_ahi_data
@@ -170,6 +176,93 @@ contains
        
    end subroutine ahi_time_from_filename
    
+   ! -------------------------------------------------
+   !    returns offset and count for lon / lat value
+   !
+   !     lon/lat box is defined in config structure
+   !      INPUT
+   !
+   !    OUTPUT:
+   !       offset is  2 element vector holding the start of array for each dimension
+   !       count_1 is a 2 elemen vector holding the number of elements in array for each dimension 
+   ! --------------------------------------------------
+   subroutine ahi_segment_information_region ( config , offset, count_1 ) 
+      implicit none
+      type ( ahi_config_type ), intent(in) :: config
+      integer, intent(out) :: offset(2)
+      integer, intent(out) :: count_1(2)
+      type ( ahi_config_type ) :: config_local
+      type ( ahi_data_out_type ) :: out
+      integer :: lat_b (2)
+      integer :: lon_b(2)
+      integer :: ii
+      integer :: x_0
+      integer :: x_1
+      integer :: y_0
+      integer :: y_1
+      logical, allocatable :: inside (:,:)
+      integer, allocatable :: line_g(:), elem_g(:)
+      integer, parameter :: N_ELEMENTS_FULL_DISK = 5500
+      integer, parameter :: N_LINES_FULL_DISK = 5500
+      
+      config_local = config
+      config_local % h5_offset = [0,0]
+      config_local % h5_count  = [5500,5500]
+      config_local % chan_on = .false.
+      
+      call set_filenames ( config_local )
+     
+      call read_navigation ( config_local , out )
+       
+      allocate ( inside (5500,5500))
+      allocate ( line_g(5500),elem_g(5500))
+      
+      inside =  out % geo % lon .gt. config % lon_range(1) .and. &
+           out % geo % lon .lt. config % lon_range(2) .and. &
+           out % geo % lat .gt. config % lat_range(1) .and. &
+           out % geo % lat .lt. config % lat_range(2)
+           
+      
+      elem_g = count (inside ,2 )      
+      line_g = count (inside ,1 ) 
+      
+      do ii =1 , 5500
+         if ( elem_g(ii) .ne. 0 ) then
+            offset(1) = ii
+           
+            exit
+         end if
+      end do
+      
+      do ii =1 , 5500
+         if ( line_g(ii) .ne. 0 ) then
+            offset(2) = ii
+            
+             exit
+         end if
+      end do
+      
+        do ii =5500 , 1, -1
+         if ( elem_g(ii) .ne. 0 ) then
+            count_1(1) = ii - offset(1)
+           
+             exit
+         end if
+      end do
+      
+        do ii =5500 , 1, -1
+         if ( line_g(ii) .ne. 0 ) then
+            count_1(2) = ii - offset(2)
+            
+             exit
+         end if
+      end do
+    
+      
+      
+      
+   end subroutine ahi_segment_information_region
+   
    ! --------------------------------------------------------------------------------------
    !
    ! --------------------------------------------------------------------------------------
@@ -185,17 +278,29 @@ contains
       do i = 1 , 16
         
          write (identifier , fmt ='(i2.2)') i
-         
+        
          file_for_this_channel = replace_text ( config % file_base,'B01','B'//identifier)
+        
          config % filename ( i ) = trim (config % data_path)//trim(file_for_this_channel) 
          config % varname ( i ) = '/RAD'
-         
+
       end do
 
    end subroutine set_filenames
 
    ! --------------------------------------------------------------------------------------
-   !
+   !  This reads navigation properties from AHI file
+   !    and popluates ahi % geo substructure
+   !  Variables are
+   !     lon
+   !     lat   
+   !    solzen
+   !    solaz
+   !    satzen ( satellite Zenith)
+   !    sataz   ( satellite azimuth )
+   !    relaz   ( relative azimuth difference )
+   !    glintzen
+   !    satangle    
    ! --------------------------------------------------------------------------------------
    subroutine read_navigation ( config, ahi )  
       
@@ -210,7 +315,7 @@ contains
       use readh5dataset, only: &
          h5readattribute 
       
-      
+      use geo_sat_navigation_mod
       
       implicit none
       
@@ -230,11 +335,13 @@ contains
       real (8) :: latx, lonx
       real (8) :: fargc
       integer  :: ii,jj
+      real(8) :: xx,yy
       integer  :: x_full_disk
       integer  :: y_full_disk
    
       real :: GEO_ALTITUDE = 35786.0 !km
       
+      ! - this is neede because it is not available in each of the files
       integer :: VALID_PROJECTION = 7
       
       integer :: day_of_year
@@ -264,29 +371,32 @@ contains
       call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), sub_lat )
       attr_name = trim('Projection/longitude_of_projection_origin')
       call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), sub_lon )
-
+      
+      
       call ahi % allocate_geo (config % h5_count(1),config % h5_count(2)) 
      
       call ahi % time_start_obj % get_date ( doy = day_of_year, hour_frac = hour_frac )
-
+      
       do jj = 1 , config % h5_count(2)     
          do ii = 1 ,   config % h5_count(1)
             
             x_full_disk = ii + config % h5_offset(1)
             y_full_disk = jj + config % h5_offset(2)
             
-            call fgf_to_earth ( 3,  dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
+            
+            call fgf_to_earth (  dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
            
             ahi % geo % lat (ii,jj) = latx  
             ahi % geo % lon (ii,jj) = lonx  
-            
+                        
             if ( lonx == -999. ) cycle
-            
+             
             call  possol ( day_of_year ,  hour_frac  , real(lonx) &
                   , real(latx),ahi % geo % solzen (ii,jj),ahi % geo % solaz (ii,jj) )
                         
-            ahi % geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
+            ahi % geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat) &
+               ,real(lonx) , real(latx) )
              
             ahi % geo % sataz (ii,jj) = sensor_azimuth (  real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
             
@@ -317,7 +427,7 @@ contains
          , h5readdataset
       
       use file_tools, only: &
-         file_test
+         file_test 
       
       implicit none
       
@@ -344,13 +454,12 @@ contains
       do i_chn = 1 ,16
         
          if ( .not. config % chan_on ( i_chn ) ) cycle
-        
+                 
          if ( .not. file_test ( trim(config % filename ( i_chn ) ) ) ) then 
             print*, 'AHI READER ERROR>> file '// trim(config % filename ( i_chn )) // ' not existing !!'
             ahi % success = .false.
             return
          end if
-        
         
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
@@ -380,6 +489,9 @@ contains
          allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
          
          ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
+         
+        
+         
          where ( buffer_fake_i4 == fillvalue )
             ahi % chn(i_chn) % rad = -999.
          end where
@@ -403,11 +515,7 @@ contains
    
    end subroutine read_ahi_level1b
    
-   
-   
-   
-   
-   
+
    ! --------------------------------------------------------------------------------------
    !
    ! --------------------------------------------------------------------------------------

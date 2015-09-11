@@ -416,10 +416,10 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-print *, "BEFORE FILE DIMS"
-
-      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
-print *, "AFTER FILE DIMS"
+      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name &
+               ,AREAstr &
+               ,Nrec_Avhrr_Header &
+               ,Ierror) 
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
@@ -430,15 +430,14 @@ print *, "AFTER FILE DIMS"
          print*,' File dimensions were not set correctly for this sensor ', sensor%sensor_name
          cycle file_loop    
       end if
-
-print *, "here ", Image%Number_Of_Lines
   
+    
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
       !--- determine segment size here
       Line_Idx_Min_Segment = 1
-      Line_Idx_Max_Segment = Image%Number_Of_Lines_Per_Segment
+      Line_Idx_Max_Segment = Image % Number_Of_Lines_Per_Segment
 
       !*************************************************************************
       ! Marker:  READ IN HEADER AND DETERMINE SOME CONSTANTS
@@ -686,12 +685,12 @@ print *, "here ", Image%Number_Of_Lines
          ! Apply spatial limits
          !------------------------------------------------------------------
          call EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
-
+  
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
          call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line)
-         
+        
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
@@ -749,10 +748,6 @@ print *, "here ", Image%Number_Of_Lines
 
                Num_Scans_Level2_Hdf = 0
 
-               !--- Compute the time stamp for use in all generated HDF output files
-               call HDF_TSTAMP()
-
-               !--- create, open and write global attributes to hdf output files
                call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Rtm, &
                               Dir_Level2, &

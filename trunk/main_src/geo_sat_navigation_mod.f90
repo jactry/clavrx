@@ -153,6 +153,9 @@ contains
       lon= RAD_TO_DEG * geographic_lon
       lat= RAD_TO_DEG * geographic_lat
       
+      if ( lon < -180.0 ) lon = lon + 360.0
+      if ( lon > 180.0 ) lon  = lon - 360.0
+      
    
    end subroutine sat_to_earth
    

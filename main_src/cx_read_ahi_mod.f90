@@ -332,7 +332,8 @@ contains
       use readh5dataset, only: &
          h5readattribute 
       
-      use geo_sat_navigation_mod
+      use geo_sat_navigation_mod, only: &
+         fgf_to_earth
       
       implicit none
       

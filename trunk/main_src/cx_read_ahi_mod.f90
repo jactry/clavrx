@@ -223,9 +223,26 @@ contains
            out % geo % lat .lt. config % lat_range(2)
            
       
+      if ( config % lon_range(2) .lt. config % lon_range(1) ) then
+        
+         inside =  (( out % geo % lon .lt. config % lon_range(2) .and. &
+               out % geo % lon .ge. -180.0 )  .or. &
+               
+               (out % geo % lon .gt. config % lon_range(1) .and. &
+               out % geo % lon .lt. 180.0 )) .and. &
+               
+               
+           out % geo % lat .gt. config % lat_range(1) .and. &
+           out % geo % lat .lt. config % lat_range(2)
+      
+      end if
+      
+      
+      
       elem_g = count (inside ,2 )      
       line_g = count (inside ,1 ) 
       
+     
       do ii =1 , 5500
          if ( elem_g(ii) .ne. 0 ) then
             offset(1) = ii

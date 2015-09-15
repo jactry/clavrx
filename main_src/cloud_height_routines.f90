@@ -162,8 +162,6 @@ subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Tempera
 
        Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = Sc_Prob_Lut(Tc_Idx) 
 
-       !print *, "TEST SC LUT ", Cloud_Temperature(Elem_Idx,Line_Idx), Tc_Idx, N_Sc_Lut, Supercooled_Cld_Prob(Elem_Idx,Line_Idx)
-
      enddo
   enddo
 
@@ -602,10 +600,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
          cycle
      endif
 
-     Count_Valid = count(Pc_Temp /= Missing_Value_Real4)
-     if (Count_Valid > 0) then
-        Pc_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
-     endif
+!    Count_Valid = count(Pc_Temp /= Missing_Value_Real4)
+!    if (Count_Valid > 0) then
+!       Pc_Co2(Elem_Idx,Line_Idx) = sum(Pc_Temp, mask = Pc_Temp /= Missing_Value_Real4) / Count_Valid
+!    endif
     
   enddo Element_Loop
   enddo Line_Loop
@@ -617,6 +615,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop_2: do Elem_Idx = 1, Num_Elem
 
      if (Pc_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Pc_Lev_Idx == Missing_Value_Int4) cycle
 
      !--- compute temperature
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
@@ -627,8 +626,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
 
      !-- compute emissivity
      Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                            ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                             rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
+                                 ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                 rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
 
   enddo Element_Loop_2
   enddo Line_Loop_2
@@ -695,8 +694,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   Number_Sounder_Fov = maxval(Nav%Sounder_Fov_Segment_Idx)
   allocate(Sounder_Fov_Mask(Number_Sounder_Fov))
   Sounder_Fov_Mask = .false.
-
-  print *, "Number of fovs = ", Number_Sounder_Fov
 
   Line_Loop: do Line_Idx = Line_Start, Line_End
   Element_Loop: do Elem_Idx = 1, Num_Elem
@@ -790,7 +787,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
 
 
      !--- set this fov as being processed
-     print *, "spreading for fov = ", Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)
      Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) = .true.
 
      !--- spread out information over all imager pixels within the sounder fov
@@ -820,10 +816,12 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
                                     Lev_Idx_Temp)
 
      !-- compute emissivity
-     Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                            ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                             rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
-
+     Pc_Lev_Idx = Lev_Idx_Temp
+     if (Pc_Lev_Idx /= MISSING_VALUE_INT2) then
+        Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                    ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
+     endif
   enddo Element_Loop_2
   enddo Line_Loop_2
 
@@ -1062,8 +1060,6 @@ subroutine COMPUTE_BETA_PROFILE(Ch_X_Rad_Toa, &
 
       !--- make beta ratio
       Beta_X_Y = BETA_RATIO(Ch_X_Emissivity, Ch_Y_Emissivity)
-
-!print *, "Channel Emiss = ", Lev_Idx, Ch_X_Emissivity, Ch_Y_Emissivity, Beta_X_Y
 
       if (Beta_X_Y == Missing_Value_Real4) cycle
 
@@ -1352,8 +1348,6 @@ subroutine  COMPUTE_SOUNDER_MASK_SEGMENT()
 
         Fov_Segment_Idx = maxval(Nav%Sounder_Fov_Segment_Idx)
 
-        !print *, X_Idx,Y_Idx,Fov_Idx, Fov_Segment_Idx
-     
       enddo
     enddo
   enddo
@@ -1366,12 +1360,6 @@ subroutine  COMPUTE_SOUNDER_MASK_SEGMENT()
   !--- destroy logical mask created above
   deallocate(Sounder_Valid_Mask)
 
-  print *, "end of sounder mask"
-  print *, Sounder_X_Min, Sounder_X_Max
-  print *, Sounder_Y_Min, Sounder_Y_Max
-  print *, Sounder_Fov_Min, Sounder_Fov_Max
-  print *, maxval(Nav%Sounder_Fov_Segment_Idx)
-    
 end subroutine  COMPUTE_SOUNDER_MASK_SEGMENT
 
 !----------------------------------------------------------------------

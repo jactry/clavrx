@@ -1,6 +1,6 @@
 !$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 238
+ integer, parameter, private:: Num_Level2_Sds = 240
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -235,16 +235,18 @@
      Sds_Num_Level2_Cod_Mask = 223,       Sds_Num_Level2_Cod_Mask_Flag = 0, &
      Sds_Num_Level2_Ch37 = 224,           Sds_Num_Level2_Ch37_Flag = 1, &
      Sds_Num_Level2_Ch38 = 225,           Sds_Num_Level2_Ch38_Flag = 1, &
-     Sds_Num_Level2_Ch37_Clear = 226,     Sds_Num_Level2_Ch37_Clear_Flag = 1, &
-     Sds_Num_Level2_Ch38_Clear = 227,     Sds_Num_Level2_Ch38_Clear_Flag = 1, &
-     Sds_Num_Level2_Cth_Aux = 228,        Sds_Num_Level2_Cth_Aux_Flag = 0, & 
-     Sds_Num_Level2_Cth_Sndr = 229,       Sds_Num_Level2_Cth_Sndr_Flag = 0, &
-     Sds_Num_Level2_Cld_Layer = 230,      Sds_Num_Level2_Cld_Layer_Flag = 1, &
-     Sds_Num_Level2_Conv_Prob = 231,      Sds_Num_Level2_Conv_Prob_Flag = 1,, &
-     Sds_Num_Level2_Beta_11_67 = 232,     Sds_Num_Level2_Beta_11_67_Flag = 0, &
-     Sds_Num_Level2_Beta_11_85 = 233,     Sds_Num_Level2_Beta_11_85_Flag = 0, &
-     Sds_Num_Level2_Beta_11_12 = 234,     Sds_Num_Level2_Beta_11_12_Flag = 0, &
-     Sds_Num_Level2_Beta_11_13 = 235,     Sds_Num_Level2_Beta_11_13_Flag = 0, &
-     Sds_Num_Level2_Ctp_Top = 236,        Sds_Num_Level2_Ctp_Top_Flag = 0, &
-     Sds_Num_Level2_Ctp_Base = 237,       Sds_Num_Level2_Ctp_Base_Flag = 0, &
-     Sds_Num_Level2_Supercool_Prob = 238, Sds_Num_Level2_Supercool_Prob_Flag = 0
+     Sds_Num_Level2_Ch45 = 226,           Sds_Num_Level2_Ch45_Flag = 1, &
+     Sds_Num_Level2_Ch37_Clear = 227,     Sds_Num_Level2_Ch37_Clear_Flag = 1, &
+     Sds_Num_Level2_Ch38_Clear = 228,     Sds_Num_Level2_Ch38_Clear_Flag = 1, &
+     Sds_Num_Level2_Ch45_Clear = 229,     Sds_Num_Level2_Ch45_Clear_Flag = 1, &
+     Sds_Num_Level2_Cth_Aux = 230,        Sds_Num_Level2_Cth_Aux_Flag = 0, & 
+     Sds_Num_Level2_Cth_Sndr = 231,       Sds_Num_Level2_Cth_Sndr_Flag = 0, &
+     Sds_Num_Level2_Cld_Layer = 232,      Sds_Num_Level2_Cld_Layer_Flag = 1, &
+     Sds_Num_Level2_Conv_Prob = 233,      Sds_Num_Level2_Conv_Prob_Flag = 1,, &
+     Sds_Num_Level2_Beta_11_67 = 234,     Sds_Num_Level2_Beta_11_67_Flag = 0, &
+     Sds_Num_Level2_Beta_11_85 = 235,     Sds_Num_Level2_Beta_11_85_Flag = 0, &
+     Sds_Num_Level2_Beta_11_12 = 236,     Sds_Num_Level2_Beta_11_12_Flag = 0, &
+     Sds_Num_Level2_Beta_11_13 = 237,     Sds_Num_Level2_Beta_11_13_Flag = 0, &
+     Sds_Num_Level2_Ctp_Top = 238,        Sds_Num_Level2_Ctp_Top_Flag = 0, &
+     Sds_Num_Level2_Ctp_Base = 239,       Sds_Num_Level2_Ctp_Base_Flag = 0, &
+     Sds_Num_Level2_Supercool_Prob = 240, Sds_Num_Level2_Supercool_Prob_Flag = 0

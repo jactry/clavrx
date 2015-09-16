@@ -613,7 +613,7 @@ module AWG_CLOUD_HEIGHT
         if (Input%Bt_133um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
     endif
 
-    if (Bad_Input_Flag == .true.) then
+    if (Bad_Input_Flag .eqv. .true.) then
           Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
           Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
           cycle

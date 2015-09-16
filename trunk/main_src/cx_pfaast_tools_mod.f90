@@ -929,7 +929,7 @@ subroutine taudoc(cc,xx,tau)
       ! assume background stored in last column of coeffecients
       yy = cc(nc,j)
       
-      yy = yy + DOT_PRODUCT( cc(:,j), xx(:nc-1,j) )
+      yy = yy + DOT_PRODUCT( cc(:nc-1,j), xx(:nc-1,j) )
       if ( yy > 0. ) taulyr = exp ( -yy)
       tau ( j + 1) = tau ( j ) * taulyr
       

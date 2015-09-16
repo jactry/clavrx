@@ -718,10 +718,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
      !--- only do this for appropriate cloud types
      if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE) cycle
      if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) cycle
-     if (Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) <= 0) cycle
+     if (Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx) <= 0) cycle
 
      !--- if already done, move on
-     if (Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) == .true.) cycle
+     if (Sounder_Fov_Mask(Nav%Sounder_Fov_Segment_Idx(Elem_Idx,Line_Idx)) .eqv. .true.) cycle
 
      !--- compute cloud top pressure using each channel pair
      Beta_Target = 1.0

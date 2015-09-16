@@ -257,7 +257,7 @@ contains
       ! - this is to delete
       integer :: i
       integer , dimension (: ) , allocatable:: time_msec_day
-      integer (kind = int8) , parameter :: microsec_per_day =  86400000000
+      integer (kind = int8) , parameter :: microsec_per_day =  86400000000_8
       integer, dimension(2)::shape_buffer
       
       real :: missing_value_real4 = -999.

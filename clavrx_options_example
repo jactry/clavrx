@@ -15,7 +15,7 @@
 0   !E2 NAV nav option  (0 =  Use  level-1b,1 = external (future) 2 = Reposnx ( fred nagle): For non-AVHRR, use 0) 
 1   !E2 OUT output compression flag (0=no,1=gzip)
 0   !E2 MASK read auxilary cloud mask 1b (1 = read from 1b and don't recompute)
-viirs_default_bayes_mask.txt 
+default
 1   !E3 SFC seebor emiss flag (0=no, 1=yes) 
 0   !E3 SFC read hires sfc type flag (0=no-8km, 1 = yes-1km) 
 1   !E3 SFC read land mask flag (0=no, 1=yes) (goge2_0ll.hdf)
@@ -36,6 +36,6 @@ viirs_default_bayes_mask.txt
 1 1 1 1 1 1    !E6 chan on flags of channels 19,20,21,22,23,24
 1 1 1 1 1 1    !E6 chan on flags of channels 25,26,27,28,29,30
 1 1 1 1 1 1    !E6 chan on flags of channels 31,32,33,34,35,36
-0 0 0 0 0 1    !E6 chan on flags of channels 37,38,i1,i2,i3,i4
-0 0 0 0 0 0    !E6 chan on flags of channels i5,DNB,psuedo-33
+0 0 0 0 0 1    !E6 chan on flags of channels 37(AHI-only),38(AHI-only),39(I1),40(I2),41(I3),42(I4)
+0 0 0 0 0 0    !E6 chan on flags of channels 43(I5),44(DNB),45(psuedo-33),46-48(Spare)
 $Id$

@@ -1845,6 +1845,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud-top pressure uncertainty from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Acha_Uncer_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Acha_Uncer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_uncer_acha", &
+                               "not specified", &
+                               "cloud pressure uncertainty computed using the AWG cloud height algorithm", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Pc_Uncer, Max_Pc_Uncer, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- quality flag for ACHA Cloud-top Temperature
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Qf_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Qf),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -4368,6 +4379,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       call SCALE_VECTOR_I1_RANK2(ACHA%Tc_Uncertainty,sym%LINEAR_SCALING,Min_Tc_Uncer, &
                                  Max_Tc_Uncer,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctt_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cloud pressure uncertainity from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Acha_Uncer_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Pc_Uncertainty,sym%LINEAR_SCALING,Min_Pc_Uncer, &
+                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

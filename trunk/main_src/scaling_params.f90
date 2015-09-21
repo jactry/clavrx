@@ -116,6 +116,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Zc = 0.0, Max_Zc = 20000.0
  real, parameter, public:: Min_Zc_Uncer = 0.0, Max_Zc_Uncer = 10000.0
  real, parameter, public:: Min_Pc = 0.0, Max_Pc = 1100.0
+ real, parameter, public:: Min_Pc_Uncer = 0.0, Max_Pc_Uncer = 1000.0
  real, parameter, public:: Min_Tc = 160.0, Max_Tc = 320.0, Min_Tc_Std = 0.0, Max_Tc_Std = 40.0
  real, parameter, public:: Min_Tc_Uncer = 0.0, Max_Tc_Uncer = 100.0
  real, parameter, public:: Min_ec = 0.0, Max_ec = 1.0, Min_ec_std = 0.0, Max_ec_std = 1.0

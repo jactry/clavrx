@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 240
+ integer, parameter, private:: Num_Level2_Sds = 241
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 1
@@ -249,4 +249,5 @@
      Sds_Num_Level2_Beta_11_13 = 237,     Sds_Num_Level2_Beta_11_13_Flag = 0, &
      Sds_Num_Level2_Ctp_Top = 238,        Sds_Num_Level2_Ctp_Top_Flag = 0, &
      Sds_Num_Level2_Ctp_Base = 239,       Sds_Num_Level2_Ctp_Base_Flag = 0, &
-     Sds_Num_Level2_Supercool_Prob = 240, Sds_Num_Level2_Supercool_Prob_Flag = 0
+     Sds_Num_Level2_Supercool_Prob = 240, Sds_Num_Level2_Supercool_Prob_Flag = 0, &
+     Sds_Num_Level2_Ctp_Acha_Uncer = 241, Sds_Num_Level2_Ctp_Acha_Uncer_Flag = 0

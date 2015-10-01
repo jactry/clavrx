@@ -216,7 +216,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
    integer:: Line_Idx
    integer:: Solar_Contamination_Thresh
 
-   Solar_Contamination_Thresh = 5 ! was 2 changed by Denis B. (Sep. 2015)
+   Solar_Contamination_Thresh = 10 ! was 2 changed by Denis B. (Sep. 2015)
 
    Number_of_Elements = Image%Number_Of_Elements
    Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment

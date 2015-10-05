@@ -269,8 +269,6 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
 
       end do element_loop
    end do line_loop
-Diag_Pix_Array_1 = Ch1_Counts - Ch1_Dark_Count
-Diag_Pix_Array_2 = Solar_Contamination_Mask
 
 end subroutine SET_SOLAR_CONTAMINATION_MASK
 

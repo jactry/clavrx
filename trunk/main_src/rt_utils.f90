@@ -792,7 +792,7 @@ contains
                      if (Chan_Idx > 21 .and. Chan_Idx /= 26) cycle
 
                      Trans_Atm_Total_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
-                                           (1.0/Geo%Cossolzen(Elem_Idx,Line_Idx))
+                                           ((Geo%Coszen(Elem_Idx,Line_Idx)+Geo%Cossolzen(Elem_Idx,Line_Idx))/Geo%Cossolzen(Elem_Idx,Line_Idx))
 
                      Trans_Atm_Solar_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
                                            (Geo%Coszen(Elem_Idx,Line_Idx)/Geo%Cossolzen(Elem_Idx,Line_Idx))

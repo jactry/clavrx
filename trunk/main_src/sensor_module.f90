@@ -359,7 +359,7 @@ module SENSOR_MODULE
               call READ_MSG_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MTSAT-IMAGER')
               call READ_MTSAT_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('FY-IMAGER')
+         case('FY2-IMAGER')
               call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('COMS-IMAGER')
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -607,7 +607,7 @@ module SENSOR_MODULE
                endif
 
             case (36, 37)
-               Sensor%Sensor_Name = 'FY-IMAGER'
+               Sensor%Sensor_Name = 'FY2-IMAGER'
                Sensor%Spatial_Resolution_Meters = 4000
                if (AREAstr%Sat_Id_Num == 36) then
                   Sensor%Platform_Name = 'FY-2D'

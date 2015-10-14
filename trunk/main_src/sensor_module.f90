@@ -999,7 +999,7 @@ module SENSOR_MODULE
                                      AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
 
       !--- knowing Sc_Id_AVHRR and the above flags, populate sensor structure for AVHRR
-      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id_AVHRR)
+      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
 
       if (AVHRR_GAC_Flag == sym%YES) then
          Sensor%Spatial_Resolution_Meters = 4000

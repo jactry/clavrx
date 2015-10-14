@@ -169,9 +169,7 @@ module AVHRR_MODULE
 !-------------------------------------------------------------------
 !-- define a Sc_Id that is unique value for each satellite
 !-------------------------------------------------------------------
- subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id)
-
-  integer(kind=int2), intent(in):: Sc_Id
+ subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
 
   if (AVHRR_KLM_Flag == sym%NO) then
     if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N

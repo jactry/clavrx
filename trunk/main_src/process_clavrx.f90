@@ -145,7 +145,8 @@
    use CLAVRX_MESSAGE_MODULE, only: &
       mesg &
       , verb_lev
-   use CLOUD_TYPE_BRIDGE_MODULE
+   use UNIVERSAL_CLOUD_TYPE_MODULE
+!  use CLOUD_TYPE_BRIDGE_MODULE
    use SIMPLE_COD
  
    use dnb_retrievals_mod, only: &
@@ -156,9 +157,6 @@
    !***********************************************************************
    ! Marker: DECLARE VARIABLES
    !***********************************************************************
-   integer(kind=int4), parameter:: nmask_clavr = 5
-   integer(kind=int4):: Nword_Clavr
-   integer(kind=int4):: Nword_Clavr_Start
    integer(kind=int4):: Nrec_Avhrr_Header
    integer(kind=int4):: Ifile    
    integer(kind=int4):: File_List_Lun                 !logical unit number for File_list
@@ -291,8 +289,12 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
- 
+
    call SETUP_USER_DEFINED_OPTIONS()
+
+
+   !--- make directory for temporary files created during this run
+   call system("mkdir "//trim(Temporary_Data_Dir))
 
    !*************************************************************************
    ! Marker: Open high spatial resolution ancillary data files
@@ -1038,7 +1040,8 @@
                   Phase_Called_Flag = sym%YES
 
                else  
-                  call CLOUD_TYPE_BRIDGE()
+!                 call CLOUD_TYPE_BRIDGE()
+                  call UNIVERSAL_CLOUD_TYPE()
                   Phase_Called_Flag = sym%YES
                end if
 
@@ -1047,6 +1050,22 @@
                   & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
             end if   !end of Cld_Flag check
+
+!================================================================================
+! TEST START
+!================================================================================
+!  Diag_Pix_Array_1 = 0 
+!  where(Beta_11um_85um_Tropo_Rtm < 1.1 .and. Beta_11um_12um_Tropo_Rtm > 0.95)
+!   Diag_Pix_Array_1 = 1 
+!  endwhere
+!  Diag_Pix_Array_2 = Beta_11um_85um_Tropo_Rtm 
+!  Diag_Pix_Array_3 = Beta_11um_12um_Tropo_Rtm 
+!Diag_Pix_Array_1 = Ref_Mean_ChI3
+!Diag_Pix_Array_2 = ch(6)%Ref_Toa
+!ch(6)%Ref_Toa = Ref_Mean_ChI3
+!===============================================================================
+! TEST END
+!================================================================================
 
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
@@ -1058,7 +1077,6 @@
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
-
                if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
@@ -1068,11 +1086,9 @@
 
                   call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
 
-
                   call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
 
                endif
-
 
                if (ACHA%Mode == 0) then
                   call MODE_ZERO_CLOUD_HEIGHT(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1306,7 +1322,7 @@
       !--- Deallocate memory from pixels arrays
       call DESTROY_PIXEL_ARRAYS()
 
-      !--- remove files in temporary directory
+      !--- remove files in temporary directory and then the directory
       if (Number_Of_Temporary_Files > 0) then 
          do Ifile = 1, Number_Of_Temporary_Files
             print *, EXE_PROMPT, "Removing Temporary File: ", trim(Temporary_File_Name(Ifile))
@@ -1377,6 +1393,9 @@
    if (Volcano_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Volcano_Mask_Id)
    if (Surface_Elev_Id > 0)  call CLOSE_LAND_SFC_HDF(Surface_Elev_Id)
    if (Snow_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Snow_Mask_Id)
+
+   !--- remove directory for temporary files
+   call system("rmdir "//trim(Temporary_Data_Dir))
 
    !*************************************************************************
    ! Marker: Final remaining memory deallocation

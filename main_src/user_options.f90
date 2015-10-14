@@ -107,6 +107,9 @@ module USER_OPTIONS
       
    use FILE_UTILITY, only: &
       Get_Lun
+
+   use LEVEL2B_ROUTINES, only: &
+      INIT_RANDOM_SEED
  
    use  CLAVRX_MESSAGE_MODULE, only: &
       Mesg &
@@ -152,7 +155,6 @@ contains
       call SET_DEFAULT_VALUES
       call DETERMINE_USER_CONFIG()
       call QC_CLAVRXORB_OPTIONS()
-
    end subroutine SETUP_USER_DEFINED_OPTIONS
    
    ! ---------------------------------------------------------------------------------
@@ -232,6 +234,12 @@ contains
       integer::erstat
       integer:: Default_Lun
       integer:: GeoNav_Limit_Flag
+      real:: Rand_Number
+      character(len=7):: Rand_String
+      character(len=355):: Temporary_Data_Dir_Root
+      integer:: string_length
+      character(len=1):: last_char
+      
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
       call MESG ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
@@ -252,7 +260,7 @@ contains
       end if
       
       read(unit=Default_Lun,fmt="(a)") Data_base_path
-      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
+      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir_Root
       read(unit=Default_Lun,fmt=*) Expert_Mode
          
       if ( Expert_Mode  == 0 )  then
@@ -366,6 +374,20 @@ contains
              
       close(unit=Default_Lun)
 
+      !--- add a random number suffix to Temporary_Data_Dir
+      string_length = len_trim(Temporary_Data_Dir_Root)
+      last_char = Temporary_Data_Dir_Root(string_length:string_length)
+
+      if (index(last_char, '/') > 0) then 
+        Temporary_Data_Dir_Root = Temporary_Data_Dir_Root(1:string_length-1)
+      endif
+
+      call INIT_RANDOM_SEED()
+      call random_number(Rand_Number)
+      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
+      write(Rand_String,'(I7.7)' ) int(10.0e06 * Rand_Number)
+      Temporary_Data_Dir = trim(Temporary_Data_Dir_Root) // '_' // trim(Rand_String) // '/'
+
    end subroutine READ_OPTION_FILE
  
    subroutine DETERMINE_USER_CONFIG()
@@ -391,8 +413,6 @@ contains
       use_Default = sym%YES
       default_temp="./clavrx_options"
       file_list = "./file_list"
-  
-
   
       Temp_Scans_Arg = 0
       fargc = iargc()
@@ -424,8 +444,6 @@ contains
   
       !---- If the default file is used, read it in first, then
       !---- check for other command line changes to the options
-  
-
       if(Use_Default == sym%YES)  then
          call READ_OPTION_FILE (Default_Temp)
       end if
@@ -433,9 +451,6 @@ contains
       if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"
       end if 
-      
-      
-      
  
       do i=1, fargc
         call getarg(i,fargv)

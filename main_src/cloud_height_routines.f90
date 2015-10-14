@@ -496,13 +496,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: SOUNDER_RESOLUTION_KM = 20.0
   real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
-  integer (kind=int4):: Box_Width
-  real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
   integer:: Lev_Idx_Temp
   integer:: Pc_Lev_Idx
 
   real, dimension(3):: Pc_Temp
-  integer:: Count_Valid
 
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
@@ -561,6 +558,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      Pc_Temp(1) = Pc_35_36
      if (Pc_35_36 /= Missing_Value_Real4) then
          Pc_Co2(Elem_Idx,Line_Idx) = Pc_35_36
+!        call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+!                                   Pc_Co2(Elem_Idx,Line_Idx), &
+!                                   Tc_Co2(Elem_Idx,Line_Idx), &
+!                                   Diag_Pix_Array_1(Elem_Idx,Line_Idx), &
+!                                   Lev_Idx_Temp)
          cycle
      endif
 
@@ -579,6 +581,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      Pc_Temp(2) = Pc_34_35
      if (Pc_34_35 /= Missing_Value_Real4) then
          Pc_Co2(Elem_Idx,Line_Idx) = Pc_34_35
+!        call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+!                                   Pc_Co2(Elem_Idx,Line_Idx), &
+!                                   Tc_Co2(Elem_Idx,Line_Idx), &
+!                                   Diag_Pix_Array_2(Elem_Idx,Line_Idx), &
+!                                   Lev_Idx_Temp)
          cycle
      endif
 
@@ -597,6 +604,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      Pc_Temp(3) = Pc_33_34
      if (Pc_33_34 /= Missing_Value_Real4) then
          Pc_Co2(Elem_Idx,Line_Idx) = Pc_33_34
+!        call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+!                                   Pc_Co2(Elem_Idx,Line_Idx), &
+!                                   Tc_Co2(Elem_Idx,Line_Idx), &
+!                                   Diag_Pix_Array_3(Elem_Idx,Line_Idx), &
+!                                   Lev_Idx_Temp)
          cycle
      endif
 
@@ -664,8 +676,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: SOUNDER_RESOLUTION_KM = 20.0
   real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
-  integer (kind=int4):: Box_Width
-  real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
   integer:: Lev_Idx_Temp
   integer:: Pc_Lev_Idx
 
@@ -851,14 +861,9 @@ subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cloud_Type, Tc_
   integer (kind=int4):: Box_Width
   real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
   integer:: i1, i2, j1, j2
-  integer:: Lev_Idx_Temp
-  integer:: Pc_Lev_Idx
 
   logical, dimension(:,:), allocatable:: Mask
   real, dimension(:,:), allocatable:: Tc_Cirrus_Co2_Temp
-  real, dimension(3):: Pc_Temp
-  integer:: Count_Valid
-
 
   Num_Elem = Image%Number_Of_Elements
   Num_Lines = Image%Number_Of_Lines_Read_This_Segment

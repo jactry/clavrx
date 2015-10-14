@@ -543,9 +543,6 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
     real (kind=real4), intent(in):: Time_Temp_Since_Launch
     real (kind=real4), dimension(:,:), intent(out):: Alb_Temp
 
-    integer :: index
-    integer:: i, j
-
     Ch1_Gain_Low = Ch1_Gain_Low_0*(100.0+Ch1_Degrad_Low_1*Time_Temp_Since_Launch + &
                                   Ch1_Degrad_Low_2*Time_Temp_Since_Launch**2)/100.0
 
@@ -554,14 +551,6 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
      Alb_Temp = Missing_Value_Real4
     endwhere
     
-!   do j = 1,Image%Number_Of_Lines_Read_This_Segment
-!     do i = 1,Image%Number_Of_Elements
-!       if (Space_Mask(i,j) == sym%NO) then
-!          Alb_Temp(i,j) = Ch1_Gain_Low * ( Mtsat_Counts(i,j) - Ch1_Dark_Count)
-!       endif
-!     enddo
-!   enddo
-
 end subroutine MTSAT_REFLECTANCE_GSICS
 
 !----------------------------------------------------------------------

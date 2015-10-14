@@ -215,6 +215,10 @@ end function GET_OISST_MAP_FILENAME
    call system(system_string)
 
    file_temp = trim(Temporary_Data_Dir)//"temp_oisst_file"
+
+   Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+   Temporary_File_Name(Number_of_Temporary_Files) = "temp_oisst_file"
+
    !------------------------------------------------------------------------------
    ! read in data
    !------------------------------------------------------------------------------

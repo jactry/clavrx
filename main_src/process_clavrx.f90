@@ -145,8 +145,7 @@
    use CLAVRX_MESSAGE_MODULE, only: &
       mesg &
       , verb_lev
-   use UNIVERSAL_CLOUD_TYPE_MODULE
-!  use CLOUD_TYPE_BRIDGE_MODULE
+   use CLOUD_TYPE_BRIDGE_MODULE
    use SIMPLE_COD
  
    use dnb_retrievals_mod, only: &
@@ -1040,8 +1039,7 @@
                   Phase_Called_Flag = sym%YES
 
                else  
-!                 call CLOUD_TYPE_BRIDGE()
-                  call UNIVERSAL_CLOUD_TYPE()
+                  call CLOUD_TYPE_BRIDGE()
                   Phase_Called_Flag = sym%YES
                end if
 

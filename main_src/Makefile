@@ -172,7 +172,6 @@ clavrxorb_objs = process_clavrx.o \
                  simple_cod_module.o \
                  level2b.o \
                  user_options.o \
-                 universal_cloud_type_module.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
@@ -368,7 +367,6 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
-universal_cloud_type_module.o:$(CTYPE)/universal_cloud_type_module.f90 constant.o pixel_common.o rtm_common.o rt_utils.o
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)   $(CTYPE)/cloud_type_bridge_module.f90
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
@@ -384,7 +382,7 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 
 sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o clavrx_sst_module.o clavrx_olr_module.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
-              sfc_prop_umd.o sfc_emiss.o universal_cloud_type_module.o cloud_type_bridge_module.o \
+              sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
               dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \

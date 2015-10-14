@@ -646,6 +646,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   enddo Element_Loop_2
   enddo Line_Loop_2
 
+  deallocate(Pc_Lev_Idx)
+
 end subroutine  CO2_SLICING_CLOUD_HEIGHT
 
 !----------------------------------------------------------------------
@@ -837,6 +839,8 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
      endif
   enddo Element_Loop_2
   enddo Line_Loop_2
+
+  deallocate(Pc_Lev_Idx)
 
 end subroutine CO2_SLICING_CLOUD_HEIGHT_NEW
 
@@ -1036,6 +1040,8 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
 
   enddo Element_Loop_2
   enddo Line_Loop_2
+
+  deallocate(Pc_Lev_Idx)
 
 end subroutine  SINGLE_CO2_SLICING_CLOUD_HEIGHT
 !==================================================================================================

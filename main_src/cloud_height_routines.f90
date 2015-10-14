@@ -497,9 +497,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
   integer:: Lev_Idx_Temp
-  integer:: Pc_Lev_Idx
+  integer,allocatable,dimension(:,:):: Pc_Lev_Idx
 
   real, dimension(3):: Pc_Temp
+
+  allocate(Pc_Lev_Idx(Num_Elem,Num_Lines))
 
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
@@ -554,7 +556,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_35_36,Pc_Lev_Idx)
+                               Pc_35_36,Pc_Lev_Idx(Elem_Idx,Line_Idx))
      Pc_Temp(1) = Pc_35_36
      if (Pc_35_36 /= Missing_Value_Real4) then
          Pc_Co2(Elem_Idx,Line_Idx) = Pc_35_36
@@ -576,7 +578,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_34_35,Pc_Lev_Idx)
+                               Pc_34_35,Pc_Lev_Idx(Elem_Idx,Line_Idx))
 
      Pc_Temp(2) = Pc_34_35
      if (Pc_34_35 /= Missing_Value_Real4) then
@@ -599,7 +601,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_33_34,Pc_Lev_Idx)
+                               Pc_33_34,Pc_Lev_Idx(Elem_Idx,Line_Idx))
 
      Pc_Temp(3) = Pc_33_34
      if (Pc_33_34 /= Missing_Value_Real4) then
@@ -627,7 +629,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop_2: do Elem_Idx = 1, Num_Elem
 
      if (Pc_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-     if (Pc_Lev_Idx == Missing_Value_Int4) cycle
+     if (Pc_Lev_Idx(Elem_Idx,Line_Idx) == Missing_Value_Int4) cycle
 
      !--- compute temperature
      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
@@ -639,7 +641,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
      !-- compute emissivity
      Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
                                  ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                                 rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
+                                 rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx(Elem_Idx,Line_Idx)))
 
   enddo Element_Loop_2
   enddo Line_Loop_2
@@ -677,12 +679,13 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   real (kind=real4), parameter:: PC_CIRRUS_MAX_THRESH = 440.0
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
   integer:: Lev_Idx_Temp
-  integer:: Pc_Lev_Idx
+  integer,allocatable,dimension(:,:):: Pc_Lev_Idx
 
   real, dimension(3):: Pc_Temp
   integer:: Count_Valid
   logical, allocatable, dimension(:):: Sounder_Fov_Mask
   integer:: Number_Sounder_Fov
+  allocate(Pc_Lev_Idx(Num_Elem,Num_Lines))
 
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
@@ -746,7 +749,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_35_36,Pc_Lev_Idx)
+                               Pc_35_36,Pc_Lev_Idx(Elem_Idx,Line_Idx))
      Pc_Temp(1) = Pc_35_36
      if (Pc_35_36 /= Missing_Value_Real4) then
          Pc_Co2(Elem_Idx,Line_Idx) = Pc_35_36
@@ -763,7 +766,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_34_35,Pc_Lev_Idx)
+                               Pc_34_35,Pc_Lev_Idx(Elem_Idx,Line_Idx))
 
      Pc_Temp(2) = Pc_34_35
      if (Pc_34_35 /= Missing_Value_Real4) then
@@ -781,7 +784,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_33_34,Pc_Lev_Idx)
+                               Pc_33_34,Pc_Lev_Idx(Elem_Idx,Line_Idx))
 
      Pc_Temp(3) = Pc_33_34
      if (Pc_33_34 /= Missing_Value_Real4) then
@@ -826,11 +829,11 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
                                     Lev_Idx_Temp)
 
      !-- compute emissivity
-     Pc_Lev_Idx = Lev_Idx_Temp
-     if (Pc_Lev_Idx /= MISSING_VALUE_INT2) then
+     Pc_Lev_Idx(Elem_Idx,Line_Idx) = Lev_Idx_Temp
+     if (Pc_Lev_Idx(Elem_Idx,Line_Idx) /= MISSING_VALUE_INT2) then
         Ec_Co2(Elem_Idx,Line_Idx) = EMISSIVITY(ch(33)%Rad_Toa(Elem_Idx,Line_Idx),  &
                                     ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx))
+                                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Pc_Lev_Idx(Elem_Idx,Line_Idx)))
      endif
   enddo Element_Loop_2
   enddo Line_Loop_2
@@ -923,17 +926,21 @@ end subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE
 subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
                                     Beta_Target, &
                                     Num_Elem,Line_Idx_min,Num_Lines, &
-                                    Pressure_Profile,Cloud_Type, &
-                                    Pc_Co2)
+                                    Pressure_Profile,Cloud_Mask,Cloud_Type, &
+                                    Pc_Co2,Tc_Co2,Zc_Co2)
   integer, intent(in):: Chan_Idx_1
   integer, intent(in):: Chan_Idx_2
   real, intent(in):: Beta_Target
   integer, intent(in):: Num_Elem
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Num_Lines
+  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Mask
   integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
   real, intent(in), dimension(:):: Pressure_Profile
   real, intent(out), dimension(:,:):: Pc_Co2
+  real, intent(out), dimension(:,:):: Tc_Co2
+  real, intent(out), dimension(:,:):: Zc_Co2
+
   integer:: Elem_Idx
   integer:: Line_Idx
   integer:: Line_Start
@@ -943,13 +950,18 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
   integer:: Vza_Rtm_Idx
   integer:: Tropo_Level_Idx
   integer:: Sfc_Level_Idx
-  integer:: Pc_Lev_Idx
+  integer:: Lev_Idx_Temp
+  integer,allocatable,dimension(:,:):: Pc_Lev_Idx
+
+  allocate(Pc_Lev_Idx(Num_Elem,Num_Lines))
 
   Line_Start = Line_Idx_Min
   Line_End = Line_Start + Num_Lines - 1
 
   !--- intialize output
   Pc_CO2 = Missing_Value_Real4
+  Tc_Co2 = Missing_Value_Real4
+  Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
   if (Sensor%Chan_On_Flag_Default(Chan_Idx_1) == sym%NO .or. &
@@ -979,6 +991,9 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
 
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE) cycle
+     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) cycle
+
      !--- only do this for appropriate cloud types
      if (Cloud_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and.   & 
          Cloud_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE .and.  &
@@ -998,10 +1013,29 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
                                Sfc_Level_Idx, &
                                Pressure_Profile, &
                                Beta_Target, &
-                               Pc_CO2(Elem_Idx,Line_Idx),Pc_Lev_Idx)
+                               Pc_CO2(Elem_Idx,Line_Idx),Pc_Lev_Idx(Elem_Idx,Line_Idx))
 
   enddo Element_Loop
   enddo Line_Loop
+
+  !-------------------------------------------------------------------------
+  ! determine temperature and height
+  !-------------------------------------------------------------------------
+  Line_Loop_2: do Line_Idx = Line_Start, Line_End
+  Element_Loop_2: do Elem_Idx = 1, Num_Elem
+
+     if (Pc_Co2(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Pc_Lev_Idx(Elem_Idx,Line_Idx) == Missing_Value_Int4) cycle
+
+     !--- compute temperature
+     call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+                                    Pc_Co2(Elem_Idx,Line_Idx), &
+                                    Tc_Co2(Elem_Idx,Line_Idx), &
+                                    Zc_Co2(Elem_Idx,Line_Idx), &
+                                    Lev_Idx_Temp)
+
+  enddo Element_Loop_2
+  enddo Line_Loop_2
 
 end subroutine  SINGLE_CO2_SLICING_CLOUD_HEIGHT
 !==================================================================================================

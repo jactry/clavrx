@@ -193,13 +193,7 @@ contains
       integer, intent(out) :: count_1(2)
       type ( ahi_config_type ) :: config_local
       type ( ahi_data_out_type ) :: out
-      integer :: lat_b (2)
-      integer :: lon_b(2)
       integer :: ii
-      integer :: x_0
-      integer :: x_1
-      integer :: y_0
-      integer :: y_1
       logical, allocatable :: inside (:,:)
       integer, allocatable :: line_g(:), elem_g(:)
       integer, parameter :: N_ELEMENTS_FULL_DISK = 5500
@@ -238,7 +232,6 @@ contains
       end if
       
       
-      
       elem_g = count (inside ,2 )      
       line_g = count (inside ,1 ) 
       
@@ -275,8 +268,6 @@ contains
          end if
       end do
     
-      
-      
       
    end subroutine ahi_segment_information_region
    
@@ -341,8 +332,6 @@ contains
       type ( ahi_data_out_type ) :: ahi
       
       character (len=120) ::  attr_name
-      integer :: status
-      integer:: i_chn
       
       real (8) :: cfac
       real (8) :: coff
@@ -351,9 +340,7 @@ contains
       real (8) :: sub_lon 
       real (8) :: sub_lat  
       real (8) :: latx, lonx
-      real (8) :: fargc
       integer  :: ii,jj
-      real(8) :: xx,yy
       integer  :: x_full_disk
       integer  :: y_full_disk
    
@@ -452,8 +439,6 @@ contains
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: ahi
      
-      integer :: status
-           
       integer(kind = 2), pointer :: i2d_buffer( : , : ) => null()
       integer:: i_chn
       character (len=120) :: attr_name
@@ -462,8 +447,6 @@ contains
       integer ( kind = 4 ) , allocatable :: buffer_fake_i4 (:,:)
       real ( 8 ) :: cprime 
       logical :: is_solar_channel = .false.
-      real(8) :: fargc
-      integer :: ii,jj
             
       ! - executable
       
@@ -574,7 +557,6 @@ contains
    ! --------------------------------------------------------------------------------------
    subroutine deallocate_geo (this )
       class ( ahi_data_out_type ) :: this
-      integer :: i_chn
       if (allocated ( this % geo % lon)) deallocate ( this % geo % lon) 
       if (allocated ( this % geo % lat)) deallocate ( this % geo % lat) 
       

@@ -116,7 +116,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  ! Perform COMS Reflectance and BT calibration
  subroutine READ_COMS(segment_number,channel_1_filename, &
-                     jday, image_time_ms, Time_Since_Launch, &
+                     jday, image_time_ms, &
                      AREAstr,NAVstr_COMS)
 
    integer(kind=int4), intent(in):: segment_number
@@ -125,7 +125,6 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    type (GVAR_NAV), intent(in)    :: NAVstr_COMS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
-   real(kind=real4), intent(in):: Time_Since_Launch
 
    character(len=120):: channel_x_filename
    character(len=120):: channel_x_filename_full

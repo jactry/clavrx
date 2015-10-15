@@ -742,7 +742,6 @@ contains
                         ,  Wvmr_Prof_Rtm &
                         ,  Ozmr_Prof_Rtm &
                         ,  Satzen_Mid_Bin &
-                        ,  CO2_RATIO &
                         ,  Sc_Name_Rtm &
                         ,  Chan_Idx_For_Pfaast &
                         ,  Trans_Prof_Rtm &

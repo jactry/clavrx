@@ -750,7 +750,6 @@
                Num_Scans_Level2_Hdf = 0
 
                call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
-                              Dir_Rtm, &
                               Dir_Level2, &
                               Image%Level1b_Name, &
                               Rtm_File_Flag, &
@@ -834,7 +833,7 @@
 
             !--- post process dark composite if one read in
             if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
-               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Sfc%Land)
+               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite)
             endif
 
             !--- check ancillary data and modify Bad_Pixel_Mask accordingly
@@ -1084,7 +1083,7 @@
 
                   call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
 
-                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
+                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
 
                endif
 
@@ -1125,7 +1124,7 @@
                
                if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
-                     call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
+                     call AWG_CLOUD_NLCOMP_ALGORITHM (  Iseg_In=Segment_Number) 
                   end if   
                end if   
           

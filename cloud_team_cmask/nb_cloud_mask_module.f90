@@ -388,7 +388,6 @@ module NB_CLOUD_MASK
    integer:: Cold_Scene_375um_Flag
    integer:: Cold_Scene_Btd_Flag
    integer:: Solar_Contam_Flag
-   integer:: Dust_Flag
    integer:: City_Flag
 
    real (kind=real4):: Airmass
@@ -1462,8 +1461,7 @@ module NB_CLOUD_MASK
                               var_name, Last_valid_Classifier_Bounds)
 
    var_name="classifier_names" !character
-   call read_netcdf_2d_char(ncid, sds_start_2d, sds_edge_2d, &
-                              var_name, Classifier_Value_Name)
+   call read_netcdf_2d_char(ncid, var_name, Classifier_Value_Name)
 
    !finally 3D variables
    sds_start_3d = 1
@@ -1618,11 +1616,9 @@ module NB_CLOUD_MASK
    ! Read in 2D arrays Characters
    ! ----------------------------------------------------------
 
-   subroutine read_netcdf_2d_char (nc_file_id, start_var, var_dim, var_name, var_output)
+   subroutine read_netcdf_2d_char (nc_file_id, var_name, var_output)
         implicit none
       integer, intent(in) :: nc_file_id
-      integer, intent(in) :: start_var(:)
-      integer, dimension(:), intent(in) :: var_dim
 
       character(len=*), intent(in) :: var_name
       character(len=30) , intent(out), dimension(:,:) :: var_output

@@ -37,7 +37,6 @@ contains
        & ,wvmr &
        & ,ozmr & 
        & ,theta  &
-       & ,rco2 &
        & ,sensor &
        & ,kban_in &
        & ,taut &
@@ -52,7 +51,6 @@ contains
       real, intent(in)  :: wvmr(:)
       real, intent(in)  :: ozmr(:)
       real, intent(in)  :: theta 
-      real, intent(in)  :: rco2 
       character (len =* ), intent(in) :: sensor
       integer, intent(in)  :: kban_in 
       logical , optional , intent(in) :: use_modis_channel_equivalent 

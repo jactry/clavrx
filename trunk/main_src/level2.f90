@@ -97,7 +97,6 @@ module LEVEL2_ROUTINES
 !
 !====================================================================
 subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
-   Dir_Rtm, &
    Dir_Level2, &
    File_1b, &
    Rtm_File_Flag, &
@@ -139,7 +138,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    End_Time)
 
 
- character(len=*), intent(in):: Dir_Rtm
  character(len=*), intent(in):: Dir_Level2
  integer(kind=int4), intent(in):: Num_Scans
  character(len=*), intent(in):: File_1b

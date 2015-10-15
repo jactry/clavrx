@@ -1122,7 +1122,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        real*8    ATTALP,ATTDEL,BETA,CDR,DELT,RTIM,SITAGT,SUNALP,SUNDEL, &
                  WKCOS,WKSIN
        real*8    ATT1(3),ATT2(3),ATT3(3),NPA(3,3), &
-                 SAT(3),SP(3),SS(3),ORBT2(35,8)
+                 SAT(3),SP(3),SS(3)
  !     integer*4 MAP(672,4)
        integer :: I
  !
@@ -1132,7 +1132,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        do 1000 I=1,7
          if(RTIM.GE.NAVstr_MTSAT_NAV%ORBT1(1,I).AND.RTIM.LT.NAVstr_MTSAT_NAV%ORBT1(1,I+1))  then
            call  MGI110 &
-                (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,ORBT2,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+                (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,SAT,SITAGT,SUNALP,SUNDEL,NPA)
            GO TO  1200
          endif
   1000 CONTINUE
@@ -1173,8 +1173,8 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        return
 end subroutine MGI100
 
-subroutine MGI110(I,RTIM,CDR,ORBTA,ORBTB,SAT,SITAGT,SUNALP,SUNDEL,NPA)
-       real*8    CDR,SAT(3),RTIM,ORBTA(35,8),ORBTB(35,8)
+subroutine MGI110(I,RTIM,CDR,ORBTA,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+       real*8    CDR,SAT(3),RTIM,ORBTA(35,8)
        real*8    SITAGT,SUNDEL,SUNALP,NPA(3,3),DELT
        integer*4 I
        if(I.NE.8)  then

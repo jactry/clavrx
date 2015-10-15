@@ -509,7 +509,7 @@ module cx_pfaast_tools_mod
 
       real*4    rho1, rho2, p1, p2, w1, w2, o1, o2, z1, z2, &
                c_avg, g_avg, z_avg, w_avg, o_avg, &
-               dz, dp, r_hgt, wg, og, A, B
+               dz, dp, r_hgt, A, B
 
 ! -- Arrays
 
@@ -904,13 +904,11 @@ subroutine taudoc(cc,xx,tau)
       real , intent(in) :: xx(:,:)
       real, intent(out)  :: tau (:)
       
-      real :: trap = -999. 
-      
 ! * Strow-Woolf model ... for dry, ozo(ne), and wco (water-vapor continuum)
 ! .... version of 05.09.02
 
       integer :: n_lay
-      integer :: i , j
+      integer :: j
      
       integer :: nc , nx
       real ::  taulyr
@@ -954,7 +952,7 @@ subroutine tauwtr( ccs , ccl , xx , tau )
       real, pointer :: cc (:,:) => null()
       real ::  taulyr
       real :: yy
-      integer :: i , j , n_lay
+      integer :: j , n_lay
 
       n_lay = ubound ( ccs, 2)
       nc = ubound ( ccs,1 )

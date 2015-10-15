@@ -57,10 +57,9 @@ end interface mesg
 contains
 
 
-   subroutine do_it ( text, color_string , message_level  )
+   subroutine do_it ( text, message_level  )
       use file_tools, only: file_test
       character ( len = * ) , intent (in) :: text 
-      character ( len = 2 ) , intent (in) :: color_string 
       integer , intent ( in ) :: message_level
       integer :: verbose_level
       
@@ -77,17 +76,14 @@ contains
          
          print*,PROMPT,' ', text 
         
-         ! switch off color because of deifferent bahvor for different shells. (AW 2015/02/05)   
-        ! print*,PROMPT//achar(27)//'['//color_string//'m  '//text//achar(27)//'[0m'      
       end if
 
    end subroutine do_it
 
-   subroutine mesg_pure ( text, level , color , stop_evt )
+   subroutine mesg_pure ( text, level , color )
       character (len = *) , intent(in) :: text
       integer, optional, intent(in) :: level
       integer, optional, intent(in) :: color
-      logical, optional, intent(in) :: stop_evt
       character( len = 2) :: color_string
       integer :: lev
       
@@ -96,18 +92,17 @@ contains
       color_string=''  
       if (present(color)) write(color_string,'(I2)') color 
       
-      call do_it ( trim(text), color_string , lev ) 
+      call do_it ( trim(text), lev ) 
       
      
  
    end subroutine mesg_pure
 
-   subroutine mesg_1r ( text,  param_r, level , color , stop_evt )
+   subroutine mesg_1r ( text,  param_r, level , color )
       character (len = *) , intent(in) :: text
       real, intent(in) :: param_r
       integer, optional, intent(in) :: level
       integer, optional, intent(in) :: color
-      logical, optional, intent(in) :: stop_evt
       character( len = 2) :: color_string
       integer :: lev
       character ( len =100 ) :: string_100
@@ -122,18 +117,17 @@ contains
       color_string=''  
       if (present(color)) write(color_string,'(I2)') color 
       
-      call do_it ( trim(text_1), color_string, lev ) 
+      call do_it ( trim(text_1), lev ) 
       
     
  
    end subroutine mesg_1r
 
-   subroutine mesg_1d ( text,  param_d, level , color , stop_evt )
+   subroutine mesg_1d ( text,  param_d, level , color )
       character (len = *) , intent(in) :: text
       real(8), intent(in) :: param_d
       integer, optional, intent(in) :: level
       integer, optional, intent(in) :: color
-      logical, optional, intent(in) :: stop_evt
       character( len = 2) :: color_string
       integer :: lev
       character ( len =100 ) :: string_100
@@ -148,7 +142,7 @@ contains
       color_string=''
       if (present(color)) write(color_string,'(I2)') color
 
-      call do_it ( trim(text_1), color_string, lev )
+      call do_it ( trim(text_1), lev )
 
    end subroutine mesg_1d
 

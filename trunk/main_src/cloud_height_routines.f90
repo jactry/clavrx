@@ -847,12 +847,11 @@ end subroutine CO2_SLICING_CLOUD_HEIGHT_NEW
 !-------------------------------------------------------------------------
 ! spatially interpolate
 !-------------------------------------------------------------------------
-subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cloud_Type, Tc_Cirrus_Co2)
+subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
 
   real, intent(in), dimension(:,:):: Tc_Co2
   real, intent(in), dimension(:,:):: Pc_Co2
   real, intent(in), dimension(:,:):: Ec_Co2
-  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
   real, intent(out), dimension(:,:):: Tc_Cirrus_Co2
 
   integer:: Num_Elem

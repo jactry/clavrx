@@ -80,7 +80,6 @@ module CLOUD_BASE
   !  Local Variable Declaration
   !===============================================================================
 
-  integer (kind=int4):: Smooth_Nwp_Fields_Flag_Temp
   integer:: Elem_Idx
   integer:: Line_Idx
   real:: Inwp_Weight

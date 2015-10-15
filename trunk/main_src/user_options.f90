@@ -786,7 +786,7 @@ contains
       
       if ( Expert_Mode == 0 ) then
          acha_mode_User_Set =  default_acha_mode ( SensorName )
-         dcomp_mode_User_Set = default_dcomp_mode ( SensorName )
+         dcomp_mode_User_Set = default_dcomp_mode ( )
       end if
 
       call CHECK_ALGORITHM_CHOICES(SensorName)
@@ -855,8 +855,7 @@ contains
    !-----------------------------------------------------------------
    !   returns default dcomp mode
    ! -----------------------------------------------------------------
-   integer function default_dcomp_mode ( SensorName )
-      character (len=*) , intent(in) :: SensorName
+   integer function default_dcomp_mode ( )
    
       default_dcomp_mode = 3
       
@@ -1022,8 +1021,8 @@ contains
       end if
       
       if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
-         dcomp_mode = default_dcomp_mode ( SensorName )
-         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( SensorName )
+         dcomp_mode = default_dcomp_mode ( )
+         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( )
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES

@@ -202,11 +202,9 @@ contains
       real(8) :: lat, lon
       
       real(8) :: sub_lon_radians
-      real(8) :: x 
-      real(8) :: y 
       real (8) :: h
       real(8) :: geocentric_lat 
-      real(8) :: d, c1, c2, s_d, s_n,r_1,r_2,r_3,s_xy
+      real(8) :: r_1,r_2,r_3
       real (8) ::geographic_lon,geographic_lat 
       real (8) :: r_earth
       

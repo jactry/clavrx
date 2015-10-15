@@ -54,7 +54,6 @@ contains
       
       integer :: modis_chn
       integer :: i_line
-      integer :: offset(2) , count(2)
       integer :: offset_all(2), count_all(2)
      
       error_out = 0

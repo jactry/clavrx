@@ -1311,8 +1311,7 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'SEVIRI') then
          call READ_SEVIRI(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
-                     AREAstr,NAVstr)
+                     AREAstr)
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Seviri_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
          call CALIBRATE_SEVIRI_DARK_COMPOSITE(Two_Byte_Temp,Ref_Ch1_Dark_Composite)
@@ -1334,7 +1333,6 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'FY2-IMAGER') then
          call READ_FY(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
@@ -1342,7 +1340,6 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
          call READ_COMS(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 

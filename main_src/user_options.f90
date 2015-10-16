@@ -262,12 +262,28 @@ contains
       read(unit=Default_Lun,fmt="(a)") Data_base_path
       read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir_Root
       read(unit=Default_Lun,fmt=*) Expert_Mode
-         
+
+      !--- add a random number suffix to Temporary_Data_Dir
+      string_length = len_trim(Temporary_Data_Dir_Root)
+      last_char = Temporary_Data_Dir_Root(string_length:string_length)
+
+      if (index(last_char, '/') > 0) then 
+        Temporary_Data_Dir_Root = Temporary_Data_Dir_Root(1:string_length-1)
+      endif
+
+      call INIT_RANDOM_SEED()
+      call random_number(Rand_Number)
+      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
+      write(Rand_String,'(I7.7)' ) int(10.0e06 * Rand_Number)
+      Temporary_Data_Dir = trim(Temporary_Data_Dir_Root) // '_' // trim(Rand_String) // '/'
+
+      !--- check expert mode, if 0 return
       if ( Expert_Mode  == 0 )  then
           close(unit=Default_Lun)
           return
       end if
       
+      !--- contintue reading file if selected expert mode allows
       read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
       read(unit=Default_Lun,fmt=*) Dcomp_Mode_User_Set
       read(unit=Default_Lun,fmt=*) Acha_Mode_User_Set
@@ -373,20 +389,6 @@ contains
       read(unit=Default_Lun,fmt=*) Chan_On_Flag_Default_User_Set(43:45)
              
       close(unit=Default_Lun)
-
-      !--- add a random number suffix to Temporary_Data_Dir
-      string_length = len_trim(Temporary_Data_Dir_Root)
-      last_char = Temporary_Data_Dir_Root(string_length:string_length)
-
-      if (index(last_char, '/') > 0) then 
-        Temporary_Data_Dir_Root = Temporary_Data_Dir_Root(1:string_length-1)
-      endif
-
-      call INIT_RANDOM_SEED()
-      call random_number(Rand_Number)
-      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
-      write(Rand_String,'(I7.7)' ) int(10.0e06 * Rand_Number)
-      Temporary_Data_Dir = trim(Temporary_Data_Dir_Root) // '_' // trim(Rand_String) // '/'
 
    end subroutine READ_OPTION_FILE
  

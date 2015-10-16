@@ -273,7 +273,7 @@ contains
 
       call INIT_RANDOM_SEED()
       call random_number(Rand_Number)
-      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
+!      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
       write(Rand_String,'(I7.7)' ) int(10.0e06 * Rand_Number)
       Temporary_Data_Dir = trim(Temporary_Data_Dir_Root) // '_' // trim(Rand_String) // '/'
 

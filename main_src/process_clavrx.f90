@@ -254,8 +254,9 @@
    
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38
-   integer, dimension(20:45), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16,8,13, &
-                                                              0, 0, 0, 0, 0, 0,16/)     !Check this
+   integer, dimension(20:45), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16, 8,13, &
+                                                            !39,40,41,42,43,44,45
+                                                              0, 0, 0, 7, 14, 0,16/)     !Check this
    integer:: Chan_Idx
    
    

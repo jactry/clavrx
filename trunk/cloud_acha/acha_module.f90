@@ -1491,6 +1491,12 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
        !-- compute height
        Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
 
+       !--- Some negative cloud heights are observed because of bad height
+       !--- NWP profiles.
+       if (Output%Zc(Elem_Idx,Line_Idx) < 0) then
+         Output%Zc(Elem_Idx,Line_Idx) = ZC_FLOOR
+       endif
+
        !--- compute pressure
        call KNOWING_Z_COMPUTE_T_P(Output%Pc(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc(Elem_Idx,Line_Idx),Ilev)
 
@@ -1897,6 +1903,13 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
            T = Temp_Prof_RTM(Ilev)
            Z = Hght_Prof_RTM(Ilev)
        endif
+
+       !--- Some negative cloud heights are observed because  of bad height
+       !--- NWP profiles.
+       if (Z < 0) then
+         Z = ZC_FLOOR
+       endif
+
    end subroutine KNOWING_P_COMPUTE_T_Z
 
    !-----------------------------------------------------------------
@@ -1967,6 +1980,11 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
          Z = Hght_Prof_RTM(kend)
          klev = kend - 1
          ierr = symbol%NO
+         !--- Some negative cloud heights are observed because of bad height
+         !--- NWP profiles.
+         if (Z < 0) then
+           Z = ZC_FLOOR
+         endif
          return
      endif
 
@@ -2020,6 +2038,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
     else
         P = Press_Prof_RTM(klev) 
         Z = Hght_Prof_RTM(klev)
+    endif
+
+    !--- Some negative cloud heights are observed because of bad height
+    !--- NWP profiles.
+    if (Z < 0) then
+      Z = ZC_FLOOR
     endif
 
    end subroutine KNOWING_T_COMPUTE_P_Z
@@ -3355,6 +3379,12 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
      endif
    end do Level_Loop
 
+   !--- Some negative cloud heights are observed because of bad height
+   !--- NWP profiles.
+   if (Zc_Opaque < 0) then
+     Zc_Opaque = ZC_FLOOR
+   endif
+
  end subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT
  !----------------------------------------------------------------------
  !
@@ -3851,6 +3881,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
        Pc = P_Prof(ilev_h2o)
        Tc = T_Prof(ilev_h2o)
        Zc = Z_Prof(ilev_h2o)
+  endif
+
+  !--- Some negative cloud heights are observed because of bad height
+  !--- NWP profiles.
+  if (Zc > MISSING_VALUE_REAL4 .AND. Zc < 0) then
+    Zc = ZC_FLOOR
   endif
 
 end subroutine H2O_CLOUD_HEIGHT

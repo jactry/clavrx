@@ -137,3 +137,6 @@
  !--- these parameters constrain the allowable solutions
  real(kind=real4), parameter, private:: Min_Allowable_Tc = 180.0  !K
  real(kind=real4), parameter, private:: Pc_Lower_Cloud_Offset = 200.0  !hpa
+
+ !--- parameter that controls observed negative heights and pressures.
+ real(kind=real4), parameter, private:: ZC_FLOOR = 75.0 !Set a bottom limit to Zc.

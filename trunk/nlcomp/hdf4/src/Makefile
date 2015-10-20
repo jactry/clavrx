@@ -3,6 +3,11 @@ HDFDIR = $(HOME)/lib/hdf4
 #COMP   = lf95
 COMP   = ifort
 
+
+   ifdef HDF4R
+      HDFDIR=$(HDF4R)
+   endif
+
 HDFINC = $(HDFDIR)/include
 ICAINC = ../include
 ICALIB = ../lib
@@ -17,6 +22,8 @@ LIBMOD = ica_f90_hdf_sds.mod ica_f90_hdf_dim_sds.mod
 	ifdef COMP1
 		COMP=$(COMP1) 
 	endif  
+   
+
 
 all: lib
 

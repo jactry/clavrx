@@ -8,7 +8,7 @@ include config.mk
 # Where to find the RTM. Replace this with your own path to the object files and modules.
 
 
-HDFDIR = $(HOME)/lib/hdf4/
+HDFDIR = $(hdf4root)
 HDFINC = $(HDFDIR)/include
 HDFLIB = $(HDFDIR)/lib
 ICAINC = hdf4/include
@@ -56,8 +56,9 @@ all: hdf4 nlcomp_one_pixel_run
 
 hdf4:
 	@echo  'kkf'$(LFLAGS)
+	@echo $(hdf4root)
 	@echo 'Building target for hdf4: $@'
-	make COMP1="$(fc)" -C $(ICASRC)	
+	make COMP1="$(fc)" HDF4R="$(hdf4root)" -C $(ICASRC)	
 
 nlcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'

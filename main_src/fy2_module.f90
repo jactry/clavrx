@@ -242,6 +242,9 @@ end subroutine READ_FY_INSTR_CONSTANTS
        
        call FY_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
        
+       !--- store ch1 counts for support of PATMOS-x calibration studies
+       Ch1_Counts = Two_Byte_Temp
+       
     
     endif
     
@@ -376,10 +379,28 @@ end subroutine READ_FY_INSTR_CONSTANTS
         call POSSOL(image_jday,image_time_hours, &
                     Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
                     Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
+                    
+        !--- because FY2 has solar contamination, we will set the
+        !    Solar_Contamination_Mask here as well for night pixels
+        
+        Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%NO
+        
+!        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.) .AND. &
+!             (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) .GT. 0)) THEN
+        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.)) THEN
+             
+             
+             Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+             
+        ENDIF
+        
+        
+         
      enddo
       call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
                                     Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
+   
       
    !--- ascending node
    Elem_Idx = Image%Number_Of_Elements/2
@@ -390,6 +411,8 @@ end subroutine READ_FY_INSTR_CONSTANTS
      endif
    enddo
    Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
+    
+   
     
  end subroutine READ_FY
 

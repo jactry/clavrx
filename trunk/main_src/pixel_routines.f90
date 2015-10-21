@@ -267,6 +267,17 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
           endif
         endif
 
+
+        !until a more robust fix can be found, for now we will set all night
+        ! pixels to have Solar_Contamination_Mask = sym%YES due to telescope
+        ! contamination in 3.9um channel. Exists for FY-2C/D/E/G - WCS3
+        
+        if (index(Sensor%Sensor_Name,'FY2-IMAGER') > 0) then
+          if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0)) then
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+          endif
+        endif
+
       end do element_loop
    end do line_loop
 

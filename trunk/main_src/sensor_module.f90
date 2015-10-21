@@ -1055,6 +1055,7 @@ module SENSOR_MODULE
     character(len=*), intent(in):: Level1b_Full_Name
     type (AREA_STRUCT), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
+    REAL (KIND=REAL4)                 :: Lat_temp, Lon_temp
 
     Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
     Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
@@ -1087,9 +1088,21 @@ module SENSOR_MODULE
                !as Nav coefficents specific to FY2D/E. They are stored in
                ! the same manner as MTSAT, hence using the same routine
                call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               
+               !Some data from BOM has subpoints flipped, so need to fix that
+               IF (NAVstr%sublat .GT. 10.0) THEN
+                    Lat_temp = NAVstr%sublon                   
+                    Lon_temp = NAVstr%sublat
+                    
+                    NAVstr%sublon = Lon_temp
+                    NAVstr%sublat = Lat_temp
+               
+               ENDIF
+               
+               
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
-
+ 
             !test for COMS
             case (250)
                !This is needed to determine type of navigation

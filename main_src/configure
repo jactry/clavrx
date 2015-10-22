@@ -33,8 +33,7 @@ my %opt = (
 my @sargv = @ARGV;
 GetOptions(
    \%opt,
-   'hdflib=s',
-   'hdfinc=s',
+   'hdf4root=s',
    'hdf5root=s',
    'netcdflib=s',
    'cmask_dir=s',
@@ -124,13 +123,9 @@ elsif ($fcs != 1)
 }
 
 # Check the HDF directory.
-$opt{hdflib} = abs_path($opt{hdflib}) if $opt{hdflib} =~ /^\./;
-$opt{hdflib} =~ s/^~/$ENV{HOME}/;
--d $opt{hdflib} or die "Doesn't exist or not a directory: $opt{hdflib}\n";
-
-$opt{hdfinc} = abs_path($opt{hdfinc}) if $opt{hdfinc} =~ /^\./;
-$opt{hdfinc} =~ s/^~/$ENV{HOME}/;
--d $opt{hdfinc} or die "Doesn't exist or not a directory: $opt{hdfinc}\n";
+$opt{hdf4root} = abs_path($opt{hdf4root}) if $opt{hdf4root} =~ /^\./;
+$opt{hdf4root} =~ s/^~/$ENV{HOME}/;
+-d $opt{hdf4root} or die "Doesn't exist or not a directory: $opt{hdf4root}\n";
 
 $opt{netcdflib} = abs_path($opt{netcdflib}) if $opt{netcdflib} =~ /^\./;
 $opt{netcdflib} =~ s/^~/$ENV{HOME}/;                                                                                                                                                    
@@ -151,14 +146,14 @@ if (exists($opt{'with-szip'}) and length($opt{'with-szip'}))
 }
 
 # Generate linker options for the HDF lib.
-my $hdflibs = "-L$opt{hdflib}"
+my $hdflibs = "-L$opt{hdf4root}/lib"
    . (exists($opt{'with-szip'})
       and length($opt{'with-szip'}) ? " -L$opt{'with-szip'}" : '')
    . " -lmfhdf -ldf -ljpeg"
    . (exists($opt{'with-szip'}) ? ' -lsz' : '')
    . " -lz";
 
-my $hdfincs = "-I$opt{hdfinc}";
+my $hdfincs = "-I$opt{hdf4root}/include";
 
 my $netcdflibs = "-L$opt{netcdflib}lib -I$opt{netcdflib}include -lnetcdf";
 
@@ -449,15 +444,11 @@ Command line options:
          IBM AIX FORTRAN compiler will be used. A path to the executable is
          optional.
 
-   --hdflib=<directory>
-         Path to the directory where HDF library files are stored.
-         Default is /usr/local/hdf/lib.
+   --hdf4root=<directory>
+         Path to the directory where HDF library and include files are stored.
+         Default is /usr/local/hdf/.
 
-  --hdfinc=<directory>
-         Path to the directory where HDF include files are stored.
-         Default is /usr/local/hdf/include.
-
-  --hdf5root=<directory>
+   --hdf5root=<directory>
          Path to the directory where HDF5 lib and include directories are.
          Default is /usr/local/hdf5/.
 
@@ -497,7 +488,7 @@ Command line options:
 
    --with-szip[=<directory>]
          Path to the SZIP library, if required by the HDF library. If
-         directory not given, the argument of '--hdflib' option used.
+         directory not given, the argument of '--hdf4root' option used.
 
    --with-lores-elev
          Enable low resolution elevation map. Default is to use the high

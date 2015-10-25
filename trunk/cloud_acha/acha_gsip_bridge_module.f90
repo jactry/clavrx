@@ -332,7 +332,7 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Surface_Elevation => Zsfc
    Input%Cloud_Mask =>  gsip_pix_prod%cldmask
    Input%Cloud_Type => gsip_pix_prod%Cldtype
-   Input%Cloud_Probability => gsip_pix_prod%r4_generic1 ! not used in ACHA
+   Input%Cloud_Probability => gsip_pix_prod%cldprob
    
    Input%Surface_Emissivity_39um => sfc_emiss_7
 

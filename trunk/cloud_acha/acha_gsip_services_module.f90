@@ -151,6 +151,7 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
+   integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
    real, dimension(:,:), pointer:: Pc_Opaque
    real, dimension(:,:), pointer:: Tc_Opaque
    real, dimension(:,:), pointer:: Zc_Opaque

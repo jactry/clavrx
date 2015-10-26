@@ -45,7 +45,6 @@ module ACHA_GSIP_BRIDGE_MOD
 
    !---- initalize Output structure
    call SET_OUTPUT()
-   print *, "Height out done"
   
    !----set symbols to local values
    call SET_SYMBOL()

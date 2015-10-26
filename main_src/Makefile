@@ -185,6 +185,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_pfaast_coef_mod.o \
                  cx_pfaast_constants_mod.o \
                  strings.o \
+                 geo_sat_navigation_mod.o \
                  precision.o
 
 #Level2b routines
@@ -296,14 +297,14 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
-user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o
+user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
-cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
 cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
 cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o
@@ -320,6 +321,7 @@ drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o l
 date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
+geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o constant.o file_utility.o avhrr_module.o
 Message_Handler.o: Message_Handler.f90 file_utility.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
@@ -365,7 +367,6 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
-#cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)   $(CTYPE)/cloud_type_bridge_module.f90
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o

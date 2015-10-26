@@ -132,8 +132,6 @@ subroutine CLOUD_SHADOW_RETR (  &
       integer , intent(in) :: i
       integer , intent(in) :: j
       
-      real :: pixel_size_Lat (2)
-      real :: pixel_size_Lon (2)
       integer :: ii,jj
       real :: diff_Lat , diff_lon
       real :: delta_Lat_ii , delta_Lat_jj

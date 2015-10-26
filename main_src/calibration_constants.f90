@@ -140,12 +140,6 @@ module CALIBRATION_CONSTANTS
  real(kind=real8),save,public:: Goes_Input_Time = 0
  real(kind=real8),save,public:: Goes_Epoch_Time = 0
 
- !--- MCSST values
- real(kind=real4),save,public:: B1_day_mask = 0.0
- real(kind=real4),save,public:: B2_day_mask = 0.0
- real(kind=real4),save,public:: B3_day_mask = 0.0
- real(kind=real4),save,public:: B4_day_mask = 0.0
-
  real(kind=real4),save,public:: Solar_Ch20 = 0.0
  real(kind=real4),save,public:: Solar_Ch20_Nu = 0.0
  real(kind=real4),save,public:: Ew_Ch20 = 0.0

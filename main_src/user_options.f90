@@ -108,6 +108,9 @@ module USER_OPTIONS
       
    use FILE_UTILITY, only: &
       Get_Lun
+
+   use LEVEL2B_ROUTINES, only: &
+      INIT_RANDOM_SEED
  
    use  CLAVRX_MESSAGE_MODULE, only: &
       Mesg &
@@ -153,7 +156,6 @@ contains
       call SET_DEFAULT_VALUES
       call DETERMINE_USER_CONFIG()
       call QC_CLAVRXORB_OPTIONS()
-
    end subroutine SETUP_USER_DEFINED_OPTIONS
    
    ! ---------------------------------------------------------------------------------
@@ -233,6 +235,12 @@ contains
       integer::erstat
       integer:: Default_Lun
       integer:: GeoNav_Limit_Flag
+      real:: Rand_Number
+      character(len=7):: Rand_String
+      character(len=355):: Temporary_Data_Dir_Root
+      integer:: string_length
+      character(len=1):: last_char
+      
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
       call MESG ("Default file to be read in: "//trim(File_Default),level = verb_lev % DEFAULT)
@@ -253,14 +261,30 @@ contains
       end if
       
       read(unit=Default_Lun,fmt="(a)") Data_base_path
-      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir
+      read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir_Root
       read(unit=Default_Lun,fmt=*) Expert_Mode
-         
+
+      !--- add a random number suffix to Temporary_Data_Dir
+      string_length = len_trim(Temporary_Data_Dir_Root)
+      last_char = Temporary_Data_Dir_Root(string_length:string_length)
+
+      if (index(last_char, '/') > 0) then 
+        Temporary_Data_Dir_Root = Temporary_Data_Dir_Root(1:string_length-1)
+      endif
+
+      call INIT_RANDOM_SEED()
+      call random_number(Rand_Number)
+!      write(6,'(I07)' ) int(10.0e06 * Rand_Number)
+      write(Rand_String,'(I7.7)' ) int(10.0e06 * Rand_Number)
+      Temporary_Data_Dir = trim(Temporary_Data_Dir_Root) // '_' // trim(Rand_String) // '/'
+
+      !--- check expert mode, if 0 return
       if ( Expert_Mode  == 0 )  then
           close(unit=Default_Lun)
           return
       end if
       
+      !--- contintue reading file if selected expert mode allows
       read(unit=Default_Lun,fmt=*) Cloud_Mask_Bayesian_Flag
       read(unit=Default_Lun,fmt=*) Dcomp_Mode_User_Set
       read(unit=Default_Lun,fmt=*) Acha_Mode_User_Set
@@ -316,7 +340,7 @@ contains
       read(unit=Default_Lun,fmt=*) Lrc_Flag
       read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
-               
+          print*,'undetected ..',     Process_Undetected_Cloud_Flag
       if ( Expert_Mode <= 5 ) then
           close(unit=Default_Lun)
           return
@@ -326,6 +350,7 @@ contains
       read(unit=Default_Lun,fmt=*) GeoNav_Limit_Flag
 
       if (GeoNav_Limit_Flag == 0) then
+          nav % lon_lat_limits_set = .false.
          Nav%Lat_Max_Limit = 90.0
          Nav%Lat_Min_Limit = -90.0
          Nav%Lon_Max_Limit = 180.0
@@ -336,6 +361,7 @@ contains
          Geo%Solzen_Min_Limit = 0.0
       else
          backspace(unit=Default_Lun)
+         nav % lon_lat_limits_set = .true.
          read(unit=Default_Lun,fmt=*) GeoNav_Limit_Flag, &
                                       Nav%Lat_Max_Limit, Nav%Lat_Min_Limit, &
                                       Nav%Lon_Max_Limit, Nav%Lon_Min_Limit, &
@@ -391,8 +417,6 @@ contains
       default_temp="./clavrx_options"
       file_list = "./file_list"
   
-
-  
       Temp_Scans_Arg = 0
       fargc = iargc()
   
@@ -423,8 +447,6 @@ contains
   
       !---- If the default file is used, read it in first, then
       !---- check for other command line changes to the options
-  
-
       if(Use_Default == sym%YES)  then
          call READ_OPTION_FILE (Default_Temp)
       end if
@@ -432,9 +454,6 @@ contains
       if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"
       end if 
-      
-      
-      
  
       do i=1, fargc
         call getarg(i,fargv)
@@ -773,7 +792,7 @@ contains
       
       if ( Expert_Mode == 0 ) then
          acha_mode_User_Set =  default_acha_mode ( SensorName )
-         dcomp_mode_User_Set = default_dcomp_mode ( SensorName )
+         dcomp_mode_User_Set = default_dcomp_mode ( )
       end if
 
       call CHECK_ALGORITHM_CHOICES(SensorName)
@@ -842,8 +861,7 @@ contains
    !-----------------------------------------------------------------
    !   returns default dcomp mode
    ! -----------------------------------------------------------------
-   integer function default_dcomp_mode ( SensorName )
-      character (len=*) , intent(in) :: SensorName
+   integer function default_dcomp_mode ( )
    
       default_dcomp_mode = 3
       
@@ -975,7 +993,7 @@ contains
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
          nlcomp_mode_User_Set       =  1  
       case ('VIIRS-IFF')      
-         possible_acha_modes(1:3)   =  [1, 3, 5]
+         possible_acha_modes(1:4)   =  [1, 3, 5, 9]
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ('AQUA-IFF')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
@@ -1009,8 +1027,8 @@ contains
       end if
       
       if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
-         dcomp_mode = default_dcomp_mode ( SensorName )
-         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( SensorName )
+         dcomp_mode = default_dcomp_mode ( )
+         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( )
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES
@@ -1048,7 +1066,7 @@ contains
       case ('VIIRS')
          Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,39,40,41,42,43,44]
       case ('VIIRS-IFF')
-         Valid_Channels (1:21) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,33,34,35,36,45]
+         Valid_Channels (1:24) = [1,2,3,4,5,6,7,8,9,15,20,22,26,27,28,29,30,31,32,33,34,35,36,45]
       case ('AQUA-IFF')
          Valid_Channels (1:36) = [(i,i=1,36,1)]
       case ('AVHRR-IFF')

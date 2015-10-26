@@ -81,11 +81,7 @@ module MODIS_MODULE
                 , ew_ch20 &
                 , planck_a1 &
                 , planck_a2 &
-                , planck_nu &
-                , b1_day_mask &
-                , b2_day_mask &
-                , b3_day_mask &
-                , b4_day_mask
+                , planck_nu 
 
         implicit none
         private
@@ -144,7 +140,6 @@ subroutine READ_MODIS_INSTR_CONSTANTS(Instr_Const_File)
    read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
    read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
    read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
-   read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
    close(unit=Instr_Const_lun)
 
    !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

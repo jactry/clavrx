@@ -103,7 +103,6 @@ subroutine READ_COMS_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) Ch1_Gain_Low_0,Ch1_Degrad_Low_1, Ch1_Degrad_Low_2
   read(unit=Instr_Const_lun,fmt=*) Launch_Date
 
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -117,7 +116,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  ! Perform COMS Reflectance and BT calibration
  subroutine READ_COMS(segment_number,channel_1_filename, &
-                     jday, image_time_ms, Time_Since_Launch, &
+                     jday, image_time_ms, &
                      AREAstr,NAVstr_COMS)
 
    integer(kind=int4), intent(in):: segment_number
@@ -126,7 +125,6 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    type (GVAR_NAV), intent(in)    :: NAVstr_COMS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
-   real(kind=real4), intent(in):: Time_Since_Launch
 
    character(len=120):: channel_x_filename
    character(len=120):: channel_x_filename_full

@@ -158,7 +158,6 @@ module RT_UTILITIES
    
    private:: EMISSIVITY, &
              BETA_RATIO
-   
     
    public::  &
             SETUP_SOLAR_RTM, &
@@ -604,7 +603,6 @@ contains
       ! Compute Gamma_Trans_Factor for radiance bias
       !--------------------------------------------------------------------------
       call COMPUTE_GAMMA_FACTOR()
-     
 
       Lon_Idx_Prev = 0
       Lat_Idx_Prev = 0
@@ -744,7 +742,6 @@ contains
                         ,  Wvmr_Prof_Rtm &
                         ,  Ozmr_Prof_Rtm &
                         ,  Satzen_Mid_Bin &
-                        ,  CO2_RATIO &
                         ,  Sc_Name_Rtm &
                         ,  Chan_Idx_For_Pfaast &
                         ,  Trans_Prof_Rtm &
@@ -794,7 +791,7 @@ contains
                      if (Chan_Idx > 21 .and. Chan_Idx /= 26) cycle
 
                      Trans_Atm_Total_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
-                                           (1.0/Geo%Cossolzen(Elem_Idx,Line_Idx))
+                                           ((Geo%Coszen(Elem_Idx,Line_Idx)+Geo%Cossolzen(Elem_Idx,Line_Idx))/Geo%Cossolzen(Elem_Idx,Line_Idx))
 
                      Trans_Atm_Solar_Prof(:,Chan_Idx) = Trans_Atm_Prof(:,Chan_Idx) **  &
                                            (Geo%Coszen(Elem_Idx,Line_Idx)/Geo%Cossolzen(Elem_Idx,Line_Idx))
@@ -1227,10 +1224,10 @@ contains
       !--- GOES-13
       if (Sensor%WMO_Id == 257) then
          if (nwp_opt == 1 .or. nwp_opt == 3) then
-            Gamma_Trans_Factor(20) = 1.45
-            Gamma_Trans_Factor(27) = 0.83
-            Gamma_Trans_Factor(31) = 1.05
-            Gamma_Trans_Factor(33) = 1.19
+            Gamma_Trans_Factor(20) = 1.00
+            Gamma_Trans_Factor(27) = 0.794
+            Gamma_Trans_Factor(31) = 1.075
+            Gamma_Trans_Factor(33) = 1.064
          end if      
       end if
 
@@ -2339,19 +2336,6 @@ contains
                     (Rad_Atm_Dwn_Profile(Sfc_Idx+1) - Rad_Atm_Dwn_Profile(Sfc_Idx)) * Profile_Weight
 
    end subroutine COMPUTE_CHANNEL_ATM_DWN_SFC_RAD
-
-   !----------------------------------------------------------------------------------------
-   ! This routine computes radiative transfer terms such as Rad_Atm
-   ! Trans_Atm, and clear-sky radinace and brightness temperature
-   !
-   ! Input:  Sfc_Level_Idx - level just above the surface in the profiles
-   !         Prof_Weight - interpolation weight for interpolating to surface level
-   !         Lon_Idx = longitude index of NWP cell
-   !         Lat_Idx = latitude index of NWP cell
-   !         Zen_Idx = zenith angle index of RTM profile
-   !
-   ! Output:  (note this passed through global arrays) 
-   !         Rad_Atm_ChX_Rtm = Radiance Emitted by Atmosphere in Channel X
 
    !----------------------------------------------------------------------------------------
    ! This routine computes radiative transfer terms such as Rad_Atm

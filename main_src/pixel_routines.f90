@@ -214,6 +214,9 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
    integer:: Number_of_Lines
    integer:: Elem_Idx
    integer:: Line_Idx
+   integer:: Solar_Contamination_Thresh
+
+   Solar_Contamination_Thresh = 10 ! was 2 changed by Denis B. (Sep. 2015)
 
    Number_of_Elements = Image%Number_Of_Elements
    Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
@@ -235,11 +238,11 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
                 if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
                    Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
                 endif
-             else
-               if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
-                Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-               endif 
-             endif
+              else
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then 
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                endif 
+              endif
             endif
   
           endif
@@ -247,7 +250,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
           !--- check for solar contamination of nighttime data in GOES
           if (index(Sensor%Sensor_Name,'GOES') > 0) then
              if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
-                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+                if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > Solar_Contamination_Thresh) then
                    Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
                 endif 
              endif
@@ -258,9 +261,20 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
         !--- check for solar contamination of nighttime data in GOES
         if (index(Sensor%Sensor_Name,'GOES') > 0) then
           if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Geo%Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
-            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > 2) then
+            if (Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count > Solar_Contamination_Thresh) then
               Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
             endif
+          endif
+        endif
+
+
+        !until a more robust fix can be found, for now we will set all night
+        ! pixels to have Solar_Contamination_Mask = sym%YES due to telescope
+        ! contamination in 3.9um channel. Exists for FY-2C/D/E/G - WCS3
+        
+        if (index(Sensor%Sensor_Name,'FY2-IMAGER') > 0) then
+          if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0)) then
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
           endif
         endif
 

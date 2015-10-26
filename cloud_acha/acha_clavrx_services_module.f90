@@ -51,10 +51,9 @@ module ACHA_SERVICES_MOD
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
-		 
-	use NUMERICAL_ROUTINES, only: &
-		invert_matrix &
-		, locate
+ 
+       use NUMERICAL_ROUTINES, only: INVERT_MATRIX, LOCATE
+
  implicit none
 
  public:: ACHA_FETCH_PIXEL_NWP_RTM 
@@ -372,8 +371,13 @@ end type acha_rtm_nwp_struct
    endif
 
    if (Acha_Input%Chan_On_133um == sym%YES) then
-      Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_Atm_Profile
-      Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
+      if (ACHA_Input%ACHA_Mode_Flag_In == 9) then
+       Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(45)%Rad_Atm_Profile
+       Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(45)%Trans_Atm_Profile
+      else
+       Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_Atm_Profile
+       Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
+      endif
    endif
     
  end subroutine ACHA_FETCH_PIXEL_NWP_RTM

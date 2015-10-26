@@ -47,6 +47,7 @@ module AWG_CLOUD_HEIGHT
 ! 6 - 11 + 6.7 + 12 um               5
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
+! 9 - 11 + 12 + 13.3-pseudo um       -
 !----------------------------------------------------------------------
 !Changes needed to get into SAPF
 !
@@ -380,6 +381,7 @@ module AWG_CLOUD_HEIGHT
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
   integer (kind=int4):: NWP_Profile_Inversion_Flag
+  logical:: Bad_Input_Flag
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -429,6 +431,8 @@ module AWG_CLOUD_HEIGHT
      case(7)  !11,13.3,6.7
        Num_Obs = 3
      case(8)  !11,12,13.3 goes-r
+       Num_Obs = 3
+     case(9)  !11,12,13.3 goes-r with pseudo 13.3
        Num_Obs = 3
   end select
 
@@ -585,14 +589,34 @@ module AWG_CLOUD_HEIGHT
       endif
     endif
 
-    !--- check for a bad data or data outside of viewing angle range
-    if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES .or. &
-        Input%Sensor_Zenith_Angle(Elem_Idx,Line_Idx) > Sensor_Zenith_Threshold) then
+    !---------------------------------------------------------------
+    ! Check to see if this pixel shoud be skipped
+    !---------------------------------------------------------------
+    Bad_Input_Flag = .false.
 
+    if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) Bad_Input_Flag = .true.
+
+    if (Input%Sensor_Zenith_Angle(Elem_Idx,Line_Idx) > Sensor_Zenith_Threshold) Bad_Input_Flag = .true.
+
+    if (Input%Bt_11um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
+
+    if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+        if (Input%Bt_67um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
+    endif
+    if (Acha_Mode_Flag == 5) then
+        if (Input%Bt_85um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
+    endif
+    if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
+        if (Input%Bt_12um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
+    endif
+    if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
+        if (Input%Bt_133um(ELem_Idx,Line_Idx) == MISSING_VALUE_REAL4) Bad_Input_Flag = .true.
+    endif
+
+    if (Bad_Input_Flag .eqv. .true.) then
           Output%Packed_Qf(Elem_Idx,Line_Idx) =  0
           Output%Packed_Meta_Data(Elem_Idx,Line_Idx) =  0
           cycle
-
     endif
 
     !--- for convenience, save nwp indices to local variables
@@ -832,12 +856,13 @@ module AWG_CLOUD_HEIGHT
    endif
 
    if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
-       Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
+       Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or.  &
+       Acha_Mode_Flag == 9) then
     Btd_11um_12um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_12um(i1:i2,j1:j2), &
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
+   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
     Btd_11um_133um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_133um(i1:i2,j1:j2), &
                                                     Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
@@ -887,7 +912,7 @@ module AWG_CLOUD_HEIGHT
        y_variance(1) =  Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
-     case(8)
+     case(8,9)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
@@ -1120,7 +1145,7 @@ module AWG_CLOUD_HEIGHT
     Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
     Rad_Clear_11um = Rad_Ac_11um + Trans_Ac_11um*Bc_11um
 
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1130,7 +1155,7 @@ module AWG_CLOUD_HEIGHT
      Rad_Clear_12um = Rad_Ac_12um + Trans_Ac_12um*Bc_12um
   endif
 
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1174,10 +1199,10 @@ module AWG_CLOUD_HEIGHT
 
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
   Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
       Rad_Clear_12um = Input%Rad_Clear_12um(Elem_Idx,Line_Idx)
   endif
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
       Rad_Clear_133um = Input%Rad_Clear_133um(Elem_Idx,Line_Idx)
   endif
   if (Acha_Mode_Flag == 5) then
@@ -1190,7 +1215,8 @@ module AWG_CLOUD_HEIGHT
  endif
 
  if (idiag_output == symbol%YES) then
-    print *, "Clear radiances = ", Rad_Clear_67um, Rad_Clear_85um, Rad_Clear_11um, Rad_Clear_12um, Rad_Clear_133um
+!   print *, "Clear radiances = ", Rad_Clear_67um, Rad_Clear_85um, Rad_Clear_11um, Rad_Clear_12um, Rad_Clear_133um
+    print *, "Clear radiances = ", Rad_Clear_11um, Rad_Clear_12um, Rad_Clear_133um
  endif
 
 
@@ -1265,7 +1291,7 @@ Retrieval_Loop: do
   Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1273,7 +1299,7 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
   endif
 
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1448,7 +1474,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
      ((Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) .or. &
       (Cloud_Type == symbol%WATER_TYPE) .or. &
       (Cloud_Type == symbol%FOG_TYPE) .or. & 
-      (abs(Input%Latitude(Elem_Idx,Line_Idx)) >=60 .and. Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
+      (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
 
        !-- select lapse rate  (k/km)
        Lapse_Rate =  -0.061  + &
@@ -1464,6 +1490,12 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
        !-- compute height
        Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
+
+       !--- Some negative cloud heights are observed because of bad height
+       !--- NWP profiles.
+       if (Output%Zc(Elem_Idx,Line_Idx) < 0) then
+         Output%Zc(Elem_Idx,Line_Idx) = ZC_FLOOR
+       endif
 
        !--- compute pressure
        call KNOWING_Z_COMPUTE_T_P(Output%Pc(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc(Elem_Idx,Line_Idx),Ilev)
@@ -1871,6 +1903,13 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
            T = Temp_Prof_RTM(Ilev)
            Z = Hght_Prof_RTM(Ilev)
        endif
+
+       !--- Some negative cloud heights are observed because  of bad height
+       !--- NWP profiles.
+       if (Z < 0) then
+         Z = ZC_FLOOR
+       endif
+
    end subroutine KNOWING_P_COMPUTE_T_Z
 
    !-----------------------------------------------------------------
@@ -1941,6 +1980,11 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
          Z = Hght_Prof_RTM(kend)
          klev = kend - 1
          ierr = symbol%NO
+         !--- Some negative cloud heights are observed because of bad height
+         !--- NWP profiles.
+         if (Z < 0) then
+           Z = ZC_FLOOR
+         endif
          return
      endif
 
@@ -1994,6 +2038,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
     else
         P = Press_Prof_RTM(klev) 
         Z = Hght_Prof_RTM(klev)
+    endif
+
+    !--- Some negative cloud heights are observed because of bad height
+    !--- NWP profiles.
+    if (Z < 0) then
+      Z = ZC_FLOOR
     endif
 
    end subroutine KNOWING_T_COMPUTE_P_Z
@@ -2117,7 +2167,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    Converged_Flag = symbol%NO
    print *, "y = ", y
    print *, "Sy = ", Sy
-  !stop
    return 
   endif
 
@@ -2136,6 +2185,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    print *, "K = ", K
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
+!stop
    return
   endif
   
@@ -2254,7 +2304,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Sy = 0.0
   Sy(1,1) = T11um_Cal_Uncer**2 + ((1.0-Ec)*T11um_Clr_Uncer)**2 + (T11um_Cld_Uncer)**2
 
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + ((1.0-Ec)*T11um_12um_Clr_Uncer)**2 + (T11um_12um_Cld_Uncer)**2
   endif
   if (Acha_Mode_Flag == 4) then
@@ -2263,7 +2313,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Acha_Mode_Flag == 7) then
     Sy(2,2) = T11um_67um_Cal_Uncer**2 + ((1.0-Ec)*T11um_67um_Clr_Uncer)**2 + (T11um_67um_Cld_Uncer)**2
   endif
-  if (Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8) then
+  if (Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + ((1.0-Ec)*T11um_133um_Clr_Uncer)**2 + (T11um_133um_Cld_Uncer)**2
   endif
   if (Acha_Mode_Flag == 5) then
@@ -2438,7 +2488,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
 
  !--- forward model for 11um - 12um
- if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6) then
+ if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 9) then
    Rad_12um = Emiss_12um*Rad_Ac_12um + Trans_Ac_12um * Emiss_12um * Bc_12um +  Trans_12um * Rad_Clear_12um
    f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_12um,Rad_12um,dB_dT = dB_dT_12um)
    K(2,1) = K(1,1) - Trans_Ac_12um * Emiss_12um * dB_dTc_12um / dB_dT_12um   
@@ -2457,7 +2507,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
  endif
- if (Acha_Mode_Flag == 8) then
+ if (Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
    f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
    K(3,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
@@ -2465,6 +2515,14 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
+
+! print *, "3 Kernel = ", K(3,:)
+! print *, Trans_Ac_133um, Emiss_133um,dB_dTc_133um,dB_dT_133um
+! print *, Rad_Ac_133um, Bc_133um, Rad_Clear_133um, dEmiss_133um_dEmiss_11um,dB_dT_133um
+  if (Trans_Ac_133um /= Trans_Ac_133um) then
+     print *, "Bad Trans_Ac_133um", Trans_Ac_133um
+     stop
+  endif
  endif
  if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
@@ -2867,7 +2925,7 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
 
-  case(8) 
+  case(8,9) 
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
@@ -2887,7 +2945,7 @@ end subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
 ! Compute Sy based on the clear-sky error covariance calcuLations.
 ! This assumes that 
 ! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
-!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um,9-11+12+13.3um
 !----------------------------------------------------------------------
 subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
 
@@ -3320,6 +3378,12 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
          exit
      endif
    end do Level_Loop
+
+   !--- Some negative cloud heights are observed because of bad height
+   !--- NWP profiles.
+   if (Zc_Opaque < 0) then
+     Zc_Opaque = ZC_FLOOR
+   endif
 
  end subroutine DETERMINE_OPAQUE_CLOUD_HEIGHT
  !----------------------------------------------------------------------
@@ -3817,6 +3881,12 @@ subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
        Pc = P_Prof(ilev_h2o)
        Tc = T_Prof(ilev_h2o)
        Zc = Z_Prof(ilev_h2o)
+  endif
+
+  !--- Some negative cloud heights are observed because of bad height
+  !--- NWP profiles.
+  if (Zc > MISSING_VALUE_REAL4 .AND. Zc < 0) then
+    Zc = ZC_FLOOR
   endif
 
 end subroutine H2O_CLOUD_HEIGHT

@@ -108,11 +108,13 @@ module SENSOR_MODULE
       
       
       use DATE_TOOLS_MOD
+      
       use CX_READ_AHI_MOD, only: &
          ahi_time_from_filename
       
       type ( date_type ) :: time0_obj, time1_obj
-
+      
+      ! - this is only needed/used for AVHRR
       type (AREA_STRUCT), intent(in) :: AREAstr
 
       integer(kind=int4):: Start_Year_Tmp
@@ -359,7 +361,7 @@ module SENSOR_MODULE
               call READ_MSG_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MTSAT-IMAGER')
               call READ_MTSAT_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('FY-IMAGER')
+         case('FY2-IMAGER')
               call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('COMS-IMAGER')
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -608,7 +610,7 @@ module SENSOR_MODULE
                endif
 
             case (36, 37)
-               Sensor%Sensor_Name = 'FY-IMAGER'
+               Sensor%Sensor_Name = 'FY2-IMAGER'
                Sensor%Spatial_Resolution_Meters = 4000
                if (AREAstr%Sat_Id_Num == 36) then
                   Sensor%Platform_Name = 'FY-2D'
@@ -1000,7 +1002,7 @@ module SENSOR_MODULE
                                      AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
 
       !--- knowing Sc_Id_AVHRR and the above flags, populate sensor structure for AVHRR
-      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id_AVHRR)
+      call ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
 
       if (AVHRR_GAC_Flag == sym%YES) then
          Sensor%Spatial_Resolution_Meters = 4000
@@ -1056,6 +1058,7 @@ module SENSOR_MODULE
     character(len=*), intent(in):: Level1b_Full_Name
     type (AREA_STRUCT), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
+    REAL (KIND=REAL4)                 :: Lat_temp, Lon_temp
 
     Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
     Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
@@ -1088,9 +1091,21 @@ module SENSOR_MODULE
                !as Nav coefficents specific to FY2D/E. They are stored in
                ! the same manner as MTSAT, hence using the same routine
                call READ_NAVIGATION_BLOCK_MTSAT_FY(trim(Level1b_Full_Name), AREAstr, NAVstr)
+               
+               !Some data from BOM has subpoints flipped, so need to fix that
+               IF (NAVstr%sublat .GT. 10.0) THEN
+                    Lat_temp = NAVstr%sublon                   
+                    Lon_temp = NAVstr%sublat
+                    
+                    NAVstr%sublon = Lon_temp
+                    NAVstr%sublat = Lat_temp
+               
+               ENDIF
+               
+               
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
-
+ 
             !test for COMS
             case (250)
                !This is needed to determine type of navigation
@@ -1120,22 +1135,31 @@ module SENSOR_MODULE
     endif
 
    end subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION
+   
    !---------------------------------------------------------------------------------------------
    ! Determine the number of elements (Image%Number_Of_Elements) and Number of Scans (Image%Number_Of_Lines)
    ! expected.  Also, 
+   !
+   !    the output will be written in global Image structure
    !---------------------------------------------------------------------------------------------
-   subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr, &
-                                 Nword_Clavr_Start,Ierror)
-
+   subroutine SET_FILE_DIMENSIONS(Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header, &
+                                 Ierror)
+      use cx_read_ahi_mod, only : &
+         ahi_segment_information_region &
+         ,ahi_config_type
+                                                               
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr
-      integer(kind=int4), intent(out) :: Nword_Clavr
-      integer(kind=int4), intent(out) :: Nword_Clavr_Start
-      integer(kind=int4), intent(out) :: Nrec_Avhrr_Header
+      TYPE (AREA_STRUCT), intent(in) :: AREAstr ! AVHRR only
+      integer(kind=int4), intent(out) :: Nrec_Avhrr_Header ! AVHRR only
       integer(kind=int4), intent(out) :: Ierror
 
+      integer(kind=int4) :: Nword_Clavr
+      integer(kind=int4) :: Nword_Clavr_Start
       integer(kind=int4) :: Ierror_Viirs_Nscans
       CHARACTER(len=355) :: Dir_File
+      
+      type ( ahi_config_type ) :: ahi_config
+      integer :: offset(2), count(2)
 
       Ierror = sym%NO
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
@@ -1148,8 +1172,22 @@ module SENSOR_MODULE
       endif
       
       if ( trim(Sensor%Sensor_Name) == 'AHI') then
+      
+         
          Image%Number_Of_Elements =  5500
          Image%Number_Of_Lines = 5500
+         
+         if ( nav % lon_lat_limits_set ) then
+            ahi_config % data_path = trim(Image%Level1b_Path)
+            ahi_config % file_base = trim (Image%level1b_name)
+            ahi_config % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
+            ahi_config % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+            call ahi_segment_information_region ( ahi_config , offset, count )
+         
+            Image%Number_Of_Elements =  count(1)
+            Image%Number_Of_Lines = count(2)
+         end if
+         
       end if
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
@@ -1289,8 +1327,7 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'SEVIRI') then
          call READ_SEVIRI(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
-                     AREAstr,NAVstr)
+                     AREAstr)
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Seviri_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
          call CALIBRATE_SEVIRI_DARK_COMPOSITE(Two_Byte_Temp,Ref_Ch1_Dark_Composite)
@@ -1312,7 +1349,6 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'FY2-IMAGER') then
          call READ_FY(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
@@ -1320,7 +1356,6 @@ module SENSOR_MODULE
       if (trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
          call READ_COMS(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
-                     Time_Since_Launch, &
                      AREAstr,NAVstr)
       end if
 
@@ -1398,7 +1433,6 @@ subroutine READ_AHI_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33),planck_nu(33) !Band 16
   read(unit=Instr_Const_lun,fmt=*) planck_a1(37), planck_a2(37),planck_nu(37) !Band 8
   read(unit=Instr_Const_lun,fmt=*) planck_a1(38), planck_a2(38),planck_nu(38) !Band 13
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1

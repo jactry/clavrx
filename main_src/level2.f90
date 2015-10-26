@@ -97,7 +97,6 @@ module LEVEL2_ROUTINES
 !
 !====================================================================
 subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
-   Dir_Rtm, &
    Dir_Level2, &
    File_1b, &
    Rtm_File_Flag, &
@@ -139,7 +138,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
    End_Time)
 
 
- character(len=*), intent(in):: Dir_Rtm
  character(len=*), intent(in):: Dir_Level2
  integer(kind=int4), intent(in):: Num_Scans
  character(len=*), intent(in):: File_1b
@@ -1845,6 +1843,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud-top pressure uncertainty from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Acha_Uncer_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Acha_Uncer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_uncer_acha", &
+                               "not specified", &
+                               "cloud pressure uncertainty computed using the AWG cloud height algorithm", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Pc_Uncer, Max_Pc_Uncer, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- quality flag for ACHA Cloud-top Temperature
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Qf_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Qf),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -2991,6 +3000,42 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "at the nominal wavelength of 13.3 microns", &
                                 DFNT_INT16, sym%LINEAR_SCALING, &
                                 Min_Bt33, Max_Bt33, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch34_Clear_Rtm
+     if (Sds_Num_Level2_Ch34_Clear_Flag == sym%YES .and.  Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch34_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_13_6um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_13_6_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 13.6 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt34, Max_Bt34, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch35_Clear_Rtm
+     if (Sds_Num_Level2_Ch35_Clear_Flag == sym%YES .and.  Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch35_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_13_9um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_13_9_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 13.9 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt35, Max_Bt35, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch36_Clear_Rtm
+     if (Sds_Num_Level2_Ch36_Clear_Flag == sym%YES .and.  Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch36_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_14_2um_nom_clear_sky", &
+                               "toa_brightness_temperature_assuming_clear_sky_14_2_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "at the nominal wavelength of 14.2 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Bt36, Max_Bt36, "K", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4427,6 +4472,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- cloud pressure uncertainity from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Acha_Uncer_Flag == sym%YES) then     
+      call SCALE_VECTOR_I1_RANK2(ACHA%Pc_Uncertainty,sym%LINEAR_SCALING,Min_Pc_Uncer, &
+                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cloud height uncertainity from acha
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Uncer_Flag == sym%YES) then     
       call SCALE_VECTOR_I1_RANK2(ACHA%Zc_Uncertainty,sym%LINEAR_SCALING,Min_Zc_Uncer, &
@@ -5072,6 +5125,27 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     if (Sds_Num_Level2_Ch33_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
+    endif
+
+    !--- Ch34 temperature clear
+    if (Sds_Num_Level2_Ch34_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ch(34)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt34,Max_Bt34,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch34_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
+    endif
+
+    !--- Ch35 temperature clear
+    if (Sds_Num_Level2_Ch35_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ch(35)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt35,Max_Bt35,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch35_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
+    endif
+
+    !--- Ch36 temperature clear
+    if (Sds_Num_Level2_Ch36_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ch(36)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt36,Max_Bt36,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch36_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif
 

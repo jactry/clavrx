@@ -3431,6 +3431,62 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- MJH AVHRR/HIRS IFF auxiliary products
+     if (Sds_Num_Level2_HIRS_Cld_Temp_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Temp),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_cloud_temp", &
+                              "hirs_cloud_temp", &
+                              "Menzel's HIRS cloud top temperature from AVHRR-IFF", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Tc, Max_Tc, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+     if (Sds_Num_Level2_HIRS_Cld_Pres_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Pres),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_cloud_pres", &
+                              "hirs_cloud_pres", &
+                              "Menzel's HIRS cloud top pressure from AVHRR-IFF", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Pc, Max_Pc, "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+     if (Sds_Num_Level2_HIRS_Cld_Height_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Height),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_cloud_height", &
+                              "hirs_cloud_height", &
+                              "Menzel's HIRS cloud top height from AVHRR-IFF", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Zc, Max_Zc, "m", Missing_Value_Real4, Istatus) ! following cld_height_acha 0 to 20,000m
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+     if (Sds_Num_Level2_HIRS_Mask_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_Mask),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_mask", &
+                              "hirs_mask", &
+                              "1=there is real HIRS data covering this AVHRR pixel; 0=there is no (real) HIRS data covering this AVHRR pixel", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0., 1., "none", No_Attribute_Missing_Value, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+     if (Sds_Num_Level2_HIRS_ele_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_ele_index),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_ele_index", &
+                              "hirs_ele_index", &
+                              "Element # in original HIRS granule for HIRS data at this AVHRR pixel", &
+                              DFNT_INT16, sym%NO_SCALING, &
+                              0., 1000., "none", Real(Missing_Value_Int2, kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+     if (Sds_Num_Level2_HIRS_line_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_HIRS_line_index),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "hirs_line_index", &
+                              "hirs_line_index", &
+                              "Line # in original HIRS granule for HIRS data at this AVHRR pixel", &
+                              DFNT_INT16, sym%NO_SCALING, &
+                              0., 15000., "none", Real(Missing_Value_Int2, kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
@@ -5401,6 +5457,50 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         call SCALE_VECTOR_I2_RANK2(Bt_12um_Sounder,sym%LINEAR_SCALING,Min_Bt32, &
                                    Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- MJH Menzel HIRS cloud temp for AVHRR/HIRS IFF
+    if (Sds_Num_Level2_HIRS_Cld_Temp_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        call SCALE_VECTOR_I2_RANK2(HIRS_Cld_Temp,sym%LINEAR_SCALING,Min_Tc, &
+                                   Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Temp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- MJH Menzel HIRS cloud pressure for AVHRR/HIRS IFF
+    if (Sds_Num_Level2_HIRS_Cld_Pres_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        call SCALE_VECTOR_I2_RANK2(HIRS_Cld_Pres,sym%LINEAR_SCALING,Min_Pc, &
+                                   Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Pres), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- MJH Menzel HIRS cloud heights for AVHRR/HIRS IFF
+    if (Sds_Num_Level2_HIRS_Cld_Height_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        call SCALE_VECTOR_I2_RANK2(HIRS_Cld_Height,sym%LINEAR_SCALING,Min_Zc, &
+                                   Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Cld_Height), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- MJH HIRS mask
+    if (Sds_Num_Level2_HIRS_Mask_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        One_Byte_Temp = HIRS_Mask
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- MJH HIRS ele collocation indices
+    if (Sds_Num_Level2_HIRS_ele_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        ! is this the wrong place to do this?
+        where(HIRS_ele_index == -999) HIRS_ele_index = Missing_Value_Int2
+        Two_Byte_Temp = HIRS_ele_index
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_ele_index), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+    !--- MJH HIRS line collocation indices
+    if (Sds_Num_Level2_HIRS_line_index_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+        ! is this the wrong place to do this?
+        where(HIRS_line_index == -999) HIRS_line_index = Missing_Value_Int2
+        Two_Byte_Temp = HIRS_line_index
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_HIRS_line_index), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

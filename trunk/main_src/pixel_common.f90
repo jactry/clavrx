@@ -375,6 +375,7 @@ module PIXEL_COMMON
   integer,public, save:: AVHRR_KLM_Flag
   integer,public, save:: AVHRR_AAPP_Flag
   integer,public, save:: AVHRR_1_Flag
+  integer,public, save:: AVHRR_IFF_Flag
   integer,public, save:: Goes_Scan_Line_Flag
   
 
@@ -408,6 +409,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Gfs_Data_Dir
   character(len=355),public,save:: Ncep_Data_Dir
   character(len=355),public,save:: Cfsr_Data_Dir
+  character(len=355),public,save:: Merra_Data_Dir
   character(len=355),public,save:: Gdas_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
@@ -479,6 +481,14 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_375um_Sounder
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_11um_Sounder
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_12um_Sounder
+
+  !--- MJH HIRS/AVHRR aux fields
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Temp 
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Pres
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Height 
+  integer (kind=int1), dimension(:,:), allocatable, public, save, target:: HIRS_Mask 
+  integer (kind=int2), dimension(:,:), allocatable, public, save, target:: HIRS_line_index 
+  integer (kind=int2), dimension(:,:), allocatable, public, save, target:: HIRS_ele_index 
    
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
@@ -1752,6 +1762,16 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Bt_11um_Sounder(dim1,dim2))
            allocate(Bt_12um_Sounder(dim1,dim2))
    endif
+   if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+           ! MJH HIRS/AVHRR aux fields.
+           ! Does this belong in CREATE_EXTRA_CHANNEL_ARRAYS??
+           allocate(HIRS_Cld_Temp(dim1,dim2))
+           allocate(HIRS_Cld_Pres(dim1,dim2))
+           allocate(HIRS_Cld_Height(dim1,dim2))
+           allocate(HIRS_Mask(dim1,dim2))
+           allocate(HIRS_ele_index(dim1,dim2))
+           allocate(HIRS_line_index(dim1,dim2))
+   endif
    if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
@@ -1830,6 +1850,14 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
           Bt_11um_Sounder = Missing_Value_Real4
           Bt_12um_Sounder = Missing_Value_Real4
       endif
+      if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
+          HIRS_Cld_Temp = Missing_Value_Real4 ! MJH
+          HIRS_Cld_Pres = Missing_Value_Real4
+          HIRS_Cld_Height = Missing_Value_Real4 
+          HIRS_Mask = Missing_Value_Int1
+          HIRS_line_index = Missing_Value_Int2
+          HIRS_ele_index = Missing_Value_Int2
+      endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
 subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
@@ -1865,6 +1893,12 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Bt_375um_Sounder)) deallocate(Bt_375um_Sounder)
   if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
   if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
+  if (allocated(HIRS_Cld_Temp)) deallocate(HIRS_Cld_Temp) ! MJH
+  if (allocated(HIRS_Cld_Pres)) deallocate(HIRS_Cld_Pres)
+  if (allocated(HIRS_Cld_Height)) deallocate(HIRS_Cld_Height)
+  if (allocated(HIRS_Mask)) deallocate(HIRS_Mask)
+  if (allocated(HIRS_ele_index)) deallocate(HIRS_ele_index)
+  if (allocated(HIRS_line_index)) deallocate(HIRS_line_index)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 
 !------------------------------------------------------------------------------

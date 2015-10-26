@@ -27,6 +27,7 @@
 !
 ! REVISON HISTORY: 
 !  created    October 2013 (Denis B)
+!  modified April 2015 for HIRS/AVHRR aux fields (MJH)
 !--------------------------------------------------------------------------------------
 module IFF_CLAVRX_BRIDGE
 
@@ -46,7 +47,13 @@ module IFF_CLAVRX_BRIDGE
        , Ch &
        , Bt_375um_Sounder &
        , Bt_11um_Sounder &
-       , Bt_12um_Sounder
+       , Bt_12um_Sounder &
+       , HIRS_Cld_Temp &
+       , HIRS_Cld_Pres &
+       , HIRS_Cld_Height &
+       , HIRS_Mask &
+       , HIRS_ele_index &
+       , HIRS_line_index
    use CONSTANTS
    use IFF_MODULE
 
@@ -136,6 +143,16 @@ contains
       Geo%Satzen(:,1:c_seg_lines)    = out % geo % satzen
       Geo%Solaz (:,1:c_seg_lines)    = out % geo % solaz
       Geo%Solzen (:,1:c_seg_lines)   = out % geo % solzen
+
+      ! - MJH HIRS/AVHRR aux fields
+      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+          HIRS_Cld_Temp(:,1:c_seg_lines) = out % prd % sndr_cld_temp
+          HIRS_Cld_Pres(:,1:c_seg_lines) = out % prd % sndr_cld_pres
+          HIRS_Cld_Height(:,1:c_seg_lines) = out % prd % sndr_cld_height
+          HIRS_Mask(:,1:c_seg_lines) = out % prd % sndr_mask
+          HIRS_ele_index(:,1:c_seg_lines) = out % prd % sndr_ele_idx
+          HIRS_line_index(:,1:c_seg_lines) = out % prd % sndr_line_idx
+      endif
 
       ! - compute relative azimuth
       Geo%Relaz = RELATIVE_AZIMUTH( Geo%Solaz , Geo%Sataz )

@@ -116,7 +116,7 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
 
 
     !-- check Nwp_Data_Type
-    if (Nwp_Data_Type /= 1 .and. Nwp_Data_Type /= 3 .and. Nwp_Data_Type /=4) then
+    if (Nwp_Data_Type /= 1 .and. Nwp_Data_Type /= 3 .and. Nwp_Data_Type /=4 .and. Nwp_Data_Type /=5) then
        print *, EXE_PROMPT, MODULE_PROMPT, " ERROR: unsupported NWP data in GFS read module, stopping"
        stop 
     endif
@@ -172,6 +172,11 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         Hour_Before = 0
         JDay_After = jday
         Hour_After = 6
+       elseif(Nwp_Data_Type == 5) then               !MERRA analyzed states
+        JDay_Before = jday
+        Hour_Before = 0
+        JDay_After = jday
+        Hour_After = 6
        endif
 
     elseif ((time >= 6.00) .and. (time < 12.00)) then
@@ -190,6 +195,11 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         Hour_Before = 6
         JDay_After = jday
         Hour_After = 12 
+       elseif(Nwp_Data_Type == 5) then
+        JDay_Before = jday
+        Hour_Before = 6
+        JDay_After = jday
+        Hour_After = 12
        endif
 
     elseif ((time >= 12.00) .and. (time < 18.00)) then
@@ -204,6 +214,11 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         JDay_After = jday
         Hour_After = 12
        elseif(Nwp_Data_Type == 4) then
+        JDay_Before = jday
+        Hour_Before = 12
+        JDay_After = jday
+        Hour_After = 18
+       elseif(Nwp_Data_Type == 5) then
         JDay_Before = jday
         Hour_Before = 12
         JDay_After = jday
@@ -225,6 +240,11 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         JDay_Before = jday
         Hour_Before = 18
         JDay_After = jday+1
+        Hour_After = 0
+       elseif(Nwp_Data_Type == 5) then
+        JDay_Before = jday
+        Hour_Before = 18
+        JDay_After = jday
         Hour_After = 0
        endif
 
@@ -275,6 +295,10 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
           Nwp_Name_Before = trim(Nwp_Path) //  &
                        "gdas." // Year_string // Month_string // &
                        Day_string // Hour_string // "_F000.hdf"    
+    elseif (Nwp_Data_Type == 5) then
+          Nwp_Name_Before = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
+                       "merra." // Year_string // Month_string // &
+                       Day_string // Hour_string // "_F000.hdf"
     else
           Nwp_Name_Before = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
                        "cfsr." // Year_string // Month_string // &
@@ -305,6 +329,10 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
           Nwp_Name_After = trim(Nwp_Path) //  &
                        "gdas." // Year_string // Month_string // &
                        Day_string // Hour_string // "_F000.hdf"    
+    elseif (Nwp_Data_Type == 5) then
+          Nwp_Name_After = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
+                       "merra." // Year_string // Month_string // &
+                       Day_string // Hour_string // "_F000.hdf"
     else
           Nwp_Name_After = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
                        "cfsr."//Year_string//Month_string// &
@@ -509,7 +537,12 @@ where (Z_Prof_Nwp /= Missing_Nwp)
 end where
 
 !--- store 500 mb heights - note convert back to meters
-Hght500_Nwp = Z_Prof_Nwp(14,:,:)
+if (Nwp_Data_Type == 5) then
+  Hght500_Nwp = Z_Prof_Nwp(17,:,:)
+else
+  Hght500_Nwp = Z_Prof_Nwp(14,:,:)
+endif
+
 
 !---- compute wind speed
 Wnd_Spd_10m_Nwp = Wind_Speed(U_Wnd_10m_Nwp,V_Wnd_10m_Nwp)

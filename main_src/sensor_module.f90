@@ -337,6 +337,8 @@ module SENSOR_MODULE
    !  Read the values from instrument constant files
    !--------------------------------------------------------------------------------------------------
    subroutine READ_INSTR_CONSTANTS()
+
+      AVHRR_IFF_Flag = 0
  
       select case(trim(Sensor%Sensor_Name))
 
@@ -376,6 +378,7 @@ module SENSOR_MODULE
             call READ_IFF_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AVHRR-IFF')
             call READ_IFF_AVHRR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+            AVHRR_IFF_Flag = 1
 
       end select
 

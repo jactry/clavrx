@@ -163,8 +163,7 @@ contains
 
       character ( len =40) :: cfile = 'ahixxx101.dat'
       
-      integer :: iux
-      integer :: l , m
+      integer :: l
       integer, parameter :: ND = 10
       integer, parameter  :: N_CHANNELS = 10   !<  number of channels modis
       real :: coefc ( NCC, NM , N_CHANNELS )
@@ -198,7 +197,7 @@ contains
          call flip_rtc(coefo,nco,nm, N_CHANNELS)
          call flip_rtc(coefc,ncc,nm, N_CHANNELS)
          call flip_rtc(coefl,ncl,nm, N_CHANNELS)
-	      call flip_rtc(coefs,ncs,nm, N_CHANNELS)
+         call flip_rtc(coefs,ncs,nm, N_CHANNELS)
       end if
          
       call this % allocate_it(N_CHANNELS)
@@ -228,15 +227,11 @@ contains
       character ( len =*) :: satellite
       
       character ( len =40) :: cfile = 'avhrncom.dat'      
-      integer :: iux
-      integer :: l , m
       
       integer  :: N_CHANNELS   
 
-      logical :: big_endian
       integer :: lun_s (NK)
-      integer :: krec
-      integer :: i,j,k
+      integer :: i
       integer :: i_sat
       integer :: koff
    
@@ -315,7 +310,6 @@ contains
       
       character ( len =40) :: cfile = 'modisdet.com.101.xxx_end'
       
-      integer :: iux
       integer :: l , m
       integer, parameter :: ND = 10
       integer, parameter  :: N_CHANNELS = 17   !<  number of channels modis
@@ -327,7 +321,7 @@ contains
       logical :: big_endian
       integer :: lun_s (5)
       integer :: krec
-      integer :: i,j,k,koff
+      integer :: i,j,k
       integer :: ksat, nsat
       integer, parameter :: NDT = ND + 1 
       integer , parameter :: NRPS = N_CHANNELS * NDT

@@ -169,9 +169,7 @@ module AVHRR_MODULE
 !-------------------------------------------------------------------
 !-- define a Sc_Id that is unique value for each satellite
 !-------------------------------------------------------------------
- subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL(Sc_Id)
-
-  integer(kind=int2), intent(in):: Sc_Id
+ subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
 
   if (AVHRR_KLM_Flag == sym%NO) then
     if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N
@@ -355,7 +353,6 @@ subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) Prt_Coef(:,3)
   read(unit=Instr_Const_lun,fmt=*) Prt_Coef(:,4)
   read(unit=Instr_Const_lun,fmt=*) prt_weight(:)
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
 !-- convert solar flux in channel 3b to mean with units mW/m^2/cm^-1
@@ -715,7 +712,6 @@ end subroutine DETERMINE_AVHRR_1
            Ch3a_On_AVHRR(Line_Idx) = 0   !set for pre-AVHRR_KLM_Flag data
          endif
        endif
-
 
        !----------------------------------------------------------------------
        ! generate new calibration coefficients
@@ -1126,40 +1122,45 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
         Valid_Ref_Cal = .false.
    endif
 
-
    !--- Apply Calibration
    if (Valid_Ref_Cal .eqv. .true.) then
 
      !--- channel 1
-     where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
-       ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
-     elsewhere
-       ch(1)%Ref_Toa(:,Line_Idx) = Ref_Ch1_Switch + Ch1_Gain_High*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Switch_Count_Cal) 
-     end where
+     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+      where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
+        ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
+      elsewhere
+        ch(1)%Ref_Toa(:,Line_Idx) = Ref_Ch1_Switch + Ch1_Gain_High*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Switch_Count_Cal) 
+      end where
+     endif
 
      !--- channel 2
-     where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
-       ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
-     elsewhere
-       ch(2)%Ref_Toa(:,Line_Idx) = Ref_Ch2_Switch + Ch2_Gain_High*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Switch_Count_Cal) 
-     end where
+     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+      where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
+        ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
+      elsewhere
+        ch(2)%Ref_Toa(:,Line_Idx) = Ref_Ch2_Switch + Ch2_Gain_High*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Switch_Count_Cal) 
+      end where
+     endif
 
      !--- channel 3a
-     if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
-       ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-     else 
-       where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
-         ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
-       elsewhere
-         ch(6)%Ref_Toa(:,Line_Idx) = Ref_Ch6_Switch + Ch3a_Gain_High*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Switch_Count_Cal) 
-       end where
+     if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+       if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
+         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+       else 
+         where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
+           ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
+         elsewhere
+           ch(6)%Ref_Toa(:,Line_Idx) = Ref_Ch6_Switch + Ch3a_Gain_High*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Switch_Count_Cal) 
+         end where
+       endif
      endif
 
   else
 
-    ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
 
   endif
 

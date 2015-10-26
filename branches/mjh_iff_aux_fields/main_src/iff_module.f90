@@ -228,7 +228,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       integer(kind=int2), dimension( : , : ) , allocatable :: i2d_16_buffer
       real(kind=int4), parameter :: fill_value = 65535.
       real(kind=int8), parameter :: sec_per_day = 86400.
-      real(kind=int4), dimension(36) :: nu_list
+      real(kind=int4), dimension(37) :: nu_list
       real(kind=int4), dimension ( : ) , allocatable:: time_msec_day
       real(kind=int8), dimension( : ) , allocatable :: r1d_buffer
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
@@ -474,6 +474,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 31
                      case (16) ! M-Bands
                         band_names_int_rad(ii) = 32
+                     case (127) ! Sounder
+                        band_names_int_rad(ii) = 27
+                     case (128) ! Sounder
+                        band_names_int_rad(ii) = 28
+                     case (130) ! Sounder
+                        band_names_int_rad(ii) = 30
                      case (133) ! Sounder
                         band_names_int_rad(ii) = 33
                      case (134) ! Sounder
@@ -555,22 +561,26 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             setname_band = 'ReflectiveSolarBands'
 
             ! find what current channel has array number
+            iband_sds = -1
             do ii = 1, num_ref_ch
                if ( config % chan_list(i_band) == band_names_int_ref(ii) ) then
                   iband_sds = ii
                endif
             enddo
+            if (iband_sds < 0) cycle
 
          elseif ((config % chan_list(i_band) >= 20 .and. config % chan_list(i_band) <= 36 &
             .and. config % chan_list(i_band) /= 26) .or. config % chan_list(i_band) == 45) then
             setname_band = 'EmissiveBands'
 
             ! find what current channel has array number
+            iband_sds = -1
             do ii = 1, num_rad_ch
                if ( config % chan_list(i_band) == band_names_int_rad(ii) ) then
                   iband_sds = ii
                endif
             enddo
+            if (iband_sds < 0) cycle
 
          endif
 
@@ -603,7 +613,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             if (.not. allocated ( out % band (i_band) % rad ) ) &
                      allocate (out % band (i_band) % rad (dim_seg(1), dim_seg(2)) )
             out % band (i_band) % rad =  r3d_buffer(:,:,1)
-
          endif
             
          out % band (i_band) % is_read = .true.

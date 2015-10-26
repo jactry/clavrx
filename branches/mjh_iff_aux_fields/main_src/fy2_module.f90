@@ -92,7 +92,6 @@ subroutine READ_FY_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -106,7 +105,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
 ! Perform fy Reflectance and BT calibration
 !============================================================================
     subroutine READ_FY(segment_number,channel_1_filename, &
-                     jday, image_time_ms, Time_Since_Launch, &
+                     jday, image_time_ms, &
                      AREAstr,NAVstr_FY)
 
    integer(kind=int4), intent(in):: segment_number
@@ -115,7 +114,6 @@ end subroutine READ_FY_INSTR_CONSTANTS
    TYPE (GVAR_NAV), intent(in)    :: NAVstr_FY
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
-   real(kind=real4), intent(in):: Time_Since_Launch
 
    character(len=120):: channel_x_filename
    character(len=120):: channel_x_filename_full
@@ -243,6 +241,9 @@ end subroutine READ_FY_INSTR_CONSTANTS
      
        
        call FY_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:))
+       
+       !--- store ch1 counts for support of PATMOS-x calibration studies
+       Ch1_Counts = Two_Byte_Temp
        
     
     endif
@@ -378,10 +379,28 @@ end subroutine READ_FY_INSTR_CONSTANTS
         call POSSOL(image_jday,image_time_hours, &
                     Nav%Lon_1b(Elem_Idx,Line_Idx),Nav%Lat_1b(Elem_Idx,Line_Idx), &
                     Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
+                    
+        !--- because FY2 has solar contamination, we will set the
+        !    Solar_Contamination_Mask here as well for night pixels
+        
+        Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%NO
+        
+!        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.) .AND. &
+!             (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) .GT. 0)) THEN
+        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.)) THEN
+             
+             
+             Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+             
+        ENDIF
+        
+        
+         
      enddo
       call COMPUTE_SATELLITE_ANGLES(Sensor%Geo_Sub_Satellite_Longitude,  &
                                     Sensor%Geo_Sub_Satellite_Latitude, Line_Idx)
    enddo
+   
       
    !--- ascending node
    Elem_Idx = Image%Number_Of_Elements/2
@@ -392,6 +411,8 @@ end subroutine READ_FY_INSTR_CONSTANTS
      endif
    enddo
    Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
+    
+   
     
  end subroutine READ_FY
 

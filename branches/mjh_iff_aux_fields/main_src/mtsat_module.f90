@@ -102,7 +102,6 @@ subroutine READ_MTSAT_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) Ch1_Gain_Low_0,Ch1_Degrad_Low_1, Ch1_Degrad_Low_2
   read(unit=Instr_Const_lun,fmt=*) Launch_Date
 
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -544,9 +543,6 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
     real (kind=real4), intent(in):: Time_Temp_Since_Launch
     real (kind=real4), dimension(:,:), intent(out):: Alb_Temp
 
-    integer :: index
-    integer:: i, j
-
     Ch1_Gain_Low = Ch1_Gain_Low_0*(100.0+Ch1_Degrad_Low_1*Time_Temp_Since_Launch + &
                                   Ch1_Degrad_Low_2*Time_Temp_Since_Launch**2)/100.0
 
@@ -555,14 +551,6 @@ subroutine MTSAT_REFLECTANCE_GSICS(Mtsat_Counts, Time_Temp_Since_Launch, Alb_Tem
      Alb_Temp = Missing_Value_Real4
     endwhere
     
-!   do j = 1,Image%Number_Of_Lines_Read_This_Segment
-!     do i = 1,Image%Number_Of_Elements
-!       if (Space_Mask(i,j) == sym%NO) then
-!          Alb_Temp(i,j) = Ch1_Gain_Low * ( Mtsat_Counts(i,j) - Ch1_Dark_Count)
-!       endif
-!     enddo
-!   enddo
-
 end subroutine MTSAT_REFLECTANCE_GSICS
 
 !----------------------------------------------------------------------
@@ -1134,7 +1122,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        real*8    ATTALP,ATTDEL,BETA,CDR,DELT,RTIM,SITAGT,SUNALP,SUNDEL, &
                  WKCOS,WKSIN
        real*8    ATT1(3),ATT2(3),ATT3(3),NPA(3,3), &
-                 SAT(3),SP(3),SS(3),ORBT2(35,8)
+                 SAT(3),SP(3),SS(3)
  !     integer*4 MAP(672,4)
        integer :: I
  !
@@ -1144,7 +1132,7 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        do 1000 I=1,7
          if(RTIM.GE.NAVstr_MTSAT_NAV%ORBT1(1,I).AND.RTIM.LT.NAVstr_MTSAT_NAV%ORBT1(1,I+1))  then
            call  MGI110 &
-                (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,ORBT2,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+                (I,RTIM,CDR,NAVstr_MTSAT_NAV%ORBT1,SAT,SITAGT,SUNALP,SUNDEL,NPA)
            GO TO  1200
          endif
   1000 CONTINUE
@@ -1185,8 +1173,8 @@ subroutine  MGI100(RTIM,CDR,SAT,SP,SS,BETA)
        return
 end subroutine MGI100
 
-subroutine MGI110(I,RTIM,CDR,ORBTA,ORBTB,SAT,SITAGT,SUNALP,SUNDEL,NPA)
-       real*8    CDR,SAT(3),RTIM,ORBTA(35,8),ORBTB(35,8)
+subroutine MGI110(I,RTIM,CDR,ORBTA,SAT,SITAGT,SUNALP,SUNDEL,NPA)
+       real*8    CDR,SAT(3),RTIM,ORBTA(35,8)
        real*8    SITAGT,SUNDEL,SUNALP,NPA(3,3),DELT
        integer*4 I
        if(I.NE.8)  then

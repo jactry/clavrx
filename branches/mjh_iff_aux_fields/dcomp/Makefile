@@ -11,7 +11,7 @@ RTM_MOD = /home/awalther/SOFTWARE/RTM/RTTOV/mod
 RTM_LIB = /home/awalther/SOFTWARE/RTM/RTTOV/lib
 RTMODEL = rttov10.2.0
 
-HDFDIR = $(HOME)/lib/hdf4/
+HDFDIR = $(hdf4root)
 HDFINC = $(HDFDIR)/include
 HDFLIB = $(HDFDIR)/lib
 ICAINC = hdf4/include

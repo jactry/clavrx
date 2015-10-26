@@ -41,9 +41,29 @@
 !--------------------------------------------------------------------------------------
 module HDF_PARAMS
 
-use CONSTANTS
-use HDF
-use SCALING_PARAMETERS
+use CONSTANTS, only: &
+   int1 &
+   , int2 &
+   , int4 &
+   , real4 &
+   , missing_value_int1 &
+   , missing_value_int2
+   
+use HDF, only: &
+   SUCCEED &
+   , DFNT_INT16 &
+   , DFNT_CHAR8 &
+   , DFNT_FLOAT32 &
+   , DFNT_INT32 &
+   , DFNT_INT8
+
+
+
+use SCALING_PARAMETERS, only: &
+    one_byte_min &
+    , one_byte_max &
+    , two_byte_min &
+    , two_byte_max
 
 implicit none
 private
@@ -54,8 +74,7 @@ public:: SCALE_VECTOR_I1_RANK1, &
          SCALE_VECTOR_I2_RANK2, &
          SCALE_VECTOR_I2_RANK3, &
          UNSCALE_VECTOR_I1_RANK1, &
-         WRITE_CLAVRX_HDF4_SDS,  &
-         HDF_TSTAMP,  &
+         WRITE_CLAVRX_HDF4_SDS, &
          WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES,  &
          READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES, &
          READ_CLAVRX_HDF4_SDS_RANK1
@@ -68,7 +87,7 @@ public:: SCALE_VECTOR_I1_RANK1, &
  end interface
 
 character(len=256), save, public:: renav_data_from
-character(len=36), save ::  hdf_timestamp
+
 
 !--- scaling options
 integer(kind=int1), parameter, public:: NO_SCALING = 0
@@ -176,14 +195,13 @@ contains
  character(len=100):: Time_Coverage_Resolution_String
  character(len=100):: Metadata_Link_String
  character(len=100):: Spatial_Resolution_String
- 
+
  include 'version.inc'
 
  !complete the creator string with the version number
  creator = trim(creator0)//trim(Product_Version_String)
 
-!--- create a time stamp
- call HDF_TSTAMP()
+
  call getenv ("HOST",machine)
  if (len_trim(machine) == 0) call getenv ("HOSTNAME",machine)
  if (len_trim(machine) == 0) machine = "unknown"
@@ -201,7 +219,7 @@ istatus = sfscatt(hdf_file_id, "MACHINE", DFNT_CHAR8, len_trim(machine), trim(ma
 istatus = sfscatt(hdf_file_id, "PROGLANG", DFNT_CHAR8, len_trim(plang), trim(plang))+istatus
 
 !--- CF compliant global attributes required for NCDC delivery
-istatus = sfscatt(hdf_file_id, "date_created", DFNT_CHAR8, len_trim(hdf_timestamp), trim(hdf_timestamp))+istatus
+istatus = sfscatt(hdf_file_id, "date_created", DFNT_CHAR8, len_trim(hdf_timestamp()), trim(hdf_timestamp()))+istatus
 istatus = sfscatt(hdf_file_id, "product_version", DFNT_CHAR8,  &
                                 len_trim(Product_Version_String), trim(Product_Version_String))+istatus
 istatus = sfscatt(hdf_file_id,"summary", DFNT_CHAR8,len_trim(Summary_String),trim(Summary_String)) + istatus
@@ -310,6 +328,18 @@ if (istatus /= 0) then
   stop 963
 endif
 
+contains
+function hdf_timestamp() result(string)
+   character (len = 36) ::string
+   character(len=10), dimension(3):: ctime
+
+   call date_and_time(ctime(1), ctime(2), ctime(3))
+   ! Timestamp string format in accordance with the ISO-8601 standard.
+   string = ctime(1)(1:4)//"-"//ctime(1)(5:6)//"-"//ctime(1)(7:8)&
+                //"T"//ctime(2)(1:2)//":"//ctime(2)(3:4)//":"//ctime(2)(5:6)&
+                //ctime(3)(1:3)//":"//ctime(3)(4:5)
+   return
+end function hdf_timestamp
  end subroutine WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES
 
 !------------------------------------------------------------------------------------------
@@ -1276,21 +1306,6 @@ if (scaled > 0) then
  endif
  
 end subroutine READ_CLAVRX_HDF4_SDS_RANK1
-
-!-----------------------------------------------------------------
-! create time stamp
-!----------------------------------------------------------------
-subroutine HDF_TSTAMP()
-
-character(len=10), dimension(3):: ctime
-
-call date_and_time(ctime(1), ctime(2), ctime(3))
-! Timestamp string format in accordance with the ISO-8601 standard.
-hdf_timestamp = ctime(1)(1:4)//"-"//ctime(1)(5:6)//"-"//ctime(1)(7:8)&
-                //"T"//ctime(2)(1:2)//":"//ctime(2)(3:4)//":"//ctime(2)(5:6)&
-                //ctime(3)(1:3)//":"//ctime(3)(4:5)
-
-end subroutine HDF_TSTAMP
 
 
 

@@ -156,9 +156,6 @@
    !***********************************************************************
    ! Marker: DECLARE VARIABLES
    !***********************************************************************
-   integer(kind=int4), parameter:: nmask_clavr = 5
-   integer(kind=int4):: Nword_Clavr
-   integer(kind=int4):: Nword_Clavr_Start
    integer(kind=int4):: Nrec_Avhrr_Header
    integer(kind=int4):: Ifile    
    integer(kind=int4):: File_List_Lun                 !logical unit number for File_list
@@ -257,7 +254,9 @@
    
    !--- mapping of modis channels to emissivity data-base (Emiss_Chan_Idx are ABI channels)
                                                             !20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38
-   integer, dimension(20:38), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16,8,13/)     !Check this
+   integer, dimension(20:45), parameter:: Emiss_Chan_Idx = (/ 7, 7, 7, 7, 7, 7, 0, 9,10,11,12,14,15,16,16,16,16, 8,13, &
+                                                            !39,40,41,42,43,44,45
+                                                              0, 0, 0, 7, 14, 0,16/)     !Check this
    integer:: Chan_Idx
    
    
@@ -290,8 +289,12 @@
    !*************************************************************************
    ! Marker: Read and Quality Check User Defined Options
    !*************************************************************************
- 
+
    call SETUP_USER_DEFINED_OPTIONS()
+
+
+   !--- make directory for temporary files created during this run
+   call system("mkdir "//trim(Temporary_Data_Dir))
 
    !*************************************************************************
    ! Marker: Open high spatial resolution ancillary data files
@@ -415,7 +418,10 @@
       ! for AVHRR, determine file type and some record lengths
       ! AVHRR Header is read here
       !-----------------------------------------------------------------------
-      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name,AREAstr,Nrec_Avhrr_Header,Nword_Clavr,Nword_Clavr_Start,Ierror) 
+      call  SET_FILE_DIMENSIONS(Image%Level1b_Full_Name &
+               ,AREAstr &
+               ,Nrec_Avhrr_Header &
+               ,Ierror) 
  
       if (Ierror == sym%YES) then
          print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
@@ -427,17 +433,13 @@
          cycle file_loop    
       end if
   
-      !-----------------------------------------------------------------------
-      !--- Compute the time stamp for use in all generated HDF output files
-      !  AW-2014-12-22 Why now? Why here?
-      !-----------------------------------------------------------------------
-      call HDF_TSTAMP()
+    
       !-----------------------------------------------------------------------
       !--- set up pixel level arrays (size depends on sensor)
       !-----------------------------------------------------------------------
       !--- determine segment size here
       Line_Idx_Min_Segment = 1
-      Line_Idx_Max_Segment = Image%Number_Of_Lines_Per_Segment
+      Line_Idx_Max_Segment = Image % Number_Of_Lines_Per_Segment
 
       !*************************************************************************
       ! Marker:  READ IN HEADER AND DETERMINE SOME CONSTANTS
@@ -455,7 +457,6 @@
       call OUTPUT_IMAGE_TO_SCREEN()
       call OUTPUT_PROCESSING_LIMITS_TO_SCREEN()
       
-
       !------------------------------------------------------------------
       ! Setup Solar-channel RTM terms for this particular sensor
       !------------------------------------------------------------------
@@ -692,12 +693,12 @@
          ! Apply spatial limits
          !------------------------------------------------------------------
          call EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
-
+  
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
          call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line)
-         
+        
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
@@ -756,7 +757,6 @@
                Num_Scans_Level2_Hdf = 0
 
                call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
-                              Dir_Rtm, &
                               Dir_Level2, &
                               Image%Level1b_Name, &
                               Rtm_File_Flag, &
@@ -840,7 +840,7 @@
 
             !--- post process dark composite if one read in
             if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
-               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite, Sfc%Land)
+               call POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark_Composite)
             endif
 
             !--- check ancillary data and modify Bad_Pixel_Mask accordingly
@@ -1055,6 +1055,22 @@
 
             end if   !end of Cld_Flag check
 
+!================================================================================
+! TEST START
+!================================================================================
+!  Diag_Pix_Array_1 = 0 
+!  where(Beta_11um_85um_Tropo_Rtm < 1.1 .and. Beta_11um_12um_Tropo_Rtm > 0.95)
+!   Diag_Pix_Array_1 = 1 
+!  endwhere
+!  Diag_Pix_Array_2 = Beta_11um_85um_Tropo_Rtm 
+!  Diag_Pix_Array_3 = Beta_11um_12um_Tropo_Rtm 
+!Diag_Pix_Array_1 = Ref_Mean_ChI3
+!Diag_Pix_Array_2 = ch(6)%Ref_Toa
+!ch(6)%Ref_Toa = Ref_Mean_ChI3
+!===============================================================================
+! TEST END
+!================================================================================
+
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
@@ -1065,8 +1081,8 @@
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
-
                if (index(Sensor%Sensor_Name,'IFF') > 0) then
+
                   call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
                                     P_Std_Rtm,Cld_Mask, &
@@ -1074,8 +1090,7 @@
 
                   call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
 
-
-                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Cld_Type, Tc_Cirrus_Co2)
+                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
 
                endif
 
@@ -1116,7 +1131,7 @@
                
                if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
-                     call awg_cloud_nlcomp_algorithm (  Iseg_In=Segment_Number) 
+                     call AWG_CLOUD_NLCOMP_ALGORITHM (  Iseg_In=Segment_Number) 
                   end if   
                end if   
           
@@ -1311,7 +1326,7 @@
       !--- Deallocate memory from pixels arrays
       call DESTROY_PIXEL_ARRAYS()
 
-      !--- remove files in temporary directory
+      !--- remove files in temporary directory and then the directory
       if (Number_Of_Temporary_Files > 0) then 
          do Ifile = 1, Number_Of_Temporary_Files
             print *, EXE_PROMPT, "Removing Temporary File: ", trim(Temporary_File_Name(Ifile))
@@ -1382,6 +1397,9 @@
    if (Volcano_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Volcano_Mask_Id)
    if (Surface_Elev_Id > 0)  call CLOSE_LAND_SFC_HDF(Surface_Elev_Id)
    if (Snow_Mask_Id > 0)  call CLOSE_LAND_SFC_HDF(Snow_Mask_Id)
+
+   !--- remove directory for temporary files
+   call system("rmdir "//trim(Temporary_Data_Dir))
 
    !*************************************************************************
    ! Marker: Final remaining memory deallocation
@@ -1597,17 +1615,19 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
        !--- surface emissivity
        if (Use_Seebor == sym%YES) then
 
-           !--- force channel 20 read
+           !--- force channel 20 read used for desert definition
            call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(20), Nav%Lat, Nav%Lon, Space_Mask, ch(20)%Sfc_Emiss)
 
-           do Chan_Idx = 21, 38
-               if (Chan_Idx == 26) cycle
+           do Chan_Idx = 21, Nchan_Clavrx
+               if (ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE .and. &
+                   ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE) cycle
+
                if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
                  call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, Ch(Chan_Idx)%Sfc_Emiss)
                endif
+
            enddo
-           !--- set Ch45 13um pseudo Sfc_Emiss to Ch 33 Sfc_Emiss
-           if (Sensor%Chan_On_Flag_Default(45) == sym%YES) Ch(45)%Sfc_Emiss = Ch(33)%Sfc_Emiss
+
         end if
 
         !--- mandatory fields - check for substitution of Bad_Pixel for space 

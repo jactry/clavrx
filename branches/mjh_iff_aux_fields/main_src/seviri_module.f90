@@ -140,7 +140,6 @@ subroutine READ_MSG_INSTR_CONSTANTS(Instr_Const_file)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
   read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -155,16 +154,14 @@ end subroutine READ_MSG_INSTR_CONSTANTS
 ! public routine to read data from an AREA file for one segment into memory
 !-------------------------------------------------------------------------------
 subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
-                       Day_Of_Year, Image_Time_Ms, Time_Since_Launch, &
-                       AREAstr,NAVstr)
+                       Day_Of_Year, Image_Time_Ms, &
+                       AREAstr)
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
    TYPE (AREA_STRUCT), intent(in) :: AREAstr
-   TYPE (GVAR_NAV), intent(in)    :: NAVstr
    integer(kind=int2), intent(in):: Day_Of_Year
    integer(kind=int4), intent(in):: Image_Time_Ms
-   real(kind=real4), intent(in):: Time_Since_Launch
 
    character(len=120):: Channel_X_Filename
    character(len=120):: Channel_X_Filename_Full

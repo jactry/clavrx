@@ -294,7 +294,10 @@ contains
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
       read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22), planck_nu(22)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29), planck_nu(29)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(42), planck_a2(42), planck_nu(42)
@@ -303,7 +306,6 @@ contains
       read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
-      read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
       close(unit=Instr_Const_lun)
 
       !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
@@ -357,7 +359,6 @@ contains
       read(unit=Instr_Const_lun,fmt=*) planck_a1(24), planck_a2(24), planck_nu(24)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(23), planck_a2(23), planck_nu(23)
       read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
-      read(unit=Instr_Const_lun,fmt=*) b1_day_mask, b2_day_mask, b3_day_mask, b4_day_mask
       close(unit=Instr_Const_lun)
  
       !--- For psedo 13um Ch 45 use MODIS Ch 33 data 

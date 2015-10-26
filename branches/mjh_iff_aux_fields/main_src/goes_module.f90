@@ -294,7 +294,6 @@ subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt=*) goes_Ch4_Thermal_Slope,goes_Ch4_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch5_Thermal_Slope,goes_Ch5_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch6_Thermal_Slope,goes_Ch6_Thermal_Intercept
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -355,7 +354,6 @@ subroutine READ_GOES_SNDR_INSTR_CONSTANTS(Instr_Const_File)
   read(unit=Instr_Const_lun,fmt=*) goes_Ch16_Thermal_Slope,goes_Ch16_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch17_Thermal_Slope,goes_Ch17_Thermal_Intercept
   read(unit=Instr_Const_lun,fmt=*) goes_Ch18_Thermal_Slope,goes_Ch18_Thermal_Intercept
-  read(unit=Instr_Const_lun,fmt=*) b1_day_mask,b2_day_mask,b3_day_mask,b4_day_mask
   close(unit=Instr_Const_lun)
 
   !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
@@ -2556,7 +2554,7 @@ end subroutine GET_GOES_NAVIGATION
 ! POINTING VECTOR IN INSTRUMENT COORDINATES
       REAL*4 U(3)
 ! COORDINATES OF THE EARTH POINT (KM)
-      REAL*4 SA,CA,DA,DZ,D1,CZ,SZ,FF,DOFF,ALPHA,ZETA
+      REAL*4 SA,CA,DA,DZ,D1,CZ,FF,DOFF,ALPHA,ZETA
 ! WORK SPACE
 !
 ! INCLUDE FILES
@@ -3682,10 +3680,9 @@ end subroutine CALIBRATE_GOES_REFLECTANCE
 ! Land_Class_Local - local copy of global Land array.  (7 = Deep Ocean)
 ! N_Box = pixel radius of area to search for minimum
 !----------------------------------------------------------------------------------------------
-subroutine POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark, Land_Class_Local)
+subroutine POST_PROCESS_GOES_DARK_COMPOSITE(Ref_Ch1_Dark)
 
    real(kind=real4), dimension(:,:),  intent(inout):: Ref_Ch1_Dark
-   integer(kind=int1), dimension(:,:),  intent(in):: Land_Class_Local
    integer, parameter:: N_Box = 1
 !  integer, parameter:: N_Box = 5
    integer, parameter:: Land_Class_Allowed = 7

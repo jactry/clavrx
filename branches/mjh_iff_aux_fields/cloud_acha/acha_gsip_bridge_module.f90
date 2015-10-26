@@ -42,23 +42,20 @@ module ACHA_GSIP_BRIDGE_MOD
 
    !--- store integer values
    call SET_INPUT()
-   print *, "Height in done"
 
    !---- initalize Output structure
    call SET_OUTPUT()
-   print *, "Height out done"
   
    !----set symbols to local values
    call SET_SYMBOL()
 
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
-   !-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------   
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
                                     Symbol, &
                                     Output)
 
-   print *, "Height done"
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
    !-----------------------------------------------------------------------
@@ -252,6 +249,7 @@ module ACHA_GSIP_BRIDGE_MOD
    Output%Pc_H2O => gsip_pix_prod%r4_generic3
    Output%Tc_H2O => gsip_pix_prod%r4_generic3
    Output%Zc_H2O => gsip_pix_prod%r4_generic3
+   Output%Inversion_Flag => gsip_pix_prod%i1_generic1
  end subroutine SET_OUTPUT
 
  subroutine SET_INPUT()
@@ -332,12 +330,12 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Surface_Elevation => Zsfc
    Input%Cloud_Mask =>  gsip_pix_prod%cldmask
    Input%Cloud_Type => gsip_pix_prod%Cldtype
-   Input%Cloud_Probability => gsip_pix_prod%r4_generic1 ! not used in ACHA
+   Input%Cloud_Probability => gsip_pix_prod%cldprob
    
    Input%Surface_Emissivity_39um => sfc_emiss_7
 
-   Input%Elem_Idx_LRC_Input => I_LRC
-   Input%Line_Idx_LRC_Input =>  J_LRC
+   Input%Elem_Idx_LRC_Input => null()
+   Input%Line_Idx_LRC_Input =>  null()
    Input%Tc_Cirrus_Sounder =>  null()
  end subroutine SET_INPUT
 

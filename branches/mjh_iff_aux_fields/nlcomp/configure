@@ -16,20 +16,11 @@ my %opt = (
           );
 
 
-#my %opt = (
-#            hdflib => '/usr/local/hdf/lib',
-#            hdfinc => '/usr/local/hdf/include',
-#            hdf5root => '/usr/local/hdf5/',
-#            'with-lores-elev' => 0,
-#            help => 0,
-#          );
-
-
 # Parse the command line.
 my @sargv = @ARGV;
 GetOptions(
    \%opt,
-   'hdflib=s',
+   'hdf4root=s',
    'hdf5root=s',
    'with-xlf90:s',
    'with-ifort:s',
@@ -80,10 +71,13 @@ elsif ($fcs != 1)
     die "More than one compiler specified.\n";
 }
 
-# Check the HDF directory.
-$opt{hdflib} = abs_path($opt{hdflib}) if $opt{hdflib} =~ /^\./;
-$opt{hdflib} =~ s/^~/$ENV{HOME}/;
--d $opt{hdflib} or die "Doesn't exist or not a directory: $opt{hdflib}\n";
+# Check the HDF4 directory.
+if (exists($opt{'hdf4root'})) {
+    $opt{hdf4root} = abs_path($opt{hdf4root}) if $opt{hdf4root} =~ /^\./;
+    $opt{hdf4root} =~ s/^~/$ENV{HOME}/;
+    -d $opt{hdf4root} or die "Doesn't exist or not a directory: $opt{hdf4root}\n";
+}
+
 
 # Check the HDF5 directory.
 if (exists($opt{'hdf5root'})) {
@@ -100,7 +94,7 @@ if (exists($opt{'with-szip'}) and length($opt{'with-szip'}))
 }
 
 # Generate linker options for the HDF lib.
-my $hdflibs = "-L$opt{hdflib}"
+my $hdflibs = "-L$opt{hdf4root}/lib"
    . (exists($opt{'with-szip'})
       and length($opt{'with-szip'}) ? " -L$opt{'with-szip'}" : '')
    . " -lmfhdf -ldf -ljpeg"
@@ -166,15 +160,16 @@ else
    print CONFIG "fflags = $fc{xlf90}->{fflags}\n";
 }
 
-print CONFIG "hdflibs = $hdflibs\n";
+print CONFIG "hdf4root = $opt{hdf4root}\n";
+print CONFIG "hdflibs = -L$opt{hdf4root}/lib -lmfhdf -ldf -ljpeg -lz\n";
 
 if (exists($opt{'hdf5root'})) {
-    print CONFIG "hdf5libs = -I$opt{hdf5root}include/ -L$opt{hdf5root}lib/\n";
+    print CONFIG "hdf5libs = -I$opt{hdf5root}include/ -L$opt{hdf5root}lib\n";
     print CONFIG "hdf5links = -lhdf5_fortran -lhdf5 -lz\n";
  }
  
 if (exists($opt{'hdf5-default'})) {
-    print CONFIG "hdf5libs = -I/usr/local/hdf5/include/ -L/usr/local/hdf5/lib/\n";
+    print CONFIG "hdf5libs = -I/usr/local/hdf5/include/ -L/usr/local/hdf5/lib\n";
     print CONFIG "hdf5links = -lhdf5_fortran -lhdf5 -lz\n";
  }
 
@@ -213,17 +208,17 @@ Command line options:
          IBM AIX FORTRAN compiler will be used. A path to the executable is
          optional.
 
-   --hdflib=<directory>
-         Path to the directory where HDF library files are stored.
+   --hdf4root=<directory>
+         Path to the directory where HDF library and include files are stored.
          Default is /usr/local/hdf/lib.
 
-  --hdf5root=<directory>
+   --hdf5root=<directory>
          Path to the directory where HDF5 lib and include directories are.
          Default is /usr/local/hdf5/.
 
    --with-szip[=<directory>]
          Path to the SZIP library, if required by the HDF library. If
-         directory not given, the argument of '--hdflib' option used.
+         directory not given, the argument of '--hdf4root' option used.
 
    --help
          Display this help message.

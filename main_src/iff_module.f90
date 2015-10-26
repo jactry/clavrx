@@ -74,6 +74,7 @@ module IFF_MODULE
       integer(kind=int1) , dimension (:,:) , allocatable :: sounder_fov
       integer(kind=int2) , dimension (:,:) , allocatable :: sounder_x
       integer(kind=int2) , dimension (:,:) , allocatable :: sounder_y
+      integer(kind=int1) , dimension (:,:) , allocatable :: sounder_mask
    end type  geo_str
 
    type :: band_str
@@ -90,9 +91,6 @@ module IFF_MODULE
       real , dimension(:,:) , allocatable :: sndr_cld_temp ! MJH
       real , dimension(:,:) , allocatable :: sndr_cld_pres
       real , dimension(:,:) , allocatable :: sndr_cld_height 
-      integer , dimension(:,:) , allocatable :: sndr_mask 
-      integer , dimension(:,:) , allocatable :: sndr_ele_idx
-      integer , dimension(:,:) , allocatable :: sndr_line_idx 
    end type cloud_products_str
 
    type, public :: iff_data_out
@@ -194,8 +192,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
           , SPLIT_STRING &
           , REPLACE_CHAR_IN_STRG
 
-
-
       type ( iff_data_config ) , intent ( in ) :: config
       type ( iff_data_out ) , intent ( out ) :: out
       integer, intent(out) , optional :: error_out
@@ -244,9 +240,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       character (len=100) :: sndr_cld_temp_strg = 'SounderCloudTemperature' !MJH
       character (len=100) :: sndr_cld_pres_strg = 'SounderCloudPressure' 
       character (len=100) :: sndr_cld_height_strg = 'SounderCloudHeights' 
-      character (len=100) :: sndr_mask_strg = 'HirsMask' 
-      character (len=100) :: sndr_ele_idx_strg = 'SounderX' 
-      character (len=100) :: sndr_line_idx_strg = 'SounderY' 
       character (len = 150) :: setname_band
       character (len = 255) , pointer , dimension (:) :: file_arr_dummy
       character (len = 250) :: file_cld_mask
@@ -337,31 +330,11 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
           if (.not. allocated ( out % prd % sndr_cld_height ) ) allocate &
               ( out % prd % sndr_cld_height (dim_seg(1), dim_seg(2)) )
           out % prd % sndr_cld_height = r2d_buffer
-          ! hirs mask
-          Status = READ_HDF_SDS_INT8_2D(Id,TRIM(sndr_mask_strg),start_2d, &
-                      stride_2d,edge_2d,i2d_buffer_int1) + Status
-          if (.not. allocated ( out % prd % sndr_mask ) ) allocate &
-              ( out % prd % sndr_mask (dim_seg(1), dim_seg(2)) )
-          out % prd % sndr_mask = i2d_buffer_int1
-          ! element index in original hirs granule
-          Status = READ_HDF_SDS_INT16_2D(Id,TRIM(sndr_ele_idx_strg),start_2d, &
-                      stride_2d,edge_2d,i2d_buffer_int2) + Status
-          if (.not. allocated ( out % prd % sndr_ele_idx ) ) allocate &
-              ( out % prd % sndr_ele_idx (dim_seg(1), dim_seg(2)) )
-          out % prd % sndr_ele_idx = i2d_buffer_int2
-          ! line index in original hirs granule
-          Status = READ_HDF_SDS_INT16_2D(Id,TRIM(sndr_line_idx_strg),start_2d, &
-                      stride_2d,edge_2d,i2d_buffer_int2) + Status
-          if (.not. allocated ( out % prd % sndr_line_idx ) ) allocate &
-              ( out % prd % sndr_line_idx (dim_seg(1), dim_seg(2)) )
-          out % prd % sndr_line_idx = i2d_buffer_int2
       endif
 
       ! MJH Moved this out of geo loop 
       ! (it never gets allocated?? see https://software.intel.com/en-us/forums/topic/295774)
-      deallocate ( r2d_buffer )
-      deallocate ( i2d_buffer_int2 )
-      deallocate ( i2d_buffer_int1 )
+      if (allocated(r2d_buffer)) deallocate ( r2d_buffer )
 
       ! read scan time and convert to milliseconds
       Status = READ_HDF_SDS_FLOAT64_1D(Id,TRIM(setname_geo_list(7)),start_2d(2), &
@@ -646,6 +619,10 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          out % geo % sounder_fov = -128
       endwhere
 
+      !------------------------------------------------------------------
+      ! Read in SounderX
+      !------------------------------------------------------------------
+      i2d_16_buffer = -1
       setname_band = 'SounderX'
       Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
                   stride_2d,edge_2d,i2d_16_buffer) + Status
@@ -656,6 +633,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          out % geo % sounder_x = -32768
       endwhere
 
+      !------------------------------------------------------------------
+      ! Read in SounderY
+      !------------------------------------------------------------------
       i2d_16_buffer = -1
       setname_band = 'SounderY'
       Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
@@ -665,6 +645,22 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! change fill values to missing
       where(i2d_16_buffer .lt. 0)
          out % geo % sounder_y = -32768
+      endwhere
+
+      !------------------------------------------------------------------
+      ! Read in the Mask
+      !------------------------------------------------------------------
+      i2d_8_buffer = -1
+      setname_band = 'HirsMask'
+      Status = READ_HDF_SDS_INT8_2D(Id,TRIM(setname_band),start_2d, &
+                      stride_2d,edge_2d,i2d_8_buffer) + Status
+      if (.not. allocated ( out % geo % sounder_mask ) ) allocate &
+              ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
+      out % geo % sounder_mask = i2d_8_buffer
+
+      ! change fill values to missing
+      where(i2d_8_buffer .lt. 0)
+         out % geo % sounder_mask = -128
       endwhere
 
       ! --- dealocate variables
@@ -806,18 +802,15 @@ subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
    INTEGER :: end_sec
    INTEGER :: days_in_year
 
-!print*,'start'
 Status_Flag = 0
 
 !---- open file
 Sd_Id = sfstart(trim(Path)//trim(Infile), DFACC_read)
-!print*,sd_id,trim(Path)//trim(Infile), DFACC_read
 !--- determine attribute index                                                                                                 
 Sds_Id = sffattr(Sd_Id, "granule_start_time")
 
 !--- read start attribute
 Status_Flag = sfrcatt(Sd_Id, Sds_Id, Metadata_Temp) + Status_Flag
-!print*,sd_id,status_flag
 !0        1         2
 !12345678901234567890
 !2013-01-13 00:00:00
@@ -888,9 +881,6 @@ end subroutine READ_IFF_DATE_TIME
       if (allocated ( this%prd%sndr_cld_temp )) deallocate ( this%prd%sndr_cld_temp ) ! MJH
       if (allocated ( this%prd%sndr_cld_pres )) deallocate ( this%prd%sndr_cld_pres )
       if (allocated ( this%prd%sndr_cld_height )) deallocate ( this%prd%sndr_cld_height )
-      if (allocated ( this%prd%sndr_mask )) deallocate ( this%prd%sndr_mask )
-      if (allocated ( this%prd%sndr_ele_idx )) deallocate ( this%prd%sndr_ele_idx )
-      if (allocated ( this%prd%sndr_line_idx )) deallocate ( this%prd%sndr_line_idx )
 
       if (allocated ( this%geo%solzen )) deallocate ( this%geo%solzen )
       if (allocated ( this%geo%satzen )) deallocate ( this%geo%satzen )
@@ -903,6 +893,7 @@ end subroutine READ_IFF_DATE_TIME
       if (allocated ( this%geo%sounder_fov )) deallocate ( this%geo%sounder_fov )
       if (allocated ( this%geo%sounder_x )) deallocate ( this%geo%sounder_x )
       if (allocated ( this%geo%sounder_y )) deallocate ( this%geo%sounder_y )
+      if (allocated ( this%geo%sounder_mask )) deallocate ( this%geo%sounder_mask )
 
       do m = 1 , 37
         if (allocated (this%band (m) %ref )) deallocate ( this%band (m) %ref )
@@ -918,11 +909,9 @@ end subroutine READ_IFF_DATE_TIME
 
    subroutine dealloc_band_str ( this )
       class ( band_str ) :: this
-      print*,'band deallocation'
       if ( allocated (this%ref) ) deallocate (this%ref )
       if ( allocated (this%rad) ) deallocate (this%rad )
       if ( allocated (this%bt) ) deallocate (this%bt )
-      print*,'done'
    end subroutine dealloc_band_str
 
 !----------------------------------------------------------------------

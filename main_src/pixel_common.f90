@@ -203,6 +203,7 @@ module PIXEL_COMMON
   type :: navigation_definition
    integer (kind=int1), dimension(:), allocatable:: Ascend
    integer (kind=int1), dimension(:,:), allocatable:: Sounder_Fov
+   integer (kind=int1), dimension(:,:), allocatable:: Sounder_Fov_Mask
    integer (kind=int2), dimension(:,:), allocatable:: Sounder_X
    integer (kind=int2), dimension(:,:), allocatable:: Sounder_Y
    integer (kind=int2), dimension(:,:), allocatable:: Sounder_Fov_Segment_Idx
@@ -486,9 +487,6 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Temp 
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Pres
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Height 
-  integer (kind=int1), dimension(:,:), allocatable, public, save, target:: HIRS_Mask 
-  integer (kind=int2), dimension(:,:), allocatable, public, save, target:: HIRS_line_index 
-  integer (kind=int2), dimension(:,:), allocatable, public, save, target:: HIRS_ele_index 
    
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
@@ -1302,6 +1300,7 @@ subroutine CREATE_NAV_ARRAYS(dim1,dim2)
    allocate(Nav%Lon_Pc(dim1,dim2))
    if (index(Sensor%Sensor_Name,'IFF') > 0) then
      allocate(Nav%Sounder_Fov(dim1,dim2))
+     allocate(Nav%Sounder_Fov_Mask(dim1,dim2))
      allocate(Nav%Sounder_Fov_Segment_Idx(dim1,dim2))
      allocate(Nav%Sounder_X(dim1,dim2))
      allocate(Nav%Sounder_Y(dim1,dim2))
@@ -1310,6 +1309,7 @@ end subroutine CREATE_NAV_ARRAYS
 subroutine DESTROY_NAV_ARRAYS()
   if (allocated(Nav%Ascend)) deallocate(Nav%Ascend)
   if (allocated(Nav%Sounder_Fov)) deallocate(Nav%Sounder_Fov)
+  if (allocated(Nav%Sounder_Fov_Mask)) deallocate(Nav%Sounder_Fov_Mask)
   if (allocated(Nav%Sounder_Fov_Segment_Idx)) deallocate(Nav%Sounder_Fov_Segment_Idx)
   if (allocated(Nav%Sounder_X)) deallocate(Nav%Sounder_X)
   if (allocated(Nav%Sounder_Y)) deallocate(Nav%Sounder_Y)
@@ -1323,6 +1323,7 @@ end subroutine
 subroutine RESET_NAV_ARRAYS()
   if (allocated(Nav%Ascend)) Nav%Ascend = Missing_Value_Int1
   if (allocated(Nav%Sounder_Fov)) Nav%Sounder_Fov = Missing_Value_Int1
+  if (allocated(Nav%Sounder_Fov_Mask)) Nav%Sounder_Fov_Mask = Missing_Value_Int1
   if (allocated(Nav%Sounder_Fov_Segment_Idx)) Nav%Sounder_Fov_Segment_Idx = Missing_Value_Int2
   if (allocated(Nav%Sounder_X)) Nav%Sounder_X = Missing_Value_Int2
   if (allocated(Nav%Sounder_Y)) Nav%Sounder_Y = Missing_Value_Int2
@@ -1768,9 +1769,6 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(HIRS_Cld_Temp(dim1,dim2))
            allocate(HIRS_Cld_Pres(dim1,dim2))
            allocate(HIRS_Cld_Height(dim1,dim2))
-           allocate(HIRS_Mask(dim1,dim2))
-           allocate(HIRS_ele_index(dim1,dim2))
-           allocate(HIRS_line_index(dim1,dim2))
    endif
    if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
@@ -1854,9 +1852,6 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
           HIRS_Cld_Temp = Missing_Value_Real4 ! MJH
           HIRS_Cld_Pres = Missing_Value_Real4
           HIRS_Cld_Height = Missing_Value_Real4 
-          HIRS_Mask = Missing_Value_Int1
-          HIRS_line_index = Missing_Value_Int2
-          HIRS_ele_index = Missing_Value_Int2
       endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
@@ -1896,9 +1891,6 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(HIRS_Cld_Temp)) deallocate(HIRS_Cld_Temp) ! MJH
   if (allocated(HIRS_Cld_Pres)) deallocate(HIRS_Cld_Pres)
   if (allocated(HIRS_Cld_Height)) deallocate(HIRS_Cld_Height)
-  if (allocated(HIRS_Mask)) deallocate(HIRS_Mask)
-  if (allocated(HIRS_ele_index)) deallocate(HIRS_ele_index)
-  if (allocated(HIRS_line_index)) deallocate(HIRS_line_index)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 
 !------------------------------------------------------------------------------

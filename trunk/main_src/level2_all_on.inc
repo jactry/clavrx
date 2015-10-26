@@ -221,7 +221,7 @@
      Sds_Num_Level2_Hcld_Dcomp = 209,     Sds_Num_Level2_Hcld_Dcomp_Flag = 1, &
      Sds_Num_Level2_Cdnc_Dcomp = 210,     Sds_Num_Level2_Cdnc_Dcomp_Flag = 1, &
      Sds_Num_Level2_Bt375_Snd = 211,      Sds_Num_Level2_Bt375_Snd_Flag = 0, &
-     Sds_Num_Level2_Bt11_Snd = 212,       Sds_Num_Level2_Bt11_Snd_Flag = 1, &
+     Sds_Num_Level2_Bt11_Snd = 212,       Sds_Num_Level2_Bt11_Snd_Flag = 0, &
      Sds_Num_Level2_Bt12_Snd = 213,       Sds_Num_Level2_Bt12_Snd_Flag = 0, &
      Sds_Num_Level2_High_Cld = 214,       Sds_Num_Level2_High_Cld_Flag = 1, &
      Sds_Num_Level2_Mid_Cld = 215,        Sds_Num_Level2_Mid_Cld_Flag = 1, &
@@ -253,10 +253,4 @@
      Sds_Num_Level2_Ctp_Acha_Uncer = 241, Sds_Num_Level2_Ctp_Acha_Uncer_Flag = 1, &
      Sds_Num_Level2_Ch34_Clear = 242,     Sds_Num_Level2_Ch34_Clear_Flag = 1, &
      Sds_Num_Level2_Ch35_Clear = 243,     Sds_Num_Level2_Ch35_Clear_Flag = 1, &
-     Sds_Num_Level2_Ch36_Clear = 244,     Sds_Num_Level2_Ch36_Clear_Flag = 1, &
-     Sds_Num_Level2_HIRS_Cld_Temp = 245,  Sds_Num_Level2_HIRS_Cld_Temp_Flag = 1, &
-     Sds_Num_Level2_HIRS_Cld_Pres = 246,  Sds_Num_Level2_HIRS_Cld_Pres_Flag = 1, &
-     Sds_Num_Level2_HIRS_Cld_Height = 247,  Sds_Num_Level2_HIRS_Cld_Height_Flag = 1, &
-     Sds_Num_Level2_HIRS_Mask = 248,  Sds_Num_Level2_HIRS_Mask_Flag = 1, &
-     Sds_Num_Level2_HIRS_ele_index = 249,  Sds_Num_Level2_HIRS_ele_index_Flag = 1, &
-     Sds_Num_Level2_HIRS_line_index = 250,  Sds_Num_Level2_HIRS_line_index_Flag = 1
+     Sds_Num_Level2_Ch36_Clear = 244,     Sds_Num_Level2_Ch36_Clear_Flag = 1

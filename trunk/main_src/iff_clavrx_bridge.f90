@@ -50,10 +50,7 @@ module IFF_CLAVRX_BRIDGE
        , Bt_12um_Sounder &
        , HIRS_Cld_Temp &
        , HIRS_Cld_Pres &
-       , HIRS_Cld_Height &
-       , HIRS_Mask &
-       , HIRS_ele_index &
-       , HIRS_line_index
+       , HIRS_Cld_Height
    use CONSTANTS
    use IFF_MODULE
 
@@ -104,7 +101,6 @@ contains
       logical, dimension(37) :: is_band_on
       logical :: sounder_flag
 
-
       error_out = 0
       ! - modis ch to read
       modis_chn_list = [  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, &
@@ -149,9 +145,6 @@ contains
           HIRS_Cld_Temp(:,1:c_seg_lines) = out % prd % sndr_cld_temp
           HIRS_Cld_Pres(:,1:c_seg_lines) = out % prd % sndr_cld_pres
           HIRS_Cld_Height(:,1:c_seg_lines) = out % prd % sndr_cld_height
-          HIRS_Mask(:,1:c_seg_lines) = out % prd % sndr_mask
-          HIRS_ele_index(:,1:c_seg_lines) = out % prd % sndr_ele_idx
-          HIRS_line_index(:,1:c_seg_lines) = out % prd % sndr_line_idx
       endif
 
       ! - compute relative azimuth
@@ -251,6 +244,7 @@ contains
          Nav % Sounder_Fov(:,1:c_seg_lines) = out % geo % sounder_fov
          Nav % Sounder_X(:,1:c_seg_lines) = out % geo % sounder_x
          Nav % Sounder_Y(:,1:c_seg_lines) = out % geo % sounder_y
+         Nav % Sounder_Fov_Mask(:,1:c_seg_lines) = out % geo % sounder_mask
       endif
 
       ! --- check if we need to read cloud mask aux

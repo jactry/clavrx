@@ -42,7 +42,6 @@ module ACHA_GSIP_BRIDGE_MOD
 
    !--- store integer values
    call SET_INPUT()
-   print *, "Height in done"
 
    !---- initalize Output structure
    call SET_OUTPUT()
@@ -58,7 +57,6 @@ module ACHA_GSIP_BRIDGE_MOD
                                     Symbol, &
                                     Output)
 
-   print *, "Height done"
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
    !-----------------------------------------------------------------------

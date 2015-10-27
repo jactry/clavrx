@@ -55,7 +55,6 @@ private:: GET_GOES_NAVIGATION, &
           READ_IMGR_SIN, &
           READ_IMGR_MON, &
           FIX_VAR, &
-          FIX_VAR2, &
           LPOINT, &
           COMP_ES, &
           COMP_LP, &

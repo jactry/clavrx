@@ -54,7 +54,6 @@ private:: GET_GOES_NAVIGATION, &
           READ_IMGR_RP, &
           READ_IMGR_SIN, &
           READ_IMGR_MON, &
-          FIX_VAR, &
           LPOINT, &
           COMP_ES, &
           COMP_LP, &
@@ -1807,13 +1806,7 @@ end subroutine GET_GOES_NAVIGATION
         read (unit=1, rec = recnum) struct%ang_from_epoch
    end subroutine READ_IMGR_MON
 
-!-----------------------------------------------------------------------
-        subroutine FIX_VAR(var)
-        integer, intent(inout):: var
 
-        var=ishftc(ishftc(ishftc(var,-8,32),-8,24),-8,16)
-
-        end subroutine FIX_VAR
 !-----------------------------------------------------------------------
 
 !======================================================================

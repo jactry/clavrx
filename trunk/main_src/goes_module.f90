@@ -1816,13 +1816,7 @@ end subroutine GET_GOES_NAVIGATION
 
         end subroutine FIX_VAR
 !-----------------------------------------------------------------------
-        subroutine FIX_VAR2(var)
-!       integer(kind=int2), intent(inout):: var
-        integer*2, intent(inout):: var
 
-        var=ishftc(var,-8,16)
-
-        end subroutine FIX_VAR2
 !======================================================================
 ! BEGIN CIRA GOES IMAGER ROUTINES
 !======================================================================

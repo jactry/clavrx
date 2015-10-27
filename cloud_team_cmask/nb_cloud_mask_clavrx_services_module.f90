@@ -51,6 +51,7 @@
     integer:: Chan_On_I4_374um                                         !flag if I4 3.74um channel on (0=no,1=yes)
     integer:: Chan_On_I5_114um                                         !flag if I5 11.4um channel on (0=no,1=yes)
     integer:: Chan_On_DNB                                              !flag if DNB channel on (0=no,1=yes)
+    integer:: Use_Sounder_11um                                         !flag for IFF files where both imager and sounder 11um are available    
     integer(kind=int1), pointer:: Snow_Class                           !Snow Classification 
     integer(kind=int1), pointer:: Land_Class                           !Land Classification
     integer(kind=int1), pointer:: Oceanic_Glint_Mask                   !Mask of oceanic solar glint (0=no,1=yes)
@@ -82,7 +83,7 @@
     real(kind=real4), pointer:: Bt_67um                                !6.7 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_85um                                !8.5 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_11um                                !11 um toa brightness temperature (K)
-    real(kind=real4), pointer:: Bt_11um_Sounder_Br                     !11 um toa brightness temp from sounder (K) 
+    real(kind=real4), pointer:: Bt_11um_Sounder                        !11 um toa brightness temp from sounder (K) 
     real(kind=real4), pointer:: Bt_11um_Std                            !11 um toa brightness temp 3x3 Std Dev (K)
     real(kind=real4), pointer:: Bt_11um_Max                            !11 um toa brightness temp 3x3 Max (K)
     real(kind=real4), pointer:: Bt_11um_Clear                          !11 um toa brightness temperature (K)

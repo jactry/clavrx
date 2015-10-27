@@ -312,6 +312,7 @@ contains
       Input%Chan_On_I4_374um = Sensor%Chan_On_Flag_Default(42)
       Input%Chan_On_I5_114um = Sensor%Chan_On_Flag_Default(43)
       Input%Chan_On_DNB = Sensor%Chan_On_Flag_Default(44)
+      Input%Use_Sounder_11um = 0                        !note, off by default
       Input%Snow_Class => Sfc%Snow(i,j)
       Input%Land_Class => Sfc%Land(i,j)
       Input%Oceanic_Glint_Mask => Sfc%Glint_Mask(i,j)
@@ -364,7 +365,8 @@ contains
         endif
       endif
       if (AVHRR_IFF_Flag == 1)  then
-        Input%Bt_11um_Sounder_Br => Bt_11um_Sounder(i,j)
+        Input%Use_Sounder_11um = sym%YES
+        Input%Bt_11um_Sounder => Bt_11um_Sounder(i,j)
         Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
       endif
       if (Input%Chan_On_85um == sym%YES)  then 

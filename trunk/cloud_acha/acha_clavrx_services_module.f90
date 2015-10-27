@@ -44,6 +44,7 @@ module ACHA_SERVICES_MOD
        Zc_Opaque_Cloud, &
        Tc_H2O, &
        Pc_H2O, &
+       Zc_H2O, &
        Cloud_Fraction_3x3, &
        Low_Cloud_Fraction_3x3, &
        Mid_Cloud_Fraction_3x3, &

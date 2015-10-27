@@ -291,7 +291,7 @@ module ACHA_CLAVRX_BRIDGE
    Output%Zc_Opaque => Zc_Opaque_Cloud
    Output%Pc_H2O => Pc_H2O
    Output%Tc_H2O => Tc_H2O
-   Output%Zc_H2O => Tc_H2O
+   Output%Zc_H2O => Zc_H2O
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()

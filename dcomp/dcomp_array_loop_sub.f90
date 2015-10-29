@@ -39,7 +39,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real :: obs_unc(2)   = [-999.,-999.]
    real :: alb_vec(2)   = [-999.,-999.]
    real :: alb_unc(2)   = [-999.,-999.]
-	real :: trans_vec(2) = [-999.,-999.]
+   real :: trans_vec(2) = [-999.,-999.]
  
    real :: gas_coeff (3)
    
@@ -72,6 +72,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
    integer :: dim_1 
    integer :: dim_2
+   integer :: dim_1_w 
+   integer :: dim_2_w
       
    integer  :: array_dim (2)
    real     :: state_apriori (2)
@@ -497,8 +499,11 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    end where
    
    ! -DCOMP_INFO_PHASE
-   where ( .not. water_phase_array)
-      info_flag = ibset ( info_flag, 5)
+!ccm   where ( .not. water_phase_array)
+   dim_1_w = size(water_phase_array,1)
+   dim_2_w = size(water_phase_array,2)
+   where ( .not. water_phase_array(1:dim_1_w,1:dim_2_w))
+      info_flag(1:dim_1_w,1:dim_2_w) = ibset ( info_flag(1:dim_1_w,1:dim_2_w), 5)
    end where
    
    ! -DCOMP_INFO_THICK_CLOUD
@@ -532,17 +537,17 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    end where
    
    ! - compute lwp
-   where ( water_phase_array &              
-	            .and. .not. btest ( quality_flag , 1 )  &
-		         .and. .not. btest ( quality_flag , 2 ) )
-          output % lwp % d =  output % cod % d * output % cps % d * 5.0 / 9.0
+   where ( water_phase_array(1:dim_1_w,1:dim_2_w) &              
+	            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
+		         .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
+          output % lwp % d(1:dim_1_w,1:dim_2_w) =  output % cod % d(1:dim_1_w,1:dim_2_w) * output % cps % d(1:dim_1_w,1:dim_2_w) * 5.0 / 9.0
    end where
    
       ! - compute lwp
-   where ( .not. water_phase_array &              
-	            .and. .not. btest ( quality_flag , 1 )  &
-		         .and. .not. btest ( quality_flag , 2 ) )
-          output % iwp % d =  (output % cod % d  ** (1/0.84) ) / 0.065 
+   where ( .not. water_phase_array(1:dim_1_w,1:dim_2_w) &              
+	            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
+		         .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
+          output % iwp % d(1:dim_1_w,1:dim_2_w) =  (output % cod % d(1:dim_1_w,1:dim_2_w)  ** (1/0.84) ) / 0.065 
    end where
    
       

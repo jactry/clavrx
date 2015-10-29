@@ -98,8 +98,8 @@ module USER_OPTIONS
       , Dcomp_mode &
       , Avhrr_1_flag &
       , Read_Dark_Comp &
+      , Dark_Comp_Data_Dir &
       , Globsnow_Data_Dir
-      
       
    use CONSTANTS, only: &
       Sym &
@@ -300,6 +300,11 @@ contains
       read(unit=Default_Lun,fmt=*) Cld_Flag
       read(unit=Default_Lun,fmt=*) Image%Number_Of_Lines_Per_Segment
       read(unit=Default_Lun,fmt=*) Sasrab_Flag
+      Dark_Comp_Data_Dir=trim(Data_base_path)//'/dynamic/goes_dark_sky_composites/'
+      if ( Sasrab_Flag == 1 )  then
+          Read_Dark_Comp=1
+      end if 
+
       read(unit=Default_Lun,fmt=*) Nwp_Opt
      
       read(unit=Default_Lun,fmt=*) Rtm_Opt

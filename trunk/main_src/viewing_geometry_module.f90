@@ -329,7 +329,7 @@
    real, intent(out):: asol, phis
    real:: tsm, xlo, xla, xj, a1, a2, et, tsv, ah, a3, delta, amuzero, elev, &
          az, caz, azim, pi2
- ! real, parameter:: pi = 3.14159265,DTOR = pi / 180.0
+! real, parameter:: pi = 3.14159265,DTOR = pi / 180.0
 !
 ! solar position (zenithal angle asol, azimuthal angle phi
 ! in degrees

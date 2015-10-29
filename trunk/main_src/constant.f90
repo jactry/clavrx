@@ -256,7 +256,8 @@ module CONSTANTS
      
   END TYPE symbol_struct
 
-  character(len=4), parameter:: SOLAR_OBS_TYPE = "SOLAR"
+!ccm  character(len=4), parameter:: SOLAR_OBS_TYPE = "SOLAR"
+  character(len=5), parameter:: SOLAR_OBS_TYPE = "SOLAR"
   character(len=5), parameter:: LUNAR_OBS_TYPE = "LUNAR"
   character(len=5), parameter:: MIXED_OBS_TYPE = "MIXED"
   character(len=5), parameter:: THERMAL_OBS_TYPE = "THERM"

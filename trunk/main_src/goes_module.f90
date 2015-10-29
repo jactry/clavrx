@@ -210,7 +210,7 @@ end type AREA_STRUCT
           integer(kind=int4), dimension(672,4) :: MAP
           integer(kind=int4), dimension(25,25,4) :: JSMT
           character(len=1), dimension(3200) :: COBAT
-	  real(kind=real4), dimension(4) :: RESLIN,RESELM,RLIC,RELMFC,SENSSU, &
+          real(kind=real4), dimension(4) :: RESLIN,RESELM,RLIC,RELMFC,SENSSU, &
                                             RLINE,RELMNT
           real(kind=real4), dimension(3) :: VMIS
           real(kind=real4), dimension(8) :: RINF
@@ -218,7 +218,7 @@ end type AREA_STRUCT
           real(kind=real8) :: DSPIN,DTIMS,DSCT
           real(kind=real8), dimension(10,33) :: ATIT
           real(kind=real8), dimension(35,8) :: ORBT1
-		  real(kind=real4) :: sublon, sublat
+          real(kind=real4) :: sublon, sublat
 
           !--Needed for HRIT MTSAT
           real(KIND(0.0d0)) :: sub_lon
@@ -644,7 +644,6 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    !------------------------------------------------------------------------------
    call GET_GOES_NAVIGATION(Segment_Number, Image%Number_Of_Lines_Per_Segment,  &
                             Image%Number_Of_Lines_Read_This_Segment, NAVstr, AREAstr, Goes_Xstride)
-
    !--- scan number and time
    First_Line_In_Segment = (Segment_Number-1)*Image%Number_Of_Lines_Per_Segment
    do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
@@ -654,7 +653,6 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
            Scan_Time(Line_Idx) = Image_Time_MS + (Scan_Number(Line_Idx)-1) * Scan_Rate
          endif
    enddo
-
    !------------------------------------------------------------------------------
    ! Solar and Sensor Angles
    !------------------------------------------------------------------------------
@@ -665,7 +663,6 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
       Image_Time_Hours = Image_Time_MS
    endif
    Image_Time_Hours = Image_Time_Hours / 60.0 / 60.0 / 1000.0
-
    do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      do Elem_Idx = 1,Image%Number_Of_Elements
         call POSSOL(image_jday,image_Time_Hours, &
@@ -3217,7 +3214,7 @@ subroutine PRINT_PREFIX(buf, ms_Time)
 ! PRINT STATEMENT KEPT for verification
 !      write (6,6005) year,dayofyr,Hour,minute,sec,msec
 !6005  FORMAT ('time: year',i5,' day of year',i4,' hh:mm:ss ',i2,1h:,i2,1h:,i2,' msec',i4)
-
+!      read *
   !Calculate miliseconds since midnight of current day
    ms_Time = (((Hour * 60 * 60) + (minute * 60) + sec) * 1000) + msec
  
@@ -3238,6 +3235,7 @@ subroutine UNPKTIME (LDOC,ITIMES,LOC)
 
   integer mask1, mask2
   integer mask3
+
   logical lword
 !  logical*1 ldoc(256)
   logical*1, intent(in) :: ldoc(256)
@@ -3329,7 +3327,7 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     case default
          return
  end select
-
+ 
  Hour = AREAstr%Img_Time/10000
  Minute = (AREAstr%Img_Time - Hour*10000)/100
  Itime = Hour*100 + Minute
@@ -3357,24 +3355,21 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     write (Year_String,fmt="(I4.4)") year
     write (Jday_String,fmt="(I3.3)") doy
  
-    Dark_Composite_Name = trim(Goes_Name)//"_"//Year_String//"_"// &
-                           Jday_String//"_"//Time_String// &
-                           "_drk_ch1_pix.dat"
-
     Dark_Comp_Data_Dir_Temp = trim(Dark_Comp_Data_Dir) // &
                               trim(Goes_Name)//"/"//Year_String//"/"
-
+    print *, "Looking for dark sky composite files in "// &
+         trim(Dark_Comp_Data_Dir_Temp)
 
     !--- test for existence - assume uncompressed
     Dark_Composite_Name = trim(Goes_Name)//"_"//Year_String//"_"// &
                            Jday_String//"_"//Time_String// &
                            "_drk_ch1_pix.dat"
-
     Does_File_Exist = file_exists(trim(Dark_Comp_Data_Dir_Temp)// &
                                   trim(Dark_Composite_Name))
 
     !-- if found, exit loop
     if (Does_File_Exist .neqv. .false.) then
+        print *, 'Found: '//trim(Dark_Composite_Name)
         exit
     endif
 
@@ -3386,6 +3381,7 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
 
     !-- if found, exit loop
     if (Does_File_Exist .neqv. .false.) then
+        print *, 'Found: '//trim(Dark_Composite_Name)
         exit
     endif
 
@@ -3465,7 +3461,7 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
 
         if (Dark_Ext == ".gz") then
           System_String = "gunzip -c "//trim(Dark_Comp_Data_Dir_Temp)// &
-                        trim(Dark_Composite_Name)//".gz"// &
+                        trim(Dark_Composite_Name)// &
                         " > "//trim(Temporary_Data_Dir)//trim(Dark_Composite_Name)
           call system(System_String)
  

@@ -48,7 +48,7 @@ C
 C   Cdfrac   : cloud cover fraction (0-1)
 C   Cldref   : mean narrowband reflectance from cloudy pixels (0-1)
 C   Clrref   : mean narrowband reflectance from clear pixels (0-1)
-C   Cmpref   : narrowband reflectance from clear sky composite (0-1)
+C   Cmpref   : narrowband reflectance from clear(dark) sky composite (0-1)
 C   Glat     : latitude of center of grid (degrees)
 C                 range: -90.0 (south) - + 90.0 (north)
 C   Glint    : glint angle (degrees)
@@ -455,7 +455,7 @@ C
 
       RETURN
 
-20    WRITE (Unit16, FMT='(/,1X, 2A)' ) 'Error opening file: ',
+20    WRITE (*, FMT='(/,1X, 2A)' ) 'Error opening file: ',
      &  Trim( Flname )
       STOP
 
@@ -2213,7 +2213,7 @@ C
 50    WRITE (Unit16, FMT='(//,1X,A)')'MATALB--ERROR READING SRF ALBEDOS'
       STOP
 
-1000  WRITE (Unit16, FMT='(/,1X, 2A)' ) 'Error opening file: ', 
+1000  WRITE (*, FMT='(/,1X, 2A)' ) 'Error opening file: ', 
      $                                  Trim(Flname)
       STOP
 
@@ -3623,7 +3623,7 @@ C
      &  'Reftra--ERROR READING REF/TRAN TABLE(S)'
       STOP
 
-1000  WRITE (Unit16, FMT='(/,1X, 2A)' ) 'Error opening file: ', 
+1000  WRITE (*, FMT='(/,1X, 2A)' ) 'Error opening file: ', 
      &                                   Trim(Flname)
       STOP
 

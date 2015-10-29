@@ -981,8 +981,9 @@ subroutine tauwtr( ccs , ccl , xx , tau )
 
          ! assume background stored in last column of coeffecients
          yy = cc(nc,j)
-      
-         yy = yy + DOT_PRODUCT( cc(:,j), xx(:nc-1,j) )
+!ccm         yy = yy + DOT_PRODUCT( cc(:,j), xx(:nc-1,j) )
+         yy = yy + DOT_PRODUCT( cc(1:nc-1,j), xx(1:nc-1,j) )!not sure
+!end ccm
          od_sum=od_sum + max(yy,0.)
          if ( yy > 0. ) taulyr = exp ( -yy)
          tau ( j + 1) = tau ( j ) * taulyr   

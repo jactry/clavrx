@@ -96,7 +96,7 @@ module MODIS_MODULE
         private:: READ_MODIS_THERMAL_BAND
 
         integer(kind=int2), parameter, private:: fill_value = 32767
- 	real(kind=real4), parameter, private:: missing_value = -999.0
+        real(kind=real4), parameter, private:: missing_value = -999.0
         character(len=13), parameter:: MODULE_PROMPT="MODIS_MODULE:"
 
 contains

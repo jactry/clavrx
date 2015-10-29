@@ -47,6 +47,8 @@ include config.mk
 
 INC_DCOMP = -I$(DCOMP)
 fflags += $(INC_DCOMP)
+#ccm following line
+fflags0 += $(INC_DCOMP)
 
 fflags_clavr=
 
@@ -59,6 +61,8 @@ ifdef nlcomplibs
      fflags_clavr += -DNLCOMPLIBS
      INC_NLCOMP = -I$(NLCOMP)
       fflags += $(INC_NLCOMP)
+#ccm following line
+      fflags0 += $(INC_NLCOMP)
 endif
 
 #-----------------------------------------------------------------------------
@@ -161,7 +165,7 @@ clavrxorb_objs = process_clavrx.o \
                  coms_module.o \
                  dnb_retrievals_mod.o \
 		 dcomp_clavrx_bridge_mod.o \
-       		 dcomp_rtm_module.o \
+		 dcomp_rtm_module.o \
                  nlcomp_bridge_mod.o \
                  globsnow_read_routines.o \
 	         laszlo_insolation_module.o \
@@ -212,9 +216,8 @@ dcomp:
 	$(MAKE)  -C $(DCOMP) 
 	rm -fv $(DCOMP)libdcomp.a
 	ar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
-	
-	
-   
+
+
 nlcomp_module:
 ifdef nlcomplibs
 	$(MAKE)  -C $(NLCOMP)   
@@ -259,12 +262,13 @@ bindir:
 #instuctions
 
 oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o hdf.o num_mod.o
-	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90 
+	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90
 
 constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o
 avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_utility.o
 
+#acha & cloud base
 acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \
                      rtm_common.o constant.o planck.o rtm_common.o num_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_services_module.f90                    
@@ -357,6 +361,7 @@ strings.o:strings.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
 rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o calibration_constants.o
 
+#sensor
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
 viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clavrx_message_module.o viirs_read_mod.o
@@ -367,6 +372,8 @@ else
 sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
+
+#cloud t&m
 cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)   $(CTYPE)/cloud_type_bridge_module.f90
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
@@ -446,7 +453,7 @@ viirs_clavrx_bridge.mod viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 \
                constants.mod hdf.mod avhrr_module.mod file_utility.mod pixel_common.mod pixel_routines.mod  planck.mod
 	$(fc) -c $(fflags) ${hdf5libs} viirs_clavrx_bridge.f90 
 viirs_read_mod.mod viirs_read_mod.o: viirs_read_mod.f90
-            
+
 	$(fc) -c $(fflags) ${hdf5libs} viirs_read_mod.f90  
 endif
 

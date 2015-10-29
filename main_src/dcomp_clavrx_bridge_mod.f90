@@ -224,7 +224,10 @@ contains
       dcomp_input % cloud_temp % d  = acha % tc
       dcomp_input % tau_acha % d    = acha % tau
       dcomp_input % cloud_mask % d  = cld_mask
-      dcomp_input % cloud_type % d  = cld_type
+!ccm
+      dcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
+!end ccm
+!ccm      dcomp_input % cloud_type % d  = cld_type
                   
          ! - Flags
       dcomp_input % is_land % d = sfc % land_mask == 1 
@@ -268,20 +271,21 @@ contains
       call dcomp_array_loop ( dcomp_input , dcomp_output , debug_mode_user = debug_mode)
 
       ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
-      tau_dcomp (1:dim_1,1:dim_2)   = dcomp_output % cod % d
-      reff_dcomp  (1:dim_1,1:dim_2) = dcomp_output % cps % d
-      lwp_dcomp (1:dim_1,1:dim_2)   = dcomp_output % lwp % d
-      iwp_dcomp (1:dim_1,1:dim_2)   = dcomp_output % iwp % d
+!ccm
+      tau_dcomp (1:dim_1,1:dim_2)   = dcomp_output % cod % d(1:dim_1,1:dim_2)
+      reff_dcomp  (1:dim_1,1:dim_2) = dcomp_output % cps % d(1:dim_1,1:dim_2)
+      lwp_dcomp (1:dim_1,1:dim_2)   = dcomp_output % lwp % d(1:dim_1,1:dim_2)
+      iwp_dcomp (1:dim_1,1:dim_2)   = dcomp_output % iwp % d(1:dim_1,1:dim_2)
       
-      tau_dcomp_cost(1:dim_1,1:dim_2)     = dcomp_output % cod_unc % d
-      reff_dcomp_cost(1:dim_1,1:dim_2)    = dcomp_output % ref_unc % d
-      dcomp_quality_flag(1:dim_1,1:dim_2) = dcomp_output % quality % d
-      dcomp_info_flag(1:dim_1,1:dim_2)    = dcomp_output % info % d
+      tau_dcomp_cost(1:dim_1,1:dim_2)     = dcomp_output % cod_unc % d(1:dim_1,1:dim_2)
+      reff_dcomp_cost(1:dim_1,1:dim_2)    = dcomp_output % ref_unc % d(1:dim_1,1:dim_2)
+      dcomp_quality_flag(1:dim_1,1:dim_2) = dcomp_output % quality % d(1:dim_1,1:dim_2)
+      dcomp_info_flag(1:dim_1,1:dim_2)    = dcomp_output % info % d(1:dim_1,1:dim_2)
     !  
-      cloud_063um_transmission_solar(1:dim_1,1:dim_2) = dcomp_output % cld_trn_sol % d
-      cloud_063um_transmission_view(1:dim_1,1:dim_2)  = dcomp_output % cld_trn_obs % d
-      cloud_063um_albedo(1:dim_1,1:dim_2)             = dcomp_output % cld_alb % d
-      cloud_063um_spherical_albedo(1:dim_1,1:dim_2)   = dcomp_output % cld_sph_alb % d
+      cloud_063um_transmission_solar(1:dim_1,1:dim_2) = dcomp_output % cld_trn_sol % d(1:dim_1,1:dim_2)
+      cloud_063um_transmission_view(1:dim_1,1:dim_2)  = dcomp_output % cld_trn_obs % d(1:dim_1,1:dim_2)
+      cloud_063um_albedo(1:dim_1,1:dim_2)             = dcomp_output % cld_alb % d(1:dim_1,1:dim_2)
+      cloud_063um_spherical_albedo(1:dim_1,1:dim_2)   = dcomp_output % cld_sph_alb % d(1:dim_1,1:dim_2)
       
       DCOMP_RELEASE_VERSION = dcomp_output % version
 

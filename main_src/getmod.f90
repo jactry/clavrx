@@ -263,7 +263,7 @@ subroutine Getmod(Unit16, Unit1, &
       end if
    enddo
 
-   call Errmsg('GETMOD--ATMOSPHERIC MODEL NOT FOUND', .true.)
+   call Errmsg(Unit16, 'GETMOD--ATMOSPHERIC MODEL NOT FOUND', .true.)
 
   return
 

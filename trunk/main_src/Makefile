@@ -326,7 +326,7 @@ date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
 geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
-goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o constant.o file_utility.o avhrr_module.o
+goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o  file_utility.o avhrr_module.o
 Message_Handler.o: Message_Handler.f90 file_utility.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o

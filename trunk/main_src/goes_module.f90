@@ -26,9 +26,48 @@
 !  This code subject to US Govt Copyright Regulations
 !--------------------------------------------------------------------------------------
 module GOES_MODULE
-use CONSTANTS
-use PIXEL_COMMON
-use CALIBRATION_CONSTANTS
+
+use PIXEL_COMMON, only: &
+   CH1_COUNTS &
+   , image &
+   , ch &
+   , scan_time &
+   , nav &
+   , geo &
+   , sensor &
+   , temporary_file_name &
+   , temporary_data_dir &
+   , scan_number &
+   , space_mask &
+   , ileap &
+   , two_byte_temp &
+   , bad_pixel_mask &
+   , temp_pix_array_1 &
+   , sfc &
+   , ref_ch1_dark_composite &
+   , dark_composite_name &
+   , Goes_Scan_Line_Flag &
+   , dark_comp_data_dir &
+   , line_idx_min_segment &
+   , number_of_temporary_files &
+   , l1b_bzip2 &
+   , l1b_gzip
+   
+use CALIBRATION_CONSTANTS, only: &
+   planck_nu &
+   , planck_a1 &
+   , planck_a2 &
+   , sat_name &
+   , solar_ch20 &
+   , solar_ch20_nu &
+   , ew_ch20 &
+   , launch_date &
+   , ch1_dark_count &
+   , ch2_dark_count &
+   , ch1_gain_low_0 &
+   , ch1_degrad_low_1 &
+   , ch1_degrad_low_2
+   
 use PLANCK
 use NUMERICAL_ROUTINES
 use FILE_UTILITY
@@ -225,35 +264,38 @@ end type AREA_STRUCT
           integer(kind=int4) :: CFAC, LFAC, COFF, LOFF
 
         end type GVAR_NAV
-!
-!     Calibration table. 
-!    
-      type, public:: MC_IMGR_CAL_VIS_DET_T
-        integer(kind=int4), dimension(8) :: det
-      end type MC_IMGR_CAL_VIS_DET_T
-
-      type, public:: MC_IMGR_CAL_IR_DET_T
-        integer(kind=int4) :: det0
-        integer(kind=int4) :: det2
-        integer(kind=int4) :: det4
-        integer(kind=int4) :: det6
-      end type MC_IMGR_CAL_IR_DET_T
-
-      type, public:: MC_IMGR_CAL_ALL_IR_DET_T 
-        type(MC_IMGR_CAL_IR_DET_T):: PRI
-        type(MC_IMGR_CAL_IR_DET_T):: SEC
-      end type MC_IMGR_CAL_ALL_IR_DET_T
-
-      type, public:: CALIB_STRUCT
-          type(MC_IMGR_CAL_VIS_DET_T):: VIS_BIAS
-          type(MC_IMGR_CAL_VIS_DET_T):: VIS_GAIN1
-          type(MC_IMGR_CAL_VIS_DET_T):: VIS_GAIN2
-          integer(kind=int4) :: vis_albedo
-          type (MC_IMGR_CAL_ALL_IR_DET_T):: IR_SCL_BIAS
-          type (MC_IMGR_CAL_ALL_IR_DET_T):: IR_SCL_GAIN1
-          integer(kind=int4), dimension(8) :: unknown
-          integer(kind=int4), dimension(79) :: z
-      end type CALIB_STRUCT
+  
+      
+   real(kind=real4),save:: Goes_Ch2_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch3_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch4_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch5_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch6_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch7_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch8_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch9_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch10_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch12_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch13_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch14_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch16_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch17_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch18_Thermal_Intercept = 0.0
+   real(kind=real4),save:: Goes_Ch2_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch3_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch4_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch5_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch6_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch7_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch8_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch9_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch10_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch12_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch13_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch14_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch16_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch17_Thermal_Slope = 0.0
+   real(kind=real4),save:: Goes_Ch18_Thermal_Slope = 0.0
 
 contains
 
@@ -657,7 +699,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    ! Solar and Sensor Angles
    !------------------------------------------------------------------------------
    Image_jday = jday
-
+  
    Image_Time_Hours = real(sum(real(Scan_Time,kind=real8), Scan_Time > 0) / real(max(1,count(Scan_Time > 0)),kind=real8),kind=real4)
    if (Image_Time_Hours <= 0.0) then
       Image_Time_Hours = Image_Time_MS

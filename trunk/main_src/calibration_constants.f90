@@ -32,7 +32,10 @@
 !--------------------------------------------------------------------------------------
 module CALIBRATION_CONSTANTS
 
-  use CONSTANTS
+  use CONSTANTS, only: &
+  real4 & 
+  , real8 &
+  , nchan_clavrx
 
   implicit none
 
@@ -106,36 +109,7 @@ module CALIBRATION_CONSTANTS
  real(kind=real4),save,public:: Sun_Earth_Distance = 0.0
  real(kind=real4),save,public:: Launch_Date = 0.0
 
- real(kind=real4),save,public:: Goes_Ch2_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch3_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch4_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch5_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch6_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch7_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch8_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch9_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch10_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch12_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch13_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch14_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch16_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch17_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch18_Thermal_Intercept = 0.0
- real(kind=real4),save,public:: Goes_Ch2_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch3_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch4_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch5_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch6_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch7_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch8_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch9_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch10_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch12_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch13_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch14_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch16_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch17_Thermal_Slope = 0.0
- real(kind=real4),save,public:: Goes_Ch18_Thermal_Slope = 0.0
+
 
  real(kind=real8),save,public:: Goes_Input_Time = 0
  real(kind=real8),save,public:: Goes_Epoch_Time = 0

@@ -408,7 +408,7 @@ contains
       erstat = 0
       if (ios0 /= 0) then
          erstat = 19
-         print *, EXE_PROMPT, "Error opening VIIRS constants file, ios0 = ", ios0
+         print *,  " VIIRS_CLAVRX_BRIDGE.f90: Error opening VIIRS constants file, ios0 = ", ios0
          stop 19
       end if
 

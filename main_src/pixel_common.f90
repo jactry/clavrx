@@ -110,7 +110,24 @@
 !--------------------------------------------------------------------------------------
 module PIXEL_COMMON
 
-  use CONSTANTS
+  use CONSTANTS, only: &
+    real4 &
+  , real8 &
+  , int4 &
+  , int2 &
+  , int1 &
+  , THERMAL_OBS_TYPE &
+  , LUNAR_OBS_TYPE &
+  , SOLAR_OBS_TYPE &
+  , MIXED_OBS_TYPE &
+  , Missing_Value_Int2 &
+  , Missing_Value_Int4 &
+  , Missing_Value_Int1 &
+  , Missing_Value_Real4 &
+  , sym &
+  , nchan_clavrx &
+  , Max_Num_Cld_Test_Bytes
+  
   use CLAVRX_MESSAGE_MODULE, only: MESG, VERB_LEV
   implicit none
   private

@@ -118,6 +118,7 @@ module ACHA_CLAVRX_BRIDGE
      Input%Bt_133um =>  null()
      Input%Rad_67um =>  null()
      Input%Rad_11um =>  null()
+     Input%Rad_133um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
      Input%Sensor_Zenith_Angle =>  null()
      Input%Sensor_Azimuth_Angle =>  null()
@@ -187,9 +188,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
      Output%Zc_Opaque =>  null()
-     Output%Pc_H2O =>  null()
-     Output%Tc_H2O =>  null()
-     Output%Zc_H2O =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -289,9 +287,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Pc_Opaque => Pc_Opaque_Cloud
    Output%Tc_Opaque => Tc_Opaque_Cloud
    Output%Zc_Opaque => Zc_Opaque_Cloud
-   Output%Pc_H2O => Pc_H2O
-   Output%Tc_H2O => Tc_H2O
-   Output%Zc_H2O => Zc_H2O
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -318,6 +313,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Bt_12um => ch(32)%Bt_Toa
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
+   Input%Rad_133um => ch(33)%Rad_Toa
    Input%Cosine_Zenith_Angle => Geo%Coszen
    Input%Sensor_Zenith_Angle => Geo%Satzen
    Input%Sensor_Azimuth_Angle => Geo%Sataz
@@ -347,9 +343,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC
-   Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Co2
-
-
+   Input%Tc_Cirrus_Sounder =>  Tc_Cirrus_Background
 
    !-------------------------------------------------------------------
    ! handle use of ch45 instead of ch33 for MODE 9

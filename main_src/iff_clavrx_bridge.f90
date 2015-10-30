@@ -48,9 +48,9 @@ module IFF_CLAVRX_BRIDGE
        , Bt_375um_Sounder &
        , Bt_11um_Sounder &
        , Bt_12um_Sounder &
-       , HIRS_Cld_Temp &
-       , HIRS_Cld_Pres &
-       , HIRS_Cld_Height
+       , Cld_Temp_Sounder &
+       , Cld_Press_Sounder &
+       , Cld_Height_Sounder
    use CONSTANTS
    use IFF_MODULE
 
@@ -142,9 +142,9 @@ contains
 
       ! - MJH HIRS/AVHRR aux fields
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-          HIRS_Cld_Temp(:,1:c_seg_lines) = out % prd % sndr_cld_temp
-          HIRS_Cld_Pres(:,1:c_seg_lines) = out % prd % sndr_cld_pres
-          HIRS_Cld_Height(:,1:c_seg_lines) = out % prd % sndr_cld_height
+          Cld_Temp_Sounder(:,1:c_seg_lines) = out % prd % sndr_cld_temp
+          Cld_Press_Sounder(:,1:c_seg_lines) = out % prd % sndr_cld_pres
+          Cld_Height_Sounder(:,1:c_seg_lines) = out % prd % sndr_cld_height
       endif
 
       ! - compute relative azimuth

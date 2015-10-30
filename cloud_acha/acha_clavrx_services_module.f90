@@ -38,13 +38,10 @@ module ACHA_SERVICES_MOD
        Cld_Test_Vector_Packed, &
        Shadow_Mask, &
        Cloud_Fraction_Uncer_3x3, &
-       Tc_Cirrus_Co2, &
+       Tc_Cirrus_Background, &
        Tc_Opaque_Cloud, &
        Pc_Opaque_Cloud, &
        Zc_Opaque_Cloud, &
-       Tc_H2O, &
-       Pc_H2O, &
-       Zc_H2O, &
        Cloud_Fraction_3x3, &
        Low_Cloud_Fraction_3x3, &
        Mid_Cloud_Fraction_3x3, &
@@ -93,6 +90,7 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Bt_133um
  real, dimension(:,:), pointer:: Rad_67um
  real, dimension(:,:), pointer:: Rad_11um
+ real, dimension(:,:), pointer:: Rad_133um
  real, dimension(:,:), pointer:: Cosine_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
@@ -150,6 +148,7 @@ module ACHA_SERVICES_MOD
    real, dimension(:), pointer :: Atm_Trans_Prof_133um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_133um
 
    !-- NWP profiles
    real, dimension(:), pointer :: T_Prof
@@ -201,9 +200,6 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Pc_Opaque
    real, dimension(:,:), pointer:: Tc_Opaque
    real, dimension(:,:), pointer:: Zc_Opaque
-   real, dimension(:,:), pointer:: Pc_H2O
-   real, dimension(:,:), pointer:: Tc_H2O
-   real, dimension(:,:), pointer:: Zc_H2O
   end type acha_output_struct
   
 !Symbol stucture
@@ -375,9 +371,11 @@ end type acha_rtm_nwp_struct
       if (ACHA_Input%ACHA_Mode_Flag_In == 9) then
        Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(45)%Rad_Atm_Profile
        Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(45)%Trans_Atm_Profile
+       Acha_RTM_NWP%Black_Body_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(45)%Rad_BB_Cloud_Profile
       else
        Acha_RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_Atm_Profile
        Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
+       Acha_RTM_NWP%Black_Body_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_BB_Cloud_Profile
       endif
    endif
     

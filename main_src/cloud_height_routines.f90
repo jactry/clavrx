@@ -43,6 +43,9 @@ module CLOUD_HEIGHT_ROUTINES
   public::  SUPERCOOLED_CLOUD_PROBABILITY
   public::  MODIFY_CLOUD_TYPE_WITH_SOUNDER
   public::  COMPUTE_SOUNDER_MASK_SEGMENT
+  public::  SOUNDER_EMISSIVITY
+  public::  H2O_CLOUD_HEIGHT
+  public::  CO2IRW_CLOUD_HEIGHT
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -844,15 +847,79 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
 
 end subroutine CO2_SLICING_CLOUD_HEIGHT_NEW
 
+
+!-------------------------------------------------------------------------
+! Make Emissivity from Sounder Values
+!-------------------------------------------------------------------------
+subroutine SOUNDER_EMISSIVITY()
+ 
+  real:: R4_Dummy
+  integer:: Num_Elem
+  integer:: Num_Lines
+  integer:: Line_Idx
+  integer:: Elem_Idx
+  integer:: Lev_Idx
+  integer:: Nwp_Lon_Idx
+  integer:: Nwp_Lat_Idx
+  integer:: Vza_Rtm_Idx
+
+  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
+  if (.not. allocated(Cld_Press_Sounder)) return
+  if (.not. allocated(Cld_Emiss_Sounder)) return
+
+  Num_Elem = Image%Number_Of_Elements  
+  Num_Lines = Image%Number_Of_Lines_Per_Segment
+
+  !-------------------------------------------------------------------------
+  ! loop through and determine emissivity
+  !-------------------------------------------------------------------------
+  Line_Loop: do Line_Idx = 1, Num_Lines
+  Element_Loop: do Elem_Idx = 1, Num_Elem
+
+     !--- skip data without sounder data
+     if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Cld_Press_Sounder(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+     !--- indice aliases
+     Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+     Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+     Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+     if (Cld_Press_Sounder(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Vza_Rtm_Idx < 1) cycle
+     if (Nwp_Lat_Idx < 1) cycle
+     if (Nwp_Lon_Idx < 1) cycle
+
+     !--- compute temperature
+     call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+                                    Cld_Press_Sounder(Elem_Idx,Line_Idx), &
+                                    R4_Dummy, &
+                                    R4_Dummy, &
+                                    Lev_Idx)
+
+     !-- compute emissivity
+     if (Lev_Idx /= MISSING_VALUE_INT2) then
+        Cld_Emiss_Sounder(Elem_Idx,Line_Idx) = EMISSIVITY(ch(31)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                    ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile(Lev_Idx))
+     endif
+  enddo Element_Loop
+  enddo Line_Loop
+
+end subroutine SOUNDER_EMISSIVITY
+
+
 !-------------------------------------------------------------------------
 ! spatially interpolate
 !-------------------------------------------------------------------------
-subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
+subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2,  &
+                                         Tc_Cirrus_Background, Zc_Cirrus_Background)
 
   real, intent(in), dimension(:,:):: Tc_Co2
   real, intent(in), dimension(:,:):: Pc_Co2
   real, intent(in), dimension(:,:):: Ec_Co2
-  real, intent(out), dimension(:,:):: Tc_Cirrus_Co2
+  real, intent(out), dimension(:,:):: Tc_Cirrus_Background
+  real, intent(out), dimension(:,:):: Zc_Cirrus_Background
 
   integer:: Num_Elem
   integer:: Num_Lines
@@ -866,10 +933,14 @@ subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
   real (kind=real4), parameter:: EC_CIRRUS_MIN_THRESH = 0.2
   integer (kind=int4):: Box_Width
   real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
-  integer:: i1, i2, j1, j2
+  real:: P_Temporary, Z_Temporary
+  integer:: i1, i2, j1, j2, Lev_Idx, Ierr
+  integer:: Nwp_Lon_Idx, Nwp_Lat_Idx
+  real:: Z_Interp_Weight
 
   logical, dimension(:,:), allocatable:: Mask
-  real, dimension(:,:), allocatable:: Tc_Cirrus_Co2_Temp
+  real, dimension(:,:), allocatable:: Tc_Cirrus_Background_Temp
+  real, dimension(:,:), allocatable:: Zc_Cirrus_Background_Temp
 
   Num_Elem = Image%Number_Of_Elements
   Num_Lines = Image%Number_Of_Lines_Read_This_Segment
@@ -879,9 +950,11 @@ subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
 
   !--- allocate temporary arrays needed here
   allocate(Mask(Num_Elem,Num_Lines))
-  allocate(Tc_Cirrus_Co2_Temp(Num_Elem,Num_Lines))
+  allocate(Tc_Cirrus_Background_Temp(Num_Elem,Num_Lines))
+  allocate(Zc_Cirrus_Background_Temp(Num_Elem,Num_Lines))
 
-  Tc_Cirrus_Co2_Temp = Missing_Value_Real4
+  Tc_Cirrus_Background_Temp = Missing_Value_Real4
+  Zc_Cirrus_Background_Temp = Missing_Value_Real4
 
   Mask = .false.
 
@@ -909,17 +982,36 @@ subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
               Temperature_Temporary = Missing_Value_Real4
           endif
 
+          !---- interpolate for Zc
+          Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+          if (Nwp_Lon_Idx < 0) cycle
+          Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+          if (Nwp_Lat_Idx < 0) cycle
           if (Temperature_Temporary /= Missing_Value_Real4) then
-             Tc_Cirrus_Co2_Temp(i1:i2,j1:j2) = Temperature_Temporary
+               call KNOWING_T_COMPUTE_P_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx,P_Temporary, &
+                                      Temperature_Temporary,Z_Temporary, &
+                                      Lev_Idx,Elem_Idx,Line_Idx,Ierr,Z_Interp_Weight)
+          else
+              Z_Temporary = Missing_Value_Real4
+          endif
+
+          if (Temperature_Temporary /= Missing_Value_Real4) then
+             Tc_Cirrus_Background_Temp(i1:i2,j1:j2) = Temperature_Temporary
+          endif
+
+          if (Z_Temporary /= Missing_Value_Real4) then
+             Zc_Cirrus_Background_Temp(i1:i2,j1:j2) = Z_Temporary
           endif
 
       enddo Line_Loop
    enddo Element_Loop
 
-   Tc_Cirrus_Co2 = Tc_Cirrus_Co2_Temp
+   Tc_Cirrus_Background = Tc_Cirrus_Background_Temp
+   Zc_Cirrus_Background = Zc_Cirrus_Background_Temp
 
   if (allocated(Mask)) deallocate(Mask)
-  if (allocated(Tc_Cirrus_Co2_Temp)) deallocate(Tc_Cirrus_Co2_Temp)
+  if (allocated(Tc_Cirrus_Background_Temp)) deallocate(Tc_Cirrus_Background_Temp)
+  if (allocated(Zc_Cirrus_Background_Temp)) deallocate(Zc_Cirrus_Background_Temp)
 
 end subroutine MAKE_CIRRUS_PRIOR_TEMPERATURE
 
@@ -1043,7 +1135,240 @@ subroutine SINGLE_CO2_SLICING_CLOUD_HEIGHT(Chan_Idx_1, Chan_Idx_2, &
   deallocate(Pc_Lev_Idx)
 
 end subroutine  SINGLE_CO2_SLICING_CLOUD_HEIGHT
-!==================================================================================================
+!====================================================================
+! Function Name: H2O_CLOUD_HEIGHT
+!
+! Function: estimate the cloud temperature/height/pressure
+!
+! Description: Use the 11um and 6.7um obs and the RTM cloud BB profiles
+!              to perform h2o intercept on a pixel level. Filters
+!              restrict this to high clouds only
+!              
+! Dependencies: 
+!
+! Restrictions: 
+!
+! Reference: 
+!
+! Author: Andrew Heidinger, NOAA/NESDIS
+!
+!====================================================================
+subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
+                             Rad_11um_BB_Profile, &
+                             Rad_11um_Clear, &
+                             Rad_H2O, &
+                             Rad_H2O_BB_Profile,  &
+                             Rad_H2O_Clear,  &
+                             Tropo_Level, &
+                             Sfc_Level, &
+                             P_Prof, &
+                             T_Prof, &
+                             Z_Prof, &
+                             Pc,  &
+                             Tc,  &
+                             Zc)
+
+  real, intent(in):: Rad_11um
+  real, intent(in):: Rad_H2O
+  real, intent(in), dimension(:):: Rad_11um_BB_Profile
+  real, intent(in):: Rad_11um_Clear
+  real, intent(in):: Rad_H2O_Clear
+  real, intent(in), dimension(:):: Rad_H2O_BB_Profile
+  integer, intent(in):: Sfc_Level
+  integer, intent(in):: Tropo_Level
+  real, intent(in), dimension(:):: P_Prof
+  real, intent(in), dimension(:):: T_Prof
+  real, intent(in), dimension(:):: Z_Prof
+  real, intent(out) :: Pc
+  real, intent(out) :: Tc
+  real, intent(out) :: Zc
+
+  real:: Rad_H2O_BB_Prediction
+  real:: Slope
+  real:: Intercept
+  real:: Denominator
+  integer:: ilev
+  integer:: ilev_h2o
+
+  real, parameter:: Rad_11um_Thresh = 2.0
+  real, parameter:: Rad_H2O_Thresh = 0.20
+
+  !--- initialize
+  Pc = MISSING_VALUE_REAL4
+  Tc = MISSING_VALUE_REAL4
+  Zc = MISSING_VALUE_REAL4
+
+  !--- determine if a solution should be attempted
+  if (Rad_11um_Clear - Rad_11um < Rad_11um_Thresh) return
+  if (Rad_11um == MISSING_VALUE_REAL4) return
+  if (Rad_11um_Clear == MISSING_VALUE_REAL4) return
+
+  if (Rad_H2O_Clear - Rad_H2O < Rad_H2O_Thresh) return
+  if (Rad_H2O == MISSING_VALUE_REAL4) return
+  if (Rad_H2O_Clear == MISSING_VALUE_REAL4) return
+
+ !--- attempt a solution
+
+ !--- colder than tropo
+ if (Rad_11um < Rad_11um_BB_Profile(Tropo_Level)) then
+
+     ilev_h2o = Tropo_Level
+
+ else   !if not, attempt solution
+
+     !--- determine linear regress of h2o (y)  as a function of window (x)
+      Denominator =  Rad_11um - Rad_11um_Clear
+
+      if (Denominator < 0.0) then
+             Slope = (Rad_H2O - Rad_H2O_Clear) / (Denominator)
+             Intercept = Rad_H2O - Slope*Rad_11um
+      else
+            return
+      endif
+
+      !--- brute force solution
+      ilev_h2o = 0
+
+      do ilev = Tropo_Level+1, Sfc_Level
+          Rad_H2O_BB_Prediction = Slope*Rad_11um_BB_Profile(ilev) + Intercept
+
+          if (Rad_H2O_BB_Prediction < 0) cycle
+
+          if ((Rad_H2O_BB_Prediction > Rad_H2O_BB_Profile(ilev-1)) .and. &
+               (Rad_H2O_BB_Prediction <= Rad_H2O_BB_Profile(ilev))) then
+               ilev_h2o = ilev
+               exit
+          endif
+
+      enddo
+
+ endif    !tropopause check
+
+ !--- adjust back to full Rtm profile indices
+ if (ilev_h2o > 0) then
+       Pc = P_Prof(ilev_h2o)
+       Tc = T_Prof(ilev_h2o)
+       Zc = Z_Prof(ilev_h2o)
+ endif
+
+end subroutine H2O_CLOUD_HEIGHT
+!====================================================================
+! Function Name: CO2IRW_CLOUD_HEIGHT
+!
+! Function: estimate the cloud temperature/height/pressure
+!
+! Description: Use the 11um and 13.3um obs and the RTM cloud BB profiles
+!              to perform co2 slicing on a pixel level. Filters
+!              restrict this to high clouds only
+!              
+! Dependencies: 
+!
+! Restrictions: 
+!
+! Reference: 
+!
+! Author: Andrew Heidinger, NOAA/NESDIS
+!
+!====================================================================
+subroutine  CO2IRW_CLOUD_HEIGHT(Rad_11um, &
+                             Rad_11um_BB_Profile, &
+                             Rad_11um_Clear, &
+                             Rad_CO2, &
+                             Rad_CO2_BB_Profile,  &
+                             Rad_CO2_Clear,  &
+                             Tropo_Level, &
+                             Sfc_Level, &
+                             P_Prof, &
+                             T_Prof, &
+                             Z_Prof, &
+                             Pc,  &
+                             Tc,  &
+                             Zc)
+
+  real, intent(in):: Rad_11um
+  real, intent(in):: Rad_CO2
+  real, intent(in), dimension(:):: Rad_11um_BB_Profile
+  real, intent(in):: Rad_11um_Clear
+  real, intent(in):: Rad_CO2_Clear
+  real, intent(in), dimension(:):: Rad_CO2_BB_Profile
+  integer, intent(in):: Sfc_Level
+  integer, intent(in):: Tropo_Level
+  real, intent(in), dimension(:):: P_Prof
+  real, intent(in), dimension(:):: T_Prof
+  real, intent(in), dimension(:):: Z_Prof
+  real, intent(out) :: Pc
+  real, intent(out) :: Tc
+  real, intent(out) :: Zc
+
+  real:: Rad_CO2_BB_Prediction
+  real:: Slope
+  real:: Intercept
+  real:: Denominator
+  integer:: ilev
+  integer:: ilev_co2
+
+  real, parameter:: Rad_11um_Thresh = 2.0
+  real, parameter:: Rad_CO2_Thresh = 2.0
+
+  !--- initialize
+  Pc = MISSING_VALUE_REAL4
+  Tc = MISSING_VALUE_REAL4
+  Zc = MISSING_VALUE_REAL4
+
+  !--- determine if a solution should be attempted
+  if (Rad_11um_Clear - Rad_11um < Rad_11um_Thresh) return
+  if (Rad_11um == MISSING_VALUE_REAL4) return
+  if (Rad_11um_Clear == MISSING_VALUE_REAL4) return
+
+  if (Rad_CO2_Clear - Rad_CO2 < Rad_CO2_Thresh) return
+  if (Rad_CO2 == MISSING_VALUE_REAL4) return
+  if (Rad_CO2_Clear == MISSING_VALUE_REAL4) return
+
+ !--- attempt a solution
+
+ !--- colder than tropo
+ if (Rad_11um < Rad_11um_BB_Profile(Tropo_Level)) then
+
+     ilev_co2 = Tropo_Level
+
+ else   !if not, attempt solution
+
+     !--- determine linear regress of co2 (y)  as a function of window (x)
+      Denominator =  Rad_11um - Rad_11um_Clear
+
+      if (Denominator < 0.0) then
+             Slope = (Rad_CO2 - Rad_CO2_Clear) / (Denominator)
+             Intercept = Rad_CO2 - Slope*Rad_11um
+      else
+            return
+      endif
+
+      !--- brute force solution
+      ilev_co2 = 0
+
+      do ilev = Tropo_Level+1, Sfc_Level
+          Rad_CO2_BB_Prediction = Slope*Rad_11um_BB_Profile(ilev) + Intercept
+
+          if (Rad_CO2_BB_Prediction < 0) cycle
+
+          if ((Rad_CO2_BB_Prediction > Rad_CO2_BB_Profile(ilev-1)) .and. &
+               (Rad_CO2_BB_Prediction <= Rad_CO2_BB_Profile(ilev))) then
+               ilev_co2 = ilev
+               exit
+          endif
+
+      enddo
+
+ endif    !tropopause check
+
+ !--- adjust back to full Rtm profile indices
+ if (ilev_co2 > 0) then
+       Pc = P_Prof(ilev_co2)
+       Tc = T_Prof(ilev_co2)
+       Zc = Z_Prof(ilev_co2)
+ endif
+
+end subroutine CO2IRW_CLOUD_HEIGHT
 !==================================================================================================
 !
 !==================================================================================================

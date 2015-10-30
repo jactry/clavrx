@@ -501,9 +501,10 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_12um_Sounder
 
   !--- MJH HIRS/AVHRR aux fields
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Temp 
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Pres
-  real (kind=real4), dimension(:,:), allocatable, public, save, target:: HIRS_Cld_Height 
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cld_Temp_Sounder 
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cld_Press_Sounder
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cld_Height_Sounder 
+  real (kind=real4), dimension(:,:), allocatable, public, save, target:: Cld_Emiss_Sounder 
    
   !--- calibrated observations
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Ref_ChI1
@@ -646,6 +647,9 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_H2O
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_H2O
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zclr_H2O_Peak
+     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_CO2IRW
+     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_CO2IRW
+     real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_CO2IRW
 
      !-- DCOMP cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP
@@ -807,7 +811,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Co2
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Co2 
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Background 
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Background 
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
 
@@ -1783,9 +1788,10 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
    if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
            ! MJH HIRS/AVHRR aux fields.
            ! Does this belong in CREATE_EXTRA_CHANNEL_ARRAYS??
-           allocate(HIRS_Cld_Temp(dim1,dim2))
-           allocate(HIRS_Cld_Pres(dim1,dim2))
-           allocate(HIRS_Cld_Height(dim1,dim2))
+           allocate(Cld_Temp_Sounder(dim1,dim2))
+           allocate(Cld_Press_Sounder(dim1,dim2))
+           allocate(Cld_Height_Sounder(dim1,dim2))
+           allocate(Cld_Emiss_Sounder(dim1,dim2))
    endif
    if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
@@ -1866,9 +1872,10 @@ subroutine RESET_EXTRA_CHANNEL_ARRAYS()
           Bt_12um_Sounder = Missing_Value_Real4
       endif
       if (index(Sensor%Sensor_Name,'AVHRR-IFF') > 0) then
-          HIRS_Cld_Temp = Missing_Value_Real4 ! MJH
-          HIRS_Cld_Pres = Missing_Value_Real4
-          HIRS_Cld_Height = Missing_Value_Real4 
+          Cld_Temp_Sounder = Missing_Value_Real4 ! MJH
+          Cld_Press_Sounder = Missing_Value_Real4
+          Cld_Height_Sounder = Missing_Value_Real4 
+          Cld_Emiss_Sounder = Missing_Value_Real4 
       endif
 end subroutine RESET_EXTRA_CHANNEL_ARRAYS
 
@@ -1905,9 +1912,10 @@ subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
   if (allocated(Bt_375um_Sounder)) deallocate(Bt_375um_Sounder)
   if (allocated(Bt_11um_Sounder)) deallocate(Bt_11um_Sounder)
   if (allocated(Bt_12um_Sounder)) deallocate(Bt_12um_Sounder)
-  if (allocated(HIRS_Cld_Temp)) deallocate(HIRS_Cld_Temp) ! MJH
-  if (allocated(HIRS_Cld_Pres)) deallocate(HIRS_Cld_Pres)
-  if (allocated(HIRS_Cld_Height)) deallocate(HIRS_Cld_Height)
+  if (allocated(Cld_Temp_Sounder)) deallocate(Cld_Temp_Sounder) ! MJH
+  if (allocated(Cld_Press_Sounder)) deallocate(Cld_Press_Sounder)
+  if (allocated(Cld_Height_Sounder)) deallocate(Cld_Height_Sounder)
+  if (allocated(Cld_Emiss_Sounder)) deallocate(Cld_Emiss_Sounder)
 end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 
 !------------------------------------------------------------------------------
@@ -2598,6 +2606,9 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Tc_H2O(dim1,dim2))
     allocate(Zc_H2O(dim1,dim2))
     allocate(Zclr_H2O_Peak(dim1,dim2))
+    allocate(Zc_CO2IRW(dim1,dim2))
+    allocate(Pc_CO2IRW(dim1,dim2))
+    allocate(Tc_CO2IRW(dim1,dim2))
     allocate(Cloud_Fraction_3x3(dim1,dim2))
     allocate(Cloud_Fraction_Uncer_3x3(dim1,dim2))
     allocate(High_Cloud_Fraction_3x3(dim1,dim2))
@@ -2607,7 +2618,8 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Pc_Co2(dim1,dim2))
     allocate(Zc_Co2(dim1,dim2))
     allocate(Ec_Co2(dim1,dim2))
-    allocate(Tc_Cirrus_Co2(dim1,dim2))
+    allocate(Tc_Cirrus_Background(dim1,dim2))
+    allocate(Zc_Cirrus_Background(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
 subroutine RESET_CLOUD_PROD_ARRAYS()
@@ -2619,6 +2631,9 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Tc_H2O = Missing_Value_Real4
      Zc_H2O = Missing_Value_Real4
      Zclr_H2O_Peak = Missing_Value_Real4
+     Pc_CO2IRW = Missing_Value_Real4
+     Tc_CO2IRW = Missing_Value_Real4
+     Zc_CO2IRW = Missing_Value_Real4
      Cloud_Fraction_3x3 = Missing_Value_Real4
      Cloud_Fraction_Uncer_3x3 = Missing_Value_Real4
      High_Cloud_Fraction_3x3 = Missing_Value_Real4
@@ -2628,7 +2643,8 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Pc_Co2 = Missing_Value_Real4
      Zc_Co2 = Missing_Value_Real4
      Ec_Co2 = Missing_Value_Real4
-     Tc_Cirrus_Co2 = Missing_Value_Real4
+     Tc_Cirrus_Background = Missing_Value_Real4
+     Zc_Cirrus_Background = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
 subroutine DESTROY_CLOUD_PROD_ARRAYS()
@@ -2640,6 +2656,9 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Tc_H2O)
      deallocate(Zc_H2O)
      deallocate(Zclr_H2O_Peak)
+     deallocate(Zc_CO2IRW)
+     deallocate(Tc_CO2IRW)
+     deallocate(Pc_CO2IRW)
      deallocate(Cloud_Fraction_3x3)
      deallocate(Cloud_Fraction_Uncer_3x3)
      deallocate(High_Cloud_Fraction_3x3)
@@ -2649,7 +2668,8 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Pc_Co2)
      deallocate(Zc_Co2)
      deallocate(Ec_Co2)
-     deallocate(Tc_Cirrus_Co2)
+     deallocate(Tc_Cirrus_Background)
+     deallocate(Zc_Cirrus_Background)
   endif
 end subroutine DESTROY_CLOUD_PROD_ARRAYS
 !-----------------------------------------------------------

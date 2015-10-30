@@ -604,6 +604,10 @@ contains
       !--------------------------------------------------------------------------
       call COMPUTE_GAMMA_FACTOR()
 
+!################### TEST     
+!     Gamma_Trans_Factor = 0.7
+!################### TEST     
+
       Lon_Idx_Prev = 0
       Lat_Idx_Prev = 0
       Zen_Idx_Prev = 0
@@ -723,10 +727,6 @@ contains
                   !--------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
 
-               !     if (Chan_Idx < 20) cycle
-               !     if (Chan_Idx == 26) cycle
-               !     if (Chan_Idx == 44) cycle
-
                      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
                      if (ch(Chan_Idx)%Obs_Type == SOLAR_OBS_TYPE) cycle
                      if (ch(Chan_Idx)%Obs_Type == LUNAR_OBS_TYPE) cycle
@@ -734,8 +734,10 @@ contains
                 
                      Chan_Idx_For_Pfaast = Chan_Idx
                      if (Chan_Idx .eq. 45) Chan_Idx_For_Pfaast = 33
-                     Sc_Name_Rtm = sensor_name_for_rtm(sensor%wmo_id,sensor%sensor_name, chan_idx)
-                     
+                     Sc_Name_Rtm = SENSOR_NAME_FOR_RTM(sensor%wmo_id,sensor%sensor_name, Chan_Idx)
+                    
+!print *, 'Calling PFAAST ', Chan_Idx, Chan_Idx_For_Pfaast
+ 
                      CALL COMPUTE_TRANSMISSION_PFAAST( &
                            trim(Ancil_Data_Dir) &
                         ,  T_Prof_rtm &
@@ -1269,137 +1271,147 @@ contains
          Gamma_Trans_Factor(32) = 1.075
       end if
 
+      !--- NOAA-19 HIRS
+      if (Sensor%WMO_Id == 223) then
+         Gamma_Trans_Factor(27) = 0.9083
+         Gamma_Trans_Factor(28) = 0.9500
+         Gamma_Trans_Factor(33) = 1.1250
+         Gamma_Trans_Factor(34) = 1.0438
+         Gamma_Trans_Factor(35) = 1.0833
+         Gamma_Trans_Factor(36) = 1.0917
+      end if
+
    end subroutine COMPUTE_GAMMA_FACTOR
 
 
    !--------------------------------------------------------------------------------------------------
-   !> subroutine NAME: sensor_name_for_rtm
+   !> subroutine NAME: SENSOR_NAME_FOR_RTM
    !!
    !! Description:
    !! Knowing the WMO Satellite Identification Number
    !!
    !--------------------------------------------------------------------------------------------------
    
-   function sensor_name_for_rtm ( wmo_id, sensorname, chan_idx ) result ( sensor_name_rtm)
+   function SENSOR_NAME_FOR_RTM ( wmo_id, sensorname, Chan_Idx ) result ( Sensor_Name_Rtm)
       
       integer, intent(in) :: wmo_id
       character (len =*) , intent(in) :: sensorname
-      integer, intent(in) :: chan_idx
-      character (len =20 ) ::  sensor_name_rtm
+      integer, intent(in) :: Chan_Idx
+      character (len =20 ) ::  Sensor_Name_Rtm
       integer :: i
     
       select case(WMO_Id)
 
       case(4) !METOP-A
-         sensor_name_rtm = 'AVHRR-METOPA'
+         Sensor_Name_Rtm = 'AVHRR-METOPA'
 
       case(3) !METOP-B
-         sensor_name_rtm = 'AVHRR-METOPB'
+         Sensor_Name_Rtm = 'AVHRR-METOPB'
 
       case(5) !METOP-C
-        sensor_name_rtm = 'AVHRR-METOPC'
+        Sensor_Name_Rtm = 'AVHRR-METOPC'
 
       case(55) !MSG-8
-         sensor_name_rtm = 'SEVIRI-MSG08'
+         Sensor_Name_Rtm = 'SEVIRI-MSG08'
       
       case(56) !MSG-9
-         sensor_name_rtm = 'SEVIRI-MSG09'
+         Sensor_Name_Rtm = 'SEVIRI-MSG09'
       
       case(57) !MSG-10
-         sensor_name_rtm = 'SEVIRI-MSG10'
+         Sensor_Name_Rtm = 'SEVIRI-MSG10'
       
       case(171) !MTSAT-1R
-         sensor_name_rtm = 'MTSAT-1'
+         Sensor_Name_Rtm = 'MTSAT-1'
       
       case(172) !MTSAT-2
-         sensor_name_rtm = 'MTSAT-2'
+         Sensor_Name_Rtm = 'MTSAT-2'
          
       case(173) !AHI
-         sensor_name_rtm = 'AHI'
+         Sensor_Name_Rtm = 'AHI'
                
       case(200) !NOAA-8
-        sensor_name_rtm = 'AVHRR-NOAA08'
+        Sensor_Name_Rtm = 'AVHRR-NOAA08'
 
       case(201) !NOAA-9
-        sensor_name_rtm = 'AVHRR-NOAA09'
+        Sensor_Name_Rtm = 'AVHRR-NOAA09'
 
       case(202) !NOAA-10
-        sensor_name_rtm = 'AVHRR-NOAA10'
+        Sensor_Name_Rtm = 'AVHRR-NOAA10'
 
       case(203) !NOAA-11
-        sensor_name_rtm = 'AVHRR-NOAA11'
+        Sensor_Name_Rtm = 'AVHRR-NOAA11'
 
       case(204) !NOAA-12
-        sensor_name_rtm = 'AVHRR-NOAA12'
+        Sensor_Name_Rtm = 'AVHRR-NOAA12'
 
       case(205) !NOAA-14
-        sensor_name_rtm = 'AVHRR-NOAA14'
+        Sensor_Name_Rtm = 'AVHRR-NOAA14'
 
       case(206) !NOAA-15
-        sensor_name_rtm = 'AVHRR-NOAA15'
+        Sensor_Name_Rtm = 'AVHRR-NOAA15'
 
       case(207) !NOAA-16
-        sensor_name_rtm = 'AVHRR-NOAA16'
+        Sensor_Name_Rtm = 'AVHRR-NOAA16'
 
       case(208) !NOAA-17
-        sensor_name_rtm = 'AVHRR-NOAA17'
+        Sensor_Name_Rtm = 'AVHRR-NOAA17'
 
       case(209) !NOAA-18
-        sensor_name_rtm = 'AVHRR-NOAA18'
+        Sensor_Name_Rtm = 'AVHRR-NOAA18'
 
       case(223) !NOAA-19
-        sensor_name_rtm = 'AVHRR-NOAA19'
+        Sensor_Name_Rtm = 'AVHRR-NOAA19'
 
       case(224) !VIIRS - 
-        sensor_name_rtm = 'VIIRS'
+        Sensor_Name_Rtm = 'VIIRS'
 
       case(252) !GOES-8
-        sensor_name_rtm = 'GOES-8'
+        Sensor_Name_Rtm = 'GOES-8'
 
       case(253) !GOES-9
-        sensor_name_rtm = 'GOES-9'
+        Sensor_Name_Rtm = 'GOES-9'
 
       case(254) !GOES-10
-        sensor_name_rtm = 'GOES-10'
+        Sensor_Name_Rtm = 'GOES-10'
 
       case(255) !GOES-11
-        sensor_name_rtm = 'GOES-11'
+        Sensor_Name_Rtm = 'GOES-11'
 
       case(256) !GOES-12
-        sensor_name_rtm = 'GOES-12'
+        Sensor_Name_Rtm = 'GOES-12'
 
       case(257) !GOES-13
-        sensor_name_rtm = 'GOES-13'
+        Sensor_Name_Rtm = 'GOES-13'
 
       case(258) !GOES-14
-        sensor_name_rtm = 'GOES-14'
+        Sensor_Name_Rtm = 'GOES-14'
 
       case(259) !GOES-15
-        sensor_name_rtm = 'GOES-15'
+        Sensor_Name_Rtm = 'GOES-15'
 
       case(706) !NOAA-6
-        sensor_name_rtm = 'AVHRR-NOAA06'
+        Sensor_Name_Rtm = 'AVHRR-NOAA06'
 
       case(707) !NOAA-7
-        sensor_name_rtm = 'AVHRR-NOAA07'
+        Sensor_Name_Rtm = 'AVHRR-NOAA07'
 
       case(708) !NOAA-5
-        sensor_name_rtm = 'AVHRR-TIROSN'
+        Sensor_Name_Rtm = 'AVHRR-TIROSN'
 
       case(783) !MODIS 
-          sensor_name_rtm = 'MODIS-TERRA'
+          Sensor_Name_Rtm = 'MODIS-TERRA'
 
       case(784) !MODIS 
-         sensor_name_rtm = 'MODIS-AQUA'
+         Sensor_Name_Rtm = 'MODIS-AQUA'
 
       case(810) !COMS
-         sensor_name_rtm ='FY2-1'
+         Sensor_Name_Rtm ='FY2-1'
          
       case(514) !FY2D      
-         sensor_name_rtm ='FY2-2'
+         Sensor_Name_Rtm ='FY2-2'
          
       case(515) !FY2E          
-         sensor_name_rtm ='FY2-3'
+         Sensor_Name_Rtm ='FY2-3'
       
       case default
          print*,'sensor for WMO number not found in RT Utils  ', WMO_id  
@@ -1413,60 +1425,61 @@ contains
       if (trim ( Sensorname) == 'AVHRR-IFF') then
         
          !  sensor for channels 21:30 and 33:36 is HIRS
-         if ( any ( chan_idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) then
-            ! - for this IFF sensor_name_rtm is initially set to AVHRR-<Satellite>
+         if ( any ( Chan_Idx ==  [ (i,i=21,30,1) , 33,34,35,36] ) ) then
+
+            ! - for this IFF Sensor_Name_Rtm is initially set to AVHRR-<Satellite>
             select case(WMO_Id)
             
             case(4) !METOP-A
-               sensor_name_rtm = 'HIRS-METOPA'
+               Sensor_Name_Rtm = 'HIRS-METOPA'
 
             case(3) !METOP-B
-               sensor_name_rtm = 'HIRS-METOPB'
+               Sensor_Name_Rtm = 'HIRS-METOPB'
 
             case(5) !METOP-C
-               sensor_name_rtm = 'HIRS-METOPC'
+               Sensor_Name_Rtm = 'HIRS-METOPC'
             
             case(200) !NOAA-8
-               sensor_name_rtm = 'HIRS-NOAA08'
+               Sensor_Name_Rtm = 'HIRS-NOAA08'
 
             case(201) !NOAA-9
-               sensor_name_rtm = 'HIRS-NOAA09'
+               Sensor_Name_Rtm = 'HIRS-NOAA09'
 
             case(202) !NOAA-10
-               sensor_name_rtm = 'HIRS-NOAA10'
+               Sensor_Name_Rtm = 'HIRS-NOAA10'
 
             case(203) !NOAA-11
-               sensor_name_rtm = 'HIRS-NOAA11'
+               Sensor_Name_Rtm = 'HIRS-NOAA11'
 
             case(204) !NOAA-12
-               sensor_name_rtm = 'HIRS-NOAA12'
+               Sensor_Name_Rtm = 'HIRS-NOAA12'
 
             case(205) !NOAA-14
-               sensor_name_rtm = 'HIRS-NOAA14'
+               Sensor_Name_Rtm = 'HIRS-NOAA14'
 
             case(206) !NOAA-15
-               sensor_name_rtm = 'HIRS-NOAA15'
+               Sensor_Name_Rtm = 'HIRS-NOAA15'
 
             case(207) !NOAA-16
-               sensor_name_rtm = 'HIRS-NOAA16'
+               Sensor_Name_Rtm = 'HIRS-NOAA16'
 
             case(208) !NOAA-17
-               sensor_name_rtm = 'HIRS-NOAA17'
+               Sensor_Name_Rtm = 'HIRS-NOAA17'
 
             case(209) !NOAA-18
-               sensor_name_rtm = 'HIRS-NOAA18'
+               Sensor_Name_Rtm = 'HIRS-NOAA18'
 
             case(223) !NOAA-19
-               sensor_name_rtm = 'HIRS-NOAA19'
+               Sensor_Name_Rtm = 'HIRS-NOAA19'
             
             case(706) !NOAA-6
-               sensor_name_rtm = 'HIRS-NOAA06'
+               Sensor_Name_Rtm = 'HIRS-NOAA06'
 
             case(707) !NOAA-7
-               sensor_name_rtm = 'HIRS-NOAA07'
+               Sensor_Name_Rtm = 'HIRS-NOAA07'
 
             case(708) !NOAA-5
-               sensor_name_rtm = 'HIRS-TIROSN'
+               Sensor_Name_Rtm = 'HIRS-TIROSN'
             
             case default
                print*,'sensor for WMO number not found in RT Utils for AVHRR-IFF  ', WMO_id  
@@ -1482,12 +1495,12 @@ contains
       if (trim ( Sensorname) == 'VIIRS-IFF') then
          
          !  sensor for channels 27:28 and 33:36 is CRISP this is similar to MODIS-AQUA
-         if ( any ( chan_idx ==  [27,28, 33,34,35,36,45] ) ) sensor_name_rtm   = 'MODIS-AQUA'
+         if ( any ( Chan_Idx ==  [27,28, 33,34,35,36,45] ) ) Sensor_Name_Rtm   = 'MODIS-AQUA'
          
       end if
    
    
-   end function sensor_name_for_rtm 
+   end function SENSOR_NAME_FOR_RTM 
    
 
    !--------------------------------------------------------------------------------------------------
@@ -2369,6 +2382,7 @@ contains
       ! Solar-Only channels, 1,2,6,7,DNB(44)
       !--------------------------------------------------------------
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
+
          if (Ch(Chan_Idx)%Obs_Type /= SOLAR_OBS_TYPE .and. &
              Ch(Chan_Idx)%Obs_Type /= LUNAR_OBS_TYPE) cycle
          

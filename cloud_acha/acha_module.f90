@@ -95,7 +95,6 @@ module AWG_CLOUD_HEIGHT
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
   private:: NULL_PIX_POINTERS 
-  private:: H2O_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
 
@@ -706,27 +705,6 @@ module AWG_CLOUD_HEIGHT
                                 Output%Pc_Opaque(Elem_Idx,Line_Idx), &
                                 Output%Tc_Opaque(Elem_Idx,Line_Idx), &
                                 Output%Zc_Opaque(Elem_Idx,Line_Idx))
-
-   !-----------------------------------------------------------------------
-   !  find h2o cloud height
-   !-----------------------------------------------------------------------
-   if (Input%Chan_On_67um == symbol%YES) then
-       call H2O_CLOUD_HEIGHT ( &
-           Input%Rad_11um(Elem_Idx,Line_Idx), &
-           ACHA_RTM_NWP%Black_Body_Rad_Prof_11um, &
-           Input%Rad_Clear_11um(Elem_Idx,Line_Idx), &
-           Input%Rad_67um(Elem_Idx,Line_Idx), &
-           ACHA_RTM_NWP%Black_Body_Rad_Prof_67um, &
-           Input%Rad_Clear_67um(Elem_Idx,Line_Idx), &
-           Tropo_Level_RTM, &
-           Sfc_Level_RTM, &
-           Press_Prof_RTM, &
-           Temp_Prof_RTM, &
-           Hght_Prof_RTM, &
-           Output%Pc_H2O(Elem_Idx,Line_Idx), & 
-           Output%Tc_H2O(Elem_Idx,Line_Idx), & 
-           Output%Zc_H2O(Elem_Idx,Line_Idx) )
-  endif
 
   !-------------------------------------------------------------------
   ! Apply Opaque Retrieval for Acha_Mode_Flag = 1, then cycle
@@ -3767,130 +3745,6 @@ subroutine CHECK_ACHA_MODE( &
 
 end subroutine CHECK_ACHA_MODE
 
-!====================================================================
-! Function Name: H2O_CLOUD_HEIGHT
-!
-! Function: estimate the cloud temperature/height/pressure
-!
-! Description: Use the 11um and 6.7um obs and the RTM cloud BB profiles
-!              to perform h2o intercept on a pixel level. Filters
-!              restrict this to high clouds only
-!              
-! Dependencies: 
-!
-! Restrictions: 
-!
-! Reference: 
-!
-! Author: Andrew Heidinger, NOAA/NESDIS
-!
-!====================================================================
-subroutine  H2O_CLOUD_HEIGHT(Rad_11um, &
-                             Rad_11um_BB_Profile, &
-                             Rad_11um_Clear, &
-                             Rad_H2O, &
-                             Rad_H2O_BB_Profile,  &
-                             Rad_H2O_Clear,  &
-                             Tropo_Level, &
-                             Sfc_Level, &
-                             P_Prof, &
-                             T_Prof, &
-                             Z_Prof, &
-                             Pc,  &
-                             Tc,  &
-                             Zc)
-
-  real, intent(in):: Rad_11um
-  real, intent(in):: Rad_H2O
-  real, intent(in), dimension(:):: Rad_11um_BB_Profile
-  real, intent(in):: Rad_11um_Clear
-  real, intent(in):: Rad_H2O_Clear
-  real, intent(in), dimension(:):: Rad_H2O_BB_Profile
-  integer, intent(in):: Sfc_Level
-  integer, intent(in):: Tropo_Level
-  real, intent(in), dimension(:):: P_Prof
-  real, intent(in), dimension(:):: T_Prof
-  real, intent(in), dimension(:):: Z_Prof
-  real, intent(out) :: Pc
-  real, intent(out) :: Tc
-  real, intent(out) :: Zc
-
-  real:: Rad_H2O_BB_Prediction
-  real:: Slope
-  real:: Intercept
-  real:: Denominator
-  integer:: ilev
-  integer:: ilev_h2o
-
-  real, parameter:: Rad_11um_Thresh = 2.0
-  real, parameter:: Rad_H2O_Thresh = 0.20
-
-  !--- initialize
-  Pc = MISSING_VALUE_REAL4
-  Tc = MISSING_VALUE_REAL4
-  Zc = MISSING_VALUE_REAL4
-
-  !--- determine if a solution should be attempted
-  if (Rad_11um_Clear - Rad_11um < Rad_11um_Thresh) then
-      return
-  endif
-
-  if (Rad_H2O_Clear - Rad_H2O < Rad_H2O_Thresh) then
-      return
-  endif
-
- !--- attempt a solution
-
- !--- colder than tropo
- if (Rad_11um < Rad_11um_BB_Profile(Tropo_Level)) then
-
-     ilev_h2o = Tropo_Level
-
- else   !if not, attempt solution
-
-     !--- determine linear regress of h2o (y)  as a function of window (x)
-      Denominator =  Rad_11um - Rad_11um_Clear
-
-      if (Denominator < 0.0) then
-             Slope = (Rad_H2O - Rad_H2O_Clear) / (Denominator)
-             Intercept = Rad_H2O - Slope*Rad_11um
-      else
-            return
-      endif
-
-      !--- brute force solution
-      ilev_h2o = 0
-
-      do ilev = Tropo_Level+1, Sfc_Level
-          Rad_H2O_BB_Prediction = Slope*Rad_11um_BB_Profile(ilev) + Intercept
-
-          if (Rad_H2O_BB_Prediction < 0) cycle
-
-          if ((Rad_H2O_BB_Prediction > Rad_H2O_BB_Profile(ilev-1)) .and. &
-               (Rad_H2O_BB_Prediction <= Rad_H2O_BB_Profile(ilev))) then
-               ilev_h2o = ilev
-               exit
-          endif
-
-      enddo
-
- endif    !tropopause check
-
- !--- adjust back to full Rtm profile indices
- if (ilev_h2o > 0) then
-       Pc = P_Prof(ilev_h2o)
-       Tc = T_Prof(ilev_h2o)
-       Zc = Z_Prof(ilev_h2o)
-  endif
-
-  !--- Some negative cloud heights are observed because of bad height
-  !--- NWP profiles.
-  if (Zc > MISSING_VALUE_REAL4 .AND. Zc < 0) then
-    Zc = ZC_FLOOR
-  endif
-
-end subroutine H2O_CLOUD_HEIGHT
-
 !------------------------------------------------------------------------------
 ! Null Pixel Level Pointers 
 !------------------------------------------------------------------------------
@@ -4016,8 +3870,9 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
       enddo
    enddo   
 
-end subroutine COMPUTE_TEMPERATURE_CIRRUS
+   deallocate(Mask)
 
+end subroutine COMPUTE_TEMPERATURE_CIRRUS
 
 !--------------------------------------------------------------------------
 ! Determine processing order of pixels

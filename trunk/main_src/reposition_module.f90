@@ -412,6 +412,7 @@ module AVHRR_REPOSITION_ROUTINES
    integer:: day, year, hour, minute,  &
              start_month, end_month, start_dom, end_dom,ileap
    integer:: num
+   integer(kind=int4):: month, isecond
    real(kind=real4):: second
    real(kind=real4):: temp
    real(kind=real4):: orbit_start_mjdn
@@ -531,8 +532,9 @@ module AVHRR_REPOSITION_ROUTINES
     temp = (temp - hour)*60.0
     minute = int(temp)
     second = (temp - minute)*60.0
+    isecond=int(second)
     orbit_start_mjdn = &
-         real(DTMJDN(year,month,day,hour,minute,second),kind=real4) + &
+         real(DTMJDN(year,month,day,hour,minute,isecond),kind=real4) + &
          mjdn_offset
 
     !--- determine MJDN at end of orbit
@@ -544,10 +546,10 @@ module AVHRR_REPOSITION_ROUTINES
     temp = (temp - hour)*60.0
     minute = int(temp)
     second = (temp - minute)*60.0
+    isecond=int(second)
     orbit_end_mjdn =  &
-         real(DTMJDN(year,month,day,hour,minute,second),kind=real4) + &
+         real(DTMJDN(year,month,day,hour,minute,isecond),kind=real4) + &
          mjdn_offset
-
     orbit_mean_mjdn = 0.5*(orbit_start_mjdn + orbit_end_mjdn)
 
     !---- check to see if time is within the timespan of the clock
@@ -619,7 +621,7 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
    integer:: day, year, hour, minute,  &
              start_month, end_month, start_dom, end_dom,ileap
    integer (kind=int4):: Pixel_offset, Pixel_spacing, ipixel
-
+   integer(kind=int4):: month, isecond
    real (kind=real4), dimension(Image%Number_Of_Elements,j2):: lat_temp,lon_temp
    real (kind=real8), dimension(Image%Number_Of_Elements,j2):: Pixel_time_mjdn
    integer, dimension(j2):: valid_scan_number
@@ -692,7 +694,8 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
       second = (temp - minute)*60.0
 
 !--- determine MJDN of this scan
-      scan_time_mjdn(jj) = DTMJDN(year,month,day,hour,minute,second)
+      isecond=int(second)
+      scan_time_mjdn(jj) = DTMJDN(year,month,day,hour,minute,isecond)
 
       jj = jj + 1
 

@@ -3467,7 +3467,8 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    integer(kind=int2), dimension(:), allocatable, save:: Dark_Comp_Counts
 
    integer:: Elem_Idx
-   integer:: Temp_Idx 
+   integer:: Temp_Idx
+   integer:: dark_length
    character(len=200):: System_String
    character(len=200):: Dark_Name_Full
    character(len=3):: Dark_Ext
@@ -3495,23 +3496,24 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    !--- and compute the offsets between the image and the dark composite
    if (Segment_Number == 1) then 
 
-
+        dark_length=len_trim(Dark_Composite_Name)
         Dark_Name_Full = trim(Dark_Comp_Data_Dir_Temp)//trim(Dark_Composite_Name)
 
         !--- check for compressed files
-        Dark_Ext = Dark_Composite_Name(len_trim(Dark_Composite_Name)-2:len_trim(Dark_Composite_Name))
+        Dark_Ext = Dark_Composite_Name(dark_length-2:dark_length)
 
         if (Dark_Ext == ".gz") then
           System_String = "gunzip -c "//trim(Dark_Comp_Data_Dir_Temp)// &
-                        trim(Dark_Composite_Name)// &
-                        " > "//trim(Temporary_Data_Dir)//trim(Dark_Composite_Name)
+                        Dark_Composite_Name(1:dark_length)// &
+                        " > "//trim(Temporary_Data_Dir)// &
+                        Dark_Composite_Name(1:dark_length-3)
           call system(System_String)
  
+          !add its name to list of temp files for deletion at end
           Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-          Temporary_File_Name(Number_of_Temporary_Files) = trim(Dark_Composite_Name)
-
-          Dark_Name_Full = trim(Temporary_Data_Dir)//trim(Dark_Composite_Name)
-
+          Temporary_File_Name(Number_of_Temporary_Files) = Dark_Composite_Name(1:dark_length-3)
+          Dark_Name_Full = trim(Temporary_Data_Dir)// &
+               Dark_Composite_Name(1:dark_length-3)
         endif
 
         !--- open for header read
@@ -3654,11 +3656,6 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
       close(unit=Dark_Lun_Data)
       if (allocated(Dark_Comp_Counts_Temp)) deallocate(Dark_Comp_Counts_Temp)
       if (allocated(Dark_Comp_Counts)) deallocate(Dark_Comp_Counts)
-
-      !--- delete uncompressed file
-      System_String = "rm "//trim(Temporary_Data_Dir)//trim(Dark_Composite_Name)
-      call system(System_String)
-
    endif
 
 end subroutine READ_DARK_COMPOSITE_COUNTS

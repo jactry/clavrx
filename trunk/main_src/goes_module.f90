@@ -1622,7 +1622,7 @@ end subroutine READ_GOES_SNDR
  First_Byte_In_Segment = AREAstr%pri_key_nav + &
                          (First_Line_In_Segment - 1)*(bytes_per_line)
 
- Number_Of_Words_In_Segment = Words_Per_Line * Num_Lines_Per_Segment
+ Number_Of_Words_In_Segment = Words_Per_Line * (1+last_line_in_Segment-First_Line_In_Segment)
 
  allocate(Word_Buffer(Number_Of_Words_In_Segment), imgbuf(Number_Of_Words_In_Segment))
 

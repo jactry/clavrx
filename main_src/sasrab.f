@@ -384,6 +384,7 @@ C     .. Local Scalars ..
       INTEGER  Ilat, Ilon, Irec, Lat, Lon, Month1, Monthn, Nlat, Nlon,
      &         Nmonth, Nskip, Pmonth
       REAL  Clat1, Clatn, Clon1, Clonn, Dlat, Dlon, Length
+      INTEGER Get_Lun
       INTEGER Unit16, Unit2
 C     ..
 C     .. Local Arrays ..
@@ -1230,6 +1231,7 @@ C     .. Scalar Arguments ..
       INTEGER  Ilat, Ilon, Isatid, Isrmod, Isrtyp, Itable,
      &         Jday, Mxnfpr, Mxnh2o, Mxnint, Mxno3, Mxnsun, Mxntab,
      &         Mxntau, Mxnwvl, Nflux, Nintv, Ntaua, Ntauc, Nwlint
+      REAL Glint
       REAL  Cdfrac, Cldref, Clrref, Cmpref, Declin, Glat, Glon,
      &      Misval, Ozone, Pwater, Relaz, Satmu, Smu, Smumax, Smumin,
      &      Snowfr, Sundis, Taucld, Tauclm, Tauclr, Time
@@ -2102,6 +2104,8 @@ C     .. Local Scalars ..
       CHARACTER  Prvmon * 6, Flname * 10
       LOGICAL  Newmon
       INTEGER  I, J, Lu
+      INTEGER Imonth, Isrmod, Idummy
+      REAL Smuszn, Albref
       REAL  Albedo, Dnwflx, Sclfac, Upwflx
 C     ..
 C     .. Local Arrays ..

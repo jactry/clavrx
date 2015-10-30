@@ -1045,7 +1045,7 @@ subroutine DESTROY_NWP_ARRAYS
   real:: dp, dt, dz
 
 
-!--- interpolate pressure profile
+  !--- interpolate pressure profile
   call LOCATE(P_Std_Nwp,Nlevels_Nwp,P,Ilev)
   Ilev = max(1,min(Nlevels_Nwp-1,Ilev))
 
@@ -1053,7 +1053,7 @@ subroutine DESTROY_NWP_ARRAYS
   dt = T_Prof_Nwp(Ilev+1,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(Ilev,Lon_Nwp_Idx,Lat_Nwp_Idx)
   dz = Z_Prof_Nwp(Ilev+1,Lon_Nwp_Idx,Lat_Nwp_Idx) - Z_Prof_Nwp(Ilev,Lon_Nwp_Idx,Lat_Nwp_Idx)
 
-!--- perform interpolation
+  !--- perform interpolation
   if (dp /= 0.0) then
    T = T_Prof_Nwp(Ilev, Lon_Nwp_Idx, Lat_Nwp_Idx) + dt/dp * (P - P_Std_Nwp(Ilev))
    Z = Z_Prof_Nwp(Ilev, Lon_Nwp_Idx, Lat_Nwp_Idx) + dz/dp * (P - P_Std_Nwp(Ilev))
@@ -1061,6 +1061,7 @@ subroutine DESTROY_NWP_ARRAYS
    T = T_Prof_Nwp(Ilev, Lon_Nwp_Idx, Lat_Nwp_Idx) 
    Z = Z_Prof_Nwp(Ilev, Lon_Nwp_Idx, Lat_Nwp_Idx)
   endif
+
  end subroutine KNOWING_P_COMPUTE_T_Z_NWP
 
 !----------------------------------------------------------------------
@@ -1166,9 +1167,16 @@ subroutine DESTROY_NWP_ARRAYS
   real:: dp, dt, dz,z1,z2,t1,t2
   real,optional,intent(out):: z_interp_weight
 
-  ierr = sym%NO
+  ierr = sym%YES
   Z = Missing_Value_Real4
   P = Missing_Value_Real4
+
+  if (Lon_Nwp_Idx < 0) return
+  if (Lon_Nwp_Idx > Nlon_Nwp) return
+  if (Lat_Nwp_Idx < 0) return
+  if (Lat_Nwp_Idx > Nlat_Nwp) return
+
+  ierr = sym%NO
 
   !--- test for existence of a valid solution with troposphere
   kstart = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)

@@ -1055,22 +1055,6 @@
 
             end if   !end of Cld_Flag check
 
-!================================================================================
-! TEST START
-!================================================================================
-!  Diag_Pix_Array_1 = 0 
-!  where(Beta_11um_85um_Tropo_Rtm < 1.1 .and. Beta_11um_12um_Tropo_Rtm > 0.95)
-!   Diag_Pix_Array_1 = 1 
-!  endwhere
-!  Diag_Pix_Array_2 = Beta_11um_85um_Tropo_Rtm 
-!  Diag_Pix_Array_3 = Beta_11um_12um_Tropo_Rtm 
-!Diag_Pix_Array_1 = Ref_Mean_ChI3
-!Diag_Pix_Array_2 = ch(6)%Ref_Toa
-!ch(6)%Ref_Toa = Ref_Mean_ChI3
-!===============================================================================
-! TEST END
-!================================================================================
-
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
@@ -1083,14 +1067,25 @@
                !-------------------------------------------------------------------
                if (index(Sensor%Sensor_Name,'IFF') > 0) then
 
-                  call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    P_Std_Rtm,Cld_Mask, &
-                                    Pc_Co2,Tc_Co2,Zc_Co2)
+                  if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
 
-                  call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
+                      call SOUNDER_EMISSIVITY()
+                      call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Cld_Temp_Sounder, Cld_Emiss_Sounder, Cld_Type)
+                      call MAKE_CIRRUS_PRIOR_TEMPERATURE(Cld_Temp_Sounder, Cld_Press_Sounder, Cld_Emiss_Sounder,  &
+                                                         Tc_Cirrus_Background, Zc_Cirrus_Background) 
 
-                  call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2, Tc_Cirrus_Co2)
+                  else
+
+                    call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+                                     Image%Number_Of_Lines_Read_This_Segment, &
+                                     P_Std_Rtm,Cld_Mask, &
+                                     Pc_Co2,Tc_Co2,Zc_Co2)
+
+                    call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)
+
+                    call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2,  &
+                                                       Tc_Cirrus_Background, Zc_Cirrus_Background)
+                  endif
 
                endif
 

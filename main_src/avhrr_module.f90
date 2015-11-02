@@ -620,7 +620,8 @@ end subroutine DETERMINE_AVHRR_1
     !--- based on segment number, compute starting and ending record in level-1b
     !--- for this segment
     Irec_start = Nrec_Header + (Seg_Idx-1)*Image%Number_Of_Lines_Per_Segment + 1
-    Irec_end =   Irec_start + Image%Number_Of_Lines_Per_Segment - 1
+    Irec_end = Irec_start + Image%Number_Of_Lines_Per_Segment - 1
+    Irec_end = min(Irec_end,Image%Number_Of_Lines)
 
     !--- initialize number of scans-read index
     Image%Number_Of_Lines_Read_This_Segment = 0

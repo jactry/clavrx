@@ -521,6 +521,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       enddo
       
       allocate ( out % band (config % n_chan))
+      out % band % is_read = .false.
+
       ! --- read bands
       do i_band = 1, config % n_chan
 

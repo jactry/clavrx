@@ -247,13 +247,6 @@ module CONSTANTS
     integer(kind=int4) :: INVALID_FILLED = 5
     integer(kind=int4) :: INVALID_REPLACED = 6
 
-
-    !observation types
-!   character(len=4):: SOLAR_OBS_TYPE = "SOLAR"
-!   character(len=5):: LUNAR_OBS_TYPE = "LUNAR"
-!   character(len=5):: MIXED_OBS_TYPE = "MIXED"
-!   character(len=5):: THERMAL_OBS_TYPE = "THERM"
-     
   END TYPE symbol_struct
 
 !ccm  character(len=4), parameter:: SOLAR_OBS_TYPE = "SOLAR"

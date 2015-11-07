@@ -84,7 +84,8 @@ MODULE PIXEL_ROUTINES
           COMPUTE_CLOUD_MASK_PERFORMANCE_METRICS, &
           MODIFY_LAND_CLASS_WITH_NDVI, &
           DESERT_MASK_FOR_CLOUD_DETECTION, &
-          CITY_MASK_FOR_CLOUD_DETECTION
+          CITY_MASK_FOR_CLOUD_DETECTION, &
+          VIIRS_TO_MODIS
 
   private:: REMOTE_SENSING_REFLECTANCE, &
             NORMALIZED_DIFFERENCE_VEGETATION_INDEX, &
@@ -265,6 +266,10 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
               Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
             endif
           endif
+!       Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Ch1_Counts(Elem_Idx,Line_Idx)
+!       Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count
+!       Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Solar_Contamination_Mask(Elem_Idx,Line_Idx)
+!print *, "test ", Geo%Solzen(Elem_Idx,Line_Idx), Geo%Scatangle(Elem_Idx,Line_Idx), Ch1_Counts(Elem_Idx,Line_Idx),Ch1_Dark_Count
         endif
 
 
@@ -2844,6 +2849,100 @@ end function CITY_MASK_FOR_CLOUD_DETECTION
      endif
 
   end function FIRE_TEST
+!-----------------------------------------------------------
+! make VIIRS look like MODIS interms of spatial sampling
+! 
+! this is accomplished by averaging in the along scan direction
+! appropriately to acheive a pixel size that grows with
+! scan angle - as would be the case with MODIS or AVHRR
+!
+! this does not resample the data so there is over sampling
+!
+!-----------------------------------------------------------
+subroutine VIIRS_TO_MODIS()
+
+  real, dimension(3):: weight
+  real, parameter, dimension(3):: weight_1_0 = (/0.00,1.00,0.00/)
+  real, parameter, dimension(3):: weight_1_5 = (/0.25,1.00,0.25/)
+  real, parameter, dimension(3):: weight_3_0 = (/1.00,1.00,1.00/)
+
+  integer:: Elem_Idx, Line_Idx, Chan_Idx
+  integer:: Number_of_Lines, Number_of_Elements
+  integer:: i1, i2
+
+
+  !--- set image size
+  Number_of_Elements = Image%Number_Of_Elements
+  Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+
+  !--- loop over channels
+  do Chan_Idx = 1, NChan_Clavrx
+
+    !--- check if channel is on
+    if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+
+    !--- solar reflectances
+    if (ch(Chan_Idx)%Obs_Type == SOLAR_OBS_TYPE .or. &
+        ch(Chan_Idx)%Obs_Type == MIXED_OBS_TYPE) then
+
+      do Line_Idx = 1, Number_of_Lines
+         do Elem_Idx = 2, Number_of_Elements-1
+  
+           i1 = Elem_Idx - 1
+           i2 = Elem_Idx + 1
+
+           !--- pick weighting scheme
+           weight = weight_1_5
+           if (Elem_Idx <= 640 .or. Elem_Idx >= 2561) weight = weight_3_0
+           if (Elem_Idx >= 1009 .and. Elem_Idx <= 2192) weight = weight_1_0
+  
+           !-- apply weighting
+           Temp_Pix_Array_1(Elem_Idx,Line_Idx) = sum(weight*Ch(Chan_Idx)%Ref_Toa(i1:i2,Line_Idx)) / sum(weight)
+
+         enddo
+      enddo 
+
+      !--- copy back
+      ch(Chan_Idx)%Ref_Toa = Temp_Pix_Array_1
+
+    endif
+
+    !--- thermal
+    if (ch(Chan_Idx)%Obs_Type == THERMAL_OBS_TYPE .or. &
+        ch(Chan_Idx)%Obs_Type == MIXED_OBS_TYPE) then
+
+      do Line_Idx = 1, Number_of_Lines
+         do Elem_Idx = 2, Number_of_Elements-1
+
+           i1 = Elem_Idx - 1
+           i2 = Elem_Idx + 1
+  
+           !--- pick weighting scheme
+           weight = weight_1_5
+           if (Elem_Idx <= 640 .or. Elem_Idx >= 2561) weight = weight_3_0
+           if (Elem_Idx >= 1009 .and. Elem_Idx <= 2192) weight = weight_1_0
+  
+           !-- apply weighting
+           Temp_Pix_Array_1(Elem_Idx,Line_Idx) = sum(weight*Ch(Chan_Idx)%Rad_Toa(i1:i2,Line_Idx)) / sum(weight)
+  
+         enddo
+      enddo 
+
+      !--- copy back
+      ch(Chan_Idx)%Rad_Toa = Temp_Pix_Array_1
+
+      !--- compute BT
+      do Line_Idx = 1, Number_of_Lines
+         do Elem_Idx = 2, Number_of_Elements-1
+            ch(Chan_Idx)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(Chan_Idx,ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx))
+         enddo
+      enddo 
+
+    endif
+
+  enddo
+  
+end subroutine VIIRS_TO_MODIS
 
 
 !-----------------------------------------------------------

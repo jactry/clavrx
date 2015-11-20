@@ -381,19 +381,8 @@ end subroutine READ_FY_INSTR_CONSTANTS
                     Geo%Solzen(Elem_Idx,Line_Idx),Geo%Solaz(Elem_Idx,Line_Idx))
                     
         !--- because FY2 has solar contamination, we will set the
-        !    Solar_Contamination_Mask here as well for night pixels
-        
-        Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%NO
-        
-!        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.) .AND. &
-!             (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) .GT. 0)) THEN
-        IF ( (Geo%Solzen(Elem_Idx,Line_Idx) .GT. 90.)) THEN
-             
-             
-             Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
-             
-        ENDIF
-        
+        !    Solar_Contamination_Mask will be set in pixel_routines in
+        !    the SET_SOLAR_CONTAMINATION_MASK routine.       
         
          
      enddo

@@ -134,6 +134,7 @@ implicit none
    real, dimension(:), pointer :: Atm_Trans_Prof_133um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_133um
 
 !NWP profiles
    real, dimension(:), pointer :: T_prof
@@ -367,6 +368,7 @@ end type acha_rtm_nwp_struct
    if (Acha_Input%Chan_On_133um == sym%YES) then
       CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Rad_Prof_133um)
       CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Atm_Trans_Prof_133um)
+      CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, Acha_NWP%Black_Body_Rad_Prof_133um)
    endif
 
    Ctxt => null()

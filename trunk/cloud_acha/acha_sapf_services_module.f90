@@ -181,6 +181,7 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order
+   integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
    !rchen change type to allocatable 05/29/2015
    real, dimension(:,:), ALLOCATABLE:: Pc_Opaque
    real, dimension(:,:), ALLOCATABLE:: Tc_Opaque
@@ -188,11 +189,17 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), ALLOCATABLE:: Pc_H2O
    real, dimension(:,:), ALLOCATABLE:: Tc_H2O
    real, dimension(:,:), ALLOCATABLE:: Zc_H2O
+   
+   !WCS3 - 10/23/2015 - Temporary vars for buffer testing
+   integer (kind=int4), dimension(:,:), pointer:: XLRCIdx
+   integer (kind=int4), dimension(:,:), pointer:: YLRCIdx
+   real, dimension(:,:), pointer:: LRC_11um
+   
  end type acha_output_struct
   
 !Symbol stucture
 
- type, public :: symbol_acha
+ type, public :: acha_symbol_struct
     integer(kind=int1) :: CLOUDY
     integer(kind=int1) :: PROB_CLOUDY
     integer(kind=int1) :: PROB_CLEAR
@@ -251,7 +258,9 @@ end type acha_rtm_nwp_struct
     integer(kind=int1) :: MIXED_PHASE
     integer(kind=int1) :: ICE_PHASE
     integer(kind=int1) :: UNKNOWN_PHASE
- end type symbol_acha
+ end type acha_symbol_struct
+
+
  
  contains
 
@@ -264,7 +273,7 @@ end type acha_rtm_nwp_struct
                                       
    type(acha_input_struct), intent(inout) :: Acha_Input
    type(acha_rtm_nwp_struct), intent(inout) :: Acha_NWP
-   type(symbol_acha), intent(inout) :: symbol
+   type(acha_symbol_struct), intent(inout) :: symbol
    integer, intent(in) :: Elem_Idx
    integer, intent(in) :: Line_Idx
    integer:: Ivza

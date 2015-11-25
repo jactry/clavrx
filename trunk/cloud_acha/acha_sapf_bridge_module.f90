@@ -30,7 +30,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
  type(NPP_VIIRS_CLD_HEIGHT_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
 
- type(symbol_acha), PRIVATE  :: symbol
+ type(acha_symbol_struct), PRIVATE  :: symbol
  type(acha_input_struct), PRIVATE  :: Input
  type(acha_output_struct), PRIVATE  :: Output
  
@@ -258,6 +258,12 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
+     Output%Inversion_Flag  =>  null()
+     
+     !WCS - 10/23/2015 - testing vars
+!     Output%XLRCIdx => null()
+!     Output%YLRCIdx => null()
+!     Output%LRC_11um => null()
 
      !rchen  05/29/2015
      !Output%Pc_Opaque =>  null()
@@ -347,7 +353,9 @@ module ACHA_CLAVRX_BRIDGE_MOD
    integer(long) :: Stat
    integer(KIND=INT4) :: WMO_Sc_Id, McIDAS_ID
 !   integer(byte), pointer, dimension(:):: Chan_On_Flag_Default
+   INTEGER(KIND=INT4), pointer, DIMENSION(:) :: ChnMap
    integer(byte), dimension(16):: Chan_On_Flag_Default
+   integer(byte) :: ABI_Chan
    !Variables for covariance calculation
    integer:: Num_Elem, Elem_Idx
    integer:: Num_Line, Line_Idx
@@ -384,10 +392,17 @@ module ACHA_CLAVRX_BRIDGE_MOD
    Input%Chan_Idx_12um = 15     !channel number for 12
    Input%Chan_Idx_133um = 16  !channel number for 13.3
 
-!    CALL NFIA_CloudHeight_ChanOn(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Chan_On_Flag_Default)
-     Chan_On_Flag_Default = (/0 , 0, 0, 0,0, 0, 0, 0, 0, 0, 1, 0,0,1,1,0/)
-
-
+   Chan_On_Flag_Default(:)= 0
+   
+   CALL NFIA_Sat_ChnMap_Flag(Ctxt_ACHA%SATELLITE_DATA_Src1_T00, ChnMap)
+     
+    DO ABI_Chan = 1, 16
+        IF (ChnMap(ABI_Chan) /= 0) THEN
+            Chan_On_Flag_Default(ABI_Chan) = 1
+        ENDIF   
+     
+    ENDDO
+    
      Input%Chan_On_67um = Chan_On_Flag_Default(Input%Chan_Idx_67um)
      Input%Chan_On_85um = Chan_On_Flag_Default(Input%Chan_Idx_85um)
      Input%Chan_On_11um = Chan_On_Flag_Default(Input%Chan_Idx_11um)
@@ -593,6 +608,11 @@ module ACHA_CLAVRX_BRIDGE_MOD
    CALL NFIA_CloudHeight_Low_Cld_Frac(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
                                         Output%Low_Cloud_Fraction)
 
+   !Inversion flag
+   CALL NFIA_CloudHeight_InverFlag(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
+                                    Output%Inversion_Flag)
+   
+   
    ! ALLOCATE Dummy array
    Num_Elem = Ctxt_ACHA%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt_ACHA%SegmentInfo%Current_Row_Size
@@ -614,6 +634,11 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !Output%Zc_H2O => Dummy
    
    
+   ! temporary output for XLRC/YLRC
+   
+!    CALL NFIA_CloudHeight_XLRCIdx(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%XLRCIdx)
+!    CALL NFIA_CloudHeight_YLRCIdx(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%YLRCIdx)  
+!    CALL NFIA_CloudHeight_Emiss11Hgh(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%LRC_11um)
    
 
  end subroutine SET_OUTPUT
@@ -713,6 +738,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
              Sensor_KM = 4.0
       case(172) ! MTSAT-2
              Sensor_KM = 4.0
+      case(173) ! Himawari-8
+             Sensor_KM = 2.0	     
       case(200:209) ! NOAA-08 - NOAA-18
              Sensor_KM = 1.0
       case(223) ! NOAA-19

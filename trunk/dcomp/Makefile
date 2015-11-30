@@ -5,11 +5,6 @@ RM := rm -rf
 
 include config.mk
 
-# Where to find the RTM. Replace this with your own path to the object files and modules.
-RTM_INC = /home/awalther/SOFTWARE/RTM/RTTOV/include
-RTM_MOD = /home/awalther/SOFTWARE/RTM/RTTOV/mod 
-RTM_LIB = /home/awalther/SOFTWARE/RTM/RTTOV/lib
-RTMODEL = rttov10.2.0
 
 HDFDIR = $(hdf4root)
 HDFINC = $(HDFDIR)/include

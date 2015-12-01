@@ -650,19 +650,16 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       endwhere
 
       !------------------------------------------------------------------
-      ! Read in the Mask
+      ! Populate sounder mask based on SounderY
       !------------------------------------------------------------------
-      i2d_8_buffer = -1
-      setname_band = 'HirsMask'
-      Status = READ_HDF_SDS_INT8_2D(Id,TRIM(setname_band),start_2d, &
-                      stride_2d,edge_2d,i2d_8_buffer) + Status
       if (.not. allocated ( out % geo % sounder_mask ) ) allocate &
               ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
-      out % geo % sounder_mask = i2d_8_buffer
-
-      ! change fill values to missing
-      where(i2d_8_buffer .lt. 0)
-         out % geo % sounder_mask = -128
+      where(i2d_16_buffer .lt. 0)
+         ! no sounder ob
+         out % geo % sounder_mask = 0
+      elsewhere
+         ! we have sounder ob
+         out % geo % sounder_mask = 1
       endwhere
 
       ! --- dealocate variables

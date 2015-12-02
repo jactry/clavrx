@@ -19,6 +19,7 @@ module ACHA_CLAVRX_BRIDGE
 
  public :: AWG_CLOUD_HEIGHT_BRIDGE
  private:: SET_SYMBOL, SET_INPUT, SET_OUTPUT, NULL_INPUT, NULL_OUTPUT
+ private:: SET_DIAG, NULL_DIAG
 
  !--------------------------------------------------------------------
  ! define structures that will be arguments to ACHA
@@ -26,6 +27,7 @@ module ACHA_CLAVRX_BRIDGE
  type(acha_symbol_struct), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
+ type(acha_diag_struct), private :: Diag
 
  contains
 
@@ -59,10 +61,13 @@ module ACHA_CLAVRX_BRIDGE
    !----set symbols to local values
    call SET_SYMBOL()
 
+   !---- initialize diagnostic structure
+   call SET_DIAG()
+
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -89,6 +94,14 @@ module ACHA_CLAVRX_BRIDGE
 
    !--- cloud cover layers
    call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output)
+
+   !--- copy output into CLAVR-x variables
+   Cloud_Fraction_3x3 = Output%Total_Cloud_Fraction
+   Cloud_Fraction_Uncer_3x3 = Output%Total_Cloud_Fraction_Uncer
+   High_Cloud_Fraction_3x3 = Output%High_Cloud_Fraction
+   Mid_Cloud_Fraction_3x3 = Output%Mid_Cloud_Fraction
+   Low_Cloud_Fraction_3x3 = Output%Low_Cloud_Fraction
+   ACHA%Cld_Layer = Output%Cloud_Layer
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -151,6 +164,14 @@ module ACHA_CLAVRX_BRIDGE
      Input%Line_Idx_LRC_Input =>   null()
      Input%Tc_Cirrus_Sounder =>   null()
  end subroutine NULL_INPUT
+ !-----------------------------------------------------------------------------
+ ! Nullify the pointers holding input 
+ !-----------------------------------------------------------------------------
+ subroutine NULL_DIAG()
+     Diag%Array_1 =>  null()
+     Diag%Array_2 =>  null()
+     Diag%Array_3 =>  null()
+ end subroutine NULL_DIAG
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output to ACHA
  !-----------------------------------------------------------------------------
@@ -359,5 +380,13 @@ module ACHA_CLAVRX_BRIDGE
    Input%Rad_Clear_133um => ch(Input%Chan_Idx_133um)%Rad_Toa_Clear
 
  end subroutine SET_INPUT
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
+ subroutine SET_DIAG
+     Diag%Array_1 => Diag_Pix_Array_1 
+     Diag%Array_2 => Diag_Pix_Array_2 
+     Diag%Array_3 => Diag_Pix_Array_3 
+ end subroutine SET_DIAG
 
 end module ACHA_CLAVRX_BRIDGE

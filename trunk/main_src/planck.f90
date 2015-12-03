@@ -189,8 +189,9 @@
     !--- check for appropriate channel
     if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
         Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
+
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
-      print *, "unsupported channel number in Fast Planck Temp Computation, stopping"
+      print *, "unsupported channel number ",ichan," in Fast Planck Temp Computation, stopping"
       stop
     endif
 
@@ -219,7 +220,7 @@
     if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
         Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number ",ichan," in Planck Rad Computation, stopping"
       stop
     endif
 
@@ -243,7 +244,7 @@
     if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
         Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
     if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
-      print *, "unsupported channel number in Planck Computation, stopping"
+      print *, "unsupported channel number ",ichan," in Planck Temp Computation, stopping"
       stop
     endif
 

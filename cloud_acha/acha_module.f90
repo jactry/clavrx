@@ -1635,7 +1635,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
 
-print *, "Computing CIRRUS Tc ", USE_CIRRUS_FLAG, Pass_Idx, Pass_Idx_Max
 endif
 
 end do pass_loop
@@ -1644,8 +1643,6 @@ Diag%Array_1 = Temperature_Cirrus
 if (associated(Input%Tc_Cirrus_Sounder)) then
  Diag%Array_2 = Input%Tc_Cirrus_Sounder
 endif
-print *, "range 1 = ", minval(Diag%Array_1), maxval(Diag%Array_1)
-print *, "range 2 = ", minval(Diag%Array_2), maxval(Diag%Array_2)
 
 !------------------------------------------------------------------------
 ! Apply Parallax Correction 

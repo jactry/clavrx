@@ -152,13 +152,13 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
    integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
-   real, dimension(:,:), pointer:: Pc_Opaque
-   real, dimension(:,:), pointer:: Tc_Opaque
-   real, dimension(:,:), pointer:: Zc_Opaque
-   real, dimension(:,:), pointer:: Pc_H2O
-   real, dimension(:,:), pointer:: Tc_H2O
-   real, dimension(:,:), pointer:: Zc_H2O
-  end type acha_output_struct
+   real, dimension(:,:), ALLOCATABLE:: Pc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Tc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Zc_Opaque
+   real, dimension(:,:), ALLOCATABLE:: Pc_H2O
+   real, dimension(:,:), ALLOCATABLE:: Tc_H2O
+   real, dimension(:,:), ALLOCATABLE:: Zc_H2O
+   end type acha_output_struct
   
 !Symbol stucture
 !Symbol stucture

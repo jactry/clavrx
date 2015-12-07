@@ -61,6 +61,13 @@ module ACHA_SERVICES_MOD
 !ACHA input structure
 ! input structure
 
+ type, public :: acha_diag_struct
+  real (kind=real4), dimension(:,:), pointer:: Array_1
+  real (kind=real4), dimension(:,:), pointer:: Array_2
+  real (kind=real4), dimension(:,:), pointer:: Array_3
+ end type acha_diag_struct
+
+
  type, public :: acha_input_struct
  integer :: ACHA_Mode_Flag_In
  integer (kind=int4):: Number_of_Elements

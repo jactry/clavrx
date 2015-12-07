@@ -65,7 +65,7 @@ module AWG_CLOUD_HEIGHT
            acha_input_struct, acha_rtm_nwp_struct, &
            PLANCK_RAD_FAST, PLANCK_TEMP_FAST, &
            INVERT_MATRIX, ACHA_FETCH_PIXEL_NWP_RTM, &
-           LOCATE
+           LOCATE, acha_diag_struct
 
   implicit none
 
@@ -224,7 +224,7 @@ module AWG_CLOUD_HEIGHT
 !
 !
 !------------------------------------------------------------------------------
-  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol_In, Output)
+  subroutine  AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol_In, Output, Diag)
 
   !===============================================================================
   !  Argument Declaration
@@ -233,6 +233,7 @@ module AWG_CLOUD_HEIGHT
   type(acha_input_struct), intent(inout) :: Input
   type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
+  type(acha_diag_struct), intent(inout), optional :: Diag
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -399,6 +400,11 @@ module AWG_CLOUD_HEIGHT
      return
   endif
 
+  !--- initialize diagnostic output
+  if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+  if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+  if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+
   !---------------------------------------------------------------------------
   !-- Acha Mode set to  -1, determine based on channels
   !---------------------------------------------------------------------------
@@ -503,6 +509,7 @@ module AWG_CLOUD_HEIGHT
   Elem_Idx_LRC = MISSING_VALUE_INTEGER4
   Line_Idx_LRC = MISSING_VALUE_INTEGER4
   Skip_LRC_Mask = Input%Invalid_Data_Mask
+  Temperature_Cirrus = MISSING_VALUE_REAL4
 
   !--- call LRC routine
   if (Use_Lrc_Flag == symbol%YES) then
@@ -546,7 +553,7 @@ module AWG_CLOUD_HEIGHT
   call COMPUTE_PROCESSING_ORDER(&
                                 Input%Invalid_Data_Mask, Input%Cloud_Type,&
                                 ELem_Idx_LRC,Line_Idx_LRC, &
-                                Pass_Idx_Min,Pass_Idx_Max,Use_Cirrus_Flag, &
+                                Pass_Idx_Min,Pass_Idx_Max,USE_CIRRUS_FLAG, &
                                 Output%Processing_Order) 
 
   !--------------------------------------------------------------------------
@@ -582,7 +589,7 @@ module AWG_CLOUD_HEIGHT
     call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
 
     !--- check if pixel should be processd in this path
-    if (Use_Cirrus_Flag == symbol%NO .or. Pass_Idx /= Pass_Idx_Max) then
+    if (USE_CIRRUS_FLAG == symbol%NO .or. Pass_Idx /= Pass_Idx_Max) then
       if (Pass_Idx /= Output%Processing_Order(Elem_Idx,Line_Idx)) then
           cycle
       endif
@@ -640,7 +647,7 @@ module AWG_CLOUD_HEIGHT
     endif
 
     !---  filter pixels for last pass for cirrus correction
-    if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES) then
+    if (Pass_Idx == Pass_Idx_Max .and. USE_CIRRUS_FLAG == symbol%YES) then
 
         if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%CIRRUS_TYPE .and. &
             Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE) then
@@ -999,9 +1006,9 @@ module AWG_CLOUD_HEIGHT
                        Beta_Ap,Beta_Ap_Uncer)
 
   !------------------------------------------------------------------------
-  ! Set Apriori to predetermined cirrus value if Use_Cirrus_Flag = Yes 
+  ! Set Apriori to predetermined cirrus value if USE_CIRRUS_FLAG = Yes 
   !------------------------------------------------------------------------
-  if (Pass_Idx == Pass_Idx_Max .and. Use_Cirrus_Flag == symbol%YES .and. &
+  if (Pass_Idx == Pass_Idx_Max .and. USE_CIRRUS_FLAG == symbol%YES .and. &
       Temperature_Cirrus(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
@@ -1052,7 +1059,7 @@ module AWG_CLOUD_HEIGHT
   Sa(3,3) = Beta_Ap_Uncer
 
   !--- modify a priori values based on lrc
-  if (Pass_Idx /= Pass_Idx_Max .or. Use_Cirrus_Flag == symbol%NO) then
+  if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
     if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
         (jlrc /= MISSING_VALUE_INTEGER4)) then
          if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
@@ -1229,7 +1236,7 @@ Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Inpu
 !                              Output%Zc(Elem_Idx,Line_Idx), &
 !                              Ilev,ierror,NWP_Profile_Inversion_Flag)
 !   if (ierror == 0) then
-!    Output%Zc(Elem_Idx,Line_Idx) = max(0.0,Output%Zc(Elem_Idx,Line_Idx))
+!   Output%Zc(Elem_Idx,Line_Idx) = max(0.0,Output%Zc(Elem_Idx,Line_Idx))
 !    Output%Pc(Elem_Idx,Line_Idx) = min(Input%Surface_Pressure(Elem_Idx,Line_Idx), &
 !                                Output%Pc(Elem_Idx,Line_Idx))
 !   endif
@@ -1368,25 +1375,6 @@ Retrieval_Loop: do
                          Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx), &
                          idiag_output)
 
-
-! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Output%Cost
-! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Converged_Flag
-! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Fail_Flag
-
-! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
-! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = f(1) - y(1)
-
-! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = AKM(1,1)
-! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = AKM(2,2)
-! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = AKM(3,3)
-
-! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = f(1) - y(1)
-! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = f(2) - y(2)
-! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = f(3) - y(3)
-
-! Diag_Pix_Array_1(Elem_Idx,Line_Idx) = AKM(1,1)
-! Diag_Pix_Array_2(Elem_Idx,Line_Idx) = f(1) - y(1)
-! Diag_Pix_Array_3(Elem_Idx,Line_Idx) = x(1) - x_ap(1)
 
   !--- check for a failed Iteration
   if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
@@ -1635,21 +1623,26 @@ end do Line_Loop
 !---------------------------------------------------------------------------
 ! if selected, compute a background cirrus temperature and use for last pass
 !---------------------------------------------------------------------------
-if (Use_Cirrus_Flag == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
+if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
 
     call COMPUTE_TEMPERATURE_CIRRUS( &
                  Input%Cloud_Type,   &
                  Output%Tc,          &
                  Output%Ec,          &
-                 Emissivity_Min_Temperature_Cirrus, &
+                 EMISSIVITY_MIN_TEMPERATURE_CIRRUS, &
                  COUNT_MIN_TEMPERATURE_CIRRUS,      &
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
+
 endif
 
-
 end do pass_loop
+
+Diag%Array_1 = Temperature_Cirrus
+if (associated(Input%Tc_Cirrus_Sounder)) then
+ Diag%Array_2 = Input%Tc_Cirrus_Sounder
+endif
 
 !------------------------------------------------------------------------
 ! Apply Parallax Correction 
@@ -3798,6 +3791,8 @@ subroutine SET_ACHA_VERSION(Acha_Version)
 end subroutine SET_ACHA_VERSION
 !====================================================================
 ! 
+! Make a background field of cirrus temperature from appropriate
+! retrievals and use as an apriori constraint
 !====================================================================
 subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
                                       Temperature_Cloud,&
@@ -3841,12 +3836,12 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
 
    end where
 
-   do Elem_Idx = 1, Num_Elements, Box_Width
+   do Elem_Idx = 1, Num_Elements, 10
 
       i1 = min(Num_Elements,max(1,Elem_Idx - Box_Width))
       i2 = min(Num_Elements,max(1,Elem_Idx + Box_Width))
 
-      do Line_Idx = 1, Num_Lines, Box_Width
+      do Line_Idx = 1, Num_Lines, 10
 
           Temperature_Temporary = Missing
           Count_Temporary = 0
@@ -3884,21 +3879,21 @@ end subroutine COMPUTE_TEMPERATURE_CIRRUS
 ! pass 2 = single layer water cloud pixels
 ! pass 3 = lrc multi-layer clouds
 ! pass 4 = all remaining clouds
-! pass 5 = if Use_Cirrus_Flag is set on, redo all thin cirrus using a priori
+! pass 5 = if USE_CIRRUS_FLAG is set on, redo all thin cirrus using a priori
 !          temperature from thicker cirrus.
 !--------------------------------------------------------------------------
 subroutine COMPUTE_PROCESSING_ORDER(Invalid_Data_Mask, &
                                     Cloud_Type, &
                                     ELem_Idx_LRC, Line_Idx_LRC, &  
                                     Pass_Idx_Min,Pass_Idx_Max, &
-                                    Use_Cirrus_Flag, &
+                                    USE_CIRRUS_FLAG, &
                                     Processing_Order) 
   
   integer(kind=int1), intent(in), dimension(:,:):: Invalid_Data_Mask
   integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
   integer(kind=int4), intent(in), dimension(:,:):: Elem_Idx_LRC, Line_Idx_LRC
   integer, intent(out):: Pass_Idx_Min, Pass_Idx_Max
-  integer(kind=int4), intent(in):: Use_Cirrus_Flag
+  integer(kind=int4), intent(in):: USE_CIRRUS_FLAG
   integer(kind=int1), intent(out), dimension(:,:):: Processing_Order
   integer:: Number_of_Lines, Number_of_Elements
   integer:: Line_Idx, Elem_Idx
@@ -3915,7 +3910,7 @@ subroutine COMPUTE_PROCESSING_ORDER(Invalid_Data_Mask, &
   Pass_Idx_min = 1
   Pass_Idx_Max = 4
 
-  if (Use_Cirrus_Flag == symbol%YES) Pass_Idx_Max = Pass_Idx_Max + 1
+  if (USE_CIRRUS_FLAG == symbol%YES) Pass_Idx_Max = Pass_Idx_Max + 1
 
   !--- loop through pixels, determine processing order
   Line_Loop: do Line_Idx = 1, Number_of_Lines

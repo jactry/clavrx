@@ -207,7 +207,6 @@ contains
             else ! the rest of channels are normal
                Ch(modis_chn_list(i_band))%Rad_Toa(:,1:c_seg_lines) = out % band (i_band) % rad
                ch_tmp = modis_chn_list(i_band)
-               if (modis_chn_list(i_band) == 45) ch_tmp = 33 ! Pseudo
                call COMPUTE_BT_ARRAY ( Ch(modis_chn_list(i_band))%Bt_Toa , Ch(modis_chn_list(i_band))%Rad_Toa , &
                                        ch_tmp , missing_value_real4 )
             endif

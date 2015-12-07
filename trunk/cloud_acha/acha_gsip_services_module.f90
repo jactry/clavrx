@@ -46,6 +46,7 @@ implicit none
  real, dimension(:,:), pointer:: Bt_133um
  real, dimension(:,:), pointer:: Rad_67um
  real, dimension(:,:), pointer:: Rad_11um
+ real, dimension(:,:), pointer::   Covar_Bt_11um_67um
  real, dimension(:,:), pointer:: Cosine_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Azimuth_Angle

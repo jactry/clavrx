@@ -23,6 +23,7 @@ module ACHA_GSIP_BRIDGE_MOD
  type(acha_symbol_struct), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
+ REAL (KIND=REAL4), DIMENSION(:,:), ALLOCATABLE,TARGET, PRIVATE :: Zsfc_km
 
  contains
 
@@ -111,6 +112,8 @@ module ACHA_GSIP_BRIDGE_MOD
      Input%Elem_Idx_LRC_Input =>  null()
      Input%Line_Idx_LRC_Input =>   null()
      Input%Tc_Cirrus_Sounder =>   null()
+     if (allocated(Zsfc_km)) deallocate(Zsfc_km)
+
  end subroutine NULL_INPUT
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output to ACHA
@@ -286,6 +289,7 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Chan_On_133um = sat_info_gsip(1)%chanon(16)
 
    Input%Invalid_Data_Mask => bad_pix_mask(14,:,:)
+   
 
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp
@@ -299,6 +303,7 @@ module ACHA_GSIP_BRIDGE_MOD
         Input%Bt_67um => bt9
         Input%Rad_67um => rad9
         Input%Rad_Clear_67um => Rad_Clear_Ch9_Rtm
+        Input%Covar_Bt_11um_67um =>Covar_Ch27_Ch31_5x5
   endif
 
    if (Input%Chan_On_85um  == sym%YES) then
@@ -338,7 +343,10 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
 
-   Input%Surface_Elevation => Zsfc
+   ALLOCATE (Zsfc_km(Input%Number_of_Elements,Input%Number_of_Lines))
+   Zsfc_km = Zsfc /1000.0
+   Input%Surface_Elevation => Zsfc_km
+
    Input%Cloud_Mask =>  gsip_pix_prod%cldmask
    Input%Cloud_Type => gsip_pix_prod%Cldtype
    Input%Cloud_Probability => gsip_pix_prod%cldprob

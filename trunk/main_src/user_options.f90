@@ -144,7 +144,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
    integer,parameter:: ACHA_Mode_Default_Modis = 8
-   integer,parameter:: ACHA_Mode_Default_Fy2 = 7
+   integer,parameter:: ACHA_Mode_Default_Fy2 = 6
    integer,parameter:: ACHA_Mode_Default_AHI = 1
    
 contains

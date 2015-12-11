@@ -908,7 +908,7 @@ contains
       case ('SEVIRI')
          filename  = 'seviri_default_nb_cloud_mask_lut.nc'
       case ('FY2-IMAGER')
-         filename  = 'avhrr_default_nb_cloud_mask_lut.nc' 
+         filename  = 'fy2_default_nb_cloud_mask_lut.nc' 
       case ('VIIRS')
          filename  = 'viirs_default_nb_cloud_mask_lut.nc' 
       case ('VIIRS-IFF')      
@@ -991,7 +991,7 @@ contains
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:2)  =  [1, 3]
       case ('FY2-IMAGER')
-         possible_acha_modes(1:2)   =  [1 , 2 ] 
+         possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
          possible_dcomp_modes(1:1)  =  [3]
       case ('VIIRS')
          possible_acha_modes(1:3)   =  [1, 3, 5] 

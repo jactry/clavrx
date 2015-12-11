@@ -430,7 +430,7 @@ contains
          read (satellite, * ) idx_sat
          select case (idx_sat)
          case(1) 
-               cfile = 'comsccc101.dat'
+            cfile = 'comsccc101.dat'
          case(2) 
             cfile = 'fy2dccc101.dat'
          case(3) 
@@ -467,7 +467,7 @@ contains
          this % modis_channel_eqv = [33,31,32,27,20]     
          this % native_channel = [ 1,2,3,4,5  ]
       case ('FY2')
-         this % modis_channel_eqv = [-1,20,27,31,32]      
+         this % modis_channel_eqv = [-1,31,32,27,20]      
          this % native_channel = [ 1,2,3,4,5  ] 
       case ('GOES')
          this % modis_channel_eqv(19:23) = [20,27,31,32,33]

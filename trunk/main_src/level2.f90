@@ -225,6 +225,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'COMS-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER' .or.  &
+      trim(Sensor%Sensor_Name) == 'FY2-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'SEVIRI') then
 
     !-- remove area suffix

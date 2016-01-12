@@ -145,9 +145,9 @@ module ACHA_COMP
        Output%Reff(Elem_Idx,Line_Idx) = 20.0
 
        if( Cloud_Phase == symbol%ICE_PHASE) then
-          Output%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Water
-       else
           Output%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Ice
+       else
+          Output%Beta(Elem_Idx,Line_Idx) = Beta_Ap_Water
        endif
 
      endif

@@ -1528,6 +1528,50 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- csbt for ch27
+     if (Sds_Num_Level2_Ch27_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27)==sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch27_CSBT),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "csbt_mask_6_7um_nom", &
+                               "csbt_mask_6_7um_nom", &
+                               "csbt 6_7um_nom cloud mask (0=clear,1=probclear,2=invisible cloudy,3=cloudy)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- csbt for ch28
+     if (Sds_Num_Level2_Ch28_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28)==sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch28_CSBT),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "csbt_mask_7_3um_nom", &
+                               "csbt_mask_7_3um_nom", &
+                               "csbt 7_3um_nom cloud mask (0=clear,1=probclear,2=invisible cloudy,3=cloudy)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- csbt for ch37
+     if (Sds_Num_Level2_Ch37_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37)==sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch37_CSBT),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "csbt_mask_6_2um_nom", &
+                               "csbt_mask_6_2um_nom", &
+                               "csbt 6_2um_nom cloud mask (0=clear,1=probclear,2=invisible cloudy,3=cloudy)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- csbt for ch33
+     if (Sds_Num_Level2_Ch33_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33)==sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch33_CSBT),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "csbt_mask_13_3um_nom", &
+                               "csbt_mask_13_3um_nom", &
+                               "csbt 13_3um_nom cloud mask (0=clear,1=probclear,2=invisible cloudy,3=cloudy)", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud optical depth for Mask
      if (Cld_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1)==sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
@@ -4234,11 +4278,44 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Fire_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- csbt for ch27
+     if (Sds_Num_Level2_Ch27_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ch(27)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- csbt for ch28
+     if (Sds_Num_Level2_Ch28_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28) == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch28_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ch(28)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- csbt for ch37
+     if (Sds_Num_Level2_Ch37_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch37_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ch(37)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- csbt for ch33
+     if (Sds_Num_Level2_Ch33_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ch(33)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cld optical depth from mask
      if (Cld_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(ch(1)%Opd,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,One_Byte_Temp)
+
+      Temp_Pix_Array_1 = Ch(1)%Opd
+      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+        where(Geo%Solzen /= Missing_Value_Real4 .and. Geo%Solzen > 90.0)
+            Temp_Pix_Array_1 = Ch(44)%Opd
+        endwhere
+      endif
+
+      call SCALE_VECTOR_I1_RANK2(Temp_Pix_Array_1,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+
      endif
 
      !--- cld type

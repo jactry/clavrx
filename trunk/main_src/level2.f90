@@ -1765,6 +1765,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud base altitude from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Base_Alt_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Base_Alt),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_base_altitude_acha", &
+                               "altitude_at_cloud_base", &
+                               "cloud base altitude computed from pressure values", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Alt, Max_Alt, &
+                               "feet", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+    
      !---  acha processing order
      if (Sds_Num_Level2_Acha_Order_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Acha_Order),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -4423,6 +4434,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Alt_Flag == sym%YES) then
       call SCALE_VECTOR_I2_RANK2(ACHA%Alt,sym%LINEAR_SCALING,Min_Alt,Max_Alt,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Alt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld base altitude
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Base_Alt_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(ACHA%Base_Alt,sym%LINEAR_SCALING,Min_Alt,Max_Alt,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Base_Alt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

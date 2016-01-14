@@ -1,6 +1,6 @@
 !$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 248
+ integer, parameter, private:: Num_Level2_Sds = 249
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -257,4 +257,5 @@
      Sds_Num_Level2_Ch27_CSBT = 245,      Sds_Num_Level2_Ch27_CSBT_Flag = 1, &
      Sds_Num_Level2_Ch28_CSBT = 246,      Sds_Num_Level2_Ch28_CSBT_Flag = 1, &
      Sds_Num_Level2_Ch37_CSBT = 247,      Sds_Num_Level2_Ch37_CSBT_Flag = 1, &
-     Sds_Num_Level2_Ch33_CSBT = 248,      Sds_Num_Level2_Ch33_CSBT_Flag = 1
+     Sds_Num_Level2_Ch33_CSBT = 248,      Sds_Num_Level2_Ch33_CSBT_Flag = 1, &
+     Sds_Num_Level2_Base_Alt = 249,       Sds_Num_Level2_Base_Alt_Flag = 1

@@ -1102,7 +1102,7 @@
                   call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--- interpolate ACHA cloud heights to flight level altitude.
-                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc,ACHA%Alt)
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
@@ -1163,6 +1163,10 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (ACHA%Mode > 0) then 
                  call CLOUD_BASE_BRIDGE()
+
+                 !---Calculate flight level altitude of the base for AWC
+                 call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc_Base,ACHA%Base_Alt)
+
                endif
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &

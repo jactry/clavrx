@@ -145,7 +145,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
    integer,parameter:: ACHA_Mode_Default_Modis = 8
    integer,parameter:: ACHA_Mode_Default_Fy2 = 6
-   integer,parameter:: ACHA_Mode_Default_AHI = 1
+   integer,parameter:: ACHA_Mode_Default_AHI = 8
    
 contains
 
@@ -804,7 +804,8 @@ contains
      
       call CHANNEL_SWITCH_ON (SensorName)
 
-      if ( Expert_Mode < 2 .or. trim(Bayesian_Cloud_Mask_Name) == 'default') then
+      if ( Expert_Mode < 2 .or. trim(Bayesian_Cloud_Mask_Name) == 'default' &
+           .or. trim(Bayesian_Cloud_Mask_Name) == 'DEFAULT') then
          Bayesian_Cloud_Mask_Name = default_nb_mask_classifier_file ( SensorName )
       end if
       

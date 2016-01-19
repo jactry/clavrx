@@ -312,6 +312,7 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Zc_Uncertainty
     real (kind=real4), dimension(:,:), allocatable:: Pc_Uncertainty
     real (kind=real4), dimension(:,:), allocatable:: Alt
+    real (kind=real4), dimension(:,:), allocatable:: Base_Alt
     real (kind=real4), dimension(:,:), allocatable:: Cost
     real (kind=real4), dimension(:,:), allocatable:: Pc_Lower_Cloud
     real (kind=real4), dimension(:,:), allocatable:: Zc_Lower_Cloud
@@ -2076,6 +2077,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Alt(dim1,dim2)) 
+    allocate(ACHA%Base_Alt(dim1,dim2)) 
     allocate(ACHA%Cost(dim1,dim2)) 
     allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
     allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
@@ -2118,6 +2120,7 @@ subroutine RESET_ACHA_ARRAYS()
 !   if (allocated(ACHA%Zc_Uncertainty)) ACHA%Zc_Uncertainty = Missing_Value_Real4
 !   if (allocated(ACHA%Pc_Uncertainty)) ACHA%Pc_Uncertainty = Missing_Value_Real4
 !   if (allocated(ACHA%Alt)) ACHA%Alt = Missing_Value_Real4
+!   if (allocated(ACHA%Base_Alt)) ACHA%Base_Alt = Missing_Value_Real4
 !   if (allocated(ACHA%Cost)) ACHA%Cost = Missing_Value_Real4
 !   if (allocated(ACHA%Pc_Lower_Cloud)) ACHA%Pc_Lower_Cloud = Missing_Value_Real4
 !   if (allocated(ACHA%Zc_Lower_Cloud)) ACHA%Zc_Lower_Cloud = Missing_Value_Real4
@@ -2148,6 +2151,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Zc_Uncertainty = Missing_Value_Real4
     ACHA%Pc_Uncertainty = Missing_Value_Real4
     ACHA%Alt = Missing_Value_Real4
+    ACHA%Base_Alt = Missing_Value_Real4
     ACHA%Cost = Missing_Value_Real4
     ACHA%Pc_Lower_Cloud = Missing_Value_Real4
     ACHA%Zc_Lower_Cloud = Missing_Value_Real4
@@ -2184,6 +2188,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Zc_Uncertainty) 
     deallocate(ACHA%Pc_Uncertainty) 
     deallocate(ACHA%Alt) 
+    deallocate(ACHA%Base_Alt) 
     deallocate(ACHA%Cost) 
     deallocate(ACHA%Pc_Lower_Cloud) 
     deallocate(ACHA%Zc_Lower_Cloud) 

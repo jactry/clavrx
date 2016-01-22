@@ -1010,7 +1010,9 @@
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call NB_CLOUD_MASK_BRIDGE(Segment_Number)
                      
-                     call AWG_Baseline_Cloud_Mask()
+                    ! will just have to comment out which CM you want to
+                    ! use for now
+                     call AWG_Baseline_Cloud_Mask_Main()
                      
                      
                   else

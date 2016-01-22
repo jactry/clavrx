@@ -406,7 +406,8 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o \
               seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
+              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o \
+              awg_baseline_cloud_mask.o 
 
 
 

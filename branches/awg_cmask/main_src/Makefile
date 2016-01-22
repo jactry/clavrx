@@ -68,7 +68,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK):../baseline_cloud_mask
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -119,6 +119,7 @@ clavrxorb_objs = process_clavrx.o \
                  acha_module.o \
 		 acha_clavrx_services_module.o \
 		 acha_clavrx_bridge_module.o \
+         awg_baseline_cloud_mask.o \
                  acha_comp_module.o \
                  acha_shadow_module.o \
                  acha_cloud_cover_layers_module.o \
@@ -360,6 +361,11 @@ string_functions.o:string_functions.f90
 strings.o:strings.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_utility.o sfc_prop_umd.o
 rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o calibration_constants.o
+
+awg_baseline_cloud_mask.o: rt_utils.o planck.o \
+                Message_Handler.o constant.o pixel_common.o \
+                calibration_constants.o
+
 
 #sensor
 ifdef hdf5libs

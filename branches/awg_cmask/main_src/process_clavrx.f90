@@ -1011,7 +1011,7 @@
                      call NB_CLOUD_MASK_BRIDGE(Segment_Number)
                      
                     ! will just have to comment out which CM you want to
-                    ! use for now
+                    ! use for now - WCS3
                      call AWG_Baseline_Cloud_Mask_Main()
                      
                      

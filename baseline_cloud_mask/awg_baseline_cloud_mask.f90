@@ -55,6 +55,7 @@ use CONSTANTS
  use NWP_COMMON
  use RTM_COMMON
  use PLANCK
+ use Message_handler
 use calibration_constants, only: &
         sun_earth_distance  &
         , solar_ch20_nu
@@ -89,6 +90,13 @@ PRIVATE:: Set_Cmask_Thresholds
 PRIVATE:: Compute_NWC
 PRIVATE:: Compute_Clear_Sky_Scatter
 PRIVATE:: Term_Refl_Norm
+
+!have to add PACK_BYTES here because it isn't available in CLAVRX
+ interface PACK_BYTES
+     module procedure  &
+         PACK_BYTES_I1,  &
+         PACK_BYTES_I2
+ end interface
 
 
 !
@@ -2434,7 +2442,171 @@ END SUBROUTINE Compute_NWC
 
 !--------------------------------------------------------------------------
 ! The subroutines and functions that contain the cloud mask tests go below here
+! LOCATED IN INCLUDE FILE NOW
 !--------------------------------------------------------------------------
+
+
+!--------------------------------------------------------------------------
+! The subroutines and functions to pack bytes
+!--------------------------------------------------------------------------
+
+!------------------------------------------------------------------------
+! Routine to pack individual bytes into a single byte
+!
+! input:
+! input_bytes - vector of bytes to be packed into output_byte
+! bit_depth - vector of bit depths (1-8(16)) for each input byte (total can not exceed 8(16))
+!
+! output: 
+! output_byte - byte variable that holds the bit values of the input_bytes - can be i1 or i2
+!
+! local
+!  n_in - number of elements of input vectors
+!  i_in - index of input_bytes (1-n_in)
+!  n_out - number of elements of output vectors
+!  i_out - index of output_bytes (1-n_out)
+!
+! Note:
+! 1.  if the input byte has information in bits greater then bit depth - they are removed 
+!
+!
+! Example, pack an input_byte with  bit_start = 2 and bit depth 3 
+!
+! input byte
+!           x x x
+! _ _ _ _ _ _ _ _
+!
+! result of first ishft
+! x x x
+! _ _ _ _ _ _ _ _
+!
+! result of second ishft
+!       x x x
+! _ _ _ _ _ _ _ _
+!
+! Author: Andrew Heidinger
+!
+! Version History:  
+! February 2007 - Created
+!-----------------------------------------------------------------------------------
+
+!--- This Version packs into one byte words
+   subroutine PACK_BYTES_I1(input_bytes,bit_depth,output_bytes)
+    integer(kind=int1), dimension(:), intent(in):: input_bytes
+    integer(kind=int4), dimension(:), intent(in):: bit_depth
+    integer(kind=int1), dimension(:), intent(out):: output_bytes
+    integer(kind=int1):: bit_start, bit_end, bit_offset
+    integer(kind=int1):: temp_byte
+    integer:: n_in,i_in,n_out,i_out
+    integer, parameter:: word_bit_depth = 8
+  
+!--- determine size of vectors
+    n_in = size(input_bytes)
+    n_out = size(output_bytes)
+
+!--- reset output byte
+   output_bytes = 0
+
+!--- initialize
+   bit_offset = 0
+   bit_start = 0
+   bit_end = 0
+   i_out = 1
+
+!--- loop through input bytes
+   do i_in = 1, n_in
+
+!--- determine starting and ending bit locations
+     bit_start = bit_offset + 1
+     bit_end = bit_start + bit_depth(i_in) - 1
+
+!--- determine if this input byte will fit on current output byte, if not go to next
+     if (bit_end > word_bit_depth) then
+      i_out = i_out + 1
+      bit_offset = 0
+      bit_start = bit_offset + 1
+      bit_end = bit_start + bit_depth(i_in) - 1
+     endif
+
+!--- check for exceeding the space allowed for the packed bytes
+     if (i_out > n_out) then
+       print *, "ERROR: Insufficient space for bit packing" 
+       return
+     endif
+
+!--- place input byte into correct position
+     temp_byte =0
+     temp_byte = ishft(input_bytes(i_in),word_bit_depth-bit_depth(i_in))   !first ishft
+     temp_byte = ishft(temp_byte,bit_end - word_bit_depth)                 !second ishft
+
+!--- modify output byte
+     output_bytes(i_out) = output_bytes(i_out) + temp_byte
+
+!--- update bit offset
+     bit_offset = bit_offset + bit_depth(i_in)
+
+   enddo
+
+  end subroutine  PACK_BYTES_I1
+
+!--- This Version packs into two byte words
+   subroutine PACK_BYTES_I2(input_bytes,bit_depth,output_bytes)
+    integer(kind=int1), dimension(:), intent(in):: input_bytes
+    integer(kind=int4), dimension(:), intent(in):: bit_depth
+    integer(kind=int2), dimension(:), intent(out):: output_bytes
+    integer(kind=int1):: bit_start, bit_end, bit_offset
+    integer(kind=int2):: temp_byte                 
+    integer:: n_in,i_in,n_out,i_out
+    integer, parameter:: word_bit_depth = 16
+
+!--- determine size of vectors
+    n_in = size(input_bytes)
+    n_out = size(output_bytes)
+
+!--- reset output byte
+   output_bytes = 0
+
+!--- initialize
+   bit_offset = 0
+   bit_start = 0
+   bit_end = 0
+   i_out = 1
+
+!--- loop through input bytes
+   do i_in = 1, n_in
+
+!--- determine starting and ending bit locations
+     bit_start = bit_offset + 1
+     bit_end = bit_start + bit_depth(i_in) - 1
+
+!--- determine if this input byte will fit on current output byte, if not go to next
+     if (bit_end > word_bit_depth) then
+      i_out = i_out + 1
+      bit_offset = 0
+      bit_start = bit_offset + 1
+      bit_end = bit_start + bit_depth(i_in) - 1
+     endif
+
+!--- check for exceeding the space allowed for the packed bytes
+     if (i_out > n_out) then
+       print *, "ERROR: Insufficient space for bit packing"
+       return
+     endif
+
+!--- place input byte into correct position
+     temp_byte =0
+     temp_byte = ishft(INT(input_bytes(i_in),KIND=INT2),word_bit_depth-bit_depth(i_in))   !first ishft
+     temp_byte = ishft(temp_byte,bit_end - word_bit_depth)                 !second ishft
+
+!--- modify output byte
+     output_bytes(i_out) = output_bytes(i_out) + temp_byte
+
+!--- update bit offset
+     bit_offset = bit_offset + bit_depth(i_in)
+
+   enddo
+
+  end subroutine  PACK_BYTES_I2
 
 
 !--------------------------------------------------------------------------

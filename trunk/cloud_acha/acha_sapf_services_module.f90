@@ -183,8 +183,8 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order
    integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
+   real, dimension(:,:), pointer:: Pc_Opaque
    !rchen change type to allocatable 05/29/2015
-   real, dimension(:,:), ALLOCATABLE:: Pc_Opaque
    real, dimension(:,:), ALLOCATABLE:: Tc_Opaque
    real, dimension(:,:), ALLOCATABLE:: Zc_Opaque
    real, dimension(:,:), ALLOCATABLE:: Pc_H2O

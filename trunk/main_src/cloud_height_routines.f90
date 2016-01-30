@@ -1625,7 +1625,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
            if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 1
-             cycle
+              cycle
            endif
 
            if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
@@ -1638,14 +1638,6 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
      enddo
   enddo
-
-! Diag_Pix_Array_1 = ch(27)%CSBT_Mask
-! Diag_Pix_Array_2 = ch(28)%CSBT_Mask
-! Diag_Pix_Array_3 = ch(37)%CSBT_Mask
-! print *, "ch27 csbt range = ", minval(Ch(27)%CSBT_Mask),maxval(ch(27)%CSBT_Mask)
-! print *, "ch31 csbt range = ", minval(Ch(31)%CSBT_Mask),maxval(ch(31)%CSBT_Mask)
-! print *, "ch33 csbt range = ", minval(Ch(33)%CSBT_Mask),maxval(ch(33)%CSBT_Mask)
-      
 
 end subroutine COMPUTE_CSBT_CLOUD_MASKS
 !----------------------------------------------------------------------

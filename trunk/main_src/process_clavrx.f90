@@ -855,8 +855,11 @@
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
-            !--- compute the channel 3b albedo arrays
-            call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            !--- compute the channel 20 pseudo reflectance
+            if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+              call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa,ch(31)%Bt_Toa, &
+                                           Sun_Earth_Distance,ch(20)%Ref_Toa,Ems_Ch20)
+            endif
 
             !--- compute pixel level Snow map based on all ancillary data
             if (Nwp_Opt /= 0) then
@@ -911,6 +914,13 @@
 
                !--- apply atmospheric correction - needs rtm results
                call ATMOS_CORR(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+
+               !--- compute the channel 20 pseudo reflectance for clear-skies
+               if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+                  call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa_Clear,ch(31)%Bt_Toa_Clear,Sun_Earth_Distance, &
+                                               ch(20)%Ref_Toa_Clear,Ems_Ch20_Clear_Rtm)
+ 
+               endif
 
                !--- compute surface products (Tsfc,Ndvi,Rsr ...)
                call SURFACE_REMOTE_SENSING(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1085,6 +1095,7 @@
 
                     call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2,  &
                                                        Tc_Cirrus_Background, Zc_Cirrus_Background)
+
                   endif
 
                endif

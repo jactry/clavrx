@@ -52,7 +52,7 @@ file_tools.o
 
 .PHONY: clean hdf4
 
-all: hdf4 nlcomp_one_pixel_run
+all: hdf4 nlcomp_one_pixel_run libnlcomp.a
 
 hdf4:
 	@echo  'kkf'$(LFLAGS)
@@ -66,6 +66,10 @@ nlcomp_one_pixel_run: $(OBJS)
 	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS)  $(LFLAGS) ${hdf5libs} ${hdflibs} $(COMOBJ) $(PATH_FLAGS) 
 	@echo 'Finished building target: $@'
 	@echo ' '	
+
+libnlcomp.a: $(OBJS)
+	ar rvc libnlcomp.a $(OBJS)
+
 
 nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_retrieval_mod.o nlcomp_interface_def_mod.o
 nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o 

@@ -3245,9 +3245,7 @@ subroutine PRINT_PREFIX(buf, ms_Time)
   buf2(:) = buf(:128)
 
   CALL UNPKTIME (ldoc ,ITIMES,9+LOC)
-  print*,ldoc
-  print*,itimes
-  stop
+  
   year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
   dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
   Hour = itimes(8)*10 + itimes(9)

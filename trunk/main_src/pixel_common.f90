@@ -426,6 +426,7 @@ module PIXEL_COMMON
   character(len=355),public,save:: Cfsr_Data_Dir
   character(len=355),public,save:: Merra_Data_Dir
   character(len=355),public,save:: Gdas_Data_Dir
+  character(len=355),public,save:: Erai_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
   character(len=355),public,save:: GLOBSnow_Data_Dir

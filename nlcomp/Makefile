@@ -50,14 +50,12 @@ dcomp_lut_hdf_mod.o \
 nlcomp_interface_def_mod.o \
 file_tools.o
 
-.PHONY: clean hdf4
+.PHONY: all_nlcomp clean hdf4
 
-all: hdf4 nlcomp_one_pixel_run libnlcomp.a
-
-hdf4:
-	@echo  'kkf'$(LFLAGS)
-	@echo $(hdf4root)
-	@echo 'Building target for hdf4: $@'
+all_nlcomp: $(ICALIB)/libicaf90hdf.a nlcomp_one_pixel_run libnlcomp.a
+	
+   
+$(ICALIB)/libicaf90hdf.a:
 	make COMP1="$(fc)" HDF4R="$(hdf4root)" -C $(ICASRC)	
 
 nlcomp_one_pixel_run: $(OBJS)

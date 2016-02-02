@@ -22,16 +22,20 @@ LIBMOD = ica_f90_hdf_sds.mod ica_f90_hdf_dim_sds.mod
 	ifdef COMP1
 		COMP=$(COMP1) 
 	endif  
+
+.SUFFIXES:
+.SUFFIXES: .f90 .F .o
    
+#Compilation rule for f90 files
+.f90.o:
+	$(COMP) -c  $(CFLAGS)  $<
+	
 
+all: $(LIBPTH)
 
-all: lib
-
-lib: $(LIBSRC)
+$(LIBPTH): $(LIBOBJ) 
 	mkdir -p $(ICALIB)
-	$(COMP) -c $(CFLAGS) $(LIBSRC) 
-	ar -r $(LIBPTH) $(LIBOBJ)
-	cp $(LIBMOD) $(ICAINC)
+	ar -r $(LIBPTH) $(LIBOBJ)   
 
 clean :
 	rm -rf $(ICALIB) *.o *.mod

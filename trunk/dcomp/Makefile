@@ -56,20 +56,17 @@ test_dcomp_lut.o \
 dcomp_math_tools_mod.o \
 file_tools.o
 
-.PHONY: clean hdf4
+.PHONY: all_dcomp clean hdf4
 
-all: hdf4 dcomp_one_pixel_run libdcomp.a
-	@echo  'kkf'$(LFLAGS)
-hdf4:
-	@echo 'Building target for hdf4: $@'
+all_dcomp: $(ICALIB)/libicaf90hdf.a dcomp_one_pixel_run libdcomp.a
+	
+$(ICALIB)/libicaf90hdf.a:
 	make COMP1="$(fc)" -C $(ICASRC)	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
-	@echo 'test lut'
+	@echo 'Building target for test lut'
 	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  $(COMOBJ) $(LFLAGS)
 	
-
-
 dcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Intel(R) Fortran Linker'
@@ -81,7 +78,7 @@ dcomp_one_pixel_run: $(OBJS)
 
 libdcomp.a: $(OBJS)
 	
-	ar rvc $(DCOMP)libdcomp.a $(OBJS)
+	ar rvc libdcomp.a $(OBJS)
 	
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o

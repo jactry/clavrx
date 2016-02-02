@@ -582,6 +582,12 @@
                             Image%End_Year, Image%End_Doy, Image%End_Time, Merra_Data_Dir, ierror_Nwp)
       endif
 
+      !--- ERA INTERIM ANALYSIS
+      if (Nwp_Opt == 6) then
+         call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time,  &
+                            Image%End_Year, Image%End_Doy, Image%End_Time, Erai_Data_Dir, ierror_Nwp)
+      endif
+
       !---- if NWP is being read in, then proceeed in allocating RTM, NWP arrays
       if (Nwp_Opt /= 0) then
          

@@ -35,7 +35,8 @@ all: $(LIBPTH)
 
 $(LIBPTH): $(LIBOBJ) 
 	mkdir -p $(ICALIB)
-	ar -r $(LIBPTH) $(LIBOBJ)   
+	ar -r $(LIBPTH) $(LIBOBJ) 
+	cp $(LIBMOD) $(ICAINC)  
 
 clean :
 	rm -rf $(ICALIB) *.o *.mod

@@ -67,7 +67,7 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output) ! , Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties

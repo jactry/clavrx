@@ -81,7 +81,7 @@ test_lut_mod: $(OBJS_TEST_LUT)
 	
 dcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: Intel(R) Fortran Linker'
+	
 	
 	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS)  ${hdf5libs} ${hdflibs} $(COMOBJ) $(LFLAGS) $(PATH_FLAGS)
    
@@ -90,7 +90,7 @@ dcomp_one_pixel_run: $(OBJS)
 
 nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 	@echo 'Building target: $@'
-	@echo 'Invoking: Intel(R) Fortran Linker'
+	
 	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)  $(LFLAGS) ${hdf5libs} ${hdflibs} $(COMOBJ) $(PATH_FLAGS) 
 	@echo 'Finished building target: $@'
 	@echo ' '
@@ -133,6 +133,7 @@ file_tools.o:file_tools.f90
 clean:
 	rm -f *.o *.mod
 	rm -f dcomp_one_pixel_run
+   rm -f nlcomp_one_pixel_run
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib

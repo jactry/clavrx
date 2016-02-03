@@ -1639,10 +1639,10 @@ endif
 
 end do pass_loop
 
-Diag%Array_1 = Temperature_Cirrus
-if (associated(Input%Tc_Cirrus_Sounder)) then
- Diag%Array_2 = Input%Tc_Cirrus_Sounder
-endif
+!Diag%Array_1 = Temperature_Cirrus
+!if (associated(Input%Tc_Cirrus_Sounder)) then
+! Diag%Array_2 = Input%Tc_Cirrus_Sounder
+!endif
 
 !------------------------------------------------------------------------
 ! Apply Parallax Correction 

@@ -10,6 +10,7 @@ module ACHA_GSIP_BRIDGE_MOD
 
  use AWG_CLOUD_HEIGHT
  use ACHA_SERVICES_MOD
+ use ACHA_CLOUD_COVER_LAYERS
    
  implicit none
 
@@ -22,6 +23,7 @@ module ACHA_GSIP_BRIDGE_MOD
  type(acha_symbol_struct), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
+ REAL (KIND=REAL4), DIMENSION(:,:), ALLOCATABLE,TARGET, PRIVATE :: Zsfc_km
 
  contains
 
@@ -55,6 +57,9 @@ module ACHA_GSIP_BRIDGE_MOD
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
                                     Symbol, &
                                     Output)
+
+  !--- cloud cover layers
+   call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -107,6 +112,8 @@ module ACHA_GSIP_BRIDGE_MOD
      Input%Elem_Idx_LRC_Input =>  null()
      Input%Line_Idx_LRC_Input =>   null()
      Input%Tc_Cirrus_Sounder =>   null()
+     if (allocated(Zsfc_km)) deallocate(Zsfc_km)
+
  end subroutine NULL_INPUT
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output to ACHA
@@ -141,13 +148,13 @@ module ACHA_GSIP_BRIDGE_MOD
      Output%Packed_Qf =>  null()
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
-     Output%Pc_Opaque =>  null()
-     Output%Tc_Opaque =>  null()
-     Output%Zc_Opaque =>  null()
-     Output%Pc_H2O =>  null()
-     Output%Tc_H2O =>  null()
-     Output%Zc_H2O =>  null()
- end subroutine NULL_OUTPUT
+     if (allocated(Output%Pc_Opaque)) deallocate(Output%Pc_Opaque)
+     if (allocated(Output%Tc_Opaque)) deallocate(Output%Tc_Opaque)
+     if (allocated(Output%Zc_Opaque)) deallocate(Output%Zc_Opaque)
+     if (allocated(Output%Pc_H2O)) deallocate(Output%Pc_H2O)
+     if (allocated(Output%Tc_H2O)) deallocate(Output%Tc_H2O)
+     if (allocated(Output%Zc_H2O)) deallocate(Output%Zc_H2O)
+  end subroutine NULL_OUTPUT
 
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -214,6 +221,7 @@ module ACHA_GSIP_BRIDGE_MOD
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
+   integer:: Num_Elem, Num_Line
    Output%Latitude_Pc => gsip_pix_prod%Lat_Pc
    Output%Longitude_Pc => gsip_pix_prod%Lon_Pc
    Output%Tc => gsip_pix_prod%ctt
@@ -243,12 +251,18 @@ module ACHA_GSIP_BRIDGE_MOD
    Output%High_Cloud_Fraction => gsip_pix_prod%r4_generic2
    Output%Mid_Cloud_Fraction => gsip_pix_prod%r4_generic2
    Output%Low_Cloud_Fraction => gsip_pix_prod%r4_generic2
-   Output%Pc_Opaque => gsip_pix_prod%r4_generic2
-   Output%Tc_Opaque => gsip_pix_prod%r4_generic2
-   Output%Zc_Opaque => gsip_pix_prod%r4_generic2
-   Output%Pc_H2O => gsip_pix_prod%r4_generic3
-   Output%Tc_H2O => gsip_pix_prod%r4_generic3
-   Output%Zc_H2O => gsip_pix_prod%r4_generic3
+
+   Num_Elem = sat%nx
+   Num_Line =Num_Scans_Per_Segment
+
+   ALLOCATE (Output%Pc_Opaque(Num_Elem,Num_Line))
+   ALLOCATE (Output%Tc_Opaque(Num_Elem,Num_Line))
+   ALLOCATE (Output%Zc_Opaque(Num_Elem,Num_Line))
+   ALLOCATE (Output%Pc_H2O(Num_Elem,Num_Line))
+   ALLOCATE (Output%Tc_H2O(Num_Elem,Num_Line))
+   ALLOCATE (Output%Zc_H2O(Num_Elem,Num_Line))
+
+
    Output%Inversion_Flag => gsip_pix_prod%i1_generic1
  end subroutine SET_OUTPUT
 
@@ -275,6 +289,7 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Chan_On_133um = sat_info_gsip(1)%chanon(16)
 
    Input%Invalid_Data_Mask => bad_pix_mask(14,:,:)
+   
 
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp
@@ -288,6 +303,7 @@ module ACHA_GSIP_BRIDGE_MOD
         Input%Bt_67um => bt9
         Input%Rad_67um => rad9
         Input%Rad_Clear_67um => Rad_Clear_Ch9_Rtm
+        Input%Covar_Bt_11um_67um =>Covar_Ch27_Ch31_5x5
   endif
 
    if (Input%Chan_On_85um  == sym%YES) then
@@ -327,7 +343,10 @@ module ACHA_GSIP_BRIDGE_MOD
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
 
-   Input%Surface_Elevation => Zsfc
+   ALLOCATE (Zsfc_km(Input%Number_of_Elements,Input%Number_of_Lines))
+   Zsfc_km = Zsfc /1000.0
+   Input%Surface_Elevation => Zsfc_km
+
    Input%Cloud_Mask =>  gsip_pix_prod%cldmask
    Input%Cloud_Type => gsip_pix_prod%Cldtype
    Input%Cloud_Probability => gsip_pix_prod%cldprob

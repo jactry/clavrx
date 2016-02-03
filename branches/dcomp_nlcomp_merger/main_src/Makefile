@@ -212,8 +212,7 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 
 dncomp:
 	$(MAKE)  -C $(DNCOMP) 
-	rm -fv $(DNCOMP)libdncomp.a
-	ar rvc $(DNCOMP)libdncomp.a $(DNCOMP)*.o
+	
 
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs

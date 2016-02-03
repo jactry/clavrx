@@ -27,7 +27,7 @@
 ! COMPUTE_TSFC - derive pixel-level surface temperature 
 ! ATMOS_CORR - perform atmospheric correction
 ! NORMALIZE_REFLECTANCES - divide reflectances by cosine solar zenith angle
-! CH3B_ALB - compute the channel 20 reflectance
+! CH20_PSEUDO_REFLECTANCE - compute the channel 20 reflectance
 ! COMPUTE_SPATIAL_UNIFORMITY - compute metrics of radiance and reflectance
 !                              spatial uniformity
 ! SPECTRAL_CORRECT_NDVI - apply a spectral correct to Ndvi to look like NOAA14
@@ -57,7 +57,7 @@ MODULE PIXEL_ROUTINES
           SURFACE_REMOTE_SENSING,  &
           ATMOS_CORR,&
           NORMALIZE_REFLECTANCES,  &
-          CH3B_ALB,  &
+          CH20_PSEUDO_REFLECTANCE,  &
           COMPUTE_SPATIAL_UNIFORMITY, &
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
           CONVERT_TIME, &
@@ -189,7 +189,7 @@ subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
    end where
 
    !--- Satzen limit
-   where (Geo%Satzen >= Geo%Satzen_Max_Limit .or. Geo%Satzen <= Geo%Satzen_Min_Limit)
+   where (Geo%Satzen > Geo%Satzen_Max_Limit .or. Geo%Satzen < Geo%Satzen_Min_Limit)
         Space_Mask = sym%YES
    end where
 
@@ -1175,49 +1175,6 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
       
     end do  channel_loop
 
-    !--- thermal atmospheric correction - use rtm parameters
-   do Chan_Idx = 20, 36
-
-      if (Chan_Idx == 26) cycle
-
-      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
-
-      ch(Chan_Idx)%Rad_Sfc(Elem_Idx,Line_Idx) = max(0.0,(ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx) -  &
-                                                         ch(Chan_Idx)%Rad_Atm(Elem_Idx,Line_Idx))/ &
-                                                         ch(Chan_Idx)%Trans_Atm(Elem_Idx,Line_Idx))
-   enddo
-
-   !--- channel 20 reflectance correction
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.   &
-       Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-
-       if (ch(31)%Bt_Sfc(Elem_Idx,Line_Idx) > 180.0) then
-          Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = PLANCK_RAD_FAST(20,ch(31)%Bt_Sfc(Elem_Idx,Line_Idx))
-          Ems_Ch20_Sfc(Elem_Idx,Line_Idx) = ch(20)%Rad_Sfc(Elem_Idx,Line_Idx) / Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)
-       else
-         Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
-         Ems_Ch20_Sfc(Elem_Idx,Line_Idx) = Missing_Value_Real4
-       endif
-       if ((Geo%Solzen(Elem_Idx,Line_Idx)<90.0).and.(Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)>0.0) &
-         .and.(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)>0.0)) then
-         ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*pi*(ch(20)%Rad_Sfc(Elem_Idx,Line_Idx)-Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx)) /  &
-                  ((Solar_Ch20_Nu*Geo%Cossolzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2) - &
-                  pi*Rad_Ch20_Ems_Sfc(Elem_Idx,Line_Idx) )
-       endif
-
-       !----- during the night, derive Ref_Ch20_Sfc from Ems_Ch20_Sfc
-       if ((Geo%Solzen(Elem_Idx,Line_Idx)>=90.0).and.(Ems_Ch20_Sfc(Elem_Idx,Line_Idx)/=Missing_Value_Real4)) then
-         ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = 100.0*(1.0-Ems_Ch20_Sfc(Elem_Idx,Line_Idx))
-       endif
-
-       !--- constrain values
-       if (ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
-        ch(20)%Ref_Sfc(Elem_Idx,Line_Idx) = max(-50.0,min(100.0,ch(20)%Ref_Sfc(Elem_Idx,Line_Idx)))
-       endif
-
-    endif
-
-
    end do element_loop
 
  end do line_loop
@@ -1351,7 +1308,7 @@ end subroutine NORMALIZE_REFLECTANCES
 !
 !  output (passed through shared memory)
 !    Ref_Ch20 - Ch3b albeDO computed using standard ch4 based method
-!    Ems_Ch20 - Ch3b emissivity computed using standrad Ch3 based method
+!    Emiss_Ch20 - Ch3b emissivity computed using standrad Ch3 based method
 !
 !  internal
 !    Rad_Ch20_ems - Ch3b emission radiance (mW/m^2/str/cm^-1)
@@ -1360,69 +1317,73 @@ end subroutine NORMALIZE_REFLECTANCES
 !
 ! Revision History
 !   January 2003 - A. Heidinger
+!
+! --->    AW 10/20/2014
+! ch(20) %ref_toa is the pseudo solar reflectance in 3.9 channels
+!  Rad_obs = Rad_sol + ( 1 - R ) Rad_ch20_ems
+!  Rad_obs = (R * F_0 * mu) / PI + ( 1 - R ) Rad_ch20_ems
+!  == >   R = ( PI (Rad_obs - Rad_ch20_ems )) / ( F_o * mu - PI * Rad_ch20_ems )
+!     see Kaufman and Remer IEEE 1994:
+!   "Detection of  Forests Using Mid-IR Reflectance: An  Application for Aerosol Studies"
+!   http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=297984
+!
 !-----------------------------------------------------------------------
-subroutine CH3B_ALB(Sun_Earth_Distance,j1,j2)
+subroutine CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Cos_Solzen,Rad_Ch20,Bt_Ch31,Sun_Earth_Distance,Ref_Ch20,Emiss_Ch20)
+
+  real(kind=real4), intent(in):: Solar_Ch20_Nu
   real(kind=real4), intent(in):: Sun_Earth_Distance
-  integer, intent(in):: j1, j2
-  integer:: i,j
-  real :: solar_irradiance
+  real(kind=real4), dimension(:,:), intent(in):: Cos_Solzen
+  real(kind=real4), dimension(:,:), intent(in):: Rad_Ch20
+  real(kind=real4), dimension(:,:), intent(in):: Bt_Ch31
+  real(kind=real4), dimension(:,:), intent(out):: Ref_Ch20
+  real(kind=real4), dimension(:,:), intent(out):: Emiss_Ch20
+  integer:: Elem_Idx, Line_Idx, Num_Elements, Num_Lines
+  real :: Rad_Ch20_Ems
+  real :: Solar_Irradiance
 
-  do j = j1,j1+j2-1
+  Num_Elements = Image%Number_Of_Elements        !make local copy of a global variable
+  Num_Lines = Image%Number_Of_Lines_Per_Segment  !make local copy of a global variable
 
-    !---- compute channel 3b albedo
-    if ((Sensor%Chan_On_Flag_Default(20) == sym%YES) .and.  &
-        (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then   !start Ch3a_on check
+  if ((Sensor%Chan_On_Flag_Default(20) /= sym%YES) .or.  &
+      (Sensor%Chan_On_Flag_Default(31) /= sym%YES)) then   !start Ch3a_on check
+        return
+  endif
 
-      !----------------------------------------------------------------------------
-      !--- standard Ref_Ch20 computation
-      !---------------------------------------------------------------------------
-      do i = 1, Image%Number_Of_Elements
+  !----------------------------------------------------------------------------
+  !--- standard Ref_Ch20 computation
+  !---------------------------------------------------------------------------
+  do Line_Idx = 1,Num_Lines
+      do Elem_Idx = 1, Num_Elements
 
-
-      !--- check for bad scans
-        if (Bad_Pixel_Mask(i,j) == sym%YES) then
+        !--- check for bad scans
+        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
           cycle
         endif
 
-        if (ch(31)%Bt_Toa(i,j) > 180.0) then
-           Rad_Ch20_ems(i,j) = PLANCK_RAD_FAST(20,ch(31)%Bt_Toa(i,j))
-           Ems_Ch20(i,j) = ch(20)%Rad_Toa(i,j) / Rad_Ch20_ems(i,j)
+        if (Bt_Ch31(Elem_Idx,Line_Idx) > 180.0) then
+           Rad_Ch20_Ems = PLANCK_RAD_FAST(20,Bt_Ch31(Elem_Idx,Line_Idx))
+           Emiss_Ch20(Elem_Idx,Line_Idx) = Rad_Ch20(Elem_Idx,Line_Idx) / Rad_Ch20_Ems
         else
-           Rad_Ch20_ems(i,j) = Missing_Value_Real4
-           Ems_Ch20(i,j) = Missing_Value_Real4
+           Rad_Ch20_Ems = Missing_Value_Real4
+           Emiss_Ch20(Elem_Idx,Line_Idx) = Missing_Value_Real4
         endif
          
-         ! --->    AW 10/20/2014
-         ! ch(20) %ref_toa is the pseudo solar reflectance in 3.9 channels
-         !  Rad_obs = Rad_sol + ( 1 - R ) Rad_ch20_ems
-         !  Rad_obs = (R * F_0 * mu) / PI + ( 1 - R ) Rad_ch20_ems
-         !  == >   R = ( PI (Rad_obs - Rad_ch20_ems )) / ( F_o * mu - PI * Rad_ch20_ems )
-         !     see Kaufman and Remer IEEE 1994:
-         !   "Detection of  Forests Using Mid-IR Reflectance: An  Application for Aerosol Studies"
-         !   http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=297984
-         !
-        if ((Rad_Ch20_ems(i,j)>0.0).and.(ch(20)%Rad_Toa(i,j)>0.0)) then
-            solar_irradiance = max ( 0., (Solar_Ch20_nu*Geo%Cossolzen(i,j))/(Sun_Earth_Distance**2))
-           ch(20)%Ref_Toa(i,j) = 100.0*pi*(ch(20)%Rad_Toa(i,j)-Rad_Ch20_ems(i,j)) /  &
-                        ( solar_irradiance - pi*Rad_Ch20_ems(i,j) )
+        if ((Rad_Ch20_Ems>0.0).and.(Rad_Ch20(Elem_Idx,Line_Idx)>0.0)) then
+           Solar_Irradiance = max (0.0, (Solar_Ch20_Nu*Cos_Solzen(Elem_Idx,Line_Idx))/(Sun_Earth_Distance**2))
+           Ref_Ch20(Elem_Idx,Line_Idx) = 100.0*pi*(Rad_Ch20(Elem_Idx,Line_Idx)-Rad_Ch20_Ems) /  &
+                                                  (Solar_Irradiance - pi*Rad_Ch20_Ems)
         endif
 
-        
-
         !--- constrain values
-        if (ch(20)%Ref_Toa(i,j) /= Missing_Value_Real4) then
-              ch(20)%Ref_Toa(i,j) = max(-50.0,min(100.0,ch(20)%Ref_Toa(i,j)))
+        if (Ref_Ch20(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then
+              Ref_Ch20(Elem_Idx,Line_Idx) = max(-50.0,min(100.0,Ref_Ch20(Elem_Idx,Line_Idx)))
         endif
 
       enddo
 
-     endif   !--end of Ch3a_on check
+   enddo
 
-   end do
-
-!--- constrain values
-
-end subroutine CH3B_ALB
+end subroutine CH20_PSEUDO_REFLECTANCE
 
 subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
 

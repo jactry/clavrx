@@ -71,6 +71,7 @@ module USER_OPTIONS
       , Cfsr_Data_Dir &
       , Merra_Data_Dir &
       , Gdas_Data_Dir &
+      , Erai_Data_Dir &
       , File_List &
       , Geo_File_Flag &
       , Gfs_Data_Dir &
@@ -144,8 +145,8 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
    integer,parameter:: ACHA_Mode_Default_SEVIRI = 8
    integer,parameter:: ACHA_Mode_Default_Modis = 8
-   integer,parameter:: ACHA_Mode_Default_Fy2 = 7
-   integer,parameter:: ACHA_Mode_Default_AHI = 1
+   integer,parameter:: ACHA_Mode_Default_Fy2 = 6
+   integer,parameter:: ACHA_Mode_Default_AHI = 8
    
 contains
 
@@ -578,6 +579,7 @@ contains
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
       Merra_Data_Dir = trim(Data_Base_Path)//'/dynamic/merra/'
       Gdas_Data_Dir = trim(Data_Base_Path)//'/dynamic/gdas/'
+      Erai_Data_Dir = trim(Data_Base_Path)//'/dynamic/erai/'
       Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
@@ -614,6 +616,8 @@ contains
          call MESG ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
       case ( 5 )
          call MESG ( "MERRA Reanalysis data will be used",level = verb_lev % DEFAULT)
+      case ( 6 )
+         call MESG ( "ERA Interim Reanalysis data will be used",level = verb_lev % DEFAULT)
       case default
          print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
          stop "6-Nwp_Flag"
@@ -804,7 +808,8 @@ contains
      
       call CHANNEL_SWITCH_ON (SensorName)
 
-      if ( Expert_Mode < 2 .or. trim(Bayesian_Cloud_Mask_Name) == 'default') then
+      if ( Expert_Mode < 2 .or. trim(Bayesian_Cloud_Mask_Name) == 'default' &
+           .or. trim(Bayesian_Cloud_Mask_Name) == 'DEFAULT') then
          Bayesian_Cloud_Mask_Name = default_nb_mask_classifier_file ( SensorName )
       end if
       
@@ -908,7 +913,7 @@ contains
       case ('SEVIRI')
          filename  = 'seviri_default_nb_cloud_mask_lut.nc'
       case ('FY2-IMAGER')
-         filename  = 'avhrr_default_nb_cloud_mask_lut.nc' 
+         filename  = 'fy2_default_nb_cloud_mask_lut.nc' 
       case ('VIIRS')
          filename  = 'viirs_default_nb_cloud_mask_lut.nc' 
       case ('VIIRS-IFF')      
@@ -991,7 +996,7 @@ contains
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:2)  =  [1, 3]
       case ('FY2-IMAGER')
-         possible_acha_modes(1:2)   =  [1 , 2 ] 
+         possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
          possible_dcomp_modes(1:1)  =  [3]
       case ('VIIRS')
          possible_acha_modes(1:3)   =  [1, 3, 5] 

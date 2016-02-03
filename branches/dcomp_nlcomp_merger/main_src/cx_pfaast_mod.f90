@@ -117,8 +117,6 @@ contains
       
       end if  
       
-      
-      
       ! - computes mid-layer values for reference
       if ( .not. are_ref_profiles_set ) then
          call conpir ( pstd,tstd,wstd,ostd,nl,1,pavg,tref,wref,oref )
@@ -155,11 +153,6 @@ contains
       taut = taud * tauo * tauc * tauw
       ! - done    
        
-   
    end subroutine compute_transmission_pfaast
-
-  
-
-
 
 end module cx_pfaast_mod

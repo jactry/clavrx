@@ -582,6 +582,12 @@
                             Image%End_Year, Image%End_Doy, Image%End_Time, Merra_Data_Dir, ierror_Nwp)
       endif
 
+      !--- ERA INTERIM ANALYSIS
+      if (Nwp_Opt == 6) then
+         call READ_GFS_DATA(Nwp_Opt, Image%Start_Year, Image%Start_Doy, Image%Start_Time,  &
+                            Image%End_Year, Image%End_Doy, Image%End_Time, Erai_Data_Dir, ierror_Nwp)
+      endif
+
       !---- if NWP is being read in, then proceeed in allocating RTM, NWP arrays
       if (Nwp_Opt /= 0) then
          
@@ -855,8 +861,11 @@
             !--- normalize reflectances by the solar zenith angle and sun-earth distance
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
-            !--- compute the channel 3b albedo arrays
-            call CH3B_ALB(Sun_Earth_Distance,Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            !--- compute the channel 20 pseudo reflectance
+            if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+              call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa,ch(31)%Bt_Toa, &
+                                           Sun_Earth_Distance,ch(20)%Ref_Toa,Ems_Ch20)
+            endif
 
             !--- compute pixel level Snow map based on all ancillary data
             if (Nwp_Opt /= 0) then
@@ -911,6 +920,13 @@
 
                !--- apply atmospheric correction - needs rtm results
                call ATMOS_CORR(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+
+               !--- compute the channel 20 pseudo reflectance for clear-skies
+               if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+                  call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa_Clear,ch(31)%Bt_Toa_Clear,Sun_Earth_Distance, &
+                                               ch(20)%Ref_Toa_Clear,Ems_Ch20_Clear_Rtm)
+ 
+               endif
 
                !--- compute surface products (Tsfc,Ndvi,Rsr ...)
                call SURFACE_REMOTE_SENSING(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1085,6 +1101,7 @@
 
                     call MAKE_CIRRUS_PRIOR_TEMPERATURE(Tc_Co2, Pc_Co2, Ec_Co2,  &
                                                        Tc_Cirrus_Background, Zc_Cirrus_Background)
+
                   endif
 
                endif
@@ -1102,7 +1119,7 @@
                   call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--- interpolate ACHA cloud heights to flight level altitude.
-                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc,ACHA%Alt)
 
                   !--accumulate performance metrics
                   call COMPUTE_ACHA_PERFORMANCE_METRICS(ACHA%Processed_Count,ACHA%Valid_Count,ACHA%Success_Fraction)
@@ -1163,6 +1180,10 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (ACHA%Mode > 0) then 
                  call CLOUD_BASE_BRIDGE()
+
+                 !---Calculate flight level altitude of the base for AWC
+                 call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc_Base,ACHA%Base_Alt)
+
                endif
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(10) =  Segment_Time_Point_Seconds(10) + &

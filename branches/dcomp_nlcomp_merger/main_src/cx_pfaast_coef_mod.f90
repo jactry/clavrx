@@ -283,8 +283,12 @@ contains
       
       case ('HIRS')
          
-         this % modis_channel_eqv = [ -1,-1,-1,-1,-1,34,33,-1,30,-1,28,27,-1,-1,25,24,-1,23,21 ]
+!        this % modis_channel_eqv = [ -1,-1,-1,-1,-1,34,33,-1,30,-1,28,27,-1,-1,25,24,-1,23,21 ]
+!                                      1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19 ]
+!akh mod
+         this % modis_channel_eqv = [ -1,-1,-1,36,35,34,33,-1,30,-1,28,27,-1,-1,25,24,-1,23,21 ]
          this % native_channel = [ (i,i=1,19),1 ]   
+
       case ('AVHRR')
         
          this % modis_channel_eqv = [ 20,31,32 ]
@@ -430,7 +434,7 @@ contains
          read (satellite, * ) idx_sat
          select case (idx_sat)
          case(1) 
-               cfile = 'comsccc101.dat'
+            cfile = 'comsccc101.dat'
          case(2) 
             cfile = 'fy2dccc101.dat'
          case(3) 
@@ -467,7 +471,7 @@ contains
          this % modis_channel_eqv = [33,31,32,27,20]     
          this % native_channel = [ 1,2,3,4,5  ]
       case ('FY2')
-         this % modis_channel_eqv = [-1,20,27,31,32]      
+         this % modis_channel_eqv = [-1,31,32,27,20]      
          this % native_channel = [ 1,2,3,4,5  ] 
       case ('GOES')
          this % modis_channel_eqv(19:23) = [20,27,31,32,33]

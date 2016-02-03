@@ -366,13 +366,15 @@ end subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
 !----------------------------------------------------------------------
 ! routine to interpolate pressure to flight level altitude.
 !----------------------------------------------------------------------
-subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
+subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
 
 !--- Based on Sarah Monette calculations for HS3.  Her calculation is based on:
 !--- http://psas.pdx.edu/RocketScience/PressureAltitude_Derived.pdf.
 
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Num_Lines
+  real, intent(inout), dimension(:,:) :: Alt_Out
+  real, intent(in), dimension(:,:) :: Pc_In
   integer:: Num_Elem
   integer:: Elem_Idx
   integer:: Line_Idx
@@ -381,7 +383,6 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
   integer:: Nwp_Lon_Idx
   integer:: Nwp_Lat_Idx
   real:: Pc_Temp
-  real:: Tc_Temp
   real:: Alt_Temp
 
   !--- Constants from Sarah Monette
@@ -405,7 +406,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
   Num_Elem = Image%Number_Of_Elements      !Image%Number_Of_Elements is a global variable
 
   !--- initialize
-  ACHA%Alt = Missing_Value_Real4
+  Alt_Out = Missing_Value_Real4
 
   !----------------------------------------------------------
   ! loop through segment
@@ -415,7 +416,6 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
 
      !--- Initialize temporary value each time.
      Pc_Temp = Missing_Value_Real4
-     Tc_Temp = Missing_Value_Real4
      Alt_Temp = Missing_Value_Real4
 
      !--- save indices
@@ -430,12 +430,11 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
 
      !--- check if cld-top pressure is valid
-     if (ACHA%Pc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Pc_In(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      !--- Place valid pressure in temp variable for readability in the
      !--- calculations below.
-     Pc_Temp = ACHA%Pc(Elem_Idx,Line_Idx)
-     Tc_Temp = ACHA%Tc(Elem_Idx,Line_Idx)
+     Pc_Temp = Pc_In(Elem_Idx,Line_Idx)
 
      !--- calculated altitude, in feet, from pressure.
      !--- 1st pivot point is directly from the pressure to
@@ -462,7 +461,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines)
      endif
 
      !--- Assign final altitude, in feet, to the level2 array.
-     ACHA%Alt(Elem_Idx,Line_Idx) = Alt_Temp
+     Alt_Out(Elem_Idx,Line_Idx) = Alt_Temp
 
   enddo Element_Loop_1
   enddo Line_Loop_1
@@ -1626,7 +1625,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
            if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 1
-             cycle
+              cycle
            endif
 
            if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
@@ -1639,14 +1638,6 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
      enddo
   enddo
-
-! Diag_Pix_Array_1 = ch(27)%CSBT_Mask
-! Diag_Pix_Array_2 = ch(28)%CSBT_Mask
-! Diag_Pix_Array_3 = ch(37)%CSBT_Mask
-! print *, "ch27 csbt range = ", minval(Ch(27)%CSBT_Mask),maxval(ch(27)%CSBT_Mask)
-! print *, "ch31 csbt range = ", minval(Ch(31)%CSBT_Mask),maxval(ch(31)%CSBT_Mask)
-! print *, "ch33 csbt range = ", minval(Ch(33)%CSBT_Mask),maxval(ch(33)%CSBT_Mask)
-      
 
 end subroutine COMPUTE_CSBT_CLOUD_MASKS
 !----------------------------------------------------------------------

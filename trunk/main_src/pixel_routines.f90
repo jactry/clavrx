@@ -189,7 +189,7 @@ subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS(Space_Mask)
    end where
 
    !--- Satzen limit
-   where (Geo%Satzen >= Geo%Satzen_Max_Limit .or. Geo%Satzen <= Geo%Satzen_Min_Limit)
+   where (Geo%Satzen > Geo%Satzen_Max_Limit .or. Geo%Satzen < Geo%Satzen_Min_Limit)
         Space_Mask = sym%YES
    end where
 

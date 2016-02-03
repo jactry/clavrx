@@ -133,7 +133,7 @@ file_tools.o:file_tools.f90
 clean:
 	rm -f *.o *.mod
 	rm -f dcomp_one_pixel_run
-   rm -f nlcomp_one_pixel_run
+	rm -f nlcomp_one_pixel_run
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib

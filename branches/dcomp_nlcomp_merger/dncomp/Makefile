@@ -48,7 +48,19 @@ view2d.o \
 file_tools.o \
 dcomp_lut_hdf_mod.o
 
-
+OBJS_NLCOMP = dcomp_math_tools_mod.o \
+dcomp_science_tools_mod.o \
+M_kracken.o \
+dcomp_interface_types_mod.o \
+dcomp_lut_mod.o \
+view2d.o \
+file_tools.o \
+dcomp_lut_hdf_mod.o \
+nlcomp_array_loop_sub.o \
+nlcomp_forward_mod.o \
+nlcomp_interface_def_mod.o \
+nlcomp_one_pixel_run_program.o \
+nlcomp_retrieval_mod.o
 
 
 OBJS_TEST_LUT = dcomp_lut_mod.o \
@@ -58,7 +70,7 @@ file_tools.o
 
 .PHONY: all_dncomp clean hdf4
 
-all_dncomp: $(ICALIB)/libicaf90hdf.a dcomp_one_pixel_run libdncomp.a
+all_dncomp: $(ICALIB)/libicaf90hdf.a dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
 	
 $(ICALIB)/libicaf90hdf.a:
 	make COMP1="$(fc)" -C $(ICASRC)	
@@ -76,6 +88,14 @@ dcomp_one_pixel_run: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
+nlcomp_one_pixel_run: $(OBJS_NLCOMP)
+	@echo 'Building target: $@'
+	@echo 'Invoking: Intel(R) Fortran Linker'
+	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)  $(LFLAGS) ${hdf5libs} ${hdflibs} $(COMOBJ) $(PATH_FLAGS) 
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+
 libdncomp.a: $(OBJS)
 	
 	ar rvc libdncomp.a $(OBJS)
@@ -89,7 +109,11 @@ dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90
 dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
-
+nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_retrieval_mod.o nlcomp_interface_def_mod.o
+nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o 
+nlcomp_array_loop_sub.o:nlcomp_array_loop_sub.f90 nlcomp_retrieval_mod.o nlcomp_interface_def_mod.o
+nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_math_tools_mod.o  M_kracken.o dcomp_lut_mod.o dcomp_science_tools_mod.o
+nlcomp_interface_def_mod.o:nlcomp_interface_def_mod.f90
 
 M_kracken.o:$(SUB_PATH)/M_kracken.f90
 	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90

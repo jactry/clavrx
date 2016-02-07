@@ -94,6 +94,8 @@
 !  Trans_Atm_Total = Simulated Transmission from Toa to Surface to Toa for cloud-free atmosphere
 !                      along solar and viewing zenith angle path
 !  Bt_Toa_Clear = Simulated Toa Brightness Temperature under clear-sky
+!  Bt_Sfc = Observed Brightness Temperature adjusted as if measured at surface level
+!  Rad_Sfc = Observed Radiance adjusted as if measured at surface level
 !  Ref_Toa = Top of Atmosphere Reflectance
 !  Ref_Toa_Unnorm = Top of Atmosphere Reflectance not normalized by cos(solzen)
 !  Ref_Sfc = Observed Reflectance adjusted as if measured at surface level
@@ -171,6 +173,8 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Trans_Atm
     real, dimension(:,:), allocatable:: Trans_Atm_Total
     real, dimension(:,:), allocatable:: Bt_Toa_Clear
+    real, dimension(:,:), allocatable:: Bt_Sfc
+    real, dimension(:,:), allocatable:: Rad_Sfc
     real, dimension(:,:), allocatable:: Ref_Toa
     real, dimension(:,:), allocatable:: Ref_Toa_Unnorm
     real, dimension(:,:), allocatable:: Ref_Sfc
@@ -426,7 +430,6 @@ module PIXEL_COMMON
   character(len=355),public,save:: Cfsr_Data_Dir
   character(len=355),public,save:: Merra_Data_Dir
   character(len=355),public,save:: Gdas_Data_Dir
-  character(len=355),public,save:: Erai_Data_Dir
   character(len=355),public,save:: Oisst_Data_Dir
   character(len=355),public,save:: Snow_Data_Dir
   character(len=355),public,save:: GLOBSnow_Data_Dir
@@ -537,7 +540,7 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Uni_ChI5
   real (kind=real4), dimension(:,:), allocatable, public, save, target:: Bt_Mean_ChI5
 
-! real (kind=real4), dimension(:,:), allocatable, public, save:: Rad_Ch20_Ems
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Rad_Ch20_ems
   real (kind=real4), dimension(:,:), allocatable, public, save:: Ems_Ch20
 
   real (kind=real4), dimension(:,:), allocatable, public, save:: Sst_Anal
@@ -737,6 +740,9 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clear_Std_3x3
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Dark_Composite
      real (kind=real4), dimension(:,:), allocatable, public:: Ndvi_Sfc
+     real (kind=real4), dimension(:,:), allocatable, public:: Bt_Ch31_Sfc
+     real (kind=real4), dimension(:,:), allocatable, public:: Rad_Ch20_Ems_Sfc
+     real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Sfc
 
   !--- scratch arrays
   integer(kind=int1), dimension(:,:), public,save,allocatable, target:: One_Byte_Temp
@@ -786,7 +792,11 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
 
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Total_Rtm
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Rtm
-  real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public:: Bt_Clear_Ch20_Solar_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public:: Rad_Clear_Ch20_Solar_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Clear_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Solar_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public:: Ems_Ch20_Clear_Solar_Sfc_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ttropo_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_Nadir_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_12um_Tropo_Rtm
@@ -891,6 +901,8 @@ subroutine CREATE_PIXEL_ARRAYS()
         case(THERMAL_OBS_TYPE)
             allocate(Ch(idx)%Rad_Toa(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa(dim1,dim2))
+            allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Rad_Sfc(dim1,dim2))
             allocate(Ch(idx)%Rad_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Rad_Atm(dim1,dim2))
@@ -909,6 +921,8 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
             allocate(Ch(idx)%Rad_Toa(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa(dim1,dim2))
+            allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
+            allocate(Ch(idx)%Rad_Sfc(dim1,dim2))
             allocate(Ch(idx)%Rad_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Bt_Toa_Clear(dim1,dim2))
             allocate(Ch(idx)%Rad_Atm(dim1,dim2))
@@ -928,6 +942,63 @@ subroutine CREATE_PIXEL_ARRAYS()
   !--- force allocation of channel 20 surface emissivity for use in mask
   if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
   
+  !---  old
+
+! do idx = 1,38
+!     if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
+!        allocate(Ch(idx)%Unc(dim1,dim2))
+!        if (idx <= 20 .or. idx == 26) then 
+!           allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Toa_Unnorm(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Ref_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+!        endif
+!        if (idx == 1) then 
+!           allocate(Ch(idx)%Opd(dim1,dim2))
+!        endif
+!        if ((idx >= 20 .and. idx <= 38 .and. idx /= 26)) then 
+!           allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Toa(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Sfc(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Bt_Toa_Clear(dim1,dim2))
+!           allocate(Ch(idx)%Rad_Atm(dim1,dim2))
+!           allocate(Ch(idx)%Trans_Atm(dim1,dim2))
+!           allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
+!        endif
+!        !-- at present only 11 micron downward atm emission needed
+!        if (idx == 31) then 
+!           allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
+!        endif
+!        if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) then
+!           allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+!        endif
+!        if (idx >= 27 .and. idx <= 38) then
+!            allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
+!            allocate(Ch(idx)%Opaque_Height(dim1,dim2))
+!        endif
+
+!     endif
+
+!  enddo
+
+!  !--- force allocation of channel 20 surface emissivity for use in mask
+!  if (.not. allocated(Ch(20)%Sfc_Emiss)) allocate(Ch(20)%Sfc_Emiss(dim1,dim2))
+
+   !--- DNB Variable
+!  idx = 44
+!  if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
+!     allocate(Ch(idx)%Rad_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Toa(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Toa_Clear(dim1,dim2))
+!     allocate(Ch(idx)%Ref_Lunar_Sfc(dim1,dim2))
+!     allocate(Ch(idx)%Trans_Atm_Total(dim1,dim2))
+!     allocate(Ch(idx)%Unc(dim1,dim2))
+!  endif
+
 !----------------------------------------------------------------------
 !  end allocation of ch structure
 !----------------------------------------------------------------------
@@ -1041,6 +1112,8 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Bt_Toa)) deallocate(Ch(idx)%Bt_Toa)
       if (allocated(Ch(idx)%Rad_Toa_Clear)) deallocate(Ch(idx)%Rad_Toa_Clear)
       if (allocated(Ch(idx)%Bt_Toa_Clear)) deallocate(Ch(idx)%Bt_Toa_Clear)
+      if (allocated(Ch(idx)%Rad_Sfc)) deallocate(Ch(idx)%Rad_Sfc)
+      if (allocated(Ch(idx)%Bt_Sfc)) deallocate(Ch(idx)%Bt_Sfc)
       if (allocated(Ch(idx)%Rad_Atm)) deallocate(Ch(idx)%Rad_Atm)
       if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) deallocate(Ch(idx)%Rad_Atm_Dwn_Sfc)
       if (allocated(Ch(idx)%Trans_Atm)) deallocate(Ch(idx)%Trans_Atm)
@@ -1525,6 +1598,8 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Bt_Toa)) Ch(idx)%Bt_Toa = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Toa_Clear)) Ch(idx)%Rad_Toa_Clear = Missing_Value_Real4
       if (allocated(Ch(idx)%Bt_Toa_Clear)) Ch(idx)%Bt_Toa_Clear = Missing_Value_Real4
+      if (allocated(Ch(idx)%Bt_Sfc)) Ch(idx)%Bt_Sfc = Missing_Value_Real4
+      if (allocated(Ch(idx)%Rad_Sfc)) Ch(idx)%Rad_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Atm)) Ch(idx)%Rad_Atm = Missing_Value_Real4
       if (allocated(Ch(idx)%Rad_Atm_Dwn_Sfc)) Ch(idx)%Rad_Atm_Dwn_Sfc = Missing_Value_Real4
       if (allocated(Ch(idx)%Trans_Atm)) Ch(idx)%Trans_Atm = Missing_Value_Real4
@@ -1599,7 +1674,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
 
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-      !allocate(Rad_Ch20_Ems(dim1,dim2))
+       allocate(Rad_Ch20_ems(dim1,dim2))
        allocate(Ems_Ch20(dim1,dim2))
        allocate(Bt_Ch20_Std_3x3(dim1,dim2))
        allocate(Bt_Ch20_Median_3x3(dim1,dim2))
@@ -1607,9 +1682,15 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Ems_Ch20_Std_Median_3x3(dim1,dim2))
        allocate(Bt_Ch20_Std_Median_3x3(dim1,dim2))
        allocate(Ch20_Counts_Filtered(dim1,dim2))
+       allocate(Rad_Clear_Ch20_Solar_Rtm(dim1,dim2))
+       allocate(Bt_Clear_Ch20_Solar_Rtm(dim1,dim2))
        allocate(Trans_Atm_Ch20_Solar_Rtm(dim1,dim2))
        allocate(Trans_Atm_Ch20_Solar_total_Rtm(dim1,dim2))
        allocate(Ems_Ch20_Clear_Rtm(dim1,dim2))
+       allocate(Ems_Ch20_Clear_Solar_Rtm(dim1,dim2))
+       allocate(Ems_Ch20_Clear_Solar_Sfc_Rtm(dim1,dim2))
+       allocate(Rad_Ch20_Ems_Sfc(dim1,dim2))
+       allocate(Ems_Ch20_Sfc(dim1,dim2))
    endif
 
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
@@ -1629,7 +1710,7 @@ end subroutine CREATE_THERM_CHANNEL_ARRAYS
 subroutine RESET_THERM_CHANNEL_ARRAYS()
 
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-!      Rad_Ch20_Ems = Missing_Value_Real4
+       Rad_Ch20_ems = Missing_Value_Real4
        Ems_Ch20 = Missing_Value_Real4
        Bt_Ch20_Std_3x3 = Missing_Value_Real4
        Bt_Ch20_Median_3x3 = Missing_Value_Real4
@@ -1637,9 +1718,15 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Ems_Ch20_Std_Median_3x3 = Missing_Value_Real4
        Bt_Ch20_Std_Median_3x3 = Missing_Value_Real4
        Ch20_Counts_Filtered = Missing_Value_Real4
+       Rad_Clear_Ch20_Solar_Rtm = Missing_Value_Real4
+       Bt_Clear_Ch20_Solar_Rtm = Missing_Value_Real4
        Trans_Atm_Ch20_Solar_Rtm = Missing_Value_Real4
        Trans_Atm_Ch20_Solar_total_Rtm = Missing_Value_Real4
        Ems_Ch20_Clear_Rtm = Missing_Value_Real4
+       Ems_Ch20_Clear_Solar_Rtm = Missing_Value_Real4
+       Ems_Ch20_Clear_Solar_Sfc_Rtm = Missing_Value_Real4
+       Rad_Ch20_Ems_Sfc = Missing_Value_Real4
+       Ems_Ch20_Sfc = Missing_Value_Real4
    endif
 
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
@@ -1658,7 +1745,7 @@ end subroutine RESET_THERM_CHANNEL_ARRAYS
 subroutine DESTROY_THERM_CHANNEL_ARRAYS()
 
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-!      deallocate(Rad_Ch20_Ems)
+       deallocate(Rad_Ch20_ems)
        deallocate(Ems_Ch20)
        deallocate(Bt_Ch20_Std_3x3)
        deallocate(Bt_Ch20_Median_3x3)
@@ -1666,9 +1753,15 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Ems_Ch20_Std_Median_3x3)
        deallocate(Bt_Ch20_Std_Median_3x3)
        deallocate(Ch20_Counts_Filtered)
+       deallocate(Rad_Clear_Ch20_Solar_Rtm)
+       deallocate(Bt_Clear_Ch20_Solar_Rtm)
        deallocate(Trans_Atm_Ch20_Solar_Rtm)
        deallocate(Trans_Atm_Ch20_Solar_total_Rtm)
        deallocate(Ems_Ch20_Clear_Rtm)
+       deallocate(Ems_Ch20_Clear_Solar_Rtm)
+       deallocate(Ems_Ch20_Clear_Solar_Sfc_Rtm)
+       deallocate(Rad_Ch20_Ems_Sfc)
+       deallocate(Ems_Ch20_Sfc)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
       deallocate(Bt_Ch31_Mean_3x3)

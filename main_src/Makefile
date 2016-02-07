@@ -120,6 +120,7 @@ clavrxorb_objs = process_clavrx.o \
 		 acha_clavrx_services_module.o \
 		 acha_clavrx_bridge_module.o \
                  acha_comp_module.o \
+                 eumetset_overlap.o \
                  acha_shadow_module.o \
                  acha_cloud_cover_layers_module.o \
                  cloud_base_module.o \
@@ -214,11 +215,15 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 
 dcomp:
 	$(MAKE)  -C $(DCOMP) 
-	
+	rm -fv $(DCOMP)libdcomp.a
+	ar rvc $(DCOMP)libdcomp.a $(DCOMP)*.o
+
 
 nlcomp_module:
 ifdef nlcomplibs
 	$(MAKE)  -C $(NLCOMP)   
+	rm -fv $(NLCOMP)libnlcomp.a  
+	ar rvc $(NLCOMP)libnlcomp.a $(NLCOMP)*.o 
 endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
@@ -270,8 +275,12 @@ acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nw
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_services_module.f90                    
 
 acha_clavrx_bridge_module.o: acha_clavrx_bridge_module.f90 acha_module.o acha_comp_module.o \
+                  eumetset_overlap.o \
                   acha_cloud_cover_layers_module.o acha_shadow_module.o acha_clavrx_services_module.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_module.f90                    
+
+eumetset_overlap.o: eumetset_overlap.f90 acha_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/eumetset_overlap.f90
 
 acha_module.o: acha_module.f90 acha_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_module.f90

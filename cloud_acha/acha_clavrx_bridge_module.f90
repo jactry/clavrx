@@ -14,6 +14,7 @@ module ACHA_CLAVRX_BRIDGE
  use ACHA_SERVICES_MOD
  use ACHA_CLOUD_COVER_LAYERS
  use CLAVRX_MESSAGE_MODULE, only: MESG
+ use eumetset_overlap
    
  implicit none
 
@@ -39,7 +40,7 @@ module ACHA_CLAVRX_BRIDGE
    implicit none
 
    logical, save:: First_Call = .true.
-
+ 
    if (First_Call .eqv. .true.) then
        call MESG('ACHA starts ', color = 46)
    endif
@@ -63,11 +64,23 @@ module ACHA_CLAVRX_BRIDGE
 
    !---- initialize diagnostic structure
    call SET_DIAG()
+   
+   Diag%Array_1 = Input%Cloud_Type
+
+   !-----------------------------------------------------------------------
+   !--- Call to Eumetset overlap test Algorithm
+   !-----------------------------------------------------------------------
+   call ovelap_co2_h2o_test(Input, Symbol, Output, Diag)
+   where(Diag%Array_3 == 1)
+       Input%Cloud_Type = Symbol%OVERLAP_TYPE
+   end where
+
+   Diag%Array_2 = Input%Cloud_Type 
 
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output) ! , Diag)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -130,6 +143,7 @@ module ACHA_CLAVRX_BRIDGE
      Input%Bt_12um =>  null()
      Input%Bt_133um =>  null()
      Input%Rad_67um =>  null()
+     Input%Rad_73um =>  null()
      Input%Rad_11um =>  null()
      Input%Rad_133um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
@@ -143,6 +157,7 @@ module ACHA_CLAVRX_BRIDGE
      Input%Latitude =>  null()
      Input%Longitude =>  null()
      Input%Rad_Clear_67um =>  null()
+     Input%Rad_Clear_73um =>  null()
      Input%Rad_Clear_85um =>  null()
      Input%Rad_Clear_11um =>  null()
      Input%Rad_Clear_12um =>  null()
@@ -320,10 +335,12 @@ module ACHA_CLAVRX_BRIDGE
    Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
    Input%Chan_Idx_67um = 27      !channel number for 6.7
+   Input%Chan_Idx_73um = 28      !channel number for 7.3
    Input%Chan_Idx_85um = 29      !channel number for 8.5
    Input%Chan_Idx_11um = 31      !channel number for 11
    Input%Chan_Idx_12um = 32      !channel number for 12
    Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
+   Input%Chan_On_73um = Sensor%Chan_On_Flag_Default(28)
    Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
    Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
    Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
@@ -333,6 +350,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Bt_11um => ch(31)%Bt_Toa
    Input%Bt_12um => ch(32)%Bt_Toa
    Input%Rad_67um => ch(27)%Rad_Toa
+   Input%Rad_73um => ch(28)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
    Input%Rad_133um => ch(33)%Rad_Toa
    Input%Cosine_Zenith_Angle => Geo%Coszen
@@ -346,6 +364,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Latitude => Nav%Lat
    Input%Longitude => Nav%Lon
    Input%Rad_Clear_67um => ch(27)%Rad_Toa_Clear
+   Input%Rad_Clear_73um => ch(28)%Rad_Toa_Clear
    Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear

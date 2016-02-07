@@ -50,12 +50,14 @@ dcomp_lut_hdf_mod.o \
 nlcomp_interface_def_mod.o \
 file_tools.o
 
-.PHONY: all_nlcomp clean hdf4
+.PHONY: clean hdf4
 
-all_nlcomp: $(ICALIB)/libicaf90hdf.a nlcomp_one_pixel_run libnlcomp.a
-	
-   
-$(ICALIB)/libicaf90hdf.a:
+all: hdf4 nlcomp_one_pixel_run
+
+hdf4:
+	@echo  'kkf'$(LFLAGS)
+	@echo $(hdf4root)
+	@echo 'Building target for hdf4: $@'
 	make COMP1="$(fc)" HDF4R="$(hdf4root)" -C $(ICASRC)	
 
 nlcomp_one_pixel_run: $(OBJS)
@@ -64,10 +66,6 @@ nlcomp_one_pixel_run: $(OBJS)
 	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS)  $(LFLAGS) ${hdf5libs} ${hdflibs} $(COMOBJ) $(PATH_FLAGS) 
 	@echo 'Finished building target: $@'
 	@echo ' '	
-
-libnlcomp.a: $(OBJS)
-	ar rvc libnlcomp.a $(OBJS)
-
 
 nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_retrieval_mod.o nlcomp_interface_def_mod.o
 nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o 

@@ -71,7 +71,6 @@ module USER_OPTIONS
       , Cfsr_Data_Dir &
       , Merra_Data_Dir &
       , Gdas_Data_Dir &
-      , Erai_Data_Dir &
       , File_List &
       , Geo_File_Flag &
       , Gfs_Data_Dir &
@@ -579,7 +578,6 @@ contains
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
       Merra_Data_Dir = trim(Data_Base_Path)//'/dynamic/merra/'
       Gdas_Data_Dir = trim(Data_Base_Path)//'/dynamic/gdas/'
-      Erai_Data_Dir = trim(Data_Base_Path)//'/dynamic/erai/'
       Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
@@ -616,8 +614,6 @@ contains
          call MESG ( "GDAS Reanalysis data will be used",level = verb_lev % DEFAULT)
       case ( 5 )
          call MESG ( "MERRA Reanalysis data will be used",level = verb_lev % DEFAULT)
-      case ( 6 )
-         call MESG ( "ERA Interim Reanalysis data will be used",level = verb_lev % DEFAULT)
       case default
          print *,  EXE_PROMPT, "unrecognized value for Nwp_Opt: ", Nwp_Opt
          stop "6-Nwp_Flag"

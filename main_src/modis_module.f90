@@ -13,6 +13,7 @@
 !  Andrew Heidinger, Andrew.Heidinger@noaa.gov
 !  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
 !  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
+!  William Straka, CIMSS, wstraka@ssec.wisc.edu
 !
 ! COPYRIGHT
 ! THIS SOFTWARE AND ITS DOCUMENTATION ARE CONSIDERED TO BE IN THE PUBLIC

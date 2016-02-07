@@ -26,7 +26,7 @@
 ! 
 ! Routines in this module and their purpose:
 !
-!  the routines are called from process_clavrx.f90 in this order
+!  the routines are called from process_ckavrx.f90 in this order
 !   file_loop
 !      DETECT_SENSOR_FROM_FILE()
 !      SET_FILE_DIMENSIONS()
@@ -473,6 +473,8 @@ module SENSOR_MODULE
         exit test_loop
       endif
       
+      
+
       !--- MODIS Test
       if (index(Image%Level1b_Name, 'MYD021KM') > 0) then
         Sensor%Sensor_Name = 'MODIS'

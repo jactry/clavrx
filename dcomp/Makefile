@@ -56,17 +56,20 @@ test_dcomp_lut.o \
 dcomp_math_tools_mod.o \
 file_tools.o
 
-.PHONY: all_dcomp clean hdf4
+.PHONY: clean hdf4
 
-all_dcomp: $(ICALIB)/libicaf90hdf.a dcomp_one_pixel_run libdcomp.a
-	
-$(ICALIB)/libicaf90hdf.a:
+all: hdf4 dcomp_one_pixel_run 
+	@echo  'kkf'$(LFLAGS)
+hdf4:
+	@echo 'Building target for hdf4: $@'
 	make COMP1="$(fc)" -C $(ICASRC)	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
-	@echo 'Building target for test lut'
+	@echo 'test lut'
 	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  $(COMOBJ) $(LFLAGS)
 	
+
+
 dcomp_one_pixel_run: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Intel(R) Fortran Linker'
@@ -76,10 +79,6 @@ dcomp_one_pixel_run: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
-libdcomp.a: $(OBJS)
-	
-	ar rvc libdcomp.a $(OBJS)
-	
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
 dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dcomp_interface_types_mod.o view2d.o
@@ -89,7 +88,6 @@ dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dcomp_interface_types_mod.o:dcomp_interface_types_mod.f90
 dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
-
 
 M_kracken.o:$(SUB_PATH)/M_kracken.f90
 	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90

@@ -118,7 +118,11 @@ module RT_UTILITIES
       , Tsfc_Nwp_Pix &
       , Trans_Atm_Ch20_Solar_Rtm &
       , Trans_Atm_Ch20_Solar_Total_Rtm &
+      , rad_clear_Ch20_Solar_Rtm &
+      , Bt_Clear_Ch20_Solar_Rtm &
+      , Ems_Ch20_Clear_Solar_Rtm &
       , Ems_Ch20_Clear_Rtm &
+      , Ems_Ch20_Clear_Solar_Sfc_Rtm &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_85um_Tropo_Rtm &
       , Beta_11um_67um_Tropo_Rtm &
@@ -2373,8 +2377,6 @@ contains
       integer:: Chan_Idx
       real:: Sfc_Ref
       real:: Rad_Ch20_Temp
-      real:: Rad_Clear_Ch20_Solar_Rtm
-      real:: Bt_Clear_Ch20_Solar_Rtm
 
       !--------------------------------------------------------------
       ! Solar-Only channels, 1,2,6,7,DNB(44)
@@ -2439,7 +2441,7 @@ contains
       end do
 
       !--------------------------------------------------------------
-      !-- Add Solar to Ch20 clear variables
+      !-- Ch20 Solar
       !--------------------------------------------------------------
       
       if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
@@ -2457,8 +2459,9 @@ contains
                   Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(20)%Trans_Atm_Total_Profile(Sfc_Level_Idx)) * &
                   Prof_Weight
 
-         Rad_Clear_Ch20_Solar_Rtm = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
-         Bt_Clear_Ch20_Solar_Rtm = ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
+         Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
+         
+         Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx)
 
          if (Geo%Cossolzen(Elem_Idx,Line_Idx) >= 0.0) then
 
@@ -2468,14 +2471,10 @@ contains
                    Trans_Atm_Ch20_Solar_Total_Rtm(Elem_Idx,Line_Idx) *  &
                    Sfc_Ref * (Geo%Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi)
 
-            Rad_Clear_Ch20_Solar_Rtm = Rad_Ch20_Temp
-            Bt_Clear_Ch20_Solar_Rtm = PLANCK_TEMP_FAST(20,Rad_Ch20_Temp)
+            Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = Rad_Ch20_Temp
+            Bt_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,Rad_Ch20_Temp)
 
          end if
-
-         ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx) = Rad_Clear_Ch20_Solar_Rtm
-         ch(20)%Bt_Toa_Clear(Elem_Idx,Line_Idx) = Bt_Clear_Ch20_Solar_Rtm
-      
       end if
 
    end subroutine COMPUTE_CHANNEL_RT
@@ -2494,8 +2493,14 @@ contains
          Ch20_Sfc_Rad = ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx) * PLANCK_RAD_FAST(20,Tsfc_Nwp_Pix(Elem_Idx,Line_Idx))
 
          Rad_Ch20_Temp = PLANCK_RAD_FAST(20,ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx))
+         Ems_Ch20_Clear_Solar_Rtm(Elem_Idx,Line_Idx) = Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) / Rad_Ch20_Temp
          Ems_Ch20_Clear_Rtm(Elem_Idx,Line_Idx) = ch(20)%Rad_Toa_Clear(Elem_Idx,Line_Idx) / Rad_Ch20_Temp
 
+         !--- atmos corrected
+         Ems_Ch20_Clear_Solar_Sfc_Rtm(Elem_Idx,Line_Idx) = Ch20_Sfc_Rad +  &
+                     Trans_Atm_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) * &
+                     (1.0 - ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx))* &
+                     Geo%Cossolzen(Elem_Idx,Line_Idx)*Solar_Ch20_Nu / pi
       end if
 
    end subroutine COMPUTE_CH20_EMISSIVITY

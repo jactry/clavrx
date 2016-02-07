@@ -83,7 +83,7 @@ module dcomp_rtm_module
          , j_nwp &
          , zen_idx_rtm &
          , bad_pixel_mask &
-         , ch
+         , Rad_Clear_Ch20_Solar_Rtm
         
       use nwp_common, only: &
            t_prof_nwp &
@@ -215,7 +215,8 @@ module dcomp_rtm_module
             clear_rad_prof_rtm   = rtm(x_nwp,y_nwp) % d(ivza) % ch(20) % rad_atm_profile
 
             dcomp_rtm % rad_clear_sky_toc_ch20 (elem_idx,line_idx) = clear_rad_prof_rtm (idx_lev_rtm)
-            dcomp_rtm % rad_clear_sky_toa_ch20 (elem_idx,line_idx) = ch(20)%rad_toa_clear(elem_idx,line_idx)             
+        !-->dcomp_rtm % rad_clear_sky_toa_ch20 (elem_idx,line_idx) = ch(20)%rad_toa_clear(elem_idx,line_idx)             
+            dcomp_rtm % rad_clear_sky_toa_ch20 (elem_idx,line_idx) = Rad_Clear_Ch20_Solar_Rtm(Elem_Idx,Line_Idx)
             
            
          

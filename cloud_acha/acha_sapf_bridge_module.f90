@@ -30,10 +30,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
  type(NPP_VIIRS_CLD_HEIGHT_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
 
- integer, parameter, private :: N_Sc_Lut = 20
-
-
-
  type(acha_symbol_struct), PRIVATE  :: symbol
  type(acha_input_struct), PRIVATE  :: Input
  type(acha_output_struct), PRIVATE  :: Output
@@ -68,9 +64,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    REAL(SINGLE), DIMENSION(:,:), POINTER :: SolZen
    REAL(SINGLE), DIMENSION(:,:), POINTER :: SolAz
    
-   REAL(SINGLE), DIMENSION(:,:), POINTER :: Conv_Cld_Prob
-   REAL(SINGLE), DIMENSION(:,:), POINTER :: Supercooled_Cld_Prob
-    
+   
    Ctxt_ACHA => Ctxt
 
    !--------------------------------------------------------------------
@@ -80,7 +74,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !---null pointers before filling them
    call NULL_INPUT()
    call NULL_OUTPUT()
-   
    
    !-------------------------------------------
    !--- initialize structures
@@ -133,7 +126,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
          , Output%Latitude_Pc &
          , Output%Longitude_Pc &
          , Shadow_Mask ) 
-   
+
    !---- copy shadow result into cloud mask test bits
    
    !Set Cloud Mask local pointers
@@ -146,36 +139,20 @@ module ACHA_CLAVRX_BRIDGE_MOD
 !   end where
 
    Shadow_Mask => null()
-    
+   
 !   Cld_Mask => null()
 !   Cld_Test_Vector_Packed => null()
 
    !--- cloud cover layers
    call COMPUTE_CLOUD_COVER_LAYERS(Input,Symbol, Output)
    
-   
-   !--- Convective and supercooled cloud probability
-   
-   CALL NFIA_CloudHeight_SC_Cld_Prob(Ctxt%CLOUD_HEIGHT_Src1_T00, Supercooled_Cld_Prob)
-   CALL NFIA_CloudHeight_Conv_Cld_Prob(Ctxt%CLOUD_HEIGHT_Src1_T00, Conv_Cld_Prob)
-
-   CALL CONVECTIVE_CLOUD_PROBABILITY(Input, Output, Conv_Cld_Prob)
-
-   CALL SUPERCOOLED_CLOUD_PROBABILITY(Input, Output, &
-                                      Supercooled_Cld_Prob)
-   
-    
-   Conv_Cld_Prob => null()
-   Supercooled_Cld_Prob => null()
-
-    
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
    !-----------------------------------------------------------------------
    call NULL_INPUT()
    call NULL_OUTPUT()
-    
+      
    Ctxt_ACHA => null()                            
    
  end subroutine AWG_CLOUD_HEIGHT_BRIDGE
@@ -282,16 +259,20 @@ module ACHA_CLAVRX_BRIDGE_MOD
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
      Output%Inversion_Flag  =>  null()
-
-     Output%Pc_Opaque =>  null()
+     
+     !WCS - 10/23/2015 - testing vars
+!     Output%XLRCIdx => null()
+!     Output%YLRCIdx => null()
+!     Output%LRC_11um => null()
 
      !rchen  05/29/2015
+     !Output%Pc_Opaque =>  null()
      !Output%Tc_Opaque =>  null()
      !Output%Zc_Opaque =>  null()
      !Output%Pc_H2O =>  null()
      !Output%Tc_H2O =>  null()
      !Output%Zc_H2O =>  null()
-!     if (allocated(Output%Pc_Opaque)) deallocate(Output%Pc_Opaque)
+     if (allocated(Output%Pc_Opaque)) deallocate(Output%Pc_Opaque)
      if (allocated(Output%Tc_Opaque)) deallocate(Output%Tc_Opaque)
      if (allocated(Output%Zc_Opaque)) deallocate(Output%Zc_Opaque)
      if (allocated(Output%Pc_H2O)) deallocate(Output%Pc_H2O)
@@ -609,9 +590,9 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
     CALL NFIA_CloudHeight_Cost(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%Cost)
     
-    CALL NFIA_CloudHeight_CldLayer(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
+    CALL NFIA_CloudHeight_Cloud_Layer(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
                                       Output%Cloud_Layer)
-        
+    
    CALL NFIA_CloudHeight_Total_Cld_Frac(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00,&
                                         Output%Total_Cloud_Fraction)
                                         
@@ -638,12 +619,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    
    !rchen  05/29/2015
    !ALLOCATE (Dummy(Num_Elem,Num_Line))
-
-   CALL NFIA_CloudHeight_Pc_Opaque(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
-                                    Output%Pc_Opaque)
-
-
-!   ALLOCATE (Output%Pc_Opaque(Num_Elem,Num_Line))
+   ALLOCATE (Output%Pc_Opaque(Num_Elem,Num_Line))
    ALLOCATE (Output%Tc_Opaque(Num_Elem,Num_Line))
    ALLOCATE (Output%Zc_Opaque(Num_Elem,Num_Line))
    ALLOCATE (Output%Pc_H2O(Num_Elem,Num_Line))
@@ -657,6 +633,12 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !Output%Tc_H2O => Dummy
    !Output%Zc_H2O => Dummy
    
+   
+   ! temporary output for XLRC/YLRC
+   
+!    CALL NFIA_CloudHeight_XLRCIdx(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%XLRCIdx)
+!    CALL NFIA_CloudHeight_YLRCIdx(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%YLRCIdx)  
+!    CALL NFIA_CloudHeight_Emiss11Hgh(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%LRC_11um)
    
 
  end subroutine SET_OUTPUT
@@ -793,128 +775,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
 
  end function WMO_Sensor_KM
-
-
-!-------------------------------------------------------------------------------
-! Convective Cloud Probability
-!-------------------------------------------------------------------------------
-subroutine CONVECTIVE_CLOUD_PROBABILITY(Input, Output, Conv_Cld_Prob)
-  type(acha_input_struct), intent(inout) :: Input
-  type(acha_output_struct), intent(inout) :: Output
-  real(kind=real4), dimension(:,:), intent(out):: Conv_Cld_Prob
-  real(kind=real4), dimension(:,:), pointer:: Emiss_11_Tropo
-
-  real, parameter:: Btd_Thresh = -2.0
-  real, parameter:: Etrop_Thresh_1 = 0.95
-  real, parameter:: Etrop_Thresh_2 = 0.90
-  real, parameter:: Tsfc_Thresh = 30.0
-  
-  !since CM already computes 11um Tropopause emissivity, just use it here
-  Emiss_11_Tropo => null()
-  CALL NFIA_CloudMask_Emiss11High(Ctxt_ACHA%CLOUD_MASK_Src1_T00, Emiss_11_Tropo)
-
-  
-
-  !--- initialize to 0 (no)
-  Conv_Cld_Prob = 0.0
-
-  !--- set bad data to missing
-  where(Input%Invalid_Data_Mask ==sym%YES)
-    Conv_Cld_Prob = Missing_Value_Real4
-  endwhere
-
-  !--- if only 11 micron, use a tight threshold
-  if (Input%Chan_On_11um == sym%YES) then
-    where(Emiss_11_Tropo >= Etrop_Thresh_1) 
-      Conv_Cld_Prob = 1.0
-    endwhere
-  endif
-
-  if (Input%Chan_On_67um == sym%YES .and. &
-      Input%Chan_On_11um == sym%YES) then
-    where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Input%Bt_67um - Input%Bt_11um) >= Etrop_Thresh_2) 
-     Conv_Cld_Prob = 1.0
-    endwhere
-  endif
-
-  !--- limit false alarms over elevated terrain
-  if (Input%Chan_On_11um == sym%YES) then
-    where(Input%Surface_Temperature - Input%Bt_11um < Tsfc_Thresh)
-       Conv_Cld_Prob = 0.0
-    endwhere
-  endif
-  
-  
-  
-  Emiss_11_Tropo => null()
-
-
-end subroutine CONVECTIVE_CLOUD_PROBABILITY
-
-!-------------------------------------------------------------------------------
-! Supercooled Cloud Probability
-!-------------------------------------------------------------------------------
-subroutine SUPERCOOLED_CLOUD_PROBABILITY(Input, Output,&
-                                         Supercooled_Cld_Prob)
-  type(acha_input_struct), intent(inout) :: Input
-  type(acha_output_struct), intent(inout) :: Output
-  real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob
-
-  integer:: Elem_Idx
-  integer:: Line_Idx
-  integer:: Number_Of_Elements
-  integer:: Number_Of_Lines
-  integer:: Tc_Idx
-  
-  !Supercooled LUT
-  real(kind=real4), dimension(N_Sc_Lut):: &
-  Sc_Tc_Lut = (/202.21,206.77,211.33,215.88,220.44,225.00,229.56,234.11,238.67,243.23, &
-                247.79,252.34,256.90,261.46,266.01,270.57,275.13,279.69,284.24,288.80/)
-
-  real(kind=real4), dimension(N_Sc_Lut):: &
-  Sc_Prob_Lut = (/0.004,0.004,0.004,0.004,0.004,0.004,0.004,0.002,0.051,0.243, &
-                  0.470,0.658,0.800,0.886,0.888,0.870,0.142,0.004,0.004,0.004 /)
-
-  
-  
-
-  !--- intialize local variables using global variables
-  Number_Of_Elements = Input%Number_Of_Elements
-  Number_Of_Lines = Input%Num_Line_Max
-
-  !--- initialize to Missing
-  Supercooled_Cld_Prob = Missing_Value_Real4
-
-  !--- Loop through each pixel
-  do Elem_Idx = 1, Number_Of_Elements 
-     do Line_Idx = 1, Number_Of_Lines
-        
-       !--- filter bad
-       if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
-       !--- filter missing temps
-       if (Output%Tc(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
-       !--- filter with cloud type
-       if (Input%Cloud_Type(Elem_Idx,Line_Idx) == Missing_Value_Int1) cycle
-
-       if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%FOG_TYPE .and. &
-           Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%WATER_TYPE .and. &
-           Input%Cloud_Type(Elem_Idx,Line_Idx) /= sym%SUPERCOOLED_TYPE) then
-           Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = 0.0
-           cycle
-       endif
-
-       Tc_Idx = minloc(abs(Output%Tc(Elem_Idx,Line_Idx) - Sc_Tc_Lut),1) 
-
-       Tc_Idx = max(1,min(N_Sc_Lut,Tc_Idx))
-
-       Supercooled_Cld_Prob(Elem_Idx,Line_Idx) = Sc_Prob_Lut(Tc_Idx) 
-
-     enddo
-  enddo
-
-end subroutine SUPERCOOLED_CLOUD_PROBABILITY
-
-
 
 
 end module ACHA_CLAVRX_BRIDGE_MOD

@@ -116,7 +116,7 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
 
 
     !-- check Nwp_Data_Type
-    if (Nwp_Data_Type /= 1 .and. Nwp_Data_Type /= 3 .and. Nwp_Data_Type /=4 .and. Nwp_Data_Type /=5 .and. Nwp_Data_Type /=6) then
+    if (Nwp_Data_Type /= 1 .and. Nwp_Data_Type /= 3 .and. Nwp_Data_Type /=4 .and. Nwp_Data_Type /=5) then
        print *, EXE_PROMPT, MODULE_PROMPT, " ERROR: unsupported NWP data in GFS read module, stopping"
        stop 
     endif
@@ -177,11 +177,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         Hour_Before = 0
         JDay_After = jday
         Hour_After = 6
-       elseif(Nwp_Data_Type == 6) then               !ERA Interim analyzed states
-        JDay_Before = jday
-        Hour_Before = 0
-        JDay_After = jday
-        Hour_After = 6
        endif
 
     elseif ((time >= 6.00) .and. (time < 12.00)) then
@@ -201,11 +196,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         JDay_After = jday
         Hour_After = 12 
        elseif(Nwp_Data_Type == 5) then
-        JDay_Before = jday
-        Hour_Before = 6
-        JDay_After = jday
-        Hour_After = 12
-       elseif(Nwp_Data_Type == 6) then
         JDay_Before = jday
         Hour_Before = 6
         JDay_After = jday
@@ -233,11 +223,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         Hour_Before = 12
         JDay_After = jday
         Hour_After = 18
-       elseif(Nwp_Data_Type == 6) then
-        JDay_Before = jday
-        Hour_Before = 12
-        JDay_After = jday
-        Hour_After = 18
        endif
 
     elseif ((time >= 18.00) .and. (time < 24.00)) then
@@ -257,11 +242,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
         JDay_After = jday+1
         Hour_After = 0
        elseif(Nwp_Data_Type == 5) then
-        JDay_Before = jday
-        Hour_Before = 18
-        JDay_After = jday
-        Hour_After = 0
-       elseif(Nwp_Data_Type == 6) then
         JDay_Before = jday
         Hour_Before = 18
         JDay_After = jday
@@ -319,10 +299,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
           Nwp_Name_Before = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
                        "merra." // Year_string // Month_string // &
                        Day_string // Hour_string // "_F000.hdf"
-    elseif (Nwp_Data_Type == 6) then
-          Nwp_Name_Before = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
-                       "era." // Year_string // Month_string // &
-                       Day_string // Hour_string // "_F000.hdf"
     else
           Nwp_Name_Before = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
                        "cfsr." // Year_string // Month_string // &
@@ -356,10 +332,6 @@ integer, dimension(Sds_rank_3d):: Sds_Start_3d, Sds_Stride_3d, Sds_Edges_3d
     elseif (Nwp_Data_Type == 5) then
           Nwp_Name_After = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
                        "merra." // Year_string // Month_string // &
-                       Day_string // Hour_string // "_F000.hdf"
-    elseif (Nwp_Data_Type == 6) then
-          Nwp_Name_After = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &
-                       "era." // Year_string // Month_string // &
                        Day_string // Hour_string // "_F000.hdf"
     else
           Nwp_Name_After = trim(Nwp_Path) //"/"//Year_string_full//"/"//  &

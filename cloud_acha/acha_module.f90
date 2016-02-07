@@ -401,9 +401,9 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--- initialize diagnostic output
-  if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
-  if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
-  if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+!  if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+!  if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+!  if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
   !---------------------------------------------------------------------------
   !-- Acha Mode set to  -1, determine based on channels
@@ -1640,9 +1640,9 @@ endif
 end do pass_loop
 
 !Diag%Array_1 = Temperature_Cirrus
-!if (associated(Input%Tc_Cirrus_Sounder)) then
+if (associated(Input%Tc_Cirrus_Sounder)) then
 ! Diag%Array_2 = Input%Tc_Cirrus_Sounder
-!endif
+endif
 
 !------------------------------------------------------------------------
 ! Apply Parallax Correction 

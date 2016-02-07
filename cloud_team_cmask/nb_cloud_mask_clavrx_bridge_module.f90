@@ -56,7 +56,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Ref_Ch1_Min_3x3, &
        Bt_Ch20_Std_3x3, &
        Ems_Ch20_Median_3x3, &
-       Ems_Ch20_Clear_Rtm, &
+       Ems_Ch20_Clear_Solar_Rtm, &
        Covar_Ch27_Ch31_5x5, &
        Bt_Ch31_Std_3x3, &
        Bt_Ch31_Max_3x3, &
@@ -356,7 +356,7 @@ contains
         Input%Bt_375um => ch(20)%Bt_Toa(i,j)
         Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)
         Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
-        Input%Emiss_375um_Clear => Ems_Ch20_Clear_Rtm(i,j)
+        Input%Emiss_375um_Clear => Ems_Ch20_Clear_Solar_Rtm(i,j)
       endif
       if (Input%Chan_On_67um == sym%YES)  then 
         Input%Bt_67um => ch(27)%Bt_Toa (i,j)

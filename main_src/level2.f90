@@ -46,7 +46,7 @@ module LEVEL2_ROUTINES
             DEFINE_PIXEL_3D_SDS
 
  !--- rtm indices
- integer, parameter, private:: Num_Rtm_Sds = 28
+ integer, parameter, private:: Num_Rtm_Sds = 29
  integer, private, save:: Sd_Id_Rtm
  integer(kind=int4), dimension(Num_Rtm_Sds), save, private:: Sds_Id_Rtm
 
@@ -361,9 +361,21 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Bt_Ch20_clear_solar_Rtm
+     if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(5),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "temp_3_75um_nom_clear_sky_solar", &
+                               "toa_brightness_temperature_assuming_clear_sky_with_solar_3.75_micron_nominal", &
+                               "top of atmosphere brightness temperature modeled assuming clear skies "// &
+                               "and including solar reflection at the nominal wavelength of 3.75 microns", &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt20, Max_Bt20, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Bt_Ch31_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(5),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(6),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_11_0um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_11_0_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -375,7 +387,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch32_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(6),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(7),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_12_0um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_12_0_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -387,7 +399,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- etrop
      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(7),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(8),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                 "emiss_11um_nom_tropopause", &
                                 "emissivity_11_0_micron_nominal_tropopause", &
                                 "emissivity at the tropopause modeled at the nominal wavelength of 11.0 microns", &
@@ -398,7 +410,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ref_Ch1_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(8),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(9),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "refl_0_65um_nom_clear_sky", &
                                "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
                                "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
@@ -410,7 +422,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ref_Ch2_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(9),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(10),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "refl_0_86um_nom_clear_sky", &
                                "toa_bidirectional_reflectance_assuming_clear_sky_0_86_micron_nominal", &
                                "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
@@ -421,7 +433,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Bt_Ch31_std_3x3
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(10),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(11),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_stddev_3x3", &
                               "brightness_temperature_11_0_micron_nominal_stddev_3x3", &
                               "3x3 pixel standard deviation of brightness temperature"// &
@@ -432,7 +444,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch31_Max_3x3
      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(11),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(12),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                 "temp_11_0um_nom_max_3x3", &
                                 "brightness_temperature_11_0_micron_nominal_max_3x3", &
                                 "maximum 3x3 pixel brightness temperature"// &
@@ -444,7 +456,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ref_Ch1_std_3x3
      if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(12),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(13),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                 "refl_0_65um_nom_stddev_3x3", &
                                 "bidirectional_reflectance_0_65_micron_nom_stddev_3x3", &
                                 "3x3 pixel standard deviation of reflectance"// &
@@ -456,7 +468,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ref_Ch1_Min_3x3
      if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(13),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(14),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "refl_0_65um_nom_min_3x3", &
                               "bidirectional_reflectance_0_65_micron_nom_min_3x3", &
                               "3x3 pixel minimum reflectance"// &
@@ -467,7 +479,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(14),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(15),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "diff_ch31_ch32_Bt_ch31_max_3x3", &
                               "difference_11_minus_12_brightness_temperature_max_3x3", &
                               "3x3 pixel maximum of 11.0 micron minus 12.0 micron"// &
@@ -478,7 +490,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ems_Ch20
      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(15),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(16),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                 "emiss_3_75um_nom", &
                                 "top_of_atmosphere_emissivity_3_75_micron_nominal", &
                                 "top of atmosphere emissivity at the nominal wavelength of 3.75 microns", &
@@ -488,7 +500,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ems_Ch20 clear
      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(16),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(17),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                 "emiss_3_75um_nom_clear", &
                                 "top_of_atmosphere_emissivity_3_75_micron_nominal_clear", &
                                 "top of atmosphere clear sky emissivity estimate "// &
@@ -499,7 +511,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Ems_Ch20 median 3x3
      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(17),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(18),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "emiss_3_75um_nom_median_3x3", &
                               "emissivity_3_75_micron_nominal_median_3x3", &
                               "3x3 pixel median top of atmosphere emissivity "// &
@@ -509,7 +521,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Tc_opaque_cloud
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(18),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(19),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "cld_temp_opaque", &
                               "cloud_top_temperature_opaque", &
                               "cloud top temperature assuming an opaque cloud", &
@@ -518,7 +530,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch20
      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(19),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(20),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_3_75um_nom_median_3x3", &
                               "brightness_temperature_3.7_micron_nominal_median_3x3", &
                               "3x3 pixel median filtered brightness temperature "// &
@@ -529,7 +541,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
 
      !--- Ch20 surface emissivity
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(20),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(21),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "surface_emiss_3_75um_nom", &
                               "surface_emissivity_3.7_micron_nominal", &
                               "surface emissivity at the nominal wavelength of 3.75 microns", &
@@ -537,7 +549,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               Min_sfc_ems, Max_sfc_ems, "none", Missing_Value_Real4, Istatus)
 
      !--- oisst_uni
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(21),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(22),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "sst_background_uni_3x3", &
                               "sea_surface_skin_temperature_background_uni_3x3", &
                               "background sea surface skin temperature 3x3", &
@@ -546,7 +558,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch27_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(22),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(23),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_6_7um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_6_7_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -558,7 +570,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch28_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
-        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(23),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(24),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_7_3um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_7_3_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -570,7 +582,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch29_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(24),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(25),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_8_5um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_8_5_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -582,7 +594,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Bt_Ch33_Clear_Rtm
      if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(25),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+        call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(26),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "temp_13_3um_nom_clear_sky", &
                                "toa_brightness_temperature_assuming_clear_sky_13_3_micron_nominal", &
                                "top of atmosphere brightness temperature modeled assuming clear skies "// &
@@ -594,7 +606,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
      !--- Covariance of Ch27 and Ch31
      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-          call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(26),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+          call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(27),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11um_vs_67um_covar_5x5", &
                               "brightness_temperature_11_vs_67_micron_5x5_covariance", &
                               "5x5 pixel covariance of brightness temperatures at "// &
@@ -604,7 +616,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
      !--- Zc_opaque_cloud
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(27),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(28),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "cld_height_opaque", &
                               "cloud_top_height_assuming_opaque", &
                               "cloud top height assuming an opaque cloud", &
@@ -612,7 +624,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               Min_Zc, Max_Zc, "m", Missing_Value_Real4, Istatus)
 
      !--- Naive Bayesian Surface Type
-     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(28),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+     call DEFINE_PIXEL_2D_SDS(Sds_Id_Rtm(29),Sd_Id_Rtm,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "bayes_mask_sfc_type", &
                               "bayes_mask_sfc_type", &
                               "bayes_mask_sfc_type", &
@@ -3562,52 +3574,59 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
+   !--- computed Ch20 temperature with solar
+   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Bt_Clear_Ch20_solar_Rtm,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     Istatus = sfwdata(Sds_Id_Rtm(5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+   endif
+
    !--- computed Ch31 temperature
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(31)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(6), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- computed Ch32 temperature
    if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(32)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(6), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(7), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- etrop
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(7), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(8), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Ref_Ch1 clear
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(8), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(9), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Ref_Ch2 clear
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(2)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch2,Max_Ref_Ch2,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(9), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(10), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Bt_Ch31_std_3x3
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Bt_Ch31_std_3x3,sym%LINEAR_SCALING,Min_Bt31_std,Max_Bt31_std,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(10), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(11), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Bt_Ch31_Max_3x3
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Bt_Ch31_Max_3x3,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(11), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
@@ -3615,14 +3634,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Ref_Ch1_std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std,&
                                 Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Ref_Ch1_Min_3x3
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Min_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-    Istatus = sfwdata(Sds_Id_Rtm(13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+    Istatus = sfwdata(Sds_Id_Rtm(14), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
@@ -3630,7 +3649,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  Sensor%Chan_On_Flag_Default(32)==sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3,sym%LINEAR_SCALING, &
                                 Min_Btd_Ch31_Ch32,Max_Btd_Ch31_Ch32,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(14), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(15), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
@@ -3638,15 +3657,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Ems_Ch20,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
                                 Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(15), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(16), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Ems_Ch20 clear-sky
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ems_Ch20_Clear_Rtm,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
+     call SCALE_VECTOR_I2_RANK2(Ems_Ch20_clear_solar_Rtm,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
                                 Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(16), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(17), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
@@ -3654,74 +3673,74 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Ems_Ch20_median_3x3,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20, &
                                 Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(17), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(18), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Tc_opaque_cloud
    call SCALE_VECTOR_I2_RANK2(Tc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Tc,Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
-   Istatus = sfwdata(Sds_Id_Rtm(18), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(19), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !--- Ch20 temperature
    if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Bt_Ch20_median_3x3,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(19), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(20), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Ch20 surface emissiviy
    call SCALE_VECTOR_I2_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems,Max_Sfc_Ems,Missing_Value_Real4,Two_Byte_Temp)
-   Istatus = sfwdata(Sds_Id_Rtm(20), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(21), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !-- background sst uniformity
    call SCALE_VECTOR_I2_RANK2(sst_anal_uni,sym%LINEAR_SCALING,Min_Sst_std,Max_Sst_std,Missing_Value_Real4,Two_Byte_Temp)
-   Istatus = sfwdata(Sds_Id_Rtm(21), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(22), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !--- computed Ch27 temperature
    if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(27)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(22), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(23), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- computed Ch28 temperature
    if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(28)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(23), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(24), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- computed Ch29 temperature
    if (Sensor%Chan_On_Flag_Default(29) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(29)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(24), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(25), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- computed Ch33 temperature
    if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Rtm(25), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     Istatus = sfwdata(Sds_Id_Rtm(26), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !-- 11um and 6.7um covariance
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
    call SCALE_VECTOR_I2_RANK2(Covar_Ch27_Ch31_5x5,sym%LINEAR_SCALING,Min_Bt_Covar,Max_Bt_Covar,Missing_Value_Real4,Two_Byte_Temp)
-   Istatus = sfwdata(Sds_Id_Rtm(26), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(27), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
    endif
 
    !--- Zc_opaque_cloud
    call SCALE_VECTOR_I2_RANK2(Zc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-   Istatus = sfwdata(Sds_Id_Rtm(27), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(28), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !---  bayes_sfc_mask
-   Istatus = sfwdata(Sds_Id_Rtm(28), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+   Istatus = sfwdata(Sds_Id_Rtm(29), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                      Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !--- check for and report errors
@@ -5095,7 +5114,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
     !--- Ch20 temperature clear
     if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
+     call SCALE_VECTOR_I2_RANK2(Ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
     endif

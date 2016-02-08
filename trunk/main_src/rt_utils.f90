@@ -2256,7 +2256,14 @@ contains
 
 
       case default
-
+         print*,'WARNING WARNING WARNING WARGNIN WARNING'
+         print*
+         print*,'sensor with WMO id: ',wmo_id,' is not included in rt_utils solar_rtm'
+         print*,'atmospheric correction is set to zero' 
+         print*,'inform andi.walther@ssec.wisc.edu '
+         print*,'clavr-x will run, but be carefule with the results'
+         print*
+         print*,'WARNING WARRNING'
 
       end select
 

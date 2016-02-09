@@ -133,13 +133,11 @@ contains
                       Output)
                      ! Diag)   !optional
 
-
-
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &
                                           Input, &
-                                          Output) !, &
-                                         ! Diag)   !optional
+                                          Output, &
+                                          Diag)   !optional
 
          !--- nullify pointers within these data structures
          call NULL_INPUT()
@@ -306,6 +304,7 @@ contains
       Input%Chan_On_375um = Sensor%Chan_On_Flag_Default(20)
       Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
       Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
+      Input%Chan_On_10um = Sensor%Chan_On_Flag_Default(30)
       Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
       Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
       Input%Chan_On_I1_064um = Sensor%Chan_On_Flag_Default(39)
@@ -371,6 +370,11 @@ contains
       endif
       if (Input%Chan_On_85um == sym%YES)  then 
         Input%Bt_85um => ch(29)%Bt_Toa(i,j)
+      endif
+      if (Input%Chan_On_10um == sym%YES)  then                                                                                                      
+        Input%Bt_10um = ch(30)%Bt_Toa(i,j)
+      else
+        Input%Bt_10um = Missing_Value_Real4
       endif
       if (Input%Chan_On_11um == sym%YES)  then 
         Input%Bt_11um => ch(31)%Bt_Toa(i,j)

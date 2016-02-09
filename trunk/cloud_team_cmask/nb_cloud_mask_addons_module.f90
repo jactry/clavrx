@@ -36,6 +36,7 @@ module CLOUD_MASK_ADDONS
            VCM_SMOKE_TEST, &
            VCM_DUST_TEST, &
            IR_DUST_TEST, &
+           IR_DUST_TEST2, &
            MEDIAN_FILTER_MASK
 
 !!--- define structures
@@ -106,6 +107,16 @@ module CLOUD_MASK_ADDONS
           endif
 
       endif
+
+!        Output%Dust_Mask = IR_DUST_TEST2 (     &
+!                    Input%Land_Class,          &
+!                    Input%Bt_85um,             &
+!                    Input%Bt_10um,             &
+!                    Input%Bt_11um,             &
+!                    Input%Bt_12um,             &
+!                    Input%Bt_11um_Std,         &
+!                    Input%Senzen)
+
        !---------------------------------------------------------------------
        ! VCM Daytime Smoke Detection
        !---------------------------------------------------------------------
@@ -438,6 +449,172 @@ module CLOUD_MASK_ADDONS
    endif 
 
    end function IR_DUST_TEST
+
+
+   !---------------------------------------------------------------------------
+   !
+   !---------------------------------------------------------------------------
+   integer elemental function IR_DUST_TEST2 ( &
+                    Land_Class,       &
+                    Bt85,             &
+                    Bt10,             &
+                    Bt11,             &
+                    Bt12,             &
+                    Bt11_Std,         &
+                    Senzen)
+
+   integer(kind=int1) , intent(in) :: Land_Class
+   real , intent(in) :: Senzen
+   real , intent(in) :: Bt85
+   real , intent(in) :: Bt10
+   real , intent(in) :: Bt11
+   real , intent(in) :: Bt12
+   real , intent(in) :: Bt11_Std
+   real, parameter :: MISSING = -999.0
+   real, parameter :: BT11_STD_THRESH = 1.0
+   real, parameter :: BTD_12_11_THRESH = -0.5
+   real, parameter :: BTD_11_85_THRESH = -1.5
+   real, parameter :: BT85_THRESH = 243.0
+   real, parameter :: R_LAND_THRESH = -0.1
+   real, parameter :: G1_LAND_MIN_THRESH = -1.0
+   real, parameter :: G1_LAND_MAX_THRESH = 3.5
+   real, parameter :: G2_LAND_THRESH = -0.5
+   real, parameter :: B1_LAND_THRESH = 243.0
+   real, parameter :: B2_LAND_THRESH = 0.997
+   real, parameter :: R_OCEAN_CLOUD_THRESH = 0.0
+   real, parameter :: G1_OCEAN_CLOUD_THRESH = 1.5
+   real, parameter :: G2_OCEAN_CLOUD_MIN_THRESH = -1.5
+   real, parameter :: G2_OCEAN_CLOUD_MAX_THRESH = 0.8
+   real, parameter :: B1_OCEAN_CLOUD_THRESH = 244.0
+   real, parameter :: B2_OCEAN_CLOUD_THRESH = 1.0
+   real, parameter :: R_OCEAN_DUST_MIN_THRESH = -1.2
+   real, parameter :: R_OCEAN_DUST_MAX_THRESH = 0.0
+   real, parameter :: G1_OCEAN_DUST_THRESH = 1.2
+   real, parameter :: G2_OCEAN_DUST_MIN_THRESH = -0.5
+   real, parameter :: G2_OCEAN_DUST_MAX_THRESH = 0.8
+   real, parameter :: B1_OCEAN_DUST_THRESH = 244.0
+   real, parameter :: B2_OCEAN_DUST_THRESH = 0.997
+   real, parameter :: R_OCEAN_LAND_THRESH = 0.5
+   real, parameter :: G_OCEAN_LAND_THRESH = 0.0
+   real, parameter :: B_OCEAN_LAND_THRESH = 0.997
+   real, parameter :: SENZEN_THRESH = 76.0
+   real :: Btd_12_11
+   real :: Btd_85_12
+   real :: Btd_11_85
+   real :: Bt85_11_Ratio
+   real :: Bt_Ratio
+   real :: MR, MG, MB
+
+   ! --- initialize output
+   Ir_Dust_Test2 = 0
+
+   ! --- check if valid or Bt11_Std is too big
+   !     or sensor zenith angle too big
+   if (Bt11 .eq. Missing .or. &
+       Bt11_Std .gt. BT11_STD_THRESH .or. &
+       Senzen .gt. SENZEN_THRESH) then
+      return
+   endif
+
+   ! --- calculate needed variables
+   Btd_12_11 = Bt12 - Bt11
+   Btd_85_12 = Bt85 - Bt12
+   Btd_11_85 = Bt11 - Bt85
+   Bt85_11_Ratio = Bt85 / Bt11
+   ! in case 10 micron is on
+   if (Bt10 .ne. Missing .and. Btd_85_12 .ne. 0.0) then
+      Bt_Ratio = (Bt10 - Bt11) / Btd_85_12
+   endif
+
+   ! --- 1st RGB check
+   if (Btd_12_11 .lt. BTD_12_11_THRESH .or. &
+       Btd_11_85 .lt. BTD_11_85_THRESH .or. &
+       Bt85 .lt. BT85_THRESH) then
+      return
+   endif
+
+   ! --- 2nd RGB check depends on surface
+   ! Over Land Tests
+   if (Land_Class .ge. 1 .and. Land_Class .le. 5) then
+      MR = 1
+      MG = 1
+      MB = 1
+      if (Btd_12_11 .lt. R_LAND_THRESH) MR = 0
+      ! in case 10 micron is on
+      if (Bt10 .ne. Missing) then
+         if (Btd_11_85 .gt. G1_LAND_MIN_THRESH .and. &
+             Btd_11_85 .lt. G1_LAND_MAX_THRESH .and. &
+             Bt_Ratio .lt. G2_LAND_THRESH) MG = 0
+      ! in case 10 micron is off
+      else
+         if (Btd_11_85 .gt. G1_LAND_MIN_THRESH .and. &
+             Btd_11_85 .lt. G1_LAND_MAX_THRESH) MG = 0
+      endif
+      if (Bt85 .lt. B1_LAND_THRESH .and. &
+          Bt85_11_Ratio .gt. B2_LAND_THRESH) MB = 0
+      ! decision
+      if ((MR * MG * MB) .ne. 0) Ir_Dust_Test2 = 1
+   endif
+
+   ! Over Water Tests
+   if (Land_Class .eq. 0 .or. Land_Class .gt. 5) then
+      ! cloud like areas
+      MR = 1
+      MG = 1
+      MB = 1
+      if (Btd_12_11 .lt. R_OCEAN_CLOUD_THRESH) MR = 0
+      ! in case 10 micron is on
+      if (Bt10 .ne. Missing) then
+         if (Btd_11_85 .lt. G1_OCEAN_CLOUD_THRESH .and. &
+             Bt_Ratio .gt. G2_OCEAN_CLOUD_MIN_THRESH .and. &
+             Bt_Ratio .lt. G2_OCEAN_CLOUD_MAX_THRESH) MG = 0
+      ! in case 10 micron is off
+      else
+         if (Btd_11_85 .lt. G1_OCEAN_CLOUD_THRESH) MG = 0
+      endif
+      if (Bt85 .lt. B1_OCEAN_CLOUD_THRESH .and. &
+          Bt85_11_Ratio .lt. B2_OCEAN_CLOUD_THRESH) MB = 0
+      ! decision
+      if (((MR + MG) * MB) .ne. 0) Ir_Dust_Test2 = 1
+
+      ! dust like areas
+      MR = 1
+      MG = 1
+      MB = 1
+      if (Btd_12_11 .gt. R_OCEAN_DUST_MIN_THRESH .and. &
+          Btd_12_11 .lt. R_OCEAN_DUST_MAX_THRESH) MR = 0
+            ! in case 10 micron is on
+      if (Bt10 .ne. Missing) then
+         if (Btd_11_85 .lt. G1_OCEAN_DUST_THRESH .and. &
+             Bt_Ratio .gt. G2_OCEAN_DUST_MIN_THRESH .and. &
+             Bt_Ratio .lt. G2_OCEAN_DUST_MAX_THRESH) MG = 0
+      ! in case 10 micron is off
+      else
+         if (Btd_11_85 .lt. G1_OCEAN_DUST_THRESH) MG = 0
+      endif
+      if (Bt85 .lt. B1_OCEAN_DUST_THRESH .and. &
+          Bt85_11_Ratio .gt. B2_OCEAN_DUST_THRESH) MB = 0
+      ! decision
+      if (((MR + MG) * MB) .ne. 0) Ir_Dust_Test2 = 1
+   
+      ! land slide like areas
+      MR = 1
+      MG = 1
+      MB = 1
+      if (Btd_11_85 .lt. R_OCEAN_LAND_THRESH) MR = 0 
+      if (Bt10 .ne. Missing) then
+         if (Bt_Ratio .lt. G_OCEAN_LAND_THRESH) MG = 0
+      ! in case 10 micron is off
+      else
+         MG = 0
+      endif
+      if (Bt85_11_Ratio .lt. B_OCEAN_LAND_THRESH) MB = 0
+      ! decision
+      if ((MR + MG + MB) .ne. 0) Ir_Dust_Test2 = 1
+   endif   
+  
+   end function IR_DUST_TEST2
+
 !==============================================================
 ! Median filter
 !

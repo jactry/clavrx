@@ -45,6 +45,7 @@
     integer:: Chan_On_375um                                            !flag if 3.75um channel on (0=no,1=yes)
     integer:: Chan_On_67um                                             !flag if 6.7um channel on (0=no,1=yes)
     integer:: Chan_On_85um                                             !flag if 8.5um channel on (0=no,1=yes)
+    integer:: Chan_On_10um                                             !flag if 10.0um channel on (0=no,1=yes)
     integer:: Chan_On_11um                                             !flag if 11.0um channel on (0=no,1=yes)
     integer:: Chan_On_12um                                             !flag if 12.0um channel on (0=no,1=yes)
     integer:: Chan_On_I1_064um                                         !flag if I1 0.64um channel on (0=no,1=yes)
@@ -82,6 +83,7 @@
     real(kind=real4), pointer:: Emiss_375um_Clear                      !3.75 um pseudo toa emissivity clear-sky
     real(kind=real4), pointer:: Bt_67um                                !6.7 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_85um                                !8.5 um toa brightness temperature (K)
+    real(kind=real4) :: Bt_10um                                        !10 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_11um                                !11 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_11um_Sounder                        !11 um toa brightness temp from sounder (K) 
     real(kind=real4), pointer:: Bt_11um_Std                            !11 um toa brightness temp 3x3 Std Dev (K)

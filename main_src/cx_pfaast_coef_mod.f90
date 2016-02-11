@@ -496,11 +496,12 @@ contains
          
       cfile_loc = cfile
       iux = 70
+
       do l = 1, NK
          cfile_loc(pos : (pos+2)) =comp(l)
          iux = iux + 1
             
-         open(iux,file=trim(pfast_path)//cfile_loc,recl=lencf(l), &
+         open(iux,file=trim(pfast_path)//trim(cfile_loc),recl=lencf(l), &
                   access='direct', status='old')
          
          lun_s(l)=iux

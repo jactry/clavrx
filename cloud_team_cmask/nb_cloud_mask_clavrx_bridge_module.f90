@@ -77,6 +77,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    use NB_CLOUD_MASK
    use CLOUD_MASK_ADDONS
    use NB_CLOUD_MASK_SERVICES
+   use CLAVRX_MESSAGE_MODULE, only: MESG
 
    implicit none
 
@@ -87,15 +88,12 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    private :: SET_INPUT
    private :: SET_OUTPUT
    private :: SET_DIAG
-   private :: NULL_INPUT
-   private :: NULL_OUTPUT
-   private :: NULL_DIAG
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
    type(mask_output), private :: Output   
    type(diag_output), private :: Diag  
-   type(symbol_naive_bayesian),private :: Symbol
+   type(symbol_naive_bayesian), private :: Symbol
    
 contains
 !----------------------------------------------------------------------
@@ -112,6 +110,12 @@ contains
    integer :: i, j
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 
+   logical, save:: First_Call = .true.
+
+   if (First_Call .eqv. .true.) then
+       call MESG('NB Cloud Mask starts ', color = 46)
+   endif
+
    !---- set paths and mask classifier file name to their values in this framework
    Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
 
@@ -122,8 +126,6 @@ contains
    line_loop: do i = 1, Image%Number_Of_Elements
       elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
          call SET_INPUT(i,j)
-         call SET_OUTPUT(i,j)
-         call SET_DIAG(i,j)
 
          !---call cloud mask routine
          call NB_CLOUD_MASK_ALGORITHM(  &
@@ -136,13 +138,11 @@ contains
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &
                                           Input, &
-                                          Output, &
-                                          Diag)   !optional
+                                          Output) !, &
+                                          !Diag)   !optional
 
-         !--- nullify pointers within these data structures
-         call NULL_INPUT()
-         call NULL_OUTPUT()
-         call NULL_DIAG()
+         call SET_OUTPUT(i,j)
+         call SET_DIAG(i,j)
    
          !-----------------------------------------------------------------------
          ! CLAVR-x specific processing
@@ -170,6 +170,8 @@ contains
    if (Segment_Number == Input%Num_Segments) then
        call RESET_NB_CLOUD_MASK_LUT()
    endif
+
+   First_Call = .false.
 
    end subroutine NB_CLOUD_MASK_BRIDGE
 
@@ -294,7 +296,7 @@ contains
       Input%Num_Line = Image%Number_Of_Lines_Read_This_Segment
       Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
       Input%Num_Segments = Image%Number_Of_Segments
-      Input%Invalid_Data_Mask => Bad_Pixel_Mask(i,j)
+      Input%Invalid_Data_Mask = Bad_Pixel_Mask(i,j)
       Input%Chan_On_041um = Sensor%Chan_On_Flag_Default(8)
       Input%Chan_On_063um = Sensor%Chan_On_Flag_Default(1)
       Input%Chan_On_086um = Sensor%Chan_On_Flag_Default(2)
@@ -304,7 +306,7 @@ contains
       Input%Chan_On_375um = Sensor%Chan_On_Flag_Default(20)
       Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
       Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
-      Input%Chan_On_10um = Sensor%Chan_On_Flag_Default(30)
+      Input%Chan_On_10um = Sensor%Chan_On_Flag_Default(38)
       Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
       Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
       Input%Chan_On_I1_064um = Sensor%Chan_On_Flag_Default(39)
@@ -312,197 +314,120 @@ contains
       Input%Chan_On_I5_114um = Sensor%Chan_On_Flag_Default(43)
       Input%Chan_On_DNB = Sensor%Chan_On_Flag_Default(44)
       Input%Use_Sounder_11um = 0                        !note, off by default
-      Input%Snow_Class => Sfc%Snow(i,j)
-      Input%Land_Class => Sfc%Land(i,j)
-      Input%Oceanic_Glint_Mask => Sfc%Glint_Mask(i,j)
-      Input%Coastal_Mask => Sfc%Coast_Mask(i,j)
-      Input%Solzen => Geo%Solzen(i,j)
-      Input%Scatzen => Geo%Scatangle(i,j)
-      Input%Senzen => Geo%Satzen(i,j)
-      Input%Lat => Nav%Lat(i,j)
-      Input%Lon => Nav%Lon(i,j)
-      Input%Sst_Anal_Uni => Sst_Anal_Uni(i,j)
-      Input%Emiss_Sfc_375um => ch(20)%Sfc_Emiss(i,j)    !note, this is on always
-      Input%Zsfc => Sfc%Zsfc(i,j)
-      Input%Solar_Contamination_Mask => Solar_Contamination_Mask(i,j)
-      Input%Sfc_Type => Sfc%Sfc_Type(i,j)
+      Input%Snow_Class = Sfc%Snow(i,j)
+      Input%Land_Class = Sfc%Land(i,j)
+      Input%Oceanic_Glint_Mask = Sfc%Glint_Mask(i,j)
+      Input%Coastal_Mask = Sfc%Coast_Mask(i,j)
+      Input%Solzen = Geo%Solzen(i,j)
+      Input%Scatzen = Geo%Scatangle(i,j)
+      Input%Senzen = Geo%Satzen(i,j)
+      Input%Lat = Nav%Lat(i,j)
+      Input%Lon = Nav%Lon(i,j)
+      Input%Sst_Anal_Uni = Sst_Anal_Uni(i,j)
+      Input%Emiss_Sfc_375um = ch(20)%Sfc_Emiss(i,j)    !note, this is on always
+      Input%Zsfc = Sfc%Zsfc(i,j)
+      Input%Solar_Contamination_Mask = Solar_Contamination_Mask(i,j)
+      Input%Sfc_Type = Sfc%Sfc_Type(i,j)
 
       if (Input%Chan_On_041um == sym%YES)  then 
-        Input%Ref_041um => ch(8)%Ref_Toa(i,j)
+        Input%Ref_041um = ch(8)%Ref_Toa(i,j)
       endif
       if (Input%Chan_On_063um == sym%YES)  then 
-        Input%Ref_063um => ch(1)%Ref_Toa(i,j)
-        Input%Ref_063um_Clear => ch(1)%Ref_Toa_Clear(i,j)
-        Input%Ref_063um_Std => Ref_Ch1_Std_3x3(i,j)
-        Input%Ref_063um_Min => Ref_Ch1_Min_3x3(i,j)
+        Input%Ref_063um = ch(1)%Ref_Toa(i,j)
+        Input%Ref_063um_Clear = ch(1)%Ref_Toa_Clear(i,j)
+        Input%Ref_063um_Std = Ref_Ch1_Std_3x3(i,j)
+        Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
       endif
       if (Input%Chan_On_086um == sym%YES)  then 
-        Input%Ref_086um => ch(2)%Ref_Toa(i,j)
+        Input%Ref_086um = ch(2)%Ref_Toa(i,j)
       endif
       if (Input%Chan_On_138um == sym%YES)  then 
-        Input%Ref_138um => ch(26)%Ref_Toa(i,j)
+        Input%Ref_138um = ch(26)%Ref_Toa(i,j)
       endif
       if (Input%Chan_On_160um == sym%YES)  then 
-        Input%Ref_160um => ch(6)%Ref_Toa(i,j)
-        Input%Ref_160um_Clear => ch(6)%Ref_Toa_Clear(i,j)
+        Input%Ref_160um = ch(6)%Ref_Toa(i,j)
+        Input%Ref_160um_Clear = ch(6)%Ref_Toa_Clear(i,j)
       endif
       if (Input%Chan_On_213um == sym%YES)  then 
-        Input%Ref_213um => ch(7)%Ref_Toa(i,j)
+        Input%Ref_213um = ch(7)%Ref_Toa(i,j)
       endif
       if (Input%Chan_On_375um == sym%YES)  then 
-        Input%Ref_375um => ch(20)%Ref_Toa(i,j)
-        Input%Ref_375um_Clear => ch(20)%Ref_Toa_Clear(i,j)
-        Input%Bt_375um => ch(20)%Bt_Toa(i,j)
-        Input%Bt_375um_Std => Bt_Ch20_Std_3x3(i,j)
-        Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
-        Input%Emiss_375um_Clear => Ems_Ch20_Clear_Rtm(i,j)
+        Input%Ref_375um = ch(20)%Ref_Toa(i,j)
+        Input%Ref_375um_Clear = ch(20)%Ref_Toa_Clear(i,j)
+        Input%Bt_375um = ch(20)%Bt_Toa(i,j)
+        Input%Bt_375um_Std = Bt_Ch20_Std_3x3(i,j)
+        Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
+        Input%Emiss_375um_Clear = Ems_Ch20_Clear_Rtm(i,j)
       endif
       if (Input%Chan_On_67um == sym%YES)  then 
-        Input%Bt_67um => ch(27)%Bt_Toa (i,j)
+        Input%Bt_67um = ch(27)%Bt_Toa (i,j)
         if (Input%Chan_On_11um == sym%YES)  then 
-           Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5(i,j)
+           Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5(i,j)
         endif
       endif
       if (AVHRR_IFF_Flag == 1)  then
         Input%Use_Sounder_11um = sym%YES
-        Input%Bt_11um_Sounder => Bt_11um_Sounder(i,j)
+        Input%Bt_11um_Sounder = Bt_11um_Sounder(i,j)
         Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
       endif
       if (Input%Chan_On_85um == sym%YES)  then 
-        Input%Bt_85um => ch(29)%Bt_Toa(i,j)
+        Input%Bt_85um = ch(29)%Bt_Toa(i,j)
       endif
       if (Input%Chan_On_10um == sym%YES)  then                                                                                                      
-        Input%Bt_10um = ch(30)%Bt_Toa(i,j)
+        Input%Bt_10um = ch(38)%Bt_Toa(i,j)
       else
         Input%Bt_10um = Missing_Value_Real4
       endif
       if (Input%Chan_On_11um == sym%YES)  then 
-        Input%Bt_11um => ch(31)%Bt_Toa(i,j)
-        Input%Bt_11um_Std => Bt_Ch31_Std_3x3(i,j)
-        Input%Bt_11um_Max => Bt_Ch31_Max_3x3(i,j)
-        Input%Bt_11um_Clear => ch(31)%Bt_Toa_Clear(i,j)
-        Input%Emiss_11um_Tropo => ch(31)%Emiss_Tropo(i,j)
+        Input%Bt_11um = ch(31)%Bt_Toa(i,j)
+        Input%Bt_11um_Std = Bt_Ch31_Std_3x3(i,j)
+        Input%Bt_11um_Max = Bt_Ch31_Max_3x3(i,j)
+        Input%Bt_11um_Clear = ch(31)%Bt_Toa_Clear(i,j)
+        Input%Emiss_11um_Tropo = ch(31)%Emiss_Tropo(i,j)
       endif
       if (Input%Chan_On_12um == sym%YES)  then 
-        Input%Bt_12um => ch(32)%Bt_Toa(i,j)
-        Input%Bt_12um_Clear => ch(32)%Bt_Toa_Clear(i,j)
+        Input%Bt_12um = ch(32)%Bt_Toa(i,j)
+        Input%Bt_12um_Clear = ch(32)%Bt_Toa_Clear(i,j)
       endif
       if (Input%Chan_On_DNB == sym%YES)  then 
-        Input%Lunscatzen => Geo%Scatangle_Lunar(i,j)
-        Input%Lunar_Oceanic_Glint_Mask => Sfc%Glint_Mask_Lunar(i,j)
-        Input%Rad_Lunar => ch(44)%Rad_Toa(i,j)
-        Input%Ref_Lunar => ch(44)%Ref_Lunar_Toa(i,j)
-        Input%Ref_Lunar_Min => Ref_ChDNB_Lunar_Min_3x3(i,j)
-        Input%Ref_Lunar_Std => Ref_ChDNB_Lunar_Std_3x3(i,j)
-        Input%Ref_Lunar_Clear => ch(44)%Ref_Lunar_Toa_Clear(i,j)
-        Input%Lunzen => Geo%Lunzen(i,j)
+        Input%Lunscatzen = Geo%Scatangle_Lunar(i,j)
+        Input%Lunar_Oceanic_Glint_Mask = Sfc%Glint_Mask_Lunar(i,j)
+        Input%Rad_Lunar = ch(44)%Rad_Toa(i,j)
+        Input%Ref_Lunar = ch(44)%Ref_Lunar_Toa(i,j)
+        Input%Ref_Lunar_Min = Ref_ChDNB_Lunar_Min_3x3(i,j)
+        Input%Ref_Lunar_Std = Ref_ChDNB_Lunar_Std_3x3(i,j)
+        Input%Ref_Lunar_Clear = ch(44)%Ref_Lunar_Toa_Clear(i,j)
+        Input%Lunzen = Geo%Lunzen(i,j)
       endif
       if (Input%Chan_On_I1_064um == sym%YES) then
-         Input%Ref_I1_064um_Std => Ref_Uni_ChI1(i,j)
+         Input%Ref_I1_064um_Std = Ref_Uni_ChI1(i,j)
       endif
       if (Input%Chan_On_I4_374um == sym%YES) then
-         Input%Bt_I4_374um_Std => Bt_Uni_ChI4(i,j)
+         Input%Bt_I4_374um_Std = Bt_Uni_ChI4(i,j)
       endif
       if (Input%Chan_On_I5_114um == sym%YES) then
-         Input%Bt_I5_114um_Std => Bt_Uni_ChI5(i,j)
+         Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)
       endif
    end subroutine SET_INPUT
 
    subroutine SET_OUTPUT(i,j)
       integer, intent (in) :: i, j
 
-      Output%Cld_Flags_Packed => Cld_Test_Vector_Packed(:,i,j)
-      Output%Cld_Mask_Bayes => Cld_Mask(i,j)
-      Output%Posterior_Cld_Probability => Posterior_Cld_Probability(i,j)
-      Output%Dust_Mask => Dust_Mask(i,j)
-      Output%Smoke_Mask => Smoke_Mask(i,j)
-      Output%Fire_Mask => Fire_Mask(i,j)
+      Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
+      Cld_Mask(i,j) = Output%Cld_Mask_Bayes
+      Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
+      Dust_Mask(i,j) = Output%Dust_Mask
+      Smoke_Mask(i,j) = Output%Smoke_Mask
+      Fire_Mask(i,j) = Output%Fire_Mask
    end subroutine SET_OUTPUT
 
    subroutine SET_DIAG(i,j)
       integer, intent (in) :: i, j
 
-      Diag%Array_1 => Diag_Pix_Array_1(i,j)
-      Diag%Array_2 => Diag_Pix_Array_2(i,j)
-      Diag%Array_3 => Diag_Pix_Array_3(i,j)
+      Diag_Pix_Array_1(i,j) = Diag%Array_1
+      Diag_Pix_Array_2(i,j) = Diag%Array_2
+      Diag_Pix_Array_3(i,j) = Diag%Array_3
    end subroutine SET_DIAG
-
-   !============================================================================
-   ! nullify input pointers
-   !============================================================================
-   subroutine NULL_INPUT()
-      Input%Invalid_Data_Mask => null()
-      Input%Snow_Class => null()
-      Input%Land_Class => null() 
-      Input%Oceanic_Glint_Mask => null() 
-      Input%Lunar_Oceanic_Glint_Mask => null()
-      Input%Coastal_Mask => null()
-      Input%Solzen => null()
-      Input%Scatzen => null()
-      Input%Lunscatzen => null()
-      Input%Senzen => null()
-      Input%Lunzen => null()
-      Input%Lat => null()
-      Input%Lon => null()
-      Input%Ref_041um => null()
-      Input%Ref_063um => null()
-      Input%Ref_063um_Clear => null()
-      Input%Ref_063um_Std => null()
-      Input%Ref_063um_Min => null()
-      Input%Ref_086um => null()
-      Input%Ref_138um => null()
-      Input%Ref_160um => null()
-      Input%Ref_160um_Clear => null()
-      Input%Ref_213um => null()
-      Input%Bt_375um =>  null()
-      Input%Bt_375um_Std => null()
-      Input%Emiss_375um => null()
-      Input%Emiss_375um_Clear => null()
-      Input%Bt_67um => null()
-      Input%Bt_85um => null()
-      Input%Bt_11um => null()
-      Input%Bt_11um_Std => null()
-      Input%Bt_11um_Max => null()
-      Input%Bt_11um_Clear => null()
-      Input%Emiss_11um_Tropo => null()
-      Input%Bt_12um => null()
-      Input%Bt_12um_Clear => null()
-      Input%Ref_I1_064um_Std => null()
-      Input%Bt_I4_374um_Std => null()
-      Input%Bt_I5_114um_Std => null()
-      Input%Bt_11um_Bt_67um_Covar => null() 
-      Input%Sst_Anal_Uni => null()
-      Input%Emiss_Sfc_375um => null()
-      Input%Rad_Lunar => null()
-      Input%Ref_Lunar => null()
-      Input%Ref_Lunar_Min => null()
-      Input%Ref_Lunar_Std => null()
-      Input%Ref_Lunar_Clear => null()
-      Input%Zsfc => null()
-      Input%Solar_Contamination_Mask => null()
-      Input%Sfc_Type => null()
-   end subroutine NULL_INPUT
-
-   !============================================================================
-   ! nullify output pointers
-   !============================================================================
-   subroutine NULL_OUTPUT()
-    Output%Cld_Flags_Packed => null()
-    Output%Cld_Mask_Bayes => null()
-    Output%Posterior_Cld_Probability => null()
-    Output%Dust_Mask => null()
-    Output%Smoke_Mask => null()
-    Output%Fire_Mask => null()
-   end subroutine NULL_OUTPUT
-
-   !============================================================================
-   ! nullify diag pointers
-   !============================================================================
-   subroutine NULL_DIAG()
-      Diag%Array_1 => null()
-      Diag%Array_2 => null()
-      Diag%Array_3 => null()
-   end subroutine NULL_DIAG
 
    !============================================================================
 

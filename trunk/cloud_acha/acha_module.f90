@@ -74,7 +74,8 @@ module AWG_CLOUD_HEIGHT
   public:: SET_ACHA_VERSION
   public:: LOCAL_LINEAR_RADIATIVE_CENTER
 
-  private:: SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION  
+  private:: COMPUTE_LOWER_CLOUD_PRESSURE
+  private:: COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
   private:: KNOWING_P_COMPUTE_T_Z
   private:: KNOWING_T_COMPUTE_P_Z
   private:: KNOWING_Z_COMPUTE_T_P
@@ -97,6 +98,7 @@ module AWG_CLOUD_HEIGHT
   private:: NULL_PIX_POINTERS 
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
+  private:: MEAN_SMOOTH
 
   !--- include the non-system specific variables
   include 'acha_parameters.inc'
@@ -367,6 +369,7 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), dimension(:,:), allocatable:: Converged_Flag
   real (kind=real4), allocatable, dimension(:,:):: Temperature_Cirrus
   integer (kind=int4):: Box_Half_Width_Cirrus
+  integer (kind=int4):: Box_Half_Width_Lower
 
   !--- local POINTERs to global arrays or data structures
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
@@ -475,9 +478,11 @@ module AWG_CLOUD_HEIGHT
   !--- set convergence criterion
   Convergence_Criteria = Num_Param - 1.0
 
-  !--- determine cirrus box width
-  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,BOX_WIDTH_KM, &
-                         Box_Half_Width_Cirrus)
+  !--- determine cirrus spatial interpolation box width
+  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,CIRRUS_BOX_WIDTH_KM, Box_Half_Width_Cirrus)
+
+  !--- determine lower cloud spatial interpolation box width
+  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,LOWER_BOX_WIDTH_KM, Box_Half_Width_Lower)
 
   !----------- make identity matrix
   E = 0.0
@@ -566,16 +571,23 @@ module AWG_CLOUD_HEIGHT
    ! on the third pass, spatially interpoLate water cloud temperature
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
-     call SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION(&
-                      Pass_Idx,Line_Idx_min,Input%Number_of_Lines, &
-                      Input%Elem_Idx_Nwp,Input%Line_Idx_Nwp, &
-                      Input%Invalid_Data_Mask, &
-                      Input%Cloud_Type, &
-                      Input%Surface_Pressure, &
-                      Output%Pc, &
-                      Output%Lower_Cloud_Pressure, &
-                      Output%Lower_Cloud_Temperature, &
-                      Output%Lower_Cloud_Height)
+
+     call  COMPUTE_LOWER_CLOUD_PRESSURE(Input%Cloud_Type, &
+                                        USE_LOWER_INTERP_FLAG, &
+                                        Input%Surface_Pressure, &
+                                        Output%Pc,&
+                                        COUNT_MIN_LOWER,      &
+                                        Box_Half_Width_Lower, &
+                                        MISSING_VALUE_REAL4, &
+                                        Output%Lower_Cloud_Pressure)
+
+     call  COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Input%Elem_Idx_Nwp, &
+                                        Input%Line_Idx_Nwp, &
+                                        MISSING_VALUE_REAL4, &
+                                        Output%Lower_Cloud_Pressure, &
+                                        Output%Lower_Cloud_Height, &
+                                        Output%Lower_Cloud_Temperature)
+
    endif
 
    !--------------------------------------------------------------------------
@@ -1210,44 +1222,6 @@ module AWG_CLOUD_HEIGHT
 !----------------------------------------------------------------
 Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
 
-!----------------------------------------------------------------
-! if no inversion is present, check to see if clear radiance
-! is much warmer than observed radiance, if not then do not proceed
-!----------------------------------------------------------------
-!if (( Inver_Level_RTM == 0) .and. (Rad_Clear_11um - Input%Rad_11um(Elem_Idx,Line_Idx) < -10.0)) then
-
-!   !-- consider this pixel a failed retrieval
-!   Fail_Flag(Elem_Idx,Line_Idx) = symbol%YES
-!
-!   Meta_Data_Flags(1) = symbol%NO
-!
-!   !--- assign default values for this result
-!   Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL4
-!   Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL4
-!   Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL4
-!   Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-!   Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-!   Output%Qf(Elem_Idx,Line_Idx) = 1
-!
-!   call KNOWING_T_COMPUTE_P_Z(symbol, &
-!                              Cloud_Type, &
-!                              Output%Pc(Elem_Idx,Line_Idx), &
-!                              Output%Tc(Elem_Idx,Line_Idx), &
-!                              Output%Zc(Elem_Idx,Line_Idx), &
-!                              Ilev,ierror,NWP_Profile_Inversion_Flag)
-!   if (ierror == 0) then
-!   Output%Zc(Elem_Idx,Line_Idx) = max(0.0,Output%Zc(Elem_Idx,Line_Idx))
-!    Output%Pc(Elem_Idx,Line_Idx) = min(Input%Surface_Pressure(Elem_Idx,Line_Idx), &
-!                                Output%Pc(Elem_Idx,Line_Idx))
-!   endif
-!   
-!   !-- go to next pixel
-!   print *, "Removed a pixel ", Rad_Clear_11um, Input%Rad_11um(Elem_Idx,Line_Idx)
-!   Diag_Pix_Array_3(Elem_Idx,Line_Idx) = 1.0
-!   cycle
-!
-!endif
-
 !-----------------------------------------------------------------
 ! start of retrieval loop
 !-----------------------------------------------------------------
@@ -1629,8 +1603,8 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Input%Cloud_Type,   &
                  Output%Tc,          &
                  Output%Ec,          &
-                 EMISSIVITY_MIN_TEMPERATURE_CIRRUS, &
-                 COUNT_MIN_TEMPERATURE_CIRRUS,      &
+                 EMISSIVITY_MIN_CIRRUS, &
+                 COUNT_MIN_CIRRUS,      &
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
@@ -1638,11 +1612,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
 endif
 
 end do pass_loop
-
-!Diag%Array_1 = Temperature_Cirrus
-!if (associated(Input%Tc_Cirrus_Sounder)) then
-! Diag%Array_2 = Input%Tc_Cirrus_Sounder
-!endif
 
 !------------------------------------------------------------------------
 ! Apply Parallax Correction 
@@ -1682,173 +1651,10 @@ end do pass_loop
 
 end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
-!-------------------------------------------------------------------------------
-! Routine to spatially interpret water cloud temperature values to surrounding 
-! pixels
-!
-! input:  interp_flag = 0 (do no interp, assume Zc=2km) /= 0 (do spatial interp)
-!-------------------------------------------------------------------------------
-  subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION(Interp_Flag,Line_Idx_Min, &
-                                                        Number_Of_Lines, &
-                                                        Elem_Idx_Nwp,Line_Idx_Nwp, &
-                                                        Invalid_Data_Mask, &
-                                                        Cloud_Type, &
-                                                        Surface_Pressure, &
-                                                        Cloud_Pressure, &
-                                                        Lower_Cloud_Pressure, &
-                                                        Lower_Cloud_Temperature, &
-                                                        Lower_Cloud_Height)
-
-      integer, intent(in):: Interp_Flag    
-      integer, intent(in):: Line_Idx_Min
-      integer, intent(in):: Number_Of_Lines
-      integer, intent(in), dimension(:,:):: Elem_Idx_Nwp
-      integer, intent(in), dimension(:,:):: Line_Idx_Nwp
-      integer(kind=int1), intent(in), dimension(:,:):: Invalid_Data_Mask
-      integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
-      real, intent(in), dimension(:,:):: Surface_Pressure
-      real, intent(in), dimension(:,:):: Cloud_Pressure
-      real, intent(out), dimension(:,:):: Lower_Cloud_Pressure
-      real, intent(out), dimension(:,:):: Lower_Cloud_Temperature
-      real, intent(out), dimension(:,:):: Lower_Cloud_Height
-      integer:: Line_Idx
-      integer:: Elem_Idx
-      integer:: Inwp
-      integer:: Jnwp
-      integer:: Ilev
-      integer:: Num_Elem
-      integer:: Num_Line
-      integer:: Line_Start
-      integer:: Line_End
-      integer:: Elem_Width
-      integer:: Line_Width
-      integer:: i1
-      integer:: i2
-      integer:: j1
-      integer:: j2
-      integer:: Count_Valid
-      real, parameter:: LOWER_LAYER_MAX_PRESS = 700.0
-
-      Num_Elem = size(Cloud_Type,1)      !-----
-      num_Line = size(Cloud_Type,2)      !-----
-      Line_Start = Line_Idx_min
-      Line_End = Number_Of_Lines + Line_Idx_min - 1
-
-      if (Interp_Flag == 0) then 
-
-       Line_loop_1: do Line_Idx = Line_Start, Line_End 
-         Element_Loop_1: do Elem_Idx = 1, Num_Elem 
-           if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
-               Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-               cycle
-           endif
-
-          Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
-          Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
-
-           if (Inwp == MISSING_VALUE_INTEGER4 .or. &
-               Jnwp == MISSING_VALUE_INTEGER4) then
-               
-               cycle
-               
-           endif
-
-          Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = Surface_Pressure(Elem_Idx,Line_Idx) - Pc_Lower_Cloud_offset
-
-        end do Element_Loop_1
-       end do Line_loop_1
-
-
-      else    !if Interp_Flag > 0 then do a spatial interpolation
-
-        !--- set box width
-        Elem_Width = 5
-        Line_Width = 5
-
-        Line_loop_2: do Line_Idx = Line_Start, Line_End 
-            Element_Loop_2: do Elem_Idx = 1, Num_Elem 
-
-             if (Cloud_Type(Elem_Idx,Line_Idx)  /= symbol%OVERLAP_TYPE) then
-                 cycle
-             endif
-
-             i1 = min(Num_Elem,max(1,Elem_Idx-Elem_Width))
-             i2 = min(Num_Elem,max(1,Elem_Idx+Elem_Width))
-             j1 = min(Num_Line,max(1,Line_Idx-Line_Width))
-             j2 = min(Num_Line,max(1,Line_Idx+Line_Width))
-
-             Count_Valid = count(Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS)
-
-             if (Count_Valid > 0) then
-
-                 Lower_Cloud_Pressure(Elem_Idx,Line_Idx) =  &
-                              sum(Cloud_Pressure(i1:i2,j1:j2), &
-                                  mask = Cloud_Pressure(i1:i2,j1:j2) >= LOWER_LAYER_MAX_PRESS) / &
-                                  count_valid
-
-             endif
-         
-             end do Element_Loop_2
-          end do Line_Loop_2
-
-          !--- fill missing values with default value
-          Line_loop_3: do Line_Idx = Line_Start, Line_End 
-            Element_Loop_3: do Elem_Idx = 1, Num_Elem 
-             if ((Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == MISSING_VALUE_REAL4) .and. &
-               (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%NO)) then
-               Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
-               Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
-               if (Inwp == MISSING_VALUE_INTEGER4 .or. &
-                   Jnwp == MISSING_VALUE_INTEGER4) THEN
-                    cycle
-               endif 
-               Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = max(LOWER_LAYER_MAX_PRESS, &
-                                                         Surface_Pressure(Elem_Idx,Line_Idx) - Pc_Lower_Cloud_offset)
-             endif
-            end do Element_Loop_3
-           end do Line_loop_3
-
-      endif   !end of Interp_Flag check
-
-      !----------------------------------------------------------------
-      !  Compute Height and Temperature
-      !----------------------------------------------------------------
-      Line_loop_4: do Line_Idx = Line_Start, Line_End 
-         Element_Loop_4: do Elem_Idx = 1, Num_Elem 
-
-            !-- if a bad pixel, set to missing
-            if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
-               Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-               Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4 
-               Lower_Cloud_Height(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4 
-               cycle
-            endif
-
-            !--- if not overlap, set to all missing 
-            if (Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE .or. &
-                Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == MISSING_VALUE_REAL4) then
-                Lower_Cloud_Pressure(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-                Lower_Cloud_Height(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-                Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-                cycle
-            endif
-
-            !--- compute T and Z from P
-            Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
-            Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
-            call KNOWING_P_COMPUTE_T_Z( Lower_Cloud_Pressure(Elem_Idx,Line_Idx), &
-                                        Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
-                                        Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                                        Ilev)
-        end do Element_Loop_4
-       end do Line_loop_4
-
-   end subroutine SPATIALLY_INTERPOLATE_LOWER_CLOUD_POSITION
-
-   !-----------------------------------------------------------------
-   ! InterpoLate within profiles knowing P to determine T and Z
-   !-----------------------------------------------------------------
-   subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Ilev)
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing P to determine T and Z
+!-----------------------------------------------------------------
+subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Ilev)
 
      real, intent(in):: P
      real, intent(out):: T
@@ -1881,12 +1687,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
          Z = ZC_FLOOR
        endif
 
-   end subroutine KNOWING_P_COMPUTE_T_Z
+end subroutine KNOWING_P_COMPUTE_T_Z
 
-   !-----------------------------------------------------------------
-   ! InterpoLate within profiles knowing Z to determine T and P
-   !-----------------------------------------------------------------
-   subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Ilev)
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing Z to determine T and P
+!-----------------------------------------------------------------
+subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Ilev)
 
      real, intent(in):: Z
      real, intent(out):: T
@@ -1913,12 +1719,12 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
            P = Press_Prof_RTM(Ilev)
      endif
 
-   end subroutine KNOWING_Z_COMPUTE_T_P
+end subroutine KNOWING_Z_COMPUTE_T_P
 
-   !-----------------------------------------------------------------
-   ! InterpoLate within profiles knowing T to determine P and Z
-   !-----------------------------------------------------------------
-   subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing T to determine P and Z
+!-----------------------------------------------------------------
+subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
 
      integer, intent(in):: Cloud_Type
      real, intent(in):: T
@@ -2017,13 +1823,13 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
       Z = ZC_FLOOR
     endif
 
-   end subroutine KNOWING_T_COMPUTE_P_Z
+end subroutine KNOWING_T_COMPUTE_P_Z
 
-   !-----------------------------------------------------------------
-   ! InterpoLate within profiles knowing Z to determine above cloud
-   ! radiative terms used in forward model
-   !-----------------------------------------------------------------
-   function GENERIC_PROFILE_INTERPOLATION(X_value,X_Profile,Y_Profile)  &
+!-----------------------------------------------------------------
+! InterpoLate within profiles knowing Z to determine above cloud
+! radiative terms used in forward model
+!-----------------------------------------------------------------
+function GENERIC_PROFILE_INTERPOLATION(X_value,X_Profile,Y_Profile)  &
             result(Y_value) 
 
      real, intent(in):: X_value 
@@ -2051,7 +1857,7 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
      else
           Y_value = Y_Profile(Ilev)
      endif
-   end function GENERIC_PROFILE_INTERPOLATION
+end function GENERIC_PROFILE_INTERPOLATION
 
 !------------------------------------------------------------------------
 ! subroutine to compute the Iteration in x due to optimal
@@ -3793,8 +3599,24 @@ end subroutine SET_ACHA_VERSION
 ! 
 ! Make a background field of cirrus temperature from appropriate
 ! retrievals and use as an apriori constraint
+!
+! Input
+!   Cld_Type = standard cloud type values
+!   Temperature_Cloud = Cloud-top Temperature 
+!   Emissivity_Cloud = Cloud Emissvity
+!   Emissivity_Thresh = threshold for determing source pixels
+!   Count_Thresh = number of source pixels needed to make a target value
+!   Box_Width = pixel dimension of averaging box
+!   Missing = Missing value to be used
+!
+! Output
+!   Temperature_Cirrus = cloud temperature of target pixels
+!
+! Local
+!   Mask1 = mask of source pixels
+!   Mask2 = mask of target pixels
 !====================================================================
-subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
+subroutine COMPUTE_TEMPERATURE_CIRRUS(Cld_Type, &
                                       Temperature_Cloud,&
                                       Emissivity_Cloud,&
                                       Emissivity_Thresh,&
@@ -3803,7 +3625,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
                                       Missing, &
                                       Temperature_Cirrus)
 
-   integer(kind=int1), intent(in), dimension(:,:):: Type
+   integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
    real(kind=real4), intent(in), dimension(:,:):: Temperature_Cloud
    real(kind=real4), intent(in), dimension(:,:):: Emissivity_Cloud
    real(kind=int4), intent(in):: Emissivity_Thresh
@@ -3811,64 +3633,164 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Type, &
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
    real(kind=real4), intent(out), dimension(:,:):: Temperature_Cirrus
-   integer(kind=int1), dimension(:,:), allocatable:: Mask
+   integer(kind=int1), dimension(:,:), allocatable:: Mask1
+   integer(kind=int1), dimension(:,:), allocatable:: Mask2
 
    integer:: Num_Elements
    integer:: Num_Lines
-   integer:: Line_Idx, Elem_Idx, i1, i2, j1, j2
-   real:: Count_Temporary, Sum_Temporary, Temperature_Temporary
 
    Temperature_Cirrus = Missing
 
    Num_Elements = size(Temperature_Cirrus,1)
    Num_Lines = size(Temperature_Cirrus,2)
 
-   allocate(Mask(Num_Elements,Num_Lines))
+   allocate(Mask1(Num_Elements,Num_Lines))
+   allocate(Mask2(Num_Elements,Num_Lines))
 
-   Mask = 0
-
-   where( (Type == symbol%CIRRUS_TYPE .or. &
-           Type == symbol%OVERLAP_TYPE) .and.  &
+   !---- make source mask
+   Mask1 = 0
+   where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
+           Cld_Type == symbol%OPAQUE_ICE_TYPE .or.  &
+           Cld_Type == symbol%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
-           Emissivity_Cloud > Emissivity_Thresh)
-
-      Mask = 1
-
+           Emissivity_Cloud >= Emissivity_Thresh)
+      Mask1 = 1
    end where
 
-   do Elem_Idx = 1, Num_Elements, 10
+   !---- make target mask
+   Mask2 = 0
+   where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
+           Cld_Type == symbol%OPAQUE_ICE_TYPE) .and.  &
+           Temperature_Cloud /= Missing .and. &
+           Emissivity_Cloud < Emissivity_Thresh)
+      Mask2 = 1
+   end where
 
-      i1 = min(Num_Elements,max(1,Elem_Idx - Box_Width))
-      i2 = min(Num_Elements,max(1,Elem_Idx + Box_Width))
 
-      do Line_Idx = 1, Num_Lines, 10
+   call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
+                    Temperature_Cloud,Temperature_Cirrus)
 
-          Temperature_Temporary = Missing
-          Count_Temporary = 0
-          Sum_Temporary = 0.0
-
-          j1 = min(Num_Lines,max(1,Line_Idx - Box_Width))
-          j2 = min(Num_Lines,max(1,Line_Idx + Box_Width))
-
-          Count_Temporary = sum(1*Mask(i1:i2,j1:j2))
-          Sum_Temporary = sum(Temperature_Cloud(i1:i2,j1:j2)*Mask(i1:i2,j1:j2))
-          if (Count_Temporary > Count_Thresh) then
-              Temperature_Temporary = Sum_Temporary / Count_Temporary
-          else
-              Temperature_Temporary = Missing
-          endif
-
-          if (Temperature_Temporary /= Missing) then
-             Temperature_Cirrus(i1:i2,j1:j2) = Temperature_Temporary
-          endif
-         
-      enddo
-   enddo   
-
-   deallocate(Mask)
+   !--------------------------------------
+   deallocate(Mask1)
+   deallocate(Mask2)
 
 end subroutine COMPUTE_TEMPERATURE_CIRRUS
+!-------------------------------------------------------------------------------
+! Routine to spatially interpret water cloud temperature values to surrounding 
+! pixels
+!
+! input:  interp_flag = 0 (do no interp, assume Zc=2km) /= 0 (do spatial interp)
+!-------------------------------------------------------------------------------
+subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
+                                        Interp_Flag, &
+                                        Surface_Pressure, &
+                                        Cloud_Pressure,&
+                                        Count_Thresh, &
+                                        Box_Width, &
+                                        Missing, &
+                                        Lower_Cloud_Pressure)
 
+   integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
+   integer(kind=int4), intent(in):: Interp_Flag
+   real, intent(in), dimension(:,:):: Surface_Pressure
+   real(kind=real4), intent(in), dimension(:,:):: Cloud_Pressure
+   integer(kind=int4), intent(in):: Count_Thresh
+   integer(kind=int4), intent(in):: Box_Width
+   real(kind=int4), intent(in):: Missing
+   real(kind=real4), intent(out), dimension(:,:):: Lower_Cloud_Pressure
+
+   integer(kind=int1), dimension(:,:), allocatable:: Mask1
+   integer(kind=int1), dimension(:,:), allocatable:: Mask2
+   integer:: Num_Elements
+   integer:: Num_Lines
+
+   !--- initialize output to missing
+   Lower_Cloud_Pressure = Missing
+
+   !--- grab size of these arrays
+   Num_Elements = size(Cloud_Pressure,1)
+   Num_Lines = size(Cloud_Pressure,2)
+
+   !---- make output mask
+   allocate(Mask2(Num_Elements,Num_Lines))
+   Mask2 = 0
+   where(Cld_Type == symbol%OVERLAP_TYPE)
+          Mask2 = 1
+   end where
+
+   !--- set default to a static offset of surface pressure 
+   where(Mask2 == 1 .and. Surface_Pressure /= Missing)
+          Lower_Cloud_Pressure = Surface_Pressure - PC_LOWER_CLOUD_OFFSET
+   end where
+
+   !--- if no spatial interpolation is to be done, return
+   if (Interp_Flag == symbol%NO) then
+      deallocate(Mask2)
+      return
+   endif
+
+   !---- make source mask
+   allocate(Mask1(Num_Elements,Num_Lines))
+   Mask1 = 0
+   where( (Cld_Type == symbol%FOG_TYPE .or. &
+              Cld_Type == symbol%WATER_TYPE .or.  &
+              Cld_Type == symbol%SUPERCOOLED_TYPE) .and.  &
+              Cloud_Pressure /= Missing)
+             Mask1 = 1
+   end where
+
+   !--- call the spatial analysis routine
+   call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
+                    Cloud_Pressure,Lower_Cloud_Pressure)
+
+   !--- deallocate memory
+   deallocate(Mask1)
+   deallocate(Mask2)
+
+end subroutine COMPUTE_LOWER_CLOUD_PRESSURE
+!------------------------------------------------------------------------------
+! Compute lower cloud height and temperature from the lower cloud pressure
+!------------------------------------------------------------------------------
+subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
+                                                  Line_Idx_Nwp, &
+                                                  Missing, &
+                                                  Lower_Cloud_Pressure, &
+                                                  Lower_Cloud_Height, &
+                                                  Lower_Cloud_Temperature)
+   integer, intent(in), dimension(:,:):: Elem_Idx_Nwp
+   integer, intent(in), dimension(:,:):: Line_Idx_Nwp
+   real, intent(in):: Missing
+   real, intent(in), dimension(:,:):: Lower_Cloud_Pressure
+   real, intent(out), dimension(:,:):: Lower_Cloud_Temperature
+   real, intent(out), dimension(:,:):: Lower_Cloud_Height
+   integer:: Line_Idx
+   integer:: Elem_Idx
+   integer:: Num_Elements
+   integer:: Num_Lines
+   integer:: Inwp
+   integer:: Jnwp
+   integer:: Ilev
+
+   !----------------------------------------------------------------
+   !  Compute Pressure and Temperature
+   !----------------------------------------------------------------
+   Line_loop: do Line_Idx = 1, Num_Lines
+       Element_Loop: do Elem_Idx = 1, Num_Elements
+
+       !--- compute T and Z from P
+       Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
+       Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
+
+       if (Inwp <= 0 .or. Jnwp <= 0 .or. Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == Missing) cycle
+
+          call KNOWING_P_COMPUTE_T_Z(Lower_Cloud_Pressure(Elem_Idx,Line_Idx),    &
+                                     Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
+                                     Lower_Cloud_Height(Elem_Idx,Line_Idx),      &
+                                     Ilev)
+       end do Element_Loop
+   end do Line_loop
+
+end subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
 !--------------------------------------------------------------------------
 ! Determine processing order of pixels
 !
@@ -3985,6 +3907,86 @@ subroutine COMPUTE_BOX_WIDTH(Sensor_Resolution_KM,Box_Width_KM, &
    endif
 
 end subroutine COMPUTE_BOX_WIDTH
+  !-------------------------------------------------------------------------------------------------
+  ! Smooth a field using a mean over an area 
+  !
+  ! Description
+  !    Values of Z_in with Mask_In = 1 are used to populate pixels with Mask_Out = 1 
+  !    Z_Out is computed as the mean of Z_In*Mask_In over a box whose size is 
+  !    defined by N.  
+  !
+  ! Input
+  !    Mask_In - binary mask of point used as the source of the smoothing
+  !    Mask_Out - binary mask of points to have a result upon exit
+  !    Missin = missing value used as fill for Z_Out
+  !    Count_Thresh - number of source points to compue an output
+  !    N - half-width of smoothing box (x and y)
+  !    Num_Elements = size of array in x-direction
+  !    Num_Lines = size of array in y-direction
+  !    Z_In - source values
+  !    Z_Out - output values
+  !    di = number of pixels to skip in the i direction (0=none,1=every other ...)
+  !    dj = number of pixels to skip in the j direction (0=none,1=every other ...)
+  !
+  !-------------------------------------------------------------------------------------------------
+  subroutine MEAN_SMOOTH(Mask_In,Mask_Out,Missing,di,dj,Count_Thresh,N,Num_Elements, Num_Lines, Z_In,Z_Out)
+
+     integer (kind=int1), intent(in), dimension(:,:), target:: Mask_In
+     integer (kind=int1), intent(in), dimension(:,:):: Mask_Out
+     real (kind=real4), intent(in):: Missing
+     integer (kind=int4), intent(in):: di
+     integer (kind=int4), intent(in):: dj
+     integer (kind=int4), intent(in):: Count_Thresh
+     integer (kind=int4), intent(in):: N
+     integer (kind=int4), intent(in):: Num_Elements
+     integer (kind=int4), intent(in):: Num_lines
+     real (kind=real4), intent(in), dimension(:,:), target:: Z_In
+     real (kind=real4), intent(out), dimension(:,:):: Z_Out
+     integer:: i
+     integer:: j
+     real:: Count_Temporary
+     real, pointer, dimension(:,:):: Z_In_Sub
+     integer (kind=int1), pointer, dimension(:,:):: Mask_In_Sub
+     real (kind=real8):: Z_sum
+     integer:: i1,i2,j1,j2
+
+     do j = 1 + dj, Num_Lines-dj, dj + 1
+
+        j1 = min(Num_Lines,max(1,j - N))
+        j2 = min(Num_Lines,max(1,j + N))
+
+        do i = 1 + N + di, Num_Elements - N - di, di + 1
+
+          i1 = i - N
+          i2 = i + N
+
+          Z_Out(i,j) = Missing
+
+          if (maxval(Mask_Out(i-di:i+di,j-dj:j+dj)) == 0) cycle
+          !if (Mask_Out(i,j) == 0) cycle
+
+          Mask_In_Sub => Mask_In(i1:i2,j1:j2)
+          Z_In_Sub => Z_In(i1:i2,j1:j2)
+
+          Count_Temporary = sum(real(Mask_In_Sub))
+          if (Count_Temporary < Count_Thresh) cycle
+
+          Z_Sum = sum(Z_In_Sub*Mask_In_Sub) / Count_Temporary
+
+          Z_Out(i-di:i+di,j-dj:j+dj) = real(Z_Sum)
+
+          Z_In_Sub => null() 
+          Mask_In_Sub => null() 
+
+      enddo
+     enddo   
+
+    !--- only values are missing where output mask is 0
+    where(Mask_Out == 0)
+      Z_Out = Missing
+    endwhere
+
+  end subroutine MEAN_SMOOTH
 
 !----------------------------------------------------------------------
 ! End of Module

@@ -14,7 +14,7 @@
  !--- Angular and Temperature Limit Thresholds
  real, parameter, private:: Reflectance_Gross_Solzen_Thresh = 80.0     !was 70.0
  real, parameter, private:: Reflectance_Spatial_Solzen_Thresh = 85.0
- real, parameter, private:: Reflectance_Gross_Airmass_Thresh = 5.0     
+ real, parameter, private:: Reflectance_Gross_Airmass_Thresh = 100.0 !5.0   !turned off
  real, parameter, private:: Reflectance_Gross_Lunzen_Thresh = 80.0
  real, parameter, private:: Radiance_Lunar_City_Thresh = 2.5e-08
  real, parameter, private:: Emiss_375um_Day_Solzen_Thresh = 85.0       !was 85.0

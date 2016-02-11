@@ -858,8 +858,6 @@ end subroutine DETERMINE_AVHRR_1
        endif
 
   end do segment_loop
-
-  !------------------------------------------------------------------------------
   ! Calculate ascending/descending flag if needed for this segment
   !------------------------------------------------------------------------------
   if (Calc_Asc_Des == sym%YES) then

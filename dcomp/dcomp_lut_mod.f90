@@ -237,7 +237,7 @@ contains
          chan_string(6) = '5'
          chan_string(20) = '7'
          
-      case('ABI','AHI') sensor_block
+      case('ABI') sensor_block
          has_sol_table(1) = .true.
          has_sol_table(6) = .true.
          has_sol_table(20) = .true.
@@ -245,6 +245,18 @@ contains
          chan_string(1) = '2'
          chan_string(6) = '5'
          chan_string(20) = '7'
+      
+      case('AHI') sensor_block
+         has_sol_table(1) = .true.
+         has_sol_table(5) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '3'
+         chan_string(6) = '5'
+         chan_string(6) = '6'
+         chan_string(20) = '7'   
+         
             
       case ('AATSR')   sensor_block
          has_sol_table(1) = .true.

@@ -29,10 +29,47 @@
 !
 !--------------------------------------------------------------------------------------
 MODULE DCOMP_DERIVED_PRODUCTS_MODULE
- use CONSTANTS
- use ALGORITHM_CONSTANTS
- use PIXEL_COMMON
- use NWP_COMMON
+ use CONSTANTS, only: & 
+   real4 &
+   ,sym &
+   , DTOR &
+   , PI &
+   , missing_value_real4
+    
+ use PIXEL_COMMON,only: &
+      tau_nlcomp &  
+   , acha &
+   , rain_rate_dcomp &
+   , hcld_dcomp &
+   , cwp_dcomp &
+   , iwp_dcomp &
+   , lwp_dcomp &
+   , cdnc_dcomp &
+   , cld_type &
+   , reff_dcomp &
+   , reff_nlcomp &
+   , tau_dcomp &
+   , tau_nlcomp &
+   , insolation_dcomp &
+   , cwp_scwater_layer_dcomp &
+   , cwp_ice_layer_dcomp &
+   , cwp_water_layer_dcomp &
+   , Cloud_063um_Transmission_Solar &
+   , Cloud_063um_Spherical_Albedo &
+   , bad_pixel_mask &
+   , tpw_nwp_pix &
+   , image &
+   , sfc &
+   , ch  &
+   , i_nwp &
+   , j_nwp &
+   , geo
+ 
+ use NWP_COMMON,only: &
+      psfc_nwp &
+    , upper_limit_water_height_nwp &
+    , Freezing_Level_Height_Nwp &
+    , ozone_nwp
 
  implicit none
  public:: COMPUTE_CLOUD_WATER_PATH, &

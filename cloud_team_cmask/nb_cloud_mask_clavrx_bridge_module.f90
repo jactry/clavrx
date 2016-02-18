@@ -88,6 +88,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    private :: SET_INPUT
    private :: SET_OUTPUT
    private :: SET_DIAG
+   private :: MEDIAN_FILTER_MASK
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
@@ -108,6 +109,9 @@ contains
    integer, intent(in):: Segment_Number
 
    integer :: i, j
+   integer :: ELem_Idx_1, ELem_Idx_2, Line_Idx_1, Line_Idx_2
+   real, allocatable, dimension (:,:) :: Tmp_Array
+   integer, parameter :: N_box = 2
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 
    logical, save:: First_Call = .true.
@@ -117,9 +121,11 @@ contains
    endif
 
    !---- set paths and mask classifier file name to their values in this framework
-   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
+   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+         "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
 
-   !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
+   !--- set structure (symbol, input, output, diag)  
+   !    elements to corresponding values in this framework
    call SET_SYMBOL()
 
    ! -----------    loop over pixels -----   
@@ -153,6 +159,37 @@ contains
 
       end do elem_loop
    end do line_loop
+
+   !------------------------------------------------------------------------------
+   !-- Use median filter for IR Dust
+   !-- NOTE: DESABLED UNTIL DECIDE TO USE IR DUST
+   !-- CHECK "nb_cloud_mask_addons_module.f90" IF ALGORITHM IS ON/OFF !!!!!
+   !------------------------------------------------------------------------------
+   if (.not. allocated (Tmp_Array)) allocate (Tmp_Array(Image%Number_Of_Elements, &
+                                       Image%Number_Of_Lines_Read_This_Segment))
+
+   ! -----------    loop over pixels -----   
+   line_loop_2: do i = 1, Image%Number_Of_Elements
+      elem_loop_2: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+
+         if (Dust_Mask(i,j) .ge. 0) then
+
+           ELem_Idx_1 = max(1,min(Image%Number_Of_Elements,i - N_box))
+           ELem_Idx_2 = max(1,min(Image%Number_Of_Elements,i + N_box))
+           Line_Idx_1 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j - N_box))
+           Line_Idx_2 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j + N_box))
+
+           call MEDIAN_FILTER_MASK(float(Dust_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)), &
+                        Bad_Pixel_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2), &
+                        Tmp_Array(i,j))
+         endif
+      end do elem_loop_2
+   end do line_loop_2
+
+   Dust_Mask = int(Tmp_Array)
+   where ( Dust_Mask > 1) Dust_Mask = Missing_Value_Int1
+   deallocate (Tmp_Array)
+
 
    !------------------------------------------------------------------------------
    !-- CLAVR-x specific Processing
@@ -287,7 +324,7 @@ contains
    end subroutine SET_SYMBOL
 
    !============================================================================
-   ! set input pointers
+   ! set input
    !============================================================================
    subroutine SET_INPUT(i,j)
       integer, intent (in) :: i, j
@@ -429,6 +466,73 @@ contains
       Diag_Pix_Array_3(i,j) = Diag%Array_3
    end subroutine SET_DIAG
 
-   !============================================================================
+!==============================================================
+! Median filter
+!
+! mask = 0 means use median, mask = 1 mean ignore
+!==============================================================
+subroutine MEDIAN_FILTER_MASK(z,mask,z_median)
+
+! The purpose of this function is to find 
+! median (emed), minimum (emin) and maximum (emax)
+! for the array elem with nelem elements. 
+
+  real, dimension(:,:), intent(in):: z
+  real, intent(out):: z_median
+  integer(kind=int1), dimension(:,:), intent(in):: mask
+  integer:: i,j,k,nx,ny,nelem
+  real, dimension(:), allocatable::x
+  real:: u
+
+  z_median = missing_value_real4
+
+  nx = size(z,1)
+  ny = size(z,2)
+
+  nelem = nx * ny
+
+  allocate(x(nelem))
+  x = 0.0
+  k = 0
+  do i = 1, nx
+    do j = 1, ny
+      if (mask(i,j) == 0 .and. z(i,j) /= missing_value_int1) then
+           k = k + 1
+           x(k) = z(i,j)
+      endif
+   enddo
+  enddo
+
+  nelem = k
+
+  if (nelem < 1) then
+     if (allocated(x)) deallocate(x)
+     return
+  endif
+  !--- sort the array into ascending order
+  do i=1,nelem-1
+   do j=i+1,nelem
+    if(x(j)<x(i))then
+     u=x(j)
+     x(j)=x(i)
+     x(i)=u
+    end if
+   end do
+  end do
+
+  !---- pick the median
+  if(mod(nelem,2)==1)then
+   i=nelem/2+1
+   z_median=x(i)
+  else
+   i=nelem/2
+   z_median=(x(i)+x(i+1))/2
+   end if
+
+  if (allocated(x)) deallocate(x)
+
+end subroutine MEDIAN_FILTER_MASK
+
+!============================================================================
 
 end module NB_CLOUD_MASK_CLAVRX_BRIDGE

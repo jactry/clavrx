@@ -36,8 +36,7 @@ module CLOUD_MASK_ADDONS
            VCM_SMOKE_TEST, &
            VCM_DUST_TEST, &
            IR_DUST_TEST, &
-           IR_DUST_TEST2, &
-           MEDIAN_FILTER_MASK
+           IR_DUST_TEST2
 
 !!--- define structures
  include 'nb_cloud_mask.inc'
@@ -78,44 +77,48 @@ module CLOUD_MASK_ADDONS
     !-------------------------------------------------------------------------
 
      
-       !--------------------------------------------------------------------------
-       !  VCM Daytime Dust Detection
-       !--------------------------------------------------------------------------
-       if ( Input%Solzen <= 85.0 .and. &
-            Input%Chan_On_063um == symbol%YES  .and. &
-            Input%Chan_On_041um == symbol%YES) then
+!       !--------------------------------------------------------------------------
+!       !  VCM Daytime Dust Detection
+!       !--------------------------------------------------------------------------
+!       if ( Input%Solzen <= 85.0 .and. &
+!            Input%Chan_On_063um == symbol%YES  .and. &
+!            Input%Chan_On_041um == symbol%YES) then
+!
+!
+!          if (Input%Chan_On_I1_064um == symbol%YES ) then
+!
+!               Output%Dust_Mask = VCM_DUST_TEST ( &
+!                   Input%Ref_041um &
+!                 , Input%Ref_063um &
+!                 , Input%Ref_I1_064um_Std &
+!                 , Input%Oceanic_Glint_Mask &
+!                 , Input%Land_Class )
+!
+!          elseif (Input%Chan_On_I1_064um == symbol%NO ) then
+!
+!               Output%Dust_Mask = VCM_DUST_TEST ( &
+!                   Input%Ref_041um &
+!                 , Input%Ref_063um &
+!                 , Input%Ref_063um_Std &
+!                 , Input%Oceanic_Glint_Mask &
+!                 , Input%Land_Class )
+!
+!          endif
+!
+!      endif
 
-
-          if (Input%Chan_On_I1_064um == symbol%YES ) then
-
-               Output%Dust_Mask = VCM_DUST_TEST ( &
-                   Input%Ref_041um &
-                 , Input%Ref_063um &
-                 , Input%Ref_I1_064um_Std &
-                 , Input%Oceanic_Glint_Mask &
-                 , Input%Land_Class )
-
-          elseif (Input%Chan_On_I1_064um == symbol%NO ) then
-
-               Output%Dust_Mask = VCM_DUST_TEST ( &
-                   Input%Ref_041um &
-                 , Input%Ref_063um &
-                 , Input%Ref_063um_Std &
-                 , Input%Oceanic_Glint_Mask &
-                 , Input%Land_Class )
-
-          endif
-
-      endif
-
-!        Output%Dust_Mask = IR_DUST_TEST2 (     &
-!                    Input%Land_Class,          &
-!                    Input%Bt_85um,             &
-!                    Input%Bt_10um,             &
-!                    Input%Bt_11um,             &
-!                    Input%Bt_12um,             &
-!                    Input%Bt_11um_Std,         &
-!                    Input%Senzen)
+        !-------------------------------------------------------------------------
+        !-- IR Dust algorithm. If decide to be ON/OFF, check
+        !-- "nb_cloud_mask_clavrx_bridge_module.f90" to turn ON/OFF Median Filter
+        !-------------------------------------------------------------------------
+        Output%Dust_Mask = IR_DUST_TEST2 (     &
+                    Input%Land_Class,          &
+                    Input%Bt_85um,             &
+                    Input%Bt_10um,             &
+                    Input%Bt_11um,             &
+                    Input%Bt_12um,             &
+                    Input%Bt_11um_Std,         &
+                    Input%Senzen)
 
        !---------------------------------------------------------------------
        ! VCM Daytime Smoke Detection
@@ -452,7 +455,9 @@ module CLOUD_MASK_ADDONS
 
 
    !---------------------------------------------------------------------------
-   !
+   ! Function calculates Dust Mask using IR channels
+   ! code is based on Keiko Yamamoto
+   ! (Denis B. - February, 2016)
    !---------------------------------------------------------------------------
    integer elemental function IR_DUST_TEST2 ( &
                     Land_Class,       &
@@ -473,7 +478,8 @@ module CLOUD_MASK_ADDONS
    real, parameter :: MISSING = -999.0
    real, parameter :: BT11_STD_THRESH = 1.0
    real, parameter :: BTD_12_11_THRESH = -0.5
-   real, parameter :: BTD_11_85_THRESH = -1.5
+   real, parameter :: BTD_11_85_MIN_THRESH = -1.5
+   real, parameter :: BTD_11_85_MAX_THRESH = 1.0
    real, parameter :: BT85_THRESH = 243.0
    real, parameter :: R_LAND_THRESH = -0.1
    real, parameter :: G1_LAND_MIN_THRESH = -1.0
@@ -528,7 +534,8 @@ module CLOUD_MASK_ADDONS
 
    ! --- 1st RGB check
    if (Btd_12_11 .lt. BTD_12_11_THRESH .or. &
-       Btd_11_85 .lt. BTD_11_85_THRESH .or. &
+       Btd_11_85 .lt. BTD_11_85_MIN_THRESH .or. &
+       Btd_11_85 .gt. BTD_11_85_MAX_THRESH .or. &
        Bt85 .lt. BT85_THRESH) then
       return
    endif
@@ -601,86 +608,20 @@ module CLOUD_MASK_ADDONS
       MR = 1
       MG = 1
       MB = 1
-      if (Btd_11_85 .lt. R_OCEAN_LAND_THRESH) MR = 0 
+      if (Btd_11_85 .gt. R_OCEAN_LAND_THRESH) MR = 0 
       if (Bt10 .ne. Missing) then
          if (Bt_Ratio .lt. G_OCEAN_LAND_THRESH) MG = 0
       ! in case 10 micron is off
       else
          MG = 0
       endif
-      if (Bt85_11_Ratio .lt. B_OCEAN_LAND_THRESH) MB = 0
+      if (Bt85_11_Ratio .gt. B_OCEAN_LAND_THRESH) MB = 0
       ! decision
       if ((MR + MG + MB) .ne. 0) Ir_Dust_Test2 = 1
    endif   
   
    end function IR_DUST_TEST2
 
-!==============================================================
-! Median filter
-!
-! mask = 0 means use median, mask = 1 mean ignore
-!==============================================================
-subroutine MEDIAN_FILTER_MASK(z,mask,z_median)
-
-! The purpose of this function is to find 
-! median (emed), minimum (emin) and maximum (emax)
-! for the array elem with nelem elements. 
-
-  real, dimension(:,:), intent(in):: z
-  real, intent(out):: z_median
-  integer(kind=int1), dimension(:,:), intent(in):: mask
-  integer:: i,j,k,nx,ny,nelem
-  real, dimension(:), allocatable::x
-  real:: u
-
-  z_median = missing_value_real4
-
-  nx = size(z,1)
-  ny = size(z,2)
-
-  nelem = nx * ny
-
-  allocate(x(nelem))
-  x = 0.0
-  k = 0
-  do i = 1, nx
-    do j = 1, ny
-      if (mask(i,j) == 0 .and. z(i,j) /= missing_value_real4) then
-           k = k + 1
-           x(k) = z(i,j)
-      endif
-   enddo
-  enddo
-
-  nelem = k
-
-  if (nelem < 1) then
-     if (allocated(x)) deallocate(x)
-     return
-  endif
-  !--- sort the array into ascending order
-  do i=1,nelem-1
-   do j=i+1,nelem
-    if(x(j)<x(i))then
-     u=x(j)
-     x(j)=x(i)
-     x(i)=u
-    end if
-   end do
-  end do
-
-  !---- pick the median
-  if(mod(nelem,2)==1)then
-   i=nelem/2+1
-   z_median=x(i)
-  else
-   i=nelem/2
-   z_median=(x(i)+x(i+1))/2
-   end if
-
-  if (allocated(x)) deallocate(x)
-
-end subroutine MEDIAN_FILTER_MASK
 !-----------------------------------------------------------
 ! end of module
 !-----------------------------------------------------------

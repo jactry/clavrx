@@ -1802,6 +1802,12 @@ contains
         Solar_Rtm%Tau_O2(1)=  0.03034
         Solar_Rtm%Tau_CO2(1)= 0.00000
         Solar_Rtm%Tau_CH4(1)= 0.00000
+        
+      case(173)     ! AHI
+        Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00006477, 0.00332966,-0.00009980/) ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(6,:)  = (/ -0.00001320,0.00070498,-0.00001705/) ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(7,:)  = (/ -0.00000919, 0.00120421,-0.0000568/)  ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(20,:) = (/ -0.00020694, 0.01548648,-0.0009537/)  ! computed 02/17/2016 AW 
 
       case(200)    !NOAA-8
         Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00134225, 0.00605508,-0.00028230/)

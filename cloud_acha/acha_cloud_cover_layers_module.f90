@@ -57,6 +57,8 @@ module ACHA_CLOUD_COVER_LAYERS
   type(acha_output_struct), intent(inout) :: Output
   type(acha_diag_struct), intent(inout), optional :: Diag
 
+  integer:: Num_Elems
+  integer:: Num_Lines
   integer :: i,j                    !pixel indices
   integer :: i1,i2,j1,j2            !pixel indices of big box
   integer :: i11,i22,j11,j22        !pixel indices of skipped pixels
@@ -123,11 +125,13 @@ module ACHA_CLOUD_COVER_LAYERS
   !--------------------------------------------------------------------
   ! compute pixel-level cloud layer flag and H/M/L masks
   !--------------------------------------------------------------------
-  allocate(Mask_High, source=Input%Cloud_Mask) 
-  allocate(Mask_Mid, source=Input%Cloud_Mask) 
-  allocate(Mask_Low, source=Input%Cloud_Mask) 
-  allocate(Mask_Clear, source=Input%Cloud_Mask) 
-  allocate(Pixel_Uncertainty, source = Input%Cloud_Probability)
+  Num_Elems = Input%Number_of_Elements
+  Num_Lines = Input%Number_of_Lines
+  allocate(Mask_High(Num_Elems, Num_Lines)) 
+  allocate(Mask_Mid(Num_Elems, Num_Lines)) 
+  allocate(Mask_Low(Num_Elems, Num_Lines))
+  allocate(Mask_Clear(Num_Elems, Num_Lines))
+  allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
 
   !--- make cloud fraction pixel level uncertainty
   Pixel_Uncertainty = MISSING_VALUE_REAL4
@@ -160,19 +164,19 @@ module ACHA_CLOUD_COVER_LAYERS
  ! compute pixel-level cloud cover for each layer over the box
  !--------------------------------------------------------------------
 
- line_loop_cover: DO j = 1, Input%Number_of_Lines, 2*M+1
+ line_loop_cover: DO j = 1, Num_Lines, 2*M+1
 
     j1 = max(1,j-N)
-    j2 = min(Input%Number_of_Lines,j+N)
+    j2 = min(Num_Lines,j+N)
     j11 = max(1,j-M)
-    j22 = min(Input%Number_of_Lines,j+M)
+    j22 = min(Num_Lines,j+M)
 
-    element_loop_cover: DO i = 1, Input%Number_of_Elements, 2*M+1
+    element_loop_cover: DO i = 1, Num_Elems, 2*M+1
 
       i1 = max(1,i-N)
-      i2 = min(Input%Number_of_Elements,i+N)
+      i2 = min(Num_Elems,i+N)
       i11 = max(1,i-M)
-      i22 = min(Input%Number_of_Elements,i+M)
+      i22 = min(Num_Elems,i+M)
 
       !--- check for a bad pixel pixel
       if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle

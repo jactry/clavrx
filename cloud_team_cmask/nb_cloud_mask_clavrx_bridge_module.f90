@@ -110,11 +110,15 @@ contains
 
    integer :: i, j
    integer :: ELem_Idx_1, ELem_Idx_2, Line_Idx_1, Line_Idx_2
-   real, allocatable, dimension (:,:) :: Tmp_Array
    integer, parameter :: N_box = 2
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 
    logical, save:: First_Call = .true.
+   integer, parameter:: Nmed = 2
+   real(kind=real4):: Nmed_Total
+   integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
+   integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
+
 
    if (First_Call .eqv. .true.) then
        call MESG('NB Cloud Mask starts ', color = 46)
@@ -159,43 +163,37 @@ contains
 
       end do elem_loop
    end do line_loop
-
    !------------------------------------------------------------------------------
-   !-- Use median filter for IR Dust
-   !-- NOTE: DESABLED UNTIL DECIDE TO USE IR DUST
-   !-- CHECK "nb_cloud_mask_addons_module.f90" IF ALGORITHM IS ON/OFF !!!!!
+   ! Apply Median Filters
    !------------------------------------------------------------------------------
-   if (.not. allocated (Tmp_Array)) allocate (Tmp_Array(Image%Number_Of_Elements, &
-                                       Image%Number_Of_Lines_Read_This_Segment))
+   Nmed_Total = (2.0*Nmed+1)**2
+   allocate(I1_Temp_1(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+   allocate(I1_Temp_2(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+   I1_Temp_1 = Dust_Mask
+   I1_Temp_2 = Smoke_Mask
+   I1_Temp_1(Nmed:Image%Number_Of_Elements-Nmed,1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
+   I1_Temp_2(Nmed:Image%Number_Of_Elements-Nmed,1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
+   line_loop_median: do i = 1+Nmed, Image%Number_Of_Elements-Nmed
+      elem_loop_median: do  j = 1+Nmed, Image%Number_Of_Lines_Read_This_Segment-Nmed
+         I1_Temp_1(i,j) = nint(count(Dust_Mask(i-Nmed:i+Nmed,j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
+         I1_Temp_2(i,j) = nint(count(Smoke_Mask(i-Nmed:i+Nmed,j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
+      end do elem_loop_median
+   end do line_loop_median
+   Dust_Mask = I1_Temp_1
+   Smoke_Mask = I1_Temp_2
+   deallocate(I1_Temp_1)
+   deallocate(I1_Temp_2)
 
-   ! -----------    loop over pixels -----   
-   line_loop_2: do i = 1, Image%Number_Of_Elements
-      elem_loop_2: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
-
-         if (Dust_Mask(i,j) .ge. 0) then
-
-           ELem_Idx_1 = max(1,min(Image%Number_Of_Elements,i - N_box))
-           ELem_Idx_2 = max(1,min(Image%Number_Of_Elements,i + N_box))
-           Line_Idx_1 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j - N_box))
-           Line_Idx_2 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j + N_box))
-
-           call MEDIAN_FILTER_MASK(float(Dust_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)), &
-                        Bad_Pixel_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2), &
-                        Tmp_Array(i,j))
-
-           ! --- save dust, smoke, fire to the corresponding bit structure 
-           if (Smoke_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
-           if (Tmp_Array(i,j) .eq. 1.0) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
-           if (Fire_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
-         endif
-      end do elem_loop_2
-   end do line_loop_2
-
-   ! --- save dust to output, make sure no strange values
-   Dust_Mask = int(Tmp_Array)
-   where ( Dust_Mask > 1) Dust_Mask = Missing_Value_Int1
-   deallocate (Tmp_Array)
-
+   !-------------------------------------------------------------------------------------------------------
+   !--- save dust, smoke, fire to the corresponding bit structure 
+   !-------------------------------------------------------------------------------------------------------
+   line_loop_pack: do i = 1, Image%Number_Of_Elements
+      elem_loop_pack: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+           if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
+           if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
+      end do elem_loop_pack
+   end do line_loop_pack
 
    !------------------------------------------------------------------------------
    !-- CLAVR-x specific Processing

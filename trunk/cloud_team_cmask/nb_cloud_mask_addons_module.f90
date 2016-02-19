@@ -33,8 +33,6 @@ module CLOUD_MASK_ADDONS
  public:: NB_CLOUD_MASK_ADDONS_ALGORITHM
 
  private:: EUMETSAT_FIRE_TEST, &
-           VCM_SMOKE_TEST, &
-           VCM_DUST_TEST, &
            IR_DUST_TEST, &
            IR_DUST_TEST2
 
@@ -72,44 +70,13 @@ module CLOUD_MASK_ADDONS
    !--- check for valid data
    if (Input%Invalid_Data_Mask == Symbol%NO) then
 
-    !-------------------------------------------------------------------------
-    ! Dust Detection 
-    !-------------------------------------------------------------------------
-
-     
-!       !--------------------------------------------------------------------------
-!       !  VCM Daytime Dust Detection
-!       !--------------------------------------------------------------------------
-!       if ( Input%Solzen <= 85.0 .and. &
-!            Input%Chan_On_063um == symbol%YES  .and. &
-!            Input%Chan_On_041um == symbol%YES) then
-!
-!
-!          if (Input%Chan_On_I1_064um == symbol%YES ) then
-!
-!               Output%Dust_Mask = VCM_DUST_TEST ( &
-!                   Input%Ref_041um &
-!                 , Input%Ref_063um &
-!                 , Input%Ref_I1_064um_Std &
-!                 , Input%Oceanic_Glint_Mask &
-!                 , Input%Land_Class )
-!
-!          elseif (Input%Chan_On_I1_064um == symbol%NO ) then
-!
-!               Output%Dust_Mask = VCM_DUST_TEST ( &
-!                   Input%Ref_041um &
-!                 , Input%Ref_063um &
-!                 , Input%Ref_063um_Std &
-!                 , Input%Oceanic_Glint_Mask &
-!                 , Input%Land_Class )
-!
-!          endif
-!
-!      endif
+        !----------------------------------------------------------------------------
+        ! CLAVR-x SMOKE TEST
+        !-------------------------------------------------------------------------
+        Output%Smoke_Mask = 0
 
         !-------------------------------------------------------------------------
-        !-- IR Dust algorithm. If decide to be ON/OFF, check
-        !-- "nb_cloud_mask_clavrx_bridge_module.f90" to turn ON/OFF Median Filter
+        !-- IR Dust algorithm
         !-------------------------------------------------------------------------
         Output%Dust_Mask = IR_DUST_TEST2 (     &
                     Input%Land_Class,          &
@@ -120,37 +87,6 @@ module CLOUD_MASK_ADDONS
                     Input%Bt_11um_Std,         &
                     Input%Senzen)
 
-       !---------------------------------------------------------------------
-       ! VCM Daytime Smoke Detection
-       !---------------------------------------------------------------------
-       if ( Input%Solzen <= 85.0 .and. &
-            Input%Chan_On_041um == symbol%YES .and.  &
-            Input%Chan_On_213um == symbol%YES) then
-
-            if (Input%Chan_On_I1_064um == symbol%YES ) then
-
-                Output%Smoke_Mask = VCM_SMOKE_TEST ( &
-                    Input%Ref_041um &
-                  , Input%Ref_213um &
-                  , Input%Ref_I1_064um_Std &
-                  , Input%Senzen &
-                  , Input%Oceanic_Glint_Mask &
-                  , Input%Land_Class )
-
-            else if (Input%Chan_On_063um == symbol%YES .and. &
-                     Input%Chan_On_I1_064um == symbol%NO ) then
-
-                Output%Smoke_Mask = VCM_SMOKE_TEST ( &
-                    Input%Ref_041um &
-                  , Input%Ref_213um &
-                  , Input%Ref_063um_Std &
-                  , Input%Senzen &
-                  , Input%Oceanic_Glint_Mask &
-                  , Input%Land_Class )
-
-            endif
-
-      endif
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
@@ -276,127 +212,9 @@ module CLOUD_MASK_ADDONS
      endif
 
   end function EUMETSAT_FIRE_TEST
-  !----------------------------------------------------------------------------
-  ! VIIRS VCM SMOKE TEST
-  !
-  !  Reference: ???
-  !----------------------------------------------------------------------------
-  integer elemental function VCM_SMOKE_TEST ( &
-           Ref_004 &
-         , Ref_021 &
-         , Ref_006_Std &
-         , sat_zen &
-         , Is_glint &
-         , Land_Class )
-
-      real , intent(in) :: Ref_004
-      real , intent(in) :: Ref_021
-      real , intent(in) :: Ref_006_Std
-      real , intent(in) :: sat_zen
-      integer(kind=int1) , intent(in) :: Is_glint
-      integer(kind=int1) , intent(in) :: Land_Class
-
-      logical :: Is_water_sfc
-
-      real, parameter :: pi = 3.14159265359
-      real, parameter :: SMOKE_STD_DEV_LAND_THRESH = 0.1
-      real, parameter :: SMOKE_STD_DEV_WATER_THRESH = 0.05
-      real, parameter :: SMOKE_STD_DEV_LAND_GLINT_THRESH = 1.5
-      real, parameter :: SMOKE_STD_DEV_WATER_GLINT_THRESH = 0.05
-      real, parameter :: SMOKE_CAND_M11M1_REF_RATIO_THRESH = 0.25
-
-      real :: Ref_ratio                                                                                                                                            
-      real :: Std_Dev_thresh_cand
-
-      Vcm_smoke_Test = 0
-
-      ! - check if valid
-      if ( Ref_004 < 0. .or. Ref_021 < 0. .or. Ref_006_Std < 0.) then
-         return
-      end if
-
-      Is_water_sfc = Land_Class == 0 .or. &
-         Land_Class >= 3 .and. Land_Class <= 7
-
-      Ref_ratio = Ref_021 / Ref_004
-
-      if ( Is_water_sfc .and. Ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH &
-                             * cos (sat_zen*pi/180.0) ) ) return
-
-      if ( Is_glint == 1 .and. Is_water_sfc )  &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_WATER_GLINT_THRESH
-      if ( Is_glint == 1 .and. .not. ( Is_water_sfc ) ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_LAND_GLINT_THRESH
-      if ( Is_glint == 0 .and. Is_water_sfc ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_WATER_THRESH
-      if ( Is_glint == 0 .and. .not. ( Is_water_sfc ) ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_LAND_THRESH
-
-      if ( Ref_006_Std < Std_Dev_thresh_cand ) Vcm_smoke_Test = 1
-
-  end function VCM_SMOKE_TEST
-
-  !----------------------------------------------------------------------------
-  ! VIIRS VCM DUST TEST
-  !
-  !  Reference: ???
-  !----------------------------------------------------------------------------
-  integer elemental function VCM_DUST_TEST ( &
-              Ref_004 &
-            , Ref_006 &
-            , Ref_006_Std &
-            , Is_glint &
-            , Land_Class )
-
-      real , intent(in) :: Ref_004
-      real , intent(in) :: Ref_006
-      real , intent(in) :: Ref_006_Std
-      integer(kind=int1) , intent(in) :: Is_glint
-      integer(kind=int1) , intent(in) :: Land_Class
-
-      logical :: Is_water_sfc
-
-      real, parameter :: DUST_M1_REFL_THRESH = 0.8
-      real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
-      real, parameter :: DUST_STD_DEV_LAND_THRESH = 0.1
-      real, parameter :: DUST_STD_DEV_WATER_THRESH = 0.05
-      real, parameter :: DUST_STD_DEV_LAND_GLINT_THRESH = 0.7
-      real, parameter :: DUST_STD_DEV_WATER_GLINT_THRESH = 0.05
-
-      real :: Std_Dev_thresh_cand
-
-      Vcm_Dust_Test = 0
-
-      ! - check if valid
-      if ( Ref_004 < 0.0 .or. Ref_006 < 0.0 .or. Ref_006_Std <= 0.) then    
-         return
-      end if
-
-      ! -- exclude water 
-      Is_water_sfc = Land_Class == 0 .or. Land_Class >= 3 .and. Land_Class <= 7
-
-
-      if ( Is_water_sfc .and. ( Ref_004 >= DUST_M1_REFL_THRESH &
-        .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
-         return
-      end if
-
-      ! adjust thresholds
-      if ( Is_Glint == 1 .and. Is_water_sfc ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_WATER_GLINT_THRESH
-      if ( Is_Glint == 1 .and. .not. (Is_water_sfc) ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_LAND_GLINT_THRESH
-      if ( Is_Glint == 0 .and. Is_water_sfc ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_WATER_THRESH
-      if ( Is_glint == 0 .and. .not. (Is_water_sfc) ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_LAND_THRESH
-
-      if ( Ref_006_Std < Std_Dev_thresh_cand ) Vcm_Dust_Test = 1
-
-   end function VCM_DUST_TEST
 
    !---------------------------------------------------------------------------
-   !
+   ! CLAVR-x IR DUST Algorithm
    !---------------------------------------------------------------------------
    integer elemental function IR_DUST_TEST ( &
                     Solzen,             &
@@ -437,13 +255,6 @@ module CLOUD_MASK_ADDONS
    if (Bt_11um_Std > Bt_11_Std_Max_Thresh .and. Btd_11_12 > -1.5) then
       Ir_Dust_Test = 0
    endif
-
-   !--- check for cloud
-!  if (Solzen > 90.0) then
-!    if (abs((Emiss_375um - Emiss_375um)) > 0.2) then
-!     Ir_Dust_Test = 0
-!    endif
-!  endif 
 
    if (Solzen > 90.0) then
      if (abs(Emiss_375um - Emiss_375um_Clear) > 0.1) then
@@ -516,9 +327,9 @@ module CLOUD_MASK_ADDONS
 
    ! --- check if valid or Bt11_Std is too big
    !     or sensor zenith angle too big
-   if (Bt11 .eq. Missing .or. &
-       Bt11_Std .gt. BT11_STD_THRESH .or. &
-       Senzen .gt. SENZEN_THRESH) then
+   if (Bt11 ==  Missing_Value_Real4 .or. &
+       Bt11_Std > BT11_STD_THRESH .or. &
+       Senzen > SENZEN_THRESH) then
       return
    endif
 
@@ -528,15 +339,15 @@ module CLOUD_MASK_ADDONS
    Btd_11_85 = Bt11 - Bt85
    Bt85_11_Ratio = Bt85 / Bt11
    ! in case 10 micron is on
-   if (Bt10 .ne. Missing .and. Btd_85_12 .ne. 0.0) then
+   if (Bt10 /= Missing_Value_Real4 .and. Btd_85_12 .ne. 0.0) then
       Bt_Ratio = (Bt10 - Bt11) / Btd_85_12
    endif
 
    ! --- 1st RGB check
-   if (Btd_12_11 .lt. BTD_12_11_THRESH .or. &
-       Btd_11_85 .lt. BTD_11_85_MIN_THRESH .or. &
-       Btd_11_85 .gt. BTD_11_85_MAX_THRESH .or. &
-       Bt85 .lt. BT85_THRESH) then
+   if (Btd_12_11 < BTD_12_11_THRESH .or. &
+       Btd_11_85 < BTD_11_85_MIN_THRESH .or. &
+       Btd_11_85 > BTD_11_85_MAX_THRESH .or. &
+       Bt85 < BT85_THRESH) then
       return
    endif
 
@@ -546,78 +357,78 @@ module CLOUD_MASK_ADDONS
       MR = 1
       MG = 1
       MB = 1
-      if (Btd_12_11 .lt. R_LAND_THRESH) MR = 0
+      if (Btd_12_11 < R_LAND_THRESH) MR = 0
       ! in case 10 micron is on
-      if (Bt10 .ne. Missing) then
-         if (Btd_11_85 .gt. G1_LAND_MIN_THRESH .and. &
-             Btd_11_85 .lt. G1_LAND_MAX_THRESH .and. &
-             Bt_Ratio .lt. G2_LAND_THRESH) MG = 0
+      if (Bt10 /= Missing_Value_Real4) then
+         if (Btd_11_85 > G1_LAND_MIN_THRESH .and. &
+             Btd_11_85 < G1_LAND_MAX_THRESH .and. &
+             Bt_Ratio < G2_LAND_THRESH) MG = 0
       ! in case 10 micron is off
       else
-         if (Btd_11_85 .gt. G1_LAND_MIN_THRESH .and. &
-             Btd_11_85 .lt. G1_LAND_MAX_THRESH) MG = 0
+         if (Btd_11_85 > G1_LAND_MIN_THRESH .and. &
+             Btd_11_85 < G1_LAND_MAX_THRESH) MG = 0
       endif
-      if (Bt85 .lt. B1_LAND_THRESH .and. &
-          Bt85_11_Ratio .gt. B2_LAND_THRESH) MB = 0
+      if (Bt85 < B1_LAND_THRESH .and. &
+          Bt85_11_Ratio > B2_LAND_THRESH) MB = 0
       ! decision
-      if ((MR * MG * MB) .ne. 0) Ir_Dust_Test2 = 1
+      if ((MR * MG * MB) /= 0) Ir_Dust_Test2 = 1
    endif
 
    ! Over Water Tests
-   if (Land_Class .eq. 0 .or. Land_Class .gt. 5) then
+   if (Land_Class == 0 .or. Land_Class > 5) then
       ! cloud like areas
       MR = 1
       MG = 1
       MB = 1
-      if (Btd_12_11 .lt. R_OCEAN_CLOUD_THRESH) MR = 0
+      if (Btd_12_11 < R_OCEAN_CLOUD_THRESH) MR = 0
       ! in case 10 micron is on
-      if (Bt10 .ne. Missing) then
-         if (Btd_11_85 .lt. G1_OCEAN_CLOUD_THRESH .and. &
-             Bt_Ratio .gt. G2_OCEAN_CLOUD_MIN_THRESH .and. &
-             Bt_Ratio .lt. G2_OCEAN_CLOUD_MAX_THRESH) MG = 0
+      if (Bt10 /= Missing_Value_Real4) then
+         if (Btd_11_85 < G1_OCEAN_CLOUD_THRESH .and. &
+             Bt_Ratio > G2_OCEAN_CLOUD_MIN_THRESH .and. &
+             Bt_Ratio < G2_OCEAN_CLOUD_MAX_THRESH) MG = 0
       ! in case 10 micron is off
       else
-         if (Btd_11_85 .lt. G1_OCEAN_CLOUD_THRESH) MG = 0
+         if (Btd_11_85 < G1_OCEAN_CLOUD_THRESH) MG = 0
       endif
-      if (Bt85 .lt. B1_OCEAN_CLOUD_THRESH .and. &
-          Bt85_11_Ratio .lt. B2_OCEAN_CLOUD_THRESH) MB = 0
+      if (Bt85 < B1_OCEAN_CLOUD_THRESH .and. &
+          Bt85_11_Ratio < B2_OCEAN_CLOUD_THRESH) MB = 0
       ! decision
-      if (((MR + MG) * MB) .ne. 0) Ir_Dust_Test2 = 1
+      if (((MR + MG) * MB) /= 0) Ir_Dust_Test2 = 1
 
       ! dust like areas
       MR = 1
       MG = 1
       MB = 1
-      if (Btd_12_11 .gt. R_OCEAN_DUST_MIN_THRESH .and. &
-          Btd_12_11 .lt. R_OCEAN_DUST_MAX_THRESH) MR = 0
+      if (Btd_12_11 > R_OCEAN_DUST_MIN_THRESH .and. &
+          Btd_12_11 < R_OCEAN_DUST_MAX_THRESH) MR = 0
             ! in case 10 micron is on
-      if (Bt10 .ne. Missing) then
-         if (Btd_11_85 .lt. G1_OCEAN_DUST_THRESH .and. &
-             Bt_Ratio .gt. G2_OCEAN_DUST_MIN_THRESH .and. &
-             Bt_Ratio .lt. G2_OCEAN_DUST_MAX_THRESH) MG = 0
+      if (Bt10 .ne. Missing_Value_Real4) then
+         if (Btd_11_85 < G1_OCEAN_DUST_THRESH .and. &
+             Bt_Ratio > G2_OCEAN_DUST_MIN_THRESH .and. &
+             Bt_Ratio < G2_OCEAN_DUST_MAX_THRESH) MG = 0
       ! in case 10 micron is off
       else
-         if (Btd_11_85 .lt. G1_OCEAN_DUST_THRESH) MG = 0
+         if (Btd_11_85 < G1_OCEAN_DUST_THRESH) MG = 0
       endif
-      if (Bt85 .lt. B1_OCEAN_DUST_THRESH .and. &
-          Bt85_11_Ratio .gt. B2_OCEAN_DUST_THRESH) MB = 0
+      if (Bt85 < B1_OCEAN_DUST_THRESH .and. &
+          Bt85_11_Ratio > B2_OCEAN_DUST_THRESH) MB = 0
       ! decision
-      if (((MR + MG) * MB) .ne. 0) Ir_Dust_Test2 = 1
+      if (((MR + MG) * MB) /= 0) Ir_Dust_Test2 = 1
    
       ! land slide like areas
       MR = 1
       MG = 1
       MB = 1
-      if (Btd_11_85 .gt. R_OCEAN_LAND_THRESH) MR = 0 
-      if (Bt10 .ne. Missing) then
-         if (Bt_Ratio .lt. G_OCEAN_LAND_THRESH) MG = 0
+      if (Btd_11_85 > R_OCEAN_LAND_THRESH) MR = 0 
+      if (Bt10 /= Missing_Value_Real4) then
+         if (Bt_Ratio < G_OCEAN_LAND_THRESH) MG = 0
       ! in case 10 micron is off
       else
          MG = 0
       endif
-      if (Bt85_11_Ratio .gt. B_OCEAN_LAND_THRESH) MB = 0
+      if (Bt85_11_Ratio > B_OCEAN_LAND_THRESH) MB = 0
       ! decision
-      if ((MR + MG + MB) .ne. 0) Ir_Dust_Test2 = 1
+      if ((MR + MG + MB) /= 0) Ir_Dust_Test2 = 1
    endif   
   
    end function IR_DUST_TEST2

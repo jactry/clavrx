@@ -24,7 +24,7 @@ module AWG_CLOUD_HEIGHT
 ! 3 - Ice Cloud Retrieval (0 = no / 1 = yes)
 ! 4 - Local Radiatve Center Processing Used (0 = no / 1 = yes)
 ! 5 - Multi-layer Retrieval (0 = no / 1 = yes)
-! 6 - Lower Cloud InterpoLation Used (0 = no / 1 = yes)
+! 6 - Lower Cloud Interpolation Used (0 = no / 1 = yes)
 ! 7 - Boundary Layer Inversion Assumed  (0 = no / 1 = yes)
 ! 8 - NWP Profile Inversion Assumed (0 = no / 1 = yes)
 !

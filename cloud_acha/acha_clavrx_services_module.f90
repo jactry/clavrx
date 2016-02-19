@@ -37,15 +37,20 @@ module ACHA_SERVICES_MOD
        Cld_Type, &
        Cld_Test_Vector_Packed, &
        Shadow_Mask, &
-       Cloud_Fraction_Uncer_3x3, &
+       Cloud_Fraction_Uncer, &
        Tc_Cirrus_Background, &
        Tc_Opaque_Cloud, &
        Pc_Opaque_Cloud, &
        Zc_Opaque_Cloud, &
-       Cloud_Fraction_3x3, &
-       Low_Cloud_Fraction_3x3, &
-       Mid_Cloud_Fraction_3x3, &
-       High_Cloud_Fraction_3x3, &
+       ASOS_Cloud_Class, &
+       ASOS_Cloud_Code, &
+       ASOS_Cloud_ECA, &
+       ASOS_Cloud_Zmin, &
+       ASOS_Cloud_Zmax, &
+       Cloud_Fraction, &
+       Low_Cloud_Fraction, &
+       Mid_Cloud_Fraction, &
+       High_Cloud_Fraction, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -207,6 +212,11 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Pc_Opaque
    real, dimension(:,:), pointer:: Tc_Opaque
    real, dimension(:,:), pointer:: Zc_Opaque
+   integer(kind=int1), dimension(:,:), pointer:: ASOS_Cloud_Class
+   integer(kind=int1), dimension(:,:), pointer:: ASOS_Cloud_Code
+   real, dimension(:,:), pointer:: ASOS_Cloud_ECA
+   real, dimension(:,:), pointer:: ASOS_Cloud_Zmin
+   real, dimension(:,:), pointer:: ASOS_Cloud_Zmax
   end type acha_output_struct
   
 !Symbol stucture

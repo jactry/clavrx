@@ -577,11 +577,16 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Mean_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction
+  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Class
+  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Code
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_ECA
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmin
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmax
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 
@@ -2521,11 +2526,16 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Zc_CO2IRW(dim1,dim2))
     allocate(Pc_CO2IRW(dim1,dim2))
     allocate(Tc_CO2IRW(dim1,dim2))
-    allocate(Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Cloud_Fraction_Uncer_3x3(dim1,dim2))
-    allocate(High_Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Mid_Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Cloud_Fraction(dim1,dim2))
+    allocate(Cloud_Fraction_Uncer(dim1,dim2))
+    allocate(High_Cloud_Fraction(dim1,dim2))
+    allocate(Mid_Cloud_Fraction(dim1,dim2))
+    allocate(Low_Cloud_Fraction(dim1,dim2))
+    allocate(ASOS_Cloud_Class(dim1,dim2))
+    allocate(ASOS_Cloud_Code(dim1,dim2))
+    allocate(ASOS_Cloud_ECA(dim1,dim2))
+    allocate(ASOS_Cloud_Zmax(dim1,dim2))
+    allocate(ASOS_Cloud_Zmin(dim1,dim2))
     allocate(Tc_Co2(dim1,dim2))
     allocate(Pc_Co2(dim1,dim2))
     allocate(Zc_Co2(dim1,dim2))
@@ -2546,11 +2556,16 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Pc_CO2IRW = Missing_Value_Real4
      Tc_CO2IRW = Missing_Value_Real4
      Zc_CO2IRW = Missing_Value_Real4
-     Cloud_Fraction_3x3 = Missing_Value_Real4
-     Cloud_Fraction_Uncer_3x3 = Missing_Value_Real4
-     High_Cloud_Fraction_3x3 = Missing_Value_Real4
-     Mid_Cloud_Fraction_3x3 = Missing_Value_Real4
-     Low_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Cloud_Fraction = Missing_Value_Real4
+     Cloud_Fraction_Uncer = Missing_Value_Real4
+     High_Cloud_Fraction = Missing_Value_Real4
+     Mid_Cloud_Fraction = Missing_Value_Real4
+     Low_Cloud_Fraction = Missing_Value_Real4
+     ASOS_Cloud_Class = Missing_Value_Int1
+     ASOS_Cloud_Code = Missing_Value_Int1
+     ASOS_Cloud_ECA = Missing_Value_Real4
+     ASOS_Cloud_Zmax = Missing_Value_Real4
+     ASOS_Cloud_Zmin = Missing_Value_Real4
      Tc_Co2 = Missing_Value_Real4
      Pc_Co2 = Missing_Value_Real4
      Zc_Co2 = Missing_Value_Real4
@@ -2571,11 +2586,16 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Zc_CO2IRW)
      deallocate(Tc_CO2IRW)
      deallocate(Pc_CO2IRW)
-     deallocate(Cloud_Fraction_3x3)
-     deallocate(Cloud_Fraction_Uncer_3x3)
-     deallocate(High_Cloud_Fraction_3x3)
-     deallocate(Mid_Cloud_Fraction_3x3)
-     deallocate(Low_Cloud_Fraction_3x3)
+     deallocate(Cloud_Fraction)
+     deallocate(Cloud_Fraction_Uncer)
+     deallocate(High_Cloud_Fraction)
+     deallocate(Mid_Cloud_Fraction)
+     deallocate(Low_Cloud_Fraction)
+     deallocate(ASOS_Cloud_Class)
+     deallocate(ASOS_Cloud_Code)
+     deallocate(ASOS_Cloud_ECA)
+     deallocate(ASOS_Cloud_Zmin)
+     deallocate(ASOS_Cloud_Zmax)
      deallocate(Tc_Co2)
      deallocate(Pc_Co2)
      deallocate(Zc_Co2)

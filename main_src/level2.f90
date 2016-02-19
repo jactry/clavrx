@@ -1195,7 +1195,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "refl_sol_dnb_nom", &
                               "toa_bidirectional_reflectance_solar_dnb_nominal", &
                               "top of atmosphere reflectance solar dnb channel", &
-                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_ChDNB, Max_Ref_ChDNB, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
       endif
@@ -4713,7 +4713,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- cloud fraction
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldfrac_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(cloud_fraction_3x3, &
+      call SCALE_VECTOR_I1_RANK2(Cloud_Fraction, &
                                  sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_cldfrac), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -4721,7 +4721,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- cloud fraction uncertainty
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldfrac_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Cloud_Fraction_Uncer_3x3, &
+      call SCALE_VECTOR_I1_RANK2(Cloud_Fraction_Uncer, &
                                  sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldfrac_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -4729,7 +4729,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- high cloud fraction
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_High_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(High_Cloud_Fraction_3x3, &
+      call SCALE_VECTOR_I1_RANK2(High_Cloud_Fraction, &
                                  sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_High_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -4737,7 +4737,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- mid cloud fraction
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Mid_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Mid_Cloud_Fraction_3x3, &
+      call SCALE_VECTOR_I1_RANK2(Mid_Cloud_Fraction, &
                                  sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Mid_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -4745,7 +4745,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- low cloud fraction
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Low_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Low_Cloud_Fraction_3x3, &
+      call SCALE_VECTOR_I1_RANK2(Low_Cloud_Fraction, &
                                  sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Low_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus

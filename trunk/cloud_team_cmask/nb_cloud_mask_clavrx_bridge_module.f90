@@ -182,10 +182,16 @@ contains
            call MEDIAN_FILTER_MASK(float(Dust_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)), &
                         Bad_Pixel_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2), &
                         Tmp_Array(i,j))
+
+           ! --- save dust, smoke, fire to the corresponding bit structure 
+           if (Smoke_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
+           if (Tmp_Array(i,j) .eq. 1.0) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
          endif
       end do elem_loop_2
    end do line_loop_2
 
+   ! --- save dust to output, make sure no strange values
    Dust_Mask = int(Tmp_Array)
    where ( Dust_Mask > 1) Dust_Mask = Missing_Value_Int1
    deallocate (Tmp_Array)

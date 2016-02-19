@@ -186,7 +186,8 @@ subroutine COMPUTE_TAU_REFF_ACHA(Beta, &
    real(kind=real4):: Temp_R4
    real(kind=real4):: log10_Reff
    real(kind=real4), parameter:: Reff_Min = 1.0
-   real(kind=real4), parameter:: Reff_Max = 100.0
+   real(kind=real4), parameter:: Reff_Max = 60.0
+   real(kind=real4), parameter:: Tau_Max = 8.0
 
    Tau = MISSING_VALUE_REAL
    Reff = MISSING_VALUE_REAL
@@ -254,9 +255,10 @@ subroutine COMPUTE_TAU_REFF_ACHA(Beta, &
 
    Ec = 1.0 - exp(-Tau_Abs_11um)
    
-   Tau = (Qe_vis / Qe_11um) * Tau_Abs_11um / (1.0 - wo_11um * g_11um)
+   Tau = min((Qe_vis / Qe_11um) * Tau_Abs_11um / (1.0 - wo_11um * &
+              g_11um),Tau_Max)
 
-   !--- set negative values to be missing - added by Y Li
+   !--- set negative values to be missing 
    if (Tau < 0) then
       Tau = MISSING_VALUE_REAL
       Reff= MISSING_VALUE_REAL

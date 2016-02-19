@@ -200,18 +200,14 @@ contains
    integer:: Line_Idx_max
    integer:: Line_Idx_width
    integer:: Line_Idx_segment_max
-   integer:: ELem_Idx_1
-   integer:: ELem_Idx_2
-   integer:: Line_Idx_1
-   integer:: Line_Idx_2
    integer:: VIIRS_375M_res_indx
    integer :: McIDAS_ID
-   real, allocatable, dimension (:,:) :: Tmp_Array
-   integer, parameter :: N_box = 2
-   REAL(SINGLE) :: Glint_Zen_Thresh=40.0
-   character (len=555):: Naive_Bayes_File_Name_Full_Path
-
-
+   real(SINGLE) :: Glint_Zen_Thresh=40.0
+   character (len=1020):: Naive_Bayes_File_Name_Full_Path
+   integer, parameter:: Nmed = 2
+   real(kind=real4):: Nmed_Total
+   integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
+   integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
 
 
    !---- set paths and mask classifier file name to their values in this framework
@@ -229,13 +225,11 @@ contains
    allocate(Ems_Ch20_Median_3x3(num_elem,num_line))
    allocate(Ems_Ch20_Std_Median_3x3(num_elem,num_line))
 
-
    allocate(Dummy_IBand(num_elem,num_line))
    allocate(Ref_Uni_ChI1(num_elem,num_line))
    allocate(Bt_Uni_ChI4(num_elem,num_line))
    allocate(Bt_Uni_ChI5(num_elem,num_line))
 
-   
    !Solar Contamination
    allocate(Solar_Contamination_Mask(num_elem, num_line))
    !Only needed for AVHRR Counts
@@ -485,43 +479,44 @@ contains
    end do line_loop
 
    !------------------------------------------------------------------------------
-   !-- Use median filter for IR Dust
-   !-- NOTE: DESABLED UNTIL DECIDE TO USE IR DUST
-   !-- CHECK "nb_cloud_mask_addons_module.f90" IF ALGORITHM IS ON/OFF !!!!!
+   ! Apply Median Filters
    !------------------------------------------------------------------------------
-   if (.not. allocated (Tmp_Array)) allocate (Tmp_Array(Image%Number_Of_Elements, &
-                                       Image%Number_Of_Lines_Read_This_Segment))
+   Nmed_Total = (2.0*Nmed+1)**2
+   allocate(I1_Temp_1(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+   allocate(I1_Temp_2(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+   I1_Temp_1 = Dust_Mask
+   I1_Temp_2 = Smoke_Mask
+   I1_Temp_1(Nmed:Image%Number_Of_Elements-Nmed, &
+             1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
+   I1_Temp_2(Nmed:Image%Number_Of_Elements-Nmed, &
+             1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
+   line_loop_median: do i = 1+Nmed, Image%Number_Of_Elements-Nmed
+      elem_loop_median: do  j = 1+Nmed, Image%Number_Of_Lines_Read_This_Segment-Nmed
+         I1_Temp_1(i,j) = nint(count(Dust_Mask(i-Nmed:i+Nmed, &
+                               j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
+         I1_Temp_2(i,j) = nint(count(Smoke_Mask(i-Nmed:i+Nmed, &
+                               j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
+      end do elem_loop_median
+   end do line_loop_median
+   Dust_Mask = I1_Temp_1
+   Smoke_Mask = I1_Temp_2
+   deallocate(I1_Temp_1)
+   deallocate(I1_Temp_2)
 
-   ! -----------    loop over pixels -----   
-   line_loop_2: do i = 1, Image%Number_Of_Elements
-      elem_loop_2: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+   !-----------------------------------------------------------------------------
+   !--- save dust, smoke, fire to the corresponding bit structure 
+   !-----------------------------------------------------------------------------
+   line_loop_pack: do i = 1, Image%Number_Of_Elements
+      elem_loop_pack: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+           if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = &
+                                     ibset(Cld_Test_Vector_Packed(2,i,j),4)
+           if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
+                                      ibset(Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
+                                      ibset(Cld_Test_Vector_Packed(2,i,j),7)
+      end do elem_loop_pack
+   end do line_loop_pack
 
-         if (Dust_Mask(i,j) .ge. 0) then
-
-           ELem_Idx_1 = max(1,min(Image%Number_Of_Elements,i - N_box))
-           ELem_Idx_2 = max(1,min(Image%Number_Of_Elements,i + N_box))
-           Line_Idx_1 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j - N_box))
-           Line_Idx_2 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j + N_box))
-
-           call MEDIAN_FILTER_MASK(float(Dust_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)), &
-                        Bad_Pixel_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2), &
-                        Tmp_Array(i,j))
-
-           ! --- save dust, smoke, fire to the corresponding bit structure 
-           if (Smoke_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = &
-                                 ibset(Cld_Test_Vector_Packed(2,i,j),4)
-           if (Tmp_Array(i,j) .eq. 1.0) Cld_Test_Vector_Packed(2,i,j) = &
-                                 ibset(Cld_Test_Vector_Packed(2,i,j),5)
-           if (Fire_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = &
-                                 ibset(Cld_Test_Vector_Packed(2,i,j),7)
-         endif
-      end do elem_loop_2
-   end do line_loop_2
-
-   ! --- save dust to output, make sure no strange values
-   Dust_Mask = int(Tmp_Array)
-   where ( Dust_Mask > 1) Dust_Mask = Missing_Value_Int1
-   deallocate (Tmp_Array)
 
 !-------------------------------------------------------------------------------
 ! on last segment, wipe out the lut from memory and reset is_read_flag to no
@@ -529,9 +524,6 @@ contains
    if (Segment_Number_CM == Input%Num_Segments) then
        call RESET_NB_CLOUD_MASK_LUT()
    endif
-
-
-   
    
    !Deallocate arrays
    deallocate(Diag_Pix_Array_1)
@@ -979,91 +971,6 @@ contains
   END DO Line_Loop
 
  END SUBROUTINE Compute_Emiss_Tropo_Chn14
-
-
-!---- MEDIAN Routine should go in num_mod
-
-!==============================================================
-! subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
-!
-! Median filter
-!==============================================================
-subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
-
-! The purpose of this function is to find 
-! median (emed), minimum (emin) and maximum (emax)
-! for the array elem with nelem elements. 
-
- real, dimension(:,:), intent(in):: z
- real, intent(out):: z_median
- real, intent(out):: z_mean
- real, intent(out):: z_std_median
- integer(kind=int1), dimension(:,:), intent(in):: mask 
- integer:: i,j,k,nx,ny,nelem
- real, dimension(:), allocatable::x
- real(kind=real4):: u
-
- z_median = missing_value_real4
- z_std_median = missing_value_real4
- z_mean = missing_value_real4
-
- nx = size(z,1)
- ny = size(z,2)
-
- nelem = nx * ny
-
- allocate(x(nelem))
- x = 0.0
-
- k = 0
- do i = 1, nx
-   do j = 1, ny
-      if (mask(i,j) == sym%NO .and. z(i,j) /= missing_value_real4) then
-           k = k + 1   
-           x(k) = z(i,j)
-      endif
-  enddo
- enddo
-
- nelem = k
-   
- if (nelem < 1) then
-     if (allocated(x)) deallocate(x)
-     return
- endif 
-!--- sort the array into ascending order
-  do i=1,nelem-1
-   do j=i+1,nelem
-    if(x(j)<x(i))then
-     u=x(j)
-     x(j)=x(i)
-     x(i)=u
-    end if   
-   end do
-  end do
-
-!---- pick the median
-  if(mod(nelem,2)==1)then
-   i=nelem/2+1
-   z_median=x(i)
-  else  
-   i=nelem/2
-   z_median=(x(i)+x(i+1))/2
-  end if
-
-!--- compute standard deviation wrt median
-  z_mean = sum(x(1:nelem))/nelem
-  z_std_median = sqrt(sum((x(1:nelem) - z_median)**2) / nelem)
-
-
-! if (z_std_median > 60.0) then 
-!         print *, "big std median ", z_std_median, nelem, x(1:nelem)
-!         print *, "z_nxn = ", z
-! endif
-
-  if (allocated(x)) deallocate(x)
-
-end subroutine COMPUTE_MEDIAN
 
 !----------------------------------------------------------------------
 ! subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax,

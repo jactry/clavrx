@@ -1,6 +1,5 @@
 !-- ice clouds modeled as radiometric consistent empirical model (b=0.10)
 !    $Header$
-!    updated 02/05/2014
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: A_BETA_11um_67um_FIT_ICE =  -1.85234
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: B_BETA_11um_67um_FIT_ICE =   2.54585
 REAL(KIND=REAL4), PARAMETER, PRIVATE:: A_BETA_11um_85um_FIT_ICE =   2.20137

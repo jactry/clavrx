@@ -53,10 +53,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    private :: SET_INPUT
    private :: SET_OUTPUT
    private :: SET_DIAG
-   private :: NULL_INPUT
-   private :: NULL_OUTPUT
-   private :: NULL_DIAG
    private :: COMPUTE_IBAND_STATISTICS
+   private :: MEDIAN_FILTER_MASK
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
@@ -202,8 +200,14 @@ contains
    integer:: Line_Idx_max
    integer:: Line_Idx_width
    integer:: Line_Idx_segment_max
+   integer:: ELem_Idx_1
+   integer:: ELem_Idx_2
+   integer:: Line_Idx_1
+   integer:: Line_Idx_2
    integer:: VIIRS_375M_res_indx
    integer :: McIDAS_ID
+   real, allocatable, dimension (:,:) :: Tmp_Array
+   integer, parameter :: N_box = 2
    REAL(SINGLE) :: Glint_Zen_Thresh=40.0
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 
@@ -476,13 +480,48 @@ contains
                                           Output) !, &
                                          ! Diag)   !optional
 
-         !--- nullify pointers within these data structures
-         call NULL_INPUT()
-         call NULL_OUTPUT()
-         call NULL_DIAG()
    
       end do elem_loop
    end do line_loop
+
+   !------------------------------------------------------------------------------
+   !-- Use median filter for IR Dust
+   !-- NOTE: DESABLED UNTIL DECIDE TO USE IR DUST
+   !-- CHECK "nb_cloud_mask_addons_module.f90" IF ALGORITHM IS ON/OFF !!!!!
+   !------------------------------------------------------------------------------
+   if (.not. allocated (Tmp_Array)) allocate (Tmp_Array(Image%Number_Of_Elements, &
+                                       Image%Number_Of_Lines_Read_This_Segment))
+
+   ! -----------    loop over pixels -----   
+   line_loop_2: do i = 1, Image%Number_Of_Elements
+      elem_loop_2: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+
+         if (Dust_Mask(i,j) .ge. 0) then
+
+           ELem_Idx_1 = max(1,min(Image%Number_Of_Elements,i - N_box))
+           ELem_Idx_2 = max(1,min(Image%Number_Of_Elements,i + N_box))
+           Line_Idx_1 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j - N_box))
+           Line_Idx_2 = max(1,min(Image%Number_Of_Lines_Read_This_Segment,j + N_box))
+
+           call MEDIAN_FILTER_MASK(float(Dust_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2)), &
+                        Bad_Pixel_Mask(Elem_Idx_1:Elem_Idx_2,Line_Idx_1:Line_Idx_2), &
+                        Tmp_Array(i,j))
+
+           ! --- save dust, smoke, fire to the corresponding bit structure 
+           if (Smoke_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = &
+                                 ibset(Cld_Test_Vector_Packed(2,i,j),4)
+           if (Tmp_Array(i,j) .eq. 1.0) Cld_Test_Vector_Packed(2,i,j) = &
+                                 ibset(Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j) .eq. 1) Cld_Test_Vector_Packed(2,i,j) = &
+                                 ibset(Cld_Test_Vector_Packed(2,i,j),7)
+         endif
+      end do elem_loop_2
+   end do line_loop_2
+
+   ! --- save dust to output, make sure no strange values
+   Dust_Mask = int(Tmp_Array)
+   where ( Dust_Mask > 1) Dust_Mask = Missing_Value_Int1
+   deallocate (Tmp_Array)
 
 !-------------------------------------------------------------------------------
 ! on last segment, wipe out the lut from memory and reset is_read_flag to no
@@ -690,7 +729,7 @@ contains
       Input%Num_Line_Max = Ctxt%SegmentInfo%Current_Row_Size
       Input%Num_Segments = Ctxt%SegmentInfo%Segment_total
       !------
-      Input%Invalid_Data_Mask => Bad_Pixel_Mask(i,j)
+      Input%Invalid_Data_Mask = Bad_Pixel_Mask(i,j)
       Input%Chan_On_041um = CHN_FLG(1)
       Input%Chan_On_063um = CHN_FLG(2)
       Input%Chan_On_086um = CHN_FLG(3)
@@ -706,156 +745,79 @@ contains
       Input%Chan_On_I4_374um = IBand_Flag(4)
       Input%Chan_On_I5_114um = IBand_Flag(5)
       Input%Chan_On_DNB = DNB_Flag
-      Input%Snow_Class => SnowMask(i,j)
-      Input%Land_Class => LandMask(i,j)
-      Input%Oceanic_Glint_Mask => Glint_Mask
-      Input%Lunar_Oceanic_Glint_Mask => null() !No DNB in Framework now
-      Input%Coastal_Mask => CoastMask(i,j)
-      Input%Solzen => SolZen(i,j)
-      Input%Scatzen => ScatAng(i,j)
-      Input%Lunscatzen => null() !No DNB in Framework now
-      Input%Senzen => Satzen(i,j)
-      Input%Lunzen => null() !No DNB in Framework now
-      Input%Lat => Latitude(i,j)
-      Input%Lon => Longitude(i,j)
-      Input%Ref_041um => Chn1Refl(i,j)
-      Input%Ref_063um => Chn2Refl(i,j)
-      Input%Ref_063um_Clear => Ref_Ch2_Clear(i,j)
-      Input%Ref_063um_Std => Ref_Ch1_Stddev_3X3(i,j)
-      Input%Ref_063um_Min => Ref_Ch1_Min_3x3(i,j)
-      Input%Ref_086um => Chn3Refl(i,j)
-      Input%Ref_138um => Chn4Refl(i,j)
-      Input%Ref_160um => Chn5Refl(i,j)
-      Input%Ref_160um_Clear => Ref_Ch5_Clear(i,j)
-      Input%Ref_375um => Chn7Refl(i,j)
-      Input%Ref_375um_Clear => null() !Not filled or used for now
-      Input%Ref_213um => Chn6Refl(i,j)
-      Input%Bt_375um => Chn7BT(i,j)
-      Input%Bt_375um_Std => Bt_Ch20_Stddev_3x3(i,j)
-      Input%Emiss_375um =>  Ems_Ch20_Median_3x3(i,j)
-      Input%Emiss_375um_Clear => EmsCh7ClSlr(i,j)
-      Input%Bt_67um => Chn9BT(i,j)
-      Input%Bt_85um => Chn11BT(i,j)
-      Input%Bt_11um => Chn14BT(i,j)
-      Input%Bt_11um_Std => Bt_Ch31_Stddev_3x3(i,j)
-      Input%Bt_11um_Max => Bt_Ch31_Max_3x3(i,j)
-      Input%Bt_11um_Clear => Chn14ClrBT(i,j)
-      Input%Emiss_11um_Tropo => Emiss_11um_Tropo_Rtm(i,j)
-      Input%Bt_12um => Chn15BT(i,j)
-      Input%Bt_12um_Clear => Chn15ClrBT(i,j)
-      Input%Ref_I1_064um_Std => null()
-      Input%Bt_I4_374um_Std => null()
-      Input%Bt_I5_114um_Std => null()
-      Input%Bt_11um_Bt_67um_Covar => Covar_Ch27_Ch31_5x5
-      Input%Sst_Anal_Uni => Sst_Anal_Uni(i,j)
-      Input%Emiss_Sfc_375um => Chn7SfcEmiss(i,j)
-      Input%Rad_Lunar => null() !No DNB
-      Input%Ref_Lunar => null() !No DNB
-      Input%Ref_Lunar_Min => null() !No DNB
-      Input%Ref_Lunar_Std => null() !No DNB
-      Input%Ref_Lunar_Clear => null() !No DNB
-      Input%Zsfc => SfcElev(i,j)
-      Input%Solar_Contamination_Mask => Solar_Contamination_Mask(i,j)
-      Input%Sfc_Type => Surface_Type(i,j)
+      Input%Snow_Class = SnowMask(i,j)
+      Input%Land_Class = LandMask(i,j)
+      Input%Oceanic_Glint_Mask = Glint_Mask
+      Input%Lunar_Oceanic_Glint_Mask = -999.0 !No DNB in Framework now
+      Input%Coastal_Mask = CoastMask(i,j)
+      Input%Solzen = SolZen(i,j)
+      Input%Scatzen = ScatAng(i,j)
+      Input%Lunscatzen = -999.0 !No DNB in Framework now
+      Input%Senzen = Satzen(i,j)
+      Input%Lunzen = -999.0 !No DNB in Framework now
+      Input%Lat = Latitude(i,j)
+      Input%Lon = Longitude(i,j)
+      Input%Ref_041um = Chn1Refl(i,j)
+      Input%Ref_063um = Chn2Refl(i,j)
+      Input%Ref_063um_Clear = Ref_Ch2_Clear(i,j)
+      Input%Ref_063um_Std = Ref_Ch1_Stddev_3X3(i,j)
+      Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
+      Input%Ref_086um = Chn3Refl(i,j)
+      Input%Ref_138um = Chn4Refl(i,j)
+      Input%Ref_160um = Chn5Refl(i,j)
+      Input%Ref_160um_Clear = Ref_Ch5_Clear(i,j)
+      Input%Ref_375um = Chn7Refl(i,j)
+      Input%Ref_375um_Clear = -999.0 !Not filled or used for now
+      Input%Ref_213um = Chn6Refl(i,j)
+      Input%Bt_375um = Chn7BT(i,j)
+      Input%Bt_375um_Std = Bt_Ch20_Stddev_3x3(i,j)
+      Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
+      Input%Emiss_375um_Clear = EmsCh7ClSlr(i,j)
+      Input%Bt_67um = Chn9BT(i,j)
+      Input%Bt_85um = Chn11BT(i,j)
+      Input%Bt_11um = Chn14BT(i,j)
+      Input%Bt_11um_Std = Bt_Ch31_Stddev_3x3(i,j)
+      Input%Bt_11um_Max = Bt_Ch31_Max_3x3(i,j)
+      Input%Bt_11um_Clear = Chn14ClrBT(i,j)
+      Input%Emiss_11um_Tropo = Emiss_11um_Tropo_Rtm(i,j)
+      Input%Bt_12um = Chn15BT(i,j)
+      Input%Bt_12um_Clear = Chn15ClrBT(i,j)
+      Input%Ref_I1_064um_Std = -999.0 !No I-Bands
+      Input%Bt_I4_374um_Std = -999.0 !No I-Bands
+      Input%Bt_I5_114um_Std = -999.0 !No I-Bands
+      Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5
+      Input%Sst_Anal_Uni = Sst_Anal_Uni(i,j)
+      Input%Emiss_Sfc_375um = Chn7SfcEmiss(i,j)
+      Input%Rad_Lunar = -999.0 !No DNB
+      Input%Ref_Lunar = -999.0 !No DNB
+      Input%Ref_Lunar_Min = -999.0 !No DNB
+      Input%Ref_Lunar_Std = -999.0 !No DNB
+      Input%Ref_Lunar_Clear = -999.0 !No DNB
+      Input%Zsfc = SfcElev(i,j)
+      Input%Solar_Contamination_Mask = Solar_Contamination_Mask(i,j)
+      Input%Sfc_Type = Surface_Type(i,j)
    end subroutine SET_INPUT
 
    subroutine SET_OUTPUT(i,j)
       integer, intent (in) :: i, j
 
-      Output%Cld_Flags_Packed => Cld_Test_Vector_Packed(:,i,j)
-      Output%Cld_Mask_Bayes => Cld_Mask(i,j)
-      Output%Posterior_Cld_Probability => Posterior_Cld_Probability(i,j)
-      Output%Dust_Mask => Dust_Mask(i,j)
-      Output%Smoke_Mask => Smoke_Mask(i,j)
-      Output%Fire_Mask => Fire_Mask(i,j)
+      Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
+      Cld_Mask(i,j) = Output%Cld_Mask_Bayes
+      Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
+      Dust_Mask(i,j) = Output%Dust_Mask
+      Smoke_Mask(i,j) = Output%Smoke_Mask
+      Fire_Mask(i,j) = Output%Fire_Mask
    end subroutine SET_OUTPUT
 
    subroutine SET_DIAG(i,j)
       integer, intent (in) :: i, j
 
-      Diag%Array_1 => Diag_Pix_Array_1(i,j)
-      Diag%Array_2 => Diag_Pix_Array_2(i,j)
-      Diag%Array_3 => Diag_Pix_Array_3(i,j)
+      Diag_Pix_Array_1(i,j) = Diag%Array_1
+      Diag_Pix_Array_2(i,j) = Diag%Array_2
+      Diag_Pix_Array_3(i,j) = Diag%Array_3
    end subroutine SET_DIAG
 
-   !============================================================================
-   ! nullify input pointers
-   !============================================================================
-   subroutine NULL_INPUT()
-      Input%Invalid_Data_Mask => null()
-      Input%Snow_Class => null()
-      Input%Land_Class => null() 
-      Input%Oceanic_Glint_Mask => null() 
-      Input%Lunar_Oceanic_Glint_Mask => null()
-      Input%Coastal_Mask => null()
-      Input%Solzen => null()
-      Input%Scatzen => null()
-      Input%Lunscatzen => null()
-      Input%Senzen => null()
-      Input%Lunzen => null()
-      Input%Lat => null()
-      Input%Lon => null()
-      Input%Ref_041um => null()
-      Input%Ref_063um => null()
-      Input%Ref_063um_Clear => null()
-      Input%Ref_063um_Std => null()
-      Input%Ref_063um_Min => null()
-      Input%Ref_086um => null()
-      Input%Ref_138um => null()
-      Input%Ref_160um => null()
-      Input%Ref_160um_Clear => null()
-      Input%Ref_213um => null()
-      Input%Bt_375um =>  null()
-      Input%Bt_375um_Std => null()
-      Input%Emiss_375um => null()
-      Input%Emiss_375um_Clear => null()
-      Input%Bt_67um => null()
-      Input%Bt_85um => null()
-      Input%Bt_11um => null()
-      Input%Bt_11um_Std => null()
-      Input%Bt_11um_Max => null()
-      Input%Bt_11um_Clear => null()
-      Input%Emiss_11um_Tropo => null()
-      Input%Bt_12um => null()
-      Input%Bt_12um_Clear => null()
-      Input%Ref_I1_064um_Std => null()
-      Input%Bt_I4_374um_Std => null()
-      Input%Bt_I5_114um_Std => null()
-      Input%Bt_11um_Bt_67um_Covar => null() 
-      Input%Sst_Anal_Uni => null()
-      Input%Emiss_Sfc_375um => null()
-      Input%Rad_Lunar => null()
-      Input%Ref_Lunar => null()
-      Input%Ref_Lunar_Min => null()
-      Input%Ref_Lunar_Std => null()
-      Input%Ref_Lunar_Clear => null()
-      Input%Zsfc => null()
-      Input%Solar_Contamination_Mask => null()
-      Input%Sfc_Type => null()
-   end subroutine NULL_INPUT
-
-   !============================================================================
-   ! nullify output pointers
-   !============================================================================
-   subroutine NULL_OUTPUT()
-    Output%Cld_Flags_Packed => null()
-    Output%Cld_Mask_Bayes => null()
-    Output%Posterior_Cld_Probability => null()
-    Output%Dust_Mask => null()
-    Output%Smoke_Mask => null()
-    Output%Fire_Mask => null()
-   end subroutine NULL_OUTPUT
-
-   !============================================================================
-   ! nullify diag pointers
-   !============================================================================
-   subroutine NULL_DIAG()
-      Diag%Array_1 => null()
-      Diag%Array_2 => null()
-      Diag%Array_3 => null()
-   end subroutine NULL_DIAG
-
-   !============================================================================
+!============================================================================
 
 
 !rchen copy Clear_Chn2_Reflectance_Field from baseline_cloud_mask.f90

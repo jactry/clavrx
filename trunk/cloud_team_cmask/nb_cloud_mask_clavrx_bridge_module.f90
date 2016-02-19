@@ -109,7 +109,6 @@ contains
    integer, intent(in):: Segment_Number
 
    integer :: i, j
-   integer :: ELem_Idx_1, ELem_Idx_2, Line_Idx_1, Line_Idx_2
    integer, parameter :: N_box = 2
    character (len=555):: Naive_Bayes_File_Name_Full_Path
 

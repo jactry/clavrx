@@ -499,6 +499,11 @@ module NB_CLOUD_MASK
    !  MAIN CODE
    !------------------------------------------------------------------------------------------
 
+   !--- initialize output
+   Output%Posterior_Cld_Probability = Missing_Value_Real4
+   Output%Cld_Mask_Bayes = Missing_Value_Int1
+   Output%Cld_Flags_Packed = 0
+
    Cld_Flags(1) = symbol%YES          ;    Cld_Flag_Bit_Depth(1) = 1
    !--- check for a bad pixel
    if (Input%Invalid_Data_Mask == symbol%YES) then

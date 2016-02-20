@@ -26,7 +26,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
  private :: WMO_Sensor_KM
    
  REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
- !REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy !for opaque stuff right now
+ REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy 
+ integer(kind=int1),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy1 
 
  type(NPP_VIIRS_CLD_HEIGHT_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
 
@@ -102,6 +103,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    call AWG_CLOUD_HEIGHT_ACHA_ALGORITHM(Input, &
                                     Symbol, &
                                     Output)
+                                    
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
    !-----------------------------------------------------------------------
@@ -133,26 +135,11 @@ module ACHA_CLAVRX_BRIDGE_MOD
          , Output%Latitude_Pc &
          , Output%Longitude_Pc &
          , Shadow_Mask ) 
-   
-   !---- copy shadow result into cloud mask test bits
-   
-   !Set Cloud Mask local pointers
-!   CALL NFIA_CloudMask_Mask(Ctxt%CLOUD_MASK_Src1_T00, Cld_Mask)
-!   CALL NFIA_CloudMask_CldMaskPacked(Ctxt%CLOUD_MASK_Src1_T00, Cld_Test_Vector_Packed)
-
-   
-!   where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  
-!           Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
-!   end where
-
    Shadow_Mask => null()
     
-!   Cld_Mask => null()
-!   Cld_Test_Vector_Packed => null()
 
    !--- cloud cover layers
-   call COMPUTE_CLOUD_COVER_LAYERS(Input,Symbol, Output)
-   
+   call COMPUTE_CLOUD_COVER_LAYERS(Input,Symbol, Output)  
    
    !--- Convective and supercooled cloud probability
    
@@ -297,10 +284,12 @@ module ACHA_CLAVRX_BRIDGE_MOD
      if (allocated(Output%Pc_H2O)) deallocate(Output%Pc_H2O)
      if (allocated(Output%Tc_H2O)) deallocate(Output%Tc_H2O)
      if (allocated(Output%Zc_H2O)) deallocate(Output%Zc_H2O)
-     !if (allocated(Dummy)) deallocate(Dummy)
      
      
     !ASOS output - Nulled and turned off for now - WCS 20Feb, 2016
+
+    if (allocated(Dummy)) deallocate(Dummy)
+    if (allocated(Dummy1)) deallocate(Dummy1)
     Output%ASOS_Cloud_Code => null()
     Output%ASOS_Cloud_ECA =>  null()
     Output%ASOS_Cloud_Zmin =>  null()
@@ -643,9 +632,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
    ! ALLOCATE Dummy array
    Num_Elem = Ctxt_ACHA%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt_ACHA%SegmentInfo%Current_Row_Size
-   
-   !rchen  05/29/2015
-   !ALLOCATE (Dummy(Num_Elem,Num_Line))
 
    CALL NFIA_CloudHeight_Pc_Opaque(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
                                     Output%Pc_Opaque)
@@ -658,12 +644,16 @@ module ACHA_CLAVRX_BRIDGE_MOD
    ALLOCATE (Output%Tc_H2O(Num_Elem,Num_Line))
    ALLOCATE (Output%Zc_H2O(Num_Elem,Num_Line))
 
-   !ASOS output - Nulled and turned off for now. May need to put into XML
-   !              at a later point pending ASOS project - WCS 20 Feb, 2016
-   Output%ASOS_Cloud_Code => null()
-   Output%ASOS_Cloud_ECA =>  null()
-   Output%ASOS_Cloud_Zmin =>  null()
-   Output%ASOS_Cloud_Zmax =>  null()
+   !ASOS output - Pointed to dummy arrays for now, since ASOS is turned off
+   !              May need to put into XML at a later point pending 
+   !              ASOS project - WCS 20 Feb, 2016
+   
+   ALLOCATE (Dummy(Num_Elem,Num_Line))
+   ALLOCATE (Dummy1(Num_Elem,Num_Line))
+   Output%ASOS_Cloud_Code => Dummy1
+   Output%ASOS_Cloud_ECA =>  Dummy
+   Output%ASOS_Cloud_Zmin =>  Dummy
+   Output%ASOS_Cloud_Zmax =>  Dummy
    
    
 

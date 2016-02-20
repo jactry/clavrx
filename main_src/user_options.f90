@@ -346,7 +346,7 @@ contains
       read(unit=Default_Lun,fmt=*) Lrc_Flag
       read(unit=Default_Lun,fmt=*) Smooth_Nwp_Flag
       read(unit=Default_Lun,fmt=*) Process_Undetected_Cloud_Flag
-          print*,'undetected ..',     Process_Undetected_Cloud_Flag
+         
       if ( Expert_Mode <= 5 ) then
           close(unit=Default_Lun)
           return

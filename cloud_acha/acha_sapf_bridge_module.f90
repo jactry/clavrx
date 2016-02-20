@@ -99,7 +99,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
    
-   call AWG_CLOUD_HEIGHT_ALGORITHM_ACHA(Input, &
+   call AWG_CLOUD_HEIGHT_ACHA_ALGORITHM(Input, &
                                     Symbol, &
                                     Output)
    !-----------------------------------------------------------------------
@@ -298,6 +298,14 @@ module ACHA_CLAVRX_BRIDGE_MOD
      if (allocated(Output%Tc_H2O)) deallocate(Output%Tc_H2O)
      if (allocated(Output%Zc_H2O)) deallocate(Output%Zc_H2O)
      !if (allocated(Dummy)) deallocate(Dummy)
+     
+     
+    !ASOS output - Nulled and turned off for now - WCS 20Feb, 2016
+    Output%ASOS_Cloud_Code => null()
+    Output%ASOS_Cloud_ECA =>  null()
+    Output%ASOS_Cloud_Zmin =>  null()
+    Output%ASOS_Cloud_Zmax =>  null()
+
      
      
  end subroutine NULL_OUTPUT
@@ -649,13 +657,13 @@ module ACHA_CLAVRX_BRIDGE_MOD
    ALLOCATE (Output%Pc_H2O(Num_Elem,Num_Line))
    ALLOCATE (Output%Tc_H2O(Num_Elem,Num_Line))
    ALLOCATE (Output%Zc_H2O(Num_Elem,Num_Line))
-   !for now the opaque data will be put into dummy array
-   !Output%Pc_Opaque => Dummy
-   !Output%Tc_Opaque => Dummy
-   !Output%Zc_Opaque => Dummy
-   !Output%Pc_H2O => Dummy
-   !Output%Tc_H2O => Dummy
-   !Output%Zc_H2O => Dummy
+
+   !ASOS output - Nulled and turned off for now. May need to put into XML
+   !              at a later point pending ASOS project - WCS 20 Feb, 2016
+   Output%ASOS_Cloud_Code => null()
+   Output%ASOS_Cloud_ECA =>  null()
+   Output%ASOS_Cloud_Zmin =>  null()
+   Output%ASOS_Cloud_Zmax =>  null()
    
    
 

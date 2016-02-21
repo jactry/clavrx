@@ -54,11 +54,11 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    private :: SET_OUTPUT
    private :: SET_DIAG
    private :: COMPUTE_IBAND_STATISTICS
-   private :: MEDIAN_FILTER_MASK
+   private :: COMPUTE_MEDIAN_SEGMENT
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
-   type(mask_output), private :: Output   
+   type(mask_output), target, private :: Output   
    type(diag_output), private :: Diag  
    type(symbol_naive_bayesian),private :: Symbol
    
@@ -68,9 +68,12 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
 
    !Segment counter
    integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1
+   
+   !Channel max for ABI counter
+   INTEGER(KIND=INT4), PARAMETER, PRIVATE :: ABI_NCHAN_MAX = 16
+   INTEGER(LONG), DIMENSION(ABI_NCHAN_MAX),  PRIVATE :: CHN_FLG
 
-   !Make Iband and DNB flag
-   integer (kind=INT1), DIMENSION(5), PRIVATE :: IBand_Flag
+   !Make DNB flag
    integer (kind=INT1), PRIVATE :: DNB_Flag
    
    !allocatable
@@ -80,7 +83,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Diag_Pix_Array_2
    REAL (kind=SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Diag_Pix_Array_3
 
-   integer (kind=INT1), TARGET, PRIVATE :: Glint_Mask
+   integer (kind=INT1), TARGET, PRIVATE :: AVHRR_IFF_Flag
    REAL(SINGLE), TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
    
    
@@ -112,14 +115,12 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_Uni_ChI5
    
    !Pointers
-   INTEGER(LONG), DIMENSION(:), POINTER, PRIVATE :: CHN_FLG
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Latitude
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Longitude
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: SolZen
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: SatZen
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ScatAng
    
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Emiss_11um_Tropo_Rtm
    INTEGER(BYTE), DIMENSION(:,:), POINTER, PRIVATE :: SpaceMask
    INTEGER(BYTE), DIMENSION(:,:), POINTER, PRIVATE :: CoastMask
    INTEGER(BYTE), DIMENSION(:,:), POINTER, PRIVATE :: LandMask
@@ -139,6 +140,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn11BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn14BT
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn13BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn9BT
@@ -161,12 +163,9 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn6Refl
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7Refl
    
-   !I-Band Pointers
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI1Refl
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI4BT
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ChnI5BT
       
    !Outputs
+   integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Cloud_Mask_Binary
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Cld_Mask
    real (SINGLE),dimension(:,:), POINTER, PRIVATE  :: Posterior_Cld_Probability
    integer(BYTE),dimension(:,:,:), POINTER, PRIVATE  :: Cld_Test_Vector_Packed
@@ -174,6 +173,18 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Smoke_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Fire_Mask
       
+   !Cloud training outputs
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Emiss_11um_Tropo_Rtm
+   integer (kind=INT1), dimension(:,:), POINTER, PRIVATE:: Glint_Mask
+
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_64_Min_3x3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_64_Std_3X3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt11um_Max_3x3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt11um_Std_3x3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_39_Med_3x3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_39_Std_3x3
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Covar_67_11_5x5
+
    
 contains
 !----------------------------------------------------------------------
@@ -202,12 +213,16 @@ contains
    integer:: Line_Idx_segment_max
    integer:: VIIRS_375M_res_indx
    integer :: McIDAS_ID
+   integer(KIND=INT4) :: ABI_Chan
+   INTEGER(KIND=INT4), pointer, DIMENSION(:) :: ChnMap
    real(SINGLE) :: Glint_Zen_Thresh=40.0
+   integer(long) :: VIIRS_375M_resolution_index
    character (len=1020):: Naive_Bayes_File_Name_Full_Path
    integer, parameter:: Nmed = 2
    real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
+   integer :: i, j
 
 
    !---- set paths and mask classifier file name to their values in this framework
@@ -221,8 +236,6 @@ contains
    allocate(Diag_Pix_Array_1(num_elem,num_line))
    allocate(Diag_Pix_Array_2(num_elem,num_line))
    allocate(Diag_Pix_Array_3(num_elem,num_line))
-   allocate(Emiss_11um_Tropo_Rtm(num_elem,num_line))
-   allocate(Ems_Ch20_Median_3x3(num_elem,num_line))
    allocate(Ems_Ch20_Std_Median_3x3(num_elem,num_line))
 
    allocate(Dummy_IBand(num_elem,num_line))
@@ -234,12 +247,20 @@ contains
    allocate(Solar_Contamination_Mask(num_elem, num_line))
    !Only needed for AVHRR Counts
    Solar_Contamination_Mask = sym%NO
+   
 
+   !channel flag mask
+   CALL NFIA_Sat_ChnMap_Flag(Ctxt%SATELLITE_DATA_Src1_T00, ChnMap)
+   
+   DO ABI_Chan = 1, ABI_NCHAN_MAX
+        IF (ChnMap(ABI_Chan) /= 0) THEN
+            CHN_FLG(ABI_Chan) = sym%YES
+        ENDIF
+   ENDDO
 
    !Initialize pointers
 
    !Angles and geolocation
-   CALL NFIA_Sat_ChnMap_CldMskChnUseFlg(Ctxt%SATELLITE_DATA_Src1_T00, CHN_FLG)
    CALL NFIA_Sat_Nav_ScatAng(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, ScatAng)
    CALL NFIA_Sat_Nav_SolZen(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, SolZen)
    CALL NFIA_Sat_Nav_Lat(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, Latitude)
@@ -263,6 +284,7 @@ contains
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI7, Chn7BT)   !3.9
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9, Chn9BT)   !6.7
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI11, Chn11BT) !8.5
+   CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI13, Chn13BT) !10.3
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14, Chn14BT) !11
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI15, Chn15BT) !12
 
@@ -294,28 +316,41 @@ contains
    
    !need to calculate  Input%Ref_375um_Clear, ch(20)%Ref_Toa_Clear(i,j) 
    
-   
-   
    !Calculate 11um topopause emissivity
+   CALL NFIA_CloudMask_Emiss11High(Ctxt%CLOUD_MASK_Src1_T00, Emiss_11um_Tropo_Rtm)
    CALL Compute_Emiss_Tropo_Chn14(Emiss_11um_Tropo_Rtm, Ctxt)
 
 
-   !Need Cloud Mask outputs (FIXME)
+   !Cloud Mask outputs
    CALL NFIA_CloudMask_Mask(Ctxt%CLOUD_MASK_Src1_T00, Cld_Mask)
    CALL NFIA_CloudMask_CldProbability(Ctxt%CLOUD_MASK_Src1_T00, Posterior_Cld_Probability)
    CALL NFIA_CloudMask_CldMaskPacked(Ctxt%CLOUD_MASK_Src1_T00, Cld_Test_Vector_Packed)
    CALL NFIA_CloudMask_Dust_Mask(Ctxt%CLOUD_MASK_Src1_T00, Dust_Mask)
    CALL NFIA_CloudMask_Smoke_Mask(Ctxt%CLOUD_MASK_Src1_T00, Smoke_Mask)
    CALL NFIA_CloudMask_Fire_Mask(Ctxt%CLOUD_MASK_Src1_T00, Fire_Mask)
-   
-   
+   CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
+
+   !Cloud Mask training outputs
+   CALL NFIA_CloudMask_Ref_64_Min_3x3(Ctxt%CLOUD_MASK_Src1_T00, Ref_64_Min_3x3)
+   CALL NFIA_CloudMask_Ref_64_Std_3X3(Ctxt%CLOUD_MASK_Src1_T00, Ref_64_Std_3X3)
+   CALL NFIA_CloudMask_Bt11um_Max_3x3(Ctxt%CLOUD_MASK_Src1_T00, Bt11um_Max_3x3)
+   CALL NFIA_CloudMask_Bt11um_Std_3x3(Ctxt%CLOUD_MASK_Src1_T00, Bt11um_Std_3x3)
+   CALL NFIA_CloudMask_Ems_39_Med_3x3(Ctxt%CLOUD_MASK_Src1_T00, Ems_39_Med_3x3)
+   CALL NFIA_CloudMask_Bt_39_Std_3x3(Ctxt%CLOUD_MASK_Src1_T00, Bt_39_Std_3x3)
+   CALL NFIA_CloudMask_Covar_67_11_5x5(Ctxt%CLOUD_MASK_Src1_T00, Covar_67_11_5x5)
+ 
+  !Binary Cloud Mask
+   CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
+
+
+
    !Compute Spatial uniformity
 
-   
+
    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn14BT, Bt_Ch31_Mean_3x3, &
                                    Bt_Ch31_Max_3x3, Bt_Ch31_Min_3x3, &
                                     Bt_Ch31_Stddev_3x3)
-                                   
+
    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn2Refl, Ref_Ch1_Mean_3X3, &
                                    Ref_Ch1_Max_3x3, Ref_Ch1_Min_3X3, &
                                    Ref_Ch1_Stddev_3X3)
@@ -326,6 +361,16 @@ contains
                                    Bt_Ch20_Stddev_3x3)
 
 
+   !Because the variables exist in the XML, fill those and then deallocate
+   ! all unneccessary variables - WCS 9/23
+   
+   Ref_64_Min_3x3 = Ref_Ch1_Min_3X3
+   Ref_64_Std_3X3 = Ref_Ch1_Stddev_3X3
+   Bt11um_Max_3x3 = Bt_Ch31_Max_3x3
+   Bt11um_Std_3x3 = Bt_Ch31_Stddev_3x3
+   Bt_39_Std_3x3  = Bt_Ch20_Stddev_3x3
+
+
    !--- apply median filter to 3.75um Emissivity
    !rchen replace Num_Scans_Read with Num_line
    call COMPUTE_MEDIAN_SEGMENT(Chn7Emiss, Bad_Pixel_Mask, 1, &
@@ -333,45 +378,14 @@ contains
                               Num_line, &
                               Ems_Ch20_Median_3x3,  &
                               Ems_Ch20_Std_Median_3x3)
-   
-
-   !--- Calculate I-Band Uniformity
-   IBand_Flag(:) = sym%NO
-   
+      
    ! McIDAS sensor ID
    CALL NFIP_Sat_Sat_ID(Ctxt%SATELLITE_DATA_Src1_T00, McIDAS_ID)
    
-   !Use sensor ID to determin if I and DNB are available
-   
-   if (McIDAS_ID == NPP_VIIRS_MCIDAS_ID) then
 
-!       VIIRS_375M_resolution_index = Ctxt%SegmentInfo%Res_Index(VIIRS_375M)
-
-       IBand_Flag(1) = sym%YES
-       IBand_Flag(4) = sym%YES
-       IBand_Flag(5) = sym%YES
-
-!       CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, &
-!                                  VIIRS_375M_res_indx, CHN_VIIRS1, ChnI1Refl)
-!       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
-!                                   VIIRS_375M_res_indx, CHN_VIIRS4, ChnI4BT)
-!       CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, &
-!                                   VIIRS_375M_res_indx, CHN_VIIRS5, ChnI5BT)
-
-!       COMPUTE_IBAND_STATISTICS ( ChnI1Refl , Dummy_IBand, Dummy_IBand , &
-!                                  Dummy_IBand, Ref_Uni_ChI1 ) 
-
-!       COMPUTE_IBAND_STATISTICS ( ChnI4BT , Dummy_IBand, Dummy_IBand , &
-!                                  Dummy_IBand, Bt_Uni_ChI4 ) 
-
-!       COMPUTE_IBAND_STATISTICS ( ChnI5BT , Dummy_IBand, Dummy_IBand , &
-!                                  Dummy_IBand, Bt_Uni_ChI5 ) 
-   
-   ENDIF
-   IBand_Flag(:) = sym%NO
-
-   !--- DNB reflectance 
+   !--- DNB and IFF Flags set to "NO"
    DNB_Flag = sym%NO
+   AVHRR_IFF_Flag = sym%NO
 
 
 
@@ -388,29 +402,29 @@ contains
         !-------------------------------------------------------------------
       
         !--- initialize valid pixel to no
-        Glint_Mask = sym%NO
+        Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
 
 
         !--- skip land pixels
-        if ((LandMask(Elem_Idx,Line_Idx) == sym%NO) .and. &
+        if ((LandMask(Elem_Idx,Line_Idx) /= sym%YES) .and. &
           SnowMask(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
 
        !--- turn on in geometric glint cone and sufficient Ref_Ch1
             if ((Glintzen(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
 
             !--- assume to be glint if in geometric zone
-                Glint_Mask = sym%YES
+                Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
 
                 IF (CHN_FLG(14) == sym%YES) then
 
                 !--- exclude pixels colder than the freezing temperature
                     IF (Chn14BT(Elem_Idx,Line_Idx) < 273.15) then
-                        Glint_Mask = sym%NO
+                        Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
 
             !--- exclude pixels colder than the surface
                     IF (Chn14BT(Elem_Idx,Line_Idx) < Chn14ClrBT(Elem_Idx,Line_Idx) - 5.0) then
-                        Glint_Mask = sym%NO
+                        Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
 
                 endif
@@ -419,7 +433,7 @@ contains
                 IF (CHN_FLG(2) == sym%YES) then
                     !rchen
                     IF (Ref_Ch1_Stddev_3x3(Elem_Idx,Line_Idx) > 1.0) then
-                        Glint_Mask = sym%NO
+                        Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
                 endif
 
@@ -474,6 +488,19 @@ contains
                                           Output) !, &
                                          ! Diag)   !optional
 
+
+         !Do binary Cloud mask
+         IF ( (Cld_Mask(Elem_Idx,Line_Idx) == symbol%CLOUDY) .or. &
+              (Cld_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLOUDY)) THEN
+         
+              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = sym%CLOUDY
+         
+         ELSE
+         
+              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = sym%CLEAR       
+         
+         ENDIF
+
    
       end do elem_loop
    end do line_loop
@@ -482,32 +509,36 @@ contains
    ! Apply Median Filters
    !------------------------------------------------------------------------------
    Nmed_Total = (2.0*Nmed+1)**2
-   allocate(I1_Temp_1(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
-   allocate(I1_Temp_2(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+   allocate(I1_Temp_1(Input%Num_Elem, Input%Num_Line))
+   allocate(I1_Temp_2(Input%Num_Elem, Input%Num_Line))
    I1_Temp_1 = Dust_Mask
    I1_Temp_2 = Smoke_Mask
-   I1_Temp_1(Nmed:Image%Number_Of_Elements-Nmed, &
-             1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
-   I1_Temp_2(Nmed:Image%Number_Of_Elements-Nmed, &
-             1+Nmed:Image%Number_Of_Lines_Read_This_Segment-Nmed) = 0
-   line_loop_median: do i = 1+Nmed, Image%Number_Of_Elements-Nmed
-      elem_loop_median: do  j = 1+Nmed, Image%Number_Of_Lines_Read_This_Segment-Nmed
+   I1_Temp_1(Nmed:Input%Num_Elem-Nmed, &
+             1+Nmed: Input%Num_Line-Nmed) = 0
+   I1_Temp_2(Nmed:Input%Num_Elem-Nmed, &
+             1+Nmed: Input%Num_Line-Nmed) = 0
+             
+             
+   line_loop_median: do i = 1+Nmed, Input%Num_Elem-Nmed
+      elem_loop_median: do  j = 1+Nmed,  Input%Num_Line-Nmed
          I1_Temp_1(i,j) = nint(count(Dust_Mask(i-Nmed:i+Nmed, &
                                j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
          I1_Temp_2(i,j) = nint(count(Smoke_Mask(i-Nmed:i+Nmed, &
                                j-Nmed:j+Nmed) == sym%YES) / Nmed_Total)
       end do elem_loop_median
    end do line_loop_median
+   
+   
    Dust_Mask = I1_Temp_1
    Smoke_Mask = I1_Temp_2
    deallocate(I1_Temp_1)
    deallocate(I1_Temp_2)
 
    !-----------------------------------------------------------------------------
-   !--- save dust, smoke, fire to the corresponding bit structure 
+!--- save dust, smoke, fire to the corresponding bit structure 
    !-----------------------------------------------------------------------------
-   line_loop_pack: do i = 1, Image%Number_Of_Elements
-      elem_loop_pack: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+   line_loop_pack: do i = 1, Input%Num_Elem
+      elem_loop_pack: do  j = 1,  Input%Num_Line
            if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = &
                                      ibset(Cld_Test_Vector_Packed(2,i,j),4)
            if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
@@ -551,7 +582,6 @@ contains
 
       
    !Pointers
-   CHN_FLG => null()
    Latitude => null()
    Longitude => null()
    SolZen => null()
@@ -720,6 +750,17 @@ contains
       Input%Num_Line = Ctxt%SegmentInfo%Current_Row_Size
       Input%Num_Line_Max = Ctxt%SegmentInfo%Current_Row_Size
       Input%Num_Segments = Ctxt%SegmentInfo%Segment_total
+      Input%Use_Sounder_11um = sym%NO
+      Input%Chan_On_I1_064um = sym%NO
+      Input%Chan_On_I4_374um = sym%NO
+      Input%Chan_On_I5_114um = sym%NO
+      
+      !set I-band flags to missing
+      Input%Ref_I1_064um_Std = Ref_Uni_ChI1(i,j)
+      Input%Bt_I4_374um_Std = Bt_Uni_ChI4(i,j)
+      Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)
+
+      
       !------
       Input%Invalid_Data_Mask = Bad_Pixel_Mask(i,j)
       Input%Chan_On_041um = CHN_FLG(1)
@@ -733,61 +774,76 @@ contains
       Input%Chan_On_85um = CHN_FLG(11)
       Input%Chan_On_11um = CHN_FLG(14)
       Input%Chan_On_12um = CHN_FLG(15)
-      Input%Chan_On_I1_064um = IBand_Flag(1)
-      Input%Chan_On_I4_374um = IBand_Flag(4)
-      Input%Chan_On_I5_114um = IBand_Flag(5)
       Input%Chan_On_DNB = DNB_Flag
       Input%Snow_Class = SnowMask(i,j)
       Input%Land_Class = LandMask(i,j)
-      Input%Oceanic_Glint_Mask = Glint_Mask
-      Input%Lunar_Oceanic_Glint_Mask = -999.0 !No DNB in Framework now
+      Input%Oceanic_Glint_Mask = Glint_Mask(i,j)
       Input%Coastal_Mask = CoastMask(i,j)
       Input%Solzen = SolZen(i,j)
       Input%Scatzen = ScatAng(i,j)
-      Input%Lunscatzen = -999.0 !No DNB in Framework now
       Input%Senzen = Satzen(i,j)
-      Input%Lunzen = -999.0 !No DNB in Framework now
       Input%Lat = Latitude(i,j)
       Input%Lon = Longitude(i,j)
       Input%Ref_041um = Chn1Refl(i,j)
+
       Input%Ref_063um = Chn2Refl(i,j)
       Input%Ref_063um_Clear = Ref_Ch2_Clear(i,j)
-      Input%Ref_063um_Std = Ref_Ch1_Stddev_3X3(i,j)
-      Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
+      Input%Ref_063um_Std = Ref_64_Std_3X3(i,j)
+      Input%Ref_063um_Min = Ref_64_Min_3x3(i,j)
+
       Input%Ref_086um = Chn3Refl(i,j)
+
       Input%Ref_138um = Chn4Refl(i,j)
+
       Input%Ref_160um = Chn5Refl(i,j)
       Input%Ref_160um_Clear = Ref_Ch5_Clear(i,j)
+
       Input%Ref_375um = Chn7Refl(i,j)
-      Input%Ref_375um_Clear = -999.0 !Not filled or used for now
+      Input%Ref_375um_Clear = Missing_Value_Real4 !Not filled or used for now
       Input%Ref_213um = Chn6Refl(i,j)
       Input%Bt_375um = Chn7BT(i,j)
-      Input%Bt_375um_Std = Bt_Ch20_Stddev_3x3(i,j)
-      Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
+      Input%Bt_375um_Std = Bt_39_Std_3x3(i,j)
+      Input%Emiss_375um =  Ems_39_Med_3x3(i,j)
       Input%Emiss_375um_Clear = EmsCh7ClSlr(i,j)
+
       Input%Bt_67um = Chn9BT(i,j)
       Input%Bt_85um = Chn11BT(i,j)
+
+      Input%Bt_10um = Chn13BT(i,j)
+
+
       Input%Bt_11um = Chn14BT(i,j)
-      Input%Bt_11um_Std = Bt_Ch31_Stddev_3x3(i,j)
-      Input%Bt_11um_Max = Bt_Ch31_Max_3x3(i,j)
+      Input%Bt_11um_Std = Bt11um_Std_3x3(i,j)
+      Input%Bt_11um_Max = Bt11um_Max_3x3(i,j)
       Input%Bt_11um_Clear = Chn14ClrBT(i,j)
       Input%Emiss_11um_Tropo = Emiss_11um_Tropo_Rtm(i,j)
+
       Input%Bt_12um = Chn15BT(i,j)
       Input%Bt_12um_Clear = Chn15ClrBT(i,j)
-      Input%Ref_I1_064um_Std = -999.0 !No I-Bands
-      Input%Bt_I4_374um_Std = -999.0 !No I-Bands
-      Input%Bt_I5_114um_Std = -999.0 !No I-Bands
       Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5
       Input%Sst_Anal_Uni = Sst_Anal_Uni(i,j)
       Input%Emiss_Sfc_375um = Chn7SfcEmiss(i,j)
-      Input%Rad_Lunar = -999.0 !No DNB
-      Input%Ref_Lunar = -999.0 !No DNB
-      Input%Ref_Lunar_Min = -999.0 !No DNB
-      Input%Ref_Lunar_Std = -999.0 !No DNB
-      Input%Ref_Lunar_Clear = -999.0 !No DNB
       Input%Zsfc = SfcElev(i,j)
       Input%Solar_Contamination_Mask = Solar_Contamination_Mask(i,j)
       Input%Sfc_Type = Surface_Type(i,j)
+      
+      if (Input%Chan_On_DNB == sym%YES)  then 
+        Input%Lunscatzen = Missing_Value_Real4
+        Input%Lunar_Oceanic_Glint_Mask = Missing_Value_Real4
+        Input%Rad_Lunar = Missing_Value_Real4
+        Input%Ref_Lunar = Missing_Value_Real4
+        Input%Ref_Lunar_Min = Missing_Value_Real4
+        Input%Ref_Lunar_Std = Missing_Value_Real4
+        Input%Ref_Lunar_Clear = Missing_Value_Real4
+        Input%Lunzen = Missing_Value_Real4
+      endif
+      
+      if (AVHRR_IFF_Flag == sym%YES)  then
+        Input%Use_Sounder_11um = sym%YES
+        Input%Bt_11um_Sounder = Missing_Value_Real4
+        Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
+      endif
+      
    end subroutine SET_INPUT
 
    subroutine SET_OUTPUT(i,j)

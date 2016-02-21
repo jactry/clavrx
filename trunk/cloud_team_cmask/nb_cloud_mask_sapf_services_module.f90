@@ -60,6 +60,7 @@
     integer:: Chan_On_I4_374um                                !flag if I4 3.74um channel on (0=no,1=yes)
     integer:: Chan_On_I5_114um                                !flag if I5 11.4um channel on (0=no,1=yes)
     integer:: Chan_On_DNB                                     !flag if DNB channel on (0=no,1=yes)
+    integer :: Use_Sounder_11um                                !flag for IFF files where both imager and sounder 11um are available    
     integer(kind=int1):: Snow_Class                           !Snow Classification 
     integer(kind=int1):: Land_Class                           !Land Classification
     integer(kind=int1):: Oceanic_Glint_Mask                   !Mask of oceanic solar glint (0=no,1=yes)
@@ -95,6 +96,7 @@
     real(kind=real4):: Bt_11um_Std                            !11 um toa brightness temp 3x3 Std Dev (K)
     real(kind=real4):: Bt_11um_Max                            !11 um toa brightness temp 3x3 Max (K)
     real(kind=real4):: Bt_11um_Clear                          !11 um toa brightness temperature (K)
+    real(kind=real4) :: Bt_11um_Sounder                        !11 um toa brightness temp from sounder (K) 
     real(kind=real4):: Emiss_11um_Tropo                       !11 um tropo emiss
     real(kind=real4):: Bt_12um                                !12 um toa brightness temperature (K)
     real(kind=real4):: Bt_12um_Clear                          !12 um toa bright temp clear-sky (K)
@@ -118,13 +120,13 @@
  ! Output Structure
  !-----------------------------------------------------------------------------
  type, public :: mask_output
-    integer(kind=int1), dimension(:):: Cld_Flags_Packed         !array of packed results 
-    integer(kind=int1):: Cld_Mask_Bayes             !Derived 4-level cloud mask
-    integer:: Cloud_Mask_Bayesian_Flag                                       !flag to tell if code should run
-    real(kind=real4):: Posterior_Cld_Probability    !posterior cloud probability (0-1)
-    integer(kind=int1):: Dust_Mask
-    integer(kind=int1):: Smoke_Mask
-    integer(kind=int1):: Fire_Mask
+    integer(kind=int1), dimension(NUMBER_OF_FLAG_BYTES) :: Cld_Flags_Packed         !array of packed results 
+    integer(kind=int1) :: Cld_Mask_Bayes             !Derived 4-level cloud mask
+    integer :: Cloud_Mask_Bayesian_Flag                                       !flag to tell if code should run
+    real(kind=real4) :: Posterior_Cld_Probability    !posterior cloud probability (0-1)
+    integer(kind=int1) :: Dust_Mask
+    integer(kind=int1) :: Smoke_Mask
+    integer(kind=int1) :: Fire_Mask
  end type mask_output
 
  !-----------------------------------------------------------------------------

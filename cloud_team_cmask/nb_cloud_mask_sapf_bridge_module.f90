@@ -55,6 +55,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    private :: SET_DIAG
    private :: COMPUTE_IBAND_STATISTICS
    private :: COMPUTE_MEDIAN_SEGMENT
+   private :: COMPUTE_MEDIAN
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
@@ -136,7 +137,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7ClrRad
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7Emiss
-   INTEGER(BYTE), POINTER, PRIVATE, DIMENSION(:,:):: Bad_Pixel_Mask
+   INTEGER(kind=int1), POINTER, PRIVATE, DIMENSION(:,:):: Bad_Pixel_Mask
    
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn11BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn14BT
@@ -257,7 +258,7 @@ contains
             CHN_FLG(ABI_Chan) = sym%YES
         ENDIF
    ENDDO
-
+   
    !Initialize pointers
 
    !Angles and geolocation
@@ -329,6 +330,7 @@ contains
    CALL NFIA_CloudMask_Smoke_Mask(Ctxt%CLOUD_MASK_Src1_T00, Smoke_Mask)
    CALL NFIA_CloudMask_Fire_Mask(Ctxt%CLOUD_MASK_Src1_T00, Fire_Mask)
    CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
+   CALL NFIA_CloudMask_Glint_Mask(Ctxt%CLOUD_MASK_Src1_T00, Glint_Mask)
 
    !Cloud Mask training outputs
    CALL NFIA_CloudMask_Ref_64_Min_3x3(Ctxt%CLOUD_MASK_Src1_T00, Ref_64_Min_3x3)
@@ -341,7 +343,6 @@ contains
  
   !Binary Cloud Mask
    CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
-
 
 
    !Compute Spatial uniformity
@@ -360,7 +361,6 @@ contains
                                    Bt_Ch20_Max_3x3, Bt_Ch20_Min_3x3, &
                                    Bt_Ch20_Stddev_3x3)
 
-
    !Because the variables exist in the XML, fill those and then deallocate
    ! all unneccessary variables - WCS 9/23
    
@@ -370,13 +370,12 @@ contains
    Bt11um_Std_3x3 = Bt_Ch31_Stddev_3x3
    Bt_39_Std_3x3  = Bt_Ch20_Stddev_3x3
 
-
    !--- apply median filter to 3.75um Emissivity
    !rchen replace Num_Scans_Read with Num_line
    call COMPUTE_MEDIAN_SEGMENT(Chn7Emiss, Bad_Pixel_Mask, 1, &
                               1, Num_Elem, 1, &
                               Num_line, &
-                              Ems_Ch20_Median_3x3,  &
+                              Ems_39_Med_3x3,  &
                               Ems_Ch20_Std_Median_3x3)
       
    ! McIDAS sensor ID
@@ -396,11 +395,23 @@ contains
    line_loop: do Line_Idx = 1, Num_Line
       elem_loop: do  Elem_Idx = 1, Num_Elem
       
+
+
+        !-------------------------------------------------------------------
+        ! Do space mask check here
+        !-------------------------------------------------------------------
+
+        IF (SpaceMask(Elem_Idx,Line_Idx) == YES) THEN
+            Cld_Mask(Elem_Idx,Line_Idx) = -128
+            Cloud_Mask_Binary(Elem_Idx,Line_Idx) = -128
+            CYCLE
+        ENDIF
+ 
       
         !-------------------------------------------------------------------
         ! Do glint mask here
         !-------------------------------------------------------------------
-      
+
         !--- initialize valid pixel to no
         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
 
@@ -414,34 +425,26 @@ contains
 
             !--- assume to be glint if in geometric zone
                 Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
-
                 IF (CHN_FLG(14) == sym%YES) then
-
                 !--- exclude pixels colder than the freezing temperature
                     IF (Chn14BT(Elem_Idx,Line_Idx) < 273.15) then
                         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
-
             !--- exclude pixels colder than the surface
                     IF (Chn14BT(Elem_Idx,Line_Idx) < Chn14ClrBT(Elem_Idx,Line_Idx) - 5.0) then
                         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
-
                 endif
-
           !-turn off if non-uniform in reflectance
                 IF (CHN_FLG(2) == sym%YES) then
-                    !rchen
                     IF (Ref_Ch1_Stddev_3x3(Elem_Idx,Line_Idx) > 1.0) then
                         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
                 endif
-
             endif  !Glintzen check
 
         endif    !land check
-      
-      
+
         !-------------------------------------------------------------------
         ! Do covariance here
         !-------------------------------------------------------------------
@@ -451,27 +454,25 @@ contains
         Line_Idx_max = max(1,min(Line_Idx + 2,Num_line))
         Line_Idx_width = Line_Idx_max - Line_Idx_min + 1
         Elem_Idx_width = Elem_Idx_max - Elem_Idx_min + 1
-        
-        Covar_Ch27_Ch31_5x5 = Missing_Value_Real4
-      
-         IF ((CHN_FLG(9) == sym%YES) .and. & 
+
+        Covar_67_11_5x5(Elem_Idx,Line_Idx) = Missing_Value_Real4
+
+         IF ((CHN_FLG(9) == sym%YES) .and. &
             ( CHN_FLG(14)== sym%YES)) THEN
 
-            Covar_Ch27_Ch31_5x5 = Covariance_local(&
+            Covar_67_11_5x5(Elem_Idx,Line_Idx) = Covariance_local(&
               Chn14BT(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
               Chn9BT(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
               Elem_Idx_width, Line_Idx_width, &
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         ENDIF
-     
       
          ! Set inputs
          
-         
-         call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)
+         call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)         
          call SET_OUTPUT(Elem_Idx,Line_Idx)
          call SET_DIAG(Elem_Idx,Line_Idx)
-
+         
          !---call cloud mask routine
          call NB_CLOUD_MASK_ALGORITHM( &
                       Naive_Bayes_File_Name_Full_Path, &
@@ -511,14 +512,21 @@ contains
    Nmed_Total = (2.0*Nmed+1)**2
    allocate(I1_Temp_1(Input%Num_Elem, Input%Num_Line))
    allocate(I1_Temp_2(Input%Num_Elem, Input%Num_Line))
-   I1_Temp_1 = Dust_Mask
-   I1_Temp_2 = Smoke_Mask
+
+   line_loop1: do Line_Idx = 1, Num_Line
+      elem_loop1: do  Elem_Idx = 1, Num_Elem
+        I1_Temp_1(Elem_Idx,Line_Idx) = Dust_Mask(Elem_Idx,Line_Idx)
+        I1_Temp_2(Elem_Idx,Line_Idx) = Smoke_Mask(Elem_Idx,Line_Idx)
+
+      end do elem_loop1
+   end do line_loop1
+
+
    I1_Temp_1(Nmed:Input%Num_Elem-Nmed, &
              1+Nmed: Input%Num_Line-Nmed) = 0
    I1_Temp_2(Nmed:Input%Num_Elem-Nmed, &
              1+Nmed: Input%Num_Line-Nmed) = 0
-             
-             
+                          
    line_loop_median: do i = 1+Nmed, Input%Num_Elem-Nmed
       elem_loop_median: do  j = 1+Nmed,  Input%Num_Line-Nmed
          I1_Temp_1(i,j) = nint(count(Dust_Mask(i-Nmed:i+Nmed, &
@@ -528,9 +536,15 @@ contains
       end do elem_loop_median
    end do line_loop_median
    
+
+   line_loop_fill: do Line_Idx = 1, Num_Line
+      elem_loop_fill: do  Elem_Idx = 1, Num_Elem
+        Dust_Mask(Elem_Idx,Line_Idx) = I1_Temp_1(Elem_Idx,Line_Idx)
+        Smoke_Mask(Elem_Idx,Line_Idx) = I1_Temp_2(Elem_Idx,Line_Idx)
+
+      end do elem_loop_fill
+   end do line_loop_fill
    
-   Dust_Mask = I1_Temp_1
-   Smoke_Mask = I1_Temp_2
    deallocate(I1_Temp_1)
    deallocate(I1_Temp_2)
 
@@ -560,8 +574,6 @@ contains
    deallocate(Diag_Pix_Array_1)
    deallocate(Diag_Pix_Array_2)
    deallocate(Diag_Pix_Array_3)
-   deallocate(Emiss_11um_Tropo_Rtm)
-   deallocate(Ems_Ch20_Median_3x3)
    deallocate(Ems_Ch20_Std_Median_3x3)
    deallocate(Solar_Contamination_Mask)
    
@@ -758,9 +770,7 @@ contains
       !set I-band flags to missing
       Input%Ref_I1_064um_Std = Ref_Uni_ChI1(i,j)
       Input%Bt_I4_374um_Std = Bt_Uni_ChI4(i,j)
-      Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)
-
-      
+      Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)      
       !------
       Input%Invalid_Data_Mask = Bad_Pixel_Mask(i,j)
       Input%Chan_On_041um = CHN_FLG(1)
@@ -772,9 +782,11 @@ contains
       Input%Chan_On_375um = CHN_FLG(7)
       Input%Chan_On_67um = CHN_FLG(9)
       Input%Chan_On_85um = CHN_FLG(11)
+      Input%Chan_On_10um = CHN_FLG(14)
       Input%Chan_On_11um = CHN_FLG(14)
       Input%Chan_On_12um = CHN_FLG(15)
       Input%Chan_On_DNB = DNB_Flag
+
       Input%Snow_Class = SnowMask(i,j)
       Input%Land_Class = LandMask(i,j)
       Input%Oceanic_Glint_Mask = Glint_Mask(i,j)
@@ -811,7 +823,6 @@ contains
 
       Input%Bt_10um = Chn13BT(i,j)
 
-
       Input%Bt_11um = Chn14BT(i,j)
       Input%Bt_11um_Std = Bt11um_Std_3x3(i,j)
       Input%Bt_11um_Max = Bt11um_Max_3x3(i,j)
@@ -820,7 +831,7 @@ contains
 
       Input%Bt_12um = Chn15BT(i,j)
       Input%Bt_12um_Clear = Chn15ClrBT(i,j)
-      Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5
+      Input%Bt_11um_Bt_67um_Covar = Covar_67_11_5x5(i,j)
       Input%Sst_Anal_Uni = Sst_Anal_Uni(i,j)
       Input%Emiss_Sfc_375um = Chn7SfcEmiss(i,j)
       Input%Zsfc = SfcElev(i,j)
@@ -1028,6 +1039,91 @@ contains
 
  END SUBROUTINE Compute_Emiss_Tropo_Chn14
 
+
+!---- MEDIAN Routine should go in num_mod
+
+!==============================================================
+! subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
+!
+! Median filter
+!==============================================================
+subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
+
+! The purpose of this function is to find
+! median (emed), minimum (emin) and maximum (emax)
+! for the array elem with nelem elements.
+
+ real, dimension(:,:), intent(in):: z
+ real, intent(out):: z_median
+ real, intent(out):: z_mean
+ real, intent(out):: z_std_median
+ integer(kind=int1), dimension(:,:), intent(in):: mask
+ integer:: i,j,k,nx,ny,nelem
+ real, dimension(:), allocatable::x
+ real(kind=real4):: u
+
+ z_median = missing_value_real4
+ z_std_median = missing_value_real4
+ z_mean = missing_value_real4
+
+ nx = size(z,1)
+ ny = size(z,2)
+
+ nelem = nx * ny
+
+ allocate(x(nelem))
+ x = 0.0
+
+ k = 0
+ do i = 1, nx
+   do j = 1, ny
+      if (mask(i,j) == sym%NO .and. z(i,j) /= missing_value_real4) then
+           k = k + 1
+           x(k) = z(i,j)
+      endif
+  enddo
+ enddo
+
+ nelem = k
+
+ if (nelem < 1) then
+     if (allocated(x)) deallocate(x)
+     return
+ endif
+!--- sort the array into ascending order
+  do i=1,nelem-1
+   do j=i+1,nelem
+    if(x(j)<x(i))then
+     u=x(j)
+     x(j)=x(i)
+     x(i)=u
+    end if
+   end do
+  end do
+
+!---- pick the median
+  if(mod(nelem,2)==1)then
+   i=nelem/2+1
+   z_median=x(i)
+  else
+   i=nelem/2
+   z_median=(x(i)+x(i+1))/2
+  end if
+
+!--- compute standard deviation wrt median
+  z_mean = sum(x(1:nelem))/nelem
+  z_std_median = sqrt(sum((x(1:nelem) - z_median)**2) / nelem)
+
+
+! if (z_std_median > 60.0) then
+!         print *, "big std median ", z_std_median, nelem, x(1:nelem)
+!         print *, "z_nxn = ", z
+! endif
+
+  if (allocated(x)) deallocate(x)
+
+end subroutine COMPUTE_MEDIAN
+
 !----------------------------------------------------------------------
 ! subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax,
 !                                   z_median,z_std_median)
@@ -1071,6 +1167,9 @@ subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax, &
   enddo
 
 end subroutine COMPUTE_MEDIAN_SEGMENT
+
+
+
 
    !----------------------------------------------------------------
    ! - iband has full file dimension of 6400 x1536

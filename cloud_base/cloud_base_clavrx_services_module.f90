@@ -9,6 +9,7 @@ module CLOUD_BASE_SERVICES
  use PIXEL_COMMON
  use NWP_COMMON
  use RTM_COMMON
+ use NUMERICAL_ROUTINES, only: LOCATE
 
  implicit none
 

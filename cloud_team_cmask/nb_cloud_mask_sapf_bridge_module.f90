@@ -402,8 +402,8 @@ contains
         !-------------------------------------------------------------------
 
         IF (SpaceMask(Elem_Idx,Line_Idx) == YES) THEN
-            Cld_Mask(Elem_Idx,Line_Idx) = -128
-            Cloud_Mask_Binary(Elem_Idx,Line_Idx) = -128
+            Cld_Mask(Elem_Idx,Line_Idx) = symbol%MISSING
+            Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%MISSING
             CYCLE
         ENDIF
  
@@ -494,11 +494,11 @@ contains
          IF ( (Cld_Mask(Elem_Idx,Line_Idx) == symbol%CLOUDY) .or. &
               (Cld_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLOUDY)) THEN
          
-              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = sym%CLOUDY
+              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLD
          
          ELSE
          
-              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = sym%CLEAR       
+              Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLR    
          
          ENDIF
 
@@ -718,6 +718,11 @@ contains
       symbol%PROB_CLOUDY = sym%PROB_CLOUDY
       symbol%PROB_CLEAR = sym%PROB_CLEAR
       symbol%CLEAR = sym%CLEAR
+      symbol%MISSING = -128
+      symbol%BINARY_CLR = 0
+      symbol%BINARY_CLD = 1
+
+
 
       symbol%NO = sym%NO
       symbol%YES = sym%YES

@@ -147,6 +147,9 @@
     integer(kind=int1) :: PROB_CLOUDY
     integer(kind=int1) :: PROB_CLEAR
     integer(kind=int1) :: CLEAR
+    integer(kind=int1) :: BINARY_CLR
+    integer(kind=int1) :: BINARY_CLD
+    integer(kind=int1) :: MISSING
 
     integer(kind=int1) :: NO
     integer(kind=int1) :: YES

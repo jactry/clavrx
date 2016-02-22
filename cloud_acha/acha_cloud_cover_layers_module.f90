@@ -135,12 +135,28 @@ module ACHA_CLOUD_COVER_LAYERS
 
   !--- make cloud fraction pixel level uncertainty
   Pixel_Uncertainty = MISSING_VALUE_REAL4
-  where(Input%Cloud_Probability >= 0.5)
-     Pixel_Uncertainty = 1.0 - Input%Cloud_Probability
-  endwhere
-  where(Input%Cloud_Probability < 0.5)
-     Pixel_Uncertainty = Input%Cloud_Probability
-  endwhere
+!  where(Input%Cloud_Probability >= 0.5)
+!     Pixel_Uncertainty = 1.0 - Input%Cloud_Probability
+!  endwhere
+!  where(Input%Cloud_Probability < 0.5)
+!     Pixel_Uncertainty = Input%Cloud_Probability
+!  endwhere
+
+  do j = 1,Input%Number_of_Lines
+      do i = 1, Input%Number_of_Elements
+        if (Input%Cloud_Probability(i,j) < 0.5) THEN
+          Pixel_Uncertainty(i,j) = Input%Cloud_Probability(i,j)
+        endif
+        
+        if (Input%Cloud_Probability(i,j) >= 0.5) THEN
+          Pixel_Uncertainty(i,j) = 1.0 - Input%Cloud_Probability(i,j)
+        endif
+       
+      enddo
+  enddo
+
+
+
 
   !------- identify clear and H/M/L pixels
   Mask_High = 0
@@ -315,11 +331,11 @@ module ACHA_CLOUD_COVER_LAYERS
  end do line_loop_asos
  endif
 
- deallocate(Mask_High)
- deallocate(Mask_Mid)
- deallocate(Mask_Low)
- deallocate(Mask_Clear)
- deallocate(Pixel_Uncertainty)
+ if (allocated(Mask_High)) deallocate(Mask_High)
+ if (allocated(Mask_Mid)) deallocate(Mask_Mid)
+ if (allocated(Mask_Low)) deallocate(Mask_Low)
+ if (allocated(Mask_Clear)) deallocate(Mask_Clear)
+ if (allocated(Pixel_Uncertainty)) deallocate(Pixel_Uncertainty)
 
  end subroutine COMPUTE_CLOUD_COVER_LAYERS
 !!-------------------------------------------------------------------------------------

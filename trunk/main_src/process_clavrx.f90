@@ -203,7 +203,7 @@
    character(len=100):: Modis_White_Sky_2_13_Name
    character(len=100):: Snow_Mask_File_Name
    character(len=256):: oiSst_File_Name
-   character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
+   
 
    integer(kind=int4):: Emiss_File_Id = missing_value_int4
    integer(kind=int4):: Coast_Mask_Id = missing_value_int4
@@ -234,7 +234,7 @@
    integer, parameter:: Max_LRC_Distance = 10
    real, parameter:: Min_LRC_Jump = 0.0   !0.5
    real, parameter:: Max_LRC_Jump = 100.0 !10.0
-   integer, parameter:: Missing_LRC_Value = -999
+   
    integer, parameter:: Grad_Flag_LRC = -1
    real, parameter:: Min_Bt_11um_LRC = 220.0
    real, parameter:: Max_Bt_11um_LRC = 300.0

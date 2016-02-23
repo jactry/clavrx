@@ -33,25 +33,12 @@ module CLOUD_MASK_ADDONS
  public:: NB_CLOUD_MASK_ADDONS_ALGORITHM
 
  private:: EUMETSAT_FIRE_TEST, &
-           IR_DUST_TEST, &
+           CLAVRX_SMOKE_TEST, &
+           CLAVRX_DUST_TEST, &
            IR_DUST_TEST2
 
 !!--- define structures
  include 'nb_cloud_mask.inc'
-
- !--- thresholds defined for efficiency
- real, private, parameter:: Refl_065_Min_Smoke_Thresh = 2.0 
- real, private, parameter:: Refl_065_Max_Smoke_Thresh = 25.0 
- real, private, parameter:: Refl_138_Max_Smoke_Thresh = 5.0 
- real, private, parameter:: Refl_160_Max_Smoke_Thresh = 5.0 
- real, private, parameter:: Refl_375_Max_Smoke_Thresh = 3.0 
- real, private, parameter:: Emiss_11_Tropo_Max_Smoke_Thresh = 0.05
- real, private, parameter:: T11_Std_Max_Smoke_Thresh = 0.25
- real, private, parameter:: Refl_065_Std_Max_Smoke_Thresh = 3.00
- real, private, parameter:: Btd_4_11_Max_Smoke_Thresh = 3.0
- real, private, parameter:: Btd_11_12_Max_Smoke_Thresh = 2.0
- real, private, parameter:: Solzen_Max_Thresh = 80.0
-
 
  contains
  !---------------------------------------------------------------------
@@ -110,15 +97,34 @@ module CLOUD_MASK_ADDONS
         !-------------------------------------------------------------------------
         !-- IR Dust algorithm
         !-------------------------------------------------------------------------
-        Output%Dust_Mask = IR_DUST_TEST2 (     &
-                    Input%Land_Class,          &
-                    Input%Bt_85um,             &
-                    Input%Bt_10um,             &
-                    Input%Bt_11um,             &
-                    Input%Bt_12um,             &
-                    Input%Bt_11um_Std,         &
-                    Input%Senzen)
+        Output%Dust_Mask = 0
+        if (Input%SNOW_Class == symbol%NO_SNOW .and. Input%Chan_On_12um == symbol%YES .and. &
+            (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
+              Output%Dust_Mask = CLAVRX_DUST_TEST ( &
+                    Input%Chan_On_85um,         &
+                    Input%Chan_On_11um,         &
+                    Input%Chan_On_12um,         &
+                    Input%Bt_85um,            &
+                    Input%Bt_11um,            &
+                    Input%Bt_12um,            &
+                    Input%Bt_11um_Clear,      &
+                    Input%Bt_12um_Clear,      &
+                    Input%Bt_11um_Std,        &
+                    Input%Emiss_11um_Tropo)
 
+        endif
+        !-------------------------------------------------------------------------
+        !-- Keiko Yamamoto Dust algorithm
+        !-------------------------------------------------------------------------
+        !Output%Dust_Mask = IR_DUST_TEST2 (     &
+        !            Input%Land_Class,          &
+        !            Input%Bt_85um,             &
+        !            Input%Bt_10um,             &
+        !            Input%Bt_11um,             &
+        !            Input%Bt_12um,             &
+        !            Input%Bt_11um_Std,         &
+        !            Input%Senzen)
+!
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
@@ -158,7 +164,7 @@ module CLOUD_MASK_ADDONS
 ! Daytime and Ice-Free Ocean
 !----------------------------------------------------------------------------
   integer elemental function CLAVRX_SMOKE_TEST(Refl_065,Refl_065_Clear,Refl_138, &
-                                               Refl_160, Refl_160_Clear, &
+                                              Refl_160, Refl_160_Clear, &
                                                Refl_375, Refl_375_Clear, &
                                                Bt_375,&
                                                Bt_11, Bt_11_Clear, &
@@ -196,7 +202,7 @@ module CLOUD_MASK_ADDONS
      
      Clavrx_Smoke_Test = MISSING_VALUE_INT1
 
-     if (Solzen < Solzen_Max_Thresh) then
+     if (Solzen < Solzen_Max_Smoke_Thresh) then
 
            IR_Flag = 1
            VIS_Flag = 1
@@ -269,20 +275,6 @@ module CLOUD_MASK_ADDONS
      real :: Stddev_11um_Eumet_Fire_Thresh
      real :: Stddev_375um_Eumet_Fire_Thresh
 
-     !---- EUMETCAST fire detection parameters
-     real, parameter :: EUMETCAST_FIRE_DAY_SOLZEN_THRESH = 70.0
-     real, parameter :: EUMETCAST_FIRE_NIGHT_SOLZEN_THRESH = 90.0
-
-     real, parameter :: BT_375UM_EUMET_FIRE_DAY_THRESH = 310.0
-     real, parameter :: BT_DIFF_EUMET_FIRE_DAY_THRESH = 8.0
-     real, parameter :: STDDEV_11UM_EUMET_FIRE_DAY_THRESH = 1.0
-     real, parameter :: STDDEV_375UM_EUMET_FIRE_DAY_THRESH = 4.0
-
-     real, parameter :: BT_375UM_EUMET_FIRE_NIGHT_THRESH = 290.0
-     real, parameter :: BT_DIFF_EUMET_FIRE_NIGHT_THRESH = 0.0
-     real, parameter :: STDDEV_11UM_EUMET_FIRE_NIGHT_THRESH = 1.0
-     real, parameter :: STDDEV_375UM_EUMET_FIRE_NIGHT_THRESH = 4.0
-
      !--- initialize
      Eumetsat_Fire_Test = 0
 
@@ -337,53 +329,71 @@ module CLOUD_MASK_ADDONS
    !---------------------------------------------------------------------------
    ! CLAVR-x IR DUST Algorithm
    !---------------------------------------------------------------------------
-   integer elemental function IR_DUST_TEST ( &
-                    Solzen,             &
-                    Emiss_375um,        &
-                    Bt_11um,            &
-                    Bt_12um,            &
-                    Emiss_375um_Clear,  &
-                    Bt_11um_Clear,      &
-                    Bt_12um_Clear,      &
-                    Bt_11um_Std)
+   integer elemental function CLAVRX_DUST_TEST ( &
+                    Chan_On_85,         &
+                    Chan_On_11,         &
+                    Chan_On_12,         &
+                    Bt_85,            &
+                    Bt_11,            &
+                    Bt_12,            &
+                    Bt_11_Clear,      &
+                    Bt_12_Clear,      &
+                    Bt_11_Std, &
+                    Emiss_11_Tropo)
 
-   real , intent(in) :: Solzen
-   real , intent(in) :: Emiss_375um
-   real , intent(in) :: Bt_11um
-   real , intent(in) :: Bt_12um
-   real , intent(in) :: Emiss_375um_Clear
-   real , intent(in) :: Bt_11um_Clear
-   real , intent(in) :: Bt_12um_Clear
-   real , intent(in) :: Bt_11um_Std
+   integer , intent(in) :: Chan_On_85
+   integer , intent(in) :: Chan_On_11
+   integer , intent(in) :: Chan_On_12
+   real , intent(in) :: Bt_85
+   real , intent(in) :: Bt_11
+   real , intent(in) :: Bt_12
+   real , intent(in) :: Bt_11_Clear
+   real , intent(in) :: Bt_12_Clear
+   real , intent(in) :: Bt_11_Std
+   real , intent(in) :: Emiss_11_Tropo
    real :: Btd_11_12
    real :: Btd_11_12_Metric
-   real , parameter:: Btd_11_12_Metric_Max_Thresh = -1.0
-   real , parameter:: Btd_11_12_Max_Thresh = -0.25 !-1.0
-   real , parameter:: Bt_11_Std_Max_Thresh = 3.0
+   integer:: Split_Win_Flag
+   integer:: IR_Win_Flag
+   integer:: IR_Win_Std_Flag
+   integer:: IR_Win_85_Diff_Flag
 
-   Ir_Dust_Test = 0
+   Split_Win_Flag = 1
+   IR_Win_Flag = 1
+   IR_Win_Std_Flag = 1
+   IR_Win_85_Diff_Flag = 1
 
-   Btd_11_12 = (Bt_11um - Bt_12um)
-   Btd_11_12_Metric = (Bt_11um_Clear - Bt_12um_Clear)*(Bt_11um-260.0) / (Bt_11um_Clear-260.0)
-   if (Bt_11um < 260.0) Btd_11_12_Metric = 0.0
-   Btd_11_12_Metric = Btd_11_12 - Btd_11_12_Metric
-
-   if (Btd_11_12 < Btd_11_12_Max_Thresh .and. Btd_11_12_Metric < Btd_11_12_Metric_Max_Thresh) then
-      Ir_Dust_Test = 1
+   !--- Split Window
+   if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+      Btd_11_12 = (Bt_11 - Bt_12)
+      Btd_11_12_Metric = split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)
+      if (Btd_11_12 > Btd_11_12_Max_Dust_Thresh) Split_Win_Flag = 0
+      if (Btd_11_12_Metric > Btd_11_12_Metric_Max_Dust_Thresh) Split_Win_Flag = 0
+      if ((Bt_11 - Bt_12) - (Bt_11_Clear - Bt_12_Clear) > Bt_11_12_Clear_Diff_Max_Dust_Thresh) Split_Win_Flag = 0
    endif
 
-   !--- turn off if btd is not too negative but it is spatially variable in 11um
-   if (Bt_11um_Std > Bt_11_Std_Max_Thresh .and. Btd_11_12 > -1.5) then
-      Ir_Dust_Test = 0
+   !--- 8.5-11 should be moderately negative.  ice clouds are positive
+   !--- water clouds are very negative
+   if (Chan_On_11 == 1 .and. chan_On_12 == 1 .and. Chan_On_85 == 1) then
+      if ((Bt_85 - Bt_11) > Btd_85_11_Max_Dust_Thresh) IR_Win_85_Diff_Flag = 0
+      if ((Bt_85 - Bt_11) < Btd_85_11_Min_Dust_Thresh) IR_Win_85_Diff_Flag = 0
    endif
 
-   if (Solzen > 90.0) then
-     if (abs(Emiss_375um - Emiss_375um_Clear) > 0.1) then
-      Ir_Dust_Test = 0
-     endif
-   endif 
+   !--- 11um variabilty
+   if (Chan_On_11 == 1) then
+      if (Bt_11_Std > Bt_11_Std_Max_Dust_Thresh) IR_Win_Std_Flag = 0
+   endif
 
-   end function IR_DUST_TEST
+   !--- IR test - dust should low to moderate emissivity
+   if (Chan_On_11 == 1) then
+       if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Dust_Thresh) IR_Win_Flag = 0
+       if (Emiss_11_Tropo < Emiss_11_Tropo_Min_Dust_Thresh) IR_Win_Flag = 0
+   endif
+
+!  CLAVRX_DUST_TEST = Split_Win_Flag * IR_Win_Std_Flag * IR_Win_Flag * IR_Win_85_Diff_Flag
+   CLAVRX_DUST_TEST = Split_Win_Flag * IR_Win_Std_Flag * IR_Win_Flag * IR_Win_85_Diff_Flag
+
+   end function CLAVRX_DUST_TEST
 
 
    !---------------------------------------------------------------------------

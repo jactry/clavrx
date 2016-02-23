@@ -157,7 +157,7 @@ contains
     
   
       Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
-      scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment + 1 , 1)]
+      scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment  , 1)]
 
       nav % ascend = 0 
       Cloud_Mask_Aux_Read_Flag = 0 
@@ -167,9 +167,9 @@ contains
       ! - update time
       call ahi_data % time_start_obj % get_date ( msec_of_day = Image%Start_Time  )
       call ahi_data % time_end_obj % get_date ( msec_of_day = Image%End_Time  )     
-           
+         
       scan_time(1:c_seg_lines)   = Image%Start_Time + &
-                                 ( scan_number * (Image%End_Time - Image%Start_Time)) &
+                                 ( scan_number(1:c_seg_lines) * (Image%End_Time - Image%Start_Time)) &
                                  / Image%Number_Of_Lines
       
       call ahi_data % deallocate_all

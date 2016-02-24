@@ -1,4 +1,4 @@
-!$Id:$
+!$Id$
 !-------------------------------------------------------------------------------
 !
 ! PURPOSE: 
@@ -12,7 +12,6 @@
 !  William Straka, CIMSS, wstraka@ssec.wisc.edu
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
-
 
    ! -- Framework specific modules
    USE PCF_NPP_BAYES_CLOUD_MASK_Mod

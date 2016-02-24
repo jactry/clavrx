@@ -50,12 +50,13 @@
  real, private, parameter:: Solzen_Max_Smoke_Thresh = 80.0
 
  !--- CLAVRx Dust Thresholds
- real, private, parameter:: Btd_11_12_Metric_Max_Dust_Thresh = -0.75! -0.5 !-1.0
+ real, private, parameter:: Btd_11_12_Metric_Max_Dust_Thresh = -0.5 !-0.75! -0.5 !-1.0
  real, private, parameter:: Btd_11_12_Max_Dust_Thresh = 0.0
  real, private, parameter:: Bt_11_Std_Max_Dust_Thresh = 1.0
  real, private, parameter:: Bt_11_12_Clear_Diff_Max_Dust_Thresh = -0.5
  real, private, parameter:: Emiss_11_Tropo_Max_Dust_Thresh = 0.20
  real, private, parameter:: Emiss_11_Tropo_Min_Dust_Thresh = 0.01
+ real, private, parameter:: Bt_11_Clear_Diff_Min_Dust_Thresh = -5.0
  real, private, parameter:: Btd_85_11_Max_Dust_Thresh = -0.5
  real, private, parameter:: Btd_85_11_Min_Dust_Thresh = -2.5 !-1.5
 

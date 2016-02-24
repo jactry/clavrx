@@ -1,4 +1,4 @@
-!$Id: acha_services_clavrx_mod.f90 581 2014-10-08 03:39:08Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the AIT framework
 !------------------------------------------------------------------------------
@@ -103,7 +103,6 @@ module CLOUD_BASE_SERVICES
 
    type(EPS_CLD_BASE_Ctxt), pointer :: Ctxt
    integer(LONG) :: Stat 
-
 
  end type acha_input_struct
 

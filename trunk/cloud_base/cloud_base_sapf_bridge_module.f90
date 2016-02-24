@@ -1,4 +1,4 @@
-!$Id: acha_clavrx_bridge_mod.f90 580 2014-10-08 03:38:52Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
 !  NOAA AWG Cloud Base Algorithm (ACBA) Bridge Code
 !
@@ -41,7 +41,6 @@ module CLOUD_BASE_SAPF_BRIDGE
  !--------------------------------------------------------------------
 
  type(EPS_CLD_BASE_Ctxt), POINTER, PRIVATE :: Ctxt_CBase
-
 
  type(Symbol_acha), private :: Symbol
  type(acha_input_struct), private :: Input

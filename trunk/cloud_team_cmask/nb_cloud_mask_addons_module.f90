@@ -388,9 +388,9 @@ module CLOUD_MASK_ADDONS
    if (Chan_On_11 == 1) then
        if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Dust_Thresh) IR_Win_Flag = 0
        if (Emiss_11_Tropo < Emiss_11_Tropo_Min_Dust_Thresh) IR_Win_Flag = 0
+       if (Bt_11 - Bt_11_Clear < Bt_11_Clear_Diff_Min_Dust_Thresh) IR_Win_Flag = 0
    endif
 
-!  CLAVRX_DUST_TEST = Split_Win_Flag * IR_Win_Std_Flag * IR_Win_Flag * IR_Win_85_Diff_Flag
    CLAVRX_DUST_TEST = Split_Win_Flag * IR_Win_Std_Flag * IR_Win_Flag * IR_Win_85_Diff_Flag
 
    end function CLAVRX_DUST_TEST

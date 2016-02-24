@@ -1,4 +1,4 @@
-!$Id: naive_bayesian_cloud_mask_module.f90 482 2014-07-01 20:18:37Z dbotambekov $
+!$Id$
 !----------------------------------------------------------------------
 ! MODULE name: NB_CLOUD_MASK
 ! 
@@ -160,7 +160,7 @@ module NB_CLOUD_MASK
 !====================================================================
  subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
    character(len=*), intent(out):: Cloud_Mask_Version
-   Cloud_Mask_Version = "$Id: naive_bayesian_cloud_mask_module.f90 46 2015-03-09 17:08:46Z dbotambekov $"
+   Cloud_Mask_Version = "$Id$"
  end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================

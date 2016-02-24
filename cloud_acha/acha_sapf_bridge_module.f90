@@ -33,8 +33,6 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
  integer, parameter, private :: N_Sc_Lut = 20
 
-
-
  type(acha_symbol_struct), PRIVATE  :: symbol
  type(acha_input_struct), PRIVATE  :: Input
  type(acha_output_struct), PRIVATE  :: Output

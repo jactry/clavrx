@@ -21,8 +21,6 @@
 ! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 ! SUPPORT TO USERS.
 !
-! Public routines used in this MODULE:
-!
 !--------------------------------------------------------------------------------------
 module CLOUD_MASK_ADDONS
 
@@ -34,15 +32,15 @@ module CLOUD_MASK_ADDONS
 
  private:: EUMETSAT_FIRE_TEST, &
            CLAVRX_SMOKE_TEST, &
-           CLAVRX_DUST_TEST, &
-           IR_DUST_TEST2
+           CLAVRX_DUST_TEST
 
-!!--- define structures
+ !--- define structures
  include 'nb_cloud_mask.inc'
 
  contains
  !---------------------------------------------------------------------
- !
+ ! subroutine that handle non-cloud tests in the enterprise mask
+ ! These include smoke, dust and fire
  !---------------------------------------------------------------------
  subroutine NB_CLOUD_MASK_ADDONS_ALGORITHM( &
             Symbol, &                       !local copy of sym structure
@@ -77,9 +75,11 @@ module CLOUD_MASK_ADDONS
         ! Day and ice-free ocean only
         !
         !-------------------------------------------------------------------------
-        Output%Smoke_Mask = 0 ! MISSING_VALUE_INT1
         if (Input%SNOW_Class == symbol%NO_SNOW .and. &
             (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
+
+           Output%Smoke_Mask = 0 
+
            Output%Smoke_Mask = CLAVRX_SMOKE_TEST(Input%Ref_063um,Input%Ref_063um_Clear, &
                                                  Input%Ref_138um, &
                                                  Input%Ref_160um,Input%Ref_160um_Clear, &
@@ -97,9 +97,11 @@ module CLOUD_MASK_ADDONS
         !-------------------------------------------------------------------------
         !-- IR Dust algorithm
         !-------------------------------------------------------------------------
-        Output%Dust_Mask = 0
         if (Input%SNOW_Class == symbol%NO_SNOW .and. Input%Chan_On_12um == symbol%YES .and. &
             (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
+
+              Output%Dust_Mask = 0
+
               Output%Dust_Mask = CLAVRX_DUST_TEST ( &
                     Input%Chan_On_85um,         &
                     Input%Chan_On_11um,         &
@@ -111,46 +113,26 @@ module CLOUD_MASK_ADDONS
                     Input%Bt_12um_Clear,      &
                     Input%Bt_11um_Std,        &
                     Input%Emiss_11um_Tropo)
-
         endif
-        !-------------------------------------------------------------------------
-        !-- Keiko Yamamoto Dust algorithm
-        !-------------------------------------------------------------------------
-        !Output%Dust_Mask = IR_DUST_TEST2 (     &
-        !            Input%Land_Class,          &
-        !            Input%Bt_85um,             &
-        !            Input%Bt_10um,             &
-        !            Input%Bt_11um,             &
-        !            Input%Bt_12um,             &
-        !            Input%Bt_11um_Std,         &
-        !            Input%Senzen)
-!
+ 
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
+      Output%Fire_Mask = 0
       if (Input%Chan_On_11um == symbol%YES .and.   &
           Input%Chan_On_375um == symbol%YES .and.  &
-          Input%Land_Class == Symbol%Land) then
+          Input%Land_Class == Symbol%Land .and.    &
+          Input%Sfc_Type /= Symbol%BARE_SFC .and. &
+          Input%Sfc_Type /= Symbol%OPEN_SHRUBS_SFC) then
 
-          if (Input%Chan_On_I4_374um == symbol%YES .and. Input%Chan_On_I5_114um == symbol%YES ) then
+          Output%Fire_Mask = 0
 
-             Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
-                   Input%Bt_11um &
-                 , Input%Bt_375um &
-                 , Input%Bt_I5_114um_Std &
-                 , Input%Bt_I4_374um_Std &
-                 , Input%Solzen )
-
-          elseif (Input%Chan_On_I4_374um == symbol%NO .and. Input%Chan_On_I5_114um == symbol%NO ) then
-
-             Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
+          Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
                    Input%Bt_11um &
                  , Input%Bt_375um &
                  , Input%Bt_11um_Std &
                  , Input%Bt_375um_Std &
                  , Input%Solzen )
-
-          endif
 
       endif
 
@@ -161,7 +143,9 @@ module CLOUD_MASK_ADDONS
 !----------------------------------------------------------------------------
 ! CLAVR-x SMOKE TEST
 !
-! Daytime and Ice-Free Ocean
+! Daytime and Ice-Free Ocean Only.
+!
+! Coded: Andy Heidinger
 !----------------------------------------------------------------------------
   integer elemental function CLAVRX_SMOKE_TEST(Refl_065,Refl_065_Clear,Refl_138, &
                                               Refl_160, Refl_160_Clear, &
@@ -258,9 +242,12 @@ module CLOUD_MASK_ADDONS
 ! EUMETCAST Fire detection algorithm
 !
 ! Reference: This implements the "Current Operational Algorithm" described in:
-!TOWARDS AN IMPROVED ACTIVE FIRE MONITORING PRODUCT FOR MSG SATELLITES
-!Sauli Joro, Olivier Samain, Ahmet Yildirim, Leo van de Berg, Hans Joachim Lutz
-!EUMETSAT, Am Kavalleriesand 31, Darmstadt, Germany
+! TOWARDS AN IMPROVED ACTIVE FIRE MONITORING PRODUCT FOR MSG SATELLITES
+! Sauli Joro, Olivier Samain, Ahmet Yildirim, Leo van de Berg, Hans Joachim Lutz
+! EUMETSAT, Am Kavalleriesand 31, Darmstadt, Germany
+!
+! Coded by William Straka III
+!
 !-----------------------------------------------------------------------------
   integer elemental function EUMETSAT_FIRE_TEST(T11,T375,T11_Std,T375_Std,Solzen)
 
@@ -328,6 +315,8 @@ module CLOUD_MASK_ADDONS
 
    !---------------------------------------------------------------------------
    ! CLAVR-x IR DUST Algorithm
+   !
+   ! Coded: Andy Heidinger
    !---------------------------------------------------------------------------
    integer elemental function CLAVRX_DUST_TEST ( &
                     Chan_On_85,         &
@@ -396,173 +385,8 @@ module CLOUD_MASK_ADDONS
    end function CLAVRX_DUST_TEST
 
 
-   !---------------------------------------------------------------------------
-   ! Function calculates Dust Mask using IR channels
-   ! code is based on Keiko Yamamoto
-   ! (Denis B. - February, 2016)
-   !---------------------------------------------------------------------------
-   integer elemental function IR_DUST_TEST2 ( &
-                    Land_Class,       &
-                    Bt85,             &
-                    Bt10,             &
-                    Bt11,             &
-                    Bt12,             &
-                    Bt11_Std,         &
-                    Senzen)
-
-   integer(kind=int1) , intent(in) :: Land_Class
-   real , intent(in) :: Senzen
-   real , intent(in) :: Bt85
-   real , intent(in) :: Bt10
-   real , intent(in) :: Bt11
-   real , intent(in) :: Bt12
-   real , intent(in) :: Bt11_Std
-   real, parameter :: MISSING = -999.0
-   real, parameter :: BT11_STD_THRESH = 1.0
-   real, parameter :: BTD_12_11_THRESH = -0.5
-   real, parameter :: BTD_11_85_MIN_THRESH = -1.5
-   real, parameter :: BTD_11_85_MAX_THRESH = 1.0
-   real, parameter :: BT85_THRESH = 243.0
-   real, parameter :: R_LAND_THRESH = -0.1
-   real, parameter :: G1_LAND_MIN_THRESH = -1.0
-   real, parameter :: G1_LAND_MAX_THRESH = 3.5
-   real, parameter :: G2_LAND_THRESH = -0.5
-   real, parameter :: B1_LAND_THRESH = 243.0
-   real, parameter :: B2_LAND_THRESH = 0.997
-   real, parameter :: R_OCEAN_CLOUD_THRESH = 0.0
-   real, parameter :: G1_OCEAN_CLOUD_THRESH = 1.5
-   real, parameter :: G2_OCEAN_CLOUD_MIN_THRESH = -1.5
-   real, parameter :: G2_OCEAN_CLOUD_MAX_THRESH = 0.8
-   real, parameter :: B1_OCEAN_CLOUD_THRESH = 244.0
-   real, parameter :: B2_OCEAN_CLOUD_THRESH = 1.0
-   real, parameter :: R_OCEAN_DUST_MIN_THRESH = -1.2
-   real, parameter :: R_OCEAN_DUST_MAX_THRESH = 0.0
-   real, parameter :: G1_OCEAN_DUST_THRESH = 1.2
-   real, parameter :: G2_OCEAN_DUST_MIN_THRESH = -0.5
-   real, parameter :: G2_OCEAN_DUST_MAX_THRESH = 0.8
-   real, parameter :: B1_OCEAN_DUST_THRESH = 244.0
-   real, parameter :: B2_OCEAN_DUST_THRESH = 0.997
-   real, parameter :: R_OCEAN_LAND_THRESH = 0.5
-   real, parameter :: G_OCEAN_LAND_THRESH = 0.0
-   real, parameter :: B_OCEAN_LAND_THRESH = 0.997
-   real, parameter :: SENZEN_THRESH = 76.0
-   real :: Btd_12_11
-   real :: Btd_85_12
-   real :: Btd_11_85
-   real :: Bt85_11_Ratio
-   real :: Bt_Ratio
-   real :: MR, MG, MB
-
-   ! --- initialize output
-   Ir_Dust_Test2 = 0
-
-   ! --- check if valid or Bt11_Std is too big
-   !     or sensor zenith angle too big
-   if (Bt11 ==  Missing_Value_Real4 .or. &
-       Bt11_Std > BT11_STD_THRESH .or. &
-       Senzen > SENZEN_THRESH) then
-      return
-   endif
-
-   ! --- calculate needed variables
-   Btd_12_11 = Bt12 - Bt11
-   Btd_85_12 = Bt85 - Bt12
-   Btd_11_85 = Bt11 - Bt85
-   Bt85_11_Ratio = Bt85 / Bt11
-   ! in case 10 micron is on
-   if (Bt10 /= Missing_Value_Real4 .and. Btd_85_12 .ne. 0.0) then
-      Bt_Ratio = (Bt10 - Bt11) / Btd_85_12
-   endif
-
-   ! --- 1st RGB check
-   if (Btd_12_11 < BTD_12_11_THRESH .or. &
-       Btd_11_85 < BTD_11_85_MIN_THRESH .or. &
-       Btd_11_85 > BTD_11_85_MAX_THRESH .or. &
-       Bt85 < BT85_THRESH) then
-      return
-   endif
-
-   ! --- 2nd RGB check depends on surface
-   ! Over Land Tests
-   if (Land_Class .ge. 1 .and. Land_Class .le. 5) then
-      MR = 1
-      MG = 1
-      MB = 1
-      if (Btd_12_11 < R_LAND_THRESH) MR = 0
-      ! in case 10 micron is on
-      if (Bt10 /= Missing_Value_Real4) then
-         if (Btd_11_85 > G1_LAND_MIN_THRESH .and. &
-             Btd_11_85 < G1_LAND_MAX_THRESH .and. &
-             Bt_Ratio < G2_LAND_THRESH) MG = 0
-      ! in case 10 micron is off
-      else
-         if (Btd_11_85 > G1_LAND_MIN_THRESH .and. &
-             Btd_11_85 < G1_LAND_MAX_THRESH) MG = 0
-      endif
-      if (Bt85 < B1_LAND_THRESH .and. &
-          Bt85_11_Ratio > B2_LAND_THRESH) MB = 0
-      ! decision
-      if ((MR * MG * MB) /= 0) Ir_Dust_Test2 = 1
-   endif
-
-   ! Over Water Tests
-   if (Land_Class == 0 .or. Land_Class > 5) then
-      ! cloud like areas
-      MR = 1
-      MG = 1
-      MB = 1
-      if (Btd_12_11 < R_OCEAN_CLOUD_THRESH) MR = 0
-      ! in case 10 micron is on
-      if (Bt10 /= Missing_Value_Real4) then
-         if (Btd_11_85 < G1_OCEAN_CLOUD_THRESH .and. &
-             Bt_Ratio > G2_OCEAN_CLOUD_MIN_THRESH .and. &
-             Bt_Ratio < G2_OCEAN_CLOUD_MAX_THRESH) MG = 0
-      ! in case 10 micron is off
-      else
-         if (Btd_11_85 < G1_OCEAN_CLOUD_THRESH) MG = 0
-      endif
-      if (Bt85 < B1_OCEAN_CLOUD_THRESH .and. &
-          Bt85_11_Ratio < B2_OCEAN_CLOUD_THRESH) MB = 0
-      ! decision
-      if (((MR + MG) * MB) /= 0) Ir_Dust_Test2 = 1
-
-      ! dust like areas
-      MR = 1
-      MG = 1
-      MB = 1
-      if (Btd_12_11 > R_OCEAN_DUST_MIN_THRESH .and. &
-          Btd_12_11 < R_OCEAN_DUST_MAX_THRESH) MR = 0
-            ! in case 10 micron is on
-      if (Bt10 .ne. Missing_Value_Real4) then
-         if (Btd_11_85 < G1_OCEAN_DUST_THRESH .and. &
-             Bt_Ratio > G2_OCEAN_DUST_MIN_THRESH .and. &
-             Bt_Ratio < G2_OCEAN_DUST_MAX_THRESH) MG = 0
-      ! in case 10 micron is off
-      else
-         if (Btd_11_85 < G1_OCEAN_DUST_THRESH) MG = 0
-      endif
-      if (Bt85 < B1_OCEAN_DUST_THRESH .and. &
-          Bt85_11_Ratio > B2_OCEAN_DUST_THRESH) MB = 0
-      ! decision
-      if (((MR + MG) * MB) /= 0) Ir_Dust_Test2 = 1
-   
-      ! land slide like areas
-      MR = 1
-      MG = 1
-      MB = 1
-      if (Btd_11_85 > R_OCEAN_LAND_THRESH) MR = 0 
-      if (Bt10 /= Missing_Value_Real4) then
-         if (Bt_Ratio < G_OCEAN_LAND_THRESH) MG = 0
-      ! in case 10 micron is off
-      else
-         MG = 0
-      endif
-      if (Bt85_11_Ratio > B_OCEAN_LAND_THRESH) MB = 0
-      ! decision
-      if ((MR + MG + MB) /= 0) Ir_Dust_Test2 = 1
-   endif   
-  
-   end function IR_DUST_TEST2
+  !-------------------------------------------------------------------------------------
+  !  CLAVR-x Split Window Test for Clear value for a given T11
   !-------------------------------------------------------------------------------------
   real elemental function SPLIT_WINDOW_TEST ( t11_clear, t12_clear, t11, t12)
 

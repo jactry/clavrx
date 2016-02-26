@@ -248,13 +248,13 @@ contains
       
       case('AHI') sensor_block
          has_sol_table(1) = .true.
-         has_sol_table(5) = .true.
          has_sol_table(6) = .true.
+         has_sol_table(7) = .true.
          has_sol_table(20) = .true.
          has_ems_table(20) = .true.
          chan_string(1) = '3'
          chan_string(6) = '5'
-         chan_string(6) = '6'
+         chan_string(7) = '6'
          chan_string(20) = '7'   
          
             

@@ -3771,6 +3771,9 @@ subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
    integer:: Jnwp
    integer:: Ilev
 
+   Num_Elements = size(Lower_Cloud_Pressure,1)
+   Num_Lines = size(Lower_Cloud_Pressure,2)
+
    !----------------------------------------------------------------
    !  Compute Pressure and Temperature
    !----------------------------------------------------------------

@@ -13,6 +13,7 @@
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 
+
    ! -- Framework specific modules
    USE PCF_NPP_BAYES_CLOUD_MASK_Mod
    USE TYPE_KINDS_AIT
@@ -393,8 +394,10 @@ contains
    ! -----------    loop over pixels -----   
    line_loop: do Line_Idx = 1, Num_Line
       elem_loop: do  Elem_Idx = 1, Num_Elem
-      
 
+           Smoke_Mask(Elem_Idx,Line_Idx) = 0
+           Dust_Mask(Elem_Idx,Line_Idx)  = 0
+           Fire_Mask(Elem_Idx,Line_Idx)  = 0
 
         !-------------------------------------------------------------------
         ! Do space mask check here

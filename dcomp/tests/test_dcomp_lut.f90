@@ -4,7 +4,7 @@ use dcomp_lut_mod
 
 type(lut_type) :: d
 type( lut_output) :: out
-character(len=200) :: ancil_path
+character(len=1020) :: ancil_path
 
 
 ancil_path = '/DATA/Ancil_Data/clavrx_ancil_data/luts/cld/'

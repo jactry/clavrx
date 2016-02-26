@@ -157,7 +157,7 @@ module PIXEL_COMMON
 
   !--- arrays to keep track of files written to temporary directory, max 100 assumed
   integer, public, save:: Number_Of_Temporary_Files
-  character(len=200),dimension(100), public, save:: Temporary_File_Name
+  character(len=1020),dimension(100), public, save:: Temporary_File_Name
 
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
@@ -261,8 +261,8 @@ module PIXEL_COMMON
     character(len=32):: Platform_Name
     integer(kind=int4):: WMO_Id
     integer(kind=int4):: WMO_Id_Previous
-    character(len=128):: Instr_Const_File
-    character(len=128):: Algo_Const_File
+    character(len=1020):: Instr_Const_File
+    character(len=1020):: Algo_Const_File
     real(kind=real8):: Geo_Sub_Satellite_Longitude
     real(kind=real8):: Geo_Sub_Satellite_Latitude
     integer(kind=int1), dimension(Nchan_Clavrx):: Chan_On_Flag_Default
@@ -270,9 +270,9 @@ module PIXEL_COMMON
   end type sensor_definition
 
   type :: image_definition
-    character(len=328):: Level1b_Name
-    character(len=528):: Level1b_Full_Name
-    character(len=328):: Level1b_Path
+    character(len=1020):: Level1b_Name
+    character(len=1020):: Level1b_Full_Name
+    character(len=1020):: Level1b_Path
     integer(kind=int4):: Number_Of_Elements
     integer(kind=int4):: Number_Of_Lines
     integer(kind=int4):: Number_Of_Lines_Per_Segment
@@ -285,8 +285,8 @@ module PIXEL_COMMON
     integer(kind=int2):: End_Year
     integer(kind=int2):: End_Doy
     integer(kind=int4):: End_Time
-    character(len=128) :: Auxiliary_Cloud_Mask_File_Name
-    character(len=128) :: Auxiliary_Geolocation_File_Name
+    character(len=1020) :: Auxiliary_Cloud_Mask_File_Name
+    character(len=1020) :: Auxiliary_Geolocation_File_Name
   end type image_definition
 
   type :: acha_definition
@@ -420,27 +420,27 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
-  character(len=355),public,save:: Ancil_Data_Dir
-  character(len=355),public,save:: Gfs_Data_Dir
-  character(len=355),public,save:: Ncep_Data_Dir
-  character(len=355),public,save:: Cfsr_Data_Dir
-  character(len=355),public,save:: Merra_Data_Dir
-  character(len=355),public,save:: Gdas_Data_Dir
-  character(len=355),public,save:: Erai_Data_Dir
-  character(len=355),public,save:: Oisst_Data_Dir
-  character(len=355),public,save:: Snow_Data_Dir
-  character(len=355),public,save:: GLOBSnow_Data_Dir
-  character(len=355),public,save:: Dark_Comp_Data_Dir
-  character(len=355),public,save:: Temporary_Data_Dir
-  character(len=255),public,save:: File_Nav
+  character(len=1020),public,save:: Ancil_Data_Dir
+  character(len=1020),public,save:: Gfs_Data_Dir
+  character(len=1020),public,save:: Ncep_Data_Dir
+  character(len=1020),public,save:: Cfsr_Data_Dir
+  character(len=1020),public,save:: Merra_Data_Dir
+  character(len=1020),public,save:: Gdas_Data_Dir
+  character(len=1020),public,save:: Erai_Data_Dir
+  character(len=1020),public,save:: Oisst_Data_Dir
+  character(len=1020),public,save:: Snow_Data_Dir
+  character(len=1020),public,save:: GLOBSnow_Data_Dir
+  character(len=1020),public,save:: Dark_Comp_Data_Dir
+  character(len=1020),public,save:: Temporary_Data_Dir
+  character(len=1020),public,save:: File_Nav
 
-  character(len=355),public,save:: Dir_Rtm
-  character(len=355),public,save:: Dir_Level2
-  character(len=355),public,save:: Bayesian_Cloud_Mask_Name
-  character(len=355),public,save:: Dark_Composite_Name
+  character(len=1020),public,save:: Dir_Rtm
+  character(len=1020),public,save:: Dir_Level2
+  character(len=1020),public,save:: Bayesian_Cloud_Mask_Name
+  character(len=1020),public,save:: Dark_Composite_Name
 
   !----- IFF data files
-  character(len=255),public,save:: IFF_File
+  character(len=1020),public,save:: IFF_File
 
   !------------------------------------------------------------------
   !--- variables pertaining to scanline size
@@ -834,7 +834,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   integer ,public, save :: Use_Default
 
 !--- clavrxorb_File_List filename
-  character(len=300), public, save:: File_List
+  character(len=1020), public, save:: File_List
 
  contains
 

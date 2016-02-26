@@ -85,7 +85,7 @@ FUNCTION open_land_sfc_hdf(data_dir, filename, grid_str) result(id)
   TYPE(land_grid_description), optional, intent(inout) :: grid_str
   
   INTEGER(kind=int4) :: id  
-  CHARACTER(len=256) :: filename_full
+  CHARACTER(len=1020) :: filename_full
   
   logical :: file_exists
   
@@ -154,8 +154,8 @@ END SUBROUTINE close_land_sfc_hdf
    CHARACTER(*), intent(in) :: snow_path
    INTEGER(kind=int2), intent(in):: year_in
    INTEGER(kind=int2), intent(in):: day_of_year
-   CHARACTER(len=256) :: snow_filename
-   CHARACTER(len=256) :: snow_filename_tmp
+   CHARACTER(len=1020) :: snow_filename
+   CHARACTER(len=1020) :: snow_filename_tmp
    INTEGER(kind=int4) :: iday, year, month, day, jday, ileap
    CHARACTER (len=2)   :: year_string, day_string, month_string
 

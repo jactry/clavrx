@@ -304,7 +304,7 @@ FUNCTION read_hdf_attribute_char8_scalar(id, sds_name, attr_name, attr, type) re
   CHARACTER(len=1000), dimension(1) :: buffer
   INTEGER(kind=int4), intent(out), optional :: type
     
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrcatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -372,7 +372,7 @@ FUNCTION read_hdf_attribute_int8_scalar(id, sds_name, attr_name, attr, type) res
   INTEGER(kind=int4), intent(out), optional :: type
   
   INTEGER(kind=int1), dimension(1) :: buffer  
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -447,7 +447,7 @@ FUNCTION read_hdf_attribute_int16_scalar(id, sds_name, attr_name, attr, type) re
   INTEGER(kind=int4), intent(out), optional :: type
   
   INTEGER(kind=int2), dimension(1) :: buffer  
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -521,7 +521,7 @@ FUNCTION read_hdf_attribute_int32_scalar(id, sds_name, attr_name, attr, type) re
   INTEGER(kind=int4), intent(out), optional :: type
   
   INTEGER(kind=int4), dimension(1) :: buffer  
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -594,7 +594,7 @@ FUNCTION read_hdf_attribute_float32_scalar(id, sds_name, attr_name, attr, type) 
   INTEGER(kind=int4), intent(out), optional :: type
   
   REAL(kind=real4), dimension(1) :: buffer  
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -667,7 +667,7 @@ FUNCTION read_hdf_attribute_float64_scalar(id, sds_name, attr_name, attr, type) 
   INTEGER(kind=int4), intent(out), optional :: type
   
   REAL(kind=real8), dimension(1) :: buffer  
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -739,7 +739,7 @@ FUNCTION read_hdf_attribute_int8_vector(id, sds_name, attr_name, attr, type) res
   INTEGER(kind=int1), dimension(:), allocatable, intent(inout) :: attr
   INTEGER(kind=int4), intent(out), optional :: type
   
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status, astatus
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -824,7 +824,7 @@ FUNCTION read_hdf_attribute_int16_vector(id, sds_name, attr_name, attr, type) re
   INTEGER(kind=int2), dimension(:), allocatable, intent(inout) :: attr
   INTEGER(kind=int4), intent(out), optional :: type
   
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status, astatus
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -909,7 +909,7 @@ FUNCTION read_hdf_attribute_int32_vector(id, sds_name, attr_name, attr, type) re
   INTEGER(kind=int4), dimension(:), allocatable, intent(inout) :: attr
   INTEGER(kind=int4), intent(out), optional :: type
   
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status, astatus
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -994,7 +994,7 @@ FUNCTION read_hdf_attribute_float32_vector(id, sds_name, attr_name, attr, type) 
   REAL(kind=real4), dimension(:), allocatable, intent(inout) :: attr
   INTEGER(kind=int4), intent(out), optional :: type
   
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status, astatus
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   
@@ -1077,7 +1077,7 @@ FUNCTION read_hdf_attribute_float64_vector(id, sds_name, attr_name, attr, type) 
   REAL(kind=real8), dimension(:), allocatable, intent(inout) :: attr
   INTEGER(kind=int4), intent(out), optional :: type
   
-  CHARACTER(len=256) :: name
+  CHARACTER(len=1020) :: name
   INTEGER(kind=int4) :: istatus, attr_index, sds_type, count, sds_id, error_status, astatus
   INTEGER :: sffattr, sfrnatt, sfgainfo, sfn2index, sfselect, sfendacc
   

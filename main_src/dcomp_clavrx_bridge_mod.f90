@@ -188,6 +188,7 @@ contains
          end if
          return
       end if
+     
    
       if ( dcomp_input % is_channel_on (CHN_VIS) .eqv. .false.) then
          if ( iseg_in == 1 ) then

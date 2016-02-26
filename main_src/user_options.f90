@@ -123,7 +123,7 @@ module USER_OPTIONS
    public  :: UPDATE_CONFIGURATION
 
    character(24), parameter, private :: MOD_PROMPT = " USER_OPTIONS_ROUTINES: "
-   character ( len = 250 ) :: Data_Base_Path
+   character ( len = 1020 ) :: Data_Base_Path
    integer :: Dcomp_Mode_User_Set
    integer :: Acha_Mode_User_Set
    integer :: Nlcomp_Mode_User_Set
@@ -238,9 +238,9 @@ contains
       integer:: GeoNav_Limit_Flag
       real:: Rand_Number
       character(len=7):: Rand_String
-      character(len=355):: Temporary_Data_Dir_Root
-      integer:: string_length
-      character(len=1):: last_char
+      character(len=1020):: Temporary_Data_Dir_Root
+      integer:: String_Length
+      character(len=1):: Last_Char
       
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
@@ -261,7 +261,7 @@ contains
          stop 1
       end if
       
-      read(unit=Default_Lun,fmt="(a)") Data_base_path
+      read(unit=Default_Lun,fmt="(a)") Data_Base_Path
       read(unit=Default_Lun,fmt="(a)") Temporary_Data_Dir_Root
       read(unit=Default_Lun,fmt=*) Expert_Mode
 
@@ -301,7 +301,7 @@ contains
       read(unit=Default_Lun,fmt=*) Cld_Flag
       read(unit=Default_Lun,fmt=*) Image%Number_Of_Lines_Per_Segment
       read(unit=Default_Lun,fmt=*) Sasrab_Flag
-      Dark_Comp_Data_Dir=trim(Data_base_path)//'/dynamic/goes_dark_sky_composites/'
+      Dark_Comp_Data_Dir=trim(Data_Base_Path)//'/dynamic/goes_dark_sky_composites/'
       if ( Sasrab_Flag == 1 )  then
           Read_Dark_Comp=1
       end if 
@@ -408,7 +408,7 @@ contains
       character(len=30) :: junk
       character(len=1) :: temp_string
       logical:: back
-      character(len=300):: default_temp
+      character(len=1020):: default_temp
       real :: int_temp
       integer :: fargc
       integer :: i
@@ -573,7 +573,7 @@ contains
   
 
       !--- default ancillary data directory
-      Ancil_Data_dir = trim(Data_Base_Path)
+      Ancil_Data_Dir = trim(Data_Base_Path)
       Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
       Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
@@ -890,7 +890,7 @@ contains
 !-----------------------------------------------------------------
    function default_nb_mask_classifier_file (SensorName) result (filename)
       character ( len = *) , intent(in) :: SensorName
-      character ( len = 355 ) :: filename
+      character ( len = 1020 ) :: filename
 
       select case ( trim(SensorName))
       

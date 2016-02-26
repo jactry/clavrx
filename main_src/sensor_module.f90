@@ -1154,7 +1154,7 @@ module SENSOR_MODULE
       integer(kind=int4) :: Nword_Clavr
       integer(kind=int4) :: Nword_Clavr_Start
       integer(kind=int4) :: Ierror_Viirs_Nscans
-      CHARACTER(len=355) :: Dir_File
+      CHARACTER(len=1020) :: Dir_File
       
       type ( ahi_config_type ) :: ahi_config
       integer :: offset(2), count(2)

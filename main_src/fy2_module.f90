@@ -115,9 +115,9 @@ end subroutine READ_FY_INSTR_CONSTANTS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
 
-   character(len=120):: channel_x_filename
-   character(len=120):: channel_x_filename_full
-   character(len=120):: channel_x_filename_full_uncompressed
+   character(len=1020):: channel_x_filename
+   character(len=1020):: channel_x_filename_full
+   character(len=1020):: channel_x_filename_full_uncompressed
    character(len=180):: System_String
    integer:: ipos
    integer:: ilen

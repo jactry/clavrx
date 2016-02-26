@@ -146,9 +146,9 @@ module OISST_ANALYSIS
    integer(kind=int2), intent(in):: year_in
    integer(kind=int2), intent(in):: day_of_year
   
-   character(len=256) :: oisst_filename
-   character(len=256) :: oisst_filename_tmp
-   character(len=256) :: oisst_filename_tmp_preliminary
+   character(len=1020) :: oisst_filename
+   character(len=1020) :: oisst_filename_tmp
+   character(len=1020) :: oisst_filename_tmp_preliminary
    integer(kind=int4) :: iday, year, month, day, jday, ileap
    character (len=2)   :: day_string, month_string
    character (len=4)   :: year_string
@@ -202,8 +202,8 @@ end function GET_OISST_MAP_FILENAME
 !----------------------------------------------------------------------
   subroutine READ_OISST_ANALYSIS_MAP(sst_anal_name)
    character(len=*), intent(in):: sst_anal_name
-   character(len=256):: file_temp
-   character(len=256):: system_string
+   character(len=1020):: file_temp
+   character(len=1020):: system_string
    integer(kind=int4):: iyrst,imst,idst,i,j
    integer:: oisst_lun
    integer:: ios0,ios1,ios2,ios3,ios4,ios5,erstat

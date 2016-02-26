@@ -1143,6 +1143,7 @@ CONTAINS
        ErrorMessage=" *** Error reading data"
        return
     ENDIF
+print *,'HERE 5',shape(H5dataset)
 
     ALLOCATE(dataset(dims(1),dims(2)),stat=AllocStat)
     IF ( AllocStat.ne.0 ) THEN
@@ -1391,8 +1392,6 @@ CONTAINS
        return
     ENDIF
 
-   
-    
     dims(1) = count(1)
     dims(2) = count(2)
     CALL DebugMessage("     > Size dim. 1: ",int(dims(1)))

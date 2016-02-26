@@ -111,8 +111,8 @@ contains
 ! history:                              added  Jan 2013 (AW)
   function file_basename(file) result(return_string)
     implicit none
-    character(355) , intent(in) :: file
-    character(355) :: return_string
+    character(1020) , intent(in) :: file
+    character(1020) :: return_string
     character :: sep = '/'
     integer :: kdot
     logical , parameter :: backward = .true.
@@ -134,8 +134,8 @@ contains
 ! history:                              added  Jan 2013 (AW)
   function file_dirname(file) result(return_string)
     implicit none
-    character(355) , intent(in) :: file
-    character(355) :: return_string
+    character(1020) , intent(in) :: file
+    character(1020) :: return_string
     character :: sep = '/'
     integer :: kdot
     logical , parameter :: backward = .true.
@@ -167,8 +167,8 @@ contains
       character(*) , intent(in) :: path
       integer , intent(out), optional :: count
       logical , intent(in) , optional :: rel_path
-      character(355), pointer, dimension(:) :: return_string
-      character(355) :: cfile
+      character(1020), pointer, dimension(:) :: return_string
+      character(1020) :: cfile
       integer :: nr , ii
       integer :: lun
       

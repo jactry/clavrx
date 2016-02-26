@@ -164,12 +164,12 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  integer(kind=int2), intent(in):: Start_Day
  integer(kind=int2), intent(in):: End_Day
  character(len=4):: l1b_ext
- character(len=128):: File_1b_root
- character(len=128):: File_Rtm
- character(len=128):: File_Level2
+ character(len=1020):: File_1b_root
+ character(len=1020):: File_Rtm
+ character(len=1020):: File_Level2
 
- character(len=128):: Long_Name_Temp
- character(len=128):: Standard_Name_Temp
+ character(len=1020):: Long_Name_Temp
+ character(len=1020):: Standard_Name_Temp
  character(len=128):: Sds_Name
 
  integer(kind=int4):: blank_int4

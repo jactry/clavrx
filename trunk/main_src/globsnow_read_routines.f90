@@ -70,8 +70,8 @@ module GLOBSNOW_READ_ROUTINES
    integer(kind=int2), intent(in):: year_in
    integer(kind=int2), intent(in):: day_of_year
    integer:: GlobSnow_option
-   CHARACTER(len=256) :: GlobSnow_filename,GlobSnow_full
-   CHARACTER(len=256) :: GlobSnow_filename_tmp
+   CHARACTER(len=1020) :: GlobSnow_filename,GlobSnow_full
+   CHARACTER(len=1020) :: GlobSnow_filename_tmp
    integer(kind=int4) :: iday, year, month, day, jday, ileap
    CHARACTER (len=2)   :: day_string, month_string
    CHARACTER (len=4)   :: year_string
@@ -126,7 +126,7 @@ module GLOBSNOW_READ_ROUTINES
 !----------------------------------------------------------------------------------------
  subroutine READ_GLOBSNOW_ANALYSIS_MAP(GlobSnow_name)
    character(len=*), intent(in):: GlobSnow_name
-   character(len=128):: file_temp
+   character(len=1020):: file_temp
    character(len=100) :: sds_name
    integer(kind=int4) :: sd_id
    integer(kind=int4) :: astatus, istatus, sds_id, sds_rank, sds_type, sds_nattr

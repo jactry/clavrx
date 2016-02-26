@@ -107,7 +107,7 @@ private
  integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
  integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
  real, private, save:: Scan_rate    !scan rate in millsec / line
- character(len=355), save, public:: Dark_Comp_Data_Dir_Temp
+ character(len=1020), save, public:: Dark_Comp_Data_Dir_Temp
  integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
  integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
  real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
@@ -417,10 +417,10 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    integer(kind=int4), intent(in):: image_Time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=1020):: Channel_X_Filename
+   character(len=1020):: Channel_X_Filename_Full
+   character(len=1020):: Channel_X_Filename_Full_uncompressed
+   character(len=1020):: System_String
 
    integer:: ipos
    integer:: ilen
@@ -743,10 +743,10 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    integer(kind=int4), intent(in):: image_Time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=255):: Channel_X_Filename
-   character(len=255):: Channel_X_Filename_Full
-   character(len=255):: Channel_X_Filename_Full_uncompressed
-   character(len=355):: System_String
+   character(len=1020):: Channel_X_Filename
+   character(len=1020):: Channel_X_Filename_Full
+   character(len=1020):: Channel_X_Filename_Full_uncompressed
+   character(len=1020):: System_String
 
    integer:: ipos
    integer:: ilen
@@ -3469,8 +3469,8 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    integer:: Elem_Idx
    integer:: Temp_Idx
    integer:: dark_length
-   character(len=200):: System_String
-   character(len=200):: Dark_Name_Full
+   character(len=1020):: System_String
+   character(len=1020):: Dark_Name_Full
    character(len=3):: Dark_Ext
 
    !--- aliases

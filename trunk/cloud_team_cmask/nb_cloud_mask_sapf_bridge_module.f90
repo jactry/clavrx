@@ -64,8 +64,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    type(symbol_naive_bayesian),private :: Symbol
    
    !Make module wide variables
-   character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
-   character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
+   character (len=1020), TARGET, PRIVATE:: Ancil_Data_Path
+   character (len=1020), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
    !Segment counter
    integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1

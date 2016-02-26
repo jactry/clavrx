@@ -2099,7 +2099,7 @@ end subroutine COMPUTE_CLEAR_SKY_SCATTER
    character(len=*), intent(in):: File_1b_Original
    integer(kind=int4), intent(out):: L1b_Gzip
    integer(kind=int4), intent(out):: L1b_Bzip2
-   character(len=200):: System_String
+   character(len=1020):: System_String
    character(len=7):: L1b_ext
 
 

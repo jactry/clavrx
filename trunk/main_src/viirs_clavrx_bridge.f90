@@ -108,8 +108,8 @@ module VIIRS_CLAVRX_BRIDGE
 
    use constants, only: &
       int4 &
-		, sym &
-		, Missing_Value_Real4
+    , sym &
+    , Missing_Value_Real4
       
    use clavrx_message_module   
    

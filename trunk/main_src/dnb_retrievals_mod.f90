@@ -141,8 +141,8 @@ contains
   
       logical :: dnb_verbose = .false.
       !logical :: dnb_verbose = .true.
-      character(len=128) :: lunar_irrad_file 
-      character(len=128) :: distance_table_file
+      character(len=1020) :: lunar_irrad_file 
+      character(len=1020) :: distance_table_file
       integer :: num_pix , num_elem
       
       logical :: is_waning

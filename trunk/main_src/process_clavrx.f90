@@ -183,7 +183,7 @@
    real(kind=real4) :: Orbital_Processing_Start_Time_Hours
    real(kind=real4) :: Orbital_Processing_End_Time_Hours
    real(kind=real4) :: Orbital_Processing_Time_Seconds
-   character(len=280):: File_1b_Temp
+   character(len=1020):: File_1b_Temp
    integer(kind=int4):: erstat
    real(kind=real4):: Time_Since_Launch
    integer(kind=int4):: err_reposnx_Flag
@@ -196,13 +196,13 @@
    integer(kind=int4):: iperiod16   
    integer(kind=int4) :: ierror
    character(len=3):: Day_String
-   character(len=100):: Modis_White_Sky_0_66_Name
-   character(len=100):: Modis_White_Sky_0_86_Name
-   character(len=100):: Modis_White_Sky_1_24_Name
-   character(len=100):: Modis_White_Sky_1_64_Name
-   character(len=100):: Modis_White_Sky_2_13_Name
-   character(len=100):: Snow_Mask_File_Name
-   character(len=256):: oiSst_File_Name
+   character(len=1020):: Modis_White_Sky_0_66_Name
+   character(len=1020):: Modis_White_Sky_0_86_Name
+   character(len=1020):: Modis_White_Sky_1_24_Name
+   character(len=1020):: Modis_White_Sky_1_64_Name
+   character(len=1020):: Modis_White_Sky_2_13_Name
+   character(len=1020):: Snow_Mask_File_Name
+   character(len=1020):: oiSst_File_Name
    
 
    integer(kind=int4):: Emiss_File_Id = missing_value_int4

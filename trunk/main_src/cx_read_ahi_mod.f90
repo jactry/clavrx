@@ -61,7 +61,7 @@
 !
 !--------------------------------------------------------------------------------------
 
-module cx_read_ahi_mod
+module CX_READ_AHI_MOD 
    
    use date_tools_mod, only : &
       date_type 
@@ -75,10 +75,10 @@ module cx_read_ahi_mod
    integer, parameter :: NUM_CHN = 16
    
    type, public :: ahi_config_type
-      character ( len = 255 ) :: file_base
-      character ( len = 400 ) :: data_path
+      character ( len = 1020 ) :: file_base
+      character ( len = 1020 ) :: data_path
       logical :: chan_on(NUM_CHN)
-      character (len = 500) :: filename ( NUM_CHN)
+      character (len = 1020) :: filename ( NUM_CHN)
       character ( len =20) :: varname (NUM_CHN)
       integer :: h5_offset(2)
       integer :: h5_count(2)
@@ -281,7 +281,7 @@ contains
       
       integer :: i
       character(len=2) :: identifier
-      character ( len=255) :: file_for_this_channel
+      character ( len=1020) :: file_for_this_channel
       
       do i = 1 , 16
         
@@ -439,7 +439,8 @@ contains
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: ahi
      
-      integer(kind = 2), pointer :: i2d_buffer( : , : ) => null()
+      !integer(kind = 2), pointer :: i2d_buffer( : , : ) => null()
+      integer(kind = 2), pointer :: i2d_buffer(:,:)
       integer:: i_chn
       character (len=120) :: attr_name
       real (8) :: scale_factor, add_offset
@@ -461,7 +462,7 @@ contains
             ahi % success = .false.
             return
          end if
-        
+
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
                , config % h5_offset,config % h5_count, i2d_buffer )
@@ -485,7 +486,6 @@ contains
          attr_name = trim(config % varname(i_chn))//'/_FillValue'
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), fillvalue )
          if ( fillvalue < 0 ) fillvalue = fillvalue + 65536
-         
         
          allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
          
@@ -511,7 +511,6 @@ contains
        
          ahi % chn(i_chn) % is_read = .true.
         
-         
       end do
    
    end subroutine read_ahi_level1b

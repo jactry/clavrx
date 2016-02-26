@@ -124,8 +124,8 @@ module dcomp_interface_TYPEs_mod
       type ( d2_real4_type) :: iwp  
       type ( d2_real4_type) :: lwp
 
-	   character ( len = 200 ) :: version
-	   real :: successrate
+      character ( len = 200 ) :: version
+      real :: successrate
       integer :: nr_clouds
       integer :: nr_obs
       integer :: nr_success_cod
@@ -324,18 +324,18 @@ contains
    subroutine out_destructor ( this )
       type ( dcomp_out_type) :: this
       
-	   if (allocated ( this % cod % d ) ) deallocate (  this % cod % d ) 
-		if ( allocated ( this % cps % d )) deallocate ( this % cps % d)
-	   if (allocated ( this % cod_unc % d ) ) deallocate (  this % cod_unc % d ) 
-		if ( allocated ( this % ref_unc % d )) deallocate ( this % ref_unc % d)   
-      if (allocated ( this % cld_trn_sol % d ) ) deallocate (  this % cld_trn_sol % d ) 
-		if ( allocated ( this % cld_trn_obs % d )) deallocate ( this % cld_trn_obs % d)
-	   if (allocated ( this % cld_alb % d ) ) deallocate (  this % cld_alb % d ) 
-		if ( allocated ( this % cld_sph_alb % d )) deallocate ( this % cld_sph_alb % d)
-		if (allocated ( this % quality % d ) ) deallocate (  this % quality % d ) 
-		if ( allocated ( this % info % d )) deallocate ( this % info % d)
-	   if (allocated ( this % iwp % d ) ) deallocate (  this % iwp % d ) 
-		if ( allocated ( this % lwp % d )) deallocate ( this % lwp % d)
+     if (allocated ( this % cod % d ) ) deallocate (  this % cod % d ) 
+     if ( allocated ( this % cps % d )) deallocate ( this % cps % d)
+     if (allocated ( this % cod_unc % d ) ) deallocate (  this % cod_unc % d ) 
+     if ( allocated ( this % ref_unc % d )) deallocate ( this % ref_unc % d)   
+     if (allocated ( this % cld_trn_sol % d ) ) deallocate (  this % cld_trn_sol % d ) 
+     if ( allocated ( this % cld_trn_obs % d )) deallocate ( this % cld_trn_obs % d)
+     if (allocated ( this % cld_alb % d ) ) deallocate (  this % cld_alb % d ) 
+     if ( allocated ( this % cld_sph_alb % d )) deallocate ( this % cld_sph_alb % d)
+     if (allocated ( this % quality % d ) ) deallocate (  this % quality % d ) 
+     if ( allocated ( this % info % d )) deallocate ( this % info % d)
+     if (allocated ( this % iwp % d ) ) deallocate (  this % iwp % d ) 
+     if ( allocated ( this % lwp % d )) deallocate ( this % lwp % d)
    end subroutine out_destructor
    
    
@@ -389,7 +389,7 @@ contains
       do i = 1, N_CHN
          if  ( allocated (this % refl) )  then      
             if ( allocated (this % refl(i) % d) ) deallocate ( this % refl(i) % d )
-			end if
+         end if
          
          if ( allocated (this % alb_sfc)) then
             if ( allocated (this % alb_sfc(i) % d) ) deallocate ( this % alb_sfc(i) % d )
@@ -405,11 +405,11 @@ contains
          
          if ( allocated (this % trans_ac_nadir )) then
             if ( allocated (this % trans_ac_nadir(i) % d) ) deallocate ( this % trans_ac_nadir(i) % d )
-			end if
+         end if
          
          if ( allocated (this % rad_clear_sky_toa )) then
             if ( allocated (this % rad_clear_sky_toa(i) % d) ) deallocate ( this % rad_clear_sky_toa(i) % d )        
-			end if
+         end if
          
          if ( allocated (this % rad_clear_sky_toc )) then
             if ( allocated (this % rad_clear_sky_toc(i) % d) ) deallocate ( this % rad_clear_sky_toc(i) % d ) 
@@ -437,10 +437,10 @@ contains
       
       if ( allocated (this % snow_class % d) ) deallocate ( this % snow_class  % d )
       if ( allocated (this % is_land % d) ) deallocate ( this % is_land  % d )
-    	if ( allocated (this % ozone_nwp % d) )    deallocate ( this %  ozone_nwp   % d )
-		if ( allocated (this % tpw_ac % d) )    deallocate ( this %  tpw_ac   % d )
-		if ( allocated (this % press_sfc % d) )    deallocate ( this %  press_sfc % d )
-		if ( allocated (this % is_valid % d) ) deallocate ( this % is_valid  % d )
+      if ( allocated (this % ozone_nwp % d) )    deallocate ( this %  ozone_nwp   % d )
+      if ( allocated (this % tpw_ac % d) )    deallocate ( this %  tpw_ac   % d )
+      if ( allocated (this % press_sfc % d) )    deallocate ( this %  press_sfc % d )
+      if ( allocated (this % is_valid % d) ) deallocate ( this % is_valid  % d )
       
      
       

@@ -35,8 +35,8 @@ module dcomp_lut_mod
       logical :: is_set
       logical :: has_sol = .false.
       logical :: has_ems = .false.
-      character (len = 300 ) :: file
-      character (len = 300 ) :: file_ems
+      character (len = 1020 ) :: file
+      character (len = 1020 ) :: file_ems
       real :: cld_sph_alb ( NUM_REF , NUM_COD )
       real :: cld_trn ( NUM_REF , NUM_COD, 45 )
       real :: cld_alb (NUM_REF , NUM_COD , 45 )
@@ -75,7 +75,7 @@ module dcomp_lut_mod
       logical :: is_set
       type ( lut_chn_type ) , allocatable :: channel (:)
       type ( lut_dim_type ) ::  dims
-      character ( len = 300) :: lut_path
+      character ( len = 1020) :: lut_path
       character ( len = 20 ) :: sensor = 'not_set'
       integer :: pos_sat, pos_sol, pos_azi
       
@@ -327,7 +327,7 @@ contains
       class ( lut_type ) :: self
       character ( len = * ) , intent(in) :: sensor
       character ( len = * ) , intent(in), optional :: ancil_path
-      character ( len =300) :: file
+      character ( len =1020) :: file
       character ( len =20) :: host
       integer :: i_chn
       
@@ -578,7 +578,7 @@ contains
    ! ----------------------------------------------------------------
    subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
-      character ( len = 300 )  :: hdf_file
+      character ( len = 1020 )  :: hdf_file
       integer :: i_chn
       
       hdf_file = self % channel ( 1) % phase (1 ) % file

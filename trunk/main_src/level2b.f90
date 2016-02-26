@@ -669,7 +669,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
     integer:: sfrdata
     integer:: sfendacc
     integer:: Istatus
-    character(72):: Sds_Name_Temp
+    character(100):: Sds_Name_Temp
 
     Istatus = 0
 
@@ -756,7 +756,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
     integer:: sfrdata
     integer:: sfendacc
     integer:: Istatus
-    character(72):: Sds_Name_Temp
+    character(100):: Sds_Name_Temp
 
     Istatus = 0
 
@@ -843,7 +843,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
     integer:: sfrdata
     integer:: sfendacc
     integer:: Istatus
-    character(72):: Sds_Name_Temp
+    character(100):: Sds_Name_Temp
 
     Istatus = 0
 
@@ -1630,7 +1630,7 @@ subroutine COPY_GLOBAL_ATTRIBUTES(Sd_Id_Input,Sd_Id_Output)
   subroutine FILE_SEARCH(Path,Search_String,Num_Files,Files)
         character(len=*), intent(in):: Path
         character(len=*), intent(in):: Search_String
-        character(len=128), dimension(:), allocatable, intent(out):: Files
+        character(len=1020), dimension(:), allocatable, intent(out):: Files
         integer(kind=int4), intent(out):: Num_Files
         integer(kind=int4):: Lun
         integer(kind=int4):: Idx

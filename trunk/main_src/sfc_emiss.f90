@@ -63,7 +63,7 @@ CONTAINS
       INTEGER(kind=int2), intent(in) :: month
       INTEGER(kind=int4), intent(out) :: id
   
-      CHARACTER(len=256) :: filename
+      CHARACTER(len=1020) :: filename
       CHARACTER(len=3) :: jday_str
       CHARACTER(len=4) :: year_str
   

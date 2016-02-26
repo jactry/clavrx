@@ -63,7 +63,7 @@ module nlcomp_lut_mod
    !-----------------------------------------------------------------------
    type, private :: emissivity_lookup_table
       logical :: is_set
-	  
+  
       real (kind=real4), dimension(num_cps,num_cod,num_sat_zen) :: trans 
       real (kind=real4), dimension(num_cps,num_cod,num_sat_zen) :: emiss 
    end type emissivity_lookup_table
@@ -93,7 +93,7 @@ module nlcomp_lut_mod
    
    character ( len = 1024 ) , save :: identifier_old
    character ( len = 1024 ) :: identifier_current
-   character ( len = 20 ) :: sensor_current	  
+   character ( len = 20 ) :: sensor_current
    
    integer , dimension ( : ) , allocatable :: mapped_modis_channels 
  
@@ -104,75 +104,75 @@ module nlcomp_lut_mod
 
 contains
  
-	!====================================================================
-	! Function Name: POPULATE_ALL_LUT
-	!
-	! Function:     Populates all main LUTs and ancil LUT
-	!
-	! Inputs: lut_path - look-up table path
-	!         sensor_name - sensor name as appears in LUT file name
-	!         sensor_chn_number - channel number as appears in LUT file name
-	!         noaa_sat_string - noaa satellite string as appears in LUT file name
-	!
-	! Dependencies:
-	!         POPULATE_CLOUD_LUT_SINGLE(Lut_File,idx_chn,idx_phase)
-	!         CALL POPULATE_CLOUD_LUT_SINGLE_EMS(Lut_File,idx_phase)
-	!         POPULATE_ANCIL(ancil_file)
-	!
-	! History:
-	!
-	! Local Variables:
-	!         Phase_String - "wat" or "ice"
-	!         Chan_String - Channel string
-	!         Lut_File - LUT file string
-	!         Ancil_File - Ancillary file string
-	!         Idx_Chn, Idx_Phase, Identifier_old, Identifier_current
-	!
-	!====================================================================
+!====================================================================
+! Function Name: POPULATE_ALL_LUT
+!
+! Function:     Populates all main LUTs and ancil LUT
+!
+! Inputs: lut_path - look-up table path
+!         sensor_name - sensor name as appears in LUT file name
+!         sensor_chn_number - channel number as appears in LUT file name
+!         noaa_sat_string - noaa satellite string as appears in LUT file name
+!
+! Dependencies:
+!         POPULATE_CLOUD_LUT_SINGLE(Lut_File,idx_chn,idx_phase)
+!         CALL POPULATE_CLOUD_LUT_SINGLE_EMS(Lut_File,idx_phase)
+!         POPULATE_ANCIL(ancil_file)
+!
+! History:
+!
+! Local Variables:
+!         Phase_String - "wat" or "ice"
+!         Chan_String - Channel string
+!         Lut_File - LUT file string
+!         Ancil_File - Ancillary file string
+!         Idx_Chn, Idx_Phase, Identifier_old, Identifier_current
+!
+!====================================================================
    subroutine populate_all_lut( &
-   	& sensor_name , channels , lut_path )  ! - input
-		
-		character (len=*), intent(in) :: sensor_name ! - sensor name as appeared in lut file name
+   & sensor_name , channels , lut_path )  ! - input
+
+      character (len=*), intent(in) :: sensor_name ! - sensor name as appeared in lut file name
       integer, intent(in), dimension(:)  :: channels
       character ( len = 1024 ) , intent ( in ),optional :: lut_path
-	 
+ 
       !-locals
-	  	character ( len = 1024 ) :: lut_path_loc
-	  	integer :: n_channels 
+      character ( len = 1024 ) :: lut_path_loc
+      integer :: n_channels 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
       character ( len = 3 ) , dimension(30) :: chan_string ='no'
 	  	logical , dimension ( 30 ) :: has_ems_table = .false.
 	  	logical , dimension ( 30 ) :: has_sol_table = .false.
-      character ( len = 255 ) :: lut_file     ! 
-      integer :: idx_chn
-      integer :: idx_phase
-	  	integer :: i_channel
-      	
-		!- executable
-	  	n_channels = size ( channels )
-	  	sensor_current = trim(sensor_name)
-	  
-	  	lut_path_loc = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
-	 
-		if (  present ( lut_path ))  lut_path_loc = trim(lut_path) 
-	   
-		has_sol_table(1) = .true.
-		has_sol_table(5) = .true.
-		has_sol_table(6) = .true.
-		has_sol_table(7) = .true.
-		has_sol_table(20) = .true.
-		has_ems_table(20) = .true.
-		chan_string(1) = '5'
-		chan_string(5) = '8'
-		chan_string(6) = '10'
-		chan_string(7) = '11'
-		chan_string(20) ='12'
+                character ( len = 1020 ) :: lut_file     ! 
+                integer :: idx_chn
+                integer :: idx_phase
+                integer :: i_channel
+      
+      !- executable
+      n_channels = size ( channels )
+      sensor_current = trim(sensor_name)
+  
+      lut_path_loc = '/DATA/Ancil_Data/clavrx_ancil_data/static/luts/cld/'
+
+      if (  present ( lut_path ))  lut_path_loc = trim(lut_path) 
+   
+      has_sol_table(1) = .true.
+      has_sol_table(5) = .true.
+      has_sol_table(6) = .true.
+      has_sol_table(7) = .true.
+      has_sol_table(20) = .true.
+      has_ems_table(20) = .true.
+      chan_string(1) = '5'
+      chan_string(5) = '8'
+      chan_string(6) = '10'
+      chan_string(7) = '11'
+      chan_string(20) ='12'
         
-	   if ( .not. Cld_Refl_Lut%is_alloc ) allocate (  Cld_Refl_Lut%channel (n_channels) )
-	   if ( .not. Cld_Ems_Lut%is_alloc) allocate (  Cld_Ems_Lut%channel (n_channels) )
-	   Cld_Refl_Lut%is_alloc = .true.
-	   Cld_Ems_Lut%is_alloc = .true.
-	       
+      if ( .not. Cld_Refl_Lut%is_alloc ) allocate (  Cld_Refl_Lut%channel (n_channels) )
+      if ( .not. Cld_Ems_Lut%is_alloc) allocate (  Cld_Ems_Lut%channel (n_channels) )
+      Cld_Refl_Lut%is_alloc = .true.
+      Cld_Ems_Lut%is_alloc = .true.
+       
       identifier_current = trim(lut_path_loc) // trim ( sensor_name )
       
      
@@ -180,86 +180,86 @@ contains
          print*,trim(identifier_current)//' already populated!'
          return
       end if
-	  
-	 	identifier_old = identifier_current
-	  
-	   if (.not. allocated (mapped_modis_channels) ) allocate (  mapped_modis_channels ( n_channels) )
-	   mapped_modis_channels  = channels
-	  
-	   loop_channel : do i_channel = 1 , n_channels
-	      idx_chn = channels ( i_channel ) 
-		 
-		 		if ( .not. has_sol_table ( idx_chn ) )  cycle 
-	      	loop_phase: do idx_phase = 1 , 2
-		    		lut_file = trim(identifier_current)//'_ch' &
-			         	& //trim ( chan_string ( idx_chn ) ) &
-				      	& //'_ref_lut_'//phase_string(idx_phase)//'_cld.hdf'
-            	call populate_cloud_lut_single ( lut_file , i_channel , idx_phase ) 
-		    
-					if ( has_ems_table(idx_chn) ) then
-			   		lut_file = trim(identifier_current)//'_ch' &
-                       & //trim(chan_string ( idx_chn) ) &
-					   	  & //"_ems_lut_"//phase_string(idx_phase)//'_cld.hdf'
-               	call populate_cloud_lut_single_ems(lut_file , i_channel , idx_phase)
-					end if
- 			
-		 		end do loop_phase
-	   	end do loop_channel
+  
+      identifier_old = identifier_current
+  
+      if (.not. allocated (mapped_modis_channels) ) allocate (  mapped_modis_channels ( n_channels) )
+      mapped_modis_channels  = channels
+  
+      loop_channel : do i_channel = 1 , n_channels
+         idx_chn = channels ( i_channel ) 
+ 
+         if ( .not. has_sol_table ( idx_chn ) )  cycle 
+         loop_phase: do idx_phase = 1 , 2
+            lut_file = trim(identifier_current)//'_ch' &
+                      & //trim ( chan_string ( idx_chn ) ) &
+                      & //'_ref_lut_'//phase_string(idx_phase)//'_cld.hdf'
+            call populate_cloud_lut_single ( lut_file , i_channel , idx_phase ) 
+   
+            if ( has_ems_table(idx_chn) ) then
+               lut_file = trim(identifier_current)//'_ch' &
+                          & //trim(chan_string ( idx_chn) ) &
+                          & //"_ems_lut_"//phase_string(idx_phase)//'_cld.hdf'
+               call populate_cloud_lut_single_ems(lut_file , i_channel , idx_phase)
+             end if
+
+         end do loop_phase
+      end do loop_channel
       
-		end subroutine populate_all_lut
+   end subroutine populate_all_lut
 
-		!====================================================================
-		! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE(lut_file, Idx_Chn, Idx_Phase) 
-		!
-		! Function: populates cloud look-up table  
-		!
-		! Inputs:
-		!    Lut_file - file there LUT is stored
-		!    Idx_Chn - channel number  in LUT
-		!    Idx_Phase - phase number  in LUT
-		!
-		!====================================================================
+!====================================================================
+! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE(lut_file, Idx_Chn, Idx_Phase) 
+!
+! Function: populates cloud look-up table  
+!
+! Inputs:
+!    Lut_file - file there LUT is stored
+!    Idx_Chn - channel number  in LUT
+!    Idx_Phase - phase number  in LUT
+!
+!====================================================================
  
-		SUBROUTINE POPULATE_CLOUD_LUT_SINGLE( &
-      		& lut_file &    ! - input
-    			& , Idx_Chn   &      ! - input
-            & , Idx_Phase )
+SUBROUTINE POPULATE_CLOUD_LUT_SINGLE( &
+                    lut_file &    ! - input
+                    , Idx_Chn   &      ! - input
+                    , Idx_Phase )
 
-			implicit none
+         implicit none
 
-			! ---  input
-   		character (len=*), intent(in) ::  lut_file	! - file there LUT is stored
-   		integer , intent(in)  ::idx_chn  				 ! - channel number  in LUT 
-   		integer , intent(in)  ::idx_phase				 ! - phase number  in LUT 
-	  
-			! -  hdf stuff
+   ! ---  input
+   character (len=*), intent(in) ::  lut_file   ! - file there LUT is stored
+   integer , intent(in)  ::idx_chn              ! - channel number  in LUT 
+   integer , intent(in)  ::idx_phase            ! - phase number  in LUT 
+  
+   ! -  hdf stuff
 
-   		integer:: istatus
+   integer:: istatus
  
-   		integer:: sfstart, Sfn2Index,  Sfendacc,Sfend,Sfrdata,Sfselect
-   		integer:: sd_id
-   		integer:: sds_id
+   integer:: sfstart, Sfn2Index,  Sfendacc,Sfend,Sfrdata,Sfselect
+   integer:: sd_id
+   integer:: sds_id
 
-   		integer, parameter:: Sds_Rank_1D = 1
-   		integer, dimension(Sds_Rank_1D):: Sds_Start_1D, Sds_Edge_1D, Sds_Stride_1D
+   integer, parameter:: Sds_Rank_1D = 1
+   integer, dimension(Sds_Rank_1D):: Sds_Start_1D, Sds_Edge_1D, Sds_Stride_1D
 
-   		integer, parameter:: Sds_Rank_2D = 2
-   		integer, dimension(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D, Sds_Dims_2D
+   integer, parameter:: Sds_Rank_2D = 2
+   integer, dimension(Sds_Rank_2D):: Sds_Start_2D, Sds_Edge_2D, Sds_Stride_2D, Sds_Dims_2D
 
-   		integer, parameter:: Sds_Rank_3D = 3
-   		integer, dimension(Sds_Rank_3D):: Sds_Start_3D, Sds_Edge_3D, Sds_Stride_3D, Sds_Dims_3D
+   integer, parameter:: Sds_Rank_3D = 3
+   integer, dimension(Sds_Rank_3D):: Sds_Start_3D, Sds_Edge_3D, Sds_Stride_3D, Sds_Dims_3D
 
-   		integer, parameter:: Sds_Rank_5D = 5
-   		integer, dimension(Sds_Rank_5D):: Sds_Start_5D, Sds_Edge_5D, Sds_Stride_5D, Sds_Dims_5D
+   integer, parameter:: Sds_Rank_5D = 5
+   integer, dimension(Sds_Rank_5D):: Sds_Start_5D, Sds_Edge_5D, Sds_Stride_5D, Sds_Dims_5D
+ 
+   ! Executable Code
 
-			! Executable Code
-
-			Sd_Id = Sfstart( &
+         Sd_Id = Sfstart( &
                  TRIM(lut_file), &
                  DFACC_READ) 
   
   
-			Istatus = 0
+         Istatus = 0
 
 
          !--- Read in values in the table
@@ -391,49 +391,49 @@ contains
             STOP
          END IF
 
-		   !--- Close the lookup table file
-		   istatus = sfend(sd_id) 
-		   IF (istatus /= 0) THEN
-   		   PRINT "(a,'Error closing cloud lut files ')",EXE_PROMPT
-   		   print*,trim(lut_file)
-			END IF
+         !--- Close the lookup table file
+         istatus = sfend(sd_id) 
+         IF (istatus /= 0) THEN
+           PRINT "(a,'Error closing cloud lut files ')",EXE_PROMPT
+           print*,trim(lut_file)
+         END IF
    
-			Cld_Refl_Lut % channel ( Idx_Chn ) % Phase ( Idx_Phase ) % is_set = .true.
+         Cld_Refl_Lut % channel ( Idx_Chn ) % Phase ( Idx_Phase ) % is_set = .true.
 
-		END SUBROUTINE POPULATE_CLOUD_LUT_SINGLE          
+END SUBROUTINE POPULATE_CLOUD_LUT_SINGLE          
 
 
-		!====================================================================
-		! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE_EMS(lut_file,Idx_Phase) 
-		!
-		! Function: populate cloud look-up table 
-		!
-		! Inputs: 
-		!     Lut_file - file there LUT is stored
-		!     Idx_Phase - phase number  in LUT
-		!
-		!====================================================================
+!====================================================================
+! Subroutine Name: POPULATE_CLOUD_LUT_SINGLE_EMS(lut_file,Idx_Phase) 
+!
+! Function: populate cloud look-up table 
+!
+! Inputs: 
+!     Lut_file - file there LUT is stored
+!     Idx_Phase - phase number  in LUT
+!
+!====================================================================
  
-   	subroutine populate_cloud_lut_single_ems( &
-                lut_file &    ! - input
-			     , idx_chn &	
-              , idx_phase )
+   subroutine populate_cloud_lut_single_ems( &
+                              lut_file &    ! - input
+                            , idx_chn &
+                            , idx_phase )
 
-      	implicit none
+      implicit none
 
-      	! ---  input
-      	character (len=*), intent(in) ::  lut_file   ! - file there lut is stored
-      	integer , intent(in)  :: idx_phase             ! - phase number  in lut 
-	   	integer , intent(in) :: idx_chn
+      ! ---  input
+      character (len=*), intent(in) ::  lut_file   ! - file there lut is stored
+      integer , intent(in)  :: idx_phase             ! - phase number  in lut 
+      integer , intent(in) :: idx_chn
 
-      	! -  hdf stuff
+      ! -  hdf stuff
 
-      	integer:: istatus
-      	integer:: sfstart, sfn2index,  sfendacc,sfend,sfrdata,sfselect
-      	integer:: sd_id
-      	integer:: sds_id
-      	integer, parameter:: sds_rank_3d = 3
-      	integer, dimension(sds_rank_3d):: sds_start_3d, sds_edge_3d, sds_stride_3d, sds_dims_3d
+      integer:: istatus
+      integer:: sfstart, sfn2index,  sfendacc,sfend,sfrdata,sfselect
+      integer:: sd_id
+      integer:: sds_id
+      integer, parameter:: sds_rank_3d = 3
+      integer, dimension(sds_rank_3d):: sds_start_3d, sds_edge_3d, sds_stride_3d, sds_dims_3d
 
       
       ! executable code
@@ -663,22 +663,22 @@ contains
       !-------------------------------------------------------------------------------
     
       idx_chn_lut = -1
-	   channel_loop: do i_channel = 1 , size ( mapped_modis_channels )  
-	      if ( idx_chn == mapped_modis_channels(i_channel) ) then
-		      idx_chn_lut = i_channel
+      channel_loop: do i_channel = 1 , size ( mapped_modis_channels )  
+         if ( idx_chn == mapped_modis_channels(i_channel) ) then
+            idx_chn_lut = i_channel
          end if 
       end do channel_loop
-	  
-	   if ( idx_chn_lut == -1 ) then
-	      print*, 'error: channel was not set in populate_lut wrong channel'
-	      return
-	   end if
-	  
+  
+      if ( idx_chn_lut == -1 ) then
+         print*, 'error: channel was not set in populate_lut wrong channel'
+         return
+      end if
+  
       if ( .not. Cld_Refl_Lut % channel ( Idx_Chn_lut ) % Phase ( Idx_Phase ) % is_set ) then
          print*, 'dcomp get_data: this channel was not populated'
-		   print*, 'check your settings'
-		   print*,'bad MODIS-like channel ', idx_chn , ' for sensor ' , sensor_current
-		   stop
+         print*, 'check your settings'
+         print*,'bad MODIS-like channel ', idx_chn , ' for sensor ' , sensor_current
+         stop
       end if 
  
       ! - populate optional output variables

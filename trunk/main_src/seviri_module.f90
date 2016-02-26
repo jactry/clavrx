@@ -163,10 +163,10 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
    integer(kind=int2), intent(in):: Day_Of_Year
    integer(kind=int4), intent(in):: Image_Time_Ms
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=1020):: Channel_X_Filename
+   character(len=1020):: Channel_X_Filename_Full
+   character(len=1020):: Channel_X_Filename_Full_uncompressed
+   character(len=1020):: System_String
 
    integer:: ipos
    integer:: ilen

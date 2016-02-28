@@ -286,6 +286,9 @@ contains
       Input%Chan_On_I4_374um = IBand_Flag(4)
       Input%Chan_On_I5_114um = IBand_Flag(5)
       Input%Chan_On_DNB = DNB_Flag
+      Input%Use_Sounder_11um = sym%NO
+
+      Input%Bt_11um_Sounder = MISSING_VALUE_REAL4
 
       Input%Coastal_Mask => Coast_Mask(i,j)
       Input%Snow_Class => Snow_mask(i,j)

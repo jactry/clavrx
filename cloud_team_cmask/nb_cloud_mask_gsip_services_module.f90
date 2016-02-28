@@ -42,6 +42,7 @@
     integer:: Chan_On_I1_064um                                         !flag if I1 0.64um channel on (0=no,1=yes)
     integer:: Chan_On_I4_374um                                         !flag if I4 3.74um channel on (0=no,1=yes)
     integer:: Chan_On_I5_114um                                         !flag if I5 11.4um channel on (0=no,1=yes)
+    integer :: Use_Sounder_11um                                !flag for IFF files where both imager and sounder 11um are available    
     integer:: Chan_On_DNB                                              !flag if DNB channel on (0=no,1=yes)
     integer(kind=int1), pointer:: Snow_Class                           !Snow Classification 
     integer(kind=int1), pointer:: Land_Class                           !Land Classification
@@ -77,6 +78,7 @@
     real(kind=real4), pointer:: Bt_11um_Std                            !11 um toa brightness temp 3x3 Std Dev (K)
     real(kind=real4), pointer:: Bt_11um_Max                            !11 um toa brightness temp 3x3 Max (K)
     real(kind=real4), pointer:: Bt_11um_Clear                          !11 um toa brightness temperature (K)
+    real(kind=real4) :: Bt_11um_Sounder                        !11 um toa brightness temp from sounder (K) 
     real(kind=real4), pointer:: Emiss_11um_Tropo                       !11 um tropo emiss
     real(kind=real4), pointer:: Bt_12um                                !12 um toa brightness temperature (K)
     real(kind=real4), pointer:: Bt_12um_Clear                          !12 um toa bright temp clear-sky (K)

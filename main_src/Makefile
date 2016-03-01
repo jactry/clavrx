@@ -436,7 +436,7 @@ re4flip.o : re4flip.f
 ################ hdf 5 read routines Code
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
-	$(fc) -c $(fflags)  ${hdf5libs} readh5dataset.f90
+	$(fc) -c $(ldlags)  ${hdf5libs} readh5dataset.f90
 endif	
 ###############  Fred Nagle Repositioning Code
 

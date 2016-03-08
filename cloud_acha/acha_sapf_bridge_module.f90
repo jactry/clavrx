@@ -33,6 +33,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
  integer, parameter, private :: N_Sc_Lut = 20
 
+
+
  type(acha_symbol_struct), PRIVATE  :: symbol
  type(acha_input_struct), PRIVATE  :: Input
  type(acha_output_struct), PRIVATE  :: Output
@@ -557,7 +559,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    integer(long) :: Stat
    integer:: Num_Elem, Num_Line
 
-
+     
     CALL NFIA_CloudHeight_Latitude_Pc(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%Latitude_Pc)
     CALL NFIA_CloudHeight_Longitude_Pc(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Output%Longitude_Pc)
 
@@ -626,6 +628,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
    CALL NFIA_CloudHeight_InverFlag(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, &
                                     Output%Inversion_Flag)
    
+   Output%Zc_Uncertainty = MISSING_VALUE_REAL4
+   Output%Cost = MISSING_VALUE_REAL4
    
    ! ALLOCATE Dummy array
    Num_Elem = Ctxt_ACHA%SegmentInfo%Current_Column_Size

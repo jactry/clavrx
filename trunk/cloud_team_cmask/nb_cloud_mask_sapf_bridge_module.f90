@@ -64,8 +64,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    type(symbol_naive_bayesian),private :: Symbol
    
    !Make module wide variables
-   character (len=1020), TARGET, PRIVATE:: Ancil_Data_Path
-   character (len=1020), TARGET, PRIVATE:: Naive_Bayes_File_Name
+   character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
+   character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
    !Segment counter
    integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1
@@ -406,7 +406,9 @@ contains
         IF (SpaceMask(Elem_Idx,Line_Idx) == YES) THEN
             Cld_Mask(Elem_Idx,Line_Idx) = symbol%MISSING
             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%MISSING
-            CYCLE
+	    Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
+	    Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = symbol%MISSING
+	    CYCLE
         ENDIF
  
       

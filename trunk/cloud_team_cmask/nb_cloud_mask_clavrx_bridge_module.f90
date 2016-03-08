@@ -139,9 +139,9 @@ contains
          call NB_CLOUD_MASK_ALGORITHM(  &
                       Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
-                      Input, &
-                      Output)
-                     ! Diag)   !optional
+                      Input,   &
+                      Output,  &
+                      Diag)   !optional
 
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &
@@ -394,6 +394,7 @@ contains
         Input%Ref_375um = ch(20)%Ref_Toa(i,j)
         Input%Ref_375um_Clear = ch(20)%Ref_Toa_Clear(i,j)
         Input%Bt_375um = ch(20)%Bt_Toa(i,j)
+        Input%Bt_375um_Clear = ch(20)%Bt_Toa_Clear(i,j)
         Input%Bt_375um_Std = Bt_Ch20_Std_3x3(i,j)
         Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
         Input%Emiss_375um_Clear = Ems_Ch20_Clear_Rtm(i,j)

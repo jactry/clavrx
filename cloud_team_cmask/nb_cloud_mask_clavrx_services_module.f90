@@ -78,6 +78,7 @@
     real(kind=real4) :: Ref_375um_Clear                        !3.75 um toa reflectance for clear-sky (%)
     real(kind=real4) :: Ref_213um                              !2.13 um toa reflectance (%)
     real(kind=real4) :: Bt_375um                               !3.75 um toa brightness temp (K)
+    real(kind=real4) :: Bt_375um_Clear                         !3.75 um toa brightness temp (K)
     real(kind=real4) :: Bt_375um_Std                           !3.75 um toa brightness temp 3x3 Std. Dev. (K)
     real(kind=real4) :: Emiss_375um                            !3.75 um pseudo toa emissivity
     real(kind=real4) :: Emiss_375um_Clear                      !3.75 um pseudo toa emissivity clear-sky

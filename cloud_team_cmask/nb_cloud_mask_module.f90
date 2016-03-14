@@ -443,11 +443,17 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 7
                     case("Btd_11_85") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 8
-                    case("Btd_375_11_All")    !Emiss_375_All 
+                    case("Emiss_375") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 9
-                    case("Btd_375_11_Day")    !Emiss_375_Day
+                    case("Btd_375_11_All") 
+                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 9
+                    case("Btd_375_11_Day") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 10
-                    case("Btd_375_11_Night")  !Emiss_375_Night
+                    case("Emiss_375_Day")   
+                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 10
+                    case("Btd_375_11_Night")
+                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 11
+                    case("Emiss_375_Night")  
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 11
                     case("Spare") 
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 12
@@ -465,6 +471,7 @@ module NB_CLOUD_MASK
                        Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 18
                     case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                       print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
                        return
            end select
 
@@ -579,6 +586,10 @@ module NB_CLOUD_MASK
           else
               Day_375_Flag = symbol%YES
           endif
+
+!---- START TEST to simulate ch3a operation
+!          Day_375_Flag = symbol%NO
+!---- END TEST
 
           if (Input%Solzen < Emiss_375um_Night_Solzen_Thresh) then
               Night_375_Flag = symbol%NO
@@ -918,6 +929,7 @@ module NB_CLOUD_MASK
                     
                      case default
                        print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                       print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
                        return
              end select
 
@@ -1548,6 +1560,12 @@ module NB_CLOUD_MASK
    status = nf90_close(ncid)
 
    Is_Classifiers_Read = .true.
+
+
+   !============= START TEST
+!  Prior_Yes = 1.1*Prior_Yes
+!  Prior_No = 1.0 - Prior_Yes
+   !============= END TEST
 
  end subroutine READ_NAIVE_BAYES_NC
 

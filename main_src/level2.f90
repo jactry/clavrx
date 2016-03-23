@@ -1597,6 +1597,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud phase aux
+     if (Sds_Num_Level2_Cld_Phase_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "cloud_phase_aux", &
+                               "cloud_phase_aux", &
+                               "aux integer classification of the cloud phase including clear "// &
+                               "and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Phase, Max_Cld_Phase, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- auxiliary cloud mask
      if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -1693,6 +1705,28 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "cld_press_top_acha", &
                                "top_press_of_cloud", &
                                "estimate of actual cloud-top pressure computed using the AWG cloud height algorithm", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud pressure from aux layer1
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top1_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top1_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_top_l1_aux", &
+                               "top_press_of_cloud_layer1_aux", &
+                               "estimate of actual cloud-top pressure layer1 read from Aux file", &
+                               DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud pressure from aux layer1
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top2_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top2_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_top_l2_aux", &
+                               "top_press_of_cloud_layer2_aux", &
+                               "estimate of actual cloud-top pressure layer2 read from Aux file", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Pc, Max_Pc, &
                                "hPa", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
@@ -1898,6 +1932,28 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud-top pressure uncertainty layer1 from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer1_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_uncer1_aux", &
+                               "not specified", &
+                               "cloud pressure uncertainty layer1 read from the aux", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Pc_Uncer, Max_Pc_Uncer, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud-top pressure uncertainty layer2 from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer2_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cld_press_uncer2_aux", &
+                               "not specified", &
+                               "cloud pressure uncertainty layer2 read from the aux", &
+                               DFNT_INT8, sym%LINEAR_SCALING, Min_Pc_Uncer, Max_Pc_Uncer, &
+                               "hPa", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- quality flag for ACHA Cloud-top Temperature
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Qf_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Qf),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -2001,7 +2057,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "cost_acha", &
                                "cost_acha", &
                                "final cost function value from acha optimal estimation", &
-                                DFNT_INT8, sym%LINEAR_SCALING, Min_Acha_Cost, Max_Acha_Cost, &
+                                DFNT_INT16, sym%LINEAR_SCALING, Min_Acha_Cost, Max_Acha_Cost, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- aux O.E. cost
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Aux_Cost_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Aux_Cost),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "cost_aux", &
+                               "cost_aux", &
+                               "final cost function value from aux optimal estimation", &
+                                DFNT_INT16, sym%LINEAR_SCALING, Min_Acha_Cost, Max_Acha_Cost, &
                                "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -2014,6 +2081,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "atmosphere_optical_thickness_due_to_cloud", &
                                "cloud optical depth at the nominal wavelength of 0.65 microns, "//&
                                "determined from DCOMP - NOAA CDR", &
+                                DFNT_INT16, sym%LINEAR_SCALING, Min_tau, Max_tau, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- cloud optical depth from AUX
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Aux),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
+                               "cld_opd_aux", &
+                               "atmosphere_optical_thickness_due_to_cloud_aux", &
+                               "cloud optical depth at the nominal wavelength of 0.65 microns, "//&
+                               "read from aux file", &
                                 DFNT_INT16, sym%LINEAR_SCALING, Min_tau, Max_tau, &
                                "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
@@ -4322,6 +4401,12 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Cld_Phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- cld phase aux
+     if (Sds_Num_Level2_Cld_Phase_Aux_Flag == sym%YES) then
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        Cld_Phase_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- auxiliary cld mask
      if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
@@ -4380,6 +4465,20 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Top,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- aux estimated cld top pressure layer1
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top1_Aux_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Pc_Top1_Aux,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top1_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- aux estimated cld top pressure layer2
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top2_Aux_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Pc_Top2_Aux,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top2_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
@@ -4501,6 +4600,22 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
+     !--- cloud pressure uncertainity layer1 from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer1_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Pc_Uncertainty1_Aux,sym%LINEAR_SCALING,Min_Pc_Uncer, &
+                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cloud pressure uncertainity layer2 from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer2_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Pc_Uncertainty2_Aux,sym%LINEAR_SCALING,Min_Pc_Uncer, &
+                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
      !--- cloud height uncertainity from acha
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Uncer_Flag == sym%YES) then     
       call SCALE_VECTOR_I1_RANK2(ACHA%Zc_Uncertainty,sym%LINEAR_SCALING,Min_Zc_Uncer, &
@@ -4560,15 +4675,29 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- Acha Cost
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Cost_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Cost,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,One_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(ACHA%Cost,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- Aux Cost
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Aux_Cost_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Cost_Aux,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Aux_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld optical depth from dcomp
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Flag == sym%YES) then     
       call SCALE_VECTOR_I2_RANK2(Tau_Dcomp,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld optical depth from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Aux_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Tau_Aux,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

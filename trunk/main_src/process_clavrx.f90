@@ -137,6 +137,8 @@
    use GOES_MODULE
    use LASZLO_INSOLATION
    use SEVIRI_MODULE
+   use OCA_MODULE, only: &
+       READ_OCA
    use MTSAT_MODULE
    use COMS_MODULE
    use FY2_MODULE
@@ -245,8 +247,8 @@
    
    logical :: dcomp_run
    
-   character ( len = 30) :: string_30
-   character ( len = 100) :: string_100
+   character (len = 30) :: string_30
+   character (len = 100) :: string_100
    
    !------------- VIIRS variables --------------
    real(kind=real4), dimension(:,:), pointer :: lunar_ref
@@ -694,6 +696,14 @@
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
          end if
+
+         if (trim(Sensor%Sensor_Name) == 'SEVIRI' .and. Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
+            call READ_OCA(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
+                 Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                 Segment_Number,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                 Cost_Aux,Pc_Top1_Aux,Pc_Top2_Aux,Pc_Uncertainty1_Aux,Pc_Uncertainty2_Aux, &
+                 Tau_Aux,Cld_Phase_Aux)
+         endif
 
          !------------------------------------------------------------------
          ! Apply spatial limits

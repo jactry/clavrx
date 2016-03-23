@@ -642,6 +642,12 @@ module PIXEL_COMMON
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
   real (kind=real4),dimension(:,:),allocatable, public, save, target::Zc_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Top1_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Top2_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Uncertainty1_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Uncertainty2_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Cost_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Tau_Aux
 
   !--- pixel level cloud props
 
@@ -1978,6 +1984,8 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Zc(dim1,dim2)) 
     allocate(ACHA%Zc_Top(dim1,dim2)) 
     allocate(ACHA%Pc_Top(dim1,dim2)) 
+    allocate(Pc_Top1_Aux(dim1,dim2)) 
+    allocate(Pc_Top2_Aux(dim1,dim2)) 
     allocate(ACHA%Zc_Base(dim1,dim2)) 
     allocate(ACHA%Pc_Base(dim1,dim2)) 
     allocate(ACHA%Beta(dim1,dim2)) 
@@ -1988,9 +1996,12 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+    allocate(Pc_Uncertainty1_Aux(dim1,dim2)) 
+    allocate(Pc_Uncertainty2_Aux(dim1,dim2)) 
     allocate(ACHA%Alt(dim1,dim2)) 
     allocate(ACHA%Base_Alt(dim1,dim2)) 
     allocate(ACHA%Cost(dim1,dim2)) 
+    allocate(Cost_Aux(dim1,dim2)) 
     allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
     allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
     allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
@@ -2052,6 +2063,8 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Zc = Missing_Value_Real4
     ACHA%Zc_Top = Missing_Value_Real4
     ACHA%Pc_Top = Missing_Value_Real4
+    Pc_Top1_Aux = Missing_Value_Real4
+    Pc_Top2_Aux = Missing_Value_Real4
     ACHA%Zc_Base  = Missing_Value_Real4
     ACHA%Pc_Base  = Missing_Value_Real4
     ACHA%Beta = Missing_Value_Real4
@@ -2062,9 +2075,12 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Beta_Uncertainty = Missing_Value_Real4
     ACHA%Zc_Uncertainty = Missing_Value_Real4
     ACHA%Pc_Uncertainty = Missing_Value_Real4
+    Pc_Uncertainty1_Aux = Missing_Value_Real4
+    Pc_Uncertainty2_Aux = Missing_Value_Real4
     ACHA%Alt = Missing_Value_Real4
     ACHA%Base_Alt = Missing_Value_Real4
     ACHA%Cost = Missing_Value_Real4
+    Cost_Aux = Missing_Value_Real4
     ACHA%Pc_Lower_Cloud = Missing_Value_Real4
     ACHA%Zc_Lower_Cloud = Missing_Value_Real4
     ACHA%Tc_Lower_Cloud = Missing_Value_Real4
@@ -2089,6 +2105,8 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Zc) 
     deallocate(ACHA%Zc_Top) 
     deallocate(ACHA%Pc_Top) 
+    deallocate(Pc_Top1_Aux) 
+    deallocate(Pc_Top2_Aux) 
     deallocate(ACHA%Zc_Base) 
     deallocate(ACHA%Pc_Base) 
     deallocate(ACHA%Beta) 
@@ -2099,9 +2117,12 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Beta_Uncertainty) 
     deallocate(ACHA%Zc_Uncertainty) 
     deallocate(ACHA%Pc_Uncertainty) 
+    deallocate(Pc_Uncertainty1_Aux) 
+    deallocate(Pc_Uncertainty2_Aux) 
     deallocate(ACHA%Alt) 
     deallocate(ACHA%Base_Alt) 
     deallocate(ACHA%Cost) 
+    deallocate(Cost_Aux) 
     deallocate(ACHA%Pc_Lower_Cloud) 
     deallocate(ACHA%Zc_Lower_Cloud) 
     deallocate(ACHA%Tc_Lower_Cloud) 
@@ -2124,6 +2145,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
       allocate(Tau_DCOMP(dim1,dim2))
+      allocate(Tau_Aux(dim1,dim2))
       allocate(Tau_DCOMP_Ap(dim1,dim2))
       allocate(Vis_Ref_Fm(dim1,dim2))
       allocate(Reff_DCOMP(dim1,dim2))
@@ -2169,6 +2191,7 @@ end subroutine CREATE_DCOMP_ARRAYS
 subroutine RESET_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       Tau_DCOMP = Missing_Value_Real4
+      Tau_Aux = Missing_Value_Real4
       Tau_DCOMP_Ap = Missing_Value_Real4
       Vis_Ref_Fm = Missing_Value_Real4
       Reff_DCOMP = Missing_Value_Real4
@@ -2214,6 +2237,7 @@ end subroutine RESET_DCOMP_ARRAYS
 subroutine DESTROY_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       deallocate(Tau_DCOMP)
+      deallocate(Tau_Aux)
       deallocate(Tau_DCOMP_Ap)
       deallocate(Vis_Ref_Fm)
       deallocate(Reff_DCOMP)

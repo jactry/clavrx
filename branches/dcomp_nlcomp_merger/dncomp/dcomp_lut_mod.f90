@@ -35,8 +35,8 @@ module dcomp_lut_mod
       logical :: is_set
       logical :: has_sol = .false.
       logical :: has_ems = .false.
-      character (len = 300 ) :: file
-      character (len = 300 ) :: file_ems
+      character (len = 1020 ) :: file
+      character (len = 1020 ) :: file_ems
       real, allocatable :: cld_sph_alb ( : , : )
       real, allocatable :: cld_trn ( : , : , : )
       real, allocatable :: cld_alb ( : , : , : )
@@ -76,7 +76,7 @@ module dcomp_lut_mod
       logical :: is_set
       type ( lut_chn_type ) , allocatable :: channel (:)
       type ( lut_dim_type ) ::  dims
-      character ( len = 300) :: lut_path
+      character ( len = 1020) :: lut_path
       character ( len = 20 ) :: sensor = 'not_set'
       integer :: pos_sat, pos_sol, pos_azi
       
@@ -172,7 +172,7 @@ contains
       integer :: i_chn , i_phase , i 
       character ( len = 3 ) , dimension(2)   :: phase_string = [ 'wat',  'ice' ]
       integer :: n_channels = 45
-      character ( len =200) :: sensor_identifier
+      character ( len =1020) :: sensor_identifier
       
       ! mapping sensor channel emis yes/no
       
@@ -237,7 +237,7 @@ contains
          chan_string(6) = '5'
          chan_string(20) = '7'
          
-      case('ABI','AHI') sensor_block
+      case('ABI') sensor_block
          has_sol_table(1) = .true.
          has_sol_table(6) = .true.
          has_sol_table(20) = .true.
@@ -245,6 +245,18 @@ contains
          chan_string(1) = '2'
          chan_string(6) = '5'
          chan_string(20) = '7'
+      
+      case('AHI') sensor_block
+         has_sol_table(1) = .true.
+         has_sol_table(6) = .true.
+         has_sol_table(7) = .true.
+         has_sol_table(20) = .true.
+         has_ems_table(20) = .true.
+         chan_string(1) = '3'
+         chan_string(6) = '5'
+         chan_string(7) = '6'
+         chan_string(20) = '7'   
+         
             
       case ('AATSR')   sensor_block
          has_sol_table(1) = .true.
@@ -328,7 +340,7 @@ contains
       class ( lut_type ) :: self
       character ( len = * ) , intent(in) :: sensor
       character ( len = * ) , intent(in), optional :: ancil_path
-      character ( len =300) :: file
+      character ( len =1020) :: file
       character ( len =20) :: host
       integer :: i_chn
       
@@ -581,10 +593,10 @@ contains
    ! ----------------------------------------------------------------
    subroutine lut__init_dims( self)        
       class ( lut_type ) :: self
-      character ( len = 300 )  :: hdf_file
+      character ( len = 1020 )  :: hdf_file
       integer :: i_chn
       
-      hdf_file = self % channel ( 1) % phase (1 ) % file
+      hdf_file = trim(self % channel ( 1) % phase (1 ) % file)
     
       if ( .not. file_test(hdf_file) ) then
          print*,'lut file not existing! ==> ', trim(hdf_file)

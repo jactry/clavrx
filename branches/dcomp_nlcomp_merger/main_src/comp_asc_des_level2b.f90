@@ -109,12 +109,12 @@ program COMPILE_ASC_DES_LEVEL2B
  real(kind=real4), dimension(:,:,:), allocatable:: Scaled_Sds_Data_Output_Full
 
 
- character(len=255),dimension(N_Files_Max):: File_Input
- character(len=255):: File_Output
- character(len=355):: Dir_In
- character(len=355):: Dir_Out
- character(len=255):: Root_Name
- character(len=255):: Temp_Name
+ character(len=1020),dimension(N_Files_Max):: File_Input
+ character(len=1020):: File_Output
+ character(len=1020):: Dir_In
+ character(len=1020):: Dir_Out
+ character(len=1020):: Root_Name
+ character(len=1020):: Temp_Name
  integer:: Comp_Asc_Des_Input_Lun
  integer:: Ielem
  integer:: Iline

@@ -9,7 +9,6 @@ module CLOUD_BASE
 !
 !----------------------------------------------------------------------
   use CLOUD_BASE_SERVICES
-  use ACHA_SERVICES_MOD, only : LOCATE
 
   implicit none
 

@@ -1,4 +1,4 @@
-! $Id: pixel_routines.f90 538 2014-09-15 20:30:48Z dbotambekov $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -21,8 +21,6 @@
 ! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 ! SUPPORT TO USERS.
 !
-! Public routines used in this MODULE:
-!
 !--------------------------------------------------------------------------------------
 module CLOUD_MASK_ADDONS
 
@@ -33,17 +31,16 @@ module CLOUD_MASK_ADDONS
  public:: NB_CLOUD_MASK_ADDONS_ALGORITHM
 
  private:: EUMETSAT_FIRE_TEST, &
-           VCM_SMOKE_TEST, &
-           VCM_DUST_TEST, &
-           IR_DUST_TEST, &
-           MEDIAN_FILTER_MASK
+           CLAVRX_SMOKE_TEST, &
+           CLAVRX_DUST_TEST
 
-!!--- define structures
+ !--- define structures
  include 'nb_cloud_mask.inc'
 
  contains
  !---------------------------------------------------------------------
- !
+ ! subroutine that handle non-cloud tests in the enterprise mask
+ ! These include smoke, dust and fire
  !---------------------------------------------------------------------
  subroutine NB_CLOUD_MASK_ADDONS_ALGORITHM( &
             Symbol, &                       !local copy of sym structure
@@ -72,118 +69,185 @@ module CLOUD_MASK_ADDONS
    !--- check for valid data
    if (Input%Invalid_Data_Mask == Symbol%NO) then
 
-    !-------------------------------------------------------------------------
-    ! Dust Detection 
-    !-------------------------------------------------------------------------
+        !----------------------------------------------------------------------------
+        ! CLAVR-x SMOKE TEST
+        !
+        ! Day and ice-free ocean only
+        !
+        !-------------------------------------------------------------------------
+        if (Input%SNOW_Class == symbol%NO_SNOW .and. &
+            (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
 
-     
-       !--------------------------------------------------------------------------
-       !  VCM Daytime Dust Detection
-       !--------------------------------------------------------------------------
-       if ( Input%Solzen <= 85.0 .and. &
-            Input%Chan_On_063um == symbol%YES  .and. &
-            Input%Chan_On_041um == symbol%YES) then
+           Output%Smoke_Mask = 0 
 
+           Output%Smoke_Mask = CLAVRX_SMOKE_TEST(Input%Ref_063um,Input%Ref_063um_Clear, &
+                                                 Input%Ref_138um, &
+                                                 Input%Ref_160um,Input%Ref_160um_Clear, &
+                                                 Input%Ref_375um,Input%Ref_375um_Clear, &
+                                                 Input%Bt_375um, &
+                                                 Input%Bt_11um, Input%Bt_11um_Clear, &
+                                                 Input%Bt_12um, Input%Bt_12um_Clear,&
+                                                 Input%Chan_On_063um,Input%Chan_On_138um, &
+                                                 Input%Chan_On_160um,Input%Chan_On_375um,Input%Chan_On_11um, &
+                                                 Input%Chan_On_12um,Input%Emiss_11um_Tropo, &
+                                                 Input%Ref_063um_Std, Input%Bt_11um_Std, &
+                                                 Input%Solzen)
+        endif
 
-          if (Input%Chan_On_I1_064um == symbol%YES ) then
+        !-------------------------------------------------------------------------
+        !-- IR Dust algorithm
+        !-------------------------------------------------------------------------
+        if (Input%SNOW_Class == symbol%NO_SNOW .and. Input%Chan_On_12um == symbol%YES .and. &
+            (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
 
-               Output%Dust_Mask = VCM_DUST_TEST ( &
-                   Input%Ref_041um &
-                 , Input%Ref_063um &
-                 , Input%Ref_I1_064um_Std &
-                 , Input%Oceanic_Glint_Mask &
-                 , Input%Land_Class )
+              Output%Dust_Mask = 0
 
-          elseif (Input%Chan_On_I1_064um == symbol%NO ) then
-
-               Output%Dust_Mask = VCM_DUST_TEST ( &
-                   Input%Ref_041um &
-                 , Input%Ref_063um &
-                 , Input%Ref_063um_Std &
-                 , Input%Oceanic_Glint_Mask &
-                 , Input%Land_Class )
-
-          endif
-
-      endif
-       !---------------------------------------------------------------------
-       ! VCM Daytime Smoke Detection
-       !---------------------------------------------------------------------
-       if ( Input%Solzen <= 85.0 .and. &
-            Input%Chan_On_041um == symbol%YES .and.  &
-            Input%Chan_On_213um == symbol%YES) then
-
-            if (Input%Chan_On_I1_064um == symbol%YES ) then
-
-                Output%Smoke_Mask = VCM_SMOKE_TEST ( &
-                    Input%Ref_041um &
-                  , Input%Ref_213um &
-                  , Input%Ref_I1_064um_Std &
-                  , Input%Senzen &
-                  , Input%Oceanic_Glint_Mask &
-                  , Input%Land_Class )
-
-            else if (Input%Chan_On_063um == symbol%YES .and. &
-                     Input%Chan_On_I1_064um == symbol%NO ) then
-
-                Output%Smoke_Mask = VCM_SMOKE_TEST ( &
-                    Input%Ref_041um &
-                  , Input%Ref_213um &
-                  , Input%Ref_063um_Std &
-                  , Input%Senzen &
-                  , Input%Oceanic_Glint_Mask &
-                  , Input%Land_Class )
-
-            endif
-
-      endif
+              Output%Dust_Mask = CLAVRX_DUST_TEST ( &
+                    Input%Chan_On_85um,         &
+                    Input%Chan_On_11um,         &
+                    Input%Chan_On_12um,         &
+                    Input%Bt_85um,            &
+                    Input%Bt_11um,            &
+                    Input%Bt_12um,            &
+                    Input%Bt_11um_Clear,      &
+                    Input%Bt_12um_Clear,      &
+                    Input%Bt_11um_Std,        &
+                    Input%Emiss_11um_Tropo)
+        endif
+ 
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
+      Output%Fire_Mask = 0
       if (Input%Chan_On_11um == symbol%YES .and.   &
           Input%Chan_On_375um == symbol%YES .and.  &
-          Input%Land_Class == Symbol%Land) then
+          Input%Land_Class == Symbol%Land .and.    &
+          Input%Sfc_Type /= Symbol%BARE_SFC .and. &
+          Input%Sfc_Type /= Symbol%OPEN_SHRUBS_SFC) then
 
-          if (Input%Chan_On_I4_374um == symbol%YES .and. Input%Chan_On_I5_114um == symbol%YES ) then
+          Output%Fire_Mask = 0
 
-             Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
-                   Input%Bt_11um &
-                 , Input%Bt_375um &
-                 , Input%Bt_I5_114um_Std &
-                 , Input%Bt_I4_374um_Std &
-                 , Input%Solzen )
-
-          elseif (Input%Chan_On_I4_374um == symbol%NO .and. Input%Chan_On_I5_114um == symbol%NO ) then
-
-             Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
+          Output%Fire_Mask = EUMETSAT_FIRE_TEST ( &
                    Input%Bt_11um &
                  , Input%Bt_375um &
                  , Input%Bt_11um_Std &
                  , Input%Bt_375um_Std &
                  , Input%Solzen )
 
-          endif
-
       endif
 
     endif ! if Invalid_Data_Mask = NO
 
-
  end subroutine NB_CLOUD_MASK_ADDONS_ALGORITHM
+
 !----------------------------------------------------------------------------
 ! CLAVR-x SMOKE TEST
 !
-! Reference: Baum and Trepte, 1998
+! Daytime and Ice-Free Ocean Only.
 !
+! Coded: Andy Heidinger
 !----------------------------------------------------------------------------
+  integer elemental function CLAVRX_SMOKE_TEST(Refl_065,Refl_065_Clear,Refl_138, &
+                                              Refl_160, Refl_160_Clear, &
+                                               Refl_375, Refl_375_Clear, &
+                                               Bt_375,&
+                                               Bt_11, Bt_11_Clear, &
+                                               Bt_12, Bt_12_Clear,&
+                                               Chan_On_065,Chan_On_138,Chan_On_160,Chan_On_375,Chan_On_11, &
+                                               Chan_On_12,Emiss_11_Tropo,Refl_065_Std,T11_Std,Solzen)
+     real, intent(in):: Refl_065
+     real, intent(in):: Refl_065_Clear
+     real, intent(in):: Refl_138
+     real, intent(in):: Refl_160
+     real, intent(in):: Refl_160_Clear
+     real, intent(in):: Refl_375
+     real, intent(in):: Refl_375_Clear
+     real, intent(in):: Bt_375
+     real, intent(in):: Bt_11
+     real, intent(in):: Bt_11_Clear
+     real, intent(in):: Bt_12
+     real, intent(in):: Bt_12_Clear
+     real, intent(in):: Emiss_11_Tropo
+     real, intent(in):: Refl_065_Std
+     real, intent(in):: T11_Std
+     integer, intent(in):: Chan_On_065
+     integer, intent(in):: Chan_On_138
+     integer, intent(in):: Chan_On_160
+     integer, intent(in):: Chan_On_375
+     integer, intent(in):: Chan_On_11
+     integer, intent(in):: Chan_On_12
+     real, intent(in):: Solzen
+
+     integer:: IR_Flag
+     integer:: VIS_Flag
+     integer:: NIR_Flag
+     integer:: NIR_IR_Flag
+     integer:: SPLIT_WIN_Flag
+     
+     Clavrx_Smoke_Test = MISSING_VALUE_INT1
+
+     if (Solzen < Solzen_Max_Smoke_Thresh) then
+
+           IR_Flag = 1
+           VIS_Flag = 1
+           NIR_Flag = 1
+           NIR_IR_Flag = 1
+           SPLIT_WIN_Flag = 1
+
+           !--- IR test - smoke should be nearly invisible
+           if (Chan_On_11 == 1) then
+               if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Thresh) IR_Flag = 0
+               if (T11_Std > T11_Std_Max_Smoke_Thresh) IR_Flag = 0
+           endif
+
+           !--- VIS test - smoke should be nearly invisible
+           if (Chan_On_065 == 1) then
+               if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Thresh .or.   &
+                   Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Thresh) VIS_Flag = 0
+               if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Thresh) VIS_Flag = 0
+           endif
+
+           !--- NIR Tests
+           if (Chan_On_375 == 1) then
+               if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Thresh) NIR_Flag = 0
+               if (Refl_375 > Refl_375_Max_Smoke_Thresh) NIR_Flag = 0
+           endif
+
+           if (Chan_On_160 == 1 .and. Chan_On_375 == 0) then
+               if (Refl_160 > Refl_160_Max_Smoke_Thresh) NIR_Flag = 0
+           endif
+
+           if (Chan_On_138 == 1) then
+               if (Refl_138 > Refl_138_Max_Smoke_Thresh) NIR_Flag = 0
+           endif
+
+           !--- NIR IR_Tests
+           if (Chan_On_375 == 1 .and. Chan_On_11 == 1) then
+               if ((Bt_11 - Bt_375) > Btd_4_11_Max_Smoke_Thresh) NIR_IR_Flag = 0
+           endif
+
+           !--- SPLIT_WIN_Tests
+           if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+             if (abs(split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)) > 1) SPLIT_WIN_Flag = 0
+           endif
+
+           !--- combine into final answer
+           Clavrx_Smoke_Test = IR_Flag * VIS_Flag * NIR_Flag * NIR_IR_Flag * SPLIT_WIN_Flag
+   
+    endif
+
+  end function CLAVRX_SMOKE_TEST
 
 !----------------------------------------------------------------------------
 ! EUMETCAST Fire detection algorithm
 !
 ! Reference: This implements the "Current Operational Algorithm" described in:
-!TOWARDS AN IMPROVED ACTIVE FIRE MONITORING PRODUCT FOR MSG SATELLITES
-!Sauli Joro, Olivier Samain, Ahmet Yildirim, Leo van de Berg, Hans Joachim Lutz
-!EUMETSAT, Am Kavalleriesand 31, Darmstadt, Germany
+! TOWARDS AN IMPROVED ACTIVE FIRE MONITORING PRODUCT FOR MSG SATELLITES
+! Sauli Joro, Olivier Samain, Ahmet Yildirim, Leo van de Berg, Hans Joachim Lutz
+! EUMETSAT, Am Kavalleriesand 31, Darmstadt, Germany
+!
+! Coded by William Straka III
+!
 !-----------------------------------------------------------------------------
   integer elemental function EUMETSAT_FIRE_TEST(T11,T375,T11_Std,T375_Std,Solzen)
 
@@ -197,20 +261,6 @@ module CLOUD_MASK_ADDONS
      real :: Bt_Diff_Eumet_Fire_Thresh
      real :: Stddev_11um_Eumet_Fire_Thresh
      real :: Stddev_375um_Eumet_Fire_Thresh
-
-     !---- EUMETCAST fire detection parameters
-     real, parameter :: EUMETCAST_FIRE_DAY_SOLZEN_THRESH = 70.0
-     real, parameter :: EUMETCAST_FIRE_NIGHT_SOLZEN_THRESH = 90.0
-
-     real, parameter :: BT_375UM_EUMET_FIRE_DAY_THRESH = 310.0
-     real, parameter :: BT_DIFF_EUMET_FIRE_DAY_THRESH = 8.0
-     real, parameter :: STDDEV_11UM_EUMET_FIRE_DAY_THRESH = 1.0
-     real, parameter :: STDDEV_375UM_EUMET_FIRE_DAY_THRESH = 4.0
-
-     real, parameter :: BT_375UM_EUMET_FIRE_NIGHT_THRESH = 290.0
-     real, parameter :: BT_DIFF_EUMET_FIRE_NIGHT_THRESH = 0.0
-     real, parameter :: STDDEV_11UM_EUMET_FIRE_NIGHT_THRESH = 1.0
-     real, parameter :: STDDEV_375UM_EUMET_FIRE_NIGHT_THRESH = 4.0
 
      !--- initialize
      Eumetsat_Fire_Test = 0
@@ -262,248 +312,97 @@ module CLOUD_MASK_ADDONS
      endif
 
   end function EUMETSAT_FIRE_TEST
-  !----------------------------------------------------------------------------
-  ! VIIRS VCM SMOKE TEST
-  !
-  !  Reference: ???
-  !----------------------------------------------------------------------------
-  integer elemental function VCM_SMOKE_TEST ( &
-           Ref_004 &
-         , Ref_021 &
-         , Ref_006_Std &
-         , sat_zen &
-         , Is_glint &
-         , Land_Class )
-
-      real , intent(in) :: Ref_004
-      real , intent(in) :: Ref_021
-      real , intent(in) :: Ref_006_Std
-      real , intent(in) :: sat_zen
-      integer(kind=int1) , intent(in) :: Is_glint
-      integer(kind=int1) , intent(in) :: Land_Class
-
-      logical :: Is_water_sfc
-
-      real, parameter :: pi = 3.14159265359
-      real, parameter :: SMOKE_STD_DEV_LAND_THRESH = 0.1
-      real, parameter :: SMOKE_STD_DEV_WATER_THRESH = 0.05
-      real, parameter :: SMOKE_STD_DEV_LAND_GLINT_THRESH = 1.5
-      real, parameter :: SMOKE_STD_DEV_WATER_GLINT_THRESH = 0.05
-      real, parameter :: SMOKE_CAND_M11M1_REF_RATIO_THRESH = 0.25
-
-      real :: Ref_ratio                                                                                                                                            
-      real :: Std_Dev_thresh_cand
-
-      Vcm_smoke_Test = 0
-
-      ! - check if valid
-      if ( Ref_004 < 0. .or. Ref_021 < 0. .or. Ref_006_Std < 0.) then
-         return
-      end if
-
-      Is_water_sfc = Land_Class == 0 .or. &
-         Land_Class >= 3 .and. Land_Class <= 7
-
-      Ref_ratio = Ref_021 / Ref_004
-
-      if ( Is_water_sfc .and. Ref_ratio > ( SMOKE_CAND_M11M1_REF_RATIO_THRESH &
-                             * cos (sat_zen*pi/180.0) ) ) return
-
-      if ( Is_glint == 1 .and. Is_water_sfc )  &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_WATER_GLINT_THRESH
-      if ( Is_glint == 1 .and. .not. ( Is_water_sfc ) ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_LAND_GLINT_THRESH
-      if ( Is_glint == 0 .and. Is_water_sfc ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_WATER_THRESH
-      if ( Is_glint == 0 .and. .not. ( Is_water_sfc ) ) &
-                Std_Dev_thresh_cand = SMOKE_STD_DEV_LAND_THRESH
-
-      if ( Ref_006_Std < Std_Dev_thresh_cand ) Vcm_smoke_Test = 1
-
-  end function VCM_SMOKE_TEST
-
-  !----------------------------------------------------------------------------
-  ! VIIRS VCM DUST TEST
-  !
-  !  Reference: ???
-  !----------------------------------------------------------------------------
-  integer elemental function VCM_DUST_TEST ( &
-              Ref_004 &
-            , Ref_006 &
-            , Ref_006_Std &
-            , Is_glint &
-            , Land_Class )
-
-      real , intent(in) :: Ref_004
-      real , intent(in) :: Ref_006
-      real , intent(in) :: Ref_006_Std
-      integer(kind=int1) , intent(in) :: Is_glint
-      integer(kind=int1) , intent(in) :: Land_Class
-
-      logical :: Is_water_sfc
-
-      real, parameter :: DUST_M1_REFL_THRESH = 0.8
-      real, parameter :: DUST_CAND_M1M5_REFL_RATIO_THRESH = 0.25
-      real, parameter :: DUST_STD_DEV_LAND_THRESH = 0.1
-      real, parameter :: DUST_STD_DEV_WATER_THRESH = 0.05
-      real, parameter :: DUST_STD_DEV_LAND_GLINT_THRESH = 0.7
-      real, parameter :: DUST_STD_DEV_WATER_GLINT_THRESH = 0.05
-
-      real :: Std_Dev_thresh_cand
-
-      Vcm_Dust_Test = 0
-
-      ! - check if valid
-      if ( Ref_004 < 0.0 .or. Ref_006 < 0.0 .or. Ref_006_Std <= 0.) then    
-         return
-      end if
-
-      ! -- exclude water 
-      Is_water_sfc = Land_Class == 0 .or. Land_Class >= 3 .and. Land_Class <= 7
-
-
-      if ( Is_water_sfc .and. ( Ref_004 >= DUST_M1_REFL_THRESH &
-        .or. Ref_004 / Ref_006 >= DUST_CAND_M1M5_REFL_RATIO_THRESH )) then
-         return
-      end if
-
-      ! adjust thresholds
-      if ( Is_Glint == 1 .and. Is_water_sfc ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_WATER_GLINT_THRESH
-      if ( Is_Glint == 1 .and. .not. (Is_water_sfc) ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_LAND_GLINT_THRESH
-      if ( Is_Glint == 0 .and. Is_water_sfc ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_WATER_THRESH
-      if ( Is_glint == 0 .and. .not. (Is_water_sfc) ) &
-           Std_Dev_thresh_cand = DUST_STD_DEV_LAND_THRESH
-
-      if ( Ref_006_Std < Std_Dev_thresh_cand ) Vcm_Dust_Test = 1
-
-   end function VCM_DUST_TEST
 
    !---------------------------------------------------------------------------
+   ! CLAVR-x IR DUST Algorithm
    !
+   ! Coded: Andy Heidinger
    !---------------------------------------------------------------------------
-   integer elemental function IR_DUST_TEST ( &
-                    Solzen,             &
-                    Emiss_375um,        &
-                    Bt_11um,            &
-                    Bt_12um,            &
-                    Emiss_375um_Clear,  &
-                    Bt_11um_Clear,      &
-                    Bt_12um_Clear,      &
-                    Bt_11um_Std)
+   integer elemental function CLAVRX_DUST_TEST ( &
+                    Chan_On_85,         &
+                    Chan_On_11,         &
+                    Chan_On_12,         &
+                    Bt_85,            &
+                    Bt_11,            &
+                    Bt_12,            &
+                    Bt_11_Clear,      &
+                    Bt_12_Clear,      &
+                    Bt_11_Std, &
+                    Emiss_11_Tropo)
 
-   real , intent(in) :: Solzen
-   real , intent(in) :: Emiss_375um
-   real , intent(in) :: Bt_11um
-   real , intent(in) :: Bt_12um
-   real , intent(in) :: Emiss_375um_Clear
-   real , intent(in) :: Bt_11um_Clear
-   real , intent(in) :: Bt_12um_Clear
-   real , intent(in) :: Bt_11um_Std
+   integer , intent(in) :: Chan_On_85
+   integer , intent(in) :: Chan_On_11
+   integer , intent(in) :: Chan_On_12
+   real , intent(in) :: Bt_85
+   real , intent(in) :: Bt_11
+   real , intent(in) :: Bt_12
+   real , intent(in) :: Bt_11_Clear
+   real , intent(in) :: Bt_12_Clear
+   real , intent(in) :: Bt_11_Std
+   real , intent(in) :: Emiss_11_Tropo
    real :: Btd_11_12
    real :: Btd_11_12_Metric
-   real , parameter:: Btd_11_12_Metric_Max_Thresh = -1.0
-   real , parameter:: Btd_11_12_Max_Thresh = -0.25 !-1.0
-   real , parameter:: Bt_11_Std_Max_Thresh = 3.0
+   integer:: Split_Win_Flag
+   integer:: IR_Win_Flag
+   integer:: IR_Win_Std_Flag
+   integer:: IR_Win_85_Diff_Flag
 
-   Ir_Dust_Test = 0
+   Split_Win_Flag = 1
+   IR_Win_Flag = 1
+   IR_Win_Std_Flag = 1
+   IR_Win_85_Diff_Flag = 1
 
-   Btd_11_12 = (Bt_11um - Bt_12um)
-   Btd_11_12_Metric = (Bt_11um_Clear - Bt_12um_Clear)*(Bt_11um-260.0) / (Bt_11um_Clear-260.0)
-   if (Bt_11um < 260.0) Btd_11_12_Metric = 0.0
-   Btd_11_12_Metric = Btd_11_12 - Btd_11_12_Metric
-
-   if (Btd_11_12 < Btd_11_12_Max_Thresh .and. Btd_11_12_Metric < Btd_11_12_Metric_Max_Thresh) then
-      Ir_Dust_Test = 1
+   !--- Split Window
+   if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+      Btd_11_12 = (Bt_11 - Bt_12)
+      Btd_11_12_Metric = split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)
+      if (Btd_11_12 > Btd_11_12_Max_Dust_Thresh) Split_Win_Flag = 0
+      if (Btd_11_12_Metric > Btd_11_12_Metric_Max_Dust_Thresh) Split_Win_Flag = 0
+      if ((Bt_11 - Bt_12) - (Bt_11_Clear - Bt_12_Clear) > Bt_11_12_Clear_Diff_Max_Dust_Thresh) Split_Win_Flag = 0
    endif
 
-   !--- turn off if btd is not too negative but it is spatially variable in 11um
-   if (Bt_11um_Std > Bt_11_Std_Max_Thresh .and. Btd_11_12 > -1.5) then
-      Ir_Dust_Test = 0
+   !--- 8.5-11 should be moderately negative.  ice clouds are positive
+   !--- water clouds are very negative
+   if (Chan_On_11 == 1 .and. chan_On_12 == 1 .and. Chan_On_85 == 1) then
+      if ((Bt_85 - Bt_11) > Btd_85_11_Max_Dust_Thresh) IR_Win_85_Diff_Flag = 0
+      if ((Bt_85 - Bt_11) < Btd_85_11_Min_Dust_Thresh) IR_Win_85_Diff_Flag = 0
    endif
 
-   !--- check for cloud
-!  if (Solzen > 90.0) then
-!    if (abs((Emiss_375um - Emiss_375um)) > 0.2) then
-!     Ir_Dust_Test = 0
-!    endif
-!  endif 
+   !--- 11um variabilty
+   if (Chan_On_11 == 1) then
+      if (Bt_11_Std > Bt_11_Std_Max_Dust_Thresh) IR_Win_Std_Flag = 0
+   endif
 
-   if (Solzen > 90.0) then
-     if (abs(Emiss_375um - Emiss_375um_Clear) > 0.1) then
-      Ir_Dust_Test = 0
-     endif
-   endif 
+   !--- IR test - dust should low to moderate emissivity
+   if (Chan_On_11 == 1) then
+       if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Dust_Thresh) IR_Win_Flag = 0
+       if (Emiss_11_Tropo < Emiss_11_Tropo_Min_Dust_Thresh) IR_Win_Flag = 0
+       if (Bt_11 - Bt_11_Clear < Bt_11_Clear_Diff_Min_Dust_Thresh) IR_Win_Flag = 0
+   endif
 
-   end function IR_DUST_TEST
-!==============================================================
-! Median filter
-!
-! mask = 0 means use median, mask = 1 mean ignore
-!==============================================================
-subroutine MEDIAN_FILTER_MASK(z,mask,z_median)
+   CLAVRX_DUST_TEST = Split_Win_Flag * IR_Win_Std_Flag * IR_Win_Flag * IR_Win_85_Diff_Flag
 
-! The purpose of this function is to find 
-! median (emed), minimum (emin) and maximum (emax)
-! for the array elem with nelem elements. 
+   end function CLAVRX_DUST_TEST
 
-  real, dimension(:,:), intent(in):: z
-  real, intent(out):: z_median
-  integer(kind=int1), dimension(:,:), intent(in):: mask
-  integer:: i,j,k,nx,ny,nelem
-  real, dimension(:), allocatable::x
-  real:: u
 
-  z_median = missing_value_real4
+  !-------------------------------------------------------------------------------------
+  !  CLAVR-x Split Window Test for Clear value for a given T11
+  !-------------------------------------------------------------------------------------
+  real elemental function SPLIT_WINDOW_TEST ( t11_clear, t12_clear, t11, t12)
 
-  nx = size(z,1)
-  ny = size(z,2)
+     real, intent(in):: t11_clear
+     real, intent(in):: t12_clear
+     real, intent(in):: t11
+     real, intent(in):: t12
 
-  nelem = nx * ny
+     split_window_test  = (t11_clear - t12_clear) * (t11 - 260.0) / (t11_clear - 260.0) 
 
-  allocate(x(nelem))
-  x = 0.0
-  k = 0
-  do i = 1, nx
-    do j = 1, ny
-      if (mask(i,j) == 0 .and. z(i,j) /= missing_value_real4) then
-           k = k + 1
-           x(k) = z(i,j)
-      endif
-   enddo
-  enddo
+     if (t11_clear <=265.0) split_window_test = 0.0
 
-  nelem = k
+     split_window_test = (t11 - t12) - split_window_test
 
-  if (nelem < 1) then
-     if (allocated(x)) deallocate(x)
-     return
-  endif
-  !--- sort the array into ascending order
-  do i=1,nelem-1
-   do j=i+1,nelem
-    if(x(j)<x(i))then
-     u=x(j)
-     x(j)=x(i)
-     x(i)=u
-    end if
-   end do
-  end do
+  end function SPLIT_WINDOW_TEST
 
-  !---- pick the median
-  if(mod(nelem,2)==1)then
-   i=nelem/2+1
-   z_median=x(i)
-  else
-   i=nelem/2
-   z_median=(x(i)+x(i+1))/2
-   end if
-
-  if (allocated(x)) deallocate(x)
-
-end subroutine MEDIAN_FILTER_MASK
 !-----------------------------------------------------------
 ! end of module
 !-----------------------------------------------------------

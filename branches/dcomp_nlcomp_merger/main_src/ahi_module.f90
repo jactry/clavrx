@@ -166,10 +166,10 @@ end subroutine READ_AHI_INSTR_CONSTANTS
    integer(kind=int4), intent(in):: image_time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=1020):: Channel_X_Filename
+   character(len=1020):: Channel_X_Filename_Full
+   character(len=1020):: Channel_X_Filename_Full_uncompressed
+   character(len=1020):: System_String
    integer:: ipos
    integer:: ilen
    integer:: ielem
@@ -226,9 +226,7 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(1, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
-   
 
    !---   read channel 12 (AHI channel 2)
    if (Chan_On_Flag_Default(3) == sym%YES) then
@@ -236,7 +234,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(2, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
    
    !---   read channel 1 (AHI channel 3)
@@ -245,7 +242,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(3, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
 
    !---   read channel 2 (AHI channel 4)
@@ -254,9 +250,7 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(4, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
-
 
    !---   read channel 6 (AHI channel 5)
    if (Chan_On_Flag_Default(6) == sym%YES) then
@@ -264,7 +258,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(5, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
 
    !---   read channel 7 (AHI channel 6)
@@ -273,10 +266,7 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(6, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
-
-
    
    !---   read channel 20 (AHI channel 7)
    if (Chan_On_Flag_Default(20) == sym%YES) then
@@ -284,9 +274,7 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(7, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
-                    
    
    !---   read channel 27 (AHI channel 9)
    if (Chan_On_Flag_Default(27) == sym%YES) then
@@ -304,7 +292,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                              Two_Byte_Temp)
    endif
 
-
    !---   read channel 29 (AHI channel 11)
    if (Chan_On_Flag_Default(29) == sym%YES) then
 
@@ -313,7 +300,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                              Two_Byte_Temp)
    endif
 
-
    !---   read channel 30 (AHI channel 12)
    if (Chan_On_Flag_Default(30) == sym%YES) then
 
@@ -321,7 +307,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
    endif
-
    
    !---   read channel 31 (AHI channel 14)
    if (Chan_On_Flag_Default(31) == sym%YES) then
@@ -331,14 +316,12 @@ end subroutine READ_AHI_INSTR_CONSTANTS
                              Two_Byte_Temp)
    endif
    
-   
    !---   read channel 32 (AHI channel 15)
    if (Chan_On_Flag_Default(32) == sym%YES) then
 
        call READ_AHI_CHANNEL(15, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
     
    !---   read channel 33 (AHI channel 16)
@@ -347,7 +330,6 @@ end subroutine READ_AHI_INSTR_CONSTANTS
        call READ_AHI_CHANNEL(16, AHI_Xstride, Segment_Number, &
                              Num_Scans_Per_Segment, Num_Scans_Read,   &
                              Two_Byte_Temp)
-
    endif
     
    do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + num_scans_read - 1

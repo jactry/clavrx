@@ -1860,19 +1860,21 @@ subroutine COMPUTE_GLINT()
 
           endif
 
-          !-turn off if non-uniform
-          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+          !-turn off if non-uniform - but not near limb
+          if (Geo%Satzen(Elem_Idx,Line_Idx) < 45.0) then 
+           if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
             if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
-          endif
+           endif
 
-          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
             if (Ref_Ch1_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
+           endif
           endif
 
           !-turn off if dark
@@ -2099,7 +2101,7 @@ end subroutine COMPUTE_CLEAR_SKY_SCATTER
    character(len=*), intent(in):: File_1b_Original
    integer(kind=int4), intent(out):: L1b_Gzip
    integer(kind=int4), intent(out):: L1b_Bzip2
-   character(len=200):: System_String
+   character(len=1020):: System_String
    character(len=7):: L1b_ext
 
 

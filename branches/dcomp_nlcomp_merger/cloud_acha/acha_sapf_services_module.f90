@@ -1,3 +1,4 @@
+! $Id$
 !------------------------------------------------------------------------------
 !this module holds all the dependencies for ACHA for the various frameworks
 !------------------------------------------------------------------------------
@@ -35,6 +36,16 @@ implicit none
   public:: ACHA_FETCH_PIXEL_NWP_RTM
 
  integer(KIND=INT4), PRIVATE, PARAMETER :: Num_Levels_Prof = 101
+
+!Diag structure
+
+ type, public :: acha_diag_struct
+  real (kind=real4), dimension(:,:), pointer:: Array_1
+  real (kind=real4), dimension(:,:), pointer:: Array_2
+  real (kind=real4), dimension(:,:), pointer:: Array_3
+ end type acha_diag_struct
+
+
 
 !ACHA input structure
 ! input structure
@@ -190,12 +201,12 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), ALLOCATABLE:: Pc_H2O
    real, dimension(:,:), ALLOCATABLE:: Tc_H2O
    real, dimension(:,:), ALLOCATABLE:: Zc_H2O
-   
-   !WCS3 - 10/23/2015 - Temporary vars for buffer testing
-   integer (kind=int4), dimension(:,:), pointer:: XLRCIdx
-   integer (kind=int4), dimension(:,:), pointer:: YLRCIdx
-   real, dimension(:,:), pointer:: LRC_11um
-   
+   !ASOS - turned off for now
+   integer(kind=int1), dimension(:,:), pointer:: ASOS_Cloud_Class
+   integer(kind=int1), dimension(:,:), pointer:: ASOS_Cloud_Code
+   real, dimension(:,:), pointer:: ASOS_Cloud_ECA
+   real, dimension(:,:), pointer:: ASOS_Cloud_Zmin
+   real, dimension(:,:), pointer:: ASOS_Cloud_Zmax      
  end type acha_output_struct
   
 !Symbol stucture

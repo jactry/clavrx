@@ -212,8 +212,8 @@ end subroutine AER_RET
  subroutine READ_AER_CH123A_REF_LUTS(ancil_data_dir,wmonum)
   character (len=*), intent(in):: ancil_data_dir
   integer, intent(in):: wmonum
-  character (len=128):: ch1_aer_Lut_file,ch2_aer_Lut_file,ch3a_aer_Lut_file
-  character (len=128):: header,basename
+  character (len=1020):: ch1_aer_Lut_file,ch2_aer_Lut_file,ch3a_aer_Lut_file
+  character (len=1020):: header,basename
   integer:: iSolzen,izen,itau
   integer:: nzen1,Naz1,Nsolzen1,Ntau1
   integer:: nzen2,Naz2,Nsolzen2,Ntau2

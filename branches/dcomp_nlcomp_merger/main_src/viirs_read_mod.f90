@@ -69,12 +69,12 @@ module viirs_read_mod
       logical :: chan_on_dnb 
       logical :: viirs_cloud_mask_on
       logical :: viirs_cloud_type_on
-      character ( len = 255 ) :: gmtco_file
+      character ( len = 1020 ) :: gmtco_file
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count 
-      character ( len =355 ) :: dir_1b
-      character ( len =255 ) :: file_gmtco_base
-      character (len = 355 ) :: Ancil_Data_Dir
+      character ( len =1020 ) :: dir_1b
+      character ( len =1020 ) :: file_gmtco_base
+      character (len = 1020 ) :: Ancil_Data_Dir
       real, dimension(16) :: Nu_List
    end type viirs_data_config
    
@@ -208,7 +208,7 @@ contains
       integer ( kind = int8) , dimension(:) , pointer :: i1d_buffer
       integer, dimension ( : , : ) , pointer :: i2d_buffer             
       integer, dimension ( :, :), allocatable :: cld_type_idps
-      character ( len = 255 ) , pointer , dimension ( :) :: file_arr_dummy 
+      character ( len = 1020 ) , pointer , dimension ( :) :: file_arr_dummy 
       
       character (len=100), dimension ( 7 ) :: setname_gmtco_list = (/ character (len =300) :: &
                           'All_Data/VIIRS-MOD-GEO-TC_All/Latitude              ' & ! 1
@@ -220,26 +220,26 @@ contains
                          , 'All_Data/VIIRS-MOD-GEO-TC_All/SolarZenithAngle     ' & ! 7
                                                     /)                            
       integer :: i_gmtco
-      character ( len =650 ) :: file_gmtco
+      character ( len =1020 ) :: file_gmtco
       
       integer :: i_mband
-      character ( len =100) :: setname_mband , setname_mband_fac
-      character ( len =150 ) :: file_mband
-      logical, dimension ( 16) :: is_mband_on
+      character ( len =1020 ) :: setname_mband , setname_mband_fac
+      character ( len =1020 ) :: file_mband
+      logical, dimension ( 16 ) :: is_mband_on
    
       integer :: i_iband
-      character ( len =100) :: setname_iband, setname_iband_fac
-      character ( len =150 ) :: file_iband
-      logical, dimension ( 5) :: is_iband_on
+      character ( len =1020 ) :: setname_iband, setname_iband_fac
+      character ( len =1020 ) :: file_iband
+      logical, dimension ( 5 ) :: is_iband_on
    
-      character ( len =150 ) :: file_dnb_idx
-      character ( len =150 ) :: file_gdnbo, file_svdnb
+      character ( len =1020 ) :: file_dnb_idx
+      character ( len =1020 ) :: file_gdnbo, file_svdnb
       integer :: io_err_stat
       integer :: i_map
       integer , dimension (3200) :: d2m_indx
       
-      character ( len =100) :: setname_iicmo
-      character ( len =150 ) :: file_iicmo
+      character ( len =1020 ) :: setname_iicmo
+      character ( len =1020 ) :: file_iicmo
       integer :: lun
       integer :: n_files
       integer :: k

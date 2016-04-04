@@ -50,7 +50,7 @@ contains
       integer, intent(in):: Line_Idx_Min_Segment
       integer, intent(in):: Number_Of_Lines_Read_This_Segment
       
-       character(len=120):: Auxpath
+      character(len=1020):: Auxpath
       real(kind=real4):: Glat
       real(kind=real4):: Glon
       integer(kind=int4):: Year

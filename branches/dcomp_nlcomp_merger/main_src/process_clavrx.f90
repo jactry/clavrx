@@ -99,7 +99,8 @@
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
-   use NLCOMP_BRIDGE_MOD
+   use NLCOMP_BRIDGE_MOD, only: &
+      awg_cloud_nlcomp_algorithm
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
    use LAND_SFC_PROPERTIES
@@ -137,6 +138,8 @@
    use GOES_MODULE
    use LASZLO_INSOLATION
    use SEVIRI_MODULE
+   use OCA_MODULE, only: &
+       READ_OCA
    use MTSAT_MODULE
    use COMS_MODULE
    use FY2_MODULE
@@ -183,7 +186,7 @@
    real(kind=real4) :: Orbital_Processing_Start_Time_Hours
    real(kind=real4) :: Orbital_Processing_End_Time_Hours
    real(kind=real4) :: Orbital_Processing_Time_Seconds
-   character(len=280):: File_1b_Temp
+   character(len=1020):: File_1b_Temp
    integer(kind=int4):: erstat
    real(kind=real4):: Time_Since_Launch
    integer(kind=int4):: err_reposnx_Flag
@@ -196,14 +199,14 @@
    integer(kind=int4):: iperiod16   
    integer(kind=int4) :: ierror
    character(len=3):: Day_String
-   character(len=100):: Modis_White_Sky_0_66_Name
-   character(len=100):: Modis_White_Sky_0_86_Name
-   character(len=100):: Modis_White_Sky_1_24_Name
-   character(len=100):: Modis_White_Sky_1_64_Name
-   character(len=100):: Modis_White_Sky_2_13_Name
-   character(len=100):: Snow_Mask_File_Name
-   character(len=256):: oiSst_File_Name
-   character(*), parameter :: PROGRAM_NAME = 'CLAVRXORB'
+   character(len=1020):: Modis_White_Sky_0_66_Name
+   character(len=1020):: Modis_White_Sky_0_86_Name
+   character(len=1020):: Modis_White_Sky_1_24_Name
+   character(len=1020):: Modis_White_Sky_1_64_Name
+   character(len=1020):: Modis_White_Sky_2_13_Name
+   character(len=1020):: Snow_Mask_File_Name
+   character(len=1020):: oiSst_File_Name
+   
 
    integer(kind=int4):: Emiss_File_Id = missing_value_int4
    integer(kind=int4):: Coast_Mask_Id = missing_value_int4
@@ -234,7 +237,7 @@
    integer, parameter:: Max_LRC_Distance = 10
    real, parameter:: Min_LRC_Jump = 0.0   !0.5
    real, parameter:: Max_LRC_Jump = 100.0 !10.0
-   integer, parameter:: Missing_LRC_Value = -999
+   
    integer, parameter:: Grad_Flag_LRC = -1
    real, parameter:: Min_Bt_11um_LRC = 220.0
    real, parameter:: Max_Bt_11um_LRC = 300.0
@@ -245,8 +248,8 @@
    
    logical :: dcomp_run
    
-   character ( len = 30) :: string_30
-   character ( len = 100) :: string_100
+   character (len = 30) :: string_30
+   character (len = 100) :: string_100
    
    !------------- VIIRS variables --------------
    real(kind=real4), dimension(:,:), pointer :: lunar_ref
@@ -694,6 +697,14 @@
             print *, EXE_PROMPT, "ERROR:  Error reading level1b, skipping this file"
             exit
          end if
+
+         if (trim(Sensor%Sensor_Name) == 'SEVIRI' .and. Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK) then
+            call READ_OCA(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
+                 Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
+                 Segment_Number,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
+                 Cost_Aux,Pc_Top1_Aux,Pc_Top2_Aux,Pc_Uncertainty1_Aux,Pc_Uncertainty2_Aux, &
+                 Tau_Aux,Cld_Phase_Aux)
+         endif
 
          !------------------------------------------------------------------
          ! Apply spatial limits

@@ -1,5 +1,5 @@
 ! $Id$
-module ahi_clavrx_bridge
+module AHI_CLAVRX_BRIDGE 
    
       use Pixel_Common , only : &
         Image &
@@ -17,21 +17,21 @@ module ahi_clavrx_bridge
       , Gap_Pixel_Mask &
       , Ch 
    
-    use constants, only: &
-      int4 &
+    use Constants, only: &
+      Int4 &
      , Missing_Value_Real4
       
       
-    use calibration_constants, only: &
+    use Calibration_Constants, only: &
             Planck_Nu
    
-   use planck, only: CONVERT_RADIANCE
+   use Planck, only: CONVERT_RADIANCE
    
    implicit none
 
 contains
 
-   subroutine read_ahi_data ( segment_number ,  file_ch01 , error_out )
+   subroutine READ_AHI_DATA ( Segment_Number , File_Ch01 , Error_Out )
       use planck
       use cx_read_ahi_mod
       
@@ -66,7 +66,6 @@ contains
                         Planck_Nu(38), Planck_Nu(31), Planck_Nu(32),  &
                         Planck_Nu(33)]
       
-      
       is_solar_channel(7:16) = .false.
       is_solar_channel(1:6) = .true.
     
@@ -82,16 +81,12 @@ contains
          ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
          ahi_c % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
    
-         call ahi_segment_information_region ( ahi_c , offset_all, count_all )
-         
-        
-         
+         call AHI_SEGMENT_INFORMATION_REGION( ahi_c , offset_all, count_all )
       end if
       
       y_start = offset_all(2) + ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment
       c_seg_lines = Image%Number_Of_Lines_Per_Segment
      
-      
       if ( (c_seg_lines + y_start) > (Image%Number_Of_Lines+offset_all(2)) ) then
          c_seg_lines = Image%Number_Of_Lines - y_start + offset_all(2)  
       end if
@@ -99,10 +94,8 @@ contains
       ahi_c % h5_offset = [offset_all(1),y_start]
       ahi_c % h5_count = [Image%Number_Of_Elements  , c_seg_lines] 
       
-
-         
        
-      call get_ahi_data ( ahi_c, ahi_data )
+      call GET_AHI_DATA( ahi_c, ahi_data )
       
       if ( .not. ahi_data % success ) then
          print*,'AHI Read had errors '
@@ -111,8 +104,6 @@ contains
          print*,' In a later version of CLAVR-x the next file should be start now...'
          stop
       end if
-     
-     
      
       nav % lat_1b(:,1:c_seg_lines)    = ahi_data % geo % lat
       nav % lon_1b(:,1:c_seg_lines)    = ahi_data % geo % lon
@@ -139,15 +130,14 @@ contains
       
          if ( is_solar_channel ( i_chn) ) then
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
-            
          else
             if ( modis_chn > 38) then
                cycle
             end if
             
             ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
-            call convert_radiance ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
-            call compute_bt_array ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &
+            call CONVERT_RADIANCE ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
+            call COMPUTE_BT_ARRAY ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &
                , ch(modis_chn)%rad_toa ( : ,1:c_seg_lines) &
                 , modis_chn ,MISSING_VALUE_REAL4 )
  
@@ -157,7 +147,7 @@ contains
     
   
       Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
-      scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment + 1 , 1)]
+      scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment  , 1)]
 
       nav % ascend = 0 
       Cloud_Mask_Aux_Read_Flag = 0 
@@ -165,16 +155,16 @@ contains
      
       
       ! - update time
-      call ahi_data % time_start_obj % get_date ( msec_of_day = Image%Start_Time  )
-      call ahi_data % time_end_obj % get_date ( msec_of_day = Image%End_Time  )     
-           
+      call AHI_DATA % TIME_START_OBJ % GET_DATE ( msec_of_day = Image%Start_Time  )
+      call AHI_DATA % TIME_END_OBJ % GET_DATE ( msec_of_day = Image%End_Time  )     
+         
       scan_time(1:c_seg_lines)   = Image%Start_Time + &
-                                 ( scan_number * (Image%End_Time - Image%Start_Time)) &
+                                 ( scan_number(1:c_seg_lines) * (Image%End_Time - Image%Start_Time)) &
                                  / Image%Number_Of_Lines
       
-      call ahi_data % deallocate_all
+      call AHI_DATA % DEALLOCATE_ALL 
  
  
-   end subroutine read_ahi_data
+   end subroutine READ_AHI_DATA 
 
-end module ahi_clavrx_bridge
+end module AHI_CLAVRX_BRIDGE

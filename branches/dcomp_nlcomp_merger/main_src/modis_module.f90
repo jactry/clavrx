@@ -158,7 +158,7 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name &
     character(len=nc):: Search_String
     integer:: ilen
     integer(kind=int4):: Num_Files
-    character(len=255), dimension(:), pointer:: Files
+    character(len=1020), dimension(:), pointer:: Files
 
     Search_String = trim(Modis_1b_Name(1:nc))
    
@@ -214,7 +214,7 @@ subroutine DETERMINE_MODIS_CLOUD_MASK_FILE(Modis_1b_Name, Dir_Modis_Cloud_Mask, 
     character(len=nc):: Search_String
     integer:: ilen
     integer(kind=int4):: Num_Files
-    character(len=255), dimension(:), pointer:: Files
+    character(len=1020), dimension(:), pointer:: Files
 
     Search_String = trim(Modis_1b_Name(1:nc-1))
 
@@ -967,16 +967,12 @@ end subroutine READ_MODIS_LEVEL1B_CLOUD_MASK
 subroutine READ_MODIS(Seg_Idx,Error_Status)
 
     integer, intent(in):: Seg_Idx
-
     integer, intent(out):: Error_Status
 
     integer:: End_Flag
-
     integer:: Chan_Idx
-
     real, dimension(20:36):: Eff_Wavenumber
-
-    character (len=250) :: File_Name_Tmp
+    character (len=1020) :: File_Name_Tmp
 
     Error_Status = 0
     End_Flag = 0

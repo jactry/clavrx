@@ -54,9 +54,15 @@
 
  !--- Cirrus Box Parameters
  integer, private, parameter :: USE_CIRRUS_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
- real (kind=real4), parameter:: EMISSIVITY_MIN_TEMPERATURE_CIRRUS = 0.7
- integer (kind=int4), parameter:: COUNT_MIN_TEMPERATURE_CIRRUS = 5
- integer (kind=int4), parameter:: BOX_WIDTH_KM = 200
+ real (kind=real4), parameter:: EMISSIVITY_MIN_CIRRUS = 0.7
+ integer (kind=int4), parameter:: COUNT_MIN_CIRRUS = 3 !5
+ integer (kind=int4), parameter:: CIRRUS_BOX_WIDTH_KM = 200 !200
+
+ !---- Lower Cloud Parameters
+ integer, private, parameter :: USE_LOWER_INTERP_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
+ integer (kind=int4), parameter:: COUNT_MIN_LOWER = 3 !5
+ integer (kind=int4), parameter:: LOWER_BOX_WIDTH_KM = 200 !200
+ real(kind=real4), parameter, private:: PC_LOWER_CLOUD_OFFSET = 200.0  !hpa
 
  !---------------------------------------------------------------------
  ! retrieval specific parameters
@@ -86,8 +92,6 @@
  real(kind=real4), parameter, private:: Tc_Ap_tropo_Offset_Cirrus = 15.0      !apriori Tc for opaque clouds
 
  real(kind=real4), parameter, private:: Tc_Ap_Uncer_Opaque  = 10.0            !apriori uncertainty of Tc for opaque clouds
-
-!real(kind=real4), parameter, private:: Tc_Ap_Uncer_Cirrus = 40.0  !!           !apriori uncertainty of Tc for cirrus
 
  real(kind=real4), parameter, private:: Tc_Ap_Uncer_Cirrus = 20.0  !!           !apriori uncertainty of Tc for cirrus
                                                                     ! Originally it was 20 in the baseline version of ACHA
@@ -136,7 +140,6 @@
 
  !--- these parameters constrain the allowable solutions
  real(kind=real4), parameter, private:: Min_Allowable_Tc = 180.0  !K
- real(kind=real4), parameter, private:: Pc_Lower_Cloud_Offset = 200.0  !hpa
 
  !--- parameter that controls observed negative heights and pressures.
  real(kind=real4), parameter, private:: ZC_FLOOR = 75.0 !Set a bottom limit to Zc.

@@ -157,7 +157,7 @@ module PIXEL_COMMON
 
   !--- arrays to keep track of files written to temporary directory, max 100 assumed
   integer, public, save:: Number_Of_Temporary_Files
-  character(len=200),dimension(100), public, save:: Temporary_File_Name
+  character(len=1020),dimension(100), public, save:: Temporary_File_Name
 
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
@@ -261,8 +261,8 @@ module PIXEL_COMMON
     character(len=32):: Platform_Name
     integer(kind=int4):: WMO_Id
     integer(kind=int4):: WMO_Id_Previous
-    character(len=128):: Instr_Const_File
-    character(len=128):: Algo_Const_File
+    character(len=1020):: Instr_Const_File
+    character(len=1020):: Algo_Const_File
     real(kind=real8):: Geo_Sub_Satellite_Longitude
     real(kind=real8):: Geo_Sub_Satellite_Latitude
     integer(kind=int1), dimension(Nchan_Clavrx):: Chan_On_Flag_Default
@@ -270,9 +270,9 @@ module PIXEL_COMMON
   end type sensor_definition
 
   type :: image_definition
-    character(len=328):: Level1b_Name
-    character(len=528):: Level1b_Full_Name
-    character(len=328):: Level1b_Path
+    character(len=1020):: Level1b_Name
+    character(len=1020):: Level1b_Full_Name
+    character(len=1020):: Level1b_Path
     integer(kind=int4):: Number_Of_Elements
     integer(kind=int4):: Number_Of_Lines
     integer(kind=int4):: Number_Of_Lines_Per_Segment
@@ -285,8 +285,8 @@ module PIXEL_COMMON
     integer(kind=int2):: End_Year
     integer(kind=int2):: End_Doy
     integer(kind=int4):: End_Time
-    character(len=128) :: Auxiliary_Cloud_Mask_File_Name
-    character(len=128) :: Auxiliary_Geolocation_File_Name
+    character(len=1020) :: Auxiliary_Cloud_Mask_File_Name
+    character(len=1020) :: Auxiliary_Geolocation_File_Name
   end type image_definition
 
   type :: acha_definition
@@ -420,27 +420,27 @@ module PIXEL_COMMON
   !---------------------------------------------------------------------------------
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
-  character(len=355),public,save:: Ancil_Data_Dir
-  character(len=355),public,save:: Gfs_Data_Dir
-  character(len=355),public,save:: Ncep_Data_Dir
-  character(len=355),public,save:: Cfsr_Data_Dir
-  character(len=355),public,save:: Merra_Data_Dir
-  character(len=355),public,save:: Gdas_Data_Dir
-  character(len=355),public,save:: Erai_Data_Dir
-  character(len=355),public,save:: Oisst_Data_Dir
-  character(len=355),public,save:: Snow_Data_Dir
-  character(len=355),public,save:: GLOBSnow_Data_Dir
-  character(len=355),public,save:: Dark_Comp_Data_Dir
-  character(len=355),public,save:: Temporary_Data_Dir
-  character(len=255),public,save:: File_Nav
+  character(len=1020),public,save:: Ancil_Data_Dir
+  character(len=1020),public,save:: Gfs_Data_Dir
+  character(len=1020),public,save:: Ncep_Data_Dir
+  character(len=1020),public,save:: Cfsr_Data_Dir
+  character(len=1020),public,save:: Merra_Data_Dir
+  character(len=1020),public,save:: Gdas_Data_Dir
+  character(len=1020),public,save:: Erai_Data_Dir
+  character(len=1020),public,save:: Oisst_Data_Dir
+  character(len=1020),public,save:: Snow_Data_Dir
+  character(len=1020),public,save:: GLOBSnow_Data_Dir
+  character(len=1020),public,save:: Dark_Comp_Data_Dir
+  character(len=1020),public,save:: Temporary_Data_Dir
+  character(len=1020),public,save:: File_Nav
 
-  character(len=355),public,save:: Dir_Rtm
-  character(len=355),public,save:: Dir_Level2
-  character(len=355),public,save:: Bayesian_Cloud_Mask_Name
-  character(len=355),public,save:: Dark_Composite_Name
+  character(len=1020),public,save:: Dir_Rtm
+  character(len=1020),public,save:: Dir_Level2
+  character(len=1020),public,save:: Bayesian_Cloud_Mask_Name
+  character(len=1020),public,save:: Dark_Composite_Name
 
   !----- IFF data files
-  character(len=255),public,save:: IFF_File
+  character(len=1020),public,save:: IFF_File
 
   !------------------------------------------------------------------
   !--- variables pertaining to scanline size
@@ -577,11 +577,16 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Mean_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction_3x3
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction
+  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Class
+  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Code
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_ECA
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmin
+  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmax
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 
@@ -637,6 +642,12 @@ module PIXEL_COMMON
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
   real (kind=real4),dimension(:,:),allocatable, public, save, target::Zc_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Top1_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Top2_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Uncertainty1_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Uncertainty2_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Cost_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Tau_Aux
 
   !--- pixel level cloud props
 
@@ -829,7 +840,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   integer ,public, save :: Use_Default
 
 !--- clavrxorb_File_List filename
-  character(len=300), public, save:: File_List
+  character(len=1020), public, save:: File_List
 
  contains
 
@@ -1973,6 +1984,8 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Zc(dim1,dim2)) 
     allocate(ACHA%Zc_Top(dim1,dim2)) 
     allocate(ACHA%Pc_Top(dim1,dim2)) 
+    allocate(Pc_Top1_Aux(dim1,dim2)) 
+    allocate(Pc_Top2_Aux(dim1,dim2)) 
     allocate(ACHA%Zc_Base(dim1,dim2)) 
     allocate(ACHA%Pc_Base(dim1,dim2)) 
     allocate(ACHA%Beta(dim1,dim2)) 
@@ -1983,9 +1996,12 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+    allocate(Pc_Uncertainty1_Aux(dim1,dim2)) 
+    allocate(Pc_Uncertainty2_Aux(dim1,dim2)) 
     allocate(ACHA%Alt(dim1,dim2)) 
     allocate(ACHA%Base_Alt(dim1,dim2)) 
     allocate(ACHA%Cost(dim1,dim2)) 
+    allocate(Cost_Aux(dim1,dim2)) 
     allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
     allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
     allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
@@ -2047,6 +2063,8 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Zc = Missing_Value_Real4
     ACHA%Zc_Top = Missing_Value_Real4
     ACHA%Pc_Top = Missing_Value_Real4
+    Pc_Top1_Aux = Missing_Value_Real4
+    Pc_Top2_Aux = Missing_Value_Real4
     ACHA%Zc_Base  = Missing_Value_Real4
     ACHA%Pc_Base  = Missing_Value_Real4
     ACHA%Beta = Missing_Value_Real4
@@ -2057,9 +2075,12 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Beta_Uncertainty = Missing_Value_Real4
     ACHA%Zc_Uncertainty = Missing_Value_Real4
     ACHA%Pc_Uncertainty = Missing_Value_Real4
+    Pc_Uncertainty1_Aux = Missing_Value_Real4
+    Pc_Uncertainty2_Aux = Missing_Value_Real4
     ACHA%Alt = Missing_Value_Real4
     ACHA%Base_Alt = Missing_Value_Real4
     ACHA%Cost = Missing_Value_Real4
+    Cost_Aux = Missing_Value_Real4
     ACHA%Pc_Lower_Cloud = Missing_Value_Real4
     ACHA%Zc_Lower_Cloud = Missing_Value_Real4
     ACHA%Tc_Lower_Cloud = Missing_Value_Real4
@@ -2084,6 +2105,8 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Zc) 
     deallocate(ACHA%Zc_Top) 
     deallocate(ACHA%Pc_Top) 
+    deallocate(Pc_Top1_Aux) 
+    deallocate(Pc_Top2_Aux) 
     deallocate(ACHA%Zc_Base) 
     deallocate(ACHA%Pc_Base) 
     deallocate(ACHA%Beta) 
@@ -2094,9 +2117,12 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Beta_Uncertainty) 
     deallocate(ACHA%Zc_Uncertainty) 
     deallocate(ACHA%Pc_Uncertainty) 
+    deallocate(Pc_Uncertainty1_Aux) 
+    deallocate(Pc_Uncertainty2_Aux) 
     deallocate(ACHA%Alt) 
     deallocate(ACHA%Base_Alt) 
     deallocate(ACHA%Cost) 
+    deallocate(Cost_Aux) 
     deallocate(ACHA%Pc_Lower_Cloud) 
     deallocate(ACHA%Zc_Lower_Cloud) 
     deallocate(ACHA%Tc_Lower_Cloud) 
@@ -2119,6 +2145,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
       allocate(Tau_DCOMP(dim1,dim2))
+      allocate(Tau_Aux(dim1,dim2))
       allocate(Tau_DCOMP_Ap(dim1,dim2))
       allocate(Vis_Ref_Fm(dim1,dim2))
       allocate(Reff_DCOMP(dim1,dim2))
@@ -2164,6 +2191,7 @@ end subroutine CREATE_DCOMP_ARRAYS
 subroutine RESET_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       Tau_DCOMP = Missing_Value_Real4
+      Tau_Aux = Missing_Value_Real4
       Tau_DCOMP_Ap = Missing_Value_Real4
       Vis_Ref_Fm = Missing_Value_Real4
       Reff_DCOMP = Missing_Value_Real4
@@ -2209,6 +2237,7 @@ end subroutine RESET_DCOMP_ARRAYS
 subroutine DESTROY_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       deallocate(Tau_DCOMP)
+      deallocate(Tau_Aux)
       deallocate(Tau_DCOMP_Ap)
       deallocate(Vis_Ref_Fm)
       deallocate(Reff_DCOMP)
@@ -2521,11 +2550,16 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Zc_CO2IRW(dim1,dim2))
     allocate(Pc_CO2IRW(dim1,dim2))
     allocate(Tc_CO2IRW(dim1,dim2))
-    allocate(Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Cloud_Fraction_Uncer_3x3(dim1,dim2))
-    allocate(High_Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Mid_Cloud_Fraction_3x3(dim1,dim2))
-    allocate(Low_Cloud_Fraction_3x3(dim1,dim2))
+    allocate(Cloud_Fraction(dim1,dim2))
+    allocate(Cloud_Fraction_Uncer(dim1,dim2))
+    allocate(High_Cloud_Fraction(dim1,dim2))
+    allocate(Mid_Cloud_Fraction(dim1,dim2))
+    allocate(Low_Cloud_Fraction(dim1,dim2))
+    allocate(ASOS_Cloud_Class(dim1,dim2))
+    allocate(ASOS_Cloud_Code(dim1,dim2))
+    allocate(ASOS_Cloud_ECA(dim1,dim2))
+    allocate(ASOS_Cloud_Zmax(dim1,dim2))
+    allocate(ASOS_Cloud_Zmin(dim1,dim2))
     allocate(Tc_Co2(dim1,dim2))
     allocate(Pc_Co2(dim1,dim2))
     allocate(Zc_Co2(dim1,dim2))
@@ -2546,11 +2580,16 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Pc_CO2IRW = Missing_Value_Real4
      Tc_CO2IRW = Missing_Value_Real4
      Zc_CO2IRW = Missing_Value_Real4
-     Cloud_Fraction_3x3 = Missing_Value_Real4
-     Cloud_Fraction_Uncer_3x3 = Missing_Value_Real4
-     High_Cloud_Fraction_3x3 = Missing_Value_Real4
-     Mid_Cloud_Fraction_3x3 = Missing_Value_Real4
-     Low_Cloud_Fraction_3x3 = Missing_Value_Real4
+     Cloud_Fraction = Missing_Value_Real4
+     Cloud_Fraction_Uncer = Missing_Value_Real4
+     High_Cloud_Fraction = Missing_Value_Real4
+     Mid_Cloud_Fraction = Missing_Value_Real4
+     Low_Cloud_Fraction = Missing_Value_Real4
+     ASOS_Cloud_Class = Missing_Value_Int1
+     ASOS_Cloud_Code = Missing_Value_Int1
+     ASOS_Cloud_ECA = Missing_Value_Real4
+     ASOS_Cloud_Zmax = Missing_Value_Real4
+     ASOS_Cloud_Zmin = Missing_Value_Real4
      Tc_Co2 = Missing_Value_Real4
      Pc_Co2 = Missing_Value_Real4
      Zc_Co2 = Missing_Value_Real4
@@ -2571,11 +2610,16 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Zc_CO2IRW)
      deallocate(Tc_CO2IRW)
      deallocate(Pc_CO2IRW)
-     deallocate(Cloud_Fraction_3x3)
-     deallocate(Cloud_Fraction_Uncer_3x3)
-     deallocate(High_Cloud_Fraction_3x3)
-     deallocate(Mid_Cloud_Fraction_3x3)
-     deallocate(Low_Cloud_Fraction_3x3)
+     deallocate(Cloud_Fraction)
+     deallocate(Cloud_Fraction_Uncer)
+     deallocate(High_Cloud_Fraction)
+     deallocate(Mid_Cloud_Fraction)
+     deallocate(Low_Cloud_Fraction)
+     deallocate(ASOS_Cloud_Class)
+     deallocate(ASOS_Cloud_Code)
+     deallocate(ASOS_Cloud_ECA)
+     deallocate(ASOS_Cloud_Zmin)
+     deallocate(ASOS_Cloud_Zmax)
      deallocate(Tc_Co2)
      deallocate(Pc_Co2)
      deallocate(Zc_Co2)

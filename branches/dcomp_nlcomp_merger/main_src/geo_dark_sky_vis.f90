@@ -111,8 +111,8 @@ program GEO_DARK_SKY_VIS
   real(kind=real4):: time
   real(kind=real4):: lat,lon,rlat,rlon
 
-  character(len=120):: system_string
-  character(len=120):: input_name, output_name, data_path, output_path, &
+  character(len=1020):: system_string
+  character(len=1020):: input_name, output_name, data_path, output_path, &
                       home_path,areafile_compressed,data_path_temp
   character(len=4):: year_string
   character(len=4):: year_temp_string

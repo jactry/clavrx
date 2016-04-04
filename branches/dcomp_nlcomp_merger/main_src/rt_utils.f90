@@ -93,7 +93,8 @@ module RT_UTILITIES
       , Delta_T_Inversion &
       , P_Inversion_Min &     
       , P_Trop_Nwp &
-      , P_Trop_Nwp 
+      , P_Trop_Nwp &
+      , Zsfc_Nwp
       
    use PIXEL_COMMON, only: &
       Nwp_Opt &
@@ -313,6 +314,7 @@ contains
    !====================================================================
    subroutine CONVERT_ATMOS_PROF_NWP_RTM(Num_Levels_NWP_Profile, &
                                        Surface_Level_Nwp, &
+                                       Surface_Elevation_Nwp, &
                                        Air_Temperature_Nwp, &
                                        Surface_Rh_Nwp, &
                                        Surface_Pressure_Nwp, &
@@ -334,6 +336,7 @@ contains
 
       integer, intent(in):: Num_Levels_Nwp_Profile
       integer(kind=int1), intent(in):: Surface_Level_Nwp 
+      real, intent(in):: Surface_Elevation_Nwp 
       real, intent(in):: Air_Temperature_Nwp 
       real, intent(in):: Surface_Rh_Nwp 
       real, intent(in):: Surface_Pressure_Nwp 
@@ -458,7 +461,7 @@ contains
                       (Press_Profile_Rtm(k) - Surface_Pressure_Nwp)
            Wvmr_Profile_Rtm(k) = Wvmr_Sfc + dWvmr_dP_near_Sfc * &
                       (Press_Profile_Rtm(k) - Surface_Pressure_Nwp)
-           Z_Profile_Rtm(k) = dZ_dP_near_Sfc * &
+           Z_Profile_Rtm(k) = Surface_Elevation_Nwp + dZ_dP_near_Sfc * &
                       (Press_Profile_Rtm(k) - Surface_Pressure_Nwp)
            Ozmr_Profile_Rtm(k) = Ozmr_Profile_Nwp(Num_Levels_Nwp_Profile)
       end do
@@ -466,7 +469,8 @@ contains
       !--- Rtm Levels below the surface
       do k = Sfc_Level_Rtm +1, Num_Levels_Rtm_Profile
          T_Profile_Rtm(k) = Air_Temperature_Nwp
-         Z_Profile_Rtm(k) = dZ_dP_near_Sfc * (Press_Profile_Rtm(k) - Surface_Pressure_Nwp)
+         Z_Profile_Rtm(k) = Surface_Elevation_Nwp + &
+                            dZ_dP_near_Sfc * (Press_Profile_Rtm(k) - Surface_Pressure_Nwp)
          Wvmr_Profile_Rtm(k) = Wvmr_Sfc
          Ozmr_Profile_Rtm(k) = Ozmr_Std_Profile_Rtm(k)
       end do
@@ -655,6 +659,7 @@ contains
                !--- convert the atmospheric profiles from nwp to Rtm pressure coords
                call CONVERT_ATMOS_PROF_NWP_RTM(NLevels_NWP, &
                                        Sfc_Level_Nwp(Lon_Idx,Lat_Idx), &
+                                       Zsfc_Nwp(Lon_Idx,Lat_Idx), &
                                        Tmpair_Nwp(Lon_Idx,Lat_Idx), &
                                        Rhsfc_Nwp(Lon_Idx,Lat_Idx), &
                                        Psfc_Nwp(Lon_Idx,Lat_Idx), &
@@ -1802,6 +1807,34 @@ contains
         Solar_Rtm%Tau_O2(1)=  0.03034
         Solar_Rtm%Tau_CO2(1)= 0.00000
         Solar_Rtm%Tau_CH4(1)= 0.00000
+        
+      case(173)     ! AHI
+        Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00006477, 0.00332966,-0.00009980/) ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(6,:)  = (/ -0.00001320,0.00070498,-0.00001705/)  ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(7,:)  = (/ -0.00000919, 0.00120421,-0.0000568/)  ! computed 02/17/2016 AW
+        Solar_Rtm%Tau_H2O_Coef(20,:) = (/ -0.00020694, 0.01548648,-0.0009537/)  ! computed 02/17/2016 AW
+        ! - from here is faked from METEOSAT-8
+        Solar_Rtm%Tau_Ray(1) = 0.05396
+        Solar_Rtm%Tau_O3(1) =  0.02354
+        Solar_Rtm%Tau_O2(1) =  0.00047
+        Solar_Rtm%Tau_CO2(1) =-0.00000
+        Solar_Rtm%Tau_CH4(1) =-0.00000
+        Solar_Rtm%Tau_Ray(2) = 0.02057
+        Solar_Rtm%Tau_O3(2) =  0.00129
+        Solar_Rtm%Tau_O2(2) =  0.00046
+        Solar_Rtm%Tau_CO2(2) =-0.00000
+        Solar_Rtm%Tau_CH4(2) =-0.00000
+        Solar_Rtm%Tau_Ray(6) = 0.00120
+        Solar_Rtm%Tau_O3(6) = -0.00000
+        Solar_Rtm%Tau_O2(6) = -0.00000
+        Solar_Rtm%Tau_CO2(6) = 0.01191
+        Solar_Rtm%Tau_CH4(6) = 0.00626
+        Solar_Rtm%Tau_Ray(20) = 0.00000
+        Solar_Rtm%Tau_O3(20) =  0.00013
+        Solar_Rtm%Tau_O2(20) = -0.00000
+        Solar_Rtm%Tau_CO2(20) = 0.09197
+        Solar_Rtm%Tau_CH4(20) = 0.00843
+         
 
       case(200)    !NOAA-8
         Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00134225, 0.00605508,-0.00028230/)

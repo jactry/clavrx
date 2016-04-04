@@ -56,9 +56,9 @@ module IFF_MODULE
       integer , dimension( 2 ) :: count
       logical , dimension( 37 ) :: chan_on
       logical :: iff_cloud_mask_on
-      character ( len = 255 ) :: iff_file
-      character ( len = 355 ) :: dir_1b
-      character ( len = 355 ) :: Ancil_Data_Dir
+      character ( len = 1020 ) :: iff_file
+      character ( len = 1020 ) :: dir_1b
+      character ( len = 1020 ) :: Ancil_Data_Dir
    end type iff_data_config
 
    type :: geo_str
@@ -241,9 +241,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       character (len=100) :: sndr_cld_pres_strg = 'SounderCloudPressure' 
       character (len=100) :: sndr_cld_height_strg = 'SounderCloudHeights' 
       character (len = 150) :: setname_band
-      character (len = 255) , pointer , dimension (:) :: file_arr_dummy
-      character (len = 250) :: file_cld_mask
-      character (len = 250) :: file_srch
+      character (len = 1020) , pointer , dimension (:) :: file_arr_dummy
+      character (len = 1020) :: file_cld_mask
+      character (len = 1020) :: file_srch
       character (len = 200) :: band_names_char
       character (len = 100), dimension(:), allocatable :: band_names_char_arr
       character (len = 4) :: year_strg

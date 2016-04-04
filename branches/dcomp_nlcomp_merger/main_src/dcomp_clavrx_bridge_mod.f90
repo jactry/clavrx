@@ -163,6 +163,8 @@ contains
             chan_on (dcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
+      
+      ! - here we have to add channels for snow
      
       !-allocate input
       dcomp_input = dcomp_in_type ( dim_1, dim_2, chan_on )
@@ -188,6 +190,7 @@ contains
          end if
          return
       end if
+     
    
       if ( dcomp_input % is_channel_on (CHN_VIS) .eqv. .false.) then
          if ( iseg_in == 1 ) then

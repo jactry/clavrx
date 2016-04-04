@@ -594,7 +594,7 @@ module SENSOR_MODULE
                Sensor%Spatial_Resolution_Meters = 4000
                if (AREAstr%Sat_Id_Num == 84) then
                   Sensor%Platform_Name = 'MTSAT-1R'
-                  Sensor%WMO_Id = 172
+                  Sensor%WMO_Id = 171
                   Sensor%Instr_Const_File = 'mtsat1r_instr.dat'
                   Sensor%Algo_Const_File = 'mtsat1r_algo.dat'
                   exit test_loop
@@ -1154,7 +1154,7 @@ module SENSOR_MODULE
       integer(kind=int4) :: Nword_Clavr
       integer(kind=int4) :: Nword_Clavr_Start
       integer(kind=int4) :: Ierror_Viirs_Nscans
-      CHARACTER(len=355) :: Dir_File
+      CHARACTER(len=1020) :: Dir_File
       
       type ( ahi_config_type ) :: ahi_config
       integer :: offset(2), count(2)

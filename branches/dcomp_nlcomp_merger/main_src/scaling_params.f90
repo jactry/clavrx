@@ -123,7 +123,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Beta = 0.0, Max_Beta = 2.0, Min_Beta_std = 0.0, Max_Beta_std = 2.0
  real, parameter, public:: Min_Tau = -0.2, Max_Tau = 160.0, Min_Tau_std = 0.0, Max_Tau_std = 100.0
  real, parameter, public:: Min_Tau_Acha = -0.2, Max_Tau_Acha = 8.0
- real, parameter, public:: Min_Acha_Cost = 0.0, Max_Acha_Cost = 18.0
+ real, parameter, public:: Min_Acha_Cost = 0.0, Max_Acha_Cost = 1000.0 ! 18.0
  real, parameter, public:: Min_Reff = 0.0, Max_Reff = 160.0, Min_Reff_std = 0.0, Max_Reff_std = 100.0
  real, parameter, public:: Min_Hcld = 0.0, Max_Hcld = 4000.0
  real, parameter, public:: Min_Cdnc = 0.0, Max_Cdnc = 1000.0

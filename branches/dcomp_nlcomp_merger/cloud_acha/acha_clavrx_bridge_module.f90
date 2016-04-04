@@ -93,15 +93,18 @@ module ACHA_CLAVRX_BRIDGE
    end where
 
    !--- cloud cover layers
-   call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output)
+   call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output) !, Diag)
 
    !--- copy output into CLAVR-x variables
-   Cloud_Fraction_3x3 = Output%Total_Cloud_Fraction
-   Cloud_Fraction_Uncer_3x3 = Output%Total_Cloud_Fraction_Uncer
-   High_Cloud_Fraction_3x3 = Output%High_Cloud_Fraction
-   Mid_Cloud_Fraction_3x3 = Output%Mid_Cloud_Fraction
-   Low_Cloud_Fraction_3x3 = Output%Low_Cloud_Fraction
-   ACHA%Cld_Layer = Output%Cloud_Layer
+   Cloud_Fraction = Output%Total_Cloud_Fraction
+   Cloud_Fraction_Uncer = Output%Total_Cloud_Fraction_Uncer
+   High_Cloud_Fraction = Output%High_Cloud_Fraction
+   Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
+   Low_Cloud_Fraction = Output%Low_Cloud_Fraction
+   ASOS_Cloud_Code = Output%ASOS_Cloud_Code
+   ASOS_Cloud_ECA = Output%ASOS_Cloud_ECA
+   ASOS_Cloud_Zmin = Output%ASOS_Cloud_Zmin
+   ASOS_Cloud_Zmax = Output%ASOS_Cloud_Zmax
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -199,7 +202,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%High_Cloud_Fraction =>  null()
      Output%Mid_Cloud_Fraction =>  null()
      Output%Low_Cloud_Fraction =>  null()
-     Output%Cloud_Layer =>  null()
      Output%Qf =>  null()
      Output%OE_Qf =>  null()
      Output%Packed_Qf =>  null()
@@ -209,6 +211,10 @@ module ACHA_CLAVRX_BRIDGE
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
      Output%Zc_Opaque =>  null()
+     Output%ASOS_Cloud_Code => null()
+     Output%ASOS_Cloud_ECA =>  null()
+     Output%ASOS_Cloud_Zmin =>  null()
+     Output%ASOS_Cloud_Zmax =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -293,12 +299,11 @@ module ACHA_CLAVRX_BRIDGE
    Output%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
    Output%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
    Output%Cost  => ACHA%Cost
-   Output%Total_Cloud_Fraction => Cloud_Fraction_3x3
-   Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer_3x3
-   Output%High_Cloud_Fraction => High_Cloud_Fraction_3x3
-   Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction_3x3
-   Output%Low_Cloud_Fraction => Low_Cloud_Fraction_3x3
-   Output%Cloud_Layer  => ACHA%Cld_Layer
+   Output%Total_Cloud_Fraction => Cloud_Fraction
+   Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer
+   Output%High_Cloud_Fraction => High_Cloud_Fraction
+   Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction
+   Output%Low_Cloud_Fraction => Low_Cloud_Fraction
    Output%Qf => ACHA%Quality_Flag
    Output%OE_Qf => ACHA%OE_Quality_Flags
    Output%Packed_Qf => ACHA%Packed_Quality_Flags
@@ -308,6 +313,10 @@ module ACHA_CLAVRX_BRIDGE
    Output%Pc_Opaque => Pc_Opaque_Cloud
    Output%Tc_Opaque => Tc_Opaque_Cloud
    Output%Zc_Opaque => Zc_Opaque_Cloud
+   Output%ASOS_Cloud_Code => ASOS_Cloud_Code
+   Output%ASOS_Cloud_ECA => ASOS_Cloud_ECA
+   Output%ASOS_Cloud_Zmin => ASOS_Cloud_Zmin
+   Output%ASOS_Cloud_Zmax => ASOS_Cloud_Zmax
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()

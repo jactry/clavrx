@@ -145,6 +145,7 @@ clavrxorb_objs = process_clavrx.o \
                  big_endian.o \
                  get_lun.o \
                  seviri_module.o \
+	         oca_module.o \
 	         reposnx.o \
                  reposition_module.o \
 		 dcomp_derived_products_module.o \
@@ -289,7 +290,7 @@ cloud_base_clavrx_services_module.o: cloud_base_clavrx_services_module.f90 pixel
 cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_module.f90
 
-dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o algorithm_constants.o nwp_common.o
+dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
@@ -328,7 +329,7 @@ hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
 modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o calibration_constants.o
-iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o
+iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
 iff_module.o: iff_module.f90 hdf.o pixel_common.o file_utility.o hdf_read_module.o 
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o avhrr_module.o
 fy2_module.o: fy2_module.f90 pixel_common.o constant.o num_mod.o mtsat_module.o get_lun.o goes_module.o file_utility.o viewing_geometry_module.o
@@ -342,6 +343,7 @@ level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o
+oca_module.o: oca_module.f90 hdf.o file_utility.o constant.o pixel_common.o file_tools.o
 sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
@@ -389,7 +391,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o \
-              seviri_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
+              seviri_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
 
@@ -430,7 +432,7 @@ re4flip.o : re4flip.f
 ################ hdf 5 read routines Code
 ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
-	$(fc) -c $(fflags)  ${hdf5libs} readh5dataset.f90
+	$(fc) -c $(ldlags)  ${hdf5libs} readh5dataset.f90
 endif	
 ###############  Fred Nagle Repositioning Code
 

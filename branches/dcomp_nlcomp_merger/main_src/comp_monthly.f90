@@ -84,7 +84,7 @@ program COMPILE_MONTHLY
  integer, dimension(1:12,1981:2010):: aft_sat,mor_sat,mid_sat,spare_sat
 
 !---
- character(len=255), dimension(n_files_max):: file_in
+ character(len=1020), dimension(n_files_max):: file_in
  integer, dimension(n_files_max):: file_mask
  integer:: sd_id
  integer:: sd_id_first
@@ -104,7 +104,7 @@ program COMPILE_MONTHLY
  integer:: compress_flag
 
 !----
- character(len=355)::  dir_in, dir_out, file_out
+ character(len=1020)::  dir_in, dir_out, file_out
  integer:: ios
  integer(kind=int1):: asc_des_node  !(0=asc,1=des)
  integer(kind=int2):: jday
@@ -133,13 +133,13 @@ program COMPILE_MONTHLY
        a_31_comp, b_31_comp, nu_31_comp, a_32_comp, b_32_comp, nu_32_comp, &
        solar_3b_nu_comp,timerr_seconds_comp
        
- character(len=255):: file_name_comp, file_1b_comp, creator_comp, &
+ character(len=1020):: file_name_comp, file_1b_comp, creator_comp, &
                     plang_comp, hdf_ver_comp, hdf_timestamp_comp, data_type_comp,grid_format_comp
  character(len=20):: platform_name_attribute_comp
  character(len=20):: platform_name_attribute_comp
  character(len=20):: sensor_name_attribute_comp
- character(len=120):: dark_name_comp
- character(len=120):: mask_name_comp
+ character(len=500):: dark_name_comp
+ character(len=500):: mask_name_comp
 
 !--- sds attributes
   character(len=100):: sds_name

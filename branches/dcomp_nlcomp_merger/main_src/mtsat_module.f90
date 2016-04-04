@@ -122,10 +122,10 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    integer(kind=int4), intent(in):: image_time_ms
    real(kind=real4), intent(in):: Time_Since_Launch
 
-   character(len=120):: Channel_X_Filename
-   character(len=120):: Channel_X_Filename_Full
-   character(len=120):: Channel_X_Filename_Full_uncompressed
-   character(len=180):: System_String
+   character(len=1020):: Channel_X_Filename
+   character(len=1020):: Channel_X_Filename_Full
+   character(len=1020):: Channel_X_Filename_Full_uncompressed
+   character(len=1020):: System_String
    integer:: ipos
    integer:: ilen
    integer:: ielem

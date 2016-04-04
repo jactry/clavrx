@@ -1,15 +1,34 @@
-!$Id: acha_services_clavrx_mod.f90 581 2014-10-08 03:39:08Z heidinger $
+!$Id$
 !------------------------------------------------------------------------------
-!this module holds all the dependencies for ACHA for the various frameworks
+!this module holds all the dependencies for ACHA for the AIT framework
 !------------------------------------------------------------------------------
 module CLOUD_BASE_SERVICES
 
- use PLANCK
- use CONSTANTS
- use PIXEL_COMMON
- use NWP_COMMON
- use RTM_COMMON
- use NUMERICAL_ROUTINES, only: LOCATE
+ use PCF_EPS_CLD_BASE_Mod
+ use type_KINDS_AIT
+ use Convert_Char
+ use Error_Messaging_Module
+ use GEOCAT_CONSTANTS
+ use Fundamental_Constants_Geocat
+ use Framework_Global_Variables_Module
+ use Sat_Access_Mod
+ use LandMask_Access_Mod
+ use CoastMask_Access_Mod
+ use DesertMask_Access_Mod
+ use SfcElev_Access_Mod
+ use SfcEmis_Access_Mod
+ use SnowMask_Access_Mod
+ use NWP_Access_Mod
+ use RTM_Data_Access_Mod
+ use RTM_Access_Mod         !rchen added RTM access module
+ USE SfcType_Access_Mod     !rchen added surface type access module
+ use CloudBase_Access_Mod !rchen added cloud height access module
+ use CloudHeight_Access_Mod !rchen added cloud height access module
+ use CloudMask_Access_Mod
+ use CloudPhase_Access_Mod
+ USE CloudMicro_Access_Mod
+ use Numerical_Routines
+ use RTM_MODULE
 
  implicit none
 
@@ -77,10 +96,13 @@ module CLOUD_BASE_SERVICES
  real, dimension(:,:), pointer:: Lower_Cloud_Height                  !height of lower cloud layer (if present)
  real, dimension(:,:), pointer:: Cdnc                                !cloud droplet number concentration
  real, dimension(:,:), pointer:: Hcld                                !cloud geometrical thickness
- real, dimension(:,:), pointer:: LCL                                 !lifting condensation level
- real, dimension(:,:), pointer:: CCL                                 !convective condensation level
- real, dimension(:,:), pointer:: CWP                                 !cloud water path
- real, dimension(:,:), pointer:: CWP_nwp
+ real, dimension(:,:), allocatable:: LCL                                 !lifting condensation level
+ real, dimension(:,:), allocatable:: CCL                                 !convective condensation level
+ real, dimension(:,:), allocatable:: CWP                                 !cloud water path
+ real, dimension(:,:), allocatable:: CWP_nwp        !CWP from NWP
+
+   type(EPS_CLD_BASE_Ctxt), pointer :: Ctxt
+   integer(LONG) :: Stat 
 
  end type acha_input_struct
 
@@ -110,7 +132,8 @@ module CLOUD_BASE_SERVICES
 
    !-- NWP profiles
    real, dimension(:), pointer :: T_Prof
-   real, dimension(Num_Levels_Rtm_Prof) :: P_Prof
+   !real, dimension(Num_Levels_Rtm_Prof) :: P_Prof
+   real, dimension(:), pointer :: P_Prof
    real, dimension(:), pointer :: Z_Prof
 
    !-- NWP profiles used for spatial interpolation
@@ -215,6 +238,7 @@ end type acha_rtm_nwp_struct
    integer:: Jnwp_x
    real:: Inwp_Weight
    real:: Jnwp_Weight
+   type(EPS_CLD_BASE_Ctxt), pointer :: Ctxt
 
    Inwp = Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx)
    Jnwp = Input%Line_Idx_Nwp(Elem_Idx,Line_Idx)
@@ -231,73 +255,74 @@ end type acha_rtm_nwp_struct
      print *, "bad nwp indices in cloud base"
      return
    endif
-   if (Allocated(Rtm(Inwp,Jnwp)%T_Prof) .eqv. .false.) then
-      print *, "error, T_Prof not allocated"
-   endif
+   !if (Allocated(Rtm(Inwp,Jnwp)%T_Prof) .eqv. .false.) then
+   !   print *, "error, T_Prof not allocated"
+   !endif
 
    !initialize smooth NWP flag 
    RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%NO
-    
-   RTM_NWP%Sfc_Level = Rtm(Inwp,Jnwp)%Sfc_Level
-   RTM_NWP%Tropo_Level = Rtm(Inwp,Jnwp)%Tropo_Level
+
+   Ctxt => Input%Ctxt
+
+   CALL NFIP_NWP_SfcLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, RTM_NWP%Sfc_Level)
+   CALL NFIP_NWP_TropoLevel(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, RTM_NWP%Tropo_Level)
    
-   RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%NO
    
    !--- do various 101 level NWP Profiles
-   RTM_NWP%P_Prof = P_Std_Rtm
+   RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%NO
 
-   RTM_NWP%T_Prof => Rtm(Inwp,Jnwp)%T_Prof 
-   RTM_NWP%Z_Prof => Rtm(Inwp,Jnwp)%Z_Prof 
-
+   CALL NFIA_NWP_PressProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, RTM_NWP%P_prof)   
+   CALL NFIA_NWP_TempProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, RTM_NWP%T_prof)
+   CALL NFIA_NWP_HgtProf101(Ctxt%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, RTM_NWP%Z_prof)   
+   
    !------------------------------------------------------
    ! Before smoothing profiles, ensure that all required
    ! rtm profiles are populated, if not, skip smoothing
    !------------------------------------------------------
-   if ((Rtm(Inwp,Jnwp)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp_x,Jnwp)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp,Jnwp_x)%Flag == symbol%YES) .and. &
-       (Rtm(Inwp_x,Jnwp_x)%Flag == symbol%YES)) then
+   if (Inwp_x  /= MISSING_VALUE_INT4 .and. Jnwp_x /= MISSING_VALUE_INT4) then
 
         RTM_NWP%Smooth_Nwp_Fields_Flag_Temp = symbol%YES
-        
-        RTM_NWP%T_Prof_1 => Rtm(Inwp_x,Jnwp)%T_Prof 
-        RTM_NWP%T_Prof_2 => Rtm(Inwp,Jnwp_x)%T_Prof 
-        RTM_NWP%T_Prof_3 => Rtm(Inwp_x,Jnwp_x)%T_Prof 
 
-        RTM_NWP%Z_Prof_1 => Rtm(Inwp_x,Jnwp)%Z_Prof 
-        RTM_NWP%Z_Prof_2 => Rtm(Inwp,Jnwp_x)%Z_Prof 
-        RTM_NWP%Z_Prof_3 => Rtm(Inwp_x,Jnwp_x)%Z_Prof
-        
+
+        RTM_NWP%T_prof_1 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp_x, Jnwp, :)
+        RTM_NWP%T_prof_2 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp, Jnwp_x, :)
+        RTM_NWP%T_prof_3 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%TempProf101(Inwp_x, Jnwp_x, :)
+        RTM_NWP%Z_prof_1 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp_x, Jnwp, :)
+        RTM_NWP%Z_prof_2 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp, Jnwp_x, :)
+        RTM_NWP%Z_prof_3 => Ctxt%NWP_DATA_Src1_T00%NWP_Grid%HgtProf101(Inwp_x, Jnwp_x, :)
+                
    endif
    
    !---- RTM profiles
  
    !--- populate radiance and transmission profiles
    if (Input%Chan_On_67um == sym%YES) then
-     RTM_NWP%Atm_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Rad_Atm_Profile
-     RTM_NWP%Atm_Trans_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Trans_Atm_Profile
-     RTM_NWP%Black_Body_Rad_Prof_67um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(27)%Rad_BB_Cloud_Profile
+
+      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI9, RTM_NWP%Atm_Rad_Prof_67um)
+      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI9, RTM_NWP%Atm_Trans_Prof_67um)     
+      CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI9, RTM_NWP%Black_Body_Rad_Prof_67um)
+
    endif
 
    if (Input%Chan_On_85um == sym%YES) then
-     RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Rad_Atm_Profile
-     RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Trans_Atm_Profile
+     CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, RTM_NWP%Atm_Rad_Prof_85um)
+     CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI11, RTM_NWP%Atm_Trans_Prof_85um)
    endif
 
    if (Input%Chan_On_11um == sym%YES) then
-      RTM_NWP%Atm_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Rad_Atm_Profile
-      RTM_NWP%Atm_Trans_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Trans_Atm_Profile
-      RTM_NWP%Black_Body_Rad_Prof_11um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(31)%Rad_BB_Cloud_Profile
+      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, RTM_NWP%Atm_Rad_Prof_11um)
+      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, RTM_NWP%Atm_Trans_Prof_11um)
+      CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, RTM_NWP%Black_Body_Rad_Prof_11um)
    endif
    
    if (Input%Chan_On_12um == sym%YES) then
-      RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Rad_Atm_Profile
-      RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Trans_Atm_Profile
+      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI15, RTM_NWP%Atm_Rad_Prof_12um)
+      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI15, RTM_NWP%Atm_Trans_Prof_12um)
    endif
 
    if (Input%Chan_On_133um == sym%YES) then
-      RTM_NWP%Atm_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_Atm_Profile
-      RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
+      CALL NFIA_RTM_Grid_RadAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, RTM_NWP%Atm_Rad_Prof_133um)
+      CALL NFIA_RTM_Grid_TransAtmClr(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI16, RTM_NWP%Atm_Trans_Prof_133um)
    endif
     
  end subroutine FETCH_PIXEL_RTM_NWP

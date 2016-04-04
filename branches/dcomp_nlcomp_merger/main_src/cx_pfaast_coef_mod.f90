@@ -60,7 +60,7 @@ module cx_pfaast_coef_mod
    
    character ( len = 3 ) ,parameter ::  comp(NK) = ['dry','ozo','wco','wtl','wts']
    
-   character ( len =400) :: pfast_path
+   character ( len =1020) :: pfast_path
    
    integer, parameter, dimension(5) :: LENCF = [ lencdb,lencob,lenccb,lenclb,lencsb ]
    
@@ -161,7 +161,7 @@ contains
    subroutine read_ahi ( this )
       class (coef_type), intent(inout) :: this
 
-      character ( len =40) :: cfile = 'ahixxx101.dat'
+      character ( len =100) :: cfile = 'ahixxx101.dat'
       
       integer :: l
       integer, parameter :: ND = 10
@@ -226,7 +226,7 @@ contains
       character ( len =*) :: sensor
       character ( len =*) :: satellite
       
-      character ( len =40) :: cfile = 'avhrncom.dat'      
+      character ( len =100) :: cfile = 'avhrncom.dat'      
       
       integer  :: N_CHANNELS   
 
@@ -311,7 +311,7 @@ contains
      
       character ( len =*) :: satellite
       
-      character ( len =40) :: cfile = 'modisdet.com.101.xxx_end'
+      character ( len =100) :: cfile = 'modisdet.com.101.xxx_end'
       
       integer :: l , m
       integer, parameter :: ND = 10
@@ -397,7 +397,7 @@ contains
       character ( len =*) :: sensor
       character ( len =*) :: satellite
       
-      character ( len = 40 ) :: cfile 
+      character ( len = 100 ) :: cfile 
       integer :: n_channels 
       integer :: koff
       integer :: lun_s (NK)
@@ -491,16 +491,17 @@ contains
       character ( len =*), intent(in) :: cfile
       integer :: pos
       integer :: lun_s(5)
-      character (len =40) :: cfile_loc
+      character (len =100) :: cfile_loc
       integer :: iux , l
          
       cfile_loc = cfile
       iux = 70
+
       do l = 1, NK
          cfile_loc(pos : (pos+2)) =comp(l)
          iux = iux + 1
             
-         open(iux,file=trim(pfast_path)//cfile_loc,recl=lencf(l), &
+         open(iux,file=trim(pfast_path)//trim(cfile_loc),recl=lencf(l), &
                   access='direct', status='old')
          
          lun_s(l)=iux

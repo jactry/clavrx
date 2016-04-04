@@ -83,8 +83,8 @@ contains
     real, parameter :: Missing_value = -9.999E+20
 
 !   Local variables
-    character (len=120) :: Nwp_Name_Before
-    character (len=120) :: Nwp_Name_After
+    character (len=1020) :: Nwp_Name_Before
+    character (len=1020) :: Nwp_Name_After
     character (len=2)   :: Year_string, Hour_string, Day_string, Month_string
     character (len=3)   :: array_order_1, array_order_2 
     character (len=4)   :: Year_string_full

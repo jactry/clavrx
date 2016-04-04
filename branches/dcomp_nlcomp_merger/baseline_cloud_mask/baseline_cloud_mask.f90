@@ -2611,7 +2611,7 @@ END SUBROUTINE Compute_NWC
  SUBROUTINE Set_Cmask_Thresholds(Sat_name, Algo_Name)
     CHARACTER(*), INTENT(IN) :: Sat_name
     CHARACTER(*), INTENT(inout) :: Algo_Name
-    CHARACTER(len=256) :: Algo_Name_Tmpy
+    CHARACTER(len=1020) :: Algo_Name_Tmpy
 
     Algo_Name_Tmpy = TRIM(trim(Algo_Name)//"abi")
        

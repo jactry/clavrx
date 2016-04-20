@@ -75,8 +75,8 @@
      Sds_Num_Level2_Beta = 63,           Sds_Num_Level2_Beta_Flag = 1, &
      Sds_Num_Level2_Cod_Acha = 64,       Sds_Num_Level2_Cod_Acha_Flag = 0, &
      Sds_Num_Level2_Ceps_Acha = 65,      Sds_Num_Level2_Ceps_Acha_Flag = 0, &
-     Sds_Num_Level2_Cod = 66,            Sds_Num_Level2_Cod_Flag = 0, &
-     Sds_Num_Level2_Ceps = 67,           Sds_Num_Level2_Ceps_Flag = 0, &
+     Sds_Num_Level2_Cod = 66,            Sds_Num_Level2_Cod_Flag = 1, &
+     Sds_Num_Level2_Ceps = 67,           Sds_Num_Level2_Ceps_Flag = 1, &
      Sds_Num_Level2_Cldalb = 68,         Sds_Num_Level2_Cldalb_Flag = 0, &
      Sds_Num_Level2_Cldtrn = 69,         Sds_Num_Level2_Cldtrn_Flag = 0, &
      Sds_Num_Level2_Cldfrac = 70,        Sds_Num_Level2_Cldfrac_Flag = 1, &
@@ -91,9 +91,9 @@
      Sds_Num_Level2_Rsr = 79,            Sds_Num_Level2_Rsr_Flag = 0, &
      Sds_Num_Level2_Qf1 = 80,            Sds_Num_Level2_Qf1_Flag = 0, &		!deprecated
      Sds_Num_Level2_Qf2 = 81,            Sds_Num_Level2_Qf2_Flag = 0, &		!deprecated
-     Sds_Num_Level2_Cod_Dcomp_Uncer = 82,Sds_Num_Level2_Cod_Dcomp_Uncer_Flag = 0, &
-     Sds_Num_Level2_Ceps_Dcomp_Uncer = 83,Sds_Num_Level2_Ceps_Dcomp_Uncer_Flag = 0, &
-     Sds_Num_Level2_Cth_Acha_Uncer = 84, Sds_Num_Level2_Cth_Acha_Uncer_Flag = 0, &
+     Sds_Num_Level2_Cod_Dcomp_Uncer = 82,Sds_Num_Level2_Cod_Dcomp_Uncer_Flag = 1, &
+     Sds_Num_Level2_Ceps_Dcomp_Uncer = 83,Sds_Num_Level2_Ceps_Dcomp_Uncer_Flag = 1, &
+     Sds_Num_Level2_Cth_Acha_Uncer = 84, Sds_Num_Level2_Cth_Acha_Uncer_Flag = 1, &
      Sds_Num_Level2_Insol = 85,          Sds_Num_Level2_Insol_Flag = 0, &
      Sds_Num_Level2_Insol_Dif = 86,      Sds_Num_Level2_Insol_Dif_Flag = 0, &
      Sds_Num_Level2_Ch1_Counts = 87,     Sds_Num_Level2_Ch1_Counts_Flag = 0, &
@@ -133,7 +133,7 @@
      Sds_Num_Level2_Aot6 = 121,          Sds_Num_Level2_Aot6_Flag = 0, &
      Sds_Num_Level2_Aot_QF = 122,        Sds_Num_Level2_Aot_QF_Flag = 0, &
      Sds_Num_Level2_Zsfc = 123,          Sds_Num_Level2_Zsfc_Flag = 1, &
-     Sds_Num_Level2_Cth_H2O = 124,       Sds_Num_Level2_Cth_H2O_Flag = 0, &
+     Sds_Num_Level2_Cth_H2O = 124,       Sds_Num_Level2_Cth_H2O_Flag = 1, &
      Sds_Num_Level2_Cth_Opa = 125,       Sds_Num_Level2_Cth_Opa_Flag = 1, &
      Sds_Num_Level2_Cld_Mask_Aux = 126,  Sds_Num_Level2_Cld_Mask_Aux_Flag = 0, & !off for GOES
      Sds_Num_Level2_Cld_Type_Aux = 127,  Sds_Num_Level2_Cld_Type_Aux_Flag = 0, & !off for GOES

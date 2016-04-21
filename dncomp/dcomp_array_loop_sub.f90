@@ -108,6 +108,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    integer :: line_idx 
    integer ::  elem_idx
    
+   
+   
    integer :: tried 
    integer :: success
    
@@ -136,8 +138,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    allocate ( obs_array ( dim_1 , dim_2 ) &
                   ,  cloud_array ( dim_1 , dim_2 ) )
-   allocate ( water_phase_array (  dim_1 , dim_2 ) )
-   allocate ( air_mass_array  ( dim_1 , dim_2 ) )   
+   allocate ( water_phase_array (  dim_1 , dim_2 ) )	
+   allocate ( air_mass_array  ( dim_1 , dim_2 ) )		   
    
       
    air_mass_array = 1.0 / cos (input % sat % d * PI / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
@@ -147,7 +149,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                        & .and. input % sol % d <= sol_zen_max &
                        & .and. input % refl (1) % d  >= 0. &
                        & .and. air_mass_array >= 2.
-
+	 
    cloud_array =  obs_array &
                         & .and. ( input % cloud_mask % d == EM_cloud_mask % CLOUDY &
                         & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) &
@@ -164,7 +166,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       case(3)
          sensor_name = 'METOP-B'
       case(4)
-         sensor_name = 'METOP-A'
+         sensor_name = 'METOP-A'	 
       case(55)
          sensor_name = 'Meteosat-8' 
       case(56)
@@ -184,7 +186,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       case (205:209)
          write(sensor_name, "('NOAA-',i2.2)") input % sensor_wmo_id - 191
       case(223)
-         sensor_name = 'NOAA-19'  
+         sensor_name = 'NOAA-19'	  
       case(224)
          sensor_name = 'VIIRS'
       case(252)
@@ -478,7 +480,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
   ! -DCOMP_INFO_DAY_NIGHT I1
    where (input % sol % d  > 82. )
-      info_flag = ibset ( info_flag , 1)
+	   info_flag = ibset ( info_flag , 1)
    end where
     
   ! - DCOMP_INFO_TWILIGHT I2
@@ -493,7 +495,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    ! - DCOMP_INFO_SEA_ICE I4
    where ( input % snow_class % d == EM_snow_class % SEA_ICE )
-      info_flag = ibset ( info_flag , 4) 
+	   info_flag = ibset ( info_flag , 4) 
    end where
    
    ! -DCOMP_INFO_PHASE
@@ -520,7 +522,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             .or. btest(info_flag,4) &
             .or. btest(info_flag,5)  &
             .or. btest(info_flag,6)) &
-            .and. btest(quality_flag,0)) 
+	        .and. btest(quality_flag,0)) 
          quality_flag = ibset ( quality_flag , 3 )
    end where
    
@@ -530,21 +532,21 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
              .or. btest(info_flag,4) &
              .or. btest(info_flag,5)  &
              .or. btest(info_flag,7)) &
-             &  .and. btest(quality_flag,0)) 
-              quality_flag = ibset ( quality_flag , 4 )
+	       &  .and. btest(quality_flag,0)) 
+	        quality_flag = ibset ( quality_flag , 4 )
    end where
    
    ! - compute lwp
    where ( water_phase_array(1:dim_1_w,1:dim_2_w) &              
-            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
-            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
+	            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
+		         .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
           output % lwp % d(1:dim_1_w,1:dim_2_w) =  output % cod % d(1:dim_1_w,1:dim_2_w) * output % cps % d(1:dim_1_w,1:dim_2_w) * 5.0 / 9.0
    end where
    
       ! - compute lwp
    where ( .not. water_phase_array(1:dim_1_w,1:dim_2_w) &              
-           .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
-           .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
+	            .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 1 )  &
+		         .and. .not. btest ( quality_flag(1:dim_1_w,1:dim_2_w) , 2 ) )
           output % iwp % d(1:dim_1_w,1:dim_2_w) =  (output % cod % d(1:dim_1_w,1:dim_2_w)  ** (1/0.84) ) / 0.065 
    end where
    
@@ -560,19 +562,19 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    tried =  count (btest(quality_flag,0))
     
-   output % successrate = 0.0
+	output % successrate = 0.0	
       if ( tried > 0 ) then
          success = count(.not. btest(quality_flag,1) .and. .not. btest ( quality_flag,2) ) 
          output % successrate = success / tried
       end if
      
    deallocate ( obs_array &
-               ,  cloud_array  )
-   deallocate ( water_phase_array )
-  
-   deallocate ( air_mass_array ) 
+	               ,  cloud_array  )
+   deallocate ( water_phase_array )	
+	  
+   deallocate ( air_mass_array ) 	
    
-   output % version = '$Id$'
+   output % version = '$Id$'	  
    
 
 end subroutine dcomp_array_loop

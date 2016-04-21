@@ -45,10 +45,10 @@ Spatial_Resolution_String = " To add "
 #
 include config.mk
 
-INC_DCOMP = -I$(DCOMP)
-fflags += $(INC_DCOMP)
+INC_DNCOMP = -I$(DNCOMP)
+fflags += $(INC_DNCOMP)
 #ccm following line
-fflags0 += $(INC_DCOMP)
+fflags0 += $(INC_DNCOMP)
 
 fflags_clavr=
 
@@ -59,10 +59,10 @@ endif
 ifdef nlcomplibs
      fflags_clavr += -DNLCOMP
      fflags_clavr += -DNLCOMPLIBS
-     INC_NLCOMP = -I$(NLCOMP)
-      fflags += $(INC_NLCOMP)
+     INC_NLCOMP = -I$(DNLCOMP)
+      fflags += $(INC_DNLCOMP)
 #ccm following line
-      fflags0 += $(INC_NLCOMP)
+      fflags0 += $(INC_DNLCOMP)
 endif
 
 #-----------------------------------------------------------------------------
@@ -92,9 +92,7 @@ CC = gcc
 .PHONY: all clean distclean
 
 #Default target is to build all executables.
-all: nlcomp_module dcomp clavrxorb comp_asc_des_level2b drive_subset_level2b
-
-nlcomp: nlcomp_module dcomp clavrxorb 
+all: dncomp clavrxorb comp_asc_des_level2b drive_subset_level2b
 
 ################################# Executables ##################################
 
@@ -213,23 +211,19 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 
   CLAVRX_OBJ_FILES = $(clavrxorb_objs)
 
-dcomp:
-	$(MAKE)  -C $(DCOMP) 
+dncomp:
+	$(MAKE)  -C $(DNCOMP) 
 	
 
-nlcomp_module:
-ifdef nlcomplibs
-	$(MAKE)  -C $(NLCOMP)   
-endif
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
    ifdef nlcomplibs
-	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks} ${nlcomplibs} ${nlcomplinks}
+	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks} ${nlcomplibs} ${nlcomplinks}
    else
-		$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o  viirs_read_mod.o   $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dcomplibs} ${dcomplinks}
+		$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o  viirs_read_mod.o   $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks}
    endif   
 else
-	$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) $(netcdflibs) $(hdflibs) ${dcomplibs} ${dcomplinks}  
+	$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) $(netcdflibs) $(hdflibs) ${dncomplibs} ${dncomplinks}  
 endif
 
 comp_asc_des_level2b: $(comp_asc_des_level2b_objs) bindir
@@ -472,8 +466,7 @@ geos_transform_pix.o: geos_transform_pix.c
 # as the file version.inc, which is created during the make process.
 clean:
 	-rm -f *.o *.mod version.inc
-	$(MAKE) clean -C $(NLCOMP) 
-	$(MAKE) clean -C $(DCOMP) 
+	$(MAKE) clean -C $(DNCOMP) 
 
 # This target also removes all the executables.
 distclean: clean

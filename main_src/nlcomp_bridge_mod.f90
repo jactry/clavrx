@@ -150,7 +150,7 @@ contains
       if ( iseg_in == 1 ) then
         call mesg ('NL-COMP starts ... ', color=46  ) 
       end if
-      
+      print*,'start nlcomp"
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( nlcomp_rtm ) 
       

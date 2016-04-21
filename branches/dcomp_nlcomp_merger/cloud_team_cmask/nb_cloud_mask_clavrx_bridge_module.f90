@@ -25,6 +25,12 @@
 ! THE USE OF THE SOFTWARE AND DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL
 ! SUPPORT TO USERS.
 !
+! Note, to use the diagnostic variables, do this
+!   - set the Use_Diag flag to true
+!   - turn on the Diag argument to the desirefd routine
+!   - in the desired routine, set the diag variables to what you want
+!   - when done, repeat this in reverse
+!
 !--------------------------------------------------------------------------------------
 module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
@@ -116,7 +122,10 @@ contains
    real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
+   logical:: Use_Diag
 
+
+   Use_Diag = .false.
 
    if (First_Call .eqv. .true.) then
        call MESG('NB Cloud Mask starts ', color = 46)
@@ -140,8 +149,8 @@ contains
                       Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
                       Input,   &
-                      Output,  &
-                      Diag)   !optional
+                      Output)
+                      !Diag)   !optional
 
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &
@@ -150,7 +159,7 @@ contains
                                           !Diag)   !optional
 
          call SET_OUTPUT(i,j)
-         call SET_DIAG(i,j)
+         if (Use_Diag) call SET_DIAG(i,j)
    
          !-----------------------------------------------------------------------
          ! CLAVR-x specific processing
@@ -463,7 +472,6 @@ contains
 
    subroutine SET_DIAG(i,j)
       integer, intent (in) :: i, j
-
       Diag_Pix_Array_1(i,j) = Diag%Array_1
       Diag_Pix_Array_2(i,j) = Diag%Array_2
       Diag_Pix_Array_3(i,j) = Diag%Array_3

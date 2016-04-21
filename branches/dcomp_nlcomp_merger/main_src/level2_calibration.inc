@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 256
+ integer, parameter, private:: Num_Level2_Sds = 266
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -265,4 +265,14 @@
      Sds_Num_Level2_Ch28_CSBT = 253,      Sds_Num_Level2_Ch28_CSBT_Flag = 0, &
      Sds_Num_Level2_Ch37_CSBT = 254,      Sds_Num_Level2_Ch37_CSBT_Flag = 0, &
      Sds_Num_Level2_Ch33_CSBT = 255,      Sds_Num_Level2_Ch33_CSBT_Flag = 0, &
-     Sds_Num_Level2_Base_Alt = 256,       Sds_Num_Level2_Base_Alt_Flag = 0
+     Sds_Num_Level2_Base_Alt = 256,       Sds_Num_Level2_Base_Alt_Flag = 0, &
+     Sds_Num_Level2_Ch31_Max_3x3 = 257,   Sds_Num_Level2_Ch31_Max_3x3_Flag = 0, &
+     Sds_Num_Level2_Ch20_Emiss = 258,     Sds_Num_Level2_Ch20_Emiss_Flag = 0, &
+     Sds_Num_Level2_Ch20_Emiss_Clear=259, Sds_Num_Level2_Ch20_Emiss_Clear_Flag = 0, &
+     Sds_Num_Level2_Ch20_Emiss_Median=260,Sds_Num_Level2_Ch20_Emiss_Median_Flag = 0, &
+     Sds_Num_Level2_Ch1_Min_3x3 = 261,    Sds_Num_Level2_Ch1_Min_3x3_Flag = 0, &
+     Sds_Num_Level2_Bt_11_67_Covar = 262, Sds_Num_Level2_Bt_11_67_Covar_Flag = 0, &
+     Sds_Num_Level2_Btd_Ch31_Ch32 = 263,  Sds_Num_Level2_Btd_Ch31_Ch32_Flag = 0, &
+     Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 0, &
+     Sds_Num_Level2_Ch20_Bt_Median = 265, Sds_Num_Level2_Ch20_Bt_Median_Flag = 0, &
+     Sds_Num_Level2_Tsfc_Uni_Back = 266,  Sds_Num_Level2_Tsfc_Uni_Back_Flag = 0

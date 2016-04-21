@@ -39,8 +39,7 @@ GetOptions(
    'cmask_dir=s',
    'ctype_dir=s',
    'acha_dir=s',
-   'dcomp_dir=s',
-   'nlcomp_dir=s',
+   'dncomp_dir=s',
    'with-xlf90:s',
    'with-ifort:s',
    'with-gfortran:s',
@@ -365,49 +364,33 @@ else
 }
 
 
-if (exists($opt{'dcomp_dir'}))
+if (exists($opt{'dncomp_dir'}))
 {
-   if (length($opt{'dcomp_dir'}))
+   if (length($opt{'dncomp_dir'}))
    {
-      print CONFIG "export DCOMP_HDF=../dcomp/hdf4/lib/\n";
-      print CONFIG "export DCOMP=$opt{'dcomp_dir'}\n";
-      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP) -L\$\(DCOMP_HDF) -I\$\(DCOMP_HDF)\n";
-      print CONFIG "dcomplinks= -ldcomp -licaf90hdf\n";
+      print CONFIG "export DNCOMP_HDF=$opt{'dncomp_dir'}/hdf4/lib/\n";
+      print CONFIG "export DNCOMP=$opt{'dncomp_dir'}\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
+      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
      
       
    }
    else
    {
-      print CONFIG "export DCOMP=../dcomp/\n";
-      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
-      print CONFIG "dcomplinks= -ldcomp\n";
+      print CONFIG "export DNCOMP_HDF=../dncomp/hdf4/lib/\n";
+      print CONFIG "export DNCOMP=../dncomp/\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
+      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
    }
 }
 else
 {
-      print CONFIG "export DCOMP=../dcomp/\n";
-      print CONFIG "dcomplibs=-L\$\(DCOMP) -I\$\(DCOMP)\n";
-      print CONFIG "dcomplinks= -ldcomp\n";
+      print CONFIG "export DNCOMP_HDF=../dncomp/hdf4/lib/\n";
+      print CONFIG "export DNCOMP=../dncomp/\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
+      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
 
 }
-
-if (exists($opt{'nlcomp_dir'}))
-{
-   if (length($opt{'nlcomp_dir'}))
-   {
-      print CONFIG "export NLCOMP=$opt{'nlcomp_dir'}\n";
-      print CONFIG "nlcomplibs=-L\$\(NLCOMP) -I\$\(NLCOMP)\n";
-      print CONFIG "nlcomplinks= -lnlcomp\n";
-      
-   }
-   else
-   {
-      print CONFIG "export NLCOMP=../nlcomp/\n";
-      print CONFIG "nlcomplibs=-L\$\(NLCOMP) -I\$\(NLCOMP)\n";
-      print CONFIG "nlcomplinks= -lnlcomp\n";
-   }
-}
-
 
  
 close CONFIG;
@@ -476,15 +459,11 @@ Command line options:
          Default is ../cloud_base/. This is an optional flag in case your
          base code is in a different location.
 
-  --dcomp_dir=<directory>
-         Path to the directory where DCOMP code is stored.
+  --dncomp_dir=<directory>
+         Path to the directory where DNCOMP code is stored.
          Default is ../aw_dcomp/. This is an optional flag in case your
          DCOMP code is in a different location.
 
-  --nlcomp_dir=<directory>
-         If present, will compile with the Nighttime optical properties
-         Default is ../aw_nlcomp/. If this flag is not present, nlcomp will
-         not be compiled with CLAVR-X
 
    --with-szip[=<directory>]
          Path to the SZIP library, if required by the HDF library. If

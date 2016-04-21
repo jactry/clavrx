@@ -51,6 +51,8 @@ contains
                                   , lut_path &
                                   , cld_albedo_vis  )
        
+       
+                          
    
       implicit none
       
@@ -82,15 +84,18 @@ contains
       real :: air_mass_sat
       real :: trans_abv_cld
          
-      type ( lut_output) :: lut_data
+	   type ( lut_output) :: lut_data
 
       integer :: i_channel 
       
       integer :: MODIS_EQUIVALENT_39_CHN = 20
 	   real :: Alb_Sfc_Term
       
+      
+      
      
-       ! - executable
+	   ! - executable
+      
       
       ! initialize lut object
       call lut_obj % initialize ( sensor , ancil_path = lut_path)
@@ -98,10 +103,10 @@ contains
       
       phase_num = 2
       if ( pixel % is_water_phase ) phase_num = 1
-                                                                      
+	                                                                      
       air_mass_two_way = ( 1. / cos (pixel % Sol_zen * DTOR ) + 1./ cos ( pixel % Sat_zen * DTOR ) )
-  
-      do i_channel = 1 , size ( channels )
+	  
+	   do i_channel = 1 , size ( channels )
  
          call lut_obj % get_data ( channels ( i_channel )  , phase_num , state_vec(1), state_vec(2) , lut_data)
          
@@ -132,20 +137,20 @@ contains
                     
          trans_two_way = air_trans_ac( i_channel ) ** air_mass_two_way           
          fm_vec(i_channel) = fm_vec(i_channel) * trans_two_way
-         kernel(i_channel,1) = kernel(i_channel,1) * trans_two_way
+	      kernel(i_channel,1) = kernel(i_channel,1) * trans_two_way
          kernel(i_channel,2) = kernel(i_channel,2) * trans_two_way
-         
-         ! - the only emis channel is channel 20
-         if ( channels ( i_channel ) == MODIS_EQUIVALENT_39_CHN ) then
-            planck_rad = get_planck_radiance_39um ( pixel % ctt  , trim(sensor) )
-
+        		 
+		   ! - the only emis channel is channel 20
+		   if ( channels ( i_channel ) == MODIS_EQUIVALENT_39_CHN ) then
+		      planck_rad = get_planck_radiance_39um ( pixel % ctt  , trim(sensor) )
+			
             rad_to_refl = get_rad_refl_factor ( trim ( sensor ) , pixel % sol_zen ) 
-            air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
-            trans_abv_cld = air_trans_ac(i_channel) ** air_mass_sat
+			   air_mass_sat =  1./ cos ( pixel % Sat_zen * dtor) 
+			   trans_abv_cld = air_trans_ac(i_channel) ** air_mass_sat
                                    
             fm_nir_terr =  rad_to_refl * (rad_abv_cld * lut_data % ems &
                   + trans_abv_cld * lut_data %  ems * planck_rad &
-                  + lut_data % trn_ems * rad_clear_toc )
+				  + lut_data % trn_ems * rad_clear_toc )
             
             kernel_nir_terr_cod = rad_to_refl * (rad_abv_cld * lut_data %  Dems_Dcod & 
                + trans_abv_cld * Planck_Rad * lut_data % Dems_Dcod  &
@@ -160,7 +165,7 @@ contains
             kernel ( i_channel, 2) = kernel ( i_channel , 2 )  + kernel_nir_terr_cps 
             
          end if       
-      end do
+	   end do
         
    end subroutine dcomp_forward_computation
     
@@ -187,7 +192,7 @@ contains
      
       real :: Ems_lut(9)  ! - sub table
       real :: rfl_lut(9)
-      real :: Rfl (9)     ! - Reflectance at TOA under consideration of surface impact
+      real :: Rfl (9)						! - Reflectance at TOA under consideration of surface impact
       integer :: ii
       integer :: phase_num
       
@@ -221,7 +226,7 @@ contains
       end if
  
       
-      return
+      return					 
       
       
    end function thick_cloud_cps

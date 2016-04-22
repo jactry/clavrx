@@ -90,7 +90,7 @@ module nlcomp_bridge_mod
 
    use dcomp_rtm_module
 #ifdef HDF5LIBS   
-#ifdef NLCOMPLIBS 
+
    use nlcomp_interface_def_mod , only: &
          nlcomp_in_type &
        , nlcomp_out_type &
@@ -98,9 +98,11 @@ module nlcomp_bridge_mod
        , deallocate_nlcompin &
        , deallocate_nlcompout
    implicit none
-#endif
+
 #endif
    private
+   
+   logical :: first_call = .true.
 
 
    !--- module main subroutine 
@@ -126,9 +128,11 @@ contains
       
       real , parameter :: PI = 3.1415927
       real, parameter :: DTOR = PI/180.
+      
+   
      
-#ifdef HDF5LIBS    
-#ifdef NLCOMPLIBS     
+   
+
        type(dcomp_rtm_type) :: nlcomp_rtm
       type(nlcomp_in_type)  :: nlcomp_input
       type(nlcomp_out_type) :: nlcomp_output
@@ -142,15 +146,17 @@ contains
             integer , optional :: debug_mode_user
          end subroutine
       end interface
-#endif     
-#endif 
+     
+
       ! ----- executable  --------------------------------------------------- !
-#ifdef HDF5LIBS  
-#ifdef NLCOMPLIBS   
-      if ( iseg_in == 1 ) then
+
+
+      if ( first_call ) then
         call mesg ('NL-COMP starts ... ', color=46  ) 
+        first_call = .false.
       end if
-      print*,'start nlcomp"
+      
+     
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( nlcomp_rtm ) 
       
@@ -282,8 +288,8 @@ contains
       nlcomp_info_flag(1:dim_1,1:dim_2) = nlcomp_output % info % d
       
       call deallocate_nlcompout ( nlcomp_output)
-#endif   
-#endif   
+  
+   
    end subroutine awg_cloud_nlcomp_algorithm
 
   

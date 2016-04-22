@@ -98,7 +98,7 @@ nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 
 libdncomp.a: $(OBJS)
 	
-	ar rvc libdncomp.a $(OBJS)
+	ar rvc libdncomp.a $(OBJS) $(OBJS_NLCOMP)
 	
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o

@@ -41,10 +41,10 @@ module dcomp_clavrx_bridge_mod
    
    !use rtm_common
    
-    use dcomp_interface_types_mod , only: &
-         dcomp_in_type &
-       , dcomp_out_type &
-       , alloc_dcomp &
+    use dncomp_interface_def_mod , only: &
+         dncomp_in_type &
+       , dncomp_out_type &
+       , alloc_dncomp &
        , n_chn 
    
    use  clavrx_message_module, only: &
@@ -111,8 +111,8 @@ contains
       logical , intent(out) :: dcomp_run
       
       type(dcomp_rtm_type) :: dcomp_rtm
-      type(dcomp_in_type)  :: dcomp_input
-      type(dcomp_out_type) :: dcomp_output
+      type(dncomp_in_type)  :: dcomp_input
+      type(dncomp_out_type) :: dcomp_output
       
       integer :: debug_mode      
       integer :: dim_1, dim_2
@@ -126,10 +126,10 @@ contains
       
       interface
          subroutine dcomp_array_loop (a , b , debug_mode_user)
-            import dcomp_in_type
-            import dcomp_out_type
-            type (dcomp_in_type) , intent(in) :: a
-            type (dcomp_out_type), intent(out) :: b
+            import dncomp_in_type
+            import dncomp_out_type
+            type (dncomp_in_type) , intent(in) :: a
+            type (dncomp_out_type), intent(out) :: b
             integer , intent(in), optional :: debug_mode_user
          end subroutine
 
@@ -167,7 +167,7 @@ contains
       ! - here we have to add channels for snow
      
       !-allocate input
-      dcomp_input = dcomp_in_type ( dim_1, dim_2, chan_on )
+      dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
             
       !- check mode
       CHN_VIS = 1

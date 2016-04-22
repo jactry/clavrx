@@ -1,5 +1,5 @@
 ! $Id$
-module dcomp_interface_TYPEs_mod
+module dncomp_interface_def_mod
 
 ! --  Module works as interface between CLAVR-x and DCOMP
 !
@@ -55,7 +55,7 @@ module dcomp_interface_TYPEs_mod
    
    
    ! - main dcomp input type
-   type dcomp_in_type
+   type dncomp_in_type
    
       ! - configure
       integer :: mode
@@ -69,7 +69,8 @@ module dcomp_interface_TYPEs_mod
       TYPE ( d2_real4_TYPE) :: sat
       TYPE ( d2_real4_TYPE) :: sol
       TYPE ( d2_real4_TYPE) :: azi
-      
+      TYPE ( d2_real4_TYPE) :: zen_lunar
+      TYPE ( d2_real4_TYPE) :: azi_lunar
       ! - cloud products
       TYPE ( d2_int1_TYPE )  :: cloud_mask
       TYPE ( d2_real4_TYPE ) :: cloud_type
@@ -105,12 +106,12 @@ module dcomp_interface_TYPEs_mod
       final :: in_destructor 
       procedure :: check_input
          
-   end type dcomp_in_type
+   end type dncomp_in_type
    
    
-   ! - DCOMP output
+   ! - DCOMP/NLCOMP output
       
-   type dcomp_out_type
+   type dncomp_out_type
       type ( d2_real4_type) :: cod  
       type ( d2_real4_type) :: cps
       type ( d2_real4_type) :: cod_unc
@@ -133,7 +134,7 @@ module dcomp_interface_TYPEs_mod
       
       contains
       final :: out_destructor
-   end type dcomp_out_type 
+   end type dncomp_out_type 
    
    ! - Enumerated cloud type
    type et_cloud_type_type
@@ -181,29 +182,29 @@ module dcomp_interface_TYPEs_mod
    
    type (  et_snow_class_type ) , protected :: EM_snow_class 
    
-   interface alloc_dcomp
+   interface alloc_dncomp
       module procedure &
       alloc_it_d2_real, alloc_it_d2_int, alloc_it_d2_log
    
    end interface 
    
-   interface dcomp_out_type
+   interface dncomp_out_type
       module procedure new_output
-   end interface dcomp_out_type
+   end interface dncomp_out_type
    
-   interface dcomp_in_type
+   interface dncomp_in_type
       module procedure new_input
-   end interface dcomp_in_type
+   end interface dncomp_in_type
    
     
 contains
 
-   !  Constructs new DCOMP output derived type
+   !  Constructs new DCOMP / NLCOMP output derived type
    !
    !      
    function new_output ( dim_1, dim_2 )
       integer , intent(in) :: dim_1, dim_2
-      type ( dcomp_out_type ) :: new_output
+      type ( dncomp_out_type ) :: new_output
       
       allocate ( new_output % cod % d         ( dim_1 , dim_2))
       allocate ( new_output % cps % d         ( dim_1 , dim_2))
@@ -229,13 +230,13 @@ contains
   
    end function new_output
    
-   !  Constructs new DCOMP input derived type
+   !  Constructs new DNCOMP input derived type
    !
    !
    function new_input ( dim_1, dim_2, chan_on )
       integer, intent(in) :: dim_1, dim_2
       logical, intent(in) :: chan_on ( :)
-      type ( dcomp_in_type ) :: new_input
+      type ( dncomp_in_type ) :: new_input
       integer :: n_chn
       integer :: idx_chn
       
@@ -260,33 +261,35 @@ contains
          
          new_input % is_channel_on(idx_chn) = .true.
          
-         call  alloc_dcomp ( new_input % refl    (  idx_chn  ) , dim_1,dim_2 )          
-         call  alloc_dcomp ( new_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
+         call  alloc_dncomp ( new_input % refl    (  idx_chn  ) , dim_1,dim_2 )          
+         call  alloc_dncomp ( new_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
                  
          if ( idx_chn >= 20 ) then   
-            call  alloc_dcomp ( new_input % rad (  idx_chn  ) ,  dim_1,dim_2 )  
-            call  alloc_dcomp ( new_input % emiss_sfc (  idx_chn  ) ,  dim_1,dim_2 )
-            call  alloc_dcomp ( new_input % rad_clear_sky_toa ( idx_chn ),  dim_1,dim_2 )
-            call  alloc_dcomp ( new_input % rad_clear_sky_toc ( idx_chn ), dim_1,dim_2 )
-            call alloc_dcomp (  new_input % trans_ac_nadir ( idx_chn )   , dim_1,dim_2 )
+            call  alloc_dncomp ( new_input % rad (  idx_chn  ) ,  dim_1,dim_2 )  
+            call  alloc_dncomp ( new_input % emiss_sfc (  idx_chn  ) ,  dim_1,dim_2 )
+            call  alloc_dncomp ( new_input % rad_clear_sky_toa ( idx_chn ),  dim_1,dim_2 )
+            call  alloc_dncomp ( new_input % rad_clear_sky_toc ( idx_chn ), dim_1,dim_2 )
+            call alloc_dncomp (  new_input % trans_ac_nadir ( idx_chn )   , dim_1,dim_2 )
          end if   
       end do
       
-      call  alloc_dcomp ( new_input % snow_class,   dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % is_land,      dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % cloud_press,  dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % cloud_temp,   dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % cloud_hgt,    dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % cloud_type,   dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % cloud_mask,   dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % tau_acha,   dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % ozone_nwp,    dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % tpw_ac,       dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % press_sfc,    dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % is_valid,     dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % sol,          dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % sat,          dim_1,dim_2 )
-      call  alloc_dcomp ( new_input % azi,          dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % snow_class,   dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % is_land,      dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % cloud_press,  dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % cloud_temp,   dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % cloud_hgt,    dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % cloud_type,   dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % cloud_mask,   dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % tau_acha,   dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % ozone_nwp,    dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % tpw_ac,       dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % press_sfc,    dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % is_valid,     dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % sol,          dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % sat,          dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % azi,          dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % zen_lunar,          dim_1,dim_2 )
+      call  alloc_dncomp ( new_input % azi_lunar,          dim_1,dim_2 )
       
 
    end function new_input
@@ -296,11 +299,11 @@ contains
    !
    !
    subroutine check_input ( this , debug_mode_in)
-      class(dcomp_in_type) :: this 
+      class(dncomp_in_type) :: this 
       integer, intent(in), optional :: debug_mode_in
       integer :: debug_mode
       integer :: n_pixels
-      real :: perc_dcomp
+      real :: perc_dncomp
       debug_mode = 0
      
       if (present(debug_mode_in)) debug_mode = debug_mode_in
@@ -322,7 +325,7 @@ contains
    !
    !
    subroutine out_destructor ( this )
-      type ( dcomp_out_type) :: this
+      type ( dncomp_out_type) :: this
       
 	   if (allocated ( this % cod % d ) ) deallocate (  this % cod % d ) 
 		if ( allocated ( this % cps % d )) deallocate ( this % cps % d)
@@ -382,7 +385,7 @@ contains
    !
    !
    subroutine in_destructor ( this )
-      type ( dcomp_in_type ) :: this
+      type ( dncomp_in_type ) :: this
       integer :: i
       
      
@@ -427,6 +430,9 @@ contains
       if ( allocated (this % sol % d) ) deallocate ( this % sol  % d )
       if ( allocated (this % sat % d) ) deallocate ( this % sat  % d )
       if ( allocated (this % azi % d) ) deallocate ( this % azi  % d )
+      if ( allocated (this % zen_lunar % d) ) deallocate ( this % zen_lunar  % d )
+      if ( allocated (this % azi_lunar % d) ) deallocate ( this % azi_lunar  % d )
+      
       
       if ( allocated (this % cloud_mask % d) )  deallocate ( this % cloud_mask  % d )
       if ( allocated (this % cloud_type % d) )  deallocate ( this % cloud_type  % d )
@@ -447,4 +453,4 @@ contains
    end subroutine in_destructor
    
 
-end module dcomp_interface_types_mod
+end module dncomp_interface_def_mod

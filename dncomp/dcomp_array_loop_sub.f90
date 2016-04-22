@@ -7,16 +7,16 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
    use dcomp_retrieval_mod
    
-   use dcomp_interface_types_mod, only: &
-      dcomp_in_type &
-      , dcomp_out_type &
+   use dncomp_interface_def_mod, only: &
+      dncomp_in_type &
+      , dncomp_out_type &
       , EM_cloud_type &
       , EM_cloud_mask &
       , EM_snow_class
    
    implicit none
-   type (dcomp_in_type) , intent(in) :: input
-   type (dcomp_out_type) :: output
+   type (dncomp_in_type) , intent(in) :: input
+   type (dncomp_out_type) :: output
    integer , intent(in) , optional :: debug_mode_user
    
    integer, parameter :: real4 = selected_real_kind(6,37)
@@ -226,7 +226,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
   
    ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    
-   output = dcomp_out_type ( dim_1, dim_2 )
+   output = dncomp_out_type ( dim_1, dim_2 )
 
    where ( obs_array .and. .not. cloud_array )
       output % cld_trn_sol % d   =  1. 

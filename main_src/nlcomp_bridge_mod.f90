@@ -91,12 +91,11 @@ module nlcomp_bridge_mod
    use dcomp_rtm_module
 #ifdef HDF5LIBS   
 
-   use nlcomp_interface_def_mod , only: &
-         nlcomp_in_type &
-       , nlcomp_out_type &
-       , alloc_nlcomp &
-       , deallocate_nlcompin &
-       , deallocate_nlcompout
+   use dncomp_interface_def_mod , only: &
+         dncomp_in_type &
+       , dncomp_out_type &
+       , alloc_dncomp &
+       , n_chn
    implicit none
 
 #endif
@@ -124,25 +123,22 @@ contains
       integer :: idx_chn
       
       integer :: nlcomp_possible_channels ( 2 ) 
+      logical :: chan_on ( N_CHN ) = .false.
       integer :: i
       
       real , parameter :: PI = 3.1415927
       real, parameter :: DTOR = PI/180.
       
-   
-     
-   
-
-       type(dcomp_rtm_type) :: nlcomp_rtm
-      type(nlcomp_in_type)  :: nlcomp_input
-      type(nlcomp_out_type) :: nlcomp_output
+      type(dcomp_rtm_type) :: nlcomp_rtm
+      type(dncomp_in_type)  :: nlcomp_input
+      type(dncomp_out_type) :: nlcomp_output
       
       interface
          subroutine nlcomp_array_loop_sub ( a, b, debug_mode_user)
-            import nlcomp_in_type
-            import nlcomp_out_type
-            type ( nlcomp_in_type ), intent(in) :: a
-            type ( nlcomp_out_type ), intent(in) :: b
+            import dncomp_in_type
+            import dncomp_out_type
+            type ( dncomp_in_type ), intent(in) :: a
+            type ( dncomp_out_type ), intent(in) :: b
             integer , optional :: debug_mode_user
          end subroutine
       end interface
@@ -156,7 +152,6 @@ contains
         first_call = .false.
       end if
       
-     
       ! - compute DCOMP related RTM 
       call perform_rtm_dcomp ( nlcomp_rtm ) 
       
@@ -165,51 +160,19 @@ contains
       
       
       ! - which channels do we need? possibles are 
-      nlcomp_input % is_channel_on = .false.
-      
+     
+      chan_on = .false.
       nlcomp_possible_channels = [  20 , 44 ]
       do i = 1 , size ( nlcomp_possible_channels )   
          if ( sensor % chan_on_flag_default ( nlcomp_possible_channels ( i) ) == 1 ) then
-            nlcomp_input % is_channel_on (nlcomp_possible_channels ( i)  )  = .true.
+            chan_on (nlcomp_possible_channels ( i)  )  = .true.
          end if
       end do 
       
+      nlcomp_input =  dncomp_in_type ( dim_1, dim_2, chan_on )
       
       
-       ! === ALLOCATION
-      do idx_chn = 1 , 44
-         if ( nlcomp_input % is_channel_on (idx_chn) .eqv. .false.) cycle
-        
-         call  alloc_nlcomp ( nlcomp_input % refl    (  idx_chn  ) , dim_1,dim_2 ) 
-         call  alloc_nlcomp ( nlcomp_input % alb_sfc (  idx_chn  ) ,  dim_1,dim_2 ) 
-                 
-         if ( idx_chn >= 20 .and. idx_chn /= 40 ) then   
-            call  alloc_nlcomp ( nlcomp_input % rad (  idx_chn  ) ,  dim_1,dim_2 )  
-            call  alloc_nlcomp ( nlcomp_input % emiss_sfc (  idx_chn  ) ,  dim_1,dim_2 )
-            call  alloc_nlcomp ( nlcomp_input % rad_clear_sky_toa ( idx_chn ),  dim_1,dim_2 )
-            call  alloc_nlcomp ( nlcomp_input % rad_clear_sky_toc ( idx_chn ), dim_1,dim_2 )
-            call alloc_nlcomp (  nlcomp_input % trans_ac_nadir ( idx_chn )   , dim_1,dim_2 )
-         end if   
-      end do
-      
-      call  alloc_nlcomp ( nlcomp_input % snow_class,   dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % is_land,      dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % cloud_press,  dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % cloud_temp,   dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % cloud_hgt,    dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % cloud_type,   dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % cloud_mask,   dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % tau_acha,   dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % ozone_nwp,    dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % tpw_ac,       dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % press_sfc,    dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % is_valid,     dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % sol,          dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % sat,          dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % azi,          dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % zen_lunar,          dim_1,dim_2 )
-      call  alloc_nlcomp ( nlcomp_input % azi_lunar,          dim_1,dim_2 )
-      
+    
       ! -- configure
       
            ! - ancil/lut path
@@ -287,7 +250,7 @@ contains
       nlcomp_quality_flag(1:dim_1,1:dim_2) = nlcomp_output %  quality % d
       nlcomp_info_flag(1:dim_1,1:dim_2) = nlcomp_output % info % d
       
-      call deallocate_nlcompout ( nlcomp_output)
+     
   
    
    end subroutine awg_cloud_nlcomp_algorithm

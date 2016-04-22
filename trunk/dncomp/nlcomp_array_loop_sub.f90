@@ -7,11 +7,21 @@
 !
 subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    use nlcomp_retrieval_mod
-   use nlcomp_interface_def_mod
+   use dncomp_interface_def_mod, only: &
+      dncomp_in_type &
+      , dncomp_out_type &
+      , EM_Cloud_mask &
+      , EM_cloud_Type &
+      , EM_snow_class
    implicit none
    
-   type (nlcomp_in_type) , intent(in) :: input
-   type (nlcomp_out_type), intent(out) :: output
+   integer, parameter :: REAL4 = selected_real_kind(6,37)
+   integer, parameter :: INT1 = selected_int_kind(1)   
+   integer, parameter :: INT2 = selected_int_kind(2)
+   real ( kind = real4), parameter :: MISSING_REAL4 = -999.
+   
+   type (dncomp_in_type) , intent(in) :: input
+   type (dncomp_out_type), intent(out) :: output
    integer , intent(in) , optional :: debug_mode_user
    
    ! parameters
@@ -21,7 +31,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real, parameter :: SOL_ZEN_MIN = 90.
    
    real, parameter :: PI = 3.14159265359
-   real, parameter :: MISSING_REAL4 = -999.
+  
    
    ! - local logical arrays 
    real,  allocatable    :: air_mass_array( : , : )

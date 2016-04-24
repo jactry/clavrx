@@ -7,7 +7,7 @@ program nlcomp_one_pixel_run
       nlcomp_algorithm	&
       ,  nlcomp_output_structure
    
-   use  nlcomp_interface_def_mod  , only:  
+    
 		   
    implicit none
    real , dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac

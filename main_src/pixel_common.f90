@@ -648,6 +648,7 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save:: Pc_Uncertainty2_Aux
   real (kind=real4), dimension(:,:), allocatable, public, save:: Cost_Aux
   real (kind=real4), dimension(:,:), allocatable, public, save:: Tau_Aux
+  real (kind=real4), dimension(:,:), allocatable, public, save:: Reff_Aux
 
   !--- pixel level cloud props
 
@@ -2146,6 +2147,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    if (Cld_Flag == sym%YES) then
       allocate(Tau_DCOMP(dim1,dim2))
       allocate(Tau_Aux(dim1,dim2))
+      allocate(Reff_Aux(dim1,dim2))
       allocate(Tau_DCOMP_Ap(dim1,dim2))
       allocate(Vis_Ref_Fm(dim1,dim2))
       allocate(Reff_DCOMP(dim1,dim2))
@@ -2192,6 +2194,7 @@ subroutine RESET_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       Tau_DCOMP = Missing_Value_Real4
       Tau_Aux = Missing_Value_Real4
+      Reff_Aux = Missing_Value_Real4
       Tau_DCOMP_Ap = Missing_Value_Real4
       Vis_Ref_Fm = Missing_Value_Real4
       Reff_DCOMP = Missing_Value_Real4
@@ -2238,6 +2241,7 @@ subroutine DESTROY_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       deallocate(Tau_DCOMP)
       deallocate(Tau_Aux)
+      deallocate(Reff_Aux)
       deallocate(Tau_DCOMP_Ap)
       deallocate(Vis_Ref_Fm)
       deallocate(Reff_DCOMP)

@@ -2147,6 +2147,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud effective particle radius from AUX
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Aux_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ceps_Aux),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
+                               "cld_reff_aux", &
+                               "effective_radius_of_cloud_condensed_water_particles_at_cloud_top", &
+                               "effective radius of cloud particles read from aux file", &
+                                DFNT_INT16, sym%LINEAR_SCALING, Min_tau, Max_tau, &
+                               "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- cloud optical depth uncertainty from dcomp
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Dcomp_Uncer_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Dcomp_Uncer),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
@@ -4846,6 +4857,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Aux_Flag == sym%YES) then
       call SCALE_VECTOR_I2_RANK2(Tau_Aux,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld reff from aux
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Aux_Flag == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Reff_Aux,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

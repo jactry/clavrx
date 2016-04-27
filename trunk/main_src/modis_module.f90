@@ -56,6 +56,8 @@ module MODIS_MODULE
                 , Cld_Phase_Aux &
                 , Cld_Type_Aux &
                 , Zc_Aux &
+                , Tau_Aux &
+                , Reff_Aux &
                 , Line_Idx_Min_segment
 
         use PIXEL_ROUTINES,only: &
@@ -792,6 +794,8 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
                               Cloud_Phase_Out,  &
                               Cloud_Type_Out,  &
                               Cloud_Height_Out,  &
+                              Cloud_Opd_Out, &
+                              Cloud_Reff_Out, &
                               nx,ny,Seg_Idx,ny_total,ny_local_temp, &
                               Error_Status) 
 
@@ -807,6 +811,8 @@ subroutine READ_MODIS_LEVEL1B_CLOUD_MASK(path,file_name,  &
       integer(kind=int1), dimension(:,:), intent(out):: Cloud_Phase_Out
       integer(kind=int1), dimension(:,:), intent(out):: Cloud_Type_Out
       real(kind=real4), dimension(:,:), intent(out):: Cloud_Height_Out
+      real(kind=real4), dimension(:,:), intent(out):: Cloud_Opd_Out
+      real(kind=real4), dimension(:,:), intent(out):: Cloud_Reff_Out
 
       integer(kind=int1), allocatable, dimension(:,:,:):: i1_buffer
       integer(kind=int2), allocatable, dimension(:,:):: i2_buffer
@@ -899,7 +905,29 @@ error_check: do while (Status_Flag == 0 .and. iend == 0)
        Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Top_Height_1km')))
        Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
        Cloud_Height_Out(1:nx_min,1:ny_min) = real(i2_buffer(1:nx_min,1:ny_min))
+       where(i2_buffer == -999)
+          Cloud_Height_Out = Missing_Value_Real4
+       endwhere
        Status_Flag = sfendacc(Sds_Id) + Status_Flag
+
+       !--- Read Cloud Optical Depth (i2, scale = 0.01, add_offset = 0, fill=-9999)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Optical_Thickness')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
+       Cloud_Opd_Out(1:nx_min,1:ny_min) = 0.0 + 0.01*real(i2_buffer(1:nx_min,1:ny_min))
+       where(i2_buffer == -9999)
+          Cloud_Opd_Out = Missing_Value_Real4
+       endwhere
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+
+       !--- Read Cloud Particle Size( i2, scale = 0.01, add_offset = 0, fill=-9999)
+       Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim('Cloud_Effective_Radius')))
+       Status_Flag = sfrdata(Sds_Id, sds_start, sds_stride, sds_edges, i2_buffer) + Status_Flag
+       Cloud_Reff_Out(1:nx_min,1:ny_min) = 0.0 + 0.01*real(i2_buffer(1:nx_min,1:ny_min))
+       where(i2_buffer == -9999)
+          Cloud_Reff_Out = Missing_Value_Real4
+       endwhere
+       Status_Flag = sfendacc(Sds_Id) + Status_Flag
+
       endif
 
       !--- close file
@@ -1017,6 +1045,8 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
                                              Cld_Phase_Aux, & 
                                              Cld_Type_Aux, & 
                                              Zc_Aux, & 
+                                             Tau_Aux, &
+                                             Reff_Aux, &
                                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment, &
                                              Seg_Idx,Image%Number_Of_Lines,Image%Number_Of_Lines_Read_This_Segment, &
                                              Error_Status)

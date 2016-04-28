@@ -1,4 +1,4 @@
-!$Id: 
+!$Id
  !-----------------------------------------------------------------------------
  ! Input Structure
  ! IMPORTANT - WILL NOT WORK UNTIL GEOCAT HAS NETCDF CAPABILITY

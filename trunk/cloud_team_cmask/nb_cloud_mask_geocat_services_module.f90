@@ -1,9 +1,9 @@
 !$Id$
  !-----------------------------------------------------------------------------
  ! Input Structure
- ! IMPORTANT - WILL NOT WORK UNTIL GEOCAT HAS NETCDF CAPABILITY
+ ! IMPORTANT - FIX BAYESIAN CLOUD MASK NAME
  !-----------------------------------------------------------------------------
- module NB_CLOUD_MASK_GEOCAT_SERVICES_MODULE
+ module NB_CLOUD_MASK_SERVICES
 
    USE ALGORITHM_MODULE_USAGE
 
@@ -68,6 +68,7 @@
     real(kind=real4) :: Ref_375um_Clear                        !3.75 um toa reflectance for clear-sky (%)
     real(kind=real4) :: Ref_213um                              !2.13 um toa reflectance (%)
     real(kind=real4) :: Bt_375um                               !3.75 um toa brightness temp (K)
+    real(kind=real4) :: Bt_375um_Clear                         !3.75 um toa brightness temp (K)
     real(kind=real4) :: Bt_375um_Std                           !3.75 um toa brightness temp 3x3 Std. Dev. (K)
     real(kind=real4) :: Emiss_375um                            !3.75 um pseudo toa emissivity
     real(kind=real4) :: Emiss_375um_Clear                      !3.75 um pseudo toa emissivity clear-sky
@@ -163,4 +164,4 @@
  end type symbol_naive_bayesian
 
 
-end module NB_CLOUD_MASK_GEOCAT_SERVICES_MODULE
+end module NB_CLOUD_MASK_SERVICES

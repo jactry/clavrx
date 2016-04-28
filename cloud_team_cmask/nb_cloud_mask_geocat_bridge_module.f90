@@ -3,7 +3,7 @@
 !
 ! PURPOSE: Bridge for GEOCAT for NB Cloud mask. 
 !
-! IMPORTANT - WILL NOT WORK UNTIL GEOCAT HAS NETCDF CAPABILITY
+! IMPORTANT - FIX BAYESIAN CLOUD MASK NAME
 !
 ! DESCRIPTION: 
 !
@@ -15,7 +15,7 @@
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_GEOCAT_BRIDGE_MODULE
 
-   use NB_CLOUD_MASK_GEOCAT_SERVICES_MODULE
+   use NB_CLOUD_MASK_SERVICES
    use NB_CLOUD_MASK
 
    implicit none
@@ -506,6 +506,7 @@ contains
         Input%Ref_375um = sat%ref7(i,j)
         Input%Ref_375um_Clear = MISSING_VALUE_REAL4 !Not filled or used for now
         Input%Bt_375um = sat%bt7(i,j)
+        Input%Bt_375um_Clear = sat%bt_clr7(i,j)
         Input%Bt_375um_Std = Bt_Ch20_Stddev_3x3(i,j) 
         Input%Emiss_375um =  Ems_39_Med_3x3(i,j) 
         Input%Emiss_375um_Clear = sat%ems_sol_clr7(i,j)

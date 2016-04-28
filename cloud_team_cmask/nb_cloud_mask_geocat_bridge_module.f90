@@ -15,7 +15,6 @@
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_GEOCAT_BRIDGE_MODULE
 
-
    use NB_CLOUD_MASK_GEOCAT_SERVICES_MODULE
    use NB_CLOUD_MASK
 

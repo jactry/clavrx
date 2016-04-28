@@ -8,7 +8,6 @@
    USE ALGORITHM_MODULE_USAGE
 
 
-
  implicit none
 
  include 'nb_cloud_mask.inc'

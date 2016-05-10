@@ -103,6 +103,10 @@ module NB_CLOUD_MASK
 !integer, parameter, private:: int8 = selected_int_kind(10)
 !integer, parameter, private:: real4 = selected_real_kind(6,37)
 !integer, parameter, private:: real8 = selected_real_kind(15,307)
+ ! --- set cloud mask probability thresholds based on sfc type
+ real, dimension (7), parameter :: CONF_CLEAR_PROB_CLEAR_THRESH =  [0.01, 0.01, 0.01, 0.10, 0.10, 0.10, 0.10]
+ real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.05, 0.05, 0.05, 0.50, 0.50, 0.50, 0.50]
+ real, dimension (7), parameter :: PROB_CLOUDY_CONF_CLOUD_THRESH = [0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90]
 
  !--- string to hold version id
  character(225), private, save :: Cloud_Mask_Thresholds_Version
@@ -394,12 +398,6 @@ module NB_CLOUD_MASK
    real (kind=real4):: Airmass
    integer, parameter:: Spare_Value = 0
    
-   ! --- set cloud mask probability thresholds based on sfc type
-   real, dimension (7) :: cld_mask_probab_thresh_lo = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-   real, dimension (7) :: cld_mask_probab_thresh_mi = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-   real, dimension (7) :: cld_mask_probab_thresh_hi = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
-   real :: cld_mask_probab_thresh_lo_tmp, cld_mask_probab_thresh_mi_tmp, &
-           cld_mask_probab_thresh_hi_tmp
    real:: r
 
    !------------------------------------------------------------------------------------------
@@ -967,20 +965,16 @@ module NB_CLOUD_MASK
         !------------------------------------------------------------------------------------------------------------
         ! - based on type of srfc could be different thresholds
         if (Sfc_Idx > 0) then
-           cld_mask_probab_thresh_lo_tmp = cld_mask_probab_thresh_lo ( Sfc_Idx )
-           cld_mask_probab_thresh_mi_tmp = cld_mask_probab_thresh_mi ( Sfc_Idx )
-           cld_mask_probab_thresh_hi_tmp = cld_mask_probab_thresh_hi ( Sfc_Idx )
-
            Output%Cld_Mask_Bayes = symbol%CLEAR
-           if (Output%Posterior_Cld_Probability >= cld_mask_probab_thresh_hi_tmp) then
+           if (Output%Posterior_Cld_Probability >= PROB_CLOUDY_CONF_CLOUD_THRESH(Sfc_Idx)) then
                    Output%Cld_Mask_Bayes = symbol%CLOUDY
            endif
-           if ((Output%Posterior_Cld_Probability >= cld_mask_probab_thresh_mi_tmp) .and. &
-               (Output%Posterior_Cld_Probability < cld_mask_probab_thresh_hi_tmp)) then
+           if ((Output%Posterior_Cld_Probability >= PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx)) .and. &
+               (Output%Posterior_Cld_Probability < PROB_CLOUDY_CONF_CLOUD_THRESH(Sfc_Idx))) then
                    Output%Cld_Mask_Bayes = symbol%PROB_CLOUDY
            endif
-           if ((Output%Posterior_Cld_Probability > cld_mask_probab_thresh_lo_tmp) .and. &
-               (Output%Posterior_Cld_Probability < cld_mask_probab_thresh_mi_tmp)) then
+           if ((Output%Posterior_Cld_Probability > CONF_CLEAR_PROB_CLEAR_THRESH(Sfc_Idx)) .and. &
+               (Output%Posterior_Cld_Probability < PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx))) then
                    Output%Cld_Mask_Bayes = symbol%PROB_CLEAR
            endif
         endif
@@ -999,15 +993,15 @@ module NB_CLOUD_MASK
           !-- set cloud flags
           Cld_Flag_Bit_Depth(Class_To_Test_Idx(Class_Idx)) = 2
           Cld_Flags(Class_To_Test_Idx(Class_Idx)) = symbol%CLOUDY
-          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_lo_tmp) then
+          if (Posterior_Cld_Probability_By_Class(Class_Idx) <= CONF_CLEAR_PROB_CLEAR_THRESH(Sfc_Idx)) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_lo_tmp .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_mi_tmp) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > CONF_CLEAR_PROB_CLEAR_THRESH(Sfc_Idx) .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx)) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLEAR
 
-          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > cld_mask_probab_thresh_mi_tmp .and. &
-                  Posterior_Cld_Probability_By_Class(Class_Idx) <= cld_mask_probab_thresh_hi_tmp) then
+          elseif (Posterior_Cld_Probability_By_Class(Class_Idx) > PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx) .and. &
+                  Posterior_Cld_Probability_By_Class(Class_Idx) <= PROB_CLOUDY_CONF_CLOUD_THRESH(Sfc_Idx)) then
                Cld_Flags(Class_to_Test_Idx(Class_Idx)) = symbol%PROB_CLOUDY
           endif
 

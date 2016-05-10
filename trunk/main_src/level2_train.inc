@@ -151,8 +151,8 @@
      Sds_Num_Level2_Bayes_Sfc_Type = 139,Sds_Num_Level2_Bayes_Sfc_Type_Flag = 1, &
      Sds_Num_Level2_Acha_Order = 140,    Sds_Num_Level2_Acha_Order_Flag = 0, &
      Sds_Num_Level2_Acha_Inver = 141,    Sds_Num_Level2_Acha_Inver_Flag = 0, &
-     Sds_Num_Level2_Cth_Top = 142,       Sds_Num_Level2_Cth_Top_Flag = 0, &
-     Sds_Num_Level2_Cth_Base = 143,      Sds_Num_Level2_Cth_Base_Flag = 0, &
+     Sds_Num_Level2_Cth_Top = 142,       Sds_Num_Level2_Cth_Top_Flag = 1, &
+     Sds_Num_Level2_Cth_Base = 143,      Sds_Num_Level2_Cth_Base_Flag = 1, &
      Sds_Num_Level2_Cld_Tests = 144,     Sds_Num_Level2_Cld_Tests_Flag = 0, &
      Sds_Num_Level2_Ref_Max_ChI1 = 145,  Sds_Num_Level2_Ref_Max_ChI1_Flag = 1, &
      Sds_Num_Level2_Ref_Min_ChI1 = 146,  Sds_Num_Level2_Ref_Min_ChI1_Flag = 1, &
@@ -218,7 +218,7 @@
      Sds_Num_Level2_Ch20_Sfc_Emiss = 206, Sds_Num_Level2_Ch20_Sfc_Emiss_Flag = 1, &
      Sds_Num_Level2_Ch31_Rad_Atm_Dwn = 207, Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag = 0, &
      Sds_Num_Level2_Ozone = 208,          Sds_Num_Level2_Ozone_Flag = 0, &
-     Sds_Num_Level2_Acha_Cost = 209,      Sds_Num_Level2_Acha_Cost_Flag = 0, &
+     Sds_Num_Level2_Acha_Cost = 209,      Sds_Num_Level2_Acha_Cost_Flag = 1, &
      Sds_Num_Level2_Aux_Cost = 210,       Sds_Num_Level2_Aux_Cost_Flag = 0, &
      Sds_Num_Level2_Hcld_Dcomp = 211,     Sds_Num_Level2_Hcld_Dcomp_Flag = 0, &
      Sds_Num_Level2_Cdnc_Dcomp = 212,     Sds_Num_Level2_Cdnc_Dcomp_Flag = 0, &

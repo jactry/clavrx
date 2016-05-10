@@ -171,7 +171,7 @@ module AWG_CLOUD_HEIGHT
                            -6.5, -6.5, -6.8, -7.0, -7.3, -7.4, -7.4, &
                            -6.5, -6.3, -6.4, -6.6, -7.0, -7.3, -7.6, &
                            -6.0, -5.7, -5.6, -5.8, -6.3, -6.8, -7.3, &
-                           -5.6, -5.2, -5.0, -5.2, -5.9, -6.3, -6.8/), (/ntcs,nts/))
+                           -5.6, -5.2, -5.0, -5.2, -5.9, -6.3, -6.8/), (/nts,ntcs/))
 
   contains 
 
@@ -1460,8 +1460,6 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
 
        !-- compute height
        Output%Zc(Elem_Idx,Line_Idx) = -1.0*Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
-
-!print *, "test ", Lapse_Rate, Delta_Cld_Temp_Sfc_Temp, Input%Surface_Elevation(Elem_Idx,Line_Idx), Output%Zc(Elem_Idx,Line_Idx) 
 
        !--- Some negative cloud heights are observed because of bad height
        !--- NWP profiles.
@@ -4015,7 +4013,6 @@ end subroutine COMPUTE_BOX_WIDTH
 ! End of Module
 !----------------------------------------------------------------------
 function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
-!real elemental function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
   real, intent(in):: Tsfc
   real, intent(in):: Tc
   real:: Tcs

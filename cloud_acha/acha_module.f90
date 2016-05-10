@@ -99,6 +99,7 @@ module AWG_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
   private:: MEAN_SMOOTH
+  private:: OCEANIC_LAPSE_RATE
 
   !--- include the non-system specific variables
   include 'acha_parameters.inc'
@@ -153,6 +154,24 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int1), private, PARAMETER:: MISSING_VALUE_INTEGER1 = -128
   integer(kind=int4), private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
   type(acha_symbol_struct), private :: symbol
+
+
+  integer, private, parameter:: nts = 7
+  integer, private, parameter:: ntcs = 9
+  real, private, parameter:: ts_min = 270.0
+  real, private, parameter:: dts = 5.0
+  real, private, parameter:: tcs_min = -20.0
+  real, private, parameter:: dtcs = 2.0
+  real, private, dimension(nts,ntcs), parameter:: lapse_rate_table = reshape ((/ &
+                           -7.1, -7.1, -7.3, -7.4, -7.4, -6.8, -6.2, &
+                           -7.3, -7.2, -7.3, -7.4, -7.4, -7.0, -6.3, &
+                           -7.4, -7.2, -7.3, -7.5, -7.6, -7.1, -6.5, &
+                           -7.2, -7.1, -7.3, -7.5, -7.6, -7.2, -6.6, &
+                           -6.9, -6.8, -7.1, -7.4, -7.5, -7.3, -7.0, &
+                           -6.5, -6.5, -6.8, -7.0, -7.3, -7.4, -7.4, &
+                           -6.5, -6.3, -6.4, -6.6, -7.0, -7.3, -7.6, &
+                           -6.0, -5.7, -5.6, -5.8, -6.3, -6.8, -7.3, &
+                           -5.6, -5.2, -5.0, -5.2, -5.9, -6.3, -6.8/), (/ntcs,nts/))
 
   contains 
 
@@ -1406,30 +1425,43 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
 
+ !--- Estimate height and pressure
+ call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
+                            Output%Tc(Elem_Idx,Line_Idx), &
+                            Output%Zc(Elem_Idx,Line_Idx),&
+                            Ilev,ierror,NWP_Profile_Inversion_Flag)
+
+ !--- check for NWP profile inversion and set meta data flag.
+ if (NWP_Profile_Inversion_Flag == 1) then
+     Meta_Data_Flags(8) = symbol%YES
+ endif
+
+
  !---  for low clouds over water, force fixed lapse rate estimate of height
  Delta_Cld_Temp_Sfc_Temp = Input%Surface_Temperature(Elem_Idx,Line_Idx) - Output%Tc(Elem_Idx,Line_Idx)
 
  if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC .and. &
      Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
-     ((Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) .or. &
-      (Cloud_Type == symbol%WATER_TYPE) .or. &
+     ((Cloud_Type == symbol%WATER_TYPE) .or. &
       (Cloud_Type == symbol%FOG_TYPE) .or. & 
       (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
 
-       !-- select lapse rate  (k/km)
-       Lapse_Rate =  -0.061  + &
-                     1.67*Delta_Cld_Temp_Sfc_Temp   &
-                     -0.124*(Delta_Cld_Temp_Sfc_Temp**2)   &
-                     +0.00343*(Delta_Cld_Temp_Sfc_Temp**3)
+     if (Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) then
 
-       !--- constrain lapse rate to be with 2 and 10 K/km
-       Lapse_Rate = max(2.0,min(10.0,Lapse_Rate))
+       !-- select lapse rate  (k/km)
+       Lapse_Rate = oceanic_lapse_rate(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
+                                       Output%Tc(Elem_Idx,Line_Idx))
+ 
+       !--- constrain lapse rate to be with -2 and -10 K/km
+       Lapse_Rate = min(-2.0,max(-10.0,Lapse_Rate))
 
        !--- convert lapse rate to K/m
        Lapse_Rate = Lapse_Rate / 1000.0  !(K/m)
 
        !-- compute height
-       Output%Zc(Elem_Idx,Line_Idx) = Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
+       Output%Zc(Elem_Idx,Line_Idx) = -1.0*Delta_Cld_Temp_Sfc_Temp/Lapse_Rate + Input%Surface_Elevation(Elem_Idx,Line_Idx)
+
+!print *, "test ", Lapse_Rate, Delta_Cld_Temp_Sfc_Temp, Input%Surface_Elevation(Elem_Idx,Line_Idx), Output%Zc(Elem_Idx,Line_Idx) 
 
        !--- Some negative cloud heights are observed because of bad height
        !--- NWP profiles.
@@ -1444,20 +1476,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
        Meta_Data_Flags(7) = symbol%YES
        Output%Inversion_Flag(Elem_Idx,Line_Idx) = 1
 
-
- else   !the general top-down solution
-
-        !--- Estimate height and pressure
-        call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
-                                  Output%Tc(Elem_Idx,Line_Idx), &
-                                  Output%Zc(Elem_Idx,Line_Idx),&
-                                  Ilev,ierror,NWP_Profile_Inversion_Flag)
-
-        !--- check for NWP profile inversion and set meta data flag.
-        if (NWP_Profile_Inversion_Flag == 1) then
-          Meta_Data_Flags(8) = symbol%YES
-        endif
-
+       endif
  endif
 
  !-----------------------------------------------------------------------------
@@ -3991,8 +4010,30 @@ end subroutine COMPUTE_BOX_WIDTH
 
   end subroutine MEAN_SMOOTH
 
+
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------
+function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
+!real elemental function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
+  real, intent(in):: Tsfc
+  real, intent(in):: Tc
+  real:: Tcs
+  real:: lapse_rate
+  integer:: its, itcs
+
+  Tcs = Tc - Tsfc
+  its = int((Tsfc - ts_min) / dts) + 1
+  its = max(1,min(nts,its))
+  itcs = int((Tcs - tcs_min) / dtcs) + 1
+  itcs = max(1,min(ntcs,itcs))
+
+  lapse_rate = lapse_rate_table(its,itcs)
+
+!- old way
+!  lapse_rate =  -0.061 - 1.67*Tcs - 0.124*(Tcs**2) - 0.00343*(Tcs**3)
+   
+
+end function oceanic_lapse_rate
 
 end module AWG_CLOUD_HEIGHT

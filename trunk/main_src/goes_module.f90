@@ -1664,6 +1664,7 @@ end subroutine READ_GOES_SNDR
  !--- update number of scans read
  Num_Lines_Read = Number_Of_Words_Read / Words_Per_Line
  
+ !--- extract scanline time from prefix - note issues with Word_End (FIXME)
  do Line_Idx = 1, Num_Lines_Read
      Word_Start = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + Words_In_Prefix + 1
 !    Word_End = min(Word_Start + AREAstr%Num_Elem,Number_Of_Words_In_Segment)
@@ -1679,7 +1680,7 @@ end subroutine READ_GOES_SNDR
       else
         if (Goes_Scan_Line_Flag==sym%NO) then
           call PRINT_PREFIX(Word_Buffer(Word_Start_Prefix:Word_Start_Prefix+Words_In_Prefix), &
-                        Scan_Time(Line_Idx))
+                            Scan_Time(Line_Idx))
         endif
       endif
     endif
@@ -3239,10 +3240,16 @@ subroutine PRINT_PREFIX(buf, ms_Time)
 !  integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
 !  integer, parameter :: LOC = 0  ! sounder value, from mcidas code
   integer, parameter :: LOC = 1   ! value experimentally determined to work for CLAVRx.
+  integer:: min_size
 
   equivalence(buf2, ldoc)
   
-  buf2(:) = buf(:128)
+! caused error on 1km
+!  buf2(:) = buf(:128)
+
+  ! works but does not solve above problem
+  min_size = min(size(buf2), size(buf))
+  buf2(1:min_size) = buf(1:min_size)
 
   CALL UNPKTIME (ldoc ,ITIMES,9+LOC)
   

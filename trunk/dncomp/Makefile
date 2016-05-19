@@ -42,6 +42,7 @@ dcomp_forward_mod.o \
 dcomp_math_tools_mod.o \
 dcomp_science_tools_mod.o \
 M_kracken.o \
+sensorname_from_wmoid.o \
 dncomp_interface_def_mod.o \
 dcomp_lut_mod.o \
 view2d.o \
@@ -101,13 +102,14 @@ libdncomp.a: $(OBJS)
 	
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
-dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dncomp_interface_def_mod.o view2d.o
+dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dncomp_interface_def_mod.o view2d.o sensorname_from_wmoid.o
 dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_science_tools_mod.o   dcomp_lut_mod.o
 dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
 dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_hdf_mod.o
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dncomp_interface_def_mod.o:dncomp_interface_def_mod.f90
 dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
+sensorname_from_wmoid.o:sensorname_from_wmoid.f90
 nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_retrieval_mod.o dncomp_interface_def_mod.o
 nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o 
 nlcomp_array_loop_sub.o:nlcomp_array_loop_sub.f90 nlcomp_retrieval_mod.o dncomp_interface_def_mod.o

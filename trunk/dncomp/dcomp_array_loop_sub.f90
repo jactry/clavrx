@@ -13,6 +13,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       , EM_cloud_type &
       , EM_cloud_mask &
       , EM_snow_class
+      
    
    implicit none
    type (dncomp_in_type) , intent(in) :: input
@@ -81,7 +82,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    integer :: debug_mode
       
-   character (len = 20) :: sensor_name
+   character (len = 20) :: sensorname_from_wmoid
       
    real :: cld_height
    real :: cld_press
@@ -161,68 +162,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
   
 
-   !--- select sensor name based on wmo id number
-   select case (input % sensor_wmo_id)
-      case(3)
-         sensor_name = 'METOP-B'
-      case(4)
-         sensor_name = 'METOP-A'	 
-      case(55)
-         sensor_name = 'Meteosat-8' 
-      case(56)
-         sensor_name = 'Meteosat-9' 
-      case(57)
-         sensor_name = 'Meteosat-10' 
-      case(70)
-         sensor_name = 'Meteosat-11' 
-      case(171)
-         sensor_name = 'MTSAT-1R'
-      case (172)
-         sensor_name = 'MTSAT-2'
-      case (173)
-         sensor_name = 'AHI'     
-      case (200:204)
-         write(sensor_name, "('NOAA-',i2.2)") input % sensor_wmo_id - 192 
-      case (205:209)
-         write(sensor_name, "('NOAA-',i2.2)") input % sensor_wmo_id - 191
-      case(223)
-         sensor_name = 'NOAA-19'	  
-      case(224)
-         sensor_name = 'VIIRS'
-      case(252)
-         sensor_name = 'GOES-08'
-      case(253)
-         sensor_name = 'GOES-09'
-      case(254)
-         sensor_name = 'GOES-10'
-      case(255)
-         sensor_name = 'GOES-11'
-      case(256)
-         sensor_name = 'GOES-12'
-      case(257)
-         sensor_name = 'GOES-13'
-      case(258)
-         sensor_name = 'GOES-14'
-      case(259)
-         sensor_name = 'GOES-15'
-      case(705)
-         sensor_name = 'NOAA-05'   
-      case(706)
-         sensor_name = 'NOAA-06'   
-      case(707)
-         sensor_name = 'NOAA-07'
-      case(708)
-         sensor_name = 'TIROS-N'   
-      case(783)
-         sensor_name = 'MODIS-TERRA'
-      case(784)
-         sensor_name = 'MODIS-AQUA'
-      case(810)
-         sensor_name = 'COMS-1'   
-      case default
-         print*,'please inform  andi.walther@ssec.wisc.edu wmo id: ', input % sensor_wmo_id 
-         stop
-   end select
+   
   
    ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    
@@ -419,7 +359,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , water_phase_array ( elem_idx, line_idx)  &
                 & , rad_clear_sky_toc_ch20 &
                 & , rad_clear_sky_toa_ch20 &
-                & , trim(sensor_name) &
+                & , trim(sensorname_from_wmoid(input % sensor_wmo_id)) &
                 & , dcomp_out &
                 & , input % mode &
                 & , input % lut_path &

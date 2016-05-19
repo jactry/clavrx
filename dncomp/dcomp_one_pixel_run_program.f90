@@ -83,20 +83,20 @@ program dcomp_one_pixel_run
    debug_mode = iget("cmd_dbg")
    call retrev("cmd_sen", sensor, iflen, ier)  
    !sensor = sensor(:iflen)	
-	
+
    
    if ( debug_mode == 3 ) then 
       print*, 'DCOMP stand alone processing'
-	   print*,'to switch on this information set -dbg 3'
-	   print*,'show usage set -dbg 2'
-	   print*
-	   print*,'input:   '
-	   print*,'obs: ', obs(1:2)
-	   print*,'sol, sat, rel_azi: ', sol_zen, sat_zen, rel_azi
-	   print*,'alb_sfc: ',alb_sfc(1:2)
-	   print*,'cloud top temperature: ', cld_temp,trim('K')
-	   print*,'snow: ',snow
-	   print*,'water phase: ', water_phase
+   print*,'to switch on this information set -dbg 3'
+   print*,'show usage set -dbg 2'
+   print*
+   print*,'input:   '
+   print*,'obs: ', obs(1:2)
+   print*,'sol, sat, rel_azi: ', sol_zen, sat_zen, rel_azi
+   print*,'alb_sfc: ',alb_sfc(1:2)
+   print*,'cloud top temperature: ', cld_temp,trim('K')
+   print*,'snow: ',snow
+   print*,'water phase: ', water_phase
       print*,'dcomp mode: ', dcomp_mode
       print*,'above cloud transmission: ', air_trans_ac(1:2)
       print*
@@ -105,18 +105,18 @@ program dcomp_one_pixel_run
    
    if ( debug_mode == 2 ) then 
       print*, 'DCOMP stand-alone processing'
-	   print*,'to switch on this information set -dbg 2'
-	   print*
-	   print*,'usage: ...'
-	   print*,' this shows the options with the default values if you do not set them: '
-	   print*
-	   print*,'./dcomp -obs1 0.5211 -obs2 0.133 -alb1 0.12 -alb2 0.12'    
+   print*,'to switch on this information set -dbg 2'
+   print*
+   print*,'usage: ...'
+   print*,' this shows the options with the default values if you do not set them: '
+   print*
+   print*,'./dcomp -obs1 0.5211 -obs2 0.133 -alb1 0.12 -alb2 0.12'    
       print* ,' -ctt 276. -sol 23.33 -sat 21. -azi 80 '
-	   print*,'-apr1 1.0 -apr2 1.0 -sen GOES-15'
-	   print*,'-radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 '
-	   print*,'-obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01 -dcm 3 -tnr 0.8  -qq 0.8  '
+   print*,'-apr1 1.0 -apr2 1.0 -sen GOES-15'
+   print*,'-radabv 0.0002 -radsfc 0.14 -tvis 0.8 -dbg 0 '
+   print*,'-obsu1 0.01 -obsu2 0.01 -albu1 0.01 -albu2 0.01 -dcm 3 -tnr 0.8  -qq 0.8  '
       print*,' boolean keywords :  -snow -wat'
-	   print*
+   print*
    end if
    
    
@@ -133,16 +133,16 @@ program dcomp_one_pixel_run
    
    call dcomp_algorithm ( obs , obs_u , alb_sfc , alb_sfc_u , state_apr , air_trans_ac &
                               & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase &
-	  & , rad_abv_cld , rad_sfc , sensor &
-	  & , dcomp_results , dcomp_mode = dcomp_mode &
-	  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
+  & , rad_abv_cld , rad_sfc , sensor &
+  & , dcomp_results , dcomp_mode = dcomp_mode &
+  & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output
    write(color_string,'(I2)') 43
    text = '============= DCOMP RESULTS==============='
    print*,achar(27)//'['//color_string//'m '//trim(text)//achar(27)//'[0m'
    print*,' ' , trim(sensor), ' DCOMP output:  COD:' &
        ,dcomp_results%cod ,'REF: ',dcomp_results % cps &
        , 'cloud albedo: ', dcomp_results % cloud_alb_vis
-	
+
  ! call dcomp_array()
     
 end program dcomp_one_pixel_run

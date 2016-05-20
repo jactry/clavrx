@@ -105,8 +105,9 @@ module NB_CLOUD_MASK
 !integer, parameter, private:: real8 = selected_real_kind(15,307)
  ! --- set cloud mask probability thresholds based on sfc type
  real, dimension (7), parameter :: CONF_CLEAR_PROB_CLEAR_THRESH =  [0.01, 0.01, 0.01, 0.10, 0.10, 0.10, 0.10]
- real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.05, 0.05, 0.05, 0.50, 0.50, 0.50, 0.50]
+ real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
  real, dimension (7), parameter :: PROB_CLOUDY_CONF_CLOUD_THRESH = [0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90]
+ !real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.05, 0.05, 0.05, 0.50, 0.50, 0.50, 0.50]
 
  !--- string to hold version id
  character(225), private, save :: Cloud_Mask_Thresholds_Version

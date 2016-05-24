@@ -99,8 +99,8 @@
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
-   use NLCOMP_BRIDGE_MOD, only: &
-      awg_cloud_nlcomp_algorithm
+   !use NLCOMP_BRIDGE_MOD, only: &
+   !   awg_cloud_nlcomp_algorithm
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
    use LAND_SFC_PROPERTIES
@@ -246,7 +246,7 @@
    TYPE (AREA_STRUCT) :: AREAstr
    TYPE (GVAR_NAV)    :: NAVstr
    
-   logical :: dcomp_run
+   logical :: dncomp_run
    
    character (len = 30) :: string_30
    character (len = 100) :: string_100
@@ -1154,7 +1154,8 @@
                
                if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
-                     call AWG_CLOUD_NLCOMP_ALGORITHM (  Iseg_In=Segment_Number) 
+                     call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , nlcomp_mode = .true. &
+                        , algorithm_started = dncomp_run)
                   end if   
                end if   
           
@@ -1167,9 +1168,9 @@
 
                if (Dcomp_Mode > 0) then
         
-                  call AWG_CLOUD_DCOMP_ALGORITHM( Iseg_In = Segment_Number , dcomp_run = dcomp_run)
+                  call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
                   call SET_DCOMP_VERSION()
-                  if ( dcomp_run ) then
+                  if ( dncomp_run ) then
                      call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                      call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,Sun_Earth_Distance)
                      call COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Image%Number_Of_Lines_Read_This_Segment)

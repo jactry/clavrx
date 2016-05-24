@@ -39,7 +39,7 @@ module nlcomp_bridge_mod
       , MISSING_VALUE_REAL4 , PI &
       , dcomp_version   ! -- this is not a constant!
    
-   use rtm_common
+   use rtm_common, only:
 !  use rt_utilities, only: &
 !        nlevels_rtm &
 !       , p_std_rtm

@@ -99,8 +99,6 @@
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
-   !use NLCOMP_BRIDGE_MOD, only: &
-   !   awg_cloud_nlcomp_algorithm
    use AEROSOL_PROPERTIES
    use HDF_PARAMS
    use LAND_SFC_PROPERTIES

@@ -163,9 +163,8 @@ clavrxorb_objs = process_clavrx.o \
                  fy2_module.o \
                  coms_module.o \
                  dnb_retrievals_mod.o \
-		 dcomp_clavrx_bridge_mod.o \
+		 dncomp_clavrx_bridge_mod.o \
 		 dcomp_rtm_module.o \
-                 nlcomp_bridge_mod.o \
                  globsnow_read_routines.o \
 	         laszlo_insolation_module.o \
                  conver.o \
@@ -304,9 +303,8 @@ cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o
 cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
 cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o
 cx_pfaast_constants_mod.o:cx_pfaast_constants_mod.f90
-dcomp_clavrx_bridge_mod.o:dcomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
+dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
-nlcomp_bridge_mod.o:nlcomp_bridge_mod.f90 clavrx_message_module.o
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
@@ -383,7 +381,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
-              dcomp_clavrx_bridge_mod.o nlcomp_bridge_mod.o \
+              dncomp_clavrx_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \

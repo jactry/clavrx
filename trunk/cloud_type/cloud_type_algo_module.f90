@@ -201,7 +201,7 @@ contains
       end if   
 
       !--- set diagnostic output (note this impacts global diag variales)
-      !diag_out % diagnostic_1 = ice_prob
+      diag_out % diagnostic_1 = ice_prob
       !diag_out % diagnostic_2 = is_cirrus
       !diag_out % diagnostic_3 = is_overlap
 

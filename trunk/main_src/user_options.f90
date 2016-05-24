@@ -257,7 +257,7 @@ contains
       erstat = 0
       if (ios0 /= 0) then    !avhrr_input_check
          erstat = 1
-         print *, EXE_PROMPT, "error opening AVHRR default control file, ios0 = ", ios0
+         print *, EXE_PROMPT, "error opening clavrx_options file, ios0 = ", ios0
          stop 1
       end if
       

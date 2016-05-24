@@ -1,0 +1,145 @@
+SWITCH_CL,Dim,''NAME'',DTYPE,SCALED,ACT_RANGE1,ACT_RANGE2,VAL_RANGE1,VAL_RANGE2,FILL,ADD_OFFS,''STANDARD_NAME'',UNITS,LONG_NAME
+1,40,''_FILENAME'',0,0,0,0,0,0,0,0,,,
+1,0,''_GLOBAL_ATTR'',0,0,0,0,0,0,0,0,,,
+1,1,''SCAN_LINE_NUMBER'',3,0,0,0,0,0,25,0,''not specified'',none,scan line number
+1,1,''SCAN_LINE_TIME'',4,0,0,0,0,0,25,0,''not specified'',hours,time for the scan line in fractional hours
+1,1,''BAD_SCAN_LINE_FLAG'',1,0,0,0,0,0,128,0,,none,
+1,1,''ASC_DES_FLAG'',1,0,0,0,0,0,128,0,,none,
+1,1,''BAD_PIXEL_MASK'',1,0,0,0,0,0,128,0,''not specified'',none,mask that distinguishes good(0) from bad(1) pixels
+1,1,''GAP_PIXEL_MASK'',1,0,0,0,0,0,128,0,''not specified'',none,mask that distinguishes not in gap (0) from in-gap(1) pixels
+1,2,''DIAGNOSTIC_1'',4,0,0,0,0,0,25,0,''not specified'',unknown,First diagnostic variable (contents will change)
+1,2,''DIAGNOSTIC_2'',4,0,0,0,0,0,25,0,''not specified'',unknown,Second diagnostic variable (contents will change)
+1,2,''DIAGNOSTIC_3'',4,0,0,0,0,0,25,0,''not specified'',unknown,third diagnostic variable (contents will change)
+1,2,''PACKED_PIXEL_META_DATA'',1,0,0,0,0,0,0,0,''pixel_quality_flags_packed_into_one_byte'',none,"order_and_depth: bad_pixel_mask(1),solar_contamination_mask(1),ch6_on_pixel_mask(1),Bayes_Mask_Sfc_Type(3)"
+1,2,''LATITUDE'',2,1,-90,90,1,255,0,0,''latitude'',degrees_north,latitude
+1,2,''LONGITUDE'',2,1,-180,180,1,255,0,0,''longitude'',degrees_east,longitude
+1,2,''LATITUDE_PC'',2,1,-90,90,1,255,0,0,''latitude_parallax_corrected'',degrees_north,latitude_parallax_corrected_using_cloud_height
+1,2,''LONGITUDE_PC'',2,1,-180,180,1,255,0,0,''longitude_parallax_corrected'',degrees_east,longitude_parallax_corrected_using_cloud_height
+1,2,''SENSOR_ZENITH_ANGLE'',1,1,0,90,129,127,128,45,''sensor_zenith_angle'',degrees,sensor zenith for each pixel measured in degrees from nadir
+1,2,''SOLAR_ZENITH_ANGLE'',1,1,0,180,129,127,128,90,''solar_zenith_angle'',degrees,solar zenith for each pixel measured in degrees away from the sun (0=looking at sun)
+1,2,''RELATIVE_AZIMUTH_ANGLE'',1,1,0,180,129,127,128,90,''relative_sensor_azimuth_angle'',degrees,relative azimuth angle in degrees. 0 is the principal plane looking towards sun
+1,2,''SOLAR_AZIMUTH_ANGLE'',1,1,-180,180,129,127,128,0,''solar_azimuth_angle'',degrees,"solar azimuth angle in degrees from north, pixel to sun, positive values are clockwise from north"
+1,2,''SENSOR_AZIMUTH_ANGLE'',1,1,-180,180,129,127,128,0,''sensor_azimuth_angle'',degrees,"sensor azimuth angle in degrees from north, pixel to sensor, positive values are clockwise from north"
+1,2,''GLINT_ZENITH_ANGLE'',1,1,0,180,129,127,128,90,''glint_zenith_angle'',degrees,glint zenith for each pixel measured in degrees away from the specular image of sun
+1,2,''SCATTERING_ANGLE'',1,1,0,180,129,127,128,90,''scattering_angle'',degrees,scattering angle for each pixel measured in degrees away from direction of forward scattering
+1,2,''LUNAR_ZENITH_ANGLE'',1,1,0,180,129,127,128,90,''lunar_zenith_angle'',degrees,lunar zenith for each pixel measured in degrees away from the moon (0=looking at sun)
+1,2,''LUNAR_RELATIVE_AZIMUTH_ANGLE'',1,1,0,180,129,127,128,90,''lunar_relative_azimuth_angle'',degrees,relative azimuth angle in degrees. 0 is the principal plane looking towards moon
+1,2,''LUNAR_AZIMUTH_ANGLE'',1,1,-180,180,129,127,128,0,''lunar_azimuth_angle'',degrees,lunar azimuth angle in degrees from north
+1,2,''PACKED_LAND_COVER'',1,0,0,0,0,0,0,0,''packed_land_cover'',none,"land cover, snow and coast values packed into one byte, see patmos-x docs to unpack"
+1,2,''GLINT_MASK'',1,0,0,0,0,0,128,0,''not specified'',none,glint mask (0=no) (1=yes)
+1,2,''COAST_MASK'',1,0,0,0,0,0,128,0,''not specified'',none,coast mask (0=no) (1=yes)
+1,2,''SURFACE_TYPE'',1,0,0,0,0,0,128,0,''area_type'',none,"UMD surface type: water=0,evergreen_needle=1,evergreen_broad=2,deciduous_needle=3,deciduous_broad=4,mixed_forest=5,woodlands=6,wooded_grass=7closed_shrubs=8,open_shrubs=9,grasses=10,croplands=11,bare=12,urban=13"
+1,2,''LAND_CLASS'',1,0,0,0,0,0,128,0,''not specified'',none,"land classes and values:shallow ocean=0,land=1,coastline=2,shallow inland water=3,ephemeral water=4,deep inland water=5,moderate ocean=6,deep ocean=7"
+1,2,''SNOW_CLASS'',1,0,0,0,0,0,128,0,''not specified'',none,"snow classes and values:no snow/ice=1,sea_ice=2,snow=3"
+1,2,''SURFACE_ELEVATION'',2,1,-500,10000,1,255,0,4750,''surface_elevation'',meters,surface elevation above mean sea level
+1,2,''REFL_0_65UM_NOM'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance'',%,top of atmosphere reflectance at the nominal wavelength of 0.65 microns - NOAA CDR
+1,2,''REFL_0_86UM_NOM'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance'',%,top of atmosphere reflectance at the nominal wavelength of 0.86 microns - NOAA CDR
+1,2,''REFL_0_47UM_NOM'',2,1,-2,120,1,255,0,59,''not specified'',%,top of atmosphere reflectance at the nominal wavelength of 0.47 microns
+1,2,''REFL_1_60UM_NOM'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance'',%,top of atmosphere reflectance at the nominal wavelength of 1.60 microns - NOAA CDR
+1,2,''REFL_SOL_DNB_NOM'',1,1,-2,150,129,127,128,74,''toa_bidirectional_reflectance_solar_dnb_nominal'',%,top of atmosphere reflectance solar dnb channel
+1,2,''REFL_LUNAR_DNB_NOM'',2,1,-2,150,1,255,0,74,''toa_bidirectional_reflectance_lunar_dnb_nominal'',%,top of atmosphere reflectance lunar dnb channel
+1,2,''REFL_3_75UM_NOM'',2,1,-20,80,1,255,0,30,''toa_bidirectional_reflectance'',%,top of atmosphere reflectance at the nominal wavelength of 3.75 microns - NOAA CDR
+1,2,''TEMP_3_75UM_NOM'',2,1,180,340,1,255,0,260,''toa_brightness_temperature'',K,top of atmosphere brightness temperature at the nominal wavelength of 3.75 microns - NOAA CDR
+1,2,''TEMP_8_5UM_NOM'',2,1,180,340,1,255,0,260,''toa_brightness_temperature_8_5_micron_nominal'',K,top of atmosphere brightness temperature at the nominal wavelength of 8.5 microns
+1,2,''TEMP_11_0UM_NOM'',2,1,180,340,1,255,0,260,''toa_brightness_temperature'',K,top of atmosphere brightness temperature at the nominal wavelength of 11.0 microns - NOAA CDR
+1,2,''TEMP_12_0UM_NOM'',2,1,180,340,1,255,0,260,''toa_brightness_temperature'',K,top of atmosphere brightness temperature at the nominal wavelength of 12.0 microns - NOAA CDR
+1,2,''REFL_0_65UM_NOM_STDDEV_3X3'',1,1,0,20,129,127,128,10,''not specified'',%,standard deviation of the 0.63 micron reflectance computed over a 3x3 pixel array
+1,2,''TEMP_11_0UM_NOM_STDDEV_3X3'',1,1,0,20,129,127,128,10,''not specified'',K,standard deviation of the 11 micron brightness temperature computed over a 3x3 pixel array
+1,2,''CLOUD_PROBABILITY'',1,1,0,1,129,127,128,0.5,''not specified'',none,probability of a pixel being cloudy from the Bayesian cloud mask
+1,2,''CLOUD_MASK'',1,0,0,0,0,0,128,0,''not specified'',none,"integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3"
+1,2,''ADJ_PIX_CLOUD_MASK'',1,0,0,0,0,0,128,0,''adj_pix_cloud_mask'',none,"integer classification of the adjacent pixel cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3"
+1,2,''CLOUD_MASK_TEST_PACKED_RESULTS'',1,0,0,0,129,127,128,0,''cloud_mask_test_packed_results'',none,individual cloud mask packed test results
+1,2,''CLOUD_MASK_1B'',1,0,0,0,0,0,128,0,''cloud_mask_1b'',none,"integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3 from mask read from level-1b file"
+1,2,''BAYES_MASK_SFC_TYPE'',1,0,0,0,0,0,128,0,''bayes_mask_sfc_type'',none,"integer classification of the surface type assumed in constructed the Bayesian cloud mask, 1=deep water,2=shallow ocean,3=land,4=snow,5=arctic,6=antarctic+greenland,7=desert"
+1,2,''CLOUD_TYPE'',1,0,0,0,0,0,128,0,''not specified'',none,"integer classification of the cloud type including clear and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke"
+1,2,''CLOUD_PHASE'',1,0,0,0,0,0,128,0,''cloud_phase'',none,"integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown"
+1,2,''CLOUD_TYPE_1B'',1,0,0,0,0,0,128,0,''cloud_type_1b'',none,integer classification of the cloud type including clear and aerosol type read from level-1b file
+1,2,''CLD_PRESS_ACHA'',2,1,0,1100,1,255,0,550,''air_pressure_at_cloud_top'',hPa,cloud-top pressure computed using the AWG cloud height algorithm
+1,2,''CLD_TEMP_ACHA'',2,1,160,320,1,255,0,240,''air_temperature_at_cloud_top'',K,cloud-top temperature computed using the AWG cloud height algorithm - NOAA CDR
+1,2,''CLD_HEIGHT_ACHA'',2,1,0,20,1,255,0,10,''height_at_cloud_top'',km,cloud height computed using the AWG cloud height algorithm
+1,2,''CLD_HEIGHT_TOP_ACHA'',2,1,0,20,1,255,0,10,''top_height_of_cloud'',km,estimate of actual cloud-top height computed using the AWG cloud height algorithm
+1,2,''CLD_HEIGHT_BASE_ACHA'',2,1,0,20,1,255,0,10,''base_height_of_cloud'',km,estimate of actual cloud-base height computed using the AWG cloud height algorithm
+1,2,''CLD_ALTITUDE_ACHA'',2,1,0,100000,1,255,0,50000,''altitude_at_cloud_top'',feet,cloud height altitude computed from pressure values
+1,2,''ACHA_PROCESSING_ORDER'',1,0,0,0,0,0,128,0,''acha_processing_order'',none,integer classification of the order of processing with ACHA
+1,2,''ACHA_INVERSION_FLAG'',1,0,0,0,0,0,128,0,''acha_inversion_flag'',none,flag stating whether ACHA was processed assuming an inversion(1) or not(0)
+1,2,''CLD_HEIGHT_H2O'',2,1,0,20,1,255,0,10,''height_at_cloud_top_from_h2o_intercept'',km,cloud-top height computed using the two-point h2o intercept
+1,2,''CLD_HEIGHT_OPAQUE'',2,1,0,20,1,255,0,10,''height_at_cloud_top_assuming_opaque'',km,cloud-top height computed using assuming the cloud is opaque
+1,2,''CLD_EMISS_ACHA'',1,1,0,1,129,127,128,0.5,''convective_cloud_longwave_emissivity'',none,"cloud emissivity at the nominal wavelength of 11 microns, determined from the AWG cloud height algorithm - NOAA CDR"
+1,2,''CLD_BETA_ACHA'',1,1,0,2,129,127,128,1,''not specified'',none,cloud 11/12 micron beta value determined from the split-window method
+1,2,''CLD_HEIGHT_UNCER_ACHA'',1,1,0,10,129,127,128,5,''not specified'',km,cloud height uncertainty computed using the AWG cloud height algorithm
+1,2,''CLD_TEMP_UNCER_ACHA'',1,1,0,100,129,127,128,50,''not specified'',K,cloud temperature uncertainty computed using the AWG cloud height algorithm
+1,2,''CLD_TEMP_ACHA_QF'',1,0,0,0,0,0,128,0,''not specified'',none,"quality flag for cloud-top temperature from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,''CLD_EMISS_ACHA_QF'',1,0,0,0,0,0,128,0,''not specified'',none,"quality flag for 11.0 micron cloud emissivity from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,''CLD_BETA_ACHA_QF'',1,0,0,0,0,0,128,0,''not specified'',none,"quality flag for cloud 11.0/12.0 micron beta from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,''CLD_OPD_ACHA'',1,1,-0.2,8,129,127,128,3.9,''atmosphere_optical_thickness_due_to_cloud'',none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from ACHA"
+1,2,''CLD_REFF_ACHA'',1,1,0,160,129,127,128,80,''effective_radius_of_cloud_condensed_water_particles_at_cloud_top'',micron,effective radius of cloud particles determined from ACHA; see attributes for channels used
+1,2,''ACHA_QUALITY'',1,0,0,0,0,0,0,0,''not specified'',none,"quality flags for ACHA products 1:Processed (0=no,1=yes) 2:valid Tc retrieval (1=yes,0=no) 3:valid ec retrieval (1=yes,0=no) 4:valid beta retrieval (1=yes,0=no) 5:degraded Tc retrieval (1=yes,0=no) 6:degraded ec retrieval (1=yes,0=no) 7:degraded beta retrieval (1=yes,0=no)"
+1,2,''ACHA_INFO'',1,0,0,0,0,0,0,0,''not specified'',none,processing information for ACHA (0=no/1=yes) 1:Cloud Height Attempted 2:Bias Correction Employed 3:Ice Cloud Retrieval 4:Local Radiative Center Processing Used 5:Multi-layer Retrieval 6:Lower Cloud Interpolation Used 7:Boundary Layer Inversion Assumed
+1,2,''CLD_OPD_DCOMP'',2,1,-0.2,160,1,255,0,79.9,''atmosphere_optical_thickness_due_to_cloud'',none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from DCOMP - NOAA CDR"
+1,2,''CLD_REFF_DCOMP'',2,1,0,160,1,255,0,80,''effective_radius_of_cloud_condensed_water_particles_at_cloud_top'',micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR
+1,2,''CLD_OPD_DCOMP_UNC'',2,1,-0.2,160,1,255,0,79.9,''not specified'',none,"uncertainty in the log10 cloud optical depth at the nominal wavelength of 0.65 microns, determined from DCOMP; see attributes for channels used"
+1,2,''CLD_REFF_DCOMP_UNC'',2,1,0,160,1,255,0,80,''not specified'',micron,uncertainty in the log10 effective radius of cloud particle determined from DCOMP; see attributes for channels used
+1,2,''CLD_OPD_DCOMP_QF'',1,0,0,0,0,0,128,0,''not specified'',none,"quality flag for cloud optical depth from DCOMP not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,''CLD_REFF_DCOMP_QF'',1,0,0,0,0,0,128,0,''not specified'',none,"quality flag for cloud effective radius from DCOMP not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,''DCOMP_QUALITY'',1,0,0,0,0,0,0,0,''not specified'',none,"quality flags for DCOMP products 1:Processed (0=no,1=yes) 2:valid COD retrieval (0=yes,1=no) 3:valid REF retrieval (0=yes,1=no) 4:degraded COD retrieval (0=no,1=degraded) 5:degraded REF retrieval (0=no,1=degraded) 6:convergency (0=no,1=yes) 7:glint (0=no,1=yes)"
+1,2,''DCOMP_INFO'',2,0,0,0,0,0,0,0,''not specified'',none,"processing flags for DCOMP 1:info flag set ? (0=no,1=yes) 2:land/sea mask (0=land,1=sea) 3:day/night mask (0=Day,1=Night) 4:twilight (65-82 solar zenith) (0=no,1=yes) 5:snow (0=no,1= snow) 6:sea-ice (0=no,1=sea-ice) 7:phase (0=liquid,1=ice) 8:thick_cloud (0=no,1=yes) 9:thin_cloud (0=no,1=yes)"
+1,2,''INSOLATION_DCOMP'',2,1,0,1500,1,255,0,750,''surface_downwelling_shortwave_flux_dcomp'',W m-2,surface downwelling shortwave flux computed from the DCOMP cloud properties
+1,2,''INSOLATION_DIFFUSE_DCOMP'',2,1,0,1500,1,255,0,750,''surface_downwelling_shortwave_flux_diffuse_dcomp'',W m-2,diffuse component of the surface downwelling shortwave flux computed from the DCOMP cloud properties
+1,2,''CLD_OPD_NLCOMP'',2,1,-0.2,160,1,255,0,79.9,''atmosphere_optical_thickness_due_to_cloud'',none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from NLCOMP"
+1,2,''CLD_REFF_NLCOMP'',2,1,0,160,1,255,0,80,''effective_radius_of_cloud_particle'',micron,effective radius of cloud particles determined from NLCOMP; see attributes for channels used
+1,2,''CLD_OPD_NLCOMP_UNC'',2,1,-0.2,160,1,255,0,79.9,''atmosphere_optical_thickness_due_to_cloud'',none,"uncertainty in cloud optical depth at the nominal wavelength of 0.65 microns, determined from NLCOMP"
+1,2,''CLD_REFF_NLCOMP_UNC'',2,1,0,160,1,255,0,80,''effective_radius_of_cloud_particle'',micron,effective radius of cloud particle determined from NLCOMP; see attributes for channels used
+1,2,''NLCOMP_QUALITY'',1,0,0,0,0,0,0,0,''nlcomp_quality'',none,"quality flags for NLCOMP products  see documentation http://cimss.ssec.wisc.edu/clavr/ 1:Processed (0=no,1=yes) 2:valid COD retrieval (0=yes,1=no) 3:valid REF retrieval (0=yes,1=no) 4:degraded COD retrieval (0=no,1=degraded) 5:degraded REF retrieval (0=no,1=degraded) 6:convergency (0=no,1=yes) 7:glint (0=no,1=yes)"
+1,2,''NLCOMP_INFO'',2,0,0,0,0,0,0,0,''nlcomp_info'',none,"processing flags for NLCOMP see http://cimss.ssec.wisc.edu/clavr/ 1: info flag set ? (0=no,1=yes) 2: land/sea mask (0=land,1=sea) 3: day/night mask (0=Day,1=Night) 4: twilight (65-82 solar zenith) (0=no,1=yes) 5: snow (0=no,1= snow) 6: sea-ice (0=no,1=sea-ice) 7: phase (0=liquid,1=ice) 8: thick_cloud (0=no,1=yes) 9: thin_cloud (0=no,1=yes)"
+1,2,''CLOUD_ALBEDO_0_65UM_NOM'',1,1,0,1,129,127,128,0.5,''cloud_albedo'',none,cloud albedo at 0.65 microns nominal from DCOMP
+1,2,''CLOUD_TRANSMISSION_0_65UM_NOM'',1,1,0,1,129,127,128,0.5,''not specified'',none,cloud transmission 0.65 microns nominal from DCOMP
+1,2,''CLOUD_FRACTION'',1,1,0,1,129,127,128,0.5,''cloud_area_fraction'',none,cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel
+1,2,''CLOUD_FRACTION_UNCERTAINTY'',1,1,0,1,129,127,128,0.5,''not specified'',none,cloud fraction uncertainty computed over a 3x3 array
+1,2,''EMISSIVITY_11UM_TROPOPAUSE'',1,1,-0.5,1.2,129,127,128,0.35,''not specified'',none,"emissivity at the nominal wavelength of 11 microns, assuming the cloud was located at the Tropopause"
+1,2,''NDVI_SFC'',1,1,-0.5,1,129,127,128,0.25,''normalized_difference_vegetation_index'',none,"normalized difference vegetation index, atmospherically corrected"
+1,2,''NDVI_SFC_WHITE_SKY'',1,1,-0.5,1,129,127,128,0.25,''normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance'',none,"normalized difference vegetation index, atmospherically corrected, modis white sky"
+1,2,''SURFACE_TEMPERATURE_RETRIEVED'',1,1,220,340,129,127,128,280,''surface_brightness_temperature'',K,surface temperature retrieved using atmospherically corrected 11 micron radiance
+1,2,''SURFACE_AIR_TEMPERATURE_NWP'',1,1,220,340,129,127,128,280,''surface_air_temperature_nwp'',K,surface air temperature from NWP ancillary data
+1,2,''SURFACE_RADIATION_TEMPERATURE_RETRIEVED'',1,1,220,340,129,127,128,280,''surface_radiation_temperature_retrieved'',K,surface radiation temperature retrieved using atmospherically corrected 11 micron radiance assuming a black surface
+1,2,''SURFACE_TEMPERATURE_BACKGROUND'',2,1,220,340,1,255,0,280,''surface_temperature'',K,surface temperature assumed using ancillary data sources
+1,2,''SURFACE_RELATIVE_HUMIDITY_NWP'',1,1,0,110,129,127,128,55,''surface_relative_humidity'',%,near-surface relative humidity from NWP ancillary data
+1,2,''SURFACE_PRESSURE_BACKGROUND'',1,1,700,1100,129,127,128,900,''surface_pressure_background'',hPa,surface pressure assumed using ancillary data sources
+1,2,''MEAN_SEALEVEL_PRESSURE_BACKGROUND'',1,1,850,1100,129,127,128,975,''mean_sealevel_pressure_background'',hPa,mean sealevel pressure assumed using ancillary data sources
+1,2,''K_INDEX_NWP'',1,1,-40,80,129,127,128,20,''k_index'',K,k index computed from NWP ancillary data sources
+1,2,''CLOUD_WATER_PATH_NWP'',2,1,0,1200,1,255,0,600,''cloud_water_path'',g m-2,cloud water path computed from NWP ancillary data sources
+1,2,''CLOUD_FRACTION_NWP'',1,1,0,1,129,127,128,0.5,''cloud_fraction'',none,cloud fraction computed from NWP ancillary data sources
+1,2,''CLD_PRESS_NWP'',1,1,0,1100,129,127,128,550,''cld_press'',none,cloud-top pressure computed from NWP ancillary data sources
+1,2,''NUMBER_CLOUD_LAYERS_NWP'',1,0,0,0,0,0,128,0,''number_cloud_layers'',none,number cloud layers in column from NWP ancillary data sources
+1,2,''CLOUD_TYPE_NWP'',1,0,0,0,0,0,128,0,''cloud_type'',none,"cloud type from NWP ancillary data sources, see PATMOS-x documentation for key"
+1,2,''TROPOPAUSE_TEMPERATURE_NWP'',1,1,160,260,129,127,128,210,''tropopause_temperature'',K,tropopause temperature from NWP ancillary data
+1,2,''LCL_NWP'',1,1,0,20,129,127,128,10,''lifting_condensation_level_nwp'',km,lifting condensation level from NWP ancillary data
+1,2,''CCL_NWP'',1,1,0,20,129,127,128,10,''convective_condensation_level_nwp'',km,convective condensation level from NWP ancillary data
+1,2,''REMOTE_SENSING_REFLECTANCE'',1,1,-2,10,129,127,128,4,''remote_sensing_reflectance'',none,remote sensing reflectance (upward radiance/downward irradiance at surface)
+1,2,''QUALITY_FLAGS_1'',1,0,0,0,0,0,128,0,''quality_flags_1'',none,"first set of packed quality flags, deprecated. Use *_qf variables."
+1,2,''QUALITY_FLAGS_2'',1,0,0,0,0,0,128,0,''quality_flags_2'',none,"second set of packed quality flags, deprecated. Use *_qf variables."
+1,2,''REFL_0_65UM_NOM_COUNTS'',2,0,0,0,0,0,0,0,''not specified'',none,instrument counts for the nominal 0.65 micron channel
+1,2,''REFL_0_86UM_NOM_COUNTS'',2,0,0,0,0,0,0,0,''not specified'',none,instrument counts for the nominal 0.86 micron channel
+1,2,''REFL_1_60UM_NOM_COUNTS'',2,0,0,0,0,0,0,0,''not specified'',none,instrument counts for the nominal 1.6 micron channel
+1,2,''TOTAL_PRECIPITABLE_WATER_NWP'',1,1,0,10,129,127,128,5,''atmosphere_mass_content_of_water_vapor'',cm,total precipitable water from NWP ancillary data
+1,2,''REFL_3_75UM_NOM_ATMOS_CORR'',2,1,-20,80,1,255,0,30,''toa_bidirectional_pseudo_reflectance_3_75_micron_atmos_corr'',%,"observed pseudo-reflectance at the nominal wavelength of 3.75 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration"
+1,2,''REFL_0_65UM_NOM_ATMOS_CORR'',2,1,-2,120,1,255,0,59,''toa_bidirectional_pseudo_reflectance_0_65_micron_atmos_corr'',%,"observed pseudo-reflectance at the nominal wavelength of 0.65 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration"
+1,2,''REFL_0_86UM_NOM_ATMOS_CORR'',1,1,-2,120,129,127,128,59,''toa_bidirectional_pseudo_reflectance_0_85_micron_atmos_corr'',%,"observed pseudo-reflectance at the nominal wavelength of 0.85 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration"
+1,2,''REFL_1_60UM_NOM_ATMOS_CORR'',1,1,-2,120,129,127,128,59,''toa_bidirectional_pseudo_reflectance_1_60_micron_atmos_corr'',%,"observed pseudo-reflectance at the nominal wavelength of 1.60 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration"
+1,2,''PIXEL_SST_MASKED'',1,1,265,315,129,127,128,290,''sea_surface_skin_temperature_masked'',K,sea surface skin temperature at the pixel with land mask and cloud mask applied
+1,2,''REFL_0_65UM_NOM_UNNORMALIZED'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance_0_65_micron_nominal_unormalized_to_solar_zenith'',%,top of atmosphere reflectance at the nominal wavelength of 0.65 microns unnormalized to the cosine of the solar zenith angle
+1,2,''REFL_0_86UM_NOM_UNNORMALIZED'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance_0_86_micron_nominal_unormalized_to_solar_zenith'',%,top of atmosphere reflectance at the nominal wavelength of 0.86 microns unnormalized to the cosine of the solar zenith angle
+1,2,''REFL_1_60UM_NOM_UNNORMALIZED'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance_1_60_micron_nominal_unormalized_to_solar_zenith'',%,top of atmosphere reflectance at the nominal wavelength of 1.60 microns unnormalized to the cosine of the solar zenith angle
+1,2,''REFL_0_65UM_NOM_CLEAR_SKY'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal'',%,top of atmosphere bidirectional reflectance modeled assuming clear skies at the nominal wavelength of 0.65 microns
+1,2,''TEMP_3_75UM_NOM_CLEAR_SKY'',2,1,180,340,1,255,0,260,''toa_brightness_temperature_assuming_clear_sky_3_75_micron_nominal'',K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 11.0 microns
+1,2,''TEMP_8_5UM_NOM_CLEAR_SKY'',2,1,180,340,1,255,0,260,''toa_brightness_temperature_assuming_clear_sky_8_5_micron_nominal'',K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 8.5 microns
+1,2,''TEMP_11_0UM_NOM_CLEAR_SKY'',2,1,180,340,1,255,0,260,''toa_brightness_temperature_assuming_clear_sky'',K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 11.0 microns
+1,2,''TEMP_12_0UM_NOM_CLEAR_SKY'',2,1,180,340,1,255,0,260,''toa_brightness_temperature_assuming_clear_sky_12_0_micron_nominal'',K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 12.0 microns
+1,2,''REFL_0_65UM_NOM_MEAN_3X3'',2,1,-2,120,1,255,0,59,''not specified'',%,mean of the 0.65 micron nominal reflectance computed over a 3x3 pixel array
+1,2,''PIXEL_SST_UNMASKED'',2,1,265,315,1,255,0,290,''sea_surface_skin_temperature_unmasked'',K,sea surface skin temperature at the pixel with land mask applied and cloud mask not applied
+1,2,''WIND_SPEED_10M_NWP'',1,1,0,50,129,127,128,25,''wind_speed_10m_above_ground'',m/s,wind speed from the NWP ancillary data at 10m above ground level
+1,2,''WIND_DIRECTION_10M_NWP'',1,1,0,360,129,127,128,180,''wind_direction_10m_above_ground'',degrees,wind direction from the NWP ancillary data at 10m above ground level
+1,2,''REFL_0_65UM_NOM_DARK'',2,1,-2,120,1,255,0,59,''toa_bidirectional_reflectance_0_65_micron_nominal_dark_sky_composite'',%,top of atmosphere reflectance at the nominal wavelength of 0.65 microns generated from a dark-sky compositing method
+1,2,''CLOUD_WATER_PATH'',1,1,0,1200,129,127,128,600,''not specified'',g m-2,integrated total cloud water over whole column
+1,2,''RAIN_RATE'',1,1,0,32,129,127,128,16,''rain_rate'',mm h-1,derived rain rate
+1,2,''WIND_SPEED_CLOUD_TOP_NWP'',1,1,0,50,129,127,128,25,''wind_speed_cloud_top'',m/s,wind speed from the NWP ancillary data at cloud-top level
+1,2,''WIND_DIRECTION_CLOUD_TOP_NWP'',1,1,0,360,129,127,128,180,''wind_direction_cloud_top'',degrees,wind direction from the NWP ancillary data at cloud-top level

@@ -26,6 +26,7 @@
 !          5/09 - Created
 !--------------------------------------------------------------------------------------
 module LEVEL2_ROUTINES
+
    use CONSTANTS
    use PIXEL_COMMON
    use HDF
@@ -48,11 +49,7 @@ module LEVEL2_ROUTINES
    private::DEFINE_PIXEL_2D_SDS, &
             DEFINE_PIXEL_3D_SDS
 
- !--- rtm indices
- integer, parameter, private:: Num_Rtm_Sds = 28
- integer, private, save:: Sd_Id_Rtm
- integer(kind=int4), dimension(Num_Rtm_Sds), save, private:: Sds_Id_Rtm
-
+ 
 !----------------------------------------------------------------------
 ! the following variables taken from process_avhrr_clavr
 !----------------------------------------------------------------------
@@ -82,6 +79,25 @@ module LEVEL2_ROUTINES
 
  character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
  character(len=18), private, parameter:: coordinates_string = "longitude latitude"
+ 
+ 
+    ! csv variables
+   integer   ( kind = 4 ) csv_file_status
+   integer   ( kind = 4 ) csv_file_unit
+   integer   ( kind = 4 ) csv_record_status
+   integer   ( kind = 4 ) i
+   integer   ( kind = 4 ) line_num
+   character ( len = 1000 ) record
+   integer   ( kind = 4 ) value_count
+   character (len = 300) :: before
+   character ( len = 300) :: rec_arr ( 14 )
+   integer :: j
+   logical :: switch
+   integer :: var_dim
+   integer(kind = 1) :: scaling
+   integer :: dtype
+   real :: act_min, act_max
+ 
 
  INCLUDE 'level2.inc'
  
@@ -192,20 +208,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  integer:: sfscatt
  integer:: sfsnatt
  integer:: erstat
-  integer   ( kind = 4 ) csv_file_status
-  integer   ( kind = 4 ) csv_file_unit
-  integer   ( kind = 4 ) csv_record_status
-  integer   ( kind = 4 ) i
-  integer   ( kind = 4 ) line_num
-  character ( len = 400 ) record
-  integer   ( kind = 4 ) value_count
-  character (len =300) :: before
-   character ( len = 300) :: rec_arr ( 13 )
-  integer :: j
-  logical :: switch
-  integer :: var_dim
-  integer(kind = 1) :: scaling
-  integer :: dtype
+ 
+integer::k
    
    
   !--- begin executable code
@@ -217,10 +221,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
   File_1b_Root = trim (file_1b)
   
   
-  ! ---
-  csv_file_name='clavrx_level2_products.csv'
-  call csv_file_line_count ( csv_file_name, line_num )
-   print*,'CSV Line number: ',line_num
+  
    
    
   
@@ -355,9 +356,13 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !-- reset status flag for error checking
      Istatus_Sum = 0
 
-     !-- scan line variables
-    
-     call csv_file_open_read ( csv_file_name, csv_file_unit )
+      
+      ! ---  rread in products from csv file
+      csv_file_name='clavrx_level2_products.csv'
+      call csv_file_line_count ( csv_file_name, line_num )
+   
+      call csv_file_open_read ( csv_file_name, csv_file_unit )
+      
       do i = 1, line_num
          
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
@@ -370,40 +375,84 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
          read( rec_arr(2),  * ) var_dim
          read ( rec_arr(4), * ) dtype
          read ( rec_arr(5), * ) scaling
+         read (rec_arr(6), * ) act_min
+         read (rec_arr(7), * ) act_max
         
-         print*,i,trim(rec_arr(3))
          
          if ( switch ) then
             select case (var_dim)
             case ( 1 )
+               select case (dtype)
+               case(1)
+               Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT8,  &
+                   1, Missing_Value_Int1) + Istatus_Sum
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32,  &
+                    1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
                
+               case(3)
+               Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, "not specified") + Istatus_Sum
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
+                    len_trim(Long_Name_temp), trim(Long_Name_temp)) + Istatus_Sum     
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
+                    1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
+               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
+                    1,Missing_Value_Int4) + Istatus_Sum
+                    
+               case(4)
                Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum  
-               print*,'1: ',istatus_sum
+               
                Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(13) )) + Istatus_Sum 
                Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, trim(rec_arr(12) )) + Istatus_Sum 
                Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
                     len_trim(trim(rec_arr(14))),  trim(rec_arr(14)) ) + Istatus_Sum
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
-                    1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
-                   
+                    1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
-                    1,Missing_Value_Int4) + Istatus_Sum     
-                 
+                    1,Missing_Value_Int4) + Istatus_Sum  
+               end select  
             case(2)
+               select case (dtype)
+               case(1)
+               
+               
                
                call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
                                trim(rec_arr(3)), &
                                trim(rec_arr(12)), &
                                trim(rec_arr(14)), &
-                               DFNT_INT8, scaling, 0.0, 1.0, &
+                               DFNT_INT8, scaling, act_min, act_max, &
                                trim(rec_arr(13) ), Real(Missing_Value_Int1,kind=real4), Istatus)
                Istatus_Sum = Istatus_Sum + Istatus
+               case(2)
+               call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              trim(rec_arr(3)), &
+                               trim(rec_arr(12)), &
+                               trim(rec_arr(14)), &
+                               DFNT_INT16, scaling, act_min, act_max, &
+                               trim(rec_arr(13) ), Missing_Value_Real4, Istatus)
+               Istatus_Sum = Istatus_Sum + Istatus
+              
+               case(4)
+               call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "diagnostic_3", &
+                              "not specified", &
+                              "third diagnostic variable (contents will change)", &
+                              DFNT_FLOAT32, sym%NO_SCALING, &
+                              0.0,0.0, "unknown", Missing_Value_Real4, Istatus)
+               Istatus_Sum = Istatus_Sum + Istatus
+               end select
                
             end select
          end if
          
-         print*,i,istatus_sum
+         
         
         
      
@@ -413,18 +462,23 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
 
 
 
-     !--- check for and report errors
-     if (Istatus_Sum /= 0) then
-       print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
-       stop
-     endif
-  endif
+      !--- check for and report errors
+      if (Istatus_Sum /= 0) then
+         print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
+         stop
+      end if
+   end if
   
-  contains
 
-   function extract_single ( record) result  (record_single)
+  
+  
+
+end subroutine DEFINE_HDF_FILE_STRUCTURES
+
+  function extract_single ( record) result  (record_single)
+      implicit none
       character ( len = * ) :: record
-      character ( len = 300) :: record_single ( 13 )
+      character ( len = 300) :: record_single ( 14 )
       character (len = 1000 ) :: record_local
       character ( len =300) :: before
       integer :: i
@@ -436,18 +490,9 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       do i = 1, n_val 
          call split ( record_local , ',', before)
          record_single ( i ) = trim(before)
-      
       end do
       
-      
-      
-   
-   
    end function extract_single
-  
-  
-
-end subroutine DEFINE_HDF_FILE_STRUCTURES
 
 !====================================================================
 ! SUBROUTINE Name: WRITE_PIXEL_HDF_RECORDS
@@ -459,1929 +504,127 @@ end subroutine DEFINE_HDF_FILE_STRUCTURES
 !   This subroutine, given the flags that determine which files are 
 !   being created, outputs the various pixel level outputs to the
 !   appropriate level 2 files and appropriate SDSs for a given segment
+!   this program is called in process_clavrx
 !
 !====================================================================
-subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
+subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
 
- integer, intent(in):: Rtm_File_Flag
- integer, intent(in):: Level2_File_Flag
- integer:: Istatus
- integer:: Line_Idx
+   integer, intent(in):: Level2_File_Flag
+   integer:: Istatus
+   integer:: Line_Idx
 
-! HDF function declarations
- integer:: sfwdata
+   ! HDF function declarations
+   integer:: sfwdata
+   integer (kind=int1), allocatable :: data_dim1_dtype1(:)
+   integer (kind=int4), allocatable :: data_dim1_dtype3(:)
+   real(kind=real4), allocatable ::data_dim1_dtype4(:)
+   integer (kind=int1), allocatable :: data_dim2_dtype1(:,:)
+   real , allocatable :: data_dim2_dtype2(:,:)
+   integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
+   real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
+   character (len=40) :: name
+   
 
-!-----------------------------------------------------------------------
-! Get time of each scan line and convert to scale
-!-----------------------------------------------------------------------
-  where(Scan_Time == Missing_Value_Real4)
+   !-----------------------------------------------------------------------
+   ! Get time of each scan line and convert to scale
+   !-----------------------------------------------------------------------
+   where(Scan_Time == Missing_Value_Real4)
             Utc_Scan_Time_Hours = Missing_Value_Real4
-  elsewhere
+   else where
             Utc_Scan_Time_Hours = Scan_Time/60.0/60.0/1000.0
-  endwhere
+   end where
 
-!--------------------------------------------------------------------------------
-! determine start and edges for writing this segment's data to pixel hdf file
-!-----------------------------------------------------------------------------
-    Sds_Start_2d(1) = 0     !pixel dimension
-    Sds_Start_2d(2) = Num_Scans_Level2_Hdf
+   !--------------------------------------------------------------------------------
+   ! determine start and edges for writing this segment's data to pixel hdf file
+   !-----------------------------------------------------------------------------
+   Sds_Start_2d(1) = 0     !pixel dimension
+   Sds_Start_2d(2) = Num_Scans_Level2_Hdf
 
-    Sds_Stride_2d(1) = 1
-    Sds_Stride_2d(2) = 1
+   Sds_Stride_2d(1) = 1
+   Sds_Stride_2d(2) = 1
 
-    Sds_Edge_2d(1) = Image%Number_Of_Elements
-    Sds_Edge_2d(2) = min(Image%Number_Of_Lines_Read_This_Segment,Image%Number_Of_Lines - Sds_Start_2d(2))
+   Sds_Edge_2d(1) = Image%Number_Of_Elements
+   Sds_Edge_2d(2) = min(Image%Number_Of_Lines_Read_This_Segment,Image%Number_Of_Lines - Sds_Start_2d(2))
 
-    if (Sds_Edge_2d(2) <= 0) then
+   if (Sds_Edge_2d(2) <= 0) then
       return
-    endif
+   end if
 
-    !--- update Num_Scans_Level2_Hdf
-    Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
+   !--- update Num_Scans_Level2_Hdf
+   Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
                                Image%Number_Of_Lines_Read_This_Segment)
 
-!-------------------------------------------------------------------------
-! write to level2 file
-!-------------------------------------------------------------------------
+   !-------------------------------------------------------------------------
+   ! write to level2 file
+   !-------------------------------------------------------------------------
    if (Level2_File_Flag == sym%YES) then
-
-      Istatus = 0
+         istatus = 0
+            ! ---  re-read in products from csv file
+      csv_file_name='clavrx_level2_products.csv'
+      call csv_file_line_count ( csv_file_name, line_num )   
+      call csv_file_open_read ( csv_file_name, csv_file_unit )
       
-      !--- scan number
-      if (Sds_Num_Level2_Scanline_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Scanline), Sds_Start_2d(2), Sds_Stride_2d(2),          &
-                         Sds_Edge_2d(2), scan_number(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- scan time
-      if (Sds_Num_Level2_Time_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Time), Sds_Start_2d(2), Sds_Stride_2d(2), Sds_Edge_2d(2),  &
-                         Utc_Scan_Time_Hours(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
- 
-      !--- bad scan flag
-      if (Sds_Num_Level2_Bad_Scan_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bad_Scan), Sds_Start_2d(2), Sds_Stride_2d(2), Sds_Edge_2d(2),  &
-                         Bad_Scan_Flag(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- ascending/descending flag
-      if (Sds_Num_Level2_Asc_Flag_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_asc_flag), Sds_Start_2d(2), Sds_Stride_2d(2), Sds_Edge_2d(2),  &
-                 Nav%Ascend(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Bad Pixel Mask
-      if (Sds_Num_Level2_Bad_Pixel_Mask_Flag == sym%YES) then
-       One_Byte_Temp = Bad_Pixel_Mask
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bad_Pixel_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Gap Pixel Mask
-      if (Sds_Num_Level2_Gap_Pixel_Mask_Flag == sym%YES) then
-       One_Byte_Temp = Gap_Pixel_Mask
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Gap_Pixel_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- diagnostic field #1
-      if (Sds_Num_Level2_Diag1_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Diag1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
-                 Diag_Pix_Array_1(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- diagnostic field #2
-      if (Sds_Num_Level2_Diag2_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Diag2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
-                 Diag_Pix_Array_2(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- diagnostic field #3
-      if (Sds_Num_Level2_Diag3_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Diag3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
-                 Diag_Pix_Array_3(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-
-      !--- packed pixel metadata
-      if (Sds_Num_Level2_Meta_Data_Flag == sym%YES) then
-       One_Byte_Temp = 0
-       Temp_Mask = 0
-       do Line_Idx = 1, Image%Number_Of_Lines_Per_Segment
-         Temp_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
-       enddo
-       One_Byte_Temp = ishft(Bayes_Mask_Sfc_Type_Global,3) + ishft(Temp_Mask,2)+ &
-                       ishft(solar_contamination_mask,1) + bad_pixel_mask
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Meta_Data), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- latitude
-      if (Sds_Num_Level2_Lat_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Nav%Lat,sym%LINEAR_SCALING,Min_Lat,Max_Lat,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lat),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
-                  Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- longitude
-      if (Sds_Num_Level2_Lon_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Nav%Lon,sym%LINEAR_SCALING,Min_Lon,Max_Lon,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_lon),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                   Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- latitude parallax_corrected
-      if (Sds_Num_Level2_Latpc_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Nav%Lat_Pc,sym%LINEAR_SCALING,Min_Lat,Max_Lat,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Latpc),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
-                  Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- longitude parallax corrected
-      if (Sds_Num_Level2_Lonpc_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Nav%Lon_Pc,sym%LINEAR_SCALING,Min_Lon,Max_Lon,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lonpc),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                   Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- sensor zenith
-      if (Sds_Num_Level2_Zen_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Satzen,sym%LINEAR_SCALING,Min_Zen,Max_Zen,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_zen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- solar zenith
-      if (Sds_Num_Level2_Solzen_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Solzen,sym%LINEAR_SCALING,Min_Solzen,Max_Solzen,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Solzen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- relative azimuth 
-      if (Sds_Num_Level2_Relaz_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Relaz,sym%LINEAR_SCALING,Min_Relaz,Max_Relaz,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Relaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- solar azimuth
-      if (Sds_Num_Level2_Solaz_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Solaz,sym%LINEAR_SCALING,Min_Solaz,Max_Solaz,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Solaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- sensor/satellite azimuth
-      if (Sds_Num_Level2_Sataz_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Sataz,sym%LINEAR_SCALING,Min_Sataz,Max_Sataz,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sataz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-
-      !--- glint zenith
-      if (Sds_Num_Level2_Glintzen_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Glintzen,sym%LINEAR_SCALING,Min_Glintzen,Max_Glintzen,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Glintzen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- scattering zenith
-      if (Sds_Num_Level2_Scatzen_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Scatangle,sym%LINEAR_SCALING,Min_Scatang,Max_Scatang,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Scatzen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- lunar zenith
-      if (Sds_Num_Level2_Lunzen_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Lunzen,sym%LINEAR_SCALING,Min_Solzen,Max_Solzen,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lunzen),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- lunar relative azimuth 
-      if (Sds_Num_Level2_LunRelaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%LunRelaz,sym%LINEAR_SCALING,Min_Relaz,Max_Relaz,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_LunRelaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- lunar azimuth 
-      if (Sds_Num_Level2_Lunaz_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Geo%Lunaz,sym%LINEAR_SCALING,Min_Solaz,Max_Solaz,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Lunaz),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,  &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- packed land cover (land,snow,coast masks)
-      if (Sds_Num_Level2_Packed_Land_Flag == sym%YES) then
-       One_Byte_Temp = 0
-       One_Byte_Temp = ishft(Sfc%Land,5) + ishft(Sfc%Snow,3) + Sfc%Coast_Mask
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Packed_Land), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- glint mask
-      if (Sds_Num_Level2_Glint_Mask_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Glint_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Glint_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- coast mask
-      if (Sds_Num_Level2_Coast_Mask_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Coast_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Coast_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- surface type
-      if (Sds_Num_Level2_Sfc_Type_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sfc_Type), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Sfc_Type(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- land classification
-      if (Sds_Num_Level2_Land_Mask_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Land_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Land(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Snow classification
-      if (Sds_Num_Level2_Snow_Mask_Flag == sym%YES) then
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Snow_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Sfc%Snow(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- surface elevation
-      if (Sds_Num_Level2_Zsfc_Flag == sym%YES) then
-          call SCALE_VECTOR_I2_RANK2(Sfc%Zsfc,sym%LINEAR_SCALING,Min_Zsfc,Max_Zsfc,Missing_Value_Real4,Two_Byte_Temp)
-          Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zsfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                    Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-!--------------------------------------------------------------------------------------------------
-!--- observations
-!--------------------------------------------------------------------------------------------------
-
-      !-- Ch1 reflectance
-      if (Sds_Num_Level2_Ch1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-
-      endif
-
-      !-- Ch2 reflectance
-      if (Sds_Num_Level2_Ch2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(2)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- ch3 reflectance
-      if (Sds_Num_Level2_Ch3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(3) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(3)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch3,Max_Ref_Ch3,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- ch4 reflectance
-      if (Sds_Num_Level2_Ch4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(4) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(4)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch4,Max_Ref_Ch4,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- ch5 reflectance
-      if (Sds_Num_Level2_Ch5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(5) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(5)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch5,Max_Ref_Ch5,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- ch6 reflectance
-      if (Sds_Num_Level2_Ch6_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(6)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch6,Max_Ref_Ch6,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch6), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch7 reflectance
-      if (Sds_Num_Level2_Ch7_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(7) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(7)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch7,Max_Ref_Ch7,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch7), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch8 reflectance
-      if (Sds_Num_Level2_Ch8_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(8) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(8)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch8,Max_Ref_Ch8,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch8), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch9 reflectance
-      if (Sds_Num_Level2_Ch9_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(9) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(9)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch9,Max_Ref_Ch9,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch9), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch17 reflectance
-      if (Sds_Num_Level2_Ch17_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(17) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(17)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch17,Max_Ref_Ch17,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch17), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch18 reflectance
-      if (Sds_Num_Level2_Ch18_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(18) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(18)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch18,Max_Ref_Ch18,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch18), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch19 reflectance
-      if (Sds_Num_Level2_Ch19_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(19) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(19)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch19,Max_Ref_Ch19,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch19), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- ch26 reflectance
-      if (Sds_Num_Level2_Ch26_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(26) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(26)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch26,Max_Ref_Ch26,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch26), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- chDNB reflectance
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. Sds_Num_Level2_ChDNB_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(44)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB,Max_Ref_ChDNB,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ChDNB), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- chDNB reflectance lunar
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(44)%Ref_Lunar_Toa,sym%LINEAR_SCALING,Min_Ref_ChDNB_lunar,Max_Ref_ChDNB_lunar,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ChDNB_lunar), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !-- Ch20 reflectance
-      if (Sds_Num_Level2_Ch20_Ref_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(20)%Ref_Toa,sym%LINEAR_SCALING,Min_Ref_Ch20,Max_Ref_Ch20,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Ref), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-      !--- Ch20 temperature
-      if (Sds_Num_Level2_Ch20_Bt_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(20)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Bt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-      !--- Ch22 temperature
-      if (Sds_Num_Level2_Ch22_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(22) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(22)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt22,Max_Bt22,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch22), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-      !--- Ch27 temperature
-      if (Sds_Num_Level2_Ch27_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(27)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-      !--- Ch28 temperature
-      if (Sds_Num_Level2_Ch28_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(28)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch28), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch29 temperature
-      if (Sds_Num_Level2_Ch29_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(29)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch29), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch30 temperature
-      if (Sds_Num_Level2_Ch30_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(30) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(30)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt30,Max_Bt30,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch30), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch31 temperature
-      if (Sds_Num_Level2_Ch31_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(31)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch32 temperature
-      if (Sds_Num_Level2_Ch32_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(32)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch32), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch33 temperature
-      if (Sds_Num_Level2_Ch33_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(33)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch34 temperature
-      if (Sds_Num_Level2_Ch34_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(34) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(34)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt34,Max_Bt34,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch34), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch35 temperature
-      if (Sds_Num_Level2_Ch35_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(35) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(35)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt35,Max_Bt35,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch35), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch36 temperature
-      if (Sds_Num_Level2_Ch36_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(36) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(36)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt36,Max_Bt36,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch36), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch37 temperature
-      if (Sds_Num_Level2_Ch37_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(37)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt37,Max_Bt37,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch37), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch38 temperature
-      if (Sds_Num_Level2_Ch38_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(38)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt38,Max_Bt38,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch38), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch45 temperature 13um Pseudo
-      if (Sds_Num_Level2_Ch45_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Ch(45)%Bt_Toa,sym%LINEAR_SCALING,Min_Bt45,Max_Bt45,&
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch45), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch1_Min_3x3
-      if (Sds_Num_Level2_Ch1_Min_3x3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Min_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1, &
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Min_3x3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Ch1_Std_3x3
-      if (Sds_Num_Level2_Ch1_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Ref_Ch1_Std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std, &
-                                 Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Bt_Ch31_std_3x3
-      if (Sds_Num_Level2_Ch31_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Bt_Ch31_Std_3x3,sym%LINEAR_SCALING,Min_Bt31_std,Max_Bt31_std, &
-                                 Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                      One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-      !--- Bt_Ch31_Max_3x3
-      if (Sds_Num_Level2_Ch31_Max_3x3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(Bt_Ch31_Max_3x3,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31, &
-                                 Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Max_3x3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-      endif
-
-
-!-------- cloud properties
-
-     !--- cloud probability
-     if (Sds_Num_Level2_Cldprob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(posterior_cld_probability, &
-                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldprob), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld mask
-     if (Sds_Num_Level2_Cld_Mask_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        cld_mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- adjacent pixel cloud mask
-     if (Sds_Num_Level2_Adj_Pix_Cld_Mask_Flag == sym%YES) then
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Adj_Pix_Cld_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Adj_Pix_Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld mask test vector (first byte - acm only)
-     if (Sds_Num_Level2_Cld_Tests_Flag == sym%YES) then     
-
-       Sds_Start_3d(1) = 0
-       Sds_Start_3d(2) = 0
-       Sds_Start_3d(3) = Sds_Start_2d(2)
-
-       Sds_Stride_3d(1) = 1
-       Sds_Stride_3d(2) = 1
-       Sds_Stride_3d(3) = 1
-
-       Sds_Edge_3d(1) = Max_Num_Cld_Test_Bytes
-       Sds_Edge_3d(2) = Sds_Edge_2d(1)
-       Sds_Edge_3d(3) = Sds_Edge_2d(2)
-
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Tests),  &
-                        Sds_Start_3d, &
-                        Sds_Stride_3d, &
-                        Sds_Edge_3d, &
-                        Cld_Test_Vector_Packed(:,:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- bayes mask sfc type
-     if (Sds_Num_Level2_Bayes_Sfc_Type_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bayes_Sfc_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- dust mask
-     if (Sds_Num_Level2_Dust_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Dust), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Dust_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- smoke mask
-     if (Sds_Num_Level2_Smoke_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Smoke), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Smoke_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- shadow mask
-     if (Sds_Num_Level2_Shadow_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Shadow), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Shadow_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- fire mask
-     if (Sds_Num_Level2_Fire_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Fire), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Fire_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- csbt for ch27
-     if (Sds_Num_Level2_Ch27_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ch(27)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- csbt for ch28
-     if (Sds_Num_Level2_Ch28_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28) == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch28_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ch(28)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- csbt for ch37
-     if (Sds_Num_Level2_Ch37_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch37_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ch(37)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- csbt for ch33
-     if (Sds_Num_Level2_Ch33_CSBT_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33_CSBT), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ch(33)%CSBT_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth from mask
-     if (Cld_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES .and. Sds_Num_Level2_Cod_Mask_Flag == sym%YES) then
-
-      Temp_Pix_Array_1 = Ch(1)%Opd
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-        where(Geo%Solzen /= Missing_Value_Real4 .and. Geo%Solzen > 90.0)
-            Temp_Pix_Array_1 = Ch(44)%Opd
-        endwhere
-      endif
-
-      call SCALE_VECTOR_I1_RANK2(Temp_Pix_Array_1,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-
-     endif
-
-     !--- cld type
-     if (Sds_Num_Level2_Cld_Type_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld phase
-     if (Sds_Num_Level2_Cld_Phase_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld phase aux
-     if (Sds_Num_Level2_Cld_Phase_Aux_Flag == sym%YES) then
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Phase_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- auxiliary cld mask
-     if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Mask_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- auxiliary cld type
-     if (Sds_Num_Level2_Cld_Type_Aux_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Type_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- auxiliary cld height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Aux_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_Aux,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- sndr cld height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_Co2,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld pressure
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Pc,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ctp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld temperature
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctt_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Tc,sym%LINEAR_SCALING,Min_Tc,Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Zc,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_cth), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld top height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Top_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Zc_Top,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- estimated cld top pressure
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Top,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- aux estimated cld top pressure layer1
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top1_Aux_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Pc_Top1_Aux,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top1_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- aux estimated cld top pressure layer2
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Top2_Aux_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Pc_Top2_Aux,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Top2_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld base height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Base_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Zc_Base,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- estimated cld base pressure
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Base_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Base,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- lower cld height
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Zc_Lower_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Zc_Lower_Cloud,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zc_Lower), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- lower cld pressure
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Pc_Lower_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Pc_Lower_Cloud,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Pc_Lower), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld altitude
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Alt_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(ACHA%Alt,sym%LINEAR_SCALING,Min_Alt,Max_Alt,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Alt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld base altitude
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Base_Alt_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(ACHA%Base_Alt,sym%LINEAR_SCALING,Min_Alt,Max_Alt,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Base_Alt), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- acha processing order
-     if (Sds_Num_Level2_Acha_Order_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Order), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ACHA%Processing_Order(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- acha inversion flag
-     if (Sds_Num_Level2_Acha_Inver_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Inver), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ACHA%Inversion_Flag(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- acha cloud layer
-     if (Sds_Num_Level2_Cld_Layer_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Layer), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        ACHA%Cld_Layer(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- acha convective cloud probability
-     if (Sds_Num_Level2_Conv_Prob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Conv_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Conv_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- acha supercooled cloud probability
-     if (Sds_Num_Level2_Supercool_Prob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Supercooled_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld height from h2o
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_H2O_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_H2O,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_H2O), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld height from opaque
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Opa_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Zc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Opa), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld temperature from opaque
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctt_Opa_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Tc_Opaque_Cloud,sym%LINEAR_SCALING,Min_Tc,Max_Tc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctt_Opa), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld emissivity from split window
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Ec,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- beta from split window
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Beta_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Beta,sym%LINEAR_SCALING,Min_beta,Max_beta,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_beta), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud temperature uncertainity from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctt_Acha_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Tc_Uncertainty,sym%LINEAR_SCALING,Min_Tc_Uncer, &
-                                 Max_Tc_Uncer,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctt_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud pressure uncertainity from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Acha_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Pc_Uncertainty,sym%LINEAR_SCALING,Min_Pc_Uncer, &
-                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud pressure uncertainity layer1 from aux
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer1_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Pc_Uncertainty1_Aux,sym%LINEAR_SCALING,Min_Pc_Uncer, &
-                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud pressure uncertainity layer2 from aux
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ctp_Aux_Uncer2_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Pc_Uncertainty2_Aux,sym%LINEAR_SCALING,Min_Pc_Uncer, &
-                                 Max_Pc_Uncer,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ctp_Aux_Uncer2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud height uncertainity from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Zc_Uncertainty,sym%LINEAR_SCALING,Min_Zc_Uncer, &
-                                 Max_Zc_Uncer,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud temperature quality flag from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Qf_Flag == sym%YES) then     
-      One_Byte_Temp = ACHA%OE_Quality_Flags(1,:,:)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud emissivity quality flag from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_Acha_Qf_Flag == sym%YES) then     
-      One_Byte_Temp = ACHA%OE_Quality_Flags(2,:,:)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ec_Acha_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud beta quality flag from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Beta_Acha_Qf_Flag == sym%YES) then     
-      One_Byte_Temp = ACHA%OE_Quality_Flags(3,:,:)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_Acha_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Acha_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Tau,sym%LINEAR_SCALING,Min_Tau_Acha,Max_Tau_Acha,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Acha), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld particle size from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Acha_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ACHA%Reff,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Acha), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- quality flag from Acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Quality_Flag == sym%YES) then     
-      One_Byte_Temp = ACHA%Packed_Quality_Flags
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Quality), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- info flag from Acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Info_Flag == sym%YES) then     
-      One_Byte_Temp = ACHA%Packed_Meta_Data_Flags
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Info), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Acha Cost
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Acha_Cost_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(ACHA%Cost,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Aux Cost
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Aux_Cost_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Cost_Aux,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Aux_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Tau_Dcomp,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth from aux
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Aux_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Tau_Aux,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld reff from aux
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Aux_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Reff_Aux,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Aux), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld particle size from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Reff_Dcomp,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth cost from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Dcomp_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Tau_Dcomp_Cost,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Dcomp_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld particle size cost from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Dcomp_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Reff_Dcomp_Cost,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Dcomp_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud optical depth quality flag from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Dcomp_Qf_Flag == sym%YES) then     
-      One_Byte_Temp = Tau_Dcomp_Qf
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Dcomp_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud effective radius quality flag from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Dcomp_Qf_Flag == sym%YES) then     
-      One_Byte_Temp = Reff_Dcomp_Qf
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Dcomp_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- quality flag from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Dcomp_Quality_Flag == sym%YES) then     
-      One_Byte_Temp = Dcomp_quality_flag
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Dcomp_Quality), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- info flag  dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Dcomp_Info_Flag == sym%YES) then     
-      Two_Byte_Temp = Dcomp_Info_Flag
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Dcomp_Info), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- insolation from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_CldInsol_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Insolation_Dcomp, &
-                                 sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CldInsol), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- diffuse insolation from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_CldInsol_Dif_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Insolation_Dcomp_Diffuse, &
-                                 sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CldInsol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cdnc from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cdnc_Dcomp_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Cdnc_Dcomp, &
-                                 sym%LINEAR_SCALING,Min_Cdnc,Max_Cdnc,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cdnc_Dcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud geo height from  dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Hcld_Dcomp_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Hcld_Dcomp, &
-                                 sym%LINEAR_SCALING,Min_Hcld,Max_Hcld,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Hcld_Dcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth from nlcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Nlcomp_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Tau_Nlcomp,sym%LINEAR_SCALING,Min_tau,Max_tau,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Nlcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld particle size nlcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Nlcomp_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Reff_Nlcomp,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Nlcomp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld optical depth cost from nlcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Nlcomp_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Tau_Nlcomp_Cost,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Nlcomp_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld particle size cost from dcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Nlcomp_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(Reff_Nlcomp_Cost,sym%LINEAR_SCALING,Min_Reff,Max_Reff,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ceps_Nlcomp_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- quality flag from nlcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Nlcomp_Quality_Flag == sym%YES) then     
-      One_Byte_Temp = Nlcomp_quality_flag
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Nlcomp_Quality), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- info flag from nlcomp
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Nlcomp_Info_Flag == sym%YES) then     
-      Two_Byte_Temp = Nlcomp_Info_Flag
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Nlcomp_Info), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud albedo
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldalb_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(cloud_063um_albedo, &
-                                 sym%LINEAR_SCALING,Min_albedo,Max_albedo,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_cldalb), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud transmission
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldtrn_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(cloud_063um_transmission_solar, &
-                                 sym%LINEAR_SCALING,Min_transmission,Max_transmission,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_cldtrn), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud fraction
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldfrac_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Cloud_Fraction, &
-                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_cldfrac), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud fraction uncertainty
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cldfrac_Uncer_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Cloud_Fraction_Uncer, &
-                                 sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldfrac_Uncer), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- high cloud fraction
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_High_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(High_Cloud_Fraction, &
-                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_High_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- mid cloud fraction
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Mid_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Mid_Cloud_Fraction, &
-                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Mid_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- low cloud fraction
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Low_Cld_Flag == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(Low_Cloud_Fraction, &
-                                 sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Low_Cld), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-!--- non-cloud props     
-
-     !--- emiss ch20
-     if (Sds_Num_Level2_Ch20_Emiss_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Ems_Ch20,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- emiss ch20 clear
-     if (Sds_Num_Level2_Ch20_Emiss_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Ems_Ch20_Clear_Rtm,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Emiss_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- emiss ch20 median 3x3
-     if (Sds_Num_Level2_Ch20_Emiss_Median_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Ems_Ch20_Median_3x3,sym%LINEAR_SCALING,Min_Ems_Ch20,Max_Ems_Ch20,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Emiss_Median), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- bt ch20 median 3x3
-     if (Sds_Num_Level2_Ch20_Bt_Median_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Bt_Ch20_Median_3x3,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Bt_Median), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-    !--- Bt_11_67_Covar
-    if (Sds_Num_Level2_Bt_11_67_Covar_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Covar_Ch27_Ch31_5x5,sym%LINEAR_SCALING,Min_Bt_Covar,Max_Bt_Covar,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_11_67_Covar), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-    if (Sds_Num_Level2_Btd_Ch31_Ch32_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3,sym%LINEAR_SCALING,Min_Btd_Ch31_Ch32, &
-                       Max_Btd_Ch31_Ch32,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Btd_Ch31_Ch32), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-     !--- etrop
-     if (Sds_Num_Level2_Etrop_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Etrop), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-    !--- Beta_11_67
-    if (Sds_Num_Level2_Beta_11_67_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Beta_11um_67um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_67), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Beta_11_85
-    if (Sds_Num_Level2_Beta_11_85_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Beta_11um_85um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_85), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Beta_11_12
-    if (Sds_Num_Level2_Beta_11_12_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Beta_11um_12um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Beta_11_133
-    if (Sds_Num_Level2_Beta_11_13_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-        Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Beta_11um_133um_Tropo_Rtm,sym%LINEAR_SCALING,Min_Beta,Max_Beta,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Beta_11_13), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-     !--- aot1
-     if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot1_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(aot1,sym%LINEAR_SCALING,Min_aot,Max_aot,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_aot1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- aot2
-     if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot2_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(aot2,sym%LINEAR_SCALING,Min_aot,Max_aot,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_aot2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- aot6
-     if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot6_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(aot3a,sym%LINEAR_SCALING,Min_aot,Max_aot,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Aot6), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- aot qf
-     if (Aer_Flag == sym%YES .and. Sds_Num_Level2_Aot_Qf_Flag == sym%YES) then
-        One_Byte_Temp = aot_qf
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Aot_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- olr
-     if ( Sds_Num_Level2_Olr_Flag == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(olr, &
-                                 sym%LINEAR_SCALING,Min_olr,Max_olr,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_olr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- insolation
-     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky, &
-                                 sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- diffuse insolation
-     if (Sasrab_Flag == sym%YES .and. Sds_Num_Level2_Insol_Dif_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Insolation_All_Sky_Diffuse, &
-                                 sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Insol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- ndvi surface corrected
-     if (Sds_Num_Level2_Ndvi_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(ndvi_sfc,sym%LINEAR_SCALING,Min_Ndvi,Max_Ndvi,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ndvi), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- ndvi surface corrected from modis white sky
-     if (Sds_Num_Level2_Ndvi_White_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Ndvi_Sfc_White_Sky,sym%LINEAR_SCALING,Min_Ndvi,Max_Ndvi,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ndvi_White), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface temperature
-     if (Sds_Num_Level2_Tsfc_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Tsfc_Retrieved,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tsfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface radiation temperature
-     if (Sds_Num_Level2_Trad_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Trad_Retrieved,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Trad), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface radiation temperature
-     if (Sds_Num_Level2_Tair_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Tair_Nwp_Pix,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tair), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface temperature background
-     if (Sds_Num_Level2_Tsfc_Back_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Tsfc_Nwp_Pix,sym%LINEAR_SCALING,Min_Tsfc,Max_Tsfc,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tsfc_Back), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface temperature background uniformity 3x3
-     if (Sds_Num_Level2_Tsfc_Uni_Back_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Sst_Anal_Uni,sym%LINEAR_SCALING,Min_Sst_std,Max_Sst_std,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tsfc_Uni_Back), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface relative humidity background
-     if (Sds_Num_Level2_Rh_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Rh_Nwp_Pix,sym%LINEAR_SCALING,Min_Rh,Max_Rh,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Rh), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- surface pressure background
-     if (Sds_Num_Level2_Psfc_Back_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Psfc_Nwp_Pix,sym%LINEAR_SCALING,Min_Psfc,Max_Psfc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Psfc_Back), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- sea-level pressure background
-     if (Sds_Num_Level2_Pmsl_Back_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Pmsl_Nwp_Pix,sym%LINEAR_SCALING,Min_Pmsl,Max_Pmsl,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Pmsl_Back), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- K index
-     if (Sds_Num_Level2_Kindex_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(K_Index_Nwp_Pix,sym%LINEAR_SCALING,Min_Kindex,Max_Kindex,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Kindex), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Cwp from Nwp 
-     if (Sds_Num_Level2_Cwp_Nwp_Flag == sym%YES) then
-      call SCALE_VECTOR_I2_RANK2(Cwp_Nwp_Pix,sym%LINEAR_SCALING,Min_Cwp,Max_Cwp,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cwp_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Cfrac from Nwp 
-     if (Sds_Num_Level2_Cfrac_Nwp_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Cfrac_Nwp_Pix,sym%LINEAR_SCALING,Min_Frac,Max_Frac,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cfrac_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Pc from Nwp 
-     if (Sds_Num_Level2_Pc_Nwp_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Pc_Nwp_Pix,sym%LINEAR_SCALING,Min_Pc,Max_Pc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Pc_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Number of Cloud Layers from Nwp 
-     if (Sds_Num_Level2_Ncld_Nwp_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ncld_Nwp), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Ncld_Layers_Nwp_Pix(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- Cld Type from Nwp 
-     if (Sds_Num_Level2_Cld_Type_Nwp_Flag == sym%YES) then     
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_Nwp), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Type_Nwp_Pix(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- tropopause temperature nwp
-     if (Sds_Num_Level2_Temp_Tropo_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Ttropo_Nwp_Pix,sym%LINEAR_SCALING,Min_Ttropo,Max_Ttropo,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Temp_Tropo), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- lifting condensation level nwp
-     if (Sds_Num_Level2_LCL_Nwp_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(LCL_Height_Nwp_Pix,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_LCL_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- convective condensation level nwp
-     if (Sds_Num_Level2_CCL_Nwp_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(CCL_Height_Nwp_Pix,sym%LINEAR_SCALING,Min_Zc,Max_Zc,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CCL_Nwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- remote sensing reflectance
-     if (Sds_Num_Level2_Rsr_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(rsr,sym%LINEAR_SCALING,Min_Rsr,Max_Rsr,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Rsr), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-!--- quality flags
-
-     !--- first level 2 packed quality flags
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Qf1_Flag == sym%YES) then
-      One_Byte_Temp = 0
-      One_Byte_Temp = ishft(ACHA%OE_Quality_Flags(1,:,:),6) + ishft(ACHA%OE_Quality_Flags(2,:,:),4) + &
-                      ishft(ACHA%OE_Quality_Flags(3,:,:),2) + Tau_Dcomp_Qf
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Qf1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-
-     endif
-
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Qf2_Flag == sym%YES) then
-        !--- second level 2 packed quality flags
-        One_Byte_Temp = 0
-        One_Byte_Temp = ishft(Reff_Dcomp_Qf,6) + ishft(Aot_Qf,4) + ishft(Rsr_Qf,2) + cld_mask
-
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Qf2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-    !--- ch1 counts
-    if (Sensor%Chan_On_Flag_Default(1) == sym%YES .and. Sds_Num_Level2_Ch1_Counts_Flag == sym%YES) then
-        Two_Byte_Temp = Ch1_Counts
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Counts), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch2 counts
-    if (Sensor%Chan_On_Flag_Default(2) == sym%YES .and. Sds_Num_Level2_Ch2_Counts_Flag == sym%YES) then
-        Two_Byte_Temp = Ch2_Counts
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch2_Counts), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch6 counts
-    if (Sensor%Chan_On_Flag_Default(6) == sym%YES .and. Sds_Num_Level2_Ch6_Counts_Flag == sym%YES) then
-        Two_Byte_Temp = Ch6_Counts
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch6_Counts), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- tpw
-    if (Sds_Num_Level2_Tpw_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Tpw_Nwp_Pix,sym%LINEAR_SCALING,Min_Tpw,Max_Tpw,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tpw), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ozone
-    if (Sds_Num_Level2_Ozone_Flag == sym%YES) then
-      call SCALE_VECTOR_I1_RANK2(Ozone_Nwp_Pix,sym%LINEAR_SCALING,Min_Ozone,Max_Ozone,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ozone), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Ch20 reflectance atmos corrected
-    if (Sds_Num_Level2_Ref_Ch20_Sfc_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(20)%Ref_Sfc,sym%LINEAR_SCALING,Min_Ref_Ch20,Max_Ref_Ch20,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Ch20_Sfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Ch1 reflectance atmos corrected
-    if (Sds_Num_Level2_Ref_Ch1_Sfc_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Sfc,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Ch1_Sfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Ch2 reflectance atmos corrected
-    if (Sds_Num_Level2_Ref_Ch2_Sfc_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(ch(2)%Ref_Sfc,sym%LINEAR_SCALING,Min_Ref_Ch2,Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Ch2_Sfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Ch6 reflectance atmos corrected
-    if (Sds_Num_Level2_Ref_Ch6_Sfc_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(ch(6)%Ref_Sfc,sym%LINEAR_SCALING,Min_Ref_Ch6,Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Ch6_Sfc), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- sst already masked
-    if (Sds_Num_Level2_Sst_Masked_Flag == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Sst_Masked,sym%LINEAR_SCALING,Min_Sst,Max_Sst,Missing_Value_Real4,One_Byte_Temp)
-       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sst_Masked), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                      One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif 
-
-    !-- Ch1 reflectance
-    if (Sds_Num_Level2_Ch1_Unnorm_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(ch(1)%Ref_Toa_Unnorm,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Unnorm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
+      do i = 1, line_num
+         
+         read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+         call csv_value_count ( record, csv_record_status, value_count )
+         rec_arr = extract_single ( trim ( record ) )
+        
+         switch = trim(rec_arr(1))  .eq. "1"
+         
+         if ( i == 1) cycle
+         read( rec_arr(2),  * ) var_dim
+         name = trim( rec_arr(3) )
+         read ( rec_arr(4), * ) dtype
+         read ( rec_arr(5), * ) scaling
+         read (rec_arr(6), * ) act_min
+         read (rec_arr(7), * ) act_max
+         
+         
+         print*,i,trim(rec_arr(3))
+         
+         if ( switch ) then
+            include 'level2_assign.inc'
+            
+            select case (var_dim)
+            case ( 1 )
+               select case (dtype)
+               case(1)
+               Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                         Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
+               case(3)
+                 Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                         Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
+               case(4)
+                 Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                         Sds_Edge_2d(2), data_dim1_dtype4 ) + Istatus
+               
+               end select  
+            case(2)
+               select case (dtype)
+               case(1)
+               
+                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                               data_dim2_dtype1) + Istatus
+               case(2)
+               call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4,Two_Byte_Temp)
+                  Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
+                  Two_Byte_Temp ) + Istatus
+                  
+               case(4)
+                   Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
+                       data_dim2_dtype4 ) + Istatus   
+               end select   
+            end select
+         end if
+         
+        
+        print*,i,istatus,var_dim,dtype
+        
      
-    !-- Ch2 reflectance
-    if (Sds_Num_Level2_Ch2_Unnorm_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(ch(2)%Ref_Toa_Unnorm,sym%LINEAR_SCALING,Min_Ref_Ch2,Max_Ref_Ch2,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch2_Unnorm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
+      end do
 
-    !-- Ch6 reflectance
-    if (Sds_Num_Level2_Ch6_Unnorm_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(ch(6)%Ref_Toa_Unnorm,sym%LINEAR_SCALING,Min_Ref_Ch6,Max_Ref_Ch6,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch6_Unnorm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Ref_Ch1 clear
-    if (Sds_Num_Level2_Ch1_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Ch20 temperature clear
-    if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(ch(20)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt20,Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch27 temperature clear
-    if (Sds_Num_Level2_Ch27_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(27)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt27,Max_Bt27,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch28 temperature clear
-    if (Sds_Num_Level2_Ch28_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(28) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(28)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt28,Max_Bt28,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch28_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch29 temperature clear
-    if (Sds_Num_Level2_Ch29_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(29)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt29,Max_Bt29,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch29_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch30 temperature clear
-    if (Sds_Num_Level2_Ch30_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(30) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(30)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt30,Max_Bt30,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch30_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch31 temperature clear
-    if (Sds_Num_Level2_Ch31_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(31)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch32 temperature clear
-    if (Sds_Num_Level2_Ch32_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(32)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt32,Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch32_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch33 temperature clear
-    if (Sds_Num_Level2_Ch33_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(33)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt33,Max_Bt33,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch33_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch34 temperature clear
-    if (Sds_Num_Level2_Ch34_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(34) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(34)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt34,Max_Bt34,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch34_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch35 temperature clear
-    if (Sds_Num_Level2_Ch35_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(35) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(35)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt35,Max_Bt35,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch35_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch36 temperature clear
-    if (Sds_Num_Level2_Ch36_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(36) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(36)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt36,Max_Bt36,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch36_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch37 temperature clear
-    if (Sds_Num_Level2_Ch37_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(37) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(37)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt37,Max_Bt37,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch37_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch38 temperature clear
-    if (Sds_Num_Level2_Ch38_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(38) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(38)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt38,Max_Bt38,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch38_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus 
-    endif
-
-    !--- Ch45 Pseudo temperature clear
-    if (Sds_Num_Level2_Ch45_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(45) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ch(45)%Bt_Toa_Clear,sym%LINEAR_SCALING,Min_Bt45,Max_Bt45,Missing_Value_Real4,Two_Byte_Temp)
-     Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch45_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Ref_Ch1 3x3 Mean
-    if (Sds_Num_Level2_Ch1_Mean_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Mean_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Mean), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- sst unmasked by cloud
-    if (Sds_Num_Level2_Sst_Unmasked_Flag == sym%YES) then
-     call SCALE_VECTOR_I2_RANK2(Sst_Unmasked,sym%LINEAR_SCALING,Min_Sst,Max_Sst,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sst_Unmasked), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- wind speed
-    if (Sds_Num_Level2_Wnd_Spd_Flag == sym%YES) then
-     call SCALE_VECTOR_I1_RANK2(Wnd_Spd_10m_Nwp_Pix,sym%LINEAR_SCALING,Min_Wndspd,Max_Wndspd,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Wnd_Spd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- wind direction
-    if (Sds_Num_Level2_Wnd_Dir_Flag == sym%YES) then
-     call SCALE_VECTOR_I1_RANK2(Wnd_Dir_10m_Nwp_Pix,sym%LINEAR_SCALING,Min_Wnddir,Max_Wnddir,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Wnd_Dir), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- wind speed at cld top
-    if (Sds_Num_Level2_Wnd_Spd_Cld_Top_Flag == sym%YES .and. Cld_Flag == sym%YES) then
-     call SCALE_VECTOR_I1_RANK2(Wnd_Spd_Cld_Top_Nwp_Pix,sym%LINEAR_SCALING,Min_Wndspd,Max_Wndspd,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Wnd_Spd_Cld_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- wind direction at cld top
-    if (Sds_Num_Level2_Wnd_Dir_Cld_Top_Flag == sym%YES .and. Cld_Flag == sym%YES) then
-     call SCALE_VECTOR_I1_RANK2(Wnd_Dir_Cld_Top_Nwp_Pix,sym%LINEAR_SCALING,Min_Wnddir,Max_Wnddir,Missing_Value_Real4,One_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Wnd_Dir_Cld_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Ch1 Dark-Sky Reflectance
-    if (Sds_Num_Level2_Ch1_Dark_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Dark_Composite,sym%LINEAR_SCALING,Min_Ref_Ch1, &
-                                   Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Dark), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Cloud Water Path
-    if (Sds_Num_Level2_Cwp_Flag == sym%YES .and. Cld_Flag == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Cwp_Dcomp,sym%LINEAR_SCALING,Min_Cwp, &
-                                   Max_Cwp,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !-- Rain Rate
-    if (Sds_Num_Level2_Rain_Rate_Flag == sym%YES .and. Cld_Flag == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Rain_Rate_Dcomp,sym%LINEAR_SCALING,Min_Rain_Rate, &
-                                   Max_Rain_Rate,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Rain_Rate), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Max of I1 at M-band
-    if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
-                                   Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Min of I1 at M-band
-    if (Sds_Num_Level2_Ref_Min_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
-                                   Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Mean of I1 at M-band
-    if (Sds_Num_Level2_Ref_Mean_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI1,sym%LINEAR_SCALING,Min_Ref_Ch1, &
-                                   Max_Ref_Ch1,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Uni of I1 at M-band
-    if (Sds_Num_Level2_Ref_Uni_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI1,sym%LINEAR_SCALING,Min_Uni_Ch1, &
-                                   Max_Uni_Ch1,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI1), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Max of I2 at M-band
-    if (Sds_Num_Level2_Ref_Max_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
-                                   Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Min of I2 at M-band
-    if (Sds_Num_Level2_Ref_Min_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
-                                   Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Mean of I2 at M-band
-    if (Sds_Num_Level2_Ref_Mean_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI2,sym%LINEAR_SCALING,Min_Ref_Ch2, &
-                                   Max_Ref_Ch2,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Uni of I2 at M-band
-    if (Sds_Num_Level2_Ref_Uni_ChI2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(40) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI2,sym%LINEAR_SCALING,Min_Uni_Ch2, &
-                                   Max_Uni_Ch2,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Max of I3 at M-band
-    if (Sds_Num_Level2_Ref_Max_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Max_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
-                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Min of I3 at M-band
-    if (Sds_Num_Level2_Ref_Min_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Min_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
-                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Min_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Mean of I3 at M-band
-    if (Sds_Num_Level2_Ref_Mean_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Mean_ChI3,sym%LINEAR_SCALING,Min_Ref_Ch6, &
-                                   Max_Ref_Ch6,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Mean_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Uni of I3 at M-band
-    if (Sds_Num_Level2_Ref_Uni_ChI3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(41) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Ref_Uni_ChI3,sym%LINEAR_SCALING,Min_Uni_Ch6, &
-                                   Max_Uni_Ch6,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ref_Uni_ChI3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Max of I4 at M-band
-    if (Sds_Num_Level2_Bt_Max_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Max_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
-                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-                                                                                                                                     
-    !--- Min of I4 at M-band
-    if (Sds_Num_Level2_Bt_Min_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Min_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
-                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Mean of I4 at M-band
-    if (Sds_Num_Level2_Bt_Mean_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Mean_ChI4,sym%LINEAR_SCALING,Min_Bt20, &
-                                   Max_Bt20,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Uni of I4 at M-band
-    if (Sds_Num_Level2_Bt_Uni_ChI4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(42) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI4,sym%LINEAR_SCALING,Min_Uni_Ch5, &
-                                   Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI4), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Max of I5 at M-band
-    if (Sds_Num_Level2_Bt_Max_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Max_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
-                                   Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Max_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Min of I5 at M-band
-    if (Sds_Num_Level2_Bt_Min_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Min_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
-                                   Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Min_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Mean of I5 at M-band
-    if (Sds_Num_Level2_Bt_Mean_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Mean_ChI5,sym%LINEAR_SCALING,Min_Bt31, &
-                                   Max_Bt31,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Mean_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- Uni of I5 at M-band
-    if (Sds_Num_Level2_Bt_Uni_ChI5_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(43) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(Bt_Uni_ChI5,sym%LINEAR_SCALING,Min_Uni_Ch5, &
-                                   Max_Uni_Ch5,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt_Uni_ChI5), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-
-    !--- ch31 atmospheric radiance
-    if (Sds_Num_Level2_Ch31_Rad_Atm_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(ch(31)%Rad_Atm,sym%LINEAR_SCALING,Min_Ch31_Rad_Atm, &
-                                   Max_Ch31_Rad_Atm,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch31 atmospheric transmission
-    if (Sds_Num_Level2_Ch31_Trans_Atm_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(ch(31)%Trans_Atm,sym%LINEAR_SCALING,Min_Trans, &
-                                   Max_Trans,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Trans_Atm), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch31 downward atmospheric radiance
-    if (Sds_Num_Level2_Ch31_Rad_Atm_Dwn_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(ch(31)%Rad_Atm_Dwn_Sfc,sym%LINEAR_SCALING,Min_Ch31_Rad_Atm_Dwn, &
-                                   Max_Ch31_Rad_Atm_Dwn,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad_Atm_Dwn), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch20 surface emissivity
-    if (Sds_Num_Level2_Ch20_Sfc_Emiss_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(ch(20)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems, &
-                                   Max_Sfc_Ems,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch20_Sfc_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- ch31 surface emissivity
-    if (Sds_Num_Level2_Ch31_Sfc_Emiss_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-        call SCALE_VECTOR_I1_RANK2(ch(31)%Sfc_Emiss,sym%LINEAR_SCALING,Min_Sfc_Ems, &
-                                   Max_Sfc_Ems,Missing_Value_Real4,One_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Sfc_Emiss), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- 3.75 micron BT for Sounder
-    if (Sds_Num_Level2_Bt375_Snd_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
-        call SCALE_VECTOR_I2_RANK2(Bt_375um_Sounder,sym%LINEAR_SCALING,Min_Bt20, &
-                                   Max_Bt20,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt375_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-    !--- 11 micron BT for Sounder
-    if (Sds_Num_Level2_Bt11_Snd_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
-        call SCALE_VECTOR_I2_RANK2(Bt_11um_Sounder,sym%LINEAR_SCALING,Min_Bt31, &
-                                   Max_Bt31,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt11_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
-    !--- 12 micron BT for Sounder
-    if (Sds_Num_Level2_Bt12_Snd_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
-        call SCALE_VECTOR_I2_RANK2(Bt_12um_Sounder,sym%LINEAR_SCALING,Min_Bt32, &
-                                   Max_Bt32,Missing_Value_Real4,Two_Byte_Temp)
-        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-    endif
-
+   
     !--- check for and report errors
     if (Istatus /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus
@@ -2404,46 +647,45 @@ end subroutine WRITE_PIXEL_HDF_RECORDS
 !   been created, closes the open output files.
 !
 !====================================================================
-subroutine CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
+subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
 
- integer, intent(in):: Rtm_File_Flag
- integer, intent(in):: Level2_File_Flag
+ 
+   integer, intent(in):: Level2_File_Flag
 
- integer:: Isds
- integer:: Istatus
+   integer:: Isds
+   integer:: Istatus
 
-! HDF function declarations
- integer:: sfsnatt
- integer:: sfendacc
- integer:: sfend
+   ! HDF function declarations
+   integer:: sfsnatt
+   integer:: sfendacc
+   integer:: sfend
 
 
-!------------------------------------------------------------------------
-!--- close level2 file
-!------------------------------------------------------------------------
-  Istatus = 0
-  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
-  Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
-  if (Level2_File_Flag == sym%YES) then
-   do Isds = 1, Num_Level2_Sds
+   !------------------------------------------------------------------------
+   !--- close level2 file
+   !------------------------------------------------------------------------
+   Istatus = 0
+   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
+   Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
+  
+   if (Level2_File_Flag == sym%YES) then
+      do Isds = 1, Num_Level2_Sds
       
-      if (sds_Id_Level2(Isds) /= 0 ) Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
-      ! - do this if sds_id_level2 is saved from last file and not used here..
-      ! - some compilers with ceratin flags save also without save attribute
-      ! - 20141225-AW
-      sds_Id_Level2(Isds) = 0
+         if (sds_Id_Level2(Isds) /= 0 ) then
+            Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+          
+         end if
+         sds_Id_Level2(Isds) = 0
      
-   enddo
-   Istatus = sfend(Sd_Id_Level2) + Istatus
-!--- errors are expected on close since all sds were not opened
-!  if (Istatus /= 0) then
-!     print *, EXE_PROMPT, MOD_PROMPT, "Error closing level2 hdf file"
-!  endif
+      end do
+      
+      Istatus = sfend(Sd_Id_Level2) + Istatus
+
   endif
 
 end subroutine CLOSE_PIXEL_HDF_FILES

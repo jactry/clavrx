@@ -560,7 +560,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )   
       call csv_file_open_read ( csv_file_name, csv_file_unit )
-        
+         
       do i = 1, line_num
          print*,i
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record

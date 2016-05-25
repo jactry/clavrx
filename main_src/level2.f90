@@ -220,11 +220,6 @@ integer::k
   !--- make a file name base for output
   File_1b_Root = trim (file_1b)
   
-  
-  
-   
-   
-  
 
   !--- special processing for modis - remove hdf suffix
   l1b_ext = File_1b_Root(len_trim(File_1b_Root)-3:len_trim(File_1b_Root))
@@ -358,11 +353,12 @@ integer::k
 
       
       ! ---  rread in products from csv file
+      print*,'aaaa'
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )
    
       call csv_file_open_read ( csv_file_name, csv_file_unit )
-      
+      print*,'affaa'
       do i = 1, line_num
          
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
@@ -372,13 +368,13 @@ integer::k
          switch = trim(rec_arr(1))  .eq. "1"
          
          if ( i == 1) cycle
-         read( rec_arr(2),  * ) var_dim
-         read ( rec_arr(4), * ) dtype
-         read ( rec_arr(5), * ) scaling
-         read (rec_arr(6), * ) act_min
-         read (rec_arr(7), * ) act_max
+         read ( rec_arr(2), * ) var_dim
+         read ( rec_arr(5), * ) dtype
+         read ( rec_arr(6), * ) scaling
+         read ( rec_arr(7), * ) act_min
+         read ( rec_arr(8), * ) act_max
         
-         
+         print*,i,line_num, trim(rec_arr(3)), var_dim,dtype
          if ( switch ) then
             select case (var_dim)
             case ( 1 )
@@ -386,7 +382,7 @@ integer::k
                case(1)
                Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, trim(rec_arr(14))) + Istatus_Sum
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT8,  &
                    1, Missing_Value_Int1) + Istatus_Sum
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32,  &
@@ -408,7 +404,7 @@ integer::k
                Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
                Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum  
                
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(13) )) + Istatus_Sum 
+               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(14) )) + Istatus_Sum 
                Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, trim(rec_arr(12) )) + Istatus_Sum 
                Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
                     len_trim(trim(rec_arr(14))),  trim(rec_arr(14)) ) + Istatus_Sum
@@ -426,17 +422,17 @@ integer::k
                call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
                                trim(rec_arr(3)), &
                                trim(rec_arr(12)), &
-                               trim(rec_arr(14)), &
+                               trim(rec_arr(15)), &
                                DFNT_INT8, scaling, act_min, act_max, &
-                               trim(rec_arr(13) ), Real(Missing_Value_Int1,kind=real4), Istatus)
+                               trim(rec_arr(14) ), Real(Missing_Value_Int1,kind=real4), Istatus)
                Istatus_Sum = Istatus_Sum + Istatus
                case(2)
                call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(rec_arr(3)), &
                                trim(rec_arr(12)), &
-                               trim(rec_arr(14)), &
+                               trim(rec_arr(15)), &
                                DFNT_INT16, scaling, act_min, act_max, &
-                               trim(rec_arr(13) ), Missing_Value_Real4, Istatus)
+                               trim(rec_arr(14) ), Missing_Value_Real4, Istatus)
                Istatus_Sum = Istatus_Sum + Istatus
               
                case(4)
@@ -459,7 +455,7 @@ integer::k
       end do
      
    
-
+      call csv_file_close_read ( csv_file_name, csv_file_unit )
 
 
       !--- check for and report errors
@@ -560,25 +556,26 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    if (Level2_File_Flag == sym%YES) then
          istatus = 0
             ! ---  re-read in products from csv file
+       print*,'start writing .....'     
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )   
       call csv_file_open_read ( csv_file_name, csv_file_unit )
-      
+        
       do i = 1, line_num
-         
+         print*,i
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
          call csv_value_count ( record, csv_record_status, value_count )
          rec_arr = extract_single ( trim ( record ) )
         
          switch = trim(rec_arr(1))  .eq. "1"
-         
+          
          if ( i == 1) cycle
          read( rec_arr(2),  * ) var_dim
          name = trim( rec_arr(3) )
-         read ( rec_arr(4), * ) dtype
-         read ( rec_arr(5), * ) scaling
-         read (rec_arr(6), * ) act_min
-         read (rec_arr(7), * ) act_max
+         read ( rec_arr(5), * ) dtype
+         read ( rec_arr(6), * ) scaling
+         read (rec_arr(7), * ) act_min
+         read (rec_arr(8), * ) act_max
          
          
          print*,i,trim(rec_arr(3))
@@ -593,6 +590,8 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                case(3)
+                  print*,size(data_dim1_dtype3)
+                  print*,maxval(data_dim1_dtype3)
                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                case(4)
@@ -624,7 +623,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
      
       end do
 
-   
+      call csv_file_close_read ( csv_file_name, csv_file_unit )
     !--- check for and report errors
     if (Istatus /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus

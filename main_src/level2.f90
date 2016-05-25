@@ -90,7 +90,7 @@ module LEVEL2_ROUTINES
    character ( len = 1000 ) record
    integer   ( kind = 4 ) value_count
    character (len = 300) :: before
-   character ( len = 300) :: rec_arr ( 14 )
+   character ( len = 300) :: rec_arr ( 15 )
    integer :: j
    logical :: switch
    integer :: var_dim
@@ -474,7 +474,7 @@ end subroutine DEFINE_HDF_FILE_STRUCTURES
   function extract_single ( record) result  (record_single)
       implicit none
       character ( len = * ) :: record
-      character ( len = 300) :: record_single ( 14 )
+      character ( len = 300) :: record_single ( 15 )
       character (len = 1000 ) :: record_local
       character ( len =300) :: before
       integer :: i
@@ -549,7 +549,18 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    !--- update Num_Scans_Level2_Hdf
    Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
                                Image%Number_Of_Lines_Read_This_Segment)
-
+   
+   allocate ( data_dim1_dtype1(sds_edge_2d(2)))
+   
+   allocate ( data_dim1_dtype3(sds_edge_2d(2)))
+   allocate ( data_dim1_dtype4(sds_edge_2d(2)))
+   
+   allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
+   allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
+   allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
+   allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
+   
+   
    !-------------------------------------------------------------------------
    ! write to level2 file
    !-------------------------------------------------------------------------
@@ -578,7 +589,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
          read (rec_arr(8), * ) act_max
          
          
-         print*,i,trim(rec_arr(3))
+         print*,i,trim(rec_arr(3)),var_dim,dtype
          
          if ( switch ) then
             include 'level2_assign.inc'
@@ -606,6 +617,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                   Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
                case(2)
+               print*,size(data_dim2_dtype2)
                call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4,Two_Byte_Temp)
                   Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                   Two_Byte_Temp ) + Istatus

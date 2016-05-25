@@ -9,7 +9,7 @@ data = read_csv(csv_file)
 
 file_l2 = 'level2_assign.inc'
 openw,10,file_l2
-printf,10,'select case(name)'
+printf,10,'select case(trim(name))'
 for i=0,n_elements(data.field01) -1  do begin
    if (data.(2))[i] eq '_filename' then continue
    if (data.(2))[i] eq '_global_attr' then continue

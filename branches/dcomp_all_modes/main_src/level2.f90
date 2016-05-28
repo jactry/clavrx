@@ -27,9 +27,15 @@
 !--------------------------------------------------------------------------------------
 module LEVEL2_ROUTINES
 
-   use CONSTANTS
+   use CONSTANTS, only:
    use PIXEL_COMMON
-   use HDF
+   use HDF, only: &
+      DFACC_CREATE &
+      , DFNT_INT8 &
+      , DFNT_CHAR8 &
+      , DFNT_FLOAT32 &
+      , DFNT_INT32 &
+      , DFNT_INT16
    use SCALING_PARAMETERS
    use HDF_PARAMS
    use AVHRR_MODULE
@@ -48,7 +54,8 @@ module LEVEL2_ROUTINES
    private::DEFINE_PIXEL_2D_SDS, &
             DEFINE_PIXEL_3D_SDS, &
             DEFINE_HDF_FILE_STRUCTURES, &
-            WRITE_ALGORITHM_ATTRIBUTES
+            WRITE_ALGORITHM_ATTRIBUTES, &
+            file_root_from_l1b
 
  
 !----------------------------------------------------------------------
@@ -472,7 +479,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
    real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
    character (len=40) :: name
    integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
-    
+    print*,'kkkkk===> ',segment_number
     if (Segment_Number == 1) then
 
                !--- place algorithm cvs tags into global strings for output

@@ -1233,8 +1233,8 @@
             
             ! = write to level2 files
             
-            
-            call WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag, segment_number)
+           
+            call WRITE_PIXEL_HDF_RECORDS(segment_number, Level2_File_Flag )
             
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &

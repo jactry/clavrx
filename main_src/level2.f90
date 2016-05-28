@@ -519,7 +519,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
    real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
    character (len=40) :: name
-   
+   integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
 
    !-----------------------------------------------------------------------
    ! Get time of each scan line and convert to scale
@@ -550,15 +550,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
                                Image%Number_Of_Lines_Read_This_Segment)
    
-   allocate ( data_dim1_dtype1(sds_edge_2d(2)))
-   
-   allocate ( data_dim1_dtype3(sds_edge_2d(2)))
-   allocate ( data_dim1_dtype4(sds_edge_2d(2)))
-   
-   allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
-   allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
-   allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
-   allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
+ 
    
    
    !-------------------------------------------------------------------------
@@ -571,6 +563,17 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )   
       call csv_file_open_read ( csv_file_name, csv_file_unit )
+      
+              allocate ( data_dim1_dtype1(sds_edge_2d(2)))
+   
+   allocate ( data_dim1_dtype3(sds_edge_2d(2)))
+   allocate ( data_dim1_dtype4(sds_edge_2d(2)))
+   
+   allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
+   allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
+   allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
+   allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
+   allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
          
       do i = 1, line_num
          print*,i
@@ -589,6 +592,10 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
          read (rec_arr(8), * ) act_max
          
          
+        
+ 
+         
+         
          print*,i,trim(rec_arr(3)),var_dim,dtype
          
          if ( switch ) then
@@ -601,8 +608,8 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                case(3)
-                  print*,size(data_dim1_dtype3)
-                  print*,maxval(data_dim1_dtype3)
+                  print*,'size: ',size(data_dim1_dtype3)
+                  print*,'maxval:',maxval(data_dim1_dtype3)
                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                case(4)
@@ -618,10 +625,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                                data_dim2_dtype1) + Istatus
                case(2)
                print*,size(data_dim2_dtype2)
-               call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4,Two_Byte_Temp)
+               print*
+               print*,act_min,act_max,Missing_Value_Real4
+               print*
+               print*,size(two_byte_temp)
+               call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4 &
+                  ,Two_Byte_dummy)
                   Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
-                  Two_Byte_Temp ) + Istatus
-                  
+                  Two_Byte_Dummy ) + Istatus
+                 print*,'done..',sds_edge_2d 
                case(4)
                    Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
@@ -629,11 +641,24 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
             end select
          end if
          
-        
+         
+      
+         
+         
+       
         print*,i,istatus,var_dim,dtype
         
      
       end do
+      
+         if ( allocated ( data_dim1_dtype1)) deallocate ( data_dim1_dtype1)
+         if ( allocated ( data_dim1_dtype3)) deallocate ( data_dim1_dtype3)
+         if ( allocated ( data_dim1_dtype4)) deallocate ( data_dim1_dtype4)
+         if ( allocated ( data_dim2_dtype1)) deallocate ( data_dim2_dtype1)
+         if ( allocated ( data_dim2_dtype2)) deallocate ( data_dim2_dtype2)
+         if ( allocated ( data_dim2_dtype3)) deallocate ( data_dim2_dtype3)
+         if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
+         if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
 
       call csv_file_close_read ( csv_file_name, csv_file_unit )
     !--- check for and report errors

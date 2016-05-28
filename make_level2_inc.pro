@@ -26,8 +26,9 @@ for i=0,n_elements(data.field01) -1  do begin
          +string(dtype,for='(i1)')
    if ~keyword_set(try_alloc) then begin
       
-   
-         printf,10,'   '+data_name+' = '+global_var+sub
+         printf,10,'   if (allocated ( '+global_var+')) then'
+         printf,10,'      '+data_name+' = '+global_var+sub
+         printf,10,'   end if'
     endif else begin
       printf,10,'allocate('+data_name+' ,source='+global_var+sub+')'
     

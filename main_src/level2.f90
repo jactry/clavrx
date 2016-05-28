@@ -600,7 +600,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
          
          if ( switch ) then
             include 'level2_assign.inc'
-            
+            print*,'include done'
             select case (var_dim)
             case ( 1 )
                select case (dtype)
@@ -708,13 +708,13 @@ subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
    Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
    Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
    Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
-  
+    
    if (Level2_File_Flag == sym%YES) then
       do Isds = 1, Num_Level2_Sds
-      
+        
          if (sds_Id_Level2(Isds) /= 0 ) then
             Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
-          
+           
          end if
          sds_Id_Level2(Isds) = 0
      

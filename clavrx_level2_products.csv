@@ -68,9 +68,9 @@ SWITCH_CL,Dim,NAME,CLAVRX_NAME,DTYPE,SCALED,ACT_RANGE1,ACT_RANGE2,VAL_RANGE1,VAL
 1,2,cld_beta_acha,acha%beta,1,1,0,2,129,127,128,1,not specified,none,cloud 11/12 micron beta value determined from the split-window method
 1,2,cld_height_uncer_acha,acha%zc_uncertainty,1,1,0,10,129,127,128,5,not specified,km,cloud height uncertainty computed using the AWG cloud height algorithm
 1,2,cld_temp_uncer_acha,acha%tc_uncertainty,1,1,0,100,129,127,128,50,not specified,K,cloud temperature uncertainty computed using the AWG cloud height algorithm
-1,2,cld_temp_acha_qf,"acha%oe_quality_flags(1,:,:)",1,0,0,0,0,0,128,0,not specified,none,"quality flag for cloud-top temperature from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
-1,2,cld_emiss_acha_qf,"acha%oe_quality_flags(2,:,:)",1,0,0,0,0,0,128,0,not specified,none,"quality flag for 11.0 micron cloud emissivity from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
-1,2,cld_beta_acha_qf,"acha%oe_quality_flags(3,:,:)",1,0,0,0,0,0,128,0,not specified,none,"quality flag for cloud 11.0/12.0 micron beta from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,cld_temp_acha_qf,acha%oe_quality_flags_1,1,0,0,0,0,0,128,0,not specified,none,quality flag for cloud-top temperature from ACHA not attempted=0, failed=1, low quality=2, high quality=3
+1,2,cld_emiss_acha_qf,"acha%oe_quality_flags_2",1,0,0,0,0,0,128,0,not specified,none,"quality flag for 11.0 micron cloud emissivity from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
+1,2,cld_beta_acha_qf,"acha%oe_quality_flags_3",1,0,0,0,0,0,128,0,not specified,none,"quality flag for cloud 11.0/12.0 micron beta from ACHA not attempted=0, failed=1, low quality=2, high quality=3"
 1,2,cld_opd_acha,acha%tau,1,1,-0.2,8,129,127,128,3.9,atmosphere_optical_thickness_due_to_cloud,none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from ACHA"
 1,2,cld_reff_acha,acha%reff,1,1,0,160,129,127,128,80,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from ACHA; see attributes for channels used
 1,2,acha_quality,ACHA%Packed_Quality_Flags,1,0,0,0,0,0,0,0,not specified,none,"quality flags for ACHA products 1:Processed (0=no,1=yes) 2:valid Tc retrieval (1=yes,0=no) 3:valid ec retrieval (1=yes,0=no) 4:valid beta retrieval (1=yes,0=no) 5:degraded Tc retrieval (1=yes,0=no) 6:degraded ec retrieval (1=yes,0=no) 7:degraded beta retrieval (1=yes,0=no)"

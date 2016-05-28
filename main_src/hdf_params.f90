@@ -636,15 +636,14 @@ end subroutine READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES
    real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
    integer(kind=int2), dimension(:,:), intent(out):: temp_i2
    real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
-         print*,'scaled: ', iscaled
+        
 !---- linear
     if (iscaled == 1) then
-      print*,'a',unscaled_min,unscaled_max 
+      
        scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
-       print*,'c',two_byte_min,two_byte_max
-       print*,'==> ',size(scratch_r4)
+       
        temp_i2 = two_byte_min + scratch_r4 * (two_byte_max - two_byte_min)
-       print*,'b'
+      
     endif
 !---- log10
     if (iscaled == 2) then

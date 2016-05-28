@@ -32,7 +32,8 @@ module LEVEL2_ROUTINES
    use HDF
    use SCALING_PARAMETERS
    use HDF_PARAMS
-   
+   use AVHRR_MODULE
+   use CLOUD_TYPE_BRIDGE_MODULE
    use clavrx_message_module
    
    use csv_mod
@@ -41,13 +42,13 @@ module LEVEL2_ROUTINES
    implicit none
    private
 
-   public:: DEFINE_HDF_FILE_STRUCTURES, &
-            WRITE_PIXEL_HDF_RECORDS, &
-            CLOSE_PIXEL_HDF_FILES, &
-            WRITE_ALGORITHM_ATTRIBUTES
+   public:: WRITE_PIXEL_HDF_RECORDS, &
+            CLOSE_PIXEL_HDF_FILES
 
    private::DEFINE_PIXEL_2D_SDS, &
-            DEFINE_PIXEL_3D_SDS
+            DEFINE_PIXEL_3D_SDS, &
+            DEFINE_HDF_FILE_STRUCTURES, &
+            WRITE_ALGORITHM_ATTRIBUTES
 
  
 !----------------------------------------------------------------------
@@ -100,6 +101,9 @@ module LEVEL2_ROUTINES
  
 
  INCLUDE 'level2.inc'
+ 
+ logical :: file_is_open
+ 
  
  character ( len=200) ::csv_file_name
 
@@ -353,12 +357,12 @@ integer::k
 
       
       ! ---  rread in products from csv file
-      print*,'aaaa'
+     
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )
    
       call csv_file_open_read ( csv_file_name, csv_file_unit )
-      print*,'affaa'
+     
       do i = 1, line_num
          
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
@@ -503,9 +507,9 @@ end subroutine DEFINE_HDF_FILE_STRUCTURES
 !   this program is called in process_clavrx
 !
 !====================================================================
-subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
-
-   integer, intent(in):: Level2_File_Flag
+subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
+   integer, intent(in) :: segment_number
+   integer, intent(in) :: Level2_File_Flag
    integer:: Istatus
    integer:: Line_Idx
 
@@ -520,7 +524,37 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
    character (len=40) :: name
    integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
+    
+    if (Segment_Number == 1) then
 
+               !--- place algorithm cvs tags into global strings for output
+               call SET_CLOUD_TYPE_VERSION()
+
+               Num_Scans_Level2_Hdf = 0
+
+               call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
+                              Dir_Level2, &
+                              Image%Level1b_Name, &
+                              Rtm_File_Flag, &
+                              Level2_File_Flag, &
+                              c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
+                              planck_a1(31),planck_a2(31),planck_nu(31), &
+                              planck_a1(32),planck_a2(32),planck_nu(32),Solar_Ch20_Nu,&
+                              Sun_Earth_Distance,Therm_Cal_1b, &
+                              Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
+                              Modis_Clr_Alb_Flag,Nwp_Opt, &
+                              Ch1_Gain_Low,Ch1_gain_High, &
+                              Ch1_Switch_Count_Cal,Ch1_Dark_Count_Cal, &
+                              Ch2_Gain_low,Ch2_Gain_High, &
+                              Ch2_Switch_Count_Cal,Ch2_Dark_Count_Cal, &
+                              Ch3a_Gain_low,Ch3a_Gain_High, &
+                              Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
+                              Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
+                              Image%Start_Time,Image%End_Time)
+            end if
+            
+    
+      
    !-----------------------------------------------------------------------
    ! Get time of each scan line and convert to scale
    !-----------------------------------------------------------------------
@@ -576,7 +610,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
    allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
          
       do i = 1, line_num
-         print*,i
+        
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
          call csv_value_count ( record, csv_record_status, value_count )
          rec_arr = extract_single ( trim ( record ) )
@@ -596,11 +630,11 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
  
          
          
-         print*,i,trim(rec_arr(3)),var_dim,dtype
+        
          
          if ( switch ) then
             include 'level2_assign.inc'
-            print*,'include done'
+          
             select case (var_dim)
             case ( 1 )
                select case (dtype)
@@ -608,8 +642,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                case(3)
-                  print*,'size: ',size(data_dim1_dtype3)
-                  print*,'maxval:',maxval(data_dim1_dtype3)
+                 
                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                case(4)
@@ -624,16 +657,12 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
                   Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
                case(2)
-               print*,size(data_dim2_dtype2)
-               print*
-               print*,act_min,act_max,Missing_Value_Real4
-               print*
-               print*,size(two_byte_temp)
+              
                call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4 &
                   ,Two_Byte_dummy)
                   Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                   Two_Byte_Dummy ) + Istatus
-                 print*,'done..',sds_edge_2d 
+                
                case(4)
                    Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
@@ -646,7 +675,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
          
          
        
-        print*,i,istatus,var_dim,dtype
+        
         
      
       end do
@@ -696,7 +725,8 @@ subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
    integer:: sfendacc
    integer:: sfend
 
-
+    !--- write algorithm attributes to level2
+   call WRITE_ALGORITHM_ATTRIBUTES()
    !------------------------------------------------------------------------
    !--- close level2 file
    !------------------------------------------------------------------------

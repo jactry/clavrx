@@ -764,33 +764,7 @@
             ! this has to be here because cal coefficients are only known
             ! after data has been read in and calibrated
             !*******************************************************************
-            if (Segment_Number == 1) then
 
-               !--- place algorithm cvs tags into global strings for output
-               call SET_CLOUD_TYPE_VERSION()
-
-               Num_Scans_Level2_Hdf = 0
-
-               call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
-                              Dir_Level2, &
-                              Image%Level1b_Name, &
-                              Rtm_File_Flag, &
-                              Level2_File_Flag, &
-                              c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
-                              planck_a1(31),planck_a2(31),planck_nu(31), &
-                              planck_a1(32),planck_a2(32),planck_nu(32),Solar_Ch20_Nu,&
-                              Sun_Earth_Distance,Therm_Cal_1b, &
-                              Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
-                              Modis_Clr_Alb_Flag,Nwp_Opt, &
-                              Ch1_Gain_Low,Ch1_gain_High, &
-                              Ch1_Switch_Count_Cal,Ch1_Dark_Count_Cal, &
-                              Ch2_Gain_low,Ch2_Gain_High, &
-                              Ch2_Switch_Count_Cal,Ch2_Dark_Count_Cal, &
-                              Ch3a_Gain_low,Ch3a_Gain_High, &
-                              Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
-                              Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
-                              Image%Start_Time,Image%End_Time)
-            end if
    
             !*******************************************************************
             ! Marker: Recompute geolocation
@@ -1255,8 +1229,12 @@
             ! Marker: Write to output files (pixel-level)
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
-            call WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
+            
+            
+            ! = write to level2 files
+            
+            
+            call WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag, segment_number)
             
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
@@ -1367,9 +1345,7 @@
                                                 Orbital_Processing_Start_Time_Hours)
       Orbital_Processing_Time_Minutes = Orbital_Processing_Time_Seconds/60.0
 
-      !--- write algorithm attributes to level2
-      call WRITE_ALGORITHM_ATTRIBUTES()
-
+     
       !--- close pixel level hdf files
       call CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
 

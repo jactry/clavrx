@@ -107,7 +107,10 @@ module LEVEL2_ROUTINES
    real :: act_min, act_max
  
 
- INCLUDE 'level2.inc'
+ integer :: Num_Level2_Sds 
+ integer, private, save:: Sd_Id_Level2
+ integer(kind=int4), allocatable, dimension(:):: Sds_Id_Level2
+ integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
  
  logical :: file_is_open
  
@@ -317,7 +320,10 @@ integer::k
       call csv_file_line_count ( csv_file_name, line_num )
    
       call csv_file_open_read ( csv_file_name, csv_file_unit )
-     
+      Num_Level2_Sds = line_num
+      allocate( Sds_Id_Level2(line_num))
+      
+      
       do i = 1, line_num
          
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record

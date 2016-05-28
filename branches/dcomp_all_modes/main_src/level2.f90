@@ -188,7 +188,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
  integer(kind=int2), intent(in):: End_Year
  integer(kind=int2), intent(in):: Start_Day
  integer(kind=int2), intent(in):: End_Day
- character(len=4):: l1b_ext
+ 
  character(len=1020):: File_1b_root
  character(len=1020):: File_Rtm
  character(len=1020):: File_Level2
@@ -221,62 +221,10 @@ integer::k
   blank_real4 = 0.0
   blank_char = " "
 
-  !--- make a file name base for output
-  File_1b_Root = trim (file_1b)
+
   
-
-  !--- special processing for modis - remove hdf suffix
-  l1b_ext = File_1b_Root(len_trim(File_1b_Root)-3:len_trim(File_1b_Root))
-  if (trim(l1b_ext) == ".hdf") then
-    File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-4)
-  endif
-
-  !--- special processing for viirs - remove hdf suffix - this hard coded for
-  if (trim(Sensor%Sensor_Name) == 'VIIRS') then
-    File_1b_Root = File_1b_Root(7:len_trim(File_1b_Root)-34)
-  endif
-
-  !--- special processing for ahi - remove B01.nc suffix - this hard coded for
-  if (trim(Sensor%Sensor_Name) == 'AHI') then
-    File_1b_Root = File_1b_Root(4:len_trim(File_1b_Root)-12)
-  endif
-
-  !--- special processing for IFF - remove hdf suffix - this hard coded for
-! !PEATE files
-! if (trim(Sensor%Sensor_Name) == 'AQUA-IFF' .or. trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
-!   File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-29)
-! elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-!   File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-20)
-! endif
-
-  !--- do this for GOES names which are named goesxx_1_year_jday_hour.area
-  if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or.  &
-      trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER' .or.  &
-      trim(Sensor%Sensor_Name) == 'COMS-IMAGER' .or.  &
-      trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER' .or.  &
-      trim(Sensor%Sensor_Name) == 'FY2-IMAGER' .or.  &
-      trim(Sensor%Sensor_Name) == 'SEVIRI') then
-
-    !-- remove area suffix
-    l1b_ext = File_1b_Root(len_trim(File_1b_Root)-3:len_trim(File_1b_Root))
-    if (trim(l1b_ext) == "area") then
-     File_1b_Root = File_1b_Root(1:len_trim(File_1b_Root)-5)
-    endif
-    !-- remove channel number
-    if (trim(l1b_ext) == "area") then
-        ipos = index(File_1b_Root, "_1_")
-        ilen = len(File_1b_Root)
-        File_1b_Root = File_1b_Root(1:ipos-1) // "_"//File_1b_Root(ipos+3:ilen)
-    endif
-  endif
-
-  !--- add 1km tag for 1km GOES files
-  if (index(Sensor%Sensor_Name,'GOES') > 0 .and. Sensor%Spatial_Resolution_Meters == 1000) then
-    File_1b_Root = trim(File_1b_Root)//".1km"
-  endif
-
-  !--- add 'clavrx_' to the file name output
-  File_1b_Root = 'clavrx_' // File_1b_Root
+  
+  File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
   !--- set Resolution_KM for global attribute
   Resolution_KM = Sensor%Spatial_Resolution_Meters / 1000.0
@@ -1277,6 +1225,77 @@ end subroutine CLOSE_PIXEL_HDF_FILES
   end subroutine WRITE_ALGORITHM_ATTRIBUTES
 
 !============================================================================
+
+   function file_root_from_l1b (filename, sensor,spatial_resolution_meters) result (file_root)
+      character (len = *), intent(in) :: filename
+      character (len = *), intent(in) :: sensor
+      integer, intent(in)::spatial_resolution_meters
+      
+      character (len = 200) :: file_root
+      
+      character(len=4):: l1b_ext
+      integer:: ipos,ilen
+      
+      !--- make a file name base for output
+      File_Root = trim (filename)
+  
+
+      !--- special processing for modis - remove hdf suffix
+      l1b_ext = file_root(len_trim(file_root)-3:len_trim(file_root))
+      if (trim(l1b_ext) == ".hdf") then
+         file_root = file_root(1:len_trim(file_root)-4)
+      endif
+
+      !--- special processing for viirs - remove hdf suffix - this hard coded for
+      if (trim(Sensor) == 'VIIRS') then
+         file_root = file_root(7:len_trim(file_root)-34)
+      endif
+
+      !--- special processing for ahi - remove B01.nc suffix - this hard coded for
+      if (trim(Sensor) == 'AHI') then
+         file_root = file_root(4:len_trim(file_root)-12)
+      endif
+
+      !--- special processing for IFF - remove hdf suffix - this hard coded for
+      ! !PEATE files
+      ! if (trim(Sensor%Sensor_Name) == 'AQUA-IFF' .or. trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
+      !   file_root = file_root(1:len_trim(file_root)-29)
+      ! elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+      !   file_root = file_root(1:len_trim(file_root)-20)
+      ! endif
+
+      !--- do this for GOES names which are named goesxx_1_year_jday_hour.area
+      if (trim(Sensor) == 'GOES-IL-IMAGER' .or.  &
+         trim(Sensor) == 'GOES-MP-IMAGER' .or.  &
+         trim(Sensor) == 'COMS-IMAGER' .or.  &
+         trim(Sensor) == 'MTSAT-IMAGER' .or.  &
+         trim(Sensor) == 'FY2-IMAGER' .or.  &
+         trim(Sensor) == 'SEVIRI') then
+
+         !-- remove area suffix
+         l1b_ext = file_root(len_trim(file_root)-3:len_trim(file_root))
+         if (trim(l1b_ext) == "area") then
+            file_root = file_root(1:len_trim(file_root)-5)
+         endif
+         !-- remove channel number
+         if (trim(l1b_ext) == "area") then
+            ipos = index(file_root, "_1_")
+            ilen = len(file_root)
+            file_root = file_root(1:ipos-1) // "_"//file_root(ipos+3:ilen)
+         endif
+      endif
+
+      !--- add 1km tag for 1km GOES files
+      if (index(Sensor,'GOES') > 0 .and. Spatial_Resolution_Meters == 1000) then
+         file_root = trim(file_root)//".1km"
+      endif
+
+      !--- add 'clavrx_' to the file name output
+      file_root = 'clavrx_' // file_root
+      
+   
+   end function file_root_from_l1b
+
 
 end module LEVEL2_ROUTINES
 

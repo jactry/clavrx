@@ -560,7 +560,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
    if (Level2_File_Flag == sym%YES) then
          istatus = 0
             ! ---  re-read in products from csv file
-       print*,'start writing .....'     
+      
       csv_file_name='clavrx_level2_products.csv'
       call csv_file_line_count ( csv_file_name, line_num )   
       call csv_file_open_read ( csv_file_name, csv_file_unit )
@@ -569,7 +569,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
    
    allocate ( data_dim1_dtype3(sds_edge_2d(2)))
    allocate ( data_dim1_dtype4(sds_edge_2d(2)))
-   
    allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
    allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
    allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
@@ -591,13 +590,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
          read ( rec_arr(6), * ) scaling
          read (rec_arr(7), * ) act_min
          read (rec_arr(8), * ) act_max
-         
-         
-        
- 
-         
-         
-        
          
          if ( switch ) then
             include 'level2_assign.inc'

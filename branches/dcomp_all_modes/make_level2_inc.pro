@@ -13,6 +13,7 @@ printf,10,'select case(trim(name))'
 for i=0,n_elements(data.field01) -1  do begin
    if (data.(2))[i] eq '_filename' then continue
    if (data.(2))[i] eq '_global_attr' then continue
+   if trim((data.(3))[i]) eq 'NOT_SET_YET' then continue
    
    printf,10,'case("'+(data.(2))[i]+'")'
    var_dim = (data.(1))[i]

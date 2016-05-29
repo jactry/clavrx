@@ -40,11 +40,105 @@ module LEVEL2_ROUTINES
       , MISSING_VALUE_REAL4 &
       , EXE_PROMPT &
       , dcomp_version &
-      , acha_version 
+      , acha_version
       
-   use PIXEL_COMMON
-   
-   
+   use PIXEL_COMMON, only: &
+      sensor &
+      , image &
+      , compress_flag &
+      , nav &
+      , acha &
+      , geo &
+      , sfc &
+      , ch &
+      , dcomp_mode &
+      , dark_composite_name &
+      , bayesian_cloud_mask_name &
+      , bad_scan_flag &
+      , bad_pixel_mask &
+      , utc_scan_time_hours &
+      , scan_number &
+      , utc_scan_time_hours &
+      , scan_number &
+      , gap_pixel_mask &
+      , diag_pix_array_1 &
+      , diag_pix_array_2 &
+      , diag_pix_array_3 &
+      , num_scans_level2_hdf &
+      , dir_level2 &
+      , rtm_file_flag &
+      , therm_cal_1b &
+      , ref_cal_1b &
+      , nav_opt &
+      , use_sst_anal &
+      , modis_clr_alb_flag &
+      , nwp_opt &
+      , scan_time &
+      , utc_scan_time_hours &
+      , line_idx_min_segment &
+      , ref_ch1_min_3x3 &
+      , ref_ch1_std_3x3 &
+      , posterior_cld_probability &
+      , cld_mask &
+      , adj_pix_cld_mask &
+      , bayes_mask_sfc_type_global &
+      , cld_type &
+      , cld_phase &
+      , zc_h2o &
+      , zc_opaque_cloud &
+      , tau_dcomp &
+      , reff_dcomp &
+      , tau_dcomp_cost &
+      , reff_dcomp_cost &
+      , tau_dcomp_qf &
+      , reff_dcomp_qf &
+      , dcomp_quality_flag &
+      , dcomp_info_flag &
+      , insolation_dcomp &
+      , insolation_dcomp_diffuse &
+      , tau_nlcomp &
+      , reff_nlcomp &
+      , tau_nlcomp_cost &
+      , reff_nlcomp_cost &
+      , nlcomp_quality_flag &
+      , nlcomp_info_flag &
+      , cloud_063um_albedo &
+      , cloud_063um_transmission_solar &
+      , cloud_fraction &
+      , cloud_fraction_uncer &
+      , ndvi_sfc &
+      , Tsfc_Retrieved &
+      , Tair_Nwp_Pix &
+      , Tsfc_Nwp_Pix &
+      , Rh_Nwp_Pix &
+      , Psfc_Nwp_Pix &
+      , Pmsl_Nwp_Pix &
+      , K_Index_Nwp_Pix &
+      , Cwp_Nwp_Pix &
+      , Cfrac_Nwp_Pix &
+      , Pc_Nwp_Pix &
+      , Ncld_Layers_Nwp_Pix &
+      , cld_type_nwp_pix &
+      , Ttropo_Nwp_Pix &
+      , LCL_Height_Nwp_Pix &
+      , CCL_Height_Nwp_Pix &
+      , ch1_counts &
+      , ch2_counts &
+      , ch6_counts &
+      , tpw_nwp_pix &
+      , Ref_Ch1_Mean_3x3 &
+      , Sst_Unmasked &
+      , Wnd_Spd_10m_Nwp_Pix &
+      , Wnd_Dir_10m_Nwp_Pix &
+      , Ref_Ch1_Dark_Composite &
+      , cwp_dcomp &
+      , rain_rate_dcomp &
+      , Wnd_Spd_Cld_Top_Nwp_Pix &
+      , wnd_dir_cld_top_nwp_pix &
+      , orbital_processing_time_minutes &
+      , nonconfident_cloud_mask_fraction &
+      , dcomp_success_fraction
+      
    use HDF, only: &
       DFACC_CREATE &
       , DFNT_INT8 &

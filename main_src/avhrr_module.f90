@@ -56,7 +56,8 @@ module AVHRR_MODULE
   use PLANCK
 
   implicit none
-
+  
+  !private
   public:: &
            ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL, &
            READ_AVHRR_INSTR_CONSTANTS, &

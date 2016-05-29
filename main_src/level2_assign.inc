@@ -92,7 +92,6 @@ case("lunar_azimuth_angle")
    if (allocated ( geo%lunaz)) then
       data_dim2_dtype1 = geo%lunaz(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("packed_land_cover")
 case("glint_mask")
    if (allocated ( sfc%glint_mask)) then
       data_dim2_dtype1 = sfc%glint_mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -135,7 +134,7 @@ case("refl_1_60um_nom")
    end if
 case("refl_sol_dnb_nom")
    if (allocated ( ch(44)%ref_toa)) then
-      data_dim2_dtype1 = ch(44)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+      data_dim2_dtype2 = ch(44)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_lunar_dnb_nom")
    if (allocated ( ch(44)%ref_lunar_toa)) then
@@ -171,7 +170,7 @@ case("temp_11_0um_nom_stddev_3x3")
    end if
 case("cloud_probability")
    if (allocated ( posterior_cld_probability)) then
-      data_dim2_dtype1 = posterior_cld_probability(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+      data_dim2_dtype2 = posterior_cld_probability(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_mask")
    if (allocated ( cld_mask)) then
@@ -182,7 +181,6 @@ case("adj_pix_cloud_mask")
       data_dim2_dtype1 = Adj_Pix_Cld_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_mask_test_packed_results")
-case("cloud_mask_1b")
 case("bayes_mask_sfc_type")
    if (allocated ( Bayes_Mask_Sfc_Type_Global)) then
       data_dim2_dtype1 = Bayes_Mask_Sfc_Type_Global(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -194,10 +192,6 @@ case("cloud_type")
 case("cloud_phase")
    if (allocated ( cld_phase)) then
       data_dim2_dtype1 = cld_phase(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cloud_type_1b")
-   if (allocated ( cld_type_aux)) then
-      data_dim2_dtype1 = cld_type_aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cld_press_acha")
    if (allocated ( acha%pc)) then
@@ -371,10 +365,6 @@ case("ndvi_sfc")
    if (allocated ( ndvi_sfc)) then
       data_dim2_dtype1 = ndvi_sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("ndvi_sfc_white_sky")
-   if (allocated ( Ndvi_Sfc_White_Sky)) then
-      data_dim2_dtype1 = Ndvi_Sfc_White_Sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
 case("surface_temperature_retrieved")
    if (allocated ( Tsfc_Retrieved)) then
       data_dim2_dtype1 = Tsfc_Retrieved(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -382,10 +372,6 @@ case("surface_temperature_retrieved")
 case("surface_air_temperature_nwp")
    if (allocated ( Tair_Nwp_Pix)) then
       data_dim2_dtype1 = Tair_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("surface_radiation_temperature_retrieved")
-   if (allocated ( Trad_Retrieved)) then
-      data_dim2_dtype1 = Trad_Retrieved(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("surface_temperature_background")
    if (allocated ( Tsfc_Nwp_Pix)) then
@@ -439,12 +425,6 @@ case("ccl_nwp")
    if (allocated ( CCL_Height_Nwp_Pix)) then
       data_dim2_dtype1 = CCL_Height_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("remote_sensing_reflectance")
-   if (allocated ( rsr)) then
-      data_dim2_dtype1 = rsr(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("quality_flags_1")
-case("quality_flags_2")
 case("refl_0_65um_nom_counts")
    if (allocated ( Ch1_Counts)) then
       data_dim2_dtype2 = Ch1_Counts(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -476,22 +456,6 @@ case("refl_0_86um_nom_atmos_corr")
 case("refl_1_60um_nom_atmos_corr")
    if (allocated ( ch(6)%Ref_Sfc)) then
       data_dim2_dtype1 = ch(6)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("pixel_sst_masked")
-   if (allocated ( Sst_Masked)) then
-      data_dim2_dtype1 = Sst_Masked(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("refl_0_65um_nom_unnormalized")
-   if (allocated ( ch(1)%Ref_Toa_Unnorm)) then
-      data_dim2_dtype2 = ch(1)%Ref_Toa_Unnorm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("refl_0_86um_nom_unnormalized")
-   if (allocated ( ch(2)%Ref_Toa_Unnorm)) then
-      data_dim2_dtype2 = ch(2)%Ref_Toa_Unnorm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("refl_1_60um_nom_unnormalized")
-   if (allocated ( ch(6)%Ref_Toa_Unnorm)) then
-      data_dim2_dtype2 = ch(6)%Ref_Toa_Unnorm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_clear_sky")
    if (allocated ( Ch(1)%Ref_Toa_Clear)) then

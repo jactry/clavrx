@@ -36,8 +36,14 @@ module LEVEL2_ROUTINES
       , DFNT_FLOAT32 &
       , DFNT_INT32 &
       , DFNT_INT16
-   use SCALING_PARAMETERS
-   use HDF_PARAMS
+   use SCALING_PARAMETERS, only: &
+      one_byte_min &
+      , one_byte_max &
+      , two_byte_min &
+      , two_byte_max
+   use HDF_PARAMS, only: &
+      scale_vector_i2_rank2 &
+      , write_clavrx_hdf_global_attributes
    use AVHRR_MODULE
    use CLOUD_TYPE_BRIDGE_MODULE
    use clavrx_message_module

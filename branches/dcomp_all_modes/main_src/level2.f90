@@ -212,35 +212,35 @@ module LEVEL2_ROUTINES
             file_root_from_l1b
 
  
-!----------------------------------------------------------------------
-! the following variables taken from process_avhrr_clavr
-!----------------------------------------------------------------------
-!--- hdf specific variables
- integer(kind=int4),private:: Dim_Id
+   !----------------------------------------------------------------------
+   ! the following variables taken from process_avhrr_clavr
+   !----------------------------------------------------------------------
+   !--- hdf specific variables
+   integer(kind=int4),private:: Dim_Id
 
- !--- compression variables
- integer(kind=int4), dimension(2),private, save::  Comp_Prm
- integer(kind=int4), private, save::  Comp_Type
+   !--- compression variables
+   integer(kind=int4), dimension(2),private, save::  Comp_Prm
+   integer(kind=int4), private, save::  Comp_Type
 
- integer(kind=int4),parameter,private:: Sds_Rank_1d = 1
- integer(kind=int4),dimension(1),private:: Sds_Dims_1d
+   integer(kind=int4),parameter,private:: Sds_Rank_1d = 1
+   integer(kind=int4),dimension(1),private:: Sds_Dims_1d
 
- integer(kind=int4),parameter,private:: Sds_Rank_2d = 2
- integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Dims_2d
- integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Start_2d
- integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Stride_2d
- integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Edge_2d
- integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
+   integer(kind=int4),parameter,private:: Sds_Rank_2d = 2
+   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Dims_2d
+   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Start_2d
+   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Stride_2d
+   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Edge_2d
+   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
 
- integer(kind=int4),parameter,private:: Sds_Rank_3d = 3
- integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Dims_3d
- integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Start_3d
- integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Stride_3d
- integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Edge_3d
- integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Chunk_Size_3d
+   integer(kind=int4),parameter,private:: Sds_Rank_3d = 3
+   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Dims_3d
+   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Start_3d
+   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Stride_3d
+   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Edge_3d
+   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Chunk_Size_3d
 
- character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
- character(len=18), private, parameter:: coordinates_string = "longitude latitude"
+   character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
+   character(len=18), private, parameter:: coordinates_string = "longitude latitude"
  
  
     ! csv variables
@@ -261,191 +261,188 @@ module LEVEL2_ROUTINES
    real :: act_min, act_max
  
 
- integer :: Num_Level2_Sds 
- integer, private, save:: Sd_Id_Level2
- integer(kind=int4), allocatable, dimension(:):: Sds_Id_Level2
- integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
+   integer :: Num_Level2_Sds 
+   integer, private, save:: Sd_Id_Level2
+   integer(kind=int4), allocatable, dimension(:):: Sds_Id_Level2
+   integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
  
- logical :: file_is_open
+   logical :: file_is_open
  
+   character ( len=200) ::csv_file_name
+
+CONTAINS
+
+   !====================================================================
+   ! SUBROUTINE Name: DEFINE_HDF_FILE_STRUCTURES
+   !
+   ! Function:
+   !   Determines the structure of the level 2 files.
+   !
+   ! Description:
+   !   This subroutine, given the inputs, determins and opens/creates the apppropriate
+   !       Level 2 (pixel level output) for various types of files. In addition
+   !       the HDF global attributes are put into the various HDF files 
+   !
+   !====================================================================
+   subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
+      Dir_Level2, &
+      File_1b, &
+      Rtm_File_Flag, &
+      Level2_File_Flag, &
+      c1,c2,a1_20, &
+      a2_20, &
+      nu_20, &
+      a1_31, &
+      a2_31, &
+      nu_31, &
+      a1_32, &
+      a2_32, &
+      nu_32, &
+      Solar_Ch20_nu, &
+      Sun_Earth_Distance, &
+      Therm_Cal_1b,  &
+      Ref_Cal_1b, &
+      nav_opt, &
+      Use_Sst_anal, &
+      Modis_clr_alb_flag, &
+      Nwp_Opt, &
+      Ch1_gain_low, &
+      Ch1_gain_high, &
+      Ch1_switch_count, &
+      Ch1_dark_count,&
+      Ch2_gain_low, &
+      Ch2_gain_high, &
+      Ch2_switch_count, &
+      Ch2_dark_count, &
+      Ch3a_Gain_low, &
+      Ch3a_Gain_high, &
+      Ch3a_Switch_Count, &
+      Ch3a_Dark_Count,&
+      Start_Year, &
+      End_Year, &
+      Start_Day, &
+      End_Day, &
+      Start_Time, &
+      End_Time)
+
+
+      character(len=*), intent(in):: Dir_Level2
+      integer(kind=int4), intent(in):: Num_Scans
+      character(len=*), intent(in):: File_1b
+      integer, intent(in):: Rtm_File_Flag
+      integer, intent(in):: Level2_File_Flag
  
- character ( len=200) ::csv_file_name
-
- CONTAINS
-
-!====================================================================
-! SUBROUTINE Name: DEFINE_HDF_FILE_STRUCTURES
-!
-! Function:
-!   Determines the structure of the level 2 files.
-!
-! Description:
-!   This subroutine, given the inputs, determins and opens/creates the apppropriate
-!       Level 2 (pixel level output) for various types of files. In addition
-!       the HDF global attributes are put into the various HDF files 
-!
-!====================================================================
-subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
-   Dir_Level2, &
-   File_1b, &
-   Rtm_File_Flag, &
-   Level2_File_Flag, &
-   c1,c2,a1_20, &
-   a2_20, &
-   nu_20, &
-   a1_31, &
-   a2_31, &
-   nu_31, &
-   a1_32, &
-   a2_32, &
-   nu_32, &
-   Solar_Ch20_nu, &
-   Sun_Earth_Distance, &
-   Therm_Cal_1b,  &
-   Ref_Cal_1b, &
-   nav_opt, &
-   Use_Sst_anal, &
-   Modis_clr_alb_flag, &
-   Nwp_Opt, &
-   Ch1_gain_low, &
-   Ch1_gain_high, &
-   Ch1_switch_count, &
-   Ch1_dark_count,&
-   Ch2_gain_low, &
-   Ch2_gain_high, &
-   Ch2_switch_count, &
-   Ch2_dark_count, &
-   Ch3a_Gain_low, &
-   Ch3a_Gain_high, &
-   Ch3a_Switch_Count, &
-   Ch3a_Dark_Count,&
-   Start_Year, &
-   End_Year, &
-   Start_Day, &
-   End_Day, &
-   Start_Time, &
-   End_Time)
-
-
- character(len=*), intent(in):: Dir_Level2
- integer(kind=int4), intent(in):: Num_Scans
- character(len=*), intent(in):: File_1b
- integer, intent(in):: Rtm_File_Flag
- integer, intent(in):: Level2_File_Flag
- 
- integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
- integer(kind=int4), intent(in) :: Nwp_Opt
- integer, intent(in):: therm_cal_1b
- integer, intent(in):: nav_opt
- integer, intent(in):: use_sst_anal
- integer, intent(in):: Ref_cal_1b
- real(kind=real4), intent(in):: c1,c2,a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32, &
+      integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
+      integer(kind=int4), intent(in) :: Nwp_Opt
+      integer, intent(in):: therm_cal_1b
+      integer, intent(in):: nav_opt
+      integer, intent(in):: use_sst_anal
+      integer, intent(in):: Ref_cal_1b
+      real(kind=real4), intent(in):: c1,c2,a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32, &
                                 a2_32,nu_32,solar_Ch20_nu,sun_earth_distance, &
                                 Ch1_gain_low,Ch1_gain_high,Ch1_switch_count, &
                                 Ch1_dark_count, Ch2_gain_low,Ch2_gain_high, &
                                 Ch2_switch_count,Ch2_dark_count, Ch3a_gain_low,&
                                 Ch3a_gain_high,Ch3a_switch_count, &
                                 Ch3a_dark_count
- integer(kind=int4), intent(in):: Start_Time
- integer(kind=int4), intent(in):: End_Time
- integer(kind=int2), intent(in):: Start_Year
- integer(kind=int2), intent(in):: End_Year
- integer(kind=int2), intent(in):: Start_Day
- integer(kind=int2), intent(in):: End_Day
+      integer(kind=int4), intent(in):: Start_Time
+      integer(kind=int4), intent(in):: End_Time
+      integer(kind=int2), intent(in):: Start_Year
+      integer(kind=int2), intent(in):: End_Year
+      integer(kind=int2), intent(in):: Start_Day
+      integer(kind=int2), intent(in):: End_Day
  
- character(len=1020):: File_1b_root
- character(len=1020):: File_Rtm
- character(len=1020):: File_Level2
+      character(len=1020):: File_1b_root
+      character(len=1020):: File_Rtm
+      character(len=1020):: File_Level2
 
- character(len=1020):: Long_Name_Temp
+      character(len=1020):: Long_Name_Temp
  
- character(len=128):: Sds_Name
+      character(len=128):: Sds_Name
 
- integer(kind=int4):: blank_int4
- character(len=1):: blank_char
- real:: blank_real4
- real(kind=real4):: Resolution_KM
- integer:: Istatus_Sum
- integer:: Istatus
- integer:: ipos
- integer:: ilen
+      integer(kind=int4):: blank_int4
+      character(len=1):: blank_char
+      real:: blank_real4
+      real(kind=real4):: Resolution_KM
+      integer:: Istatus_Sum
+      integer:: Istatus
+      integer:: ipos
+      integer:: ilen
  
- ! HDF function declarations
- integer:: sfstart
- integer:: sfcreate
- integer:: sfscatt
- integer:: sfsnatt
- integer:: erstat
+      ! HDF function declarations
+      integer:: sfstart
+      integer:: sfcreate
+      integer:: sfscatt
+      integer:: sfsnatt
+      integer:: erstat
  
-integer::k
+      integer::k
    
    
-  !--- begin executable code
-  blank_int4 = 0
-  blank_real4 = 0.0
-  blank_char = " "
-
-
+      !--- begin executable code
+      blank_int4 = 0
+      blank_real4 = 0.0
+      blank_char = " "
   
-  
-  File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
+      File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
-  !--- set Resolution_KM for global attribute
-  Resolution_KM = Sensor%Spatial_Resolution_Meters / 1000.0
+      !--- set Resolution_KM for global attribute
+      Resolution_KM = Sensor%Spatial_Resolution_Meters / 1000.0
 
-!-------------------------------------------------------------
-! define chunking here
-!-------------------------------------------------------------
-     !--- 3d , first dim is sds dependent
-     Sds_Dims_3d(2) = Image%Number_Of_Elements
-     Sds_Dims_3d(3) = Num_Scans
-     Sds_Chunk_Size_3d(2) = Image%Number_Of_Elements
-     Sds_Chunk_Size_3d(3) = Num_Scans
+      !-------------------------------------------------------------
+      ! define chunking here
+      !-------------------------------------------------------------
+      !--- 3d , first dim is sds dependent
+      Sds_Dims_3d(2) = Image%Number_Of_Elements
+      Sds_Dims_3d(3) = Num_Scans
+      Sds_Chunk_Size_3d(2) = Image%Number_Of_Elements
+      Sds_Chunk_Size_3d(3) = Num_Scans
 
-     !-- dimension of 2d variables
-     Sds_Dims_2d(1) = Image%Number_Of_Elements
-     Sds_Dims_2d(2) = Image%Number_Of_Lines
-     Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
-     Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
+      !-- dimension of 2d variables
+      Sds_Dims_2d(1) = Image%Number_Of_Elements
+      Sds_Dims_2d(2) = Image%Number_Of_Lines
+      Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
+      Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
 
-     !-- dimension of 1d variables
-     Sds_Dims_1d(1) = Image%Number_Of_Lines
+      !-- dimension of 1d variables
+      Sds_Dims_1d(1) = Image%Number_Of_Lines
 
-!-------------------------------------------------------------
-! define compression here
-!-------------------------------------------------------------
- Comp_Type = 0                  !no compression
- Comp_Prm(1) = 0
- Comp_Prm(2) = 0
+      !-------------------------------------------------------------
+      ! define compression here
+      !-------------------------------------------------------------
+      Comp_Type = 0                  !no compression
+      Comp_Prm(1) = 0
+      Comp_Prm(2) = 0
 
- if (Compress_Flag == 1) then  !gzip compression
-   Comp_Type = 4
-   Comp_Prm(1) = 6
-   Comp_Prm(2) = 0
- endif
+      if (Compress_Flag == 1) then  !gzip compression
+         Comp_Type = 4
+         Comp_Prm(1) = 6
+         Comp_Prm(2) = 0
+      endif
 
- if (Compress_Flag == 2) then  !szip compression
-   Comp_Type = 5
-   Comp_Prm(1) = 32
-   Comp_Prm(2) = 2
- endif
+      if (Compress_Flag == 2) then  !szip compression
+         Comp_Type = 5
+         Comp_Prm(1) = 32
+         Comp_Prm(2) = 2
+      endif
 
 
-!---------------------------------------------------------
-!-- define level2 file structure
-!---------------------------------------------------------
-  if (Level2_File_Flag == sym%YES) then
-     File_Level2= trim(File_1b_Root)//".level2.hdf"
-     call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
-     Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
-     if (Sd_Id_Level2 < 0) then
-       erstat = 68
-       print *, EXE_PROMPT, MOD_PROMPT, "Level-2 file creation failed. Exiting..."
-       stop 68
-     endif
+      !---------------------------------------------------------
+      !-- define level2 file structure
+      !---------------------------------------------------------
+      if (Level2_File_Flag == sym%YES) then
+         File_Level2= trim(File_1b_Root)//".level2.hdf"
+         call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
+         
+         Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
+         if (Sd_Id_Level2 < 0) then
+            erstat = 68
+            print *, EXE_PROMPT, MOD_PROMPT, "Level-2 file creation failed. Exiting..."
+            stop 68
+         end if
 
-    !--- write attributes
-    call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
+         !--- write attributes
+         call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
                            Resolution_KM, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
@@ -464,133 +461,124 @@ integer::k
                            Sensor%Platform_Name, Sensor%Sensor_Name, &
                            Dark_Composite_Name,Bayesian_Cloud_Mask_Name)
 
-     !-- reset status flag for error checking
-     Istatus_Sum = 0
+         !-- reset status flag for error checking
+         Istatus_Sum = 0
 
       
-      ! ---  rread in products from csv file
+         ! ---  rread in products from csv file
      
-      csv_file_name='clavrx_level2_products.csv'
-      call csv_file_line_count ( csv_file_name, line_num )
+         csv_file_name='clavrx_level2_products.csv'
+         call csv_file_line_count ( csv_file_name, line_num )
    
-      call csv_file_open_read ( csv_file_name, csv_file_unit )
-      Num_Level2_Sds = line_num
-      allocate( Sds_Id_Level2(line_num))
+         call csv_file_open_read ( csv_file_name, csv_file_unit )
+         Num_Level2_Sds = line_num
+         allocate( Sds_Id_Level2(line_num))
       
       
-      do i = 1, line_num
+         do i = 1, line_num
          
-         read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
-         call csv_value_count ( record, csv_record_status, value_count )
-         rec_arr = extract_single ( trim ( record ) )
+            read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+            call csv_value_count ( record, csv_record_status, value_count )
+            rec_arr = extract_single ( trim ( record ) )
         
-         switch = trim(rec_arr(1))  .eq. "1"
+            switch = trim(rec_arr(1))  .eq. "1"
          
-         if ( i == 1) cycle
-         read ( rec_arr(2), * ) var_dim
-         read ( rec_arr(5), * ) dtype
-         read ( rec_arr(6), * ) scaling
-         read ( rec_arr(7), * ) act_min
-         read ( rec_arr(8), * ) act_max
-        
-         print*,i,line_num, trim(rec_arr(3)), var_dim,dtype
-         if ( switch ) then
-            select case (var_dim)
-            case ( 1 )
-               select case (dtype)
-               case(1)
-               Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, trim(rec_arr(14))) + Istatus_Sum
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT8,  &
-                   1, Missing_Value_Int1) + Istatus_Sum
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32,  &
-                    1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
+            if ( i == 1) cycle
+            read ( rec_arr(2), * ) var_dim
+            read ( rec_arr(5), * ) dtype
+            read ( rec_arr(6), * ) scaling
+            read ( rec_arr(7), * ) act_min
+            read ( rec_arr(8), * ) act_max
+              
+            if ( switch ) then
+               select case (var_dim)
+               case ( 1 )
+                  select case (dtype)
+                  case(1)
+                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, trim(rec_arr(14))) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT8,  &
+                     1, Missing_Value_Int1) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32,  &
+                     1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
                
-               case(3)
-               Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, "not specified") + Istatus_Sum
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
-                    len_trim(Long_Name_temp), trim(Long_Name_temp)) + Istatus_Sum     
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
+                  case(3)
+                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, "not specified") + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
+                     len_trim(Long_Name_temp), trim(Long_Name_temp)) + Istatus_Sum     
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
                     1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
                     1,Missing_Value_Int4) + Istatus_Sum
                     
-               case(4)
-               Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum  
+                  case(4)
+                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum  
                
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(14) )) + Istatus_Sum 
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, trim(rec_arr(12) )) + Istatus_Sum 
-               Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
-                    len_trim(trim(rec_arr(14))),  trim(rec_arr(14)) ) + Istatus_Sum
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
-                    1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
-               Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(14) )) + Istatus_Sum 
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, trim(rec_arr(12) )) + Istatus_Sum 
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
+                     len_trim(trim(rec_arr(14))),  trim(rec_arr(14)) ) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
+                     1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
                     1,Missing_Value_Int4) + Istatus_Sum  
-               end select  
-            case(2)
-               select case (dtype)
-               case(1)
-               
-               
-               
-               call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                  end select  
+               case(2)
+                  select case (dtype)
+                  
+                  case(1)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
                                trim(rec_arr(3)), &
                                trim(rec_arr(12)), &
                                trim(rec_arr(15)), &
                                DFNT_INT8, scaling, act_min, act_max, &
                                trim(rec_arr(14) ), Real(Missing_Value_Int1,kind=real4), Istatus)
-               Istatus_Sum = Istatus_Sum + Istatus
-               case(2)
-               call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                  Istatus_Sum = Istatus_Sum + Istatus
+                  
+                  case(2)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(rec_arr(3)), &
                                trim(rec_arr(12)), &
                                trim(rec_arr(15)), &
                                DFNT_INT16, scaling, act_min, act_max, &
                                trim(rec_arr(14) ), Missing_Value_Real4, Istatus)
-               Istatus_Sum = Istatus_Sum + Istatus
+                  Istatus_Sum = Istatus_Sum + Istatus
               
-               case(4)
-               call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              "diagnostic_3", &
-                              "not specified", &
-                              "third diagnostic variable (contents will change)", &
+                  case(4)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              trim(rec_arr(3)), &
+                              trim(rec_arr(12)), &
+                              trim(rec_arr(15)), &
                               DFNT_FLOAT32, sym%NO_SCALING, &
                               0.0,0.0, "unknown", Missing_Value_Real4, Istatus)
-               Istatus_Sum = Istatus_Sum + Istatus
-               end select
+                  Istatus_Sum = Istatus_Sum + Istatus
+                  end select
                
-            end select
+               end select
+            end if
+         end do
+ 
+         call csv_file_close_read ( csv_file_name, csv_file_unit )
+
+
+         !--- check for and report errors
+         if (Istatus_Sum /= 0) then
+            print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
+            stop
          end if
-         
-         
-        
-        
-     
-      end do
-     
-   
-      call csv_file_close_read ( csv_file_name, csv_file_unit )
-
-
-      !--- check for and report errors
-      if (Istatus_Sum /= 0) then
-         print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
-         stop
       end if
-   end if
-  
-
-  
-  
-
-end subroutine DEFINE_HDF_FILE_STRUCTURES
-
-  function extract_single ( record) result  (record_single)
+ 
+   end subroutine DEFINE_HDF_FILE_STRUCTURES
+   
+   !
+   !
+   !
+   function extract_single ( record) result  (record_single)
       implicit none
       character ( len = * ) :: record
       character ( len = 300) :: record_single ( 15 )
@@ -609,45 +597,46 @@ end subroutine DEFINE_HDF_FILE_STRUCTURES
       
    end function extract_single
 
-!====================================================================
-! SUBROUTINE Name: WRITE_PIXEL_HDF_RECORDS
-!
-! Function:
-!   Writes output to appropriate Level 2 files
-!
-! Description:
-!   This subroutine, given the flags that determine which files are 
-!   being created, outputs the various pixel level outputs to the
-!   appropriate level 2 files and appropriate SDSs for a given segment
-!   this program is called in process_clavrx
-!
-!====================================================================
-subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
-   integer, intent(in) :: segment_number
-   integer, intent(in) :: Level2_File_Flag
-   integer:: Istatus
-   integer:: Line_Idx
+   !====================================================================
+   ! SUBROUTINE Name: WRITE_PIXEL_HDF_RECORDS
+   !
+   ! Function:
+   !   Writes output to appropriate Level 2 files
+   !
+   ! Description:
+   !   This subroutine, given the flags that determine which files are 
+   !   being created, outputs the various pixel level outputs to the
+   !   appropriate level 2 files and appropriate SDSs for a given segment
+   !   this program is called in process_clavrx
+   !
+   !====================================================================
+   subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
+      integer, intent(in) :: segment_number
+      integer, intent(in) :: Level2_File_Flag
+   
+      integer:: Istatus
+      integer:: Line_Idx
 
-   ! HDF function declarations
-   integer:: sfwdata
-   integer (kind=int1), allocatable :: data_dim1_dtype1(:)
-   integer (kind=int4), allocatable :: data_dim1_dtype3(:)
-   real(kind=real4), allocatable ::data_dim1_dtype4(:)
-   integer (kind=int1), allocatable :: data_dim2_dtype1(:,:)
-   real , allocatable :: data_dim2_dtype2(:,:)
-   integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
-   real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
-   character (len=40) :: name
-   integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
-    print*,'kkkkk===> ',segment_number
-    if (Segment_Number == 1) then
+      ! HDF function declarations
+      integer:: sfwdata
+      integer (kind=int1), allocatable :: data_dim1_dtype1(:)
+      integer (kind=int4), allocatable :: data_dim1_dtype3(:)
+      real(kind=real4), allocatable ::data_dim1_dtype4(:)
+      integer (kind=int1), allocatable :: data_dim2_dtype1(:,:)
+      real , allocatable :: data_dim2_dtype2(:,:)
+      integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
+      real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
+      character (len=40) :: name
+      integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
+    
+      if (Segment_Number == 1) then
 
-               !--- place algorithm cvs tags into global strings for output
-               call SET_CLOUD_TYPE_VERSION()
+         !--- place algorithm cvs tags into global strings for output
+         call SET_CLOUD_TYPE_VERSION()
 
-               Num_Scans_Level2_Hdf = 0
+         Num_Scans_Level2_Hdf = 0
 
-               call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
+         call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Level2, &
                               Image%Level1b_Name, &
                               Rtm_File_Flag, &
@@ -776,15 +765,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
                end select   
             end select
          end if
-         
-         
-      
-         
-         
-       
-        
-        
-     
+
       end do
       
          if ( allocated ( data_dim1_dtype1)) deallocate ( data_dim1_dtype1)
@@ -805,63 +786,62 @@ subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
     
    endif
 
-end subroutine WRITE_PIXEL_HDF_RECORDS
+   end subroutine WRITE_PIXEL_HDF_RECORDS
 
 
-!====================================================================
-! SUBROUTINE Name: CLOSE_PIXEL_HDF_FILES
-!
-! Function:
-!   Closes appropriate Level 2 files
-!
-! Description:
-!   This subroutine, given the flags that determine which files have 
-!   been created, closes the open output files.
-!
-!====================================================================
-subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
+   !====================================================================
+   ! SUBROUTINE Name: CLOSE_PIXEL_HDF_FILES
+   !
+   ! Function:
+   !   Closes appropriate Level 2 files
+   !
+   ! Description:
+   !   This subroutine, given the flags that determine which files have 
+   !   been created, closes the open output files.
+   !
+   !====================================================================
+   subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
 
  
-   integer, intent(in):: Level2_File_Flag
+      integer, intent(in):: Level2_File_Flag
 
-   integer:: Isds
-   integer:: Istatus
+      integer:: Isds
+      integer:: Istatus
 
-   ! HDF function declarations
-   integer:: sfsnatt
-   integer:: sfendacc
-   integer:: sfend
+      ! HDF function declarations
+      integer:: sfsnatt
+      integer:: sfendacc
+      integer:: sfend
 
-    !--- write algorithm attributes to level2
-   call WRITE_ALGORITHM_ATTRIBUTES()
-   !------------------------------------------------------------------------
-   !--- close level2 file
-   !------------------------------------------------------------------------
-   Istatus = 0
-   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
-   Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
+      !--- write algorithm attributes to level2
+      call WRITE_ALGORITHM_ATTRIBUTES()
+      !------------------------------------------------------------------------
+      !--- close level2 file
+      !------------------------------------------------------------------------
+      Istatus = 0
+      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
+      Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
     
-   if (Level2_File_Flag == sym%YES) then
-      do Isds = 1, Num_Level2_Sds
+      if (Level2_File_Flag == sym%YES) then
+         do Isds = 1, Num_Level2_Sds
         
-         if (sds_Id_Level2(Isds) /= 0 ) then
-            Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
-           
-         end if
-         sds_Id_Level2(Isds) = 0
+            if (sds_Id_Level2(Isds) /= 0 ) then
+               Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
+            end if
+            sds_Id_Level2(Isds) = 0
      
-      end do
+         end do
       
-      Istatus = sfend(Sd_Id_Level2) + Istatus
+         Istatus = sfend(Sd_Id_Level2) + Istatus
 
-  endif
+      end if
 
-end subroutine CLOSE_PIXEL_HDF_FILES
+   end subroutine CLOSE_PIXEL_HDF_FILES
 
 !====================================================================
 ! SUBROUTINE Name: DEFINE_PIXEL_2D_SDS

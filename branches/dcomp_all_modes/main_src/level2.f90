@@ -24,11 +24,27 @@
 !
 ! REVISION HISTORY:
 !          5/09 - Created
+!          May 2016 --   store product details in CSV file (AW)
 !--------------------------------------------------------------------------------------
 module LEVEL2_ROUTINES
-
-   use CONSTANTS, only:
+   
+   use CONSTANTS, only: &
+      int4 &
+      , int1 &
+      , int2 &
+      , sym &
+      , real4 &
+      , MISSING_VALUE_INT1 &
+      , MISSING_VALUE_INT2 &
+      , MISSING_VALUE_INT4 &
+      , MISSING_VALUE_REAL4 &
+      , EXE_PROMPT &
+      , dcomp_version &
+      , acha_version 
+      
    use PIXEL_COMMON
+   
+   
    use HDF, only: &
       DFACC_CREATE &
       , DFNT_INT8 &
@@ -36,20 +52,58 @@ module LEVEL2_ROUTINES
       , DFNT_FLOAT32 &
       , DFNT_INT32 &
       , DFNT_INT16
+      
    use SCALING_PARAMETERS, only: &
       one_byte_min &
       , one_byte_max &
       , two_byte_min &
       , two_byte_max
+      
    use HDF_PARAMS, only: &
       scale_vector_i2_rank2 &
       , write_clavrx_hdf_global_attributes
-   use AVHRR_MODULE
-   use CLOUD_TYPE_BRIDGE_MODULE
-   use clavrx_message_module
+      
+   use AVHRR_MODULE,only: &
+     CH3A_GAIN_HIGH &
+     , c1 &
+     , c2 &
+     , planck_a1 &
+     , planck_a2 &
+     , planck_nu &
+     , solar_ch20_nu &
+     , sun_earth_distance &
+     , ch1_gain_low &
+     , ch1_gain_high &
+     , ch1_switch_count_cal &
+     , ch1_dark_count_cal &
+     , ch2_gain_low &
+     , ch2_gain_high &
+     , ch2_switch_count_cal &
+     , ch2_dark_count_cal &
+     , ch3a_gain_low &
+     , ch3a_gain_high &
+     , ch3a_switch_count_cal &
+     , ch3a_dark_count_cal  &
+     , cloud_mask_version   &  !- comes from anywhere else!
+     , cloud_mask_thresholds_version &   !- comes from anywhere else!
+     , acha_version      !- comes from anywhere else!
+     
+    
+   use CLOUD_TYPE_BRIDGE_MODULE,only: &
+      cloud_type_version &
+      , SET_CLOUD_TYPE_VERSION
+      
+   use clavrx_message_module, only: &
+       mesg
    
-   use csv_mod
-   use strings
+   use csv_mod, only: &
+      csv_file_close_read &
+      , csv_file_line_count &
+      , csv_file_open_read &
+      , csv_value_count
+      
+   use strings, only: &
+      split
 
    implicit none
    private

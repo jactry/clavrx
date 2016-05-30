@@ -158,29 +158,29 @@ module LEVEL2_ROUTINES
       , write_clavrx_hdf_global_attributes
       
    use AVHRR_MODULE,only: &
-     CH3A_GAIN_HIGH &
-     , c1 &
-     , c2 &
-     , planck_a1 &
-     , planck_a2 &
-     , planck_nu &
-     , solar_ch20_nu &
-     , sun_earth_distance &
-     , ch1_gain_low &
-     , ch1_gain_high &
-     , ch1_switch_count_cal &
-     , ch1_dark_count_cal &
-     , ch2_gain_low &
-     , ch2_gain_high &
-     , ch2_switch_count_cal &
-     , ch2_dark_count_cal &
-     , ch3a_gain_low &
-     , ch3a_gain_high &
-     , ch3a_switch_count_cal &
-     , ch3a_dark_count_cal  &
-     , cloud_mask_version   &  !- comes from anywhere else!
-     , cloud_mask_thresholds_version &   !- comes from anywhere else!
-     , acha_version      !- comes from anywhere else!
+      ch3a_gain_high &
+      , c1 &
+      , c2 &
+      , planck_a1 &
+      , planck_a2 &
+      , planck_nu &
+      , solar_ch20_nu &
+      , sun_earth_distance &
+      , ch1_gain_low &
+      , ch1_gain_high &
+      , ch1_switch_count_cal &
+      , ch1_dark_count_cal &
+      , ch2_gain_low &
+      , ch2_gain_high &
+      , ch2_switch_count_cal &
+      , ch2_dark_count_cal &
+      , ch3a_gain_low &
+      , ch3a_gain_high &
+      , ch3a_switch_count_cal &
+      , ch3a_dark_count_cal  &
+      , cloud_mask_version   &  !- comes from anywhere else!
+      , cloud_mask_thresholds_version &   !- comes from anywhere else!
+      , acha_version      !- comes from anywhere else!
      
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &
@@ -505,7 +505,7 @@ CONTAINS
                
                   case(3)
                   Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, sym%NO_SCALING) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
                   Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
                   Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, "not specified") + Istatus_Sum
                   Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
@@ -527,7 +527,8 @@ CONTAINS
                      1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
                   Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
                     1,Missing_Value_Int4) + Istatus_Sum  
-                  end select  
+                  end select 
+                   
                case(2)
                   select case (dtype)
                   
@@ -655,118 +656,115 @@ CONTAINS
                               Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
                               Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
                               Image%Start_Time,Image%End_Time)
-            end if
+      end if
             
     
       
-   !-----------------------------------------------------------------------
-   ! Get time of each scan line and convert to scale
-   !-----------------------------------------------------------------------
-   where(Scan_Time == Missing_Value_Real4)
+      !-----------------------------------------------------------------------
+      ! Get time of each scan line and convert to scale
+      !-----------------------------------------------------------------------
+      where(Scan_Time == Missing_Value_Real4)
             Utc_Scan_Time_Hours = Missing_Value_Real4
-   else where
+      else where
             Utc_Scan_Time_Hours = Scan_Time/60.0/60.0/1000.0
-   end where
+      end where
 
-   !--------------------------------------------------------------------------------
-   ! determine start and edges for writing this segment's data to pixel hdf file
-   !-----------------------------------------------------------------------------
-   Sds_Start_2d(1) = 0     !pixel dimension
-   Sds_Start_2d(2) = Num_Scans_Level2_Hdf
+      !--------------------------------------------------------------------------------
+      ! determine start and edges for writing this segment's data to pixel hdf file
+      !-----------------------------------------------------------------------------
+      Sds_Start_2d(1) = 0     !pixel dimension
+      Sds_Start_2d(2) = Num_Scans_Level2_Hdf
 
-   Sds_Stride_2d(1) = 1
-   Sds_Stride_2d(2) = 1
+      Sds_Stride_2d(1) = 1
+      Sds_Stride_2d(2) = 1
 
-   Sds_Edge_2d(1) = Image%Number_Of_Elements
-   Sds_Edge_2d(2) = min(Image%Number_Of_Lines_Read_This_Segment,Image%Number_Of_Lines - Sds_Start_2d(2))
+      Sds_Edge_2d(1) = Image%Number_Of_Elements
+      Sds_Edge_2d(2) = min(Image%Number_Of_Lines_Read_This_Segment,Image%Number_Of_Lines - Sds_Start_2d(2))
 
-   if (Sds_Edge_2d(2) <= 0) then
-      return
-   end if
+      if (Sds_Edge_2d(2) <= 0) then
+         return
+      end if
 
-   !--- update Num_Scans_Level2_Hdf
-   Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
+      !--- update Num_Scans_Level2_Hdf
+      Num_Scans_Level2_Hdf = min(Image%Number_Of_Lines,Num_Scans_Level2_Hdf +  &
                                Image%Number_Of_Lines_Read_This_Segment)
-   
- 
-   
-   
-   !-------------------------------------------------------------------------
-   ! write to level2 file
-   !-------------------------------------------------------------------------
-   if (Level2_File_Flag == sym%YES) then
+
+      !-------------------------------------------------------------------------
+      ! write to level2 file
+      !-------------------------------------------------------------------------
+      if (Level2_File_Flag == sym%YES) then
          istatus = 0
             ! ---  re-read in products from csv file
       
-      csv_file_name='clavrx_level2_products.csv'
-      call csv_file_line_count ( csv_file_name, line_num )   
-      call csv_file_open_read ( csv_file_name, csv_file_unit )
+         csv_file_name='clavrx_level2_products.csv'
+         call csv_file_line_count ( csv_file_name, line_num )   
+         call csv_file_open_read ( csv_file_name, csv_file_unit )
       
-              allocate ( data_dim1_dtype1(sds_edge_2d(2)))
-   
-   allocate ( data_dim1_dtype3(sds_edge_2d(2)))
-   allocate ( data_dim1_dtype4(sds_edge_2d(2)))
-   allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
-   allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
-   allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
-   allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
-   allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
+         allocate ( data_dim1_dtype1(sds_edge_2d(2)))
+         allocate ( data_dim1_dtype3(sds_edge_2d(2)))
+         allocate ( data_dim1_dtype4(sds_edge_2d(2)))
+         allocate ( data_dim2_dtype1(sds_edge_2d(1),sds_edge_2d(2))) 
+         allocate ( data_dim2_dtype2(sds_edge_2d(1),sds_edge_2d(2)))
+         allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
+         allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
+         allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
          
-      do i = 1, line_num
+         do i = 1, line_num
         
-         read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
-         call csv_value_count ( record, csv_record_status, value_count )
-         rec_arr = extract_single ( trim ( record ) )
+            read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+            call csv_value_count ( record, csv_record_status, value_count )
+            rec_arr = extract_single ( trim ( record ) )
         
-         switch = trim(rec_arr(1))  .eq. "1"
+            switch = trim(rec_arr(1))  .eq. "1"
           
-         if ( i == 1) cycle
-         read( rec_arr(2),  * ) var_dim
-         name = trim( rec_arr(3) )
-         read ( rec_arr(5), * ) dtype
-         read ( rec_arr(6), * ) scaling
-         read (rec_arr(7), * ) act_min
-         read (rec_arr(8), * ) act_max
+            if ( i == 1) cycle
+            read( rec_arr(2),  * ) var_dim
+            name = trim( rec_arr(3) )
+            read ( rec_arr(5), * ) dtype
+            read ( rec_arr(6), * ) scaling
+            read (rec_arr(7), * ) act_min
+            read (rec_arr(8), * ) act_max
          
-         if ( switch ) then
-            include 'level2_assign.inc'
+            if ( switch ) then
+               include 'level2_assign.inc'
           
-            select case (var_dim)
-            case ( 1 )
-               select case (dtype)
-               case(1)
-               Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+               select case (var_dim)
+               case ( 1 )
+                  select case (dtype)
+                  case(1)
+                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
-               case(3)
-                 
-                 Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  
+                  case(3)
+                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
-               case(4)
-                 Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  
+                  case(4)
+                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype4 ) + Istatus
                
-               end select  
-            case(2)
-               select case (dtype)
-               case(1)
+                  end select  
                
+               case(2)
+                  select case (dtype)
+                  case(1)
                   Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
-               case(2)
-              
-               call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4 &
-                  ,Two_Byte_dummy)
+                  
+                  case(2)
+                  call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4 &
+                     ,Two_Byte_dummy)
                   Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
-                  Two_Byte_Dummy ) + Istatus
+                     Two_Byte_Dummy ) + Istatus
                 
-               case(4)
-                   Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
+                  case(4)
+                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
-               end select   
-            end select
-         end if
+                  end select   
+               end select
+            end if
 
-      end do
+         end do
       
          if ( allocated ( data_dim1_dtype1)) deallocate ( data_dim1_dtype1)
          if ( allocated ( data_dim1_dtype3)) deallocate ( data_dim1_dtype3)
@@ -777,14 +775,15 @@ CONTAINS
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
 
-      call csv_file_close_read ( csv_file_name, csv_file_unit )
-    !--- check for and report errors
-    if (Istatus /= 0) then
-       print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus
-       stop
-    endif
+         call csv_file_close_read ( csv_file_name, csv_file_unit )
+         !--- check for and report errors
+         
+         if (Istatus /= 0) then
+            print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus
+            stop
+         endif
     
-   endif
+      endif
 
    end subroutine WRITE_PIXEL_HDF_RECORDS
 
@@ -1345,26 +1344,28 @@ CONTAINS
 
   end subroutine DEFINE_PIXEL_3D_SDS
 
-  !============================================================================
-  !
-  !============================================================================
-  subroutine WRITE_ALGORITHM_ATTRIBUTES()
+   !============================================================================
+   !
+   !============================================================================
+   subroutine WRITE_ALGORITHM_ATTRIBUTES()
 
-    integer:: sfscatt
-    integer:: istatus
+      integer:: sfscatt
+      integer:: istatus
     
-    istatus = 0
-    istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_VERSION", DFNT_CHAR8, len_trim(Cloud_Mask_Version), trim(Cloud_Mask_Version))+istatus
-    istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_THRESHOLDS_VERSION", DFNT_CHAR8,  &
+      istatus = 0
+      istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_VERSION", DFNT_CHAR8, len_trim(Cloud_Mask_Version), trim(Cloud_Mask_Version))+istatus
+      istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_THRESHOLDS_VERSION", DFNT_CHAR8,  &
                  len_trim(Cloud_Mask_Thresholds_Version), trim(Cloud_Mask_Thresholds_Version))+istatus 
-    istatus = sfscatt(Sd_Id_Level2, "CLOUD_TYPE_VERSION", DFNT_CHAR8, len_trim(Cloud_Type_Version), trim(Cloud_Type_Version))+istatus 
-    istatus = sfscatt(Sd_Id_Level2, "ACHA_VERSION", DFNT_CHAR8, len_trim(ACHA_Version), trim(ACHA_Version))+istatus 
-    istatus = sfscatt(Sd_Id_Level2, "DCOMP_VERSION", DFNT_CHAR8, len_trim(dcomp_version), trim(dcomp_version))+istatus
+      istatus = sfscatt(Sd_Id_Level2, "CLOUD_TYPE_VERSION", DFNT_CHAR8, len_trim(Cloud_Type_Version), trim(Cloud_Type_Version))+istatus 
+      istatus = sfscatt(Sd_Id_Level2, "ACHA_VERSION", DFNT_CHAR8, len_trim(ACHA_Version), trim(ACHA_Version))+istatus 
+      istatus = sfscatt(Sd_Id_Level2, "DCOMP_VERSION", DFNT_CHAR8, len_trim(dcomp_version), trim(dcomp_version))+istatus
 
-  end subroutine WRITE_ALGORITHM_ATTRIBUTES
+   end subroutine WRITE_ALGORITHM_ATTRIBUTES
 
-!============================================================================
-
+   !============================================================================
+   !
+   !   returns flename toot for level-2 output from level-1b filename
+   !
    function file_root_from_l1b (filename, sensor,spatial_resolution_meters) result (file_root)
       character (len = *), intent(in) :: filename
       character (len = *), intent(in) :: sensor

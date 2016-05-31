@@ -243,34 +243,100 @@ module LEVEL2_ROUTINES
    character(len=18), private, parameter:: coordinates_string = "longitude latitude"
  
  
-    ! csv variables
-   integer   ( kind = 4 ) csv_file_status
-   integer   ( kind = 4 ) csv_file_unit
-   integer   ( kind = 4 ) csv_record_status
-   integer   ( kind = 4 ) i
-   integer   ( kind = 4 ) line_num
-   character ( len = 1000 ) record
-   integer   ( kind = 4 ) value_count
-   character (len = 300) :: before
-   character ( len = 300) :: rec_arr ( 15 )
-   integer :: j
-   logical :: switch
-   integer :: var_dim
-   integer(kind = 1) :: scaling
-   integer :: dtype
-   real :: act_min, act_max
- 
+    
 
    integer :: Num_Level2_Sds 
    integer, private, save:: Sd_Id_Level2
    integer(kind=int4), allocatable, dimension(:):: Sds_Id_Level2
-   integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
- 
-   logical :: file_is_open
- 
-   character ( len=200) ::csv_file_name
+  
+   type prd_individual_dtype
+      logical :: switch
+      integer :: dim
+      character(len=30) :: name
+      character(len=50) :: name_clavrx
+      integer :: dtype
+      integer :: scaling
+      real :: act_min
+      real :: act_max
+      integer :: val_min
+      integer :: val_max
+      integer :: val_fill
+      integer :: add_offset
+      character(len=300) :: standard_name
+      character(len=30) :: unit
+      character (len=300):: long_name
+   end type prd_individual_dtype
+   
+   type prd_dtype
+      logical :: is_set = .false.
+      character(len=200) :: csv_filename ='clavrx_level2_products.csv'
+      integer :: num_products
+      integer :: num_products_on
+      type (prd_individual_dtype), allocatable :: product (:) 
+      contains
+      procedure :: read_products
+   end type prd_dtype
+   
+   type(prd_dtype) :: prd
+   type(prd_individual_dtype):: prd_i
 
 CONTAINS
+
+
+   subroutine read_products ( this)
+      implicit none
+      class (prd_dtype) :: this
+      
+      integer :: line_num
+      integer  (kind = 4) :: csv_fle_unit
+      integer  (kind = 4) :: csv_file_status
+      integer  (kind = 4) :: csv_record_status
+      integer  (kind = 4) :: csv_file_unit
+      character ( len = 1000 ) record
+      integer :: i_prd
+      integer   ( kind = 4 ) value_count
+      character ( len = 300) :: rec_arr ( 15 )
+      
+      call csv_file_line_count ( this % csv_filename, line_num )
+      this % num_products = line_num - 1
+      allocate (this % product (this % num_products))
+      call csv_file_open_read ( this % csv_filename, csv_file_unit )
+      
+      ! - read header which is on first line
+      read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+      
+      do i_prd = 1, this % num_products
+         
+         read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+         call csv_value_count ( record, csv_record_status, value_count )
+         rec_arr = extract_single ( trim ( record ) )
+         
+         this % product(i_prd) % switch = trim(rec_arr(1))  .eq. "1"
+         
+         
+         read ( rec_arr(3), * ) this%product(i_prd)%name
+        
+         if (.not. this % product(i_prd) % switch  ) cycle
+         
+         read ( rec_arr(2), * ) this%product(i_prd)%dim
+         read( rec_arr(4), '(a)' ) this%product(i_prd)%name_clavrx
+         read ( rec_arr(5), * ) this%product(i_prd)%dtype
+         read ( rec_arr(6), * ) this%product(i_prd)%scaling
+         read ( rec_arr(7), * ) this%product(i_prd)%act_min
+         read ( rec_arr(8), * ) this%product(i_prd)%act_max
+         read ( rec_arr(9), * ) this%product(i_prd)%val_min
+         read ( rec_arr(10), * ) this%product(i_prd)%val_max
+         read ( rec_arr(11), * ) this%product(i_prd)%val_fill
+         read ( rec_arr(12), * ) this%product(i_prd)%add_offset
+         read ( rec_arr(13), '(a)' ) this%product(i_prd)%standard_name
+         read ( rec_arr(14), '(a)' ) this%product(i_prd)%unit
+         read ( rec_arr(15), '(a)' ) this%product(i_prd)%long_name
+         
+      end do
+       
+      call csv_file_close_read ( this % csv_filename, csv_file_unit )
+      this % is_set = .true.
+   end subroutine 
 
    !====================================================================
    ! SUBROUTINE Name: DEFINE_HDF_FILE_STRUCTURES
@@ -377,6 +443,7 @@ CONTAINS
       integer:: erstat
  
       integer::k
+      integer :: ii
    
    
       !--- begin executable code
@@ -466,97 +533,81 @@ CONTAINS
 
       
          ! ---  rread in products from csv file
-     
-         csv_file_name='clavrx_level2_products.csv'
-         call csv_file_line_count ( csv_file_name, line_num )
-   
-         call csv_file_open_read ( csv_file_name, csv_file_unit )
-         Num_Level2_Sds = line_num
-         allocate( Sds_Id_Level2(line_num))
+  
+         allocate( Sds_Id_Level2(prd%num_products))
       
       
-         do i = 1, line_num
-         
-            read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
-            call csv_value_count ( record, csv_record_status, value_count )
-            rec_arr = extract_single ( trim ( record ) )
-        
-            switch = trim(rec_arr(1))  .eq. "1"
-         
-            if ( i == 1) cycle
-            read ( rec_arr(2), * ) var_dim
-            read ( rec_arr(5), * ) dtype
-            read ( rec_arr(6), * ) scaling
-            read ( rec_arr(7), * ) act_min
-            read ( rec_arr(8), * ) act_max
+         do ii = 1, prd%num_products
+            
+            prd_i = prd % product(ii)
               
-            if ( switch ) then
-               select case (var_dim)
+            if ( prd_i % switch ) then
+               select case ( prd_i %  dim)
                case ( 1 )
-                  select case (dtype)
+                  select case ( prd_i % dtype)
                   case(1)
-                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, trim(rec_arr(14))) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT8,  &
+                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,  prd_i %  unit ) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT8,  &
                      1, Missing_Value_Int1) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32,  &
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32,  &
                      1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
                
                   case(3)
-                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,"scan_line_number",DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4, "none") + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, "not specified") + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
-                     len_trim(Long_Name_temp), trim(Long_Name_temp)) + Istatus_Sum     
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
+                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4, prd_i %  unit) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name ) + Istatus_Sum
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
+                     len_trim(trim(prd_i % Long_Name)), trim(prd_i % Long_Name)) + Istatus_Sum     
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
                     1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
                     1,Missing_Value_Int4) + Istatus_Sum
                     
                   case(4)
-                  Sds_Id_Level2(i) = sfcreate(Sd_Id_Level2,trim(rec_arr(3)),DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "SCALED", DFNT_INT8, 1, scaling) + Istatus_Sum  
+                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i %name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1, prd_i % scaling) + Istatus_Sum  
                
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "units", DFNT_CHAR8, 4,trim(rec_arr(14) )) + Istatus_Sum 
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "standard_name", DFNT_CHAR8, 13, trim(rec_arr(12) )) + Istatus_Sum 
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(i), "long_name", DFNT_CHAR8,  &
-                     len_trim(trim(rec_arr(14))),  trim(rec_arr(14)) ) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "RANGE_MISSING", DFNT_FLOAT32, &
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,prd_i %  unit) + Istatus_Sum 
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name) + Istatus_Sum 
+                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
+                     len_trim(trim(prd_i % Long_Name)),  trim(prd_i % Long_Name) ) + Istatus_Sum
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
                      1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(i), "_FillValue", DFNT_INT32, &
+                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
                     1,Missing_Value_Int4) + Istatus_Sum  
                   end select 
                    
                case(2)
-                  select case (dtype)
+                  select case (prd_i % dtype)
                   
                   case(1)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               trim(rec_arr(3)), &
-                               trim(rec_arr(12)), &
-                               trim(rec_arr(15)), &
-                               DFNT_INT8, scaling, act_min, act_max, &
-                               trim(rec_arr(14) ), Real(Missing_Value_Int1,kind=real4), Istatus)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               trim(prd_i % name), &
+                               trim(prd_i % standard_name), &
+                               trim(prd_i % Long_Name), &
+                               DFNT_INT8, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
+                               trim(prd_i%unit ), Real(Missing_Value_Int1,kind=real4), Istatus)
                   Istatus_Sum = Istatus_Sum + Istatus
                   
                   case(2)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              trim(rec_arr(3)), &
-                               trim(rec_arr(12)), &
-                               trim(rec_arr(15)), &
-                               DFNT_INT16, scaling, act_min, act_max, &
-                               trim(rec_arr(14) ), Missing_Value_Real4, Istatus)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              trim(prd_i % name), &
+                               trim(prd_i % standard_name), &
+                               trim(prd_i % Long_Name), &
+                               DFNT_INT16, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
+                               trim(prd_i%unit ), Missing_Value_Real4, Istatus)
                   Istatus_Sum = Istatus_Sum + Istatus
               
                   case(4)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(i),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              trim(rec_arr(3)), &
-                              trim(rec_arr(12)), &
-                              trim(rec_arr(15)), &
-                              DFNT_FLOAT32, sym%NO_SCALING, &
-                              0.0,0.0, "unknown", Missing_Value_Real4, Istatus)
+                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              trim(prd_i % name), &
+                             trim(prd_i % standard_name), &
+                              trim(prd_i % Long_Name), &
+                              DFNT_FLOAT32, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
+                              trim(prd_i%unit ), Missing_Value_Real4, Istatus)
                   Istatus_Sum = Istatus_Sum + Istatus
                   end select
                
@@ -564,7 +615,7 @@ CONTAINS
             end if
          end do
  
-         call csv_file_close_read ( csv_file_name, csv_file_unit )
+         
 
 
          !--- check for and report errors
@@ -612,6 +663,7 @@ CONTAINS
    !
    !====================================================================
    subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
+      implicit none
       integer, intent(in) :: segment_number
       integer, intent(in) :: Level2_File_Flag
    
@@ -629,12 +681,15 @@ CONTAINS
       real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
       character (len=40) :: name
       integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
+      integer :: ii
     
       if (Segment_Number == 1) then
 
          !--- place algorithm cvs tags into global strings for output
          call SET_CLOUD_TYPE_VERSION()
-
+         
+         if (.not. prd % is_set) call prd % read_products()
+           
          Num_Scans_Level2_Hdf = 0
 
          call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
@@ -656,8 +711,11 @@ CONTAINS
                               Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
                               Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
                               Image%Start_Time,Image%End_Time)
+      
+      
+      
       end if
-            
+      
     
       
       !-----------------------------------------------------------------------
@@ -696,9 +754,7 @@ CONTAINS
          istatus = 0
             ! ---  re-read in products from csv file
       
-         csv_file_name='clavrx_level2_products.csv'
-         call csv_file_line_count ( csv_file_name, line_num )   
-         call csv_file_open_read ( csv_file_name, csv_file_unit )
+         
       
          allocate ( data_dim1_dtype1(sds_edge_2d(2)))
          allocate ( data_dim1_dtype3(sds_edge_2d(2)))
@@ -708,57 +764,45 @@ CONTAINS
          allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
-         
-         do i = 1, line_num
         
-            read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
-            call csv_value_count ( record, csv_record_status, value_count )
-            rec_arr = extract_single ( trim ( record ) )
-        
-            switch = trim(rec_arr(1))  .eq. "1"
-          
-            if ( i == 1) cycle
-            read( rec_arr(2),  * ) var_dim
-            name = trim( rec_arr(3) )
-            read ( rec_arr(5), * ) dtype
-            read ( rec_arr(6), * ) scaling
-            read (rec_arr(7), * ) act_min
-            read (rec_arr(8), * ) act_max
-         
-            if ( switch ) then
+         do ii = 1, prd % num_products
+            prd_i = prd % product(ii)
+            name = prd_i %name
+             
+            if ( prd_i % switch ) then
                include 'level2_assign.inc'
-          
-               select case (var_dim)
+               
+               select case (prd_i % dim)
                case ( 1 )
-                  select case (dtype)
+                  select case (prd_i % dtype)
                   case(1)
-                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                   
                   case(3)
-                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                   
                   case(4)
-                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype4 ) + Istatus
                
                   end select  
                
                case(2)
-                  select case (dtype)
+                  select case (prd_i % dtype)
                   case(1)
-                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
                   
                   case(2)
-                  call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,sym%LINEAR_SCALING,act_min,act_max,Missing_Value_Real4 &
+                  call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                      ,Two_Byte_dummy)
-                  Istatus = sfwdata(Sds_Id_Level2(i),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
+                  Istatus = sfwdata(Sds_Id_Level2(ii),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                      Two_Byte_Dummy ) + Istatus
                 
                   case(4)
-                  Istatus = sfwdata(Sds_Id_Level2(i), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
+                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
                   end select   
                end select
@@ -775,7 +819,7 @@ CONTAINS
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
 
-         call csv_file_close_read ( csv_file_name, csv_file_unit )
+         
          !--- check for and report errors
          
          if (Istatus /= 0) then
@@ -876,7 +920,7 @@ CONTAINS
     real, intent(in):: Sds_Min
     real, intent(in):: Sds_Max
     real, intent(in):: Sds_Missing
-    integer(kind=int1), intent(in):: Scaled
+    integer, intent(in):: Scaled
     character(len=*), intent(in):: Sds_Name
     character(len=*), intent(in):: Sds_Standard_Name
     character(len=*), intent(in):: Sds_Long_Name

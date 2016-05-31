@@ -265,6 +265,10 @@ module LEVEL2_ROUTINES
       character(len=300) :: standard_name
       character(len=30) :: unit
       character (len=300):: long_name
+      character (len=300):: flagvalues
+      
+      integer(kind=int4) :: Sds_Id
+      
    end type prd_individual_dtype
    
    type prd_dtype
@@ -281,8 +285,10 @@ module LEVEL2_ROUTINES
    type(prd_individual_dtype):: prd_i
 
 CONTAINS
-
-
+   
+   !
+   !   read csv file into product structure
+   !
    subroutine read_products ( this)
       implicit none
       class (prd_dtype) :: this
@@ -295,7 +301,7 @@ CONTAINS
       character ( len = 1000 ) record
       integer :: i_prd
       integer   ( kind = 4 ) value_count
-      character ( len = 300) :: rec_arr ( 15 )
+      character ( len = 300) :: rec_arr ( 16 )
       
       call csv_file_line_count ( this % csv_filename, line_num )
       this % num_products = line_num - 1
@@ -312,12 +318,8 @@ CONTAINS
          rec_arr = extract_single ( trim ( record ) )
          
          this % product(i_prd) % switch = trim(rec_arr(1))  .eq. "1"
-         
-         
-         read ( rec_arr(3), * ) this%product(i_prd)%name
-        
-         if (.not. this % product(i_prd) % switch  ) cycle
-         
+                 
+         read ( rec_arr(3), * ) this%product(i_prd)%name 
          read ( rec_arr(2), * ) this%product(i_prd)%dim
          read( rec_arr(4), '(a)' ) this%product(i_prd)%name_clavrx
          read ( rec_arr(5), * ) this%product(i_prd)%dtype
@@ -331,6 +333,7 @@ CONTAINS
          read ( rec_arr(13), '(a)' ) this%product(i_prd)%standard_name
          read ( rec_arr(14), '(a)' ) this%product(i_prd)%unit
          read ( rec_arr(15), '(a)' ) this%product(i_prd)%long_name
+         read ( rec_arr(16), '(a)' ) this%product(i_prd)%flagvalues
          
       end do
        
@@ -494,22 +497,18 @@ CONTAINS
       endif
 
 
-      !---------------------------------------------------------
-      !-- define level2 file structure
-      !---------------------------------------------------------
-      if (Level2_File_Flag == sym%YES) then
-         File_Level2= trim(File_1b_Root)//".level2.hdf"
-         call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
+      File_Level2= trim(File_1b_Root)//".level2.hdf"
+      call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
          
-         Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
-         if (Sd_Id_Level2 < 0) then
-            erstat = 68
-            print *, EXE_PROMPT, MOD_PROMPT, "Level-2 file creation failed. Exiting..."
-            stop 68
-         end if
+      Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
+      if (Sd_Id_Level2 < 0) then
+         erstat = 68
+         print *, EXE_PROMPT, MOD_PROMPT, "Level-2 file creation failed. Exiting..."
+         stop 68
+      end if
 
-         !--- write attributes
-         call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
+      !--- write attributes
+      call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
                            Resolution_KM, &
                            start_year,end_year,start_day,end_day,start_time,end_time,&
                            blank_int4,blank_int4,blank_char,blank_real4, &
@@ -528,103 +527,95 @@ CONTAINS
                            Sensor%Platform_Name, Sensor%Sensor_Name, &
                            Dark_Composite_Name,Bayesian_Cloud_Mask_Name)
 
-         !-- reset status flag for error checking
-         Istatus_Sum = 0
+      !-- reset status flag for error checking
+      Istatus_Sum = 0
 
-      
-         ! ---  rread in products from csv file
-  
-         allocate( Sds_Id_Level2(prd%num_products))
+      allocate( Sds_Id_Level2(prd%num_products))
       
       
-         do ii = 1, prd%num_products
-            
-            prd_i = prd % product(ii)
+      do ii = 1, prd%num_products
+         prd_i = prd % product(ii)
               
-            if ( prd_i % switch ) then
-               select case ( prd_i %  dim)
+         if ( prd_i % switch ) then
+               
+            select case ( prd_i %  dim)
                case ( 1 )
                   select case ( prd_i % dtype)
-                  case(1)
-                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,  prd_i %  unit ) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT8,  &
-                     1, Missing_Value_Int1) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32,  &
-                     1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
+                     case(1)
+                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,  prd_i %  unit ) + Istatus_Sum
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT8,  &
+                           1, Missing_Value_Int1) + Istatus_Sum
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32,  &
+                           1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
                
-                  case(3)
-                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4, prd_i %  unit) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name ) + Istatus_Sum
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
-                     len_trim(trim(prd_i % Long_Name)), trim(prd_i % Long_Name)) + Istatus_Sum     
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
-                    1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
-                    1,Missing_Value_Int4) + Istatus_Sum
+                     case(3)
+                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4, prd_i %  unit) + Istatus_Sum
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name ) + Istatus_Sum
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
+                           len_trim(trim(prd_i % Long_Name)), trim(prd_i % Long_Name)) + Istatus_Sum     
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
+                           1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
+                            1,Missing_Value_Int4) + Istatus_Sum
                     
-                  case(4)
-                  Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i %name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1, prd_i % scaling) + Istatus_Sum  
-               
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,prd_i %  unit) + Istatus_Sum 
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name) + Istatus_Sum 
-                  Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
-                     len_trim(trim(prd_i % Long_Name)),  trim(prd_i % Long_Name) ) + Istatus_Sum
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
-                     1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
-                  Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
-                    1,Missing_Value_Int4) + Istatus_Sum  
+                     case(4)
+                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i %name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1, prd_i % scaling) + Istatus_Sum  
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,prd_i %  unit) + Istatus_Sum 
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name) + Istatus_Sum 
+                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
+                           len_trim(trim(prd_i % Long_Name)),  trim(prd_i % Long_Name) ) + Istatus_Sum
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
+                           1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
+                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
+                           1,Missing_Value_Int4) + Istatus_Sum  
                   end select 
                    
                case(2)
                   select case (prd_i % dtype)
                   
-                  case(1)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                     case(1)
+                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
                                trim(prd_i % name), &
                                trim(prd_i % standard_name), &
                                trim(prd_i % Long_Name), &
                                DFNT_INT8, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
                                trim(prd_i%unit ), Real(Missing_Value_Int1,kind=real4), Istatus)
-                  Istatus_Sum = Istatus_Sum + Istatus
+                           Istatus_Sum = Istatus_Sum + Istatus
                   
-                  case(2)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                     case(2)
+                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(prd_i % name), &
                                trim(prd_i % standard_name), &
                                trim(prd_i % Long_Name), &
                                DFNT_INT16, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
                                trim(prd_i%unit ), Missing_Value_Real4, Istatus)
-                  Istatus_Sum = Istatus_Sum + Istatus
+                           Istatus_Sum = Istatus_Sum + Istatus
               
-                  case(4)
-                  call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                     case(4)
+                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(prd_i % name), &
                              trim(prd_i % standard_name), &
                               trim(prd_i % Long_Name), &
                               DFNT_FLOAT32, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
                               trim(prd_i%unit ), Missing_Value_Real4, Istatus)
-                  Istatus_Sum = Istatus_Sum + Istatus
+                           Istatus_Sum = Istatus_Sum + Istatus
                   end select
                
-               end select
-            end if
-         end do
- 
-         
-
-
-         !--- check for and report errors
-         if (Istatus_Sum /= 0) then
-            print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
-            stop
+            end select
          end if
+      end do
+
+      !--- check for and report errors
+      if (Istatus_Sum /= 0) then
+         print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
+         stop
       end if
- 
+     
    end subroutine DEFINE_HDF_FILE_STRUCTURES
    
    !
@@ -633,7 +624,7 @@ CONTAINS
    function extract_single ( record) result  (record_single)
       implicit none
       character ( len = * ) :: record
-      character ( len = 300) :: record_single ( 15 )
+      character ( len = 300) :: record_single ( 16 )
       character (len = 1000 ) :: record_local
       character ( len =300) :: before
       integer :: i

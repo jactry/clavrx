@@ -625,7 +625,7 @@ end subroutine READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES
 
  subroutine SCALE_VECTOR_I2_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i2)
    real, dimension(:,:), intent(in):: temp_r4
-   integer(kind=int1), intent(in):: iscaled
+   integer, intent(in):: iscaled
    real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
    integer(kind=int2), dimension(:,:), intent(out):: temp_i2
    real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4

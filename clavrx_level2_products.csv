@@ -1,6 +1,4 @@
 SWITCH_CL,DIM,NAME,CLAVRX_NAME,DTYPE,SCALED,ACT_RANGE1,ACT_RANGE2,VAL_RANGE1,VAL_RANGE2,FILL,ADD_OFFS,STANDARD_NAME,UNITS,LONG_NAME
-1,0, _filename , NOT_SET_YET ,0,0,0.00000,0.00000,0,0,0,0.00000,  ,  ,  
-1,0, _global_attr ,  ,0,0,0.00000,0.00000,0,0,0,0.00000,  ,  ,  
 1,1, scan_line_number , scan_number ,3,0,0.00000,0.00000,0,0,25,0.00000, not specified , none , scan line number 
 1,1, scan_line_time , utc_scan_time_hours ,4,0,0.00000,0.00000,0,0,25,0.00000, not specified , hours , time for the scan line in fractional hours 
 1,1, bad_scan_line_flag , bad_scan_flag ,1,0,0.00000,0.00000,0,0,128,0.00000,  , none ,  

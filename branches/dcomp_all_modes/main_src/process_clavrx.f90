@@ -1233,9 +1233,9 @@
             
             ! = write to level2 files
             
-           
-            call WRITE_PIXEL_HDF_RECORDS(segment_number, Level2_File_Flag )
-            
+           if ( Level2_File_Flag  ==1 ) then
+               call WRITE_PIXEL_HDF_RECORDS(segment_number )
+            end if
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
@@ -1347,8 +1347,9 @@
 
      
       !--- close pixel level hdf files
-      call CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
-
+      if ( Level2_File_Flag == 1) then
+      call CLOSE_PIXEL_HDF_FILES()
+      end if
       !--- diagnostic screen output
       call mesg ("<----- Timing Results ----->")
       call mesg ("Time for Level-1b Processing (sec) = ", Segment_Time_Point_Seconds(1))

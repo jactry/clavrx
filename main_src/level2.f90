@@ -64,7 +64,6 @@ module LEVEL2_ROUTINES
       , diag_pix_array_1 &
       , diag_pix_array_2 &
       , diag_pix_array_3 &
-      , num_scans_level2_hdf &
       , dir_level2 &
       , rtm_file_flag &
       , therm_cal_1b &
@@ -242,7 +241,7 @@ module LEVEL2_ROUTINES
    character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
    character(len=18), private, parameter:: coordinates_string = "longitude latitude"
  
- 
+   integer(kind=int4),  save:: Num_Scans_Level2_Hdf
     
 
    integer :: Num_Level2_Sds 
@@ -339,6 +338,32 @@ CONTAINS
        
       call csv_file_close_read ( this % csv_filename, csv_file_unit )
       this % is_set = .true.
+      
+      contains
+      
+      !
+      !
+      !
+      function extract_single ( record) result  (record_single)
+         implicit none
+         character ( len = * ) :: record
+         character ( len = 300) :: record_single ( 16 )
+         character (len = 1000 ) :: record_local
+         character ( len =300) :: before
+         integer :: i
+         integer :: n_val
+      
+         record_local = trim (record)
+         n_val = size ( record_single)
+         record_single(:) = 'not_set' 
+         do i = 1, n_val 
+            call split ( record_local , ',', before)
+            record_single ( i ) = trim(before)
+         end do
+      
+      end function extract_single
+      
+      
    end subroutine 
 
    !====================================================================
@@ -356,8 +381,6 @@ CONTAINS
    subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Dir_Level2, &
       File_1b, &
-      Rtm_File_Flag, &
-      Level2_File_Flag, &
       c1,c2,a1_20, &
       a2_20, &
       nu_20, &
@@ -398,8 +421,7 @@ CONTAINS
       character(len=*), intent(in):: Dir_Level2
       integer(kind=int4), intent(in):: Num_Scans
       character(len=*), intent(in):: File_1b
-      integer, intent(in):: Rtm_File_Flag
-      integer, intent(in):: Level2_File_Flag
+      
  
       integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
       integer(kind=int4), intent(in) :: Nwp_Opt
@@ -618,33 +640,15 @@ CONTAINS
      
    end subroutine DEFINE_HDF_FILE_STRUCTURES
    
-   !
-   !
-   !
-   function extract_single ( record) result  (record_single)
-      implicit none
-      character ( len = * ) :: record
-      character ( len = 300) :: record_single ( 16 )
-      character (len = 1000 ) :: record_local
-      character ( len =300) :: before
-      integer :: i
-      integer :: n_val
-      
-      record_local = trim (record)
-      n_val = size ( record_single)
-      record_single(:) = 'not_set' 
-      do i = 1, n_val 
-         call split ( record_local , ',', before)
-         record_single ( i ) = trim(before)
-      end do
-      
-   end function extract_single
+
 
    !====================================================================
    ! SUBROUTINE Name: WRITE_PIXEL_HDF_RECORDS
    !
    ! Function:
    !   Writes output to appropriate Level 2 files
+   !
+   !   call from process_clavrx
    !
    ! Description:
    !   This subroutine, given the flags that determine which files are 
@@ -653,10 +657,10 @@ CONTAINS
    !   this program is called in process_clavrx
    !
    !====================================================================
-   subroutine WRITE_PIXEL_HDF_RECORDS(segment_number,Level2_File_Flag)
+   subroutine WRITE_PIXEL_HDF_RECORDS(segment_number)
       implicit none
       integer, intent(in) :: segment_number
-      integer, intent(in) :: Level2_File_Flag
+      
    
       integer:: Istatus
       integer:: Line_Idx
@@ -670,9 +674,11 @@ CONTAINS
       real , allocatable :: data_dim2_dtype2(:,:)
       integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
       real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
+      
       character (len=40) :: name
       integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
       integer :: ii
+      
     
       if (Segment_Number == 1) then
 
@@ -682,12 +688,11 @@ CONTAINS
          if (.not. prd % is_set) call prd % read_products()
            
          Num_Scans_Level2_Hdf = 0
-
+         ! - these values come from globals
+         
          call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Level2, &
                               Image%Level1b_Name, &
-                              Rtm_File_Flag, &
-                              Level2_File_Flag, &
                               c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
                               planck_a1(31),planck_a2(31),planck_nu(31), &
                               planck_a1(32),planck_a2(32),planck_nu(32),Solar_Ch20_Nu,&
@@ -741,7 +746,7 @@ CONTAINS
       !-------------------------------------------------------------------------
       ! write to level2 file
       !-------------------------------------------------------------------------
-      if (Level2_File_Flag == sym%YES) then
+      
          istatus = 0
             ! ---  re-read in products from csv file
       
@@ -818,7 +823,7 @@ CONTAINS
             stop
          endif
     
-      endif
+      
 
    end subroutine WRITE_PIXEL_HDF_RECORDS
 
@@ -834,10 +839,10 @@ CONTAINS
    !   been created, closes the open output files.
    !
    !====================================================================
-   subroutine CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
+   subroutine CLOSE_PIXEL_HDF_FILES()
 
  
-      integer, intent(in):: Level2_File_Flag
+      
 
       integer:: Isds
       integer:: Istatus
@@ -861,7 +866,7 @@ CONTAINS
       Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
       Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
     
-      if (Level2_File_Flag == sym%YES) then
+      
          do Isds = 1, Num_Level2_Sds
         
             if (sds_Id_Level2(Isds) /= 0 ) then
@@ -873,7 +878,7 @@ CONTAINS
       
          Istatus = sfend(Sd_Id_Level2) + Istatus
 
-      end if
+      
 
    end subroutine CLOSE_PIXEL_HDF_FILES
 
@@ -934,15 +939,6 @@ CONTAINS
     real :: temp_vector_2  (2)
     integer (kind = int1)  :: temp_vector_2_int1  (2)  
     integer (kind = int2)  :: temp_vector_2_int2  (2) 
-    
-    integer (kind = int1), parameter  :: temp_indgen_2_int1  (2)  = [0,1]
-    integer (kind = int1)  ,parameter :: temp_indgen_4_int1(4) = [0,1,2,3]
-    integer (kind = int1)  , parameter :: temp_indgen_8_int1  (8) = [0,1,2,3,4,5,6,7]
-    integer (kind = int1) ,parameter  :: temp_indgen_13_int1 (13) =  [0,1,2,3,4,5,6,7,8,9,10,11,12]
-    integer (kind = int1)  ,parameter :: temp_indgen_14_int1 (14) =  [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
-    
-    
-    
     
     Istatus = 0 
 
@@ -1019,161 +1015,6 @@ CONTAINS
      endif
 
     endif
-
-    !--- testing CF flag_meanings and flag_values attributes
-    if (Sds_Name == "acha_quality") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 2, temp_indgen_2_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 143, "Processed "// &
-                               " valid_Tc_retrieval "// &
-                               " valid_ec_retrieval "// &
-                               " valid_beta_retrieval "// &
-                               " degraded_Tc_retrieval "// &
-                               " degraded_ec_retrieval "// &
-                               " degraded_beta_retrieval ") + Istatus
-    end if
-
-    if (Sds_Name == "acha_info") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 2, temp_indgen_2_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 196, "Cloud_Height_Attempted "// &
-                               " Bias_Correction_Employed "// &
-                               " Ice_Cloud_Retrieval "// &
-                               " Local_Radiative_Center_Processing_Used "// &
-                               " Multi_Layer_Retrieval "// &
-                               " Lower_Cloud_Interpolation_Used "// &
-                               " Boundary_Layer_Inversion_Assumed ") + Istatus
-    end if
-
-    if (Sds_Name == "dcomp_quality") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 2, temp_indgen_2_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 120, "Processed "// &
-                               " valid_COD_retrieval "// &
-                               " valid_REF_retrieval "// &
-                               " degraded_COD_retrieval "// &
-                               " degraded_REF_retrieval "// &
-                               " convergency "// &
-                               " glint ") + Istatus
-    end if
-
-    if (Sds_Name == "dcomp_info") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 2, temp_indgen_2_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 117, "info_flag_set "// &
-                               " land_or_sea_mask "// &
-                               " day_or_night mask "// &
-                               " twilight_(65-82_solar_zenith) "// &
-                               " snow "// &
-                               " sea_ice "// &
-                               " phase "// &
-                               " thick_cloud ") + Istatus
-    end if
-
-    if (Sds_Name == "cld_opd_dcomp_qf") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4,  temp_indgen_4_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 49, "not_attempted "// &
-                               " failed "// &
-                               " low_quality "// &
-                               " high_quality ") + Istatus
-    end if
-
-    if (Sds_Name == "cld_reff_dcomp_qf") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4,  temp_indgen_4_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 49, "not_attempted "// &
-                               " failed "// &
-                               " low_quality "// &
-                               " high_quality ") + Istatus
-    end if
-
-    if (Sds_Name == "cld_temp_acha_qf") then
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4, temp_indgen_4_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 49, "not_attempted "// &
-                               " failed "// &
-                               " low_quality "// &
-                               " high_quality ") + Istatus
-    end if
-
-    if (Sds_Name == "cld_emiss_acha_qf") then
-    
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4,  temp_indgen_4_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 49, "not_attempted "// &
-                               " failed "// &
-                               " low_quality "// &
-                               " high_quality ") + Istatus
-    end if
-
-    if (Sds_Name == "cld_beta_acha_qf") then
-      
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4,  temp_indgen_4_int1) + Istatus
-      Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 49, "not_attempted "// &
-                               " failed "// &
-                               " low_quality "// &
-                               " high_quality ") + Istatus
-    end if
-
-    if (Sds_Name == "cloud_mask") then
-    
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 4,  temp_indgen_4_int1) + Istatus
-            Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 47, "clear "// &
-                               " probably_clear "// &
-                               " probably_cloudy "// &
-                               " cloudy ") + Istatus
-    end if
-
-    if (Sds_Name == "cloud_type") then
-      
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 13, temp_indgen_13_int1) + Istatus
-            Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 120, "clear "// &
-                               " probably_clear "// &
-                               " fog "// &
-                               " water "// &
-                               " supercooled_water "// &
-                               " mixed "// &
-                               " opaque_ice "// &
-                               " cirrus "// &
-                               " overlapping "// &
-                               " overshooting "// &
-                               " unknown "// &
-                               " dust "// &
-                               " smoke ") + Istatus
-    end if
-
-    if (Sds_Name == "surface_type") then
-      
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 14, temp_indgen_14_int1) + Istatus
-            Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 106, "water "// &
-                               " evergreen_needle "// &
-                               " evergreen_broad "// &
-                               " deciduous_needle "// &
-                               " deciduous_broad "// &
-                               " mixed_forest "// &
-                               " woodlands "// &
-                               " wooded_grass "// &
-                               " closed_shrubs "// &
-                               " open_shrubs "// &
-                               " grasses "// &
-                               " croplands "// &
-                               " bare "// &
-                               " urban ") + Istatus
-    end if
-
-    if (Sds_Name == "land_class") then
-      
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 8, temp_indgen_8_int1) + Istatus
-            Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 109, "ocean "// &
-                               " land "// &
-                               " coastline "// &
-                               " shallow_inland_water "// &
-                               " ephemeral_water "// &
-                               " deep_inland_water "// &
-                               " moderate_ocean "// &
-                               " deep_ocean ") + Istatus
-    end if
-
-    if (Sds_Name == "snow_class") then
-     
-      Istatus = sfsnatt(Sds_Id, "flag_values", DFNT_INT8, 3,  temp_indgen_4_int1) + Istatus
-            Istatus = sfscatt(Sds_Id, "flag_meanings", DFNT_CHAR8, 30, "no_snow_or_ice "// &
-                               " sea_ice "// &
-                               " snow ") + Istatus
-    end if
 
 
     !--- Scaling Attributes that go into scaled SDSs

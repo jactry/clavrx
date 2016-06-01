@@ -281,10 +281,34 @@ case("cld_opd_dcomp")
    if (allocated ( tau_dcomp)) then
       data_dim2_dtype2 = tau_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_opd_dcomp_1")
+   if (allocated ( tau_dcomp_1)) then
+      data_dim2_dtype2 = tau_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_opd_dcomp_2")
+   if (allocated ( tau_dcomp_2)) then
+      data_dim2_dtype2 = tau_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_opd_dcomp_3")
+   if (allocated ( tau_dcomp_3)) then
+      data_dim2_dtype2 = tau_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if    
 case("cld_reff_dcomp")
    if (allocated ( reff_dcomp)) then
       data_dim2_dtype2 = reff_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_reff_dcomp_1")
+   if (allocated ( reff_dcomp_1)) then
+      data_dim2_dtype2 = reff_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_dcomp_2")
+   if (allocated ( reff_dcomp_2)) then
+      data_dim2_dtype2 = reff_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_dcomp_3")
+   if (allocated ( reff_dcomp_3)) then
+      data_dim2_dtype2 = reff_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if         
 case("cld_opd_dcomp_unc")
    if (allocated ( tau_dcomp_cost)) then
       data_dim2_dtype2 = tau_dcomp_cost(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)

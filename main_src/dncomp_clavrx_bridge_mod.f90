@@ -61,6 +61,8 @@ module dcomp_clavrx_bridge_mod
        , cld_mask &
        , bad_pixel_mask &
        , lwp_dcomp, reff_dcomp, tau_dcomp, iwp_dcomp &
+       , tau_dcomp_1, tau_dcomp_2, tau_dcomp_3 &
+       , reff_dcomp_1, reff_dcomp_2, reff_dcomp_3 &
        , tau_dcomp_qf, reff_dcomp_qf &
        , tau_dcomp_cost , reff_dcomp_cost &
        , dcomp_info_flag, dcomp_quality_flag &
@@ -79,12 +81,7 @@ module dcomp_clavrx_bridge_mod
        , reff_nlcomp_cost &
        , nlcomp_quality_flag &
        , nlcomp_info_flag
-   
-  !!! use pixel_common, only: &
-   !      dcomp_diag_2 , dcomp_diag_3 , dcomp_diag_4 &
-   !      ,  dcomp_diag_toc_rfl1,  dcomp_diag_toc_rfl2 ,dcomp_diag_virt_alb1 &
-   !      ,dcomp_diag_virt_alb2,dcomp_diag_wv1,dcomp_diag_wv2
-   
+      
    use calibration_constants, only: &
         sun_earth_distance  &      !---- check, This is defined in three routines   
       , solar_ch20_nu
@@ -132,9 +129,11 @@ contains
       
       integer, allocatable :: possible_channels ( : )
       logical :: chan_on ( N_CHN ) = .false.
-      integer :: i
+      integer :: i, i_mode
       integer :: CHN_VIS
       integer :: CHN_NIR
+      
+      integer :: dcomp_mode_local
       
       interface
          subroutine dcomp_array_loop (a , b , debug_mode_user)
@@ -195,14 +194,20 @@ contains
       
       ! - here we have to add channels for snow
      
-      !-allocate input
-      dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
       
+      
+      do i_mode = 1, 3 
+         dcomp_mode_local = i_mode
+         if ( dcomp_mode .ne. i_mode .and. dcomp_mode .ne. 9) cycle
+         ! - compute DCOMP related RTM 
+      
+         !-allocate input
+      dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
       
       if ( .not. run_nlcomp) then      
          !- check mode
          CHN_VIS = 1
-         select case ( dcomp_mode )
+         select case ( dcomp_mode_local )
             case ( 1 ) 
                CHN_NIR = 6               
             case ( 2 )
@@ -210,7 +215,7 @@ contains
             case ( 3 )
                CHN_NIR = 20
             case default
-               print*, 'dcomp mode ',dcomp_mode,' not possible'
+               print*, 'dcomp mode ',dcomp_mode_local,' not possible'
                return
          end select
       
@@ -233,9 +238,9 @@ contains
       end if
       
       ! == CONFIGURE 
-      
+       
          ! - dcomp-mode
-      dcomp_input % mode = dcomp_mode
+      dcomp_input % mode = dcomp_mode_local
          ! - ancil/lut path
       dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
          ! - wmo sensor id
@@ -315,7 +320,7 @@ contains
 
 
       
-      call dcomp_rtm % deallocate_it()
+      
       
       ! === THE MAIN CALL of DCOMP ===  
       
@@ -345,6 +350,23 @@ contains
       
          tau_dcomp (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
          reff_dcomp  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
+         
+         select case (dcomp_mode_local)
+         
+         case (1)
+            tau_dcomp_1 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
+            reff_dcomp_1  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
+        case(2)
+         
+         tau_dcomp_2 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
+         reff_dcomp_2  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
+         
+         case(3)
+         tau_dcomp_3 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
+         reff_dcomp_3  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
+         end select
+         
+         
          lwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % lwp % d(1:dim_1,1:dim_2)
          iwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % iwp % d(1:dim_1,1:dim_2)
       
@@ -361,8 +383,8 @@ contains
          DCOMP_RELEASE_VERSION = dncomp_output % version
       end if
       
-      
-
+      end do
+      call dcomp_rtm % deallocate_it()
       
 
    end subroutine awg_cloud_dncomp_algorithm

@@ -86,7 +86,13 @@ module LEVEL2_ROUTINES
       , zc_h2o &
       , zc_opaque_cloud &
       , tau_dcomp &
-      , reff_dcomp &
+      , tau_dcomp_1 &
+      , tau_dcomp_2 &
+      , tau_dcomp_3 &
+      , reff_dcomp & 
+      , reff_dcomp_1 &
+      , reff_dcomp_2 &
+      , reff_dcomp_3 &
       , tau_dcomp_cost &
       , reff_dcomp_cost &
       , tau_dcomp_qf &
@@ -552,7 +558,7 @@ CONTAINS
       !-- reset status flag for error checking
       Istatus_Sum = 0
 
-      allocate( Sds_Id_Level2(prd%num_products))
+      if ( .not. allocated ( Sds_Id_Level2)) allocate( Sds_Id_Level2(prd%num_products))
       
       
       do ii = 1, prd%num_products

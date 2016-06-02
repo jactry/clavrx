@@ -196,13 +196,8 @@ module LEVEL2_ROUTINES
    !--- hdf specific variables
    integer(kind=int4),private:: Dim_Id
 
-   !--- compression variables
-   integer(kind=int4), dimension(2),private, save::  Comp_Prm
-   integer(kind=int4), private, save::  Comp_Type
-
    integer(kind=int4),parameter,private:: Sds_Rank_1d = 1
    integer(kind=int4),dimension(1),private:: Sds_Dims_1d
-
    integer(kind=int4),parameter,private:: Sds_Rank_2d = 2
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Dims_2d
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Start_2d
@@ -210,17 +205,9 @@ module LEVEL2_ROUTINES
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Edge_2d
    integer,dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
 
-
-
    character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
-   character(len=18), private, parameter:: coordinates_string = "longitude latitude"
- 
+   character(len=18), private, parameter:: coordinates_string = "longitude latitude" 
    integer(kind=int4),  save:: Num_Scans_Level2_Hdf
-    
-
-   integer :: Num_Level2_Sds 
-   integer, private, save:: Sd_Id_Level2
-   integer(kind=int4), allocatable, dimension(:):: Sds_Id_Level2
   
    type prd_individual_dtype
       logical :: switch
@@ -367,7 +354,6 @@ CONTAINS
       character(len=1020):: File_Level2
       character(len=1020):: Long_Name_Temp
       real(kind=real4):: Resolution_KM
-      
       integer:: erstat
  
       integer::k
@@ -375,7 +361,7 @@ CONTAINS
       real(kind=real4):: Add_Offset
       real(kind=real4):: Scale_Factor
        integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
-                                          two_byte_min = -32767   !-(2**15)/2
+                                        two_byte_min = -32767   !-(2**15)/2
  
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
@@ -404,8 +390,6 @@ CONTAINS
          stop 68
       end if
                                
-      if ( .not. allocated ( Sds_Id_Level2)) allocate( Sds_Id_Level2(prd % num_products))
-      
       do ii = 1, prd % num_products
          prd_i => prd % product(ii)
          if ( prd_i % switch ) then
@@ -527,9 +511,7 @@ CONTAINS
       
          istatus = 0
             ! ---  re-read in products from csv file
-      
-         
-      
+
          allocate ( data_dim1_dtype1(sds_edge_2d(2)))
          allocate ( data_dim1_dtype3(sds_edge_2d(2)))
          allocate ( data_dim1_dtype4(sds_edge_2d(2)))
@@ -594,8 +576,7 @@ CONTAINS
          if ( allocated ( data_dim2_dtype3)) deallocate ( data_dim2_dtype3)
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
-
-         
+      
          !--- check for and report errors
          
          if (Istatus /= 0) then

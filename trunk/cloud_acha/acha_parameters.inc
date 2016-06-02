@@ -78,10 +78,11 @@
  !--- limits on steps taken in retrieval
  real(kind=real4), parameter, private, DIMENSION(NUM_PARAM):: delta_x_max = (/20.0,0.1,0.1/)
 
- !--- parameters that control the bottom-up estimation of Zc and Pc
- real(kind=real4), parameter, private:: ABS_LAPSE_RATE_UNCER_MIN = 0.0005 !K/m smallest lapse rate over height uncertainty calc
- real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DP_DZ_UNCER_MIN = 0.00005 !K/hPa smallest lapse rate over height uncertainty calc
+ !--- parameters that control the conversion of Tc uncertainty to Pc and Zc uncertainty
+ real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DlnP_DZ_UNCER = 0.0001 !hPa/m
+ real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DT_DZ_UNCER = 0.007 !K/m
 
+ !--- parameters that control the bottom-up estimation of Zc and Pc
  real(kind=real4), parameter, private:: Min_P_inversion = 600.0 !min pressure to look for low-level inversion
  real(kind=real4), parameter, private:: Max_Delta_T_inversion = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion
  real(kind=real4), parameter, private:: Delta_Psfc_Inversion = 50.0  !pressure above sfc to look for low-level inversion

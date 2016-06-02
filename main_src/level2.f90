@@ -58,8 +58,6 @@ module LEVEL2_ROUTINES
       , bad_pixel_mask &
       , utc_scan_time_hours &
       , scan_number &
-      , utc_scan_time_hours &
-      , scan_number &
       , gap_pixel_mask &
       , diag_pix_array_1 &
       , diag_pix_array_2 &
@@ -73,7 +71,6 @@ module LEVEL2_ROUTINES
       , modis_clr_alb_flag &
       , nwp_opt &
       , scan_time &
-      , utc_scan_time_hours &
       , line_idx_min_segment &
       , ref_ch1_min_3x3 &
       , ref_ch1_std_3x3 &
@@ -146,8 +143,6 @@ module LEVEL2_ROUTINES
       
    use HDF, only: &
       DFACC_CREATE &
-      , DFNT_INT8 &
-      , DFNT_CHAR8 &
       , DFNT_FLOAT32 &
       , DFNT_INT32 &
       , DFNT_INT16
@@ -163,27 +158,7 @@ module LEVEL2_ROUTINES
       , write_clavrx_hdf_global_attributes
       
    use AVHRR_MODULE,only: &
-      ch3a_gain_high &
-      , c1 &
-      , c2 &
-      , planck_a1 &
-      , planck_a2 &
-      , planck_nu &
-      , solar_ch20_nu &
-      , sun_earth_distance &
-      , ch1_gain_low &
-      , ch1_gain_high &
-      , ch1_switch_count_cal &
-      , ch1_dark_count_cal &
-      , ch2_gain_low &
-      , ch2_gain_high &
-      , ch2_switch_count_cal &
-      , ch2_dark_count_cal &
-      , ch3a_gain_low &
-      , ch3a_gain_high &
-      , ch3a_switch_count_cal &
-      , ch3a_dark_count_cal  &
-      , cloud_mask_version   &  !- comes from anywhere else!
+       cloud_mask_version   &  !- comes from anywhere else!
       , cloud_mask_thresholds_version &   !- comes from anywhere else!
       , acha_version      !- comes from anywhere else!
      
@@ -203,17 +178,15 @@ module LEVEL2_ROUTINES
       
    use strings, only: &
       split
+      
+   use level2_hdf_mod   
 
    implicit none
    private
 
-   public:: WRITE_PIXEL_HDF_RECORDS, &
-            CLOSE_PIXEL_HDF_FILES
+   public:: WRITE_PIXEL_HDF_RECORDS
 
-   private::DEFINE_PIXEL_2D_SDS, &
-            DEFINE_PIXEL_3D_SDS, &
-            DEFINE_HDF_FILE_STRUCTURES, &
-            WRITE_ALGORITHM_ATTRIBUTES, &
+   private:: DEFINE_HDF_FILE_STRUCTURES, &
             file_root_from_l1b
 
  
@@ -235,14 +208,9 @@ module LEVEL2_ROUTINES
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Start_2d
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Stride_2d
    integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Edge_2d
-   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
+   integer,dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
 
-   integer(kind=int4),parameter,private:: Sds_Rank_3d = 3
-   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Dims_3d
-   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Start_3d
-   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Stride_3d
-   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Edge_3d
-   integer(kind=int4),dimension(Sds_Rank_3d),private:: Sds_Chunk_Size_3d
+
 
    character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
    character(len=18), private, parameter:: coordinates_string = "longitude latitude"
@@ -286,8 +254,10 @@ module LEVEL2_ROUTINES
       procedure :: read_products
    end type prd_dtype
    
-   type(prd_dtype) :: prd
-   type(prd_individual_dtype):: prd_i
+   type(prd_dtype), save, target :: prd
+   type(prd_individual_dtype), pointer:: prd_i
+   
+   integer :: id_file
 
 CONTAINS
    
@@ -386,263 +356,81 @@ CONTAINS
    !====================================================================
    subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Dir_Level2, &
-      File_1b, &
-      c1,c2,a1_20, &
-      a2_20, &
-      nu_20, &
-      a1_31, &
-      a2_31, &
-      nu_31, &
-      a1_32, &
-      a2_32, &
-      nu_32, &
-      Solar_Ch20_nu, &
-      Sun_Earth_Distance, &
-      Therm_Cal_1b,  &
-      Ref_Cal_1b, &
-      nav_opt, &
-      Use_Sst_anal, &
-      Modis_clr_alb_flag, &
-      Nwp_Opt, &
-      Ch1_gain_low, &
-      Ch1_gain_high, &
-      Ch1_switch_count, &
-      Ch1_dark_count,&
-      Ch2_gain_low, &
-      Ch2_gain_high, &
-      Ch2_switch_count, &
-      Ch2_dark_count, &
-      Ch3a_Gain_low, &
-      Ch3a_Gain_high, &
-      Ch3a_Switch_Count, &
-      Ch3a_Dark_Count,&
-      Start_Year, &
-      End_Year, &
-      Start_Day, &
-      End_Day, &
-      Start_Time, &
-      End_Time)
-
+      File_1b )
+      
+      implicit none
 
       character(len=*), intent(in):: Dir_Level2
       integer(kind=int4), intent(in):: Num_Scans
       character(len=*), intent(in):: File_1b
-      
- 
-      integer(kind=int4), intent(in) :: Modis_Clr_Alb_Flag
-      integer(kind=int4), intent(in) :: Nwp_Opt
-      integer, intent(in):: therm_cal_1b
-      integer, intent(in):: nav_opt
-      integer, intent(in):: use_sst_anal
-      integer, intent(in):: Ref_cal_1b
-      real(kind=real4), intent(in):: c1,c2,a1_20,a2_20,nu_20,a1_31,a2_31,nu_31,a1_32, &
-                                a2_32,nu_32,solar_Ch20_nu,sun_earth_distance, &
-                                Ch1_gain_low,Ch1_gain_high,Ch1_switch_count, &
-                                Ch1_dark_count, Ch2_gain_low,Ch2_gain_high, &
-                                Ch2_switch_count,Ch2_dark_count, Ch3a_gain_low,&
-                                Ch3a_gain_high,Ch3a_switch_count, &
-                                Ch3a_dark_count
-      integer(kind=int4), intent(in):: Start_Time
-      integer(kind=int4), intent(in):: End_Time
-      integer(kind=int2), intent(in):: Start_Year
-      integer(kind=int2), intent(in):: End_Year
-      integer(kind=int2), intent(in):: Start_Day
-      integer(kind=int2), intent(in):: End_Day
- 
       character(len=1020):: File_1b_root
-      character(len=1020):: File_Rtm
       character(len=1020):: File_Level2
-
       character(len=1020):: Long_Name_Temp
- 
-      character(len=128):: Sds_Name
-
-      integer(kind=int4):: blank_int4
-      character(len=1):: blank_char
-      real:: blank_real4
       real(kind=real4):: Resolution_KM
-      integer:: Istatus_Sum
-      integer:: Istatus
-      integer:: ipos
-      integer:: ilen
- 
-      ! HDF function declarations
-      integer:: sfstart
-      integer:: sfcreate
-      integer:: sfscatt
-      integer:: sfsnatt
+      
       integer:: erstat
  
       integer::k
       integer :: ii
-   
-   
-      !--- begin executable code
-      blank_int4 = 0
-      blank_real4 = 0.0
-      blank_char = " "
-  
+      real(kind=real4):: Add_Offset
+      real(kind=real4):: Scale_Factor
+       integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
+                                          two_byte_min = -32767   !-(2**15)/2
+ 
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
       !--- set Resolution_KM for global attribute
       Resolution_KM = Sensor%Spatial_Resolution_Meters / 1000.0
 
-      !-------------------------------------------------------------
-      ! define chunking here
-      !-------------------------------------------------------------
-      !--- 3d , first dim is sds dependent
-      Sds_Dims_3d(2) = Image%Number_Of_Elements
-      Sds_Dims_3d(3) = Num_Scans
-      Sds_Chunk_Size_3d(2) = Image%Number_Of_Elements
-      Sds_Chunk_Size_3d(3) = Num_Scans
 
-      !-- dimension of 2d variables
-      Sds_Dims_2d(1) = Image%Number_Of_Elements
-      Sds_Dims_2d(2) = Image%Number_Of_Lines
       Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
       Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
 
       !-- dimension of 1d variables
       Sds_Dims_1d(1) = Image%Number_Of_Lines
 
-      !-------------------------------------------------------------
-      ! define compression here
-      !-------------------------------------------------------------
-      Comp_Type = 0                  !no compression
-      Comp_Prm(1) = 0
-      Comp_Prm(2) = 0
-
-      if (Compress_Flag == 1) then  !gzip compression
-         Comp_Type = 4
-         Comp_Prm(1) = 6
-         Comp_Prm(2) = 0
-      endif
-
-      if (Compress_Flag == 2) then  !szip compression
-         Comp_Type = 5
-         Comp_Prm(1) = 32
-         Comp_Prm(2) = 2
-      endif
 
 
       File_Level2= trim(File_1b_Root)//".level2.hdf"
       call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
          
-      Sd_Id_Level2 = sfstart(trim(Dir_Level2)//trim(file_Level2),DFACC_CREATE)
-      if (Sd_Id_Level2 < 0) then
+      id_file = file_open(trim(Dir_Level2)//trim(file_Level2))
+      
+      call dims_file % set ( Image%Number_Of_Elements, Image%Number_Of_Lines,0)
+      
+      if (id_file < 0) then
          erstat = 68
          print *, EXE_PROMPT, MOD_PROMPT, "Level-2 file creation failed. Exiting..."
          stop 68
       end if
-
-      !--- write attributes
-      call WRITE_CLAVRX_HDF_GLOBAL_ATTRIBUTES(Sd_Id_Level2,"PIXEL",File_Level2,File_1b_Root, &
-                           Resolution_KM, &
-                           start_year,end_year,start_day,end_day,start_time,end_time,&
-                           blank_int4,blank_int4,blank_char,blank_real4, &
-                           therm_cal_1b,Ref_cal_1b,nav_opt,use_sst_anal, &
-                           modis_clr_alb_flag, nwp_opt, Ch1_gain_low, Ch1_gain_high, &
-                           Ch1_switch_count, Ch1_dark_count, &
-                           Ch2_gain_low, Ch2_gain_high, &
-                           Ch2_switch_count, Ch2_dark_count, &
-                           Ch3a_gain_low, Ch3a_gain_high, &
-                           Ch3a_switch_count, Ch3a_dark_count, &
-                           sun_earth_distance, &
-                           c1, c2, a1_20, a2_20, nu_20, &
-                           a1_31, a2_31, nu_31, a1_32, a2_32, nu_32, &
-                           solar_Ch20_nu,Nav%Timerr_seconds, &
-                           acha%mode, dcomp_mode,Sensor%WMO_Id, &
-                           Sensor%Platform_Name, Sensor%Sensor_Name, &
-                           Dark_Composite_Name,Bayesian_Cloud_Mask_Name)
-
-      !-- reset status flag for error checking
-      Istatus_Sum = 0
-
-      if ( .not. allocated ( Sds_Id_Level2)) allocate( Sds_Id_Level2(prd%num_products))
+                               
+      if ( .not. allocated ( Sds_Id_Level2)) allocate( Sds_Id_Level2(prd % num_products))
       
-      
-      do ii = 1, prd%num_products
-         prd_i = prd % product(ii)
-              
+      do ii = 1, prd % num_products
+         prd_i => prd % product(ii)
          if ( prd_i % switch ) then
+           prd_i % Sds_Id= create_sds (id_file, prd_i % name ,  prd_i % dim, prd_i % dtype) 
+           
+            if (prd_i % dim == 2) istatus = compress_sds ( prd_i % Sds_Id,Compress_Flag, Sds_Chunk_Size_2d) 
+            call add_att(  prd_i % Sds_Id, 'SCALED', prd_i % scaling)
+            call add_att( prd_i % sds_id, 'unit', trim(prd_i % unit)) 
+            call add_att( prd_i % sds_id, 'standard_name', trim(prd_i % standard_name))
+            call add_att( prd_i % sds_id, 'long_name', trim(prd_i % long_name))  
+            
+            if ( prd_i % scaling .NE. 0 ) then
                
-            select case ( prd_i %  dim)
-               case ( 1 )
-                  select case ( prd_i % dtype)
-                     case(1)
-                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT8,Sds_Rank_1d,Sds_Dims_1d)
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,  prd_i %  unit ) + Istatus_Sum
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT8,  &
-                           1, Missing_Value_Int1) + Istatus_Sum
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32,  &
-                           1, Real(Missing_Value_Int1,kind=real4)) + Istatus_Sum
-               
-                     case(3)
-                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i % name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1,  prd_i % scaling) + Istatus_Sum
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4, prd_i %  unit) + Istatus_Sum
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name ) + Istatus_Sum
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
-                           len_trim(trim(prd_i % Long_Name)), trim(prd_i % Long_Name)) + Istatus_Sum     
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
-                           1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
-                            1,Missing_Value_Int4) + Istatus_Sum
-                    
-                     case(4)
-                        Sds_Id_Level2(ii) = sfcreate(Sd_Id_Level2,prd_i %name,DFNT_INT32,Sds_Rank_1d,Sds_Dims_1d)    
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "SCALED", DFNT_INT8, 1, prd_i % scaling) + Istatus_Sum  
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "units", DFNT_CHAR8, 4,prd_i %  unit) + Istatus_Sum 
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "standard_name", DFNT_CHAR8, 13, prd_i %  standard_name) + Istatus_Sum 
-                        Istatus_Sum = sfscatt(Sds_Id_Level2(ii), "long_name", DFNT_CHAR8,  &
-                           len_trim(trim(prd_i % Long_Name)),  trim(prd_i % Long_Name) ) + Istatus_Sum
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "RANGE_MISSING", DFNT_FLOAT32, &
-                           1,real(Missing_Value_Int4,kind=real4)) + Istatus_Sum           
-                        Istatus_Sum = sfsnatt(Sds_Id_Level2(ii), "_FillValue", DFNT_INT32, &
-                           1,Missing_Value_Int4) + Istatus_Sum  
-                  end select 
-                   
-               case(2)
-                  select case (prd_i % dtype)
-                  
-                     case(1)
-                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               trim(prd_i % name), &
-                               trim(prd_i % standard_name), &
-                               trim(prd_i % Long_Name), &
-                               DFNT_INT8, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
-                               trim(prd_i%unit ), Real(Missing_Value_Int1,kind=real4), Istatus)
-                           Istatus_Sum = Istatus_Sum + Istatus
-                  
-                     case(2)
-                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              trim(prd_i % name), &
-                               trim(prd_i % standard_name), &
-                               trim(prd_i % Long_Name), &
-                               DFNT_INT16, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
-                               trim(prd_i%unit ), Missing_Value_Real4, Istatus)
-                           Istatus_Sum = Istatus_Sum + Istatus
+               scale_factor = (prd_i%act_max - prd_i%act_min )/(two_byte_max - two_byte_min)
+               add_offset = prd_i%act_min - scale_factor * two_byte_min
+               call add_att ( prd_i % sds_id, 'add_offset', add_offset)
+               call add_att ( prd_i % sds_id, 'scale_factor',scale_factor)
+            end if
               
-                     case(4)
-                        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(ii),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                              trim(prd_i % name), &
-                             trim(prd_i % standard_name), &
-                              trim(prd_i % Long_Name), &
-                              DFNT_FLOAT32, prd_i % scaling,  prd_i % act_min,  prd_i % act_max, &
-                              trim(prd_i%unit ), Missing_Value_Real4, Istatus)
-                           Istatus_Sum = Istatus_Sum + Istatus
-                  end select
-               
-            end select
+  
+ 
          end if
       end do
 
-      !--- check for and report errors
-      if (Istatus_Sum /= 0) then
-         print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
-         stop
-      end if
+      
      
    end subroutine DEFINE_HDF_FILE_STRUCTURES
    
@@ -685,12 +473,13 @@ CONTAINS
       integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
       integer :: ii
       
-    
+      ! first segment
       if (Segment_Number == 1) then
 
-         !--- place algorithm cvs tags into global strings for output
+         !--- place algorithm cvs tags into global strings for output find better place for this..
          call SET_CLOUD_TYPE_VERSION()
          
+         !- read csv file
          if (.not. prd % is_set) call prd % read_products()
            
          Num_Scans_Level2_Hdf = 0
@@ -698,28 +487,11 @@ CONTAINS
          
          call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Level2, &
-                              Image%Level1b_Name, &
-                              c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
-                              planck_a1(31),planck_a2(31),planck_nu(31), &
-                              planck_a1(32),planck_a2(32),planck_nu(32),Solar_Ch20_Nu,&
-                              Sun_Earth_Distance,Therm_Cal_1b, &
-                              Ref_Cal_1b,Nav_Opt,Use_Sst_Anal, &
-                              Modis_Clr_Alb_Flag,Nwp_Opt, &
-                              Ch1_Gain_Low,Ch1_gain_High, &
-                              Ch1_Switch_Count_Cal,Ch1_Dark_Count_Cal, &
-                              Ch2_Gain_low,Ch2_Gain_High, &
-                              Ch2_Switch_Count_Cal,Ch2_Dark_Count_Cal, &
-                              Ch3a_Gain_low,Ch3a_Gain_High, &
-                              Ch3a_Switch_Count_Cal,Ch3a_Dark_Count_Cal, &
-                              Image%Start_Year,Image%End_Year,Image%Start_Doy,Image%End_Doy,&
-                              Image%Start_Time,Image%End_Time)
+                              Image%Level1b_Name)
       
       
       
       end if
-      
-    
-      
       !-----------------------------------------------------------------------
       ! Get time of each scan line and convert to scale
       !-----------------------------------------------------------------------
@@ -768,25 +540,27 @@ CONTAINS
          allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
         
          do ii = 1, prd % num_products
-            prd_i = prd % product(ii)
+            prd_i => prd % product(ii)
             name = prd_i %name
              
             if ( prd_i % switch ) then
                include 'level2_assign.inc'
                
                select case (prd_i % dim)
+                  
                case ( 1 )
                   select case (prd_i % dtype)
                   case(1)
-                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                   
                   case(3)
-                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                         
+                  Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                   
                   case(4)
-                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d(2), Sds_Stride_2d(2),          &
+                  Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype4 ) + Istatus
                
                   end select  
@@ -794,24 +568,24 @@ CONTAINS
                case(2)
                   select case (prd_i % dtype)
                   case(1)
-                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                  Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
                   
                   case(2)
                   call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                      ,Two_Byte_dummy)
-                  Istatus = sfwdata(Sds_Id_Level2(ii),Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
+                  Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                      Two_Byte_Dummy ) + Istatus
                 
                   case(4)
-                  Istatus = sfwdata(Sds_Id_Level2(ii), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
+                  Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
                   end select   
                end select
             end if
-
+        
          end do
-      
+        
          if ( allocated ( data_dim1_dtype1)) deallocate ( data_dim1_dtype1)
          if ( allocated ( data_dim1_dtype3)) deallocate ( data_dim1_dtype3)
          if ( allocated ( data_dim1_dtype4)) deallocate ( data_dim1_dtype4)
@@ -828,422 +602,91 @@ CONTAINS
             print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus
             stop
          endif
+         
+         ! final segment, write global attributes and closing.. bye bye
+         if ( segment_number == Image%Number_Of_Segments) then 
+           
+            call add_global_attributes ( id_file) 
+            do ii = 1, prd % num_products
+                prd_i => prd % product(ii)
+                if ( prd_i % switch ) then
+                  call close_sds (  prd_i % sds_id)
+                end if  
+            end do
+            call close_file (id_file)      
+         end if
     
-      
-
    end subroutine WRITE_PIXEL_HDF_RECORDS
 
-
-   !====================================================================
-   ! SUBROUTINE Name: CLOSE_PIXEL_HDF_FILES
    !
-   ! Function:
-   !   Closes appropriate Level 2 files
    !
-   ! Description:
-   !   This subroutine, given the flags that determine which files have 
-   !   been created, closes the open output files.
    !
-   !====================================================================
-   subroutine CLOSE_PIXEL_HDF_FILES()
-
- 
-      
-
-      integer:: Isds
-      integer:: Istatus
-
-      ! HDF function declarations
-      integer:: sfsnatt
-      integer:: sfendacc
-      integer:: sfend
-
-      !--- write algorithm attributes to level2
-      call WRITE_ALGORITHM_ATTRIBUTES()
-      !------------------------------------------------------------------------
-      !--- close level2 file
-      !------------------------------------------------------------------------
-      Istatus = 0
-      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
-      Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
-    
-      
-         do Isds = 1, Num_Level2_Sds
-        
-            if (sds_Id_Level2(Isds) /= 0 ) then
-               Istatus = sfendacc(Sds_Id_Level2(Isds)) + Istatus
-            end if
-            sds_Id_Level2(Isds) = 0
+   subroutine add_global_attributes ( id_file)
+       
+       use pixel_common, only: &
+         sensor &
+         , image &
+         , acha &
+         , dcomp_mode
+       
+      integer, intent(in) :: id_file
+      character(len=36) :: machine
+      character(len=36) :: user
      
-         end do
+      call getenv ("HOST",machine)
+      call getenv ("USER",user)
       
-         Istatus = sfend(Sd_Id_Level2) + Istatus
-
+      call add_att (id_file, 'MACHINE',trim(machine))
+      call add_att (id_file, 'date_created',hdf_timestamp())
+       call add_att (id_file, 'user_created',trim(user))
+      call add_att (id_file, 'institution','CIMSS')
+      call add_att (id_file, 'sensor',trim(sensor% sensor_name))
+      call add_att (id_file, 'satellite', trim(sensor%platform_name))
+      !call add_att (id_file,  'L1B'
+      !call add_att (id_file,   'RESOLUTION_KM',
+      !call add_att (id_file,   'spatial_resolution'
+      call add_att (id_file,  'START_YEAR',image%start_year)
+      call add_att (id_file,  'START_DAY_OF_YEAR',image%start_doy)
+      call add_att (id_file,  'START_TIME_FRACTION_DAY',image%start_time/3600000.0)
+      call add_att (id_file,  'END_YEAR',image%end_year)
+      call add_att (id_file,  'END_DAY_OF_YEAR',image%end_doy)
+      call add_att (id_file,  'END_TIME',image%end_time/3600000.0)
+      call add_att (id_file,  'ACHA_MODE',acha%mode)
+      call add_att (id_file,  'DCOMP_MODE',dcomp_mode)
+      call add_att (id_file,  'WMO_SATELLITE_CODE',sensor%wmo_id)
+      !call add_att (id_file,  'REFL_0_65UM_NOM_DARK_COMPOSITE_NAME'
+      !call add_att (id_file,  'NAIVE_BAYESIAN_CLOUD_MASK_NAME', 
       
+      call add_att ( id_file,'CLOUD_MASK_VERSION', trim(cloud_mask_version))
+      call add_att ( id_file,'CLOUD_MASK_THRESHOLDS_VERSION',trim(CLOUD_MASK_THRESHOLDS_VERSION))
+      call add_att ( id_file,'CLOUD_TYPE_VERSION',trim(CLOUD_TYPE_VERSION))
+      call add_att ( id_file,'ACHA_VERSION',trim(ACHA_VERSION))
+      call add_att ( id_file,'DCOMP_VERSION',trim(DCOMP_VERSION))
+       
+    !        Istatus = 0
+    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus
+    !  Istatus = sfsnatt(Sd_Id_Level2, "DCOMP_SUCCESS_FRACTION", DFNT_FLOAT32,1,DCOMP_Success_Fraction)+Istatus
+      
+      
+      contains
+      function hdf_timestamp() result(string)
+         character (len = 36) ::string
+         character(len=10), dimension(3):: ctime
 
-   end subroutine CLOSE_PIXEL_HDF_FILES
-
-!====================================================================
-! SUBROUTINE Name: DEFINE_PIXEL_2D_SDS
-!
-! Function:
-!   Defines a 2D SDS for the level 2 files
-!
-! Description:
-!   This subroutine, given the inputs, creates the SDSs inside the various
-!   files. 
-!
-!====================================================================
-  subroutine DEFINE_PIXEL_2D_SDS(Sds_Id,     &
-                                 Sd_Id,      &
-                                 Sds_Dims,   &
-                                 Sds_Chunk,  &
-                                 Sds_Name,   &
-                                 Sds_Standard_Name,   &
-                                 Sds_Long_Name, &
-                                 Sds_Type,   &
-                                 scaled,     &
-                                 Sds_Min,    &
-                                 Sds_Max,    &
-                                 Sds_Units,  &
-                                 Sds_Missing,&
-                                 Istatus)
-
-    integer, intent(out):: Sds_Id
-    integer, intent(in):: Sd_Id
-    integer, dimension(2), intent(in):: Sds_Dims
-    integer, dimension(2), intent(in):: Sds_Chunk
-    integer, intent(in):: Sds_Type
-    real, intent(in):: Sds_Min
-    real, intent(in):: Sds_Max
-    real, intent(in):: Sds_Missing
-    integer, intent(in):: Scaled
-    character(len=*), intent(in):: Sds_Name
-    character(len=*), intent(in):: Sds_Standard_Name
-    character(len=*), intent(in):: Sds_Long_Name
-    character(len=*), intent(in):: Sds_Units
-    integer, intent(out):: Istatus
-    integer:: Dim_Id
-    integer(kind=int4):: Scaled_Min
-    integer(kind=int4):: Scaled_Max
-    integer(kind=int4):: Scaled_Missing
-    real(kind=real4):: Add_Offset
-    real(kind=real4):: Scale_Factor
-
-    integer:: sfcreate
-    integer:: sfsnatt
-    integer:: sfscatt
-    integer:: sfdimid
-    integer:: sfsdmname
-    integer:: sfschnk
-    
-    real :: temp_vector_2  (2)
-    integer (kind = int1)  :: temp_vector_2_int1  (2)  
-    integer (kind = int2)  :: temp_vector_2_int2  (2) 
-    
-    Istatus = 0 
-
-    Sds_Id = sfcreate(Sd_Id,Sds_Name,Sds_Type,Sds_Rank_2d,Sds_Dims)
-
-    !--- Attributes that go into all SDSs
-    Istatus = sfsnatt(Sds_Id, "SCALED", DFNT_INT8, 1, scaled) + Istatus
-
-    Istatus = sfscatt(Sds_Id, "units", DFNT_CHAR8, len_trim(Sds_Units), trim(Sds_Units)) + Istatus
-
-    Istatus = sfscatt(Sds_Id, "standard_name", DFNT_CHAR8, len_trim(Sds_Standard_Name),  &
-                               trim(Sds_Standard_Name)) + Istatus
-
-    Istatus = sfscatt(Sds_Id, "long_name", DFNT_CHAR8, len_trim(Sds_Long_Name),  &
-                                trim(Sds_Long_Name)) + Istatus
-
-    if (Sds_Name /= "latitude" .and. Sds_Name /= "longitude") then 
-       Istatus = sfscatt(Sds_Id, "coordinates", DFNT_CHAR8, len_trim(coordinates_string),  &
-                          trim(coordinates_string)) + Istatus
-    endif
-
-    Dim_Id = sfdimid(Sds_Id, 0)
-    Istatus = sfsdmname(Dim_Id,"pixel_elements_along_scan_direction") + Istatus
-
-    Dim_Id = sfdimid(Sds_Id, 1)
-    Istatus = sfsdmname(Dim_Id,"scan_lines_along_track_direction") + Istatus
-
-    Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
-
-    !--- determine scaled ranges based on Sds_Type
-    if (Sds_Type == DFNT_INT8) then
-          Scaled_Min = One_Byte_Min
-          Scaled_Max = One_Byte_Max
-          Scaled_Missing = Missing_Value_Int1
-    elseif (Sds_Type == DFNT_INT16) then
-          Scaled_Min = Two_Byte_Min
-          Scaled_Max = Two_Byte_Max
-          Scaled_Missing = Missing_Value_Int2
-    endif
-
-    !--- write actual missng and actual rangel for all scaled variables
-    if (Scaled /= sym%NO_SCALING) then
-!     Istatus = sfsnatt(Sds_Id, "actual_missing", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
-      temp_vector_2 = [Sds_Min,Sds_Max]
-     Istatus = sfsnatt(Sds_Id, "actual_range", DFNT_FLOAT32, 2, temp_vector_2) + Istatus
-    endif
-
-    !--- write valid_range for all scaled variables
-    if (Scaled /= sym%NO_SCALING) then
-
-     if (Sds_Type == DFNT_INT8) then
-       temp_vector_2_int1 = int((/Scaled_Min,Scaled_Max/),kind=int1)
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2,  temp_vector_2_int1 ) + Istatus
-     elseif (Sds_Type == DFNT_INT16) then
-       temp_vector_2_int2 = int((/Scaled_Min,Scaled_Max/),kind=int2)
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2, temp_vector_2_int2) + Istatus
-     elseif (Sds_Type == DFNT_FLOAT32) then
-          temp_vector_2 = [Sds_Min,Sds_Max]
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2, temp_vector_2) + Istatus
-     endif
-
-    endif
-
-    !--- write _FillValue for all except bitmasks (missing = -888)
-    if (Sds_Missing /= -888.0) then
-
-     !--- write Fill_Value
-     if (Sds_Type == DFNT_INT8) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, int(Scaled_Missing,kind=int1)) + Istatus
-     elseif (Sds_Type == DFNT_INT16) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, int(Scaled_Missing,kind=int2)) + Istatus
-     elseif (Sds_Type == DFNT_FLOAT32) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, Sds_Missing) + Istatus
-     endif
-
-    endif
-
-
-    !--- Scaling Attributes that go into scaled SDSs
-    if (Scaled > 0) then
-
-     !--- determine offset and scale factor
-     if (Sds_Min /= Sds_Max) then
-       Scale_Factor = (Sds_Max - Sds_Min) / (Scaled_Max - Scaled_Min)
-       Add_Offset =  Sds_Min - Scale_Factor*Scaled_Min
-     else
-       Scale_Factor = 1.0
-       Add_Offset = 0.0
-     endif
-
-     !--- assume any one-byte integer is not to be scaled
-     if (Sds_Missing == -128.0) then
-        Scale_Factor = 1.0
-        Add_Offset = 0.0
-     endif
-
-     !--- write remaining attributes
-     if (Scaled == sym%LINEAR_SCALING) then
-      Istatus = sfsnatt(Sds_Id, "add_offset", DFNT_FLOAT32, 1, Add_Offset) + Istatus
-      Istatus = sfsnatt(Sds_Id, "scale_factor", DFNT_FLOAT32, 1, Scale_Factor) + Istatus
-     endif 
-
-     !--- write deprecated scaling attributes that supported non-linear scaling
-     Istatus = sfsnatt(Sds_Id, "RANGE_MIN", DFNT_FLOAT32, 1, Sds_Min) + Istatus
-     Istatus = sfsnatt(Sds_Id, "RANGE_MAX", DFNT_FLOAT32, 1, Sds_Max) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MISSING", DFNT_INT32, 1, Scaled_Missing) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MIN", DFNT_INT32, 1, Scaled_Min) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MAX", DFNT_INT32, 1, Scaled_Max) + Istatus
-
-
-     if (Istatus /= 0) print *, "Error writing level2 2d sds named ", trim(Sds_Name)
-
-   endif 
-
-  end subroutine DEFINE_PIXEL_2D_SDS
-
-!====================================================================
-! SUBROUTINE Name: DEFINE_PIXEL_3D_SDS
-!
-! Function:
-!   Defines a 3D SDS for the level 2 files
-!
-! Description:
-!   This subroutine, given the inputs, creates the SDSs inside the various
-!   files. 
-!
-!====================================================================
-  subroutine DEFINE_PIXEL_3D_SDS(Sds_Id,     &
-                                 Sd_Id,      &
-                                 Sds_Dims,   &
-                                 Sds_Chunk,  &
-                                 Sds_Name,   &
-                                 Sds_Standard_Name,   &
-                                 Sds_Long_Name, &
-                                 Sds_Type,   &
-                                 scaled,     &
-                                 Sds_Min,    &
-                                 Sds_Max,    &
-                                 Sds_Units,  &
-                                 Sds_Missing,&
-                                 Dim1_Name, &
-                                 Dim2_Name, &
-                                 Dim3_Name, &
-                                 Istatus)
-
-    integer, intent(out):: Sds_Id
-    integer, intent(in):: Sd_Id
-    integer, dimension(3), intent(in):: Sds_Dims
-    integer, dimension(3), intent(in):: Sds_Chunk
-    integer, intent(in):: Sds_Type
-    real, intent(in):: Sds_Min
-    real, intent(in):: Sds_Max
-    real, intent(in):: Sds_Missing
-    integer(kind=int1), intent(in):: scaled
-    character(len=*), intent(in):: Sds_Name
-    character(len=*), intent(in):: Sds_Standard_Name
-    character(len=*), intent(in):: Sds_Long_Name
-    character(len=*), intent(in):: Sds_Units
-    character(len=*), intent(in):: Dim1_Name
-    character(len=*), intent(in):: Dim2_Name
-    character(len=*), intent(in):: Dim3_Name
-    integer, intent(out):: Istatus
-    integer:: Dim_Id
-    integer(kind=int4):: Scaled_Min
-    integer(kind=int4):: Scaled_Max
-    integer(kind=int4):: Scaled_Missing
-    real(kind=real4):: Add_Offset
-    real(kind=real4):: Scale_Factor
-
-    integer:: sfcreate
-    integer:: sfsnatt
-    integer:: sfscatt
-    integer:: sfdimid
-    integer:: sfsdmname
-    integer:: sfschnk
-    
-    real :: temp_vector_2  (2)
-    integer (kind = int1)  :: temp_vector_2_int1  (2)  
-    integer (kind = int2)  :: temp_vector_2_int2  (2) 
-
-    Istatus = 0 
-
-    Sds_Id = sfcreate(Sd_Id,Sds_Name,Sds_Type,3,Sds_Dims)
-
-    !--- Attributes that go into all SDSs
-    Istatus = sfsnatt(Sds_Id, "SCALED", DFNT_INT8, 1, Scaled) + Istatus
-    Istatus = sfscatt(Sds_Id, "units", DFNT_CHAR8, len_trim(Sds_Units), trim(Sds_Units)) + Istatus
-
-    Istatus = sfscatt(Sds_Id, "standard_name", DFNT_CHAR8, len_trim(Sds_Standard_Name),  &
-                               trim(Sds_Standard_Name)) + Istatus
-
-    Istatus = sfscatt(Sds_Id, "long_name", DFNT_CHAR8, len_trim(Sds_Long_Name),  &
-                                trim(Sds_Long_Name)) + Istatus
-    Dim_Id = sfdimid(Sds_Id, 0)
-    Istatus = sfsdmname(Dim_Id,trim(Dim1_Name)) + Istatus
-
-    Dim_Id = sfdimid(Sds_Id, 1)
-    Istatus = sfsdmname(Dim_Id,trim(Dim2_Name)) + Istatus
-
-    Dim_Id = sfdimid(Sds_Id, 2)
-    Istatus = sfsdmname(Dim_Id,trim(Dim3_Name)) + Istatus
-
-    Istatus = sfschnk(Sds_Id,Sds_Chunk,Comp_Type,Comp_Prm)+Istatus
-
-    !-- Range Missing written out regardless of Scaled Value
-    Istatus = sfsnatt(Sds_Id, "RANGE_MISSING", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
-    temp_vector_2 = [Sds_Min,Sds_Max]
-    Istatus = sfsnatt(Sds_Id, "actual_range", DFNT_FLOAT32, 2, temp_vector_2) + Istatus
-
-    !--- determine scaled ranges based on Sds_Type
-    if (Sds_Type == DFNT_INT8) then
-          Scaled_Min = One_Byte_Min
-          Scaled_Max = One_Byte_Max
-          Scaled_Missing = Missing_Value_Int1
-    elseif (Sds_Type == DFNT_INT16) then
-          Scaled_Min = Two_Byte_Min
-          Scaled_Max = Two_Byte_Max
-          Scaled_Missing = Missing_Value_Int2
-    endif
-    
-    !--- write valid_range and _FillValue for all except bitmasks (missing = -888)
-    if (Sds_Missing /= -888.0) then
-   
-    !--- write valid range
-    if (Sds_Type == DFNT_INT8) then
-       temp_vector_2_int1 = int((/Scaled_Min,Scaled_Max/),kind=int1)
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2,  temp_vector_2_int1 ) + Istatus
-     elseif (Sds_Type == DFNT_INT16) then
-       temp_vector_2_int2 = int((/Scaled_Min,Scaled_Max/),kind=int2)
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2, temp_vector_2_int2) + Istatus
-     elseif (Sds_Type == DFNT_FLOAT32) then
-          temp_vector_2 = [Sds_Min,Sds_Max]
-       Istatus = sfsnatt(Sds_Id, "valid_range", Sds_Type, 2, temp_vector_2) + Istatus
-     endif
-
-     !--- write fill_value
-     if (Sds_Type == DFNT_INT8) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, int(Scaled_Missing,kind=int1)) + Istatus
-     elseif (Sds_Type == DFNT_INT16) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, int(Scaled_Missing,kind=int2)) + Istatus
-     elseif (Sds_Type == DFNT_FLOAT32) then
-       Istatus = sfsnatt(Sds_Id, "_FillValue", Sds_Type, 1, Sds_Missing) + Istatus
-     endif
-
-    endif
-
-    !--- Attributes that go into scaled SDSs
-    if (Scaled > 0) then
-
-     !--- determine offset and scale factor
-     if (Sds_Min /= Sds_Max) then
-       Scale_Factor = (Sds_Max - Sds_Min) / (Scaled_Max - Scaled_Min)
-       Add_Offset =  Sds_Min - Scale_Factor*Scaled_Min
-     else
-       Scale_Factor = 1.0
-       Add_Offset = 0.0
-     endif
-   
-     !--- assume any one-byte integer is not to be scaled
-     if (Sds_Missing == -128.0) then
-        Scale_Factor = 1.0
-        Add_Offset = 0.0
-     endif
-
-     !--- write remaining attributes
-     Istatus = sfsnatt(Sds_Id, "RANGE_MIN", DFNT_FLOAT32, 1, Sds_Min) + Istatus
-     Istatus = sfsnatt(Sds_Id, "RANGE_MAX", DFNT_FLOAT32, 1, Sds_Max) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MISSING", DFNT_INT32, 1, Scaled_Missing) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MIN", DFNT_INT32, 1, Scaled_Min) + Istatus
-     Istatus = sfsnatt(Sds_Id, "SCALED_MAX", DFNT_INT32, 1, Scaled_Max) + Istatus
-     if (Scaled == sym%LINEAR_SCALING) then 
-      Istatus = sfsnatt(Sds_Id, "add_offset", DFNT_FLOAT32, 1, Add_Offset) + Istatus
-      Istatus = sfsnatt(Sds_Id, "scale_factor", DFNT_FLOAT32, 1, Scale_Factor) + Istatus
-     endif
-
-   endif
-
-   if (Istatus /= 0) print *, "Error writing level2 3d sds named ", trim(Sds_Name)
-
-  end subroutine DEFINE_PIXEL_3D_SDS
-
-   !============================================================================
-   !
-   !============================================================================
-   subroutine WRITE_ALGORITHM_ATTRIBUTES()
-
-      integer:: sfscatt
-      integer:: istatus
-    
-      istatus = 0
-      istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_VERSION", DFNT_CHAR8, len_trim(Cloud_Mask_Version), trim(Cloud_Mask_Version))+istatus
-      istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_THRESHOLDS_VERSION", DFNT_CHAR8,  &
-                 len_trim(Cloud_Mask_Thresholds_Version), trim(Cloud_Mask_Thresholds_Version))+istatus 
-      istatus = sfscatt(Sd_Id_Level2, "CLOUD_TYPE_VERSION", DFNT_CHAR8, len_trim(Cloud_Type_Version), trim(Cloud_Type_Version))+istatus 
-      istatus = sfscatt(Sd_Id_Level2, "ACHA_VERSION", DFNT_CHAR8, len_trim(ACHA_Version), trim(ACHA_Version))+istatus 
-      istatus = sfscatt(Sd_Id_Level2, "DCOMP_VERSION", DFNT_CHAR8, len_trim(dcomp_version), trim(dcomp_version))+istatus
-
-   end subroutine WRITE_ALGORITHM_ATTRIBUTES
-
+         call date_and_time(ctime(1), ctime(2), ctime(3))
+         ! Timestamp string format in accordance with the ISO-8601 standard.
+         string = ctime(1)(1:4)//"-"//ctime(1)(5:6)//"-"//ctime(1)(7:8)&
+                //"T"//ctime(2)(1:2)//":"//ctime(2)(3:4)//":"//ctime(2)(5:6)&
+                //ctime(3)(1:3)//":"//ctime(3)(4:5)
+         return
+      end function hdf_timestamp 
+        
+   end subroutine add_global_attributes
    !============================================================================
    !
    !   returns flename toot for level-2 output from level-1b filename
@@ -1314,11 +757,7 @@ CONTAINS
 
       !--- add 'clavrx_' to the file name output
       file_root = 'clavrx_' // file_root
-      
-   
+         
    end function file_root_from_l1b
 
-
 end module LEVEL2_ROUTINES
-
-

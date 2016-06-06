@@ -353,10 +353,9 @@ CONTAINS
       character(len=1020):: File_1b_root
       character(len=1020):: File_Level2
       character(len=1020):: Long_Name_Temp
-      real(kind=real4):: Resolution_KM
+      
       integer:: erstat
  
-      integer::k
       integer :: ii
       real(kind=real4):: Add_Offset
       real(kind=real4):: Scale_Factor
@@ -365,18 +364,14 @@ CONTAINS
  
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
-      !--- set Resolution_KM for global attribute
-      Resolution_KM = Sensor%Spatial_Resolution_Meters / 1000.0
-
+      !
 
       Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
       Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
 
       !-- dimension of 1d variables
       Sds_Dims_1d(1) = Image%Number_Of_Lines
-
-
-
+      
       File_Level2= trim(File_1b_Root)//".level2.hdf"
       call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
          

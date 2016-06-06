@@ -1481,27 +1481,17 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !--- compute height and pressure uncertainties 
  !-----------------------------------------------------------------------------
 
- !--- compute lapse rate as dT/dZ
- Abs_Lapse_Rate =  ABS((Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)) / &
-               (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
-
- if (Abs_Lapse_Rate < ABS_LAPSE_RATE_UNCER_MIN) Abs_Lapse_Rate = ABS_LAPSE_RATE_UNCER_MIN
-
- !--- compute lapse rate as dP/dZ
- Abs_Lapse_Rate_dP_dZ =  ABS((Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)) / &
-                     (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
-
- if (Abs_Lapse_Rate_dP_dZ < ABS_LAPSE_RATE_DP_DZ_UNCER_MIN) Abs_Lapse_Rate_dP_dZ = ABS_LAPSE_RATE_DP_DZ_UNCER_MIN
-
  !-- Compute Height Uncertainty
- Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) / Abs_Lapse_Rate
+ Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+                                            ABS_LAPSE_RATE_DT_DZ_UNCER
 
  !-- Compute Pressure Uncertainty
- if (Abs_Lapse_Rate_dP_dZ /= 0.0) THEN
-     Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) * Abs_Lapse_Rate_dP_dZ
- endif
+ Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
 
+ !-----------------------------------------------------------------------------
  !--- quality flags of the retrieved parameters
+ !-----------------------------------------------------------------------------
  do Param_Idx = 1,Num_Param    !loop over parameters
        if (Sx(Param_Idx,Param_Idx) < 0.111*Sa(Param_Idx,Param_Idx) ) THEN
             Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_1_3_APRIORI_RETREVIAL

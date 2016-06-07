@@ -239,7 +239,7 @@ contains
       integer :: istatus
       integer :: sfendacc
       istatus = sfendacc ( id_sds )
-      print*,istatus,id_sds 
+      
    end subroutine close_sds
    
    subroutine close_file(id_file)

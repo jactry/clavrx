@@ -154,12 +154,7 @@ module LEVEL2_ROUTINES
       , one_byte_max &
       , two_byte_min &
       , two_byte_max
-      
-   use HDF_PARAMS, only: &
-      scale_vector_i2_rank2 &
-      , scale_vector_i1_rank2 &
-      , write_clavrx_hdf_global_attributes
-      
+            
    use AVHRR_MODULE,only: &
        cloud_mask_version   &  !- comes from anywhere else!
       , cloud_mask_thresholds_version &   !- comes from anywhere else!
@@ -562,11 +557,13 @@ CONTAINS
                   select case (prd_i % dtype)
                   case(1)
                   if (prd_i % scaling == 1 ) then
+                     
                      call SCALE_VECTOR_I1_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,One_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                         One_Byte_Dummy ) + Istatus 
                   else
+                     
                      Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
                   end if
@@ -764,5 +761,49 @@ CONTAINS
       file_root = 'clavrx_' // file_root
          
    end function file_root_from_l1b
+   
+   subroutine SCALE_VECTOR_I1_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i1)
+      real, dimension(:,:), intent(in):: temp_r4
+      integer(kind=int1), intent(in):: iscaled
+      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
+      integer(kind=int1), dimension(:,:),  intent(out):: temp_i1
+      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
+
+      scratch_r4 = 0.0
+      !---- linear
+      if (iscaled == 1) then
+         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
+         temp_i1 = one_byte_min + scratch_r4 * (one_byte_max - one_byte_min)
+      endif
+
+      !--- set scaled missing values
+      where (temp_r4 == unscaled_missing)
+         temp_i1 = missing_value_int1
+      end where
+   end subroutine SCALE_VECTOR_I1_RANK2
+   
+   
+   subroutine SCALE_VECTOR_I2_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i2)
+      real, dimension(:,:), intent(in):: temp_r4
+      integer, intent(in):: iscaled
+      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
+      integer(kind=int2), dimension(:,:), intent(out):: temp_i2
+      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
+        
+      !---- linear
+      if (iscaled == 1) then
+      
+         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
+       
+         temp_i2 = two_byte_min + scratch_r4 * (two_byte_max - two_byte_min)
+      
+      endif
+
+      !--- set scaled missing values
+      where (temp_r4 == unscaled_missing)
+         temp_i2 = missing_value_int2
+      end where
+   end subroutine SCALE_VECTOR_I2_RANK2
+   
 
 end module LEVEL2_ROUTINES

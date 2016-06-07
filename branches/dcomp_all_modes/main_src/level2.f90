@@ -1,3 +1,5 @@
+
+
 ! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
@@ -256,10 +258,10 @@ CONTAINS
       class (prd_dtype) :: this
       
       integer :: line_num
-      integer  (kind = 4) :: csv_fle_unit
-      integer  (kind = 4) :: csv_file_status
-      integer  (kind = 4) :: csv_record_status
-      integer  (kind = 4) :: csv_file_unit
+      integer  (kind = int4) :: csv_fle_unit
+      integer  (kind = int4) :: csv_file_status
+      integer  (kind = int4) :: csv_record_status
+      integer  (kind = int4) :: csv_file_unit
       character ( len = 1000 ) record
       integer :: i_prd
       integer   ( kind = 4 ) value_count
@@ -274,13 +276,13 @@ CONTAINS
       read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
       
       do i_prd = 1, this % num_products
-         
+        
          read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
          call csv_value_count ( record, csv_record_status, value_count )
          rec_arr = extract_single ( trim ( record ) )
          
          this % product(i_prd) % switch = trim(rec_arr(1))  .eq. "1"
-                 
+              
          read ( rec_arr(3), * ) this%product(i_prd)%name 
          read ( rec_arr(2), * ) this%product(i_prd)%dim
          read( rec_arr(4), '(a)' ) this%product(i_prd)%name_clavrx
@@ -291,7 +293,7 @@ CONTAINS
          read ( rec_arr(9), * ) this%product(i_prd)%val_min
          read ( rec_arr(10), * ) this%product(i_prd)%val_max
          read ( rec_arr(11), * ) this%product(i_prd)%val_fill
-         read ( rec_arr(12), * ) this%product(i_prd)%add_offset
+         read ( rec_arr(12), '(a)' ) this%product(i_prd)%add_offset
          read ( rec_arr(13), '(a)' ) this%product(i_prd)%standard_name
          read ( rec_arr(14), '(a)' ) this%product(i_prd)%unit
          read ( rec_arr(15), '(a)' ) this%product(i_prd)%long_name

@@ -157,6 +157,7 @@ module LEVEL2_ROUTINES
       
    use HDF_PARAMS, only: &
       scale_vector_i2_rank2 &
+      , scale_vector_i1_rank2 &
       , write_clavrx_hdf_global_attributes
       
    use AVHRR_MODULE,only: &
@@ -361,9 +362,12 @@ CONTAINS
       integer :: ii
       real(kind=real4):: Add_Offset
       real(kind=real4):: Scale_Factor
-       integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
+      integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
                                         two_byte_min = -32767   !-(2**15)/2
- 
+                                        
+      integer(kind=int4), parameter :: one_byte_max = 127, & !(2**8)/2 - 1
+                                        one_byte_min = -127   !-(2**8)/2
+                                        
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
       !
@@ -398,10 +402,18 @@ CONTAINS
             call add_att( prd_i % sds_id, 'standard_name', trim(prd_i % standard_name))
             call add_att( prd_i % sds_id, 'long_name', trim(prd_i % long_name))  
             
-            if ( prd_i % scaling .NE. 0 ) then
-               
-               scale_factor = (prd_i%act_max - prd_i%act_min )/(two_byte_max - two_byte_min)
-               add_offset = prd_i%act_min - scale_factor * two_byte_min
+            if ( prd_i % scaling .gt. 0 ) then
+            
+               select case ( prd_i % scaling ) 
+               case(1)
+                  scale_factor = (prd_i%act_max - prd_i%act_min )/(one_byte_max - one_byte_min)
+                  add_offset = prd_i%act_min - scale_factor * one_byte_min
+               case(2)
+                  scale_factor = (prd_i%act_max - prd_i%act_min )/(two_byte_max - two_byte_min)
+                  add_offset = prd_i%act_min - scale_factor * two_byte_min   
+               end select   
+              
+            
                call add_att ( prd_i % sds_id, 'add_offset', add_offset)
                call add_att ( prd_i % sds_id, 'scale_factor',scale_factor)
             end if
@@ -452,6 +464,7 @@ CONTAINS
       
       character (len=40) :: name
       integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
+      integer(kind=int1), dimension(:,:),allocatable :: One_Byte_dummy
       integer :: ii
       
       ! first segment
@@ -517,6 +530,7 @@ CONTAINS
          allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
+         allocate ( one_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
         
          do ii = 1, prd % num_products
             prd_i => prd % product(ii)
@@ -547,16 +561,29 @@ CONTAINS
                case(2)
                   select case (prd_i % dtype)
                   case(1)
-                  Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                  if (prd_i % scaling == 1 ) then
+                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
+                        ,One_Byte_dummy)
+                     Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
+                        One_Byte_Dummy ) + Istatus 
+                  else
+                     Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                                data_dim2_dtype1) + Istatus
+                  end if
                   
                   case(2)
-                  call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
-                     ,Two_Byte_dummy)
-                  Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
-                     Two_Byte_Dummy ) + Istatus
-                
+                  if (prd_i % scaling == 1) then
+                     call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
+                        ,Two_Byte_dummy)
+                     Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
+                        Two_Byte_Dummy ) + Istatus
+                  else 
+                     Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                               data_dim2_dtype2) + Istatus
+                  end if 
+                  
                   case(4)
+                  !- this is only diagnostic variables, we don't scale..
                   Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d,  &
                        data_dim2_dtype4 ) + Istatus   
                   end select   
@@ -573,7 +600,7 @@ CONTAINS
          if ( allocated ( data_dim2_dtype3)) deallocate ( data_dim2_dtype3)
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
-      
+         if ( allocated ( one_byte_dummy)) deallocate (one_byte_dummy)
          !--- check for and report errors
          
          if (Istatus /= 0) then

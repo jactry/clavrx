@@ -149,13 +149,7 @@ module LEVEL2_ROUTINES
       , DFNT_FLOAT32 &
       , DFNT_INT32 &
       , DFNT_INT16
-      
-   use SCALING_PARAMETERS, only: &
-      one_byte_min &
-      , one_byte_max &
-      , two_byte_min &
-      , two_byte_max
-            
+                  
    use AVHRR_MODULE,only: &
        cloud_mask_version   &  !- comes from anywhere else!
       , cloud_mask_thresholds_version &   !- comes from anywhere else!
@@ -251,6 +245,13 @@ module LEVEL2_ROUTINES
    type(prd_individual_dtype), pointer:: prd_i
    
    integer :: id_file
+   
+   integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
+                                        two_byte_min = -32767   !-(2**15)/2
+                                        
+   integer(kind=int4), parameter :: one_byte_max = 127, & !(2**8)/2 - 1
+                                        one_byte_min = -127   !-(2**8)/2
+   
 
 CONTAINS
    
@@ -367,11 +368,7 @@ CONTAINS
       integer :: ii
       real(kind=real4):: Add_Offset
       real(kind=real4):: Scale_Factor
-      integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
-                                        two_byte_min = -32767   !-(2**15)/2
-                                        
-      integer(kind=int4), parameter :: one_byte_max = 127, & !(2**8)/2 - 1
-                                        one_byte_min = -127   !-(2**8)/2
+
                                         
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
@@ -428,6 +425,8 @@ CONTAINS
             
                call add_att ( prd_i % sds_id, 'add_offset', add_offset)
                call add_att ( prd_i % sds_id, 'scale_factor',scale_factor)
+               call add_att ( prd_i % sds_id, 'actual_min',prd_i%act_min )
+               call add_att ( prd_i % sds_id, 'actual_max',prd_i%act_max )
             end if
               
   

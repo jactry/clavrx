@@ -347,7 +347,7 @@ ncep_reanalysis.o: ncep_reanalysis.f90 constant.o hdf.o nwp_common.o sort_module
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
-level2.o: level2.f90 constant.o pixel_common.o hdf.o scaling_params.o clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o cx_hdf_write_mod.o
+level2.o: level2.f90 constant.o pixel_common.o hdf.o clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o cx_hdf_write_mod.o
 cx_hdf_write_mod.o:cx_hdf_write_mod.f90
 level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o

@@ -45,14 +45,14 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,refl_lunar_dnb_nom,ch(44)%ref_lunar_toa,2,2,1,-2.00000,150.000,toa_bidirectional_reflectance_lunar_dnb_nominal,%,top of atmosphere reflectance lunar dnb channel,none
 1,refl_3_75um_nom,ch(20)%ref_toa,2,2,1,-20.0000,80.0000,toa_bidirectional_reflectance,%,top of atmosphere reflectance at the nominal wavelength of 3.75 microns - NOAA CDR,none
 1,temp_3_75um_nom,ch(20)%bt_toa,2,2,1,180.000,340.000,toa_brightness_temperature,K,top of atmosphere brightness temperature at the nominal wavelength of 3.75 microns - NOAA CDR,none
-1,temp_3_9um_nom,NOT_SET_YET,2,2,1,180.000,340.000,toa_brightness_temperature_3_9_micron_nominal,K,top of atmosphere brightness temperature at the nominal wavelength of 3.9 microns,none
+1,temp_3_9um_nom,ch(22)%Bt_Toa,2,2,1,180.000,340.000,toa_brightness_temperature_3_9_micron_nominal,K,top of atmosphere brightness temperature at the nominal wavelength of 3.9 microns,none
 1,temp_8_5um_nom,ch(27)%bt_toa,2,2,1,180.000,340.000,toa_brightness_temperature_8_5_micron_nominal,K,top of atmosphere brightness temperature at the nominal wavelength of 8.5 microns,none
 1,temp_11_0um_nom,ch(31)%bt_toa,2,2,1,180.000,340.000,toa_brightness_temperature,K,top of atmosphere brightness temperature at the nominal wavelength of 11.0 microns - NOAA CDR,none
 1,temp_12_0um_nom,ch(32)%bt_toa,2,2,1,180.000,340.000,toa_brightness_temperature,K,top of atmosphere brightness temperature at the nominal wavelength of 12.0 microns - NOAA CDR,none
-1,refl_0_65um_nom_min_3x3,NOT_SET_YET,2,2,1,-2.00000,120.000,bidirectional_reflectance_0_65_micron_nom_min_3x3,%,3x3 pixel minimum reflectanceat the nominal wavelength of 0.65 microns,none
+1,refl_0_65um_nom_min_3x3,ref_Ch1_Min_3x3,2,2,1,-2.00000,120.000,bidirectional_reflectance_0_65_micron_nom_min_3x3,%,3x3 pixel minimum reflectanceat the nominal wavelength of 0.65 microns,none
 1,refl_0_65um_nom_stddev_3x3,Ref_Ch1_Min_3x3,2,1,1,0.00000,20.0000,not specified,%,standard deviation of the 0.63 micron reflectance computed over a 3x3 pixel array,none
 1,temp_11_0um_nom_stddev_3x3,Ref_Ch1_Std_3x3,2,1,1,0.00000,20.0000,not specified,K,standard deviation of the 11 micron brightness temperature computed over a 3x3 pixel array,none
-1,temp_11_0um_nom_max_3x3,NOT_SET_YET,2,2,1,180.000,340.000,not specified,K,maximum of the 11 micron brightness temperature computed over a 3x3 pixel array,none
+1,temp_11_0um_nom_max_3x3,Bt_Ch31_Max_3x3,2,2,1,180.000,340.000,not specified,K,maximum of the 11 micron brightness temperature computed over a 3x3 pixel array,none
 1,cloud_probability,posterior_cld_probability,2,2,1,0.00000,1.00000,not specified,none,probability of a pixel being cloudy from the Bayesian cloud mask,none
 1,cloud_mask,cld_mask,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3",   0
 1,adj_pix_cloud_mask,Adj_Pix_Cld_Mask,2,1,0,0.00000,0.00000,adj_pix_cloud_mask,none,"integer classification of the adjacent pixel cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3",   1
@@ -87,7 +87,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,acha_inversion_flag,ACHA%Inversion_Flag,2,1,0,0.00000,0.00000,acha_inversion_flag,none,flag stating whether ACHA was processed assuming an inversion(1) or not(0),none
 1,cld_layer,NOT_SET_YET,2,1,0,0.00000,0.00000,cloud_layer,none,"cloud layer: 0-none,1:sfc-642 hpa, 2:642-350 hPa, 3:350 hpa -toa",none
 1,conv_cloud_probability,NOT_SET_YET,2,1,1,0.00000,1.00000,convective_cloud_probability,none,convective cloud probility: 0-1,none
-1,supercooled_cloud_probability,NOT_SET_YET,2,1,1,0.00000,1.00000,supercooled_cloud_probability,none,convective cloud probility: 0-1,none
+1,supercooled_cloud_probability,ACHA%Supercooled_Cld_Prob,2,1,1,0.00000,1.00000,supercooled_cloud_probability,none,convective cloud probility: 0-1,none
 1,cld_height_h2o,Zc_H2O,2,2,1,0.00000,20000.0,height_at_cloud_top_from_h2o_intercept,m,cloud-top height computed using the two-point h2o intercept,none
 1,cld_height_opaque,Zc_opaque_cloud,2,2,1,0.00000,20000.0,height_at_cloud_top_assuming_opaque,m,cloud-top height computed using assuming the cloud is opaque,none
 1,cld_temp_opaque,NOT_SET_YET,2,2,1,160.000,320.000,cloud_top_temperature_opaque,K,cloud top temperature assuming an opaque cloud,none
@@ -137,24 +137,24 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,emiss_3_75um_nom,NOT_SET_YET,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal,none,top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
 1,emiss_3_75um_nom_clear,NOT_SET_YET,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal_clear,none,top of atmosphere clear sky emissivity estimateat the nominal wavelength of 3.75 microns,none
 1,emiss_3_75um_nom_median_3x3,NOT_SET_YET,2,2,1,0.500000,3.00000,emissivity_3_75_micron_nominal_median_3x3,none,3x3 pixel median top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
-1,temp_3_75um_nom_median_3x3,NOT_SET_YET,2,2,1,180.000,340.000,brightness_temperature_3.7_micron_nominal_median_3x3,none,3x3 pixel median filtered brightness temperature at the nominal wavelength of 3.75 microns,none
+1,temp_3_75um_nom_median_3x3,Bt_Ch20_median_3x3,2,2,1,180.000,340.000,brightness_temperature_3.7_micron_nominal_median_3x3,none,3x3 pixel median filtered brightness temperature at the nominal wavelength of 3.75 microns,none
 1,diff_ch31_ch32_bt_ch31_max_3x3,NOT_SET_YET,2,2,1,-4.00000,12.0000,difference_11_minus_12_brightness_temperature_max_3x3,K,3x3 pixel maximum of 11.0 micron minus 12.0 micronbrightness temperatures (nominal wavelengths),none
 1,emissivity_11um_tropopause,ch(31)%Emiss_Tropo,2,1,1,-0.500000,1.20000,not specified,none,"emissivity at the nominal wavelength of 11 microns, assuming the cloud was located at the Tropopause",none
 1,beta_11um_85um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_85um_tropopause,none,cloud 11/8.5 micron beta value assuming cloud resides at tropopause,none
 1,beta_11um_12um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_12um_tropopause,none,cloud 11/12 micron beta value assuming cloud resides at tropopause,none
 1,aot_0_65um_nom,NOT_SET_YET,2,2,1,-0.200000,5.00000,optical_thickness_of_atmosphere_layer_due_to_aerosol_0.65_micron nominal,none,optical thickness of atmosphere layer due to aerosol at the nominal wavelength of 0.65 microns,none
 1,aot_qf,aot_qf,2,1,0,0.00000,0.00000,optical_thickness_of_atmosphere_layer_quality_flag,none,quality flag for optical thickness of atmosphere layer,none
-1,olr,NOT_SET_YET,2,1,1,50.0000,350.000,toa_net_upward_longwave_flux,W m-2,top of atmosphere outgoing longwave radiation,none
+1,olr,olr,2,1,1,50.0000,350.000,toa_net_upward_longwave_flux,W m-2,top of atmosphere outgoing longwave radiation,none
 1,ndvi_sfc,ndvi_sfc,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index,none,"normalized difference vegetation index, atmospherically corrected",none
-1,ndvi_sfc_white_sky_nwp,NOT_SET_YET,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance,none,"normalized difference vegetation index, atmospherically corrected, modis white sky",none
+1,ndvi_sfc_white_sky_nwp,Ndvi_Sfc_White_Sky,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance,none,"normalized difference vegetation index, atmospherically corrected, modis white sky",none
 1,surface_temperature_retrieved,Tsfc_Retrieved,2,1,1,220.000,340.000,surface_brightness_temperature,K,surface temperature retrieved using atmospherically corrected 11 micron radiance,none
 1,atmos_rad_11_0um_nom_nwp,NOT_SET_YET,2,1,1,0.00000,100.000,atmospheric_radiance_11_0um_nom_nwp,mW/m^2/cm^-1,atmospheric emission 11 micron radiance at toa from nwp,none
 1,atmos_trans_11_0um_nom_nwp,NOT_SET_YET,2,1,1,0.00000,1.00000,atmospheric_transmission_11_0um_nom_nwp,none,atmospheric tranmission 11 micron radiance at toa from nwp,none
-1,sfc_emiss_3_75um_nom_nwp,NOT_SET_YET,2,1,1,0.750000,1.00000,surface_emissivity_3_75um_nom_nwp,none,surface emissivity at 3.75 micron from ancillary data,none
-1,sfc_emiss_11_0um_nom_nwp,NOT_SET_YET,2,1,1,0.750000,1.00000,surface_emissivity_11_0um_nom_nwp,none,surface emissivity at 11 micron from ancillary data,none
+1,sfc_emiss_3_75um_nom_nwp,ch(20)%Sfc_Emiss,2,1,1,0.750000,1.00000,surface_emissivity_3_75um_nom_nwp,none,surface emissivity at 3.75 micron from ancillary data,none
+1,sfc_emiss_11_0um_nom_nwp,ch(31)%Sfc_Emiss,2,1,1,0.750000,1.00000,surface_emissivity_11_0um_nom_nwp,none,surface emissivity at 11 micron from ancillary data,none
 1,surface_air_temperature_nwp,Tair_Nwp_Pix,2,1,1,220.000,340.000,surface_air_temperature_nwp,K,surface air temperature from NWP ancillary data,none
 1,surface_temperature_background,Tsfc_Nwp_Pix,2,2,1,220.000,340.000,surface_temperature,K,surface temperature assumed using ancillary data sources,none
-1,sst_background_uni_3x3,NOT_SET_YET,2,2,1,0.00000,20.0000,sea_surface_skin_temperature_background_uni_3x3,none,standard deviation of background sea surface skin temperature 3x3surface temperature assumed using ancillary data sources,none
+1,sst_background_uni_3x3,Sst_Anal_Uni,2,2,1,0.00000,20.0000,sea_surface_skin_temperature_background_uni_3x3,none,standard deviation of background sea surface skin temperature 3x3surface temperature assumed using ancillary data sources,none
 1,surface_relative_humidity_nwp,Rh_Nwp_Pix,2,1,1,0.00000,110.000,surface_relative_humidity,%,near-surface relative humidity from NWP ancillary data,none
 1,surface_pressure_background,Psfc_Nwp_Pix,2,1,1,700.000,1100.00,surface_pressure_background,hPa,surface pressure assumed using ancillary data sources,none
 1,mean_sealevel_pressure_background,Pmsl_Nwp_Pix,2,1,1,850.000,1100.00,mean_sealevel_pressure_background,hPa,mean sealevel pressure assumed using ancillary data sources,none
@@ -171,16 +171,16 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,refl_0_86um_nom_counts,Ch2_Counts,2,2,0,0.00000,0.00000,not specified,none,instrument counts for the nominal 0.86 micron channel,none
 1,refl_1_60um_nom_counts,Ch6_Counts,2,2,0,0.00000,0.00000,not specified,none,instrument counts for the nominal 1.6 micron channel,none
 1,total_precipitable_water_nwp,Tpw_Nwp_Pix,2,1,1,0.00000,10.0000,atmosphere_mass_content_of_water_vapor,cm,total precipitable water from NWP ancillary data,none
-1,total_column_ozone_nwp,NOT_SET_YET,2,1,1,100.000,550.000,total_column_ozone_nwp,DU,total ozone amount integrated over column from nwp ancillary data,none
+1,total_column_ozone_nwp,ozone_nwp_pix,2,1,1,100.000,550.000,total_column_ozone_nwp,DU,total ozone amount integrated over column from nwp ancillary data,none
 1,refl_3_75um_nom_atmos_corr,ch(20)%Ref_Sfc,2,2,1,-20.0000,80.0000,toa_bidirectional_pseudo_reflectance_3_75_micron_atmos_corr,%,"observed pseudo-reflectance at the nominal wavelength of 3.75 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration",none
 1,refl_0_65um_nom_atmos_corr,ch(1)%Ref_Sfc,2,2,1,-2.00000,120.000,toa_bidirectional_pseudo_reflectance_0_65_micron_atmos_corr,%,"observed pseudo-reflectance at the nominal wavelength of 0.65 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration",none
 1,refl_0_86um_nom_atmos_corr,ch(2)%Ref_Sfc,2,1,1,-2.00000,120.000,toa_bidirectional_pseudo_reflectance_0_85_micron_atmos_corr,%,"observed pseudo-reflectance at the nominal wavelength of 0.85 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration",none
 1,refl_1_60um_nom_atmos_corr,ch(6)%Ref_Sfc,2,1,1,-2.00000,120.000,toa_bidirectional_pseudo_reflectance_1_60_micron_atmos_corr,%,"observed pseudo-reflectance at the nominal wavelength of 1.60 microns, atmospherically corrected, expressed as a percentage using PATMOS-x calibration",none
-1,refl_0_65um_nom_clear_sky,Ch(1)%Ref_Toa_Clear,2,2,1,-2.00000,120.000,toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal,%,top of atmosphere bidirectional reflectance modeled assuming clear skies at the nominal wavelength of 0.65 microns,none
+1,refl_0_65um_nom_clear_sky,ch(1)%Ref_Toa_Clear,2,2,1,-2.00000,120.000,toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal,%,top of atmosphere bidirectional reflectance modeled assuming clear skies at the nominal wavelength of 0.65 microns,none
 1,temp_3_75um_nom_clear_sky,ch(20)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky_3_75_micron_nominal,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 11.0 microns,none
-1,temp_8_5um_nom_clear_sky,Ch(27)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky_8_5_micron_nominal,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 8.5 microns,none
-1,temp_11_0um_nom_clear_sky,Ch(31)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 11.0 microns,none
-1,temp_12_0um_nom_clear_sky,Ch(32)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky_12_0_micron_nominal,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 12.0 microns,none
+1,temp_8_5um_nom_clear_sky,ch(27)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky_8_5_micron_nominal,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 8.5 microns,none
+1,temp_11_0um_nom_clear_sky,ch(31)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 11.0 microns,none
+1,temp_12_0um_nom_clear_sky,ch(32)%Bt_Toa_Clear,2,2,1,180.000,340.000,toa_brightness_temperature_assuming_clear_sky_12_0_micron_nominal,K,top of atmosphere brightness temperature modeled assuming clear skies at the nominal wavelength of 12.0 microns,none
 1,refl_0_65um_nom_mean_3x3,Ref_Ch1_Mean_3x3,2,2,1,-2.00000,120.000,not specified,%,mean of the 0.65 micron nominal reflectance computed over a 3x3 pixel array,none
 1,pixel_sst_unmasked,Sst_Unmasked,2,2,1,265.000,315.000,sea_surface_skin_temperature_unmasked,K,sea surface skin temperature at the pixel with land mask applied and cloud mask not applied,none
 1,wind_speed_10m_nwp,Wnd_Spd_10m_Nwp_Pix,2,1,1,0.00000,50.0000,wind_speed_10m_above_ground,m/s,wind speed from the NWP ancillary data at 10m above ground level,none

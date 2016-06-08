@@ -119,7 +119,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,dcomp_info,dcomp_info_flag,2,2,0,0.00000,0.00000,not specified,none,"processing flags for DCOMP 1:info flag set ? (0=no,1=yes) 2:land/sea mask (0=land,1=sea) 3:day/night mask (0=Day,1=Night) 4:twilight (65-82 solar zenith) (0=no,1=yes) 5:snow (0=no,1= snow) 6:sea-ice (0=no,1=sea-ice) 7:phase (0=liquid,1=ice) 8:thick_cloud (0=no,1=yes) 9:thin_cloud (0=no,1=yes)",   0
 1,insolation_dcomp,Insolation_Dcomp,2,2,1,0.00000,1500.00,surface_downwelling_shortwave_flux_dcomp,W m-2,surface downwelling shortwave flux computed from the DCOMP cloud properties,   1
 1,insolation_diffuse_dcomp,Insolation_Dcomp_Diffuse,2,2,1,0.00000,1500.00,surface_downwelling_shortwave_flux_diffuse_dcomp,W m-2,diffuse component of the surface downwelling shortwave flux computed from the DCOMP cloud properties,none
-1,cdnc_dcomp,NOT_SET_YET,2,2,1,0.00000,1000.00,cloud_droplet_number_concentration,cm-3,cloud_droplet_number_concentration from DCOMP algorithm,none
+1,cdnc_dcomp,cdnc_dcomp,2,2,1,0.00000,1000.00,cloud_droplet_number_concentration,cm-3,cloud_droplet_number_concentration from DCOMP algorithm,none
 1,hcld_dcomp,NOT_SET_YET,2,2,1,0.00000,4000.00,geometrical_thickness_of_liquid_clouds,m,geometrical_thickness_of_liquid_clouds based on DCOMP,none
 1,cld_opd_nlcomp,Tau_Nlcomp,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud,none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from NLCOMP",none
 1,cld_reff_nlcomp,Reff_Nlcomp,2,2,1,0.00000,160.000,effective_radius_of_cloud_particle,micron,effective radius of cloud particles determined from NLCOMP; see attributes for channels used,none
@@ -143,7 +143,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,beta_11um_85um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_85um_tropopause,none,cloud 11/8.5 micron beta value assuming cloud resides at tropopause,none
 1,beta_11um_12um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_12um_tropopause,none,cloud 11/12 micron beta value assuming cloud resides at tropopause,none
 1,aot_0_65um_nom,NOT_SET_YET,2,2,1,-0.200000,5.00000,optical_thickness_of_atmosphere_layer_due_to_aerosol_0.65_micron nominal,none,optical thickness of atmosphere layer due to aerosol at the nominal wavelength of 0.65 microns,none
-1,aot_qf,NOT_SET_YET,2,1,0,0.00000,0.00000,optical_thickness_of_atmosphere_layer_quality_flag,none,quality flag for optical thickness of atmosphere layer,none
+1,aot_qf,aot_qf,2,1,0,0.00000,0.00000,optical_thickness_of_atmosphere_layer_quality_flag,none,quality flag for optical thickness of atmosphere layer,none
 1,olr,NOT_SET_YET,2,1,1,50.0000,350.000,toa_net_upward_longwave_flux,W m-2,top of atmosphere outgoing longwave radiation,none
 1,ndvi_sfc,ndvi_sfc,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index,none,"normalized difference vegetation index, atmospherically corrected",none
 1,ndvi_sfc_white_sky_nwp,NOT_SET_YET,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance,none,"normalized difference vegetation index, atmospherically corrected, modis white sky",none

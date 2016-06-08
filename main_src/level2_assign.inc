@@ -341,6 +341,10 @@ case("insolation_diffuse_dcomp")
    if (allocated ( Insolation_Dcomp_Diffuse)) then
       data_dim2_dtype2 = Insolation_Dcomp_Diffuse(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cdnc_dcomp")
+   if (allocated ( cdnc_dcomp)) then
+      data_dim2_dtype2 = cdnc_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_opd_nlcomp")
    if (allocated ( Tau_Nlcomp)) then
       data_dim2_dtype2 = Tau_Nlcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -384,6 +388,10 @@ case("cloud_fraction_uncertainty")
 case("emissivity_11um_tropopause")
    if (allocated ( ch(31)%Emiss_Tropo)) then
       data_dim2_dtype1 = ch(31)%Emiss_Tropo(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("aot_qf")
+   if (allocated ( aot_qf)) then
+      data_dim2_dtype1 = aot_qf(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("ndvi_sfc")
    if (allocated ( ndvi_sfc)) then

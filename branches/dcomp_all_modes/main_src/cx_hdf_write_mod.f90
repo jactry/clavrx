@@ -2,7 +2,7 @@
 !
 !
 
-module level2_hdf_mod
+module cx_hdf_write_mod
    use constants
    use hdf
    
@@ -27,6 +27,7 @@ module level2_hdf_mod
    
    integer :: istatus
    
+   public  hdf_file_open 
 contains
    !
    !
@@ -34,14 +35,14 @@ contains
    !
    !
    !
-   integer function file_open ( file)
+   integer function hdf_file_open ( file)
       character(len=*) , intent(in) :: file
       integer :: dum
       integer :: sfstart
       
       dum = sfstart(trim(file),DFACC_CREATE)
-      file_open = dum
-   end function file_open
+      hdf_file_open = dum
+   end function hdf_file_open
    
    !
    !
@@ -263,4 +264,4 @@ contains
    end subroutine close_file
    
 
-end module level2_hdf_mod
+end module cx_hdf_write_mod

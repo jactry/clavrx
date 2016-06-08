@@ -89,21 +89,26 @@
 ! Marker: ACCESS MODULES 
 !******************************************************************************
    use CONSTANTS
-   use HDF
+  
    use PIXEL_COMMON
    use PIXEL_ROUTINES
-   use LEVEL2_ROUTINES
+   use LEVEL2_ROUTINES, only: &
+      write_pixel_hdf_records
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
-   use AEROSOL_PROPERTIES
-   use HDF_PARAMS
+   
+   use AEROSOL_PROPERTIES, only: &
+      pixel_aer_ret_ocean &
+      , read_aer_ch123a_ref_luts
+
    use LAND_SFC_PROPERTIES
    use GLOBSNOW_READ_ROUTINES
-   use GFS
+   use GFS, only: &
+    read_gfs_data
    use NCEP_REANALYSIS
    use DCOMP_DERIVED_PRODUCTS_MODULE
    use CLAVRX_OLR_MODULE
@@ -123,9 +128,8 @@
       
    use RTM_COMMON,only: &
       nlevels_rtm
+ 
    
-   use NWP_COMMON
-   use SCALING_PARAMETERS
    use SFC_EMISS
    use PLANCK
    use AVHRR_REPOSITION_ROUTINES

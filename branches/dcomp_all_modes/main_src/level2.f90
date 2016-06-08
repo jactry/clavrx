@@ -413,13 +413,15 @@ CONTAINS
             
             if ( prd_i % scaling .gt. 0 ) then
             
-               select case ( prd_i % scaling ) 
+               select case ( prd_i % dtype ) 
                case(1)
                   scale_factor = (prd_i%act_max - prd_i%act_min )/(one_byte_max - one_byte_min)
                   add_offset = prd_i%act_min - scale_factor * one_byte_min
+                  call add_att ( prd_i % sds_id, 'scaled_missing',Missing_Value_Int1 )
                case(2)
                   scale_factor = (prd_i%act_max - prd_i%act_min )/(two_byte_max - two_byte_min)
-                  add_offset = prd_i%act_min - scale_factor * two_byte_min   
+                  add_offset = prd_i%act_min - scale_factor * two_byte_min 
+                  call add_att ( prd_i % sds_id, 'scaled_missing',Missing_Value_Int2 )  
                end select   
               
             

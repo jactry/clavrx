@@ -245,6 +245,26 @@ case("cloud_phase")
    if (allocated ( cld_phase)) then
       data_dim2_dtype1 = cld_phase(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cloud_phase_aux")
+   if (allocated ( Cld_Phase_Aux)) then
+      data_dim2_dtype1 = Cld_Phase_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cloud_mask_aux")
+   if (allocated ( Cld_Mask_Aux)) then
+      data_dim2_dtype1 = Cld_Mask_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cloud_type_aux")
+   if (allocated ( Cld_Type_Aux)) then
+      data_dim2_dtype1 = Cld_Type_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_height_aux")
+   if (allocated ( zc_aux)) then
+      data_dim2_dtype2 = zc_aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_height_sndr")
+   if (allocated ( zc_co2)) then
+      data_dim2_dtype2 = zc_co2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_press_acha")
    if (allocated ( acha%pc)) then
       data_dim2_dtype2 = acha%pc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -261,13 +281,41 @@ case("cld_height_top_acha")
    if (allocated ( acha%zc_top)) then
       data_dim2_dtype2 = acha%zc_top(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_press_top_acha")
+   if (allocated ( ACHA%Pc_Top)) then
+      data_dim2_dtype2 = ACHA%Pc_Top(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_press_top_l1_aux")
+   if (allocated ( Pc_Top1_Aux)) then
+      data_dim2_dtype2 = Pc_Top1_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_press_top_l2_aux")
+   if (allocated ( Pc_Top2_Aux)) then
+      data_dim2_dtype2 = Pc_Top2_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_height_base_acha")
    if (allocated ( acha%zc_base)) then
       data_dim2_dtype2 = acha%zc_base(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_press_base_acha")
+   if (allocated ( ACHA%Pc_Base)) then
+      data_dim2_dtype2 = ACHA%Pc_Base(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_height_lower_acha")
+   if (allocated ( ACHA%Zc_Lower_Cloud)) then
+      data_dim2_dtype2 = ACHA%Zc_Lower_Cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_pressure_lower_acha")
+   if (allocated ( ACHA%Pc_Lower_Cloud)) then
+      data_dim2_dtype2 = ACHA%Pc_Lower_Cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_altitude_acha")
    if (allocated ( acha%alt)) then
       data_dim2_dtype2 = acha%alt(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_base_altitude_acha")
+   if (allocated ( ACHA%Base_Alt)) then
+      data_dim2_dtype2 = ACHA%Base_Alt(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("acha_processing_order")
    if (allocated ( acha%processing_order)) then
@@ -276,6 +324,14 @@ case("acha_processing_order")
 case("acha_inversion_flag")
    if (allocated ( ACHA%Inversion_Flag)) then
       data_dim2_dtype1 = ACHA%Inversion_Flag(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_layer")
+   if (allocated ( ACHA%Cld_Layer)) then
+      data_dim2_dtype1 = ACHA%Cld_Layer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("conv_cloud_probability")
+   if (allocated ( ACHA%Conv_Cld_Prob)) then
+      data_dim2_dtype1 = ACHA%Conv_Cld_Prob(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("supercooled_cloud_probability")
    if (allocated ( ACHA%Supercooled_Cld_Prob)) then
@@ -288,6 +344,10 @@ case("cld_height_h2o")
 case("cld_height_opaque")
    if (allocated ( Zc_opaque_cloud)) then
       data_dim2_dtype2 = Zc_opaque_cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_temp_opaque")
+   if (allocated ( Tc_Opaque_Cloud)) then
+      data_dim2_dtype2 = Tc_Opaque_Cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cld_emiss_acha")
    if (allocated ( acha%ec)) then
@@ -304,6 +364,18 @@ case("cld_height_uncer_acha")
 case("cld_temp_uncer_acha")
    if (allocated ( acha%tc_uncertainty)) then
       data_dim2_dtype1 = acha%tc_uncertainty(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_press_uncer_acha")
+   if (allocated ( ACHA%Pc_Uncertainty)) then
+      data_dim2_dtype1 = ACHA%Pc_Uncertainty(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_press_uncer1_aux")
+   if (allocated ( Pc_Uncertainty1_Aux)) then
+      data_dim2_dtype1 = Pc_Uncertainty1_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_press_uncer2_aux")
+   if (allocated ( Pc_Uncertainty2_Aux)) then
+      data_dim2_dtype1 = Pc_Uncertainty2_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cld_temp_acha_qf")
    if (allocated ( acha%oe_quality_flags)) then
@@ -345,9 +417,17 @@ case("cld_opd_dcomp")
    if (allocated ( tau_dcomp)) then
       data_dim2_dtype2 = tau_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_opd_aux")
+   if (allocated ( Tau_Aux)) then
+      data_dim2_dtype2 = Tau_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_reff_dcomp")
    if (allocated ( reff_dcomp)) then
       data_dim2_dtype2 = reff_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_aux")
+   if (allocated ( Reff_Aux)) then
+      data_dim2_dtype2 = Reff_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cld_opd_dcomp_unc")
    if (allocated ( tau_dcomp_cost)) then
@@ -465,6 +545,18 @@ case("emissivity_11um_tropopause")
    if (allocated ( ch(31)%Emiss_Tropo)) then
       data_dim2_dtype1 = ch(31)%Emiss_Tropo(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("beta_11um_85um_tropopause")
+   if (allocated ( Beta_11um_85um_Tropo_Rtm)) then
+      data_dim2_dtype1 = Beta_11um_85um_Tropo_Rtm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("beta_11um_12um_tropopause")
+   if (allocated ( Beta_11um_12um_Tropo_Rtm)) then
+      data_dim2_dtype1 = Beta_11um_12um_Tropo_Rtm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("aot_0_65um_nom")
+   if (allocated ( aot1)) then
+      data_dim2_dtype2 = aot1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("aot_qf")
    if (allocated ( aot_qf)) then
       data_dim2_dtype1 = aot_qf(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -484,6 +576,14 @@ case("ndvi_sfc_white_sky_nwp")
 case("surface_temperature_retrieved")
    if (allocated ( Tsfc_Retrieved)) then
       data_dim2_dtype1 = Tsfc_Retrieved(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("atmos_rad_11_0um_nom_nwp")
+   if (allocated ( ch(31)%Rad_Atm)) then
+      data_dim2_dtype1 = ch(31)%Rad_Atm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("atmos_trans_11_0um_nom_nwp")
+   if (allocated ( ch(31)%Trans_Atm)) then
+      data_dim2_dtype1 = ch(31)%Trans_Atm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("sfc_emiss_3_75um_nom_nwp")
    if (allocated ( ch(20)%Sfc_Emiss)) then

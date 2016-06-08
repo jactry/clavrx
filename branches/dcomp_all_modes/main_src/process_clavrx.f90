@@ -155,6 +155,8 @@
  
    use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
+   
+   use cx_conf_mod   
       
    implicit none
  
@@ -263,8 +265,11 @@
                                                             !39,40,41,42,43,44,45
                                                               0, 0, 0, 7, 14, 0,16/)     !Check this
    integer:: Chan_Idx
+   type (conf_main_type) :: conf
    
+   call set_config (conf)
    
+  
 
    !***********************************************************************
    ! Begin Executable Code

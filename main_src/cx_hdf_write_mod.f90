@@ -12,7 +12,7 @@ module cx_hdf_write_mod
   
    interface add_att
       module procedure add_att_char, add_att_int &
-         , add_att_real, add_att_int2
+         , add_att_real, add_att_int1, add_att_int2
    end interface
    
    interface create_sds
@@ -55,6 +55,14 @@ contains
       istatus = sfscatt ( id,name,DFNT_CHAR8,len_trim(value),trim(value))
    end subroutine add_att_char
    
+   subroutine add_att_int1 (id, name, value)
+      integer, intent(in) :: id
+      character (len= *), intent(in) :: name
+      integer(kind=int1), intent(in) :: value
+      integer :: sfsnatt
+      istatus = sfsnatt ( id,name,DFNT_INT32,1,value)   
+   end subroutine add_att_int1
+   
    subroutine add_att_int (id, name, value)
       integer, intent(in) :: id
       character (len= *), intent(in) :: name
@@ -62,6 +70,7 @@ contains
       integer :: sfsnatt
       istatus = sfsnatt ( id,name,DFNT_INT32,1,value)   
    end subroutine add_att_int
+   
    
    subroutine add_att_int2 (id, name, value)
       integer, intent(in) :: id

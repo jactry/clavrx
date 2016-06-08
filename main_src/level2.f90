@@ -353,6 +353,8 @@ CONTAINS
       character(len=1020):: Long_Name_Temp
       
       integer:: erstat
+      
+      integer :: ssd_dims_2d(2)
  
       integer :: ii
       real(kind=real4):: Add_Offset
@@ -366,7 +368,7 @@ CONTAINS
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
       !
-
+      sds_dims_2d = (/ Image%Number_Of_Elements, Image%Number_Of_Lines /)
       Sds_Chunk_Size_2d(1) = Image%Number_Of_Elements
       Sds_Chunk_Size_2d(2) = Image%Number_Of_Lines_Per_Segment
 
@@ -378,7 +380,7 @@ CONTAINS
          
       id_file = file_open(trim(Dir_Level2)//trim(file_Level2))
       
-      call dims_file % set ( Image%Number_Of_Elements, Image%Number_Of_Lines,0)
+      
       
       if (id_file < 0) then
          erstat = 68
@@ -389,9 +391,16 @@ CONTAINS
       do ii = 1, prd % num_products
          prd_i => prd % product(ii)
          if ( prd_i % switch ) then
-           prd_i % Sds_Id= create_sds (id_file, prd_i % name ,  prd_i % dim, prd_i % dtype) 
+            select case ( prd_i % dim)
+            case(1)
+              prd_i % Sds_Id= create_sds (id_file, prd_i % name ,  Image%Number_Of_Lines, prd_i % dtype)
+            case(2)
+               prd_i % Sds_Id= create_sds (id_file, prd_i % name , sds_dims_2d , prd_i % dtype)
+               istatus = compress_sds ( prd_i % Sds_Id,Compress_Flag, Sds_Chunk_Size_2d) 
+            end select
+            
            
-            if (prd_i % dim == 2) istatus = compress_sds ( prd_i % Sds_Id,Compress_Flag, Sds_Chunk_Size_2d) 
+           
             call add_att(  prd_i % Sds_Id, 'SCALED', prd_i % scaling)
             call add_att( prd_i % sds_id, 'unit', trim(prd_i % unit)) 
             call add_att( prd_i % sds_id, 'standard_name', trim(prd_i % standard_name))

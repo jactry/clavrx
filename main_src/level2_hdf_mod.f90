@@ -15,24 +15,15 @@ module level2_hdf_mod
          , add_att_real, add_att_int2
    end interface
    
+   interface create_sds
+      module procedure create_sds_1d, create_sds_2d
+   end interface
+   
    interface write_sds 
       module procedure write_sds_1d_dt1, write_sds_1d_dt3, write_sds_1d_dt4 &
                ,write_sds_2d_dt1, write_sds_2d_dt2, write_sds_2d_dt4 
    end interface
-   
-   type file_dims_type
-      logical :: is_set = .false.
-      integer :: dim1
-      integer :: dim2
-      integer :: dim3
-      
-      contains
-      procedure:: set => file_dims__set
-   
-   end type file_dims_type
-   
-   type(file_dims_type) :: dims_file
-   
+  
    
    integer :: istatus
    
@@ -40,17 +31,6 @@ contains
    !
    !
    !
-   subroutine file_dims__set (this, dim1, dim2, dim3)
-      class(file_dims_type) :: this
-      integer, intent(in) :: dim1, dim2, dim3
-      
-      this % dim1 = dim1
-      this % dim2 = dim2
-      this % dim3 = dim3
-      this%is_set= .true.
-      
-   end subroutine file_dims__set
-   
    !
    !
    !
@@ -60,7 +40,6 @@ contains
       integer :: sfstart
       
       dum = sfstart(trim(file),DFACC_CREATE)
-      print*,'dum==> ',dum
       file_open = dum
    end function file_open
    
@@ -102,12 +81,12 @@ contains
    !
    !
    !
-   integer (kind=int4) function create_sds ( id, name, dim, dtype )
+   integer (kind=int4) function create_sds_1d ( id, name, dim, dtype )
       integer, intent(in) :: id
       character (len=*), intent(in) :: name
       integer,intent(in) :: dim
       integer,intent(in) :: dtype
-      integer :: dim_hdf(dim)
+      
       integer :: dtype_hdf
       integer::sfcreate
       
@@ -122,16 +101,46 @@ contains
          dtype_hdf = DFNT_FLOAT32
       end select
       
-      select case ( dim )
-         case(1)
-         dim_hdf = dims_file % dim1
-         case(2)
-         dim_hdf = (/ dims_file % dim1, dims_file % dim2 /)
+   
+      
+      create_sds_1d = sfcreate(id,name,dtype_hdf,1, dim)
+      
+   end function create_sds_1d
+   
+   
+      !
+   !
+   !
+   integer (kind=int4) function create_sds_2d ( id, name, dim, dtype )
+      integer, intent(in) :: id
+      character (len=*), intent(in) :: name
+      integer,intent(in) :: dim(:)
+      integer,intent(in) :: dtype
+      integer :: rank
+     
+      integer :: dtype_hdf
+      integer::sfcreate
+      
+      rank = size(dim)
+      
+      select case (dtype)
+      case(1)
+         dtype_hdf = DFNT_INT8
+      case(2)
+         dtype_hdf = DFNT_INT16
+      case(3)
+         dtype_hdf = DFNT_INT32
+      case(4)
+         dtype_hdf = DFNT_FLOAT32
       end select
       
-      create_sds = sfcreate(id,name,dtype_hdf,dim, dim_hdf)
       
-   end function create_sds
+      create_sds_2d = sfcreate(id,name,dtype_hdf,rank, dim)
+      
+   end function create_sds_2d
+   
+
+   
    
    !
    !

@@ -39,20 +39,12 @@ use CONSTANTS, only: &
    , real4  
    
 use HDF, only: &
-   SUCCEED &
-   , DFNT_INT16 &
+       DFNT_INT16 &
    , DFNT_CHAR8 &
    , DFNT_FLOAT32 &
    , DFNT_INT32 &
    , DFNT_INT8
 
-
-
-use SCALING_PARAMETERS, only: &
-    one_byte_min &
-    , one_byte_max &
-    , two_byte_min &
-    , two_byte_max
 
 implicit none
 private

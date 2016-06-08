@@ -43,7 +43,8 @@ module LEVEL2_ROUTINES
       , EXE_PROMPT &
       , dcomp_version &
       , acha_version
-      
+   
+   ! - many of those variables are in level2_assign.inc   
    use PIXEL_COMMON, only: &
       sensor &
       , image &
@@ -177,7 +178,14 @@ module LEVEL2_ROUTINES
    use strings, only: &
       split
       
-   use level2_hdf_mod   
+   use cx_hdf_write_mod, only:  &
+      hdf_file_open &
+      , create_sds &
+      , compress_sds &
+      , write_sds &
+      , add_att &
+      , close_sds &
+      , close_file
 
    implicit none
    private
@@ -352,7 +360,7 @@ CONTAINS
       character(len=1020):: File_Level2
       character(len=1020):: Long_Name_Temp
       
-      integer:: erstat
+      integer:: erstat, istatus
       
       integer :: ssd_dims_2d(2)
  
@@ -378,7 +386,7 @@ CONTAINS
       File_Level2= trim(File_1b_Root)//".level2.hdf"
       call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
          
-      id_file = file_open(trim(Dir_Level2)//trim(file_Level2))
+      id_file = hdf_file_open(trim(Dir_Level2)//trim(file_Level2))
       
       
       
@@ -546,6 +554,7 @@ CONTAINS
                select case (prd_i % dim)
                   
                case ( 1 )
+               
                   select case (prd_i % dtype)
                   case(1)
                   Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d(2), Sds_Stride_2d(2),          &

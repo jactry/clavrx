@@ -58,10 +58,10 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,adj_pix_cloud_mask,Adj_Pix_Cld_Mask,2,1,0,0.00000,0.00000,adj_pix_cloud_mask,none,"integer classification of the adjacent pixel cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3",   1
 1,cloud_mask_test_packed_results,special,3,1,0,0.00000,0.00000,cloud_mask_test_packed_results,none,individual cloud mask packed test results,   2
 1,bayes_mask_sfc_type,Bayes_Mask_Sfc_Type_Global,2,1,0,0.00000,0.00000,bayes_mask_sfc_type,none,"integer classification of the surface type assumed in constructed the Bayesian cloud mask, 1=deep water,2=shallow ocean,3=land,4=snow,5=arctic,6=antarctic+greenland,7=desert",   3
-1,dust_mask,NOT_SET_YET,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of dust (0=no,1=yes)",none
-1,smoke_mask,NOT_SET_YET,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of smoke (0=no,1=yes)",none
-1,shadow_mask,NOT_SET_YET,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of shadow (0=no,1=yes)",none
-1,fire_mask,NOT_SET_YET,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of fire (0=no,1=yes)",none
+1,dust_mask,dust_mask,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of dust (0=no,1=yes)",none
+1,smoke_mask,smoke_mask,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of smoke (0=no,1=yes)",none
+1,shadow_mask,shadow_mask,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of shadow (0=no,1=yes)",none
+1,fire_mask,fire_mask,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the presence of fire (0=no,1=yes)",none
 1,cld_opd_mask,NOT_SET_YET,2,1,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud_assuming_water_phase,none,"cloud optical depth at the nominal wavelength of 0.65 microns, and water phase with 10 micron particle size determined for cloud mask use",none
 1,cloud_type,cld_type,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the cloud type including clear and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke",   0
 1,cloud_phase,cld_phase,2,1,0,0.00000,0.00000,cloud_phase,none,"integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown",   1
@@ -105,8 +105,8 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,cld_reff_acha,acha%reff,2,1,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from ACHA; see attributes for channels used,   2
 1,acha_quality,ACHA%Packed_Quality_Flags,2,1,0,0.00000,0.00000,not specified,none,"quality flags for ACHA products 1:Processed (0=no,1=yes) 2:valid Tc retrieval (1=yes,0=no) 3:valid ec retrieval (1=yes,0=no) 4:valid beta retrieval (1=yes,0=no) 5:degraded Tc retrieval (1=yes,0=no) 6:degraded ec retrieval (1=yes,0=no) 7:degraded beta retrieval (1=yes,0=no)",   0
 1,acha_info,ACHA%Packed_Meta_Data_Flags,2,1,0,0.00000,0.00000,not specified,none,processing information for ACHA (0=no/1=yes) 1:Cloud Height Attempted 2:Bias Correction Employed 3:Ice Cloud Retrieval 4:Local Radiative Center Processing Used 5:Multi-layer Retrieval 6:Lower Cloud Interpolation Used 7:Boundary Layer Inversion Assumed,   0
-1,cost_acha,NOT_SET_YET,2,2,1,0.00000,1000.00,cost_acha,none,final cost function value from acha optimal estimation,   1
-1,cost_aux,NOT_SET_YET,2,2,1,0.00000,1000.00,cost_aux,none,final cost function value from aux optimal estimation,none
+1,cost_acha,ACHA%Cost,2,2,1,0.00000,1000.00,cost_acha,none,final cost function value from acha optimal estimation,   1
+1,cost_aux,cost_aux,2,2,1,0.00000,1000.00,cost_aux,none,final cost function value from aux optimal estimation,none
 1,cld_opd_dcomp,tau_dcomp,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud,none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from DCOMP - NOAA CDR",none
 1,cld_opd_aux,NOT_SET_YET,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud_aux,none,"cloud optical depth at the nominal wavelength of 0.65 microns, read from aux file",none
 1,cld_reff_dcomp,reff_dcomp,2,2,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR,none
@@ -120,7 +120,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,insolation_dcomp,Insolation_Dcomp,2,2,1,0.00000,1500.00,surface_downwelling_shortwave_flux_dcomp,W m-2,surface downwelling shortwave flux computed from the DCOMP cloud properties,   1
 1,insolation_diffuse_dcomp,Insolation_Dcomp_Diffuse,2,2,1,0.00000,1500.00,surface_downwelling_shortwave_flux_diffuse_dcomp,W m-2,diffuse component of the surface downwelling shortwave flux computed from the DCOMP cloud properties,none
 1,cdnc_dcomp,cdnc_dcomp,2,2,1,0.00000,1000.00,cloud_droplet_number_concentration,cm-3,cloud_droplet_number_concentration from DCOMP algorithm,none
-1,hcld_dcomp,NOT_SET_YET,2,2,1,0.00000,4000.00,geometrical_thickness_of_liquid_clouds,m,geometrical_thickness_of_liquid_clouds based on DCOMP,none
+1,hcld_dcomp,hcld_dcomp,2,2,1,0.00000,4000.00,geometrical_thickness_of_liquid_clouds,m,geometrical_thickness_of_liquid_clouds based on DCOMP,none
 1,cld_opd_nlcomp,Tau_Nlcomp,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud,none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from NLCOMP",none
 1,cld_reff_nlcomp,Reff_Nlcomp,2,2,1,0.00000,160.000,effective_radius_of_cloud_particle,micron,effective radius of cloud particles determined from NLCOMP; see attributes for channels used,none
 1,cld_opd_nlcomp_unc,Tau_Nlcomp_Cost,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud,none,"uncertainty in cloud optical depth at the nominal wavelength of 0.65 microns, determined from NLCOMP",none
@@ -130,15 +130,15 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,cloud_albedo_0_65um_nom,cloud_063um_albedo,2,1,1,0.00000,1.00000,cloud_albedo,none,cloud albedo at 0.65 microns nominal from DCOMP,none
 1,cloud_transmission_0_65um_nom,cloud_063um_transmission_solar,2,1,1,0.00000,1.00000,not specified,none,cloud transmission 0.65 microns nominal from DCOMP,none
 1,cloud_fraction,Cloud_Fraction,2,1,1,0.00000,1.00000,cloud_area_fraction,none,cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel,none
-1,high_cloud_fraction,NOT_SET_YET,2,1,1,0.00000,1.00000,high_cloud_area_fraction,none,high cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. High clouds have pressures less than 440 hPa.,none
-1,mid_cloud_fraction,NOT_SET_YET,2,1,1,0.00000,1.00000,mid_cloud_area_fraction,none,mid cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. Mid clouds have pressures greater than 440 and less than 680 hPa,none
-1,low_cloud_fraction,NOT_SET_YET,2,1,1,0.00000,1.00000,low_cloud_area_fraction,none,low cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. Low clouds have pressures greater than 680 hPa,none
+1,high_cloud_fraction,high_cloud_fraction,2,1,1,0.00000,1.00000,high_cloud_area_fraction,none,high cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. High clouds have pressures less than 440 hPa.,none
+1,mid_cloud_fraction,mid_cloud_fraction,2,1,1,0.00000,1.00000,mid_cloud_area_fraction,none,mid cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. Mid clouds have pressures greater than 440 and less than 680 hPa,none
+1,low_cloud_fraction,low_cloud_fraction,2,1,1,0.00000,1.00000,low_cloud_area_fraction,none,low cloud fraction computed over a 3x3 pixel array at the native resolution centered on this pixel. Low clouds have pressures greater than 680 hPa,none
 1,cloud_fraction_uncertainty,Cloud_Fraction_Uncer,2,1,1,0.00000,1.00000,not specified,none,cloud fraction uncertainty computed over a 3x3 array,none
-1,emiss_3_75um_nom,NOT_SET_YET,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal,none,top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
-1,emiss_3_75um_nom_clear,NOT_SET_YET,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal_clear,none,top of atmosphere clear sky emissivity estimateat the nominal wavelength of 3.75 microns,none
-1,emiss_3_75um_nom_median_3x3,NOT_SET_YET,2,2,1,0.500000,3.00000,emissivity_3_75_micron_nominal_median_3x3,none,3x3 pixel median top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
+1,emiss_3_75um_nom,Ems_Ch20,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal,none,top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
+1,emiss_3_75um_nom_clear,Ems_Ch20_Clear_Rtm,2,2,1,0.500000,3.00000,top_of_atmosphere_emissivity_3_75_micron_nominal_clear,none,top of atmosphere clear sky emissivity estimateat the nominal wavelength of 3.75 microns,none
+1,emiss_3_75um_nom_median_3x3,Ems_Ch20_Median_3x3,2,2,1,0.500000,3.00000,emissivity_3_75_micron_nominal_median_3x3,none,3x3 pixel median top of atmosphere emissivity at the nominal wavelength of 3.75 microns,none
 1,temp_3_75um_nom_median_3x3,Bt_Ch20_median_3x3,2,2,1,180.000,340.000,brightness_temperature_3.7_micron_nominal_median_3x3,none,3x3 pixel median filtered brightness temperature at the nominal wavelength of 3.75 microns,none
-1,diff_ch31_ch32_bt_ch31_max_3x3,NOT_SET_YET,2,2,1,-4.00000,12.0000,difference_11_minus_12_brightness_temperature_max_3x3,K,3x3 pixel maximum of 11.0 micron minus 12.0 micronbrightness temperatures (nominal wavelengths),none
+1,diff_ch31_ch32_bt_ch31_max_3x3,Btd_Ch31_Ch32_Bt_Ch31_Max_3x3,2,2,1,-4.00000,12.0000,difference_11_minus_12_brightness_temperature_max_3x3,K,3x3 pixel maximum of 11.0 micron minus 12.0 micronbrightness temperatures (nominal wavelengths),none
 1,emissivity_11um_tropopause,ch(31)%Emiss_Tropo,2,1,1,-0.500000,1.20000,not specified,none,"emissivity at the nominal wavelength of 11 microns, assuming the cloud was located at the Tropopause",none
 1,beta_11um_85um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_85um_tropopause,none,cloud 11/8.5 micron beta value assuming cloud resides at tropopause,none
 1,beta_11um_12um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_12um_tropopause,none,cloud 11/12 micron beta value assuming cloud resides at tropopause,none

@@ -221,6 +221,22 @@ case("bayes_mask_sfc_type")
    if (allocated ( Bayes_Mask_Sfc_Type_Global)) then
       data_dim2_dtype1 = Bayes_Mask_Sfc_Type_Global(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("dust_mask")
+   if (allocated ( dust_mask)) then
+      data_dim2_dtype1 = dust_mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("smoke_mask")
+   if (allocated ( smoke_mask)) then
+      data_dim2_dtype1 = smoke_mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("shadow_mask")
+   if (allocated ( shadow_mask)) then
+      data_dim2_dtype1 = shadow_mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("fire_mask")
+   if (allocated ( fire_mask)) then
+      data_dim2_dtype1 = fire_mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cloud_type")
    if (allocated ( cld_type)) then
       data_dim2_dtype1 = cld_type(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -317,6 +333,14 @@ case("acha_info")
    if (allocated ( ACHA%Packed_Meta_Data_Flags)) then
       data_dim2_dtype1 = ACHA%Packed_Meta_Data_Flags(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cost_acha")
+   if (allocated ( ACHA%Cost)) then
+      data_dim2_dtype2 = ACHA%Cost(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cost_aux")
+   if (allocated ( cost_aux)) then
+      data_dim2_dtype2 = cost_aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_opd_dcomp")
    if (allocated ( tau_dcomp)) then
       data_dim2_dtype2 = tau_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -361,6 +385,10 @@ case("cdnc_dcomp")
    if (allocated ( cdnc_dcomp)) then
       data_dim2_dtype2 = cdnc_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("hcld_dcomp")
+   if (allocated ( hcld_dcomp)) then
+      data_dim2_dtype2 = hcld_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_opd_nlcomp")
    if (allocated ( Tau_Nlcomp)) then
       data_dim2_dtype2 = Tau_Nlcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -397,13 +425,41 @@ case("cloud_fraction")
    if (allocated ( Cloud_Fraction)) then
       data_dim2_dtype1 = Cloud_Fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("high_cloud_fraction")
+   if (allocated ( high_cloud_fraction)) then
+      data_dim2_dtype1 = high_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("mid_cloud_fraction")
+   if (allocated ( mid_cloud_fraction)) then
+      data_dim2_dtype1 = mid_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("low_cloud_fraction")
+   if (allocated ( low_cloud_fraction)) then
+      data_dim2_dtype1 = low_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cloud_fraction_uncertainty")
    if (allocated ( Cloud_Fraction_Uncer)) then
       data_dim2_dtype1 = Cloud_Fraction_Uncer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("emiss_3_75um_nom")
+   if (allocated ( Ems_Ch20)) then
+      data_dim2_dtype2 = Ems_Ch20(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("emiss_3_75um_nom_clear")
+   if (allocated ( Ems_Ch20_Clear_Rtm)) then
+      data_dim2_dtype2 = Ems_Ch20_Clear_Rtm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("emiss_3_75um_nom_median_3x3")
+   if (allocated ( Ems_Ch20_Median_3x3)) then
+      data_dim2_dtype2 = Ems_Ch20_Median_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("temp_3_75um_nom_median_3x3")
    if (allocated ( Bt_Ch20_median_3x3)) then
       data_dim2_dtype2 = Bt_Ch20_median_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("diff_ch31_ch32_bt_ch31_max_3x3")
+   if (allocated ( Btd_Ch31_Ch32_Bt_Ch31_Max_3x3)) then
+      data_dim2_dtype2 = Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("emissivity_11um_tropopause")
    if (allocated ( ch(31)%Emiss_Tropo)) then

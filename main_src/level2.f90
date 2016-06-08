@@ -150,7 +150,20 @@ module LEVEL2_ROUTINES
       , olr &
       , Ndvi_Sfc_White_Sky &
       , Sst_Anal_Uni &
-      , ozone_nwp_pix
+      , ozone_nwp_pix &
+      , dust_mask &
+      , smoke_mask &
+      , shadow_mask &
+      , fire_mask &
+      , cost_aux &
+      , hcld_dcomp &
+      , high_cloud_fraction &
+      , mid_cloud_fraction &
+      , low_cloud_fraction &
+      , ems_ch20 &
+      , ems_ch20_clear_rtm &
+      , Ems_Ch20_Median_3x3 &
+      , Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
       
    use HDF, only: &
       DFACC_CREATE &

@@ -190,6 +190,10 @@ clavrxorb_objs = process_clavrx.o \
                  geo_sat_navigation_mod.o \
                  cx_hdf_write_mod.o \
                  precision.o \
+                 cx_conf_mod.o \
+                 cx_file_tools_mod.o \
+                 cx_ssec_areafile_mod.o \
+                 cx_read_ascii_line_mod.o \
                  csv_mod.o 
 
 #Level2b routines
@@ -301,6 +305,10 @@ clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 calibration_constants.o: calibration_constants.f90 constant.o 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 csv_mod.o:csv_mod.f90 strings.o
+cx_file_tools_mod.o:cx_file_tools_mod.f90
+cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90
+cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
+cx_conf_mod.o:cx_conf_mod.f90 cx_file_tools_mod.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
 cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
@@ -392,7 +400,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
-              laszlo_insolation_module.o sasrab.o conver.o \
+              laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o \
               seviri_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
@@ -406,8 +414,7 @@ process_clavrx.o: process_clavrx.f90 $(sub_routine)
 	$(fc) -c $(fflags) $(cppflags) $(fflags_clavr) $(cppflags_vcld) $(cpp) ${hdf5libs} $(netcdflibs) process_clavrx.f90 
 
 
-######### .o files that depend on .inc files ########
-level2.o: level2.inc
+
 
 ########################### PFAST ##############################################
 sasrab.o : sasrab.f conver.o get_lun.o

@@ -144,7 +144,13 @@ module LEVEL2_ROUTINES
       , nonconfident_cloud_mask_fraction &
       , dcomp_success_fraction&
       , cdnc_dcomp &
-      , aot_qf
+      , aot_qf &
+      , Bt_Ch31_Max_3x3 &
+      , Bt_Ch20_median_3x3 &
+      , olr &
+      , Ndvi_Sfc_White_Sky &
+      , Sst_Anal_Uni &
+      , ozone_nwp_pix
       
    use HDF, only: &
       DFACC_CREATE &

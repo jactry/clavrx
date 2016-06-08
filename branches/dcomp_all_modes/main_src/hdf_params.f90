@@ -36,9 +36,7 @@ use CONSTANTS, only: &
    int1 &
    , int2 &
    , int4 &
-   , real4 &
-   , missing_value_int1 &
-   , missing_value_int2
+   , real4  
    
 use HDF, only: &
    SUCCEED &

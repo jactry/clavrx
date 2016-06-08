@@ -142,7 +142,9 @@ module LEVEL2_ROUTINES
       , wnd_dir_cld_top_nwp_pix &
       , orbital_processing_time_minutes &
       , nonconfident_cloud_mask_fraction &
-      , dcomp_success_fraction
+      , dcomp_success_fraction&
+      , cdnc_dcomp &
+      , aot_qf
       
    use HDF, only: &
       DFACC_CREATE &

@@ -221,7 +221,8 @@ module LEVEL2_ROUTINES
       integer :: val_min
       integer :: val_max
       integer :: val_fill
-      integer :: add_offset
+      real :: add_offset
+      real :: slope
       character(len=300) :: standard_name
       character(len=30) :: unit
       character (len=300):: long_name
@@ -269,8 +270,9 @@ CONTAINS
       integer  (kind = int4) :: csv_file_unit
       character ( len = 1000 ) record
       integer :: i_prd
-      integer   ( kind = 4 ) value_count
-      character ( len = 300) :: rec_arr ( 16 )
+      integer   ( kind = 4 ) :: value_count
+      integer, parameter :: N_CSV = 12
+      character ( len = 300) :: rec_arr ( N_CSV )
       
       call csv_file_line_count ( this % csv_filename, line_num )
       this % num_products = line_num - 1
@@ -288,21 +290,19 @@ CONTAINS
          
          this % product(i_prd) % switch = trim(rec_arr(1))  .eq. "1"
               
-         read ( rec_arr(3), * ) this%product(i_prd)%name 
-         read ( rec_arr(2), * ) this%product(i_prd)%dim
-         read( rec_arr(4), '(a)' ) this%product(i_prd)%name_clavrx
+         read ( rec_arr(2), * ) this%product(i_prd)%name 
+         read( rec_arr(3), '(a)' ) this%product(i_prd)%name_clavrx
+         read ( rec_arr(4), * ) this%product(i_prd)%dim
          read ( rec_arr(5), * ) this%product(i_prd)%dtype
          read ( rec_arr(6), * ) this%product(i_prd)%scaling
          read ( rec_arr(7), * ) this%product(i_prd)%act_min
          read ( rec_arr(8), * ) this%product(i_prd)%act_max
-         read ( rec_arr(9), * ) this%product(i_prd)%val_min
-         read ( rec_arr(10), * ) this%product(i_prd)%val_max
-         read ( rec_arr(11), * ) this%product(i_prd)%val_fill
-         read ( rec_arr(12), '(a)' ) this%product(i_prd)%add_offset
-         read ( rec_arr(13), '(a)' ) this%product(i_prd)%standard_name
-         read ( rec_arr(14), '(a)' ) this%product(i_prd)%unit
-         read ( rec_arr(15), '(a)' ) this%product(i_prd)%long_name
-         read ( rec_arr(16), '(a)' ) this%product(i_prd)%flagvalues
+         !read ( rec_arr(9), '(a)' ) this%product(i_prd)%add_offset
+         !read ( rec_arr(10), '(a)' ) this%product(i_prd)%slope
+         read ( rec_arr(9), '(a)' ) this%product(i_prd)%standard_name
+         read ( rec_arr(10), '(a)' ) this%product(i_prd)%unit
+         read ( rec_arr(11), '(a)' ) this%product(i_prd)%long_name
+         read ( rec_arr(12), '(a)' ) this%product(i_prd)%flagvalues
          
       end do
        
@@ -317,7 +317,7 @@ CONTAINS
       function extract_single ( record) result  (record_single)
          implicit none
          character ( len = * ) :: record
-         character ( len = 300) :: record_single ( 16 )
+         character ( len = 300) :: record_single ( N_CSV )
          character (len = 1000 ) :: record_local
          character ( len =300) :: before
          integer :: i

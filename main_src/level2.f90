@@ -163,7 +163,22 @@ module LEVEL2_ROUTINES
       , ems_ch20 &
       , ems_ch20_clear_rtm &
       , Ems_Ch20_Median_3x3 &
-      , Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
+      , Btd_Ch31_Ch32_Bt_Ch31_Max_3x3 &
+      , cld_phase_aux &
+      , cld_mask_aux &
+      , cld_type_aux &
+      , zc_aux &
+      , zc_co2 &
+      , pc_top1_aux &
+      , pc_top2_aux &
+      , tc_opaque_cloud &
+      , pc_uncertainty1_aux &
+      , pc_uncertainty2_aux &
+      , tau_aux &
+      , reff_aux &
+      , Beta_11um_85um_Tropo_Rtm &
+      , Beta_11um_12um_Tropo_Rtm &
+      , aot1
       
    use HDF, only: &
       DFACC_CREATE &

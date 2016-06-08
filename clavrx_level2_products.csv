@@ -65,39 +65,39 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,cld_opd_mask,NOT_SET_YET,2,1,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud_assuming_water_phase,none,"cloud optical depth at the nominal wavelength of 0.65 microns, and water phase with 10 micron particle size determined for cloud mask use",none
 1,cloud_type,cld_type,2,1,0,0.00000,0.00000,not specified,none,"integer classification of the cloud type including clear and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke",   0
 1,cloud_phase,cld_phase,2,1,0,0.00000,0.00000,cloud_phase,none,"integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown",   1
-1,cloud_phase_aux,NOT_SET_YET,2,1,0,0.00000,0.00000,cloud_phase_aux,none,"aux integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown",   2
-1,cloud_mask_aux,NOT_SET_YET,2,1,0,0.00000,0.00000,cloud_mask_aux,none,"integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3 from mask read from auxiliary data source",   3
-1,cloud_type_aux,NOT_SET_YET,2,1,0,0.00000,0.00000,cloud_type_aux,none,integer classification of the cloud type including clear and aerosol type read from auxiliary data source,   4
-1,cld_height_aux,NOT_SET_YET,2,2,1,0.00000,20000.0,height_at_cloud_top_aux,m,cloud height from the auxiliary data source,   5
-1,cld_height_sndr,NOT_SET_YET,2,2,1,0.00000,20000.0,height_at_cloud_top_sndr,m,cloud height from the sounder data source,   6
+1,cloud_phase_aux,Cld_Phase_Aux,2,1,0,0.00000,0.00000,cloud_phase_aux,none,"aux integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown",   2
+1,cloud_mask_aux,Cld_Mask_Aux,2,1,0,0.00000,0.00000,cloud_mask_aux,none,"integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3 from mask read from auxiliary data source",   3
+1,cloud_type_aux,Cld_Type_Aux,2,1,0,0.00000,0.00000,cloud_type_aux,none,integer classification of the cloud type including clear and aerosol type read from auxiliary data source,   4
+1,cld_height_aux,zc_aux,2,2,1,0.00000,20000.0,height_at_cloud_top_aux,m,cloud height from the auxiliary data source,   5
+1,cld_height_sndr,zc_co2,2,2,1,0.00000,20000.0,height_at_cloud_top_sndr,m,cloud height from the sounder data source,   6
 1,cld_press_acha,acha%pc,2,2,1,0.00000,1100.00,air_pressure_at_cloud_top,hPa,cloud-top pressure computed using the AWG cloud height algorithm,   7
 1,cld_temp_acha,acha%tc,2,2,1,160.000,320.000,air_temperature_at_cloud_top,K,cloud-top temperature computed using the AWG cloud height algorithm - NOAA CDR,   8
 1,cld_height_acha,acha%zc,2,2,1,0.00000,20000.0,height_at_cloud_top,m,cloud height computed using the AWG cloud height algorithm,   9
 1,cld_height_top_acha,acha%zc_top,2,2,1,0.00000,20000.0,top_height_of_cloud,m,estimate of actual cloud-top height computed using the AWG cloud height algorithm,  10
-1,cld_press_top_acha,NOT_SET_YET,2,2,1,0.00000,1100.00,top_press_of_cloud,hPa,estimate of actual cloud-top pressure computed using the AWG cloud height algorithm,  11
-1,cld_press_top_l1_aux,NOT_SET_YET,2,2,1,0.00000,1100.00,top_press_of_cloud_layer1_aux,hPa,estimate of actual cloud-top pressure layer1 read from Aux file,  12
-1,cld_press_top_l2_aux,NOT_SET_YET,2,2,1,0.00000,1100.00,top_press_of_cloud_layer2_aux,hPa,estimate of actual cloud-top pressure layer2 read from Aux file,none
+1,cld_press_top_acha,ACHA%Pc_Top,2,2,1,0.00000,1100.00,top_press_of_cloud,hPa,estimate of actual cloud-top pressure computed using the AWG cloud height algorithm,  11
+1,cld_press_top_l1_aux,Pc_Top1_Aux,2,2,1,0.00000,1100.00,top_press_of_cloud_layer1_aux,hPa,estimate of actual cloud-top pressure layer1 read from Aux file,  12
+1,cld_press_top_l2_aux,Pc_Top2_Aux,2,2,1,0.00000,1100.00,top_press_of_cloud_layer2_aux,hPa,estimate of actual cloud-top pressure layer2 read from Aux file,none
 1,cld_height_base_acha,acha%zc_base,2,2,1,0.00000,20000.0,base_height_of_cloud,m,estimate of actual cloud-base height computed using the AWG cloud height algorithm,none
-1,cld_press_base_acha,NOT_SET_YET,2,2,1,0.00000,1100.00,base_press_of_cloud,hPa,estimate of actual cloud-base pressure computed using the AWG cloud height algorithm,none
-1,cld_height_lower_acha,NOT_SET_YET,2,2,1,0.00000,20000.0,height_of_lower_cloud,m,estimate of actual cloud height of lower cloud computed using the AWG cloud height algorithm,none
-1,cld_pressure_lower_acha,NOT_SET_YET,2,2,1,0.00000,1100.00,pressure_of_lower_cloud,hPa,estimate of actual cloud pressure of lower cloud computed using the AWG cloud height algorithm,none
+1,cld_press_base_acha,ACHA%Pc_Base,2,2,1,0.00000,1100.00,base_press_of_cloud,hPa,estimate of actual cloud-base pressure computed using the AWG cloud height algorithm,none
+1,cld_height_lower_acha,ACHA%Zc_Lower_Cloud,2,2,1,0.00000,20000.0,height_of_lower_cloud,m,estimate of actual cloud height of lower cloud computed using the AWG cloud height algorithm,none
+1,cld_pressure_lower_acha,ACHA%Pc_Lower_Cloud,2,2,1,0.00000,1100.00,pressure_of_lower_cloud,hPa,estimate of actual cloud pressure of lower cloud computed using the AWG cloud height algorithm,none
 1,cld_altitude_acha,acha%alt,2,2,1,0.00000,100000.,altitude_at_cloud_top,feet,cloud height altitude computed from pressure values,none
-1,cld_base_altitude_acha,NOT_SET_YET,2,2,1,0.00000,100000.,altitude_at_cloud_base,feet,cloud base altitude computed from pressure values,none
+1,cld_base_altitude_acha,ACHA%Base_Alt,2,2,1,0.00000,100000.,altitude_at_cloud_base,feet,cloud base altitude computed from pressure values,none
 1,acha_processing_order,acha%processing_order,2,1,0,0.00000,0.00000,acha_processing_order,none,integer classification of the order of processing with ACHA,none
 1,acha_inversion_flag,ACHA%Inversion_Flag,2,1,0,0.00000,0.00000,acha_inversion_flag,none,flag stating whether ACHA was processed assuming an inversion(1) or not(0),none
-1,cld_layer,NOT_SET_YET,2,1,0,0.00000,0.00000,cloud_layer,none,"cloud layer: 0-none,1:sfc-642 hpa, 2:642-350 hPa, 3:350 hpa -toa",none
-1,conv_cloud_probability,NOT_SET_YET,2,1,1,0.00000,1.00000,convective_cloud_probability,none,convective cloud probility: 0-1,none
+1,cld_layer,ACHA%Cld_Layer,2,1,0,0.00000,0.00000,cloud_layer,none,"cloud layer: 0-none,1:sfc-642 hpa, 2:642-350 hPa, 3:350 hpa -toa",none
+1,conv_cloud_probability,ACHA%Conv_Cld_Prob,2,1,1,0.00000,1.00000,convective_cloud_probability,none,convective cloud probility: 0-1,none
 1,supercooled_cloud_probability,ACHA%Supercooled_Cld_Prob,2,1,1,0.00000,1.00000,supercooled_cloud_probability,none,convective cloud probility: 0-1,none
 1,cld_height_h2o,Zc_H2O,2,2,1,0.00000,20000.0,height_at_cloud_top_from_h2o_intercept,m,cloud-top height computed using the two-point h2o intercept,none
 1,cld_height_opaque,Zc_opaque_cloud,2,2,1,0.00000,20000.0,height_at_cloud_top_assuming_opaque,m,cloud-top height computed using assuming the cloud is opaque,none
-1,cld_temp_opaque,NOT_SET_YET,2,2,1,160.000,320.000,cloud_top_temperature_opaque,K,cloud top temperature assuming an opaque cloud,none
+1,cld_temp_opaque,Tc_Opaque_Cloud,2,2,1,160.000,320.000,cloud_top_temperature_opaque,K,cloud top temperature assuming an opaque cloud,none
 1,cld_emiss_acha,acha%ec,2,1,1,0.00000,1.00000,convective_cloud_longwave_emissivity,none,"cloud emissivity at the nominal wavelength of 11 microns, determined from the AWG cloud height algorithm - NOAA CDR",none
 1,cld_beta_acha,acha%beta,2,1,1,0.00000,2.00000,not specified,none,cloud 11/12 micron beta value determined from the split-window method,none
 1,cld_height_uncer_acha,acha%zc_uncertainty,2,1,1,0.00000,10000.0,not specified,m,cloud height uncertainty computed using the AWG cloud height algorithm,none
 1,cld_temp_uncer_acha,acha%tc_uncertainty,2,1,1,0.00000,100.000,not specified,K,cloud temperature uncertainty computed using the AWG cloud height algorithm,none
-1,cld_press_uncer_acha,NOT_SET_YET,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty computed using the AWG cloud height algorithm,none
-1,cld_press_uncer1_aux,NOT_SET_YET,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty layer1 read from the aux,none
-1,cld_press_uncer2_aux,NOT_SET_YET,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty layer2 read from the aux,none
+1,cld_press_uncer_acha,ACHA%Pc_Uncertainty,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty computed using the AWG cloud height algorithm,none
+1,cld_press_uncer1_aux,Pc_Uncertainty1_Aux,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty layer1 read from the aux,none
+1,cld_press_uncer2_aux,Pc_Uncertainty2_Aux,2,1,1,0.00000,1000.00,not specified,hPa,cloud pressure uncertainty layer2 read from the aux,none
 1,cld_temp_acha_qf,acha%oe_quality_flags_1,2,1,0,0.00000,0.00000,not specified,none,"quality flag for cloud-top temperature from ACHA not attempted=0, failed=1, low quality=2, high quality=3",   0
 1,cld_emiss_acha_qf,acha%oe_quality_flags_2,2,1,0,0.00000,0.00000,not specified,none,"quality flag for 11.0 micron cloud emissivity from ACHA not attempted=0, failed=1, low quality=2, high quality=3",   0
 1,cld_beta_acha_qf,acha%oe_quality_flags_3,2,1,0,0.00000,0.00000,not specified,none,"quality flag for cloud 11.0/12.0 micron beta from ACHA not attempted=0, failed=1, low quality=2, high quality=3",   0
@@ -108,9 +108,9 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,cost_acha,ACHA%Cost,2,2,1,0.00000,1000.00,cost_acha,none,final cost function value from acha optimal estimation,   1
 1,cost_aux,cost_aux,2,2,1,0.00000,1000.00,cost_aux,none,final cost function value from aux optimal estimation,none
 1,cld_opd_dcomp,tau_dcomp,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud,none,"cloud optical depth at the nominal wavelength of 0.65 microns, determined from DCOMP - NOAA CDR",none
-1,cld_opd_aux,NOT_SET_YET,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud_aux,none,"cloud optical depth at the nominal wavelength of 0.65 microns, read from aux file",none
+1,cld_opd_aux,Tau_Aux,2,2,1,-0.200000,160.000,atmosphere_optical_thickness_due_to_cloud_aux,none,"cloud optical depth at the nominal wavelength of 0.65 microns, read from aux file",none
 1,cld_reff_dcomp,reff_dcomp,2,2,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR,none
-1,cld_reff_aux,NOT_SET_YET,2,2,1,-0.200000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,none,effective radius of cloud particles read from aux file,none
+1,cld_reff_aux,Reff_Aux,2,2,1,-0.200000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,none,effective radius of cloud particles read from aux file,none
 1,cld_opd_dcomp_unc,tau_dcomp_cost,2,2,1,-0.200000,160.000,not specified,none,"uncertainty in the log10 cloud optical depth at the nominal wavelength of 0.65 microns, determined from DCOMP; see attributes for channels used",none
 1,cld_reff_dcomp_unc,reff_dcomp_cost,2,2,1,0.00000,160.000,not specified,micron,uncertainty in the log10 effective radius of cloud particle determined from DCOMP; see attributes for channels used,none
 1,cld_opd_dcomp_qf,tau_dcomp_qf,2,1,0,0.00000,0.00000,not specified,none,"quality flag for cloud optical depth from DCOMP not attempted=0, failed=1, low quality=2, high quality=3",   0
@@ -140,16 +140,16 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,temp_3_75um_nom_median_3x3,Bt_Ch20_median_3x3,2,2,1,180.000,340.000,brightness_temperature_3.7_micron_nominal_median_3x3,none,3x3 pixel median filtered brightness temperature at the nominal wavelength of 3.75 microns,none
 1,diff_ch31_ch32_bt_ch31_max_3x3,Btd_Ch31_Ch32_Bt_Ch31_Max_3x3,2,2,1,-4.00000,12.0000,difference_11_minus_12_brightness_temperature_max_3x3,K,3x3 pixel maximum of 11.0 micron minus 12.0 micronbrightness temperatures (nominal wavelengths),none
 1,emissivity_11um_tropopause,ch(31)%Emiss_Tropo,2,1,1,-0.500000,1.20000,not specified,none,"emissivity at the nominal wavelength of 11 microns, assuming the cloud was located at the Tropopause",none
-1,beta_11um_85um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_85um_tropopause,none,cloud 11/8.5 micron beta value assuming cloud resides at tropopause,none
-1,beta_11um_12um_tropopause,NOT_SET_YET,2,1,1,0.00000,2.00000,beta_11um_12um_tropopause,none,cloud 11/12 micron beta value assuming cloud resides at tropopause,none
-1,aot_0_65um_nom,NOT_SET_YET,2,2,1,-0.200000,5.00000,optical_thickness_of_atmosphere_layer_due_to_aerosol_0.65_micron nominal,none,optical thickness of atmosphere layer due to aerosol at the nominal wavelength of 0.65 microns,none
+1,beta_11um_85um_tropopause,Beta_11um_85um_Tropo_Rtm,2,1,1,0.00000,2.00000,beta_11um_85um_tropopause,none,cloud 11/8.5 micron beta value assuming cloud resides at tropopause,none
+1,beta_11um_12um_tropopause,Beta_11um_12um_Tropo_Rtm,2,1,1,0.00000,2.00000,beta_11um_12um_tropopause,none,cloud 11/12 micron beta value assuming cloud resides at tropopause,none
+1,aot_0_65um_nom,aot1,2,2,1,-0.200000,5.00000,optical_thickness_of_atmosphere_layer_due_to_aerosol_0.65_micron nominal,none,optical thickness of atmosphere layer due to aerosol at the nominal wavelength of 0.65 microns,none
 1,aot_qf,aot_qf,2,1,0,0.00000,0.00000,optical_thickness_of_atmosphere_layer_quality_flag,none,quality flag for optical thickness of atmosphere layer,none
 1,olr,olr,2,1,1,50.0000,350.000,toa_net_upward_longwave_flux,W m-2,top of atmosphere outgoing longwave radiation,none
 1,ndvi_sfc,ndvi_sfc,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index,none,"normalized difference vegetation index, atmospherically corrected",none
 1,ndvi_sfc_white_sky_nwp,Ndvi_Sfc_White_Sky,2,1,1,-0.500000,1.00000,normalized_difference_vegetation_index_at_surface_from_white_sky_reflectance,none,"normalized difference vegetation index, atmospherically corrected, modis white sky",none
 1,surface_temperature_retrieved,Tsfc_Retrieved,2,1,1,220.000,340.000,surface_brightness_temperature,K,surface temperature retrieved using atmospherically corrected 11 micron radiance,none
-1,atmos_rad_11_0um_nom_nwp,NOT_SET_YET,2,1,1,0.00000,100.000,atmospheric_radiance_11_0um_nom_nwp,mW/m^2/cm^-1,atmospheric emission 11 micron radiance at toa from nwp,none
-1,atmos_trans_11_0um_nom_nwp,NOT_SET_YET,2,1,1,0.00000,1.00000,atmospheric_transmission_11_0um_nom_nwp,none,atmospheric tranmission 11 micron radiance at toa from nwp,none
+1,atmos_rad_11_0um_nom_nwp,ch(31)%Rad_Atm,2,1,1,0.00000,100.000,atmospheric_radiance_11_0um_nom_nwp,mW/m^2/cm^-1,atmospheric emission 11 micron radiance at toa from nwp,none
+1,atmos_trans_11_0um_nom_nwp,ch(31)%Trans_Atm,2,1,1,0.00000,1.00000,atmospheric_transmission_11_0um_nom_nwp,none,atmospheric tranmission 11 micron radiance at toa from nwp,none
 1,sfc_emiss_3_75um_nom_nwp,ch(20)%Sfc_Emiss,2,1,1,0.750000,1.00000,surface_emissivity_3_75um_nom_nwp,none,surface emissivity at 3.75 micron from ancillary data,none
 1,sfc_emiss_11_0um_nom_nwp,ch(31)%Sfc_Emiss,2,1,1,0.750000,1.00000,surface_emissivity_11_0um_nom_nwp,none,surface emissivity at 11 micron from ancillary data,none
 1,surface_air_temperature_nwp,Tair_Nwp_Pix,2,1,1,220.000,340.000,surface_air_temperature_nwp,K,surface air temperature from NWP ancillary data,none

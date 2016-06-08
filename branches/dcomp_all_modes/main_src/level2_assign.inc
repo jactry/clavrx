@@ -128,9 +128,33 @@ case("refl_0_47um_nom")
    if (allocated ( ch(3)%ref_toa)) then
       data_dim2_dtype2 = ch(3)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("refl_0_55um_nom")
+   if (allocated ( ch(4)%ref_toa)) then
+      data_dim2_dtype2 = ch(4)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_2um_nom")
+   if (allocated ( ch(5)%ref_toa)) then
+      data_dim2_dtype2 = ch(5)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("refl_1_60um_nom")
    if (allocated ( ch(6)%ref_toa)) then
       data_dim2_dtype2 = ch(6)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_2_1um_nom")
+   if (allocated ( ch(7)%ref_toa)) then
+      data_dim2_dtype2 = ch(7)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_41um_nom")
+   if (allocated ( ch(8)%ref_toa)) then
+      data_dim2_dtype2 = ch(8)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_44um_nom")
+   if (allocated ( ch(9)%ref_toa)) then
+      data_dim2_dtype2 = ch(9)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_38um_nom")
+   if (allocated ( ch(26)%ref_toa)) then
+      data_dim2_dtype2 = ch(26)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_sol_dnb_nom")
    if (allocated ( ch(44)%ref_toa)) then
@@ -281,34 +305,10 @@ case("cld_opd_dcomp")
    if (allocated ( tau_dcomp)) then
       data_dim2_dtype2 = tau_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("cld_opd_dcomp_1")
-   if (allocated ( tau_dcomp_1)) then
-      data_dim2_dtype2 = tau_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cld_opd_dcomp_2")
-   if (allocated ( tau_dcomp_2)) then
-      data_dim2_dtype2 = tau_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cld_opd_dcomp_3")
-   if (allocated ( tau_dcomp_3)) then
-      data_dim2_dtype2 = tau_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if    
 case("cld_reff_dcomp")
    if (allocated ( reff_dcomp)) then
       data_dim2_dtype2 = reff_dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("cld_reff_dcomp_1")
-   if (allocated ( reff_dcomp_1)) then
-      data_dim2_dtype2 = reff_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cld_reff_dcomp_2")
-   if (allocated ( reff_dcomp_2)) then
-      data_dim2_dtype2 = reff_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cld_reff_dcomp_3")
-   if (allocated ( reff_dcomp_3)) then
-      data_dim2_dtype2 = reff_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if         
 case("cld_opd_dcomp_unc")
    if (allocated ( tau_dcomp_cost)) then
       data_dim2_dtype2 = tau_dcomp_cost(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -536,5 +536,29 @@ case("wind_speed_cloud_top_nwp")
 case("wind_direction_cloud_top_nwp")
    if (allocated ( Wnd_Dir_Cld_Top_Nwp_Pix)) then
       data_dim2_dtype1 = Wnd_Dir_Cld_Top_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_opd_dcomp_1")
+   if (allocated ( tau_dcomp_1)) then
+      data_dim2_dtype2 = tau_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_opd_dcomp_2")
+   if (allocated ( tau_dcomp_2)) then
+      data_dim2_dtype2 = tau_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_opd_dcomp_3")
+   if (allocated ( tau_dcomp_3)) then
+      data_dim2_dtype2 = tau_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_dcomp_1")
+   if (allocated ( reff_dcomp_1)) then
+      data_dim2_dtype2 = reff_dcomp_1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_dcomp_2")
+   if (allocated ( reff_dcomp_2)) then
+      data_dim2_dtype2 = reff_dcomp_2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_reff_dcomp_3")
+   if (allocated ( reff_dcomp_3)) then
+      data_dim2_dtype2 = reff_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 end select

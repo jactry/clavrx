@@ -782,7 +782,7 @@ CONTAINS
    
    subroutine SCALE_VECTOR_I1_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i1)
       real, dimension(:,:), intent(in):: temp_r4
-      integer(kind=int1), intent(in):: iscaled
+      integer, intent(in):: iscaled
       real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
       integer(kind=int1), dimension(:,:),  intent(out):: temp_i1
       real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
@@ -810,11 +810,8 @@ CONTAINS
         
       !---- linear
       if (iscaled == 1) then
-      
-         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
-       
+         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))       
          temp_i2 = two_byte_min + scratch_r4 * (two_byte_max - two_byte_min)
-      
       endif
 
       !--- set scaled missing values

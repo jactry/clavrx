@@ -137,15 +137,17 @@ contains
    subroutine read_input_files (conf)
    
       use cx_file_tools_mod, only: get_lun &
-         , file_nr_lines
+         , file_nr_lines, file_test
       
       
       class ( conf_main_type ) :: conf
-      character ( len =256 ) :: input_file = 'file_list_viirs_dcomp'
+      character ( len =256 ) :: input_file = 'file_list'
       integer :: n_files
       integer :: i_file
       integer :: ios
       integer :: ppp
+      
+      if ( .not. file_test(trim(input_file))) return
      
       ppp = file_nr_lines (trim(input_file))
       

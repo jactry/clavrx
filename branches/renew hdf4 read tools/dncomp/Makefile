@@ -12,8 +12,6 @@ HDFLIB = $(HDFDIR)/lib
 
 CFLAGS = -O2 -w  -I$(HDFINC)
 LFLAGS =  -L$(HDFLIB)  -lmfhdf -ldf -ljpeg -lz -lm -w
-NCDF_LIB = /usr/local/lib
-
 
 TEST_PATH = ./tests/
 SUB_PATH = ./subtools/
@@ -116,7 +114,6 @@ nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_math_tools_mod.o  M_kracken.
 M_kracken.o:$(SUB_PATH)/M_kracken.f90
 	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90
 
-
 test_dcomp_lut.o:$(TEST_PATH)/test_dcomp_lut.f90 dcomp_lut_mod.o
 	$(fc) -c ${fflags} ${hdflibs} $(COMOBJ) $(LFLAGS) $(TEST_PATH)/test_dcomp_lut.f90
 
@@ -135,5 +132,5 @@ clean:
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib
-	make clean  -C $(ICASRC)
+	
 	-@echo ' '

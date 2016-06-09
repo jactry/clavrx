@@ -10,7 +10,7 @@
 
 module dcomp_lut_hdf_mod
 
-   use ica_f90_hdf_sds , only : &
+   use cx_hdf_read_mod , only : &
          & hdf_sds &
          , hdf_data &
          , hdf_get_file_sds &

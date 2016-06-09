@@ -368,27 +368,24 @@ if (exists($opt{'dncomp_dir'}))
 {
    if (length($opt{'dncomp_dir'}))
    {
-      print CONFIG "export DNCOMP_HDF=$opt{'dncomp_dir'}/hdf4/lib/\n";
       print CONFIG "export DNCOMP=$opt{'dncomp_dir'}\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
-      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
+      print CONFIG "dncomplinks= -ldncomp\n";
      
       
    }
    else
-   {
-      print CONFIG "export DNCOMP_HDF=../dncomp/hdf4/lib/\n";
+   {   
       print CONFIG "export DNCOMP=../dncomp/\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
-      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
+      print CONFIG "dncomplinks= -ldncomp\n";
    }
 }
 else
 {
-      print CONFIG "export DNCOMP_HDF=../dncomp/hdf4/lib/\n";
       print CONFIG "export DNCOMP=../dncomp/\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(DNCOMP_HDF) -I\$\(DNCOMP_HDF)\n";
-      print CONFIG "dncomplinks= -ldncomp -licaf90hdf\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
+      print CONFIG "dncomplinks= -ldncomp\n";
 
 }
 

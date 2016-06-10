@@ -689,6 +689,10 @@ case("refl_1_60um_nom_atmos_corr")
    if (allocated ( ch(6)%Ref_Sfc)) then
       data_dim2_dtype1 = ch(6)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("refl_2_1um_nom_atmos_corr")
+   if (allocated ( ch(7)%Ref_Sfc)) then
+      data_dim2_dtype1 = ch(7)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("refl_0_65um_nom_clear_sky")
    if (allocated ( ch(1)%Ref_Toa_Clear)) then
       data_dim2_dtype2 = ch(1)%Ref_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)

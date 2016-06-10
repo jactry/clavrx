@@ -20,12 +20,14 @@ for i=0,n_elements(data.field01) -1  do begin
    var_dim = (data.(3))[i]
    dtype = (data.(4))[i]
    global_var = (data.(2))[i]
+   scaling = (data.(5))[i]
    if global_var eq 'special' then continue
    
    sub = '(Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)'
    if var_dim eq 2 then sub = '(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)'
    data_name = 'data_dim'+string(var_dim,for='(i1)')+'_dtype'$
          +string(dtype,for='(i1)')
+   if scaling eq 1 then data_name = 'data_dim' +string(var_dim,for='(i1)')+'_dtype_r4'     
    ; special case where three different output variables come from one clavr-x var
    if out_name eq 'cld_temp_acha_qf' then begin
       global_var = 'acha%oe_quality_flags'

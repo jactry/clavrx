@@ -504,7 +504,7 @@ CONTAINS
       integer (kind=int1), allocatable :: data_dim1_dtype1(:)
       integer (kind=int4), allocatable :: data_dim1_dtype3(:)
       real(kind=real4), allocatable ::data_dim1_dtype4(:)
-      integer (kind=int1), allocatable :: data_dim2_dtype1(:,:)
+      real, allocatable :: data_dim2_dtype1(:,:)
       real , allocatable :: data_dim2_dtype2(:,:)
       integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
       real(kind=real4), allocatable ::data_dim2_dtype4(:,:)

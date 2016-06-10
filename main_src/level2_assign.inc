@@ -773,4 +773,16 @@ case("cld_reff_dcomp_3")
    if (allocated ( reff_dcomp_3)) then
       data_dim2_dtype2 = reff_dcomp_3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("albedo_sfc_white_sky_0_65um")
+   if (allocated ( ch(1)%sfc_ref_white_sky)) then
+      data_dim2_dtype2 = ch(1)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("albedo_sfc_white_sky_1_60um")
+   if (allocated ( ch(6)%sfc_ref_white_sky)) then
+      data_dim2_dtype2 = ch(6)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("albedo_sfc_white_sky_2_20um")
+   if (allocated ( ch(7)%sfc_ref_white_sky)) then
+      data_dim2_dtype2 = ch(7)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 end select

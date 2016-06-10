@@ -197,3 +197,6 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,cld_reff_dcomp_1,reff_dcomp_1,2,2,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR,none
 1,cld_reff_dcomp_2,reff_dcomp_2,2,2,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR,none
 1,cld_reff_dcomp_3,reff_dcomp_3,2,2,1,0.00000,160.000,effective_radius_of_cloud_condensed_water_particles_at_cloud_top,micron,effective radius of cloud particles determined from DCOMP; see attributes for channels used - NOAA CDR,none
+1,albedo_sfc_white_sky_0_65um,ch(1)%sfc_ref_white_sky,2,2,1,0.0000,120.00,alb_sfc,%,Surface albedo from MODIS 16 days climatology,none
+1,albedo_sfc_white_sky_1_60um,ch(6)%sfc_ref_white_sky,2,2,1,0.0000,120.000,alb_sfc,%,Surface albedo from MODIS 16 days climatology,none
+1,albedo_sfc_white_sky_2_20um,ch(7)%sfc_ref_white_sky,2,2,1,0.0000,120.00,alb_sfc,%,Surface albedo from MODIS 16 days climatology,none

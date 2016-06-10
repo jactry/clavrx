@@ -504,10 +504,13 @@ CONTAINS
       integer (kind=int1), allocatable :: data_dim1_dtype1(:)
       integer (kind=int4), allocatable :: data_dim1_dtype3(:)
       real(kind=real4), allocatable ::data_dim1_dtype4(:)
-      real, allocatable :: data_dim2_dtype1(:,:)
-      real , allocatable :: data_dim2_dtype2(:,:)
+      integer ( kind = int1), allocatable :: data_dim2_dtype1(:,:)
+      integer ( kind = int2), allocatable :: data_dim2_dtype2(:,:)
       integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
       real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
+      real(kind=real4), allocatable :: data_dim1_dtype_r4(:)
+      real(kind=real4), allocatable :: data_dim2_dtype_r4(:,:)
+      
       
       character (len=40) :: name
       integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
@@ -577,7 +580,9 @@ CONTAINS
          allocate ( data_dim2_dtype3(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( data_dim2_dtype4(sds_edge_2d(1),sds_edge_2d(2)))
          allocate ( two_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
-         allocate ( one_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))   
+         allocate ( one_byte_dummy(sds_edge_2d(1),sds_edge_2d(2)))  
+         allocate ( data_dim1_dtype_r4 (sds_edge_2d(2)))
+         allocate ( data_dim2_dtype_r4 (sds_edge_2d(1),sds_edge_2d(2)))
         
          do ii = 1, prd % num_products
             prd_i => prd % product(ii)
@@ -611,7 +616,7 @@ CONTAINS
                   case(1)
                   if (prd_i % scaling == 1 ) then
                      
-                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype1,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
+                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype_r4,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,One_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                         One_Byte_Dummy ) + Istatus 
@@ -623,7 +628,7 @@ CONTAINS
                   
                   case(2)
                   if (prd_i % scaling == 1) then
-                     call SCALE_VECTOR_I2_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
+                     call SCALE_VECTOR_I2_RANK2(data_dim2_dtype_r4,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,Two_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                         Two_Byte_Dummy ) + Istatus

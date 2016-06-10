@@ -439,9 +439,7 @@ CONTAINS
                prd_i % Sds_Id= create_sds (id_file, prd_i % name , sds_dims_2d , prd_i % dtype)
                istatus = compress_sds ( prd_i % Sds_Id,Compress_Flag, Sds_Chunk_Size_2d) 
             end select
-            
-           
-           
+
             call add_att(  prd_i % Sds_Id, 'SCALED', prd_i % scaling)
             call add_att( prd_i % sds_id, 'unit', trim(prd_i % unit)) 
             call add_att( prd_i % sds_id, 'standard_name', trim(prd_i % standard_name))
@@ -613,7 +611,7 @@ CONTAINS
                   case(1)
                   if (prd_i % scaling == 1 ) then
                      
-                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype2,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
+                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype1,prd_i % scaling ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,One_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
                         One_Byte_Dummy ) + Istatus 

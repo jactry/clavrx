@@ -681,11 +681,31 @@ Sds_Output_Stride_XY = (/1,1/)
           End_Date_Input = End_Day_Input + End_Time_Input / 24.0
 
           !--- based on attributes, see if this file should analyzed further
-          if ((Start_Year_Input /= Year) .and. (End_Year_Input /= Year)) cycle
-          if ((Node_String /= "zen") .and. (Start_Day_Input /= Jday) .and. (End_Day_Input /= Jday)) cycle
-          if ((Node_String /= "zen") .and. (Sc_Id_Output /= Sc_Id_Input)) cycle
-          if ((Node_String == "zen") .and. (Start_Date_Input < Start_Date_Window)) cycle
-          if ((Node_String == "zen") .and. (End_Date_Input > End_Date_Window)) cycle
+          if ((Start_Year_Input /= Year) .and. (End_Year_Input /= Year)) then
+             print *, "level-2 file year outside bounds for level-2b, skipping file ", &
+             Start_Year_Input, End_Year_Input, Year
+             cycle
+          endif
+          if ((Node_String /= "zen") .and. (Start_Day_Input /= Jday) .and. (End_Day_Input /= Jday)) then
+             print *, "for nodes other than zen, level-2 file doy outside bounds for level-2b, skipping file ",  &
+                      Start_Day_Input, End_Day_Input, Jday
+             cycle
+          endif
+          if ((Node_String /= "zen") .and. (Sc_Id_Output /= Sc_Id_Input)) then
+             print *, "for nodes other than zen, level-2 Sat Id outside bounds for level-2b, skipping file ", &
+                      Sc_Id_Input, Sc_Id_Output
+             cycle
+          endif
+          if ((Node_String == "zen") .and. (Start_Date_Input < Start_Date_Window)) then
+             print *, "for zen node, level-2 start date outside bounds for level-2b, skipping file ", &
+                      Start_Date_Input, Start_Date_Window
+             cycle
+          endif
+          if ((Node_String == "zen") .and. (End_Date_Input > End_Date_Window)) then
+             print *, "for zen node, level-2 end date outside bounds for level-2b, skipping file ",  &
+                      End_Date_Input, End_Date_Window
+             cycle
+          endif
 
           !--- pass along Level1b file for a source global variable
           L1b_Length = index(L1b_Input,achar(0)) - 1

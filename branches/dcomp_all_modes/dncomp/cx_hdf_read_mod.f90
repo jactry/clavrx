@@ -5,6 +5,8 @@
 
 module cx_hdf_read_mod
    implicit none
+   private
+   
    include 'hdf.f90'
    include 'cx_hdf_standard_declarations.inc'
    
@@ -46,6 +48,13 @@ module cx_hdf_read_mod
       type ( hdf_data) :: data
       type(hdf_att), dimension(:),allocatable :: attr
    end type hdf_sds
+   
+   
+   public :: hdf_data
+   public :: hdf_sds
+   public :: MAXNCDIM
+   public :: MAXNCNAM
+   public :: hdf_get_file_sds
    
 contains
    !

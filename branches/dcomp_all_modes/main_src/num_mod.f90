@@ -50,7 +50,7 @@
   use CONSTANTS
   
   implicit none
-  
+  private
   public:: LOCATE, &
            JULIAN, &
            COMPUTE_MONTH, &
@@ -71,7 +71,8 @@
            WIND_DIRECTION, &
            COUNTSUBSTRING, &
            SPLIT_STRING, &
-           REPLACE_CHAR_IN_STRG
+           REPLACE_CHAR_IN_STRG, &
+           COVARIANCE
            
   contains
 

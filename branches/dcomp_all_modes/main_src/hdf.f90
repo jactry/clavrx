@@ -47,7 +47,7 @@
 !--------------------------------------------------------------------------------------
 module HDF
    implicit none
-
+   private
 !	Error Return Codes 
    integer, parameter, public:: DFE_NOERROR = 0
    integer, parameter, public:: DFE_NONE = 0

@@ -68,11 +68,42 @@ use CALIBRATION_CONSTANTS, only: &
    , ch1_degrad_low_1 &
    , ch1_degrad_low_2
    
-use PLANCK
-use NUMERICAL_ROUTINES
-use FILE_UTILITY
-use VIEWING_GEOMETRY_MODULE
+use PLANCK, only: &
+   PLANCK_TEMP_FAST &
+   , PLANCK_TEMP_FAST
+   
+use NUMERICAL_ROUTINES, only: &
+   leap_year_fct &
+   , compute_median
+   
+use FILE_UTILITY, only: &
+   get_lun &
+   , file_exists
+   
+use VIEWING_GEOMETRY_MODULE, only: &
+   SENSOR_ZENITH &
+   , SENSOR_AZIMUTH &
+   , RELATIVE_AZIMUTH & 
+   , glint_angle &
+   , scattering_angle &
+   , possol
+   
+   
+use CONSTANTS, only: &
+   real4 &
+   , int1 &
+   , int2 &
+   , int4 &
+   , real8 &
+   , sym &
+   , EXE_PROMPT &
+   , Missing_value_real4 &
+   , DTOR &
+   , Missing_value_int2
+
 implicit none
+
+
 
 public:: GET_GOES_HEADERS, &
          READ_GOES, &

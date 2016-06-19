@@ -26,14 +26,36 @@
 !    Creation Date May 2009
 !--------------------------------------------------------------------------------------
 module LEVEL2B_ROUTINES
- use CONSTANTS
- use HDF
- use LEVEL2_ROUTINES
- use SCALING_PARAMETERS
- use FILE_UTILITY
+   use CONSTANTS, only:  &
+   int4 &
+   , real4 &
+   , int2 &
+   , int1 &
+   , sym &
+   , EXE_PROMPT &
+   , missing_value_int1 &
+   , missing_value_int2 &
+   , missing_value_int4 &
+   , Missing_Value_Real4 &
+   , No_Attribute_Missing_Value
+   
+   use HDF, only: &
+   DFACC_CREATE &
+   , DFNT_INT16 &
+   , DFACC_READ &
+   , DFNT_INT32 &
+   , DFNT_FLOAT32 &
+   , DFNT_CHAR8 &
+   , DFNT_INT8 &
+   , DFNT_CHAR
+   
+
+   use FILE_UTILITY,only: &
+    get_lun
 
  implicit none
-
+ 
+   private
  public:: DEFINE_SDS_RANK1
  public:: DEFINE_SDS_RANK2
  public:: DEFINE_SDS_RANK3
@@ -773,7 +795,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
     !--- read sds scaling attributes
     call READ_SCALING_ATTRIBUTES(Sds,Istatus)
-
+      print*,istatus, Sds%Data_Type
     !--- allocate arrays for holding data, read data and store in output array
     if (Sds%Data_Type == DFNT_INT8) then
        allocate(Temp_I1(Sds_Dims(1),Sds_Dims(2)))
@@ -801,7 +823,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
        Sds%Data_Type = -999
        return
     endif
-
+      print*,'success'
     !---deallocate temp arrays
     if (allocated(Temp_I1)) deallocate(Temp_I1)
     if (allocated(Temp_I2)) deallocate(Temp_I2)
@@ -1120,6 +1142,9 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
     real(kind=real4), dimension(:), allocatable:: Temp_R4
     integer(kind=int4):: Istatus
     integer:: sfwdata
+    
+    
+    print*,'ffgggg 1d'
 
     Sds_Dims(1) = size(Scaled_Sds_Data,1)
     Sds_Start = (/ 0 /)
@@ -1178,7 +1203,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
      real(kind=real4), dimension(:,:), allocatable:: Temp_R4
      integer(kind=int4):: Istatus
      integer:: sfwdata
-
+       print*,'ffgggg 2d'
      Sds_Dims(1) = size(Scaled_Sds_Data,1)
      Sds_Dims(2) = size(Scaled_Sds_Data,2)
      Sds_Start = (/ 0, 0 /)
@@ -1186,7 +1211,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
      Sds_Edges = Sds_Dims
 
      Istatus = 0
-
+ print*,'kk', Sds%Data_Type, Sds_Dims(1),Sds_Dims(2)
      if (Sds%Data_Type == DFNT_INT8) then
         allocate(Temp_I1(Sds_Dims(1),Sds_Dims(2)))
         Temp_I1 = int(Scaled_Sds_Data,kind=int1)
@@ -1200,11 +1225,15 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
         Temp_I4 = int(Scaled_Sds_Data,kind=int4)
         Istatus = sfwdata(Sds%Id_Output, Sds_Start, Sds_Stride, Sds_Edges, Temp_I4) + Istatus
      elseif (Sds%Data_Type == DFNT_FLOAT32) then
+         print*,'w1'
         allocate(Temp_R4(Sds_Dims(1),Sds_Dims(2)))
+        print*,'w2',size(temp_r4)
         Temp_R4 = real(Scaled_Sds_Data,kind=real4)
+        print*,'w3'
         Istatus = sfwdata(Sds%Id_Output, Sds_Start, Sds_Stride, Sds_Edges, Temp_R4) + Istatus
+        print*,'w4'
      endif
-
+ print*,'fff'
    !---deallocate temp arrays
    if (allocated(Temp_I1)) deallocate(Temp_I1)
    if (allocated(Temp_I2)) deallocate(Temp_I2)
@@ -1233,7 +1262,7 @@ end subroutine WRITE_SDS_RANK2
      real(kind=real4), dimension(:,:,:), allocatable:: Temp_R4
      integer(kind=int4):: Istatus
      integer:: sfwdata
-
+       print*,'ffgggg 3d ',sds % variable_name
      Sds_Dims(1) = size(Scaled_Sds_Data,1)
      Sds_Dims(2) = size(Scaled_Sds_Data,2)
      Sds_Dims(3) = size(Scaled_Sds_Data,3)
@@ -1242,7 +1271,7 @@ end subroutine WRITE_SDS_RANK2
      Sds_Edges = Sds_Dims
 
      Istatus = 0
-
+      print*,'kk', Sds%Data_Type
      if (Sds%Data_Type == DFNT_INT8) then
         allocate(Temp_I1(Sds_Dims(1),Sds_Dims(2),Sds_Dims(3)))
         Temp_I1 = int(Scaled_Sds_Data,kind=int1)
@@ -1260,7 +1289,7 @@ end subroutine WRITE_SDS_RANK2
         Temp_R4 = real(Scaled_Sds_Data,kind=real4)
         Istatus = sfwdata(Sds%Id_Output, Sds_Start, Sds_Stride, Sds_Edges, Temp_R4) + Istatus
      endif
-
+     
    !---deallocate temp arrays
    if (allocated(Temp_I1)) deallocate(Temp_I1)
    if (allocated(Temp_I2)) deallocate(Temp_I2)
@@ -1981,66 +2010,68 @@ subroutine WRITE_SCALING_ATTRIBUTES(Sds,Istatus_Sum)
      endif
 
 end subroutine WRITE_SCALING_ATTRIBUTES
-!------------------------------------------------------------------------------------------------
-!  write the sds attributes that communicate how data is scaled
-!------------------------------------------------------------------------------------------------
-subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
-    type(Sds_Struct), intent(inout):: Sds
-    integer, intent(inout):: Istatus
+   !------------------------------------------------------------------------------------------------
+   !  write the sds attributes that communicate how data is scaled
+   !------------------------------------------------------------------------------------------------
+   subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
+      type(Sds_Struct), intent(inout):: Sds
+      integer, intent(inout):: Istatus
 
-    integer(kind=int1):: fill_value_i1
-    integer(kind=int2):: fill_value_i2
-    integer(kind=int4):: fill_value_i4
-    real(kind=real4):: fill_value_r4
-    integer(kind=int1), dimension(2):: valid_range_i1
-    integer(kind=int2), dimension(2):: valid_range_i2
-    integer(kind=int4), dimension(2):: valid_range_i4
-    real(kind=real4), dimension(2):: valid_range_r4
+      integer(kind=int1):: fill_value_i1
+      integer(kind=int2):: fill_value_i2
+      integer(kind=int4):: fill_value_i4
+      real(kind=real4):: fill_value_r4
+      integer(kind=int1), dimension(2):: valid_range_i1
+      integer(kind=int2), dimension(2):: valid_range_i2
+      integer(kind=int4), dimension(2):: valid_range_i4
+      real(kind=real4), dimension(2):: valid_range_r4
 
-    integer:: sffattr, sfrnatt, sfrcatt
-
-    !--- read Sds attributes
-    Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED"), Sds%Scaling_Type)
-    Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"units"), Sds%Units)
-    if (Istatus /= 0) Sds%Units = "none"
-    Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"standard_name"), Sds%Standard_Name)
-    if (Istatus /= 0) Sds%Standard_Name = "none"
-    Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"long_name"), Sds%Long_Name)
-    if (Istatus /= 0) Sds%Long_Name = "none"
-
-
-    if (Sds%Scaling_Type /= sym%NO_SCALING) then
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_missing"), Sds%Unscaled_Missing)
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_range"), Sds%Actual_Range)
-    endif
-
-    if (Sds%Scaling_Type /= sym%NO_SCALING) then
-       if (Sds%Data_Type == DFNT_INT8) then
-         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i1)
-         Sds%Valid_Range = int(valid_range_i1,kind=int4)
-       elseif (Sds%Data_Type == DFNT_INT16) then
-         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i2)
-         Sds%Valid_Range = int(valid_range_i2,kind=int4)
-       elseif (Sds%Data_Type == DFNT_INT32) then
-         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i4)
-         Sds%Valid_Range = int(valid_range_i4,kind=int4)
-       elseif (Sds%Data_Type == DFNT_FLOAT32) then
-         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_r4)
-         Sds%Valid_Range = int(valid_range_r4,kind=real4)
-       endif
-    endif
-
-    !--- fill value (if absent, assume this is packed variable and set
-    !--- Unscaled_Missing to -888
-    if (Sds%Data_Type == DFNT_INT8) then
+      integer:: sffattr, sfrnatt, sfrcatt
+      
+      print*,sds % Variable_Name
+      !--- read Sds attributes
+      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED"), Sds%Scaling_Type)
+      print*,'a',istatus
+      Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"units"), Sds%Units)
+      if (Istatus /= 0) Sds%Units = "none"
+      Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"standard_name"), Sds%Standard_Name)
+      if (Istatus /= 0) Sds%Standard_Name = "none"
+      Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"long_name"), Sds%Long_Name)
+      if (Istatus /= 0) Sds%Long_Name = "none"
+       print*,'a1',istatus
+      if (Sds%Scaling_Type /= sym%NO_SCALING) then
+         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_missing"), Sds%Unscaled_Missing)
+         print*,'a22',istatus
+         Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_range"), Sds%Actual_Range)
+      end if
+       print*,'a2',istatus,Sds%Actual_Range
+      if (Sds%Scaling_Type /= sym%NO_SCALING) then
+         if (Sds%Data_Type == DFNT_INT8) then
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i1)
+            Sds%Valid_Range = int(valid_range_i1,kind=int4)
+         elseif (Sds%Data_Type == DFNT_INT16) then
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i2)
+            Sds%Valid_Range = int(valid_range_i2,kind=int4)
+         elseif (Sds%Data_Type == DFNT_INT32) then
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_i4)
+            Sds%Valid_Range = int(valid_range_i4,kind=int4)
+         elseif (Sds%Data_Type == DFNT_FLOAT32) then
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"valid_range"), valid_range_r4)
+            Sds%Valid_Range = int(valid_range_r4,kind=real4)
+         endif
+      endif
+ print*,'a2',istatus
+      !--- fill value (if absent, assume this is packed variable and set
+      !--- Unscaled_Missing to -888
+      if (Sds%Data_Type == DFNT_INT8) then
          Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"_FillValue"), fill_value_i1)
          if (Istatus == 0) then
-           Sds%Fill_Value = int(fill_value_i1,kind=int4)
+            Sds%Fill_Value = int(fill_value_i1,kind=int4)
          else
-           Sds%Fill_Value = Missing_Value_int4
-           Sds%Unscaled_Missing = No_Attribute_Missing_Value
+            Sds%Fill_Value = Missing_Value_int4
+            Sds%Unscaled_Missing = No_Attribute_Missing_Value
          endif
-    elseif (Sds%Data_Type == DFNT_INT16) then
+      elseif (Sds%Data_Type == DFNT_INT16) then
          Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"_FillValue"), fill_value_i2)
          if (Istatus == 0) then
             Sds%Fill_Value = int(fill_value_i2,kind=int4)
@@ -2048,7 +2079,7 @@ subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
            Sds%Fill_Value = Missing_Value_int4
            Sds%Unscaled_Missing = No_Attribute_Missing_Value
          endif
-    elseif (Sds%Data_Type == DFNT_INT32) then
+      elseif (Sds%Data_Type == DFNT_INT32) then
          Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"_FillValue"), fill_value_i4)
          if (Istatus == 0) then
             Sds%Fill_Value = int(fill_value_i4,kind=int4)
@@ -2056,7 +2087,7 @@ subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
            Sds%Fill_Value = Missing_Value_int4
            Sds%Unscaled_Missing = No_Attribute_Missing_Value
          endif
-    elseif (Sds%Data_Type == DFNT_FLOAT32) then
+      elseif (Sds%Data_Type == DFNT_FLOAT32) then
          Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"_FillValue"), fill_value_r4)
          if (Istatus == 0) then
             Sds%Fill_Value = int(fill_value_r4,kind=int4)
@@ -2064,23 +2095,17 @@ subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
            Sds%Fill_Value = Missing_Value_int4
            Sds%Unscaled_Missing = No_Attribute_Missing_Value
          endif
-    endif
-
-    !-- if scaled, read attributes that allow unscaling
-    if (Sds%Scaling_Type > 0) then
-      if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"scale_factor"), Sds%Scale_Factor) + Istatus
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"add_offset"), Sds%Add_Offset) + Istatus
-!     else
-!      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED_MISSING"), Sds%Scaled_Missing) + Istatus
-!      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED_MIN"), Sds%Scaled_Min) + Istatus
-!      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED_MAX"), Sds%Scaled_Max) + Istatus
-!      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"RANGE_MIN"), Sds%Unscaled_Min) + Istatus
-!      Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"RANGE_MAX"), Sds%Unscaled_Max) + Istatus
       endif
-    endif
-
-end subroutine READ_SCALING_ATTRIBUTES
+ print*,'a4',istatus
+      !-- if scaled, read attributes that allow unscaling
+      if (Sds%Scaling_Type > 0) then
+         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"scale_factor"), Sds%Scale_Factor) + Istatus
+            Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"add_offset"), Sds%Add_Offset) + Istatus
+         endif
+      endif
+print*,'a5',istatus
+   end subroutine READ_SCALING_ATTRIBUTES
 
 
 end module LEVEL2B_ROUTINES

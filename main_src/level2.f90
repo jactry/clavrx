@@ -656,6 +656,8 @@ CONTAINS
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
          if ( allocated ( one_byte_dummy)) deallocate (one_byte_dummy)
+         
+         
          !--- check for and report errors
          
          if (Istatus /= 0) then

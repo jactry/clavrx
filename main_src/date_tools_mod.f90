@@ -23,8 +23,7 @@ module date_tools_mod
       character(8) :: yymmddhh
       real (kind = r15) :: julday
       real :: mod_julday
-      
-     
+           
    contains
       procedure :: set_date 
       procedure :: set_date_with_doy
@@ -32,7 +31,7 @@ module date_tools_mod
       procedure :: print_data 
       procedure :: date_string 
       procedure :: add_time 
-       procedure :: get_date
+      procedure :: get_date
       procedure , private :: update 
       procedure , private :: set_julday
       procedure , private::  add_day
@@ -292,7 +291,9 @@ contains
       write ( day_s, fmt = '(i2.2)') this % day
       write ( hour_s , fmt = '(i2.2)') this % hour
       write ( minute_s , fmt = '(i2.2)') this % minute
-    out='start'  
+      
+      out='start'  
+      
       select case (fmt)
          case ('yymmdd')
             out = year_s2d//month_s//day_s
@@ -381,37 +382,6 @@ contains
    END FUNCTION izlr
 
 
-   SUBROUTINE calend(yyyy, ddd, mm, dd)
-      !=============CALEND WHEN GIVEN A VALID YEAR, YYYY, AND DAY OF THE YEAR, DDD,
-      !             RETURNS THE MONTH, MM, AND DAY OF THE MONTH, DD.
-      !             SEE ACM ALGORITHM 398, TABLELESS DATE CONVERSION, BY
-      !             DICK STONE, CACM 13(10):621.
-      INTEGER, INTENT(IN)   :: yyyy
-      INTEGER, INTENT(IN)   :: ddd
-      INTEGER, INTENT(OUT)  :: mm
-      INTEGER, INTENT(OUT)  :: dd
-      INTEGER :: t
-
-      t = 0
-      IF(MOD(yyyy, 4) == 0) t = 1
-
-      !-----------THE FOLLOWING STATEMENT IS NECESSARY IF YYYY IS < 1900 OR > 2100.
-      IF(MOD(yyyy, 400) /= 0 .AND. MOD(yyyy, 100) == 0) t = 0
-
-      dd = ddd
-      IF(ddd > 59+t) dd = dd + 2 - t
-      mm = ((dd+91)*100)/3055
-      dd = (dd+91) - (mm*3055)/100
-      mm = mm - 2
-      !----------MM WILL BE CORRECT IFF DDD IS CORRECT FOR YYYY.
-      IF(mm >= 1 .AND. mm <= 12) RETURN
-      WRITE(*,1) ddd
-1 FORMAT('0$$$CALEND: DAY OF THE YEAR INPUT =', i11,  ' IS OUT OF RANGE.')
-
-      STOP
-   END SUBROUTINE calend
-
-
    SUBROUTINE cdate(jd, yyyy, mm, dd)
       !=======GIVEN A JULIAN DAY NUMBER, NNNNNNNN, YYYY,MM,DD ARE RETURNED AS THE
       !              CALENDAR DATE. JD = NNNNNNNN IS THE JULIAN DATE FROM AN EPOCH
@@ -439,26 +409,26 @@ contains
    END SUBROUTINE cdate
 
 
-SUBROUTINE daysub(jd, yyyy, mm, dd, wd, ddd)
-!========GIVEN JD, A JULIAN DAY # (SEE ASF JD), THIS ROUTINE CALCULATES DD,
-!        THE DAY NUMBER OF THE MONTH; MM, THE MONTH NUMBER; YYYY THE YEAR;
-!        WD THE WEEKDAY NUMBER, AND DDD THE DAY NUMBER OF THE YEAR.
+   SUBROUTINE daysub(jd, yyyy, mm, dd, wd, ddd)
+      !========GIVEN JD, A JULIAN DAY # (SEE ASF JD), THIS ROUTINE CALCULATES DD,
+      !        THE DAY NUMBER OF THE MONTH; MM, THE MONTH NUMBER; YYYY THE YEAR;
+      !        WD THE WEEKDAY NUMBER, AND DDD THE DAY NUMBER OF THE YEAR.
 
-!   EXAMPLE: CALL DAYSUB(2440588, YYYY, MM, DD, WD, DDD) YIELDS 1970 1 1 4 1.
+      !   EXAMPLE: CALL DAYSUB(2440588, YYYY, MM, DD, WD, DDD) YIELDS 1970 1 1 4 1.
 
-real ( kind = r15) , INTENT(IN)   :: jd
-INTEGER, INTENT(OUT)  :: yyyy
-INTEGER, INTENT(OUT)  :: mm
-INTEGER, INTENT(OUT)  :: dd
-INTEGER, INTENT(OUT)  :: wd
-INTEGER, INTENT(OUT)  :: ddd
+      real ( kind = r15) , INTENT(IN)   :: jd
+      INTEGER, INTENT(OUT)  :: yyyy
+      INTEGER, INTENT(OUT)  :: mm
+      INTEGER, INTENT(OUT)  :: dd
+      INTEGER, INTENT(OUT)  :: wd
+      INTEGER, INTENT(OUT)  :: ddd
 
-CALL cdate(jd, yyyy, mm, dd)
-wd = izlr(yyyy, mm, dd)
-ddd = iday(yyyy, mm, dd)
+      CALL cdate(jd, yyyy, mm, dd)
+      wd = izlr(yyyy, mm, dd)
+      ddd = iday(yyyy, mm, dd)
 
-RETURN
-END SUBROUTINE daysub
+      RETURN
+   END SUBROUTINE daysub
 
 
    function jd(yyyy, mm, dd, hh , uu ) result(ival)

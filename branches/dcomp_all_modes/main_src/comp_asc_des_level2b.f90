@@ -106,7 +106,6 @@ program COMPILE_ASC_DES_LEVEL2B
     , lat_input &
     , Gap_Pixel_Mask_Input &
     , COMPUTE_WMO_ID_KNOWING_SENSOR_NAME &
-    , copy_global_attributes &
     , define_sds_rank1 &
     , define_sds_rank2 &
     , init_random_seed &
@@ -116,10 +115,22 @@ program COMPILE_ASC_DES_LEVEL2B
     , unscale_sds &
     , write_sds 
     
- use FILE_UTILITY, only: &
-   get_lun
+   use FILE_UTILITY, only: &
+      get_lun
    
- 
+   use cx_hdf_read_mod, only: &
+      hdf_att &
+      , MAXNCNAM &
+      , hdf_get_file_att &
+      , hdf_get_finfo
+   
+   use cx_hdf_write_mod, only: &
+      add_att   &
+      , hdf_file_open &
+      , close_file
+   
+   use cx_data_io_tools_mod
+   
    implicit none
   
 
@@ -128,7 +139,7 @@ program COMPILE_ASC_DES_LEVEL2B
    integer(kind=int4):: N_Command_Line_Args
    integer, parameter:: Source_Length_Max = 1000
 
-   integer(kind=int4):: First_Valid_Input
+   logical :: First_Valid_Input
    integer(kind=int4):: Sd_Id_Input
    integer(kind=int4):: Sd_Id_Output
 
@@ -339,7 +350,17 @@ program COMPILE_ASC_DES_LEVEL2B
    character(len=100):: Time_Coverage_Resolution_String
    character(len=100):: Metadata_Link_String
    character(len=100):: Spatial_Resolution_String
-
+   
+   character(len =MAXNCNAM), allocatable :: att_names(:)
+   integer :: N_ATTS 
+   integer :: istatus
+   character (len=200) :: file
+   integer :: natt,nsds
+   type(hdf_att), allocatable:: attrs(:)
+   character ( len = MAXNCNAM), allocatable :: att_name(:)
+   character ( len = MAXNCNAM), allocatable :: sds_name(:) 
+   integer :: i
+   integer :: id_out
    INCLUDE 'version.inc'
 
    !----------------------------------------------------------------------
@@ -627,12 +648,12 @@ program COMPILE_ASC_DES_LEVEL2B
    print *, LOCAL_EXE_PROMPT, "Creating ", trim(File_Output)
 
    !--- open file for reading and writing
-   Sd_Id_Output = sfstart(trim(dir_out)//trim(File_Output),DFACC_CREATE)
+  ! Sd_Id_Output = sfstart(trim(dir_out)//trim(File_Output),DFACC_CREATE)
 
-   if (Sd_Id_Output <  0) then
-      print *, LOCAL_EXE_PROMPT, "output HDF file creation failed. Exiting...", Asc_Des_Node
-      stop 38
-   endif
+ !  if (Sd_Id_Output <  0) then
+  !    print *, LOCAL_EXE_PROMPT, "output HDF file creation failed. Exiting...", Asc_Des_Node
+ !     stop 38
+ !  endif
 
    !--------------------------------------------------------------------------------
    ! allocate and initialize arrays for composite
@@ -683,7 +704,7 @@ program COMPILE_ASC_DES_LEVEL2B
    Temp_Mask_Output = 0
    Source_Length_End = 1
 
-   First_Valid_Input = sym%YES
+   First_Valid_Input = .true.
 
    !---------------------------------------------------------------------------------
    ! loop through orbit files
@@ -695,32 +716,61 @@ program COMPILE_ASC_DES_LEVEL2B
       Istatus_Sum = 0
 
       !---- determine if this file should be skipped
-      Sd_Id_Input = sfstart(trim(dir_in)//trim(File_Input(ifile)), DFACC_READ)
-
-      if (Sd_Id_Input == FAIL) then
-         print *, LOCAL_EXE_PROMPT, "Unable to open: ", trim(File_Input(ifile))
-         cycle
-      endif
+    !  Sd_Id_Input = sfstart(trim(dir_in)//trim(File_Input(ifile)), DFACC_READ)
+      file = trim(dir_in)//trim(File_Input(ifile))
+    !  if (Sd_Id_Input == FAIL) then
+    !     print *, LOCAL_EXE_PROMPT, "Unable to open: ", trim(File_Input(ifile))
+    !    cycle
+    !  endif
 
       !--- determine number of sds's in these files (assume the same)
-      Istatus_Sum = sffinfo(Sd_Id_Input,Num_Sds_Input,Num_Global_Attrs)
-
-      if (Num_Sds_Input <= 1) then
-          print *, LOCAL_EXE_PROMPT, "Empty File:  ", trim(File_Input(ifile))
-          cycle
-      endif
-
+    !  Istatus_Sum = sffinfo(Sd_Id_Input,Num_Sds_Input,Num_Global_Attrs)
+!
+   !   if (Num_Sds_Input <= 1) then
+   !       print *, LOCAL_EXE_PROMPT, "Empty File:  ", trim(File_Input(ifile))
+  !        cycle
+ !     endif
+      
+      ! - read global attributes
+      
+   !   istatus =  hdf_get_finfo (file,nsds,sds_name,natt,att_name)
+                                               
+      
+      if ( hdf_get_file_att (file,natt,attrs) < 0 ) then
+         print*,'error reading attributes'
+         stop
+      end if
+      
+      do i = 1, natt
+            
+         if ( attrs(i) % name .eq. 'NUMBER_OF_ELEMENTS' ) Num_Elements_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'NUMBER_OF_SCANS_LEVEL2' ) Num_Lines_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'START_YEAR' ) Start_Year_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'END_YEAR' ) End_Year_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'START_DAY_OF_YEAR' ) Start_Day_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'END_DAY_OF_YEAR' ) End_Day_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'START_TIME' ) Start_Time_Input = attrs(i) % data % r4values (1)
+         if ( attrs(i) % name .eq. 'END_TIME' ) End_Time_Input = attrs(i) % data % r4values (1)
+         if ( attrs(i) % name .eq. 'WMO_SATELLITE_CODE' ) Sc_Id_Input = attrs(i) % data % i2values (1)
+         if ( attrs(i) % name .eq. 'L1B' ) L1b_input = attrs(i) % data % c1values (1)
+         
+      end do
+      
+      
       !--- read attributes of this file
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_ELEMENTS"),Num_Elements_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_SCANS_LEVEL2"),Num_Lines_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_YEAR"),Start_Year_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_YEAR"),End_Year_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_DAY_OF_YEAR"),Start_Day_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_DAY_OF_YEAR"),End_Day_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_TIME"),Start_Time_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_TIME"),End_Time_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"WMO_SATELLITE_CODE"),Sc_Id_Input) + Istatus_Sum
-      Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"L1B"),L1b_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_ELEMENTS"),Num_Elements_Input) + Istatus_Sum
+  !    print*,  num_elements_input
+     
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_SCANS_LEVEL2"),Num_Lines_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_YEAR"),Start_Year_Input) + Istatus_Sum
+  !    print*,start_year_input
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_YEAR"),End_Year_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_DAY_OF_YEAR"),Start_Day_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_DAY_OF_YEAR"),End_Day_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_TIME"),Start_Time_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_TIME"),End_Time_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"WMO_SATELLITE_CODE"),Sc_Id_Input) + Istatus_Sum
+  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"L1B"),L1b_Input) + Istatus_Sum
 
 
       Start_Date_Input = Start_Day_Input + Start_Time_Input / 24.0
@@ -763,10 +813,22 @@ program COMPILE_ASC_DES_LEVEL2B
       endif
 
       !--- copy global attributes of first valid file to output file
-      if (First_Valid_Input == sym%YES) then
+      if (First_Valid_Input ) then
 
-         call COPY_GLOBAL_ATTRIBUTES(Sd_Id_Input,Sd_Id_Output)
-
+         print*,'start level2b ..', trim(file),trim(dir_out)//trim(File_Output)
+         call copy_global_attributes ( trim(file) , trim(dir_out)//trim(File_Output)  &
+            , exclude_list=['FILENAME','NUMBER_OF_SCANS_LEVEL1B', 'START_YEAR', 'END_YEAR' &
+               ,'START_DAY_OF_YEAR', 'END_DAY_OF_YEAR','START_TIME','END_TIME'])
+        
+        
+        id_out = hdf_file_open ( trim(dir_out)//trim(File_Output))
+        call add_att ( id_out, 'geospatial_lon_number',Nlon_Output)
+        
+        
+        call close_file(id_out)
+         
+        stop
+         
          !--- add in attributes that define the output grid
          Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_number",DFNT_INT32,1,Nlon_Output) + Istatus_Sum
          Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_number",DFNT_INT32,1,Nlat_Output) + Istatus_Sum
@@ -866,7 +928,7 @@ print*,'eeeeeeeerrrrrrreeee'
 
              
       !--- if first valid file, write output lon and lat vectors to output file
-      if (First_Valid_Input == sym%YES) then
+      if (First_Valid_Input ) then
 
          !--- longitude
          Sds_Lon_Out = Sds_Lon
@@ -932,7 +994,7 @@ print*,'eeeeeeeerrrrrrreeee'
       allocate(Input_Array_1d(Num_Points))
 
       !--- allocate memory for output on First_Valid_Input
-      if (First_Valid_Input == sym%YES) then
+      if (First_Valid_Input ) then
          allocate(Scaled_Sds_Data_Output_Full(Nlon_Output, Nlat_Output, Num_Sds_Input))
       endif
 
@@ -983,7 +1045,7 @@ print*,'eeeeeeeerrrrrrreeee'
       endif
 
       !--- define output or read in output values
-      if (First_Valid_Input == sym%YES) then   !define sds in output
+      if (First_Valid_Input ) then   !define sds in output
             call CORRECT_SDS_STRINGS (Sds_Time) 
             call DEFINE_SDS_RANK2(Sd_Id_Output, &
                               Sds_dims_Output_xy, &
@@ -1013,7 +1075,7 @@ print*,'eeeeeeeerrrrrrreeee'
       deallocate(Scan_Line_Number_1d_Input)
 
       !--- define output or read in output values
-      if (First_Valid_Input == sym%YES) then   !define sds in output
+      if (First_Valid_Input ) then   !define sds in output
               call CORRECT_SDS_STRINGS (Sds_Scan_Line_Number ) 
               call DEFINE_SDS_RANK2(Sd_Id_Output,Sds_Dims_Output_xy, &
                          Sds_dims_Output_xy,Sds_scan_line_number)
@@ -1034,7 +1096,7 @@ print*,'eeeeeeeerrrrrrreeee'
       Sds_Scan_Element_Number%Unscaled_Missing = Missing_Value_Real4
 
       !--- define output or read in output values
-      if (First_Valid_Input == sym%YES) then   !define sds in output
+      if (First_Valid_Input ) then   !define sds in output
           call DEFINE_SDS_RANK2(Sd_Id_Output,Sds_dims_Output_xy, &
               Sds_dims_Output_xy,Sds_Scan_Element_Number)
               Scan_Element_Number_Output = missing_value_int4
@@ -1191,7 +1253,7 @@ print*,'eeeeeeeerrrrrrreeee'
       ! loop through SDS's and store the information about them
       ! note, this has to be zero based indices
       !---------------------------------------------------------------------
-      if (First_Valid_Input == sym%YES) then
+      if (First_Valid_Input) then
          Sds_loop_1: do Isds = 0, Num_Sds_Input-1
         
             sds%Id_Input = sfselect(Sd_Id_Input,Isds) 
@@ -1232,7 +1294,7 @@ print*,'eeeeeeeerrrrrrreeee'
          !-----------------------------------------------------------
          !--- read from or define  output variable
          !-----------------------------------------------------------
-         if (First_Valid_Input == sym%YES) then 
+         if (First_Valid_Input ) then 
                         
             call CORRECT_SDS_STRINGS (Sds(Isds)) 
             call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_xy,  &
@@ -1283,14 +1345,14 @@ print*,'eeeeeeeerrrrrrreeee'
       !----- close input hdf file
       Istatus_Sum = sfend(Sd_Id_Input) + Istatus_Sum 
       
-      First_Valid_Input = sym%NO
+      First_Valid_Input = .false.
 
    end do file_loop
     !----------------------------------------------------------------------------
     ! after last file, write output if at least one file was successfully read in
     !----------------------------------------------------------------------------
 print*,'end file loop'
-    if (First_Valid_Input == sym%NO) then
+    if (.not. First_Valid_Input ) then
             print*,'a'
             !---- write time to output files
             !call SCALE_SDS(Sds_Time,Time_Output,Scaled_Sds_Data_Output)

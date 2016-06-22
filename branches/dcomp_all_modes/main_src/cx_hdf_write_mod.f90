@@ -39,8 +39,9 @@ contains
       character(len=*) , intent(in) :: file
       integer :: dum
       integer :: sfstart
+     
+      dum = sfstart(trim(file),DFACC_WRITE)
       
-      dum = sfstart(trim(file),DFACC_CREATE)
       hdf_file_open = dum
    end function hdf_file_open
    
@@ -53,6 +54,7 @@ contains
       character (len= *), intent(in) :: value
       integer :: sfscatt
       istatus = sfscatt ( id,name,DFNT_CHAR8,len_trim(value),trim(value))
+      
    end subroutine add_att_char
    
    subroutine add_att_int1 (id, name, value)
@@ -60,7 +62,8 @@ contains
       character (len= *), intent(in) :: name
       integer(kind=int1), intent(in) :: value
       integer :: sfsnatt
-      istatus = sfsnatt ( id,name,DFNT_INT32,1,value)   
+      
+      istatus = sfsnatt ( id,name,DFNT_INT8,1,value)   
    end subroutine add_att_int1
    
    subroutine add_att_int (id, name, value)
@@ -68,7 +71,8 @@ contains
       character (len= *), intent(in) :: name
       integer, intent(in) :: value
       integer :: sfsnatt
-      istatus = sfsnatt ( id,name,DFNT_INT32,1,value)   
+      
+      istatus = sfsnatt ( id,name,DFNT_INT16,1,value)   
    end subroutine add_att_int
    
    
@@ -77,7 +81,8 @@ contains
       character (len= *), intent(in) :: name
       integer(kind = int2), intent(in) :: value
       integer :: sfsnatt
-      istatus = sfsnatt ( id,name,DFNT_INT32,1,value)   
+      
+      istatus = sfsnatt ( id,name,DFNT_INT16,1,value)   
    end subroutine add_att_int2
    
    subroutine add_att_real (id,name, value)
@@ -266,6 +271,7 @@ contains
       integer :: istatus
       integer :: sfend
       istatus = sfend ( id_file)
+      
       if ( istatus /= 0 ) then
          print*,'level-2 file error whil closing ', istatus,id_file
          stop

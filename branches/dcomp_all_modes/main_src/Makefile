@@ -189,11 +189,13 @@ clavrxorb_objs = process_clavrx.o \
                  strings.o \
                  geo_sat_navigation_mod.o \
                  cx_hdf_write_mod.o \
+                 cx_hdf_read_mod.o \
                  precision.o \
                  cx_conf_mod.o \
                  cx_file_tools_mod.o \
                  cx_ssec_areafile_mod.o \
                  cx_read_ascii_line_mod.o \
+                 cx_data_io_tools_mod.o \
                  csv_mod.o 
 
 #Level2b routines
@@ -202,6 +204,10 @@ comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
                             level2b.o \
                             num_mod.o \
                             file_utility.o \
+                            cx_hdf_read_mod.o \
+                            cx_hdf_write_mod.o \
+                            cx_data_io_tools_mod.o \
+                             string_functions.o \
                             constant.o
 
 #Level2b subsetting routines
@@ -296,15 +302,15 @@ cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o 
-dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
-user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
-pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
-pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
+calibration_constants.o: calibration_constants.f90 constant.o 
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
-calibration_constants.o: calibration_constants.f90 constant.o 
+comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o hdf.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
+cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
 cx_file_tools_mod.o:cx_file_tools_mod.f90
+cx_hdf_read_mod.o:cx_hdf_write_mod.f90
+cx_hdf_write_mod.o:cx_hdf_write_mod.f90
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 cx_file_tools_mod.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
@@ -313,13 +319,17 @@ cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o
 cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
 cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o
 cx_pfaast_constants_mod.o:cx_pfaast_constants_mod.f90
+dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
+user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
+pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
+pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
 dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
-comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o hdf.o level2b.o file_utility.o cx_hdf_write_mod.o
+
 drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
 date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
@@ -347,7 +357,7 @@ num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
 level2.o: level2.f90 constant.o pixel_common.o hdf.o clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o cx_hdf_write_mod.o avhrr_module.o
-cx_hdf_write_mod.o:cx_hdf_write_mod.f90
+
 level2b.o: level2b.f90 constant.o hdf.o file_utility.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o

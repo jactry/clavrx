@@ -7,7 +7,7 @@ module cx_hdf_read_mod
    implicit none
    private
    
-   include 'hdf.f90'
+   include '/Users/awalther/lib/hdf4/include/hdf.f90'
    include 'cx_hdf_standard_declarations.inc'
    
    integer, parameter :: MAXNCDIM = 32
@@ -52,9 +52,12 @@ module cx_hdf_read_mod
    
    public :: hdf_data
    public :: hdf_sds
+   public :: hdf_att
    public :: MAXNCDIM
    public :: MAXNCNAM
    public :: hdf_get_file_sds
+   public :: hdf_get_finfo
+   public :: hdf_get_file_att
    
 contains
    !
@@ -163,142 +166,113 @@ contains
   
    !-------------------------------------------------------------------------------
 
-  function hdf_get_obj_att(obj_id, natt, attrs, nattn, att_name)
+   function hdf_get_obj_att(obj_id, natt, attrs, nattn, att_name)
     
-    integer :: hdf_get_obj_att
+      integer :: hdf_get_obj_att
+      integer, intent(in) :: obj_id  
+      integer, intent(out) :: natt 
+      type(hdf_att), intent(out), dimension(:), allocatable :: attrs  
+      integer, intent( in), optional :: nattn 
+      character(len=*), intent( in), optional :: att_name(*)      
+      integer :: iatt    
+      integer :: ierr   
+      integer, dimension(:), allocatable :: attind   
 
-    ! Déclaration des arguments de la function
+      hdf_get_obj_att = -1
 
-    integer, intent(in)                                   :: &
-         obj_id                 ! Identificateur HDF de l'objet
-    
-    integer, intent(out)                                  :: &
-         natt                   ! Nombre d'attributs réellement retournés
-
-    type(hdf_att), intent(out), dimension(:), allocatable :: &
-         attrs                  ! Tableau des structures d'attributs de l'objet
-    
-    integer, intent( in), optional                        :: &
-         nattn                  ! Nombre (optionnel) d'attributs requis
-    
-    character(len=*), intent( in), optional               :: &
-         att_name(*)            ! Tableau (optionnel) des noms des attributs requis
-    
-    ! Déclaration des variables locales
-
-    integer                                               :: &
-         iatt,                & ! Indice de l'attribut en cours
-         ierr                   ! Code d'erreur
- 
-    integer, dimension(:), allocatable                    :: &
-         attind                 ! Table des index des attributs à extraire
-
-    hdf_get_obj_att = -1
-
-    if (std_error((present(nattn).or.present(att_name)).and.(.not.(present(nattn).and.present(att_name))),  &
+      if (std_error((present(nattn).or.present(att_name)).and.(.not.(present(nattn).and.present(att_name))),  &
          "Optionnal arguments must be both defined or undefined")) return
 
-    if (present(nattn)) natt = nattn
-    
-    ! On regarde s'il y a quelque-chose à faire
+      if (present(nattn)) natt = nattn
 
-    if (natt <= 0) return
+      if (natt <= 0) return
 
-    ! Allocation de la table des index des attributs à extraire
+      allocate (attind(1:natt), stat=ierr)
+      if (std_error(ierr /= 0, "Dynamic memory allocation error")) return
 
-    allocate (attind(1:natt), stat=ierr)
-    if (std_error(ierr /= 0, "Dynamic memory allocation error")) return
+      if (.not.present(nattn)) then
+         do iatt = 1, natt
+            attind(iatt) = iatt - 1
+         enddo
+      else
+         natt = nattn
+         do iatt = 1, natt
+            attind(iatt) = sffattr(obj_id, att_name(iatt))
+            if (hdf_error(attind(iatt))) goto 99999
+         enddo
+      endif
+      
+      if (allocated(attrs)) then
+         deallocate (attrs, stat=ierr)
+         if (std_error(ierr /= 0, "Dynamic memory desallocation error")) goto 99999
+      endif
+      
+      allocate (attrs(1:natt), stat=ierr)
+      if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
 
-    ! Remplissage de la table des index des attributs à extraire
+      do iatt = 1, natt 
 
-    if (.not.present(nattn)) then
-       do iatt = 1, natt
-          attind(iatt) = iatt - 1
-       enddo
-    else
-       natt = nattn
-       do iatt = 1, natt
-          attind(iatt) = sffattr(obj_id, att_name(iatt))
-          if (hdf_error(attind(iatt))) goto 99999
-       enddo
-    endif
-    
-    ! Allocation du tableau des structures d'attributs
-
-    if (allocated(attrs)) then
-       deallocate (attrs, stat=ierr)
-       if (std_error(ierr /= 0, "Dynamic memory desallocation error")) goto 99999
-    endif
-    allocate (attrs(1:natt), stat=ierr)
-    if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-
-    do iatt = 1, natt                ! DÉBUT DE BOUCLE SUR LES ATTRIBUTS À EXTRAIRE
-
-       ! Récupération des infos sur l'attribut
-
-       if (hdf_error(sfgainfo(obj_id, attind(iatt), attrs(iatt)%name, attrs(iatt)%data%type, &
+         if (hdf_error(sfgainfo(obj_id, attind(iatt), attrs(iatt)%name, attrs(iatt)%data%type, &
             attrs(iatt)%data%dimsize))) goto 99999
 
-       ! On renseigne les infos sur l'attribut dans la structure
+       
 
-       attrs(iatt)%data%rank = 1
-       attrs(iatt)%data%datasize = hdf_typesize(attrs(iatt)%data%type)
-       attrs(iatt)%data%size = attrs(iatt)%data%dimsize(1)*attrs(iatt)%data%datasize
-       attrs(iatt)%data%nval = attrs(iatt)%data%dimsize(1)
+         attrs(iatt)%data%rank = 1
+         attrs(iatt)%data%datasize = hdf_typesize(attrs(iatt)%data%type)
+         attrs(iatt)%data%size = attrs(iatt)%data%dimsize(1)*attrs(iatt)%data%datasize
+         attrs(iatt)%data%nval = attrs(iatt)%data%dimsize(1)
 
-       ! Allocation et remplissage des valeurs de l'attribut selon son type
+         select case (attrs(iatt)%data%type)
 
-       select case (attrs(iatt)%data%type)
+         case (DFNT_CHAR8)
+            allocate (attrs(iatt)%data%c1values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%c1values))) goto 99999
 
-       case (DFNT_CHAR8)
-          allocate (attrs(iatt)%data%c1values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%c1values))) goto 99999
+         case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+            allocate (attrs(iatt)%data%i1values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i1values))) goto 99999
 
-       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
-          allocate (attrs(iatt)%data%i1values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i1values))) goto 99999
+         case (DFNT_UINT16, DFNT_INT16)
+            allocate (attrs(iatt)%data%i2values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i2values))) goto 99999
 
-       case (DFNT_UINT16, DFNT_INT16)
-          allocate (attrs(iatt)%data%i2values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i2values))) goto 99999
+         case (DFNT_UINT32, DFNT_INT32)
+            allocate (attrs(iatt)%data%i4values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i4values))) goto 99999
 
-       case (DFNT_UINT32, DFNT_INT32)
-          allocate (attrs(iatt)%data%i4values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%i4values))) goto 99999
+         case (DFNT_FLOAT32)
+            allocate (attrs(iatt)%data%r4values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%r4values))) goto 99999
 
-       case (DFNT_FLOAT32)
-          allocate (attrs(iatt)%data%r4values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%r4values))) goto 99999
+         case (DFNT_FLOAT64)
+            allocate (attrs(iatt)%data%r8values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%r8values))) goto 99999
 
-       case (DFNT_FLOAT64)
-          allocate (attrs(iatt)%data%r8values(1:attrs(iatt)%data%dimsize(1)), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (hdf_error(sfrcatt(obj_id, iatt - 1, attrs(iatt)%data%r8values))) goto 99999
+         case default
+            print *, "Unimplemented data type: ", attrs(iatt)%data%type; goto 99999
 
-       case default
-          print *, "Unimplemented data type: ", attrs(iatt)%data%type; goto 99999
+         end select
 
-       end select
+      end do                          
 
-    end do                          
-
-    hdf_get_obj_att = 0
+      hdf_get_obj_att = 0
     
 99999 continue
 
     
 
-    if (allocated(attind)) then
-       deallocate (attind, stat=ierr)
-       if (std_error(ierr /= 0, "Dynamic memory desallocation error"))  hdf_get_obj_att = -1
-    endif
+      if (allocated(attind)) then
+         deallocate (attind, stat=ierr)
+         if (std_error(ierr /= 0, "Dynamic memory desallocation error"))  hdf_get_obj_att = -1
+      endif
 
-  end function hdf_get_obj_att
+   end function hdf_get_obj_att
   
    !----------------------------------------------------------------------------------------
 
@@ -540,7 +514,7 @@ contains
           if (std_error(ierr /= 0, "Dynamic memory desallocation error")) goto 99999
        endif
 
-       ! Récupération des éventuels attributs du SDS si demandée
+       
        if (att_sw .and. sdata(isds)%nattr > 0) then
           if (hdf_get_obj_att(sds_id, sdata(isds)%nattr, sdata(isds)%attr) < 0) goto 99999
        endif
@@ -600,11 +574,11 @@ contains
   
   function hdf_typesize(t)
     
-    ! La fonction hdf_typesize retourne la taille en octets d'un type HDF passé en argument
+    
 
     integer            :: &
-         hdf_typesize,    & ! Taille retournée
-         t                  ! Type de donnée HDF
+         hdf_typesize,    & 
+         t                  
   
     select case (t)
     case (DFNT_UCHAR8, DFNT_CHAR8, DFNT_UINT8, DFNT_INT8); hdf_typesize = 1
@@ -620,14 +594,12 @@ contains
 
   function hdf_typedesc(htyp)
 
-    ! La fonction hdf_typedesc donne la description d'un type de donnée HDF passé en argument.
-    ! Si le type de donnée est invalide, 'unknow data type' est retourné.
-
+    
     integer           :: &
-         htyp            ! (IN)  Type de donnée HDF
+         htyp           
 
     character(len=60) :: &
-         hdf_typedesc    ! (OUT) Description du type de donnée HDF
+         hdf_typedesc   
 
      select case (htyp)
      case (DFNT_UCHAR8 ); hdf_typedesc = '8-bit unsigned character / integer*1'
@@ -655,7 +627,7 @@ contains
     integer :: isds, nsds, iatt
 
     type(hdf_sds), dimension(:), allocatable :: &
-         sds                  ! Tableau des SDS extraits
+         sds                 
 
     do isds = 1, nsds
        if (allocated(sds(isds)%attr)) then
@@ -722,16 +694,16 @@ contains
    function hdf_get_int_sds(hdf_file, sds_name, raw, cal_sub)
 
       character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
+         hdf_file              
 
       character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+         sds_name               
 
       logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
+         raw                    
 
       integer(kind=4), dimension(:), pointer           :: &
-         hdf_get_int_sds        ! Valeur retournée par la fonction
+         hdf_get_int_sds        
 
       optional :: &
          cal_sub
@@ -739,13 +711,13 @@ contains
       external cal_sub
 
     type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
+         sds                   
 
     integer                                          :: &
-         nsds                   ! Nombre de SDS effectivement extraits
+         nsds                   
 
     logical                                          :: &
-         dclb                   ! Flag réel de décalibration
+         dclb                  
 
     dclb = .true.
     if (present(raw)) dclb = (.not.raw)
@@ -919,30 +891,30 @@ contains
     
   function hdf_get_dbl_sds(hdf_file, sds_name, raw, cal_sub)
 
-    ! Déclaration des arguments de la function
+    
 
     character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
+         hdf_file              
 
     character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+         sds_name              
 
     logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
+         raw                   
 
     real(kind=8), dimension(:), pointer              :: &
-         hdf_get_dbl_sds        ! Valeur retournée par la fonction
+         hdf_get_dbl_sds        
 
-    ! Déclaration des variables locales
+    !
 
     type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
+         sds                   
 
     integer                                          :: &
-         nsds                   ! Nombre de SDS effectivement extraits
+         nsds                   
 
     logical                                          :: &
-         dclb                   ! Flag réel de décalibration
+         dclb                   
 
     optional :: &
          cal_sub
@@ -965,7 +937,7 @@ contains
           hdf_get_dbl_sds = sds(1)%data%i2values
        elseif (allocated(sds(1)%data%i4values)) then
           hdf_get_dbl_sds = sds(1)%data%i4values
-! En prévision...
+
 !       elseif (allocated(sds(1)%data%i8values)) then
 !          hdf_get_dbl_sds = sds(1)%data%i8values, (/dim1, dim2/))
        elseif (allocated(sds(1)%data%r4values)) then
@@ -1034,7 +1006,7 @@ contains
           hdf_get_dbl_sds_2D = reshape(sds(1)%data%i2values, (/dim1, dim2/))
        elseif (allocated(sds(1)%data%i4values)) then
           hdf_get_dbl_sds_2D = reshape(sds(1)%data%i4values, (/dim1, dim2/))
-! En prévision...
+
 !       elseif (allocated(sds(1)%data%i8values)) then
 !          hdf_get_dbl_sds_2D = reshape(sds(1)%data%i8values, (/dim1, dim2/))
        elseif (allocated(sds(1)%data%r4values)) then
@@ -1053,33 +1025,33 @@ contains
     
   function hdf_get_dbl_sds_3D(hdf_file, sds_name, raw, cal_sub)
 
-    ! Déclaration des arguments de la function
+    
 
     character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
+         hdf_file              
 
     character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+         sds_name              
 
     logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
+         raw                   
 
     real(kind=8), dimension(:,:,:), pointer          :: &
          hdf_get_dbl_sds_3D
 
-    ! Déclaration des variables locales
+    
 
     type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
+         sds                    
 
     integer                                          :: &
-         nsds,                & ! Nombre de SDS effectivement extraits
-         dim1,                & ! 1ère dimension du SDS
-         dim2,                & ! 2ème dimension du SDS
-         dim3                   ! 3ème dimension du SDS
+         nsds,                & 
+         dim1,                & 
+         dim2,                & 
+         dim3                   
 
     logical                                          :: &
-         dclb                   ! Flag réel de décalibration
+         dclb                  
 
     optional :: &
          cal_sub

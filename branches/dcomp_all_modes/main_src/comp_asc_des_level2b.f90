@@ -122,7 +122,9 @@ program COMPILE_ASC_DES_LEVEL2B
       hdf_att &
       , MAXNCNAM &
       , hdf_get_file_att &
-      , hdf_get_finfo
+      , hdf_get_finfo &
+      , hdf_get_file_sds &
+      , hdf_sds
    
    use cx_hdf_write_mod, only: &
       add_att   &
@@ -361,6 +363,16 @@ program COMPILE_ASC_DES_LEVEL2B
    character ( len = MAXNCNAM), allocatable :: sds_name(:) 
    integer :: i
    integer :: id_out
+   integer :: sds_id
+   type(hdf_sds), dimension(:), target, allocatable :: sds_new  
+   
+         type(hdf_sds), pointer                           :: &
+       ps                           ! Pointeur sur la structure du SDS courant 
+      
+      type(hdf_data), pointer                          :: &
+       psd                        ! Pointeur sur les données du SDS courant
+   
+   
    INCLUDE 'version.inc'
 
    !----------------------------------------------------------------------
@@ -715,27 +727,9 @@ program COMPILE_ASC_DES_LEVEL2B
 
       Istatus_Sum = 0
 
-      !---- determine if this file should be skipped
-    !  Sd_Id_Input = sfstart(trim(dir_in)//trim(File_Input(ifile)), DFACC_READ)
+     
       file = trim(dir_in)//trim(File_Input(ifile))
-    !  if (Sd_Id_Input == FAIL) then
-    !     print *, LOCAL_EXE_PROMPT, "Unable to open: ", trim(File_Input(ifile))
-    !    cycle
-    !  endif
 
-      !--- determine number of sds's in these files (assume the same)
-    !  Istatus_Sum = sffinfo(Sd_Id_Input,Num_Sds_Input,Num_Global_Attrs)
-!
-   !   if (Num_Sds_Input <= 1) then
-   !       print *, LOCAL_EXE_PROMPT, "Empty File:  ", trim(File_Input(ifile))
-  !        cycle
- !     endif
-      
-      ! - read global attributes
-      
-   !   istatus =  hdf_get_finfo (file,nsds,sds_name,natt,att_name)
-                                               
-      
       if ( hdf_get_file_att (file,natt,attrs) < 0 ) then
          print*,'error reading attributes'
          stop
@@ -756,22 +750,6 @@ program COMPILE_ASC_DES_LEVEL2B
          
       end do
       
-      
-      !--- read attributes of this file
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_ELEMENTS"),Num_Elements_Input) + Istatus_Sum
-  !    print*,  num_elements_input
-     
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"NUMBER_OF_SCANS_LEVEL2"),Num_Lines_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_YEAR"),Start_Year_Input) + Istatus_Sum
-  !    print*,start_year_input
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_YEAR"),End_Year_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_DAY_OF_YEAR"),Start_Day_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_DAY_OF_YEAR"),End_Day_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"START_TIME"),Start_Time_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"END_TIME"),End_Time_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"WMO_SATELLITE_CODE"),Sc_Id_Input) + Istatus_Sum
-  !    Istatus_Sum = sfrnatt(Sd_Id_Input,sffattr(Sd_Id_Input,"L1B"),L1b_Input) + Istatus_Sum
-
 
       Start_Date_Input = Start_Day_Input + Start_Time_Input / 24.0
       End_Date_Input = End_Day_Input + End_Time_Input / 24.0
@@ -812,81 +790,7 @@ program COMPILE_ASC_DES_LEVEL2B
          Source_String(Source_Length_Start:Source_Length_End) = L1b_Input(1:L1b_Length)//"; "
       endif
 
-      !--- copy global attributes of first valid file to output file
-      if (First_Valid_Input ) then
 
-         print*,'start level2b ..', trim(file),trim(dir_out)//trim(File_Output)
-         call copy_global_attributes ( trim(file) , trim(dir_out)//trim(File_Output)  &
-            , exclude_list=['FILENAME','NUMBER_OF_SCANS_LEVEL1B', 'START_YEAR', 'END_YEAR' &
-               ,'START_DAY_OF_YEAR', 'END_DAY_OF_YEAR','START_TIME','END_TIME'])
-        
-        
-        id_out = hdf_file_open ( trim(dir_out)//trim(File_Output))
-        call add_att ( id_out, 'geospatial_lon_number',Nlon_Output)
-        
-        
-        call close_file(id_out)
-         
-        stop
-         
-         !--- add in attributes that define the output grid
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_number",DFNT_INT32,1,Nlon_Output) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_number",DFNT_INT32,1,Nlat_Output) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_spacing",DFNT_FLOAT32,1,dlon_Output) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_spacing",DFNT_FLOAT32,1,dlat_Output) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_units",DFNT_CHAR8,len_trim("degrees_north"),"degrees_north") + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_units",DFNT_CHAR8,len_trim("degrees_east"),"degrees_east") + Istatus_Sum
-
-         !------------------------------------------------------------------
-         ! add CF-compliant global attributes required for NCDC delivery
-         !------------------------------------------------------------------
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_min",DFNT_FLOAT32,1,Lon_West) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lon_max",DFNT_FLOAT32,1,Lon_East) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_max",DFNT_FLOAT32,1,Lat_North) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"geospatial_lat_min",DFNT_FLOAT32,1,Lat_South) + Istatus_Sum
-         Istatus_Sum = sfscatt(Sd_Id_Output,"cdm_data_type", DFNT_CHAR8, len_trim("Grid"),trim("Grid")) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"time_coverage_start",DFNT_CHAR8, &
-                      len_trim(Time_Coverage_Start),trim(Time_Coverage_Start)) + Istatus_Sum
-         Istatus_Sum = sfsnatt(Sd_Id_Output,"time_coverage_end",DFNT_CHAR8, &
-                      len_trim(Time_Coverage_End),Time_Coverage_End) + Istatus_Sum
-         Istatus_Sum = sfscatt(Sd_Id_Output,"date_created", DFNT_CHAR8, &
-                      len_trim(Date_Created_String), trim(Date_Created_String)) + Istatus_Sum
-         Istatus_Sum = sfscatt(Sd_Id_Output,"id", DFNT_CHAR8, &
-                      len_trim(Id_String),trim(Id_String)) + Istatus_Sum
-
-        
-         Istatus_Sum = sfscatt(Sd_Id_Output,"DATA_NODE",DFNT_CHAR8, &
-                           len_trim(Node_String),trim(Node_String)) + Istatus_Sum
-
-         if (Node_String /= "zen") then
-            Istatus_Sum = sfsnatt(Sd_Id_Output,"COMPOSITE_TIME_HOURS",DFNT_CHAR8, &
-                       len_trim(Time_String),Time_String) + Istatus_Sum
-            Istatus_Sum = sfscatt(Sd_Id_Output,"COMPOSITE_TIME_WINDOW_HOURS",DFNT_CHAR8, &
-                       len_trim(Time_Win_String),Time_Win_String) + Istatus_Sum
-         endif
-
-         if (Overlap_Option_String /= "nadir_overlap") then
-            Istatus_Sum = sfscatt(Sd_Id_Output,"SENSOR_ZENITH_SAMPLING_METHOD",DFNT_CHAR8, &
-                          len_trim("RANDOM"),"RANDOM") + Istatus_Sum
-         endif
-
-         if (Overlap_Option_String /= "random_overlap") then
-            Istatus_Sum = sfscatt(Sd_Id_Output,"SENSOR_ZENITH_SAMPLING_METHOD",DFNT_CHAR8, &
-                          len_trim("MOST_NADIR"),"MOST_NADIR") + Istatus_Sum
-         endif
-
-
-         if (Spatial_Option_String /= "near") then
-            Istatus_Sum = sfscatt(Sd_Id_Output,"SPATIAL_SAMPLING_METHOD",DFNT_CHAR8, &
-                          len_trim("RANDOM"),"RANDOM") + Istatus_Sum
-         endif
-
-         if (Spatial_Option_String /= "rand") then
-            Istatus_Sum = sfscatt(Sd_Id_Output,"SPATIAL_SAMPLING_METHOD",DFNT_CHAR8, &
-                          len_trim("NEAREST_NEIGHBOR"),"NEAREST_NEIGHBOR") + Istatus_Sum
-         endif
-
-      endif
 
       !--- allocate memory for input data
       allocate(Scaled_Sds_Data_Input(Num_Elements_Input,Num_Lines_Input))
@@ -897,20 +801,24 @@ program COMPILE_ASC_DES_LEVEL2B
       allocate(Post_Cld_Prob_Input(Num_Elements_Input,Num_Lines_Input))
       allocate(Gap_Pixel_Mask_Input(Num_Elements_Input,Num_Lines_Input))
 
-      Sds_lon%Variable_Name = "longitude"
-      call READ_SDS(Sd_Id_Input,Scaled_Sds_Data_Input,Sds_lon)
-      call UNSCALE_SDS(Sds_lon,Scaled_Sds_Data_Input, Lon_Input)
-
-      Sds_Lat%Variable_Name = "latitude"
-      call READ_SDS(Sd_Id_Input,Scaled_Sds_Data_Input,Sds_Lat)
-      call UNSCALE_SDS(Sds_Lat,Scaled_Sds_Data_Input, Lat_Input)
-      print*,'eeeeeeeeeee'
-      !--- read gap pixel mask (goes does not have one)
-      Sds_Temp%Variable_Name = "gap_pixel_mask"
-      Sds_Temp%Rank = 3
-      call READ_SDS(Sd_Id_Input,Gap_Pixel_Mask_Input,Sds_Temp)
+      
+      if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = 3, sds_name = ['longitude','latitude','gap_pixel_mask']) < 0) then
+         print*,'hdf file not readable ', trim(file)
+         stop  
+      end if 
+     
+      ps => sds_new(1) ; psd=> ps%data
+      lon_input =  reshape(psd%i2values,[Num_Elements_Input,Num_Lines_Input])   * (ps % attr(7) % data % r4values(1) )   
+      
+      ps => sds_new(2) ; psd=> ps%data
+      lat_input =  reshape(psd%i2values,[Num_Elements_Input,Num_Lines_Input])   * (ps % attr(7) % data % r4values(1) ) 
+      
+      ps => sds_new(3) ; psd=> ps%data
+      Gap_Pixel_Mask_Input = (reshape(psd%i1values  ,[Num_Elements_Input,Num_Lines_Input]) .gt. 0)
+      
+      
       Start_Time_point_Hours = COMPUTE_TIME_HOURS()
-print*,'eeeeeeeerrrrrrreeee'
+
       !--- compute remapping arrays for this orbit
       call REGRID( Lat_South,        &
                    Dlat_Output,      &
@@ -929,12 +837,74 @@ print*,'eeeeeeeerrrrrrreeee'
              
       !--- if first valid file, write output lon and lat vectors to output file
       if (First_Valid_Input ) then
+         
+         print*,'start level2b ..', trim(file),trim(dir_out)//trim(File_Output)
+         call copy_global_attributes ( trim(file) , trim(dir_out)//trim(File_Output)  &
+            , exclude_list=['FILENAME','NUMBER_OF_SCANS_LEVEL1B', 'START_YEAR', 'END_YEAR' &
+               ,'START_DAY_OF_YEAR', 'END_DAY_OF_YEAR','START_TIME','END_TIME'])
 
+         id_out = hdf_file_open ( trim(dir_out)//trim(File_Output))
+         call add_att ( id_out, 'geospatial_lon_number',Nlon_Output)
+         call add_att ( id_out,"geospatial_lon_number",Nlon_Output) 
+         call add_att ( id_out,"geospatial_lat_number",Nlat_Output) 
+         call add_att ( id_out,"geospatial_lon_spacing",dlon_Output) 
+         call add_att ( id_out,"geospatial_lat_spacing",dlat_Output) 
+         call add_att ( id_out,"geospatial_lat_units","degrees_north")
+         call add_att ( id_out,"geospatial_lon_units","degrees_east") 
+
+         !------------------------------------------------------------------
+         ! add CF-compliant global attributes required for NCDC delivery
+         !------------------------------------------------------------------
+         call add_att ( id_out,"geospatial_lon_min",Lon_West) 
+         call add_att ( id_out,"geospatial_lon_max",Lon_East) 
+         call add_att ( id_out,"geospatial_lat_max",Lat_North) 
+         call add_att ( id_out,"geospatial_lat_min",Lat_South) 
+         call add_att ( id_out,"cdm_data_type", trim("Grid")) 
+         call add_att ( id_out,"time_coverage_start",trim(Time_Coverage_Start)) 
+         call add_att ( id_out,"time_coverage_end",Time_Coverage_End)
+         call add_att ( id_out,"date_created", trim(Date_Created_String)) 
+         call add_att ( id_out,"id", trim(Id_String)) 
+
+        
+         call add_att ( id_out,"DATA_NODE",trim(Node_String)) 
+      
+         if (Node_String /= "zen") then
+            call add_att ( id_out,"COMPOSITE_TIME_HOURS",Time_String) 
+            call add_att ( id_out,"COMPOSITE_TIME_WINDOW_HOURS",Time_Win_String) 
+         endif
+
+         if (Overlap_Option_String /= "nadir_overlap") then
+            call add_att ( id_out,"SENSOR_ZENITH_SAMPLING_METHOD","RANDOM") 
+         endif
+
+         if (Overlap_Option_String /= "random_overlap") then
+            call add_att ( id_out,"SENSOR_ZENITH_SAMPLING_METHOD","MOST_NADIR") 
+         endif
+
+
+         if (Spatial_Option_String /= "near") then
+            call add_att ( id_out,"SPATIAL_SAMPLING_METHOD","RANDOM") 
+         endif
+
+         if (Spatial_Option_String /= "rand") then
+            call add_att ( id_out,"SPATIAL_SAMPLING_METHOD","NEAREST_NEIGHBOR") 
+         endif
+         
+          
+         
+         
          !--- longitude
          Sds_Lon_Out = Sds_Lon
          
+         
+         
          if (Geo_2d_Flag == 0) then    !first row only
-
+            
+            
+            sds_id = create_sds (id_out, 'longitude' ,  Sds_Dims_Output_X, 2)
+            Istatus = write_sds (  sds_id, 1, 1, size(Lon_Output(:,1)),  &
+                       Lon_Output(:,1) )
+            
             Sds_Lon_Out%Rank = 1
             Lon_Output_1d = Lon_Output(:,1)
             call CORRECT_SDS_STRINGS (Sds_Lon_Out) 
@@ -945,7 +915,11 @@ print*,'eeeeeeeerrrrrrreeee'
             Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
 
          else
-
+            
+            sds_id = create_sds (id_out, 'longitude' ,  Sds_Dims_Output_XY, 2)
+            Istatus = write_sds (  sds_id, [1,1], [1,1], [size(Lon_Output(:,1)),size(Lon_Output(1,:))] ,  &
+                       Lon_Output )
+                       
             Sds_Lon_Out%Rank = 2
             call CORRECT_SDS_STRINGS(Sds_Lon_Out) 
             call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_XY,  &
@@ -986,7 +960,9 @@ print*,'eeeeeeeerrrrrrreeee'
          Istatus_Sum = sfsnatt(Sds_Lat_Out%Id_Output, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
          Temp_Name = "X"
          Istatus_Sum = sfsnatt(Sds_Lon_Out%Id_Output, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-
+         
+         call close_file(id_out)
+         
       endif
 
       Num_Points = Num_Elements_Input * Num_Lines_Input

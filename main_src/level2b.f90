@@ -53,26 +53,26 @@ module LEVEL2B_ROUTINES
    use FILE_UTILITY,only: &
     get_lun
 
- implicit none
+   implicit none
  
    private
- public:: DEFINE_SDS_RANK1
- public:: DEFINE_SDS_RANK2
- public:: DEFINE_SDS_RANK3
- public:: READ_SDS     
- public:: UNSCALE_SDS  
- public:: SCALE_SDS     
- public:: WRITE_SDS     
- public:: COPY_GLOBAL_ATTRIBUTES    
- public:: REGRID
- public:: SUBSET_LEVEL2B
- public:: INIT_RANDOM_SEED
- public:: FILE_SEARCH
- public:: COMPUTE_WMO_ID_KNOWING_SENSOR_NAME
+   public:: DEFINE_SDS_RANK1
+   public:: DEFINE_SDS_RANK2
+   public:: DEFINE_SDS_RANK3
+   public:: READ_SDS     
+   public:: UNSCALE_SDS  
+   public:: SCALE_SDS     
+   public:: WRITE_SDS     
+   public:: COPY_GLOBAL_ATTRIBUTES    
+   public:: REGRID
+   public:: SUBSET_LEVEL2B
+   public:: INIT_RANDOM_SEED
+   public:: FILE_SEARCH
+   public:: COMPUTE_WMO_ID_KNOWING_SENSOR_NAME
 
- private:: WRITE_FLAG_ATTRIBUTES
- private:: WRITE_SCALING_ATTRIBUTES
- private:: READ_SCALING_ATTRIBUTES
+   private:: WRITE_FLAG_ATTRIBUTES
+   private:: WRITE_SCALING_ATTRIBUTES
+   private:: READ_SCALING_ATTRIBUTES
 
  interface READ_SDS
      module procedure  &
@@ -136,7 +136,7 @@ module LEVEL2B_ROUTINES
 
  real(kind=real4), dimension(:,:), allocatable, public, save:: Lat_Input
  real(kind=real4), dimension(:,:), allocatable, public, save:: Lon_Input
- real(kind=real4), dimension(:,:), allocatable, public, save:: Gap_Pixel_Mask_Input
+ logical, dimension(:,:), allocatable, public, save:: Gap_Pixel_Mask_Input
  real(kind=real4), dimension(:,:), allocatable, public, save:: Lat_Output
  real(kind=real4), dimension(:,:), allocatable, public, save:: Lon_Output
  integer(kind=int4), dimension(:,:), allocatable, public, save:: Ielem_Output
@@ -172,8 +172,10 @@ module LEVEL2B_ROUTINES
 !       Iline_Output = array of line indices for each grid point
 !       Random_Flag = set 1 to select a random point in the grid, set
 !                     set 0 to select nearest point to grid lattice
+!
+!   What is output , what is input ??
 !====================================================================
-subroutine REGRID( &
+   subroutine REGRID( &
         Lat_South, &
         dlat,      &
         Nlat,      &
@@ -182,190 +184,176 @@ subroutine REGRID( &
         Nlon,      &
         Random_Flag)
 
-real(kind=real4), intent(in):: Lat_South
-real(kind=real4), intent(in):: dlat
-integer(kind=int4), intent(in):: Nlat
-real(kind=real4), intent(in):: Lon_West
-real(kind=real4), intent(in):: dlon
-integer(kind=int4), intent(in):: Nlon
-integer(kind=int4), intent(in):: Random_Flag
+      real(kind=real4), intent(in):: Lat_South
+      real(kind=real4), intent(in):: dlat
+      integer(kind=int4), intent(in):: Nlat
+      real(kind=real4), intent(in):: Lon_West
+      real(kind=real4), intent(in):: dlon
+      integer(kind=int4), intent(in):: Nlon
+      integer(kind=int4), intent(in):: Random_Flag
 
-real(kind=real4):: big_number
-real(kind=real4):: Max_Allowable_Distance
-real(kind=real4), dimension(:,:),allocatable:: Min_Dist_Grid
-integer:: Ielem
-integer:: Iline
-integer:: Ilon
-integer:: Ilat
-integer:: nx
-integer:: ny
-real:: Lat_North
-real:: Lon_East
-real:: xdist
-real:: xdist_01
-real:: xdist_02
-real:: xdist_10
-real:: xdist_20
-real:: lat_width
-real:: lon_width
-integer:: Ilon_1, Ilon_2
-integer:: Ilon_min, Ilon_max
-real:: lon_1, lon_2
-integer:: Ilat_1, Ilat_2
-integer:: Ilat_min, Ilat_max
-real:: lat_1, lat_2
-integer:: i1,i2,j1,j2
-integer:: dateline_flag
-real:: Lon_East_abs
-real:: Lon_Input_abs
-real:: xrand
+      real(kind=real4):: big_number
+      real(kind=real4):: Max_Allowable_Distance
+      real(kind=real4), dimension(:,:),allocatable:: Min_Dist_Grid
+      integer:: Ielem
+      integer:: Iline
+      integer:: Ilon
+      integer:: Ilat
+      integer:: nx
+      integer:: ny
+      real:: Lat_North
+      real:: Lon_East
+      real:: xdist
+      real:: xdist_01
+      real:: xdist_02
+      real:: xdist_10
+      real:: xdist_20
+      real:: lat_width
+      real:: lon_width
+      integer:: Ilon_1, Ilon_2
+      integer:: Ilon_min, Ilon_max
+      real:: lon_1, lon_2
+      integer:: Ilat_1, Ilat_2
+      integer:: Ilat_min, Ilat_max
+      real:: lat_1, lat_2
+      integer:: i1,i2,j1,j2
+      logical :: dateline_flag
+      real:: Lon_East_abs
+      real:: Lon_Input_abs
+      real:: xrand
 
-big_number = 999999.9
+      big_number = 999999.9
 
-!--- construct boundaries
-Lon_East_abs = Lon_West + dlon * (Nlon-1)
-Lon_East = Lon_East_abs
-if (Lon_East > 180.0) Lon_East = Lon_East - 360.0
+      !--- construct boundaries
+      Lon_East_abs = Lon_West + dlon * (Nlon-1)
+      Lon_East = Lon_East_abs
+      if (Lon_East > 180.0) Lon_East = Lon_East - 360.0
 
-dateline_flag = sym%NO
-if (Lon_West > 0 .and. Lon_East < 0.0) dateline_flag = sym%YES
+      dateline_flag = .false.
+      if (Lon_West > 0 .and. Lon_East < 0.0) dateline_flag = .true.
 
-Lat_North = Lat_South + dlat * (Nlat-1)
+      Lat_North = Lat_South + dlat * (Nlat-1)
 
-nx = size(Lat_Input,1)
-ny = size(Lat_Input,2)
+      nx = size(Lat_Input,1)
+      ny = size(Lat_Input,2)
 
-Ielem_Output = Missing_Value_Int4
-Iline_Output = Missing_Value_Int4
+      Ielem_Output = Missing_Value_Int4
+      Iline_Output = Missing_Value_Int4
 
-Max_Allowable_Distance = 1.0*sqrt(dlat**2 + dlon**2)
+      Max_Allowable_Distance = 1.0*sqrt(dlat**2 + dlon**2)
 
-ALLOCATE(Min_Dist_Grid(Nlon,Nlat))
-Min_Dist_Grid = big_number
+      ALLOCATE(Min_Dist_Grid(Nlon,Nlat))
+      
+      Min_Dist_Grid = big_number
 
-do Ielem = 1, nx
-  do Iline = 1, ny
+      do Ielem = 1, nx
+         do Iline = 1, ny
+            
+            if ( lat_input(Ielem,Iline) .LT. lat_south .OR. lat_input(Ielem,Iline) .GT. lat_north ) cycle
+            
+            if ( .NOT. dateline_flag .AND. ( Lon_Input(Ielem,Iline) .LT. Lon_West) ) cycle
+            if ( .NOT. dateline_flag .AND. ( Lon_Input(Ielem,Iline) .GT. Lon_East) ) cycle
+                       
+            Lon_Input_abs = Lon_Input(Ielem,Iline)
+            if (Lon_Input_abs < 0.0) Lon_Input_abs = Lon_Input_abs + 360.0
+            
+            if ( dateline_flag .AND.  Lon_Input_abs .LT. Lon_West  ) cycle
+            if ( dateline_flag .AND.  Lon_Input_abs .GT. Lon_East_abs  ) cycle
+            
        
-    if ((Lat_Input(Ielem,Iline) >= Lat_South) .and. (Lat_Input(Ielem,Iline) <= Lat_North)) then
+            i1 = max(1,Ielem-1)
+            i2 = min(nx,Ielem+1)
+            j1 = max(1,Iline-1)
+            j2 = min(ny,Iline+1)
 
-      Lon_Input_abs = Lon_Input(Ielem,Iline)
-      if (Lon_Input_abs < 0.0) Lon_Input_abs = Lon_Input_abs + 360.0
+            lon_width = abs(Lon_Input(i1,Iline) - Lon_Input(i2,Iline))
+            lon_1 = Lon_Input(Ielem,Iline) + lon_width/2.0
+            lon_2 = Lon_Input(Ielem,Iline) - lon_width/2.0
 
-      if ( ( (dateline_flag == sym%NO) .and. &                !dateline check
-             (Lon_Input(Ielem,Iline) >= Lon_West) .and. &
-             (Lon_Input(Ielem,Iline) <= Lon_East)) .or. & 
-           ( (dateline_flag == sym%YES) .and.  &
-             (Lon_Input_abs >= Lon_West) .and. &
-             (Lon_Input_abs <= Lon_East_abs))) then 
+            !-- lon width constraints prevents large values in presence of scanline jumps
+            lat_width = min(lon_width,abs(Lat_Input(Ielem,j1) - Lat_Input(Ielem,j2)))
+            lat_1 = Lat_Input(Ielem,Iline) + lat_width/2.0
+            lat_2 = Lat_Input(Ielem,Iline) - lat_width/2.0
 
-        i1 = max(1,Ielem-1)
-        i2 = min(nx,Ielem+1)
-        j1 = max(1,Iline-1)
-        j2 = min(ny,Iline+1)
+            call POSITION_TO_INDICES (Ilat, Ilon, Lat_Input(Ielem,Iline), Lon_Input(Ielem,Iline),  &
+               Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist)
 
-        lon_width = abs(Lon_Input(i1,Iline) - Lon_Input(i2,Iline))
-        lon_1 = Lon_Input(Ielem,Iline) + lon_width/2.0
-        lon_2 = Lon_Input(Ielem,Iline) - lon_width/2.0
+            call POSITION_TO_INDICES (Ilat, Ilon_1, Lat_Input(Ielem,Iline), lon_1,  &
+               Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_10)
 
-        !-- lon width constraints prevents large values in presence of scanline jumps
-        lat_width = min(lon_width,abs(Lat_Input(Ielem,j1) - Lat_Input(Ielem,j2)))
-        lat_1 = Lat_Input(Ielem,Iline) + lat_width/2.0
-        lat_2 = Lat_Input(Ielem,Iline) - lat_width/2.0
+            call POSITION_TO_INDICES (Ilat, Ilon_2, Lat_Input(Ielem,Iline), lon_2,  &
+               Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_20)
 
-        call POSITION_TO_INDICES (Ilat, Ilon, Lat_Input(Ielem,Iline), Lon_Input(Ielem,Iline),  &
-            Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist)
+            call POSITION_TO_INDICES (Ilat_1, Ilon, lat_1, Lon_Input(Ielem,Iline),  &
+               Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_01)
 
-        call POSITION_TO_INDICES (Ilat, Ilon_1, Lat_Input(Ielem,Iline), lon_1,  &
-            Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_10)
+            call POSITION_TO_INDICES (Ilat_2, Ilon, lat_2, Lon_Input(Ielem,Iline),  &
+               Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_02)
 
-        call POSITION_TO_INDICES (Ilat, Ilon_2, Lat_Input(Ielem,Iline), lon_2,  &
-            Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_20)
+            Ilon_min = min(Ilon_1,Ilon_2)
+            Ilon_max = max(Ilon_1,Ilon_2)
+            Ilat_min = min(Ilat_1,Ilat_2)
+            Ilat_max = max(Ilat_1,Ilat_2)
 
-        call POSITION_TO_INDICES (Ilat_1, Ilon, lat_1, Lon_Input(Ielem,Iline),  &
-            Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_01)
+            !update closest grid point
+            
+            if ( Ilon .LT.1 ) cycle
+            if ( Ilat .LT.1 ) cycle
+            
+            if ( xdist .GT. Max_Allowable_Distance) cycle
 
-        call POSITION_TO_INDICES (Ilat_2, Ilon, lat_2, Lon_Input(Ielem,Iline),  &
-            Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_02)
-
-        Ilon_min = min(Ilon_1,Ilon_2)
-        Ilon_max = max(Ilon_1,Ilon_2)
-        Ilat_min = min(Ilat_1,Ilat_2)
-        Ilat_max = max(Ilat_1,Ilat_2)
-
-        !update closest grid point
-
-        if ((Ilon >= 1) .and. (Ilat >= 1)) then    !check for valid regrid result
-
-!         Lat_South_This_Gridbox = Lat_South + (Ilat-1)*Dlat
-!         Lat_North_This_Gridbox = Lat_South_This_Grid_Box + Dlat
-!         Lon_West_This_Gridbox = Lon_West + (Ilon-1)*Dlon
-!         Lon_East_This_Gridbox = Lon_West + Dlon
-
-          !--- make sure this pixel falls within the particular gridbox
-!         if ( (Lat_Input(Ielem,Iline) >= Lat_South_This_Gridbox) .and. &
-!              (Lat_Input(Ielem,Iline) < Lat_North_This_Gridbox) .and. &
-!              (Lon_Input(Ielem,Iline) >= Lon_West_This_Gridbox) .and. &
-!              (Lon_Input(Ielem,Iline) < Lon_East_This_Gridbox)) then
-
-          if (xdist < Max_Allowable_Distance) then  !check for pixels that fall within grid
-
-          !----- if random, replace true xdist with a random number
-          if (Random_Flag == sym%YES) then
-              call random_number(xrand)
-              xdist = xrand * Max_Allowable_Distance
-          endif
-
-          if (xdist < Min_Dist_Grid(Ilon,Ilat)) then  !check for pixels that are closer 
-
-            if (Gap_Pixel_Mask_Input(ielem,iline) /= sym%YES) then
-              Ielem_Output(Ilon,Ilat)  = Ielem
-              Iline_Output(Ilon,Ilat)  = Iline
-              Min_Dist_Grid(Ilon,Ilat) = xdist
+            !----- if random, replace true xdist with a random number
+            if (Random_Flag == sym%YES) then
+               call random_number(xrand)
+               xdist = xrand * Max_Allowable_Distance
             endif
 
-            !update surrounding grid points that fall within the pixel's footprint but
-            !have not already been filled in by a closest pixel
-            if ((Ilon_min > 1) .and. (Ilat_min > 1)) then
-              do Ilon_1 = Ilon_min, Ilon_max
-                do Ilat_1 = Ilat_min, Ilat_max
-                  !-- do not reset grid point closest to pixel
-                  if ((Ilon_1 == Ilon) .and. (Ilat_1 == Ilat)) cycle
-                  !-- fill in values for all grid points within pixel footprint
-                  !-- ignore those already set previously
-                  if (Min_Dist_Grid(Ilon_1,Ilat_1) == big_number .and.  &
-                      Gap_Pixel_Mask_Input(Ielem,Iline) /= sym%YES) then
-                    Ielem_Output(Ilon_1,Ilat_1)  = Ielem
-                    Iline_Output(Ilon_1,Ilat_1)  = Iline
-                  endif
-                end do
-              end do
-            endif
+            if (xdist < Min_Dist_Grid(Ilon,Ilat)) then  !check for pixels that are closer 
 
-          end if   !end check on min distance
-          end if   !end check on max distance
-        end if     ! valid regrid
+               if ( .not. Gap_Pixel_Mask_Input(ielem,iline) ) then
+                  Ielem_Output(Ilon,Ilat)  = Ielem
+                  Iline_Output(Ilon,Ilat)  = Iline
+                  Min_Dist_Grid(Ilon,Ilat) = xdist
+               endif
 
-      end if      !dateline check
+               !update surrounding grid points that fall within the pixel's footprint but
+               !have not already been filled in by a closest pixel
+               if ((Ilon_min > 1) .and. (Ilat_min > 1)) then
+                  do Ilon_1 = Ilon_min, Ilon_max
+                     do Ilat_1 = Ilat_min, Ilat_max
+                        !-- do not reset grid point closest to pixel
+                        if ((Ilon_1 == Ilon) .and. (Ilat_1 == Ilat)) cycle
+                        !-- fill in values for all grid points within pixel footprint
+                        !-- ignore those already set previously
+                        if (Min_Dist_Grid(Ilon_1,Ilat_1) == big_number .and.  &
+                           .not. Gap_Pixel_Mask_Input(Ielem,Iline)) then
+                           Ielem_Output(Ilon_1,Ilat_1)  = Ielem
+                           Iline_Output(Ilon_1,Ilat_1)  = Iline
+                        endif
+                     end do
+                  end do
+               endif
 
-    end if      !latitude check longitude check
+            end if   !end check on min distance
+            
+  
+         end do
+      end do
 
-  end do
-end do
+      DEALLOCATE(Min_Dist_Grid)
+      !--- make grid lat and lons
+      do Ilat = 1, Nlat
+         do Ilon = 1, Nlon
+            Lat_Output(Ilon,Ilat) = Lat_South + (Ilat-1)*dlat
+            Lon_Output(Ilon,Ilat) = Lon_West + (Ilon-1)*dlon
+         end do
+      end do
 
-DEALLOCATE(Min_Dist_Grid)
-!--- make grid lat and lons
-  do Ilat = 1, Nlat
-    do Ilon = 1, Nlon
-       Lat_Output(Ilon,Ilat) = Lat_South + (Ilat-1)*dlat
-       Lon_Output(Ilon,Ilat) = Lon_West + (Ilon-1)*dlon
-    end do
-  end do
+      where(Lon_Output > 180.0)
+         Lon_Output = Lon_Output - 360.0
+      end where
 
-  where(Lon_Output > 180.0)
-     Lon_Output = Lon_Output - 360.0
-  end where
-
-  end subroutine REGRID
+   end subroutine REGRID
 
 !====================================================================
 ! SUBROUTINE Name: indices_to_position

@@ -2028,17 +2028,17 @@ end subroutine WRITE_SCALING_ATTRIBUTES
 
       integer:: sffattr, sfrnatt, sfrcatt
       
-      print*,sds % Variable_Name
+      
       !--- read Sds attributes
       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"SCALED"), Sds%Scaling_Type)
-      print*,'a',istatus
+      
       Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"units"), Sds%Units)
       if (Istatus /= 0) Sds%Units = "none"
       Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"standard_name"), Sds%Standard_Name)
       if (Istatus /= 0) Sds%Standard_Name = "none"
       Istatus = sfrcatt(Sds%Id_Input, sffattr(Sds%Id_Input,"long_name"), Sds%Long_Name)
       if (Istatus /= 0) Sds%Long_Name = "none"
-       print*,'a1',istatus
+       
       if (Sds%Scaling_Type /= sym%NO_SCALING) then
          Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_missing"), Sds%Unscaled_Missing)
          print*,'a22',istatus

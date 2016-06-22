@@ -704,9 +704,11 @@ CONTAINS
       call add_att (id_file, 'institution','CIMSS')
       call add_att (id_file, 'sensor',trim(sensor% sensor_name))
       call add_att (id_file, 'satellite', trim(sensor%platform_name))
-      !call add_att (id_file,  'L1B'
+      call add_att (id_file,  'L1B', trim(Image%Level1b_Name))
       !call add_att (id_file,   'RESOLUTION_KM',
       !call add_att (id_file,   'spatial_resolution'
+      print*,image%start_year
+      print*,'==================================== ===================== ================'
       call add_att (id_file,  'START_YEAR',image%start_year)
       call add_att (id_file,  'START_DAY_OF_YEAR',image%start_doy)
       call add_att (id_file,  'START_TIME_FRACTION_DAY',image%start_time/3600000.0)
@@ -724,7 +726,10 @@ CONTAINS
       call add_att ( id_file,'CLOUD_TYPE_VERSION',trim(CLOUD_TYPE_VERSION))
       call add_att ( id_file,'ACHA_VERSION',trim(ACHA_VERSION))
       call add_att ( id_file,'DCOMP_VERSION',trim(DCOMP_VERSION))
-       
+      
+      call add_att ( id_file, 'NUMBER_OF_ELEMENTS', Image%Number_Of_Elements )
+      call add_att ( id_file, 'NUMBER_OF_SCANS_LEVEL1B', Image%Number_Of_Lines) 
+      call add_att ( id_file, 'NUMBER_OF_SCANS_LEVEL2', Num_Scans_Level2_Hdf)
     !        Istatus = 0
     !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
     !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus

@@ -749,7 +749,6 @@ program COMPILE_ASC_DES_LEVEL2B
          if ( attrs(i) % name .eq. 'L1B' ) L1b_input = attrs(i) % data % c1values (1)
          
       end do
-      
 
       Start_Date_Input = Start_Day_Input + Start_Time_Input / 24.0
       End_Date_Input = End_Day_Input + End_Time_Input / 24.0
@@ -842,32 +841,27 @@ program COMPILE_ASC_DES_LEVEL2B
          call copy_global_attributes ( trim(file) , trim(dir_out)//trim(File_Output)  &
             , exclude_list=['FILENAME','NUMBER_OF_SCANS_LEVEL1B', 'START_YEAR', 'END_YEAR' &
                ,'START_DAY_OF_YEAR', 'END_DAY_OF_YEAR','START_TIME','END_TIME'])
-
+         print*,'ffe 1'
          id_out = hdf_file_open ( trim(dir_out)//trim(File_Output))
+         print*,'a'
          call add_att ( id_out, 'geospatial_lon_number',Nlon_Output)
-         call add_att ( id_out,"geospatial_lon_number",Nlon_Output) 
-         call add_att ( id_out,"geospatial_lat_number",Nlat_Output) 
-         call add_att ( id_out,"geospatial_lon_spacing",dlon_Output) 
-         call add_att ( id_out,"geospatial_lat_spacing",dlat_Output) 
-         call add_att ( id_out,"geospatial_lat_units","degrees_north")
-         call add_att ( id_out,"geospatial_lon_units","degrees_east") 
-
-         !------------------------------------------------------------------
-         ! add CF-compliant global attributes required for NCDC delivery
-         !------------------------------------------------------------------
-         call add_att ( id_out,"geospatial_lon_min",Lon_West) 
-         call add_att ( id_out,"geospatial_lon_max",Lon_East) 
-         call add_att ( id_out,"geospatial_lat_max",Lat_North) 
-         call add_att ( id_out,"geospatial_lat_min",Lat_South) 
-         call add_att ( id_out,"cdm_data_type", trim("Grid")) 
-         call add_att ( id_out,"time_coverage_start",trim(Time_Coverage_Start)) 
-         call add_att ( id_out,"time_coverage_end",Time_Coverage_End)
-         call add_att ( id_out,"date_created", trim(Date_Created_String)) 
-         call add_att ( id_out,"id", trim(Id_String)) 
-
-        
-         call add_att ( id_out,"DATA_NODE",trim(Node_String)) 
-      
+         call add_att ( id_out,'geospatial_lon_number',Nlon_Output) 
+         call add_att ( id_out,'geospatial_lat_number',Nlat_Output) 
+         call add_att ( id_out,'geospatial_lon_spacing',dlon_Output) 
+         call add_att ( id_out,'geospatial_lat_spacing',dlat_Output) 
+         call add_att ( id_out,'geospatial_lat_units','degrees_north')
+         call add_att ( id_out,'geospatial_lon_units','degrees_east') 
+         call add_att ( id_out,'geospatial_lon_min',Lon_West) 
+         call add_att ( id_out,'geospatial_lon_max',Lon_East) 
+         call add_att ( id_out,'geospatial_lat_max',Lat_North) 
+         call add_att ( id_out,'geospatial_lat_min',Lat_South) 
+         call add_att ( id_out,'cdm_data_type', trim('Grid')) 
+         call add_att ( id_out,'time_coverage_start',trim(Time_Coverage_Start)) 
+         call add_att ( id_out,'time_coverage_end',Time_Coverage_End)
+         call add_att ( id_out,'date_created', trim(Date_Created_String)) 
+         call add_att ( id_out,'id', trim(Id_String)) 
+         call add_att ( id_out,'DATA_NODE',trim(Node_String)) 
+       
          if (Node_String /= "zen") then
             call add_att ( id_out,"COMPOSITE_TIME_HOURS",Time_String) 
             call add_att ( id_out,"COMPOSITE_TIME_WINDOW_HOURS",Time_Win_String) 
@@ -887,84 +881,55 @@ program COMPILE_ASC_DES_LEVEL2B
          endif
 
          if (Spatial_Option_String /= "rand") then
-            call add_att ( id_out,"SPATIAL_SAMPLING_METHOD","NEAREST_NEIGHBOR") 
+            call add_att ( id_out,'SPATIAL_SAMPLING_METHOD','NEAREST_NEIGHBOR') 
          endif
-         
-          
-         
-         
-         !--- longitude
-         Sds_Lon_Out = Sds_Lon
-         
-         
+ 
          
          if (Geo_2d_Flag == 0) then    !first row only
             
             
-            sds_id = create_sds (id_out, 'longitude' ,  Sds_Dims_Output_X, 2)
-            Istatus = write_sds (  sds_id, 1, 1, size(Lon_Output(:,1)),  &
+            sds_id = create_sds (id_out, 'longitude' ,   size(Lon_Output(:,1)), 4)
+            Istatus = write_sds (  sds_id, 0, 1, size(Lon_Output(:,1)),  &
                        Lon_Output(:,1) )
-            
-            Sds_Lon_Out%Rank = 1
-            Lon_Output_1d = Lon_Output(:,1)
-            call CORRECT_SDS_STRINGS (Sds_Lon_Out) 
-            call DEFINE_SDS_RANK1(Sd_Id_Output, Sds_Dims_Output_X,  &
-                             Sds_Dims_Output_X,Sds_Lon_Out)
-            call SCALE_SDS(Sds_Lon_Out,Lon_Output_1d,Scaled_Lon_Output_1d)
-            call WRITE_SDS(Scaled_Lon_Output_1d,Sds_Lon_Out)
-            Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
-
+      
          else
             
-            sds_id = create_sds (id_out, 'longitude' ,  Sds_Dims_Output_XY, 2)
-            Istatus = write_sds (  sds_id, [1,1], [1,1], [size(Lon_Output(:,1)),size(Lon_Output(1,:))] ,  &
+            sds_id = create_sds (id_out, 'longitude' ,  Sds_Dims_Output_XY, 4)
+            Istatus = write_sds (  sds_id, [0,0], [1,1], [size(Lon_Output(:,1)),size(Lon_Output(1,:))] ,  &
                        Lon_Output )
-                       
-            Sds_Lon_Out%Rank = 2
-            call CORRECT_SDS_STRINGS(Sds_Lon_Out) 
-            call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_XY,  &
-                            Sds_Dims_Output_XY,Sds_Lon_Out)
-            call SCALE_SDS(Sds_Lon_Out,Lon_Output,Scaled_Sds_Data_Output)
-            call WRITE_SDS(Scaled_Sds_Data_Output,Sds_Lon_Out)
-            Istatus_Sum = sfendacc(Sds_Lon_Out%Id_Output) + Istatus_Sum
+                      
 
          endif
-
-         !--- latitude 
-         Sds_Lat_Out = Sds_Lat
+          
+         call add_att ( sds_id, 'axis','X')
+         call close_sds (  sds_id)
+         
+         
+ 
+         
          if (Geo_2d_Flag == 0) then   !first column only
-
-            Sds_Lat_Out%Rank = 1
-            Lat_Output_1d = Lat_Output(1,:)
-            call CORRECT_SDS_STRINGS (Sds_Lat_Out) 
-            call DEFINE_SDS_RANK1(Sd_Id_Output, Sds_Dims_Output_y,  &
-                           Sds_Dims_Output_y,Sds_Lat_Out)
-            call SCALE_SDS(Sds_Lat_Out,Lat_Output_1d,Scaled_Lat_Output_1d)
-            call WRITE_SDS(Scaled_Lat_Output_1d,Sds_Lat_Out)
-            Istatus_Sum = sfendacc(Sds_Lat_Out%Id_Output) + Istatus_Sum
+           
+            sds_id = create_sds (id_out, 'latitude' ,  size(Lat_Output(1,:)), 4)
+            Istatus = write_sds (  sds_id, 0, 1, size(Lat_Output(1,:)),  &
+                       Lat_Output(1,:) )
 
          else
 
-            Sds_Lat_Out%Rank = 2
-            call CORRECT_SDS_STRINGS (Sds_Lat_Out) 
-            call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_XY,  &
-                           Sds_Dims_Output_XY,Sds_Lat_Out)
-            call SCALE_SDS(Sds_Lat_Out,Lat_Output,Scaled_Sds_Data_Output)
-            call WRITE_SDS(Scaled_Sds_Data_Output,Sds_Lat_Out)
-            Istatus_Sum = sfendacc(Sds_Lat_Out%Id_Output) + Istatus_Sum
+            sds_id = create_sds (id_out, 'latitude' ,  Sds_Dims_Output_XY, 4)
+            Istatus = write_sds (  sds_id, [0,0], [1,1], [size(Lat_Output(:,1)),size(Lat_Output(1,:))] ,  &
+                       Lat_Output )
 
          endif
-
-         !--- add extra attributes
-         Temp_Name = "Y"
-         Istatus_Sum = sfsnatt(Sds_Lat_Out%Id_Output, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
-         Temp_Name = "X"
-         Istatus_Sum = sfsnatt(Sds_Lon_Out%Id_Output, "axis", DFNT_CHAR8, len_trim(Temp_Name), trim(Temp_Name)) + Istatus_Sum
+         
+         call add_att ( sds_id, 'axis','Y')
+         call close_sds (  sds_id)
          
          call close_file(id_out)
-         
+      stop   
       endif
-
+      
+      
+      
       Num_Points = Num_Elements_Input * Num_Lines_Input
       allocate(Input_Update_Index(Num_Points))
       allocate(Input_Array_1d(Num_Points))

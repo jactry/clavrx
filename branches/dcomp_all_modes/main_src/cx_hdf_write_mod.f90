@@ -35,13 +35,21 @@ contains
    !
    !
    !
-   integer function hdf_file_open ( file)
+   integer function hdf_file_open ( file, create)
       character(len=*) , intent(in) :: file
       integer :: dum
       integer :: sfstart
-     
-      dum = sfstart(trim(file),DFACC_WRITE)
+      logical, optional, intent(in) :: create
+      logical :: create_loc
       
+      create_loc = .false.
+      if (present(create)) create_loc = create
+      
+      if ( create_loc ) then
+         dum = sfstart(trim(file),DFACC_CREATE)
+      else
+         dum = sfstart(trim(file),DFACC_WRITE)
+      end if
       hdf_file_open = dum
    end function hdf_file_open
    

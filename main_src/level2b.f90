@@ -134,11 +134,11 @@ module LEVEL2B_ROUTINES
  character(len=30), parameter, private :: MOD_PROMPT = " PATMOSx_LEVEL2B_ROUTINES: "
  character(len=18), private, parameter:: Coordinates_String = "longitude latitude"
 
- real(kind=real4), dimension(:,:), allocatable, public, save:: Lat_Input
- real(kind=real4), dimension(:,:), allocatable, public, save:: Lon_Input
+ real, dimension(:,:), allocatable, public, save:: Lat_Input
+ real, dimension(:,:), allocatable, public, save:: Lon_Input
  logical, dimension(:,:), allocatable, public, save:: Gap_Pixel_Mask_Input
- real(kind=real4), dimension(:,:), allocatable, public, save:: Lat_Output
- real(kind=real4), dimension(:,:), allocatable, public, save:: Lon_Output
+ real, dimension(:,:), allocatable, public, save:: Lat_Output
+ real, dimension(:,:), allocatable, public, save:: Lon_Output
  integer(kind=int4), dimension(:,:), allocatable, public, save:: Ielem_Output
  integer(kind=int4), dimension(:,:), allocatable, public, save:: Iline_Output
 
@@ -921,7 +921,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
       real(kind=real4), dimension(:), intent(out):: Unscaled_Data
 
       !--- unscale Sds
-
+      
       if (Sds%Scaling_Type /= sym%NO_SCALING) then
 
         !---- linear
@@ -1001,20 +1001,20 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
       endif
 
    end subroutine UNSCALE_SDS_RANK3
-!------------------------------------------------------------------------------------------------
-! SUBROUTINE Name: SCALE_SDS_RANK1
-!
-! Function:
-!     Scales unscaled SDS data from level2b files
-!-----------------------------------------------------------------------------------------------
+   !------------------------------------------------------------------------------------------------
+   ! SUBROUTINE Name: SCALE_SDS_RANK1
+   !
+   ! Function:
+   !     Scales unscaled SDS data from level2b files
+   !-----------------------------------------------------------------------------------------------
    subroutine SCALE_SDS_RANK1(Sds, Unscaled_Data, Scaled_Data)
       type(Sds_Struct), intent(in):: Sds
       real(kind=real4), dimension(:), intent(in):: Unscaled_Data
       real(kind=real4), dimension(:), intent(out):: Scaled_Data
-
+      
       !--- scale Sds
       if (Sds%Scaling_Type /= sym%NO_SCALING) then
-
+      
         !---- linear
         if (Sds%Scaling_Type == sym%LINEAR_SCALING) then
            Scaled_Data = (Unscaled_Data - Sds%Add_Offset)/(Sds%Scale_Factor)
@@ -1029,11 +1029,11 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
         !--- set scaled missing values
         where (Unscaled_Data == Sds%Unscaled_Missing)
          Scaled_Data = Sds%Fill_Value
-        endwhere
+        end where
 
-     else
-       Scaled_Data = Unscaled_Data
-     endif
+      else
+         Scaled_Data = Unscaled_Data
+      end if
 
    end subroutine SCALE_SDS_RANK1
 !------------------------------------------------------------------------------------------------

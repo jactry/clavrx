@@ -135,6 +135,7 @@ program COMPILE_ASC_DES_LEVEL2B
    
    implicit none
   
+   
 
    integer, parameter:: NCDC_Attributes_Flag = 0    !Set this to 1 to emulate NCDC 2009 data format
    integer, parameter:: N_Files_Max = 1200
@@ -659,13 +660,6 @@ program COMPILE_ASC_DES_LEVEL2B
 
    print *, LOCAL_EXE_PROMPT, "Creating ", trim(File_Output)
 
-   !--- open file for reading and writing
-  ! Sd_Id_Output = sfstart(trim(dir_out)//trim(File_Output),DFACC_CREATE)
-
- !  if (Sd_Id_Output <  0) then
-  !    print *, LOCAL_EXE_PROMPT, "output HDF file creation failed. Exiting...", Asc_Des_Node
- !     stop 38
- !  endif
 
    !--------------------------------------------------------------------------------
    ! allocate and initialize arrays for composite
@@ -735,6 +729,15 @@ program COMPILE_ASC_DES_LEVEL2B
          stop
       end if
       
+      if ( hdf_get_finfo(file, num_sds_input, sds_name, natt, att_name) < 0 ) then
+         print*,'error reading attributes'
+         stop
+      end if
+      
+      do i=1,num_sds_input
+        
+         print*,i,' ',num_sds_input,' ',trim(sds_name(i))
+      end do
       do i = 1, natt
             
          if ( attrs(i) % name .eq. 'NUMBER_OF_ELEMENTS' ) Num_Elements_Input = attrs(i) % data % i2values (1)
@@ -925,10 +928,10 @@ program COMPILE_ASC_DES_LEVEL2B
          call close_sds (  sds_id)
          
          call close_file(id_out)
-      stop   
+     
       endif
       
-      
+      print*,'after first file'
       
       Num_Points = Num_Elements_Input * Num_Lines_Input
       allocate(Input_Update_Index(Num_Points))
@@ -942,29 +945,43 @@ program COMPILE_ASC_DES_LEVEL2B
       !--------------------------------------------------------------
       !--- bad pixel mask (assumed no scaling applied)
       !--------------------------------------------------------------
-      Sds_Temp%Variable_Name = "bad_pixel_mask"
+      print*,'a'
       allocate(Bad_Pixel_Mask_Input(Num_Elements_Input,Num_Lines_Input))
-      call READ_SDS(Sd_Id_Input,Bad_Pixel_Mask_Input,Sds_Temp)
-
-      ! --------------------------------------------------------------
-      !--- ascending / descending flag (assumed no scaling applied)
-      !--------------------------------------------------------------
       allocate(Asc_Des_Flag_Input(Num_Lines_Input))
-      Sds_Asc_Des_Flag%Rank = 1
-      Sds_Asc_Des_Flag%Variable_Name = "asc_des_flag"
-      if (Node_String /= "geo") then
-         call READ_SDS(Sd_Id_Input,Asc_Des_Flag_Input,Sds_Asc_Des_Flag)
-      else
-         Asc_Des_Flag_Input(:) = -1 
-      endif
-
-      !--------------------------------------------------------------
-      !--- read time (assumed no scaling applied)
-      !--------------------------------------------------------------
-      Sds_Time%Variable_Name = "scan_line_time"
       allocate(time_1d_Input(Num_Lines_Input))
-      call READ_SDS(Sd_Id_Input,time_1d_Input,Sds_Time)
-      Sds_Time%Rank = 3
+      allocate(Scan_Line_Number_1d_Input(Num_Lines_Input))
+      print*,'b'
+      if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = 6 &
+         , sds_name = ['bad_pixel_mask','asc_des_flag','scan_line_time','scan_line_number','sensor_zenith_angle','solar_zenith_angle']) < 0) then
+         print*,'hdf file not readable ', trim(file)
+         stop  
+      end if 
+      
+      
+     
+      ps => sds_new(1) ; psd=> ps%data
+      Bad_Pixel_Mask_Input =  reshape(psd%i1values,[Num_Elements_Input,Num_Lines_Input])  
+      
+      ps => sds_new(2) ; psd=> ps%data
+      Asc_Des_Flag_Input =  reshape(psd%i1values,[Num_Lines_Input])  
+      if (Node_String .EQ. "geo") Asc_Des_Flag_Input(:) = -1
+      
+     
+      ps => sds_new(3) ; psd=> ps%data
+      time_1d_Input =  reshape(psd%r4values,[Num_Lines_Input])   
+      
+      ps => sds_new(4) ; psd=> ps%data
+      Scan_Line_Number_1d_Input =  reshape(psd%r4values,[Num_Lines_Input])
+     
+      ps => sds_new(5) ; psd=> ps%data
+      print*,allocated(psd%i1values),allocated(psd%i2values),allocated(psd%i4values),allocated(psd%r4values)
+      Senzen_Input =  reshape(psd%i1values,[Num_Elements_Input,Num_Lines_Input])  * (ps % attr(7) % data % r4values(1) )
+      
+      ps => sds_new(6) ; psd=> ps%data
+      Solzen_Input =  reshape(psd%i1values,[Num_Elements_Input,Num_Lines_Input])  * (ps % attr(7) % data % r4values(1) )
+      
+       
+
 
       !---- extrapolate scan-line time to each pixel
       allocate(Time_Input(Num_Elements_Input,Num_Lines_Input))
@@ -984,25 +1001,23 @@ program COMPILE_ASC_DES_LEVEL2B
             Date_Input = Start_Day_Input + 1 + Time_Input/24.0
          end where
       endif
-
+      print*,'after first file 3'
       !--- define output or read in output values
-      if (First_Valid_Input ) then   !define sds in output
-            call CORRECT_SDS_STRINGS (Sds_Time) 
-            call DEFINE_SDS_RANK2(Sd_Id_Output, &
-                              Sds_dims_Output_xy, &
-                              Sds_dims_Output_xy, &
-                              Sds_Time)
-            Time_Output(:,:) = Missing_Value_Real4
-      endif
+    !A  if (First_Valid_Input ) then   !define sds in output
+    !A       call CORRECT_SDS_STRINGS (Sds_Time) 
+    !A       call DEFINE_SDS_RANK2(Sd_Id_Output, &
+    !A                           Sds_dims_Output_xy, &
+    !A                           Sds_dims_Output_xy, &
+    !A                          Sds_Time)
+    !A        Time_Output(:,:) = Missing_Value_Real4
+    !A   endif
 
-      !--------------------------------------------------------------
-      !--- scan line number
-      !--------------------------------------------------------------
-      Sds_scan_line_number%Variable_Name = "scan_line_number"
-      allocate(Scan_Line_Number_1d_Input(Num_Lines_Input))
 
-      call READ_SDS(Sd_Id_Input,Scan_Line_Number_1d_Input,Sds_scan_line_number)
-
+      
+      
+     
+      
+      
       !-- modify level-2 sds parameters for level-2b
       Sds_Scan_Line_Number%Rank = 3
       Sds_Scan_Element_Number%Long_Name = "scan line index of the "// &
@@ -1010,7 +1025,10 @@ program COMPILE_ASC_DES_LEVEL2B
 
       !---- extrapolate scan-line number to each pixel
       allocate(Scan_Line_Number_Input(Num_Elements_Input,Num_Lines_Input))
+       
+      
       do Iline = 1, Num_Lines_Input
+        
            Scan_Line_Number_Input(:,Iline) = Scan_Line_Number_1d_Input(Iline)
       end do
       deallocate(Scan_Line_Number_1d_Input)
@@ -1043,19 +1061,7 @@ program COMPILE_ASC_DES_LEVEL2B
               Scan_Element_Number_Output = missing_value_int4
       endif
 
-      !--------------------------------------------------------------
-      !--- sensor zenith
-      !--------------------------------------------------------------
-      Sds_Temp%Variable_Name = "sensor_zenith_angle"
-      call READ_SDS(Sd_Id_Input,Scaled_Sds_Data_Input,Sds_Temp)
-      call UNSCALE_SDS(Sds_Temp,Scaled_Sds_Data_Input, Senzen_Input)
 
-      !--------------------------------------------------------------
-      !--- solar zenith
-      !--------------------------------------------------------------
-      Sds_Temp%Variable_Name = "solar_zenith_angle"
-      call READ_SDS(Sd_Id_Input,Scaled_Sds_Data_Input,Sds_Temp)
-      call UNSCALE_SDS(Sds_Temp,Scaled_Sds_Data_Input,Solzen_Input)
       
       !-------------------------------------------------------------
       !  determine which output grid_points are to be updated by
@@ -1064,7 +1070,7 @@ program COMPILE_ASC_DES_LEVEL2B
       Update_Output_Mask = sym%NO
 
       Itime = 1
-
+      print*,'after first file 4'
       do Ilon = 1, Nlon_Output
          do Ilat = 1, Nlat_Output
 
@@ -1072,64 +1078,60 @@ program COMPILE_ASC_DES_LEVEL2B
 
             Ielem = Ielem_Output(Ilon,Ilat)
             Iline = Iline_Output(Ilon,Ilat)
+            
+            if (Ielem < 1 ) cycle
+            if (Iline < 1 ) cycle           
+            
+            if (Bad_Pixel_Mask_Input(Ielem,Iline) == sym%YES) cycle
+            
+            if ( node_string .NE. 'zen' &
+               .AND. node_string .NE. 'geo' &
+               .AND. Asc_Des_Flag_Input(Iline) .NE. Asc_Des_Node) cycle
 
-            if ((Ielem > 0) .and. (Iline > 0)) then  !valid Ielem, Iline check
+            if (Senzen_Input(Ielem,Iline) .EQ. Missing_Value_Real4) cycle
 
-               if (Bad_Pixel_Mask_Input(Ielem,Iline) == sym%NO) then
-
-                  !--- check node
-                  if (Node_String == "zen" .or.  &
-                     Node_String == "geo" .or.  &
-                     Asc_Des_Flag_Input(Iline) == Asc_Des_Node) then
-
-                     !-- valid data check
-                     if (Senzen_Input(Ielem,Iline) /= Missing_Value_Real4) then
-
-                        if (Senzen_Output(Ilon,Ilat) == Missing_Value_Real4)  then
-                           Temp_Update_Flag = sym%YES
-                        endif
+                    
+            if (Senzen_Output(Ilon,Ilat) == Missing_Value_Real4) Temp_Update_Flag = sym%YES
+            
         
-                        !--- nadir check
-                        if ((Overlap_Flag == 0) .and.  &
-                           (Senzen_Output(Ilon,Ilat) /= Missing_Value_Real4) .and. &
-                           (Senzen_Output(Ilon,Ilat) - Senzen_Input(Ielem,Iline) > Senzen_Thresh) .and. &
-                           (Senzen_Input(Ielem,Iline) < Senzen_Output(Ilon,Ilat))) then
+            !--- nadir check
+            if ((Overlap_Flag == 0) .and.  &
+                  (Senzen_Output(Ilon,Ilat) /= Missing_Value_Real4) .and. &
+                  (Senzen_Output(Ilon,Ilat) - Senzen_Input(Ielem,Iline) > Senzen_Thresh) .and. &
+                  (Senzen_Input(Ielem,Iline) < Senzen_Output(Ilon,Ilat))) then
                            
-                           Temp_Update_Flag = sym%YES
-                        end if
+               Temp_Update_Flag = sym%YES
+            end if
 
-                        !--- random check
-                        if (Overlap_Flag == 1) then
-                           call random_number(xrand)
-                           if ((Overlap_Random_Output(Ilon,Ilat) == Missing_Value_Real4) .or. &
-                              (xrand < Overlap_Random_Output(Ilon,Ilat))) then
-                        
-                              Temp_Update_Flag = sym%YES  
-                              Overlap_Random_Output(Ilon,Ilat) = xrand
-                           end if
-                        end if
+           !--- random check
+           if (Overlap_Flag == 1) then
+              call random_number(xrand)
+              if ((Overlap_Random_Output(Ilon,Ilat) == Missing_Value_Real4) .or. &
+                 (xrand < Overlap_Random_Output(Ilon,Ilat))) then
+           
+                 Temp_Update_Flag = sym%YES  
+                 Overlap_Random_Output(Ilon,Ilat) = xrand
+              end if
+           end if
 
-                        !--- check time to exclude data from wrong days for orbits that span midnight
-                        if (Temp_Update_Flag == sym%YES) then
-                           if ((Date_Input(Ielem,Iline) >= Start_Date_Window) .and.  &
-                              (Date_Input(Ielem,Iline) <= End_Date_Window)) then
-                              
-                              Update_Output_Mask(Ilon,Ilat) = sym%YES
-                           end if
-                        end if
+           !--- check time to exclude data from wrong days for orbits that span midnight
+           if (Temp_Update_Flag == sym%YES) then
+              if ((Date_Input(Ielem,Iline) >= Start_Date_Window) .and.  &
+                 (Date_Input(Ielem,Iline) <= End_Date_Window)) then
+                 
+                 Update_Output_Mask(Ilon,Ilat) = sym%YES
+              end if
+           end if
 
-                        !--- update senzen output array
-                        if (Update_Output_Mask(Ilon,Ilat) == sym%YES) then
-                           Senzen_Output(Ilon,Ilat) = Senzen_Input(ielem,iline)
-                           Time_Output(Ilon,Ilat) = Time_Input(ielem,iline)
-                        end if
+           !--- update senzen output array
+           if (Update_Output_Mask(Ilon,Ilat) == sym%YES) then
+              Senzen_Output(Ilon,Ilat) = Senzen_Input(ielem,iline)
+              Time_Output(Ilon,Ilat) = Time_Input(ielem,iline)
+           end if
 
-                     end if  !check for valid data
-                  end if   !check Asc_Des_Node
-               end if    !check for bad pixel
-            end if    !check for valid Ielem and Iline
          end do
       end do
+      print*,'after first file 5'
       
       !----- compute 1d input to output index mapping 
       ipoint = 0
@@ -1148,7 +1150,7 @@ program COMPILE_ASC_DES_LEVEL2B
       end do
 
       !--- update results
-
+      print*,'after first file 6'
       !---new
       if (ipoint > 0) then
 
@@ -1177,7 +1179,7 @@ program COMPILE_ASC_DES_LEVEL2B
          Bad_Pixel_Mask_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
 
       endif
-
+      print*,'after first file 7'
 
       deallocate(Senzen_Input)
       deallocate(Solzen_Input)
@@ -1189,11 +1191,26 @@ program COMPILE_ASC_DES_LEVEL2B
       deallocate(Post_Cld_Prob_Input)
       deallocate(Bad_Pixel_Mask_Input)
       deallocate(Gap_Pixel_Mask_Input)
-
+      print*,'after first file 8'
       !---------------------------------------------------------------------
       ! loop through SDS's and store the information about them
       ! note, this has to be zero based indices
       !---------------------------------------------------------------------
+      
+      if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = num_sds_input , sds_name = sds_name) < 0) then
+            print*,'hdf file not readable ', trim(file)
+            stop  
+      end if 
+      
+      do Isds = 1, Num_Sds_Input   
+         ps => sds_new(Isds) ; psd=> ps%data
+         if (First_Valid_Input) then
+            sds_id = create_sds (id_out, ps%name ,  size(psd%i2values), 2)
+         end if   
+      end do
+      
+      
+      
       if (First_Valid_Input) then
          Sds_loop_1: do Isds = 0, Num_Sds_Input-1
         
@@ -1207,7 +1224,7 @@ program COMPILE_ASC_DES_LEVEL2B
                           sds(Isds)%Num_Attrs) + Istatus_Sum
          end do Sds_loop_1
       end if
-
+print*,'after first file 9'
       !---------------------------------------------------------------------
       ! loop through SDS's and store the information about them
       !---------------------------------------------------------------------

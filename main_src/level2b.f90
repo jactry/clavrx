@@ -277,7 +277,30 @@ module LEVEL2B_ROUTINES
 
             call POSITION_TO_INDICES (Ilat, Ilon, Lat_Input(Ielem,Iline), Lon_Input(Ielem,Iline),  &
                Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist)
+               
+            if ( Ilon .LT.1 ) cycle
+            if ( Ilat .LT.1 ) cycle   
+            if ( xdist .GT. Max_Allowable_Distance) cycle   
+            
+            !----- if random, replace true xdist with a random number
+            if (Random_Flag == sym%YES) then
+               call random_number(xrand)
+               xdist = xrand * Max_Allowable_Distance
+            endif
+            
+            !update closest grid point
+            if ( .NOT. Gap_Pixel_Mask_Input(ielem,iline) ) then
+               Ielem_Output(Ilon,Ilat)  = Ielem
+               Iline_Output(Ilon,Ilat)  = Iline
+               Min_Dist_Grid(Ilon,Ilat) = xdist
+            endif
+            
 
+            if (xdist .GE. Min_Dist_Grid(Ilon,Ilat)) cycle  !check for pixels that are closer 
+            
+            
+            !update surrounding grid points that fall within the pixel's footprint but
+            !have not already been filled in by a closest pixel
             call POSITION_TO_INDICES (Ilat, Ilon_1, Lat_Input(Ielem,Iline), lon_1,  &
                Lat_South, Lat_North, dlat, Nlat, Lon_West, Lon_East,dlon, Nlon, xdist_10)
 
@@ -294,49 +317,25 @@ module LEVEL2B_ROUTINES
             Ilon_max = max(Ilon_1,Ilon_2)
             Ilat_min = min(Ilat_1,Ilat_2)
             Ilat_max = max(Ilat_1,Ilat_2)
-
-            !update closest grid point
             
-            if ( Ilon .LT.1 ) cycle
-            if ( Ilat .LT.1 ) cycle
+            if (Ilon_min .LE. 1) cycle
+            if (Ilat_min .LE. 1) cycle
             
-            if ( xdist .GT. Max_Allowable_Distance) cycle
-
-            !----- if random, replace true xdist with a random number
-            if (Random_Flag == sym%YES) then
-               call random_number(xrand)
-               xdist = xrand * Max_Allowable_Distance
-            endif
-
-            if (xdist < Min_Dist_Grid(Ilon,Ilat)) then  !check for pixels that are closer 
-
-               if ( .not. Gap_Pixel_Mask_Input(ielem,iline) ) then
-                  Ielem_Output(Ilon,Ilat)  = Ielem
-                  Iline_Output(Ilon,Ilat)  = Iline
-                  Min_Dist_Grid(Ilon,Ilat) = xdist
-               endif
-
-               !update surrounding grid points that fall within the pixel's footprint but
-               !have not already been filled in by a closest pixel
-               if ((Ilon_min > 1) .and. (Ilat_min > 1)) then
-                  do Ilon_1 = Ilon_min, Ilon_max
-                     do Ilat_1 = Ilat_min, Ilat_max
-                        !-- do not reset grid point closest to pixel
-                        if ((Ilon_1 == Ilon) .and. (Ilat_1 == Ilat)) cycle
-                        !-- fill in values for all grid points within pixel footprint
-                        !-- ignore those already set previously
-                        if (Min_Dist_Grid(Ilon_1,Ilat_1) == big_number .and.  &
+            do Ilon_1 = Ilon_min, Ilon_max
+               do Ilat_1 = Ilat_min, Ilat_max
+                  !-- do not reset grid point closest to pixel
+                  if ((Ilon_1 == Ilon) .and. (Ilat_1 == Ilat)) cycle
+                  !-- fill in values for all grid points within pixel footprint
+                  !-- ignore those already set previously
+                  if (Min_Dist_Grid(Ilon_1,Ilat_1) == big_number .and.  &
                            .not. Gap_Pixel_Mask_Input(Ielem,Iline)) then
-                           Ielem_Output(Ilon_1,Ilat_1)  = Ielem
-                           Iline_Output(Ilon_1,Ilat_1)  = Iline
-                        endif
-                     end do
-                  end do
-               endif
-
-            end if   !end check on min distance
+                     Ielem_Output(Ilon_1,Ilat_1)  = Ielem
+                     Iline_Output(Ilon_1,Ilat_1)  = Iline
+                  end if
+               end do
+            end do
             
-  
+
          end do
       end do
 

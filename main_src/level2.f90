@@ -419,7 +419,7 @@ CONTAINS
       File_Level2= trim(File_1b_Root)//".level2.hdf"
       call mesg (MOD_PROMPT//"creating level-2 file "//trim(file_Level2))
          
-      id_file = hdf_file_open(trim(Dir_Level2)//trim(file_Level2))
+      id_file = hdf_file_open(trim(Dir_Level2)//trim(file_Level2), create=.true.)
       
       
       

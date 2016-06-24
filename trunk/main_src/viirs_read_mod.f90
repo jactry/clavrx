@@ -785,10 +785,6 @@ contains
          end if
        
       end do    
-print *,Gap_Line_Idx_Pattern(1,:)
-print *,'--------------'
-print *,Gap_Pixel_Mask_Pattern(1,:)
-stop
 
    end subroutine COMPUTE_VIIRS_BOWTIE_GAP_PATTERN
 !------------------------------------------------------------------------------

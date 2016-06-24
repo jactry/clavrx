@@ -207,6 +207,11 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
     File_1b_Root = File_1b_Root(7:len_trim(File_1b_Root)-34)
   endif
 
+  !--- special processing for viirs nasa - remove nc suffix - this hard coded for
+  if (trim(Sensor%Sensor_Name) == 'VIIRS-NASA') then
+    File_1b_Root = File_1b_Root(7:len_trim(File_1b_Root)-3)
+  endif
+
   !--- special processing for ahi - remove B01.nc suffix - this hard coded for
   if (trim(Sensor%Sensor_Name) == 'AHI') then
     File_1b_Root = File_1b_Root(4:len_trim(File_1b_Root)-12)
@@ -2320,7 +2325,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cod_Nlcomp_Uncer_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cod_Nlcomp_Uncer),Sd_Id_Level2,Sds_Dims_2d, Sds_Chunk_Size_2d,&
                               "cld_opd_nlcomp_unc", &
-                              "atmosphere_optical_thickness_due_to_cloud", &
+                              "atmosphere_optical_thickness_due_to_cloud_uncertainty", &
                               "uncertainty in cloud optical depth at the nominal wavelength "// &
                               "of 0.65 microns, determined from NLCOMP", &
                               DFNT_INT16, sym%LINEAR_SCALING, Min_tau, Max_tau, &
@@ -2328,12 +2333,13 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- cloud effective particle radius uncertainity from the nlcomp approach
+     !--- cloud effective particle radius uncertainty from the nlcomp approach
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ceps_Nlcomp_Uncer_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ceps_Nlcomp_Uncer),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                "cld_reff_nlcomp_unc", &
-                               "effective_radius_of_cloud_particle", &
-                               "effective radius of cloud particle determined from NLCOMP; see attributes for channels used", &
+                               "effective_radius_of_cloud_particle_uncertainty", &
+                               "effective radius of cloud particle uncertainty " // &
+                               "determined from NLCOMP; see attributes for channels used", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Reff, Max_Reff, &
                                "micron", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus

@@ -844,10 +844,8 @@ contains
          default_acha_mode  = ACHA_Mode_Default_SEVIRI
       case ('FY2-IMAGER')
          default_acha_mode  =  ACHA_Mode_Default_FY2 
-      case ('VIIRS')
+      case ('VIIRS','VIIRS-NASA','VIIRS-IFF')
          default_acha_mode  =  ACHA_Mode_Default_VIIRS 
-      case ('VIIRS-IFF')      
-          default_acha_mode  = ACHA_Mode_Default_VIIRS      
       case ('AQUA-IFF')
           default_acha_mode  = ACHA_Mode_Default_Modis
       case ('AVHRR-IFF')      
@@ -914,10 +912,8 @@ contains
          filename  = 'seviri_default_nb_cloud_mask_lut.nc'
       case ('FY2-IMAGER')
          filename  = 'fy2_default_nb_cloud_mask_lut.nc' 
-      case ('VIIRS')
+      case ('VIIRS','VIIRS-NASA','VIIRS-IFF')
          filename  = 'viirs_default_nb_cloud_mask_lut.nc' 
-      case ('VIIRS-IFF')      
-          filename  = 'viirs_default_nb_cloud_mask_lut.nc'
       case ('AQUA-IFF')
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('AVHRR-IFF')      
@@ -998,7 +994,7 @@ contains
       case ('FY2-IMAGER')
          possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
          possible_dcomp_modes(1:1)  =  [3]
-      case ('VIIRS')
+      case ('VIIRS','VIIRS-NASA')
          possible_acha_modes(1:3)   =  [1, 3, 5] 
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
          nlcomp_mode_User_Set       =  1  
@@ -1046,7 +1042,7 @@ contains
    ! ----------------------------------------------------------------------
    !    returns all available sensors for this sensors
    ! ----------------------------------------------------------------------
-   function Existing_Channels  (SensorName)  result( Valid_Channels )
+   function EXISTING_CHANNELS (SensorName)  result( Valid_Channels )
       character (len = *) , intent(in) :: SensorName
       
       integer , target :: Valid_Channels (Nchan_Clavrx) 
@@ -1075,6 +1071,8 @@ contains
          Valid_Channels (1:5) = [1,20,27,31,32]    
       case ('VIIRS')
          Valid_Channels (1:22) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,39,40,41,42,43,44]
+      case ('VIIRS-NASA')
+         Valid_Channels (1:17) = [1,2,3,4,5,6,7,8,9,15,20,22,26,29,31,32,44]
       case ('VIIRS-IFF')
          Valid_Channels (1:24) = [1,2,3,4,5,6,7,8,9,15,20,22,26,27,28,29,30,31,32,33,34,35,36,45]
       case ('AQUA-IFF')
@@ -1095,7 +1093,7 @@ contains
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
 
-   end function Existing_Channels
+   end function EXISTING_CHANNELS
    
    !----------------------------------------------------------------------
    !   Channel settings

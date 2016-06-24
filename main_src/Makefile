@@ -110,6 +110,7 @@ clavrxorb_objs = process_clavrx.o \
                  file_utility.o \
                  scaling_params.o \
                  hdf.o \
+                 netcdf_read_module.o \
                  oisst_analysis.o \
                  constant.o \
                  calibration_constants.o \
@@ -217,9 +218,9 @@ dncomp:
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
    ifdef nlcomplibs
-	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks} ${nlcomplibs} ${nlcomplinks}
+	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o viirs_nasa_read_module.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks} ${nlcomplibs} ${nlcomplinks}
    else
-		$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o  viirs_read_mod.o   $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks}
+	   $(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) readh5dataset.o viirs_clavrx_bridge.o viirs_read_mod.o viirs_nasa_read_module.o  $(netcdflibs) ${hdf5libs} $(hdflibs) ${hdf5links} ${dncomplibs} ${dncomplinks}
    endif   
 else
 	$(fc) $(ldflags) -o ../clavrx_bin/clavrxorb $(CLAVRX_OBJ_FILES) $(netcdflibs) $(hdflibs) ${dncomplibs} ${dncomplinks}  
@@ -321,6 +322,8 @@ Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o file_utility.o
 hdf.o: hdf.f90
+netcdf_read_module.o: netcdf_read_module.f90 constant.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
 precision.o:precision.f90
 hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
 hdf_params.o: version.inc hdf_params.f90 hdf.o scaling_params.o constant.o
@@ -356,10 +359,12 @@ ifdef hdf5libs
 readh5dataset.o: readh5dataset.f90
 viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clavrx_message_module.o viirs_read_mod.o
 viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o
+viirs_nasa_read_module.o: viirs_nasa_read_module.f90 file_tools.o pixel_common.o constant.o readh5dataset.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(hdf5libs)  viirs_nasa_read_module.f90
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o 
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
 
@@ -371,7 +376,7 @@ nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_modul
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)  $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
 nb_cloud_mask_clavrx_services_module.o: $(CMASK)/nb_cloud_mask_clavrx_services_module.f90
 
-nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o
+nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o netcdf_read_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_module.f90
 
 nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud_mask_clavrx_services_module.o
@@ -395,7 +400,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
 
 
 ifdef hdf5libs
-     sub_routine += viirs_clavrx_bridge.o readh5dataset.o viirs_read_mod.o
+     sub_routine += viirs_clavrx_bridge.o readh5dataset.o viirs_read_mod.o viirs_nasa_read_module.o
 endif
 
 process_clavrx.o: process_clavrx.f90 $(sub_routine)
@@ -443,8 +448,8 @@ viirs_clavrx_bridge.mod viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 \
                constants.mod hdf.mod avhrr_module.mod file_utility.mod pixel_common.mod pixel_routines.mod  planck.mod
 	$(fc) -c $(fflags) ${hdf5libs} viirs_clavrx_bridge.f90 
 viirs_read_mod.mod viirs_read_mod.o: viirs_read_mod.f90
-
 	$(fc) -c $(fflags) ${hdf5libs} viirs_read_mod.f90  
+
 endif
 
 ############### C Code

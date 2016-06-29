@@ -482,7 +482,7 @@ module SENSOR_MODULE
       Ierror = sym%NO
       ifound = sym%NO
       
-      print*,'=============================='
+     
 
       test_loop: do while (ifound == sym%NO)
       
@@ -519,6 +519,19 @@ module SENSOR_MODULE
         Sensor%WMO_Id = 784
         exit test_loop
       endif
+		
+		if (index(Image%Level1b_Name, 'MYDATML') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 5000
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        Sensor%WMO_Id = 784
+		  print*,'mydatml'
+        exit test_loop
+      endif
+		
+		
 
       if (index(Image%Level1b_Name, 'MOD021KM') > 0) then
         Sensor%Sensor_Name = 'MODIS'
@@ -1048,7 +1061,7 @@ module SENSOR_MODULE
       ifound = sym%YES   ! force exit need to develop logic for setting Ierror
 
       enddo test_loop
-
+  
       !---------------------------------------------------------------------------------
       ! Set sub-satellite point for geostationary satellites that are Areafiles
       !---------------------------------------------------------------------------------
@@ -1072,16 +1085,19 @@ module SENSOR_MODULE
             Ierror = sym%YES
          endif
       endif
+		
 
       !-- determine modis cloud mask name
       if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
           .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+			
          call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
          if (trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file" .and. &
                   Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
       endif
+		
 
    end subroutine DETECT_SENSOR_FROM_FILE
 

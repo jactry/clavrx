@@ -1190,7 +1190,8 @@ end subroutine ATMOS_CORR
   real:: Factor
 
   ! for these sensors, no correction is needed
-  if (index(Sensor%Sensor_Name,'VIIRS') > 0) return 
+  if (trim(Sensor%Sensor_Name) == 'VIIRS') return 
+  if (trim(Sensor%Sensor_Name) == 'VIIRS-IFF') return 
   if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') return 
 
   !--------------------------------------------------------------------

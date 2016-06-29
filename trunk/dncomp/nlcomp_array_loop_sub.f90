@@ -81,9 +81,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real( kind = real4 ) :: assumed_tpw_error 
    real( kind = real4 ), parameter :: ozone_coeff (3)    = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ]
    
-   real ( kind = real4 ) :: refl_toc(40)
-   real ( kind = real4 ) :: alb_sfc(40)
-   real ( kind = real4 ) :: alb_unc_sfc(40)
+   real ( kind = real4 ) :: refl_toc(N_CHAN)
+   real ( kind = real4 ) :: alb_sfc(N_CHAN)
+   real ( kind = real4 ) :: alb_unc_sfc(N_CHAN)
    real ( kind = real4 ) :: rad_to_refl_factor
    real(kind=real4)   :: refl_toa = -999.
    

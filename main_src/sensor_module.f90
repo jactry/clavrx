@@ -72,10 +72,14 @@ module SENSOR_MODULE
        , READ_VIIRS_DATA &
        , GET_NUMBER_OF_SCANS_FROM_VIIRS_BRIDGE &
        , READ_VIIRS_INSTR_CONSTANTS
-    use AHI_CLAVRX_BRIDGE 
+   use AHI_CLAVRX_BRIDGE 
+   use VIIRS_NASA_READ_MODULE, only : &
+       READ_VIIRS_NASA_DATE_TIME &
+       , READ_VIIRS_NASA_DATA &
+       , READ_NUMBER_OF_SCANS_VIIRS_NASA
 #endif
 
-   use clavrx_message_module
+   use CLAVRX_MESSAGE_MODULE
 
    implicit none
 
@@ -137,20 +141,21 @@ module SENSOR_MODULE
       !----------------------------------------------
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
 
-         call READ_MODIS_TIME_ATTR(trim(Image%Level1b_Path), trim(Image%Level1b_Name), Image%Start_Year, &
-                            Image%Start_Doy, Image%Start_Time, Image%End_Year, Image%End_Doy, &
-                            Image%End_Time)
+         call READ_MODIS_TIME_ATTR(trim(Image%Level1b_Path), trim(Image%Level1b_Name), &
+                            Image%Start_Year, Image%Start_Doy, Image%Start_Time, &
+                            Image%End_Year, Image%End_Doy, Image%End_Time)
   
       end if
 
       !----------------------------------------------
-      ! for VIIRS take time from file's name
+      ! read VIIRS-NOAA time from GMTCO
       !----------------------------------------------
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
 #ifdef HDF5LIBS
          call READ_VIIRS_DATE_TIME(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
                              Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
-                             End_Time_Tmp,Orbit_Number_Tmp,Orbit_Identifier, End_Year_Tmp , End_Day_Tmp)
+                             End_Time_Tmp,Orbit_Number_Tmp,Orbit_Identifier, &
+                             End_Year_Tmp , End_Day_Tmp)
          Image%Start_Year = Start_Year_Tmp
          Image%End_Year = End_Year_Tmp
          Image%Start_Doy = Start_Day_Tmp
@@ -162,8 +167,29 @@ module SENSOR_MODULE
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
 #endif
-
       end if 
+
+      !----------------------------------------------
+      ! read VIIRS-NASA time from VGEOM
+      !----------------------------------------------
+      if (trim(Sensor%Sensor_Name) == 'VIIRS-NASA') then
+#ifdef HDF5LIBS
+         call READ_VIIRS_NASA_DATE_TIME(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
+                             Start_Year_Tmp,Start_Day_Tmp,Start_Time_Tmp, &
+                             End_Time_Tmp,Orbit_Number_Tmp, End_Year_Tmp , End_Day_Tmp)
+         Image%Start_Year = Start_Year_Tmp
+         Image%End_Year = End_Year_Tmp
+         Image%Start_Doy = Start_Day_Tmp
+         Image%End_Doy = End_Day_Tmp
+
+         Image%Start_Time = Start_Time_Tmp
+         Image%End_Time = End_Time_Tmp
+#else
+         PRINT *, "No HDF5 libraries installed, stopping"
+         stop
+#endif
+      endif
+
       
       !----------------------------------------------
       ! for AHI ???????
@@ -367,7 +393,7 @@ module SENSOR_MODULE
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AHI')
               call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
-         case('VIIRS')
+         case('VIIRS','VIIRS-NASA')
 #ifdef HDF5LIBS 
               call READ_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
 #else
@@ -421,7 +447,7 @@ module SENSOR_MODULE
    !        spatial_resolution:  1, 5
    !
    !   VIIRS
-   !        sensors:  VIIRS, VIIRS-IFF
+   !        sensors:  VIIRS, VIIRS-NASA, VIIRS-IFF
    !        platform:  SNPP
    !        spatial_resolution:  0.75
    !        
@@ -456,7 +482,7 @@ module SENSOR_MODULE
       Ierror = sym%NO
       ifound = sym%NO
       
-      print*,'=============================='
+     
 
       test_loop: do while (ifound == sym%NO)
       
@@ -493,6 +519,19 @@ module SENSOR_MODULE
         Sensor%WMO_Id = 784
         exit test_loop
       endif
+		
+		if (index(Image%Level1b_Name, 'MYDATML') > 0) then
+        Sensor%Sensor_Name = 'MODIS'
+        Sensor%Platform_Name = 'AQUA'
+        Sensor%Spatial_Resolution_Meters = 5000
+        Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
+        Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
+        Sensor%WMO_Id = 784
+		  print*,'mydatml'
+        exit test_loop
+      endif
+		
+		
 
       if (index(Image%Level1b_Name, 'MOD021KM') > 0) then
         Sensor%Sensor_Name = 'MODIS'
@@ -809,6 +848,17 @@ module SENSOR_MODULE
          exit test_loop
       endif
 
+      !---  VIIRS-NASA
+      if (index(Image%Level1b_Name, 'VGEOM') > 0) then
+         Sensor%Sensor_Name = 'VIIRS-NASA'
+         Sensor%Spatial_Resolution_Meters = 750
+         Sensor%Platform_Name = 'SNPP'
+         Sensor%WMO_Id = 224
+         Sensor%Instr_Const_File = 'viirs_npp_instr.dat'
+         Sensor%Algo_Const_File = 'viirs_npp_algo.dat'
+         exit test_loop
+      endif
+
       !--- AQUA IFF
       if (index(Image%Level1b_Name, 'IFFSDR_aqua') > 0) then
          Sensor%Sensor_Name = 'AQUA-IFF'
@@ -1011,7 +1061,7 @@ module SENSOR_MODULE
       ifound = sym%YES   ! force exit need to develop logic for setting Ierror
 
       enddo test_loop
-
+  
       !---------------------------------------------------------------------------------
       ! Set sub-satellite point for geostationary satellites that are Areafiles
       !---------------------------------------------------------------------------------
@@ -1035,16 +1085,19 @@ module SENSOR_MODULE
             Ierror = sym%YES
          endif
       endif
+		
 
       !-- determine modis cloud mask name
       if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
           .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+			
          call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
          if (trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file" .and. &
                   Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
       endif
+		
 
    end subroutine DETECT_SENSOR_FROM_FILE
 
@@ -1215,6 +1268,24 @@ module SENSOR_MODULE
          stop
 #endif
       end if
+
+      if (trim(Sensor%Sensor_Name) == 'VIIRS-NASA') then
+         Image%Number_Of_Elements = 3200
+         Dir_File = trim(Image%Level1b_Path) // trim(Image%Level1b_Name)
+#ifdef HDF5LIBS
+         call READ_NUMBER_OF_SCANS_VIIRS_NASA (trim(Dir_File),Image%Number_Of_Lines,Ierror_Viirs_Nscans)
+
+         ! If error reading, then go to next file
+         if (Ierror_Viirs_Nscans /= 0) then
+            Ierror = sym%YES
+            return      ! skips file
+         endif
+#else
+         print *, "No HDF5 library installed. VIIRS-NASA unable to process. Stopping"
+         stop
+#endif
+
+      endif
       
       !--- if an IFF, call routine to determine dimensions from latitude sds
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
@@ -1299,8 +1370,8 @@ module SENSOR_MODULE
          if (Ierror_Level1b /= 0) return
       end if
 
-      if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or. &
-          trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') then
+      select case (trim(Sensor%Sensor_Name))
+       case('GOES-IL-IMAGER','GOES-MP-IMAGER')
          call READ_GOES(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
@@ -1312,28 +1383,22 @@ module SENSOR_MODULE
             call CALIBRATE_GOES_DARK_COMPOSITE(Two_Byte_Temp,Time_Since_Launch,Ref_Ch1_Dark_Composite)
          end if
 
-      end if
-
-      if (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') then
+       case('GOES-IP-SOUNDER')
          call READ_GOES_SNDR(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
-      end if
 
-      !--------  MSG/SEVIRI
-      if (trim(Sensor%Sensor_Name) == 'SEVIRI') then
+       case('SEVIRI')
+       !--------  MSG/SEVIRI
          call READ_SEVIRI(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      AREAstr)
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Seviri_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
          call CALIBRATE_SEVIRI_DARK_COMPOSITE(Two_Byte_Temp,Ref_Ch1_Dark_Composite)
-      end if
 
-
-      !--- MTSAT
-      if (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER') then
+       case('MTSAT-IMAGER')
          call READ_MTSAT(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
@@ -1341,35 +1406,25 @@ module SENSOR_MODULE
          call READ_DARK_COMPOSITE_COUNTS(Segment_Number,Mtsat_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
          call CALIBRATE_MTSAT_DARK_COMPOSITE(Two_Byte_Temp,Ref_Ch1_Dark_Composite)
-      end if
 
-      !--- FY2
-      if (trim(Sensor%Sensor_Name) == 'FY2-IMAGER') then
+       case('FY2-IMAGER')
          call READ_FY(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      AREAstr,NAVstr)
-      end if
 
-      !--- COMS
-      if (trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
+       case('COMS-IMAGER')
          call READ_COMS(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      AREAstr,NAVstr)
-      end if
 
-      
-      !--- AVHRR
-      if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
-          trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
-          trim(Sensor%Sensor_Name) == 'AVHRR-3') then
+       case('AVHRR-1','AVHRR-2','AVHRR-3')
          call READ_AVHRR_LEVEL1B_DATA(trim(Level1b_Full_Name), &
               AVHRR_KLM_Flag,AVHRR_AAPP_Flag,Therm_Cal_1b,&
               Time_Since_Launch,Nrec_Avhrr_Header,Segment_Number)
-      end if
 
-      if (trim(Sensor%Sensor_Name) == 'VIIRS') then
+       case('VIIRS')
 #ifdef HDF5LIBS
-         call READ_VIIRS_DATA ( Segment_Number , trim(Image%Level1b_Name),Ierror_Level1b)
+         call READ_VIIRS_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
       
          ! If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
@@ -1377,12 +1432,21 @@ module SENSOR_MODULE
          print *, "No HDF5 library installed, stopping"
          stop
 #endif
-      end if
-      
-      if ( trim(sensor%sensor_name ) == 'AHI' ) then
-         call READ_AHI_DATA (Segment_Number ,trim (Image%level1b_name), ierror_level1b )
-      
-      end if
+
+       case('VIIRS-NASA')
+#ifdef HDF5LIBS
+         call READ_VIIRS_NASA_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
+
+         ! If error reading, then go to next file
+         if (Ierror_Level1b /= 0) return
+#else
+         print *, "No HDF5 library installed, stopping"
+         stop
+#endif
+
+       case('AHI')
+         call READ_AHI_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
+      end select
 
       !--- IFF data (all sensors same format)
       if (index(Sensor%Sensor_Name,'IFF') > 0) then

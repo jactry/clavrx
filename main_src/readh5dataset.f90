@@ -1143,7 +1143,6 @@ CONTAINS
        ErrorMessage=" *** Error reading data"
        return
     ENDIF
-print *,'HERE 5',shape(H5dataset)
 
     ALLOCATE(dataset(dims(1),dims(2)),stat=AllocStat)
     IF ( AllocStat.ne.0 ) THEN

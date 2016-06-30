@@ -366,12 +366,8 @@ program COMPILE_ASC_DES_LEVEL2B
    integer :: id_out
    integer :: sds_id
    type(hdf_sds), dimension(:), target, allocatable :: sds_new  
-   
-         type(hdf_sds), pointer                           :: &
-       ps                           ! Pointeur sur la structure du SDS courant 
-      
-      type(hdf_data), pointer                          :: &
-       psd                        ! Pointeur sur les données du SDS courant
+   type(hdf_sds), pointer :: ps                          
+   type(hdf_data), pointer :: psd                        
    
    
    INCLUDE 'version.inc'
@@ -957,7 +953,7 @@ program COMPILE_ASC_DES_LEVEL2B
          stop  
       end if 
       
-      
+       Bad_Pixel_Mask_Input =  cx_get_sds ( file,'bad_pixel_mask')
      
       ps => sds_new(1) ; psd=> ps%data
       Bad_Pixel_Mask_Input =  reshape(psd%i1values,[Num_Elements_Input,Num_Lines_Input])  

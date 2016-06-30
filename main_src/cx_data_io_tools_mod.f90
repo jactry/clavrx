@@ -15,10 +15,45 @@ module cx_data_io_tools_mod
          use cx_hdf_read_mod, only: &
          hdf_data &
          , hdf_att &
-         , hdf_get_file_att
+         , hdf_get_file_att &
+         , hdf_sds &
+         , hdf_get_file_sds
    
    use string_functions
+   
+   use constants
+   
+   
+   interface cx_get_sds
+      module procedure cx_get_sds_2d_i1
+   end interface
+   
+   
 contains
+
+   function cx_get_sds_2d_i1 (file, varname) result(res)
+      character(len=*), intent(in) :: file
+      character(len=*), intent(in) :: varname
+      
+      integer (kind=int1),pointer :: res(:,:)
+      type(hdf_sds), pointer :: ps                          
+      type(hdf_data), pointer :: psd   
+      type(hdf_sds), dimension(:), target, allocatable :: sds
+      
+      
+      allocate(sds(1))
+      
+      if (hdf_get_file_sds(file, nsds, sds, nsdsn = 1, sds_name = varname ) < 0) then
+         print*,'hdf file bad..'
+         stop
+      end if
+      
+      ps => sds(1) ; psd=> ps%data
+      
+      print*,ps % name
+      stop
+   
+   end function cx_get_sds_2d_i1
 
    subroutine copy_global_attributes ( file_in, file_out, exclude_list)
    

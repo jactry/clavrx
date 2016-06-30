@@ -132,8 +132,8 @@ module dncomp_interface_def_mod
       integer :: nr_success_cod
       integer :: nr_success_cps
       
-      contains
-      final :: out_destructor
+    ! contains
+    !  final :: out_destructor
    end type dncomp_out_type 
    
    ! - Enumerated cloud type

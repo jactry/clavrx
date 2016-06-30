@@ -726,19 +726,20 @@
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
-         if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+         if ((trim(Sensor%Sensor_Name) == 'VIIRS' .or. trim(Sensor%Sensor_Name) == 'VIIRS-NASA') &
+             .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
 
            ! - check the angles if this is a good lunar scene
            ! - lun and solar zenith angle
 
-           Lunar_Ref => ch(44)%Ref_Lunar_Toa
+           Lunar_Ref => Ch (44) % Ref_Lunar_Toa
                   
-           call COMPUTE_LUNAR_REFLECTANCE (ch(44)%Rad_Toa &
-                     & , Geo%Solzen, Geo%Lunzen &
-                     & , Image%Start_Year, month,day_of_month,Image%start_time &
-                     & , Geo%moon_phase_angle  &
-                     & , ancil_data_dir &
-                     & , Lunar_placeholder)
+           call COMPUTE_LUNAR_REFLECTANCE (Ch (44) % Rad_Toa &
+                      , Geo % Solzen, Geo%Lunzen &
+                      , Image % Start_Year, Month, Day_Of_Month, Image % Start_Time &
+                      , Geo % Moon_Phase_Angle  &
+                      , Ancil_Data_Dir &
+                      , Lunar_Placeholder)
             
                   Lunar_Ref = Lunar_placeholder   
         
@@ -1133,7 +1134,8 @@
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                
-               if (trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
+               if ((trim(Sensor%Sensor_Name) == 'VIIRS' .or. trim(Sensor%Sensor_Name) == 'VIIRS-NASA') &
+                       .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
                      call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , nlcomp_mode = .true. &
                         , algorithm_started = dncomp_run)

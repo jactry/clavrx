@@ -1485,6 +1485,7 @@ module NB_CLOUD_MASK
    Optimal_Posterior_Prob = Missing_Value_Real4
    First_valid_Classifier_Bounds = 0
    Last_valid_Classifier_Bounds = 0
+   Skip_Sfc_Type_Flag = symbol%NO
 
 
    !Now read in to the 1D variables

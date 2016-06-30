@@ -6,7 +6,6 @@
 ! Authors: Andrew Heidinger, NOAA/NESDIS
 !          Andi Walther, CIMSS
 !          Denis Botambekov, CIMSS
-!          William Straka, CIMSS
 !
 ! DEPENDENCIES: Constants, NETCDF library
 !
@@ -48,7 +47,7 @@ module NETCDF_READ_MODULE
  subroutine read_netcdf_attribute_real (nc_file_id, attribute_id, var_name, attr)
    integer:: nc_file_id
    integer:: attribute_id
-   character(4):: var_name
+   character(len=*):: var_name
    real, intent(out) :: attr
    integer:: status
 
@@ -61,7 +60,7 @@ module NETCDF_READ_MODULE
  
  !, CFAC, COFF, LFAC, LOFF, Sub_point)
  
-   character ( len =*) , intent(in) :: ncdf_file
+   character (len =*) , intent(in) :: ncdf_file
    REAL(KIND(0.0d0)) , INTENT (OUT) :: CFAC
    REAL(KIND(0.0d0)) , INTENT (OUT) :: COFF
    REAL(KIND(0.0d0)) , INTENT (OUT) :: LFAC
@@ -115,7 +114,7 @@ module NETCDF_READ_MODULE
         implicit none
       integer, intent(in) :: nc_file_id
       integer, intent(in) :: var_dim
-      character(30), intent(in) :: var_name
+      character(len=*), intent(in) :: var_name
       real, intent(out), dimension(:) :: var_output
 
       integer :: nc_var_id
@@ -291,7 +290,7 @@ module NETCDF_READ_MODULE
       integer, intent(in) :: start_var(:)
       integer, dimension(:), intent(in) :: var_dim
 
-      character(len=30), intent(in) :: var_name
+      character(len=*), intent(in) :: var_name
       real, intent(out), dimension(:,:,:) :: var_output
 
       integer :: nc_var_id

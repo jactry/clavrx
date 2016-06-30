@@ -51,8 +51,8 @@ module viirs_read_mod
    ! - bowtie gaps values
    integer, parameter :: Ny_Pattern = 48
    integer, parameter :: Nx_Pattern = 3200
-   logical, dimension(:,:), allocatable, public:: Gap_Pixel_Mask_pattern
-   integer(kind=int4), dimension(:,:), allocatable, public:: Gap_Line_Idx_pattern
+   logical, dimension(:,:), allocatable, public:: Gap_Pixel_Mask_Pattern
+   integer(kind=int4), dimension(:,:), allocatable, public:: Gap_Line_Idx_Pattern
     
    type :: syms
       integer::  NO  =  0
@@ -90,7 +90,6 @@ module viirs_read_mod
       real , dimension (:,:) , allocatable :: lat
       real , dimension (:,:) , allocatable :: lon  
       real , dimension (:) , allocatable :: scan_time
-      integer , dimension (:) , allocatable :: ascend
       real :: Moon_Illum_Frac
       real :: Moon_Phase_Angle
    end type  geo_str
@@ -489,10 +488,6 @@ contains
            
             deallocate ( r2d_buffer )
         
-            allocate ( out % geo % lunrelaz ( dim_seg(1) , dim_seg(2) ) )
-            
-            call compute_relative_azimuth_viirs ( out % geo % lunaz , out % geo % sataz, out % geo % lunrelaz ) 
-           
             call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonIllumFraction', out % geo % Moon_Illum_Frac )
             
             call H5ReadDataset( trim(config %dir_1b)//file_gdnbo , 'All_Data/VIIRS-DNB-GEO_All/MoonPhaseAngle', out % geo % Moon_Phase_Angle )
@@ -517,7 +512,7 @@ contains
             if (.not. allocated ( out % dnb_mgrid % ref ) ) allocate ( out % dnb_mgrid %  ref (dim_seg(1), dim_seg(2)) )
          
             !call read_viirs_date_time(file_gdnbo  , doy = day_of_year  )
-            call convert_rad_2_sol_ref_dnb ( out % dnb_mgrid % rad &
+            call CONVERT_RAD_2_SOL_REF_DNB ( out % dnb_mgrid % rad &
                                 , out % geo % solzen &
                                 , day_of_year &
                                 , missing_value_real4 &
@@ -658,63 +653,45 @@ contains
       !end do
      
       if ( .not. gap_pattern_computed  ) then
-         call compute_viirs_bowtie_gap_pattern()
+         call COMPUTE_VIIRS_BOWTIE_GAP_PATTERN()
          gap_pattern_computed = .true.
       end if   
    
-      call fill_viirs_bowtie_gaps  ( ny_start ,  dim_seg(2) , out )
+      call FILL_VIIRS_BOWTIE_GAPS ( ny_start ,  dim_seg(2) , out )
      
-      
-      ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-      !  everything between these xxx have to go to other locations  
-            
-
-      
-      !- ascending  (global varaibel )
-      allocate ( out % geo % ascend ( dim_seg (2) ) ) 
-      out % geo % ascend = 0  
-      do i = 1 , ny_end -ny_start - 1
-         if ( out%geo%lat (dim_seg(1) / 2 , i + 1) <= out%geo%lat(dim_seg(1) / 2 , i ) ) out % geo % ascend  ( i )  = 1
-      end do
-
-      allocate ( out % geo % relaz ( dim_seg(1) , dim_seg(2) ) )
-    
-      ! rel azimuths  - these are all global variables
-      call  compute_relative_azimuth_viirs ( out%geo%solaz , out%geo%sataz , out%geo%relaz)
-     
-   end subroutine read_viirs_level1b
+   end subroutine READ_VIIRS_LEVEL1B 
    
    
-   !-------------------------------------------------------------------------------------
-   ! subroutine to compute the bowtie gap pattern.  
-   ! This pattern repeats every 48 scans 
-   ! all VIIRS files should be integer multiples of this pattern
-   !
-   ! Gap_Pixel_Mask_Pattern = a binary mask that identifies these bowtie gaps
-   ! Gap_Line_Idx = line index for each pixel in pattern including gap pixels
-   !
-   ! A description of the pattern
-   !
-   !--------  line type 3
-   !----      line type 4
-   ! 12 lines without gaps
-   !----      line type 1
-   !--------  line type 2
-   !--------  line type 3
-   !----      line type 4
-   ! 12 lines without gaps
-   !----      line type 1
-   !--------  line type 2
-   !--------  line type 3
-   !----      line type 4
-   ! 12 lines without gaps
-   !----      line type 1
-   !--------  line type 2
-   !
-   !  line types 1 and 4 have 1280 missing pixels
-   !  line types 2 and 3 have 2016 missing pixels
-   ! 
-   !-------------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------------
+! subroutine to compute the bowtie gap pattern.  
+! This pattern repeats every 48 scans 
+! all VIIRS files should be integer multiples of this pattern
+!
+! Gap_Pixel_Mask_Pattern = a binary mask that identifies these bowtie gaps
+! Gap_Line_Idx = line index for each pixel in pattern including gap pixels
+!
+! A description of the pattern
+!
+!--------  line type 3
+!----      line type 4
+! 12 lines without gaps
+!----      line type 1
+!--------  line type 2
+!--------  line type 3
+!----      line type 4
+! 12 lines without gaps
+!----      line type 1
+!--------  line type 2
+!--------  line type 3
+!----      line type 4
+! 12 lines without gaps
+!----      line type 1
+!--------  line type 2
+!
+!  line types 1 and 4 have 1280 missing pixels
+!  line types 2 and 3 have 2016 missing pixels
+! 
+!-------------------------------------------------------------------------------------
    subroutine COMPUTE_VIIRS_BOWTIE_GAP_PATTERN()
     
       integer (kind=int4), dimension(Ny_Pattern):: Line_Type
@@ -722,7 +699,7 @@ contains
       integer (kind=int4), parameter:: Ngap_2 = 1008 !2016
       integer (kind=int4), parameter:: Ngap_3 = 1008 !2016
       integer (kind=int4), parameter:: Ngap_4 = 640  !1280
-      integer (kind=int4):: iline
+      integer (kind=int4):: Iline
       integer (kind=int4):: i1
       integer (kind=int4):: i2
 
@@ -733,88 +710,88 @@ contains
       if (.not. allocated(Gap_Line_Idx_Pattern)) Allocate(Gap_Line_Idx_Pattern(Nx_Pattern,Ny_Pattern))    
       if (.not. allocated(Gap_Pixel_Mask_Pattern)) Allocate(Gap_Pixel_Mask_Pattern(Nx_Pattern,Ny_Pattern))    
 
-      do iline = 1 , Ny_Pattern
+      do Iline = 1 , Ny_Pattern
 
-         Gap_Line_Idx_Pattern( : , iline ) =  -999 
-         Gap_Pixel_Mask_Pattern( : , iline ) = .false.
+         Gap_Line_Idx_Pattern( : , Iline ) =  -999 
+         Gap_Pixel_Mask_Pattern( : , Iline ) = .false.
 
-         if (line_Type(iline) == 1) then
+         if (line_Type(Iline) == 1) then
             
             i1 = 1
             i2 = Ngap_1 
-            Gap_Line_Idx_Pattern( i1 : i2 , iline) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline) = Iline - 1
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline) = .true.
 
             i1 = Nx_Pattern - Ngap_1 + 1
             i2 = Nx_Pattern
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline - 1
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline ) = .true.
          end if
 
-         if (Line_Type(iline) == 2) then 
+         if (Line_Type(Iline) == 2) then 
             i1 = 1
             i2 = Ngap_1
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 2
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline - 2
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline ) = .true.
 
             i1 = Ngap_1 + 1
             i2 = Ngap_2
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline - 1
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline ) = .true.
 
             i1 = Nx_Pattern - Ngap_1 + 1
             i2 = Nx_Pattern
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 2
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline - 2
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline ) = .true.
 
             i1 = Nx_Pattern - Ngap_2 + 1
             i2 = i1  + (Ngap_2 - Ngap_1)
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline - 1
-            Gap_Pixel_Mask_Pattern( i1 : i2 , iline ) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline - 1
+            Gap_Pixel_Mask_Pattern( i1 : i2 , Iline ) = .true.
          end if
 
-         if (Line_Type(iline) == 3) then
+         if (Line_Type(Iline) == 3) then
             i1 = 1
             i2 = Ngap_4
-            Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 2
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern(i1:i2,Iline) = Iline + 2
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
 
             i1 = Ngap_4 + 1
             i2 = Ngap_3
-            Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern(i1:i2,Iline) = Iline + 1
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
 
             i1 = Nx_Pattern - Ngap_4 + 1
             i2 = Nx_Pattern
-            Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 2
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern(i1:i2,Iline) = Iline + 2
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
 
             i1 = Nx_Pattern - Ngap_3 + 1
             i2 = i1 + (Ngap_3 - Ngap_4)
-            Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern(i1:i2,Iline) = Iline + 1
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
          end if
 
-         if (Line_Type(iline) ==  4) then
+         if (Line_Type(Iline) ==  4) then
             i1 = 1
             i2 = Ngap_4
-            Gap_Line_Idx_Pattern(i1:i2,iline) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern(i1:i2,Iline) = Iline + 1
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
 
             i1 = Nx_Pattern - Ngap_4 + 1
             i2 = Nx_Pattern
-            Gap_Line_Idx_Pattern( i1 : i2 , iline ) = iline + 1
-            Gap_Pixel_Mask_Pattern(i1:i2,iline) = .true.
+            Gap_Line_Idx_Pattern( i1 : i2 , Iline ) = Iline + 1
+            Gap_Pixel_Mask_Pattern(i1:i2,Iline) = .true.
          end if
        
       end do    
 
-   end subroutine compute_viirs_bowtie_gap_pattern
+   end subroutine COMPUTE_VIIRS_BOWTIE_GAP_PATTERN
 !------------------------------------------------------------------------------
 ! this routine uses the bowtie gap pattern, applies it to an arbitrary 
 ! segment of data and fills in the observations with the closest valid data
 !------------------------------------------------------------------------------
-    subroutine fill_viirs_bowtie_gaps ( Line_Start, Number_of_Lines  , out )
+    subroutine FILL_VIIRS_BOWTIE_GAPS ( Line_Start, Number_of_Lines  , out )
       integer(kind=int4), intent(in):: Line_Start
       integer(kind=int4), intent(in):: Number_of_Lines
       type (  viirs_data_out ) , intent (inout) :: out
@@ -833,6 +810,7 @@ contains
       integer :: missing_value_int1 = -999
     
       allocate ( gap_pixel_mask (3200, number_of_lines) , gap_line_idx(3200, number_of_lines))
+      gap_line_idx = missing_value_int1
       
       do line_in_segment = 1 ,  number_of_lines
          
@@ -841,7 +819,9 @@ contains
       
          line_offset = line_in_segment - line_in_pattern
         
-         gap_line_idx ( : , line_in_segment ) = Gap_Line_Idx_Pattern(:,Line_in_Pattern) + line_offset
+         if (Gap_Line_Idx_Pattern(1,Line_In_Pattern) /= Missing_Value_Int1) &
+             gap_line_idx ( : , line_in_segment ) = Gap_Line_Idx_Pattern(:,Line_in_Pattern) &
+                                                    + line_offset
          
          where ( gap_line_idx(:,Line_in_Segment) <= 0 )
             Gap_Line_Idx(:,Line_in_Segment) = 1
@@ -893,26 +873,12 @@ contains
       out % gap % mask = gap_pixel_mask
       deallocate (  gap_pixel_mask)
       
-   end subroutine fill_viirs_bowtie_gaps
+   end subroutine FILL_VIIRS_BOWTIE_GAPS
  
- 
-   
-   !  this routine should be at a different place
-   subroutine  compute_relative_azimuth_viirs ( ang1 , ang2, rel_az_out )
-      real , dimension(:,:), intent(in) :: ang1
-      real , dimension(:,:), intent(in) :: ang2
-      real , dimension(:,:)  :: rel_az_out
-    
-    
-      rel_az_out = abs (ang1 - ang2 )
-      where ( rel_az_out > 180 ) rel_az_out = 180.0 - rel_az_out
-     
-   end subroutine compute_relative_azimuth_viirs
-  
- !-----------------------------------------------------------------------------------------
-   !  Extract time information from VIIRS filename - should explore use of header for this
-   !   assumingly called from outside  ...
-   !-----------------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
+!  Extract time information from VIIRS filename - should explore use of header for this
+!   assumingly called from outside  ...
+!-----------------------------------------------------------------------------------------
   
    subroutine READ_VIIRS_DATE_TIME_ATT (Path, Infile, Year , Doy , Start_Time &
                 , End_Time , Orbit , Orbit_Identifier , End_Year, End_Doy )
@@ -1018,7 +984,6 @@ contains
       
    end subroutine READ_VIIRS_DATE_TIME_ATT
 
-
 !---------------------------------------------------------------------------------
 !  subroutine READ_NUMBER_OF_SCANS_FROM_VIIRS ( Infile, Number_Of_Viirs_Lines, Error_Out )
 !  to read number of scans,  called from the bridge
@@ -1040,32 +1005,32 @@ contains
    
    END SUBROUTINE READ_NUMBER_OF_SCANS_FROM_VIIRS
 
-   !====================================================================
-   ! Function Name: CONVERT_VIIRS_RADIANCE
-   !
-   ! Function:
-   !    Convert to units of the VIIRS radiance values from the that used
-   !    in the IDPS level-1b to that expected by CLAVR-x
-   !
-   ! Description: 
-   !   
-   ! Calling Sequence: rad_new = convert_viirs_radiance(rad_old,nu,missing_value)
-   !   
-   !
-   ! Inputs:
-   !   rad_old = radiance in units of W/m^2/micron/str (2d array)
-   !   nu = channels equivalent width in units of cm^-1
-   !   missing_value = value assigned to missing radiance values
-   !
-   ! Outputs: 
-   !   rad_new = radiance in units of mW/m^2/cm^-1/str (2d array)
-   !
-   ! Dependencies:
-   !
-   ! Restrictions:  None
-   !
-   ! Reference: algebraic manipulation of Planck Equation
-   ! ---------------------------------------------------------------------------------------
+!====================================================================
+! Function Name: CONVERT_VIIRS_RADIANCE
+!
+! Function:
+!    Convert to units of the VIIRS radiance values from the that used
+!    in the IDPS level-1b to that expected by CLAVR-x
+!
+! Description: 
+!   
+! Calling Sequence: rad_new = convert_viirs_radiance(rad_old,nu,missing_value)
+!   
+!
+! Inputs:
+!   rad_old = radiance in units of W/m^2/micron/str (2d array)
+!   nu = channels equivalent width in units of cm^-1
+!   missing_value = value assigned to missing radiance values
+!
+! Outputs: 
+!   rad_new = radiance in units of mW/m^2/cm^-1/str (2d array)
+!
+! Dependencies:
+!
+! Restrictions:  None
+!
+! Reference: algebraic manipulation of Planck Equation
+! ---------------------------------------------------------------------------------------
    subroutine CONVERT_VIIRS_RADIANCE(radiance,nu,missing_value)
       real (kind=real4), dimension(:,:), intent(inout):: Radiance
       real (kind=real4), intent(in):: Nu
@@ -1079,9 +1044,9 @@ contains
 
    end subroutine CONVERT_VIIRS_RADIANCE
 
+! ---------------------------------------------------------------------------------------
 
-
-    subroutine convert_rad_2_sol_ref_dnb ( radiance , solzen , day_of_year , missing_value , reflectance )
+    subroutine CONVERT_RAD_2_SOL_REF_DNB ( radiance , solzen , day_of_year , missing_value , reflectance )
    
       real (kind=real4), dimension(:,:), intent(in) :: radiance
       real (kind=real4), dimension(:,:), intent(in) :: solzen
@@ -1102,11 +1067,11 @@ contains
          reflectance = 100*(pi*radiance*sun_earth_distance**2) / (cos(solzen*pi/180.0)*fo)
       end where
 
-   end subroutine convert_rad_2_sol_ref_dnb
+   end subroutine CONVERT_RAD_2_SOL_REF_DNB
 
-  !---------------------------------------------------------------------------------------
-  !    transforms LOGICAL data type to an integer
-  !
+!---------------------------------------------------------------------------------------
+!    transforms LOGICAL data type to an integer
+!
    function log2int (b) result (r)
       logical , dimension(:,:) :: b
       integer , dimension(:,:),allocatable :: r
@@ -1122,7 +1087,7 @@ contains
 
 !---------------------------------------------------------------------------------------
 
-!-------------------------------------------------
+!---------------------------------------------------------------------------------------
 ! subroutine JULIAN(iday,imonth,iyear,jday)
 ! compute julian day
 ! input:
@@ -1131,7 +1096,7 @@ contains
 !         iyear - integer year (2 or four digits)
 !         
 ! output : jday - julian day
-!--------------------------------------------------
+!---------------------------------------------------------------------------------------
  subroutine JULIAN(iday,imonth,iyear,jday)
 
 !-- Computes julian day (1-365/366)
@@ -1152,14 +1117,16 @@ contains
         end do
 
    end subroutine JULIAN
-   !
-   !  public routine to deallocate output structure
-   !  history: 04/30/2013 AW
-   ! 
+
+!---------------------------------------------------------------------------------------
+!
+!  public routine to deallocate output structure
+!  history: 04/30/2013 AW
+! 
+!---------------------------------------------------------------------------------------
    subroutine dealloc_viirs_data_out ( this )
       class ( viirs_data_out) :: this
       integer :: m 
-      
       
       if ( allocated (this%prd%cld_mask) ) deallocate (this%prd%cld_mask )
       if ( allocated (this%prd%cld_phase) ) deallocate (this%prd%cld_phase )
@@ -1178,7 +1145,6 @@ contains
       if (allocated ( this%geo%lon) ) deallocate ( this%geo%lon) 
       
       if (allocated ( this%geo%scan_time) ) deallocate ( this%geo%scan_time) 
-      if (allocated ( this%geo%ascend) ) deallocate ( this%geo%ascend)
       
       if (allocated ( this%dnb%ref_lun)) deallocate ( this%dnb%ref_lun)
       if (allocated ( this%dnb%ref_sol)) deallocate ( this%dnb%ref_sol)
@@ -1207,7 +1173,7 @@ contains
      
    end subroutine dealloc_viirs_data_out
    
-   
+!---------------------------------------------------------------------------------------
    
    subroutine dealloc_mband_str ( this )
       class ( mband_str ) :: this
@@ -1218,5 +1184,7 @@ contains
       print*,'done'
    end subroutine dealloc_mband_str 
 
+!---------------------------------------------------------------------------------------
+   
 end module viirs_read_mod
 

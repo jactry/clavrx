@@ -232,6 +232,12 @@ contains
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
+   !initial set the input structure line/elements 
+   Input%Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
+   Input%Num_Line = Ctxt%SegmentInfo%Current_Row_Size
+   Input%Num_Line_Max = Ctxt%SegmentInfo%Current_Row_Size
+   Input%Num_Segments = Ctxt%SegmentInfo%Segment_total
+   
    !allocate local arrays
       
    allocate(Diag_Pix_Array_1(num_elem,num_line))

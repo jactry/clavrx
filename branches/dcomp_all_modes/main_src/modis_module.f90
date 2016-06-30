@@ -1168,7 +1168,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
       !--- check if attribute's size exceeds expectation, if so warn
       if (count > string_length_assumed) then
-        print *, EXE_PROMPT, MODULE_PROMPT, " Warning: inconsistent attribute length in READ_MODIS_SIZE_ATTR"
+        print *, EXE_PROMPT, MODULE_PROMPT, " Warning: inconsistent attribute length in READ_MODIS_TIME_ATTR"
       endif
       
       !--- read attribute
@@ -1299,11 +1299,9 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       !Test to see if '10*nscans' .eqv. '2*nscans'. This is only true
       ! for 5km MODIS files. This test does NOT key off the file name
       ! just in case the file name is different than 02SSH.
-      
       if (trim(Temp_Char) .EQ. trim(Temp_5km_Char)) THEN
            File_5km_Test = .TRUE. 
       endif
-      
       
       !usage of the I3 and I4 read have to be done due to the restrictions
       ! of the READ function. I3 means to take the first 3 characters, I4 takes
@@ -1355,6 +1353,16 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
       elseif (Num_Char .eq. 5) THEN
         read(Temp_Char, fmt="(I5)") Num_Elements
       endif
+		
+		
+		! exceptiopm atml
+		if ( index(file_name_full, 'MYDATML') > 0 ) then
+			print*,'WARNING: MYDATML file: number of lines and elements hardcoded in modis_module.f90 line 1330 '
+			print*,'WARNING:              This should be read in from file  AW 04/24/2016'
+			Num_elements = 271
+			Num_lines=408
+		
+		end if
 
     end subroutine READ_MODIS_SIZE_ATTR
 !==============================================================================

@@ -106,28 +106,28 @@ module VIIRS_CLAVRX_BRIDGE
       , Bt_Uni_ChI5 
       
 
-   use constants, only: &
-      int4 &
-    , sym &
+   use CONSTANTS, only: &
+      Int4 &
+    , Sym &
     , Missing_Value_Real4
       
-   use clavrx_message_module   
+   use CLAVRX_MESSAGE_MODULE
    
 contains
    
-   subroutine read_viirs_data ( segment_number ,  file_gmtco_base , error_out )
-      use viirs_read_mod , only : &
-          viirs_data_config &
-           , viirs_data_out &
-           , get_viirs_data 
+   subroutine READ_VIIRS_DATA (Segment_Number, File_Gmtco_Base, Error_Out)
+      use VIIRS_READ_MOD , only : &
+           VIIRS_DATA_CONFIG &
+           , VIIRS_DATA_OUT &
+           , GET_VIIRS_DATA 
    
-      use planck
-      use viewing_geometry_module , only: &
-          glint_angle &
-          , scattering_angle  &
-          , relative_azimuth
-
-      use calibration_constants, only: &
+      use PLANCK 
+      use VIEWING_GEOMETRY_MODULE, only: &
+           GLINT_ANGLE &
+           , SCATTERING_ANGLE &
+           , RELATIVE_AZIMUTH
+  
+      use CALIBRATION_CONSTANTS, only: &
             Planck_Nu
       
       
@@ -157,8 +157,8 @@ contains
       !                 M1  M2   M3   M4  M5   M6   M7  M8  M9  M10 M11  M12  M13  M14  M15  M16  
       modis_chn_list = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
       modis_chn_list_iband = [ 39 , 40 , 41 , 42 , 43 ]
-      is_mband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
-      is_iband_on = Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) == sym%YES
+      is_mband_on = Sensor%Chan_On_Flag_Default (modis_chn_list) == sym%YES
+      is_iband_on = Sensor%Chan_On_Flag_Default (modis_chn_list_iband) == sym%YES
       
       y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment + 1
       c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 , Image%Number_Of_Lines )  - y_start  + 1
@@ -194,17 +194,16 @@ contains
       geo % satzen(:,1:c_seg_lines)    = out % geo % satzen
       geo % solaz (:,1:c_seg_lines)    = out % geo % solaz 
       geo % solzen (:,1:c_seg_lines)   = out % geo % solzen 
-      nav % ascend (1:c_seg_lines)     = out % geo % ascend
       
       geo % moon_phase_angle = out % geo % Moon_Phase_Angle
       ! rel azimuths  - these are all global variables
-      call  COMPUTE_RELATIVE_AZIMUTH_VIIRS( geo % solaz , geo % sataz , geo % relaz )
+      geo % relaz = RELATIVE_AZIMUTH ( geo % solaz , geo % sataz )
 
       !--- compute the glint zenith angle
-      geo % glintzen = glint_angle( geo % solzen , geo % satzen , geo % relaz )
+      geo % glintzen = GLINT_ANGLE ( geo % solzen , geo % satzen , geo % relaz )
 
       !--- compute the scattering angle
-      geo % scatangle = scattering_angle( geo % solzen , geo % satzen , geo % relaz )
+      geo % scatangle = SCATTERING_ANGLE ( geo % solzen , geo % satzen , geo % relaz )
 
       ! gap
       gap_pixel_mask( : ,1:c_seg_lines) = 0
@@ -230,7 +229,8 @@ contains
          if ( i_mband >= 12 ) then
             
             ch ( modis_chn)  % Rad_Toa( : ,1:c_seg_lines) =   out % mband (i_mband) % rad
-            call compute_bt_array ( ch(modis_chn)%bt_toa , ch(modis_chn)%rad_toa , modis_chn , missing_value_real4 )
+            call COMPUTE_BT_ARRAY ( ch(modis_chn)%bt_toa , ch(modis_chn)%rad_toa , &
+                                modis_chn , missing_value_real4 )
          end if
          
       end do
@@ -278,14 +278,14 @@ contains
          geo % lunzen( : ,1:c_seg_lines) = out % geo % lunzen
          geo % lunaz( : ,1:c_seg_lines) = out % geo % lunaz
          ch(44)%ref_toa( : ,1:c_seg_lines) = out % dnb_mgrid % ref
-         geo % lunrelaz( : ,1:c_seg_lines) = Relative_Azimuth ( geo % lunaz( : ,1:c_seg_lines) &
+         geo % lunrelaz( : ,1:c_seg_lines) = RELATIVE_AZIMUTH ( geo % lunaz( : ,1:c_seg_lines) &
                                                              , geo % sataz( : ,1:c_seg_lines) )
           
          !--- compute the scattering angle
-         geo % scatangle_lunar( : ,1:c_seg_lines) = scattering_angle(  geo % lunzen( : ,1:c_seg_lines) &
+         geo % scatangle_lunar( : ,1:c_seg_lines) = SCATTERING_ANGLE( geo % lunzen( : ,1:c_seg_lines) &
                                                 , geo % satzen( : ,1:c_seg_lines) &
                                                 , geo % lunrelaz( : ,1:c_seg_lines) )
-         geo % glintzen_lunar( : ,1:c_seg_lines) = glint_angle( geo % lunzen( : ,1:c_seg_lines) &
+         geo % glintzen_lunar( : ,1:c_seg_lines) = GLINT_ANGLE( geo % lunzen( : ,1:c_seg_lines) &
                                              , geo % satzen( : ,1:c_seg_lines) &
                                              , geo % lunrelaz( : ,1:c_seg_lines) )                                       
       end if
@@ -331,22 +331,6 @@ contains
     
    end subroutine READ_VIIRS_DATA
 
-   !----------------------------------------------------------------   
-   !  this routine should be at a different place
-   !----------------------------------------------------------------
-   subroutine  COMPUTE_RELATIVE_AZIMUTH_VIIRS( ang1 , ang2, rel_az_out )
-      real , dimension(:,:), intent(in) :: ang1
-      real , dimension(:,:), intent(in) :: ang2
-      real , dimension(:,:)  :: rel_az_out
-   
-      rel_az_out = abs (ang1 - ang2 )
-      where ( rel_az_out > 180 )
-          rel_az_out = 360.0 - rel_az_out
-      end where
-      rel_az_out = 180.0 - rel_az_out
-     
-   end subroutine COMPUTE_RELATIVE_AZIMUTH_VIIRS
-   
    !----------------------------------------------------------------
    ! - iband has full file dimension of 6400 x1536
    ! - mband 3200 x 768

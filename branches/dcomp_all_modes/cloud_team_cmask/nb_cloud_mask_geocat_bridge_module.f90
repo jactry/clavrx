@@ -28,6 +28,7 @@ module NB_CLOUD_MASK_GEOCAT_BRIDGE_MODULE
    private :: SET_DIAG
    private :: NULL_OUTPUT
    private :: NULL_DIAG
+   private :: WMO_NB_Lut
 
    !--- define these structure as module wide
    type(mask_input), private :: Input   
@@ -121,10 +122,10 @@ contains
 
   ! --   Set LUT file
   Lut_Path = TRIM(Out2(Algo_Idx)%Ancil_Subdir)//"/"
-
+  Bayesian_Cloud_Mask_Name = WMO_NB_Lut(scinfo(sc_ind)%WMO_Sc_Id)
    !---- FIXME - need to figure out how to set bayesian name
    Naive_Bayes_File_Name_Full_Path = trim(Lut_Path)//trim(Bayesian_Cloud_Mask_Name)
-         
+            
    Num_Elem = sat%nx
    Num_Line = sat%ny
    Num_Line_Max = size(sat%lat,2)
@@ -197,10 +198,6 @@ contains
             CYCLE
         ENDIF
        
-
-
-
-       
         !-------------------------------------------------------------------
         ! Do glint mask here
         !-------------------------------------------------------------------
@@ -267,10 +264,7 @@ contains
               Elem_Idx_width, Line_Idx_width, &
                sat%Bad_Pixel_Mask(14,Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         ENDIF
-      
-
-        
-          
+                
       
          ! Set inputs
          
@@ -280,11 +274,11 @@ contains
          call SET_DIAG(Elem_Idx,Line_Idx)
 
          !---call cloud mask routine
-!         call NB_CLOUD_MASK_ALGORITHM( &
-!                      Naive_Bayes_File_Name_Full_Path, &
-!                      Symbol,  &
-!                      Input, &
-!                      Output)
+         call NB_CLOUD_MASK_ALGORITHM( &
+                      Naive_Bayes_File_Name_Full_Path, &
+                      Symbol,  &
+                      Input, &
+                      Output)
 
          !--- nullify pointers within these data structures
          call NULL_OUTPUT()
@@ -306,6 +300,8 @@ contains
    !Deallocate arrays
    deallocate(Solar_Contamination_Mask)
    deallocate(Ems_Ch20_Std_Median_3x3)
+   deallocate(Ems_39_Med_3x3)
+   deallocate(Covar_67_11_5x5)
 
    CALL Destroy_Spatial_Uniformity(Ref_Ch1_Mean_3X3, Ref_Ch1_Max_3x3,  &
                                    Ref_Ch1_Min_3X3, Ref_Ch1_Stddev_3X3)
@@ -324,7 +320,7 @@ contains
    
    !Increment segment number
    Segment_Number_CM = Segment_Number_CM +1
-
+      
    end subroutine NB_CLOUD_MASK_BRIDGE
 
    !====================================================================
@@ -467,6 +463,7 @@ contains
       Input%Chan_On_I5_114um = IBand_Flag(5)
       Input%Chan_On_DNB = DNB_Flag
       Input%Use_Sounder_11um = sym%NO
+
 
       Input%Bt_11um_Sounder = MISSING_VALUE_REAL4
 
@@ -809,6 +806,37 @@ subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax, &
 
 end subroutine COMPUTE_MEDIAN_SEGMENT
 
+ !-----------------------------------------------------------------------------
+ !
+ !-----------------------------------------------------------------------------
+ function WMO_NB_Lut(wmo_id) result (NB_Lut)
+      integer , intent(in) :: wmo_id
+      character (len=120) :: NB_Lut
+
+      select case (WMO_id)
+      case(55)  ! Meteosat-08
+             NB_Lut = "seviri_default_nb_cloud_mask_lut.nc"
+      case(56)  ! Meteosat-09
+             NB_Lut = "seviri_default_nb_cloud_mask_lut.nc"
+      case(57)  ! Meteosat-10
+             NB_Lut ="seviri_default_nb_cloud_mask_lut.nc"
+      case(70)  ! Meteosat-11
+             NB_Lut = "seviri_default_nb_cloud_mask_lut.nc"
+      case(173) ! Himawari-08
+             NB_Lut = "ahi_default_nb_cloud_mask_lut.nc"
+      case(257) ! GOES-13
+             NB_Lut = "goesmp_default_nb_cloud_mask_lut.nc"
+      case(258) ! GOES-14
+             NB_Lut = "goesmp_default_nb_cloud_mask_lut.nc"
+      case(259) ! GOES-15
+             NB_Lut = "goesmp_default_nb_cloud_mask_lut.nc"
+      case default
+             print*,'This sensor is missing a wmo id: ', wmo_id 
+             stop
+      end select
+
+
+ end function WMO_NB_Lut
 
 
 

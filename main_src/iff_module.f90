@@ -52,10 +52,10 @@ module IFF_MODULE
       integer , dimension( 2 ) :: year_int
       integer , dimension( 2 ) :: doy_int
       integer :: n_chan
-      integer , dimension( 37 ) :: chan_list
+      integer , dimension( 39 ) :: chan_list
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count
-      logical , dimension( 37 ) :: chan_on
+      logical , dimension( 39 ) :: chan_on
       logical :: iff_cloud_mask_on
       character ( len = 1020 ) :: iff_file
       character ( len = 1020 ) :: dir_1b
@@ -237,7 +237,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       integer(kind=int2), dimension( : , : ) , allocatable :: i2d_16_buffer
       real(kind=int4), parameter :: fill_value = 65535.
       real(kind=int8), parameter :: sec_per_day = 86400.
-      real(kind=int4), dimension(37) :: nu_list
+      real(kind=int4), dimension(39) :: nu_list
       real(kind=int4), dimension ( : ) , allocatable:: time_msec_day
       real(kind=int8), dimension( : ) , allocatable :: r1d_buffer
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
@@ -280,15 +280,10 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! set nu numbes for radiance conversion
       nu_list = 0
-      if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
-         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(20), Planck_Nu(31), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
-         nu_list(27:36) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(32), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
-                           Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36)]
-      else
-         nu_list(20:25) = [Planck_Nu(20), Planck_Nu(21), Planck_Nu(22), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
-         nu_list(27:37) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
-                           Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36), Planck_Nu(33)]
-      endif
+      nu_list(20:25) = [Planck_Nu(20), Planck_Nu(21), Planck_Nu(22), Planck_Nu(23), Planck_Nu(24), Planck_Nu(25)]
+      nu_list(27:39) = [Planck_Nu(27), Planck_Nu(28), Planck_Nu(29), Planck_Nu(30), Planck_Nu(31), Planck_Nu(32), &
+                        Planck_Nu(33), Planck_Nu(34), Planck_Nu(35), Planck_Nu(36), Planck_Nu(31), Planck_Nu(32), &
+                        Planck_Nu(33)]
 
       ! open file
       Status = OPEN_FILE_HDF_READ ( TRIM( config % iff_file ), Id ) + Status
@@ -469,6 +464,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 28
                      case (130) ! Sounder
                         band_names_int_rad(ii) = 30
+                     ! Attn: Use unused ch. to save CrIS 11um
+                     case (131) ! Sounder
+                        band_names_int_rad(ii) = 37
+                     ! Attn: Use unused ch. to save CrIS 12um
+                     case (132) ! Sounder
+                        band_names_int_rad(ii) = 38
                      case (133) ! Sounder
                         band_names_int_rad(ii) = 33
                      case (134) ! Sounder
@@ -500,12 +501,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 33
                      ! Attn: Use unused ch. to save HIRS 11um
                      case (18) ! HIRS-8 ! same as AVHRR ch4
-                        band_names_int_rad(ii) = 22
+                        band_names_int_rad(ii) = 37
                      case (19) ! HIRS-9
                         band_names_int_rad(ii) = 30
                      ! Attn: Use ch. 29 to save either HIRS 12um or 8.55um
                      case (110) ! HIRS-10  ! same as AVHRR ch5
-                        band_names_int_rad(ii) = 29 ! early 29, latter 32
+                        band_names_int_rad(ii) = 38 ! early 29, latter 32
                      case (111) ! HIRS-11
                         band_names_int_rad(ii) = 28
                      case (112) ! HIRS-12
@@ -560,7 +561,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             enddo
             if (iband_sds < 0) cycle
 
-         elseif ((config % chan_list(i_band) >= 20 .and. config % chan_list(i_band) <= 36 &
+         elseif ((config % chan_list(i_band) >= 20 .and. config % chan_list(i_band) <= 38 &
             .and. config % chan_list(i_band) /= 26) .or. config % chan_list(i_band) == 45) then
             setname_band = 'EmissiveBands'
 

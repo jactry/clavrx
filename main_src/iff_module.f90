@@ -25,8 +25,9 @@
 !--------------------------------------------------------------------------------------
 module IFF_MODULE
 
- use HDF
- use PLANCK
+ use HDF, only:
+ use PLANCK, only: &
+   convert_radiance
  use PIXEL_COMMON, only: &
      sensor &
      , image
@@ -110,7 +111,10 @@ module IFF_MODULE
 !
 subroutine GET_IFF_DIMS (File_Name, Nx, Ny)
 
-   use HDF_READ_MODULE
+   use HDF_READ_MODULE, only: &
+      open_file_hdf_read &
+      , hdf_sds_dimenions_reader &
+      , close_file_hdf_read
 
    implicit none
 
@@ -185,8 +189,16 @@ end subroutine GET_IFF_DATA
 !
 subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
-      use FILE_TOOLS
-      use HDF_READ_MODULE
+      use FILE_TOOLS, only: &
+         file_search
+         
+      use HDF_READ_MODULE, only: &
+         open_file_hdf_read &
+         , close_file_hdf_read &
+         , hdf_sds_dimenions_reader &
+         , hdf_sds_reader &
+         , hdf_sds_attribute_reader
+         
       use NUMERICAL_ROUTINES, only: &
           COUNTSUBSTRING &
           , SPLIT_STRING &
@@ -213,6 +225,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       integer(kind=int4), dimension (10) :: Sds_Dims
       integer(kind=int4), dimension(:), allocatable  :: band_names_int_ref
       integer(kind=int4), dimension(:), allocatable  :: band_names_int_rad
+      integer(kind=int4), dimension (1) :: start_1d, stride_1d, edge_1d
       integer(kind=int4), dimension (2) :: start_2d, stride_2d, edge_2d
       integer(kind=int4), dimension (3) :: start_3d, stride_3d, edge_3d
       integer(kind=int1), dimension( : , : , : ) , allocatable :: i3d_buffer
@@ -283,7 +296,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! --- read geo info
       do i_geo = 1 , 6
-         Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(setname_geo_list(i_geo)),start_2d, &
+         Status = hdf_sds_reader(Id,TRIM(setname_geo_list(i_geo)),start_2d, &
                      stride_2d,edge_2d,r2d_buffer) + Status
 
          select case (i_geo)
@@ -313,19 +326,19 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! and Menzel HIRS cloud heights
       if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
           ! cld temp
-          Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(sndr_cld_temp_strg),start_2d, &
+          Status = hdf_sds_reader(Id,TRIM(sndr_cld_temp_strg),start_2d, &
                       stride_2d,edge_2d,r2d_buffer) + Status
           if (.not. allocated ( out % prd % sndr_cld_temp ) ) allocate &
               ( out % prd % sndr_cld_temp (dim_seg(1), dim_seg(2)) )
           out % prd % sndr_cld_temp = r2d_buffer
           ! cld pressure
-          Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(sndr_cld_pres_strg),start_2d, &
+          Status = hdf_sds_reader(Id,TRIM(sndr_cld_pres_strg),start_2d, &
                       stride_2d,edge_2d,r2d_buffer) + Status
           if (.not. allocated ( out % prd % sndr_cld_pres ) ) allocate &
               ( out % prd % sndr_cld_pres (dim_seg(1), dim_seg(2)) )
           out % prd % sndr_cld_pres = r2d_buffer
           ! cld height
-          Status = READ_HDF_SDS_FLOAT32_2D(Id,TRIM(sndr_cld_height_strg),start_2d, &
+          Status = hdf_sds_reader(Id,TRIM(sndr_cld_height_strg),start_2d, &
                       stride_2d,edge_2d,r2d_buffer) + Status
           if (.not. allocated ( out % prd % sndr_cld_height ) ) allocate &
               ( out % prd % sndr_cld_height (dim_seg(1), dim_seg(2)) )
@@ -337,8 +350,11 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       if (allocated(r2d_buffer)) deallocate ( r2d_buffer )
 
       ! read scan time and convert to milliseconds
-      Status = READ_HDF_SDS_FLOAT64_1D(Id,TRIM(setname_geo_list(7)),start_2d(2), &
-                     stride_2d(2),edge_2d(2),r1d_buffer) + Status
+      start_1d(1) = start_2d(2)
+      stride_1d(1) =stride_2d(2)
+      edge_1d(1) = edge_1d(2)
+      Status = hdf_sds_reader(Id,TRIM(setname_geo_list(7)),start_1d, &
+                     stride_1d,edge_1d,r1d_buffer) + Status
       allocate ( time_msec_day ( size ( r1d_buffer)))                                                                                               
       time_msec_day = ( dmod ( r1d_buffer , sec_per_day ) ) * 1000
       if (.not. allocated ( out % geo % scan_time ) ) allocate ( out % geo % scan_time (dim_seg(2)) )
@@ -358,7 +374,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          endif
 
          ! get band names from the attribute
-         Status = READ_HDF_ATTRIBUTE_CHAR8_SCALAR(Id, TRIM(setname_band), 'band_names', band_names_char) + Status
+         Status = hdf_sds_attribute_reader(Id, TRIM(setname_band), 'band_names', band_names_char) + Status
 
          ! find out how many attributes
          num_char_band_names = COUNTSUBSTRING ( band_names_char, ',' ) + 1
@@ -565,7 +581,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          edge_3d = (/ dim_seg(1), dim_seg(2), 1 /)
          allocate ( r3d_buffer(dim_seg(1), dim_seg(2), 1) )
 
-         Status = READ_HDF_SDS_FLOAT32_3D(Id,TRIM(setname_band),start_3d, &
+         Status = hdf_sds_reader(Id,TRIM(setname_band),start_3d, &
                      stride_3d,edge_3d,r3d_buffer) + Status
 
          ! change fill and unrealistic values to missing
@@ -612,7 +628,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
       allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
 
-      Status = READ_HDF_SDS_INT8_2D(Id,TRIM(setname_band),start_2d, &
+      Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
                   stride_2d,edge_2d,i2d_8_buffer) + Status
       out % geo % sounder_fov = i2d_8_buffer
 
@@ -626,7 +642,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       !------------------------------------------------------------------
       i2d_16_buffer = -1
       setname_band = 'SounderX'
-      Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
+      Status =hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
                   stride_2d,edge_2d,i2d_16_buffer) + Status
       out % geo % sounder_x = i2d_16_buffer
 
@@ -640,7 +656,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       !------------------------------------------------------------------
       i2d_16_buffer = -1
       setname_band = 'SounderY'
-      Status = READ_HDF_SDS_INT16_2D(Id,TRIM(setname_band),start_2d, &
+      Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
                   stride_2d,edge_2d,i2d_16_buffer) + Status
       out % geo % sounder_y = i2d_16_buffer
 
@@ -680,7 +696,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       if ( config %  iff_cloud_mask_on ) then
          if (ny_end == dim_seg(2)) &
 
-          print *, EXE_PROMPT, "Reading in AUX cloud mask"
+          print *, "IFF_MODULE> Reading in AUX cloud mask"
 
           ! ---
           write (year_strg, "(I4)") config % year_int
@@ -717,7 +733,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                             // TRIM( file_arr_dummy(1) ), Id ) + Status
 
             ! read data
-            Status = READ_HDF_SDS_INT8_3d(Id,TRIM(setname_band),start_3d, &
+            Status = hdf_sds_reader(Id,TRIM(setname_band),start_3d, &
                      stride_3d,edge_3d,i3d_buffer) + Status
 
             ! extract cloud mask bits (# 1 & 2 of the first byte)

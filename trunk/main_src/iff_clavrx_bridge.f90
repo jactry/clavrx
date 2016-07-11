@@ -92,20 +92,20 @@ contains
 
       type ( iff_data_config )  :: iff_conf
       type ( iff_data_out )  :: out
-      integer :: num_chan = 37
-      integer , dimension(37) :: modis_chn_list
+      integer :: num_chan = 39
+      integer , dimension(39) :: modis_chn_list
       integer :: i_band
       integer :: y_start , c_seg_lines
       integer :: iline
       integer :: ch_tmp
-      logical, dimension(37) :: is_band_on
+      logical, dimension(39) :: is_band_on
       logical :: sounder_flag
 
       error_out = 0
       ! - modis ch to read
       modis_chn_list = [  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, &
                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, &
-                         29, 30, 31, 32, 33, 34, 35, 36, 45 ]
+                         29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 45 ]
       is_band_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
 
       y_start = ( segment_number - 1 ) * Image%Number_Of_Lines_Per_Segment + 1
@@ -194,15 +194,17 @@ contains
          elseif ((modis_chn_list(i_band) >= 20 .and. modis_chn_list(i_band) < 26) &
             .or. (modis_chn_list(i_band) > 26 .and. modis_chn_list(i_band) <= 45)) then
 
-            !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS (SPECIAL CASE) !!!
+            !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS & CrIS (SPECIAL CASE) !!!
             if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 21) then ! 3.75um 
                call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
                                        20 , missing_value_real4 )
-            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 22) then ! 11.00um 
-               call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (22) % rad , &
+            elseif ((trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .or. trim(Sensor%Sensor_Name) == 'VIIRS-IFF') &
+                   .and. modis_chn_list(i_band) == 37) then ! 11.00um 
+               call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (37) % rad , &
                                        31 , missing_value_real4 )
-            elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 29) then ! 12.00um 
-               call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (29) % rad , &
+            elseif ((trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .or. trim(Sensor%Sensor_Name) == 'VIIRS-IFF') &
+                   .and. modis_chn_list(i_band) == 38) then ! 12.00um 
+               call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (38) % rad , &
                                        32 , missing_value_real4 )
             else ! the rest of channels are normal
                Ch(modis_chn_list(i_band))%Rad_Toa(:,1:c_seg_lines) = out % band (i_band) % rad

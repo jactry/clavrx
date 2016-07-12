@@ -822,8 +822,11 @@ Status_Flag = 0
 
 !---- open file
 Sd_Id = sfstart(trim(Path)//trim(Infile), DFACC_read)
-!--- determine attribute index                                                                                                 
+print *,Sd_Id,'NEED TO DELETE THIS IN THE NEXT IFF_MODULE'
+call system('ls -lh '//trim(Path)//trim(Infile))
+!--- determine attribute index
 Sds_Id = sffattr(Sd_Id, "granule_start_time")
+print *,Sds_Id
 
 !--- read start attribute
 Status_Flag = sfrcatt(Sd_Id, Sds_Id, Metadata_Temp) + Status_Flag

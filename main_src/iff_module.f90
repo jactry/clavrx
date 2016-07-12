@@ -346,8 +346,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! read scan time and convert to milliseconds
       start_1d(1) = start_2d(2)
-      stride_1d(1) =stride_2d(2)
-      edge_1d(1) = edge_1d(2)
+      stride_1d(1) = stride_2d(2)
+      edge_1d(1) = edge_2d(2)
       Status = hdf_sds_reader(Id,TRIM(setname_geo_list(7)),start_1d, &
                      stride_1d,edge_1d,r1d_buffer) + Status
       allocate ( time_msec_day ( size ( r1d_buffer)))                                                                                               

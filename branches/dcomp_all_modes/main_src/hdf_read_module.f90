@@ -42,6 +42,7 @@ MODULE hdf_read_module
   !USE MESSAGE_HANDLER
 
   implicit none
+  private
   
   interface hdf_sds_reader
     module procedure read_hdf_sds_int8_1d, &
@@ -91,6 +92,13 @@ MODULE hdf_read_module
     module procedure unscale_cat_int8_2d, &
                      unscale_cat_int16_2d
   end interface
+  
+  
+  public :: open_file_hdf_read
+  public :: hdf_sds_dimenions_reader
+  public :: close_file_hdf_read
+  public :: hdf_sds_reader
+  public :: hdf_sds_attribute_reader
   
   CONTAINS
 

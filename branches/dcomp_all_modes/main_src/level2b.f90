@@ -1742,6 +1742,8 @@ case("npp")
   WMO_Id = 224
 case("iff_npp")
   WMO_Id = 224
+case("npp-nasa")
+  WMO_Id = 224
 case("goes-08")
   WMO_Id = 252
 case("goes-09")

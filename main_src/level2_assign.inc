@@ -785,4 +785,16 @@ case("albedo_sfc_white_sky_2_20um")
    if (allocated ( ch(7)%sfc_ref_white_sky)) then
       data_dim2_dtype_r4 = ch(7)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("refl_0_95um_nom")
+   if (allocated ( ch(17)%Ref_Toa)) then
+      data_dim2_dtype_r4 = ch(17)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_93um_nom")
+   if (allocated ( ch(18)%Ref_Toa)) then
+      data_dim2_dtype_r4 = ch(18)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_94um_nom")
+   if (allocated ( ch(19)%Ref_Toa)) then
+      data_dim2_dtype_r4 = ch(19)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 end select

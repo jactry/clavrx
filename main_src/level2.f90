@@ -571,7 +571,8 @@ CONTAINS
       
          istatus = 0
             ! ---  re-read in products from csv file
-
+         
+         !!! - all this data are used in level2_assign.inc file
          allocate ( data_dim1_dtype1(sds_edge_2d(2)))
          allocate ( data_dim1_dtype3(sds_edge_2d(2)))
          allocate ( data_dim1_dtype4(sds_edge_2d(2)))

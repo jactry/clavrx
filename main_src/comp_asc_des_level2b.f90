@@ -954,7 +954,7 @@ program COMPILE_ASC_DES_LEVEL2B
       end if 
       
        Bad_Pixel_Mask_Input =  cx_get_sds ( file,'bad_pixel_mask')
-     
+     print*,'hhhh'
       ps => sds_new(1) ; psd=> ps%data
       Bad_Pixel_Mask_Input =  reshape(psd%i1values,[Num_Elements_Input,Num_Lines_Input])  
       

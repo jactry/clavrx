@@ -164,5 +164,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Cld_Phase = 0.0, Max_Cld_Phase = 5.0
  real, parameter, public:: Min_Alt = 0.0, Max_Alt = 100000.0
  real, parameter, public:: Min_Prob = 0.0, Max_Prob = 1.0
+ real, parameter, public:: Min_Inver_Strength = 0.0, Max_Inver_Strength = 20.0
+ real, parameter, public:: Min_Inver_Top = 0.0, Max_Inver_Top = 5000.0
 
 end module SCALING_PARAMETERS

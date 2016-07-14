@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 267
+ integer, parameter, private:: Num_Level2_Sds = 274
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -276,4 +276,11 @@
      Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 1, &
      Sds_Num_Level2_Ch20_Bt_Median = 265, Sds_Num_Level2_Ch20_Bt_Median_Flag = 1, &
      Sds_Num_Level2_Tsfc_Uni_Back = 266,  Sds_Num_Level2_Tsfc_Uni_Back_Flag = 1, &
-     Sds_Num_Level2_Ceps_Aux = 267,       Sds_Num_Level2_Ceps_Aux_Flag = 1
+     Sds_Num_Level2_Ceps_Aux = 267,       Sds_Num_Level2_Ceps_Aux_Flag = 1, &
+     Sds_Num_Level2_Sndr_Fov = 268,       Sds_Num_Level2_Sndr_Fov_Flag = 1, &
+     Sds_Num_Level2_Sndr_X = 269,         Sds_Num_Level2_Sndr_X_Flag = 1, &
+     Sds_Num_Level2_Sndr_Y = 270,         Sds_Num_Level2_Sndr_Y_Flag = 1, &
+     Sds_Num_Level2_Sndr_Mask = 271,      Sds_Num_Level2_Sndr_Mask_Flag = 1, &
+     Sds_Num_Level2_Inver_Strength = 272, Sds_Num_Level2_Inver_Strength_Flag = 1, &
+     Sds_Num_Level2_Inver_Top = 273,      Sds_Num_Level2_Inver_Top_Flag = 1, &
+     Sds_Num_Level2_Inver_Base = 274,     Sds_Num_Level2_Inver_Base_Flag = 1

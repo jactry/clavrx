@@ -519,19 +519,18 @@ module SENSOR_MODULE
         Sensor%WMO_Id = 784
         exit test_loop
       endif
-		
-		if (index(Image%Level1b_Name, 'MYDATML') > 0) then
+
+      if (index(Image%Level1b_Name, 'MYDATML') > 0) then
         Sensor%Sensor_Name = 'MODIS'
         Sensor%Platform_Name = 'AQUA'
         Sensor%Spatial_Resolution_Meters = 5000
         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
         Sensor%WMO_Id = 784
-		  print*,'mydatml'
+        print*,'mydatml'
         exit test_loop
       endif
-		
-		
+
 
       if (index(Image%Level1b_Name, 'MOD021KM') > 0) then
         Sensor%Sensor_Name = 'MODIS'
@@ -1011,7 +1010,7 @@ module SENSOR_MODULE
                Sc_Id_AVHRR = 12
                Sensor%Platform_Name = 'METOP-A'
                Sensor%Sensor_Name = 'AVHRR-IFF'
-               Sensor%WMO_Id = 12
+               Sensor%WMO_Id = 4
                Sensor%Instr_Const_File = "iff_avhrr_2_instr.dat"
                Sensor%Algo_Const_File = "avhrr_2_algo.dat"
                exit test_loop
@@ -1021,7 +1020,7 @@ module SENSOR_MODULE
                Sc_Id_AVHRR = 11
                Sensor%Platform_Name = 'METOP-B'
                Sensor%Sensor_Name = 'AVHRR-IFF'
-               Sensor%WMO_Id = 11
+               Sensor%WMO_Id = 3
                Sensor%Instr_Const_File = "iff_avhrr_1_instr.dat"
                Sensor%Algo_Const_File = "avhrr_1_algo.dat"
                exit test_loop
@@ -1031,7 +1030,7 @@ module SENSOR_MODULE
                Sc_Id_AVHRR = 13 ! Metop-C Sc_Id numbers are not known at this time
                Sensor%Platform_Name = 'METOP-C'
                Sensor%Sensor_Name = 'AVHRR-IFF'
-               Sensor%WMO_Id = 13
+               Sensor%WMO_Id = 5
                Sensor%Instr_Const_File = "iff_avhrr_3_instr.dat"
                Sensor%Algo_Const_File = "avhrr_3_algo.dat"
                exit test_loop
@@ -1085,19 +1084,19 @@ module SENSOR_MODULE
             Ierror = sym%YES
          endif
       endif
-		
+
 
       !-- determine modis cloud mask name
       if ((trim(Sensor%Sensor_Name) == 'MODIS' .or. trim(Sensor%Sensor_Name) == 'MODIS-CSPP') &
           .and. Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
-			
+
          call DETERMINE_MODIS_CLOUD_MASK_FILE(Image%Level1b_Name,Image%Level1b_Path,Image%Auxiliary_Cloud_Mask_File_Name )
          if (trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file" .and. &
                   Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
       endif
-		
+
 
    end subroutine DETECT_SENSOR_FROM_FILE
 

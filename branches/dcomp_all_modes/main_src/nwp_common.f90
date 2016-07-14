@@ -166,7 +166,10 @@ module NWP_COMMON
   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level700_Nwp
   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level500_Nwp
   integer (kind=int1), dimension(:,:), allocatable, public, save :: Sfc_Level_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Strength_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Base_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Top_Nwp
+  integer (kind=int4), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
   integer (kind=int4), dimension(:,:,:), allocatable, public, save :: Inversion_Level_Profile_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Lifting_Condensation_Level_Height_Nwp !km
   real (kind=real4), dimension(:,:), allocatable, public, save :: Convective_Condensation_Level_Height_Nwp !km
@@ -200,6 +203,7 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_1
   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_2
   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d
+  real (kind=real4), dimension(:), allocatable, save, public :: temp1d_Nwp
 
   integer(kind=int4), save, public:: nwp_start_hour
   integer(kind=int4), save, public:: nwp_end_hour
@@ -392,6 +396,9 @@ subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Dir_10m_Nwp,Wnd_Dir_10m_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lifting_Condensation_Level_Height_Nwp,LCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Convective_Condensation_Level_Height_Nwp,CCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Strength_Nwp,Inversion_Strength_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Base_Nwp,Inversion_Base_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Top_Nwp,Inversion_Top_Nwp_Pix,Smooth_Nwp_Opt)
 
 end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
 
@@ -460,7 +467,6 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
   !--- intialize levels to missing
   Sfc_Level_Nwp = Missing_Value_Int1
   Tropo_Level_Nwp = Missing_Value_Int1
-  Inversion_Level_Nwp = Missing_Value_Int1
   Level850_Nwp = Missing_Value_Int1
   Level700_Nwp = Missing_Value_Int1
   Level500_Nwp = Missing_Value_Int1
@@ -832,6 +838,9 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(Sea_Ice_Frac_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Sfc_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tropo_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Inversion_Strength_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Inversion_Top_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Inversion_Base_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Inversion_Level_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Inversion_Level_Profile_Nwp(Nlevels_Nwp,Nlon_Nwp, Nlat_Nwp))
     allocate(Lifting_Condensation_Level_Height_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -854,6 +863,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(Ncld_Layers_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Cld_Type_Nwp(Nlon_Nwp, Nlat_Nwp))
 
+    allocate(temp1d_Nwp(Nlevels_Nwp))
     allocate(temp2d_Nwp_1(Nlon_Nwp, Nlat_Nwp))
     allocate(temp2d_Nwp_2(Nlon_Nwp, Nlat_Nwp))
     allocate(temp3d_Nwp_1(Nlevels_Nwp, Nlon_Nwp, Nlat_Nwp))
@@ -915,6 +925,9 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     Level850_Nwp = 0
     Level700_Nwp = 0
     Level500_Nwp = 0
+    Inversion_Top_Nwp = Missing_Value_Real4
+    Inversion_Base_Nwp = Missing_Value_Real4
+    Inversion_Strength_Nwp = Missing_Value_Real4
     Inversion_Level_Nwp = 0
     Inversion_Level_Profile_Nwp = 0
     Lifting_Condensation_Level_Height_Nwp = 0
@@ -972,6 +985,9 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Level850_Nwp))       deallocate(Level850_Nwp)
     if (allocated(Level700_Nwp))       deallocate(Level700_Nwp)
     if (allocated(Level500_Nwp))       deallocate(Level500_Nwp)
+    if (allocated(Inversion_Strength_Nwp)) deallocate(Inversion_Strength_Nwp)
+    if (allocated(Inversion_Top_Nwp)) deallocate(Inversion_Top_Nwp)
+    if (allocated(Inversion_Base_Nwp)) deallocate(Inversion_Base_Nwp)
     if (allocated(Inversion_Level_Nwp)) deallocate(Inversion_Level_Nwp)
     if (allocated(Inversion_Level_Profile_Nwp)) deallocate(Inversion_Level_Profile_Nwp)
     if (allocated(Lifting_Condensation_Level_Height_Nwp))    deallocate(Lifting_Condensation_Level_Height_Nwp)
@@ -1011,6 +1027,7 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Clwmr_Prof_Nwp))    deallocate(Clwmr_Prof_Nwp)
     if (allocated(U_Wnd_Prof_Nwp))    deallocate(U_Wnd_Prof_Nwp)
     if (allocated(V_Wnd_Prof_Nwp))    deallocate(V_Wnd_Prof_Nwp)
+    if (allocated(temp1d_Nwp))        deallocate(temp1d_Nwp)
     if (allocated(temp2d_Nwp_1))      deallocate(temp2d_Nwp_1)
     if (allocated(temp2d_Nwp_2))      deallocate(temp2d_Nwp_2)
     if (allocated(temp3d_Nwp_1))      deallocate(temp3d_Nwp_1)
@@ -1309,6 +1326,8 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
  real:: T500
  real:: Td850
  real:: Td700
+ integer:: Top_Lev_Idx
+ integer:: Base_Lev_Idx
 
    !--------------------------------------------------------------------
    !--- find surface level (standard closest but less than sfc pressure)
@@ -1371,24 +1390,60 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
    ! Inversion Level Profile
    !---------------------------------------------------------------------
    Inversion_Level_Profile_Nwp(:,Lon_Nwp_Idx,Lat_Nwp_Idx) = sym%NO
-   do k = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-1
-      if (T_Prof_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(k+1,Lon_Nwp_Idx,Lat_Nwp_Idx) > Delta_T_Inversion) then
-        Inversion_Level_Profile_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) = sym%YES
+
+   do k = Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx), Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx), -1
+
+      if (P_Std_Nwp(k) >= P_Inversion_Min) then
+
+         if (T_Prof_Nwp(k-1,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) > Delta_T_Inversion) then
+            Inversion_Level_Profile_Nwp(k-1:k,Lon_Nwp_Idx,Lat_Nwp_Idx) = sym%YES
+         endif
+
       endif
    enddo
 
-   !---------------------------------------------------------------------
-   ! find Inversion level - highest level Inversion below Tropopause
-   !---------------------------------------------------------------------
-   Inversion_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = 0
-   do k = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)-1
-      if ((T_Prof_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) - T_Prof_Nwp(k+1,Lon_Nwp_Idx,Lat_Nwp_Idx) > Delta_T_Inversion) .and. &
-          (P_Std_Nwp(k) >= P_Inversion_Min)) then
-          Inversion_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = k
-          exit 
+   Top_Lev_Idx =  0
+   do k = Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)
+      if (Inversion_Level_Profile_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) == sym%YES .and. Top_Lev_Idx == 0) then
+         Top_Lev_Idx = k
+         Inversion_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Top_Lev_Idx
+         exit
       endif
    enddo
 
+   Base_Lev_Idx = 0
+   do k = Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),-1
+      if (Inversion_Level_Profile_Nwp(k,Lon_Nwp_Idx,Lat_Nwp_Idx) == sym%YES .and. Base_Lev_Idx == 0) then
+         Base_Lev_Idx = k
+         exit
+      endif
+   enddo
+
+   Inversion_Strength_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)  = Missing_Value_Real4
+   Inversion_Base_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Missing_Value_Real4
+   Inversion_Top_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Missing_Value_Real4
+
+   !---- inversion top height (meters)
+   if (Top_Lev_Idx /= 0)  Inversion_Top_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Z_Prof_Nwp(Top_Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx)
+
+   !---- inversion base height (meters)
+   if (Base_Lev_Idx /= 0) Inversion_Base_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Z_Prof_Nwp(Base_Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx)
+   !--- assume inversion streches to surface if lowest level is the surface level
+   if (Base_Lev_Idx == Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) .and. Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Real4) then
+    Inversion_Base_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)
+   endif
+
+   !--- inversion temperature strength
+   if (Base_Lev_Idx /= 0 .and. Top_Lev_Idx /= 0) then 
+     Inversion_Strength_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = T_Prof_Nwp(Top_Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) -  &
+                                                   T_Prof_Nwp(Base_Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx)
+     !--- assume inversion streches to surface if lowest level is the surface level
+     if (Base_Lev_Idx == Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) .and.  Tmpair_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Real4) then
+        Inversion_Strength_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = T_Prof_Nwp(Top_Lev_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) -  &
+                                                          Tmpair_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)
+     endif
+   endif
+  
    !-------------------------------------------------------------------
    ! Find the Height of the Freezing Level in the NWP Profiles
    ! Start at the Tropopause and work down

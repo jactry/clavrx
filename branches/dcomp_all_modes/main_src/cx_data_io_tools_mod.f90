@@ -51,7 +51,7 @@ contains
       ps => sds(1) ; psd=> ps%data
       
       print*,ps % name
-      stop
+      
    
    end function cx_get_sds_2d_i1
 

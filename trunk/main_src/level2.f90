@@ -1678,8 +1678,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- sounder cloud height
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Sndr_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cth_Sndr),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                               "cld_height_sndr", &
-                               "height_at_cloud_top_sndr", &
+                               "cld_height_sounder", &
+                               "height_at_cloud_top_sounder", &
                                "cloud height from the sounder data source", &
                                DFNT_INT16, sym%LINEAR_SCALING, Min_Zc, Max_Zc, &
                                "m", Missing_Value_Real4, Istatus)
@@ -3444,6 +3444,41 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Inversion Strength
+     if (Sds_Num_Level2_Inver_Strength_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Inver_Strength),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "inversion_strength_nwp", &
+                              "inversion_strength_nwp", &
+                              "strength of atmospheric inversion (if present) in K from NWP", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Inver_Strength, Max_Inver_Strength, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Inversion Base
+     if (Sds_Num_Level2_Inver_Base_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Inver_Base),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "inversion_base_height_nwp", &
+                              "inversion_base_height_nwp", &
+                              "height of base of atmospheric inversion (if present) in meters from NWP", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Inver_Top, Max_Inver_Top, "meters", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Inversion Top
+     if (Sds_Num_Level2_Inver_Top_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Inver_Top),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "inversion_top_height_nwp", &
+                              "inversion_top_height_nwp", &
+                              "height of top of atmospheric inversion (if present) in meters from NWP", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Inver_Top, Max_Inver_Top, "meters", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Max of ChI1 at the M-band resolution
+
      !--- Max of ChI1 at the M-band resolution
      if (Sds_Num_Level2_Ref_Max_ChI1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ref_Max_ChI1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -3696,6 +3731,51 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               Min_Bt32, Max_Bt32, "K", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
+
+     !--- Sounder Fov
+     if (Sds_Num_Level2_Sndr_Fov_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Sndr_Fov),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "sounder_fov_index", &
+                              "sounder_fov_index", &
+                              "sounder field of view index.  Will be 0 or 1 for HIRS and 1-9 for CrIS", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0.0, 1.0, "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Sounder X
+     if (Sds_Num_Level2_Sndr_X_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Sndr_X),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "sounder_x_index", &
+                              "sounder_x_index", &
+                              "across track index of sounder fov grouping referenced to sounder level-1b", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0.0, 1.0, "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Sounder Y
+     if (Sds_Num_Level2_Sndr_Y_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Sndr_Y),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "sounder_y_index", &
+                              "sounder_y_index", &
+                              "along track index of sounder fov grouping referenced to sounder level-1b", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0.0, 1.0, "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Sounder Mask
+     if (Sds_Num_Level2_Sndr_Mask_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Sndr_Mask),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "sounder_mask", &
+                              "sounder_mask", &
+                              "binary mask that identifies imager pixels within a sounder fov", &
+                              DFNT_INT8, sym%NO_SCALING, &
+                              0.0, 1.0, "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
 
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
@@ -5812,6 +5892,30 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
+    !--- Inversion Strength
+    if (Sds_Num_Level2_Inver_Strength_Flag == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Inversion_Strength_Nwp_Pix,sym%LINEAR_SCALING,Min_Inver_Strength, &
+                                   Max_Inver_Strength,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Inver_Strength), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Inversion Base
+    if (Sds_Num_Level2_Inver_Base_Flag == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Inversion_Base_Nwp_Pix,sym%LINEAR_SCALING,Min_Inver_Top, &
+                                   Max_Inver_Top,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Inver_Base), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Inversion Top
+    if (Sds_Num_Level2_Inver_Top_Flag == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Inversion_Top_Nwp_Pix,sym%LINEAR_SCALING,Min_Inver_Top, &
+                                   Max_Inver_Top,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Inver_Top), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
     !--- 3.75 micron BT for Sounder
     if (Sds_Num_Level2_Bt375_Snd_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
         call SCALE_VECTOR_I2_RANK2(Bt_375um_Sounder,sym%LINEAR_SCALING,Min_Bt20, &
@@ -5834,6 +5938,35 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bt12_Snd), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
+
+    !--- Sounder Fov Index
+    if (Sds_Num_Level2_Sndr_Fov_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+       One_Byte_Temp = Nav%Sounder_Fov
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sndr_Fov), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Sounder X Index
+    if (Sds_Num_Level2_Sndr_X_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+       One_Byte_Temp = Nav%Sounder_X
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sndr_x), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Sounder Y Index
+    if (Sds_Num_Level2_Sndr_Y_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+       One_Byte_Temp = Nav%Sounder_Y
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sndr_Y), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Sounder Mask
+    if (Sds_Num_Level2_Sndr_Mask_Flag == sym%YES .and. index(Sensor%Sensor_Name,'IFF') > 0) then
+       One_Byte_Temp = Nav%Sounder_Fov_Mask
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sndr_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
 
     !--- check for and report errors
     if (Istatus /= 0) then

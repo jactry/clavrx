@@ -795,6 +795,9 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Wnd_Dir_10m_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Wnd_Spd_Cld_Top_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Wnd_Dir_Cld_Top_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Base_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Top_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Strength_Nwp_Pix
 
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Total_Rtm
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Rtm
@@ -1425,6 +1428,9 @@ subroutine CREATE_NWP_PIX_ARRAYS(dim1,dim2)
    allocate(Wnd_Dir_10m_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Spd_Cld_Top_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Dir_Cld_Top_Nwp_Pix(dim1,dim2))
+   allocate(Inversion_Base_Nwp_Pix(dim1,dim2))
+   allocate(Inversion_Top_Nwp_Pix(dim1,dim2))
+   allocate(Inversion_Strength_Nwp_Pix(dim1,dim2))
    allocate(I_Nwp(dim1,dim2))
    allocate(J_Nwp(dim1,dim2))
    allocate(I_Nwp_x(dim1,dim2))
@@ -1458,6 +1464,9 @@ subroutine RESET_NWP_PIX_ARRAYS()
    Wnd_Dir_10m_Nwp_Pix = Missing_Value_Real4
    Wnd_Spd_Cld_Top_Nwp_Pix = Missing_Value_Real4
    Wnd_Dir_Cld_Top_Nwp_Pix = Missing_Value_Real4
+   Inversion_Base_Nwp_Pix = Missing_Value_Real4
+   Inversion_Top_Nwp_Pix = Missing_Value_Real4
+   Inversion_Strength_Nwp_Pix = Missing_Value_Real4
    I_Nwp = Missing_Value_Int4
    J_Nwp = Missing_Value_Int4
    I_Nwp_x = Missing_Value_Int4
@@ -1491,6 +1500,9 @@ subroutine DESTROY_NWP_PIX_ARRAYS()
    deallocate(Wnd_Dir_10m_Nwp_Pix)
    deallocate(Wnd_Spd_Cld_Top_Nwp_Pix)
    deallocate(Wnd_Dir_Cld_Top_Nwp_Pix)
+   deallocate(Inversion_Base_Nwp_Pix)
+   deallocate(Inversion_Top_Nwp_Pix)
+   deallocate(Inversion_Strength_Nwp_Pix)
    deallocate(I_Nwp)
    deallocate(J_Nwp)
    deallocate(I_Nwp_x)

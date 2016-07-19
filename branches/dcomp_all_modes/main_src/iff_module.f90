@@ -76,6 +76,8 @@ module IFF_MODULE
       integer(kind=int2) , dimension (:,:) , allocatable :: sounder_x
       integer(kind=int2) , dimension (:,:) , allocatable :: sounder_y
       integer(kind=int1) , dimension (:,:) , allocatable :: sounder_mask
+      integer(kind=int2) , dimension (:, :,:) , allocatable :: nearest_sounder_x
+      integer(kind=int2) , dimension (:, :,:) , allocatable :: nearest_sounder_y
    end type  geo_str
 
    type :: band_str
@@ -221,6 +223,11 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       integer(kind=int4) :: n_files
       integer(kind=int4) :: ii
       integer(kind=int4) :: num_char_band_names
+      integer(kind=int4) :: empty_i
+      integer(kind=int4) :: empty_j
+      integer(kind=int4) :: interp_i
+      integer(kind=int4) :: interp_j
+      integer(kind=int4) :: nearest_i
       integer(kind=int4) :: nx_start , nx_end , ny_start , ny_end
       integer(kind=int4), dimension (10) :: Sds_Dims
       integer(kind=int4), dimension(:), allocatable  :: band_names_int_ref
@@ -242,6 +249,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       real(kind=int8), dimension( : ) , allocatable :: r1d_buffer
       real(kind=int4), dimension( : , : ) , allocatable :: r2d_buffer
       real(kind=int4), dimension( : , : , : ) , allocatable :: r3d_buffer
+      real(kind=int4) :: this_imgr_11um
+      real(kind=int4) :: diff_11um
+      real(kind=int4) :: best_diff_11um
       character (len=100), dimension ( 7 ) :: setname_geo_list = (/ character(len=40) :: &
                            'Latitude'            & ! 1
                          , 'Longitude'           & ! 2
@@ -261,10 +271,12 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       character (len = 100), dimension(:), allocatable :: band_names_char_arr
       character (len = 4) :: year_strg
       character (len = 3) :: doy_strg
- 
+      logical, dimension(39) :: sounder_ch 
+
       error_out = 0
       iend = 0
       Status = 0
+      sounder_ch = .false.
 
       error_check: do while (Status == 0 .and. iend == 0)
 
@@ -346,7 +358,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       ! read scan time and convert to milliseconds
       start_1d(1) = start_2d(2)
-      stride_1d(1) = stride_2d(2)
+      stride_1d(1) =stride_2d(2)
       edge_1d(1) = edge_2d(2)
       Status = hdf_sds_reader(Id,TRIM(setname_geo_list(7)),start_1d, &
                      stride_1d,edge_1d,r1d_buffer) + Status
@@ -354,8 +366,8 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       time_msec_day = ( dmod ( r1d_buffer , sec_per_day ) ) * 1000
       if (.not. allocated ( out % geo % scan_time ) ) allocate ( out % geo % scan_time (dim_seg(2)) )
       out % geo % scan_time = time_msec_day
-      deallocate ( time_msec_day )
-      deallocate ( r1d_buffer )
+      if (allocated(time_msec_day)) deallocate ( time_msec_day )
+      if (allocated(r1d_buffer)) deallocate ( r1d_buffer )
 
       ! --- Read reflectence band centers to find position in the array
 
@@ -460,24 +472,33 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 32
                      case (127) ! Sounder
                         band_names_int_rad(ii) = 27
+                        sounder_ch(27) = .true.
                      case (128) ! Sounder
                         band_names_int_rad(ii) = 28
+                        sounder_ch(28) = .true.
                      case (130) ! Sounder
                         band_names_int_rad(ii) = 30
+                        sounder_ch(30) = .true.
                      ! Attn: Use unused ch. to save CrIS 11um
                      case (131) ! Sounder
                         band_names_int_rad(ii) = 37
+                        sounder_ch(37) = .true.
                      ! Attn: Use unused ch. to save CrIS 12um
                      case (132) ! Sounder
                         band_names_int_rad(ii) = 38
+                        sounder_ch(38) = .true.
                      case (133) ! Sounder
                         band_names_int_rad(ii) = 33
+                        sounder_ch(33) = .true.
                      case (134) ! Sounder
                         band_names_int_rad(ii) = 34
+                        sounder_ch(34) = .true.
                      case (135) ! Sounder
                         band_names_int_rad(ii) = 35
+                        sounder_ch(35) = .true.
                      case (136) ! Sounder
                         band_names_int_rad(ii) = 36
+                        sounder_ch(36) = .true.
                      case (933) ! Pseudo
                         band_names_int_rad(ii) = 45
                   end select
@@ -493,33 +514,46 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                         band_names_int_rad(ii) = 32
                      case (14) ! HIRS-4
                         band_names_int_rad(ii) = 36
+                        sounder_ch(36) = .true.
                      case (15) ! HIRS-5
                         band_names_int_rad(ii) = 35
+                        sounder_ch(35) = .true.
                      case (16) ! HIRS-6
                         band_names_int_rad(ii) = 34
+                        sounder_ch(34) = .true.
                      case (17) ! HIRS-7
                         band_names_int_rad(ii) = 33
+                        sounder_ch(33) = .true.
                      ! Attn: Use unused ch. to save HIRS 11um
                      case (18) ! HIRS-8 ! same as AVHRR ch4
                         band_names_int_rad(ii) = 37
+                        sounder_ch(37) = .true.
                      case (19) ! HIRS-9
                         band_names_int_rad(ii) = 30
+                        sounder_ch(30) = .true.
                      ! Attn: Use ch. 29 to save either HIRS 12um or 8.55um
                      case (110) ! HIRS-10  ! same as AVHRR ch5
                         band_names_int_rad(ii) = 38 ! early 29, latter 32
+                        sounder_ch(38) = .true.
                      case (111) ! HIRS-11
                         band_names_int_rad(ii) = 28
+                        sounder_ch(28) = .true.
                      case (112) ! HIRS-12
                         band_names_int_rad(ii) = 27
+                        sounder_ch(27) = .true.
                      case (114) ! HIRS-14
                         band_names_int_rad(ii) = 25
+                        sounder_ch(25) = .true.
                      case (116) ! HIRS-16
                         band_names_int_rad(ii) = 24
+                        sounder_ch(24) = .true.
                      case (118) ! HIRS-18
                         band_names_int_rad(ii) = 23
+                        sounder_ch(23) = .true.
                      ! Attn: Use unused ch. to save HIRS 3.75um
                      case (119) ! HIRS-19 ! same as AVHRR ch3
                         band_names_int_rad(ii) = 21
+                        sounder_ch(21) = .true.
                      case (933) ! Pseudo
                         band_names_int_rad(ii) = 45
                   end select
@@ -616,7 +650,51 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
       deallocate ( band_names_int_ref )                                                                                        
       deallocate ( band_names_int_rad )
+ 
+      allocate ( out % geo % nearest_sounder_x(dim_seg(1), dim_seg(2), 4) )
+      allocate ( out % geo % nearest_sounder_y(dim_seg(1), dim_seg(2), 4) )
 
+      ! --- read nearest sounder indexes
+      stride_3d = (/ 1, 1, 1 /)
+      start_3d = (/ 0, ny_start, 0 /)
+      edge_3d = (/ dim_seg(1), dim_seg(2), 4 /)
+      setname_band = 'NearestSounderX'
+      Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
+                  stride_3d,edge_3d,out % geo % nearest_sounder_x) + Status
+      setname_band = 'NearestSounderY'
+      Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
+                  stride_3d,edge_3d,out % geo % nearest_sounder_y) + Status
+
+      ! --- loop over all pixels and interpolate all channels based on 11um
+      ! SOUNDER 11um = ch 37, imager 11um = ch 31
+      ! i is ele index, j is line index
+      do empty_i = 1, size(out % band (37) % rad, 1)
+          do empty_j = 1, size(out % band (37) % rad, 2)
+              ! ! --- nearest neighbor:
+              ! --- 11um comparison scheme
+              this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
+              best_diff_11um = 1.e30
+              do nearest_i = 1, 4
+                  ! subtract ny_start to get indices into this *segment*!
+                  ! also careful 1-based indexing!!!
+                  interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
+                  interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
+                  if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
+                      diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
+                      if (diff_11um < best_diff_11um) then
+                         ! assign sounder bands w/this index
+                         do i_band = 21, config % n_chan 
+                            if ( sounder_ch (i_band) ) then
+                               out % band (i_band) % rad(empty_i, empty_j) = &
+                                   out % band (i_band) % rad(interp_i, interp_j)
+                            endif
+                         enddo
+                         best_diff_11um = diff_11um
+                      endif
+                  endif
+              enddo
+          enddo
+      enddo
 
       ! --- Read indices from sounder
       setname_band = 'SounderFOV'

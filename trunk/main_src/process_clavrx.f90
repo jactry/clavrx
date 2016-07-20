@@ -620,6 +620,12 @@
       if (Sensor%WMO_Id /= Sensor%WMO_Id_Previous) then
 
          call POPULATE_PLANCK_TABLES()
+
+         !--- planck for 11 and 12um sounder ch
+         if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .or. &
+             trim(Sensor%Sensor_Name) == 'VIIRS-IFF') then
+            call POPULATE_PLANCK_TABLES_SOUNDER()
+         endif
  
          if (Aer_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
             call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sensor%WMO_Id)

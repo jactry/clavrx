@@ -43,9 +43,18 @@ module CALIBRATION_CONSTANTS
   real (kind=real4), parameter, public:: c1 = 1.191062e-5, &
                                          c2 = 1.4387863
 
-  real (kind=real4), dimension(20:Nchan_Clavrx), public,save:: Planck_A1 = 0.0
-  real (kind=real4), dimension(20:Nchan_Clavrx), public,save:: Planck_A2 = 1.0
-  real (kind=real4), dimension(20:Nchan_Clavrx), public,save:: Planck_Nu = 0.0
+  real (kind=real4), dimension(20:Nchan_Clavrx), public, save:: Planck_A1 = 0.0
+  real (kind=real4), dimension(20:Nchan_Clavrx), public, save:: Planck_A2 = 1.0
+  real (kind=real4), dimension(20:Nchan_Clavrx), public, save:: Planck_Nu = 0.0
+  real (kind=real4), public, save :: Planck_A1_375um_Sndr = 0.0
+  real (kind=real4), public, save :: Planck_A2_375um_Sndr = 1.0
+  real (kind=real4), public, save :: Planck_Nu_375um_Sndr = 0.0
+  real (kind=real4), public, save :: Planck_A1_11um_Sndr = 0.0
+  real (kind=real4), public, save :: Planck_A2_11um_Sndr = 1.0
+  real (kind=real4), public, save :: Planck_Nu_11um_Sndr = 0.0
+  real (kind=real4), public, save :: Planck_A1_12um_Sndr = 0.0
+  real (kind=real4), public, save :: Planck_A2_12um_Sndr = 1.0
+  real (kind=real4), public, save :: Planck_Nu_12um_Sndr = 0.0
 
 !----- variables read in from instrument constant files (planck stored in constants module)
  real (kind=real4), save, public:: B0_3b = 0.0

@@ -70,18 +70,24 @@
   implicit none
   private
   public:: POPULATE_PLANCK_TABLES
+  public:: POPULATE_PLANCK_TABLES_SOUNDER
   public:: PLANCK_RAD_FAST
   public:: PLANCK_TEMP_FAST
   public:: PLANCK_RAD
   public:: PLANCK_TEMP
   public:: COMPUTE_BT_ARRAY
+  public:: COMPUTE_BT_ARRAY_SOUNDER
   public:: CONVERT_RADIANCE
+  private:: PLANCK_TEMP_FAST_SOUNDER
 
 !-- planck tables arrays
   integer, parameter, private:: Nplanck = 161
   real (kind=int4), parameter, private:: T_Planck_min = 180.0,  &
                                          delta_T_Planck = 1.0
   real(kind=int4), dimension(20:Nchan_Clavrx,Nplanck), save, private:: BB_Rad = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: BB_Rad_375um_Sndr = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: BB_Rad_11um_Sndr = Missing_Value_Real4
+  real(kind=int4), dimension(Nplanck), save, private:: BB_Rad_12um_Sndr = Missing_Value_Real4
   real(kind=int4), dimension(Nplanck), save, private:: T_Planck = Missing_Value_Real4
 
   contains
@@ -109,7 +115,33 @@
     enddo
   enddo
 
- end subroutine
+ end subroutine COMPUTE_BT_ARRAY
+
+!-------------------------------------------------------------------------
+ subroutine COMPUTE_BT_ARRAY_SOUNDER(bt,rad,ichan,missing)
+
+ real(kind=real4), dimension(:,:), intent(in):: Rad
+ integer(kind=int4):: ichan
+ real(kind=real4):: missing
+ real(kind=real4), dimension(:,:), intent(out):: Bt
+ integer:: i, j
+ integer:: nx, ny
+
+  nx = size(Rad,1)
+  ny = size(Rad,2)
+
+  Bt = missing
+
+  do i = 1, nx
+    do j = 1, ny
+       if (Rad(i,j) /= missing) then
+          Bt(i,j) = PLANCK_TEMP_FAST_SOUNDER(ichan,Rad(i,j))
+       endif
+    enddo
+  enddo
+
+ end subroutine COMPUTE_BT_ARRAY_SOUNDER
+
 !-------------------------------------------------------------------------
 ! subroutine POPULATE_PLANCK_TABLES()
 !
@@ -134,6 +166,32 @@
   enddo
 
   end subroutine POPULATE_PLANCK_TABLES
+
+!-------------------------------------------------------------------------
+! subroutine POPULATE_PLANCK_TABLES_SOUNDER()
+!
+! compute planck function tables for IFF HIRS and CrIS ch
+!
+!-------------------------------------------------------------------------
+ subroutine POPULATE_PLANCK_TABLES_SOUNDER()
+
+     !--- 3.75um only in HIRS, CrIS doesn't have it
+     if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
+        BB_Rad_375um_Sndr = c1*(Planck_Nu_375um_Sndr**3)/ &
+              (exp((c2*Planck_Nu_375um_Sndr)/ &
+              ((T_Planck-Planck_A1_375um_Sndr)/Planck_A2_375um_Sndr))-1.0)
+     endif
+
+     BB_Rad_11um_Sndr = c1*(Planck_Nu_11um_Sndr**3)/ &
+            (exp((c2*Planck_Nu_11um_Sndr)/ &
+            ((T_Planck-Planck_A1_11um_Sndr)/Planck_A2_11um_Sndr))-1.0)
+
+     BB_Rad_12um_Sndr = c1*(Planck_Nu_12um_Sndr**3)/ &
+            (exp((c2*Planck_Nu_12um_Sndr)/ &
+            ((T_Planck-Planck_A1_12um_Sndr)/Planck_A2_12um_Sndr))-1.0)
+
+
+  end subroutine POPULATE_PLANCK_TABLES_SOUNDER
 
 !------------------------------------------------------------------
 ! function PLANCK_RAD_FAST(ichan, T, dB_dT) result(B)
@@ -206,6 +264,46 @@
     return
 
   end function PLANCK_TEMP_FAST
+
+!------------------------------------------------------------------------
+! function PLANCK_TEMP_FAST_SOUNDER(ichan, B, dB_dT) result(T)
+!
+! Note: This function only for IFF HIRS and CrIS 11 and 12um ch.
+! Subroutine to convert radiance (B) to brightness temperature(T) using a
+! look-up table *Function that returns a scalar*.
+!------------------------------------------------------------------
+  function PLANCK_TEMP_FAST_SOUNDER(ichan, B) result(T)
+    integer (kind=int4), intent(in) :: ichan
+    real (kind=real4), intent(in) :: B
+    real(kind=int4), dimension(Nplanck) :: BB_Rad_Tmp
+    real (kind=real4) :: T
+    real (kind=real4) :: dB_dT_Tmp
+    integer:: l
+
+    T = Missing_Value_Real4
+    dB_dT_Tmp = Missing_Value_Real4
+
+    !---- depending on ch # make temporate BB_Rad
+    if (ichan == 20) then
+       BB_Rad_Tmp = BB_Rad_375um_Sndr
+    elseif (ichan == 31) then
+       BB_Rad_Tmp = BB_Rad_11um_Sndr
+    elseif (ichan == 32) then
+       BB_Rad_Tmp = BB_Rad_12um_Sndr
+    else
+       print *, "Unsupported channel number ",ichan," in Fast Planck Temp Sounder Computation"
+       stop
+    endif
+
+    !---- compute brightness temperature
+    call LOCATE(BB_Rad_Tmp,Nplanck,B,l)
+    l = max(1,min(Nplanck-1,l))
+    dB_dT_tmp = (BB_Rad_Tmp(l+1)-BB_Rad_Tmp(l))/(T_Planck(l+1)-T_Planck(l))
+    T = T_Planck(l) + (B - BB_Rad_Tmp(l)) / (dB_dT_tmp)
+
+    return
+
+  end function PLANCK_TEMP_FAST_SOUNDER
 
 !----------------------------------------------------------------------
 ! function PLANCK_RAD(ichan, T) result(B)

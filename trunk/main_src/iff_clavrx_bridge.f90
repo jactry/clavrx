@@ -78,7 +78,8 @@ contains
 !
    subroutine READ_IFF_DATA (segment_number, iff_file, error_out)
       use PLANCK , only : &
-          COMPUTE_BT_ARRAY
+          COMPUTE_BT_ARRAY &
+          , COMPUTE_BT_ARRAY_SOUNDER
       use viewing_geometry_module , only: &
           RELATIVE_AZIMUTH &
           , GLINT_ANGLE &
@@ -196,15 +197,15 @@ contains
 
             !!! - ATTN: USED UNASSIGNED CHANELS FOR HIRS & CrIS (SPECIAL CASE) !!!
             if (trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .and. modis_chn_list(i_band) == 21) then ! 3.75um 
-               call COMPUTE_BT_ARRAY ( Bt_375um_Sounder , out % band (21) % rad , &
+               call COMPUTE_BT_ARRAY_SOUNDER ( Bt_375um_Sounder , out % band (21) % rad , &
                                        20 , missing_value_real4 )
             elseif ((trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .or. trim(Sensor%Sensor_Name) == 'VIIRS-IFF') &
                    .and. modis_chn_list(i_band) == 37) then ! 11.00um 
-               call COMPUTE_BT_ARRAY ( Bt_11um_Sounder , out % band (37) % rad , &
+               call COMPUTE_BT_ARRAY_SOUNDER ( Bt_11um_Sounder , out % band (37) % rad , &
                                        31 , missing_value_real4 )
             elseif ((trim(Sensor%Sensor_Name) == 'AVHRR-IFF' .or. trim(Sensor%Sensor_Name) == 'VIIRS-IFF') &
                    .and. modis_chn_list(i_band) == 38) then ! 12.00um 
-               call COMPUTE_BT_ARRAY ( Bt_12um_Sounder , out % band (38) % rad , &
+               call COMPUTE_BT_ARRAY_SOUNDER ( Bt_12um_Sounder , out % band (38) % rad , &
                                        32 , missing_value_real4 )
             else ! the rest of channels are normal
                Ch(modis_chn_list(i_band))%Rad_Toa(:,1:c_seg_lines) = out % band (i_band) % rad
@@ -264,8 +265,8 @@ contains
 ! read the IFF VIIRS + CrIS constants into memory
 !-----------------------------------------------------------------
    subroutine READ_IFF_VIIRS_INSTR_CONSTANTS(Instr_Const_file)
-      use calibration_constants
-      use file_tools , only: getlun
+      use CALIBRATION_CONSTANTS 
+      use FILE_TOOLS , only: GETLUN
 
       implicit none
 
@@ -287,26 +288,28 @@ contains
       read(unit=Instr_Const_lun,fmt="(a3)") sat_name
       read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(22), planck_a2(22), planck_nu(22)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(29), planck_a2(29), planck_nu(29)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(42), planck_a2(42), planck_nu(42)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(43), planck_a2(43), planck_nu(43)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(20), Planck_A2(20), Planck_Nu(20)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(22), Planck_A2(22), Planck_Nu(22)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(27), Planck_A2(27), Planck_Nu(27)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(28), Planck_A2(28), Planck_Nu(28)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(29), Planck_A2(29), Planck_Nu(29)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(30), Planck_A2(30), Planck_Nu(30)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(31), Planck_A2(31), Planck_Nu(31)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(32), Planck_A2(32), Planck_Nu(32)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(42), Planck_A2(42), Planck_Nu(42)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(43), Planck_A2(43), Planck_Nu(43)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(33), Planck_A2(33), Planck_Nu(33)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(34), Planck_A2(34), Planck_Nu(34)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(35), Planck_A2(35), Planck_Nu(35)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(36), Planck_A2(36), Planck_Nu(36)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1_11um_Sndr, Planck_A2_11um_Sndr, Planck_Nu_11um_Sndr
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1_12um_Sndr, Planck_A2_12um_Sndr, Planck_Nu_12um_Sndr
       close(unit=Instr_Const_lun)
 
       !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
-      planck_a1(45) = planck_a1(33)
-      planck_a2(45) = planck_a2(33)
-      planck_nu(45) = planck_nu(33)
+      Planck_A1(45) = Planck_A1(33)
+      Planck_A2(45) = Planck_A2(33)
+      Planck_Nu(45) = Planck_Nu(33)
 
       !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
       Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20
@@ -317,8 +320,8 @@ contains
 ! read the IFF AVHRR + HIRS constants into memory
 !----------------------------------------------------------------------
    subroutine READ_IFF_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
-      use calibration_constants
-      use file_tools , only: getlun
+      use CALIBRATION_CONSTANTS 
+      use FILE_TOOLS , only: GETLUN 
 
       implicit none
 
@@ -340,26 +343,29 @@ contains
       read(unit=Instr_Const_lun,fmt="(a3)") sat_name
       read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
       read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20), planck_nu(20)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31), planck_nu(31)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32), planck_nu(32)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(36), planck_a2(36), planck_nu(36)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(35), planck_a2(35), planck_nu(35)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(34), planck_a2(34), planck_nu(34)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(33), planck_a2(33), planck_nu(33)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(30), planck_a2(30), planck_nu(30)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(28), planck_a2(28), planck_nu(28)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27), planck_nu(27)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(25), planck_a2(25), planck_nu(25)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(24), planck_a2(24), planck_nu(24)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(23), planck_a2(23), planck_nu(23)
-      read(unit=Instr_Const_lun,fmt=*) planck_a1(21), planck_a2(21), planck_nu(21)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(20), Planck_A2(20), Planck_Nu(20)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(31), Planck_A2(31), Planck_Nu(31)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(32), Planck_A2(32), Planck_Nu(32)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(36), Planck_A2(36), Planck_Nu(36)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(35), Planck_A2(35), Planck_Nu(35)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(34), Planck_A2(34), Planck_Nu(34)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(33), Planck_A2(33), Planck_Nu(33)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(30), Planck_A2(30), Planck_Nu(30)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(28), Planck_A2(28), Planck_Nu(28)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(27), Planck_A2(27), Planck_Nu(27)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(25), Planck_A2(25), Planck_Nu(25)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(24), Planck_A2(24), Planck_Nu(24)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(23), Planck_A2(23), Planck_Nu(23)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1(21), Planck_A2(21), Planck_Nu(21)
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1_375um_Sndr, Planck_A2_375um_Sndr, Planck_Nu_375um_Sndr
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1_11um_Sndr , Planck_A2_11um_Sndr , Planck_Nu_11um_Sndr
+      read(unit=Instr_Const_lun,fmt=*) Planck_A1_12um_Sndr , Planck_A2_12um_Sndr , Planck_Nu_12um_Sndr
       close(unit=Instr_Const_lun)
  
       !--- For psedo 13um Ch 45 use MODIS Ch 33 data 
-      planck_a1(45) = planck_a1(33)
-      planck_a2(45) = planck_a2(33)
-      planck_nu(45) = planck_nu(33)
+      Planck_A1(45) = Planck_A1(33)
+      Planck_A2(45) = Planck_A2(33)
+      Planck_Nu(45) = Planck_Nu(33)
 
       !-- convert solar flux in channel 20 & 21 to mean with units mW/m^2/cm^-1
       Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / Ew_Ch20

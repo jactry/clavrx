@@ -169,7 +169,7 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Strength_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Base_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Top_Nwp
-  integer (kind=int4), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
+  integer (kind=int1), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
   integer (kind=int4), dimension(:,:,:), allocatable, public, save :: Inversion_Level_Profile_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Lifting_Condensation_Level_Height_Nwp !km
   real (kind=real4), dimension(:,:), allocatable, public, save :: Convective_Condensation_Level_Height_Nwp !km

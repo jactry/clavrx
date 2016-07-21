@@ -356,7 +356,6 @@ contains
       read(unit=Instr_Const_lun,fmt=*) Planck_A1(25), Planck_A2(25), Planck_Nu(25)
       read(unit=Instr_Const_lun,fmt=*) Planck_A1(24), Planck_A2(24), Planck_Nu(24)
       read(unit=Instr_Const_lun,fmt=*) Planck_A1(23), Planck_A2(23), Planck_Nu(23)
-      read(unit=Instr_Const_lun,fmt=*) Planck_A1(21), Planck_A2(21), Planck_Nu(21)
       read(unit=Instr_Const_lun,fmt=*) Planck_A1_375um_Sndr, Planck_A2_375um_Sndr, Planck_Nu_375um_Sndr
       read(unit=Instr_Const_lun,fmt=*) Planck_A1_11um_Sndr , Planck_A2_11um_Sndr , Planck_Nu_11um_Sndr
       read(unit=Instr_Const_lun,fmt=*) Planck_A1_12um_Sndr , Planck_A2_12um_Sndr , Planck_Nu_12um_Sndr

@@ -1,6 +1,6 @@
 !$Id: level2_all_off.inc 1555 2016-03-23 21:54:05Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 274
+ integer, parameter, private:: Num_Level2_Sds = 275
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -283,4 +283,5 @@
      Sds_Num_Level2_Sndr_Mask = 271,      Sds_Num_Level2_Sndr_Mask_Flag = 0, &
      Sds_Num_Level2_Inver_Strength = 272, Sds_Num_Level2_Inver_Strength_Flag = 0, &
      Sds_Num_Level2_Inver_Top = 273,      Sds_Num_Level2_Inver_Top_Flag = 0, &
-     Sds_Num_Level2_Inver_Base = 274,     Sds_Num_Level2_Inver_Base_Flag = 0
+     Sds_Num_Level2_Inver_Base = 274,     Sds_Num_Level2_Inver_Base_Flag = 0, &
+     Sds_Num_Level2_Ch31_Rad = 275 ,      Sds_Num_Level2_Ch31_Rad_Flag = 0

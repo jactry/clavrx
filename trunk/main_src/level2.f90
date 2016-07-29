@@ -1291,7 +1291,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
      !--- Ch31 Radiance
      if (Sds_Num_Level2_Ch31_Rad_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "radiance_11_0um_nom", &
                               "toa_radiance", &
                               "top of atmosphere radiance at the nominal wavelength of 11.0 microns - NOAA CDR", &
@@ -1299,6 +1299,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               Min_Ch31_Rad, Max_Ch31_Rad, "mW/m^2/cm^-1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
+
      !--- Ch31 temperature
      if (Sds_Num_Level2_Ch31_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &

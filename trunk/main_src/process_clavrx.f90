@@ -1036,6 +1036,13 @@
                call COMPUTE_SIMPLE_SOLAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
                call COMPUTE_SIMPLE_LUNAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
+               call CO2IRW_CLOUD_HEIGHT()
+               call H2O_CLOUD_HEIGHT()
+               call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
+                                             Image%Number_Of_Lines_Read_This_Segment, &
+                                             P_Std_Rtm, &
+                                             Pc_Co2,Tc_Co2,Zc_Co2)
+
                !--- cloud mask
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
@@ -1093,7 +1100,14 @@
             if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-              
+
+               call CTP_MULTILAYER()
+
+               Diag_Pix_Array_1 = Zc_H2O
+print *, "Range = H2O = ", maxval(Zc_H2O)
+               Diag_Pix_Array_2 = Zc_CO2IRW
+               Diag_Pix_Array_3 = Ctp_Multilayer_Flag 
+
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF
                !-------------------------------------------------------------------
@@ -1110,7 +1124,7 @@
 
                     call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
                                      Image%Number_Of_Lines_Read_This_Segment, &
-                                     P_Std_Rtm,Cld_Mask, &
+                                     P_Std_Rtm, &
                                      Pc_Co2,Tc_Co2,Zc_Co2)
 
                     call MODIFY_CLOUD_TYPE_WITH_SOUNDER (Tc_CO2, Ec_CO2, Cld_Type)

@@ -635,7 +635,7 @@ module PIXEL_COMMON
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cirrus_Quality
+  integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Ctp_Multilayer_Flag
 
   !--- Auxilliary variables
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
@@ -2440,7 +2440,7 @@ subroutine CREATE_CLOUD_TYPE_ARRAYS(dim1,dim2)
      allocate(Cld_Phase_Aux(dim1,dim2))
      allocate(Cld_Phase(dim1,dim2))
      allocate(Cld_Type(dim1,dim2))
-     allocate(Cirrus_Quality(dim1,dim2))
+     allocate(Ctp_Multilayer_Flag(dim1,dim2))
      allocate(Zc_Aux(dim1,dim2))
   endif
 end subroutine CREATE_CLOUD_TYPE_ARRAYS
@@ -2450,7 +2450,7 @@ subroutine RESET_CLOUD_TYPE_ARRAYS()
       Cld_Type = Missing_Value_Int1
       Cld_Phase_Aux = Missing_Value_Int1
       Cld_Type_Aux = Missing_Value_Int1
-      Cirrus_Quality = 1
+      Ctp_Multilayer_Flag = Missing_Value_Int1
       Zc_Aux = Missing_Value_Real4
   endif
 end subroutine RESET_CLOUD_TYPE_ARRAYS
@@ -2460,7 +2460,7 @@ subroutine DESTROY_CLOUD_TYPE_ARRAYS
      deallocate(Cld_Phase_Aux)
      deallocate(Cld_Phase)
      deallocate(Cld_Type)
-     deallocate(Cirrus_Quality)
+     deallocate(Ctp_Multilayer_Flag)
      deallocate(Zc_Aux)
   endif
 end subroutine DESTROY_CLOUD_TYPE_ARRAYS

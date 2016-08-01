@@ -1104,7 +1104,6 @@
                call CTP_MULTILAYER()
 
                Diag_Pix_Array_1 = Zc_H2O
-print *, "Range = H2O = ", maxval(Zc_H2O)
                Diag_Pix_Array_2 = Zc_CO2IRW
                Diag_Pix_Array_3 = Ctp_Multilayer_Flag 
 

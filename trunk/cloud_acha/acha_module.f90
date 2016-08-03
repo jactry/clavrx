@@ -82,11 +82,11 @@ module AWG_CLOUD_HEIGHT
   private:: GENERIC_PROFILE_INTERPOLATION
   private:: OPTIMAL_ESTIMATION
   private:: COMPUTE_FORWARD_MODEL_AND_KERNEL
-  private:: COMPUTE_APRIORI_BASED_ON_TYPE
   private:: COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO
   private:: DETERMINE_SFC_TYPE_FORWARD_MODEL
   private:: SET_CLEAR_SKY_COVARIANCE_TERMS
   private:: COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE
+  private:: COMPUTE_CIRRUS_APRIORI
 
   private:: DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
   private:: INTERPOLATE_PROFILE_ACHA
@@ -104,13 +104,18 @@ module AWG_CLOUD_HEIGHT
   !--- include the non-system specific variables
   include 'acha_parameters.inc'
 
-  !--- interpoLated profiles
+  !--- interpolated profiles
   real, private, dimension(Num_Levels_RTM_Prof) :: Temp_Prof_RTM
   real, private, dimension(Num_Levels_RTM_Prof) :: Press_Prof_RTM
   real, private, dimension(Num_Levels_RTM_Prof) :: Hght_Prof_RTM
-  integer, private:: Inver_Level_RTM
+  integer, private, dimension(Num_Levels_RTM_Prof) :: Inver_Prof_RTM
+  integer, private:: Inver_Top_Level_RTM
+  integer, private:: Inver_Base_Level_RTM
   integer, private:: Sfc_Level_RTM
   integer, private:: Tropo_Level_RTM
+  real, private:: Inver_Top_Height
+  real, private:: Inver_Base_Height
+  real, private:: Inver_Strength
 
   real, private:: Bt_67um_Mean
   real, private:: Bt_85um_Mean
@@ -706,7 +711,7 @@ module AWG_CLOUD_HEIGHT
     
     Press_Prof_RTM =  ACHA_RTM_NWP%P_Prof
 
-    !do smoothing routines here - WCS3
+    !do smoothing routines here 
     if (ACHA_RTM_NWP%Smooth_Nwp_Fields_Flag_Temp == symbol%YES) then
 
        !--- height profile       
@@ -1027,6 +1032,7 @@ module AWG_CLOUD_HEIGHT
   call COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                        Cloud_Phase, &
                        Emiss_11um_Tropo, &
+                       Input%Latitude(Elem_Idx,Line_Idx), &
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
                        Bt_11um_Lrc, &
@@ -1239,7 +1245,18 @@ module AWG_CLOUD_HEIGHT
 !----------------------------------------------------------------
 ! Determine the level of the highest inversion (0=if none)
 !----------------------------------------------------------------
-Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
+!Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
+ call DETERMINE_INVERSION_CHARACTERISTICS(symbol%YES, &
+                                          symbol%NO,  &
+                                          Tropo_Level_RTM,              &
+                                          Sfc_Level_RTM,                &
+                                          Input%Surface_Air_Temperature(Elem_Idx,Line_Idx),&
+                                          Input%Surface_Elevation(Elem_Idx,Line_Idx),      &
+                                          Inver_Top_Level_RTM,    &
+                                          Inver_Base_Level_RTM,   & 
+                                          Inver_Top_Height,       &
+                                          Inver_Base_Height,      & 
+                                          Inver_Strength)
 
 !-----------------------------------------------------------------
 ! start of retrieval loop
@@ -1481,17 +1498,28 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !--- compute height and pressure uncertainties 
  !-----------------------------------------------------------------------------
 
+ !--- compute lapse rate as dT/dZ
+ Abs_Lapse_Rate =  ABS((Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)) / &
+                       (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
+
+ !--- compute lapse rate as dP/dZ
+ Abs_Lapse_Rate_dP_dZ =  ABS((Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)) / &
+                             (Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)))
+
+ !--- constrain these lapse rates
+ if (Abs_Lapse_Rate < ABS_LAPSE_RATE_UNCER_MIN) Abs_Lapse_Rate = ABS_LAPSE_RATE_UNCER_MIN
+ if (Abs_Lapse_Rate_dP_dZ < ABS_LAPSE_RATE_DP_DZ_UNCER_MIN) Abs_Lapse_Rate_dP_dZ = ABS_LAPSE_RATE_DP_DZ_UNCER_MIN
+
  !-- Compute Height Uncertainty
- Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
-                                            ABS_LAPSE_RATE_DT_DZ_UNCER
+ Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) / Abs_Lapse_Rate   ! = dT  / dT/dZ
 
  !-- Compute Pressure Uncertainty
- Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
-                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
+ Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) * Abs_Lapse_Rate_dP_dZ    ! = dZ * dP/dZ
 
- !-----------------------------------------------------------------------------
+!print *, 'Uncer Test', Abs_Lapse_Rate, Abs_Lapse_Rate_dP_dZ,Output%Tc_Uncertainty(Elem_Idx,Line_Idx),  &
+!                       Output%Zc_Uncertainty(Elem_Idx,Line_Idx),Output%Pc_Uncertainty(Elem_Idx,Line_Idx)
+
  !--- quality flags of the retrieved parameters
- !-----------------------------------------------------------------------------
  do Param_Idx = 1,Num_Param    !loop over parameters
        if (Sx(Param_Idx,Param_Idx) < 0.111*Sa(Param_Idx,Param_Idx) ) THEN
             Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_1_3_APRIORI_RETREVIAL
@@ -1518,6 +1546,8 @@ else
  Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
  Output%Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
  Output%Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+ Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+ Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
 
  !--- set quality flags
  Output%OE_Qf(:,Elem_Idx,Line_Idx) = 0
@@ -1790,9 +1820,9 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
      !--- if there is an inversion, look below first
      Level_Within_Inversion_Flag = 0
-     if (Inver_Level_RTM > 0 .and. Inver_Level_RTM < Sfc_Level_RTM) then
-         kstart = Inver_Level_RTM
-         kend =  Sfc_Level_RTM
+     if (Inver_Top_Level_RTM > 0 .and. Inver_Base_Level_RTM > 0) then
+         kstart = Inver_Top_Level_RTM
+         kend =  Inver_Base_Level_RTM
          nlevels_temp = kend - kstart + 1
          call LOCATE(Temp_Prof_RTM(kstart:kend),nlevels_temp,T,klev)
          if ((klev > 0) .and. (klev < nlevels_temp -1)) then
@@ -1826,7 +1856,7 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
     !--- Some negative cloud heights are observed because of bad height
     !--- NWP profiles.
-    if (Z < 0) then
+    if (Z < 0.0) then
       Z = ZC_FLOOR
     endif
 
@@ -1864,6 +1894,7 @@ function GENERIC_PROFILE_INTERPOLATION(X_value,X_Profile,Y_Profile)  &
      else
           Y_value = Y_Profile(Ilev)
      endif
+
 end function GENERIC_PROFILE_INTERPOLATION
 
 !------------------------------------------------------------------------
@@ -2374,98 +2405,12 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
 end subroutine COMPUTE_FORWARD_MODEL_AND_KERNEL
 
 !----------------------------------------------------------------------
-subroutine COMPUTE_APRIORI_BASED_ON_TYPE(Cloud_Type, &
-                           Ttropo,T11um,mu,Tc_Opaque, &
-                           Tc_Ap, Tc_Ap_Uncer, &
-                           Ec_Ap, Ec_Ap_Uncer, &
-                           Beta_Ap, Beta_Ap_Uncer)
-
-  integer, intent(in):: Cloud_Type
-  real(kind=real4), intent(in):: Ttropo
-  real(kind=real4), intent(in):: T11um
-  real(kind=real4), intent(in):: mu
-  real(kind=real4), intent(in):: Tc_Opaque
-  real(kind=real4), intent(out):: Tc_Ap
-  real(kind=real4), intent(out):: Ec_Ap
-  real(kind=real4), intent(out):: Tc_Ap_Uncer
-  real(kind=real4), intent(out):: Ec_Ap_Uncer
-  real(kind=real4), intent(out):: Beta_Ap
-  real(kind=real4), intent(out):: Beta_Ap_Uncer
-  real(kind=real4):: Tc_Ap_Cirrus
-  real(kind=real4):: Tc_Ap_Opaque
-  real(kind=real4):: Tau_Ap
-
-  !--- calipso values (not multiplier on uncer values)
-  Tc_Ap_Cirrus = Ttropo + Tc_Ap_Tropo_OFFSET_Cirrus
-  Tc_Ap_Opaque = Tc_Opaque
-  if (Tc_Ap_Opaque == MISSING_VALUE_REAL4) then
-     Tc_Ap_Opaque = T11um
-  endif
-
-  if (Cloud_Type == symbol%FOG_TYPE) then
-     Tc_Ap = Tc_Ap_Opaque
-     Tau_Ap = Tau_Ap_Fog_Type  
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-     Ec_Ap_Uncer = 2.0*Ec_Ap_Uncer_Opaque
-  elseif (Cloud_Type == symbol%WATER_TYPE) then
-     Tc_Ap = Tc_Ap_Opaque
-     Tau_Ap = Tau_Ap_Water_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Opaque
-  elseif (Cloud_Type == symbol%SUPERCOOLED_TYPE .or. &
-          Cloud_Type == symbol%MIXED_TYPE) then
-     Tc_Ap = Tc_Ap_Opaque
-     Tau_Ap = Tau_Ap_Mixed_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Opaque
-  elseif (Cloud_Type == symbol%TICE_TYPE) then
-     Tc_Ap = Tc_Ap_Opaque
-     Tau_Ap = Tau_Ap_Opaque_Ice_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Opaque
-  elseif (Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-     Tc_Ap = Tc_Ap_Opaque
-     Tau_Ap = Tau_Ap_Opaque_Ice_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Opaque
-  elseif (Cloud_Type == symbol%CIRRUS_TYPE) then
-     Tc_Ap = Tc_Ap_Cirrus
-     Tau_Ap = Tau_Ap_Cirrus_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
-  elseif (Cloud_Type == symbol%OVERLAP_TYPE) then
-     Tc_Ap = Tc_Ap_Cirrus
-     Tau_Ap = Tau_Ap_overlap_Type
-     Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
-     Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
-  endif
-
-  !--- determine beta apriori and fit parameters based on 
-  !--- phase (derived from type)
-          
-  !--- water phase clouds
-  if ((Cloud_Type == symbol%FOG_TYPE) .or. &
-     (Cloud_Type == symbol%WATER_TYPE) .or. &
-      (Cloud_Type == symbol%SUPERCOOLED_TYPE)) THEN
-      Beta_Ap = Beta_Ap_Water
-      Beta_Ap_Uncer = Beta_Ap_Uncer_Water
-  else
-  !--- ice phase clouds
-      Beta_Ap = Beta_Ap_Ice
-      Beta_Ap_Uncer = Beta_Ap_Uncer_Ice
-  endif
-
-  !--- convert Tau_Ap to Emissivity
-  Ec_Ap = 1.0 - exp(-Tau_Ap/mu)  !slow!
-
-end subroutine COMPUTE_APRIORI_BASED_ON_TYPE
-
-!----------------------------------------------------------------------
 !---
 !----------------------------------------------------------------------
 subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            Cloud_Phase, &
                            Emiss_11um_Tropo, &
+                           Latitude, &
                            Ttropo, &
                            T11um, &
                            T11um_Lrc, &
@@ -2480,6 +2425,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
 
   integer, intent(in):: Cloud_Phase
   real(kind=real4), intent(in):: Emiss_11um_Tropo
+  real(kind=real4), intent(in):: Latitude
   real(kind=real4), intent(in):: Ttropo
   real(kind=real4), intent(in):: T11um
   real(kind=real4), intent(in):: T11um_Lrc
@@ -2493,13 +2439,16 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4), intent(out):: Beta_Ap_Uncer
 
   real(kind=real4):: Tc_Ap_Cirrus
+  real(kind=real4):: Tc_Ap_Uncer_Cirrus
   real(kind=real4):: Tc_Ap_Opaque
   real(kind=real4):: Emiss_Weight
   real(kind=real4):: Emiss_Weight2
 
   !--- calipso values (not multiplier on uncer values)
-  Tc_Ap_Cirrus = Ttropo + Tc_Ap_Tropo_OFFSET_Cirrus
+  call compute_cirrus_apriori(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
+
   Tc_Ap_Opaque = Tc_Opaque
+
   if (T11um_Lrc /= MISSING_VALUE_REAL4) then
       Tc_Ap_Opaque = T11um_Lrc
   endif
@@ -3115,6 +3064,111 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
    enddo
 
  end function DETERMINE_INVERSION_LEVEL
+
+
+ !-------------------------------------------------------------------------
+ ! Input:
+ ! Tropo_Level - level in RTM profiles of the Tropopause
+ ! Sfc_Level - level in RTM profiles closest but above the surface
+ ! Sfc_Air_Temp = air temperature at the surface level
+ ! Sfc_Height = height of the surface level (m)
+ ! Inversion_Top_Level -  level in RTM profiles closest to but below the top of
+ !                         inversion
+ ! Inversion_Base_Level -  level in RTM profiles closest to but above the base of
+ !                         inversion
+ ! Inversion_Strength - Temperature difference between Top and Base (K)
+ ! Inversion_Base_Height -  Height of Inversion Base (m)
+ ! Inversion_Top_Height -  Height of Inversion Top (m)
+ !
+ ! Input - via module-wide variables
+ ! Press_Prof_RTM - pressure profile
+ ! Hght_Prof_RTM - height profile
+ ! Temp_Prof_RTM - temperature profile
+ !
+ ! Output - via module-wide variables
+ ! Inver_Prof_RTM - level flags (0/1) if inversion present
+ !--------------------------------------------------------------------------
+ subroutine DETERMINE_INVERSION_CHARACTERISTICS(symbol_yes,               &
+                                                symbol_no,                &
+                                                Tropo_Level,              &
+                                                Sfc_Level,                &
+                                                Sfc_Air_Temp,             &
+                                                Sfc_Height,               &
+                                                Top_Lev_Idx,            &
+                                                Base_Lev_Idx,           & 
+                                                Inversion_Top_Height,     &
+                                                Inversion_Base_Height,    & 
+                                                Inversion_Strength)
+   integer(kind=int1), intent(in) :: symbol_yes
+   integer(kind=int1), intent(in) :: symbol_no
+   integer, intent(in):: Tropo_Level
+   integer, intent(in):: Sfc_Level
+   real, intent(in):: Sfc_Air_Temp
+   real, intent(in):: Sfc_Height
+   real, intent(out):: Inversion_Top_Height
+   real, intent(out):: Inversion_Base_Height
+   integer, intent(out):: Top_Lev_Idx
+   integer, intent(out):: Base_Lev_Idx
+   real, intent(out):: Inversion_Strength
+   integer:: k
+
+   Inver_Prof_RTM = symbol_NO
+
+   do k = Sfc_Level, Tropo_Level, -1
+
+      if (Press_Prof_RTM(k) >= MIN_P_INVERSION) then
+
+         if (Temp_Prof_RTM(k-1) - Temp_Prof_RTM(k) > DELTA_T_LAYER_INVERSION) then
+            Inver_Prof_RTM(k-1:k) = symbol_YES
+         endif
+
+      endif
+   enddo
+
+   Top_Lev_Idx =  0
+   do k = Tropo_Level,Sfc_Level,1
+      if (Inver_Prof_RTM(k) == symbol_YES .and. Top_Lev_Idx == 0) then
+         Top_Lev_Idx = k
+         exit
+      endif
+   enddo
+
+   Base_Lev_Idx = 0
+   do k = Sfc_Level, Tropo_Level, -1
+      if (Inver_Prof_RTM(k) == symbol_YES .and. Base_Lev_Idx == 0) then
+         Base_Lev_Idx = k
+         exit
+      endif
+   enddo
+
+   Inversion_Strength  = Missing_Value_Real4
+   Inversion_Base_Height = Missing_Value_Real4
+   Inversion_Top_Height = Missing_Value_Real4
+
+   !---- inversion top height (meters)
+   if (Top_Lev_Idx /= 0)  Inversion_Top_Height = Hght_Prof_RTM(Top_Lev_Idx)
+
+   !---- inversion base height (meters)
+   if (Base_Lev_Idx /= 0) Inversion_Base_Height = Hght_Prof_RTM(Base_Lev_Idx)
+
+   !--- assume inversion streches to surface if lowest level is the surface level
+   if (Base_Lev_Idx == Sfc_Level .and.  Sfc_Height /= Missing_Value_Real4) then
+    Inversion_Base_Height = Sfc_Height
+   endif
+
+   !--- inversion temperature strength
+   if (Base_Lev_Idx /= 0 .and. Top_Lev_Idx /= 0) then
+     Inversion_Strength = Temp_Prof_RTM(Top_Lev_Idx) - Temp_Prof_RTM(Base_Lev_Idx)
+
+     !--- assume inversion streches to surface if lowest level is the surface level
+     if (Base_Lev_Idx == Sfc_Level .and.  Sfc_Air_Temp /= Missing_Value_Real4) then
+        Inversion_Strength = Temp_Prof_RTM(Top_Lev_Idx) - Sfc_Air_Temp
+     endif
+   endif
+
+ end subroutine DETERMINE_INVERSION_CHARACTERISTICS
+
+
  !---------------------------------------------------------------------
  ! Find Opaque Cloud Level - highest Level Inversion below trop
  !---------------------------------------------------------------------
@@ -4022,5 +4076,26 @@ function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
    
 
 end function oceanic_lapse_rate
+!----------------------------------------------------------------------------
+! estimate cirrus aprior temperature and uncertainty from a precomputed 
+! latitude table (stored in acha_parameters.inc)
+!----------------------------------------------------------------------------
+subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_uncer)
+  real, intent(in):: t_tropo
+  real, intent(in):: latitude
+  real, intent(out):: tc_apriori
+  real, intent(out):: tc_apriori_uncer
+
+  integer:: lat_idx
+  real, parameter:: lat_min = -90.0
+  real, parameter:: delta_lat = -10.0
+
+  lat_idx = ((latitude - lat_min) / delta_lat) + 1
+  lat_idx = max(1,min(lat_idx, num_lat_cirrus_ap))
+  
+  tc_apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)
+  tc_apriori_uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
+
+end subroutine compute_cirrus_apriori
 
 end module AWG_CLOUD_HEIGHT

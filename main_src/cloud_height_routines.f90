@@ -35,6 +35,8 @@ module CLOUD_HEIGHT_ROUTINES
 
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
+  public::  H2O_CLOUD_HEIGHT
+  public::  CO2IRW_CLOUD_HEIGHT
   public::  CO2_SLICING_CLOUD_HEIGHT
   public::  CO2_SLICING_CLOUD_HEIGHT_NEW
   public::  OPAQUE_TRANSMISSION_HEIGHT
@@ -45,7 +47,7 @@ module CLOUD_HEIGHT_ROUTINES
   public::  SOUNDER_EMISSIVITY
   public::  INTERCEPT_CLOUD_PRESSURE
   public::  SLICING_CLOUD_PRESSURE
-  public::  IR_MULTILAYER
+  public::  CTP_MULTILAYER
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -468,9 +470,9 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
 
 end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
 !----------------------------------------------------------------------
-!
+! water vapor intercept
 !----------------------------------------------------------------------
-subroutine IR_MULTILAYER()
+subroutine H2O_CLOUD_HEIGHT()
 
    integer:: Line_Idx
    integer:: Elem_Idx
@@ -482,36 +484,26 @@ subroutine IR_MULTILAYER()
    integer:: Tropo_Level_Idx
    integer:: Sfc_Level_Idx
    integer:: Level_Idx
-   real:: Beta_Target
-   real:: Pc_1
-   real:: Pc_2
-   real:: Pc_3
+   integer:: Level_Idx_Temp
 
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
    if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
    if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
-
-print *, "before  loop"
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
-      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
-          Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
-          Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
-          cycle
-      endif
 
+!     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
+!         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
+!         Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
+!         cycle
+!     endif
 
-      !---- start select a pixel
-      if (Sfc%Land(Elem_Idx,Line_Idx) /= 7) cycle
-      if (Geo%Satzen(Elem_Idx,Line_Idx) > 30.0) cycle
-      !---- end select a pixel
 
       !--- indice aliases
       Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
@@ -524,8 +516,84 @@ print *, "before  loop"
       Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
       Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
 
-      !--- IRWCO2
-      Beta_Target = 1.1
+
+      !--- call routine
+      call INTERCEPT_CLOUD_PRESSURE(ch(31)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile, &
+                               ch(27)%Rad_Toa(Elem_Idx,Line_Idx), &
+                               ch(27)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
+                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(27)%Rad_BB_Cloud_Profile, &
+                               Tropo_Level_Idx, &
+                               Sfc_Level_Idx, &
+                               P_Std_Rtm, &
+                               Pc_H2O(Elem_Idx,Line_Idx), &
+                               Level_Idx)      
+
+      !--- compute temperature and height
+      if (Pc_H2O(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+      if (Level_Idx == Missing_Value_Int4) cycle
+
+      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+                                     Pc_H2O(Elem_Idx,Line_Idx), &
+                                     Tc_H2O(Elem_Idx,Line_Idx), &
+                                     Zc_H2O(Elem_Idx,Line_Idx), &
+                                     Level_Idx_Temp)
+     
+
+      enddo
+   enddo
+
+end subroutine H2O_CLOUD_HEIGHT
+!----------------------------------------------------------------------
+! water vapor intercept
+!----------------------------------------------------------------------
+subroutine CO2IRW_CLOUD_HEIGHT()
+
+   integer:: Line_Idx
+   integer:: Elem_Idx
+   integer:: Num_Elements
+   integer:: Num_Lines
+   integer:: Nwp_Lon_Idx
+   integer:: Nwp_Lat_Idx
+   integer:: Vza_Rtm_Idx
+   integer:: Tropo_Level_Idx
+   integer:: Sfc_Level_Idx
+   integer:: Level_Idx
+   integer:: Level_Idx_Temp
+   real, parameter:: Beta_Target = 1.1
+
+   Num_Elements = Image%Number_Of_Elements
+   Num_Lines = Image%Number_Of_Lines_Per_Segment
+
+   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
+
+   do Elem_Idx = 1, Num_Elements
+     do Line_Idx = 1, Num_Lines
+
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+!     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
+!         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
+!         Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
+!         cycle
+!     endif
+
+
+      !--- indice aliases
+      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+      !-- check if indices are valid
+      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+
+
+      !--- call routine
       call SLICING_CLOUD_PRESSURE(ch(31)%Rad_Toa(Elem_Idx,Line_Idx), &
                                ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
                                rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile, &
@@ -536,69 +604,90 @@ print *, "before  loop"
                                Sfc_Level_Idx, &
                                P_Std_Rtm, &
                                Beta_Target, &
-                               Pc_1, &
-                               Level_Idx)      
-
-      call INTERCEPT_CLOUD_PRESSURE(ch(31)%Rad_Toa(Elem_Idx,Line_Idx), &
-                               ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile, &
-                               ch(33)%Rad_Toa(Elem_Idx,Line_Idx), &
-                               ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile, &
-                               Tropo_Level_Idx, &
-                               Sfc_Level_Idx, &
-                               P_Std_Rtm, &
-                               Pc_2, &
+                               Pc_CO2IRW(Elem_Idx,Line_Idx), &
                                Level_Idx)      
      
-      call INTERCEPT_CLOUD_PRESSURE(ch(31)%Rad_Toa(Elem_Idx,Line_Idx), &
-                               ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile, &
-                               ch(27)%Rad_Toa(Elem_Idx,Line_Idx), &
-                               ch(27)%Rad_Toa_Clear(Elem_Idx,Line_Idx), &
-                               rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(27)%Rad_BB_Cloud_Profile, &
-                               Tropo_Level_Idx, &
-                               Sfc_Level_Idx, &
-                               P_Std_Rtm, &
-                               Pc_3, &
-                               Level_Idx)      
-     
+      !--- compute temperature and height
+      if (Pc_Co2IRW(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+      if (Level_Idx == Missing_Value_Int4) cycle
 
-!      if (abs(Pc_1 - Pc_3) < 50.0) then
-!        write(unit=6,fmt="(2I5)") Tropo_Level_Idx, Sfc_Level_Idx
-!        write(unit=6,fmt="(3F8.2)") Pc_1, Pc_2, Pc_3
-!        write(unit=6,fmt="(3F8.2)") ch(27)%Rad_Toa(Elem_Idx,Line_Idx),ch(31)%Rad_Toa(Elem_Idx,Line_Idx),ch(33)%Rad_Toa(Elem_Idx,Line_Idx)
-!        write(unit=6,fmt="(3F8.2)") ch(27)%Rad_Toa_Clear(Elem_Idx,Line_Idx),ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx),ch(33)%Rad_Toa_Clear(Elem_Idx,Line_Idx)
-!        do Level_Idx = 1, NLevels_Rtm
-!           write(unit=6,fmt="(I4,F8.2,3F12.5)") Level_Idx, P_Std_Rtm(Level_Idx), &
-!                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(27)%Rad_BB_Cloud_Profile(Level_Idx), &
-!                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile(Level_Idx), &
-!                    rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(33)%Rad_BB_Cloud_Profile(Level_Idx)
-!        enddo
-!        stop 
-!      endif
-!     Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Pc_1
-!     Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Pc_2
-!     Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Pc_3
+      call KNOWING_P_COMPUTE_T_Z_NWP(Nwp_Lon_Idx,Nwp_Lat_Idx, &
+                                     Pc_Co2IRW(Elem_Idx,Line_Idx), &
+                                     Tc_Co2IRW(Elem_Idx,Line_Idx), &
+                                     Zc_Co2IRW(Elem_Idx,Line_Idx), &
+                                     Level_Idx_Temp)
+
+      enddo
+   enddo
+
+end subroutine CO2IRW_CLOUD_HEIGHT
+
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
+subroutine CTP_MULTILAYER()
+
+   integer:: Line_Idx
+   integer:: Elem_Idx
+   integer:: Num_Elements
+   integer:: Num_Lines
+
+   Num_Elements = Image%Number_Of_Elements
+   Num_Lines = Image%Number_Of_Lines_Per_Segment
+
+   Ctp_Multilayer_Flag = Missing_Value_Int1
+
+   !--- check if channels are on
+   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
+
+ 
+   !--- loop through pixels in the segment
+   do Elem_Idx = 1, Num_Elements
+     do Line_Idx = 1, Num_Lines
+
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+      !---- filter on cloud type
+      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
+          Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
+          Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
+          cycle
+      endif
+
+
+      !--- skip pixels without valid input
+      if (Pc_H2O(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+      if (Pc_CO2IRW(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+
+
+      Ctp_Multilayer_Flag(Elem_Idx,Line_Idx) = sym%No
+
+      !--- IRWCO2
+      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) < 0.80) then
+         if (abs(Pc_H2O(Elem_Idx,Line_Idx) - Pc_CO2IRW(Elem_Idx,Line_Idx)) > 50.0) then
+           Ctp_Multilayer_Flag(Elem_Idx,Line_Idx) = sym%YES
+         endif
+      endif
 
       enddo
    enddo
 
 
-end subroutine IR_MULTILAYER
-
-
+end subroutine CTP_MULTILAYER
 
 !----------------------------------------------------------------------
 ! Compute CO2 Slicing using Ch33, 34, 35 and ch 36
 !----------------------------------------------------------------------
 subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
-                                    Pressure_Profile,Cloud_Mask, &
+                                    Pressure_Profile, &
                                     Pc_Co2,Tc_Co2,Zc_Co2)
   integer, intent(in):: Num_Elem
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Num_Lines
-  integer(kind=int1), intent(in), dimension(:,:):: Cloud_Mask
   real, intent(in), dimension(:):: Pressure_Profile
   real, intent(out), dimension(:,:):: Pc_Co2
   real, intent(out), dimension(:,:):: Tc_Co2
@@ -661,10 +750,6 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
 
      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
-
-     !--- only do this for appropriate cloud types
-     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE) cycle
-     if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) cycle
 
      !--- compute cloud top pressure using each channel pair
      Beta_Target = 1.0

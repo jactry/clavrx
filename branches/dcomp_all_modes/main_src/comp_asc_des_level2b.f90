@@ -124,14 +124,23 @@ program COMPILE_ASC_DES_LEVEL2B
       , hdf_get_file_att &
       , hdf_get_finfo &
       , hdf_get_file_sds &
-      , hdf_sds
+      , hdf_sds &
+      ,  hdf_data
    
    use cx_hdf_write_mod, only: &
       add_att   &
       , hdf_file_open &
-      , close_file
+      , close_file &
+      , create_sds &
+      , write_sds &
+     
+      , close_sds
    
-   use cx_data_io_tools_mod
+   use cx_data_io_tools_mod, only: &
+     
+       copy_global_attributes &
+        , cx_get_sds 
+      
    
    implicit none
   
@@ -941,18 +950,18 @@ program COMPILE_ASC_DES_LEVEL2B
       !--------------------------------------------------------------
       !--- bad pixel mask (assumed no scaling applied)
       !--------------------------------------------------------------
-      print*,'a'
+      print*,'a after'
       allocate(Bad_Pixel_Mask_Input(Num_Elements_Input,Num_Lines_Input))
       allocate(Asc_Des_Flag_Input(Num_Lines_Input))
       allocate(time_1d_Input(Num_Lines_Input))
       allocate(Scan_Line_Number_1d_Input(Num_Lines_Input))
-      print*,'b'
+      print*,'b after'
       if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = 6 &
          , sds_name = ['bad_pixel_mask','asc_des_flag','scan_line_time','scan_line_number','sensor_zenith_angle','solar_zenith_angle']) < 0) then
          print*,'hdf file not readable ', trim(file)
          stop  
       end if 
-      
+      print*,'c after'
        Bad_Pixel_Mask_Input =  cx_get_sds ( file,'bad_pixel_mask')
      print*,'hhhh'
       ps => sds_new(1) ; psd=> ps%data
@@ -1204,11 +1213,12 @@ program COMPILE_ASC_DES_LEVEL2B
             sds_id = create_sds (id_out, ps%name ,  size(psd%i2values), 2)
          end if   
       end do
-      
+      print*,'after first file 81> ', first_valid_input
       
       
       if (First_Valid_Input) then
          Sds_loop_1: do Isds = 0, Num_Sds_Input-1
+            print*,isds,sds(Isds)%Variable_Name
         
             sds%Id_Input = sfselect(Sd_Id_Input,Isds) 
 
@@ -1244,12 +1254,12 @@ print*,'after first file 9'
          !-----------------------------------------------------------
          print*,'aaaaaaaaaa',trim(sds(Isds)%Variable_Name)
          call READ_SDS(Sd_Id_Input,Scaled_Sds_Data_Input,Sds(Isds))
-         print*,'eeeeeeeeeeee'
+         print*,'eeeeeeeeeeee ',First_Valid_Input
          !-----------------------------------------------------------
          !--- read from or define  output variable
          !-----------------------------------------------------------
          if (First_Valid_Input ) then 
-                        
+            print*,sds(isds)            
             call CORRECT_SDS_STRINGS (Sds(Isds)) 
             call DEFINE_SDS_RANK2(Sd_Id_Output, Sds_Dims_Output_xy,  &
                                 Sds_Dims_Output_xy,Sds(Isds))

@@ -3,6 +3,7 @@
 
 
 module cx_data_io_tools_mod
+   
       use cx_hdf_write_mod, only:  &
       hdf_file_open &
       , create_sds &
@@ -22,10 +23,12 @@ module cx_data_io_tools_mod
    use string_functions
    
    use constants
-   
-   
+   private
+   public :: copy_global_attributes
+   public :: cx_get_sds
    interface cx_get_sds
       module procedure cx_get_sds_2d_i1
+     
    end interface
    
    
@@ -37,8 +40,9 @@ contains
       
       integer (kind=int1),pointer :: res(:,:)
       type(hdf_sds), pointer :: ps                          
-      type(hdf_data), pointer :: psd   
+      type(hdf_data), pointer:: psd   
       type(hdf_sds), dimension(:), target, allocatable :: sds
+      integer ( kind = int1 ) , allocatable , target :: dummy(:,:)
       
       
       allocate(sds(1))
@@ -51,9 +55,13 @@ contains
       ps => sds(1) ; psd=> ps%data
       
       print*,ps % name
+      allocate ( dummy (psd% dimsize(1), psd % dimsize(2) ))
+      dummy = reshape( psd % i1values, [psd% dimsize(1), psd % dimsize(2)])
+      res  => dummy 
       
-   
    end function cx_get_sds_2d_i1
+   
+
 
    subroutine copy_global_attributes ( file_in, file_out, exclude_list)
    

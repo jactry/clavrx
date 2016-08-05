@@ -149,6 +149,7 @@ module SCALING_PARAMETERS
                            Min_dcomp_atmos_ir = 0.0, Max_dcomp_atmos_ir = 1.5 
  real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 
  real, parameter, public:: Min_Trans = 0.0, Max_Trans = 1.0 
+ real, parameter, public:: Min_Ch31_Rad = 0.0, Max_Ch31_Rad = 150.0 
  real, parameter, public:: Min_Ch31_Rad_Atm = 0.0, Max_Ch31_Rad_Atm = 100.0 
  real, parameter, public:: Min_Ch31_Rad_Atm_Dwn = 0.0, Max_Ch31_Rad_Atm_Dwn = 50.0 
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 

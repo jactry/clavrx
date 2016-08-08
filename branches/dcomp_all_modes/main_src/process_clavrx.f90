@@ -1169,11 +1169,11 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                if (Dcomp_Mode > 0) then
-        
+                  print*,'sdcmomp mode first: ', dcomp_mode
                   call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
-                  
-                  if ( dcomp_mode .EQ. 8) then
-                     call AWG_CLOUD_DNCOMP_ALGORITHM_WITH_IBAND ( Iseg_In = Segment_Number )
+                  print*,'sdcmomp mode: ', dcomp_mode
+                  if ( dcomp_mode .GE. 8) then
+                     call AWG_CLOUD_DNCOMP_ALGORITHM_IBAND ( Iseg_In = Segment_Number, algorithm_started = dncomp_run )
                   
                   end if 
                   

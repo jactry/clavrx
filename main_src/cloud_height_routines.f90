@@ -1358,7 +1358,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
   real, parameter:: Ch31_Mask_Cld_Prob_Max = 0.1
   real, parameter:: Covar_Ch27_Ch31_Max = 1.0
    
-  if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
+! if ( sensor % Chan_On_Flag_Default(27) == sym % no ) return
    
   do Elem_Idx = 1, Image%Number_Of_Elements
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
@@ -1371,6 +1371,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
      do Chan_Idx = 27, 38
 
          if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+         if (ch(Chan_Idx)%Bt_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
            !--- initialize to cloudy
            ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 3
@@ -1387,11 +1388,11 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
               cycle
            endif
 
-           if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
+           !if (Covar_Ch27_Ch31_5x5(Elem_idx,Line_Idx) <= Covar_Ch27_Ch31_Max) then
               if (Acha%Zc(Elem_Idx,Line_Idx) <= ch(Chan_Idx)%Opaque_Height(Elem_Idx,Line_Idx)) then
                 ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 2
               endif
-          endif
+           !endif
 
        enddo
 

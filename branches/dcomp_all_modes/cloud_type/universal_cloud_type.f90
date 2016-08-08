@@ -110,12 +110,12 @@ end subroutine SET_CLOUD_TYPE_VERSION
 ! Author: Andrew Heidinger, NOAA/NESDIS
 !
 !====================================================================
-subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
+subroutine UNIVERSAL_CLOUD_TYPE()
 
   implicit none
 
-  integer, intent(in):: Line_Start
-  integer, intent(in):: Line_End
+  integer:: Line_Start
+  integer:: Line_End
   integer:: Line_Idx
   integer:: Elem_Idx
   integer:: Num_Elem
@@ -194,7 +194,10 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 #endif   
 
   !--- allocate
+  Num_Elem = size(Cloud_Type(:,0))
   Num_Line = size(Cloud_Type(0,:))
+  Line_Start = 1
+  Line_End = Num_Line
 
   allocate(Cirrus_Flag(Num_Elem,Num_Line))
   allocate(Water_Flag(Num_Elem,Num_Line))
@@ -324,7 +327,7 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
    !---- 1.6 um Spectral Test for Water
    if (Channel_On_Flag(Chan_Idx_16um) == sym%YES) then
-        if (Solzen(Elem_Idx,Line_Idx) < 80.0) then
+        if (Geo%Solzen(Elem_Idx,Line_Idx) < 80.0) then
           if (ch(6)%Ref_Toa_Clear(Elem_Idx,Line_Idx) < 20.0) then
           if (Ref_16um(Elem_Idx,Line_Idx) > 30.0) then
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
@@ -335,12 +338,12 @@ subroutine UNIVERSAL_CLOUD_TYPE(Line_Start,Line_End)
 
    !---- 3.75 um Spectral Test for Water - If triggered, ignore cirrus tests
    if (Channel_On_Flag(Chan_Idx_375um) == sym%YES) then
-        if (Solzen(Elem_Idx,Line_Idx) < 80.0) then
+        if (Geo%Solzen(Elem_Idx,Line_Idx) < 80.0) then
          if (ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx) > 0.90) then
           if (Ref_375um(Elem_Idx,Line_Idx) > 20.0) then
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
           endif
-        elseif (Solzen(Elem_Idx,Line_Idx) > 90.0) then
+        elseif (Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) then
           if (Ref_375um(Elem_Idx,Line_Idx) > 5.0) then
              Water_Flag(Elem_Idx,Line_Idx) = sym%YES
          endif

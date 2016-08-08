@@ -2,10 +2,10 @@
 !---------------------------------------------------------------------
 !
 !----------------------------------------------------------------------
-  Num_Elem = Num_Pix      
+  Num_Elem = Image%Number_Of_Elements
   Elem_End = Num_Elem
   Elem_Start = 1
-  Channel_On_Flag => Chan_On_Flag_Default
+  Channel_On_Flag => Sensor%Chan_On_Flag_Default
   Invalid_Pixel_Mask => Bad_Pixel_Mask
   Vza_Idx_Rtm => Zen_Idx_Rtm
   if ((Channel_On_Flag(Chan_Idx_16um)) /= 0) Ref_16um => ch(6)%Ref_Toa
@@ -22,7 +22,7 @@
   if ((Channel_On_Flag(Chan_Idx_12um)) /= 0) Bt_12um_Clear => ch(32)%Bt_Toa_Clear 
   if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Rad_H2O => ch(27)%Rad_Toa
   if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Bt_H2O => ch(27)%Bt_Toa
-  if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Bt_H2O_Stddev => Bt_Ch27_Std_3x3
+!  if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Bt_H2O_Stddev => Bt_Ch27_Std_3x3
   if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Rad_H2O_Clear => ch(27)%Rad_Toa_Clear
   if ((Channel_On_Flag(Chan_Idx_67um)) /= 0) Bt_H2O_Clear => ch(27)%Bt_Toa_Clear
   if (((Channel_On_Flag(Chan_Idx_67um)) /= 0) .and. (Channel_On_Flag(Chan_Idx_11um) /= 0)) Covar_H2O_Window => Covar_Ch27_Ch31_5x5 

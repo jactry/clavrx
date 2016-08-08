@@ -83,18 +83,18 @@
  real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DT_DZ_UNCER = 0.007 !K/m
 
  !--- parameters that control the bottom-up estimation of Zc and Pc
- real(kind=real4), parameter, private:: Min_P_inversion = 600.0 !min pressure to look for low-level inversion
- real(kind=real4), parameter, private:: Max_Delta_T_inversion = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion
- real(kind=real4), parameter, private:: Delta_Psfc_Inversion = 50.0  !pressure above sfc to look for low-level inversion
- real(kind=real4), parameter, private:: Delta_T_Layer_Inversion = 0.0   !maximum temperature difference to define an inversion layer
+ real(kind=real4), parameter, private:: MIN_P_INVERSION = 600.0 !min pressure to look for low-level inversion
+ real(kind=real4), parameter, private:: MAX_DELTA_T_INVERSION = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion
+ real(kind=real4), parameter, private:: DELTA_PSFC_INVERSION = 50.0  !pressure above sfc to look for low-level inversion
+ real(kind=real4), parameter, private:: DELTA_T_LAYER_INVERSION = 0.0   !maximum temperature difference to define an inversion layer
  integer(kind=INT1), parameter, private:: ALLOW_STRATOSPHERE_SOLUTION_FLAG = 1  !allow interpolation in stratosphere
 
  !--- the parameters that provide the apriori values and their uncertainties
- real(kind=real4), parameter, private:: Tc_Ap_tropo_Offset_Cirrus = 15.0      !apriori Tc for opaque clouds
+!real(kind=real4), parameter, private:: Tc_Ap_Tropo_Offset_Cirrus = 15.0      !apriori Tc for opaque clouds
 
  real(kind=real4), parameter, private:: Tc_Ap_Uncer_Opaque  = 10.0            !apriori uncertainty of Tc for opaque clouds
 
- real(kind=real4), parameter, private:: Tc_Ap_Uncer_Cirrus = 20.0  !!           !apriori uncertainty of Tc for cirrus
+!real(kind=real4), parameter, private:: Tc_Ap_Uncer_Cirrus = 20.0  !!           !apriori uncertainty of Tc for cirrus
                                                                     ! Originally it was 20 in the baseline version of ACHA
 
 !real(kind=real4), parameter, private:: Ec_Ap_Uncer_Opaque = 0.2             !apriori uncertainty of ec for opaque clouds
@@ -144,3 +144,17 @@
 
  !--- parameter that controls observed negative heights and pressures.
  real(kind=real4), parameter, private:: ZC_FLOOR = 75.0 !Set a bottom limit to Zc.
+
+ !--- cirrus apriori for ice cloud temperature relative to tropopause
+ !---- computed in 10 deg lat bands.  First bin is -90 to -80
+ integer, parameter, private:: num_lat_cirrus_ap = 18
+ real(kind=real4), dimension(num_lat_cirrus_ap), private, parameter:: &
+    TC_CIRRUS_MEAN_LAT_VECTOR = (/  &
+      17.1184, 16.8644, 14.4241, 15.7231, 14.6659, 17.5565, &
+      27.6142, 17.9770, 13.5127, 16.2466, 22.4699, 24.6992, &
+      18.7324, 18.3266, 15.2087, 14.8122, 18.0353, 19.9059/)
+ real(kind=real4), dimension(num_lat_cirrus_ap), private, parameter:: &
+    TC_CIRRUS_STDDEV_LAT_VECTOR = (/  &
+      9.58205, 10.7957, 9.96308, 9.75967, 9.11487, 11.3290, &
+      18.0040, 16.2742, 14.0061, 15.0945, 13.7971, 14.6018, &
+      15.5322, 14.5822, 11.3727, 9.90263, 11.5416, 11.9146/)

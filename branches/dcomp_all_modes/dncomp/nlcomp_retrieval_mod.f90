@@ -136,6 +136,7 @@ contains
       state_vec = state_apr
 
       iteration_idx = 0
+      debug_mode = 0
 
       IF (debug_mode > 4 ) THEN
          PRINT *, "<--- Begin New Retrieval for pixel = "

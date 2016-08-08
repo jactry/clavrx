@@ -259,6 +259,8 @@ contains
       integer :: edge(2)
       real  :: values(:,:)     
       integer :: sfwdata   
+     
+     
       write_sds_2d_dt4 = sfwdata ( sds_id,start,stride,edge,values)
    end function write_sds_2d_dt4
    
@@ -272,6 +274,10 @@ contains
       integer :: sfendacc
       istatus = sfendacc ( id_sds )
       
+      if ( istatus /= 0 ) then
+         !print*,'level-2 sds closing warning: ', istatus, id_sds
+        ! stop
+      end if
    end subroutine close_sds
    
    subroutine close_file(id_file)

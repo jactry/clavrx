@@ -87,15 +87,18 @@ module dcomp_clavrx_bridge_mod
       , solar_ch20_nu
      
    use dcomp_rtm_module
+   
+   use cx_array_tools_mod
           
    implicit none
 
    private
    
    logical :: first_call = .true.
-   
+   logical :: first_call_iband = .true.
    public :: set_dcomp_version              
    public :: awg_cloud_dncomp_algorithm
+   public :: awg_cloud_dncomp_algorithm_iband
    
    character(len = 200) :: DCOMP_RELEASE_VERSION = 'DCOMP version 2_0_0'
   
@@ -192,10 +195,8 @@ contains
          end if
       end do 
       
-      ! - here we have to add channels for snow
      
-      
-      
+      ! - all dcomp modes 
       do i_mode = 1, 3 
          dcomp_mode_local = i_mode
          if ( dcomp_mode .ne. i_mode .and. dcomp_mode .ne. 9) cycle
@@ -380,7 +381,226 @@ contains
       
 
    end subroutine awg_cloud_dncomp_algorithm
+   
+   
+   
+   !----------------------------------------------------------------------
+   !  AWG_CLOUD_DCOMP_ALGORITHM
+   !    This is the DCOMP bridge from CLAVR-x
+   !   this is for iband VIIRS 0.6/1.6 algorithm only
+   !---------------------------------------------------------------------- 
+   subroutine awg_cloud_dncomp_algorithm_iband (  iseg_in ,  algorithm_started )   
+      use pixel_common   
+       
+      implicit none
+ 
+      !--- input
+      integer, intent(in),optional :: iseg_in
+      
+      ! - output 
+      logical , intent(out) :: algorithm_started
+      
+      type(dcomp_rtm_type) :: dcomp_rtm
+      type(dncomp_in_type)  :: dcomp_input
+      type(dncomp_out_type) :: dncomp_output
+      
+      integer :: debug_mode      
+      integer :: dim_1, dim_2
+      integer :: idx_chn
+      
+      
+      
+      integer, allocatable :: possible_channels ( : )
+      logical :: chan_on ( N_CHN ) = .false.
+      integer :: i, i_mode
+      integer :: CHN_VIS
+      integer :: CHN_NIR
+      
+      integer :: dcomp_mode_local
+      
+      interface
+         subroutine dcomp_array_loop (a , b , debug_mode_user)
+            import dncomp_in_type
+            import dncomp_out_type
+            type (dncomp_in_type) , intent(in) :: a
+            type (dncomp_out_type), intent(out) :: b
+            integer , intent(in), optional :: debug_mode_user
+         end subroutine
 
+      end interface
+      
+
+      
+      
+      ! ----- executable  --------------------------------------------------- !
+      
+      
+            
+      algorithm_started = .false.
+      
+      ! - do we need to run dcomp at all? ( night  etc..)
+      
+          
+      if ( count ( geo % solzen < 75. .and. geo % solzen >= 0 .and. geo % satzen < 75. ) < 1 ) return
+     
+      algorithm_started = .true.
+      
+      
+      if ( first_call_iband) then
+        call mesg ('DCNOMP Iband starts ',color = 46 ) 
+        first_call_iband = .false.
+      end if
+      
+       
+      ! - compute DCOMP related RTM 
+      call perform_rtm_dcomp ( dcomp_rtm ) 
+        
+      dim_1 =  2 * Image%Number_Of_Elements
+      dim_2 =  2 * Image%Number_Of_Lines_Read_This_Segment
+   
+      chan_on = .false.
+      chan_on ( 1  )  = .true.
+      chan_on ( 6  )  = .true.
+      
+
+      !-allocate input
+      dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
+      
+      
+  
+      ! == CONFIGURE 
+       
+      ! - dcomp-mode
+      dcomp_input % mode = 1
+      ! - ancil/lut path
+      dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
+      ! - wmo sensor id
+      dcomp_input % sensor_wmo_id = sensor % wmo_id
+      dcomp_input % sun_earth_dist = sun_earth_distance
+            
+      ! -  Satellite Data
+      dcomp_input % refl ( 1 ) % d = Ref_chi1
+      dcomp_input % alb_sfc ( 1 ) % d = cx_rebin(ch(1) % sfc_ref_white_sky(:,1:Image%Number_Of_Lines_Read_This_Segment), dim_1, dim_2)
+      dcomp_input % gas_coeff(1) % d = solar_rtm % tau_h2o_coef(1,:)
+               
+      dcomp_input % refl ( 6 ) % d = ref_chi3
+      dcomp_input % alb_sfc ( 6 ) % d = cx_rebin(ch(6) % sfc_ref_white_sky(:,1:Image%Number_Of_Lines_Read_This_Segment), dim_1, dim_2)
+      dcomp_input % gas_coeff( 6 ) % d = solar_rtm % tau_h2o_coef(6,:)
+      
+
+      dcomp_input % sat % d = cx_rebin(geo % satzen, dim_1, dim_2)
+      dcomp_input % sol % d = cx_rebin(geo % solzen, dim_1, dim_2)
+      dcomp_input % azi % d = cx_rebin(geo % relaz, dim_1, dim_2)
+          
+      ! - Cloud products
+      dcomp_input % cloud_press % d = cx_rebin(acha % pc, dim_1, dim_2)
+      dcomp_input % cloud_temp % d  = cx_rebin(acha % tc, dim_1, dim_2)
+      dcomp_input % tau_acha % d    = cx_rebin(acha % tau, dim_1, dim_2)
+      dcomp_input % cloud_mask % d  = cx_rebin(cld_mask, dim_1, dim_2)
+!ccm
+      dcomp_input % cloud_type % d  = cx_rebin(cld_type, dim_1, dim_2)
+!end ccm
+!ccm      dcomp_input % cloud_type % d  = cld_type
+                
+         ! - Flags
+      dcomp_input % is_land % d = cx_rebin(sfc % land_mask, dim_1, dim_2) == 1 
+      dcomp_input % is_valid % d =cx_rebin( bad_pixel_mask, dim_1, dim_2) /= 1
+     
+       
+      dcomp_input % press_sfc % d = cx_rebin( dcomp_rtm % sfc_nwp, dim_1, dim_2)
+      dcomp_input % snow_class % d = sfc % snow
+        
+      ! - Atmospheric contents
+      ! ozone column in Dobson
+      dcomp_input % ozone_nwp % d = cx_rebin(dcomp_rtm % ozone_path, dim_1, dim_2)
+      ! Total water Vapour above the cloud
+      dcomp_input % tpw_ac % d = cx_rebin(dcomp_rtm % tpw_ac, dim_1, dim_2)
+  
+      ! === THE MAIN CALL of DCOMP ===  
+     
+        debug_mode = 0
+      !   call dcomp_input % check_input (debug_mode)
+        
+      call dcomp_array_loop ( dcomp_input , dncomp_output , debug_mode_user = debug_mode)
+     
+      ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
+!ccm
+
+
+            ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
+      
+      
+          
+        
+      print*,'number of lines: ..... ',Image%Number_Of_Lines
+      
+      call dcomp_rtm % deallocate_it()
+      
+      call add_to_file ( dncomp_output % cod % d, dncomp_output % cps % d )
+      
+
+      
+      
+
+   end subroutine awg_cloud_dncomp_algorithm_iband
+   
+   
+   subroutine add_to_file (product,prd2)
+   
+        use cx_hdf_write_mod, only:  &
+      hdf_file_open &
+      , create_sds &
+      , compress_sds &
+      , write_sds &
+      , add_att &
+      , close_sds &
+      , close_file
+      
+      real, intent(in) :: product ( :,:)
+      real, intent(in) :: prd2 ( :,:)
+      logical :: first_seg = .true.
+      character ( len=240) :: file = 'test.hdf'
+      
+      integer,save :: id_file
+      integer, save :: sds_id, sds_id2
+      
+      integer :: sds_start_2d(2)
+      integer :: sds_stride_2d(2) = [1,1]
+      integer :: sds_edge_2d(2)
+      integer :: istatus
+      
+      
+      if ( first_seg ) then 
+         id_file = hdf_file_open(trim(file), create=.true.)
+         Sds_Id= create_sds (id_file, 'COD' , [6400,1536] , 4)
+         Sds_Id2= create_sds (id_file, 'CPS' , [6400,1536] , 4)
+         sds_start_2d = [0,0]
+         first_seg = .false.
+      end if
+      
+      
+      sds_edge_2d = shape ( product)
+       
+      istatus = write_sds ( sds_id, sds_start_2d, sds_stride_2d , sds_edge_2d,  product)
+      istatus = write_sds ( sds_id2, sds_start_2d, sds_stride_2d , sds_edge_2d,  prd2)
+      print*,istatus,sds_id
+      
+       if ( istatus /= 0 ) then
+         print*,'something wrong with write sds ', istatus, sds_id
+         print*,sds_id, sds_start_2d, sds_stride_2d , sds_edge_2d
+         print*,'dimensions array: ',shape(product)
+         stop
+      end if
+      sds_start_2d = [0,sds_start_2d(2)+100]
+      
+      if (sds_edge_2d(2) .lt. 50) then
+         call close_sds (  sds_id)
+         call close_sds (  sds_id2)
+         call close_file (id_file)
+     end if
+   end subroutine 
+   
+  
   
    !---------------------------------------------------------------------------
    ! routine to set the cvs version in a global variable to write to hdf file

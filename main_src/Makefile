@@ -197,7 +197,8 @@ clavrxorb_objs = process_clavrx.o \
                  cx_ssec_areafile_mod.o \
                  cx_read_ascii_line_mod.o \
                  cx_data_io_tools_mod.o \
-                 csv_mod.o 
+                 csv_mod.o  \
+                 cx_array_tools_mod.o
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
@@ -308,6 +309,7 @@ clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_c
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o hdf.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
+cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
 cx_file_tools_mod.o:cx_file_tools_mod.f90
 cx_hdf_read_mod.o:cx_hdf_write_mod.f90
@@ -324,7 +326,7 @@ dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pi
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_utility.o calibration_constants.o
-dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o
+dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o cx_array_tools_mod.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
 cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	

@@ -944,7 +944,7 @@ contains
       character (len=*) , intent(in) :: SensorName
       
       integer :: possible_acha_modes ( 8 )
-      integer :: possible_dcomp_modes ( 4 )
+      integer :: possible_dcomp_modes ( 5 )
  
       !------------------------------------------------------------------------
       !--- ACHA MODE Check
@@ -996,7 +996,7 @@ contains
          possible_dcomp_modes(1:1)  =  [3]
       case ('VIIRS','VIIRS-NASA')
          possible_acha_modes(1:3)   =  [1, 3, 5] 
-         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
+         possible_dcomp_modes(1:5)  =  [1, 2, 3, 9, 8]
          nlcomp_mode_User_Set       =  1  
       case ('VIIRS-IFF')      
          possible_acha_modes(1:4)   =  [1, 3, 5, 9]

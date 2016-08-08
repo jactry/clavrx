@@ -37,6 +37,7 @@
 !   VAPOR_ICE
 !   INVERT_2x2
 !   INVERT_3x3
+!   INVERT_4x4
 !   FIND_BOUNDS
 !   PACK_BYTES
 !   COMPUTE_TIME_HOURS
@@ -60,6 +61,8 @@
            INVERT_MATRIX,  &
            INVERT_2x2,  &
            INVERT_3x3,  &
+           INVERT_4x4,  &
+           INVERT_DIAGONAL,  &
            FIND_BOUNDS,  &
            COMPUTE_TIME_HOURS, &
            COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES,  &
@@ -422,42 +425,85 @@ end function VAPOR_ICE
 !--------------------------------------------------------------------------
 ! Invert a square matrix
 !--------------------------------------------------------------------------
-function Invert_Matrix(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
+function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
-  REAL(KIND=REAL4), DIMENSION(:,:), INTENT(IN) :: Matrix
-  REAL(KIND=REAL4), DIMENSION(:,:), INTENT(OUT) :: Matrix_Inv
-  INTEGER(KIND=INT4), INTENT(IN) :: Matrix_Size
+  real(kind=real4), dimension(:,:), intent(in) :: Matrix
+  real(kind=real4), dimension(:,:), intent(OUT) :: Matrix_Inv
+  integer(kind=INT4), intent(in) :: Matrix_Size
 
-  INTEGER(KIND=INT4) :: Status
-  INTEGER(KIND=INT4) :: Singular_Flag
+  integer(kind=INT4) :: Status
+  integer(kind=INT4) :: Singular_Flag
+  integer:: i,j,ni, nj
+  real(kind=real4) :: Zero
+  logical:: Diag_Flag
 
   Status = Sym%SUCCESS
 
-  SELECT CASE(Matrix_Size)
+  Zero = epsilon(Matrix(1,1))
 
-    CASE(2)
-
-      CALL INVERT_2x2(Matrix, Matrix_Inv, Singular_Flag)
-      IF (Singular_Flag == 1) THEN
+  !---- check for a square matrix
+  ni = size(Matrix,1)
+  nj = size(Matrix,2)
+  if (ni /= nj) then
+     Status = sym%FAILURE
+     return
+  endif
+  !---- check for a diagonal matrix
+  Diag_Flag = .true.
+  do i = 1, ni
+    do j = 1, nj
+       if (i == j) cycle
+       if (abs(Matrix(i,j)) > Zero) then
+         Diag_Flag = .false.
+         exit
+       endif
+    enddo
+  enddo
+  
+  if (Diag_Flag) then
+      call INVERT_DIAGONAL(Matrix, Matrix_Inv, Singular_Flag)
+      if (Singular_Flag == 1) THEN
+        stop
         Status = Sym%FAILURE
-      ENDIF
+      endif
 
-    CASE(3)
+  else
 
-      CALL INVERT_3x3(Matrix, Matrix_Inv, Singular_Flag)
-      IF (Singular_Flag == 1) THEN
+  !---- if not diagonal matrix, do full inversion
+  select case(Matrix_Size)
+
+    case(2)
+
+      call INVERT_2x2(Matrix, Matrix_Inv, Singular_Flag)
+      if (Singular_Flag == 1) THEN
         Status = Sym%FAILURE
-      ENDIF
+      endif
 
-    CASE DEFAULT
+    case(3)
+
+      call INVERT_3x3(Matrix, Matrix_Inv, Singular_Flag)
+      if (Singular_Flag == 1) THEN
+        Status = Sym%FAILURE
+      endif
+
+    case(4)
+
+      call INVERT_4x4(Matrix, Matrix_Inv, Singular_Flag)
+      if (Singular_Flag == 1) THEN
+        Status = Sym%FAILURE
+      endif
+
+    case default
 
       Status = Sym%FAILURE
 
       print*,"Invalid matrix size."
 
-  END SELECT
+  end select
 
-  RETURN
+  endif
+
+  return
 
 end function Invert_Matrix
 
@@ -504,7 +550,8 @@ subroutine INVERT_3x3(A,A_inv,ierr)
   real:: determinant
 
   ierr = 0
-!--- compute determinant
+
+  !--- compute determinant
   determinant = A(1,1)*(A(2,2)*A(3,3)-A(3,2)*A(2,3)) - &
                 A(1,2)*(A(2,1)*A(3,3)-A(3,1)*A(2,3)) + &
                 A(1,3)*(A(2,1)*A(3,2)-A(3,1)*A(2,2))
@@ -513,7 +560,7 @@ subroutine INVERT_3x3(A,A_inv,ierr)
         ierr = 1
   endif
 
-!--- compute inverse
+  !--- compute inverse
   A_inv(1,1) = A(2,2)*A(3,3) - A(3,2)*A(2,3)
   A_inv(1,2) = A(1,3)*A(3,2) - A(3,3)*A(1,2)
   A_inv(1,3) = A(1,2)*A(2,3) - A(2,2)*A(1,3)
@@ -525,8 +572,95 @@ subroutine INVERT_3x3(A,A_inv,ierr)
   A_inv(3,3) = A(1,1)*A(2,2) - A(2,1)*A(1,2)
   A_inv = A_inv / determinant
 
-
 end subroutine INVERT_3x3
+!--------------------------------------------------------------------------
+! subroutine INVERT_4x4(A,A_inv,ierr)
+!
+! Matrix Inversion for a 4x4 matrix
+!--------------------------------------------------------------------------
+subroutine INVERT_4x4(A,A_inv,ierr)
+  real, dimension(:,:), intent(in):: A
+  real, dimension(:,:), intent(out):: A_inv
+  integer, intent(out):: ierr
+  real:: determinant
+
+  ierr = 0
+
+  !--- compute determinant
+  determinant = A(1,1)*(A(2,2)*A(3,3)*A(4,4) + A(2,3)*A(3,4)*A(4,2) + A(2,4)*A(3,2)*A(4,3)) + &
+                A(1,2)*(A(2,1)*A(3,4)*A(4,3) + A(2,3)*A(3,1)*A(4,4) + A(2,4)*A(3,3)*A(4,1)) + &
+                A(1,3)*(A(2,1)*A(3,2)*A(4,4) + A(2,2)*A(3,4)*A(4,1) + A(2,4)*A(3,1)*A(4,2)) + &
+                A(1,4)*(A(2,1)*A(3,3)*A(4,2) + A(2,2)*A(3,1)*A(4,3) + A(2,3)*A(3,2)*A(4,1)) - &
+                A(1,1)*(A(2,2)*A(3,4)*A(4,3) + A(2,3)*A(3,2)*A(4,4) + A(2,4)*A(3,3)*A(4,2)) - &
+                A(1,2)*(A(2,1)*A(3,3)*A(4,4) + A(2,3)*A(3,4)*A(4,1) + A(2,4)*A(3,1)*A(4,3)) - &
+                A(1,3)*(A(2,1)*A(3,4)*A(4,2) + A(2,2)*A(3,1)*A(4,4) + A(2,4)*A(3,2)*A(4,1)) - &
+                A(1,4)*(A(2,1)*A(3,2)*A(4,3) + A(2,2)*A(3,3)*A(4,1) + A(2,3)*A(3,1)*A(4,2))
+
+  if (determinant == 0.0) then
+!       print *, "Singular Matrix in Invert 3x3"
+        ierr = 1
+  endif
+
+  !--- compute inverse
+  A_inv(1,1) = A(2,2)*A(3,3)*A(4,4) + A(2,3)*A(3,4)*A(4,2) + A(2,4)*A(3,2)*A(4,3) - A(2,2)*A(3,4)*A(4,3) - A(2,3)*A(3,2)*A(4,4) - A(2,4)*A(3,3)*A(4,2)
+  A_inv(1,2) = A(1,2)*A(3,4)*A(4,3) + A(1,3)*A(3,2)*A(4,4) + A(1,4)*A(3,3)*A(4,2) - A(1,2)*A(3,3)*A(4,4) - A(1,3)*A(3,4)*A(4,2) - A(1,4)*A(3,2)*A(4,3)
+  A_inv(1,3) = A(1,2)*A(2,3)*A(4,4) + A(1,3)*A(2,4)*A(4,2) + A(1,4)*A(2,2)*A(4,3) - A(1,2)*A(2,4)*A(4,3) - A(1,3)*A(2,2)*A(4,4) - A(1,4)*A(2,3)*A(4,2)
+  A_inv(1,4) = A(1,2)*A(2,4)*A(3,3) + A(1,3)*A(2,3)*A(3,4) + A(1,4)*A(2,3)*A(3,2) - A(1,2)*A(2,3)*A(3,4) - A(1,3)*A(2,4)*A(3,2) - A(1,4)*A(2,2)*A(3,3)
+
+  A_inv(2,1) = A(2,1)*A(3,4)*A(4,3) + A(2,3)*A(3,1)*A(4,4) + A(2,4)*A(3,3)*A(4,1) - A(2,1)*A(3,3)*A(4,4) - A(2,3)*A(3,4)*A(4,1) - A(2,4)*A(3,1)*A(4,3)
+  A_inv(2,2) = A(1,1)*A(3,3)*A(4,4) + A(1,3)*A(3,4)*A(4,1) + A(1,4)*A(3,1)*A(4,3) - A(1,1)*A(3,4)*A(4,3) - A(1,3)*A(3,1)*A(4,4) - A(1,4)*A(3,3)*A(4,1)
+  A_inv(2,3) = A(1,1)*A(2,4)*A(4,3) + A(1,3)*A(2,1)*A(4,4) + A(1,4)*A(2,3)*A(4,1) - A(1,1)*A(2,3)*A(4,4) - A(1,3)*A(2,4)*A(4,1) - A(1,4)*A(2,1)*A(4,3)
+  A_inv(2,4) = A(1,1)*A(2,3)*A(3,4) + A(1,3)*A(2,4)*A(3,1) + A(1,4)*A(2,1)*A(3,3) - A(1,1)*A(2,4)*A(3,3) - A(1,3)*A(2,1)*A(3,4) - A(1,4)*A(2,3)*A(3,1)
+
+  A_inv(3,1) = A(2,1)*A(3,2)*A(4,4) + A(2,2)*A(3,4)*A(4,1) + A(2,4)*A(3,1)*A(4,2) - A(2,1)*A(3,4)*A(4,2) - A(2,2)*A(3,1)*A(4,4) - A(2,4)*A(3,2)*A(4,1)
+  A_inv(3,2) = A(1,1)*A(3,4)*A(4,2) + A(1,2)*A(3,1)*A(4,4) + A(1,4)*A(3,2)*A(4,1) - A(1,1)*A(3,2)*A(4,4) - A(1,2)*A(3,4)*A(4,1) - A(1,4)*A(3,1)*A(4,2)
+  A_inv(3,3) = A(1,1)*A(2,2)*A(4,4) + A(1,2)*A(2,4)*A(4,1) + A(1,4)*A(2,1)*A(4,2) - A(1,1)*A(2,4)*A(4,2) - A(1,2)*A(2,1)*A(4,4) - A(1,4)*A(2,2)*A(4,1)
+  A_inv(3,4) = A(1,1)*A(2,4)*A(3,2) + A(1,2)*A(2,1)*A(3,4) + A(1,4)*A(2,2)*A(3,1) - A(1,1)*A(2,2)*A(3,4) - A(1,2)*A(2,4)*A(3,1) - A(1,4)*A(2,1)*A(3,2)
+
+  A_inv(4,1) = A(2,1)*A(3,3)*A(4,2) + A(2,2)*A(3,1)*A(4,3) + A(2,3)*A(3,2)*A(4,1) - A(2,1)*A(3,2)*A(4,3) - A(2,2)*A(3,3)*A(4,1) - A(2,3)*A(3,1)*A(4,2)
+  A_inv(4,2) = A(1,1)*A(3,2)*A(4,3) + A(1,2)*A(3,3)*A(4,1) + A(1,3)*A(3,1)*A(4,2) - A(1,1)*A(3,3)*A(4,2) - A(1,2)*A(3,1)*A(4,3) - A(1,3)*A(3,2)*A(4,1)
+  A_inv(4,3) = A(1,1)*A(2,3)*A(4,2) + A(1,2)*A(2,1)*A(4,3) + A(1,3)*A(2,2)*A(4,1) - A(1,1)*A(2,2)*A(4,3) - A(1,2)*A(2,3)*A(4,1) - A(1,3)*A(2,1)*A(4,2)
+  A_inv(4,4) = A(1,1)*A(2,2)*A(3,3) + A(1,2)*A(2,3)*A(3,1) + A(1,3)*A(2,1)*A(3,2) - A(1,1)*A(2,3)*A(3,2) - A(1,2)*A(2,1)*A(3,3) - A(1,3)*A(2,2)*A(3,1)
+
+  A_inv = A_inv / determinant
+
+end subroutine INVERT_4x4
+!--------------------------------------------------------------------------
+! subroutine INVERT_DIAGONAL(A,A_inv,ierr)
+!
+! Matrix Inversion for a nxn diagnonal matrix
+!--------------------------------------------------------------------------
+subroutine INVERT_DIAGONAL(A,A_inv,ierr)
+  real, dimension(:,:), intent(in):: A
+  real, dimension(:,:), intent(out):: A_inv
+  integer, intent(out):: ierr
+  integer:: i, j, ni, nj
+  real:: determinant
+  real:: zero
+
+  zero = epsilon(zero)
+  ierr = 0
+  A_inv = 0.0
+
+  ni = size(A,1)
+  nj = size(A,2)
+ 
+  if(ni /= nj) then 
+    ierr = 1
+    return
+  endif
+
+  do i = 1, ni
+     j = i
+     if (abs(A(i,j)) > zero) then
+        A_inv(i,i) = 1.0 / A(i,i)
+     else
+       ierr = 1
+       return
+     endif
+  enddo
+
+end subroutine INVERT_DIAGONAL
 
 !--------------------------------------------------------------------
 ! subroutine FIND_BOUNDS(lat,lon,wlon,elon,slat,nlat,dateline_flg)
@@ -552,12 +686,12 @@ subroutine FIND_BOUNDS(lat,lon,wlon,elon,slat,nlat,dateline_flg)
 
 !Declare calling parameters
 
-  REAL(kind=real4),dimension(:,:),intent(in) :: lat,lon
-  REAL(kind=real4),intent(out) :: wlon,elon,slat,nlat
-  INTEGER(kind=int1), intent(out) :: dateline_flg
+  real(kind=real4),dimension(:,:),intent(in) :: lat,lon
+  real(kind=real4),intent(out) :: wlon,elon,slat,nlat
+  integer(kind=int1), intent(out) :: dateline_flg
 
-  INTEGER(kind=int4) :: astatus, nx, ny
-  REAL(kind=real4), dimension(:,:), allocatable :: dum
+  integer(kind=int4) :: astatus, nx, ny
+  real(kind=real4), dimension(:,:), allocatable :: dum
 
   nx = size(lon,1)
   ny = size(lon,2)
@@ -750,7 +884,7 @@ end subroutine FIND_BOUNDS
 
 !--- place input byte into correct position
      temp_byte =0
-     temp_byte = ishft(INT(input_bytes(i_in),KIND=INT2),word_bit_depth-bit_depth(i_in))   !first ishft
+     temp_byte = ishft(INT(input_bytes(i_in),kind=INT2),word_bit_depth-bit_depth(i_in))   !first ishft
      temp_byte = ishft(temp_byte,bit_end - word_bit_depth)                 !second ishft
 
 !--- modify output byte
@@ -1081,24 +1215,24 @@ end subroutine COMPUTE_MEDIAN_SEGMENT
 ! Reference: Standard definition for Pearson correlation
 !
 !====================================================================
-FUNCTION Pearson_Corr(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask)  &
+function Pearson_Corr(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask)  &
          RESULT(Pearson_Corr_Coeff)
-   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_One
-   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_Two
-   INTEGER(KIND=INT4), INTENT(IN):: Array_Width
-   INTEGER(KIND=INT4), INTENT(IN):: Array_Hght
-   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Invalid_Data_Mask
-   REAL(KIND=REAL4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_1
-   REAL(KIND=REAL4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_2
-   REAL(KIND=REAL8):: Pearson_Corr_Top_Term_1
-   REAL(KIND=REAL8):: Pearson_Corr_Top_Term_2
-   REAL(KIND=REAL8):: Pearson_Corr_Bottom_Term_1
-   REAL(KIND=REAL8):: Pearson_Corr_Bottom_Term_2
-   REAL(KIND=REAL4):: Pearson_Corr_Coeff
-   REAL(KIND=REAL8):: Mean_Array_One
-   REAL(KIND=REAL8):: Mean_Array_Two
-   REAL(KIND=REAL8):: Sum_Array_One
-   REAL(KIND=REAL8):: Sum_Array_Two
+   real(kind=real4), intent(in), dimension(:,:):: Array_One
+   real(kind=real4), intent(in), dimension(:,:):: Array_Two
+   integer(kind=INT4), intent(in):: Array_Width
+   integer(kind=INT4), intent(in):: Array_Hght
+   integer(kind=INT1), intent(in), dimension(:,:):: Invalid_Data_Mask
+   real(kind=real4), dimension(Array_Width,Array_Hght):: Pearson_Corr_Term_1
+   real(kind=real4), dimension(Array_Width,Array_Hght):: Pearson_Corr_Term_2
+   real(kind=real8):: Pearson_Corr_Top_Term_1
+   real(kind=real8):: Pearson_Corr_Top_Term_2
+   real(kind=real8):: Pearson_Corr_Bottom_Term_1
+   real(kind=real8):: Pearson_Corr_Bottom_Term_2
+   real(kind=real4):: Pearson_Corr_Coeff
+   real(kind=real8):: Mean_Array_One
+   real(kind=real8):: Mean_Array_Two
+   real(kind=real8):: Sum_Array_One
+   real(kind=real8):: Sum_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
    if (sum(Invalid_Data_Mask) > 0) then
@@ -1135,7 +1269,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Ma
                          sqrt(Pearson_Corr_Bottom_Term_1 * &
                               Pearson_Corr_Bottom_Term_2)
    
- END FUNCTION Pearson_Corr
+ end function Pearson_Corr
 
 !====================================================================
 ! Function Name: Covariance
@@ -1168,21 +1302,21 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Ma
 ! Reference: Standard definition for the Covariance Computation
 !
 !====================================================================
-FUNCTION Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask) &
+function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask) &
          RESULT(Covar_Array_One_Array_Two)
-   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_One
-   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_Two
-   INTEGER(KIND=INT4), INTENT(IN):: Array_Width
-   INTEGER(KIND=INT4), INTENT(IN):: Array_Hght
-   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Invalid_Data_Mask
+   real(kind=real4), intent(in), dimension(:,:):: Array_One
+   real(kind=real4), intent(in), dimension(:,:):: Array_Two
+   integer(kind=INT4), intent(in):: Array_Width
+   integer(kind=INT4), intent(in):: Array_Hght
+   integer(kind=INT1), intent(in), dimension(:,:):: Invalid_Data_Mask
 
-   REAL(KIND=REAL8):: Mean_Array_One
-   REAL(KIND=REAL8):: Mean_Array_Two
-   REAL(KIND=REAL8):: Mean_Array_One_x_Array_Two
-   REAL(KIND=REAL8):: Sum_Array_One
-   REAL(KIND=REAL8):: Sum_Array_Two
-   REAL(KIND=REAL8):: Sum_Array_One_x_Array_Two
-   REAL(KIND=REAL4):: Covar_Array_One_Array_Two
+   real(kind=real8):: Mean_Array_One
+   real(kind=real8):: Mean_Array_Two
+   real(kind=real8):: Mean_Array_One_x_Array_Two
+   real(kind=real8):: Sum_Array_One
+   real(kind=real8):: Sum_Array_Two
+   real(kind=real8):: Sum_Array_One_x_Array_Two
+   real(kind=real4):: Covar_Array_One_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
    if (sum(Invalid_Data_Mask) > 0) then
@@ -1202,17 +1336,17 @@ FUNCTION Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
    Covar_Array_One_Array_Two  = Mean_Array_One_x_Array_Two - &
                                 Mean_Array_One * Mean_Array_Two 
    
- END FUNCTION Covariance
+ end function Covariance
  
 !---------------------------------------------------------------------
-! FUNCTION leap_year_fct(yyyy) result(leap_flg)
+! function leap_year_fct(yyyy) result(leap_flg)
 !
 ! Function to determine if an input year is a leap year.
 !---------------------------------------------------------------------
 
-FUNCTION leap_year_fct(yyyy) result(leap_flg)
-  INTEGER, intent(in) :: yyyy
-  INTEGER :: leap_flg
+function leap_year_fct(yyyy) result(leap_flg)
+  integer, intent(in) :: yyyy
+  integer :: leap_flg
 
   leap_flg = 0
 
@@ -1221,7 +1355,7 @@ FUNCTION leap_year_fct(yyyy) result(leap_flg)
 
   return
 
-END FUNCTION leap_year_fct
+end function leap_year_fct
 
 !---------------------------------------------------------------------
 ! SUBPROGRAM:  W3FC05        EARTH U,V WIND COMPONENTS TO DIR AND SPD
@@ -1241,16 +1375,16 @@ END FUNCTION leap_year_fct
 !   90-06-11  R.E.JONES   CONVERT TO SUN FORTRAN 1.3
 !   91-03-30  R.E.JONES   SiliconGraphics FORTRAN
 !
-! USAGE:    CALL W3FC05 (U, V, DIR, SPD)
+! USAGE:    call W3FC05 (U, V, DIR, SPD)
 !
 !   INPUT ARGUMENT LIST:
-!     U        - REAL*4 EARTH-ORIENTED U-COMPONENT
-!     V        - REAL*4 EARTH-ORIENTED V-COMPONENT
+!     U        - real*4 EARTH-ORIENTED U-COMPONENT
+!     V        - real*4 EARTH-ORIENTED V-COMPONENT
 !
 !   OUTPUT ARGUMENT LIST:      (INCLUDING WORK ARRAYS)
-!     DIR      - REAL*4 WIND DIRECTION, DEGREES.  VALUES WILL
+!     DIR      - real*4 WIND DIRECTION, DEGREES.  VALUES WILL
 !                BE FROM 0 TO 360 INCLUSIVE.
-!     SPD      - REAL*4 WIND SPEED IN SAME UNITS AS INPUT
+!     SPD      - real*4 WIND SPEED IN SAME UNITS AS INPUT
 !---------------------------------------------------------------------
 
 subroutine WIND_SPEED_AND_DIRECTION(u,v,dir,spd)
@@ -1301,13 +1435,13 @@ end subroutine WIND_SPEED_AND_DIRECTION
 ! USAGE:    CALL W3FC05 (U, V, DIR, SPD)
 !
 !   INPUT ARGUMENT LIST:
-!     U        - REAL*4 EARTH-ORIENTED U-COMPONENT
-!     V        - REAL*4 EARTH-ORIENTED V-COMPONENT
+!     U        - real*4 EARTH-ORIENTED U-COMPONENT
+!     V        - real*4 EARTH-ORIENTED V-COMPONENT
 !
 !   OUTPUT ARGUMENT LIST:      (INCLUDING WORK ARRAYS)
-!     DIR      - REAL*4 WIND DIRECTION, DEGREES.  VALUES WILL
+!     DIR      - real*4 WIND DIRECTION, DEGREES.  VALUES WILL
 !                BE FROM 0 TO 360 INCLUSIVE.
-!     SPD      - REAL*4 WIND SPEED IN SAME UNITS AS INPUT
+!     SPD      - real*4 WIND SPEED IN SAME UNITS AS INPUT
 !-------------------------------------------------------------------------------------
 real elemental function WIND_SPEED ( u ,v )
 
@@ -1370,36 +1504,36 @@ end function
 !-------------------------------------------------------------------------------------
 
 function SPLIT_STRING (str, separ, dims, word) result(error_status)
-  CHARACTER(*), intent(in) :: str
-  CHARACTER(*), intent(in) :: separ
-  INTEGER, intent(in) :: dims
-  INTEGER :: error_status
-  CHARACTER(100), dimension(:), allocatable, intent (out) :: word
-  INTEGER :: pos1, pos2, i
+  character(*), intent(in) :: str
+  character(*), intent(in) :: separ
+  integer, intent(in) :: dims
+  integer :: error_status
+  character(100), dimension(:), allocatable, intent (out) :: word
+  integer :: pos1, pos2, i
 
   error_status = 0
   pos1 = 1
   if (allocated (word) ) deallocate (word)
   allocate (word (dims))
-  DO i = 1, dims
+  do i = 1, dims
     pos2 = INDEX(str(pos1:), separ)
-    IF (pos2 == 0) THEN
+    if (pos2 == 0) THEN
        word(i) = str(pos1:)
        EXIT
-    END IF
+    endif
     word(i) = str(pos1:pos1+pos2-2)
     pos1 = pos2+pos1
- END DO
+ enddo
 
 end function
 
 !------------------------------------------------------------------------------------- 
 
-FUNCTION REPLACE_CHAR_IN_STRG (string_inout,target_char,substring_char, &
+function REPLACE_CHAR_IN_STRG (string_inout,target_char,substring_char, &
                     what_del) result(error_status)
- CHARACTER(*), intent(inout) :: string_inout
- CHARACTER(*), intent(in) :: target_char, substring_char, what_del
- INTEGER :: indx, error_status
+ character(*), intent(inout) :: string_inout
+ character(*), intent(in) :: target_char, substring_char, what_del
+ integer :: indx, error_status
 
  error_status = 0
  indx = index(string_inout,target_char)
@@ -1416,7 +1550,7 @@ FUNCTION REPLACE_CHAR_IN_STRG (string_inout,target_char,substring_char, &
     return
  endif
 
-ENDFUNCTION 
+endfunction 
 
 !------------------------------------------------------------------------------------- 
 

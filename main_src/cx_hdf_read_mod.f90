@@ -7,7 +7,7 @@ module cx_hdf_read_mod
    implicit none
    private
    
-   include '/Users/awalther/lib/hdf4/include/hdf.f90'
+   include '/home/awalther/lib/hdf4/include/hdf.f90'
    include 'cx_hdf_standard_declarations.inc'
    
    integer, parameter :: MAXNCDIM = 32

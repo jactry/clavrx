@@ -79,7 +79,7 @@ contains
   end if
 
   return
-end
+end function
 
 subroutine csv_value_count ( csv_record, csv_record_status, value_count )
 
@@ -210,7 +210,8 @@ subroutine csv_file_close_read ( csv_file_name, csv_file_unit )
   close ( unit = csv_file_unit )
 
   return
-end
+end subroutine
+
 subroutine csv_file_close_write ( csv_file_name, csv_file_unit )
 
 !*****************************************************************************80
@@ -243,7 +244,7 @@ subroutine csv_file_close_write ( csv_file_name, csv_file_unit )
   close ( unit = csv_file_unit )
 
   return
-end
+end subroutine
 subroutine csv_file_header_write ( csv_file_name, csv_file_unit, header )
 
 !*****************************************************************************80
@@ -279,7 +280,8 @@ subroutine csv_file_header_write ( csv_file_name, csv_file_unit, header )
   write ( csv_file_unit, '(a)' ) trim ( header )
 
   return
-end
+end subroutine
+
 subroutine csv_file_line_count ( csv_file_name, line_num )
 
 !*****************************************************************************80
@@ -351,7 +353,7 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
   close ( unit = input_unit )
 
   return
-end
+end subroutine
 subroutine csv_file_record_write ( csv_file_name, csv_file_unit, record )
 
 !*****************************************************************************80
@@ -387,7 +389,7 @@ subroutine csv_file_record_write ( csv_file_name, csv_file_unit, record )
   write ( csv_file_unit, '(a)' ) trim ( record )
 
   return
-end
+end subroutine
 subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
 
 !*****************************************************************************80
@@ -432,7 +434,7 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
   end if
 
   return
-end
+end subroutine
 subroutine csv_file_open_write ( csv_file_name, csv_file_unit )
 
 !*****************************************************************************80
@@ -476,7 +478,7 @@ subroutine csv_file_open_write ( csv_file_name, csv_file_unit )
   end if
 
   return
-end
+end subroutine
 subroutine csv_record_append_i4 ( i4, record )
 
 !*****************************************************************************80
@@ -534,7 +536,7 @@ subroutine csv_record_append_i4 ( i4, record )
   write ( record(i+1:i+i4_len), fmat ) i4
 
   return
-end
+end subroutine
 subroutine csv_record_append_r4 ( r4, record )
 
 !*****************************************************************************80
@@ -593,7 +595,7 @@ subroutine csv_record_append_r4 ( r4, record )
   end if
 
   return
-end
+end subroutine
 subroutine csv_record_append_r8 ( r8, record )
 
 !*****************************************************************************80
@@ -652,7 +654,7 @@ subroutine csv_record_append_r8 ( r8, record )
   end if
 
   return
-end
+end subroutine
 subroutine csv_record_append_s ( s, record )
 
 !*****************************************************************************80
@@ -712,7 +714,7 @@ subroutine csv_record_append_s ( s, record )
   record(i:i) = '"'
 
   return
-end
+end subroutine
 subroutine get_unit ( iunit )
 
 !*****************************************************************************80
@@ -776,7 +778,7 @@ subroutine get_unit ( iunit )
   end do
 
   return
-end
+end subroutine
 function i4_log_10 ( i )
 
 !*****************************************************************************80
@@ -934,6 +936,6 @@ subroutine timestamp ( )
     d, trim ( month(m) ), y, h, ':', n, ':', s, '.', mm, trim ( ampm )
 
   return
-end
+end subroutine
 
 end module csv_mod

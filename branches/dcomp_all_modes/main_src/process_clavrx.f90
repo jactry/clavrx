@@ -1169,12 +1169,12 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                if (Dcomp_Mode > 0) then
-                  print*,'sdcmomp mode first: ', dcomp_mode
-                  call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
-                  print*,'sdcmomp mode: ', dcomp_mode
-                  if ( dcomp_mode .GE. 8) then
-                     call AWG_CLOUD_DNCOMP_ALGORITHM_IBAND ( Iseg_In = Segment_Number, algorithm_started = dncomp_run )
                   
+                  call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
+                  
+                  if ( dcomp_mode .GE. 8 .and. trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
+							
+                     call AWG_CLOUD_DNCOMP_ALGORITHM_IBAND ( Iseg_In = Segment_Number, infile = trim(File_1b_Temp),algorithm_started = dncomp_run )                 
                   end if 
                   
                   

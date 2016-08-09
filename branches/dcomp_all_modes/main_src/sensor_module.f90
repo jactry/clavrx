@@ -1251,7 +1251,7 @@ module SENSOR_MODULE
             Ierror = sym%YES
             return      ! skips file
          endif
-
+print*,'after nscans> ', Image%Number_Of_Lines
          ! Check if VIIRS Number of scans is regular (48) and calculate Number of y pixels
          if (Image%Number_Of_Lines .ge. 48) then
             Image%Number_Of_Lines = Image%Number_Of_Lines * 16      !16pix per Scan

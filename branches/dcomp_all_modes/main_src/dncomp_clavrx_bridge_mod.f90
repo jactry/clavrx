@@ -389,13 +389,14 @@ contains
    !    This is the DCOMP bridge from CLAVR-x
    !   this is for iband VIIRS 0.6/1.6 algorithm only
    !---------------------------------------------------------------------- 
-   subroutine awg_cloud_dncomp_algorithm_iband (  iseg_in ,  algorithm_started )   
+   subroutine awg_cloud_dncomp_algorithm_iband (  iseg_in , infile, algorithm_started )   
       use pixel_common   
        
       implicit none
  
       !--- input
       integer, intent(in),optional :: iseg_in
+		character(len=*) , intent(in) :: infile
       
       ! - output 
       logical , intent(out) :: algorithm_started
@@ -439,7 +440,7 @@ contains
       algorithm_started = .false.
       
       ! - do we need to run dcomp at all? ( night  etc..)
-      
+    
           
       if ( count ( geo % solzen < 75. .and. geo % solzen >= 0 .and. geo % satzen < 75. ) < 1 ) return
      
@@ -532,11 +533,11 @@ contains
       
           
         
-      print*,'number of lines: ..... ',Image%Number_Of_Lines
+    
       
       call dcomp_rtm % deallocate_it()
       
-      call add_to_file ( dncomp_output % cod % d, dncomp_output % cps % d )
+      call add_to_file ( dncomp_output % cod % d, dncomp_output % cps % d , infile)
       
 
       
@@ -545,7 +546,7 @@ contains
    end subroutine awg_cloud_dncomp_algorithm_iband
    
    
-   subroutine add_to_file (product,prd2)
+   subroutine add_to_file (product,prd2, file)
    
         use cx_hdf_write_mod, only:  &
       hdf_file_open &
@@ -559,8 +560,8 @@ contains
       real, intent(in) :: product ( :,:)
       real, intent(in) :: prd2 ( :,:)
       logical :: first_seg = .true.
-      character ( len=240) :: file = 'test.hdf'
-      
+      character ( len=*), intent(in) :: file 
+      character (len = 240) :: outfile
       integer,save :: id_file
       integer, save :: sds_id, sds_id2
       
@@ -569,9 +570,10 @@ contains
       integer :: sds_edge_2d(2)
       integer :: istatus
       
-      
+		
+      outfile = 'IBAND_LEVEL2_'//trim(file)//'.hdf'
       if ( first_seg ) then 
-         id_file = hdf_file_open(trim(file), create=.true.)
+         id_file = hdf_file_open(trim(outfile), create=.true.)
          Sds_Id= create_sds (id_file, 'COD' , [6400,1536] , 4)
          Sds_Id2= create_sds (id_file, 'CPS' , [6400,1536] , 4)
          sds_start_2d = [0,0]
@@ -583,7 +585,7 @@ contains
        
       istatus = write_sds ( sds_id, sds_start_2d, sds_stride_2d , sds_edge_2d,  product)
       istatus = write_sds ( sds_id2, sds_start_2d, sds_stride_2d , sds_edge_2d,  prd2)
-      print*,istatus,sds_id
+     
       
        if ( istatus /= 0 ) then
          print*,'something wrong with write sds ', istatus, sds_id
@@ -597,6 +599,7 @@ contains
          call close_sds (  sds_id)
          call close_sds (  sds_id2)
          call close_file (id_file)
+			first_seg = .true.
      end if
    end subroutine 
    

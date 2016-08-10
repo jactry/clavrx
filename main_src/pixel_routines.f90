@@ -266,10 +266,6 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
               Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
             endif
           endif
-!       Diag_Pix_Array_1(Elem_Idx,Line_Idx) = Ch1_Counts(Elem_Idx,Line_Idx)
-!       Diag_Pix_Array_2(Elem_Idx,Line_Idx) = Ch1_Counts(Elem_Idx,Line_Idx) - Ch1_Dark_Count
-!       Diag_Pix_Array_3(Elem_Idx,Line_Idx) = Solar_Contamination_Mask(Elem_Idx,Line_Idx)
-!print *, "test ", Geo%Solzen(Elem_Idx,Line_Idx), Geo%Scatangle(Elem_Idx,Line_Idx), Ch1_Counts(Elem_Idx,Line_Idx),Ch1_Dark_Count
         endif
 
 

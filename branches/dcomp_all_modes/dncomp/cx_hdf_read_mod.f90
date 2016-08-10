@@ -9,7 +9,8 @@ module cx_hdf_read_mod
    
    ! = this is in inlcude path of hdf library
    include 'hdf.f90'
-   include 'cx_hdf_standard_declarations.inc'
+	include 'dffunc.f90'
+   !include 'cx_hdf_standard_declarations.inc'
    
    integer, parameter :: MAXNCDIM = 32
    integer, parameter :: MAXNCNAM = 128

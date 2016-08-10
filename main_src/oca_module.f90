@@ -31,8 +31,6 @@
 !--------------------------------------------------------------------------------------
       module OCA_MODULE
 
-      use HDF, only: &
-             DFACC_read
 
       use FILE_UTILITY,only: &
              GET_LUN
@@ -56,6 +54,8 @@
 
 
         implicit none
+
+       include 'hdf.f90'
         public :: READ_OCA
         private :: DETERMINE_OCA_FILE
 

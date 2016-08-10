@@ -32,7 +32,6 @@
 !--------------------------------------------------------------------------------------
 program DRIVE_SUBSET_LEVEL2B
  use CONSTANTS
- use HDF
  use HDF_PARAMS
  use NUMERICAL_ROUTINES
  use SCALING_PARAMETERS

@@ -39,22 +39,12 @@ module LEVEL2B_ROUTINES
    , Missing_Value_Real4 &
    , No_Attribute_Missing_Value
    
-   use HDF, only: &
-   DFACC_CREATE &
-   , DFNT_INT16 &
-   , DFACC_READ &
-   , DFNT_INT32 &
-   , DFNT_FLOAT32 &
-   , DFNT_CHAR8 &
-   , DFNT_INT8 &
-   , DFNT_CHAR
-   
 
    use FILE_UTILITY,only: &
     get_lun
 
    implicit none
- 
+   include 'hdf.f90' 
    private
    public:: DEFINE_SDS_RANK1
    public:: DEFINE_SDS_RANK2

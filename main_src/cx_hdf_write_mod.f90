@@ -4,7 +4,7 @@
 
 module cx_hdf_write_mod
    use constants
-   use hdf
+   
    
    implicit none
   
@@ -26,6 +26,8 @@ module cx_hdf_write_mod
   
    
    integer :: istatus
+	
+	include 'hdf.f90'
    
    public  hdf_file_open 
 contains

@@ -27,13 +27,12 @@
 !
 !--------------------------------------------------------------------------------------
 module SFC_EMISS
-   use HDF
    use CONSTANTS
    use NUMERICAL_ROUTINES
   
    implicit none
-  
-   !--- routine access declaration
+   include 'hdf.f90' 
+    !--- routine access declaration
    private :: READ_INTEGRATED_SEEBOR_HDF 
    public :: OPEN_SEEBOR_EMISS, CLOSE_SEEBOR_EMISS, READ_SEEBOR_EMISS
 

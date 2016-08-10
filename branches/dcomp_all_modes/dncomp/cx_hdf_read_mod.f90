@@ -7,7 +7,8 @@ module cx_hdf_read_mod
    implicit none
    private
    
-   include '/home/awalther/lib/hdf4/include/hdf.f90'
+   ! = this is in inlcude path of hdf library
+   include 'hdf.f90'
    include 'cx_hdf_standard_declarations.inc'
    
    integer, parameter :: MAXNCDIM = 32

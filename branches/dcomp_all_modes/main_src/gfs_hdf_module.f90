@@ -39,7 +39,7 @@ module GFS
   use NUMERICAL_ROUTINES
   use Sort_Module
   use NWP_COMMON
-  use HDF
+  
   
   use clavrx_message_module
 
@@ -52,6 +52,7 @@ module GFS
   real (kind=real4), parameter, private :: Missing_Gfs = 9.999E+20
 
    character(len=11), parameter:: MODULE_PROMPT = "GFS_MODULE:"
+	include 'hdf.f90'
 contains
 
 !-------------------------------------------------------------

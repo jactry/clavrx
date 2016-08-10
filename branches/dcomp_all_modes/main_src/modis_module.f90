@@ -36,8 +36,6 @@ module MODIS_MODULE
                 , sym &
                 , missing_value_int1
 
-        use HDF, only: &
-                DFACC_read
  
         use FILE_UTILITY,only: &
                 get_lun
@@ -99,7 +97,9 @@ module MODIS_MODULE
         integer(kind=int2), parameter, private:: fill_value = 32767
         real(kind=real4), parameter, private:: missing_value = -999.0
         character(len=13), parameter:: MODULE_PROMPT="MODIS_MODULE:"
+        
 
+       include 'hdf.f90'
 contains
 
 !----------------------------------------------------------------

@@ -82,16 +82,6 @@ program COMPILE_ASC_DES_LEVEL2B
    , missing_value_int4 &
    , Missing_Value_Real4
    
- use HDF, only: &
-   DFACC_CREATE &
-   , FAIL &
-   , DFNT_INT16 &
-   , DFACC_READ &
-   , DFNT_INT32 &
-   , DFNT_FLOAT32 &
-   , DFNT_CHAR8 &
-   , DFACC_RDWR &
-   , DFNT_INT8
  
  use NUMERICAL_ROUTINES, only: &
    Compute_Time_Hours
@@ -145,7 +135,7 @@ program COMPILE_ASC_DES_LEVEL2B
    implicit none
   
    
-
+   include 'hdf.f90'
    integer, parameter:: NCDC_Attributes_Flag = 0    !Set this to 1 to emulate NCDC 2009 data format
    integer, parameter:: N_Files_Max = 1200
    integer(kind=int4):: N_Command_Line_Args

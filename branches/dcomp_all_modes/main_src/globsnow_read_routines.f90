@@ -31,12 +31,12 @@
 !
 !--------------------------------------------------------------------------------------
 module GLOBSNOW_READ_ROUTINES
-  use HDF
   use CONSTANTS
   use NUMERICAL_ROUTINES
   use FILE_UTILITY
   implicit none
-  private
+  include 'hdf.f90'  
+private
   public:: GET_PIXEL_GLOBSNOW_ANALYSIS
   public:: GET_GLOBSNOW_FILENAME
   public:: READ_GLOBSNOW_ANALYSIS_MAP

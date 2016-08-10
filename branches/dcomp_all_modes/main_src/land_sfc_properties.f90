@@ -28,7 +28,7 @@
 !--------------------------------------------------------------------------------------
 
 MODULE land_sfc_properties
-  use HDF
+  
   use CONSTANTS
   use NUMERICAL_ROUTINES
   use FILE_UTILITY
@@ -73,6 +73,8 @@ MODULE land_sfc_properties
     REAL(kind=real8) :: first_lat
     REAL(kind=real8) :: first_lon
   END TYPE land_grid_description
+  
+  include 'hdf.f90'
     
   CONTAINS
   

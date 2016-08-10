@@ -79,7 +79,7 @@ CLAVRX_ID_FLAG = -DISCLAVRX
 
 #Compilation rule for f90 files
 .f90.o:
-	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(fflags_clavr) $(CLAVRX_ID_FLAG) $(cpp) $<
+	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(fflags_clavr) $(CLAVRX_ID_FLAG)  $(hdflibs) $(cpp) $<
 
 #Compilation rule for F files (needed for AIX compilation)
 .F.o:
@@ -109,7 +109,6 @@ clavrxorb_objs = process_clavrx.o \
                  cgms_nav.o \
                  file_utility.o \
                  scaling_params.o \
-                 hdf.o \
                  netcdf_read_module.o \
                  oisst_analysis.o \
                  constant.o \
@@ -202,7 +201,6 @@ clavrxorb_objs = process_clavrx.o \
 
 #Level2b routines
 comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
-                            hdf.o \
                             level2b.o \
                             num_mod.o \
                             file_utility.o \
@@ -214,7 +212,6 @@ comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
 
 #Level2b subsetting routines
 drive_subset_level2b_objs = drive_subset_level2b.o \
-                            hdf.o \
 		                    hdf_params.o \
                             level2b.o \
                             num_mod.o \
@@ -264,7 +261,7 @@ bindir:
 #The convert big endian flag is only needed for the OISST module, hence the special compilation
 #instuctions
 
-oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o hdf.o num_mod.o
+oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o num_mod.o
 	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90
 
 constant.o: constant.f90
@@ -307,7 +304,7 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 calibration_constants.o: calibration_constants.f90 constant.o 
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
-comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o hdf.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
+comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
@@ -333,7 +330,7 @@ cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_commo
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 
-drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o hdf.o level2b.o file_utility.o
+drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o  level2b.o file_utility.o
 date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 file_utility.o: file_utility.f90 constant.o
@@ -341,33 +338,32 @@ geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o  file_utility.o avhrr_module.o constant.o
 Message_Handler.o: Message_Handler.f90 file_utility.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
-gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o
-globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o file_utility.o
-hdf.o: hdf.f90
+gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o clavrx_message_module.o
+globsnow_read_routines.o: globsnow_read_routines.f90 constant.o num_mod.o file_utility.o
 netcdf_read_module.o: netcdf_read_module.f90 constant.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
 precision.o:precision.f90
-hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
-hdf_params.o: version.inc hdf_params.f90 hdf.o constant.o
-land_sfc_properties.o: land_sfc_properties.f90 constant.o hdf.o num_mod.o file_utility.o
+hdf_read_module.o: hdf_read_module.f90 Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
+hdf_params.o: version.inc hdf_params.f90  constant.o
+land_sfc_properties.o: land_sfc_properties.f90 constant.o num_mod.o file_utility.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-modis_module.o: modis_module.f90 constant.o hdf.o file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o calibration_constants.o
+modis_module.o: modis_module.f90 constant.o  file_utility.o pixel_common.o pixel_routines.o planck.o file_utility.o viewing_geometry_module.o file_tools.o calibration_constants.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_utility.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
-iff_module.o: iff_module.f90 hdf.o pixel_common.o file_utility.o hdf_read_module.o 
+iff_module.o: iff_module.f90  pixel_common.o file_utility.o hdf_read_module.o 
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o avhrr_module.o
 fy2_module.o: fy2_module.f90 pixel_common.o constant.o num_mod.o mtsat_module.o get_lun.o goes_module.o file_utility.o viewing_geometry_module.o
 coms_module.o: coms_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o viewing_geometry_module.o
-ncep_reanalysis.o: ncep_reanalysis.f90 constant.o hdf.o nwp_common.o sort_module.o num_mod.o
+ncep_reanalysis.o: ncep_reanalysis.f90 constant.o  nwp_common.o sort_module.o num_mod.o
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
-level2.o: level2.f90 constant.o pixel_common.o hdf.o clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o cx_hdf_write_mod.o avhrr_module.o
+level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o cx_hdf_write_mod.o avhrr_module.o
 
-level2b.o: level2b.f90 constant.o hdf.o file_utility.o
+level2b.o: level2b.f90 constant.o file_utility.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o
-oca_module.o: oca_module.f90 hdf.o file_utility.o constant.o pixel_common.o file_tools.o
+oca_module.o: oca_module.f90  file_utility.o constant.o pixel_common.o file_tools.o
 sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
@@ -410,7 +406,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
               dncomp_clavrx_bridge_mod.o \
-              clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
+              clavrx_message_module.o avhrr_pixel_aerosol.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
               nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
@@ -467,7 +463,7 @@ reposnx.o : reposnx.f
 ################## VIIRS ###################
 ifdef hdf5libs
 viirs_clavrx_bridge.mod viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 \
-               constants.mod hdf.mod avhrr_module.mod file_utility.mod pixel_common.mod pixel_routines.mod  planck.mod
+               constants.mod avhrr_module.mod file_utility.mod pixel_common.mod pixel_routines.mod  planck.mod
 	$(fc) -c $(fflags) ${hdf5libs} viirs_clavrx_bridge.f90 
 viirs_read_mod.mod viirs_read_mod.o: viirs_read_mod.f90
 	$(fc) -c $(fflags) ${hdf5libs} viirs_read_mod.f90  

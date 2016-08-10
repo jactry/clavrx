@@ -180,12 +180,6 @@ module LEVEL2_ROUTINES
       , Beta_11um_12um_Tropo_Rtm &
       , aot1
       
-   use HDF, only: &
-      DFACC_CREATE &
-      , DFNT_FLOAT32 &
-      , DFNT_INT32 &
-      , DFNT_INT16
-                  
    use AVHRR_MODULE,only: &
        cloud_mask_version   &  !- comes from anywhere else!
       , cloud_mask_thresholds_version &   !- comes from anywhere else!
@@ -218,6 +212,8 @@ module LEVEL2_ROUTINES
       , close_file
 
    implicit none
+   
+   include 'hdf.f90'
    private
 
    public:: WRITE_PIXEL_HDF_RECORDS

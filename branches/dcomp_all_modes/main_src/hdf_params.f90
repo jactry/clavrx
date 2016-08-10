@@ -38,15 +38,8 @@ use CONSTANTS, only: &
    , int4 &
    , real4  
    
-use HDF, only: &
-       DFNT_INT16 &
-   , DFNT_CHAR8 &
-   , DFNT_FLOAT32 &
-   , DFNT_INT32 &
-   , DFNT_INT8
-
-
-implicit none
+   implicit none
+   include 'hdf.f90'   
 private
 public:: READ_CLAVRX_HDF_GLOBAL_ATTRIBUTES, &
          READ_CLAVRX_HDF4_SDS_RANK1

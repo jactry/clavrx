@@ -52,6 +52,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Cld_Test_Vector_Packed, &
        Dust_Mask, &
        Fire_Mask, &
+       Thin_Cirr_Mask, &
        Posterior_Cld_Probability, &
        Smoke_Mask, &
        SST_Anal_Uni, &
@@ -199,6 +200,7 @@ contains
            if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
            if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
            if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
+           if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = ibset(Cld_Test_Vector_Packed(3,i,j),3)
       end do elem_loop_pack
    end do line_loop_pack
 
@@ -468,6 +470,7 @@ contains
       Dust_Mask(i,j) = Output%Dust_Mask
       Smoke_Mask(i,j) = Output%Smoke_Mask
       Fire_Mask(i,j) = Output%Fire_Mask
+      Thin_Cirr_Mask(i,j) = Output%Thin_Cirr_Mask
    end subroutine SET_OUTPUT
 
    subroutine SET_DIAG(i,j)

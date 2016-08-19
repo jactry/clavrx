@@ -32,7 +32,8 @@ module CLOUD_MASK_ADDONS
 
  private:: EUMETSAT_FIRE_TEST, &
            CLAVRX_SMOKE_TEST, &
-           CLAVRX_DUST_TEST
+           CLAVRX_DUST_TEST, &
+           CLAVRX_THIN_CIRRUS_TEST
 
  !--- define structures
  include 'nb_cloud_mask.inc'
@@ -53,6 +54,9 @@ module CLOUD_MASK_ADDONS
   type(mask_output), intent(out) :: Output
   type(diag_output), intent(out), Optional :: Diag
 
+  real :: Min_Thresh
+  real :: Max_Thresh
+
   !------------------------------------------------------------------------------------------
   !---  begin executable code
   !------------------------------------------------------------------------------------------
@@ -61,6 +65,7 @@ module CLOUD_MASK_ADDONS
   Output%Dust_Mask = MISSING_VALUE_INT1
   Output%Smoke_Mask = MISSING_VALUE_INT1
   Output%Fire_Mask = MISSING_VALUE_INT1
+  Output%Thin_Cirr_Mask = MISSING_VALUE_INT1
 
   !------------------------------------------------------------------------------------------
   !  MAIN LOOP
@@ -118,7 +123,6 @@ module CLOUD_MASK_ADDONS
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
-      Output%Fire_Mask = 0
       if (Input%Chan_On_11um == symbol%YES .and.   &
           Input%Chan_On_375um == symbol%YES .and.  &
           Input%Land_Class == Symbol%Land .and.    &
@@ -133,6 +137,38 @@ module CLOUD_MASK_ADDONS
                  , Input%Bt_11um_Std &
                  , Input%Bt_375um_Std &
                  , Input%Solzen )
+
+      endif
+
+      !-----------------------------------------------------------------------------
+      ! VCM Thin Cirrus Algorithm (only for daytime)
+      !-----------------------------------------------------------------------------
+      if (Input%Chan_On_138um == symbol%YES .and.  &
+          Input%Solzen <= Reflectance_Spatial_Solzen_Thresh) then
+           
+          Output%Thin_Cirr_Mask = 0
+
+          ! --- get thresholds depending on the surface conditions
+          Min_Thresh = Thin_Cirr_Min_Thresh
+          Max_Thresh = Thin_Cirr_Max_Thresh
+
+          ! desert
+          if (Input%Sfc_Type == Symbol%BARE_SFC) then
+            Min_Thresh = Desert_Thin_Cirr_Min_Thresh
+            Max_Thresh = Desert_Thin_Cirr_Max_Thresh
+          endif
+
+          ! snow/ice
+          if (Input%Snow_Class == Symbol%SNOW .or. &
+              Input%Snow_Class == Symbol%SEA_ICE ) then
+            Min_Thresh = Snow_Thin_Cirr_Min_Thresh
+            Max_Thresh = Snow_Thin_Cirr_Max_Thresh
+          endif
+
+          Output%Thin_Cirr_Mask = CLAVRX_THIN_CIRRUS_TEST ( &
+                   Input%Ref_138um,   &
+                   Min_Thresh,        &
+                   Max_Thresh )
 
       endif
 
@@ -402,6 +438,25 @@ module CLOUD_MASK_ADDONS
      split_window_test = (t11 - t12) - split_window_test
 
   end function SPLIT_WINDOW_TEST
+
+  !-------------------------------------------------------------------------------------
+  !  CLAVR-x Thin Cirrus Test
+  !-------------------------------------------------------------------------------------
+  integer elemental function CLAVRX_THIN_CIRRUS_TEST ( r138, min_thresh, max_thresh )
+
+     real, intent(in):: r138
+     real, intent(in):: min_thresh
+     real, intent(in):: max_thresh
+
+     ! --- calculate test result
+     if ( r138 >= min_thresh .and. &
+          r138 <= max_thresh ) then
+        clavrx_thin_cirrus_test = 1
+     else
+        clavrx_thin_cirrus_test = 0
+     endif
+
+  end function CLAVRX_THIN_CIRRUS_TEST
 
 !-----------------------------------------------------------
 ! end of module

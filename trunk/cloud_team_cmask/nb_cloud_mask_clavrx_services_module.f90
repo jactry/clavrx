@@ -121,6 +121,7 @@
     integer(kind=int1) :: Dust_Mask
     integer(kind=int1) :: Smoke_Mask
     integer(kind=int1) :: Fire_Mask
+    integer(kind=int1) :: Thin_Cirr_Mask
  end type mask_output
 
  !-----------------------------------------------------------------------------

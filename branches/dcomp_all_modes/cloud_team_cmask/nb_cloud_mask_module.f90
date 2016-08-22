@@ -35,7 +35,7 @@
 ! 16           1            16        2    fire detected
 !---
 ! 17           3            17-19     3    nbvcm surface type
-! 18           1            20        3    blank   
+! 18           1            20        3    thin cirrus detected (separate test)
 !<-------------------- START OF CLOUD TESTS -------------------------->
 ! 19           2            21-22     3    T_11           (TGCT)
 ! 20           2            23-24     3    T_Max-T        (RTCT)

@@ -61,3 +61,12 @@
  real, private, parameter:: Btd_85_11_Max_Dust_Thresh = -0.5
  real, private, parameter:: Btd_85_11_Min_Dust_Thresh = -2.5 !-1.5
 
+ !--- CLAVRx Thin Cirrus Thresholds
+ real, private, parameter:: Thin_Cirr_Min_Thresh = 1.0
+ real, private, parameter:: Thin_Cirr_Max_Thresh = 3.0
+ real, private, parameter:: Desert_Thin_Cirr_Min_Thresh = 3.0
+ real, private, parameter:: Desert_Thin_Cirr_Max_Thresh = 5.0
+ real, private, parameter:: Snow_Thin_Cirr_Min_Thresh = 3.0
+ real, private, parameter:: Snow_Thin_Cirr_Max_Thresh = 5.0
+
+

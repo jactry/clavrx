@@ -566,8 +566,9 @@ subroutine CO2IRW_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
    if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines

@@ -639,6 +639,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             if (.not. allocated ( out % band (i_band) % rad ) ) &
                      allocate (out % band (i_band) % rad (dim_seg(1), dim_seg(2)) )
             out % band (i_band) % rad =  r3d_buffer(:,:,1)
+
          endif
             
          out % band (i_band) % is_read = .true.
@@ -670,6 +671,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       ! i is ele index, j is line index
       do empty_i = 1, size(out % band (37) % rad, 1)
           do empty_j = 1, size(out % band (37) % rad, 2)
+              if (out % band (37) % rad(empty_i, empty_j) /= missing_value) cycle
               ! ! --- nearest neighbor:
               ! --- 11um comparison scheme
               this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
@@ -679,11 +681,18 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                   ! also careful 1-based indexing!!!
                   interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
                   interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
+!print *,empty_i, empty_j,out % geo % nearest_sounder_y (empty_i, empty_j,:),out % geo % nearest_sounder_x (empty_i, empty_j,:)
                   if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
                       diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
+!print *,shape(out % band (37) % rad)
+!print *,out % band (37) % rad(empty_i, empty_j),out % band (31) % rad(interp_i,interp_j)
+!print *,empty_i, empty_j,interp_i - 1,interp_j +ny_start - 1
+!print *,diff_11um,best_diff_11um
+!stop
                       if (diff_11um < best_diff_11um) then
                          ! assign sounder bands w/this index
-                         do i_band = 21, config % n_chan 
+                         do i_band = 22, 36 !config % n_chan 
+                            !if ( i_band == 37 .or. i_band == 38 ) cycle
                             if ( sounder_ch (i_band) ) then
                                out % band (i_band) % rad(empty_i, empty_j) = &
                                    out % band (i_band) % rad(interp_i, interp_j)

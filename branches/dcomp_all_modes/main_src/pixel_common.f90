@@ -624,6 +624,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Smoke_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
+  integer(kind=int1), dimension(:,:), allocatable, public, target:: Thin_Cirr_Mask
 
   !--- cloud Mask arrays
   integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
@@ -979,6 +980,7 @@ subroutine CREATE_PIXEL_ARRAYS()
           Dust_Mask(dim1,dim2), &
           Smoke_Mask(dim1,dim2), &
           Fire_Mask(dim1,dim2), &
+          Thin_Cirr_Mask(dim1,dim2), &
           Shadow_Mask(dim1,dim2), &
           Sst_Anal(dim1,dim2), &
           Sst_Anal_Err(dim1,dim2), &
@@ -1121,6 +1123,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
   deallocate(Space_Mask)
   deallocate(Sfc_Level_Rtm_Pixel)
   deallocate(Fire_Mask)
+  deallocate(Thin_Cirr_Mask)
   deallocate(Dust_Mask)
   deallocate(Smoke_Mask)
   deallocate(Shadow_Mask)

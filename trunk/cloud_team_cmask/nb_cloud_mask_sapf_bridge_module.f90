@@ -10,6 +10,13 @@
 !  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
 !  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
 !  William Straka, CIMSS, wstraka@ssec.wisc.edu
+!
+! Note, to use the diagnostic variables, do this
+!   - set the Use_Diag flag to true
+!   - turn on the Diag argument to the desirefd routine
+!   - in the desired routine, set the diag variables to what you want
+!   - when done, repeat this in reverse
+!
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 
@@ -64,8 +71,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    type(symbol_naive_bayesian),private :: Symbol
    
    !Make module wide variables
-   character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
-   character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
+   character (len=1020), TARGET, PRIVATE:: Ancil_Data_Path
+   character (len=1020), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
    !Segment counter
    integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1
@@ -173,6 +180,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Dust_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Smoke_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Fire_Mask
+   integer(BYTE), dimension(:,:), PRIVATE  :: Thin_Cirr_Mask
       
    !Cloud training outputs
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Emiss_11um_Tropo_Rtm
@@ -224,7 +232,9 @@ contains
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
    integer :: i, j
+   logical:: Use_Diag
 
+   Use_Diag = .false.
 
    !---- set paths and mask classifier file name to their values in this framework
    Naive_Bayes_File_Name_Full_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
@@ -249,6 +259,8 @@ contains
    allocate(Ref_Uni_ChI1(num_elem,num_line))
    allocate(Bt_Uni_ChI4(num_elem,num_line))
    allocate(Bt_Uni_ChI5(num_elem,num_line))
+
+   allocate(Thin_Cirr_Mask(num_elem,num_line))
 
    !Solar Contamination
    allocate(Solar_Contamination_Mask(num_elem, num_line))
@@ -404,6 +416,7 @@ contains
            Smoke_Mask(Elem_Idx,Line_Idx) = 0
            Dust_Mask(Elem_Idx,Line_Idx)  = 0
            Fire_Mask(Elem_Idx,Line_Idx)  = 0
+           Thin_Cirr_Mask(Elem_Idx,Line_Idx)  = 0
 
         !-------------------------------------------------------------------
         ! Do space mask check here
@@ -412,9 +425,9 @@ contains
         IF (SpaceMask(Elem_Idx,Line_Idx) == YES) THEN
             Cld_Mask(Elem_Idx,Line_Idx) = symbol%MISSING
             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%MISSING
-	    Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
-	    Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = symbol%MISSING
-	    CYCLE
+            Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
+            Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = symbol%MISSING
+            CYCLE
         ENDIF
  
       
@@ -480,8 +493,6 @@ contains
          ! Set inputs
          
          call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)         
-         call SET_OUTPUT(Elem_Idx,Line_Idx)
-         call SET_DIAG(Elem_Idx,Line_Idx)
          
          !---call cloud mask routine
          call NB_CLOUD_MASK_ALGORITHM( &
@@ -499,19 +510,19 @@ contains
                                           Output) !, &
                                          ! Diag)   !optional
 
+         Thin_Cirr_Mask(Elem_Idx,Line_Idx) = Output%Thin_Cirr_Mask
 
          !Do binary Cloud mask
          IF ( (Cld_Mask(Elem_Idx,Line_Idx) == symbol%CLOUDY) .or. &
               (Cld_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLOUDY)) THEN
          
               Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLD
-         
          ELSE
-         
               Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLR    
-         
          ENDIF
 
+         call SET_OUTPUT(Elem_Idx,Line_Idx)
+         if (Use_Diag) call SET_DIAG(Elem_Idx,Line_Idx)
    
       end do elem_loop
    end do line_loop
@@ -559,16 +570,19 @@ contains
    deallocate(I1_Temp_2)
 
    !-----------------------------------------------------------------------------
-!--- save dust, smoke, fire to the corresponding bit structure 
+   !--- save dust, smoke, fire, thin cirrus to the corresponding bit structure 
    !-----------------------------------------------------------------------------
    line_loop_pack: do i = 1, Input%Num_Elem
       elem_loop_pack: do  j = 1,  Input%Num_Line
            if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = &
-                                     ibset(Cld_Test_Vector_Packed(2,i,j),4)
+                                      ibset(Cld_Test_Vector_Packed(2,i,j),4)
            if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
                                       ibset(Cld_Test_Vector_Packed(2,i,j),5)
            if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
                                       ibset(Cld_Test_Vector_Packed(2,i,j),7)
+           if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = &
+                                      ibset(Cld_Test_Vector_Packed(3,i,j),3)
+
       end do elem_loop_pack
    end do line_loop_pack
 
@@ -586,6 +600,12 @@ contains
    deallocate(Diag_Pix_Array_3)
    deallocate(Ems_Ch20_Std_Median_3x3)
    deallocate(Solar_Contamination_Mask)
+
+   deallocate(Dummy_IBand)
+   deallocate(Ref_Uni_ChI1)
+   deallocate(Bt_Uni_ChI4)
+   deallocate(Bt_Uni_ChI5)
+   deallocate(Thin_Cirr_Mask)
    
    if (allocated(Ref_Ch1_Mean_3X3)) deallocate(Ref_Ch1_Mean_3X3)
    if (allocated(Ref_Ch1_Max_3x3)) deallocate(Ref_Ch1_Max_3x3)

@@ -109,6 +109,7 @@
     integer(kind=int1), pointer:: Dust_Mask
     integer(kind=int1), pointer:: Smoke_Mask
     integer(kind=int1), pointer:: Fire_Mask
+    integer(kind=int1), pointer:: Thin_Cirr_Mask
  end type mask_output
 
  !-----------------------------------------------------------------------------

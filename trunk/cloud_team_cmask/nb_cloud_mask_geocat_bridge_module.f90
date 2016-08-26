@@ -142,8 +142,6 @@ contains
    allocate(Ems_39_Med_3x3(num_elem,num_line))
    allocate(Covar_67_11_5x5(num_elem,num_line))
 
-   allocate(Thin_Cirr_Mask(num_elem,num_line))
-
    !Solar Contamination
    allocate(Solar_Contamination_Mask(num_elem, num_line))
    !Only needed for AVHRR Counts
@@ -310,7 +308,6 @@ contains
    deallocate(Ems_Ch20_Std_Median_3x3)
    deallocate(Ems_39_Med_3x3)
    deallocate(Covar_67_11_5x5)
-   deallocate(Thin_Cirr_Mask)
 
    CALL Destroy_Spatial_Uniformity(Ref_Ch1_Mean_3X3, Ref_Ch1_Max_3x3,  &
                                    Ref_Ch1_Min_3X3, Ref_Ch1_Stddev_3X3)

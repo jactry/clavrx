@@ -29,7 +29,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
  REAL(SINGLE),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy 
  integer(kind=int1),  DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Dummy1 
 
- type(NPP_VIIRS_CLD_HEIGHT_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
+ type(CLOUD_HEIGHT_EN_Ctxt), POINTER, PRIVATE :: Ctxt_ACHA
 
  integer, parameter, private :: N_Sc_Lut = 20
 
@@ -59,7 +59,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
  subroutine AWG_CLOUD_HEIGHT_BRIDGE(Ctxt, Stat)
 
    implicit none
-   type(NPP_VIIRS_CLD_HEIGHT_Ctxt), target :: Ctxt
+   type(CLOUD_HEIGHT_EN_Ctxt), target :: Ctxt
    integer(long) :: Stat
    integer:: Num_Elem, Num_Line
 
@@ -100,7 +100,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
    
-   call AWG_CLOUD_HEIGHT_ACHA_ALGORITHM(Input, &
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, &
                                     Symbol, &
                                     Output)
                                     

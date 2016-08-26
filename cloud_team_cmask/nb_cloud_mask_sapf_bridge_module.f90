@@ -22,7 +22,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
 
 
    ! -- Framework specific modules
-   USE PCF_NPP_BAYES_CLOUD_MASK_Mod
+   USE PCF_CLOUD_MASK_EN_Mod
    USE TYPE_KINDS_AIT
    USE Convert_Char
    USE Error_Messaging_Module
@@ -140,6 +140,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
 
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch5_Clear
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch2_Clear
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn14ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7ClrRad
@@ -180,7 +181,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Dust_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Smoke_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Fire_Mask
-   integer(BYTE), dimension(:,:), PRIVATE  :: Thin_Cirr_Mask
+   integer(BYTE), dimension(:,:), ALLOCATABLE, PRIVATE  :: Thin_Cirr_Mask
       
    !Cloud training outputs
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Emiss_11um_Tropo_Rtm
@@ -205,7 +206,7 @@ contains
  
    implicit none
 
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    INTEGER(LONG) :: Return_Status
 
    integer :: Line_Idx, Elem_Idx
@@ -317,6 +318,7 @@ contains
    CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI7, Chn7Refl) !3.7um
    
    !RTM Clear sky BTs/Radiances
+   CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI7, Chn7ClrBT)
    CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI14, Chn14ClrBT)
    CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI15, Chn15ClrBT)
    CALL NFIA_RTM_Pixel_EmsCh7ClSlr(Ctxt%RTM_Src1_T00, EmsCh7ClSlr) 
@@ -637,6 +639,7 @@ contains
    SfcElev => null()
    Ref_Ch5_Clear => null()
    Ref_Ch2_Clear => null()
+   Chn7ClrBT => null()
    Chn14ClrBT => null()
    Chn15ClrBT => null()
    Chn7ClrRad => null()
@@ -791,7 +794,7 @@ contains
    !============================================================================
    subroutine SET_INPUT(i,j, Ctxt)
       integer, intent (in) :: i, j
-      TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+      TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
 
       Input%Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
       Input%Num_Line = Ctxt%SegmentInfo%Current_Row_Size
@@ -849,6 +852,7 @@ contains
       Input%Ref_375um_Clear = Missing_Value_Real4 !Not filled or used for now
       Input%Ref_213um = Chn6Refl(i,j)
       Input%Bt_375um = Chn7BT(i,j)
+      Input%Bt_375um_Clear = Chn7ClrBT(i,j)
       Input%Bt_375um_Std = Bt_39_Std_3x3(i,j)
       Input%Emiss_375um =  Ems_39_Med_3x3(i,j)
       Input%Emiss_375um_Clear = EmsCh7ClSlr(i,j)
@@ -946,7 +950,7 @@ contains
    INTEGER(LONG) :: Max_Num_Lines_per_Seg
    !tyu
    !TYPE(FW_Context), POINTER :: Ctxt
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    !tyu
    !=== INFO: generated declarations
    INTEGER(BYTE), DIMENSION(:,:), POINTER :: LandMask
@@ -1000,7 +1004,7 @@ contains
    INTEGER(LONG) :: Number_of_Lines_in_this_Segment
    REAL(SINGLE), DIMENSION(:,:), INTENT(OUT) :: Emiss_Tropo_Chn14
    !TYPE(FW_Context), POINTER :: Ctxt
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    INTEGER(LONG) :: Tropo_Idx_NWP
    !INTEGER(BYTE) :: View_Zen_Idx
    INTEGER :: X_NWP_Idx

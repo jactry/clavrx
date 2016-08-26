@@ -5,7 +5,7 @@
 module ACHA_SERVICES_MOD
 
 
- use PCF_NPP_VIIRS_CLD_HEIGHT_Mod
+ use PCF_CLOUD_HEIGHT_EN_Mod
  use type_KINDS_AIT
  use Convert_Char
  use Error_Messaging_Module
@@ -116,7 +116,7 @@ implicit none
    integer(kind=int4), dimension(:,:), pointer   ::   Line_Idx_LRC_Input
    real (kind=real4), dimension(:,:), pointer:: Tc_Cirrus_Sounder
  
-   type(NPP_VIIRS_CLD_HEIGHT_Ctxt), pointer :: Ctxt
+   type(CLOUD_HEIGHT_EN_Ctxt), pointer :: Ctxt
    integer(LONG) :: Stat 
 
  end type acha_input_struct
@@ -295,7 +295,7 @@ end type acha_rtm_nwp_struct
    integer:: Jnwp_x
    real:: Inwp_Weight
    real:: Jnwp_Weight
-   type(NPP_VIIRS_CLD_HEIGHT_Ctxt), pointer :: Ctxt
+   type(CLOUD_HEIGHT_EN_Ctxt), pointer :: Ctxt
 
    Inwp = Acha_Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx)
    Jnwp = Acha_Input%Line_Idx_Nwp(Elem_Idx,Line_Idx)
@@ -402,7 +402,7 @@ end type acha_rtm_nwp_struct
       INTEGER(KIND=Int4) :: Xnwp
       INTEGER(KIND=Int4) :: Ynwp
       REAL(KIND=Real4):: Temp_sfc
-      type(NPP_VIIRS_CLD_HEIGHT_Ctxt), pointer :: Ctxt
+      type(CLOUD_HEIGHT_EN_Ctxt), pointer :: Ctxt
       Ctxt => Acha_Input%Ctxt
 
       !------------------------------------------------------------------

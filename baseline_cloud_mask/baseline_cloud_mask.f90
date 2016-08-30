@@ -50,8 +50,16 @@ MODULE Baseline_Cloud_Mask
 !
 !--- module use statements
 !
-USE ALGORITHM_MODULE_USAGE
-
+use PIXEL_COMMON
+use CONSTANTS
+ use NWP_COMMON
+ use RTM_COMMON
+ use PLANCK
+ use Message_handler
+use calibration_constants, only: &
+        sun_earth_distance  &
+        , solar_ch20_nu
+        
 IMPLICIT NONE
 
 PRIVATE

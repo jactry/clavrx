@@ -1,0 +1,45 @@
+
+#===========================================================================
+# Code update for OSPO delivered 2016-08-30
+#
+# ospo_delivery_08302016
+#
+# Denis Botambekov - denis.botambekov@ssec.wisc.edu
+# William Straka - william.straka@ssec.wisc.edu
+#
+#---------------------------------------------------------------------------
+#
+# 1. You need to have: 
+# hdf4 library build with NO NetCDF APIs (hdf4_path)
+# hdf5 library build with Fortran_2003 Flag ON (hdf5_path)
+# netcdf3 library (netcdf_path)
+# 
+# 2.1. To Configure and Compie with IFORT:
+# cd ospo_delivery_08302016/dncomp
+# ./configure -hdf5root=${hdf5_path} -with-ifort -hdf4root=${hdf4_path}
+# make clean
+# cd ../main_src
+# cp level2_all_on.inc level2.inc
+# ./configure -hdf5root=${hdf5_path} -with-ifort  -hdf4root=${hdf4_path} -netcdflib=${netcdf_path}  -dncomp_dir=../dncomp/ -acha_dir=../cloud_acha/
+# make clean
+# make
+#
+# 2.2. To Configure and Compie with GFORT:
+# cd ospo_delivery_08302016/dncomp
+# ./configure -hdf5root=${hdf5_path} -with-gfortran -hdf4root=${hdf4_path}
+# make clean
+# cd ../main_src
+# cp level2_all_on.inc level2.inc
+# ./configure -hdf5root=${hdf5_path} -with-gfortran  -hdf4root=${hdf4_path} -netcdflib=${netcdf_path}  -dncomp_dir=../dncomp/ -acha_dir=../cloud_acha/
+# make clean
+# make
+#
+# 3. Prepare Default Options and File List files
+# Example for Default Option is at ospo_delivery_08302016/clavrx_options_example
+# Example for File List is at ospo_delivery_08302016/file_list_example
+#
+# 4. To Run CLAVR-x you need executable at ospo_delivery_08302016/clavrx_bin/clavrxorb
+# ./clavrxorb -default ${OPTION_FILE) -filelist $(FILE_LIST)
+#
+#===========================================================================
+

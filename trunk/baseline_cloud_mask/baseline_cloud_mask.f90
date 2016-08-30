@@ -262,29 +262,25 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    INTEGER(KIND=INT4) :: Have_Prev_BT_Chn14_15min
    INTEGER(KIND=INT4) :: Have_Prev_BT_Chn14_Clr_15min
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WV_BT_Window_Corr
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WaterVapor_Mean_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WaterVapor_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WaterVapor_Min_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WaterVapor_Stddev_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_Chn14_Mean_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_Chn14_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_Chn14_Min_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_Chn14_Stddev_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_WaterVapor_Stddev_3x3
    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE:: X_NWC_Idx
    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE:: Y_NWC_Idx
 
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Mean_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Min_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Stddev_3X3
+   !some allocatables changed to pointers
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Mean_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Max_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Min_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Stddev_3X3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Mean_3X3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Max_3X3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Min_3X3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Stddev_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Clear_Mean_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Clear_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Clear_Min_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Refl_Chn2_Clear_Stddev_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Mean_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Max_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Min_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Stddev_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_Chn14_Stddev_3x3
+
    INTEGER(KIND=INT4):: Num_Pix
    INTEGER(KIND=INT4):: Snow_Mask
    INTEGER(KIND=INT4):: Desert_Mask
@@ -298,7 +294,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    INTEGER(KIND=INT4):: Is_Desert
    INTEGER(KIND=INT4):: Is_Snow
    INTEGER(KIND=INT4):: Is_Valid_Pixel
-   INTEGER(KIND=INT4), DIMENSION(16):: Is_Chn
+   INTEGER(KIND=INT4), DIMENSION(16):: Is_Chn ! ABI channel #
    INTEGER(KIND=INT4):: Num_Tests
    INTEGER(KIND=INT4):: Error_Level
    REAL(KIND=REAL4):: Total_Precipitable_Water_NWP
@@ -362,6 +358,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !--- cloud Mask arrays
    !
    INTEGER(KIND=INT4), DIMENSION(Total_Num_Tests):: Test_Bit_Depth
+   !needed for CLAVR-x
+   INTEGER(KIND=INT1), DIMENSION(:,:,:), ALLOCATABLE, target:: Test_Results_Temp
 
    !
    !--- local pointers
@@ -398,7 +396,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !--- store size of this segment into local variables
    Num_Elem = Image%Number_Of_Elements
    Number_of_Lines_in_this_Segment = Image%Number_Of_Lines_Read_This_Segment
-   Max_Num_Lines_per_Seg = Image%Number_Of_Lines_Per_Segment
+   Max_Num_Lines_per_Seg = size(Nav%Lat,2)
 
 
    !set the initial cloud mask algorithm name here (for usage in the temporal term test)
@@ -406,7 +404,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
    !--- store name of sensor
    ! WCS - FIXME
-   Sat_Name = trim(scinfo(sc_ind)%name)
+    Sat_Name = trim(Sensor%Platform_Name)
    
    !-----------------------------------------------------------------
    ! Set sensor dependent thresholds
@@ -417,6 +415,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    CALL Set_Cmask_Thresholds(Sat_Name, Algo_Name)
    
 
+   ! Need to have an array for the unpacked tests for CLAVR-x
+   ALLOCATE(Test_Results_Temp(Num_Elem, Number_of_Lines_in_this_Segment, Total_Num_Tests))
+
+
    !-----------------------------------------------------------------
    ! Read IN background Chn2 Reflectance Field 
    !-----------------------------------------------------------------
@@ -424,24 +426,31 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !                                  Max_Num_Lines_per_Seg, &
    !                                  Refl_Chn2_Clear)
 
-   ! Data is already normalized in CLAVRx
-   Refl_Chn2_Clear => ch(1)%Ref_Toa_Clear
+   !-----------------------------------------------------------------
+   ! Read IN background Chn2 Reflectance Field 
+   ! Calculated by CLAVR-x
+   !-----------------------------------------------------------------
+                                     
+    Refl_Chn2_Clear => ch(1)%Ref_Toa_Clear
+    Refl_Chn2_Clear_Max_3x3 => Ref_Ch1_Clear_Max_3x3
+    Refl_Chn2_Clear_Min_3x3 => Ref_Ch1_Clear_Min_3x3
+    BT_Chn14_Stddev_3x3 => Bt_Ch31_Std_3x3
+
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
-   Cloud_Mask => Cld_Mask(i,j)
-   Cloud_Mask_Binary => null()
-   Cloud_Mask_IR => null()
-   Cloud_Mask_SST => null()
-   Cloud_Mask_Packed => Cld_Test_Vector_Packed(:,i,j)
-   Test_Results =>
-   Cloud_Mask_QF => 
-   Cloud_Mask_Tmpy => 
-   X_LRC_Idx => 
-   Y_LRC_Idx => 
-   LRC_Mask => 
-   Emiss_Tropo_Chn14 => 
+   Cloud_Mask => Cld_Mask
+   Cloud_Mask_Packed => Cld_Test_Vector_Packed
+   Test_Results => Test_Results_Temp !will just null for now
+   Cloud_Mask_QF => null() !will just null for now
+   Cloud_Mask_Tmpy => One_Byte_Temp !need to find
    
+   
+   !inputs
+   X_LRC_Idx => I_LRC
+   Y_LRC_Idx => J_LRC
+!   LRC_Mask => out2(Algo_Num)%LRC_Mask
+   Emiss_Tropo_Chn14 => ch(31)%Emiss_Tropo   
    !
    !--- set bit depths for packed Output (all here are 1 bit)
    !
@@ -473,26 +482,22 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    Cloud_Mask_QF = INVALID_CMASK_RETREVAL
 
    !=======================================================================
-   ! Compute spatial uniformity metrics
+   ! Compute spatial uniformity metrics - Already done by CLAVRx.
+   ! But set appropriate WV/IR 3x3
    !=======================================================================
-   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(28)  > 0)) THEN
-      IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN     !Choose Chn10 if available
-        CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(28)%Bt_Toa, BT_WaterVapor_Mean_3x3, &
-                                        BT_WaterVapor_Max_3x3, BT_WaterVapor_Min_3x3, BT_WaterVapor_Stddev_3x3)
-      ELSE                                        !If Chn10 not available, use Chn9
-        CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(27)%Bt_Toa, BT_WaterVapor_Mean_3x3, &
-                                        BT_WaterVapor_Max_3x3, BT_WaterVapor_Min_3x3, BT_WaterVapor_Stddev_3x3)
-      ENDIF
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29) > 0) .AND. &
+        (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
+        
+         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
+            BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch27_Std_3x3
+         ELSE
+            BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch29_Std_3x3
+         
+         ENDIF
    ENDIF
 
-   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(31)%Bt_Toa, BT_Chn14_Mean_3x3, &
-                                   BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
-   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, ch(1)%Ref_Toa, Refl_Chn2_Mean_3X3, &
-                                   Refl_Chn2_Max_3x3, Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3X3, &
                                    Sfc_Hgt_Max_3X3, Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
-   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
-                                   Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3X3, Refl_Chn2_Clear_Stddev_3X3)
 
    ! Temporal commented out due to CLAVR-x not having that capability
 
@@ -519,50 +524,23 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 !   Have_Prev_Cmask_1Hr = Load_Temporal_Data(minus_i_01hrs,TRIM(Algo_Name), &
 !                                            temporal(minus_i_01hrs)%cldmask)
 
+
+    Have_Prev_BT_Chn11_1Hr = sym%FAILURE
+    Have_Prev_BT_Chn14_1Hr = sym%FAILURE
+    Have_Prev_BT_Chn15_1Hr = sym%FAILURE
+    Have_Prev_Cmask_1Hr = sym%FAILURE
+
    !=======================================================================
    ! Compute 11 micron emissivity at Tropopause
+   ! -------------- removed - CLAVR-x computes emiss11 already------------!
    !=======================================================================
-   CALL Compute_Emiss_Tropo_Chn14(Emiss_Tropo_Chn14, &
-                                  Number_of_Lines_in_this_Segment)
+
 
    !======================================================================
    ! compute local radiative center
    !======================================================================
-
-   !--- determine which pixels to skip
-   LRC_Mask = sym%NO
    
-   WHERE(Emiss_Tropo_Chn14 /= Missing_Value_Real4)
-        LRC_Mask = sym%YES
-   ENDWHERE
-
-   !--- initialize indices
-   X_LRC_Idx = Missing_Value_INT4
-   Y_LRC_Idx = Missing_Value_INT4
-
-   !--- call routines to compute emiss lrc indices
-   CALL Gradient2d(Emiss_Tropo_Chn14, &
-                  Image%Number_Of_Elements, &
-                  Image%Number_Of_Lines_Read_This_Segment, &
-                  LRC_Mask, &
-                  EMISS_TROPO_CHN14_GRADIENT_MIN, & 
-                  EMISS_TROPO_CHN14_GRADIENT_MAX, & 
-                  EMISS_TROPO_CHN14_GRADIENT_THRESH, & 
-                  X_LRC_Idx, &
-                  Y_LRC_Idx)
-
-   !-------------------------------------------------------------------------------
-   ! Ensure that pixels with values above the threshold are
-   ! treated as LRC's.  This not the default behavior
-   !-------------------------------------------------------------------------------
-   DO Line_Idx=1, Number_of_Lines_in_this_Segment
-      DO Elem_Idx=1, Num_Elem
-         IF (Emiss_Tropo_Chn14(Elem_Idx,Line_Idx) >= EMISS_TROPO_CHN14_GRADIENT_THRESH ) THEN
-          X_LRC_Idx(Elem_Idx,Line_Idx) = Elem_Idx
-          Y_LRC_Idx(Elem_Idx,Line_Idx) = Line_Idx
-         ENDIF
-      ENDDO
-   ENDDO
+   !-------------- removed - CLAVR-x computes LRC already ------------------!
 
    !----------------------------------------------------------------------
    ! set flag to enforce uniformity IN land Mask for these computations
@@ -618,12 +596,13 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                      Max_Num_Lines_per_Seg, &
                      X_NWC_Idx, & 
                      Y_NWC_Idx)
-
    !----------------------------------------------------------------------
    ! compute Correlation of Chn10 and Chn14
+   ! WCS - must remain to match GS implmentation
    !----------------------------------------------------------------------
+
    IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(28)  > 0) .AND. &
-        (out2(Algo_Num)%ch_flg(14) > 0)) THEN
+        (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
    
         Alloc_Status_Total = 0 
         
@@ -761,7 +740,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !--- store BTD_Chn14_Chn15 at NWC
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
-         IF (out2(Algo_Num)%ch_flg(14) > 0 .and. Sensor%Chan_On_Flag_Default(32) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(31) > 0 .and. Sensor%Chan_On_Flag_Default(32) > 0) THEN
            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
                                       ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
@@ -1171,7 +1150,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          IF (Sol_Zen < Day_Sol_Zen_Thresh) THEN
            DO Chn_Num = 1, 6 
 
-            IF ((out2(Algo_Num)%ch_flg(Chn_Num) > 0).AND.                  &
+            IF (((Is_Chn(Chn_Num) > 0).AND.                  &
                 (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
@@ -1187,7 +1166,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          DO Chn_Num = 7, Nchan_Max
 
-            IF ((out2(Algo_Num)%ch_flg(Chn_Num) > 0).AND.                  &
+            IF ((Is_Chn(Chn_Num) > 0).AND.                  &
                 (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
@@ -1206,7 +1185,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !--- Also check for RTM calculations (use bt14_clr)
          !
-         IF (out2(Algo_Num)%ch_flg(14) > 0) THEN
+          IF (Sensor%Chan_On_Flag_Default(31) > 0) THEN
                  IF (BT_Chn14_Clr  < 200.0) then
                       Is_Valid_Pixel = sym%NO
                  ENDIF   
@@ -2009,7 +1988,6 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !======================================================================
 
    Cloud_Mask => null()
-   Cloud_Mask_Binary => null()
    Cloud_Mask_IR => null()
    Cloud_Mask_Packed => null()
    Test_Results => null()
@@ -2019,16 +1997,17 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    X_LRC_Idx => null()
    Y_LRC_Idx => null()
    Emiss_Tropo_Chn14 => null()
+   Refl_Chn2_Clear =>null()
+   Refl_Chn2_Clear_Max_3x3 => null()
+   Refl_Chn2_Clear_Min_3x3 => null()
+   BT_WaterVapor_Stddev_3x3 =>null()
+   BT_Chn14_Stddev_3x3 => null()
+
+
    !======================================================================
    ! deallocate
    !======================================================================
 
-   CALL Destroy_Spatial_Uniformity(BT_WaterVapor_Mean_3x3, BT_WaterVapor_Max_3x3,  &
-                                   BT_WaterVapor_Min_3x3, BT_WaterVapor_Stddev_3x3)
-   CALL Destroy_Spatial_Uniformity(BT_Chn14_Mean_3x3, BT_Chn14_Max_3x3,  &
-                                   BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
-   CALL Destroy_Spatial_Uniformity(Refl_Chn2_Mean_3X3, Refl_Chn2_Max_3x3,  &
-                                   Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
    CALL Destroy_Spatial_Uniformity(Sfc_Hgt_Mean_3X3, Sfc_Hgt_Max_3X3,  &
                                    Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
 

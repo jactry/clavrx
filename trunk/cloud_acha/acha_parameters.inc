@@ -28,6 +28,9 @@
  !------------------------------------------------------------
  ! ACHA parameters
  !------------------------------------------------------------
+ integer(kind=INT4), parameter, private:: idiag_output = 0 ! (0=off, 1=on)
+ real(kind=real4), parameter, private:: count_diag_max = 1000   ! maximum number of diagnostic files allowed
+
  !--- set starting index value
  integer(kind=INT4), parameter, private:: Element_Idx_Min = 1
  integer(kind=INT4), parameter, private:: Line_Idx_Min = 1
@@ -70,13 +73,13 @@
  integer(kind=INT4), private, parameter :: Num_Levels_Rtm_Prof = 101
 
  !--- these parameters control the size of matrices
- integer(kind=INT4), parameter :: Num_Param = 3              !number of retrieved parameters
+ integer(kind=INT4), parameter :: NUM_PARAM = 4              !number of retrieved parameters
 
  !--- maximum number of iterations allowed
  integer(kind=INT4), parameter :: Iter_Idx_Max = 10              !maximum number of iterations
 
  !--- limits on steps taken in retrieval
- real(kind=real4), parameter, private, DIMENSION(NUM_PARAM):: delta_x_max = (/20.0,0.1,0.1/)
+ real(kind=real4), parameter, private, DIMENSION(NUM_PARAM):: delta_x_max = (/20.0,0.1,0.1,5.0/)
 
  !--- parameters that control the conversion of Tc uncertainty to Pc and Zc uncertainty
  real(kind=real4), parameter, private:: ABS_LAPSE_RATE_DlnP_DZ_UNCER = 0.0001 !hPa/m
@@ -98,6 +101,8 @@
                                                                     ! Originally it was 20 in the baseline version of ACHA
 
 !real(kind=real4), parameter, private:: Ec_Ap_Uncer_Opaque = 0.2             !apriori uncertainty of ec for opaque clouds
+
+ real(kind=real4), parameter, private:: Ts_Ap_Uncer = 1.0                    !apriori uncertainty of Tsfc
  real(kind=real4), parameter, private:: Ec_Ap_Uncer_Opaque = 0.1             !apriori uncertainty of ec for opaque clouds
  real(kind=real4), parameter, private:: Ec_Ap_Uncer_Cirrus = 0.4
 

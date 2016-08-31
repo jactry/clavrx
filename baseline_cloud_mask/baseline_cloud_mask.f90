@@ -52,13 +52,13 @@ MODULE Baseline_Cloud_Mask
 !
 use PIXEL_COMMON
 use CONSTANTS
- use NWP_COMMON
- use RTM_COMMON
- use PLANCK
- use Message_handler
-use calibration_constants, only: &
-        sun_earth_distance  &
-        , solar_ch20_nu
+use NWP_COMMON
+use RTM_COMMON
+use PLANCK
+use CLAVRX_MESSAGE_MODULE
+use CALIBRATION_CONSTANTS, only: &
+         Sun_Earth_Distance  &
+        , Solar_Ch20_Nu
         
 IMPLICIT NONE
 
@@ -68,7 +68,7 @@ PUBLIC:: Baseline_Cloud_Mask_Main
 
 PRIVATE:: Compute_Probably_Clear_Restoral
 PRIVATE:: Compute_Probably_Cloudy
-PRIVATE:: Clear_Chn2_Reflectance_Field
+!PRIVATE:: Clear_Chn2_Reflectance_Field
 PRIVATE:: RUT_Routine
 PRIVATE:: TUT_Routine
 PRIVATE:: RTCT_Routine
@@ -802,7 +802,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---sun earth distance factor
          !
-         Sun_Earth_Dist =           sat%sun_earth_distance         
+         Sun_Earth_Dist =           Sun_Earth_Distance         
 
          !
          !---glint zenith angle
@@ -859,7 +859,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn2 = ch(1)%Ref_Toa(Elem_Idx,Line_Idx)         
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
               Refl_Chn2 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn2)
             ENDIF
 
@@ -876,7 +876,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn4 =          ch(26)%Ref_Toa(Elem_Idx,Line_Idx)       
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
               Refl_Chn4 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn4)
             ENDIF
 
@@ -893,7 +893,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn5 =          ch(6)%Ref_Toa(Elem_Idx,Line_Idx)          
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
               Refl_Chn5 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn5)
             ENDIF
 
@@ -920,7 +920,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn7 =        ch(20)%Ref_Toa(Elem_Idx,Line_Idx)      
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
               Refl_Chn7 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn7)
             ENDIF
 
@@ -948,7 +948,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !--- Atmospheric Transmission IN Channel 7
             !
-            Atm_Trans_Chn7_RTM =   rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%ch(20)%trans_atm_clr7(Sfc_Idx_NWP) 
+            Atm_Trans_Chn7_RTM =   rtm(X_NWP_Idx,Y_NWP_Idx)%d(View_Zen_Idx)%ch(20)%Trans_Atm_Profile(Sfc_Idx_NWP) 
 
             !
             !---solar energy IN channel 7
@@ -1150,8 +1150,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          IF (Sol_Zen < Day_Sol_Zen_Thresh) THEN
            DO Chn_Num = 1, 6 
 
-            IF (((Is_Chn(Chn_Num) > 0).AND.                  &
-                (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
+            IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
+                (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
@@ -1166,8 +1166,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          DO Chn_Num = 7, Nchan_Max
 
-            IF ((Is_Chn(Chn_Num) > 0).AND.                  &
-                (Bad_Pixel_Mask(Elem_Idx,Line_Idx)==sym%YES)) THEN
+            IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
+                (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
@@ -1383,7 +1383,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
   !                  Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
 
             !--- renormalize for improved terminator performance
-  !          IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+  !          IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
             
   !            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
   !                                  Refl_Chn2_Clear(Elem_Idx,Line_Idx))

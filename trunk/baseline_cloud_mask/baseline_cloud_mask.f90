@@ -90,6 +90,9 @@ PRIVATE:: Compute_NWC
 PRIVATE:: Compute_Clear_Sky_Scatter
 PRIVATE:: Term_Refl_Norm
 
+PRIVATE:: compute_spatial_uniformity
+PRIVATE:: destroy_spatial_uniformity
+
 !
 !--- include fixed thresholds via this include statement
 !
@@ -4438,6 +4441,106 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
 !--------------------------------------------------------------------------
 ! End ACM test Subroutines and functions 
 !--------------------------------------------------------------------------
+
+!---------- added in for CLAVR-x -------!
+
+!-----------------------------------------------------------------
+!
+!-----------------------------------------------------------------
+
+SUBROUTINE compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_max, data_min, data_uni)
+                                                                                                           
+  INTEGER (kind=int4), intent(in) :: dx, dy
+  INTEGER (kind=int1), intent(in), dimension(:,:) :: space_mask
+  REAL (kind=real4), intent(in), dimension(:,:) :: data
+  REAL (kind=real4), intent(out), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
+  INTEGER (kind=int4) :: nx, ny, nsub, nx_uni, ny_uni, astatus
+  INTEGER (kind=int4) :: ielem, iline, ielem1, ielem2, iline1, iline2, elem_idx, line_idx, n_good
+  REAL (kind=real4), dimension(:), allocatable :: temp
+  
+  nx = size(data,1)
+  ny = size(data,2)
+  
+  nx_uni = 2*dx + 1
+  ny_uni = 2*dy + 1
+  nsub = nx_uni*ny_uni
+  
+  allocate(temp(nsub), data_mean(nx,ny), data_max(nx,ny), data_min(nx,ny),data_uni(nx,ny),stat=astatus)
+  if (astatus /= 0) then
+    print "(a,'Not enough memory to allocate spatial uniformity arrays.')",EXE_PROMPT
+    stop
+  endif
+  
+  line_loop: do iline=1, ny
+    
+    iline1 = max(1,iline-dy)
+    iline2 = min(ny,iline+dy)    
+    
+    element_loop: do ielem=1, nx
+    
+      data_mean(ielem,iline) = missing_value_real4
+      data_max(ielem,iline) = missing_value_real4
+      data_min(ielem,iline) = missing_value_real4
+      data_uni(ielem,iline) = missing_value_real4
+      
+      if ((data(ielem,iline) .EqualTo. missing_value_real4) .or. &
+          (space_mask(ielem,iline) == Sym%SPACE)) CYCLE
+      
+      ielem1 = max(1,ielem-dx)
+      ielem2 = min(nx,ielem+dx)
+        
+      n_good = 0
+        
+      do line_idx=iline1, iline2
+        
+        do elem_idx=ielem1, ielem2
+          
+          if ((data(elem_idx,line_idx) .EqualTo. missing_value_real4) .or. &
+              (space_mask(elem_idx,line_idx) == Sym%SPACE)) CYCLE
+          
+          n_good = n_good + 1
+          temp(n_good) = data(elem_idx,line_idx)
+          
+        end do
+        
+      end do
+      
+      if (n_good > 0) then
+        data_mean(ielem,iline) =  sum(temp(1:n_good))/n_good
+        data_uni(ielem,iline) = sqrt(max(0.0,(sum((temp(1:n_good))**2)/n_good - data_mean(ielem,iline)**2)))
+        data_max(ielem,iline) = maxval(temp(1:n_good))
+        data_min(ielem,iline) = minval(temp(1:n_good)) 
+      endif
+    
+    end do element_loop    
+  end do line_loop
+  
+  deallocate(temp,stat=astatus)
+  if (astatus /= 0) then
+    print "(a,'Error deallocating temporary spatial uniformity arrays.')",EXE_PROMPT
+    stop
+  endif
+  
+END SUBROUTINE compute_spatial_uniformity
+
+!-----------------------------------------------------------------
+!
+!-----------------------------------------------------------------
+
+SUBROUTINE destroy_spatial_uniformity(data_mean, data_max, data_min, data_uni)
+                                                                                                           
+  REAL (kind=real4), intent(inout), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
+  INTEGER (kind=int4) :: astatus
+  
+  deallocate(data_mean, data_max, data_min, data_uni,stat=astatus)
+  if (astatus /= 0) then
+    print "(a,'Error deallocating spatial uniformity arrays.')",EXE_PROMPT
+    stop
+  endif
+  
+END SUBROUTINE destroy_spatial_uniformity
+
+
 
 !--------------------------------------------------------------------------
 ! End of the Module

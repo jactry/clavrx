@@ -600,8 +600,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! compute Correlation of Chn10 and Chn14
    ! WCS - must remain to match GS implmentation
    !----------------------------------------------------------------------
-
-   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(28)  > 0) .AND. &
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29) > 0) .AND. &
         (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
    
         Alloc_Status_Total = 0 
@@ -643,38 +642,35 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     Array_Bottom = max(1,min(Line_Idx + 2,Max_Num_Lines_per_Seg))
                     Array_Width = Array_Left -Array_Right + 1
                     Array_Hgt = Array_Bottom -Array_Top + 1
-
-                    IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
                     
+                    IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
                         BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Missing_Value_Real4
-                        
                         CYCLE
-                        
                     ENDIF
 
-                    
-                    IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(10) > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
-                                                       ch(28)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Array_Width, Array_Hgt)
-                    ELSE
+                                                                    ch(29)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Array_Width, Array_Hgt)
+                     ELSE
                     
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
-                                                       ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
-                                                       Array_Width, Array_Hgt)
+                                                                    ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                                    Array_Width, Array_Hgt)
                     ENDIF
                     
                 END DO Element_Loop_Corr
         END DO Line_Loop_Corr
 
    ENDIF
-      
+   
+         
    !=======================================================================
    ! Loop over pixels apply cloud tests
    !=======================================================================
@@ -740,13 +736,12 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !--- store BTD_Chn14_Chn15 at NWC
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
-         IF (Sensor%Chan_On_Flag_Default(31) > 0 .and. Sensor%Chan_On_Flag_Default(32) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(14) > 0 .and. Sensor%Chan_On_Flag_Default(15) > 0) THEN
            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
                                       ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
            ENDIF
          ENDIF
-
          !
          !---cosine of satellite viewing zenith angle
          !
@@ -775,7 +770,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---nwp level associated with tropopause
          !
-         Tropo_Idx_NWP =        Rtm(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level 
+         Tropo_Idx_NWP =        Rtm(X_NWP_Idx,Y_NWP_Idx)%Tropo_Level
 
          !
          !---viewing zenith angle bin
@@ -785,34 +780,34 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !--- Surface Temperature and its 3x3 uniformity
          !
-         Sfc_Temp_Uni_NWP =  Tmpsfc_uni_Nwp(X_NWP_Idx,Y_NWP_Idx)
+         Sfc_Temp_Uni_NWP =  tmpsfc_uni_nwp(Elem_Idx,Line_Idx)
      
-         Sfc_Temp         =  Tmpsfc_Nwp(X_NWP_Idx,Y_NWP_Idx)
+         Sfc_Temp         =  Tsfc_Nwp_Pix(Elem_Idx,Line_Idx)
 
          !
          !--- Total Precipitable Water (g/m^2 or cm)
          !
-         Total_Precipitable_Water_NWP =  Tpw_Nwp(X_NWP_Idx,Y_NWP_Idx)
+         Total_Precipitable_Water_NWP =  Tpw_Nwp_Pix(Elem_Idx,Line_Idx)
 
          !
          !--- Total Ozone (Dobson Unit)
          !
-         Total_Ozone_Path_NWP =  Ozone_Nwp(X_NWP_Idx,Y_NWP_Idx)
+         Total_Ozone_Path_NWP =  Ozone_Nwp_Pix(Elem_Idx,Line_Idx)
 
          !
          !---sun earth distance factor
          !
-         Sun_Earth_Dist =           Sun_Earth_Distance         
+         Sun_Earth_Dist =           Sun_Earth_Distance
 
          !
          !---glint zenith angle
          !
-         Glint_Zen =      Sfc%Glint_Mask(Elem_Idx,Line_Idx)       
+         Glint_Zen =      Geo%Glintzen(Elem_Idx,Line_Idx)       
 
          !
          !---land type
          !
-         Land_Type =      Sfc%Land(Elem_Idx,Line_Idx)    
+         Land_Type =      Sfc%Land_Mask(Elem_Idx,Line_Idx)    
 
          !
          !---coast type
@@ -822,7 +817,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---Surface Height 
          !
-         Sfc_Hgt =      Sfc%zsfc(Elem_Idx,Line_Idx)         
+         Sfc_Hgt =      Sfc%Zsfc(Elem_Idx,Line_Idx)         
 
          !
          !---solar zenith angle
@@ -837,14 +832,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !
          !---desert Mask
          !
-         Desert_Mask =    Sfc%Desert_Mask(Elem_Idx,Line_Idx)    
+         Desert_Mask =    Sfc%desert_mask(Elem_Idx,Line_Idx)    
 
          !
          !---snow Mask
          !
-         Snow_Mask =      Sfc%Snow(Elem_Idx,Line_Idx)     
+         Snow_Mask =      Sfc%snow(Elem_Idx,Line_Idx)     
 
-         !--------------------------------------------------------
+        !--------------------------------------------------------
          !--- local aliases for observations that are available
          !--------------------------------------------------------
 
@@ -852,16 +847,16 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          IF (Sensor%Chan_On_Flag_Default(1) > 0) THEN
 
             Is_Chn(2) = sym%YES
-
             !
             !---0.63 micron reflectance
             !
             Refl_Chn2 = ch(1)%Ref_Toa(Elem_Idx,Line_Idx)         
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
-              Refl_Chn2 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn2)
-            ENDIF
+            !--- already done in CLAVRx
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !  Refl_Chn2 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn2)
+            !ENDIF
 
          ENDIF
 
@@ -873,12 +868,13 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !---1.38 micron reflectance
             !
-            Refl_Chn4 =          ch(26)%Ref_Toa(Elem_Idx,Line_Idx)       
+            Refl_Chn4 =          ch(2)%Ref_Toa(Elem_Idx,Line_Idx)       
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
-              Refl_Chn4 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn4)
-            ENDIF
+            !--- already done in CLAVRx
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !  Refl_Chn4 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn4)
+            !ENDIF
 
          ENDIF
 
@@ -893,9 +889,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn5 =          ch(6)%Ref_Toa(Elem_Idx,Line_Idx)          
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
-              Refl_Chn5 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn5)
-            ENDIF
+            !--- already done in CLAVRx
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !  Refl_Chn5 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn5)
+            !ENDIF
 
          ENDIF
 
@@ -920,9 +917,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Refl_Chn7 =        ch(20)%Ref_Toa(Elem_Idx,Line_Idx)      
 
             !--- renormalize for improved terminator performance
-            IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
-              Refl_Chn7 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn7)
-            ENDIF
+            !--- already done in CLAVRx
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !  Refl_Chn7 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn7)
+            !ENDIF
 
             !
             !---3.9 um emissivity
@@ -953,7 +951,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !
             !---solar energy IN channel 7
             !
-            Chn7_Sol_Energy =       scinfo(sc_ind)%S(7,sat%idet)    
+            Chn7_Sol_Energy =      solar_ch20_nu    
 
          ENDIF
 
@@ -1054,74 +1052,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !--------------------------------------------------------------------
          !---- alias temporal parameters
          !--------------------------------------------------------------------
-         IF (Is_Chn(14) == sym%YES) THEN
+         
+         !--- WCS3 - REMOVED BECAUSE CLAVRX HAS NO TEMPORAL ------------------!
 
-            IF (Have_Prev_BT_Chn14_15min == sym%SUCCESS) THEN
-
-               BT_Chn14_15min = temporal(minus_i_15min)%bt14%DATA(Elem_Idx,Line_Idx)
-
-            ELSE
-
-               BT_Chn14_15min = Missing_Value_Real4
-
-            ENDIF
-
-            IF (Have_Prev_BT_Chn14_Clr_15min == sym%SUCCESS) THEN
-               BT_Chn14_15min_Clr = temporal(minus_i_15min)    &
-                                     %bt_clr14%DATA(Elem_Idx,Line_Idx)
-
-            ELSE
-
-               BT_Chn14_15min_Clr = Missing_Value_Real4
-
-            ENDIF
-
-            !---- TERM_THERM_STAB parameters
-
-            IF (Have_Prev_BT_Chn11_1Hr == sym%SUCCESS) THEN
-               BT_Chn11_1Hr = temporal(minus_i_01hrs)    &
-                                     %bt11%DATA(Elem_Idx,Line_Idx)
-            
-            ELSE
-
-               BT_Chn11_1Hr = Missing_Value_Real4
-
-            ENDIF
-
-
-            IF (Have_Prev_BT_Chn14_1Hr == sym%SUCCESS) THEN
-               BT_Chn14_1Hr = temporal(minus_i_01hrs)    &
-                                     %bt14%DATA(Elem_Idx,Line_Idx)
-
-            ELSE
-
-               BT_Chn14_1Hr = Missing_Value_Real4
-
-            ENDIF
-
-            IF (Have_Prev_BT_Chn15_1Hr == sym%SUCCESS) THEN
-               BT_Chn15_1Hr = temporal(minus_i_01hrs)    &
-                                     %bt15%DATA(Elem_Idx,Line_Idx)
-
-            ELSE
-
-               BT_Chn15_1Hr = Missing_Value_Real4
-
-            ENDIF
-
-
-            IF (Have_Prev_Cmask_1Hr == sym%SUCCESS) THEN
-               Cmask_1Hr = temporal(minus_i_01hrs)    &
-                                     %cldmask%DATA(Elem_Idx,Line_Idx)
-
-            ELSE
-
-               Cmask_1Hr = Missing_Value_Real4
-
-            ENDIF
-
-
-         ENDIF
 
          !---------------------------------------------------------------------
          !--- define a coast flag based on nwp tsfc - this indicates
@@ -1349,54 +1282,20 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          
          ! WCS - clear sky reflectance in CLAVRX is already corrected.
          
-!         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
+         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
 
-!            IF (Is_Land == sym%YES) THEN 
-!                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Land
-!            ELSE
-!                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Ocean
-!            ENDIF
-!
-!            CALL Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
-!                                           Aerosol_Single_Scatter_Albedo_Chn2, &
-!                                           Aerosol_Asymmetry_Parameter, &
-!                                           Rayleigh_Optical_Depth_Chn2, &
-!                                           Sat_Name, &
-!                                           Total_Precipitable_Water_NWP, &
-!                                           Total_Ozone_Path_NWP, &
-!                                           Scat_Zen, &
-!                                           Cos_Sat_Zen, &
-!                                           Cos_Sol_Zen, &
-!                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
-!                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
-!                                           Transmission_Sing_Scat, &
-!                                           Refl_Sing_Scat)
-
-            !--- add it IN to the clear-sky estimate
- !           Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
- !                   Refl_Chn2_Clear(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+            !--- most of this is done behind the scenes of CLAVR-x, so commented out
+            !--- and set to CLAVRx globals
+!            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = ch(1)%Ref_Toa_Clear(Elem_Idx,Line_Idx) 
                     
- !           Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
- !                   Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+!            Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Ref_Ch1_Clear_Max_3x3(Elem_Idx,Line_Idx)
                     
- !           Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
-  !                  Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+!            Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Ref_Ch1_Clear_Min_3x3(Elem_Idx,Line_Idx)
 
             !--- renormalize for improved terminator performance
-  !          IF (Sol_Zen > TERMINATOR_REFL_SOL_ZEN_THRESH) THEN
-            
-  !            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-  !                                  Refl_Chn2_Clear(Elem_Idx,Line_Idx))
-                                    
-   !           Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-   !                                 Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx))
-                                    
-   !           Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
-   !                                 Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
-                                    
-   !         ENDIF
+            !--- Already done by CLAVRX, so removing calls
 
-   !      ENDIF
+         ENDIF
 
          
          

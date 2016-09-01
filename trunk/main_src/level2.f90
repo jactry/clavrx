@@ -2050,8 +2050,8 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cbh_Qf),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
                                "cld_base_hgt_qf", &
                                "not specified", &
-                               "quality flag for cloud-base height from CIRA "// &
-                               "not attempted=0, failed=1, low quality=2, high quality=3", &
+                               "quality flag for cloud-base height "// &
+                               "valid=0, invalid input=1, lower than terrain=2, out of range=3, invalid higher than cth=4", &
                                DFNT_INT8, sym%NO_SCALING, 0.0, 4.0, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
       Istatus_Sum = Istatus_Sum + Istatus

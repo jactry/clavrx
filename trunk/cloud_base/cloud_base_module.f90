@@ -243,7 +243,7 @@ module CLOUD_BASE
        if (Input%Zc(Elem_Idx,Line_Idx) > 0 .and. (Input%CWP(Elem_Idx,Line_Idx)  > 0 .or. Input%CWP_nwp(Elem_Idx,Line_Idx) > 0)) then
          call CIRA_base_hgt(Input%Zc(Elem_Idx,Line_Idx),Input%CWP(Elem_Idx,Line_Idx), Input%CWP_NWP(Elem_Idx,Line_Idx) ,&
               Cloud_Type,Input%CCL(Elem_Idx,Line_Idx),Input%Surface_Elevation(Elem_Idx,Line_Idx), &
-              Cloud_Geometrical_Thickness_eff,Output%Zc_Base(Elem_Idx,Line_Idx))
+              Cloud_Geometrical_Thickness_eff,Output%Zc_Base(Elem_Idx,Line_Idx),Output%Zc_Base_Qf(Elem_Idx,Line_Idx))
        endif
      endif 
 
@@ -375,11 +375,12 @@ end subroutine NULL_PIX_POINTERS
 !-----------------------------------------------------------------
 ! CIRA's base code, interpret from IDL codes 
 !-----------------------------------------------------------------
-subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base)
+subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base,cbh_qf)
 
   real(kind=real4), intent(in) :: Zc,Cwp,Cwp_nwp,CCL,Surf_Elev
   integer,intent(in) :: Cloud_Type
   real(kind=real4), intent(out) :: Cloud_Geometrical_Thickness,Zc_base
+  integer(kind=int1),intent(out) :: cbh_qf
 
 ! local variables
   real(kind=real4) :: Zc_local, Cwp_local,Cwp_nwp_local
@@ -393,7 +394,7 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometric
   real,dimension(nbin,npara,ncwp) :: regr_coeff
   real,parameter :: mincbh = 0.0, maxcbh = 20.0*1000
   integer, dimension(5) :: qf
-  integer :: cbh_qf
+ ! integer :: cbh_qf
   integer :: statusflag,status_below_sfc,status_high_top
 
 !                      min cth       ;slope         y-int          r2      n    median CWP

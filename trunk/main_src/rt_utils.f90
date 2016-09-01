@@ -124,6 +124,7 @@ module RT_UTILITIES
       , Beta_11um_85um_Tropo_Rtm &
       , Beta_11um_67um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
+      , Beta_11um_133fusum_Tropo_Rtm &
       , Pixel_Local_Time_Hours &
       , Ancil_Data_Dir
       
@@ -2624,6 +2625,15 @@ contains
 
          Beta_11um_133um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(33)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
+                                        ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx))
+      endif
+
+      !--- compute 11 and 13.3-fusion beta ratio at tropopause
+      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+
+         Beta_11um_133fusum_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
+                                        ch(45)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
                                         ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx))
       endif
 

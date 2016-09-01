@@ -1,6 +1,6 @@
 !$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 275
+ integer, parameter, private:: Num_Level2_Sds = 278
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -284,4 +284,7 @@
      Sds_Num_Level2_Inver_Strength = 272, Sds_Num_Level2_Inver_Strength_Flag = 0, &
      Sds_Num_Level2_Inver_Top = 273,      Sds_Num_Level2_Inver_Top_Flag = 0, &
      Sds_Num_Level2_Inver_Base = 274,     Sds_Num_Level2_Inver_Base_Flag = 0, &
-     Sds_Num_Level2_Ch31_Rad = 275 ,      Sds_Num_Level2_Ch31_Rad_Flag = 0
+     Sds_Num_Level2_Ch31_Rad = 275 ,      Sds_Num_Level2_Ch31_Rad_Flag = 0, &
+     Sds_Num_Level2_Cbh_Qf = 276,         Sds_Num_Level2_Cbh_Qf_Flag = 0, &
+     Sds_Num_Level2_Cld_Phase_IR = 277,   Sds_Num_Level2_Cld_Phase_IR_Flag = 0, &
+     Sds_Num_Level2_Cld_Type_IR = 278,    Sds_Num_Level2_Cld_Type_IR_Flag = 0

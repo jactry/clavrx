@@ -95,6 +95,8 @@
    use LEVEL2_ROUTINES
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
+!  use UNIVERSAL_CLOUD_TYPE_MODULE
+   use IR_CLOUD_TYPE_BAUM_MODULE
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
@@ -775,6 +777,7 @@
 
                !--- place algorithm cvs tags into global strings for output
                call SET_CLOUD_TYPE_VERSION()
+               call SET_IR_CLOUD_TYPE_VERSION()
 
                Num_Scans_Level2_Hdf = 0
 
@@ -1084,7 +1087,16 @@
                   Phase_Called_Flag = sym%YES
 
                else  
+
                   call CLOUD_TYPE_BRIDGE()
+                  call IR_CLOUD_TYPE_BAUM()
+
+                  if (Use_IR_Cloud_Type_Flag) then
+                     Cld_Type = Cld_Type_IR
+                     Cld_Phase = Cld_Phase_IR
+                  endif
+
+                ! call UNIVERSAL_CLOUD_TYPE()
                   Phase_Called_Flag = sym%YES
                end if
 
@@ -1102,10 +1114,6 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                call CTP_MULTILAYER()
-
-               Diag_Pix_Array_1 = Zc_H2O
-               Diag_Pix_Array_2 = Zc_CO2IRW
-               Diag_Pix_Array_3 = Ctp_Multilayer_Flag 
 
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF

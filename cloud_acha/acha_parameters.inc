@@ -87,7 +87,7 @@
 
  !--- parameters that control the bottom-up estimation of Zc and Pc
  real(kind=real4), parameter, private:: MIN_P_INVERSION = 600.0 !min pressure to look for low-level inversion
- real(kind=real4), parameter, private:: MAX_DELTA_T_INVERSION = 15.0 !max temperature difference (surface -cloud) to look for low-level inversion
+ real(kind=real4), parameter, private:: MAX_DELTA_T_INVERSION = 20.0 !max temperature difference (surface -cloud) to look for low-level inversion
  real(kind=real4), parameter, private:: DELTA_PSFC_INVERSION = 50.0  !pressure above sfc to look for low-level inversion
  real(kind=real4), parameter, private:: DELTA_T_LAYER_INVERSION = 0.0   !maximum temperature difference to define an inversion layer
  integer(kind=INT1), parameter, private:: ALLOW_STRATOSPHERE_SOLUTION_FLAG = 1  !allow interpolation in stratosphere

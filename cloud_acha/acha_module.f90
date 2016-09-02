@@ -99,7 +99,7 @@ module AWG_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
   private:: MEAN_SMOOTH
-  private:: OCEANIC_LAPSE_RATE
+  private:: EMPIRICAL_LAPSE_RATE
   private:: OCEANIC_LAPSE_RATE_OLD
 
   !--- include the non-system specific variables
@@ -162,23 +162,37 @@ module AWG_CLOUD_HEIGHT
   type(acha_symbol_struct), private :: symbol
 
 
+  !-------------------------------------------------------------------------------------
+  ! empirical lapse rate table data and metadata
+  !-------------------------------------------------------------------------------------
   integer, private, parameter:: nts = 7
   integer, private, parameter:: ntcs = 9
   real, private, parameter:: ts_min = 270.0
   real, private, parameter:: dts = 5.0
   real, private, parameter:: tcs_min = -20.0
   real, private, parameter:: dtcs = 2.0
-  real, private, dimension(nts,ntcs), parameter:: lapse_rate_table = reshape ((/ &
-                           -7.1, -7.1, -7.3, -7.4, -7.4, -6.8, -6.2, &
-                           -7.3, -7.2, -7.3, -7.4, -7.4, -7.0, -6.3, &
-                           -7.4, -7.2, -7.3, -7.5, -7.6, -7.1, -6.5, &
-                           -7.2, -7.1, -7.3, -7.5, -7.6, -7.2, -6.6, &
-                           -6.9, -6.8, -7.1, -7.4, -7.5, -7.3, -7.0, &
-                           -6.5, -6.5, -6.8, -7.0, -7.3, -7.4, -7.4, &
-                           -6.5, -6.3, -6.4, -6.6, -7.0, -7.3, -7.6, &
-                           -6.0, -5.7, -5.6, -5.8, -6.3, -6.8, -7.3, &
-                           -5.6, -5.2, -5.0, -5.2, -5.9, -6.3, -6.8/), (/nts,ntcs/))
 
+  real, private, dimension(nts,ntcs), parameter:: ocean_lapse_rate_table = reshape ((/ &
+                          -7.3, -7.2, -7.3, -7.4, -7.4, -6.8, -6.2, &
+                          -7.4, -7.3, -7.3, -7.4, -7.4, -7.0, -6.3, &
+                          -7.5, -7.3, -7.3, -7.5, -7.6, -7.1, -6.5, &
+                          -7.2, -7.1, -7.3, -7.5, -7.6, -7.2, -6.6, &
+                          -6.9, -6.8, -7.1, -7.4, -7.5, -7.3, -7.0, &
+                          -6.6, -6.6, -6.8, -7.0, -7.3, -7.4, -7.4, &
+                          -6.7, -6.4, -6.4, -6.6, -7.0, -7.3, -7.6, &
+                          -6.2, -5.8, -5.6, -5.8, -6.3, -6.8, -7.3, &
+                          -5.8, -5.3, -5.0, -5.2, -5.9, -6.3, -6.8/), (/nts,ntcs/))
+
+  real, private, dimension(nts,ntcs), parameter:: land_lapse_rate_table = reshape ((/ &
+                           -5.2, -5.8, -6.2, -6.2, -6.4, -7.0, -7.7, &
+                           -5.3, -5.8, -6.2, -6.3, -6.4, -7.1, -7.7, &
+                           -5.2, -5.7, -6.0, -6.1, -6.4, -7.1, -7.7, &
+                           -5.0, -5.4, -5.8, -5.9, -6.2, -6.9, -7.7, &
+                           -5.0, -5.2, -5.5, -5.5, -5.8, -6.8, -7.8, &
+                           -4.9, -5.0, -5.2, -4.9, -5.2, -6.2, -7.6, &
+                           -4.7, -4.7, -4.8, -4.5, -4.8, -6.0, -7.5, &
+                           -3.9, -4.0, -4.2, -3.9, -3.9, -5.3, -7.3, &
+                           -3.3, -3.4, -3.7, -3.6, -3.5, -5.0, -7.3/), (/nts,ntcs/))
   contains 
 
 !------------------------------------------------------------------------------
@@ -1593,20 +1607,21 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Delta_Cld_Temp_Sfc_Temp = Input%Surface_Temperature(Elem_Idx,Line_Idx) - Output%Tc(Elem_Idx,Line_Idx)
  Lapse_Rate = Missing_Value_Real4
 
- if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC .and. &
-     Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
-     ((Cloud_Type == symbol%WATER_TYPE) .or. &
-      (Cloud_Type == symbol%FOG_TYPE) .or. & 
-      (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
+ if (Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
+      ((Cloud_Type == symbol%WATER_TYPE) .or. &
+       (Cloud_Type == symbol%FOG_TYPE) .or. & 
+       (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
 
      if (Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) then
 
        !-- select lapse rate  (k/km)
-!      Lapse_Rate = OCEANIC_LAPSE_RATE_OLD(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
-!                                      Output%Tc(Elem_Idx,Line_Idx))
-
-       Lapse_Rate = OCEANIC_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
-                                       Output%Tc(Elem_Idx,Line_Idx))
+       if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC) then 
+           Lapse_Rate = EMPIRICAL_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
+                                       Output%Tc(Elem_Idx,Line_Idx), 0)
+       else
+           Lapse_Rate = EMPIRICAL_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
+                                       Output%Tc(Elem_Idx,Line_Idx), 1)
+       endif
 
        !--- constrain lapse rate to be with -2 and -10 K/km
        Lapse_Rate = min(-2.0,max(-10.0,Lapse_Rate))
@@ -4214,9 +4229,10 @@ end subroutine COMPUTE_BOX_WIDTH
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------
-function OCEANIC_LAPSE_RATE(Tsfc, Tc) result(lapse_rate)
+function EMPIRICAL_LAPSE_RATE(Tsfc, Tc, land_flag) result(lapse_rate)
   real, intent(in):: Tsfc
   real, intent(in):: Tc
+  integer, intent(in):: land_flag  !(0=ocean,1=land)
   real:: Tcs
   real:: lapse_rate
   integer:: its, itcs
@@ -4227,13 +4243,13 @@ function OCEANIC_LAPSE_RATE(Tsfc, Tc) result(lapse_rate)
   itcs = int((Tcs - tcs_min) / dtcs) + 1
   itcs = max(1,min(ntcs,itcs))
 
-  lapse_rate = lapse_rate_table(its,itcs)
+  if (land_flag == 0) then 
+    lapse_rate = ocean_lapse_rate_table(its,itcs)
+  else
+    lapse_rate = land_lapse_rate_table(its,itcs)
+  endif
 
-!- old way
-!  lapse_rate =  -0.061 - 1.67*Tcs - 0.124*(Tcs**2) - 0.00343*(Tcs**3)
-   
-
-end function OCEANIC_LAPSE_RATE
+end function EMPIRICAL_LAPSE_RATE
 
 function OCEANIC_LAPSE_RATE_OLD(Tsfc, Tc) result(lapse_rate)
   real, intent(in):: Tsfc

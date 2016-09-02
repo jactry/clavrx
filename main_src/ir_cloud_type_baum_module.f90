@@ -332,9 +332,6 @@ subroutine IR_CLOUD_TYPE_BAUM()
   enddo Line_Loop_2
 
 
-  Diag_Pix_Array_1 = Cld_Phase_IR
-  Diag_Pix_Array_2 = Cld_Type_IR
-
 end subroutine IR_CLOUD_TYPE_BAUM
 
 !----------------------------------------------------------------------

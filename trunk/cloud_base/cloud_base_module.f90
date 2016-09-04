@@ -234,11 +234,14 @@ module CLOUD_BASE
        endif
 
 
-!  Compute cloud base 
+!  Compute cloud base
      if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10000.0) then
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
+       Output%Zc_Base_Qf(Elem_Idx,Line_Idx) = 0
+       if (Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness < Zc_Base_Min)  Output%Zc_Base_Qf(Elem_Idx,Line_Idx) = 2
+       if (Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness >= Input%Zc(Elem_Idx,Line_Idx))  Output%Zc_Base_Qf(Elem_Idx,Line_Idx) = 4
      else
        if (Input%Zc(Elem_Idx,Line_Idx) > 0 .and. (Input%CWP(Elem_Idx,Line_Idx)  > 0 .or. Input%CWP_nwp(Elem_Idx,Line_Idx) > 0)) then
          call CIRA_base_hgt(Input%Zc(Elem_Idx,Line_Idx),Input%CWP(Elem_Idx,Line_Idx), Input%CWP_NWP(Elem_Idx,Line_Idx) ,&

@@ -2123,7 +2123,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Packed_Meta_Data_Flags = 0
     ACHA%Conv_Cld_Prob = Missing_Value_Real4
     ACHA%Supercooled_Cld_Prob = Missing_Value_Real4
-    ACHA%base_Quality_Flag = Missing_Value_Int1
+    ACHA%base_Quality_Flag = 1   ! Missing_Value_Int1
 
 end subroutine RESET_ACHA_ARRAYS
 

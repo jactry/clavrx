@@ -10,12 +10,19 @@
 !  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
 !  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
 !  William Straka, CIMSS, wstraka@ssec.wisc.edu
+!
+! Note, to use the diagnostic variables, do this
+!   - set the Use_Diag flag to true
+!   - turn on the Diag argument to the desirefd routine
+!   - in the desired routine, set the diag variables to what you want
+!   - when done, repeat this in reverse
+!
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 
 
    ! -- Framework specific modules
-   USE PCF_NPP_BAYES_CLOUD_MASK_Mod
+   USE PCF_CLOUD_MASK_EN_Mod
    USE TYPE_KINDS_AIT
    USE Convert_Char
    USE Error_Messaging_Module
@@ -64,8 +71,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    type(symbol_naive_bayesian),private :: Symbol
    
    !Make module wide variables
-   character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
-   character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
+   character (len=1020), TARGET, PRIVATE:: Ancil_Data_Path
+   character (len=1020), TARGET, PRIVATE:: Naive_Bayes_File_Name
 
    !Segment counter
    integer(kind=INT1), TARGET, PRIVATE:: Segment_Number_CM = 1
@@ -133,6 +140,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
 
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch5_Clear
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ref_Ch2_Clear
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn14ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15ClrBT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7ClrRad
@@ -173,6 +181,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Dust_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Smoke_Mask
    integer(BYTE), dimension(:,:), POINTER, PRIVATE  :: Fire_Mask
+   integer(BYTE), dimension(:,:), ALLOCATABLE, PRIVATE  :: Thin_Cirr_Mask
       
    !Cloud training outputs
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Emiss_11um_Tropo_Rtm
@@ -197,7 +206,7 @@ contains
  
    implicit none
 
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    INTEGER(LONG) :: Return_Status
 
    integer :: Line_Idx, Elem_Idx
@@ -224,7 +233,9 @@ contains
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
    integer :: i, j
+   logical:: Use_Diag
 
+   Use_Diag = .false.
 
    !---- set paths and mask classifier file name to their values in this framework
    Naive_Bayes_File_Name_Full_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
@@ -249,6 +260,8 @@ contains
    allocate(Ref_Uni_ChI1(num_elem,num_line))
    allocate(Bt_Uni_ChI4(num_elem,num_line))
    allocate(Bt_Uni_ChI5(num_elem,num_line))
+
+   allocate(Thin_Cirr_Mask(num_elem,num_line))
 
    !Solar Contamination
    allocate(Solar_Contamination_Mask(num_elem, num_line))
@@ -305,6 +318,7 @@ contains
    CALL NFIA_Sat_L1b_ReflPrct(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI7, Chn7Refl) !3.7um
    
    !RTM Clear sky BTs/Radiances
+   CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI7, Chn7ClrBT)
    CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI14, Chn14ClrBT)
    CALL NFIA_RTM_Pixel_BtClr(Ctxt%RTM_Src1_T00, CHN_ABI15, Chn15ClrBT)
    CALL NFIA_RTM_Pixel_EmsCh7ClSlr(Ctxt%RTM_Src1_T00, EmsCh7ClSlr) 
@@ -404,6 +418,7 @@ contains
            Smoke_Mask(Elem_Idx,Line_Idx) = 0
            Dust_Mask(Elem_Idx,Line_Idx)  = 0
            Fire_Mask(Elem_Idx,Line_Idx)  = 0
+           Thin_Cirr_Mask(Elem_Idx,Line_Idx)  = 0
 
         !-------------------------------------------------------------------
         ! Do space mask check here
@@ -412,9 +427,9 @@ contains
         IF (SpaceMask(Elem_Idx,Line_Idx) == YES) THEN
             Cld_Mask(Elem_Idx,Line_Idx) = symbol%MISSING
             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%MISSING
-	    Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
-	    Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = symbol%MISSING
-	    CYCLE
+            Posterior_Cld_Probability(Elem_Idx,Line_Idx) = Missing_Value_Real4
+            Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = symbol%MISSING
+            CYCLE
         ENDIF
  
       
@@ -480,8 +495,6 @@ contains
          ! Set inputs
          
          call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)         
-         call SET_OUTPUT(Elem_Idx,Line_Idx)
-         call SET_DIAG(Elem_Idx,Line_Idx)
          
          !---call cloud mask routine
          call NB_CLOUD_MASK_ALGORITHM( &
@@ -499,19 +512,19 @@ contains
                                           Output) !, &
                                          ! Diag)   !optional
 
+         Thin_Cirr_Mask(Elem_Idx,Line_Idx) = Output%Thin_Cirr_Mask
 
          !Do binary Cloud mask
          IF ( (Cld_Mask(Elem_Idx,Line_Idx) == symbol%CLOUDY) .or. &
               (Cld_Mask(Elem_Idx,Line_Idx) == symbol%PROB_CLOUDY)) THEN
          
               Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLD
-         
          ELSE
-         
               Cloud_Mask_Binary(Elem_Idx,Line_Idx) = symbol%BINARY_CLR    
-         
          ENDIF
 
+         call SET_OUTPUT(Elem_Idx,Line_Idx)
+         if (Use_Diag) call SET_DIAG(Elem_Idx,Line_Idx)
    
       end do elem_loop
    end do line_loop
@@ -559,16 +572,19 @@ contains
    deallocate(I1_Temp_2)
 
    !-----------------------------------------------------------------------------
-!--- save dust, smoke, fire to the corresponding bit structure 
+   !--- save dust, smoke, fire, thin cirrus to the corresponding bit structure 
    !-----------------------------------------------------------------------------
    line_loop_pack: do i = 1, Input%Num_Elem
       elem_loop_pack: do  j = 1,  Input%Num_Line
            if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = &
-                                     ibset(Cld_Test_Vector_Packed(2,i,j),4)
+                                      ibset(Cld_Test_Vector_Packed(2,i,j),4)
            if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
                                       ibset(Cld_Test_Vector_Packed(2,i,j),5)
            if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = &
                                       ibset(Cld_Test_Vector_Packed(2,i,j),7)
+           if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = &
+                                      ibset(Cld_Test_Vector_Packed(3,i,j),3)
+
       end do elem_loop_pack
    end do line_loop_pack
 
@@ -586,6 +602,12 @@ contains
    deallocate(Diag_Pix_Array_3)
    deallocate(Ems_Ch20_Std_Median_3x3)
    deallocate(Solar_Contamination_Mask)
+
+   deallocate(Dummy_IBand)
+   deallocate(Ref_Uni_ChI1)
+   deallocate(Bt_Uni_ChI4)
+   deallocate(Bt_Uni_ChI5)
+   deallocate(Thin_Cirr_Mask)
    
    if (allocated(Ref_Ch1_Mean_3X3)) deallocate(Ref_Ch1_Mean_3X3)
    if (allocated(Ref_Ch1_Max_3x3)) deallocate(Ref_Ch1_Max_3x3)
@@ -617,6 +639,7 @@ contains
    SfcElev => null()
    Ref_Ch5_Clear => null()
    Ref_Ch2_Clear => null()
+   Chn7ClrBT => null()
    Chn14ClrBT => null()
    Chn15ClrBT => null()
    Chn7ClrRad => null()
@@ -771,7 +794,7 @@ contains
    !============================================================================
    subroutine SET_INPUT(i,j, Ctxt)
       integer, intent (in) :: i, j
-      TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+      TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
 
       Input%Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
       Input%Num_Line = Ctxt%SegmentInfo%Current_Row_Size
@@ -829,6 +852,7 @@ contains
       Input%Ref_375um_Clear = Missing_Value_Real4 !Not filled or used for now
       Input%Ref_213um = Chn6Refl(i,j)
       Input%Bt_375um = Chn7BT(i,j)
+      Input%Bt_375um_Clear = Chn7ClrBT(i,j)
       Input%Bt_375um_Std = Bt_39_Std_3x3(i,j)
       Input%Emiss_375um =  Ems_39_Med_3x3(i,j)
       Input%Emiss_375um_Clear = EmsCh7ClSlr(i,j)
@@ -926,7 +950,7 @@ contains
    INTEGER(LONG) :: Max_Num_Lines_per_Seg
    !tyu
    !TYPE(FW_Context), POINTER :: Ctxt
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    !tyu
    !=== INFO: generated declarations
    INTEGER(BYTE), DIMENSION(:,:), POINTER :: LandMask
@@ -980,7 +1004,7 @@ contains
    INTEGER(LONG) :: Number_of_Lines_in_this_Segment
    REAL(SINGLE), DIMENSION(:,:), INTENT(OUT) :: Emiss_Tropo_Chn14
    !TYPE(FW_Context), POINTER :: Ctxt
-   TYPE(NPP_BAYES_CLOUD_MASK_Ctxt) :: Ctxt
+   TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
    INTEGER(LONG) :: Tropo_Idx_NWP
    !INTEGER(BYTE) :: View_Zen_Idx
    INTEGER :: X_NWP_Idx

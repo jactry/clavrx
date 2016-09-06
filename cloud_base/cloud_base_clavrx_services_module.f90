@@ -129,6 +129,7 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Zc_Base
    real, dimension(:,:), pointer:: Pc_Top
    real, dimension(:,:), pointer:: Pc_Base
+   integer (kind=int1), dimension(:,:), pointer:: Zc_Base_Qf
  end type acha_output_struct
 
 !Symbol stucture

@@ -4,7 +4,7 @@
  !-----------------------------------------------------------------------------
  module NB_CLOUD_MASK_SERVICES
 
- use PCF_NPP_BAYES_CLOUD_MASK_Mod
+ use PCF_CLOUD_MASK_EN_Mod
  use CloudMask_Access_Mod
  use type_KINDS_AIT
  use Convert_Char
@@ -86,6 +86,7 @@
     real(kind=real4) :: Ref_213um                              !2.13 um toa reflectance (%)
     real(kind=real4) :: Bt_375um                               !3.75 um toa brightness temp (K)
     real(kind=real4) :: Bt_375um_Std                           !3.75 um toa brightness temp 3x3 Std. Dev. (K)
+    real(kind=real4) :: Bt_375um_Clear                         !3.75 um toa brightness temperature (K)
     real(kind=real4) :: Emiss_375um                            !3.75 um pseudo toa emissivity
     real(kind=real4) :: Emiss_375um_Clear                      !3.75 um pseudo toa emissivity clear-sky
     real(kind=real4) :: Bt_67um                                !6.7 um toa brightness temperature (K)
@@ -127,6 +128,7 @@
     integer(kind=int1) :: Dust_Mask
     integer(kind=int1) :: Smoke_Mask
     integer(kind=int1) :: Fire_Mask
+    integer(kind=int1) :: Thin_Cirr_Mask
  end type mask_output
 
  !-----------------------------------------------------------------------------

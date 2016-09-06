@@ -321,6 +321,7 @@ module PIXEL_COMMON
     integer (kind=int1), dimension(:,:,:), allocatable:: OE_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Meta_Data_Flags
+    integer (kind=int1), dimension(:,:), allocatable:: base_Quality_Flag
     real (kind=real4), dimension(:,:), allocatable:: Conv_Cld_Prob
     real (kind=real4), dimension(:,:), allocatable:: Supercooled_Cld_Prob
     real(kind=real4):: Success_Fraction
@@ -354,6 +355,7 @@ module PIXEL_COMMON
   integer,public, save:: Ash_File_Flag
   integer,public, save:: Level2_File_Flag
   integer,public, save:: Use_Sst_Anal
+  logical,public, save:: Use_IR_Cloud_Type_Flag
   integer,public, save:: L1b_Gzip
   integer,public, save:: L1b_Bzip2
   
@@ -636,6 +638,8 @@ module PIXEL_COMMON
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
+  integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type_IR
+  integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase_IR
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Ctp_Multilayer_Flag
 
   !--- Auxilliary variables
@@ -816,6 +820,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_85um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_67um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_133um_Tropo_Rtm
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_133fusum_Tropo_Rtm
 
 
   real (kind=real4), dimension(:,:), allocatable, public, target:: Pc_Opaque_Cloud
@@ -848,10 +853,10 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
  
   type (solar_rtm_struct), public, save:: Solar_Rtm
 
-!--- flags for using clavrxorb_Default_file
+  !--- flags for using clavrxorb_Default_file
   integer ,public, save :: Use_Default
 
-!--- clavrxorb_File_List filename
+  !--- clavrxorb_File_List filename
   character(len=1020), public, save:: File_List
 
  contains
@@ -991,6 +996,7 @@ subroutine CREATE_PIXEL_ARRAYS()
   allocate(Beta_11um_85um_Tropo_Rtm(dim1,dim2))
   allocate(Beta_11um_67um_Tropo_Rtm(dim1,dim2))
   allocate(Beta_11um_133um_Tropo_Rtm(dim1,dim2))
+  allocate(Beta_11um_133fusum_Tropo_Rtm(dim1,dim2))
 
   allocate(Temp_Mask(dim1,dim2))
 
@@ -1153,6 +1159,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Beta_11um_67um_Tropo_Rtm)) deallocate(Beta_11um_67um_Tropo_Rtm)
   if (allocated(Beta_11um_85um_Tropo_Rtm)) deallocate(Beta_11um_85um_Tropo_Rtm)
   if (allocated(Beta_11um_133um_Tropo_Rtm)) deallocate(Beta_11um_133um_Tropo_Rtm)
+  if (allocated(Beta_11um_133fusum_Tropo_Rtm)) deallocate(Beta_11um_133fusum_Tropo_Rtm)
 
   !--- VIIRS
   if (allocated(Gap_Pixel_Mask)) deallocate(Gap_Pixel_Mask)
@@ -1223,6 +1230,11 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
           (Sensor%Chan_On_Flag_Default(33) == sym%YES)) then
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
+      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
+          (Sensor%Chan_On_Flag_Default(45) == sym%YES)) then
+        Beta_11um_133fusum_Tropo_Rtm = Missing_Value_Real4
+      endif
+
 
       Space_Mask = Missing_Value_Int1
       Sfc_Level_Rtm_Pixel = Missing_Value_Int4
@@ -2038,6 +2050,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
     allocate(ACHA%Conv_Cld_Prob(dim1,dim2)) 
     allocate(ACHA%Supercooled_Cld_Prob(dim1,dim2)) 
+    allocate(ACHA%base_Quality_Flag(dim1,dim2))
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2117,6 +2130,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Packed_Meta_Data_Flags = 0
     ACHA%Conv_Cld_Prob = Missing_Value_Real4
     ACHA%Supercooled_Cld_Prob = Missing_Value_Real4
+    ACHA%base_Quality_Flag = 1   ! Missing_Value_Int1
 
 end subroutine RESET_ACHA_ARRAYS
 
@@ -2159,6 +2173,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Packed_Meta_Data_Flags) 
     deallocate(ACHA%Conv_Cld_Prob) 
     deallocate(ACHA%Supercooled_Cld_Prob) 
+    deallocate(ACHA%base_Quality_Flag)
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------
@@ -2468,6 +2483,8 @@ subroutine CREATE_CLOUD_TYPE_ARRAYS(dim1,dim2)
      allocate(Cld_Phase_Aux(dim1,dim2))
      allocate(Cld_Phase(dim1,dim2))
      allocate(Cld_Type(dim1,dim2))
+     allocate(Cld_Phase_IR(dim1,dim2))
+     allocate(Cld_Type_IR(dim1,dim2))
      allocate(Ctp_Multilayer_Flag(dim1,dim2))
      allocate(Zc_Aux(dim1,dim2))
   endif
@@ -2476,6 +2493,8 @@ subroutine RESET_CLOUD_TYPE_ARRAYS()
   if (Cld_Flag == sym%YES) then
       Cld_Phase = Missing_Value_Int1
       Cld_Type = Missing_Value_Int1
+      Cld_Phase_IR = Missing_Value_Int1
+      Cld_Type_IR = Missing_Value_Int1
       Cld_Phase_Aux = Missing_Value_Int1
       Cld_Type_Aux = Missing_Value_Int1
       Ctp_Multilayer_Flag = Missing_Value_Int1
@@ -2488,6 +2507,8 @@ subroutine DESTROY_CLOUD_TYPE_ARRAYS
      deallocate(Cld_Phase_Aux)
      deallocate(Cld_Phase)
      deallocate(Cld_Type)
+     deallocate(Cld_Phase_IR)
+     deallocate(Cld_Type_IR)
      deallocate(Ctp_Multilayer_Flag)
      deallocate(Zc_Aux)
   endif

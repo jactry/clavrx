@@ -68,7 +68,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK):$(BASELINEMASK)
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -154,6 +154,7 @@ clavrxorb_objs = process_clavrx.o \
                  nb_cloud_mask_clavrx_services_module.o \
 		 nb_cloud_mask_module.o \
                  nb_cloud_mask_addons_module.o \
+                 baseline_cloud_mask.o \
                  move_bytes.o \
 	         mreadf.o \
 	         modis_module.o \
@@ -386,6 +387,8 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 #universal_cloud_type.o:$(CTYPE)/universal_cloud_type.f90 constant.o pixel_common.o
 ir_cloud_type_baum_module.o: ir_cloud_type_baum_module.f90 constant.o pixel_common.o
 
+baseline_cloud_mask.o: $(BASELINEMASK)/baseline_cloud_mask.f90 pixel_common.o constant.o nwp_common.o rtm_common.o planck.o clavrx_message_module.o calibration_constants.o
+
 sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o clavrx_sst_module.o clavrx_olr_module.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o sfc_emiss.o ir_cloud_type_baum_module.o cloud_type_bridge_module.o \
@@ -394,7 +397,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
+              nb_cloud_mask_clavrx_bridge_module.o baseline_cloud_mask.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o \

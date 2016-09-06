@@ -1647,7 +1647,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Bt_Ch20_Std_Median_3x3(dim1,dim2))
        allocate(Ch20_Counts_Filtered(dim1,dim2))
        allocate(Trans_Atm_Ch20_Solar_Rtm(dim1,dim2))
-       allocate(Trans_Atm_Ch20_Solar_total_Rtm(dim1,dim2))
+       allocate(Trans_Atm_Ch20_Solar_Total_Rtm(dim1,dim2))
        allocate(Ems_Ch20_Clear_Rtm(dim1,dim2))
    endif
 
@@ -1677,7 +1677,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Bt_Ch20_Std_Median_3x3 = Missing_Value_Real4
        Ch20_Counts_Filtered = Missing_Value_Real4
        Trans_Atm_Ch20_Solar_Rtm = Missing_Value_Real4
-       Trans_Atm_Ch20_Solar_total_Rtm = Missing_Value_Real4
+       Trans_Atm_Ch20_Solar_Total_Rtm = Missing_Value_Real4
        Ems_Ch20_Clear_Rtm = Missing_Value_Real4
    endif
 
@@ -1706,7 +1706,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Bt_Ch20_Std_Median_3x3)
        deallocate(Ch20_Counts_Filtered)
        deallocate(Trans_Atm_Ch20_Solar_Rtm)
-       deallocate(Trans_Atm_Ch20_Solar_total_Rtm)
+       deallocate(Trans_Atm_Ch20_Solar_Total_Rtm)
        deallocate(Ems_Ch20_Clear_Rtm)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then

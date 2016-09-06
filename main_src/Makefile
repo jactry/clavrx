@@ -174,6 +174,7 @@ clavrxorb_objs = process_clavrx.o \
                  simple_cod_module.o \
                  level2b.o \
                  user_options.o \
+                 ir_cloud_type_baum_module.o \
                  cloud_type_bridge_module.o \
                  cloud_type_algo_module.o \
                  viewing_geometry_module.o \
@@ -401,9 +402,12 @@ nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_s
 nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud_mask_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_addons_module.f90
 
+#universal_cloud_type.o:$(CTYPE)/universal_cloud_type.f90 constant.o pixel_common.o
+ir_cloud_type_baum_module.o: ir_cloud_type_baum_module.f90 constant.o pixel_common.o
+
 sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o clavrx_sst_module.o clavrx_olr_module.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
-              sfc_prop_umd.o sfc_emiss.o cloud_type_bridge_module.o \
+              sfc_prop_umd.o sfc_emiss.o ir_cloud_type_baum_module.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_utility.o level2.o cloud_height_routines.o \
               dncomp_clavrx_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf_params.o dnb_retrievals_mod.o \

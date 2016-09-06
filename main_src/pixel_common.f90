@@ -918,7 +918,8 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Trans_Atm(dim1,dim2))
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
             if (idx == 31) allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
-            if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+            if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or.  &
+                idx == 33 .or. idx == 45) allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
             if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
             if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%Opaque_Height(dim1,dim2))
 

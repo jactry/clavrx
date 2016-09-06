@@ -12,6 +12,13 @@
 !  Andi Walther, CIMSS, andi.walther@ssec.wisc.edu
 !  Denis Botambekov, CIMSS, denis.botambekov@ssec.wisc.edu
 !  William Straka, CIMSS, wstraka@ssec.wisc.edu
+!
+! Note, to use the diagnostic variables, do this
+!   - set the Use_Diag flag to true
+!   - turn on the Diag argument to the desirefd routine
+!   - in the desired routine, set the diag variables to what you want
+!   - when done, repeat this in reverse
+!
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_GEOCAT_BRIDGE_MODULE
 
@@ -37,8 +44,8 @@ module NB_CLOUD_MASK_GEOCAT_BRIDGE_MODULE
    type(symbol_naive_bayesian),private :: Symbol
    
    !Make module wide variables
-   character (len=120), TARGET, PRIVATE:: Ancil_Data_Path
-   character (len=120), TARGET, PRIVATE:: Naive_Bayes_File_Name
+   character (len=1020), TARGET, PRIVATE:: Ancil_Data_Path
+   character (len=1020), TARGET, PRIVATE:: Naive_Bayes_File_Name
    REAL(kind=real4), TARGET, PRIVATE :: Covar_Ch27_Ch31_5x5
 
    !Segment counter
@@ -114,11 +121,11 @@ contains
    REAL(kind=real4) :: Glint_Zen_Thresh=40.0
    character (len=555):: Naive_Bayes_File_Name_Full_Path, Bayesian_Cloud_Mask_Name
    CHARACTER(LEN=1024):: Lut_Path
+   logical:: Use_Diag
 
-
+   Use_Diag = .false.
 
    !---- set paths and mask classifier file name to their values in this framework
-
 
   ! --   Set LUT file
   Lut_Path = TRIM(Out2(Algo_Idx)%Ancil_Subdir)//"/"
@@ -267,11 +274,7 @@ contains
                 
       
          ! Set inputs
-         
-         
          call SET_INPUT(Elem_Idx,Line_Idx)
-         call SET_OUTPUT(Elem_Idx,Line_Idx, Algo_Idx)
-         call SET_DIAG(Elem_Idx,Line_Idx)
 
          !---call cloud mask routine
          call NB_CLOUD_MASK_ALGORITHM( &
@@ -279,6 +282,9 @@ contains
                       Symbol,  &
                       Input, &
                       Output)
+
+         call SET_OUTPUT(Elem_Idx,Line_Idx, Algo_Idx)
+         call SET_DIAG(Elem_Idx,Line_Idx)
 
          !--- nullify pointers within these data structures
          call NULL_OUTPUT()
@@ -547,6 +553,7 @@ contains
       Output%Dust_Mask => null()
       Output%Smoke_Mask => null()
       Output%Fire_Mask => null()
+      Output%Thin_Cirr_Mask => null()
    end subroutine SET_OUTPUT
 
    subroutine SET_DIAG(i,j)
@@ -567,6 +574,7 @@ contains
     Output%Dust_Mask => null()
     Output%Smoke_Mask => null()
     Output%Fire_Mask => null()
+    Output%Thin_Cirr_Mask => null()
    end subroutine NULL_OUTPUT
 
    !============================================================================

@@ -102,8 +102,8 @@ program COMPILE_ASC_DES_LEVEL2B
     , read_sds &
     , regrid &
     , scale_sds &
-    , unscale_sds &
-    , write_sds 
+    , unscale_sds ! &
+   !, write_sds 
     
    use FILE_UTILITY, only: &
       get_lun
@@ -924,7 +924,7 @@ program COMPILE_ASC_DES_LEVEL2B
          
          call close_file(id_out)
      
-      endif
+      endif ! first valid input
       
       print*,'after first file'
       

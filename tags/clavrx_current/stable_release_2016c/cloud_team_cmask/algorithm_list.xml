@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<!--
+   Baseline XML description of algorithms available for GEOCAT.
+   Edit this list instead of algorithm_mod.f90, which is now generated from this list.
+
+   "$Id: algorithm_list.xml,v 1.53 2012/11/26 23:36:03 mpav Exp $"
+   IMPORTANT - WILL NOT WORK UNTIL GEOCAT HAS NETCDF CAPABILITY
+
+-->
+
+<geocat xmlns="http://cimss.ssec.wisc.edu/goesr/xsd/geocat.xsd-1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://cimss.ssec.wisc.edu/goesr/xsd/geocat.xsd-1.0 geocat.xsd">
+  
+  <algorithms>
+<!-- 
+Basic layout, including all optional tags
+
+<algorithm name="name" keyword="keyword">
+        <comment value="fortran header comment" />
+        <module value="geocat_module_name" />
+        <function value="geocat_function_name" />
+        <reference value="reference" />
+        <ancil_subdir value="ancil_subdir" />
+        
+        <inactive /> (optional)
+        
+        <cmask_needed /> (optional)
+        <ctype_needed /> (optional)
+        <amask_needed /> (optional)
+        <cldz_needed /> (optional)
+        <nwp_needed /> (optional)
+        <rtm_needed /> (optional)
+        <active_needed /> (optional)
+        
+        <sds_list>
+                <sds_item name="sds_name">
+                        <dim3_size value="dimen3_size" /> (optional)
+                        <stride_factor value="stride_factor" /> (optional)
+                        <produces_output /> (optional)
+                </sds_item>
+        </sds_list>
+        
+        <channels values="comma,separated,list,of,channels" />
+</algorithm>
+-->
+        <algorithm name="enterprise ahi cloud mask" keyword="eps_cmask_ahi">
+                <comment value="enterprise cloud mask for ahi" />
+                <function value="nb_cloud_mask_bridge" />
+                <module value="nb_cloud_mask_geocat_services_module+nb_cloud_mask+nb_cloud_mask_geocat_bridge_module" />
+                <reference value="goes-r awg cloud team" />
+                <ancil_subdir value="eps_cloud_mask" />
+
+                <nwp_needed />
+                <rtm_needed />
+
+                <sds_list>
+                        <sds_item name="cloud_mask">
+                                <produces_output />
+                        </sds_item>
+                        <sds_item name="cloud_mask_packed">
+                                <dim3_size value="7" />
+                                <produces_output />
+                        </sds_item>
+                        <sds_item name="emiss11_high">
+                                <produces_output />
+                        </sds_item>
+                        <sds_item name="cld_probability">
+                                <produces_output />
+                        </sds_item>
+                 </sds_list>
+
+                <channels values="2,4,5,7,10,11,14,15" />
+        </algorithm>
+
+
+
+        
+  </algorithms>
+</geocat>

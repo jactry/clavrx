@@ -391,6 +391,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    INTEGER(KIND=INT4), DIMENSION(:,:), POINTER :: Y_LRC_Idx
    INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: LRC_Mask
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Emiss_Tropo_Chn14
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag1
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag2
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag3
 
 
    ! ------------- Variables needed for Term stability test
@@ -465,6 +468,13 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    Cloud_Mask_Binary => Temp_Array 
    Cloud_Mask_IR => Temp_Array 
    Cloud_Mask_SST => Temp_Array 
+
+   !-----------------------------------------------------------------
+   ! Initialize Diagnostic variables
+   !-----------------------------------------------------------------
+   Diag1 => Diag_Pix_Array_1
+   Diag2 => Diag_Pix_Array_2
+   Diag3 => Diag_Pix_Array_3
    
    
    !inputs
@@ -667,14 +677,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     ENDIF
 
                     
-                    IF (Sensor%Chan_On_Flag_Default(10)  > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(29)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
                                                        ch(29)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
-                    ELSE
+                    ELSEIF (Sensor%Chan_On_Flag_Default(27)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
                                                                     ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
@@ -851,14 +861,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             !ENDIF
          ENDIF
 
-         !--- Channel 5 Aliases and Derived Parameters
+         !--- Channel 4 Aliases and Derived Parameters
          IF (Sensor%Chan_On_Flag_Default(26) > 0) THEN
 
             Is_Chn(4) = sym%YES
 
             !
             !---1.38 micron reflectance
-            Refl_Chn4 =          ch(2)%Ref_Toa(Elem_Idx,Line_Idx)       
+            Refl_Chn4 =          ch(26)%Ref_Toa(Elem_Idx,Line_Idx)       
 
             !--- renormalize for improved terminator performance
             !--- already done in CLAVRx
@@ -1087,20 +1097,23 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !--- valid pixel - check for aLine_Loc bad channel that is used
          Is_Valid_Pixel = sym%YES
 
+         !--- check for a bad pixel (added by Denis B.)
+         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+            Is_Valid_Pixel = sym%NO
+         endif
+
          !
-         !--- solar channels (7-16)
+         !--- solar channels (1-6)
          IF (Sol_Zen < Day_Sol_Zen_Thresh) THEN
            DO Chn_Num = 1, 6 
 
             IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
-                (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)) THEN
+                (Is_Valid_Pixel == sym%NO)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
             ENDIF
-
            ENDDO
-
          ENDIF  
 
          !
@@ -1108,12 +1121,11 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          DO Chn_Num = 7, 16 !Nchan_Max
 
             IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
-                (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)) THEN
+                (Is_Valid_Pixel == sym%NO)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
             ENDIF
-
          ENDDO
 
          !
@@ -1124,8 +1136,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !
          !--- Also check for RTM calculations (use bt14_clr)
-          IF (Sensor%Chan_On_Flag_Default(31) > 0) THEN
-                 IF (BT_Chn14_Clr  < 200.0) then
+          IF (Is_Chn(14) == sym%YES) THEN
+                 IF (BT_Chn14_Clr < 200.0) then
                       Is_Valid_Pixel = sym%NO
                  ENDIF   
          ENDIF
@@ -1136,7 +1148,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !
          !---- if a pixel is invalid, set QF and the skip to next one
-         IF (Test_Results(1,Elem_Idx,Line_Idx) == sym%NO) THEN
+         IF (Is_Valid_Pixel == sym%NO) THEN
             Cloud_Mask_QF(Elem_Idx,Line_Idx) = INVALID_CMASK_BAD_CHN14
             CYCLE
          ENDIF
@@ -1271,9 +1283,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          Refl_Sing_Scat = 0.0
          
          ! WCS - clear sky reflectance in CLAVRX is already corrected.
-         
-         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
-
+!         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
             !--- most of this is done behind the scenes of CLAVR-x, so commented out
             !--- and set to CLAVRx globals
 !            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = ch(1)%Ref_Toa_Clear(Elem_Idx,Line_Idx) 
@@ -1284,8 +1294,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
             !--- renormalize for improved terminator performance
             !--- Already done by CLAVRX, so removing calls
-
-         ENDIF
+!         ENDIF
 
          !=====================================================================
          ! Determine 0.65 micron clear sky background reflectance
@@ -1624,7 +1633,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
             !
             !--- make estimate of clear emissivity that includes solar
-            Planck_Emission_Chn7_Clr = PLANCK_RAD_FAST (31,BT_Chn14_Clr)
+            Planck_Emission_Chn7_Clr = PLANCK_RAD_FAST (20,BT_Chn14_Clr)
             Solar_Rad_Chn7_Clr = Rad_Chn7_Clr
 
             IF (Is_Day == sym%YES .or. Is_Terminator == sym%YES) THEN
@@ -1632,7 +1641,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                      * Atm_Solar_Trans_Chn7 * max(Cos_Sol_Zen,0.05) * (Chn7_Sol_Energy/PI)
             ENDIF
 
-            Solar_BT_Chn7_Clr = PLANCK_TEMP_FAST (31,Solar_Rad_Chn7_Clr)
+            Solar_BT_Chn7_Clr = PLANCK_TEMP_FAST (20,Solar_Rad_Chn7_Clr)
 
             Emiss_Chn7_Clr = Solar_Rad_Chn7_Clr / Planck_Emission_Chn7_Clr
 

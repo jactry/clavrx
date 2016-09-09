@@ -837,6 +837,7 @@ module SENSOR_MODULE
 
       !--- NPP/JPSS IFF 
       if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0 .or. &
+          index(Image%Level1b_Name, 'IFFSVM_npp') > 0 .or. &
           index(Image%Level1b_Name, 'IFF_npp') > 0) then
          Sensor%Sensor_Name = 'VIIRS-IFF'
          Sensor%Spatial_Resolution_Meters = 750

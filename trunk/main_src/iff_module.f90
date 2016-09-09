@@ -52,6 +52,7 @@ module IFF_MODULE
       integer , dimension( 2 ) :: year_int
       integer , dimension( 2 ) :: doy_int
       integer :: n_chan
+      integer :: seg_num
       integer , dimension( 39 ) :: chan_list
       integer , dimension( 2 )  :: offset
       integer , dimension( 2 ) :: count
@@ -272,11 +273,13 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       character (len = 4) :: year_strg
       character (len = 3) :: doy_strg
       logical, dimension(39) :: sounder_ch 
+      logical :: sounder_avail
 
       error_out = 0
       iend = 0
       Status = 0
       sounder_ch = .false.
+      sounder_avail = .false.
 
       error_check: do while (Status == 0 .and. iend == 0)
 
@@ -502,6 +505,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                      case (933) ! Pseudo
                         band_names_int_rad(ii) = 45
                   end select
+                  if (sounder_ch(ii)) sounder_avail = .true.
                enddo
             elseif (trim(Sensor%Sensor_Name) == 'AVHRR-IFF') then
                do ii = 1, num_char_band_names
@@ -557,6 +561,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                      case (933) ! Pseudo
                         band_names_int_rad(ii) = 45
                   end select
+                  if (sounder_ch(ii)) sounder_avail = .true.
                enddo
             elseif (trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
                do ii = 1, num_char_band_names                                                                                                                                      
@@ -656,119 +661,117 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       allocate ( out % geo % nearest_sounder_y(dim_seg(1), dim_seg(2), 4) )
 
       ! --- read nearest sounder indexes
-      stride_3d = (/ 1, 1, 1 /)
-      start_3d = (/ 0, ny_start, 0 /)
-      edge_3d = (/ dim_seg(1), dim_seg(2), 4 /)
-      setname_band = 'NearestSounderX'
-      Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
+      if (sounder_avail) then
+        stride_3d = (/ 1, 1, 1 /)
+        start_3d = (/ 0, ny_start, 0 /)
+        edge_3d = (/ dim_seg(1), dim_seg(2), 4 /)
+        setname_band = 'NearestSounderX'
+        Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
                   stride_3d,edge_3d,out % geo % nearest_sounder_x) + Status
-      setname_band = 'NearestSounderY'
-      Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
-                  stride_3d,edge_3d,out % geo % nearest_sounder_y) + Status
+        ! - if for previous variable is missing than NO sounder data, skip all these
+        setname_band = 'NearestSounderY'
+        Status = HDF_SDS_READER(Id,TRIM(setname_band),start_3d, &
+                    stride_3d,edge_3d,out % geo % nearest_sounder_y) + Status
 
-      ! --- loop over all pixels and interpolate all channels based on 11um
-      ! SOUNDER 11um = ch 37, imager 11um = ch 31
-      ! i is ele index, j is line index
-      do empty_i = 1, size(out % band (37) % rad, 1)
-          do empty_j = 1, size(out % band (37) % rad, 2)
-              if (out % band (37) % rad(empty_i, empty_j) /= missing_value) cycle
-              ! ! --- nearest neighbor:
-              ! --- 11um comparison scheme
-              this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
-              best_diff_11um = 1.e30
-              do nearest_i = 1, 4
-                  ! subtract ny_start to get indices into this *segment*!
-                  ! also careful 1-based indexing!!!
-                  interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
-                  interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
-!print *,empty_i, empty_j,out % geo % nearest_sounder_y (empty_i, empty_j,:),out % geo % nearest_sounder_x (empty_i, empty_j,:)
-                  if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
-                      diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
-!print *,shape(out % band (37) % rad)
-!print *,out % band (37) % rad(empty_i, empty_j),out % band (31) % rad(interp_i,interp_j)
-!print *,empty_i, empty_j,interp_i - 1,interp_j +ny_start - 1
-!print *,diff_11um,best_diff_11um
-!stop
-                      if (diff_11um < best_diff_11um) then
-                         ! assign sounder bands w/this index
-                         do i_band = 22, 36 !config % n_chan 
-                            !if ( i_band == 37 .or. i_band == 38 ) cycle
-                            if ( sounder_ch (i_band) ) then
-                               out % band (i_band) % rad(empty_i, empty_j) = &
-                                   out % band (i_band) % rad(interp_i, interp_j)
-                            endif
-                         enddo
-                         best_diff_11um = diff_11um
-                      endif
-                  endif
-              enddo
-          enddo
-      enddo
+        ! --- loop over all pixels and interpolate all channels based on 11um
+        ! SOUNDER 11um = ch 37, imager 11um = ch 31
+        ! i is ele index, j is line index
+        do empty_i = 1, size(out % band (37) % rad, 1)
+            do empty_j = 1, size(out % band (37) % rad, 2)
+                if (out % band (37) % rad(empty_i, empty_j) /= missing_value) cycle
+                ! ! --- nearest neighbor:
+                ! --- 11um comparison scheme
+                this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
+                best_diff_11um = 1.e30
+                do nearest_i = 1, 4
+                    ! subtract ny_start to get indices into this *segment*!
+                    ! also careful 1-based indexing!!!
+                    interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
+                    interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
+                    if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
+                        diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
+                        if (diff_11um < best_diff_11um) then
+                           ! assign sounder bands w/this index
+                           do i_band = 22, 36 !config % n_chan 
+                              !if ( i_band == 37 .or. i_band == 38 ) cycle
+                              if ( sounder_ch (i_band) ) then
+                                 out % band (i_band) % rad(empty_i, empty_j) = &
+                                     out % band (i_band) % rad(interp_i, interp_j)
+                              endif
+                           enddo
+                           best_diff_11um = diff_11um
+                        endif
+                    endif
+                enddo
+            enddo
+        enddo
+ 
+        ! --- Read indices from sounder
+        setname_band = 'SounderFOV'
+        stride_2d = (/ 1, 1 /)
+        start_2d = (/ 0, ny_start /)
+        edge_2d = (/ dim_seg(1), dim_seg(2) /)
+        allocate ( i2d_8_buffer(dim_seg(1), dim_seg(2)) )
+        allocate ( i2d_16_buffer(dim_seg(1), dim_seg(2)) )
+        allocate ( out % geo % sounder_fov(dim_seg(1), dim_seg(2)) )
+        allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
+        allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
+  
+        Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
+                    stride_2d,edge_2d,i2d_8_buffer) + Status
+        out % geo % sounder_fov = i2d_8_buffer
+  
+        ! change fill values to missing
+        where(i2d_8_buffer .lt. 0)
+           out % geo % sounder_fov = -128
+        endwhere
+  
+        !------------------------------------------------------------------
+        ! Read in SounderX
+        !------------------------------------------------------------------
+        i2d_16_buffer = -1
+        setname_band = 'SounderX'
+        Status =hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
+                    stride_2d,edge_2d,i2d_16_buffer) + Status
+        out % geo % sounder_x = i2d_16_buffer
+ 
+        ! change fill values to missing
+        where(i2d_16_buffer .lt. 0)
+           out % geo % sounder_x = -32768
+        endwhere
+ 
+        !------------------------------------------------------------------
+        ! Read in SounderY
+        !------------------------------------------------------------------
+        i2d_16_buffer = -1
+        setname_band = 'SounderY'
+        Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
+                    stride_2d,edge_2d,i2d_16_buffer) + Status
+        out % geo % sounder_y = i2d_16_buffer
+ 
+        ! change fill values to missing
+        where(i2d_16_buffer .lt. 0)
+           out % geo % sounder_y = -32768
+        endwhere
 
-      ! --- Read indices from sounder
-      setname_band = 'SounderFOV'
-      stride_2d = (/ 1, 1 /)
-      start_2d = (/ 0, ny_start /)
-      edge_2d = (/ dim_seg(1), dim_seg(2) /)
-      allocate ( i2d_8_buffer(dim_seg(1), dim_seg(2)) )
-      allocate ( i2d_16_buffer(dim_seg(1), dim_seg(2)) )
-      allocate ( out % geo % sounder_fov(dim_seg(1), dim_seg(2)) )
-      allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
-      allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
+        !------------------------------------------------------------------
+        ! Populate sounder mask based on SounderY
+        !------------------------------------------------------------------
+        if (.not. allocated ( out % geo % sounder_mask ) ) allocate &
+                ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
+        where(i2d_16_buffer .lt. 0)
+           ! no sounder ob
+           out % geo % sounder_mask = 0
+        elsewhere
+           ! we have sounder ob
+           out % geo % sounder_mask = 1
+        endwhere
 
-      Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
-                  stride_2d,edge_2d,i2d_8_buffer) + Status
-      out % geo % sounder_fov = i2d_8_buffer
-
-      ! change fill values to missing
-      where(i2d_8_buffer .lt. 0)
-         out % geo % sounder_fov = -128
-      endwhere
-
-      !------------------------------------------------------------------
-      ! Read in SounderX
-      !------------------------------------------------------------------
-      i2d_16_buffer = -1
-      setname_band = 'SounderX'
-      Status =hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
-                  stride_2d,edge_2d,i2d_16_buffer) + Status
-      out % geo % sounder_x = i2d_16_buffer
-
-      ! change fill values to missing
-      where(i2d_16_buffer .lt. 0)
-         out % geo % sounder_x = -32768
-      endwhere
-
-      !------------------------------------------------------------------
-      ! Read in SounderY
-      !------------------------------------------------------------------
-      i2d_16_buffer = -1
-      setname_band = 'SounderY'
-      Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
-                  stride_2d,edge_2d,i2d_16_buffer) + Status
-      out % geo % sounder_y = i2d_16_buffer
-
-      ! change fill values to missing
-      where(i2d_16_buffer .lt. 0)
-         out % geo % sounder_y = -32768
-      endwhere
-
-      !------------------------------------------------------------------
-      ! Populate sounder mask based on SounderY
-      !------------------------------------------------------------------
-      if (.not. allocated ( out % geo % sounder_mask ) ) allocate &
-              ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
-      where(i2d_16_buffer .lt. 0)
-         ! no sounder ob
-         out % geo % sounder_mask = 0
-      elsewhere
-         ! we have sounder ob
-         out % geo % sounder_mask = 1
-      endwhere
+      endif ! end skipping sounder
 
       ! --- dealocate variables
-      deallocate ( i2d_8_buffer )
-      deallocate ( i2d_16_buffer )
+      if (allocated(i2d_8_buffer)) deallocate ( i2d_8_buffer )
+      if (allocated(i2d_16_buffer)) deallocate ( i2d_16_buffer )
 
       !Close main file
       call CLOSE_FILE_HDF_READ(Id,TRIM(config%iff_file))
@@ -776,31 +779,25 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
       !0        1         2         3         4         5         6
       !123456789012345678901234567890123456789012345678901234567890
       !IFFSDR_aqua_d20130113_t235500_c20150202152558_ssec_dev.hdf
-      !MYD35_L2.A2013013.2355_aqua_IFF_v2_2_6.hdf
+      !IFFCMO_aqua_d20140203_t101000_c20160904132319_ssec_dev.hdf
       !IFFSDR_npp_d20130113_t235500_c20150201214538_ssec_dev.hdf
-      !MYD35_L2.A2013013.2355_npp_IFF_v2_2_6.hdf
+      !IFFCMO_npp_d20140203_t083000_c20160904132205_ssec_dev.hdf
 
       ! --- Read cld_mask_aux if it set in default file
       if ( config %  iff_cloud_mask_on ) then
-         if (ny_end == dim_seg(2)) &
 
-          print *, "IFF_MODULE> Reading in AUX cloud mask"
+          if (config % seg_num == 1) print *, "IFF_MODULE > Reading in AUX cloud mask"
 
-          ! ---
-          write (year_strg, "(I4)") config % year_int
-          write (doy_strg, "(I0.3)") config % doy_int
-
+          ! --- create mask file name and search
           if (trim(Sensor%Sensor_Name)== 'VIIRS-IFF') then
-             file_srch = 'MYD35_L2.A'//trim(year_strg)//trim(doy_strg)//'.'// &
-                         trim(config % iff_file &
-                         (len(trim(config % dir_1b))+23:len(trim(config % dir_1b))+26)) &
-                         //'_npp_IFF*.hdf'
+             file_srch = 'IFFCMO'//trim(config % iff_file &
+                         (len(trim(config % dir_1b))+7:len(trim(config % dir_1b))+28)) &
+                         //'*ssec_dev.hdf'
           endif
           if (trim(Sensor%Sensor_Name)== 'AQUA-IFF' ) then
-             file_srch = 'MYD35_L2.A'//trim(year_strg)//trim(doy_strg)//'.'// &
-                         trim(config % iff_file &
-                         (len(trim(config % dir_1b))+24:len(trim(config % dir_1b))+27)) &
-                         //'_aqua_IFF*.hdf'
+             file_srch = 'IFFCMO'//trim(config % iff_file &
+                         (len(trim(config % dir_1b))+7:len(trim(config % dir_1b))+29)) &
+                         //'*ssec_dev.hdf'
           endif
 
          file_arr_dummy => FILE_SEARCH ( trim(config %dir_1b), file_srch, n_files )
@@ -811,6 +808,9 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
             file_cld_mask = file_arr_dummy(1)
             setname_band = 'Cloud_Mask'
 
+            if (config%seg_num == 1) print *, "IFF_MODULE > Cloud Mask File: ", &
+                         trim (file_cld_mask)
+
             allocate ( i3d_buffer ( dim_seg(1), dim_seg(2), 1 ) )
             stride_3d = (/ 1, 1, 1 /)
             start_3d = (/ 0, ny_start, 0 /)
@@ -818,7 +818,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
             ! open cloud mask file
             Status = OPEN_FILE_HDF_READ ( TRIM(config % dir_1b) &
-                            // TRIM( file_arr_dummy(1) ), Id ) + Status
+                            // TRIM( file_cld_mask ), Id ) + Status
 
             ! read data
             Status = hdf_sds_reader(Id,TRIM(setname_band),start_3d, &
@@ -849,7 +849,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
 
             !Close cloud mask file
             call CLOSE_FILE_HDF_READ( Id, TRIM(config %dir_1b) &
-                                    // TRIM(file_arr_dummy(1)) )
+                                    // TRIM(file_cld_mask) )
 
          else
             print*,'AUX Mask file not found , cld_mask_aux is set to missing'

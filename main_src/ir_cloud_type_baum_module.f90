@@ -125,7 +125,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
   integer:: Line_Lrc_Idx
   integer:: Number_Rtm_Levels
 
-  integer:: Fire_Flag
+  logical:: Fire_Flag
 
   integer:: water_count
   integer:: ice_count
@@ -142,6 +142,8 @@ subroutine IR_CLOUD_TYPE_BAUM()
 
   Cld_Phase_IR = sym%UNKNOWN_PHASE
   Cld_Phase_IR = sym%UNKNOWN_TYPE
+
+  Fire_Flag = .false.
 
 
   !------------------------------------------------------------------
@@ -173,7 +175,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
      ! cloud mask, if so, set the type flag and exit
      !-------------------------------------------------------------
      Fire_Flag = BTEST(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
-     if (Fire_Flag == sym%YES) then
+     if (Fire_Flag) then
         Cld_Type_IR(Elem_Idx,Line_Idx) = sym%FIRE_TYPE
         Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%UNKNOWN_PHASE
         cycle

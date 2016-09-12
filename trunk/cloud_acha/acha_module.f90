@@ -1306,10 +1306,10 @@ module AWG_CLOUD_HEIGHT
   endif
 
   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Rad_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
-     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Trans_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
      Blc_67um = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Tsfc_Est)
@@ -1806,7 +1806,7 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
-
+print *, 'box width ', Box_Half_Width_CIRRUS
 endif
 
 end do pass_loop

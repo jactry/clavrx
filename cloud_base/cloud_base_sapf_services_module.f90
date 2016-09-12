@@ -4,7 +4,7 @@
 !------------------------------------------------------------------------------
 module CLOUD_BASE_SERVICES
 
- use PCF_EPS_CLD_BASE_Mod
+ use PCF_CLOUD_BASE_EN_Mod
  use type_KINDS_AIT
  use Convert_Char
  use Error_Messaging_Module
@@ -101,7 +101,7 @@ module CLOUD_BASE_SERVICES
  real, dimension(:,:), allocatable:: CWP                                 !cloud water path
  real, dimension(:,:), allocatable:: CWP_nwp        !CWP from NWP
 
-   type(EPS_CLD_BASE_Ctxt), pointer :: Ctxt
+   type(CLOUD_BASE_EN_Ctxt), pointer :: Ctxt
    integer(LONG) :: Stat 
 
  end type acha_input_struct
@@ -152,6 +152,7 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Zc_Base
    real, dimension(:,:), pointer:: Pc_Top
    real, dimension(:,:), pointer:: Pc_Base
+   integer (kind=int1), dimension(:,:), pointer:: Zc_Base_Qf
  end type acha_output_struct
 
 !Symbol stucture
@@ -238,7 +239,7 @@ end type acha_rtm_nwp_struct
    integer:: Jnwp_x
    real:: Inwp_Weight
    real:: Jnwp_Weight
-   type(EPS_CLD_BASE_Ctxt), pointer :: Ctxt
+   type(CLOUD_BASE_EN_Ctxt), pointer :: Ctxt
 
    Inwp = Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx)
    Jnwp = Input%Line_Idx_Nwp(Elem_Idx,Line_Idx)

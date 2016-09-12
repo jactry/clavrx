@@ -40,7 +40,7 @@ module CLOUD_BASE_SAPF_BRIDGE
  ! define structures that will be arguments 
  !--------------------------------------------------------------------
 
- type(EPS_CLD_BASE_Ctxt), POINTER, PRIVATE :: Ctxt_CBase
+ type(CLOUD_BASE_EN_Ctxt), POINTER, PRIVATE :: Ctxt_CBase
 
  type(Symbol_acha), private :: Symbol
  type(acha_input_struct), private :: Input
@@ -54,7 +54,7 @@ module CLOUD_BASE_SAPF_BRIDGE
  subroutine CLOUD_BASE_BRIDGE(Ctxt, Stat)
  
    implicit none
-   type(EPS_CLD_BASE_Ctxt), target :: Ctxt
+   type(CLOUD_BASE_EN_Ctxt), target :: Ctxt
    integer(long) :: Stat
 
 
@@ -154,6 +154,7 @@ module CLOUD_BASE_SAPF_BRIDGE
      Output%Zc_Base =>  null()
      Output%Pc_Top =>  null()
      Output%Pc_Base =>  null()
+     Output%Zc_Base_Qf => null()
  end subroutine NULL_OUTPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -390,6 +391,12 @@ module CLOUD_BASE_SAPF_BRIDGE
     CALL NFIA_CloudBase_CldTopPres(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Pc_Top)
      
     CALL NFIA_CloudBase_CldBasePres(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Pc_Base)
+
+    CALL NFIA_CloudBase_CldBaseQF(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Zc_Base_Qf)
+    
+    !initialize DQF
+    Output%Zc_Base_Qf = 1
+    
 
  end subroutine SET_OUTPUT
 

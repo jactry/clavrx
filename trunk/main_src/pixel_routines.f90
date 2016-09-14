@@ -35,7 +35,6 @@
 ! CONVERT_TIME - compute a time in hours based on millisecond time in leveL1b
 ! COMPUTE_SNOW_CLASS - based on Snow information, make a Snow Classification
 ! COMPUTE_GLINT - derive a glint mask
-! COMPUTE_GLINT_LUNAR - derive a glint mask for lunar reflectance
 !
 ! DETERMINE_LEVEL1B_COMPRESSION
 !
@@ -71,7 +70,6 @@ MODULE PIXEL_ROUTINES
           READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
           COMPUTE_GLINT,                    &
-          COMPUTE_GLINT_LUNAR,              &
           QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
@@ -1804,20 +1802,27 @@ end subroutine COMPUTE_SPATIAL_UNIFORMITY
 !--- 
 !--- input and output passed through global arrays
 !----------------------------------------------------------------------
-subroutine COMPUTE_GLINT()
+subroutine COMPUTE_GLINT(Source_GLintzen, Source_Ref_Toa, Source_Ref_Std_3x3, &
+                         Source_Glint_Mask)
+
+  real, dimension(:,:), intent(in):: Source_GlintZen
+  real, dimension(:,:), intent(in):: Source_Ref_Toa
+  real, dimension(:,:), intent(in):: Source_Ref_Std_3x3
+  integer(kind=int1),  dimension(:,:), intent(out):: Source_Glint_Mask
 
   !--- define local variables
   integer:: Number_Of_Lines
   integer:: Number_Of_Elements
   integer:: Elem_Idx
   integer:: Line_Idx
+  real:: Refl_Thresh
 
 
   !--- alias some global sizes into local values
   Number_Of_Lines = Image%Number_Of_Lines_Per_Segment
   Number_Of_Elements = Image%Number_Of_Elements
 
-  Sfc%Glint_Mask = Missing_Value_Int1
+  Source_Glint_Mask = Missing_Value_Int1
 
      line_loop: do Line_Idx = 1, Number_Of_Lines
 
@@ -1829,29 +1834,29 @@ subroutine COMPUTE_GLINT()
      endif
 
      !--- initialize valid pixel to no
-     Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+     Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
 
      !--- skip land pixels
      if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
           Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
 
        !--- turn on in geometric glint cone and sufficient Ref_Ch1
-       if ((Geo%Glintzen(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
+       if ((Source_Glintzen(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
 
           !--- assume to be glint if in geometric zone
-          Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
+          Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%YES
 
           if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 
             !--- exclude pixels colder than the freezing temperature
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 273.15) then
-              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+              Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
             !--- exclude pixels colder than the surface
             if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) - 5.0) then
-              Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+              Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
               cycle
             endif
 
@@ -1861,25 +1866,55 @@ subroutine COMPUTE_GLINT()
           if (Geo%Satzen(Elem_Idx,Line_Idx) < 45.0) then 
            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
             if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
-             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+             Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
            endif
 
            if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-            if (Ref_Ch1_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
-             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+            if (Source_Ref_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
+             Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
            endif
           endif
 
-          !-turn off if dark
+          !-checks on the value of ch1
           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-            if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) < 5.0) then
-             Sfc%Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+
+            !-turn off if dark
+            if (Source_Ref_Toa(Elem_Idx,Line_Idx) < 5.0) then
+             Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
              cycle
             endif
+
+            !-turn off if bright
+            if (Source_Glintzen(Elem_Idx,Line_Idx) > 10.0 .and. &
+                Source_Glintzen(Elem_Idx,Line_Idx) < 40.0) then
+
+               Refl_Thresh = 25.0 - Source_Glintzen(Elem_Idx,Line_Idx)/3.0
+
+               if (Source_Ref_Toa(Elem_Idx,Line_Idx) > Refl_Thresh) then
+                  Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+                  cycle
+               endif
+
+            endif
+
+!           if (Source_Glintzen(Elem_Idx,Line_Idx) > 20.0) then
+!             if (Source_Ref_Toa(Elem_Idx,Line_Idx) > 15.0) then
+!                 Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+!                 cycle
+!             endif
+!           endif
+
+!           if (Source_Glintzen(Elem_Idx,Line_Idx) > 10.0) then
+!             if (Source_Ref_Toa(Elem_Idx,Line_Idx) > 20.0) then
+!                 Source_Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
+!                 cycle
+!             endif
+!           endif
+
           endif
 
        endif  !Glintzen check
@@ -1891,90 +1926,6 @@ subroutine COMPUTE_GLINT()
 
 
  end subroutine COMPUTE_GLINT
-!----------------------------------------------------------------------
-!--- Compute a mask identifying presence of oceanic glint in lunar ref
-!--- 
-!--- input and output passed through global arrays
-!----------------------------------------------------------------------
-subroutine COMPUTE_GLINT_LUNAR()
-
-  !--- define local variables
-  integer:: Number_Of_Lines
-  integer:: Number_Of_Elements
-  integer:: Elem_Idx
-  integer:: Line_Idx
-
-
-  !--- alias some global sizes into local values
-  Number_Of_Lines = Image%Number_Of_Lines_Per_Segment
-  Number_Of_Elements = Image%Number_Of_Elements
-
-  Sfc%Glint_Mask_Lunar = Missing_Value_Int1
-
-     line_loop: do Line_Idx = 1, Number_Of_Lines
-
-     element_loop: do Elem_Idx = 1, Number_Of_Elements
-
-     !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
-             cycle
-     endif
-
-     !--- initialize valid pixel to no
-     Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
-
-
-     !--- skip land pixels
-     if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
-          Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
-
-       !--- turn on in geometric glint cone and sufficient Ref_Ch1
-       if ((Geo%Glintzen_Lunar(Elem_Idx,Line_Idx) < Glint_Zen_Thresh)) then
-
-          !--- assume to be glint if in geometric zone
-          Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%YES
-
-          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-
-            !--- exclude pixels colder than the freezing temperature
-            if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 273.15) then
-              Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
-              cycle
-            endif
-
-            !--- exclude pixels colder than the surface
-            if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) - 5.0) then
-              Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
-              cycle
-            endif
-
-          endif
-
-          !-turn off if non-uniform
-          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-            if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
-             Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
-             cycle
-            endif
-          endif
-
-          !-turn off if dark
-          if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-            if (ch(44)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) < 5.0) then
-             Sfc%Glint_Mask_Lunar(Elem_Idx,Line_Idx) = sym%NO
-             cycle
-            endif
-          endif
-
-       endif  !Glintzen check
-
-     endif    !land check
-
-     enddo element_loop
-   enddo line_loop
-
-
- end subroutine COMPUTE_GLINT_LUNAR
 
 !----------------------------------------------------------------------
 ! Read MODIS white sky albedoes

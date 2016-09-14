@@ -753,7 +753,7 @@
                   end where
        
             end if
-         
+
          End_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
          !--- update time summation for level-1b processing
@@ -1014,8 +1014,24 @@
             Segment_Time_Point_Seconds(4) =  Segment_Time_Point_Seconds(4) + &
                &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-            !--- compute the glint mask
-            call COMPUTE_GLINT()
+            !------------------------------------------------------------------------------
+            ! compute glint masks for use in cloud detection
+            !------------------------------------------------------------------------------
+
+            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+
+             !--- solar glint mask
+             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+               call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
+             endif
+
+             !--- lunar glint mask
+             if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+               call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(45)%Ref_Lunar_Toa,  &
+                                  Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
+             endif
+
+            endif
 
             !*******************************************************************
             ! Marker: Generate pixel-level products

@@ -659,6 +659,20 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
  
       allocate ( out % geo % nearest_sounder_x(dim_seg(1), dim_seg(2), 4) )
       allocate ( out % geo % nearest_sounder_y(dim_seg(1), dim_seg(2), 4) )
+      allocate ( i2d_8_buffer(dim_seg(1), dim_seg(2)) )
+      allocate ( i2d_16_buffer(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_fov(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
+      allocate ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
+
+      ! --- initialize
+      out % geo % nearest_sounder_x = missing_value
+      out % geo % nearest_sounder_y = missing_value
+      out % geo % sounder_fov = -128
+      out % geo % sounder_x = missing_value
+      out % geo % sounder_y = missing_value
+      out % geo % sounder_mask = -128
 
       ! --- read nearest sounder indexes
       if (sounder_avail) then
@@ -711,11 +725,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
         stride_2d = (/ 1, 1 /)
         start_2d = (/ 0, ny_start /)
         edge_2d = (/ dim_seg(1), dim_seg(2) /)
-        allocate ( i2d_8_buffer(dim_seg(1), dim_seg(2)) )
-        allocate ( i2d_16_buffer(dim_seg(1), dim_seg(2)) )
-        allocate ( out % geo % sounder_fov(dim_seg(1), dim_seg(2)) )
-        allocate ( out % geo % sounder_x(dim_seg(1), dim_seg(2)) )
-        allocate ( out % geo % sounder_y(dim_seg(1), dim_seg(2)) )
   
         Status = hdf_sds_reader(Id,TRIM(setname_band),start_2d, &
                     stride_2d,edge_2d,i2d_8_buffer) + Status
@@ -757,8 +766,6 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
         !------------------------------------------------------------------
         ! Populate sounder mask based on SounderY
         !------------------------------------------------------------------
-        if (.not. allocated ( out % geo % sounder_mask ) ) allocate &
-                ( out % geo % sounder_mask (dim_seg(1), dim_seg(2)) )
         where(i2d_16_buffer .lt. 0)
            ! no sounder ob
            out % geo % sounder_mask = 0

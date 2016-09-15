@@ -1027,7 +1027,7 @@
 
              !--- lunar glint mask
              if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-               call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(45)%Ref_Lunar_Toa,  &
+               call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(44)%Ref_Lunar_Toa,  &
                                   Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
              endif
 

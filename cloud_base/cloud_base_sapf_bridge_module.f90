@@ -341,14 +341,14 @@ module CLOUD_BASE_SAPF_BRIDGE
         
         
         !Fill NWP level values for CCL/LCL calculation and NWP CWP
-        CALL NFIP_NWP_Temp2M(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Tmpair_Nwp)
+        CALL NFIP_NWP_Temp2M_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Tmpair_Nwp)
         
-        CALL NFIP_NWP_RH_2m(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Rhsfc_Nwp)
+        CALL NFIP_NWP_RH_2m_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Rhsfc_Nwp)
         
 
         !COMMENTED OUT UNTIL NWP_CWP IS INTEGERATED IN - WCS3
         
-        !CALL NFIP_NWP_CWP(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Input%CWP_nwp(Elem_Idx,Line_Idx)) ! Need to put in SAPF
+        CALL NFIP_NWP_CWP_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Input%CWP_nwp(Elem_Idx,Line_Idx)) ! Need to put in SAPF
 
         !Determine CCL/LCL
         CALL  CCL_LCL_CALC(Tmpair_Nwp, Rhsfc_Nwp, Input%LCL(Elem_Idx,Line_Idx), &

@@ -171,7 +171,7 @@ program COMPILE_ASC_DES_LEVEL2B
  real(kind=real4), dimension(:), allocatable:: lat_Output_1d
  integer:: ipos
 
- type(Sds_Struct), dimension(0:400) :: sds
+ type(Sds_Struct), dimension(0:300) :: sds
  type(Sds_Struct) :: Sds_Lat
  type(Sds_Struct) :: Sds_Lon
  type(Sds_Struct) :: Sds_Time

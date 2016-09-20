@@ -1205,6 +1205,9 @@ module AWG_CLOUD_HEIGHT
     endif
   endif
 
+  !--- square the individual elements to convert to variances (not a matmul)
+  Sa = Sa**2
+
   if (lun_diag > 0) then 
     write(unit=lun_diag,fmt=*) "final Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
   endif
@@ -1218,12 +1221,10 @@ module AWG_CLOUD_HEIGHT
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
 
       Tc_Ap_Imager = x_Ap(1)  !K
-      Sa_Tc_Imager = sqrt(Sa(1,1))  !K
+      Sa_Tc_Imager = Sa(1,1)  !K^2
       Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
-      Sa_Tc_Sounder = 10.0    !5.0  K
-
+      Sa_Tc_Sounder = 10.0**2    !K^2
       Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
-
       x_Ap(1) = (Tc_Ap_Imager/Sa_Tc_Imager + Tc_Ap_Sounder/Sa_Tc_Sounder) *  Sa(1,1)
 
     endif
@@ -1233,9 +1234,6 @@ module AWG_CLOUD_HEIGHT
    write(unit=lun_diag,fmt=*) "x_ap after sounder  = ", x_ap
    write(unit=lun_diag,fmt=*) "S_a after sounder  = ", Sa(1,1), Sa(2,2), Sa(3,3), Sa(4,4)
   endif
-
-  !--- square the individual elements to convert to variances (not a matmul)
-  Sa = Sa**2
 
   !--- compute inverse of Sa matrix
   Singular_Flag =  INVERT_MATRIX(Sa, Sa_Inv, Num_Param)
@@ -1346,7 +1344,6 @@ module AWG_CLOUD_HEIGHT
 !----------------------------------------------------------------
 ! Determine the level of the highest inversion (0=if none)
 !----------------------------------------------------------------
-!Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
  call DETERMINE_INVERSION_CHARACTERISTICS(symbol%YES, &
                                           symbol%NO,  &
                                           Tropo_Level_RTM,              &

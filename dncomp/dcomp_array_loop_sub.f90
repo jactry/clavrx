@@ -95,8 +95,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real ( kind = real4 ) :: alb_unc_sfc(N_CHAN)
    real ( kind = real4 ) :: rad_to_refl_factor
    
-   real, parameter :: SAT_ZEN_MAX = 75.
-   real, parameter :: SOL_ZEN_MAX = 75.
+   real, parameter :: SAT_ZEN_MAX = 70.
+   real, parameter :: SOL_ZEN_MAX = 70.
    real, parameter :: PI = 4. * ATAN(1.)
    
    real ( kind = real4) :: ALBEDO_OCEAN (N_CHAN)
@@ -490,6 +490,14 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
           output % iwp % d(1:dim_1_w,1:dim_2_w) =  (output % cod % d(1:dim_1_w,1:dim_2_w)  ** (1/0.84) ) / 0.065 
    end where
    
+   where ( obs_array .and. .not. cloud_array )
+      output % cld_trn_sol % d   =  1.0 
+      output % cld_trn_obs % d   =  1.0  
+      output % cld_alb % d       =  0.0
+      output % cld_sph_alb % d   =  0.0  
+      output % cod % d           =  -999.0
+      output % cps % d           =  -999.0
+   end where
       
    output % quality % d = quality_flag
    output % info % d = info_flag

@@ -95,8 +95,6 @@
    use LEVEL2_ROUTINES
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
-!  use UNIVERSAL_CLOUD_TYPE_MODULE
-   use IR_CLOUD_TYPE_BAUM_MODULE
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
@@ -112,19 +110,19 @@
    use CLAVRX_SST_MODULE
    
    use RT_UTILITIES, only: &
-        RTM_NVZEN &
-      , SETUP_SOLAR_RTM &
-      , MAP_NWP_RTM &
-      , CREATE_TEMP_NWP_VECTORS &
-      , DESTROY_TEMP_NWP_VECTORS &
-      , GET_PIXEL_NWP_RTM &
-      , ALLOCATE_RTM &
-      , DEALLOCATE_RTM &
-      , DEALLOCATE_RTM_VARS &
-      , DEALLOCATE_RTM_CELL 
+        rtm_nvzen &
+      , setup_solar_rtm &
+      , map_nwp_rtm  &
+      , create_temp_nwp_vectors  &
+      , destroy_temp_nwp_vectors &
+      , get_pixel_nwp_rtm &
+      , allocate_rtm &
+      , deallocate_rtm &
+      , deallocate_rtm_vars &
+      , deallocate_rtm_cell  
       
-   use RTM_COMMON, only: &
-      NLEVELS_RTM
+   use RTM_COMMON,only: &
+      nlevels_rtm
    
    use NWP_COMMON
    use SCALING_PARAMETERS
@@ -146,17 +144,14 @@
    use SENSOR_MODULE
    use USER_OPTIONS
    use CLAVRX_MESSAGE_MODULE, only: &
-      MESG &
-      , VERB_LEV
+      mesg &
+      , verb_lev
    use CLOUD_TYPE_BRIDGE_MODULE
    use SIMPLE_COD
  
-   use DNB_RETRIEVALS_MOD, only: &
+   use dnb_retrievals_mod, only: &
       COMPUTE_LUNAR_REFLECTANCE
       
-   use BASELINE_CLOUD_MASK, only: &
-      BASELINE_CLOUD_MASK_MAIN
-
    implicit none
  
    !***********************************************************************
@@ -753,7 +748,7 @@
                   end where
        
             end if
-
+         
          End_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
          !--- update time summation for level-1b processing
@@ -780,7 +775,6 @@
 
                !--- place algorithm cvs tags into global strings for output
                call SET_CLOUD_TYPE_VERSION()
-               call SET_IR_CLOUD_TYPE_VERSION()
 
                Num_Scans_Level2_Hdf = 0
 
@@ -1014,24 +1008,8 @@
             Segment_Time_Point_Seconds(4) =  Segment_Time_Point_Seconds(4) + &
                &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-            !------------------------------------------------------------------------------
-            ! compute glint masks for use in cloud detection
-            !------------------------------------------------------------------------------
-
-            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-
-             !--- solar glint mask
-             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-               call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
-             endif
-
-             !--- lunar glint mask
-             if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
-               call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(44)%Ref_Lunar_Toa,  &
-                                  Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
-             endif
-
-            endif
+            !--- compute the glint mask
+            call COMPUTE_GLINT()
 
             !*******************************************************************
             ! Marker: Generate pixel-level products
@@ -1069,10 +1047,8 @@
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call NB_CLOUD_MASK_BRIDGE(Segment_Number)
-                  elseif (Cloud_Mask_Bayesian_Flag == sym%NO) then
-                     call BASELINE_CLOUD_MASK_MAIN (Segment_Number)
                   else
-                     print *, "Only the Bayesian and Baseline Cloud Masks are available, check selection"
+                     print *, "Only the Bayesian Cloud Mask is available, check selection"
                      stop 
                   end if
                end if
@@ -1108,16 +1084,7 @@
                   Phase_Called_Flag = sym%YES
 
                else  
-
                   call CLOUD_TYPE_BRIDGE()
-                  call IR_CLOUD_TYPE_BAUM()
-
-                  if (Use_IR_Cloud_Type_Flag) then
-                     Cld_Type = Cld_Type_IR
-                     Cld_Phase = Cld_Phase_IR
-                  endif
-
-                ! call UNIVERSAL_CLOUD_TYPE()
                   Phase_Called_Flag = sym%YES
                end if
 
@@ -1135,6 +1102,10 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                call CTP_MULTILAYER()
+
+               Diag_Pix_Array_1 = Zc_H2O
+               Diag_Pix_Array_2 = Zc_CO2IRW
+               Diag_Pix_Array_3 = Ctp_Multilayer_Flag 
 
                !-------------------------------------------------------------------
                ! make co2 slicing height from sounder with using sounder/imager IFF

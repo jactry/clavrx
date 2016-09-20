@@ -242,7 +242,7 @@
      real, intent(in) :: rel_az
 
      glint_angle = cos ( sol_zen * DTOR ) * cos ( sen_zen * DTOR ) +    &
-                   sin ( sol_zen * DTOR ) * sin ( sen_zen * DTOR ) * cos ( rel_az * DTOR )
+                        & sin ( sol_zen * DTOR ) * sin ( sen_zen * DTOR ) * cos ( rel_az * DTOR )
 
      glint_angle = max(-1.0 , min( glint_angle ,1.0 ) )
 

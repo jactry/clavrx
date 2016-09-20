@@ -100,8 +100,7 @@ module USER_OPTIONS
       , Avhrr_1_flag &
       , Read_Dark_Comp &
       , Dark_Comp_Data_Dir &
-      , Globsnow_Data_Dir, &
-        Use_IR_Cloud_Type_Flag
+      , Globsnow_Data_Dir
       
    use CONSTANTS, only: &
       Sym &
@@ -420,10 +419,9 @@ contains
 
       !---- SET DEFAULT OPTIONS
   
-      Use_Default = sym%YES
-      Default_Temp="./clavrx_options"
-      File_List = "./file_list"
-      Use_IR_Cloud_Type_Flag = .false.      !controls which type is used in algorithms
+      use_Default = sym%YES
+      default_temp="./clavrx_options"
+      file_list = "./file_list"
   
       Temp_Scans_Arg = 0
       fargc = iargc()
@@ -443,8 +441,8 @@ contains
             &'$Header$'
             stop
         
-         else if (trim(fargv) == "-no_default") then 
-            Use_Default = sym%NO
+         else if (trim(fargv) == "-no_Default") then 
+            use_Default = sym%NO
             !Different default file used
          else if (trim(fargv) == "-default") then
             call getarg(i+1,default_temp)
@@ -464,7 +462,6 @@ contains
       end if 
  
       do i=1, fargc
-
         call getarg(i,fargv)
     
         !Change Ref_Cal_1b flag 
@@ -483,6 +480,12 @@ contains
         elseif(trim(fargv) == "-l1bnav") then
           nav_opt = 0
           
+        !Change RTM output flag
+        elseif(trim(fargv) == "-rtm_file") then
+          rtm_file_Flag = sym%YES
+        elseif(trim(fargv) == "-no_rtm_file") then
+          rtm_file_Flag = sym%NO
+
         !Change level2 output flag
         elseif(trim(fargv) == "-level2_file") then
           level2_file_Flag = sym%YES
@@ -562,13 +565,9 @@ contains
             int_temp = scan(junk,temp_string, back) 
             if(int_temp > 0.0) read(junk,'(f6.3)') Geo%Solzen_Max_Limit
             if(int_temp == 0.0) read(junk,'(f6.0)') Geo%Solzen_Max_Limit
-
          elseif (trim(fargv) == "-filelist") then
             call getarg(i+1,file_list)
             file_list=trim(file_list)
-
-         elseif (trim(fargv) == "-use_ir_type") then
-              Use_IR_Cloud_Type_Flag = .true.
          endif
       enddo
   
@@ -584,6 +583,7 @@ contains
       Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
+      
       
       Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
 

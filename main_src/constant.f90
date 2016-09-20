@@ -85,7 +85,6 @@ module CONSTANTS
   character(120), public :: Cloud_Mask_Version
   character(120), public :: Cloud_Mask_Thresholds_Version
   character(120), public :: Cloud_Type_Version
-  character(120), public :: Cloud_Type_IR_Version
   
   !--- define sds names in hdf files of relevant static ancillary data
   character(*), parameter, public :: SFC_TYPE_SDS_NAME = "surface_type"

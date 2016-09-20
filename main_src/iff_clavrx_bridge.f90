@@ -87,9 +87,9 @@ contains
    
       implicit none
 
-      integer , intent(in) :: Segment_Number
-      character(len=*), intent(in) :: Iff_File
-      integer(kind=int4), intent(out) :: Error_Out
+      integer , intent(in) :: segment_number
+      character(len=*), intent(in) :: iff_file
+      integer(kind=int4), intent(out) :: error_out
 
       type ( iff_data_config )  :: iff_conf
       type ( iff_data_out )  :: out
@@ -114,7 +114,6 @@ contains
                          - y_start  + 1
 
       ! - configure interface
-      iff_conf % seg_num = Segment_Number
       iff_conf % year_int = Image % Start_Year
       iff_conf % doy_int = Image % Start_Doy
       iff_conf % n_chan = num_chan

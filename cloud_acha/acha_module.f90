@@ -99,8 +99,7 @@ module AWG_CLOUD_HEIGHT
   private:: COMPUTE_TEMPERATURE_CIRRUS
   private:: COMPUTE_BOX_WIDTH
   private:: MEAN_SMOOTH
-  private:: EMPIRICAL_LAPSE_RATE
-  private:: OCEANIC_LAPSE_RATE_OLD
+  private:: OCEANIC_LAPSE_RATE
 
   !--- include the non-system specific variables
   include 'acha_parameters.inc'
@@ -162,37 +161,23 @@ module AWG_CLOUD_HEIGHT
   type(acha_symbol_struct), private :: symbol
 
 
-  !-------------------------------------------------------------------------------------
-  ! empirical lapse rate table data and metadata
-  !-------------------------------------------------------------------------------------
   integer, private, parameter:: nts = 7
   integer, private, parameter:: ntcs = 9
   real, private, parameter:: ts_min = 270.0
   real, private, parameter:: dts = 5.0
   real, private, parameter:: tcs_min = -20.0
   real, private, parameter:: dtcs = 2.0
+  real, private, dimension(nts,ntcs), parameter:: lapse_rate_table = reshape ((/ &
+                           -7.1, -7.1, -7.3, -7.4, -7.4, -6.8, -6.2, &
+                           -7.3, -7.2, -7.3, -7.4, -7.4, -7.0, -6.3, &
+                           -7.4, -7.2, -7.3, -7.5, -7.6, -7.1, -6.5, &
+                           -7.2, -7.1, -7.3, -7.5, -7.6, -7.2, -6.6, &
+                           -6.9, -6.8, -7.1, -7.4, -7.5, -7.3, -7.0, &
+                           -6.5, -6.5, -6.8, -7.0, -7.3, -7.4, -7.4, &
+                           -6.5, -6.3, -6.4, -6.6, -7.0, -7.3, -7.6, &
+                           -6.0, -5.7, -5.6, -5.8, -6.3, -6.8, -7.3, &
+                           -5.6, -5.2, -5.0, -5.2, -5.9, -6.3, -6.8/), (/nts,ntcs/))
 
-  real, private, dimension(nts,ntcs), parameter:: ocean_lapse_rate_table = reshape ((/ &
-                          -7.3, -7.2, -7.3, -7.4, -7.4, -6.8, -6.2, &
-                          -7.4, -7.3, -7.3, -7.4, -7.4, -7.0, -6.3, &
-                          -7.5, -7.3, -7.3, -7.5, -7.6, -7.1, -6.5, &
-                          -7.2, -7.1, -7.3, -7.5, -7.6, -7.2, -6.6, &
-                          -6.9, -6.8, -7.1, -7.4, -7.5, -7.3, -7.0, &
-                          -6.6, -6.6, -6.8, -7.0, -7.3, -7.4, -7.4, &
-                          -6.7, -6.4, -6.4, -6.6, -7.0, -7.3, -7.6, &
-                          -6.2, -5.8, -5.6, -5.8, -6.3, -6.8, -7.3, &
-                          -5.8, -5.3, -5.0, -5.2, -5.9, -6.3, -6.8/), (/nts,ntcs/))
-
-  real, private, dimension(nts,ntcs), parameter:: land_lapse_rate_table = reshape ((/ &
-                           -5.2, -5.8, -6.2, -6.2, -6.4, -7.0, -7.7, &
-                           -5.3, -5.8, -6.2, -6.3, -6.4, -7.1, -7.7, &
-                           -5.2, -5.7, -6.0, -6.1, -6.4, -7.1, -7.7, &
-                           -5.0, -5.4, -5.8, -5.9, -6.2, -6.9, -7.7, &
-                           -5.0, -5.2, -5.5, -5.5, -5.8, -6.8, -7.8, &
-                           -4.9, -5.0, -5.2, -4.9, -5.2, -6.2, -7.6, &
-                           -4.7, -4.7, -4.8, -4.5, -4.8, -6.0, -7.5, &
-                           -3.9, -4.0, -4.2, -3.9, -3.9, -5.3, -7.3, &
-                           -3.3, -3.4, -3.7, -3.6, -3.5, -5.0, -7.3/), (/nts,ntcs/))
   contains 
 
 !------------------------------------------------------------------------------
@@ -303,8 +288,8 @@ module AWG_CLOUD_HEIGHT
   integer:: ilrc
   integer:: jlrc
   integer:: Iter_Idx
+  integer:: idiag_output
   integer:: ierror
-  integer:: Lev_Idx
   integer:: Pass_Idx
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
@@ -317,64 +302,39 @@ module AWG_CLOUD_HEIGHT
 
   !--- ch27 variables
   real:: Rad_Ac_67um
-  real:: Rad_Alc_67um
   real:: Trans_Ac_67um
-  real:: Trans_Alc_67um
-  real:: Trans_Bc_67um
   real:: Rad_Clear_67um
   real:: Bc_67um
-  real:: Blc_67um
-  real:: Bs_67um
-  real:: Bt_Clear_67um
+  real::  Bt_Clear_67um
 
   !--- ch29 variables
   real:: Rad_Ac_85um
-  real:: Rad_Alc_85um
   real:: Trans_Ac_85um
-  real:: Trans_Alc_85um
-  real:: Trans_Bc_85um
   real:: Rad_Clear_85um
   real:: Bc_85um
-  real:: Blc_85um
-  real:: Bs_85um
-  real:: Bt_Clear_85um
+  real::  Bt_Clear_85um
 
   !--- ch31 variables
   real:: Rad_Ac_11um
-  real:: Rad_Alc_11um
   real:: Trans_Ac_11um
-  real:: Trans_Alc_11um
-  real:: Trans_Bc_11um
   real:: Rad_Clear_11um
   real:: Bc_11um
-  real:: Blc_11um
-  real:: Bs_11um
-  real:: Bt_Clear_11um
-  real:: Bt_11um_Lrc
+  real::  Bt_Clear_11um
+  real::  Bt_11um_Lrc
 
   !--- ch32 variables
   real:: Rad_Ac_12um
-  real:: Rad_Alc_12um
   real:: Trans_Ac_12um
-  real:: Trans_Alc_12um
-  real:: Trans_Bc_12um
   real:: Rad_Clear_12um
   real:: Bc_12um
-  real:: Blc_12um
-  real:: Bs_12um
-  real:: Bt_Clear_12um
+  real::  Bt_Clear_12um
 
   !--- ch33 variables
   real:: Rad_Ac_133um
-  real:: Rad_Alc_133um
   real:: Trans_Ac_133um
-  real:: Trans_Alc_133um
-  real:: Trans_Bc_133um
   real:: Rad_Clear_133um
   real:: Bc_133um
-  real:: Blc_133um
-  real:: Bs_133um
-  real:: Bt_Clear_133um
+  real::  Bt_Clear_133um
 
   real:: a_Beta_11um_133um_fit
   real:: b_Beta_11um_133um_fit
@@ -384,16 +344,12 @@ module AWG_CLOUD_HEIGHT
   real:: b_Beta_11um_67um_fit
 
   real:: Tsfc_Est
-  real:: Ts_temp
   real:: Tc_temp
   real:: Pc_temp
-  real:: Ps_temp
   real:: Zc_Temp
-  real:: Zs_Temp
   real:: Tc_Ap
   real:: Ec_Ap
   real:: Beta_Ap
-  real:: Ts_Ap
   real:: Tc_Ap_Uncer
   real:: Ec_Ap_Uncer
   real:: Tc_Ap_Imager
@@ -449,17 +405,10 @@ module AWG_CLOUD_HEIGHT
   real (kind=real4):: Btd_11um_12um_Std
   real (kind=real4):: Btd_11um_133um_Std
 
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
-
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
   integer (kind=int4):: NWP_Profile_Inversion_Flag
   logical:: Bad_Input_Flag
-
-  integer:: count_diag
-  integer:: lun_diag
-  character(len=100):: file_name_diag
 
 !-----------------------------------------------------------------------
 ! BEGIN EXECUTABLE CODE
@@ -547,9 +496,8 @@ module AWG_CLOUD_HEIGHT
   allocate(Emiss_Vector(Num_Obs))
   allocate(AKM(Num_Param,Num_Param))
 
-  !--- initialize diagnostic output
-  count_diag = 0
-  lun_diag = 0
+  !--- turn on diagnostic output
+  idiag_output = symbol%NO
 
   !--- set convergence criterion
   Convergence_Criteria = Num_Param - 1.0
@@ -644,7 +592,7 @@ module AWG_CLOUD_HEIGHT
   pass_loop: do Pass_Idx = Pass_Idx_min, Pass_Idx_Max
   
    !--------------------------------------------------------------------------
-   ! on the third pass, spatially interpolate water cloud temperature
+   ! on the third pass, spatially interpoLate water cloud temperature
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
 
@@ -884,40 +832,7 @@ module AWG_CLOUD_HEIGHT
        endif
 
      endif
-
-
-    !----------------------------------------------------------------------
-    !  turn on diagnostic
-    !----------------------------------------------------------------------
-    lun_diag = 0
-    if (idiag_output == symbol%YES .and. count_diag < count_diag_max) then
-      print *, "ACHA Diagnostic File Created for this Pixel"
-      count_diag = count_diag + 1
-      write(file_name_diag,fmt="(I0.4)") count_diag
-      file_name_diag = trim(file_name_diag)
-      file_name_diag = 'acha_diag_output_'//trim(file_name_diag)//'.txt'
-      lun_diag = get_lun_acha()
-      open(unit=lun_diag,file=trim(file_name_diag),form="formatted",status='unknown',action='write') 
-    endif
-
-    if (lun_diag > 0) then
-         write(unit=lun_diag,fmt=*) "Element, Line Indices (Relative to Segment) = ", Elem_Idx,Line_Idx
-         write(unit=lun_diag,fmt=*) "Surface Elevation = ", Input%Surface_Elevation(Elem_Idx,Line_Idx)
-         write(unit=lun_diag,fmt=*) "Latitude = ", Input%Latitude(Elem_Idx,Line_Idx)
-         write(unit=lun_diag,fmt=*) "Longitude = ", Input%Longitude(Elem_Idx,Line_Idx)
-         write(unit=lun_diag,fmt=*) "Zenith Angle = ", Input%Sensor_Zenith_Angle(Elem_Idx,Line_Idx)
-         if (Input%Surface_Type(Elem_Idx,Line_Idx) == 0) write(unit=lun_diag,fmt=*) "WATER SURFACE"
-         if (Input%Surface_Type(Elem_Idx,Line_Idx) > 0) write(unit=lun_diag,fmt=*) "LAND SURFACE"
-         if (Input%SNOW_CLASS(Elem_Idx,Line_Idx) == 1) write(unit=lun_diag,fmt=*) "UNFROZEN SURFACE"
-         if (Input%SNOW_CLASS(Elem_Idx,Line_Idx) > 1) write(unit=lun_diag,fmt=*) "FROZEN SURFACE"
-         write(unit=lun_diag,fmt=*) "Cloud Type = ", Cloud_Type
-         write(unit=lun_diag,fmt=*) "ACHA_MODE = ", ACHA_Mode_Flag
-         write(unit=lun_diag,fmt=*) "Pass_Idx = ", Pass_Idx
-         write(unit=lun_diag,fmt=*) "Profiles: idx, P, Z, T"
-         do Lev_Idx = 1,Num_Levels_Rtm_Prof 
-          write(unit=lun_diag,fmt=*) Lev_Idx, Press_Prof_RTM(Lev_Idx), Hght_Prof_RTM(Lev_Idx), Temp_Prof_RTM(Lev_Idx)
-         enddo
-    endif
+  
 
    !----------------------------------------------------------------------
    !--- Set Meta Data Flags
@@ -1032,6 +947,11 @@ module AWG_CLOUD_HEIGHT
        y_variance(2) = Btd_11um_12um_Std**2 
    end select
 
+   if (idiag_output == symbol%YES) then
+           print *, "ACHA_MODE = ", Acha_Mode_Flag
+           print *, "y = ", y
+   endif
+   
    !-------------------------------------------------------------------
    ! Determine surface type for use in forward model
    ! 0 = Water
@@ -1059,7 +979,6 @@ module AWG_CLOUD_HEIGHT
    ! these are based on patmos-x clear data and are the 
    ! approx average of des+asc from August 2006 NOAA-18
    !-------------------------------------------------------------------
-   !REMOVE
    if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC) then
      T11um_Clr_Uncer = T11um_Clr_Uncer_Water
      T11um_67um_Clr_Uncer = T11um_67um_Clr_Uncer_Water
@@ -1072,6 +991,12 @@ module AWG_CLOUD_HEIGHT
      T11um_85um_Clr_Uncer = T11um_85um_Clr_Uncer_land
      T11um_12um_Clr_Uncer = T11um_12um_Clr_Uncer_land
      T11um_133um_Clr_Uncer = T11um_133um_Clr_Uncer_land
+   endif
+
+   if (idiag_output == symbol%YES) then
+           print *, "Clear-sky uncertainties = ", &
+           T11um_Clr_Uncer,T11um_85um_Clr_Uncer,T11um_12um_Clr_Uncer, &
+           T11um_133um_Clr_Uncer
    endif
 
   !--------------------------------------------------------------------
@@ -1113,19 +1038,9 @@ module AWG_CLOUD_HEIGHT
                        Bt_11um_Lrc, &
                        Output%Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
-                       Input%Snow_Class(Elem_Idx,Line_Idx), &
-                       Input%Surface_Air_Temperature(Elem_Idx,Line_Idx), &
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
-
-   if (lun_diag > 0) then 
-     write(unit=lun_diag,fmt=*) "==========================================================="
-     write(unit=lun_diag,fmt=*) "START OF OE RETRIEVAL"
-     write(unit=lun_diag,fmt=*) "==========================================================="
-     write(unit=lun_diag,fmt=*) "y = ", y
-     write(unit=lun_diag,fmt=*) "initial x_ap = ", Tc_Ap, Ec_Ap, Beta_Ap, Ts_Ap
-   endif 
 
   !------------------------------------------------------------------------
   ! Set Apriori to predetermined cirrus value if USE_CIRRUS_FLAG = Yes 
@@ -1135,30 +1050,17 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-   if (lun_diag > 0) then 
-     write(unit=lun_diag,fmt=*) "Cirrus Temperature = ", Temperature_Cirrus(Elem_Idx,Line_Idx)
-   endif 
-
-  !------------------------------------------------------------------------
-  ! fill x_ap vector with a priori values  
-  !------------------------------------------------------------------------
-  if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Ts_Ap = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
-  else
-    Ts_Ap = Input%Surface_Temperature(Elem_Idx,Line_Idx)
-  endif
-
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
   !------------------------------------------------------------------------
    x_Ap(1) = Tc_Ap
    x_Ap(2) = Ec_Ap
    x_Ap(3) = Beta_Ap
-   x_Ap(4) = Ts_Ap
 
-   if (lun_diag > 0) then 
-     write(unit=lun_diag,fmt=*) "final x_ap = ", x_ap
-   endif 
+   if (idiag_output == symbol%YES) then
+           print *, "x_Ap = ", x_Ap
+           print *, "x_Ap Uncer = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer
+   endif
 
    !---- determine Output%Beta fit parameters based on phase (derived from type)
           
@@ -1179,17 +1081,19 @@ module AWG_CLOUD_HEIGHT
       a_Beta_11um_67um_fit = a_Beta_11um_67um_fit_Ice
       b_Beta_11um_67um_fit = b_Beta_11um_67um_fit_Ice
   endif
+  if (idiag_output == symbol%YES) then
+        print *, "Output%Beta fit for 6.7 = ", a_Beta_11um_67um_fit, b_Beta_11um_67um_fit
+        print *, "Output%Beta fit for 8.5 = ", a_Beta_11um_85um_fit, b_Beta_11um_85um_fit
+        print *, "Output%Beta fit for 13.3 = ", a_Beta_11um_133um_fit, b_Beta_11um_133um_fit
+  endif
 
   !--- now compute Sa
   Sa = 0.0
   Sa(1,1) = Tc_Ap_Uncer
+  Sa(2,1) = 0.0 
   Sa(2,2) = Ec_Ap_Uncer
+  Sa(1,2) = 0.0 
   Sa(3,3) = Beta_Ap_Uncer
-  Sa(4,4) = Ts_Ap_Uncer
-
-   if (lun_diag > 0) then 
-     write(unit=lun_diag,fmt=*) "initial Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
-   endif 
 
   !--- modify a priori values based on lrc
   if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
@@ -1208,10 +1112,6 @@ module AWG_CLOUD_HEIGHT
   !--- square the individual elements to convert to variances (not a matmul)
   Sa = Sa**2
 
-  if (lun_diag > 0) then 
-    write(unit=lun_diag,fmt=*) "final Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
-  endif
-
   !------------------------------------------------------------------------
   ! If a sounder value is available for Tc apriori, combine it with 
   ! other value.  Do this for all passes and only cirrus or overlap
@@ -1223,22 +1123,23 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap_Imager = x_Ap(1)  !K
       Sa_Tc_Imager = Sa(1,1)  !K^2
       Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
-      Sa_Tc_Sounder = 10.0**2    !K^2
+      Sa_Tc_Sounder = 81.0    !25.0   ! K^2
+
       Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
+
       x_Ap(1) = (Tc_Ap_Imager/Sa_Tc_Imager + Tc_Ap_Sounder/Sa_Tc_Sounder) *  Sa(1,1)
 
+!     print *, "Sounder Test 1: ", Tc_Ap_Imager, Tc_Ap_Sounder, x_Ap(1)
+!     print *, "Sounder Test 2: ", Sa_Tc_Imager, Sa_Tc_Sounder, Sa(1,1)
+            
     endif
   endif
 
-  if (lun_diag > 0) then
-   write(unit=lun_diag,fmt=*) "x_ap after sounder  = ", x_ap
-   write(unit=lun_diag,fmt=*) "S_a after sounder  = ", Sa(1,1), Sa(2,2), Sa(3,3), Sa(4,4)
-  endif
 
   !--- compute inverse of Sa matrix
   Singular_Flag =  INVERT_MATRIX(Sa, Sa_Inv, Num_Param)
   if (Singular_Flag == 1) then
-    print *, "Cloud Height warning ==> Singular Sa in ACHA", &
+    print *, "Cloud Height warning ==> Singular Sa in Split Window", &
            Elem_Idx,Line_Idx, Cloud_Type
     Fail_Flag(Elem_Idx,Line_Idx) = symbol%YES
     exit
@@ -1255,74 +1156,68 @@ module AWG_CLOUD_HEIGHT
  if (Cloud_Type == symbol%OVERLAP_TYPE .and.  &
     Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
 
-    if (lun_diag > 0) then
-       write(unit=lun_diag,fmt=*) "This pixel is following the multilayer cloud logic"
-    endif
-
     Meta_Data_Flags(6) = symbol%YES
-    Tsfc_Est = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
 
-    Rad_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+    Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
 
-    Trans_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+    Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-    Blc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tsfc_Est)
-    Rad_Clear_11um = Rad_Alc_11um + Trans_Alc_11um*Blc_11um
+    Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
+    Rad_Clear_11um = Rad_Ac_11um + Trans_Ac_11um*Bc_11um
 
   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
-     Trans_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Trans_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
-     Blc_12um = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Tsfc_Est)
-     Rad_Clear_12um = Rad_Alc_12um + Trans_Alc_12um*Blc_12um
+     Bc_12um = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
+     Rad_Clear_12um = Rad_Ac_12um + Trans_Ac_12um*Bc_12um
   endif
 
   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
-     Trans_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
 
-     Blc_133um = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Tsfc_Est)
-     Rad_Clear_133um = Rad_Alc_133um + Trans_Alc_133um*Blc_133um
+     Bc_133um = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
+     Rad_Clear_133um = Rad_Ac_133um + Trans_Ac_133um*Bc_133um
   endif
 
   if (Acha_Mode_Flag == 5) then
-     Rad_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
-     Trans_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
 
-     Blc_85um = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Tsfc_Est)
-     Rad_Clear_85um = Rad_Alc_85um + Trans_Alc_85um*Blc_85um
+     Bc_85um = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
+     Rad_Clear_85um = Rad_Ac_85um + Trans_Ac_85um*Bc_85um
   endif
 
   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-     Rad_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
-     Trans_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
                                Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
-     Blc_67um = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Tsfc_Est)
-     Rad_Clear_67um = Rad_Alc_67um + Trans_Alc_67um*Blc_67um
+     Bc_67um = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx))
+     Rad_Clear_67um = Rad_Ac_67um + Trans_Ac_67um*Bc_67um
   endif
 
+
+  Tsfc_Est = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
 
  else
 
  !---------------------------------------------------------------
  ! if not multi-layer, use existing clear sky radiances
  !---------------------------------------------------------------
-  if (lun_diag > 0) then
-     write(unit=lun_diag,fmt=*) "This pixel is NOT following the multilayer cloud logic"
-  endif
 
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
   Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
@@ -1341,9 +1236,16 @@ module AWG_CLOUD_HEIGHT
 
  endif
 
+ if (idiag_output == symbol%YES) then
+!   print *, "Clear radiances = ", Rad_Clear_67um, Rad_Clear_85um, Rad_Clear_11um, Rad_Clear_12um, Rad_Clear_133um
+    print *, "Clear radiances = ", Rad_Clear_11um, Rad_Clear_12um, Rad_Clear_133um
+ endif
+
+
 !----------------------------------------------------------------
 ! Determine the level of the highest inversion (0=if none)
 !----------------------------------------------------------------
+!Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
  call DETERMINE_INVERSION_CHARACTERISTICS(symbol%YES, &
                                           symbol%NO,  &
                                           Tropo_Level_RTM,              &
@@ -1373,11 +1275,9 @@ Retrieval_Loop: do
   !---------------------------------------------------------------------
   ! estimate above cloud radiances and transmissions
   !---------------------------------------------------------------------
-  Tc_Temp = x(1)
-  Ts_Temp = x(4)
+  Tc_temp = x(1)
 
   call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
 
   !--- compute above-cloud terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
@@ -1386,29 +1286,12 @@ Retrieval_Loop: do
   Trans_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  Trans_Bc_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um) / &
-                             Trans_Ac_11um
-
-  Rad_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
- 
-  Trans_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
-  Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tc_Temp)
-  Bs_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
-  Rad_Clear_11um = Rad_Atm_11um + Trans_Atm_11um*Bs_11um    !what about emissivity?
-
   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
      Trans_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
-
-    Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) / &
-                             Trans_Ac_12um
   endif
 
   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
@@ -1417,10 +1300,6 @@ Retrieval_Loop: do
 
     Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
-
-    Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) / &
-                            Trans_Ac_133um
   endif
 
   if (Acha_Mode_Flag == 5) then
@@ -1429,11 +1308,6 @@ Retrieval_Loop: do
 
     Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
-
-    Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um) / &
-                            Trans_Ac_85um
-
   endif
 
   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
@@ -1442,10 +1316,6 @@ Retrieval_Loop: do
 
     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
-
-    Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um) / &
-                            Trans_Ac_67um
 
   endif
 
@@ -1461,6 +1331,9 @@ Retrieval_Loop: do
   !--------------------------------------------------
   ! call forward models
   !--------------------------------------------------
+  if (idiag_output == symbol%YES) then
+      print *, "Iter_Idx = ", Iter_Idx
+  endif
   call COMPUTE_FORWARD_MODEL_AND_KERNEL(Acha_Mode_Flag,  &
            Input%Chan_On_67um,  &
            Input%Chan_On_85um, &
@@ -1473,15 +1346,15 @@ Retrieval_Loop: do
            Input%Chan_Idx_12um, &
            Input%Chan_Idx_133um, &
            x, &
-           Rad_Clear_67um, Rad_Ac_67um, Trans_Ac_67um, Trans_Bc_67um, &
-           Rad_Clear_85um, Rad_Ac_85um, Trans_Ac_85um, Trans_Bc_85um, &
-           Rad_Clear_11um, Rad_Ac_11um, Trans_Ac_11um, Trans_Bc_11um, &
-           Rad_Clear_12um, Rad_Ac_12um, Trans_Ac_12um, Trans_Bc_12um, &
-           Rad_Clear_133um, Rad_Ac_133um, Trans_Ac_133um, Trans_Bc_133um, &
+           Rad_Clear_67um, Rad_Ac_67um, Trans_Ac_67um, &
+           Rad_Clear_85um, Rad_Ac_85um, Trans_Ac_85um, &
+           Rad_Clear_11um, Rad_Ac_11um, Trans_Ac_11um, &
+           Rad_Clear_12um, Rad_Ac_12um, Trans_Ac_12um, &
+           Rad_Clear_133um, Rad_Ac_133um, Trans_Ac_133um, &
            a_Beta_11um_133um_fit, b_Beta_11um_133um_fit, &
            a_Beta_11um_85um_fit, b_Beta_11um_85um_fit, &
            a_Beta_11um_67um_fit, b_Beta_11um_67um_fit, &
-           f, K,Emiss_Vector)
+           f, K,Emiss_Vector,idiag_output)
 
   !--------------------------------------------------
   ! compute the Sy convariance matrix
@@ -1492,6 +1365,15 @@ Retrieval_Loop: do
                                                  y_variance, &
                                                  Sy) 
 
+
+  if (idiag_output == symbol%YES) then
+          print *, "Sa1 = ", Sa(1,1), Sa(1,2), Sa(1,3)
+          print *, "Sa2 = ", Sa(2,1), Sa(2,2), Sa(2,3)
+          print *, "Sa3 = ", Sa(3,1), Sa(3,2), Sa(3,3)
+          print *, "Sy1 = ", Sy(1,:)
+          print *, "Sy2 = ", Sy(2,:)
+          print *, "shape of Sy = ", shape(Sy), Num_Obs
+  endif
   !--------------------------------------------------
   ! call OE routine to advance the Iteration
   !--------------------------------------------------
@@ -1500,7 +1382,8 @@ Retrieval_Loop: do
                          y,f,x,x_Ap,K,Sy,Sa_inv, &
                          Sx,AKM,Delta_X, &
                          Output%Cost(Elem_Idx,Line_Idx), &
-                         Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx))
+                         Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx), &
+                         idiag_output)
 
 
   !--- check for a failed Iteration
@@ -1513,25 +1396,17 @@ Retrieval_Loop: do
   !---------------------------------------------------------
   x = x + Delta_X
 
-  if (lun_diag > 0) then
-     write(unit=lun_diag,fmt=*) "Iter_Idx = ", Iter_Idx
-     write(unit=lun_diag,fmt=*) "Kernel Matrix"
-     write(unit=lun_diag,fmt=*) "K(1,:) = ", K(1,:)
-     write(unit=lun_diag,fmt=*) "K(2,:) = ", K(2,:)
-     write(unit=lun_diag,fmt=*) "K(3,:) = ", K(3,:)
-     write(unit=lun_diag,fmt=*) "f = ", f
-     write(unit=lun_diag,fmt=*) "Emiss_Vector = ",Emiss_Vector
-     write(unit=lun_diag,fmt=*) "Delta_x = ",Delta_x
-     write(unit=lun_diag,fmt=*) "x = ",x
- endif
-
+  if (idiag_output==symbol%YES) then  
+          print *, "x = ", x
+  endif
 
   !--------------------------------------------------------
   ! exit retrieval loop if converged
   !--------------------------------------------------------
   if (Converged_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
-       if (lun_diag > 0) then  
-             write(unit=lun_diag,fmt=*) "convergence achieved ", Iter_Idx
+       if (idiag_output==symbol%YES) then  
+             print *, "convergence acheived ", Iter_Idx, x
+             print *, '  '
        endif
        exit
   endif
@@ -1542,24 +1417,12 @@ Retrieval_Loop: do
   x(1) = max(min_allowable_Tc,min(Tsfc_Est,x(1)))     !should we do this?
   x(2) = max(0.0,min(x(2),1.0))
   x(3) = max(0.8,min(x(3),1.8))
-  x(4) = max(min_allowable_Tc,min(Tsfc_Est,x(4)))     !should we do this?
-
-  if (lun_diag > 0) then
-     write(unit=lun_diag,fmt=*) "constrained x = ",x
- endif
 
 end do Retrieval_Loop
 
 !=================================================================
 ! Begin Retrieval Post Processing
 !=================================================================
- if (lun_diag > 0) then 
-    write(unit=lun_diag,fmt=*) "final f = ", f
-    write(unit=lun_diag,fmt=*) "final x = ", x
-     write(unit=lun_diag,fmt=*) "==========================================================="
-     write(unit=lun_diag,fmt=*) "END OF OE RETRIEVAL"
-     write(unit=lun_diag,fmt=*) "==========================================================="
- endif 
 
 !-----------------------------------------------------------------
 ! Successful Retrieval Post Processing
@@ -1570,13 +1433,11 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
  Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
- Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x(4)
 
  !--- save uncertainty estimates
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
  Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(2,2))
  Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(3,3))
-!Output%Ts_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   (NEED TO ADD THIS)
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1592,34 +1453,22 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
      Meta_Data_Flags(8) = symbol%YES
  endif
 
- if (lun_diag > 0) then 
-    write(unit=lun_diag,fmt=*) "Results after direct profile inversion "
-    write(unit=lun_diag,fmt=*) "Cloud Temperature =",  Output%Tc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Cloud Pressure =",  Output%Pc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Cloud Height =",  Output%Zc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "NWP_Profile_Inversion_Flag = ", NWP_Profile_Inversion_Flag
- endif 
-  
+
  !---  for low clouds over water, force fixed lapse rate estimate of height
  Delta_Cld_Temp_Sfc_Temp = Input%Surface_Temperature(Elem_Idx,Line_Idx) - Output%Tc(Elem_Idx,Line_Idx)
- Lapse_Rate = Missing_Value_Real4
 
- if (Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
-      ((Cloud_Type == symbol%WATER_TYPE) .or. &
-       (Cloud_Type == symbol%FOG_TYPE) .or. & 
-       (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
+ if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC .and. &
+     Input%Snow_Class (Elem_Idx,Line_Idx) == symbol%NO_SNOW .and. &
+     ((Cloud_Type == symbol%WATER_TYPE) .or. &
+      (Cloud_Type == symbol%FOG_TYPE) .or. & 
+      (Cloud_Type == symbol%SUPERCOOLED_TYPE))) then
 
      if (Delta_Cld_Temp_Sfc_Temp <  MAX_DELTA_T_INVERSION) then
 
        !-- select lapse rate  (k/km)
-       if (Input%Surface_Type(Elem_Idx,Line_Idx) == symbol%WATER_SFC) then 
-           Lapse_Rate = EMPIRICAL_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
-                                       Output%Tc(Elem_Idx,Line_Idx), 0)
-       else
-           Lapse_Rate = EMPIRICAL_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
-                                       Output%Tc(Elem_Idx,Line_Idx), 1)
-       endif
-
+       Lapse_Rate = oceanic_lapse_rate(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
+                                       Output%Tc(Elem_Idx,Line_Idx))
+ 
        !--- constrain lapse rate to be with -2 and -10 K/km
        Lapse_Rate = min(-2.0,max(-10.0,Lapse_Rate))
 
@@ -1645,18 +1494,6 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
        endif
  endif
 
- if (lun_diag > 0) then 
-    write(unit=lun_diag,fmt=*) "Results after oceanic inversion logic "
-    write(unit=lun_diag,fmt=*) "Ocean Lapse Rate Input ",                            &
-       MAX_DELTA_T_INVERSION, Input%Surface_Temperature(Elem_Idx,Line_Idx), & 
-       Output%Tc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Ocean Lapse Rate = ", Lapse_Rate
-    write(unit=lun_diag,fmt=*) "Cloud Temperature =",  Output%Tc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Cloud Pressure =",  Output%Pc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Cloud Height =",  Output%Zc(Elem_Idx,Line_Idx)
-    write(unit=lun_diag,fmt=*) "Meta_Data_Flags =",  Meta_Data_Flags
- endif 
- 
  !-----------------------------------------------------------------------------
  !--- compute height and pressure uncertainties 
  !-----------------------------------------------------------------------------
@@ -1779,12 +1616,6 @@ endif     ! ---------- end of data check
  !---- null profile pointers each time 
  call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
 
-
- !---close diagnostic output
- if (lun_diag > 0) then
-       close(unit=lun_diag)
- endif
-
  end do Element_Loop
 
 end do Line_Loop
@@ -1803,7 +1634,7 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
-print *, 'box width ', Box_Half_Width_CIRRUS
+
 endif
 
 end do pass_loop
@@ -2091,10 +1922,12 @@ end function GENERIC_PROFILE_INTERPOLATION
 subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                               Convergence_Criteria,Delta_X_Max, &
                               y,f,x,x_Ap,K,Sy,Sa_inv, &
-                              Sx,AKM,Delta_X,Conv_Test,Converged_Flag,Fail_Flag)
+                              Sx,AKM,Delta_X,Conv_Test,Converged_Flag,Fail_Flag, &
+                              idiag_output)
 
   integer, intent(in):: Iter_Idx
   integer, intent(in):: Iter_Idx_Max
+  integer, intent(in):: idiag_output
   integer, intent(in):: ny
   integer, intent(in):: nx
   real(kind=real4), intent(in):: Convergence_Criteria
@@ -2176,6 +2009,13 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Conv_Test = abs(sum(Delta_X*matmul(Sx_inv,Delta_X)))
 
   !--- control step size  (note change to preserve direction)
+  if (idiag_output == symbol%YES) then
+          print *, "Sa_inv = ", Sa_inv
+          print *, "Sy_inv = ", Sy_inv
+          print *, "Sx_inv = ", Sx_inv
+          print *, "Sx = ", Sx
+          print *, "Delta_X = ", Delta_X
+  endif
   Delta_X_distance = sqrt(sum(Delta_X**2))
   if (Delta_X_distance > 0.0) then
      do ix = 1,nx
@@ -2298,17 +2138,18 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
            Chan_On_67um, Chan_On_85um, Chan_On_11um, Chan_On_12um, Chan_On_133um, &
            Chan_Idx_67um, Chan_Idx_85um, Chan_Idx_11um, Chan_Idx_12um, Chan_Idx_133um, &
            x,    &
-           Rad_Clear_67um, Rad_Ac_67um, Trans_Ac_67um, Trans_Bc_67um,    &
-           Rad_Clear_85um, Rad_Ac_85um, Trans_Ac_85um, Trans_Bc_85um,    &
-           Rad_Clear_11um, Rad_Ac_11um, Trans_Ac_11um, Trans_Bc_11um,    &
-           Rad_Clear_12um, Rad_Ac_12um, Trans_Ac_12um, Trans_Bc_12um,    &
-           Rad_Clear_133um, Rad_Ac_133um, Trans_Ac_133um, Trans_Bc_133um,&
+           Rad_Clear_67um, Rad_Ac_67um, Trans_Ac_67um,    &
+           Rad_Clear_85um, Rad_Ac_85um, Trans_Ac_85um,    &
+           Rad_Clear_11um, Rad_Ac_11um, Trans_Ac_11um,    &
+           Rad_Clear_12um, Rad_Ac_12um, Trans_Ac_12um,    &
+           Rad_Clear_133um, Rad_Ac_133um, Trans_Ac_133um, &
            a_Beta_11um_133um_fit, b_Beta_11um_133um_fit, &
            a_Beta_11um_85um_fit, b_Beta_11um_85um_fit,   &
            a_Beta_11um_67um_fit, b_Beta_11um_67um_fit,   &
            f,                                            & 
            K, &
-           Emiss_Vector)
+           Emiss_Vector, &
+           idiag_output)
 
   integer(kind=int4), intent(in):: Acha_Mode_Flag
   integer, intent(in):: Chan_On_67um
@@ -2325,47 +2166,35 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4), intent(in):: Rad_Clear_67um
   real(kind=real4), intent(in):: Rad_Ac_67um
   real(kind=real4), intent(in):: Trans_Ac_67um
-  real(kind=real4), intent(in):: Trans_Bc_67um
   real(kind=real4), intent(in):: Rad_Clear_85um
   real(kind=real4), intent(in):: Rad_Ac_85um
   real(kind=real4), intent(in):: Trans_Ac_85um
-  real(kind=real4), intent(in):: Trans_Bc_85um
   real(kind=real4), intent(in):: Rad_Clear_11um
   real(kind=real4), intent(in):: Rad_Ac_11um
   real(kind=real4), intent(in):: Trans_Ac_11um
-  real(kind=real4), intent(in):: Trans_Bc_11um
   real(kind=real4), intent(in):: Rad_Clear_12um
   real(kind=real4), intent(in):: Rad_Ac_12um
   real(kind=real4), intent(in):: Trans_Ac_12um
-  real(kind=real4), intent(in):: Trans_Bc_12um
   real(kind=real4), intent(in):: Rad_Clear_133um
   real(kind=real4), intent(in):: Rad_Ac_133um
   real(kind=real4), intent(in):: Trans_Ac_133um
-  real(kind=real4), intent(in):: Trans_Bc_133um
   real(kind=real4), intent(in):: a_Beta_11um_133um_fit
   real(kind=real4), intent(in):: b_Beta_11um_133um_fit
   real(kind=real4), intent(in):: a_Beta_11um_85um_fit
   real(kind=real4), intent(in):: b_Beta_11um_85um_fit
   real(kind=real4), intent(in):: a_Beta_11um_67um_fit
   real(kind=real4), intent(in):: b_Beta_11um_67um_fit
+  integer(kind=int4), intent(in):: idiag_output
   real(kind=real4), dimension(:), intent(out):: f 
   real(kind=real4), dimension(:,:), intent(out):: K
   real(kind=real4), dimension(:), intent(out):: Emiss_Vector
 
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
   real(kind=real4):: Tc
-  real(kind=real4):: Ts
   real(kind=real4):: Bc_67um
   real(kind=real4):: Bc_85um
   real(kind=real4):: Bc_11um
   real(kind=real4):: Bc_12um
   real(kind=real4):: Bc_133um
-  real(kind=real4):: Bs_67um
-  real(kind=real4):: Bs_85um
-  real(kind=real4):: Bs_11um
-  real(kind=real4):: Bs_12um
-  real(kind=real4):: Bs_133um
   real(kind=real4):: Rad_67um
   real(kind=real4):: Rad_85um
   real(kind=real4):: Rad_11um
@@ -2402,18 +2231,12 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4):: dB_dTc_11um
   real(kind=real4):: dB_dTc_12um
   real(kind=real4):: dB_dTc_133um
-  real(kind=real4):: dB_dTs_67um
-  real(kind=real4):: dB_dTs_85um
-  real(kind=real4):: dB_dTs_11um
-  real(kind=real4):: dB_dTs_12um
-  real(kind=real4):: dB_dTs_133um
 
 
   !---  for notational convenience, rename elements of x to local variables
   Tc = x(1)
   Emiss_11um = min(x(2),0.999999)    !values must be below unity
   Beta_11um_12um = x(3)
-  Ts = x(4)
 
   !--- compute planck Emission for cloud temperature
   if (Chan_On_67um == symbol%YES) Bc_67um = PLANCK_RAD_FAST( Chan_Idx_67um, Tc, dB_dT = dB_dTc_67um)
@@ -2422,12 +2245,9 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Chan_On_12um == symbol%YES) Bc_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Tc, dB_dT = dB_dTc_12um)
   if (Chan_On_133um == symbol%YES) Bc_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Tc, dB_dT = dB_dTc_133um)
 
-  !--- compute planck Emission for surface temperature (REMOVE ????)
-  if (Chan_On_67um == symbol%YES) Bs_67um = PLANCK_RAD_FAST( Chan_Idx_67um, Ts, dB_dT = dB_dTs_67um)
-  if (Chan_On_85um == symbol%YES) Bs_85um = PLANCK_RAD_FAST( Chan_Idx_85um, Ts, dB_dT = dB_dTs_85um)
-  if (Chan_On_11um == symbol%YES) Bs_11um = PLANCK_RAD_FAST( Chan_Idx_11um, Ts, dB_dT = dB_dTs_11um)
-  if (Chan_On_12um == symbol%YES) Bs_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Ts, dB_dT = dB_dTs_12um)
-  if (Chan_On_133um == symbol%YES) Bs_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Ts, dB_dT = dB_dTs_133um)
+  if (idiag_output == symbol%YES) then
+          print *, "Bc = ", Bc_67um, Bc_85um, Bc_11um, Bc_12um, Bc_133um
+  endif
 
   !----- compute channel Emissivities
 
@@ -2453,6 +2273,10 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   dEmiss_67um_dEmiss_11um = Beta_11um_67um * (1.0-Emiss_11um)**(Beta_11um_67um - 1.0)
   Emiss_67um = 1.0 - (1.0-Emiss_11um)**Beta_11um_67um
 
+  if (idiag_output == symbol%YES) then
+          print *, "Ec = ", Emiss_67um,Emiss_85um, Emiss_11um, Emiss_12um, Emiss_133um
+  endif
+
  !--- define Transmission as complement of Emissivity
  Trans_67um = (1.0 - Emiss_67um)
  Trans_85um = (1.0 - Emiss_85um)
@@ -2466,7 +2290,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,1) = (Trans_Ac_11um * Emiss_11um * dB_dTc_11um) / dB_dT_11um               !dT_11um / dT_c
  K(1,2) = (Rad_Ac_11um + Trans_Ac_11um*Bc_11um - Rad_Clear_11um)/dB_dT_11um     !dT_11um / dEmiss_c
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
- K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um    !dT_11um / dT_s
 
  !--- forward model for 11um - 12um
  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 9) then
@@ -2477,7 +2300,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                       (dEmiss_12um_dEmiss_11um)/dB_dT_12um  
    K(2,3) = (Rad_Ac_12um+Trans_Ac_12um*Bc_12um-Rad_Clear_12um)/ &
             dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
-   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um
  endif
  !--- forward model for 11um - 133um
  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
@@ -2488,7 +2310,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
  endif
  if (Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
@@ -2498,7 +2319,14 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
+
+! print *, "3 Kernel = ", K(3,:)
+! print *, Trans_Ac_133um, Emiss_133um,dB_dTc_133um,dB_dT_133um
+! print *, Rad_Ac_133um, Bc_133um, Rad_Clear_133um, dEmiss_133um_dEmiss_11um,dB_dT_133um
+  if (Trans_Ac_133um /= Trans_Ac_133um) then
+     print *, "Bad Trans_Ac_133um", Trans_Ac_133um
+     stop
+  endif
  endif
  if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
@@ -2508,7 +2336,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_85um_dEmiss_11um)/dB_dT_85um
    K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
-   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um
  endif
  if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2518,7 +2345,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
  endif
  if (Acha_Mode_Flag == 2) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2528,7 +2354,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(2,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
  endif
 
  !--- determine number of channels
@@ -2562,6 +2387,10 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
        Emiss_Vector(3) = Emiss_133um
   end select
 
+ if (idiag_output == symbol%YES) then
+         print *, "f = ", f
+ endif
+
 end subroutine COMPUTE_FORWARD_MODEL_AND_KERNEL
 
 !----------------------------------------------------------------------
@@ -2576,8 +2405,6 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            T11um_Lrc, &
                            Tc_Opaque, &
                            Mu, &
-                           Snow_Flag, &
-                           Tair,  &
                            Tc_Ap, &
                            Tc_Ap_Uncer, &
                            Ec_Ap, &
@@ -2593,8 +2420,6 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4), intent(in):: T11um_Lrc
   real(kind=real4), intent(in):: Tc_Opaque
   real(kind=real4), intent(in):: Mu
-  integer(kind=int1), intent(in):: Snow_Flag
-  real(kind=real4), intent(in):: Tair
   real(kind=real4), intent(out):: Tc_Ap
   real(kind=real4), intent(out):: Ec_Ap
   real(kind=real4), intent(out):: Beta_Ap
@@ -2638,12 +2463,6 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
     else
             Emiss_Weight = Emiss_11um_Tropo
     endif
-
-    !--- force opaque for cold over frozen
-!   if (Snow_Flag > 1 .and. Tair < 270.0) then
-!     Emiss_Weight = 1.0
-!   endif
-!   print *, "update ", Snow_Flag, Tair, Emiss_Weight
 
     Emiss_Weight2 = Emiss_Weight
 
@@ -4226,10 +4045,9 @@ end subroutine COMPUTE_BOX_WIDTH
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------
-function EMPIRICAL_LAPSE_RATE(Tsfc, Tc, land_flag) result(lapse_rate)
+function oceanic_lapse_rate(Tsfc, Tc) result(lapse_rate)
   real, intent(in):: Tsfc
   real, intent(in):: Tc
-  integer, intent(in):: land_flag  !(0=ocean,1=land)
   real:: Tcs
   real:: lapse_rate
   integer:: its, itcs
@@ -4240,26 +4058,13 @@ function EMPIRICAL_LAPSE_RATE(Tsfc, Tc, land_flag) result(lapse_rate)
   itcs = int((Tcs - tcs_min) / dtcs) + 1
   itcs = max(1,min(ntcs,itcs))
 
-  if (land_flag == 0) then 
-    lapse_rate = ocean_lapse_rate_table(its,itcs)
-  else
-    lapse_rate = land_lapse_rate_table(its,itcs)
-  endif
+  lapse_rate = lapse_rate_table(its,itcs)
 
-end function EMPIRICAL_LAPSE_RATE
-
-function OCEANIC_LAPSE_RATE_OLD(Tsfc, Tc) result(lapse_rate)
-  real, intent(in):: Tsfc
-  real, intent(in):: Tc
-  real:: Tcs
-  real:: lapse_rate
-
-  Tcs = Tc - Tsfc
-
-  lapse_rate =  -0.061 - 1.67*Tcs - 0.124*(Tcs**2) - 0.00343*(Tcs**3)
+!- old way
+!  lapse_rate =  -0.061 - 1.67*Tcs - 0.124*(Tcs**2) - 0.00343*(Tcs**3)
    
 
-end function OCEANIC_LAPSE_RATE_OLD
+end function oceanic_lapse_rate
 !----------------------------------------------------------------------------
 ! estimate cirrus aprior temperature and uncertainty from a precomputed 
 ! latitude table (stored in acha_parameters.inc)
@@ -4281,43 +4086,5 @@ subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_unce
   tc_apriori_uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
 
 end subroutine compute_cirrus_apriori
-
-  FUNCTION get_lun_acha() RESULT( lun )
-
-
-    ! -----------------
-    ! Type declarations
-    ! -----------------
-
-    INTEGER :: lun
-    LOGICAL :: file_open
-
-
-    ! --------------------------------------------
-    ! Initialise logical unit number and file_open
-    ! --------------------------------------------
-
-    lun = 9
-    file_open = .TRUE.
-
-
-    ! ------------------------------
-    ! Start open loop for lun search
-    ! ------------------------------
-
-    lun_search: DO
-
-      ! -- Increment logical unit number
-      lun = lun + 1
-
-      ! -- Check if file is open
-      INQUIRE( lun, OPENED = file_open )
-
-      ! -- Is this lun available?
-      IF ( .NOT. file_open ) EXIT lun_search
-
-    END DO lun_search
-
-  END FUNCTION get_lun_acha
 
 end module AWG_CLOUD_HEIGHT

@@ -40,7 +40,7 @@ module CLOUD_BASE_SAPF_BRIDGE
  ! define structures that will be arguments 
  !--------------------------------------------------------------------
 
- type(CLOUD_BASE_EN_Ctxt), POINTER, PRIVATE :: Ctxt_CBase
+ type(EPS_CLD_BASE_Ctxt), POINTER, PRIVATE :: Ctxt_CBase
 
  type(Symbol_acha), private :: Symbol
  type(acha_input_struct), private :: Input
@@ -54,7 +54,7 @@ module CLOUD_BASE_SAPF_BRIDGE
  subroutine CLOUD_BASE_BRIDGE(Ctxt, Stat)
  
    implicit none
-   type(CLOUD_BASE_EN_Ctxt), target :: Ctxt
+   type(EPS_CLD_BASE_Ctxt), target :: Ctxt
    integer(long) :: Stat
 
 
@@ -154,7 +154,6 @@ module CLOUD_BASE_SAPF_BRIDGE
      Output%Zc_Base =>  null()
      Output%Pc_Top =>  null()
      Output%Pc_Base =>  null()
-     Output%Zc_Base_Qf => null()
  end subroutine NULL_OUTPUT_POINTERS
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -341,14 +340,14 @@ module CLOUD_BASE_SAPF_BRIDGE
         
         
         !Fill NWP level values for CCL/LCL calculation and NWP CWP
-        CALL NFIP_NWP_Temp2M_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Tmpair_Nwp)
+        CALL NFIP_NWP_Temp2M(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Tmpair_Nwp)
         
-        CALL NFIP_NWP_RH_2m_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Rhsfc_Nwp)
+        CALL NFIP_NWP_RH_2m(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Rhsfc_Nwp)
         
 
         !COMMENTED OUT UNTIL NWP_CWP IS INTEGERATED IN - WCS3
         
-        CALL NFIP_NWP_CWP_Pix(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Input%CWP_nwp(Elem_Idx,Line_Idx)) ! Need to put in SAPF
+        !CALL NFIP_NWP_CWP(Ctxt_CBase%NWP_DATA_Src1_T00, Elem_Idx, Line_Idx, Input%CWP_nwp(Elem_Idx,Line_Idx)) ! Need to put in SAPF
 
         !Determine CCL/LCL
         CALL  CCL_LCL_CALC(Tmpair_Nwp, Rhsfc_Nwp, Input%LCL(Elem_Idx,Line_Idx), &
@@ -391,12 +390,6 @@ module CLOUD_BASE_SAPF_BRIDGE
     CALL NFIA_CloudBase_CldTopPres(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Pc_Top)
      
     CALL NFIA_CloudBase_CldBasePres(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Pc_Base)
-
-    CALL NFIA_CloudBase_CldBaseQF(Ctxt_CBase%CLOUD_BASE_Src1_T00, Output%Zc_Base_Qf)
-    
-    !initialize DQF
-    Output%Zc_Base_Qf = 1
-    
 
  end subroutine SET_OUTPUT
 

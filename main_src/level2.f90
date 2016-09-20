@@ -1639,32 +1639,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- cloud type ir
-     if (Sds_Num_Level2_Cld_Type_IR_Flag == sym%YES) then
-      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_IR),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "cloud_type_ir", &
-                               "not specified", &
-                               "ir integer classification of the cloud type including clear "// &
-                               "and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,"//&
-                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke", &
-                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Type, Max_Cld_Type, &
-                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
-      Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
-     !--- cloud phase ir
-     if (Sds_Num_Level2_Cld_Phase_IR_Flag == sym%YES) then
-      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_IR),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "cloud_phase_ir", &
-                               "cloud_phase_ir", &
-                               "ir integer classification of the cloud phase including clear "// &
-                               "and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown", &
-                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Phase, Max_Cld_Phase, &
-                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
-      Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
-
      !--- cloud phase aux
      if (Sds_Num_Level2_Cld_Phase_Aux_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_Aux),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
@@ -2041,18 +2015,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "quality flag for cloud-top temperature from ACHA "// &
                                "not attempted=0, failed=1, low quality=2, high quality=3", &
                                DFNT_INT8, sym%NO_SCALING, 0.0, 3.0, &
-                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
-      Istatus_Sum = Istatus_Sum + Istatus
-     endif
-
-     !--- quality flag for CBH
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cbh_Qf_Flag == sym%YES) then
-      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cbh_Qf),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
-                               "cld_base_hgt_qf", &
-                               "not specified", &
-                               "quality flag for cloud-base height "// &
-                               "valid=0, invalid input=1, lower than terrain=2, out of range=3, invalid higher than cth=4", &
-                               DFNT_INT8, sym%NO_SCALING, 0.0, 4.0, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -4695,18 +4657,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Cld_Phase(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
-     !--- cld type ir
-     if (Sds_Num_Level2_Cld_Type_IR_Flag == sym%YES) then
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_IR), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Type_Ir(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cld phase ir
-     if (Sds_Num_Level2_Cld_Phase_IR_Flag == sym%YES) then
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_IR), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Phase_Ir(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
      !--- cld phase aux
      if (Sds_Num_Level2_Cld_Phase_Aux_Flag == sym%YES) then
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Phase_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
@@ -4941,13 +4891,6 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_Acha_Qf_Flag == sym%YES) then     
       One_Byte_Temp = ACHA%OE_Quality_Flags(1,:,:)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cth_Acha_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
-     endif
-
-     !--- cloud base height quality flag from acha
-     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cbh_Qf_Flag == sym%YES) then
-      One_Byte_Temp = ACHA%base_Quality_Flag
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cbh_Qf), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 

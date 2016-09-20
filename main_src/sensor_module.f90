@@ -422,7 +422,7 @@ module SENSOR_MODULE
    !        spatial_resolution:  1.1, 4
    !  
    !   GOES
-   !        sensors:   GOES-IL-IMAGER, GOES-MP-IMAGER, GOES-IP-SOUNDER
+   !        sensors:   GOES-IL-IMAGERMAGER, GOES-MP-IMAGER, GOES-IP-SOUNDER
    !        platforms: GOES-8 - GOES-15
    !        spatial_resolution:  1, 4
    !
@@ -837,7 +837,6 @@ module SENSOR_MODULE
 
       !--- NPP/JPSS IFF 
       if (index(Image%Level1b_Name, 'IFFSDR_npp') > 0 .or. &
-          index(Image%Level1b_Name, 'IFFSVM_npp') > 0 .or. &
           index(Image%Level1b_Name, 'IFF_npp') > 0) then
          Sensor%Sensor_Name = 'VIIRS-IFF'
          Sensor%Spatial_Resolution_Meters = 750

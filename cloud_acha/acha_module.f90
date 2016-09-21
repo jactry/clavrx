@@ -193,6 +193,14 @@ module AWG_CLOUD_HEIGHT
                            -4.7, -4.7, -4.8, -4.5, -4.8, -6.0, -7.5, &
                            -3.9, -4.0, -4.2, -3.9, -3.9, -5.3, -7.3, &
                            -3.3, -3.4, -3.7, -3.6, -3.5, -5.0, -7.3/), (/nts,ntcs/))
+
+  ! surface emissivity
+  real(kind=real4),private:: Emiss_Sfc_85um
+  real(kind=real4),private:: Emiss_Sfc_11um
+  real(kind=real4),private:: Emiss_Sfc_12um
+  real(kind=real4),private:: Emiss_Sfc_133um
+  real(kind=real4),private:: Emiss_Sfc_67um
+
   contains 
 
 !------------------------------------------------------------------------------
@@ -315,66 +323,39 @@ module AWG_CLOUD_HEIGHT
 
   real:: Convergence_Criteria
 
+  real:: Bs
+  real:: Rad_Atm
+  real:: Trans_Atm
+
   !--- ch27 variables
   real:: Rad_Ac_67um
-  real:: Rad_Alc_67um
   real:: Trans_Ac_67um
-  real:: Trans_Alc_67um
   real:: Trans_Bc_67um
   real:: Rad_Clear_67um
-  real:: Bc_67um
-  real:: Blc_67um
-  real:: Bs_67um
-  real:: Bt_Clear_67um
 
   !--- ch29 variables
   real:: Rad_Ac_85um
-  real:: Rad_Alc_85um
   real:: Trans_Ac_85um
-  real:: Trans_Alc_85um
   real:: Trans_Bc_85um
   real:: Rad_Clear_85um
-  real:: Bc_85um
-  real:: Blc_85um
-  real:: Bs_85um
-  real:: Bt_Clear_85um
 
   !--- ch31 variables
   real:: Rad_Ac_11um
-  real:: Rad_Alc_11um
   real:: Trans_Ac_11um
-  real:: Trans_Alc_11um
   real:: Trans_Bc_11um
   real:: Rad_Clear_11um
-  real:: Bc_11um
-  real:: Blc_11um
-  real:: Bs_11um
-  real:: Bt_Clear_11um
-  real:: Bt_11um_Lrc
 
   !--- ch32 variables
   real:: Rad_Ac_12um
-  real:: Rad_Alc_12um
   real:: Trans_Ac_12um
-  real:: Trans_Alc_12um
   real:: Trans_Bc_12um
   real:: Rad_Clear_12um
-  real:: Bc_12um
-  real:: Blc_12um
-  real:: Bs_12um
-  real:: Bt_Clear_12um
 
   !--- ch33 variables
   real:: Rad_Ac_133um
-  real:: Rad_Alc_133um
   real:: Trans_Ac_133um
-  real:: Trans_Alc_133um
   real:: Trans_Bc_133um
   real:: Rad_Clear_133um
-  real:: Bc_133um
-  real:: Blc_133um
-  real:: Bs_133um
-  real:: Bt_Clear_133um
 
   real:: a_Beta_11um_133um_fit
   real:: b_Beta_11um_133um_fit
@@ -443,14 +424,12 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
   integer(kind=int4), allocatable, dimension(:,:):: Line_Idx_LRC
   integer(kind=int1), allocatable, dimension(:,:):: Skip_LRC_Mask
+  real (kind=real4):: Bt_11um_Lrc
   real (kind=real4):: Bt_11um_Std
   real (kind=real4):: Btd_11um_67um_Std
   real (kind=real4):: Btd_11um_85um_Std
   real (kind=real4):: Btd_11um_12um_Std
   real (kind=real4):: Btd_11um_133um_Std
-
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
 
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
@@ -575,10 +554,6 @@ module AWG_CLOUD_HEIGHT
   Output%OE_Qf = 0
   Output%Qf = 0
   Meta_Data_Flags = 0
-  Bc_67um = 0
-  Bc_85um = 0
-  Bc_11um = 0
-  Bc_12um = 0
   Output%Inversion_Flag = 0
   
   !--------------------------------------------------------------------------
@@ -1244,103 +1219,23 @@ module AWG_CLOUD_HEIGHT
     exit
   endif
 
-!----------------------------------------------------------------------------
-! compute clear-sky radiances
-!-----------------------------------------------------------------------------
-
- !---------------------------------------------------------------------------
- !--- modify clear radiances to simuLate that from an opaque cloud at 200 mb
- !--- above the surface when a multi-layer situation is suspected
- !---------------------------------------------------------------------------
- if (Cloud_Type == symbol%OVERLAP_TYPE .and.  &
-    Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
-
-    if (lun_diag > 0) then
-       write(unit=lun_diag,fmt=*) "This pixel is following the multilayer cloud logic"
-    endif
-
-    Meta_Data_Flags(6) = symbol%YES
-    Tsfc_Est = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
-
-    Rad_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
-
-    Trans_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
-
-    Blc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tsfc_Est)
-    Rad_Clear_11um = Rad_Alc_11um + Trans_Alc_11um*Blc_11um
-
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
-
-     Trans_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
-     Blc_12um = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Tsfc_Est)
-     Rad_Clear_12um = Rad_Alc_12um + Trans_Alc_12um*Blc_12um
+  !--------------------------------------------------
+  ! assign surface emissivity for non-overlap type
+  !--------------------------------------------------
+  Emiss_Sfc_85um = 1.0
+  Emiss_Sfc_11um = 1.0
+  Emiss_Sfc_12um = 1.0
+  Emiss_Sfc_133um = 1.0
+  Emiss_Sfc_67um = 1.0
+  if (Cloud_Type /= symbol%OVERLAP_TYPE) then
+     if (Input%Chan_On_85um == symbol%YES) Emiss_Sfc_85um = Input%Surface_Emissivity_85um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_11um == symbol%YES) Emiss_Sfc_11um = Input%Surface_Emissivity_11um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_12um == symbol%YES) Emiss_Sfc_12um = Input%Surface_Emissivity_12um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_133um == symbol%YES) Emiss_Sfc_133um = Input%Surface_Emissivity_133um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_67um == symbol%YES) Emiss_Sfc_67um = Input%Surface_Emissivity_67um(Elem_Idx,Line_Idx)
   endif
 
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
-
-     Trans_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
-
-     Blc_133um = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Tsfc_Est)
-     Rad_Clear_133um = Rad_Alc_133um + Trans_Alc_133um*Blc_133um
-  endif
-
-  if (Acha_Mode_Flag == 5) then
-     Rad_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
-
-     Trans_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
-
-     Blc_85um = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Tsfc_Est)
-     Rad_Clear_85um = Rad_Alc_85um + Trans_Alc_85um*Blc_85um
-  endif
-
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-     Rad_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
-
-     Trans_Alc_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
-
-     Blc_67um = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Tsfc_Est)
-     Rad_Clear_67um = Rad_Alc_67um + Trans_Alc_67um*Blc_67um
-  endif
-
-
- else
-
- !---------------------------------------------------------------
- ! if not multi-layer, use existing clear sky radiances
- !---------------------------------------------------------------
-  if (lun_diag > 0) then
-     write(unit=lun_diag,fmt=*) "This pixel is NOT following the multilayer cloud logic"
-  endif
-
-  Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
-  Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-      Rad_Clear_12um = Input%Rad_Clear_12um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-      Rad_Clear_133um = Input%Rad_Clear_133um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 5) then
-      Rad_Clear_85um = Input%Rad_Clear_85um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-      Rad_Clear_67um = Input%Rad_Clear_67um(Elem_Idx,Line_Idx)
-  endif
-
- endif
-
+  
 !----------------------------------------------------------------
 ! Determine the level of the highest inversion (0=if none)
 !----------------------------------------------------------------
@@ -1371,7 +1266,7 @@ Retrieval_Loop: do
  Iter_Idx = Iter_Idx + 1
 
   !---------------------------------------------------------------------
-  ! estimate above cloud radiances and transmissions
+  ! estimate clear-sky radiative transfer terms used in forward model
   !---------------------------------------------------------------------
   Tc_Temp = x(1)
   Ts_Temp = x(4)
@@ -1379,7 +1274,7 @@ Retrieval_Loop: do
   call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
   call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
 
-  !--- compute above-cloud terms
+  !--- compute 11um radiative transfer terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
 
@@ -1393,15 +1288,16 @@ Retrieval_Loop: do
      Trans_Bc_11um = Trans_Bc_11um / Trans_Ac_11um
   endif
 
-  Rad_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+  Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
  
-  Trans_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+  Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
-  Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tc_Temp)
-  Bs_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
-  Rad_Clear_11um = Rad_Atm_11um + Trans_Atm_11um*Bs_11um    !what about emissivity?
+  Bs = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
 
+  Rad_Clear_11um = Rad_Atm + Trans_Atm*Emiss_Sfc_11um*Bs   
+
+  !--- compute 12um radiative transfer terms
   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
@@ -1409,72 +1305,107 @@ Retrieval_Loop: do
      Trans_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
 
-    Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+     Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) 
 
-    if (Trans_Ac_12um > epsilon(Trans_Ac_12um)) then
+     if (Trans_Ac_12um > epsilon(Trans_Ac_12um)) then
        Trans_Bc_12um = Trans_Bc_12um / Trans_Ac_12um
-    endif
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                           Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Ts_Temp)
+
+     Rad_Clear_12um = Rad_Atm + Trans_Atm*Emiss_Sfc_12um*Bs
 
   endif
 
+  !--- 13.3um clear radiative transfer terms
   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-    Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
-    Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
 
-    Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+     Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) 
 
-    if (Trans_Ac_133um > epsilon(Trans_Ac_133um)) then
+     if (Trans_Ac_133um > epsilon(Trans_Ac_133um)) then
        Trans_Bc_133um = Trans_Bc_133um / Trans_Ac_133um
-    endif
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Ts_Temp)
+
+     Rad_Clear_133um = Rad_Atm + Trans_Atm*Emiss_Sfc_133um*Bs
+
 
   endif
 
   if (Acha_Mode_Flag == 5) then
-    Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
-    Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
 
-    Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+     Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
 
-    if (Trans_Ac_85um > epsilon(Trans_Ac_85um)) then
+     if (Trans_Ac_85um > epsilon(Trans_Ac_85um)) then
        Trans_Bc_85um = Trans_Bc_85um / Trans_Ac_85um
-    endif
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Ts_Temp)
+
+     Rad_Clear_85um = Rad_Atm + Trans_Atm*Emiss_Sfc_85um*Bs
+
 
   endif
 
   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-    Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
-    Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
-    Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+     Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
-    if (Trans_Ac_67um > epsilon(Trans_Ac_67um)) then
+     if (Trans_Ac_67um > epsilon(Trans_Ac_67um)) then
        Trans_Bc_67um = Trans_Bc_67um / Trans_Ac_67um
-    endif
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Ts_Temp)
+
+     Rad_Clear_67um = Rad_Atm + Trans_Atm*Emiss_Sfc_67um*Bs
+
 
   endif
 
-  !--------------------------------------------------
-  ! call abi_planck_temp(ichan,rad,bt)
-  !--------------------------------------------------
-   if (Input%Chan_On_67um == symbol%YES)  Bt_Clear_67um = PLANCK_TEMP_FAST(Input%Chan_Idx_67um, Rad_Clear_67um)
-   if (Input%Chan_On_85um == symbol%YES)  Bt_Clear_85um = PLANCK_TEMP_FAST(Input%Chan_Idx_85um, Rad_Clear_85um)
-   if (Input%Chan_On_11um == symbol%YES)  Bt_Clear_11um = PLANCK_TEMP_FAST(Input%Chan_Idx_11um, Rad_Clear_11um)
-   if (Input%Chan_On_12um == symbol%YES)  Bt_Clear_12um = PLANCK_TEMP_FAST(Input%Chan_Idx_12um, Rad_Clear_12um)
-   if (Input%Chan_On_133um == symbol%YES)  Bt_Clear_133um = PLANCK_TEMP_FAST(Input%Chan_Idx_133um, Rad_Clear_133um)
- 
   !--------------------------------------------------
   ! call forward models
   !--------------------------------------------------
@@ -2196,7 +2127,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
 !print *, " "
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
-   stop
    return
   endif
   
@@ -2401,11 +2331,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4):: Bc_11um
   real(kind=real4):: Bc_12um
   real(kind=real4):: Bc_133um
-  real(kind=real4):: Bs_67um
-  real(kind=real4):: Bs_85um
-  real(kind=real4):: Bs_11um
-  real(kind=real4):: Bs_12um
-  real(kind=real4):: Bs_133um
   real(kind=real4):: Rad_67um
   real(kind=real4):: Rad_85um
   real(kind=real4):: Rad_11um
@@ -2462,13 +2387,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Chan_On_12um == symbol%YES) Bc_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Tc, dB_dT = dB_dTc_12um)
   if (Chan_On_133um == symbol%YES) Bc_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Tc, dB_dT = dB_dTc_133um)
 
-  !--- compute planck Emission for surface temperature (REMOVE ????)
-  if (Chan_On_67um == symbol%YES) Bs_67um = PLANCK_RAD_FAST( Chan_Idx_67um, Ts, dB_dT = dB_dTs_67um)
-  if (Chan_On_85um == symbol%YES) Bs_85um = PLANCK_RAD_FAST( Chan_Idx_85um, Ts, dB_dT = dB_dTs_85um)
-  if (Chan_On_11um == symbol%YES) Bs_11um = PLANCK_RAD_FAST( Chan_Idx_11um, Ts, dB_dT = dB_dTs_11um)
-  if (Chan_On_12um == symbol%YES) Bs_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Ts, dB_dT = dB_dTs_12um)
-  if (Chan_On_133um == symbol%YES) Bs_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Ts, dB_dT = dB_dTs_133um)
-
   !----- compute channel Emissivities
 
   !-- ch32
@@ -2506,7 +2424,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,1) = (Trans_Ac_11um * Emiss_11um * dB_dTc_11um) / dB_dT_11um               !dT_11um / dT_c
  K(1,2) = (Rad_Ac_11um + Trans_Ac_11um*Bc_11um - Rad_Clear_11um)/dB_dT_11um     !dT_11um / dEmiss_c
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
- K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um    !dT_11um / dT_s
+ K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um * Emiss_Sfc_11um    !dT_11um / dT_s
 
  !--- forward model for 11um - 12um
  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 9) then
@@ -2517,7 +2435,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                       (dEmiss_12um_dEmiss_11um)/dB_dT_12um  
    K(2,3) = (Rad_Ac_12um+Trans_Ac_12um*Bc_12um-Rad_Clear_12um)/ &
             dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
-   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um
+   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um * Emiss_Sfc_12um
  endif
  !--- forward model for 11um - 133um
  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
@@ -2528,7 +2446,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
+   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
  endif
  if (Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
@@ -2538,7 +2456,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
+   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
  endif
  if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
@@ -2548,7 +2466,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_85um_dEmiss_11um)/dB_dT_85um
    K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
-   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um
+   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um * Emiss_Sfc_85um
  endif
  if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2558,7 +2476,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
+   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
  endif
  if (Acha_Mode_Flag == 2) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2568,7 +2486,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(2,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
+   K(2,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
  endif
 
  !--- determine number of channels

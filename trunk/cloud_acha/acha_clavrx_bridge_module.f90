@@ -152,6 +152,11 @@ module ACHA_CLAVRX_BRIDGE
      Input%Rad_Clear_12um =>  null()
      Input%Rad_Clear_133um =>  null()
      Input%Surface_Emissivity_39um =>  null()
+     Input%Surface_Emissivity_11um =>  null()
+     Input%Surface_Emissivity_12um =>  null()
+     Input%Surface_Emissivity_85um =>  null()
+     Input%Surface_Emissivity_133um =>  null()
+     Input%Surface_Emissivity_67um =>  null()
      Input%Snow_Class =>  null()
      Input%Surface_Type =>  null()
      Input%Cloud_Mask =>  null()
@@ -360,6 +365,11 @@ module ACHA_CLAVRX_BRIDGE
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
    Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
+   Input%Surface_Emissivity_11um => ch(31)%Sfc_Emiss
+   Input%Surface_Emissivity_12um => ch(32)%Sfc_Emiss
+   Input%Surface_Emissivity_85um => ch(29)%Sfc_Emiss
+   Input%Surface_Emissivity_133um => ch(33)%Sfc_Emiss
+   Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
    Input%Cloud_Mask => Cld_Mask

@@ -1387,8 +1387,11 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
   Trans_Bc_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um) / &
-                             Trans_Ac_11um
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
+
+  if (Trans_Ac_11um > epsilon(Trans_Ac_11um)) then
+     Trans_Bc_11um = Trans_Bc_11um / Trans_Ac_11um
+  endif
 
   Rad_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
@@ -1407,8 +1410,12 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
 
     Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) / &
-                             Trans_Ac_12um
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) 
+
+    if (Trans_Ac_12um > epsilon(Trans_Ac_12um)) then
+       Trans_Bc_12um = Trans_Bc_12um / Trans_Ac_12um
+    endif
+
   endif
 
   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
@@ -1419,8 +1426,12 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
 
     Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) / &
-                            Trans_Ac_133um
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) 
+
+    if (Trans_Ac_133um > epsilon(Trans_Ac_133um)) then
+       Trans_Bc_133um = Trans_Bc_133um / Trans_Ac_133um
+    endif
+
   endif
 
   if (Acha_Mode_Flag == 5) then
@@ -1431,8 +1442,11 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
 
     Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um) / &
-                            Trans_Ac_85um
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
+
+    if (Trans_Ac_85um > epsilon(Trans_Ac_85um)) then
+       Trans_Bc_85um = Trans_Bc_85um / Trans_Ac_85um
+    endif
 
   endif
 
@@ -1444,8 +1458,11 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
     Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um) / &
-                            Trans_Ac_67um
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
+
+    if (Trans_Ac_67um > epsilon(Trans_Ac_67um)) then
+       Trans_Bc_67um = Trans_Bc_67um / Trans_Ac_67um
+    endif
 
   endif
 
@@ -1803,7 +1820,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
-print *, 'box width ', Box_Half_Width_CIRRUS
 endif
 
 end do pass_loop
@@ -2136,8 +2152,8 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    print *, "Cloud Height warning ==> Singular Sy in ACHA "
    Fail_Flag = symbol%YES
    Converged_Flag = symbol%NO
-   print *, "y = ", y
-   print *, "Sy = ", Sy
+!  print *, "y = ", y
+!  print *, "Sy = ", Sy
    return 
   endif
 
@@ -2147,16 +2163,40 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Singular_Flag =  INVERT_MATRIX(Sx_inv, Sx, p)
   if (Singular_Flag == symbol%YES) then
    print *, "Cloud Height warning ==> Singular Sx in ACHA "
-   print *, "y = ", y
-   print *, "f = ", f
-   print *, "x_ap = ", x_ap
-   print *, "x = ", x
-   print *, "Sa_Inv = ", Sa_Inv
-   print *, "Sy_Inv = ", Sy_Inv
-   print *, "K = ", K
+!  print *, "y = ", y
+!  print *, "f = ", f
+!  print *, "x_ap = ", x_ap
+!  print *, "x = ", x
+!  print *, "Sa_Inv = ", Sa_Inv
+!  print *, "Sx_Inv = ", Sx_Inv
+!  print *, "K = ", K
+!print *, "Sy = "
+!print *, Sy(1,1), Sy(2,1), Sy(3,1)
+!print *, Sy(1,2), Sy(2,3), Sy(3,2)
+!print *, Sy(1,3), Sy(2,3), Sy(3,3)
+!print *, " "
+
+!print *, "K = "
+!print *, K(1,1), K(2,1), K(3,1), K(4,1)
+!print *, K(1,2), K(2,2), K(3,2), K(4,2)
+!print *, K(1,3), K(2,3), K(3,3), K(4,3)
+!print *, K(1,4), K(2,4), K(3,4), K(4,4)
+!print *, " "
+!print *, "AKM = "
+!print *, AKM(1,1), AKM(2,1), AKM(3,1), AKM(4,1)
+!print *, AKM(1,2), AKM(2,2), AKM(3,2), AKM(4,2)
+!print *, AKM(1,3), AKM(2,3), AKM(3,3), AKM(4,3)
+!print *, AKM(1,4), AKM(2,4), AKM(3,4), AKM(4,4)
+!print *, " "
+!print *, "Sx_inv = "
+!print *, Sx_Inv(1,1), Sx_Inv(2,1), Sx_Inv(3,1), Sx_Inv(4,1)
+!print *, Sx_Inv(1,2), Sx_Inv(2,2), Sx_Inv(3,2), Sx_Inv(4,2)
+!print *, Sx_Inv(1,3), Sx_Inv(2,3), Sx_Inv(3,3), Sx_Inv(4,3)
+!print *, Sx_Inv(1,4), Sx_Inv(2,4), Sx_Inv(3,4), Sx_Inv(4,4)
+!print *, " "
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
-!stop
+   stop
    return
   endif
   
@@ -2184,11 +2224,11 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
      do ix = 1,nx
         Delta_X_constrained(ix) =  &
              sign(min(Delta_X_Max(ix),abs(Delta_X(ix))) , Delta_X(ix) )
-     end DO
+     enddo
      Delta_X_distance_constrained = sqrt(sum(Delta_X_constrained**2))
      do ix = 1,nx
         Delta_X(ix) = Delta_X_dir(ix)*Delta_X_distance_constrained
-     end DO
+     enddo
   endif
 
   !--- check for non-traditional convergence

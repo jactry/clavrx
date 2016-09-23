@@ -1910,7 +1910,7 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
      !--- check to see if colder than min, than assume above tropopause
      !--- and either limit height to tropopause or extrapoLate in stratosphere
-     if ((T < minval(Temp_Prof_RTM(kstart:kend))) .or. (klev < Tropo_Level_RTM)) then
+     if (T < minval(Temp_Prof_RTM(kstart:kend))) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
 !--->      if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
            Z = Hght_Prof_RTM(kstart) + (T - Temp_Prof_RTM(kstart)) / Dt_Dz_Strato

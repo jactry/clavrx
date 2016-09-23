@@ -1887,6 +1887,7 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
      ierr = symbol%NO
      Z = MISSING_VALUE_REAL4
      P = MISSING_VALUE_REAL4
+     klev = MISSING_VALUE_INTEGER4
 
      !--- test for existence of a valid solution with troposphere
      kstart = Tropo_Level_RTM

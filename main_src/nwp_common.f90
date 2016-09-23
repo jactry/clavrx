@@ -1187,6 +1187,7 @@ subroutine DESTROY_NWP_ARRAYS
   ierr = sym%YES
   Z = Missing_Value_Real4
   P = Missing_Value_Real4
+  klev = Missing_Value_Int4
 
   if (Lon_Nwp_Idx < 0) return
   if (Lon_Nwp_Idx > Nlon_Nwp) return

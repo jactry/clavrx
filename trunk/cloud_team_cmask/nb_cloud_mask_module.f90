@@ -392,7 +392,8 @@ module NB_CLOUD_MASK
    integer:: Forward_Scattering_Flag
    integer:: Lunar_Forward_Scattering_Flag
    integer:: Cold_Scene_375um_Flag
-   integer:: Cold_Scene_Btd_Flag
+   integer:: Cold_Scene_Flag
+   integer:: Dry_Scene_Flag
    integer:: Solar_Contam_Flag
    integer:: City_Flag
 
@@ -623,12 +624,21 @@ module NB_CLOUD_MASK
            endif
           endif
 
-          Cold_Scene_Btd_Flag = symbol%NO
-          if (Input%Chan_On_11um == symbol%YES) then
-           if (Input%Bt_11um < Bt_11um_Cold_Scene_Thresh .and.  &
-               Input%Bt_11um /= Missing_Value_Real4) then
-              Cold_Scene_Btd_Flag = symbol%YES
-           endif
+          Cold_Scene_Flag = symbol%NO
+          if (Input%Sfc_Temp < Tsfc_Cold_Scene_Thresh) then
+              Cold_Scene_Flag = symbol%YES
+          endif
+
+!         if (Input%Chan_On_11um == symbol%YES) then
+!          if (Input%Bt_11um < Bt_11um_Cold_Scene_Thresh .and.  &
+!              Input%Bt_11um /= Missing_Value_Real4) then
+!             Cold_Scene_Btd_Flag = symbol%YES
+!          endif
+!         endif
+
+          Dry_Scene_Flag = symbol%NO
+          if (Input%Path_Tpw < Path_Tpw_Dry_Scene_Thresh) then
+              Dry_Scene_Flag = symbol%YES
           endif
 
           !--- City Flag of DNB Lunar Tests
@@ -649,7 +659,7 @@ module NB_CLOUD_MASK
           Cld_Flags(8) = Mountain_Flag         ;    Cld_Flag_Bit_Depth(8) = 1
           Cld_Flags(9) = Forward_Scattering_Flag;   Cld_Flag_Bit_Depth(9) = 1
           Cld_Flags(10) = Cold_Scene_375um_Flag ;   Cld_Flag_Bit_Depth(10) = 1
-          Cld_Flags(11) = Cold_Scene_Btd_Flag  ;    Cld_Flag_Bit_Depth(11) = 1
+          Cld_Flags(11) = Cold_Scene_Flag      ;    Cld_Flag_Bit_Depth(11) = 1
           Cld_Flags(12) = Oceanic_Glint_Flag   ;    Cld_Flag_Bit_Depth(12) = 1
           Cld_Flags(13) = Spare_Value          ;    Cld_Flag_Bit_Depth(13) = 1
           Cld_Flags(14) = Spare_Value          ;    Cld_Flag_Bit_Depth(14) = 1
@@ -690,12 +700,13 @@ module NB_CLOUD_MASK
                     case("Emiss_Tropo") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
 
                     case("FMFT") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_12um == symbol%NO) cycle
-                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
                        if (Input%Bt_12um == Missing_Value_Real4) cycle
@@ -707,7 +718,7 @@ module NB_CLOUD_MASK
                     case("Btd_11_67") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
-                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+!--->                  if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_67um == Missing_Value_Real4) cycle
                        if (Sfc_Idx == 1) cycle
@@ -722,14 +733,14 @@ module NB_CLOUD_MASK
                     case("Bt_11_67_Covar") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
-                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Dry_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
                     case("Btd_11_85") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_85um == symbol%NO) cycle
-                       if (Cold_Scene_Btd_Flag == symbol%YES) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_85um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um - Input%Bt_85um
@@ -779,6 +790,7 @@ module NB_CLOUD_MASK
                        if (All_375_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
@@ -790,6 +802,7 @@ module NB_CLOUD_MASK
                        if (Day_375_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
@@ -801,6 +814,7 @@ module NB_CLOUD_MASK
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &

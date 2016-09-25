@@ -108,6 +108,8 @@
     integer :: Num_Segments                                    !number of segments in this data 
     integer(kind=int1) :: Solar_Contamination_Mask             !binary mask of solar contamination (0=no,1=yes)
     integer(kind=int1) :: Sfc_Type                             !surface type based on UMD classification
+    real(kind=real4) :: Sfc_Temp                               !surface temperature from ancillary sources
+    real(kind=real4) :: Path_Tpw                               !TPW along IR path from ancillary sources
  end type mask_input 
 
  !-----------------------------------------------------------------------------

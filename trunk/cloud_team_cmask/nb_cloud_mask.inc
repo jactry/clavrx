@@ -20,7 +20,9 @@
  real, parameter, private:: Radiance_Lunar_City_Thresh = 2.5e-08
  real, parameter, private:: Emiss_375um_Day_Solzen_Thresh = 80.0       !was 85.0
  real, parameter, private:: Emiss_375um_Night_Solzen_Thresh = 90.0     !was 80.0
- real, parameter, private:: Bt_11um_Cold_Scene_Thresh = 220.0    
+ real, parameter, private:: Bt_11um_Cold_Scene_Thresh = 230.0    
+ real, parameter, private:: Tsfc_Cold_Scene_Thresh = 230.0    
+ real, parameter, private:: Path_Tpw_Dry_Scene_Thresh = 0.5
  real, parameter, private:: Bt_375um_Cold_Scene_Thresh = 240.0    
  
  !--- EUMETCAST fire detection parameters
@@ -38,17 +40,29 @@
  real, private, parameter :: STDDEV_375UM_EUMET_FIRE_NIGHT_THRESH = 4.0
 
  !--- CLAVRx Smoke Thresholds
- real, private, parameter:: Refl_065_Min_Smoke_Thresh = 2.0
- real, private, parameter:: Refl_065_Max_Smoke_Thresh = 25.0
- real, private, parameter:: Refl_138_Max_Smoke_Thresh = 5.0
- real, private, parameter:: Refl_160_Max_Smoke_Thresh = 5.0
- real, private, parameter:: Refl_375_Max_Smoke_Thresh = 3.0
- real, private, parameter:: Emiss_11_Tropo_Max_Smoke_Thresh = 0.05
- real, private, parameter:: T11_Std_Max_Smoke_Thresh = 0.25
- real, private, parameter:: Refl_065_Std_Max_Smoke_Thresh = 3.00
- real, private, parameter:: Btd_4_11_Max_Smoke_Thresh = 3.0
- real, private, parameter:: Btd_11_12_Max_Smoke_Thresh = 2.0
- real, private, parameter:: Solzen_Max_Smoke_Thresh = 80.0
+ real, private, parameter:: Refl_065_Min_Smoke_Water_Thresh = 2.0
+ real, private, parameter:: Refl_065_Max_Smoke_Water_Thresh = 25.0
+ real, private, parameter:: Refl_138_Max_Smoke_Water_Thresh = 5.0
+ real, private, parameter:: Refl_160_Max_Smoke_Water_Thresh = 5.0
+ real, private, parameter:: Refl_375_Max_Smoke_Water_Thresh = 3.0
+ real, private, parameter:: Emiss_11_Tropo_Max_Smoke_Water_Thresh = 0.05
+ real, private, parameter:: T11_Std_Max_Smoke_Water_Thresh = 0.25
+ real, private, parameter:: Refl_065_Std_Max_Smoke_Water_Thresh = 3.00
+ real, private, parameter:: Btd_4_11_Max_Smoke_Water_Thresh = 3.0
+ real, private, parameter:: Btd_11_12_Max_Smoke_Water_Thresh = 2.0
+ real, private, parameter:: Solzen_Max_Smoke_Water_Thresh = 80.0
+
+ real, private, parameter:: Refl_065_Min_Smoke_Land_Thresh = 10.0
+ real, private, parameter:: Refl_065_Max_Smoke_Land_Thresh = 25.0
+ real, private, parameter:: Refl_138_Max_Smoke_Land_Thresh = 5.0
+ real, private, parameter:: NIR_Smoke_Ratio_Max_Land_Thresh = 0.0
+ real, private, parameter:: Refl_375_Max_Smoke_Land_Thresh = 3.0
+ real, private, parameter:: Emiss_11_Tropo_Max_Smoke_Land_Thresh = 0.3
+ real, private, parameter:: T11_Std_Max_Smoke_Land_Thresh = 2.0
+ real, private, parameter:: Refl_065_Std_Max_Smoke_Land_Thresh = 3.00
+ real, private, parameter:: Btd_4_11_Max_Smoke_Land_Thresh = 5.0
+ real, private, parameter:: Btd_11_12_Max_Smoke_Land_Thresh = 2.0
+ real, private, parameter:: Solzen_Max_Smoke_Land_Thresh = 80.0
 
  !--- CLAVRx Dust Thresholds
  real, private, parameter:: Btd_11_12_Metric_Max_Dust_Thresh = -0.5 !-0.75! -0.5 !-1.0

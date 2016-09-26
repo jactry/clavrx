@@ -424,6 +424,9 @@ end function VAPOR_ICE
 
 !--------------------------------------------------------------------------
 ! Invert a square matrix
+!
+! follows:
+! http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
 !--------------------------------------------------------------------------
 function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
@@ -445,6 +448,7 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
   ni = size(Matrix,1)
   nj = size(Matrix,2)
   if (ni /= nj) then
+     print *, "size mismatch in invert matrix"
      Status = sym%FAILURE
      return
   endif
@@ -459,11 +463,11 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
        endif
     enddo
   enddo
-  
+ 
   if (Diag_Flag) then
       call INVERT_DIAGONAL(Matrix, Matrix_Inv, Singular_Flag)
       if (Singular_Flag == 1) THEN
-        stop
+        print *, "diagonal failure"
         Status = Sym%FAILURE
       endif
 
@@ -476,6 +480,7 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
       call INVERT_2x2(Matrix, Matrix_Inv, Singular_Flag)
       if (Singular_Flag == 1) THEN
+        print *, "non-diagonal 2x2 failure"
         Status = Sym%FAILURE
       endif
 
@@ -483,6 +488,7 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
       call INVERT_3x3(Matrix, Matrix_Inv, Singular_Flag)
       if (Singular_Flag == 1) THEN
+        print *, "non-diagonal 3x3 failure"
         Status = Sym%FAILURE
       endif
 
@@ -490,6 +496,7 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
       call INVERT_4x4(Matrix, Matrix_Inv, Singular_Flag)
       if (Singular_Flag == 1) THEN
+        print *, "non-diagonal 4x4 failure"
         Status = Sym%FAILURE
       endif
 
@@ -543,20 +550,22 @@ end subroutine INVERT_2x2
 !
 ! Matrix Inversion for a 3x3 matrix
 !--------------------------------------------------------------------------
-subroutine INVERT_3x3(A,A_inv,ierr)
-  real, dimension(:,:), intent(in):: A
-  real, dimension(:,:), intent(out):: A_inv
+subroutine INVERT_3x3(AA,AA_inv,ierr)
+  real, dimension(:,:), intent(in):: AA
+  real, dimension(:,:), intent(out):: AA_inv
   integer, intent(out):: ierr
-  real:: determinant
+  real(kind=real8) :: determinant
+  real(kind=real8), dimension(4,4):: A, A_inv
 
   ierr = 0
+
+  A = real(AA,kind=real8)
 
   !--- compute determinant
   determinant = A(1,1)*(A(2,2)*A(3,3)-A(3,2)*A(2,3)) - &
                 A(1,2)*(A(2,1)*A(3,3)-A(3,1)*A(2,3)) + &
                 A(1,3)*(A(2,1)*A(3,2)-A(3,1)*A(2,2))
   if (determinant == 0.0) then
-!       print *, "Singular Matrix in Invert 3x3"
         ierr = 1
   endif
 
@@ -570,7 +579,10 @@ subroutine INVERT_3x3(A,A_inv,ierr)
   A_inv(3,1) = A(2,1)*A(3,2) - A(3,1)*A(2,2)
   A_inv(3,2) = A(1,2)*A(3,1) - A(3,2)*A(1,1)
   A_inv(3,3) = A(1,1)*A(2,2) - A(2,1)*A(1,2)
+
   A_inv = A_inv / determinant
+
+  AA_inv = real(A_inv, kind=real4)
 
 end subroutine INVERT_3x3
 !--------------------------------------------------------------------------
@@ -578,13 +590,16 @@ end subroutine INVERT_3x3
 !
 ! Matrix Inversion for a 4x4 matrix
 !--------------------------------------------------------------------------
-subroutine INVERT_4x4(A,A_inv,ierr)
-  real, dimension(:,:), intent(in):: A
-  real, dimension(:,:), intent(out):: A_inv
+subroutine INVERT_4x4(AA,AA_inv,ierr)
+  real, dimension(:,:), intent(in):: AA
+  real, dimension(:,:), intent(out):: AA_inv
   integer, intent(out):: ierr
-  real:: determinant
+  real(kind=real8) :: determinant
+  real(kind=real8), dimension(4,4):: A, A_inv
 
   ierr = 0
+
+  A = real(AA,kind=real8)
 
   !--- compute determinant
   determinant = A(1,1)*(A(2,2)*A(3,3)*A(4,4) + A(2,3)*A(3,4)*A(4,2) + A(2,4)*A(3,2)*A(4,3)) + &
@@ -597,7 +612,7 @@ subroutine INVERT_4x4(A,A_inv,ierr)
                 A(1,4)*(A(2,1)*A(3,2)*A(4,3) + A(2,2)*A(3,3)*A(4,1) + A(2,3)*A(3,1)*A(4,2))
 
   if (determinant == 0.0) then
-!       print *, "Singular Matrix in Invert 3x3"
+        !print *, "Singular Matrix in Invert 4x4 ", determinant
         ierr = 1
   endif
 
@@ -623,6 +638,8 @@ subroutine INVERT_4x4(A,A_inv,ierr)
   A_inv(4,4) = A(1,1)*A(2,2)*A(3,3) + A(1,2)*A(2,3)*A(3,1) + A(1,3)*A(2,1)*A(3,2) - A(1,1)*A(2,3)*A(3,2) - A(1,2)*A(2,1)*A(3,3) - A(1,3)*A(2,2)*A(3,1)
 
   A_inv = A_inv / determinant
+
+  AA_inv = real(A_inv, kind=real4)
 
 end subroutine INVERT_4x4
 !--------------------------------------------------------------------------

@@ -90,8 +90,6 @@ module AWG_CLOUD_HEIGHT
 
   private:: DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
   private:: INTERPOLATE_PROFILE_ACHA
-  private:: INTERPOLATE_NWP_ACHA
-  private:: DETERMINE_INVERSION_LEVEL
   private:: DETERMINE_OPAQUE_CLOUD_HEIGHT
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
@@ -317,7 +315,6 @@ module AWG_CLOUD_HEIGHT
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
   real:: Lapse_Rate
-  real:: Abs_Lapse_Rate
   real:: Abs_Lapse_Rate_dP_dZ
   real:: Delta_Cld_Temp_Sfc_Temp
 
@@ -933,7 +930,7 @@ module AWG_CLOUD_HEIGHT
    endif
    if (Acha_Mode_Flag == 5) then
     Btd_11um_85um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_85um(i1:i2,j1:j2), &
-                                                  Input%Invalid_Data_Mask(i1:i2,j1:j2))
+                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
    if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
@@ -1117,10 +1114,12 @@ module AWG_CLOUD_HEIGHT
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
   !------------------------------------------------------------------------
+  Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
+
   if (Cloud_Type == symbol%OVERLAP_TYPE) then
     Ts_Ap = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
   else
-    Ts_Ap = Input%Surface_Temperature(Elem_Idx,Line_Idx)
+    Ts_Ap = Tsfc_Est
   endif
 
   !------------------------------------------------------------------------
@@ -1446,10 +1445,9 @@ Retrieval_Loop: do
   call OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,Num_Param,Num_Obs, &
                          Convergence_Criteria,Delta_X_Max, &
                          y,f,x,x_Ap,K,Sy,Sa_inv, &
-                         Sx,AKM,Delta_X, &
+                         Sx,AKM,Delta_x, &
                          Output%Cost(Elem_Idx,Line_Idx), &
                          Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx))
-
 
   !--- check for a failed Iteration
   if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
@@ -1466,7 +1464,7 @@ Retrieval_Loop: do
      write(unit=lun_diag,fmt=*) "Kernel Matrix"
      write(unit=lun_diag,fmt=*) "K(1,:) = ", K(1,:)
      write(unit=lun_diag,fmt=*) "K(2,:) = ", K(2,:)
-     write(unit=lun_diag,fmt=*) "K(3,:) = ", K(3,:)
+!    write(unit=lun_diag,fmt=*) "K(3,:) = ", K(3,:)
      write(unit=lun_diag,fmt=*) "f = ", f
      write(unit=lun_diag,fmt=*) "Emiss_Vector = ",Emiss_Vector
      write(unit=lun_diag,fmt=*) "Delta_x = ",Delta_x
@@ -1487,10 +1485,10 @@ Retrieval_Loop: do
   !-------------------------------------------------------
   ! constrain to reasonable values
   !-------------------------------------------------------
-  x(1) = max(min_allowable_Tc,min(Tsfc_Est,x(1)))     !should we do this?
+  x(1) = max(min_allowable_Tc,min(Tsfc_Est+5,x(1)))   
   x(2) = max(0.0,min(x(2),1.0))
   x(3) = max(0.8,min(x(3),1.8))
-  x(4) = max(min_allowable_Tc,min(Tsfc_Est,x(4)))     !should we do this?
+  x(4) = max(min_allowable_Tc,min(Tsfc_Est+10,x(4)))    
 
   if (lun_diag > 0) then
      write(unit=lun_diag,fmt=*) "constrained x = ",x
@@ -1524,7 +1522,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
  Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(2,2))
  Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(3,3))
-!Output%Ts_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   (NEED TO ADD THIS)
+!Output%Lower_Cloud_Temperature_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   (NEED TO ADD THIS)
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1640,6 +1638,7 @@ else
  Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL4
  Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL4
  Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL4
+!Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
 
  !--- set derived parameters to missing
  Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
@@ -1720,7 +1719,7 @@ endif     ! ---------- end of data check
  !------------------------------------------------------------------------
  do i = 1, 8
     Output%Packed_Meta_Data(Elem_Idx,Line_Idx) = Output%Packed_Meta_Data(Elem_Idx,Line_Idx) +  &
-                                          (2**(i-1)) * Meta_Data_Flags(i)
+                                                 int((2**(i-1)) * Meta_Data_Flags(i),kind=int1)
  enddo
 
 
@@ -1912,7 +1911,6 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
      !--- and either limit height to tropopause or extrapoLate in stratosphere
      if (T < minval(Temp_Prof_RTM(kstart:kend))) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-!--->      if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
            Z = Hght_Prof_RTM(kstart) + (T - Temp_Prof_RTM(kstart)) / Dt_Dz_Strato
            call KNOWING_Z_COMPUTE_T_P(P,R4_Dummy,Z,klev)
          else
@@ -2039,7 +2037,7 @@ end function GENERIC_PROFILE_INTERPOLATION
 subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                               Convergence_Criteria,Delta_X_Max, &
                               y,f,x,x_Ap,K,Sy,Sa_inv, &
-                              Sx,AKM,Delta_X,Conv_Test,Converged_Flag,Fail_Flag)
+                              Sx,AKM,Delta_x,Conv_Test,Converged_Flag,Fail_Flag)
 
   integer, intent(in):: Iter_Idx
   integer, intent(in):: Iter_Idx_Max
@@ -2057,11 +2055,11 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4), dimension(:,:), intent(out):: Sx
   real(kind=real4), dimension(:,:), intent(out):: AKM
   real(kind=real4), intent(out):: Conv_Test
-  real(kind=real4), dimension(:), intent(out):: Delta_X
+  real(kind=real4), dimension(:), intent(out):: Delta_x
   real(kind=real4), dimension(ny,ny):: Sy_inv
   real(kind=real4), dimension(nx,nx):: Sx_inv
-  real(kind=real4), dimension(nx):: Delta_X_dir
-  real(kind=real4), dimension(nx):: Delta_X_constrained
+  real(kind=real4), dimension(nx):: Delta_x_dir
+  real(kind=real4), dimension(nx):: Delta_x_constrained
   real(kind=real4):: Delta_X_distance_constrained
   real(kind=real4):: Delta_X_distance
   integer, intent(out):: Fail_Flag
@@ -2084,8 +2082,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    print *, "Cloud Height warning ==> Singular Sy in ACHA "
    Fail_Flag = symbol%YES
    Converged_Flag = symbol%NO
-!  print *, "y = ", y
-!  print *, "Sy = ", Sy
    return 
   endif
 
@@ -2095,43 +2091,12 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Singular_Flag =  INVERT_MATRIX(Sx_inv, Sx, p)
   if (Singular_Flag == symbol%YES) then
    print *, "Cloud Height warning ==> Singular Sx in ACHA "
-!  print *, "y = ", y
-!  print *, "f = ", f
-!  print *, "x_ap = ", x_ap
-!  print *, "x = ", x
-!  print *, "Sa_Inv = ", Sa_Inv
-!  print *, "Sx_Inv = ", Sx_Inv
-!  print *, "K = ", K
-!print *, "Sy = "
-!print *, Sy(1,1), Sy(2,1), Sy(3,1)
-!print *, Sy(1,2), Sy(2,3), Sy(3,2)
-!print *, Sy(1,3), Sy(2,3), Sy(3,3)
-!print *, " "
-
-!print *, "K = "
-!print *, K(1,1), K(2,1), K(3,1), K(4,1)
-!print *, K(1,2), K(2,2), K(3,2), K(4,2)
-!print *, K(1,3), K(2,3), K(3,3), K(4,3)
-!print *, K(1,4), K(2,4), K(3,4), K(4,4)
-!print *, " "
-!print *, "AKM = "
-!print *, AKM(1,1), AKM(2,1), AKM(3,1), AKM(4,1)
-!print *, AKM(1,2), AKM(2,2), AKM(3,2), AKM(4,2)
-!print *, AKM(1,3), AKM(2,3), AKM(3,3), AKM(4,3)
-!print *, AKM(1,4), AKM(2,4), AKM(3,4), AKM(4,4)
-!print *, " "
-!print *, "Sx_inv = "
-!print *, Sx_Inv(1,1), Sx_Inv(2,1), Sx_Inv(3,1), Sx_Inv(4,1)
-!print *, Sx_Inv(1,2), Sx_Inv(2,2), Sx_Inv(3,2), Sx_Inv(4,2)
-!print *, Sx_Inv(1,3), Sx_Inv(2,3), Sx_Inv(3,3), Sx_Inv(4,3)
-!print *, Sx_Inv(1,4), Sx_Inv(2,4), Sx_Inv(3,4), Sx_Inv(4,4)
-!print *, " "
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
    return
   endif
   
-  Delta_X = matmul(Sx,(matmul(Transpose(K),matmul(Sy_inv,(y-f))) +  &
+  Delta_x = matmul(Sx,(matmul(Transpose(K),matmul(Sy_inv,(y-f))) +  &
                        matmul(Sa_inv,x_Ap-x) ))
 
   !--------------------------------------------------------------
@@ -2323,8 +2288,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4), dimension(:,:), intent(out):: K
   real(kind=real4), dimension(:), intent(out):: Emiss_Vector
 
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
   real(kind=real4):: Tc
   real(kind=real4):: Ts
   real(kind=real4):: Bc_67um
@@ -2332,6 +2295,11 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4):: Bc_11um
   real(kind=real4):: Bc_12um
   real(kind=real4):: Bc_133um
+  real(kind=real4):: Bs_67um
+  real(kind=real4):: Bs_85um
+  real(kind=real4):: Bs_11um
+  real(kind=real4):: Bs_12um
+  real(kind=real4):: Bs_133um
   real(kind=real4):: Rad_67um
   real(kind=real4):: Rad_85um
   real(kind=real4):: Rad_11um
@@ -2387,6 +2355,13 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Chan_On_11um == symbol%YES) Bc_11um = PLANCK_RAD_FAST( Chan_Idx_11um, Tc, dB_dT = dB_dTc_11um)
   if (Chan_On_12um == symbol%YES) Bc_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Tc, dB_dT = dB_dTc_12um)
   if (Chan_On_133um == symbol%YES) Bc_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Tc, dB_dT = dB_dTc_133um)
+
+  !--- compute planck Emission for surface temperature
+  if (Chan_On_67um == symbol%YES) Bs_67um = PLANCK_RAD_FAST( Chan_Idx_67um, Ts, dB_dT = dB_dTs_67um)
+  if (Chan_On_85um == symbol%YES) Bs_85um = PLANCK_RAD_FAST( Chan_Idx_85um, Ts, dB_dT = dB_dTs_85um)
+  if (Chan_On_11um == symbol%YES) Bs_11um = PLANCK_RAD_FAST( Chan_Idx_11um, Ts, dB_dT = dB_dTs_11um)
+  if (Chan_On_12um == symbol%YES) Bs_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Ts, dB_dT = dB_dTs_12um)
+  if (Chan_On_133um == symbol%YES) Bs_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Ts, dB_dT = dB_dTs_133um)
 
   !----- compute channel Emissivities
 
@@ -2536,7 +2511,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            Tc_Opaque, &
                            Mu, &
                            Snow_Flag, &
-                           Tair,  &
+                           Tair, &
                            Tc_Ap, &
                            Tc_Ap_Uncer, &
                            Ec_Ap, &
@@ -3136,64 +3111,6 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
            (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
 
  end function INTERPOLATE_PROFILE_ACHA
-
-!----------------------------------------------------------------------------
-! Function INTERPOLATE_NWP_ACHA
-!
-! general interpoLation routine for nwp fields
-!
-! description of arguments
-! ilon, iLat - nwp indices of closest nwp cell
-! ilonx,iLatx - nwp indices of nwp cells of diagnoal of bounding box
-! lonx - longitude weighting factor
-! Latx = Latitude weighting factor
-! z1 = data(ilon, iLat)
-! z2 = data(ilonx,iLat)
-! z3 = data(ilon,iLatx)
-! z4 = data(ilonx,iLatx)
-!
-! output:
-! z = interpoLated data point
-!
-!---------------------------------------------------------------------------
- function INTERPOLATE_NWP_ACHA(z1,z2,z3,z4,lonx,Latx) result(z)
-
-  real, intent(in):: z1
-  real, intent(in):: z2
-  real, intent(in):: z3
-  real, intent(in):: z4
-  real, intent(in):: lonx
-  real, intent(in):: Latx
-  real:: z
-
-  !--- linear inteprpoLation scheme
-  z =  (1.0-lonx) * ((1.0-Latx) * z1 + (Latx)* z3) + &
-           (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
-
- end function INTERPOLATE_NWP_ACHA
-
- !---------------------------------------------------------------------
- ! find Inversion Level - highest Level Inversion below trop
- !---------------------------------------------------------------------
- function DETERMINE_INVERSION_LEVEL(Tropo_Level, Sfc_Level, Sfc_Air_Temp) result(Inversion_Level)
-   integer, intent(in):: Tropo_Level
-   integer, intent(in):: Sfc_Level
-   real, intent(in):: Sfc_Air_Temp
-   integer:: Inversion_Level
-   integer:: k
-
-   Inversion_Level = 0
-
-   do k = Tropo_Level, Sfc_Level-1
-      if (Temp_Prof_RTM(k) > Sfc_Air_Temp) then
-          Inversion_Level = minval(maxloc(Temp_Prof_RTM(k:Sfc_Level-1)))
-          Inversion_Level = Inversion_Level - 1 + k
-          exit
-      endif
-   enddo
-
- end function DETERMINE_INVERSION_LEVEL
-
 
  !-------------------------------------------------------------------------
  ! Input:
@@ -4233,7 +4150,7 @@ subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_unce
   real, parameter:: lat_min = -90.0
   real, parameter:: delta_lat = -10.0
 
-  lat_idx = ((latitude - lat_min) / delta_lat) + 1
+  lat_idx = int((latitude - lat_min) / delta_lat) + 1
   lat_idx = max(1,min(lat_idx, num_lat_cirrus_ap))
   
   tc_apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)

@@ -555,7 +555,7 @@ subroutine INVERT_3x3(AA,AA_inv,ierr)
   real, dimension(:,:), intent(out):: AA_inv
   integer, intent(out):: ierr
   real(kind=real8) :: determinant
-  real(kind=real8), dimension(4,4):: A, A_inv
+  real(kind=real8), dimension(3,3):: A, A_inv
 
   ierr = 0
 

@@ -494,10 +494,10 @@
       !------------------------------------------------------------------
 
       ! Made ileap consistant with oisst call.
-      ileap = leap_year_Fct(int(Image%Start_Year, kind=int4))
+      ileap = int(leap_year_Fct(int(Image%Start_Year, kind=int4)),kind=int1)
 
-      Month = COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
-      Day_Of_Month = COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
+      Month = int(COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4)),kind=int2)
+      Day_Of_Month = int(COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4)),kind=int2)
 
 
       !*************************************************************************

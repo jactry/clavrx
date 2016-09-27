@@ -386,7 +386,7 @@ module NB_CLOUD_MASK
    integer:: Day_063_Spatial_Flag
    integer:: Night_Lunar_Flag
    integer:: Lunar_Spatial_Flag
-   integer:: All_375_Flag
+!  integer:: All_375_Flag
    integer:: Day_375_Flag
    integer:: Night_375_Flag
    integer:: Forward_Scattering_Flag
@@ -574,7 +574,8 @@ module NB_CLOUD_MASK
              endif
 
              Lunar_Forward_Scattering_Flag = symbol%NO
-             if (Input%Lunscatzen < 80.0 .and. Input%Lunzen < 95.0) then
+             if (Input%Lunscatzen < Forward_Scatter_Scatzen_Max_Thresh .and. &
+                 Input%Lunzen < Forward_Scatter_Solzen_Max_Thresh) then
                Lunar_Forward_Scattering_Flag = symbol%YES
              endif
 
@@ -587,22 +588,18 @@ module NB_CLOUD_MASK
               Day_375_Flag = symbol%YES
           endif
 
-!---- START TEST to simulate ch3a operation
-!          Day_375_Flag = symbol%NO
-!---- END TEST
-
           if (Input%Solzen < Emiss_375um_Night_Solzen_Thresh) then
               Night_375_Flag = symbol%NO
           else
               Night_375_Flag = symbol%YES
           endif
 
-          if (Input%Solzen < Emiss_375um_Night_Solzen_Thresh .and. &
-              Input%Solzen > Emiss_375um_Day_Solzen_Thresh) then
-              All_375_Flag = symbol%YES
-          else
-              All_375_Flag = symbol%No
-          endif
+       !  if (Input%Solzen < Emiss_375um_Night_Solzen_Thresh .and. &
+       !      Input%Solzen > Emiss_375um_Day_Solzen_Thresh) then
+       !      All_375_Flag = symbol%YES
+       !  else
+       !      All_375_Flag = symbol%No
+       !  endif
 
           if (Sfc_Idx /= 6 .and. Input%Zsfc > 2000.0) then
               Mountain_Flag = symbol%YES
@@ -610,7 +607,8 @@ module NB_CLOUD_MASK
               Mountain_Flag = symbol%NO
           endif
 
-          if (Input%Scatzen < 80.0 .and. Input%Solzen < 95.0) then
+          if (Input%Scatzen < Forward_Scatter_Scatzen_Max_Thresh .and. &
+              Input%Solzen < Forward_Scatter_Solzen_Max_Thresh) then
               Forward_Scattering_Flag = symbol%YES
           else
               Forward_Scattering_Flag = symbol%NO
@@ -749,7 +747,7 @@ module NB_CLOUD_MASK
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
-                       if (All_375_Flag == symbol%NO) cycle
+                      !if (All_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um == Missing_Value_Real4) cycle
@@ -787,8 +785,9 @@ module NB_CLOUD_MASK
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
-                       if (All_375_Flag == symbol%NO) cycle
+                      !if (All_375_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
@@ -803,6 +802,7 @@ module NB_CLOUD_MASK
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &

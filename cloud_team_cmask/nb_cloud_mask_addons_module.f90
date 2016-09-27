@@ -31,7 +31,8 @@ module CLOUD_MASK_ADDONS
  public:: NB_CLOUD_MASK_ADDONS_ALGORITHM
 
  private:: EUMETSAT_FIRE_TEST, &
-           CLAVRX_SMOKE_TEST, &
+           CLAVRX_SMOKE_OVER_WATER_TEST, &
+           CLAVRX_SMOKE_OVER_LAND_TEST, &
            CLAVRX_DUST_TEST, &
            CLAVRX_THIN_CIRRUS_TEST
 
@@ -40,7 +41,7 @@ module CLOUD_MASK_ADDONS
 
  contains
  !---------------------------------------------------------------------
- ! subroutine that handle non-cloud tests in the enterprise mask
+ ! ubroutine that handle non-cloud tests in the enterprise mask
  ! These include smoke, dust and fire
  !---------------------------------------------------------------------
  subroutine NB_CLOUD_MASK_ADDONS_ALGORITHM( &
@@ -67,6 +68,11 @@ module CLOUD_MASK_ADDONS
   Output%Fire_Mask = MISSING_VALUE_INT1
   Output%Thin_Cirr_Mask = MISSING_VALUE_INT1
 
+   !--- initialize diagnostic output
+   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+
   !------------------------------------------------------------------------------------------
   !  MAIN LOOP
   !------------------------------------------------------------------------------------------
@@ -85,7 +91,7 @@ module CLOUD_MASK_ADDONS
 
            Output%Smoke_Mask = 0 
 
-           Output%Smoke_Mask = CLAVRX_SMOKE_TEST(Input%Ref_063um,Input%Ref_063um_Clear, &
+           Output%Smoke_Mask = CLAVRX_SMOKE_OVER_WATER_TEST(Input%Ref_063um,Input%Ref_063um_Clear, &
                                                  Input%Ref_138um, &
                                                  Input%Ref_160um,Input%Ref_160um_Clear, &
                                                  Input%Ref_375um,Input%Ref_375um_Clear, &
@@ -97,6 +103,28 @@ module CLOUD_MASK_ADDONS
                                                  Input%Chan_On_12um,Input%Emiss_11um_Tropo, &
                                                  Input%Ref_063um_Std, Input%Bt_11um_Std, &
                                                  Input%Solzen)
+
+        endif
+
+        if (Input%SNOW_Class == symbol%NO_SNOW .and. &
+            (Input%Land_Class == symbol%LAND)) then
+
+           Output%Smoke_Mask = 0 
+
+           Output%Smoke_Mask = CLAVRX_SMOKE_OVER_LAND_TEST(Input%Ref_063um,Input%Ref_063um_Clear, &
+                                                 Input%Ref_086um, &
+                                                 Input%Ref_138um, &
+                                                 Input%Ref_160um,Input%Ref_160um_Clear, &
+                                                 Input%Ref_375um,Input%Ref_375um_Clear, &
+                                                 Input%Bt_375um, &
+                                                 Input%Bt_11um, Input%Bt_11um_Clear, &
+                                                 Input%Bt_12um, Input%Bt_12um_Clear,&
+                                                 Input%Chan_On_063um,Input%Chan_On_138um, &
+                                                 Input%Chan_On_160um,Input%Chan_On_375um,Input%Chan_On_11um, &
+                                                 Input%Chan_On_12um,Input%Emiss_11um_Tropo, &
+                                                 Input%Ref_063um_Std, Input%Bt_11um_Std, &
+                                                 Input%Solzen)
+
         endif
 
         !-------------------------------------------------------------------------
@@ -183,8 +211,8 @@ module CLOUD_MASK_ADDONS
 !
 ! Coded: Andy Heidinger
 !----------------------------------------------------------------------------
-  integer elemental function CLAVRX_SMOKE_TEST(Refl_065,Refl_065_Clear,Refl_138, &
-                                              Refl_160, Refl_160_Clear, &
+  integer elemental function CLAVRX_SMOKE_OVER_WATER_TEST(Refl_065,Refl_065_Clear,Refl_138, &
+                                               Refl_160, Refl_160_Clear, &
                                                Refl_375, Refl_375_Clear, &
                                                Bt_375,&
                                                Bt_11, Bt_11_Clear, &
@@ -220,9 +248,9 @@ module CLOUD_MASK_ADDONS
      integer:: NIR_IR_Flag
      integer:: SPLIT_WIN_Flag
      
-     Clavrx_Smoke_Test = MISSING_VALUE_INT1
+     Clavrx_Smoke_Over_Water_Test = MISSING_VALUE_INT1
 
-     if (Solzen < Solzen_Max_Smoke_Thresh) then
+     if (Solzen < Solzen_Max_Smoke_Water_Thresh) then
 
            IR_Flag = 1
            VIS_Flag = 1
@@ -232,34 +260,34 @@ module CLOUD_MASK_ADDONS
 
            !--- IR test - smoke should be nearly invisible
            if (Chan_On_11 == 1) then
-               if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Thresh) IR_Flag = 0
-               if (T11_Std > T11_Std_Max_Smoke_Thresh) IR_Flag = 0
+               if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Water_Thresh) IR_Flag = 0
+               if (T11_Std > T11_Std_Max_Smoke_Water_Thresh) IR_Flag = 0
            endif
 
            !--- VIS test - smoke should be nearly invisible
            if (Chan_On_065 == 1) then
-               if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Thresh .or.   &
-                   Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Thresh) VIS_Flag = 0
-               if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Thresh) VIS_Flag = 0
+               if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Water_Thresh .or.   &
+                   Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Water_Thresh) VIS_Flag = 0
+               if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Water_Thresh) VIS_Flag = 0
            endif
 
            !--- NIR Tests
            if (Chan_On_375 == 1) then
-               if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Thresh) NIR_Flag = 0
-               if (Refl_375 > Refl_375_Max_Smoke_Thresh) NIR_Flag = 0
+               if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Water_Thresh) NIR_Flag = 0
+               if (Refl_375 > Refl_375_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
            if (Chan_On_160 == 1 .and. Chan_On_375 == 0) then
-               if (Refl_160 > Refl_160_Max_Smoke_Thresh) NIR_Flag = 0
+               if (Refl_160 > Refl_160_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
            if (Chan_On_138 == 1) then
-               if (Refl_138 > Refl_138_Max_Smoke_Thresh) NIR_Flag = 0
+               if (Refl_138 > Refl_138_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
            !--- NIR IR_Tests
            if (Chan_On_375 == 1 .and. Chan_On_11 == 1) then
-               if ((Bt_11 - Bt_375) > Btd_4_11_Max_Smoke_Thresh) NIR_IR_Flag = 0
+               if ((Bt_375 - Bt_11) > Btd_4_11_Max_Smoke_Water_Thresh) NIR_IR_Flag = 0
            endif
 
            !--- SPLIT_WIN_Tests
@@ -268,11 +296,115 @@ module CLOUD_MASK_ADDONS
            endif
 
            !--- combine into final answer
-           Clavrx_Smoke_Test = IR_Flag * VIS_Flag * NIR_Flag * NIR_IR_Flag * SPLIT_WIN_Flag
+           Clavrx_Smoke_Over_Water_Test = IR_Flag * VIS_Flag * NIR_Flag * NIR_IR_Flag * SPLIT_WIN_Flag
    
     endif
 
-  end function CLAVRX_SMOKE_TEST
+  end function CLAVRX_SMOKE_OVER_WATER_TEST
+
+!----------------------------------------------------------------------------
+! CLAVR-x SMOKE TEST OVER LAND
+!
+! Daytime and Snow-Free Land Only.
+!
+! Coded: Andy Heidinger
+!----------------------------------------------------------------------------
+  integer elemental function CLAVRX_SMOKE_OVER_LAND_TEST(Refl_065,Refl_065_Clear, &
+                                               Refl_086, Refl_138, &
+                                               Refl_160, Refl_160_Clear, &
+                                               Refl_375, Refl_375_Clear, &
+                                               Bt_375,&
+                                               Bt_11, Bt_11_Clear, &
+                                               Bt_12, Bt_12_Clear,&
+                                               Chan_On_065,Chan_On_138,Chan_On_160,Chan_On_375,Chan_On_11, &
+                                               Chan_On_12,Emiss_11_Tropo,Refl_065_Std,T11_Std,Solzen)
+     real, intent(in):: Refl_065
+     real, intent(in):: Refl_065_Clear
+     real, intent(in):: Refl_086
+     real, intent(in):: Refl_138
+     real, intent(in):: Refl_160
+     real, intent(in):: Refl_160_Clear
+     real, intent(in):: Refl_375
+     real, intent(in):: Refl_375_Clear
+     real, intent(in):: Bt_375
+     real, intent(in):: Bt_11
+     real, intent(in):: Bt_11_Clear
+     real, intent(in):: Bt_12
+     real, intent(in):: Bt_12_Clear
+     real, intent(in):: Emiss_11_Tropo
+     real, intent(in):: Refl_065_Std
+     real, intent(in):: T11_Std
+     integer, intent(in):: Chan_On_065
+     integer, intent(in):: Chan_On_138
+     integer, intent(in):: Chan_On_160
+     integer, intent(in):: Chan_On_375
+     integer, intent(in):: Chan_On_11
+     integer, intent(in):: Chan_On_12
+     real, intent(in):: Solzen
+  
+
+     real:: NIR_Smoke_Ratio
+     integer:: IR_Flag
+     integer:: VIS_Flag
+     integer:: NIR_Flag
+     integer:: NIR_IR_Flag
+     integer:: SPLIT_WIN_Flag
+     
+     Clavrx_Smoke_Over_Land_Test = MISSING_VALUE_INT1
+
+     if (Solzen < Solzen_Max_Smoke_Land_Thresh) then
+
+           IR_Flag = 1
+           VIS_Flag = 1
+           NIR_Flag = 1
+           NIR_IR_Flag = 1
+           SPLIT_WIN_Flag = 1
+
+           !--- IR test - smoke should be nearly invisible
+           if (Chan_On_11 == 1) then
+               if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Land_Thresh) IR_Flag = 0
+               if (T11_Std > T11_Std_Max_Smoke_Land_Thresh) IR_Flag = 0
+           endif
+
+           !--- VIS test - smoke should be nearly invisible
+           if (Chan_On_065 == 1) then
+               if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Land_Thresh .or.   &
+                   Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Land_Thresh) VIS_Flag = 0
+               if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Land_Thresh) VIS_Flag = 0
+           endif
+
+           !--- NIR Tests
+           if (Chan_On_375 == 1) then
+               if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Land_Thresh) NIR_Flag = 0
+               if (Refl_375 > Refl_375_Max_Smoke_Land_Thresh) NIR_Flag = 0
+           endif
+
+           !if (Chan_On_160 == 1 .and. Chan_On_375 == 0) then
+           if (Chan_On_160 == 1) then
+               NIR_Smoke_Ratio = (Refl_160 - Refl_065)/(Refl_086 - Refl_065)
+               if (NIR_Smoke_Ratio > NIR_Smoke_Ratio_Max_Land_Thresh) NIR_Flag = 0
+           endif
+
+           if (Chan_On_138 == 1) then
+               if (Refl_138 > Refl_138_Max_Smoke_Land_Thresh) NIR_Flag = 0
+           endif
+
+           !--- NIR IR_Tests
+           if (Chan_On_375 == 1 .and. Chan_On_11 == 1) then
+               if ((Bt_375 - Bt_11) > Btd_4_11_Max_Smoke_Land_Thresh) NIR_IR_Flag = 0
+           endif
+
+           !--- SPLIT_WIN_Tests
+           if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+             if (abs(split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)) > 1) SPLIT_WIN_Flag = 0
+           endif
+
+           !--- combine into final answer
+           Clavrx_Smoke_Over_Land_Test = IR_Flag * VIS_Flag * NIR_Flag * NIR_IR_Flag * SPLIT_WIN_Flag
+   
+    endif
+
+  end function CLAVRX_SMOKE_OVER_LAND_TEST
 
 !----------------------------------------------------------------------------
 ! EUMETCAST Fire detection algorithm

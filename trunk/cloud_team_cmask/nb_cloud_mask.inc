@@ -24,6 +24,8 @@
  real, parameter, private:: Tsfc_Cold_Scene_Thresh = 230.0    
  real, parameter, private:: Path_Tpw_Dry_Scene_Thresh = 0.5
  real, parameter, private:: Bt_375um_Cold_Scene_Thresh = 240.0    
+ real, parameter, private:: Forward_Scatter_Scatzen_Max_Thresh = 90.0
+ real, parameter, private:: Forward_Scatter_Solzen_Max_Thresh = 95.0
  
  !--- EUMETCAST fire detection parameters
  real, private, parameter :: EUMETCAST_FIRE_DAY_SOLZEN_THRESH = 70.0

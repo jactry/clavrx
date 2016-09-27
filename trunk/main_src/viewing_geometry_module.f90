@@ -254,12 +254,12 @@
   !-------------------------------------------------------------------------------------
   real elemental function scattering_angle(sol_zen, sen_zen, rel_az)
 
-   real, intent(in)::  sol_zen
+   real, intent(in):: sol_zen
    real, intent(in):: sen_zen
    real, intent(in):: rel_az
 
    scattering_angle = cos(sol_zen*DTOR)*cos(sen_zen*DTOR) -    &
-                       sin(sol_zen*DTOR)*sin(sen_zen*DTOR)*cos(rel_az*DTOR)
+                      sin(sol_zen*DTOR)*sin(sen_zen*DTOR)*cos(rel_az*DTOR)
 
    scattering_angle = -1.0*scattering_angle
 

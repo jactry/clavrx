@@ -147,7 +147,8 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
  
  
   !--  channel 1
-  temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch1_aer(it,iu,:,iv) +  &
+  if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+    temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch1_aer(it,iu,:,iv) +  &
                  (1.0-t)*(1.0-u)*(v)*Ref_Lut_Ch1_aer(it,iu,:,iv+1) +  &
                  (t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch1_aer(it+1,iu,:,iv) +  &
                  (t)*(1.0-u)*(v)*Ref_Lut_Ch1_aer(it+1,iu,:,iv+1) +  &
@@ -155,10 +156,12 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
                  (1.0-t)*(u)*(v)*Ref_Lut_Ch1_aer(it,iu+1,:,iv+1) +  &
                  (t)*(u)*(1.0-v)*Ref_Lut_Ch1_aer(it+1,iu+1,:,iv) +  &
                  (t)*(u)*(v)*Ref_Lut_Ch1_aer(it+1,iu+1,:,iv+1)
-  call AER_RET(ch(1)%Ref_Toa(i,j)/100.0, aot1(i,j))
+    call AER_RET(ch(1)%Ref_Toa(i,j)/100.0, aot1(i,j))
+  endif
 
   !--  channel 2
-  temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch2_aer(it,iu,:,iv) +  &
+  if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+     temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch2_aer(it,iu,:,iv) +  &
                  (1.0-t)*(1.0-u)*(v)*Ref_Lut_Ch2_aer(it,iu,:,iv+1) +  &
                  (t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch2_aer(it+1,iu,:,iv) +  &
                  (t)*(1.0-u)*(v)*Ref_Lut_Ch2_aer(it+1,iu,:,iv+1) +  &
@@ -166,12 +169,14 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
                  (1.0-t)*(u)*(v)*Ref_Lut_Ch2_aer(it,iu+1,:,iv+1) +  &
                  (t)*(u)*(1.0-v)*Ref_Lut_Ch2_aer(it+1,iu+1,:,iv) +  &
                  (t)*(u)*(v)*Ref_Lut_Ch2_aer(it+1,iu+1,:,iv+1)
-  call AER_RET(ch(2)%Ref_Toa(i,j)/100.0, aot2(i,j))
+     call AER_RET(ch(2)%Ref_Toa(i,j)/100.0, aot2(i,j))
+   endif
 
 
-  if (Ch3a_On_AVHRR(j) == sym%YES) then
-   !--  channel 3a
-   temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch3a_aer(it,iu,:,iv) +  &
+   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+     if (Ch3a_On_AVHRR(j) == sym%YES) then
+     !--  channel 3a
+       temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch3a_aer(it,iu,:,iv) +  &
                  (1.0-t)*(1.0-u)*(v)*Ref_Lut_Ch3a_aer(it,iu,:,iv+1) +  &
                  (t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch3a_aer(it+1,iu,:,iv) +  &
                  (t)*(1.0-u)*(v)*Ref_Lut_Ch3a_aer(it+1,iu,:,iv+1) +  &
@@ -179,8 +184,9 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
                  (1.0-t)*(u)*(v)*Ref_Lut_Ch3a_aer(it,iu+1,:,iv+1) +  &
                  (t)*(u)*(1.0-v)*Ref_Lut_Ch3a_aer(it+1,iu+1,:,iv) +  &
                  (t)*(u)*(v)*Ref_Lut_Ch3a_aer(it+1,iu+1,:,iv+1)
-   call AER_RET(ch(6)%Ref_Toa(i,j)/100.0, aot3a(i,j))
-  endif
+      call AER_RET(ch(6)%Ref_Toa(i,j)/100.0, aot3a(i,j))
+    endif
+   endif
 
  endif            !end of check for appropriate retrieval conditions
 

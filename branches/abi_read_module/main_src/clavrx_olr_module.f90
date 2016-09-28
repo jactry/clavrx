@@ -94,6 +94,9 @@ select case (Sensor%WMO_Id)
       case(173) !AHI
          olr_type = 'none'
 
+      case(186) !GOES-16
+         olr_type = 'none'
+
       case(200) !NOAA-8 AVHRR
          olr_type = 'none'
 

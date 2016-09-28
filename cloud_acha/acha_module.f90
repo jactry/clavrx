@@ -1516,7 +1516,14 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
  Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
- Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x(4)
+ if (Cloud_Type == symbol%OVERLAP_TYPE) then
+    Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x(4)
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx), &
+                               Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
+                               Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+ endif
+
 
  !--- save uncertainty estimates
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
@@ -1638,7 +1645,14 @@ else
  Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL4
  Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL4
  Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL4
-!Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
+
+ if (Cloud_Type == symbol%OVERLAP_TYPE) then
+    Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx),&
+                               Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx),&
+                               Output%Lower_Cloud_Height(Elem_Idx,Line_Idx),&
+                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+ endif 
 
  !--- set derived parameters to missing
  Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4

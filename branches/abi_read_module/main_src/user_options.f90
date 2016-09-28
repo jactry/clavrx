@@ -836,6 +836,8 @@ contains
          default_acha_mode  = ACHA_Mode_Default_Goes_MP
       case ( 'GOES-IL-IMAGER')      
          default_acha_mode  = ACHA_Mode_Default_Goes_IL   
+      case ( 'GOES-RU-IMAGER')      
+         default_acha_mode  = ACHA_Mode_Default_Goes_RU
       case ( 'GOES-IP-SOUNDER')
          default_acha_mode  = ACHA_Mode_Default_Goes_SNDR 
       case ( 'MTSAT-IMAGER')
@@ -904,6 +906,8 @@ contains
          filename  = 'goesmp_default_nb_cloud_mask_lut.nc'
       case ( 'GOES-IL-IMAGER')      
          filename  = 'goesil_default_nb_cloud_mask_lut.nc'   
+      case ( 'GOES-RU-IMAGER')      
+         filename  = 'ahi_default_nb_cloud_mask_lut.nc'
       case ( 'GOES-IP-SOUNDER')
          filename  = 'goesmp_default_nb_cloud_mask_lut.nc' 
       case ( 'MTSAT-IMAGER')
@@ -927,7 +931,7 @@ contains
       case ('MODIS-MAC')
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('AHI')
-          filename  = 'modis_default_nb_cloud_mask_lut.nc'   
+          filename  = 'ahi_default_nb_cloud_mask_lut.nc'
           
       case default 
          print*,'sensor ',SensorName, ' is not set in user_options.f90:  Inform andi.walther@ssec.wisc.edu'  
@@ -982,6 +986,9 @@ contains
       case ( 'GOES-IL-IMAGER')      
          possible_acha_modes(1:3)   =  [1,  3, 6] 
          possible_dcomp_modes(1)    =  3  
+      case ( 'GOES-RU-IMAGER')      
+         possible_acha_modes(1:3)   =  [1, 2, 3, 4, 5, 6] 
+         possible_dcomp_modes(1)    =  [1, 2, 3]  
       case ( 'GOES-IP-SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
@@ -1061,6 +1068,8 @@ contains
          Valid_Channels (1:5) = [1,20,27,31,32]
       case ( 'GOES-MP-IMAGER')      
          Valid_Channels (1:5) = [1,20,27,31,33]   
+      case ('GOES-RU-IMAGER')
+         Valid_Channels(1:16) = [1,2,3,6,7,20,26,27,28,29,30,31,32,33,37,38]
       case ( 'GOES-IP-SOUNDER')
          Valid_Channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
       case ( 'MTSAT-IMAGER')

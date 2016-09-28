@@ -81,6 +81,8 @@ select case (Sensor%WMO_Id)
 
       case(173) !AHI
 
+      case(186) !GOES-16
+
       case(200) !NOAA-8
 
       case(201) !NOAA-9

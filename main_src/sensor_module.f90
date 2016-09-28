@@ -211,6 +211,12 @@ module SENSOR_MODULE
          Image%End_Doy   = doy  
          
       endif
+
+      if (index(Sensor%Sensor_Name,'GOES-RU-IMAGER') > 0) then
+        ! Set date/time in some way.
+        ! Global attributes in the NC file would work.
+        print*,"SENSOR NAME : ", Sensor%Sensor_Name
+      endif
       
       !----------------------------------------------
       ! for IFF take time and set some constants
@@ -393,6 +399,8 @@ module SENSOR_MODULE
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AHI')
               call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('GOES-RU-IMAGER')
+              call READ_ABI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('VIIRS','VIIRS-NASA')
 #ifdef HDF5LIBS 
               call READ_VIIRS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
@@ -495,6 +503,19 @@ module SENSOR_MODULE
         Sensor%Instr_Const_File = 'him8_instr.dat'
         Sensor%Algo_Const_File = 'him8_algo.dat'
         Sensor%Geo_Sub_Satellite_Longitude = 140.0
+        Sensor%Geo_Sub_Satellite_Latitude = 0.0
+        exit test_loop
+      endif
+
+      !--- GOES-16 ABI Test
+      if (index(Image%Level1b_Name, 'OR_ABI-L1b') > 0) then
+        Sensor%Sensor_Name = 'GOES-RU-IMAGER'
+        Sensor%Platform_Name = 'GOES-16'
+        Sensor%Spatial_Resolution_Meters = 2000
+        Sensor%WMO_Id = 186
+        Sensor%Instr_Const_File = 'goes16_instr.dat'
+        Sensor%Algo_Const_File = 'goes16_algo.dat'   ! Not needed anymore.  Dummy name.
+        Sensor%Geo_Sub_Satellite_Longitude = -89.5   ! Will need to be set at launch.
         Sensor%Geo_Sub_Satellite_Latitude = 0.0
         exit test_loop
       endif
@@ -1240,6 +1261,24 @@ module SENSOR_MODULE
          end if
          
       end if
+
+      if ( trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER') then
+         
+         Image%Number_Of_Elements =  5424
+         Image%Number_Of_Lines = 5424
+         
+         if ( nav % lon_lat_limits_set ) then
+            abi_config % data_path = trim(Image%Level1b_Path)
+            abi_config % file_base = trim (Image%level1b_name)
+            abi_config % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
+            abi_config % lat_range =[Nav%Lat_Min_Limit,Nav%Lat_Max_Limit]
+            call abi_segment_information_region ( abi_config , offset, count )
+         
+            Image%Number_Of_Elements =  count(1)
+            Image%Number_Of_Lines = count(2)
+         end if
+         
+      end if
    
       if (trim(Sensor%Sensor_Name) == 'VIIRS') then
          Image%Number_Of_Elements = 3200
@@ -1446,6 +1485,10 @@ module SENSOR_MODULE
 
        case('AHI')
          call READ_AHI_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
+
+       case('GOES-RU-IMAGER')
+         call READ_ABI_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
+
       end select
 
       !--- IFF data (all sensors same format)

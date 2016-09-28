@@ -262,9 +262,9 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Beta_Uncertainty => ACHA%Beta_Uncertainty
    Input%Pc_Uncertainty => ACHA%Pc_Uncertainty
    Input%Zc_Uncertainty => ACHA%Zc_Uncertainty
-   Input%Lower_Cloud_Pressure => ACHA%Pc_Lower_Cloud
-   Input%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
-   Input%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
+   Input%Lower_Cloud_Pressure => ACHA%Lower_Pc
+   Input%Lower_Cloud_Temperature => ACHA%Lower_Tc
+   Input%Lower_Cloud_Height => ACHA%Lower_Zc
    Input%Cdnc => Cdnc_DCOMP
    Input%Hcld => Hcld_DCOMP
    Input%LCL => LCL_Height_Nwp_Pix

@@ -387,7 +387,7 @@ module AWG_CLOUD_HEIGHT
   real:: R4_Dummy
   real:: Emiss_11um_Tropo
   integer:: Num_Obs
-  integer:: Cloud_Type
+  integer(kind=int1):: Cloud_Type
   integer:: Cloud_Phase
   integer:: Undetected_Cloud
   integer:: Sfc_Type_Forward_Model
@@ -627,14 +627,15 @@ module AWG_CLOUD_HEIGHT
                                         COUNT_MIN_LOWER,      &
                                         Box_Half_Width_Lower, &
                                         MISSING_VALUE_REAL4, &
-                                        Output%Lower_Cloud_Pressure)
+                                        Output%Lower_Pc)
 
-     call  COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Input%Elem_Idx_Nwp, &
+     call  COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Input%Cloud_Type, &
+                                        Input%Elem_Idx_Nwp, &
                                         Input%Line_Idx_Nwp, &
                                         MISSING_VALUE_REAL4, &
-                                        Output%Lower_Cloud_Pressure, &
-                                        Output%Lower_Cloud_Height, &
-                                        Output%Lower_Cloud_Temperature)
+                                        Output%Lower_Pc, &
+                                        Output%Lower_Zc, &
+                                        Output%Lower_Tc)
 
    endif
 
@@ -1117,7 +1118,7 @@ module AWG_CLOUD_HEIGHT
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
 
   if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Ts_Ap = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
+    Ts_Ap = Output%Lower_Tc(Elem_Idx,Line_Idx)
   else
     Ts_Ap = Tsfc_Est
   endif
@@ -1517,10 +1518,10 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
  if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x(4)
-    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx), &
-                               Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
-                               Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
+    Output%Lower_Tc(Elem_Idx,Line_Idx) = x(4)
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
+                               Output%Lower_Tc(Elem_Idx,Line_Idx), &
+                               Output%Lower_Zc(Elem_Idx,Line_Idx), &
                                Ilev,ierror,NWP_Profile_Inversion_Flag)
  endif
 
@@ -1529,7 +1530,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
  Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(2,2))
  Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(3,3))
-!Output%Lower_Cloud_Temperature_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   (NEED TO ADD THIS)
+ Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1618,9 +1619,12 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
                                             ABS_LAPSE_RATE_DT_DZ_UNCER
 
+ Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+                                            ABS_LAPSE_RATE_DT_DZ_UNCER
+
  !-- Compute Pressure Uncertainty
- Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
-                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
+ Output%LOWER_Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%LOWER_Pc(Elem_Idx,Line_Idx)
 
  !-----------------------------------------------------------------------------
  !--- quality flags of the retrieved parameters
@@ -1647,10 +1651,10 @@ else
  Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL4
 
  if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
-    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx),&
-                               Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx),&
-                               Output%Lower_Cloud_Height(Elem_Idx,Line_Idx),&
+    Output%Lower_Tc(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx),&
+                               Output%Lower_Tc(Elem_Idx,Line_Idx),&
+                               Output%Lower_Zc(Elem_Idx,Line_Idx),&
                                Ilev,ierror,NWP_Profile_Inversion_Flag)
  endif 
 
@@ -1881,7 +1885,7 @@ end subroutine KNOWING_Z_COMPUTE_T_P
 !-----------------------------------------------------------------
 subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
 
-     integer, intent(in):: Cloud_Type
+     integer (kind=int1), intent(in):: Cloud_Type
      real, intent(in):: T
      real, intent(out):: P
      real, intent(out):: Z
@@ -3809,7 +3813,7 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
                                         Count_Thresh, &
                                         Box_Width, &
                                         Missing, &
-                                        Lower_Cloud_Pressure)
+                                        Lower_Pc)
 
    integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
    integer(kind=int4), intent(in):: Interp_Flag
@@ -3818,7 +3822,7 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    integer(kind=int4), intent(in):: Count_Thresh
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
-   real(kind=real4), intent(out), dimension(:,:):: Lower_Cloud_Pressure
+   real(kind=real4), intent(out), dimension(:,:):: Lower_Pc
 
    integer(kind=int1), dimension(:,:), allocatable:: Mask1
    integer(kind=int1), dimension(:,:), allocatable:: Mask2
@@ -3826,7 +3830,7 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    integer:: Num_Lines
 
    !--- initialize output to missing
-   Lower_Cloud_Pressure = Missing
+   Lower_Pc = Missing
 
    !--- grab size of these arrays
    Num_Elements = size(Cloud_Pressure,1)
@@ -3841,7 +3845,7 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
 
    !--- set default to a static offset of surface pressure 
    where(Mask2 == 1 .and. Surface_Pressure /= Missing)
-          Lower_Cloud_Pressure = Surface_Pressure - PC_LOWER_CLOUD_OFFSET
+          Lower_Pc = Surface_Pressure - PC_LOWER_CLOUD_OFFSET
    end where
 
    !--- if no spatial interpolation is to be done, return
@@ -3862,7 +3866,7 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
 
    !--- call the spatial analysis routine
    call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
-                    Cloud_Pressure,Lower_Cloud_Pressure)
+                    Cloud_Pressure,Lower_Pc)
 
    !--- deallocate memory
    deallocate(Mask1)
@@ -3872,18 +3876,20 @@ end subroutine COMPUTE_LOWER_CLOUD_PRESSURE
 !------------------------------------------------------------------------------
 ! Compute lower cloud height and temperature from the lower cloud pressure
 !------------------------------------------------------------------------------
-subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
+subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Cld_Type, &
+                                                  Elem_Idx_Nwp, &
                                                   Line_Idx_Nwp, &
                                                   Missing, &
-                                                  Lower_Cloud_Pressure, &
-                                                  Lower_Cloud_Height, &
-                                                  Lower_Cloud_Temperature)
+                                                  Lower_Pc, &
+                                                  Lower_Zc, &
+                                                  Lower_Tc)
+   integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
    integer, intent(in), dimension(:,:):: Elem_Idx_Nwp
    integer, intent(in), dimension(:,:):: Line_Idx_Nwp
    real, intent(in):: Missing
-   real, intent(in), dimension(:,:):: Lower_Cloud_Pressure
-   real, intent(out), dimension(:,:):: Lower_Cloud_Temperature
-   real, intent(out), dimension(:,:):: Lower_Cloud_Height
+   real, intent(inout), dimension(:,:):: Lower_Pc
+   real, intent(out), dimension(:,:):: Lower_Tc
+   real, intent(out), dimension(:,:):: Lower_Zc
    integer:: Line_Idx
    integer:: Elem_Idx
    integer:: Num_Elements
@@ -3891,9 +3897,11 @@ subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
    integer:: Inwp
    integer:: Jnwp
    integer:: Ilev
+   integer:: Ierror
+   integer:: NWP_Profile_Inversion_Flag
 
-   Num_Elements = size(Lower_Cloud_Pressure,1)
-   Num_Lines = size(Lower_Cloud_Pressure,2)
+   Num_Elements = size(Lower_Pc,1)
+   Num_Lines = size(Lower_Pc,2)
 
    !----------------------------------------------------------------
    !  Compute Pressure and Temperature
@@ -3905,12 +3913,21 @@ subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
        Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
        Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
 
-       if (Inwp <= 0 .or. Jnwp <= 0 .or. Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == Missing) cycle
+       if (Inwp <= 0 .or. Jnwp <= 0 .or. Lower_Pc(Elem_Idx,Line_Idx) == Missing) cycle
 
-          call KNOWING_P_COMPUTE_T_Z(Lower_Cloud_Pressure(Elem_Idx,Line_Idx),    &
-                                     Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
-                                     Lower_Cloud_Height(Elem_Idx,Line_Idx),      &
+          call KNOWING_P_COMPUTE_T_Z(Lower_Pc(Elem_Idx,Line_Idx),    &
+                                     Lower_Tc(Elem_Idx,Line_Idx), &
+                                     Lower_Zc(Elem_Idx,Line_Idx),      &
                                      Ilev)
+
+          !--- you have re-interpoalte in temperature-space to account for
+          !--- inversion logic
+!         call KNOWING_T_COMPUTE_P_Z(Cld_Type(Elem_Idx,Line_Idx), &
+!                                    Lower_Pc(Elem_Idx,Line_Idx),  &
+!                                    Lower_Tc(Elem_Idx,Line_Idx), &
+!                                    Lower_Zc(Elem_Idx,Line_Idx), &
+!                                    Ilev,ierror,NWP_Profile_Inversion_Flag)
+
        end do Element_Loop
    end do Line_loop
 

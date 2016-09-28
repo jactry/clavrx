@@ -198,9 +198,12 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Beta_Uncertainty
    real, dimension(:,:), pointer:: Pc_Uncertainty
    real, dimension(:,:), pointer:: Zc_Uncertainty
-   real, dimension(:,:), pointer:: Lower_Cloud_Pressure
-   real, dimension(:,:), pointer:: Lower_Cloud_Temperature
-   real, dimension(:,:), pointer:: Lower_Cloud_Height
+   real, dimension(:,:), pointer:: Lower_Tc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Zc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Pc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Pc
+   real, dimension(:,:), pointer:: Lower_Tc
+   real, dimension(:,:), pointer:: Lower_Zc
    real, dimension(:,:), pointer:: Cost
    real, dimension(:,:), pointer:: Total_Cloud_Fraction
    real, dimension(:,:), pointer:: Total_Cloud_Fraction_Uncer

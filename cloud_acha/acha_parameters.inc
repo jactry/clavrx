@@ -65,7 +65,7 @@
  integer, private, parameter :: USE_LOWER_INTERP_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
  integer (kind=int4), parameter:: COUNT_MIN_LOWER = 3 !5
  integer (kind=int4), parameter:: LOWER_BOX_WIDTH_KM = 200 !200
- real(kind=real4), parameter, private:: PC_LOWER_CLOUD_OFFSET = 200.0  !hpa
+ real(kind=real4), parameter, private:: TC_LOWER_CLOUD_OFFSET = 10.0  !K
 
  !---------------------------------------------------------------------
  ! retrieval specific parameters

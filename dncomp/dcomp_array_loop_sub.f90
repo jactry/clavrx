@@ -69,6 +69,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
   
    logical  , allocatable :: cloud_array(:,:)
    logical  , allocatable :: obs_array(:,:)
+   logical  , allocatable :: obs_and_acha_array(:,:)
    logical  , allocatable :: water_phase_array(:,:)
    
    integer ( kind = int2)  , allocatable :: info_flag ( :,:)
@@ -97,8 +98,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real ( kind = real4 ) :: alb_unc_sfc(N_CHAN)
    real ( kind = real4 ) :: rad_to_refl_factor
    
-   real, parameter :: SAT_ZEN_MAX = 75.
-   real, parameter :: SOL_ZEN_MAX = 75.
+   real, parameter :: SAT_ZEN_MAX = 70.
+   real, parameter :: SOL_ZEN_MAX = 70.
    real, parameter :: PI = 4. * ATAN(1.)
    
    real ( kind = real4) :: ALBEDO_OCEAN (N_CHAN)
@@ -140,7 +141,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    
    allocate ( obs_array ( dim_1 , dim_2 ) &
-                  ,  cloud_array ( dim_1 , dim_2 ) )
+                  ,  cloud_array ( dim_1 , dim_2 ) , obs_and_acha_array ( dim_1 , dim_2 ) )
    allocate ( water_phase_array (  dim_1 , dim_2 ) )	
    allocate ( air_mass_array  ( dim_1 , dim_2 ) )		   
    
@@ -148,15 +149,16 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    air_mass_array = 1.0 / cos (input % sat % d * PI / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
       
    obs_array = input % is_valid % d   &
-                       & .and. input % sat % d <= sat_zen_max &
-                       & .and. input % sol % d <= sol_zen_max &
+                       & .and. input % sat % d <= SAT_ZEN_MAX &
+                       & .and. input % sol % d <= SOL_ZEN_MAX &
                        & .and. input % refl (1) % d  >= 0. &
                        & .and. air_mass_array >= 2.
-	 
-   cloud_array =  obs_array &
+	
+   obs_and_acha_array =  obs_array .and. input % cloud_temp % d > 10 
+    
+   cloud_array =  obs_and_acha_array &
                         & .and. ( input % cloud_mask % d == EM_cloud_mask % CLOUDY &
-                        & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) &
-                        & .and. input % cloud_temp % d > 10 
+                        & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) 
      
    water_phase_array = input % cloud_type % d == EM_cloud_type % FOG &
                         &  .or. input % cloud_type % d == EM_cloud_type % WATER &
@@ -169,13 +171,18 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    
    output = dncomp_out_type ( dim_1, dim_2 )
+   
+   
+   output % cod % d  = -999.
+   output % cps % d  =  -999.   
+   output % cod_unc % d  = -999.
+   output % ref_unc % d  = -999.
+   output % cld_trn_sol % d  = -999.  
+   output % cld_trn_obs % d  = -999.
+   output % cld_alb % d   =  -999.
+   output % cld_sph_alb % d   = -999.
+   
 
-   where ( obs_array .and. .not. cloud_array )
-      output % cld_trn_sol % d   =  1. 
-      output % cld_trn_obs % d   =  1.  
-      output % cld_alb % d       =  0.
-      output % cld_sph_alb % d   =  0.   
-   end where
     
    allocate ( info_flag ( dim_1, dim_2))
    allocate ( quality_flag ( dim_1, dim_2))
@@ -230,7 +237,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
          
-   
+         
          if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
          
          ! - set aliases
@@ -241,7 +248,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          sat_zen    =  input % sat % d (elem_idx,line_idx)
          rel_azi    =  input % azi % d (elem_idx,line_idx)
          ozone_dobson = input % ozone_nwp % d (elem_idx,line_idx)
-                  
+         
          ! - compute transmission 
               
          loop_chn: do chn_idx = 1 , 40
@@ -356,6 +363,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
            
          end if
          
+         
+         
          output % cod % d (elem_idx,line_idx) = dcomp_out % cod
          output % cps % d (elem_idx, line_idx) = dcomp_out % cps 
      
@@ -462,6 +471,22 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
           output % iwp % d(1:dim_1_w,1:dim_2_w) =  (output % cod % d(1:dim_1_w,1:dim_2_w)  ** (1/0.84) ) / 0.065 
    end where
    
+   where ( obs_array .and. .not. cloud_array )
+      output % cld_trn_sol % d   =  1.0 
+      output % cld_trn_obs % d   =  1.0  
+      output % cld_alb % d       =  0.0
+      output % cld_sph_alb % d   =  0.0  
+      output % cod % d           =  0.0
+      output % cps % d           =  -999.0
+   end where
+   
+ !  where ( output % cod % d .lt. (-1.)  )
+ !     output % cld_trn_sol % d   =  -999.
+ !     output % cld_trn_obs % d   =  -999.
+ !     output % cld_alb % d       =  -999.
+ !     output % cld_sph_alb % d   =  -999.
+ !  end where
+   
       
    output % quality % d = quality_flag
    output % info % d = info_flag
@@ -481,14 +506,21 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       end if
      
    deallocate ( obs_array &
-	               ,  cloud_array  )
+	               ,  cloud_array, obs_and_acha_array  )
    deallocate ( water_phase_array )	
 	  
    deallocate ( air_mass_array ) 	
    
-   output % version = '$Id$'	  
+   output % version = '$Id$'	
    
-
+   contains
+   
+   subroutine set_to_missing( output  )
+      type (dncomp_out_type), intent(inout) :: output
+      
+      
+      
+   end subroutine set_to_missing
 end subroutine dcomp_array_loop
 
 

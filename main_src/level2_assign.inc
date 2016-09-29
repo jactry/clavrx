@@ -301,14 +301,6 @@ case("cld_press_base_acha")
    if (allocated ( ACHA%Pc_Base)) then
       data_dim2_dtype_r4 = ACHA%Pc_Base(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
-case("cld_height_lower_acha")
-   if (allocated ( ACHA%Zc_Lower_Cloud)) then
-      data_dim2_dtype_r4 = ACHA%Zc_Lower_Cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
-case("cld_pressure_lower_acha")
-   if (allocated ( ACHA%Pc_Lower_Cloud)) then
-      data_dim2_dtype_r4 = ACHA%Pc_Lower_Cloud(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
-   end if
 case("cld_altitude_acha")
    if (allocated ( acha%alt)) then
       data_dim2_dtype_r4 = acha%alt(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)

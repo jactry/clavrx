@@ -68,7 +68,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK):$(BASELINEMASK)
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -92,7 +92,7 @@ CC = gcc
 .PHONY: all clean distclean
 
 #Default target is to build all executables.
-all: dncomp clavrxorb comp_asc_des_level2b drive_subset_level2b
+all: dncomp clavrxorb  drive_subset_level2b create_level2b
 
 ################################# Executables ##################################
 
@@ -153,6 +153,7 @@ clavrxorb_objs = process_clavrx.o \
                  nb_cloud_mask_clavrx_services_module.o \
 		 nb_cloud_mask_module.o \
                  nb_cloud_mask_addons_module.o \
+                 baseline_cloud_mask.o \
                  move_bytes.o \
 	         mreadf.o \
 	         modis_module.o \
@@ -211,6 +212,11 @@ comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
                              string_functions.o \
                             constant.o
 
+
+create_level2b_objs = create_level2b.o \
+                            file_tools.o  \
+                            cx_hdf_read_mod.o
+
 #Level2b subsetting routines
 drive_subset_level2b_objs = drive_subset_level2b.o \
 		                    hdf_params.o \
@@ -239,6 +245,9 @@ endif
 comp_asc_des_level2b: $(comp_asc_des_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/comp_asc_des_level2b $(comp_asc_des_level2b_objs) $(hdflibs)
 
+create_level2b: $(create_level2b_objs) bindir
+	$(fc) $(ldflags) -o ../clavrx_bin/create_level2b $(create_level2b_objs) $(hdflibs)
+   
 drive_subset_level2b: $(drive_subset_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/drive_subset_level2b $(drive_subset_level2b_objs) $(hdflibs)
 version.inc: Makefile
@@ -306,6 +315,7 @@ calibration_constants.o: calibration_constants.f90 constant.o
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
+create_level2b.o: create_level2b.o file_tools.o cx_hdf_read_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
@@ -405,6 +415,8 @@ nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud
 #universal_cloud_type.o:$(CTYPE)/universal_cloud_type.f90 constant.o pixel_common.o
 ir_cloud_type_baum_module.o: ir_cloud_type_baum_module.f90 constant.o pixel_common.o
 
+baseline_cloud_mask.o: $(BASELINEMASK)/baseline_cloud_mask.f90 pixel_common.o constant.o nwp_common.o rtm_common.o planck.o clavrx_message_module.o calibration_constants.o
+
 sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o clavrx_sst_module.o clavrx_olr_module.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
               sfc_prop_umd.o sfc_emiss.o ir_cloud_type_baum_module.o cloud_type_bridge_module.o \
@@ -413,7 +425,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
-              nb_cloud_mask_clavrx_bridge_module.o ncep_reanalysis.o date_tools_mod.o \
+              nb_cloud_mask_clavrx_bridge_module.o baseline_cloud_mask.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o \
@@ -495,7 +507,7 @@ clean:
 
 # This target also removes all the executables.
 distclean: clean
-	-rm ../clavrx_bin/clavrxorb ../clavrx_bin/comp_asc_des_level2b ../clavrx_bin/drive_subset_level2b 
+	-rm ../clavrx_bin/clavrxorb ../clavrx_bin/comp_asc_des_level2b ../clavrx_bin/drive_subset_level2b  ../clavrx_bin/create_level2
 
 #------------------------------------------------------------------------
 # To put all necessary files in one file ready for distribution,

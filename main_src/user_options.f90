@@ -927,7 +927,7 @@ contains
       case ('MODIS-MAC')
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('AHI')
-          filename  = 'modis_default_nb_cloud_mask_lut.nc'   
+          filename  = 'ahi_default_nb_cloud_mask_lut.nc'
           
       case default 
          print*,'sensor ',SensorName, ' is not set in user_options.f90:  Inform andi.walther@ssec.wisc.edu'  

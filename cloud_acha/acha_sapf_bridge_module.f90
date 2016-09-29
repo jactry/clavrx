@@ -390,7 +390,7 @@ module ACHA_CLAVRX_BRIDGE_MOD
 
    Input%Number_of_Elements = Ctxt_ACHA%SegmentInfo%Current_Column_Size
    Input%Number_of_Lines = Ctxt_ACHA%SegmentInfo%Current_Row_Size
-   Input%Num_Line_Max = Ctxt_ACHA%SegmentInfo%Current_Row_Size
+   Input%Num_Line_Max = Ctxt_ACHA%SegmentInfo%Allocate_Rows
    Input%Process_Undetected_Cloud_Flag = sym%NO
    Input%Smooth_Nwp_Fields_Flag = sym%YES
    CALL NFIP_CloudHeight_AchaMode(Ctxt_ACHA%CLOUD_HEIGHT_Src1_T00, Input%ACHA_Mode_Flag_In)
@@ -529,10 +529,10 @@ module ACHA_CLAVRX_BRIDGE_MOD
 !
 ! And then do this
 
-    allocate(Input%Surface_Temperature(Input%Number_of_Elements,Input%Number_of_Lines ))
-    allocate(Input%Surface_Air_Temperature(Input%Number_of_Elements,Input%Number_of_Lines ))
-    allocate(Input%Tropopause_Temperature(Input%Number_of_Elements,Input%Number_of_Lines ))
-    allocate(Input%Surface_Pressure(Input%Number_of_Elements,Input%Number_of_Lines ))
+    allocate(Input%Surface_Temperature(Input%Number_of_Elements,Input%Num_Line_Max ))
+    allocate(Input%Surface_Air_Temperature(Input%Number_of_Elements,Input%Num_Line_Max ))
+    allocate(Input%Tropopause_Temperature(Input%Number_of_Elements,Input%Num_Line_Max ))
+    allocate(Input%Surface_Pressure(Input%Number_of_Elements,Input%Num_Line_Max ))
 
       !Fill the pixel level NWP stuff for now
       CALL ACHA_NWP_Fill(Input)
@@ -880,7 +880,7 @@ subroutine SUPERCOOLED_CLOUD_PROBABILITY(Input, Output,&
 
   !--- intialize local variables using global variables
   Number_Of_Elements = Input%Number_Of_Elements
-  Number_Of_Lines = Input%Num_Line_Max
+  Number_Of_Lines = Input%Number_Of_Lines
 
   !--- initialize to Missing
   Supercooled_Cld_Prob = Missing_Value_Real4

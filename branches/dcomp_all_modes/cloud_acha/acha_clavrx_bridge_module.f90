@@ -67,8 +67,8 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output) ! , Diag)
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output) ! , Diag)
+   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -152,6 +152,11 @@ module ACHA_CLAVRX_BRIDGE
      Input%Rad_Clear_12um =>  null()
      Input%Rad_Clear_133um =>  null()
      Input%Surface_Emissivity_39um =>  null()
+     Input%Surface_Emissivity_11um =>  null()
+     Input%Surface_Emissivity_12um =>  null()
+     Input%Surface_Emissivity_85um =>  null()
+     Input%Surface_Emissivity_133um =>  null()
+     Input%Surface_Emissivity_67um =>  null()
      Input%Snow_Class =>  null()
      Input%Surface_Type =>  null()
      Input%Cloud_Mask =>  null()
@@ -194,9 +199,9 @@ module ACHA_CLAVRX_BRIDGE
      Output%Beta_Uncertainty =>  null()
      Output%Pc_Uncertainty =>  null()
      Output%Zc_Uncertainty =>  null()
-     Output%Lower_Cloud_Pressure =>  null()
-     Output%Lower_Cloud_Temperature =>  null()
-     Output%Lower_Cloud_Height =>  null()
+     Output%Lower_Pc =>  null()
+     Output%Lower_Tc =>  null()
+     Output%Lower_Zc =>  null()
      Output%Cost =>  null()
      Output%Total_Cloud_Fraction =>  null()
      Output%Total_Cloud_Fraction_Uncer =>  null()
@@ -296,9 +301,12 @@ module ACHA_CLAVRX_BRIDGE
    Output%Beta_Uncertainty => ACHA%Beta_Uncertainty
    Output%Pc_Uncertainty => ACHA%Pc_Uncertainty
    Output%Zc_Uncertainty => ACHA%Zc_Uncertainty
-   Output%Lower_Cloud_Pressure => ACHA%Pc_Lower_Cloud
-   Output%Lower_Cloud_Temperature => ACHA%Tc_Lower_Cloud
-   Output%Lower_Cloud_Height => ACHA%Zc_Lower_Cloud
+   Output%Lower_Tc_Uncertainty => ACHA%Lower_Tc_Uncertainty
+   Output%Lower_Zc_Uncertainty => ACHA%Lower_Zc_Uncertainty
+   Output%Lower_Pc_Uncertainty => ACHA%Lower_Pc_Uncertainty
+   Output%Lower_Pc => ACHA%Lower_Pc
+   Output%Lower_Tc => ACHA%Lower_Tc
+   Output%Lower_Zc => ACHA%Lower_Zc
    Output%Cost  => ACHA%Cost
    Output%Total_Cloud_Fraction => Cloud_Fraction
    Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer
@@ -360,6 +368,11 @@ module ACHA_CLAVRX_BRIDGE
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
    Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
+   Input%Surface_Emissivity_11um => ch(31)%Sfc_Emiss
+   Input%Surface_Emissivity_12um => ch(32)%Sfc_Emiss
+   Input%Surface_Emissivity_85um => ch(29)%Sfc_Emiss
+   Input%Surface_Emissivity_133um => ch(33)%Sfc_Emiss
+   Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
    Input%Cloud_Mask => Cld_Mask

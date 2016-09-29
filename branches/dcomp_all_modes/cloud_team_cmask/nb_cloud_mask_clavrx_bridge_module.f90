@@ -72,6 +72,8 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Ref_Uni_ChI1, &
        Bt_Uni_ChI4, &
        Bt_Uni_ChI5, &
+       Tsfc_Nwp_Pix, &
+       Tpw_Nwp_Pix, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -156,7 +158,7 @@ contains
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &
                                           Input, &
-                                          Output) !, &
+                                          Output)
                                           !Diag)   !optional
 
          call SET_OUTPUT(i,j)
@@ -378,6 +380,9 @@ contains
       Input%Zsfc = Sfc%Zsfc(i,j)
       Input%Solar_Contamination_Mask = Solar_Contamination_Mask(i,j)
       Input%Sfc_Type = Sfc%Sfc_Type(i,j)
+      Input%Sfc_Temp = Tsfc_Nwp_Pix(i,j)
+      Input%Path_Tpw = Tpw_Nwp_Pix(i,j) / Geo%Coszen(i,j)
+
 
       if (Input%Chan_On_041um == sym%YES)  then 
         Input%Ref_041um = ch(8)%Ref_Toa(i,j)

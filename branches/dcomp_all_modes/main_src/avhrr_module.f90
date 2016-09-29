@@ -3174,10 +3174,6 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
 
  endif
 
- !--- if channels missing, return
- if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
- if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return
- if (Sensor%Chan_On_Flag_Default(6) == sym%NO) return
 
  !--- pre-KLM logic
  if (AVHRR_KLM_Flag == sym%NO) then
@@ -3256,6 +3252,8 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
 
  endif
 
+ !--- save into these global arrays that can be output and/or used by other
+ !--- applications - like looking for solar contamination
  Ch1_Counts = Chan_Counts_Avhrr_Sg(1,:,:)
  Ch2_Counts = Chan_Counts_Avhrr_Sg(2,:,:)
  Ch6_Counts = Chan_Counts_Avhrr_Sg(3,:,:)

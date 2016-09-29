@@ -115,19 +115,19 @@
    use CLAVRX_SST_MODULE
    
    use RT_UTILITIES, only: &
-        rtm_nvzen &
-      , setup_solar_rtm &
-      , map_nwp_rtm  &
-      , create_temp_nwp_vectors  &
-      , destroy_temp_nwp_vectors &
-      , get_pixel_nwp_rtm &
-      , allocate_rtm &
-      , deallocate_rtm &
-      , deallocate_rtm_vars &
-      , deallocate_rtm_cell  
+        RTM_NVZEN &
+      , SETUP_SOLAR_RTM &
+      , MAP_NWP_RTM &
+      , CREATE_TEMP_NWP_VECTORS &
+      , DESTROY_TEMP_NWP_VECTORS &
+      , GET_PIXEL_NWP_RTM &
+      , ALLOCATE_RTM &
+      , DEALLOCATE_RTM &
+      , DEALLOCATE_RTM_VARS &
+      , DEALLOCATE_RTM_CELL 
       
-   use RTM_COMMON,only: &
-      nlevels_rtm
+   use RTM_COMMON, only: &
+      NLEVELS_RTM
  
    
    use SFC_EMISS
@@ -148,16 +148,19 @@
    use SENSOR_MODULE
    use USER_OPTIONS
    use CLAVRX_MESSAGE_MODULE, only: &
-      mesg &
-      , verb_lev
+      MESG &
+      , VERB_LEV
    use CLOUD_TYPE_BRIDGE_MODULE
    use SIMPLE_COD
  
-   use dnb_retrievals_mod, only: &
+   use DNB_RETRIEVALS_MOD, only: &
       COMPUTE_LUNAR_REFLECTANCE
    
    use cx_conf_mod   
       
+   use BASELINE_CLOUD_MASK, only: &
+      BASELINE_CLOUD_MASK_MAIN
+
    implicit none
  
    !***********************************************************************
@@ -498,10 +501,10 @@
       !------------------------------------------------------------------
 
       ! Made ileap consistant with oisst call.
-      ileap = leap_year_Fct(int(Image%Start_Year, kind=int4))
+      ileap = int(leap_year_Fct(int(Image%Start_Year, kind=int4)),kind=int1)
 
-      Month = COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
-      Day_Of_Month = COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4))
+      Month = int(COMPUTE_MONTH(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4)),kind=int2)
+      Day_Of_Month = int(COMPUTE_DAY(int(Image%Start_Doy, kind=int4), int(ileap, kind=int4)),kind=int2)
 
 
       !*************************************************************************
@@ -757,7 +760,7 @@
                   end where
        
             end if
-         
+
          End_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
          !--- update time summation for level-1b processing
@@ -991,8 +994,24 @@
             Segment_Time_Point_Seconds(4) =  Segment_Time_Point_Seconds(4) + &
                &  60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
-            !--- compute the glint mask
-            call COMPUTE_GLINT()
+            !------------------------------------------------------------------------------
+            ! compute glint masks for use in cloud detection
+            !------------------------------------------------------------------------------
+
+            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+
+             !--- solar glint mask
+             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+               call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
+             endif
+
+             !--- lunar glint mask
+             if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+               call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(44)%Ref_Lunar_Toa,  &
+                                  Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
+             endif
+
+            endif
 
             !*******************************************************************
             ! Marker: Generate pixel-level products
@@ -1030,8 +1049,10 @@
                if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call NB_CLOUD_MASK_BRIDGE(Segment_Number)
+                  elseif (Cloud_Mask_Bayesian_Flag == sym%NO) then
+                     call BASELINE_CLOUD_MASK_MAIN (Segment_Number)
                   else
-                     print *, "Only the Bayesian Cloud Mask is available, check selection"
+                     print *, "Only the Bayesian and Baseline Cloud Masks are available, check selection"
                      stop 
                   end if
                end if

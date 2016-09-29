@@ -37,6 +37,7 @@ GetOptions(
    'hdf5root=s',
    'netcdflib=s',
    'cmask_dir=s',
+   'baselinemask_dir=s',
    'ctype_dir=s',
    'acha_dir=s',
    'dncomp_dir=s',
@@ -313,6 +314,24 @@ else
       print CONFIG "export CMASK=../cloud_team_cmask/\n";
 
 }
+
+if (exists($opt{'baselinemask_dir'}))
+{
+   if (length($opt{'baselinemask_dir'}))
+   {
+      print CONFIG "export BASELINEMASK=$opt{'baselinemask_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export BASELINEMASK=../baseline_cloud_mask/\n";
+   }
+}
+else
+{
+      print CONFIG "export BASELINEMASK=../baseline_cloud_mask/\n";
+
+}
+
 if (exists($opt{'ctype_dir'}))
 {
    if (length($opt{'ctype_dir'}))
@@ -437,8 +456,13 @@ Command line options:
          Default is /usr/local/netcdf/lib.
 
   --cmask_dir=<directory>
-         Path to the directory where cloud mask files are stored.
-         Default is ../jpss_nbvcm/. This is an optional flag in case your
+         Path to the directory where bayesian cloud mask files are stored.
+         Default is ../cloud_team_cmask/. This is an optional flag in case your
+         cloud mask code is in a different location.
+
+  --baselinemask_dir=<directory>
+         Path to the directory where baseline cloud mask files are stored.
+         Default is ../baseline_cloud_mask/. This is an optional flag in case your
          cloud mask code is in a different location.
 
   --ctype_dir=<directory>

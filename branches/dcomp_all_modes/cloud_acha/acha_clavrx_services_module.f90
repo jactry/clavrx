@@ -118,7 +118,12 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Rad_Clear_11um
  real, dimension(:,:), pointer:: Rad_Clear_12um
  real, dimension(:,:), pointer:: Rad_Clear_133um
- real, dimension(:,:), pointer:: Surface_Emissivity_39um 
+ real, dimension(:,:), pointer:: Surface_Emissivity_39um
+ real, dimension(:,:), pointer:: Surface_Emissivity_11um
+ real, dimension(:,:), pointer:: Surface_Emissivity_12um
+ real, dimension(:,:), pointer:: Surface_Emissivity_85um
+ real, dimension(:,:), pointer:: Surface_Emissivity_133um
+ real, dimension(:,:), pointer:: Surface_Emissivity_67um 
  integer (kind=int1),dimension(:,:), pointer:: Snow_Class
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
@@ -193,9 +198,12 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Beta_Uncertainty
    real, dimension(:,:), pointer:: Pc_Uncertainty
    real, dimension(:,:), pointer:: Zc_Uncertainty
-   real, dimension(:,:), pointer:: Lower_Cloud_Pressure
-   real, dimension(:,:), pointer:: Lower_Cloud_Temperature
-   real, dimension(:,:), pointer:: Lower_Cloud_Height
+   real, dimension(:,:), pointer:: Lower_Tc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Zc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Pc_Uncertainty
+   real, dimension(:,:), pointer:: Lower_Pc
+   real, dimension(:,:), pointer:: Lower_Tc
+   real, dimension(:,:), pointer:: Lower_Zc
    real, dimension(:,:), pointer:: Cost
    real, dimension(:,:), pointer:: Total_Cloud_Fraction
    real, dimension(:,:), pointer:: Total_Cloud_Fraction_Uncer

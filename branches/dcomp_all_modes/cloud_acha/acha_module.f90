@@ -74,8 +74,7 @@ module AWG_CLOUD_HEIGHT
   public:: SET_ACHA_VERSION
   public:: LOCAL_LINEAR_RADIATIVE_CENTER
 
-  private:: COMPUTE_LOWER_CLOUD_PRESSURE
-  private:: COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
+  private:: COMPUTE_LOWER_CLOUD_TEMPERATURE
   private:: KNOWING_P_COMPUTE_T_Z
   private:: KNOWING_T_COMPUTE_P_Z
   private:: KNOWING_Z_COMPUTE_T_P
@@ -90,8 +89,6 @@ module AWG_CLOUD_HEIGHT
 
   private:: DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
   private:: INTERPOLATE_PROFILE_ACHA
-  private:: INTERPOLATE_NWP_ACHA
-  private:: DETERMINE_INVERSION_LEVEL
   private:: DETERMINE_OPAQUE_CLOUD_HEIGHT
   private:: COMPUTE_REFERENCE_LEVEL_EMISSIVITY
   private:: COMPUTE_STANDARD_DEVIATION
@@ -193,6 +190,14 @@ module AWG_CLOUD_HEIGHT
                            -4.7, -4.7, -4.8, -4.5, -4.8, -6.0, -7.5, &
                            -3.9, -4.0, -4.2, -3.9, -3.9, -5.3, -7.3, &
                            -3.3, -3.4, -3.7, -3.6, -3.5, -5.0, -7.3/), (/nts,ntcs/))
+
+  ! surface emissivity
+  real(kind=real4),private:: Emiss_Sfc_85um
+  real(kind=real4),private:: Emiss_Sfc_11um
+  real(kind=real4),private:: Emiss_Sfc_12um
+  real(kind=real4),private:: Emiss_Sfc_133um
+  real(kind=real4),private:: Emiss_Sfc_67um
+
   contains 
 
 !------------------------------------------------------------------------------
@@ -309,72 +314,44 @@ module AWG_CLOUD_HEIGHT
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
   real:: Lapse_Rate
-  real:: Abs_Lapse_Rate
   real:: Abs_Lapse_Rate_dP_dZ
   real:: Delta_Cld_Temp_Sfc_Temp
 
   real:: Convergence_Criteria
 
+  real:: Bs
+  real:: Rad_Atm
+  real:: Trans_Atm
+
   !--- ch27 variables
   real:: Rad_Ac_67um
-  real:: Rad_Alc_67um
   real:: Trans_Ac_67um
-  real:: Trans_Alc_67um
   real:: Trans_Bc_67um
   real:: Rad_Clear_67um
-  real:: Bc_67um
-  real:: Blc_67um
-  real:: Bs_67um
-  real:: Bt_Clear_67um
 
   !--- ch29 variables
   real:: Rad_Ac_85um
-  real:: Rad_Alc_85um
   real:: Trans_Ac_85um
-  real:: Trans_Alc_85um
   real:: Trans_Bc_85um
   real:: Rad_Clear_85um
-  real:: Bc_85um
-  real:: Blc_85um
-  real:: Bs_85um
-  real:: Bt_Clear_85um
 
   !--- ch31 variables
   real:: Rad_Ac_11um
-  real:: Rad_Alc_11um
   real:: Trans_Ac_11um
-  real:: Trans_Alc_11um
   real:: Trans_Bc_11um
   real:: Rad_Clear_11um
-  real:: Bc_11um
-  real:: Blc_11um
-  real:: Bs_11um
-  real:: Bt_Clear_11um
-  real:: Bt_11um_Lrc
 
   !--- ch32 variables
   real:: Rad_Ac_12um
-  real:: Rad_Alc_12um
   real:: Trans_Ac_12um
-  real:: Trans_Alc_12um
   real:: Trans_Bc_12um
   real:: Rad_Clear_12um
-  real:: Bc_12um
-  real:: Blc_12um
-  real:: Bs_12um
-  real:: Bt_Clear_12um
 
   !--- ch33 variables
   real:: Rad_Ac_133um
-  real:: Rad_Alc_133um
   real:: Trans_Ac_133um
-  real:: Trans_Alc_133um
   real:: Trans_Bc_133um
   real:: Rad_Clear_133um
-  real:: Bc_133um
-  real:: Blc_133um
-  real:: Bs_133um
-  real:: Bt_Clear_133um
 
   real:: a_Beta_11um_133um_fit
   real:: b_Beta_11um_133um_fit
@@ -409,7 +386,7 @@ module AWG_CLOUD_HEIGHT
   real:: R4_Dummy
   real:: Emiss_11um_Tropo
   integer:: Num_Obs
-  integer:: Cloud_Type
+  integer(kind=int1):: Cloud_Type
   integer:: Cloud_Phase
   integer:: Undetected_Cloud
   integer:: Sfc_Type_Forward_Model
@@ -443,14 +420,12 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
   integer(kind=int4), allocatable, dimension(:,:):: Line_Idx_LRC
   integer(kind=int1), allocatable, dimension(:,:):: Skip_LRC_Mask
+  real (kind=real4):: Bt_11um_Lrc
   real (kind=real4):: Bt_11um_Std
   real (kind=real4):: Btd_11um_67um_Std
   real (kind=real4):: Btd_11um_85um_Std
   real (kind=real4):: Btd_11um_12um_Std
   real (kind=real4):: Btd_11um_133um_Std
-
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
 
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
@@ -575,10 +550,6 @@ module AWG_CLOUD_HEIGHT
   Output%OE_Qf = 0
   Output%Qf = 0
   Meta_Data_Flags = 0
-  Bc_67um = 0
-  Bc_85um = 0
-  Bc_11um = 0
-  Bc_12um = 0
   Output%Inversion_Flag = 0
   
   !--------------------------------------------------------------------------
@@ -645,24 +616,19 @@ module AWG_CLOUD_HEIGHT
   
    !--------------------------------------------------------------------------
    ! on the third pass, spatially interpolate water cloud temperature
+   ! note, this first guess is stored in the Output Variable but it is
+   ! over-written during the retrieval
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
 
-     call  COMPUTE_LOWER_CLOUD_PRESSURE(Input%Cloud_Type, &
+     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Input%Cloud_Type, &
                                         USE_LOWER_INTERP_FLAG, &
-                                        Input%Surface_Pressure, &
-                                        Output%Pc,&
+                                        Input%Surface_Temperature, &
+                                        Output%Tc,&
                                         COUNT_MIN_LOWER,      &
                                         Box_Half_Width_Lower, &
                                         MISSING_VALUE_REAL4, &
-                                        Output%Lower_Cloud_Pressure)
-
-     call  COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Input%Elem_Idx_Nwp, &
-                                        Input%Line_Idx_Nwp, &
-                                        MISSING_VALUE_REAL4, &
-                                        Output%Lower_Cloud_Pressure, &
-                                        Output%Lower_Cloud_Height, &
-                                        Output%Lower_Cloud_Temperature)
+                                        Output%Lower_Tc)
 
    endif
 
@@ -958,7 +924,7 @@ module AWG_CLOUD_HEIGHT
    endif
    if (Acha_Mode_Flag == 5) then
     Btd_11um_85um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_85um(i1:i2,j1:j2), &
-                                                  Input%Invalid_Data_Mask(i1:i2,j1:j2))
+                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
    if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
@@ -1142,10 +1108,12 @@ module AWG_CLOUD_HEIGHT
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
   !------------------------------------------------------------------------
+  Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
+
   if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Ts_Ap = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
+    Ts_Ap = Output%Lower_Tc(Elem_Idx,Line_Idx)
   else
-    Ts_Ap = Input%Surface_Temperature(Elem_Idx,Line_Idx)
+    Ts_Ap = Tsfc_Est
   endif
 
   !------------------------------------------------------------------------
@@ -1205,6 +1173,9 @@ module AWG_CLOUD_HEIGHT
     endif
   endif
 
+  !--- square the individual elements to convert to variances (not a matmul)
+  Sa = Sa**2
+
   if (lun_diag > 0) then 
     write(unit=lun_diag,fmt=*) "final Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
   endif
@@ -1218,12 +1189,10 @@ module AWG_CLOUD_HEIGHT
       (Cloud_Type == symbol%CIRRUS_TYPE .or. Cloud_Type == symbol%OVERLAP_TYPE)) then
 
       Tc_Ap_Imager = x_Ap(1)  !K
-      Sa_Tc_Imager = sqrt(Sa(1,1))  !K
+      Sa_Tc_Imager = Sa(1,1)  !K^2
       Tc_Ap_Sounder = Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)  !K
-      Sa_Tc_Sounder = 10.0    !5.0  K
-
+      Sa_Tc_Sounder = 10.0**2    !K^2
       Sa(1,1) =   1.0/(1.0/Sa_Tc_Imager + 1.0/Sa_Tc_Sounder)
-
       x_Ap(1) = (Tc_Ap_Imager/Sa_Tc_Imager + Tc_Ap_Sounder/Sa_Tc_Sounder) *  Sa(1,1)
 
     endif
@@ -1234,9 +1203,6 @@ module AWG_CLOUD_HEIGHT
    write(unit=lun_diag,fmt=*) "S_a after sounder  = ", Sa(1,1), Sa(2,2), Sa(3,3), Sa(4,4)
   endif
 
-  !--- square the individual elements to convert to variances (not a matmul)
-  Sa = Sa**2
-
   !--- compute inverse of Sa matrix
   Singular_Flag =  INVERT_MATRIX(Sa, Sa_Inv, Num_Param)
   if (Singular_Flag == 1) then
@@ -1246,107 +1212,26 @@ module AWG_CLOUD_HEIGHT
     exit
   endif
 
-!----------------------------------------------------------------------------
-! compute clear-sky radiances
-!-----------------------------------------------------------------------------
-
- !---------------------------------------------------------------------------
- !--- modify clear radiances to simuLate that from an opaque cloud at 200 mb
- !--- above the surface when a multi-layer situation is suspected
- !---------------------------------------------------------------------------
- if (Cloud_Type == symbol%OVERLAP_TYPE .and.  &
-    Output%Lower_Cloud_Pressure(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
-
-    if (lun_diag > 0) then
-       write(unit=lun_diag,fmt=*) "This pixel is following the multilayer cloud logic"
-    endif
-
-    Meta_Data_Flags(6) = symbol%YES
-    Tsfc_Est = Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx)
-
-    Rad_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
-
-    Trans_Alc_11um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
-
-    Blc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tsfc_Est)
-    Rad_Clear_11um = Rad_Alc_11um + Trans_Alc_11um*Blc_11um
-
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
-
-     Trans_Alc_12um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
-     Blc_12um = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Tsfc_Est)
-     Rad_Clear_12um = Rad_Alc_12um + Trans_Alc_12um*Blc_12um
+  !--------------------------------------------------
+  ! assign surface emissivity for non-overlap type
+  !--------------------------------------------------
+  Emiss_Sfc_85um = 1.0
+  Emiss_Sfc_11um = 1.0
+  Emiss_Sfc_12um = 1.0
+  Emiss_Sfc_133um = 1.0
+  Emiss_Sfc_67um = 1.0
+  if (Cloud_Type /= symbol%OVERLAP_TYPE) then
+     if (Input%Chan_On_85um == symbol%YES) Emiss_Sfc_85um = Input%Surface_Emissivity_85um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_11um == symbol%YES) Emiss_Sfc_11um = Input%Surface_Emissivity_11um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_12um == symbol%YES) Emiss_Sfc_12um = Input%Surface_Emissivity_12um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_133um == symbol%YES) Emiss_Sfc_133um = Input%Surface_Emissivity_133um(Elem_Idx,Line_Idx)
+     if (Input%Chan_On_67um == symbol%YES) Emiss_Sfc_67um = Input%Surface_Emissivity_67um(Elem_Idx,Line_Idx)
   endif
 
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-     Rad_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
-
-     Trans_Alc_133um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
-
-     Blc_133um = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Tsfc_Est)
-     Rad_Clear_133um = Rad_Alc_133um + Trans_Alc_133um*Blc_133um
-  endif
-
-  if (Acha_Mode_Flag == 5) then
-     Rad_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
-
-     Trans_Alc_85um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
-
-     Blc_85um = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Tsfc_Est)
-     Rad_Clear_85um = Rad_Alc_85um + Trans_Alc_85um*Blc_85um
-  endif
-
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
-
-     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Output%Lower_Cloud_Height(Elem_Idx,Line_Idx), &
-                               Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
-
-     Blc_67um = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Tsfc_Est)
-     Rad_Clear_67um = Rad_Alc_67um + Trans_Alc_67um*Blc_67um
-  endif
-
-
- else
-
- !---------------------------------------------------------------
- ! if not multi-layer, use existing clear sky radiances
- !---------------------------------------------------------------
-  if (lun_diag > 0) then
-     write(unit=lun_diag,fmt=*) "This pixel is NOT following the multilayer cloud logic"
-  endif
-
-  Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
-  Rad_Clear_11um = Input%Rad_Clear_11um(Elem_Idx,Line_Idx)
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag ==5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-      Rad_Clear_12um = Input%Rad_Clear_12um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-      Rad_Clear_133um = Input%Rad_Clear_133um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 5) then
-      Rad_Clear_85um = Input%Rad_Clear_85um(Elem_Idx,Line_Idx)
-  endif
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-      Rad_Clear_67um = Input%Rad_Clear_67um(Elem_Idx,Line_Idx)
-  endif
-
- endif
-
+  
 !----------------------------------------------------------------
 ! Determine the level of the highest inversion (0=if none)
 !----------------------------------------------------------------
-!Inver_Level_RTM = DETERMINE_INVERSION_LEVEL(Tropo_Level_RTM, Sfc_Level_RTM, Input%Surface_Air_Temperature(Elem_Idx,Line_Idx))
  call DETERMINE_INVERSION_CHARACTERISTICS(symbol%YES, &
                                           symbol%NO,  &
                                           Tropo_Level_RTM,              &
@@ -1374,7 +1259,7 @@ Retrieval_Loop: do
  Iter_Idx = Iter_Idx + 1
 
   !---------------------------------------------------------------------
-  ! estimate above cloud radiances and transmissions
+  ! estimate clear-sky radiative transfer terms used in forward model
   !---------------------------------------------------------------------
   Tc_Temp = x(1)
   Ts_Temp = x(4)
@@ -1382,7 +1267,7 @@ Retrieval_Loop: do
   call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
   call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
 
-  !--- compute above-cloud terms
+  !--- compute 11um radiative transfer terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
 
@@ -1390,18 +1275,22 @@ Retrieval_Loop: do
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
   Trans_Bc_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um) / &
-                             Trans_Ac_11um
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
 
-  Rad_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+  if (Trans_Ac_11um > epsilon(Trans_Ac_11um)) then
+     Trans_Bc_11um = Trans_Bc_11um / Trans_Ac_11um
+  endif
+
+  Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_11um)
  
-  Trans_Atm_11um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+  Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
-  Bc_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Tc_Temp)
-  Bs_11um = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
-  Rad_Clear_11um = Rad_Atm_11um + Trans_Atm_11um*Bs_11um    !what about emissivity?
+  Bs = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
 
+  Rad_Clear_11um = Rad_Atm + Trans_Atm*Emiss_Sfc_11um*Bs   
+
+  !--- compute 12um radiative transfer terms
   if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
@@ -1409,58 +1298,107 @@ Retrieval_Loop: do
      Trans_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
 
-    Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) / &
-                             Trans_Ac_12um
+     Trans_Bc_12um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um) 
+
+     if (Trans_Ac_12um > epsilon(Trans_Ac_12um)) then
+       Trans_Bc_12um = Trans_Bc_12um / Trans_Ac_12um
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                           Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_12um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_12um,Ts_Temp)
+
+     Rad_Clear_12um = Rad_Atm + Trans_Atm*Emiss_Sfc_12um*Bs
+
   endif
 
+  !--- 13.3um clear radiative transfer terms
   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-    Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
-    Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
 
-    Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) / &
-                            Trans_Ac_133um
+     Trans_Bc_133um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um) 
+
+     if (Trans_Ac_133um > epsilon(Trans_Ac_133um)) then
+       Trans_Bc_133um = Trans_Bc_133um / Trans_Ac_133um
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_133um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_133um,Ts_Temp)
+
+     Rad_Clear_133um = Rad_Atm + Trans_Atm*Emiss_Sfc_133um*Bs
+
+
   endif
 
   if (Acha_Mode_Flag == 5) then
-    Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
-    Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
 
-    Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um) / &
-                            Trans_Ac_85um
+     Trans_Bc_85um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
+
+     if (Trans_Ac_85um > epsilon(Trans_Ac_85um)) then
+       Trans_Bc_85um = Trans_Bc_85um / Trans_Ac_85um
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_85um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_85um,Ts_Temp)
+
+     Rad_Clear_85um = Rad_Atm + Trans_Atm*Emiss_Sfc_85um*Bs
+
 
   endif
 
   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
-    Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
-    Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
+     Trans_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
 
-    Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
-                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um) / &
-                            Trans_Ac_67um
+     Trans_Bc_67um = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                            Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
+
+     if (Trans_Ac_67um > epsilon(Trans_Ac_67um)) then
+       Trans_Bc_67um = Trans_Bc_67um / Trans_Ac_67um
+     endif
+
+     Rad_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
+ 
+     Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
+                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_67um)
+
+     Bs = PLANCK_RAD_FAST(Input%Chan_Idx_67um,Ts_Temp)
+
+     Rad_Clear_67um = Rad_Atm + Trans_Atm*Emiss_Sfc_67um*Bs
+
 
   endif
 
-  !--------------------------------------------------
-  ! call abi_planck_temp(ichan,rad,bt)
-  !--------------------------------------------------
-   if (Input%Chan_On_67um == symbol%YES)  Bt_Clear_67um = PLANCK_TEMP_FAST(Input%Chan_Idx_67um, Rad_Clear_67um)
-   if (Input%Chan_On_85um == symbol%YES)  Bt_Clear_85um = PLANCK_TEMP_FAST(Input%Chan_Idx_85um, Rad_Clear_85um)
-   if (Input%Chan_On_11um == symbol%YES)  Bt_Clear_11um = PLANCK_TEMP_FAST(Input%Chan_Idx_11um, Rad_Clear_11um)
-   if (Input%Chan_On_12um == symbol%YES)  Bt_Clear_12um = PLANCK_TEMP_FAST(Input%Chan_Idx_12um, Rad_Clear_12um)
-   if (Input%Chan_On_133um == symbol%YES)  Bt_Clear_133um = PLANCK_TEMP_FAST(Input%Chan_Idx_133um, Rad_Clear_133um)
- 
   !--------------------------------------------------
   ! call forward models
   !--------------------------------------------------
@@ -1501,10 +1439,9 @@ Retrieval_Loop: do
   call OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,Num_Param,Num_Obs, &
                          Convergence_Criteria,Delta_X_Max, &
                          y,f,x,x_Ap,K,Sy,Sa_inv, &
-                         Sx,AKM,Delta_X, &
+                         Sx,AKM,Delta_x, &
                          Output%Cost(Elem_Idx,Line_Idx), &
                          Converged_Flag(Elem_Idx,Line_Idx),Fail_Flag(Elem_Idx,Line_Idx))
-
 
   !--- check for a failed Iteration
   if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%YES) then
@@ -1521,7 +1458,7 @@ Retrieval_Loop: do
      write(unit=lun_diag,fmt=*) "Kernel Matrix"
      write(unit=lun_diag,fmt=*) "K(1,:) = ", K(1,:)
      write(unit=lun_diag,fmt=*) "K(2,:) = ", K(2,:)
-     write(unit=lun_diag,fmt=*) "K(3,:) = ", K(3,:)
+!    write(unit=lun_diag,fmt=*) "K(3,:) = ", K(3,:)
      write(unit=lun_diag,fmt=*) "f = ", f
      write(unit=lun_diag,fmt=*) "Emiss_Vector = ",Emiss_Vector
      write(unit=lun_diag,fmt=*) "Delta_x = ",Delta_x
@@ -1542,10 +1479,10 @@ Retrieval_Loop: do
   !-------------------------------------------------------
   ! constrain to reasonable values
   !-------------------------------------------------------
-  x(1) = max(min_allowable_Tc,min(Tsfc_Est,x(1)))     !should we do this?
+  x(1) = max(min_allowable_Tc,min(Tsfc_Est+5,x(1)))   
   x(2) = max(0.0,min(x(2),1.0))
   x(3) = max(0.8,min(x(3),1.8))
-  x(4) = max(min_allowable_Tc,min(Tsfc_Est,x(4)))     !should we do this?
+  x(4) = max(min_allowable_Tc,min(Tsfc_Est+10,x(4)))    
 
   if (lun_diag > 0) then
      write(unit=lun_diag,fmt=*) "constrained x = ",x
@@ -1573,13 +1510,20 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
  Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
- Output%Lower_Cloud_Temperature(Elem_Idx,Line_Idx) = x(4)
+ if (Cloud_Type == symbol%OVERLAP_TYPE) then
+    Output%Lower_Tc(Elem_Idx,Line_Idx) = x(4)
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
+                               Output%Lower_Tc(Elem_Idx,Line_Idx), &
+                               Output%Lower_Zc(Elem_Idx,Line_Idx), &
+                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+ endif
+
 
  !--- save uncertainty estimates
  Output%Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(1,1))
  Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(2,2))
  Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(3,3))
-!Output%Ts_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   (NEED TO ADD THIS)
+ Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1668,9 +1612,12 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
                                             ABS_LAPSE_RATE_DT_DZ_UNCER
 
+ Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+                                            ABS_LAPSE_RATE_DT_DZ_UNCER
+
  !-- Compute Pressure Uncertainty
- Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
-                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
+ Output%LOWER_Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%LOWER_Pc(Elem_Idx,Line_Idx)
 
  !-----------------------------------------------------------------------------
  !--- quality flags of the retrieved parameters
@@ -1695,6 +1642,14 @@ else
  Output%Tc(Elem_Idx,Line_Idx) = x_Ap(1)   !MISSING_VALUE_REAL4
  Output%Ec(Elem_Idx,Line_Idx) = x_Ap(2)   !MISSING_VALUE_REAL4
  Output%Beta(Elem_Idx,Line_Idx) = x_Ap(3) !MISSING_VALUE_REAL4
+
+ if (Cloud_Type == symbol%OVERLAP_TYPE) then
+    Output%Lower_Tc(Elem_Idx,Line_Idx) = x_Ap(4) !MISSING_VALUE_REAL4
+    call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx),&
+                               Output%Lower_Tc(Elem_Idx,Line_Idx),&
+                               Output%Lower_Zc(Elem_Idx,Line_Idx),&
+                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+ endif 
 
  !--- set derived parameters to missing
  Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
@@ -1775,7 +1730,7 @@ endif     ! ---------- end of data check
  !------------------------------------------------------------------------
  do i = 1, 8
     Output%Packed_Meta_Data(Elem_Idx,Line_Idx) = Output%Packed_Meta_Data(Elem_Idx,Line_Idx) +  &
-                                          (2**(i-1)) * Meta_Data_Flags(i)
+                                                 int((2**(i-1)) * Meta_Data_Flags(i),kind=int1)
  enddo
 
 
@@ -1806,7 +1761,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
-
 endif
 
 end do pass_loop
@@ -1924,7 +1878,7 @@ end subroutine KNOWING_Z_COMPUTE_T_P
 !-----------------------------------------------------------------
 subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
 
-     integer, intent(in):: Cloud_Type
+     integer (kind=int1), intent(in):: Cloud_Type
      real, intent(in):: T
      real, intent(out):: P
      real, intent(out):: Z
@@ -1943,6 +1897,7 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
      ierr = symbol%NO
      Z = MISSING_VALUE_REAL4
      P = MISSING_VALUE_REAL4
+     klev = MISSING_VALUE_INTEGER4
 
      !--- test for existence of a valid solution with troposphere
      kstart = Tropo_Level_RTM
@@ -1965,9 +1920,8 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
      !--- check to see if colder than min, than assume above tropopause
      !--- and either limit height to tropopause or extrapoLate in stratosphere
-     if ((T < minval(Temp_Prof_RTM(kstart:kend))) .or. (klev < Tropo_Level_RTM)) then
+     if (T < minval(Temp_Prof_RTM(kstart:kend))) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-!--->      if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1) then
            Z = Hght_Prof_RTM(kstart) + (T - Temp_Prof_RTM(kstart)) / Dt_Dz_Strato
            call KNOWING_Z_COMPUTE_T_P(P,R4_Dummy,Z,klev)
          else
@@ -2094,7 +2048,7 @@ end function GENERIC_PROFILE_INTERPOLATION
 subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                               Convergence_Criteria,Delta_X_Max, &
                               y,f,x,x_Ap,K,Sy,Sa_inv, &
-                              Sx,AKM,Delta_X,Conv_Test,Converged_Flag,Fail_Flag)
+                              Sx,AKM,Delta_x,Conv_Test,Converged_Flag,Fail_Flag)
 
   integer, intent(in):: Iter_Idx
   integer, intent(in):: Iter_Idx_Max
@@ -2112,11 +2066,11 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4), dimension(:,:), intent(out):: Sx
   real(kind=real4), dimension(:,:), intent(out):: AKM
   real(kind=real4), intent(out):: Conv_Test
-  real(kind=real4), dimension(:), intent(out):: Delta_X
+  real(kind=real4), dimension(:), intent(out):: Delta_x
   real(kind=real4), dimension(ny,ny):: Sy_inv
   real(kind=real4), dimension(nx,nx):: Sx_inv
-  real(kind=real4), dimension(nx):: Delta_X_dir
-  real(kind=real4), dimension(nx):: Delta_X_constrained
+  real(kind=real4), dimension(nx):: Delta_x_dir
+  real(kind=real4), dimension(nx):: Delta_x_constrained
   real(kind=real4):: Delta_X_distance_constrained
   real(kind=real4):: Delta_X_distance
   integer, intent(out):: Fail_Flag
@@ -2139,8 +2093,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    print *, "Cloud Height warning ==> Singular Sy in ACHA "
    Fail_Flag = symbol%YES
    Converged_Flag = symbol%NO
-   print *, "y = ", y
-   print *, "Sy = ", Sy
    return 
   endif
 
@@ -2150,20 +2102,12 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Singular_Flag =  INVERT_MATRIX(Sx_inv, Sx, p)
   if (Singular_Flag == symbol%YES) then
    print *, "Cloud Height warning ==> Singular Sx in ACHA "
-   print *, "y = ", y
-   print *, "f = ", f
-   print *, "x_ap = ", x_ap
-   print *, "x = ", x
-   print *, "Sa_Inv = ", Sa_Inv
-   print *, "Sy_Inv = ", Sy_Inv
-   print *, "K = ", K
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
-!stop
    return
   endif
   
-  Delta_X = matmul(Sx,(matmul(Transpose(K),matmul(Sy_inv,(y-f))) +  &
+  Delta_x = matmul(Sx,(matmul(Transpose(K),matmul(Sy_inv,(y-f))) +  &
                        matmul(Sa_inv,x_Ap-x) ))
 
   !--------------------------------------------------------------
@@ -2187,11 +2131,11 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
      do ix = 1,nx
         Delta_X_constrained(ix) =  &
              sign(min(Delta_X_Max(ix),abs(Delta_X(ix))) , Delta_X(ix) )
-     end DO
+     enddo
      Delta_X_distance_constrained = sqrt(sum(Delta_X_constrained**2))
      do ix = 1,nx
         Delta_X(ix) = Delta_X_dir(ix)*Delta_X_distance_constrained
-     end DO
+     enddo
   endif
 
   !--- check for non-traditional convergence
@@ -2355,8 +2299,6 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4), dimension(:,:), intent(out):: K
   real(kind=real4), dimension(:), intent(out):: Emiss_Vector
 
-  real(kind=real4):: Rad_Atm_11um
-  real(kind=real4):: Trans_Atm_11um
   real(kind=real4):: Tc
   real(kind=real4):: Ts
   real(kind=real4):: Bc_67um
@@ -2425,7 +2367,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Chan_On_12um == symbol%YES) Bc_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Tc, dB_dT = dB_dTc_12um)
   if (Chan_On_133um == symbol%YES) Bc_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Tc, dB_dT = dB_dTc_133um)
 
-  !--- compute planck Emission for surface temperature (REMOVE ????)
+  !--- compute planck Emission for surface temperature
   if (Chan_On_67um == symbol%YES) Bs_67um = PLANCK_RAD_FAST( Chan_Idx_67um, Ts, dB_dT = dB_dTs_67um)
   if (Chan_On_85um == symbol%YES) Bs_85um = PLANCK_RAD_FAST( Chan_Idx_85um, Ts, dB_dT = dB_dTs_85um)
   if (Chan_On_11um == symbol%YES) Bs_11um = PLANCK_RAD_FAST( Chan_Idx_11um, Ts, dB_dT = dB_dTs_11um)
@@ -2469,7 +2411,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
  K(1,1) = (Trans_Ac_11um * Emiss_11um * dB_dTc_11um) / dB_dT_11um               !dT_11um / dT_c
  K(1,2) = (Rad_Ac_11um + Trans_Ac_11um*Bc_11um - Rad_Clear_11um)/dB_dT_11um     !dT_11um / dEmiss_c
  K(1,3) = 0.0                                                                   !dT_11um / dbeta
- K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um    !dT_11um / dT_s
+ K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um * Emiss_Sfc_11um    !dT_11um / dT_s
 
  !--- forward model for 11um - 12um
  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 9) then
@@ -2480,7 +2422,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                       (dEmiss_12um_dEmiss_11um)/dB_dT_12um  
    K(2,3) = (Rad_Ac_12um+Trans_Ac_12um*Bc_12um-Rad_Clear_12um)/ &
             dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
-   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um
+   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um * Emiss_Sfc_12um
  endif
  !--- forward model for 11um - 133um
  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
@@ -2491,7 +2433,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
+   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
  endif
  if (Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
@@ -2501,7 +2443,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
    K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
              dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um
+   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
  endif
  if (Acha_Mode_Flag == 5) then
    Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
@@ -2511,7 +2453,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_85um_dEmiss_11um)/dB_dT_85um
    K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
-   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um
+   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um * Emiss_Sfc_85um
  endif
  if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2521,7 +2463,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
+   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
  endif
  if (Acha_Mode_Flag == 2) then
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
@@ -2531,7 +2473,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
    K(2,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
              dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um
+   K(2,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
  endif
 
  !--- determine number of channels
@@ -2580,7 +2522,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            Tc_Opaque, &
                            Mu, &
                            Snow_Flag, &
-                           Tair,  &
+                           Tair, &
                            Tc_Ap, &
                            Tc_Ap_Uncer, &
                            Ec_Ap, &
@@ -3180,64 +3122,6 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
            (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
 
  end function INTERPOLATE_PROFILE_ACHA
-
-!----------------------------------------------------------------------------
-! Function INTERPOLATE_NWP_ACHA
-!
-! general interpoLation routine for nwp fields
-!
-! description of arguments
-! ilon, iLat - nwp indices of closest nwp cell
-! ilonx,iLatx - nwp indices of nwp cells of diagnoal of bounding box
-! lonx - longitude weighting factor
-! Latx = Latitude weighting factor
-! z1 = data(ilon, iLat)
-! z2 = data(ilonx,iLat)
-! z3 = data(ilon,iLatx)
-! z4 = data(ilonx,iLatx)
-!
-! output:
-! z = interpoLated data point
-!
-!---------------------------------------------------------------------------
- function INTERPOLATE_NWP_ACHA(z1,z2,z3,z4,lonx,Latx) result(z)
-
-  real, intent(in):: z1
-  real, intent(in):: z2
-  real, intent(in):: z3
-  real, intent(in):: z4
-  real, intent(in):: lonx
-  real, intent(in):: Latx
-  real:: z
-
-  !--- linear inteprpoLation scheme
-  z =  (1.0-lonx) * ((1.0-Latx) * z1 + (Latx)* z3) + &
-           (lonx) * ((1.0-Latx) * z2 + (Latx)* z4)
-
- end function INTERPOLATE_NWP_ACHA
-
- !---------------------------------------------------------------------
- ! find Inversion Level - highest Level Inversion below trop
- !---------------------------------------------------------------------
- function DETERMINE_INVERSION_LEVEL(Tropo_Level, Sfc_Level, Sfc_Air_Temp) result(Inversion_Level)
-   integer, intent(in):: Tropo_Level
-   integer, intent(in):: Sfc_Level
-   real, intent(in):: Sfc_Air_Temp
-   integer:: Inversion_Level
-   integer:: k
-
-   Inversion_Level = 0
-
-   do k = Tropo_Level, Sfc_Level-1
-      if (Temp_Prof_RTM(k) > Sfc_Air_Temp) then
-          Inversion_Level = minval(maxloc(Temp_Prof_RTM(k:Sfc_Level-1)))
-          Inversion_Level = Inversion_Level - 1 + k
-          exit
-      endif
-   enddo
-
- end function DETERMINE_INVERSION_LEVEL
-
 
  !-------------------------------------------------------------------------
  ! Input:
@@ -3915,23 +3799,23 @@ end subroutine COMPUTE_TEMPERATURE_CIRRUS
 !
 ! input:  interp_flag = 0 (do no interp, assume Zc=2km) /= 0 (do spatial interp)
 !-------------------------------------------------------------------------------
-subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
+subroutine COMPUTE_LOWER_CLOUD_TEMPERATURE(Cld_Type, &
                                         Interp_Flag, &
-                                        Surface_Pressure, &
-                                        Cloud_Pressure,&
+                                        Surface_Temperature, &
+                                        Cloud_Temperature,&
                                         Count_Thresh, &
                                         Box_Width, &
                                         Missing, &
-                                        Lower_Cloud_Pressure)
+                                        Lower_Tc)
 
    integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
    integer(kind=int4), intent(in):: Interp_Flag
-   real, intent(in), dimension(:,:):: Surface_Pressure
-   real(kind=real4), intent(in), dimension(:,:):: Cloud_Pressure
+   real, intent(in), dimension(:,:):: Surface_Temperature
+   real(kind=real4), intent(in), dimension(:,:):: Cloud_Temperature
    integer(kind=int4), intent(in):: Count_Thresh
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
-   real(kind=real4), intent(out), dimension(:,:):: Lower_Cloud_Pressure
+   real(kind=real4), intent(out), dimension(:,:):: Lower_Tc
 
    integer(kind=int1), dimension(:,:), allocatable:: Mask1
    integer(kind=int1), dimension(:,:), allocatable:: Mask2
@@ -3939,11 +3823,11 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    integer:: Num_Lines
 
    !--- initialize output to missing
-   Lower_Cloud_Pressure = Missing
+   Lower_Tc = Missing
 
    !--- grab size of these arrays
-   Num_Elements = size(Cloud_Pressure,1)
-   Num_Lines = size(Cloud_Pressure,2)
+   Num_Elements = size(Cloud_Temperature,1)
+   Num_Lines = size(Cloud_Temperature,2)
 
    !---- make output mask
    allocate(Mask2(Num_Elements,Num_Lines))
@@ -3953,8 +3837,8 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    end where
 
    !--- set default to a static offset of surface pressure 
-   where(Mask2 == 1 .and. Surface_Pressure /= Missing)
-          Lower_Cloud_Pressure = Surface_Pressure - PC_LOWER_CLOUD_OFFSET
+   where(Mask2 == 1 .and. Surface_Temperature /= Missing)
+          Lower_Tc = Surface_Temperature - TC_LOWER_CLOUD_OFFSET
    end where
 
    !--- if no spatial interpolation is to be done, return
@@ -3969,65 +3853,20 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    where( (Cld_Type == symbol%FOG_TYPE .or. &
               Cld_Type == symbol%WATER_TYPE .or.  &
               Cld_Type == symbol%SUPERCOOLED_TYPE) .and.  &
-              Cloud_Pressure /= Missing)
+              Cloud_Temperature /= Missing)
              Mask1 = 1
    end where
 
    !--- call the spatial analysis routine
    call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
-                    Cloud_Pressure,Lower_Cloud_Pressure)
+                    Cloud_Temperature,Lower_Tc)
 
    !--- deallocate memory
    deallocate(Mask1)
    deallocate(Mask2)
 
-end subroutine COMPUTE_LOWER_CLOUD_PRESSURE
-!------------------------------------------------------------------------------
-! Compute lower cloud height and temperature from the lower cloud pressure
-!------------------------------------------------------------------------------
-subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Elem_Idx_Nwp, &
-                                                  Line_Idx_Nwp, &
-                                                  Missing, &
-                                                  Lower_Cloud_Pressure, &
-                                                  Lower_Cloud_Height, &
-                                                  Lower_Cloud_Temperature)
-   integer, intent(in), dimension(:,:):: Elem_Idx_Nwp
-   integer, intent(in), dimension(:,:):: Line_Idx_Nwp
-   real, intent(in):: Missing
-   real, intent(in), dimension(:,:):: Lower_Cloud_Pressure
-   real, intent(out), dimension(:,:):: Lower_Cloud_Temperature
-   real, intent(out), dimension(:,:):: Lower_Cloud_Height
-   integer:: Line_Idx
-   integer:: Elem_Idx
-   integer:: Num_Elements
-   integer:: Num_Lines
-   integer:: Inwp
-   integer:: Jnwp
-   integer:: Ilev
+end subroutine COMPUTE_LOWER_CLOUD_TEMPERATURE
 
-   Num_Elements = size(Lower_Cloud_Pressure,1)
-   Num_Lines = size(Lower_Cloud_Pressure,2)
-
-   !----------------------------------------------------------------
-   !  Compute Pressure and Temperature
-   !----------------------------------------------------------------
-   Line_loop: do Line_Idx = 1, Num_Lines
-       Element_Loop: do Elem_Idx = 1, Num_Elements
-
-       !--- compute T and Z from P
-       Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
-       Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
-
-       if (Inwp <= 0 .or. Jnwp <= 0 .or. Lower_Cloud_Pressure(Elem_Idx,Line_Idx) == Missing) cycle
-
-          call KNOWING_P_COMPUTE_T_Z(Lower_Cloud_Pressure(Elem_Idx,Line_Idx),    &
-                                     Lower_Cloud_Temperature(Elem_Idx,Line_Idx), &
-                                     Lower_Cloud_Height(Elem_Idx,Line_Idx),      &
-                                     Ilev)
-       end do Element_Loop
-   end do Line_loop
-
-end subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
 !--------------------------------------------------------------------------
 ! Determine processing order of pixels
 !
@@ -4277,7 +4116,7 @@ subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_unce
   real, parameter:: lat_min = -90.0
   real, parameter:: delta_lat = -10.0
 
-  lat_idx = ((latitude - lat_min) / delta_lat) + 1
+  lat_idx = int((latitude - lat_min) / delta_lat) + 1
   lat_idx = max(1,min(lat_idx, num_lat_cirrus_ap))
   
   tc_apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)

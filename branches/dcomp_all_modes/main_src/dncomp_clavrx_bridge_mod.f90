@@ -168,7 +168,7 @@ contains
       
       
       if ( first_call) then
-        call mesg ('DCNOMP starts ',color = 46 ) 
+        call mesg ('DNCOMP starts ',color = 46 ) 
         first_call = .false.
       end if
       

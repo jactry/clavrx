@@ -307,12 +307,15 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Beta_Uncertainty
     real (kind=real4), dimension(:,:), allocatable:: Zc_Uncertainty
     real (kind=real4), dimension(:,:), allocatable:: Pc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Tc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Zc_Uncertainty
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Pc_Uncertainty
     real (kind=real4), dimension(:,:), allocatable:: Alt
     real (kind=real4), dimension(:,:), allocatable:: Base_Alt
     real (kind=real4), dimension(:,:), allocatable:: Cost
-    real (kind=real4), dimension(:,:), allocatable:: Pc_Lower_Cloud
-    real (kind=real4), dimension(:,:), allocatable:: Zc_Lower_Cloud
-    real (kind=real4), dimension(:,:), allocatable:: Tc_Lower_Cloud
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Pc
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Zc
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Tc
     integer(kind=int1), dimension(:,:), allocatable:: Processing_Order
     integer(kind=int1), dimension(:,:), allocatable:: Inversion_Flag
     integer (kind=int1), dimension(:,:), allocatable:: Quality_Flag
@@ -925,7 +928,8 @@ subroutine CREATE_PIXEL_ARRAYS()
             allocate(Ch(idx)%Trans_Atm(dim1,dim2))
             allocate(Ch(idx)%Sfc_Emiss(dim1,dim2))
             if (idx == 31) allocate(Ch(idx)%Rad_Atm_Dwn_Sfc(dim1,dim2))
-            if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or. idx == 33) allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
+            if (idx == 27 .or. idx == 29 .or. idx == 31 .or. idx == 32 .or.  &
+                idx == 33 .or. idx == 45) allocate(Ch(idx)%Emiss_Tropo(dim1,dim2))
             if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%CSBT_Mask(dim1,dim2))
             if (idx >= 27 .and. idx <= 38)  allocate(Ch(idx)%Opaque_Height(dim1,dim2))
 
@@ -1654,7 +1658,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Bt_Ch20_Std_Median_3x3(dim1,dim2))
        allocate(Ch20_Counts_Filtered(dim1,dim2))
        allocate(Trans_Atm_Ch20_Solar_Rtm(dim1,dim2))
-       allocate(Trans_Atm_Ch20_Solar_total_Rtm(dim1,dim2))
+       allocate(Trans_Atm_Ch20_Solar_Total_Rtm(dim1,dim2))
        allocate(Ems_Ch20_Clear_Rtm(dim1,dim2))
    endif
 
@@ -1684,7 +1688,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Bt_Ch20_Std_Median_3x3 = Missing_Value_Real4
        Ch20_Counts_Filtered = Missing_Value_Real4
        Trans_Atm_Ch20_Solar_Rtm = Missing_Value_Real4
-       Trans_Atm_Ch20_Solar_total_Rtm = Missing_Value_Real4
+       Trans_Atm_Ch20_Solar_Total_Rtm = Missing_Value_Real4
        Ems_Ch20_Clear_Rtm = Missing_Value_Real4
    endif
 
@@ -1713,7 +1717,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Bt_Ch20_Std_Median_3x3)
        deallocate(Ch20_Counts_Filtered)
        deallocate(Trans_Atm_Ch20_Solar_Rtm)
-       deallocate(Trans_Atm_Ch20_Solar_total_Rtm)
+       deallocate(Trans_Atm_Ch20_Solar_Total_Rtm)
        deallocate(Ems_Ch20_Clear_Rtm)
    endif
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
@@ -2031,15 +2035,18 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Beta_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Zc_Uncertainty(dim1,dim2)) 
     allocate(ACHA%Pc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Lower_Tc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Lower_Pc_Uncertainty(dim1,dim2)) 
+    allocate(ACHA%Lower_Zc_Uncertainty(dim1,dim2)) 
     allocate(Pc_Uncertainty1_Aux(dim1,dim2)) 
     allocate(Pc_Uncertainty2_Aux(dim1,dim2)) 
     allocate(ACHA%Alt(dim1,dim2)) 
     allocate(ACHA%Base_Alt(dim1,dim2)) 
     allocate(ACHA%Cost(dim1,dim2)) 
     allocate(Cost_Aux(dim1,dim2)) 
-    allocate(ACHA%Pc_Lower_Cloud(dim1,dim2)) 
-    allocate(ACHA%Zc_Lower_Cloud(dim1,dim2)) 
-    allocate(ACHA%Tc_Lower_Cloud(dim1,dim2)) 
+    allocate(ACHA%Lower_Pc(dim1,dim2)) 
+    allocate(ACHA%Lower_Zc(dim1,dim2)) 
+    allocate(ACHA%Lower_Tc(dim1,dim2)) 
     allocate(ACHA%Processing_Order(dim1,dim2)) 
     allocate(ACHA%Inversion_Flag(dim1,dim2)) 
     allocate(ACHA%Quality_Flag(dim1,dim2)) 
@@ -2062,37 +2069,6 @@ end subroutine CREATE_ACHA_ARRAYS
 
 subroutine RESET_ACHA_ARRAYS()
 
-!   if (allocated(ACHA%Tc)) ACHA%Tc = Missing_Value_Real4
-!   if (allocated(ACHA%Ec)) ACHA%Ec = Missing_Value_Real4
-!   if (allocated(ACHA%Pc)) ACHA%Pc = Missing_Value_Real4
-!   if (allocated(ACHA%Zc)) ACHA%Zc = Missing_Value_Real4
-!   if (allocated(ACHA%Zc_Top)) ACHA%Zc_Top = Missing_Value_Real4
-!   if (allocated(ACHA%Pc_Top)) ACHA%Pc_Top = Missing_Value_Real4
-!   if (allocated(ACHA%Zc_Base)) ACHA%Zc_Base  = Missing_Value_Real4
-!   if (allocated(ACHA%Pc_Base)) ACHA%Pc_Base  = Missing_Value_Real4
-!   if (allocated(ACHA%Beta)) ACHA%Beta = Missing_Value_Real4
-!   if (allocated(ACHA%Tau)) ACHA%Tau = Missing_Value_Real4
-!   if (allocated(ACHA%Reff)) ACHA%Reff = Missing_Value_Real4
-!   if (allocated(ACHA%Tc_Uncertainty)) ACHA%Tc_Uncertainty = Missing_Value_Real4
-!   if (allocated(ACHA%Ec_Uncertainty)) ACHA%Ec_Uncertainty = Missing_Value_Real4
-!   if (allocated(ACHA%Beta_Uncertainty)) ACHA%Beta_Uncertainty = Missing_Value_Real4
-!   if (allocated(ACHA%Zc_Uncertainty)) ACHA%Zc_Uncertainty = Missing_Value_Real4
-!   if (allocated(ACHA%Pc_Uncertainty)) ACHA%Pc_Uncertainty = Missing_Value_Real4
-!   if (allocated(ACHA%Alt)) ACHA%Alt = Missing_Value_Real4
-!   if (allocated(ACHA%Base_Alt)) ACHA%Base_Alt = Missing_Value_Real4
-!   if (allocated(ACHA%Cost)) ACHA%Cost = Missing_Value_Real4
-!   if (allocated(ACHA%Pc_Lower_Cloud)) ACHA%Pc_Lower_Cloud = Missing_Value_Real4
-!   if (allocated(ACHA%Zc_Lower_Cloud)) ACHA%Zc_Lower_Cloud = Missing_Value_Real4
-!   if (allocated(ACHA%Tc_Lower_Cloud)) ACHA%Tc_Lower_Cloud = Missing_Value_Real4
-!   if (allocated(ACHA%Processing_Order)) ACHA%Processing_Order = Missing_Value_Int1
-!   if (allocated(ACHA%Inversion_Flag)) ACHA%Inversion_Flag = Missing_Value_Int1
-!   if (allocated(ACHA%Quality_Flag)) ACHA%Quality_Flag = Missing_Value_Int1
-!   if (allocated(ACHA%Cld_Layer)) ACHA%Cld_Layer = Missing_Value_Int1
-!   if (allocated(ACHA%Meta_Data)) ACHA%Meta_Data = 0
-!   if (allocated(ACHA%OE_Quality_Flags)) ACHA%OE_Quality_Flags = 0
-!   if (allocated(ACHA%Packed_Quality_Flags)) ACHA%Packed_Quality_Flags = 0
-!   if (allocated(ACHA%Packed_Meta_Data_Flags)) ACHA%Packed_Meta_Data_Flags = 0
-
     ACHA%Tc = Missing_Value_Real4
     ACHA%Ec = Missing_Value_Real4
     ACHA%Pc = Missing_Value_Real4
@@ -2111,15 +2087,18 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Beta_Uncertainty = Missing_Value_Real4
     ACHA%Zc_Uncertainty = Missing_Value_Real4
     ACHA%Pc_Uncertainty = Missing_Value_Real4
+    ACHA%Lower_Tc_Uncertainty = Missing_Value_Real4
+    ACHA%Lower_Pc_Uncertainty = Missing_Value_Real4
+    ACHA%Lower_Zc_Uncertainty = Missing_Value_Real4
     Pc_Uncertainty1_Aux = Missing_Value_Real4
     Pc_Uncertainty2_Aux = Missing_Value_Real4
     ACHA%Alt = Missing_Value_Real4
     ACHA%Base_Alt = Missing_Value_Real4
     ACHA%Cost = Missing_Value_Real4
     Cost_Aux = Missing_Value_Real4
-    ACHA%Pc_Lower_Cloud = Missing_Value_Real4
-    ACHA%Zc_Lower_Cloud = Missing_Value_Real4
-    ACHA%Tc_Lower_Cloud = Missing_Value_Real4
+    ACHA%Lower_Pc = Missing_Value_Real4
+    ACHA%Lower_Zc = Missing_Value_Real4
+    ACHA%Lower_Tc = Missing_Value_Real4
     ACHA%Processing_Order = Missing_Value_Int1
     ACHA%Inversion_Flag = Missing_Value_Int1
     ACHA%Quality_Flag = Missing_Value_Int1
@@ -2154,15 +2133,18 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Beta_Uncertainty) 
     deallocate(ACHA%Zc_Uncertainty) 
     deallocate(ACHA%Pc_Uncertainty) 
+    deallocate(ACHA%Lower_Tc_Uncertainty) 
+    deallocate(ACHA%Lower_Zc_Uncertainty) 
+    deallocate(ACHA%Lower_Pc_Uncertainty) 
     deallocate(Pc_Uncertainty1_Aux) 
     deallocate(Pc_Uncertainty2_Aux) 
     deallocate(ACHA%Alt) 
     deallocate(ACHA%Base_Alt) 
     deallocate(ACHA%Cost) 
     deallocate(Cost_Aux) 
-    deallocate(ACHA%Pc_Lower_Cloud) 
-    deallocate(ACHA%Zc_Lower_Cloud) 
-    deallocate(ACHA%Tc_Lower_Cloud) 
+    deallocate(ACHA%Lower_Pc) 
+    deallocate(ACHA%Lower_Zc) 
+    deallocate(ACHA%Lower_Tc) 
     deallocate(ACHA%Processing_Order) 
     deallocate(ACHA%Inversion_Flag) 
     deallocate(ACHA%Quality_Flag) 

@@ -74,8 +74,7 @@ module AWG_CLOUD_HEIGHT
   public:: SET_ACHA_VERSION
   public:: LOCAL_LINEAR_RADIATIVE_CENTER
 
-  private:: COMPUTE_LOWER_CLOUD_PRESSURE
-  private:: COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
+  private:: COMPUTE_LOWER_CLOUD_TEMPERATURE
   private:: KNOWING_P_COMPUTE_T_Z
   private:: KNOWING_T_COMPUTE_P_Z
   private:: KNOWING_Z_COMPUTE_T_P
@@ -617,24 +616,18 @@ module AWG_CLOUD_HEIGHT
   
    !--------------------------------------------------------------------------
    ! on the third pass, spatially interpolate water cloud temperature
+   ! note, this first guess is stored in the Output Variable but it is
+   ! over-written during the retrieval
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
 
-     call  COMPUTE_LOWER_CLOUD_PRESSURE(Input%Cloud_Type, &
+     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Input%Cloud_Type, &
                                         USE_LOWER_INTERP_FLAG, &
-                                        Input%Surface_Pressure, &
-                                        Output%Pc,&
+                                        Input%Surface_Temperature, &
+                                        Output%Tc,&
                                         COUNT_MIN_LOWER,      &
                                         Box_Half_Width_Lower, &
                                         MISSING_VALUE_REAL4, &
-                                        Output%Lower_Pc)
-
-     call  COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Input%Cloud_Type, &
-                                        Input%Elem_Idx_Nwp, &
-                                        Input%Line_Idx_Nwp, &
-                                        MISSING_VALUE_REAL4, &
-                                        Output%Lower_Pc, &
-                                        Output%Lower_Zc, &
                                         Output%Lower_Tc)
 
    endif
@@ -3806,23 +3799,23 @@ end subroutine COMPUTE_TEMPERATURE_CIRRUS
 !
 ! input:  interp_flag = 0 (do no interp, assume Zc=2km) /= 0 (do spatial interp)
 !-------------------------------------------------------------------------------
-subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
+subroutine COMPUTE_LOWER_CLOUD_TEMPERATURE(Cld_Type, &
                                         Interp_Flag, &
-                                        Surface_Pressure, &
-                                        Cloud_Pressure,&
+                                        Surface_Temperature, &
+                                        Cloud_Temperature,&
                                         Count_Thresh, &
                                         Box_Width, &
                                         Missing, &
-                                        Lower_Pc)
+                                        Lower_Tc)
 
    integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
    integer(kind=int4), intent(in):: Interp_Flag
-   real, intent(in), dimension(:,:):: Surface_Pressure
-   real(kind=real4), intent(in), dimension(:,:):: Cloud_Pressure
+   real, intent(in), dimension(:,:):: Surface_Temperature
+   real(kind=real4), intent(in), dimension(:,:):: Cloud_Temperature
    integer(kind=int4), intent(in):: Count_Thresh
    integer(kind=int4), intent(in):: Box_Width
    real(kind=int4), intent(in):: Missing
-   real(kind=real4), intent(out), dimension(:,:):: Lower_Pc
+   real(kind=real4), intent(out), dimension(:,:):: Lower_Tc
 
    integer(kind=int1), dimension(:,:), allocatable:: Mask1
    integer(kind=int1), dimension(:,:), allocatable:: Mask2
@@ -3830,11 +3823,11 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    integer:: Num_Lines
 
    !--- initialize output to missing
-   Lower_Pc = Missing
+   Lower_Tc = Missing
 
    !--- grab size of these arrays
-   Num_Elements = size(Cloud_Pressure,1)
-   Num_Lines = size(Cloud_Pressure,2)
+   Num_Elements = size(Cloud_Temperature,1)
+   Num_Lines = size(Cloud_Temperature,2)
 
    !---- make output mask
    allocate(Mask2(Num_Elements,Num_Lines))
@@ -3844,8 +3837,8 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    end where
 
    !--- set default to a static offset of surface pressure 
-   where(Mask2 == 1 .and. Surface_Pressure /= Missing)
-          Lower_Pc = Surface_Pressure - PC_LOWER_CLOUD_OFFSET
+   where(Mask2 == 1 .and. Surface_Temperature /= Missing)
+          Lower_Tc = Surface_Temperature - TC_LOWER_CLOUD_OFFSET
    end where
 
    !--- if no spatial interpolation is to be done, return
@@ -3860,78 +3853,20 @@ subroutine COMPUTE_LOWER_CLOUD_PRESSURE(Cld_Type, &
    where( (Cld_Type == symbol%FOG_TYPE .or. &
               Cld_Type == symbol%WATER_TYPE .or.  &
               Cld_Type == symbol%SUPERCOOLED_TYPE) .and.  &
-              Cloud_Pressure /= Missing)
+              Cloud_Temperature /= Missing)
              Mask1 = 1
    end where
 
    !--- call the spatial analysis routine
    call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
-                    Cloud_Pressure,Lower_Pc)
+                    Cloud_Temperature,Lower_Tc)
 
    !--- deallocate memory
    deallocate(Mask1)
    deallocate(Mask2)
 
-end subroutine COMPUTE_LOWER_CLOUD_PRESSURE
-!------------------------------------------------------------------------------
-! Compute lower cloud height and temperature from the lower cloud pressure
-!------------------------------------------------------------------------------
-subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE(Cld_Type, &
-                                                  Elem_Idx_Nwp, &
-                                                  Line_Idx_Nwp, &
-                                                  Missing, &
-                                                  Lower_Pc, &
-                                                  Lower_Zc, &
-                                                  Lower_Tc)
-   integer(kind=int1), intent(in), dimension(:,:):: Cld_Type
-   integer, intent(in), dimension(:,:):: Elem_Idx_Nwp
-   integer, intent(in), dimension(:,:):: Line_Idx_Nwp
-   real, intent(in):: Missing
-   real, intent(inout), dimension(:,:):: Lower_Pc
-   real, intent(out), dimension(:,:):: Lower_Tc
-   real, intent(out), dimension(:,:):: Lower_Zc
-   integer:: Line_Idx
-   integer:: Elem_Idx
-   integer:: Num_Elements
-   integer:: Num_Lines
-   integer:: Inwp
-   integer:: Jnwp
-   integer:: Ilev
-   integer:: Ierror
-   integer:: NWP_Profile_Inversion_Flag
+end subroutine COMPUTE_LOWER_CLOUD_TEMPERATURE
 
-   Num_Elements = size(Lower_Pc,1)
-   Num_Lines = size(Lower_Pc,2)
-
-   !----------------------------------------------------------------
-   !  Compute Pressure and Temperature
-   !----------------------------------------------------------------
-   Line_loop: do Line_Idx = 1, Num_Lines
-       Element_Loop: do Elem_Idx = 1, Num_Elements
-
-       !--- compute T and Z from P
-       Inwp = Elem_Idx_Nwp(Elem_Idx,Line_Idx)
-       Jnwp = Line_Idx_Nwp(Elem_Idx,Line_Idx)
-
-       if (Inwp <= 0 .or. Jnwp <= 0 .or. Lower_Pc(Elem_Idx,Line_Idx) == Missing) cycle
-
-          call KNOWING_P_COMPUTE_T_Z(Lower_Pc(Elem_Idx,Line_Idx),    &
-                                     Lower_Tc(Elem_Idx,Line_Idx), &
-                                     Lower_Zc(Elem_Idx,Line_Idx),      &
-                                     Ilev)
-
-          !--- you have re-interpoalte in temperature-space to account for
-          !--- inversion logic
-!         call KNOWING_T_COMPUTE_P_Z(Cld_Type(Elem_Idx,Line_Idx), &
-!                                    Lower_Pc(Elem_Idx,Line_Idx),  &
-!                                    Lower_Tc(Elem_Idx,Line_Idx), &
-!                                    Lower_Zc(Elem_Idx,Line_Idx), &
-!                                    Ilev,ierror,NWP_Profile_Inversion_Flag)
-
-       end do Element_Loop
-   end do Line_loop
-
-end subroutine COMPUTE_LOWER_CLOUD_HEIGHT_TEMPERATURE
 !--------------------------------------------------------------------------
 ! Determine processing order of pixels
 !

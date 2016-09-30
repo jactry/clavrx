@@ -164,6 +164,7 @@ clavrxorb_objs = process_clavrx.o \
                  mtsat_module.o \
                  fy2_module.o \
                  coms_module.o \
+                 insat3_module.o \
                  dnb_retrievals_mod.o \
 		 dncomp_clavrx_bridge_mod.o \
 		 dcomp_rtm_module.o \
@@ -337,6 +338,7 @@ iff_module.o: iff_module.f90 hdf.o pixel_common.o file_utility.o hdf_read_module
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o avhrr_module.o
 fy2_module.o: fy2_module.f90 pixel_common.o constant.o num_mod.o mtsat_module.o get_lun.o goes_module.o file_utility.o viewing_geometry_module.o
 coms_module.o: coms_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o viewing_geometry_module.o
+insat3_module.o: insat3_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_utility.o viewing_geometry_module.o
 ncep_reanalysis.o: ncep_reanalysis.f90 constant.o hdf.o nwp_common.o sort_module.o num_mod.o
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
@@ -363,10 +365,10 @@ viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clav
 viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
 viirs_nasa_read_module.o: viirs_nasa_read_module.f90 file_tools.o pixel_common.o constant.o readh5dataset.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(hdf5libs)  viirs_nasa_read_module.f90
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o 
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o insat3_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o 
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o insat3_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
 
@@ -402,7 +404,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o \
               seviri_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
+              coms_module.o insat3_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
 
 

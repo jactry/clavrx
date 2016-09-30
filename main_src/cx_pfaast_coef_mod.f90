@@ -103,7 +103,7 @@ contains
          call this % read_ahi ()  
       case ( 'AVHRR','HIRS')
          call this % read_avhrr ( device,  satellite )
-      case ( 'SEVIRI','MTSAT','VIIRS','FY2','GOES')
+      case ( 'SEVIRI','MTSAT','VIIRS','FY2','GOES', 'INSAT3D')
          call this % read_general ( device, satellite  )
       
       case default
@@ -269,7 +269,7 @@ contains
          
       
       case default
-         print*,'=========== something wron g in pfaast avhrr hirs read ======='
+         print*,'=========== something wrong in pfaast avhrr hirs read ======='
       
       end select
       
@@ -451,6 +451,12 @@ contains
          pos_in_coeffile = 6
          read (satellite, * ) idx_sat
          koff = (idx_sat - 8 ) * N_CHANNELS
+
+      case ('INSAT3D')
+         cfile = 'insatccc.dat'
+         N_CHANNELS = 22
+         pos_in_coeffile = 6 ! This is for file name lengths.
+         koff = 0
          
       end select
      
@@ -476,8 +482,10 @@ contains
       case ('GOES')
          this % modis_channel_eqv(19:23) = [20,27,31,32,33]
          this % native_channel(19:23) = [ 2 ,3,4,5,6  ] 
+      case ('INSAT3D')
+         this % modis_channel_eqv(19:22) = [20,27,31,32]
+         this % native_channel(19:22)    = [3,4,5,6 ]
       end select
-      
       
    end subroutine read_general
    

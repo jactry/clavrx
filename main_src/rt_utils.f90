@@ -1390,6 +1390,9 @@ contains
 
       case(259) !GOES-15
         Sensor_Name_Rtm = 'GOES-15'
+  
+      case(471) !Insat3D
+        Sensor_Name_Rtm = 'INSAT3D-IMG'
 
       case(706) !NOAA-6
         Sensor_Name_Rtm = 'AVHRR-NOAA06'
@@ -2190,6 +2193,20 @@ contains
         Solar_Rtm%Tau_O2(20) = -0.00000
         Solar_Rtm%Tau_CO2(20) = 0.01666
         Solar_Rtm%Tau_CH4(20) = 0.00723
+
+      case(471)    !INSAT-3D FAKE
+        Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00026800, 0.00469394,-0.00016590/)
+        Solar_Rtm%Tau_H2O_Coef(20,:) = (/  0.00300622, 0.02934613,-0.00158632/)
+        Solar_Rtm%Tau_Ray(1)= 0.06236
+        Solar_Rtm%Tau_O3(1)=  0.02207
+        Solar_Rtm%Tau_O2(1)=  0.00647
+        Solar_Rtm%Tau_CO2(1)= 0.00000
+        Solar_Rtm%Tau_CH4(1)= 0.00000
+        Solar_Rtm%Tau_Ray(20) = 0.00000
+        Solar_Rtm%Tau_O3(20) =  0.00003
+        Solar_Rtm%Tau_O2(20) = -0.00000
+        Solar_Rtm%Tau_CO2(20) = 0.00868
+        Solar_Rtm%Tau_CH4(20) = 0.00790
 
       case(706)    !NOAA-6
         Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00080858, 0.00517629,-0.00020678/)

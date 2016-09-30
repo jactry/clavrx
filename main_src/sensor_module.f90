@@ -58,6 +58,7 @@ module SENSOR_MODULE
     , READ_FY_INSTR_CONSTANTS
 
    use COMS_MODULE
+   use INSAT3_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
       , READ_IFF_VIIRS_INSTR_CONSTANTS &
@@ -234,6 +235,7 @@ module SENSOR_MODULE
           index(Sensor%Sensor_Name,'COMS') > 0 .or.  &
           index(Sensor%Sensor_Name,'MTSAT') > 0 .or.  &
           index(Sensor%Sensor_Name,'SEVIRI') > 0 .or.  &
+          index(Sensor%Sensor_Name,'INSAT3') > 0 .or.  &
           index(Sensor%Sensor_Name,'FY2') > 0) then
 
         !--- check if area file
@@ -391,6 +393,8 @@ module SENSOR_MODULE
               call READ_FY_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('COMS-IMAGER')
               call READ_COMS_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('INSAT3-IMAGER')
+              call READ_INSAT3_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('AHI')
               call READ_AHI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('VIIRS','VIIRS-NASA')
@@ -662,6 +666,15 @@ module SENSOR_MODULE
                   Sensor%Algo_Const_File = 'fy2e_algo.dat'
                   exit test_loop
                endif
+
+            case (231)
+               Sensor%Sensor_Name = 'INSAT3-IMAGER'
+               Sensor%Spatial_Resolution_Meters = 4000
+               Sensor%Platform_Name = 'INSAT3D-IMG'
+               Sensor%WMO_Id = 471
+               Sensor%Instr_Const_File = 'insat3_d_instr.dat'
+               Sensor%Algo_Const_File = 'insat3_d_algo.dat' ! Not needed anymore. Dummy name.
+               exit test_loop
 
             case (250)
                Sensor%Sensor_Name = 'COMS-IMAGER'
@@ -1165,6 +1178,14 @@ module SENSOR_MODULE
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
+            !test for INSAT3D
+            case (231)
+               !This is needed to determine type of navigation
+               !as Nav coefficents specific to INSAT3D
+               call READ_NAVIGATION_BLOCK_COMS(trim(Level1b_Full_Name), AREAstr,NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
+
             !test for GOES Imagers or Sounders
             case (70:79,180:185)
 
@@ -1342,6 +1363,7 @@ module SENSOR_MODULE
 
       if (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER' .or. &
           trim(Sensor%Sensor_Name) == 'FY2-IMAGER' .or. &
+          trim(Sensor%Sensor_Name) == 'INSAT3-IMAGER' .or. &
           trim(Sensor%Sensor_Name) == 'COMS-IMAGER') then
          Image%Number_Of_Elements =  int(AREAstr%Num_Elem)
          Image%Number_Of_Lines = AREAstr%Num_Line
@@ -1414,6 +1436,11 @@ module SENSOR_MODULE
 
        case('COMS-IMAGER')
          call READ_COMS(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
+                     AREAstr,NAVstr)
+
+       case('INSAT3-IMAGER')
+         call READ_INSAT3(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      AREAstr,NAVstr)
 

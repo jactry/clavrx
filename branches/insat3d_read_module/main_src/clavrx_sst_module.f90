@@ -131,6 +131,8 @@ select case (Sensor%WMO_Id)
 
       case(259) !GOES-15
 
+      case(471) !INSAT3D
+
       case(706) !NOAA-6
 
       case(707) !NOAA-7

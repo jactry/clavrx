@@ -148,6 +148,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_Modis = 8
    integer,parameter:: ACHA_Mode_Default_Fy2 = 6
    integer,parameter:: ACHA_Mode_Default_AHI = 8
+   integer,parameter:: ACHA_Mode_Default_Insat3d = 6
    
 contains
 
@@ -860,6 +861,8 @@ contains
           default_acha_mode  = ACHA_Mode_Default_Modis 
       case ('AHI')
           default_acha_mode  = ACHA_Mode_Default_AHI   
+      case ( 'INSAT3-IMAGER')
+         default_acha_mode  = ACHA_Mode_Default_Insat3d
       case default 
          print*,'sensor ',SensorName, ' is not set in user_options.f90: check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -928,6 +931,8 @@ contains
           filename  = 'modis_default_nb_cloud_mask_lut.nc'
       case ('AHI')
           filename  = 'ahi_default_nb_cloud_mask_lut.nc'
+      case ( 'INSAT3-IMAGER')
+         filename  = 'coms_default_nb_cloud_mask_lut.nc'
           
       case default 
          print*,'sensor ',SensorName, ' is not set in user_options.f90:  Inform andi.walther@ssec.wisc.edu'  
@@ -1022,6 +1027,9 @@ contains
       case ( 'AHI')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:3)  =  [1, 2, 3]
+      case ( 'INSAT3-IMAGER')
+         possible_acha_modes(1:3)   =  [1,  3, 6]
+         possible_dcomp_modes(1)    =  3
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -1089,6 +1097,8 @@ contains
          Valid_Channels(1:36) = [(i,i=1,36,1)] 
       case ('AHI')
          Valid_Channels(1:16) = [1,2,3,4,6,7,20,27,28,29,30,31,32,33,37,38]    
+      case ( 'INSAT3-IMAGER')
+         Valid_Channels (1:6) = [1,6,20,27,31,32]
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels settings Inform andi.walther@ssec.wisc.edu'   
       end select

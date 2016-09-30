@@ -182,6 +182,9 @@ select case (Sensor%WMO_Id)
          olr_type = 'goes'
          olr_coef(1:5) = (/11.4174, 0.559768, 0.366210, 0.00986985, 0.00850844/)
 
+      case(471) !INSAT3D
+         olr_type = 'none'
+
       case(706) !NOAA-6
          olr_type = 'none'
 

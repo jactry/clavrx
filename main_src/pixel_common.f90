@@ -2204,7 +2204,7 @@ subroutine CREATE_ASOS_ARRAYS(dim1,dim2)
    endif
 end subroutine CREATE_ASOS_ARRAYS
 subroutine RESET_ASOS_ARRAYS()
-   if (allocated(ASOS%Code)) ASOS%Code = Missing_Value_Real4
+   if (allocated(ASOS%Code)) ASOS%Code = Missing_Value_Int1
    if (allocated(ASOS%ECA)) ASOS%ECA = Missing_Value_Real4
    if (allocated(ASOS%Zmax)) ASOS%Zmax = Missing_Value_Real4
    if (allocated(ASOS%Zmin)) ASOS%Zmin = Missing_Value_Real4

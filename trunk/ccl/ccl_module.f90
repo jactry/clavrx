@@ -26,7 +26,7 @@
 ! Public routines used in this MODULE:
 !
 !--------------------------------------------------------------------------------------
-module CLOUD_COVER_LAYERS
+module CCL_MODULE
 
   use CCL_SERVICES_MOD, only : &
            real4, int1, int4, ccl_output_struct,ccl_symbol_struct, &
@@ -129,7 +129,6 @@ module CLOUD_COVER_LAYERS
   allocate(Mask_Clear(Num_Elems, Num_Lines))
   allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
 
-print *, "here 1"
   !--- make cloud fraction pixel level uncertainty
   Pixel_Uncertainty = MISSING_VALUE_REAL4
   where(Input%Cloud_Probability >= 0.5)
@@ -138,7 +137,6 @@ print *, "here 1"
   where(Input%Cloud_Probability < 0.5)
      Pixel_Uncertainty = Input%Cloud_Probability
   endwhere
-print *, "here 2"
 
 ! do j = 1,Input%Number_of_Lines
 !     do i = 1, Input%Number_of_Elements
@@ -153,10 +151,6 @@ print *, "here 2"
 !     enddo
 ! enddo
 
-
-
-
-print *, "here 3"
   !------- identify clear and H/M/L pixels
   Mask_High = 0
   Mask_Mid = 0
@@ -178,7 +172,6 @@ print *, "here 3"
          Mask_Clear = 1
         Output%Cloud_Layer = 0
   endwhere 
-print *, "here 4"
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
@@ -270,4 +263,4 @@ end subroutine COMPUTE_BOX_WIDTH
 !-----------------------------------------------------------
 ! end of MODULE
 !-----------------------------------------------------------
-end module CLOUD_COVER_LAYERS
+end module CCL_MODULE

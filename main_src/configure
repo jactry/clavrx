@@ -40,6 +40,9 @@ GetOptions(
    'baselinemask_dir=s',
    'ctype_dir=s',
    'acha_dir=s',
+   'ccl_dir=s',
+   'pfaast_dir=s',
+   'sasrab_dir=s',
    'dncomp_dir=s',
    'with-xlf90:s',
    'with-ifort:s',
@@ -357,12 +360,76 @@ if (exists($opt{'acha_dir'}))
    }
    else
    {
-      print CONFIG "export ACHA=../cloud_acha/\n";
+      print CONFIG "export ACHA=../acha/\n";
    }
 }
 else
 {
-      print CONFIG "export ACHA=../cloud_acha/\n";
+      print CONFIG "export ACHA=../acha/\n";
+
+}
+if (exists($opt{'ccl_dir'}))
+{
+   if (length($opt{'ccl_dir'}))
+   {
+      print CONFIG "export CCL=$opt{'ccl_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export CCL=../ccl/\n";
+   }
+}
+else
+{
+      print CONFIG "export CCL=../ccl/\n";
+
+}
+if (exists($opt{'asos_dir'}))
+{
+   if (length($opt{'asos_dir'}))
+   {
+      print CONFIG "export ASOS=$opt{'asos_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export ASOS=../asos/\n";
+   }
+}
+else
+{
+      print CONFIG "export ASOS=../asos/\n";
+
+}
+if (exists($opt{'pfaast_dir'}))
+{
+   if (length($opt{'pfaast_dir'}))
+   {
+      print CONFIG "export PFAAST=$opt{'pfaast_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export PFAAST=../pfaast/\n";
+   }
+}
+else
+{
+      print CONFIG "export PFAAST=../pfaast/\n";
+
+}
+if (exists($opt{'sasrab_dir'}))
+{
+   if (length($opt{'sasrab_dir'}))
+   {
+      print CONFIG "export SASRAB=$opt{'sasrab_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export SASRAB=../sasrab/\n";
+   }
+}
+else
+{
+      print CONFIG "export SASRAB=../sasrab/\n";
 
 }
 if (exists($opt{'base_dir'}))
@@ -471,9 +538,24 @@ Command line options:
          cloud type code is in a different location.
 
   --acha_dir=<directory>
-         Path to the directory where HDF include files are stored.
-         Default is ../akh_acha_repo/. This is an optional flag in case your
+         Default is ../acha/. This is an optional flag in case your
          ACHA code is in a different location.
+
+  --ccl_dir=<directory>
+         Default is ../ccl/. This is an optional flag in case your
+         CCL code is in a different location.
+
+  --asos_dir=<directory>
+         Default is ../asos/. This is an optional flag in case your
+         ASOS code is in a different location.
+
+  --sasrab_dir=<directory>
+         Default is ../sasrab/. This is an optional flag in case your
+         SASRAB code is in a different location.
+
+  --pfaast_dir=<directory>
+         Default is ../sasrab/. This is an optional flag in case your
+         PFAAST code is in a different location.
 
   --base_dir=<directory>
          Path to the directory where cloud base files are stored.

@@ -11,10 +11,10 @@ module CCL_SERVICES_MOD
  use PIXEL_COMMON, only: &
        Ch, &
        Nav, &
-       Geo, &
        Sensor, &
        Image, &
        ACHA, &
+       CCL, &
        Sfc, &
        Bad_Pixel_Mask, &
        I_Lrc, &
@@ -26,26 +26,10 @@ module CCL_SERVICES_MOD
        Lon_Nwp_Fac, &
        Lat_Nwp_Fac, &
        Zen_Idx_Rtm, &
-       Tair_Nwp_Pix, &
-       Tsfc_Nwp_Pix, &
-       Ttropo_Nwp_Pix, &
-       Psfc_Nwp_Pix, &
        Smooth_Nwp_Flag, &
-       Process_Undetected_Cloud_Flag, &
        Posterior_Cld_Probability, &
        Cld_Mask, &
        Cld_Type, &
-       Cld_Test_Vector_Packed, &
-       Shadow_Mask, &
-       Cloud_Fraction_Uncer, &
-       Tc_Cirrus_Background, &
-       Tc_Opaque_Cloud, &
-       Pc_Opaque_Cloud, &
-       Zc_Opaque_Cloud, &
-       Cloud_Fraction, &
-       Low_Cloud_Fraction, &
-       Mid_Cloud_Fraction, &
-       High_Cloud_Fraction, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -67,26 +51,23 @@ module CCL_SERVICES_MOD
 
 
  type, public :: ccl_input_struct
- integer :: CCL_Mode_Flag_In
  integer (kind=int4):: Number_of_Elements
  integer (kind=int4):: Number_Of_Lines
- integer (kind=int4):: Num_Line_Max
- integer (kind=int4):: Smooth_Nwp_Fields_Flag
- integer (kind=int4):: Process_Undetected_Cloud_Flag
  real (kind=real4):: Sensor_Resolution_KM
 
  integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
- real, dimension(:,:), pointer:: Pc
  real, dimension(:,:), pointer:: Latitude
  real, dimension(:,:), pointer:: Longitude
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
  real, dimension(:,:), pointer:: Cloud_Probability
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
- integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP 
- integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP 
- integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP 
- integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP 
+ real, dimension(:,:), pointer:: Pc
+
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP
+ integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_Opposite_Corner_NWP
+ integer (kind=int4), dimension(:,:), pointer:: Line_Idx_Opposite_Corner_NWP
  integer (kind=int4), dimension(:,:), pointer:: Viewing_Zenith_Angle_Idx_Rtm
  real (kind=real4), dimension(:,:), pointer:: Latitude_Interp_Weight_NWP
  real (kind=real4), dimension(:,:), pointer:: Longitude_Interp_Weight_NWP

@@ -9,7 +9,7 @@
 module CCL_CLAVRX_BRIDGE
 
  use CCL_SERVICES_MOD
- use CLOUD_COVER_LAYERS
+ use CCL_MODULE
  use CLAVRX_MESSAGE_MODULE, only: MESG
    
  implicit none
@@ -65,12 +65,12 @@ module CCL_CLAVRX_BRIDGE
    call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output) !, Diag)
 
    !--- copy output into CLAVR-x variables
-   Cloud_Fraction = Output%Total_Cloud_Fraction
-   Cloud_Fraction_Uncer = Output%Total_Cloud_Fraction_Uncer
-   High_Cloud_Fraction = Output%High_Cloud_Fraction
-   Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
-   Low_Cloud_Fraction = Output%Low_Cloud_Fraction
-   ACHA%Cld_Layer = Output%Cloud_Layer
+   CCL%Cloud_Fraction = Output%Total_Cloud_Fraction
+   CCL%Cloud_Fraction_Uncer = Output%Total_Cloud_Fraction_Uncer
+   CCL%High_Cloud_Fraction = Output%High_Cloud_Fraction
+   CCL%Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
+   CCL%Low_Cloud_Fraction = Output%Low_Cloud_Fraction
+   CCL%Cld_Layer = Output%Cloud_Layer
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -94,6 +94,13 @@ module CCL_CLAVRX_BRIDGE
      Input%Cloud_Probability => null()
      Input%Cloud_Type =>  null()
      Input%Pc =>  null()
+     Input%Elem_Idx_Nwp =>   null()
+     Input%Line_Idx_Nwp =>  null()
+     Input%Elem_Idx_Opposite_Corner_NWP =>  null()
+     Input%Line_Idx_Opposite_Corner_NWP =>  null()
+     Input%Viewing_Zenith_Angle_Idx_Rtm =>  null()
+     Input%Latitude_Interp_Weight_NWP =>  null()
+     Input%Longitude_Interp_Weight_NWP =>  null()
  end subroutine NULL_INPUT
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding input 
@@ -179,25 +186,36 @@ module CCL_CLAVRX_BRIDGE
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
-   Output%Total_Cloud_Fraction => Cloud_Fraction
-   Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer
-   Output%High_Cloud_Fraction => High_Cloud_Fraction
-   Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction
-   Output%Low_Cloud_Fraction => Low_Cloud_Fraction
-   Output%Cloud_Layer => ACHA%Cld_Layer
+   Output%Total_Cloud_Fraction => CCL%Cloud_Fraction
+   Output%Total_Cloud_Fraction_Uncer => CCL%Cloud_Fraction_Uncer
+   Output%High_Cloud_Fraction => CCL%High_Cloud_Fraction
+   Output%Mid_Cloud_Fraction => CCL%Mid_Cloud_Fraction
+   Output%Low_Cloud_Fraction => CCL%Low_Cloud_Fraction
+   Output%Cloud_Layer => CCL%Cld_Layer
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
 
    Input%Number_of_Elements = Image%Number_Of_Elements
-   Input%Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
-   Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
+   Input%Number_of_Lines = Image%Number_Of_Lines_Per_Segment
+   Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
+
+   Input%Invalid_Data_Mask =>  Bad_Pixel_Mask
    Input%Latitude => Nav%Lat
    Input%Longitude => Nav%Lon
    Input%Surface_Type => Sfc%Sfc_Type
    Input%Cloud_Mask => Cld_Mask
    Input%Cloud_Probability => Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
+   Input%Pc => ACHA%Pc
+
+   Input%Elem_Idx_Nwp =>  I_Nwp
+   Input%Line_Idx_Nwp => J_Nwp
+   Input%Elem_Idx_Opposite_Corner_NWP => I_Nwp_x
+   Input%Line_Idx_Opposite_Corner_NWP => J_Nwp_x
+   Input%Viewing_Zenith_Angle_Idx_Rtm => Zen_Idx_Rtm
+   Input%Latitude_Interp_Weight_NWP => Lat_Nwp_Fac
+   Input%Longitude_Interp_Weight_NWP => Lon_Nwp_Fac
 
  end subroutine SET_INPUT
 !----------------------------------------------------------------------

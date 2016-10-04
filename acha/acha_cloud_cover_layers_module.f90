@@ -1,11 +1,12 @@
-! $Id: acha_cloud_cover_layers_module.f90 1523 2016-02-22 16:30:27Z wstraka $
+! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
-! NAME: asos_module.f90 (src)
-!       ASOS (module)
+! NAME: cloud_cover_layers_module.f90 (src)
+!       CLOUD_COVER_LAYERS (module)
 !
-! PURPOSE: this module houses routines for computing ASOS
+! PURPOSE: this module houses routines for computing cloud cover or
+!          fraction in each atmospheric layer including the total
 !
 ! DESCRIPTION: 
 !
@@ -25,35 +26,36 @@
 ! Public routines used in this MODULE:
 !
 !--------------------------------------------------------------------------------------
-module ASOS_MODULE
+module ACHA_CLOUD_COVER_LAYERS
 
-  use ASOS_SERVICES_MOD, only : &
-           real4, int1, int4, asos_output_struct, asos_symbol_struct, &
-           asos_input_struct, asos_diag_struct
+  use ACHA_SERVICES_MOD, only : &
+           real4, int1, int4, acha_output_struct,acha_symbol_struct, &
+           acha_input_struct, acha_diag_struct
 
  implicit none
- public:: COMPUTE_ASOS
+ public:: COMPUTE_CLOUD_COVER_LAYERS
+!public:: ASOS_CLOUD_CLASSIFICATION
  private:: COMPUTE_BOX_WIDTH
 
- type(asos_symbol_struct), private :: symbol
+ type(acha_symbol_struct), private :: symbol
 
- include 'asos_parameters.inc'
+ include 'ccl_parameters.inc'
 
  contains
 
 !------------------------------------------------------------------------------
 ! compute cloud fraction over a 3x3 array using the Bayesian probability
 !------------------------------------------------------------------------------
- subroutine COMPUTE_ASOS(Input, Symbol_In, Output, Diag)
+ subroutine COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol_In, Output, Diag)
 
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
 
-  type(asos_input_struct), intent(inout) :: Input
-  type(asos_symbol_struct), intent(inout) :: Symbol_In
-  type(asos_output_struct), intent(inout) :: Output
-  type(asos_diag_struct), intent(inout), optional :: Diag
+  type(acha_input_struct), intent(inout) :: Input
+  type(acha_symbol_struct), intent(inout) :: Symbol_In
+  type(acha_output_struct), intent(inout) :: Output
+  type(acha_diag_struct), intent(inout), optional :: Diag
 
   integer:: Num_Elems
   integer:: Num_Lines
@@ -71,10 +73,8 @@ module ASOS_MODULE
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Mid
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Low
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Clear
-  real (kind=real4), dimension(:,:), allocatable:: Total_Cloud_Fraction
-  real (kind=real4), dimension(:,:), allocatable:: High_Cloud_Fraction
-  real (kind=real4), dimension(:,:), allocatable:: Mid_Cloud_Fraction
-  real (kind=real4), dimension(:,:), allocatable:: Low_Cloud_Fraction
+  real (kind=real4), dimension(:,:), allocatable:: Pixel_Uncertainty
+
 
   !-------------------------------------------------------------------------------
   ! Total Cloud Fraction and Its Uncertainty
@@ -84,6 +84,14 @@ module ASOS_MODULE
   symbol = Symbol_In
 
   !--- initialize
+  Output%Total_Cloud_Fraction = MISSING_VALUE_REAL4
+  Output%Total_Cloud_Fraction_Uncer = MISSING_VALUE_REAL4
+  Output%High_Cloud_Fraction = MISSING_VALUE_REAL4
+  Output%Mid_Cloud_Fraction = MISSING_VALUE_REAL4
+  Output%Low_Cloud_Fraction = MISSING_VALUE_REAL4
+print *, "here 0"
+  Output%Cloud_Layer = MISSING_VALUE_INTEGER1
+print *, "here 00"
   Output%ASOS_Cloud_Code = MISSING_VALUE_INTEGER1
   Output%ASOS_Cloud_ECA = MISSING_VALUE_REAL4
   Output%ASOS_Cloud_Zmin = MISSING_VALUE_REAL4
@@ -95,8 +103,8 @@ module ASOS_MODULE
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
   !--- Determine Box Width 
-  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,ASOS_BOX_WIDTH_KM, N)
-  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,ASOS_SPACING_KM, M)
+  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,CCL_BOX_WIDTH_KM, N)
+  call COMPUTE_BOX_WIDTH(Input%Sensor_Resolution_KM,CCL_SPACING_KM, M)
 
 !==============================================================================
 !
@@ -114,7 +122,7 @@ module ASOS_MODULE
 !  1. cloud fractions have values limited by 1/N^2. If N=1, values are 1/9,2/9...
 !  2. Cloud_Fraction is the total cloud amount.  This is computed from the
 !     mask only.  If arrays have pixels with failed ACHA, H+M+L /= Total.
-!  3. H/M/L boundaries in asos_parameters.inc
+!  3. H/M/L boundaries in ccl_parameters.inc
 !==============================================================================
 
   !--------------------------------------------------------------------
@@ -126,28 +134,58 @@ module ASOS_MODULE
   allocate(Mask_Mid(Num_Elems, Num_Lines)) 
   allocate(Mask_Low(Num_Elems, Num_Lines))
   allocate(Mask_Clear(Num_Elems, Num_Lines))
-  allocate(Total_Cloud_Fraction(Num_Elems, Num_Lines))
-  allocate(High_Cloud_Fraction(Num_Elems, Num_Lines))
-  allocate(Mid_Cloud_Fraction(Num_Elems, Num_Lines))
-  allocate(Low_Cloud_Fraction(Num_Elems, Num_Lines))
+  allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
 
+print *, "here 1"
+  !--- make cloud fraction pixel level uncertainty
+  Pixel_Uncertainty = MISSING_VALUE_REAL4
+  where(Input%Cloud_Probability >= 0.5)
+     Pixel_Uncertainty = 1.0 - Input%Cloud_Probability
+  endwhere
+  where(Input%Cloud_Probability < 0.5)
+     Pixel_Uncertainty = Input%Cloud_Probability
+  endwhere
+print *, "here 2"
+
+! do j = 1,Input%Number_of_Lines
+!     do i = 1, Input%Number_of_Elements
+!       if (Input%Cloud_Probability(i,j) < 0.5) THEN
+!         Pixel_Uncertainty(i,j) = Input%Cloud_Probability(i,j)
+!       endif
+!       
+!       if (Input%Cloud_Probability(i,j) >= 0.5) THEN
+!         Pixel_Uncertainty(i,j) = 1.0 - Input%Cloud_Probability(i,j)
+!       endif
+!      
+!     enddo
+! enddo
+
+
+
+
+print *, "here 3"
   !------- identify clear and H/M/L pixels
   Mask_High = 0
   Mask_Mid = 0
   Mask_Low = 0
   Mask_Clear = 0
-  where (Input%Pc /= MISSING_VALUE_REAL4 .and. Input%Pc <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
+  where (Output%Pc /= MISSING_VALUE_REAL4 .and. Output%Pc <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
         Mask_High = 1
+        Output%Cloud_Layer = 3
   endwhere
-  where (Input%Pc < LOW_CLOUD_MIN_PRESSURE_THRESH .and. Input%Pc > HIGH_CLOUD_MAX_PRESSURE_THRESH)
+  where (Output%Pc < LOW_CLOUD_MIN_PRESSURE_THRESH .and. Output%Pc > HIGH_CLOUD_MAX_PRESSURE_THRESH)
          Mask_Mid = 1
+        Output%Cloud_Layer = 2
   endwhere
-  where (Input%Pc >= LOW_CLOUD_MIN_PRESSURE_THRESH)
+  where (Output%Pc >= LOW_CLOUD_MIN_PRESSURE_THRESH)
          Mask_Low = 1
+        Output%Cloud_Layer = 1
   endwhere
   where (Input%Cloud_Mask == Symbol%CLEAR .or. Input%Cloud_Mask == Symbol%PROB_CLEAR)
          Mask_Clear = 1
+        Output%Cloud_Layer = 0
   endwhere 
+print *, "here 4"
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
@@ -180,26 +218,29 @@ module ASOS_MODULE
       Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
 
       !--- see if there are any valid mask points, if not skip this pixel
-      if (Num_Good < COUNT_MIN_ASOS) then
+      if (Num_Good < COUNT_MIN_CCL) then
          cycle
       endif
 
       !--- Total Cloud Fraction
-      Total_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Cloud)/real(Num_Good)
+      Output%Total_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Cloud)/real(Num_Good)
 
-      !--- see if there are any valid ASOS points, if not skip this pixel
+      !--- compute the uncertainty of the total cloud fraction
+      Output%Total_Cloud_Fraction_Uncer(i11:i22,j11:j22) = sum(Pixel_Uncertainty(i1:i2,j1:j2))/real(Num_Good)
+
+      !--- see if there are any valid CCL points, if not skip this pixel
       if (Num_All == 0 ) then
          cycle
       endif
 
       !--- High Cloud Fraction
-      High_Cloud_Fraction(i11:i22,j11:j22) = real(Num_High)/real(Num_All)
+      Output%High_Cloud_Fraction(i11:i22,j11:j22) = real(Num_High)/real(Num_All)
 
       !--- Mid Cloud Fraction
-      Mid_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Mid)/real(Num_All)
+      Output%Mid_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Mid)/real(Num_All)
 
       !--- Low Cloud Fraction - ignore emissivity calc in ECA
-      Low_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Low)/real(Num_All)
+      Output%Low_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Low)/real(Num_All)
 
     end do element_loop_cover
  end do line_loop_cover
@@ -250,7 +291,7 @@ module ASOS_MODULE
 
       !--- OVC
       if (Clear_Fraction < OVC_CLEAR_FRACTION_THRESH) then
-         if (High_Cloud_Fraction(i,j) > Mid_Cloud_Fraction(i,j)) then
+         if (Output%High_Cloud_Fraction(i,j) > Output%Mid_Cloud_Fraction(i,j)) then
              Output%ASOS_Cloud_Code(i11:i22,j11:j22)= 23
          else
              Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 13
@@ -259,14 +300,14 @@ module ASOS_MODULE
 
       !--- BKN
       if (Clear_Fraction >= OVC_CLEAR_FRACTION_THRESH .and. Clear_Fraction < BKN_CLEAR_FRACTION_THRESH) then
-         if (Low_Cloud_Fraction(i,j) > LOW_CLOUD_FRACTION_THRESH) then
-            if (High_Cloud_Fraction(i,j) < 0.10) then
+         if (Output%Low_Cloud_Fraction(i,j) > LOW_CLOUD_FRACTION_THRESH) then
+            if (Output%High_Cloud_Fraction(i,j) < 0.10) then
                  Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 22
             else
                  Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 12
             endif
          else
-            if (High_Cloud_Fraction(i,j) > Mid_Cloud_Fraction(i,j)) then
+            if (Output%High_Cloud_Fraction(i,j) > Output%Mid_Cloud_Fraction(i,j)) then
                  Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 22
             else
                  Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 12
@@ -276,21 +317,21 @@ module ASOS_MODULE
 
       !--- SCT
       if (Clear_Fraction > BKN_CLEAR_FRACTION_THRESH) then
-          if (High_Cloud_Fraction(i,j) > 0.0) then
+          if (Output%High_Cloud_Fraction(i,j) > 0.0) then
               Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 21
-          elseif (Mid_Cloud_Fraction(i,j) > 0.0) then
+          elseif (Output%Mid_Cloud_Fraction(i,j) > 0.0) then
               Output%ASOS_Cloud_Code(i11:i22,j11:j22) = 11
           endif
       endif
 
       if (Output%ASOS_Cloud_Code(i,j) > 20) then
-          Output%ASOS_Cloud_ECA(i11:i22,j11:j22) = sum(Mask_High(i1:i2,j1:j2)*Input%Ec(i1:i2,j1:j2))/real(Num_High)
-          Output%ASOS_Cloud_Zmin(i11:i22,j11:j22) = minval(Mask_High(i1:i2,j1:j2)*Input%Zc(i1:i2,j1:j2))
-          Output%ASOS_Cloud_Zmax(i11:i22,j11:j22) = maxval(Mask_High(i1:i2,j1:j2)*Input%Zc(i1:i2,j1:j2))
+         Output%ASOS_Cloud_ECA(i11:i22,j11:j22) = sum(Mask_High(i1:i2,j1:j2)*Output%Ec(i1:i2,j1:j2))/real(Num_High)
+         Output%ASOS_Cloud_Zmin(i11:i22,j11:j22) = minval(Mask_High(i1:i2,j1:j2)*Output%Zc(i1:i2,j1:j2))
+         Output%ASOS_Cloud_Zmax(i11:i22,j11:j22) = maxval(Mask_High(i1:i2,j1:j2)*Output%Zc(i1:i2,j1:j2))
       elseif (Output%ASOS_Cloud_Code(i,j) > 10) then
-         Output%ASOS_Cloud_ECA(i11:i22,j11:j22) = sum(Mask_Mid(i1:i2,j1:j2)*Input%Ec(i1:i2,j1:j2))/real(Num_Mid)
-         Output%ASOS_Cloud_Zmin(i11:i22,j11:j22) = minval(Mask_Mid(i1:i2,j1:j2)*Input%Zc(i1:i2,j1:j2))
-         Output%ASOS_Cloud_Zmax(i11:i22,j11:j22) = maxval(Mask_Mid(i1:i2,j1:j2)*Input%Zc(i1:i2,j1:j2))
+         Output%ASOS_Cloud_ECA(i11:i22,j11:j22) = sum(Mask_Mid(i1:i2,j1:j2)*Output%Ec(i1:i2,j1:j2))/real(Num_Mid)
+         Output%ASOS_Cloud_Zmin(i11:i22,j11:j22) = minval(Mask_Mid(i1:i2,j1:j2)*Output%Zc(i1:i2,j1:j2))
+         Output%ASOS_Cloud_Zmax(i11:i22,j11:j22) = maxval(Mask_Mid(i1:i2,j1:j2)*Output%Zc(i1:i2,j1:j2))
       else
          Output%ASOS_Cloud_ECA(i11:i22,j11:j22) = MISSING_VALUE_REAL4
          Output%ASOS_Cloud_Zmin(i11:i22,j11:j22) = MISSING_VALUE_REAL4
@@ -301,16 +342,13 @@ module ASOS_MODULE
  end do line_loop_asos
  endif
 
- if (allocated(Mask_High))deallocate(Mask_High)
+ if (allocated(Mask_High)) deallocate(Mask_High)
  if (allocated(Mask_Mid)) deallocate(Mask_Mid)
  if (allocated(Mask_Low)) deallocate(Mask_Low)
  if (allocated(Mask_Clear)) deallocate(Mask_Clear)
- if (allocated(Total_Cloud_Fraction)) deallocate(Total_Cloud_Fraction)
- if (allocated(High_Cloud_Fraction)) deallocate(High_Cloud_Fraction)
- if (allocated(Mid_Cloud_Fraction)) deallocate(Mid_Cloud_Fraction)
- if (allocated(Low_Cloud_Fraction)) deallocate(Low_Cloud_Fraction)
+ if (allocated(Pixel_Uncertainty)) deallocate(Pixel_Uncertainty)
 
- end subroutine COMPUTE_ASOS
+ end subroutine COMPUTE_CLOUD_COVER_LAYERS
 !!-------------------------------------------------------------------------------------
 !! ASOS_CLOUD_CLASSIFICATION
 !!
@@ -442,4 +480,4 @@ end subroutine COMPUTE_BOX_WIDTH
 !-----------------------------------------------------------
 ! end of MODULE
 !-----------------------------------------------------------
-end module ASOS_MODULE
+end module ACHA_CLOUD_COVER_LAYERS

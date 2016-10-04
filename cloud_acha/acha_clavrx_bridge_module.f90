@@ -12,7 +12,6 @@ module ACHA_CLAVRX_BRIDGE
  use ACHA_COMP
  use ACHA_SHADOW
  use ACHA_SERVICES_MOD
- use ACHA_CLOUD_COVER_LAYERS
  use CLAVRX_MESSAGE_MODULE, only: MESG
    
  implicit none
@@ -93,20 +92,6 @@ module ACHA_CLAVRX_BRIDGE
            Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
    end where
 
-   !--- cloud cover layers
-   call COMPUTE_CLOUD_COVER_LAYERS(Input, Symbol, Output) !, Diag)
-
-   !--- copy output into CLAVR-x variables
-   Cloud_Fraction = Output%Total_Cloud_Fraction
-   Cloud_Fraction_Uncer = Output%Total_Cloud_Fraction_Uncer
-   High_Cloud_Fraction = Output%High_Cloud_Fraction
-   Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
-   Low_Cloud_Fraction = Output%Low_Cloud_Fraction
-   ASOS_Cloud_Code = Output%ASOS_Cloud_Code
-   ASOS_Cloud_ECA = Output%ASOS_Cloud_ECA
-   ASOS_Cloud_Zmin = Output%ASOS_Cloud_Zmin
-   ASOS_Cloud_Zmax = Output%ASOS_Cloud_Zmax
-
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
    !-----------------------------------------------------------------------
@@ -136,6 +121,9 @@ module ACHA_CLAVRX_BRIDGE
      Input%Rad_67um =>  null()
      Input%Rad_11um =>  null()
      Input%Rad_133um =>  null()
+     Input%Rad_136um =>  null()
+     Input%Rad_139um =>  null()
+     Input%Rad_142um =>  null()
      Input%Cosine_Zenith_Angle =>  null()
      Input%Sensor_Zenith_Angle =>  null()
      Input%Sensor_Azimuth_Angle =>  null()
@@ -151,11 +139,17 @@ module ACHA_CLAVRX_BRIDGE
      Input%Rad_Clear_11um =>  null()
      Input%Rad_Clear_12um =>  null()
      Input%Rad_Clear_133um =>  null()
+     Input%Rad_Clear_136um =>  null()
+     Input%Rad_Clear_139um =>  null()
+     Input%Rad_Clear_142um =>  null()
      Input%Surface_Emissivity_39um =>  null()
      Input%Surface_Emissivity_11um =>  null()
      Input%Surface_Emissivity_12um =>  null()
      Input%Surface_Emissivity_85um =>  null()
      Input%Surface_Emissivity_133um =>  null()
+     Input%Surface_Emissivity_136um =>  null()
+     Input%Surface_Emissivity_139um =>  null()
+     Input%Surface_Emissivity_142um =>  null()
      Input%Surface_Emissivity_67um =>  null()
      Input%Snow_Class =>  null()
      Input%Surface_Type =>  null()
@@ -203,11 +197,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Lower_Tc =>  null()
      Output%Lower_Zc =>  null()
      Output%Cost =>  null()
-     Output%Total_Cloud_Fraction =>  null()
-     Output%Total_Cloud_Fraction_Uncer =>  null()
-     Output%High_Cloud_Fraction =>  null()
-     Output%Mid_Cloud_Fraction =>  null()
-     Output%Low_Cloud_Fraction =>  null()
      Output%Qf =>  null()
      Output%OE_Qf =>  null()
      Output%Packed_Qf =>  null()
@@ -217,10 +206,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Pc_Opaque =>  null()
      Output%Tc_Opaque =>  null()
      Output%Zc_Opaque =>  null()
-     Output%ASOS_Cloud_Code => null()
-     Output%ASOS_Cloud_ECA =>  null()
-     Output%ASOS_Cloud_Zmin =>  null()
-     Output%ASOS_Cloud_Zmax =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -308,11 +293,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Lower_Tc => ACHA%Lower_Tc
    Output%Lower_Zc => ACHA%Lower_Zc
    Output%Cost  => ACHA%Cost
-   Output%Total_Cloud_Fraction => Cloud_Fraction
-   Output%Total_Cloud_Fraction_Uncer => Cloud_Fraction_Uncer
-   Output%High_Cloud_Fraction => High_Cloud_Fraction
-   Output%Mid_Cloud_Fraction => Mid_Cloud_Fraction
-   Output%Low_Cloud_Fraction => Low_Cloud_Fraction
    Output%Qf => ACHA%Quality_Flag
    Output%OE_Qf => ACHA%OE_Quality_Flags
    Output%Packed_Qf => ACHA%Packed_Quality_Flags
@@ -322,10 +302,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Pc_Opaque => Pc_Opaque_Cloud
    Output%Tc_Opaque => Tc_Opaque_Cloud
    Output%Zc_Opaque => Zc_Opaque_Cloud
-   Output%ASOS_Cloud_Code => ASOS_Cloud_Code
-   Output%ASOS_Cloud_ECA => ASOS_Cloud_ECA
-   Output%ASOS_Cloud_Zmin => ASOS_Cloud_Zmin
-   Output%ASOS_Cloud_Zmax => ASOS_Cloud_Zmax
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -341,18 +317,30 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_Idx_85um = 29      !channel number for 8.5
    Input%Chan_Idx_11um = 31      !channel number for 11
    Input%Chan_Idx_12um = 32      !channel number for 12
+   Input%Chan_Idx_136um = 34     !channel number for 13.6
+   Input%Chan_Idx_139um = 35     !channel number for 13.9
+   Input%Chan_Idx_142um = 36     !channel number for 14.2
    Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
    Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
    Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
    Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
+   Input%Chan_On_136um = Sensor%Chan_On_Flag_Default(34)
+   Input%Chan_On_139um = Sensor%Chan_On_Flag_Default(35)
+   Input%Chan_On_142um = Sensor%Chan_On_Flag_Default(36)
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
    Input%Bt_11um => ch(31)%Bt_Toa
    Input%Bt_12um => ch(32)%Bt_Toa
+   Input%Bt_136um => ch(34)%Bt_Toa
+   Input%Bt_139um => ch(35)%Bt_Toa
+   Input%Bt_142um => ch(36)%Bt_Toa
    Input%Rad_67um => ch(27)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
    Input%Rad_133um => ch(33)%Rad_Toa
+   Input%Rad_136um => ch(34)%Rad_Toa
+   Input%Rad_139um => ch(35)%Rad_Toa
+   Input%Rad_142um => ch(36)%Rad_Toa
    Input%Cosine_Zenith_Angle => Geo%Coszen
    Input%Sensor_Zenith_Angle => Geo%Satzen
    Input%Sensor_Azimuth_Angle => Geo%Sataz
@@ -367,11 +355,17 @@ module ACHA_CLAVRX_BRIDGE
    Input%Rad_Clear_85um => ch(29)%Rad_Toa_Clear
    Input%Rad_Clear_11um => ch(31)%Rad_Toa_Clear
    Input%Rad_Clear_12um => ch(32)%Rad_Toa_Clear
+   Input%Rad_Clear_136um => ch(34)%Rad_Toa_Clear
+   Input%Rad_Clear_139um => ch(35)%Rad_Toa_Clear
+   Input%Rad_Clear_142um => ch(36)%Rad_Toa_Clear
    Input%Surface_Emissivity_39um => ch(20)%Sfc_Emiss
    Input%Surface_Emissivity_11um => ch(31)%Sfc_Emiss
    Input%Surface_Emissivity_12um => ch(32)%Sfc_Emiss
    Input%Surface_Emissivity_85um => ch(29)%Sfc_Emiss
    Input%Surface_Emissivity_133um => ch(33)%Sfc_Emiss
+   Input%Surface_Emissivity_136um => ch(33)%Sfc_Emiss
+   Input%Surface_Emissivity_139um => ch(33)%Sfc_Emiss
+   Input%Surface_Emissivity_142um => ch(33)%Sfc_Emiss
    Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
@@ -401,6 +395,10 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um)
    Input%Bt_133um => ch(Input%Chan_Idx_133um)%Bt_Toa
    Input%Rad_Clear_133um => ch(Input%Chan_Idx_133um)%Rad_Toa_Clear
+
+   Input%Chan_On_136um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_136um)
+   Input%Chan_On_139um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_139um)
+   Input%Chan_On_142um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_142um)
 
  end subroutine SET_INPUT
 !----------------------------------------------------------------------

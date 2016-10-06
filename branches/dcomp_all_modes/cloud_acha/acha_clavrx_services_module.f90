@@ -88,11 +88,17 @@ module ACHA_SERVICES_MOD
  integer:: Chan_Idx_11um
  integer:: Chan_Idx_12um
  integer:: Chan_Idx_133um 
+ integer:: Chan_Idx_136um 
+ integer:: Chan_Idx_139um 
+ integer:: Chan_Idx_142um 
  integer:: Chan_On_67um
  integer:: Chan_On_85um
  integer:: Chan_On_11um
  integer:: Chan_On_12um
  integer:: Chan_On_133um
+ integer:: Chan_On_136um
+ integer:: Chan_On_139um
+ integer:: Chan_On_142um
 
  integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Bt_67um
@@ -100,9 +106,15 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Bt_11um
  real, dimension(:,:), pointer:: Bt_12um
  real, dimension(:,:), pointer:: Bt_133um
+ real, dimension(:,:), pointer:: Bt_136um
+ real, dimension(:,:), pointer:: Bt_139um
+ real, dimension(:,:), pointer:: Bt_142um
  real, dimension(:,:), pointer:: Rad_67um
  real, dimension(:,:), pointer:: Rad_11um
  real, dimension(:,:), pointer:: Rad_133um
+ real, dimension(:,:), pointer:: Rad_136um
+ real, dimension(:,:), pointer:: Rad_139um
+ real, dimension(:,:), pointer:: Rad_142um
  real, dimension(:,:), pointer:: Cosine_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Azimuth_Angle
@@ -118,12 +130,18 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Rad_Clear_11um
  real, dimension(:,:), pointer:: Rad_Clear_12um
  real, dimension(:,:), pointer:: Rad_Clear_133um
+ real, dimension(:,:), pointer:: Rad_Clear_136um
+ real, dimension(:,:), pointer:: Rad_Clear_139um
+ real, dimension(:,:), pointer:: Rad_Clear_142um
  real, dimension(:,:), pointer:: Surface_Emissivity_39um
+ real, dimension(:,:), pointer:: Surface_Emissivity_67um 
  real, dimension(:,:), pointer:: Surface_Emissivity_11um
  real, dimension(:,:), pointer:: Surface_Emissivity_12um
  real, dimension(:,:), pointer:: Surface_Emissivity_85um
  real, dimension(:,:), pointer:: Surface_Emissivity_133um
- real, dimension(:,:), pointer:: Surface_Emissivity_67um 
+ real, dimension(:,:), pointer:: Surface_Emissivity_136um
+ real, dimension(:,:), pointer:: Surface_Emissivity_139um
+ real, dimension(:,:), pointer:: Surface_Emissivity_142um
  integer (kind=int1),dimension(:,:), pointer:: Snow_Class
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Mask
@@ -158,14 +176,24 @@ module ACHA_SERVICES_MOD
    real, dimension(:), pointer :: Atm_Rad_Prof_11um
    real, dimension(:), pointer :: Atm_Rad_Prof_12um
    real, dimension(:), pointer :: Atm_Rad_Prof_133um
+   real, dimension(:), pointer :: Atm_Rad_Prof_136um
+   real, dimension(:), pointer :: Atm_Rad_Prof_139um
+   real, dimension(:), pointer :: Atm_Rad_Prof_142um
    real, dimension(:), pointer :: Atm_Trans_Prof_67um
    real, dimension(:), pointer :: Atm_Trans_Prof_85um
    real, dimension(:), pointer :: Atm_Trans_Prof_11um
    real, dimension(:), pointer :: Atm_Trans_Prof_12um
    real, dimension(:), pointer :: Atm_Trans_Prof_133um
+   real, dimension(:), pointer :: Atm_Trans_Prof_136um
+   real, dimension(:), pointer :: Atm_Trans_Prof_139um
+   real, dimension(:), pointer :: Atm_Trans_Prof_142um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_12um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_133um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_136um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_139um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_142um
 
    !-- NWP profiles
    real, dimension(:), pointer :: T_Prof
@@ -390,6 +418,7 @@ end type acha_rtm_nwp_struct
    if (Acha_Input%Chan_On_12um == sym%YES) then
       Acha_RTM_NWP%Atm_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Rad_Atm_Profile
       Acha_RTM_NWP%Atm_Trans_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Trans_Atm_Profile
+      Acha_RTM_NWP%Black_Body_Rad_Prof_12um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(32)%Rad_BB_Cloud_Profile
    endif
 
    if (Acha_Input%Chan_On_133um == sym%YES) then
@@ -402,6 +431,24 @@ end type acha_rtm_nwp_struct
        Acha_RTM_NWP%Atm_Trans_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Trans_Atm_Profile
        Acha_RTM_NWP%Black_Body_Rad_Prof_133um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(33)%Rad_BB_Cloud_Profile
       endif
+   endif
+
+   if (Acha_Input%Chan_On_136um == sym%YES) then
+      Acha_RTM_NWP%Atm_Rad_Prof_136um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(34)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_136um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(34)%Trans_Atm_Profile
+      Acha_RTM_NWP%Black_Body_Rad_Prof_136um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(34)%Rad_BB_Cloud_Profile
+   endif
+
+   if (Acha_Input%Chan_On_139um == sym%YES) then
+      Acha_RTM_NWP%Atm_Rad_Prof_139um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(35)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_139um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(35)%Trans_Atm_Profile
+      Acha_RTM_NWP%Black_Body_Rad_Prof_139um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(35)%Rad_BB_Cloud_Profile
+   endif
+
+   if (Acha_Input%Chan_On_142um == sym%YES) then
+      Acha_RTM_NWP%Atm_Rad_Prof_142um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(36)%Rad_Atm_Profile
+      Acha_RTM_NWP%Atm_Trans_Prof_142um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(36)%Trans_Atm_Profile
+      Acha_RTM_NWP%Black_Body_Rad_Prof_142um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(36)%Rad_BB_Cloud_Profile
    endif
     
  end subroutine ACHA_FETCH_PIXEL_NWP_RTM

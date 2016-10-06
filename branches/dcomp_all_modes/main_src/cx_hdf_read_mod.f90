@@ -1,7 +1,7 @@
 !  started to make this icar tool ( thanks) in one file and a bit better readable
 !  AW
 !   
-
+!
 
 module cx_hdf_read_mod
    implicit none
@@ -14,7 +14,7 @@ module cx_hdf_read_mod
    integer, parameter :: MAXNCNAM = 128
    
    integer, parameter :: UNCLBRTD = -1
-   integer, parameter ::DECLBRTD =  0
+   integer, parameter :: DECLBRTD =  0
    integer, parameter :: CALIBRTD =  1
       
    type hdf_data
@@ -34,6 +34,10 @@ module cx_hdf_read_mod
       integer(kind=4), dimension(:), allocatable :: i4values
       real(kind=4), dimension(:), allocatable :: r4values
       real(kind=8), dimension(:), allocatable :: r8values
+      
+      contains
+      
+      procedure :: info => hdf_data__info
       
    end type hdf_data
    
@@ -58,16 +62,15 @@ module cx_hdf_read_mod
    public :: hdf_get_file_sds
    public :: hdf_get_finfo
    public :: hdf_get_file_att
+   public :: transform_sds_to_real
    
 contains
+   ! ----------------------------------------------------------------
    !
-   !
-   !  
+   ! ---------------------------------------------------------------- 
    function hdf_get_finfo(hdf_file, nsds, sds_name, natt, att_name)
 
-      integer :: hdf_get_finfo     
-      
-      
+      integer :: hdf_get_finfo       
       character(len=*), intent(in) :: hdf_file
       integer, intent(out) :: nsds
       integer, intent(out) :: natt                 
@@ -129,10 +132,10 @@ contains
 
    end function hdf_get_finfo
   
-   !-------------------------------------------------------------------------------
+   ! -------------------------------------------------------------------------------
    !
    !
-   !
+   ! -------------------------------------------------------------------------------
    function hdf_get_file_att(hdf_file, natt, attrs, nattn, att_name)
 
       integer :: hdf_get_file_att
@@ -166,8 +169,9 @@ contains
 
    end function hdf_get_file_att
   
-   !-------------------------------------------------------------------------------
-
+   ! -------------------------------------------------------------------------------
+   !
+   ! -------------------------------------------------------------------------------
    function hdf_get_obj_att(obj_id, natt, attrs, nattn, att_name)
     
       integer :: hdf_get_obj_att
@@ -182,8 +186,9 @@ contains
 
       hdf_get_obj_att = -1
 
-      if (std_error((present(nattn).or.present(att_name)).and.(.not.(present(nattn).and.present(att_name))),  &
-         "Optionnal arguments must be both defined or undefined")) return
+      if (std_error((present(nattn).or.present(att_name)) &
+         .and.(.not.(present(nattn).and.present(att_name))),  &
+         'Optional arguments must be both defined or undefined')) return
 
       if (present(nattn)) natt = nattn
      
@@ -280,7 +285,8 @@ contains
    end function hdf_get_obj_att
   
    !----------------------------------------------------------------------------------------
-
+   !   reads all sds data from hdf file
+   ! -------------------------------------------------------------------------------------
    function hdf_get_file_sds(hdf_file, nsds, sdata, nsdsn, sds_name, dclb, attr, cal_sub, outtype)
 
       integer :: hdf_get_file_sds
@@ -315,22 +321,29 @@ contains
       real(kind=8), allocatable :: r8data(:)
       type(hdf_sds), pointer :: ps
       type(hdf_data), pointer :: pd  
-
+      
+      
+      integer :: i
+      
+      !
+      ! executable
+      !
+      
       hdf_get_file_sds = -1
 
       if (std_error((present(nsdsn).or.present(sds_name)).and.(.not.(present(nsdsn).and.present(sds_name))), &
          "Optionnal arguments must be both defined or undefined")) return
 
-    
+     
       sd_id = sfstart(hdf_file, DFACC_READ)
       if (hdf_error(sd_id)) return
 
       if (hdf_error(sffinfo(sd_id, nsds, natt))) goto 99999
-
+     
       if (present(nsdsn)) nsds = nsdsn
       att_sw = .true.
       if (present(attr)) att_sw = attr
-
+ 
       if (nsds <= 0) goto 99999
 
       allocate (sdsind(1:nsds), stat=ierr)
@@ -342,8 +355,11 @@ contains
          end do
       else
          do isds = 1, nsds
+           
             sdsind(isds) = sfn2index(sd_id, sds_name(isds))
+           
             if (hdf_error(sdsind(isds))) goto 99999
+          
          end do
       end if
 
@@ -351,7 +367,7 @@ contains
       if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
 
       do isds = 1, nsds        
-
+        
          sds_id = sfselect(sd_id, sdsind(isds))
          if (hdf_error(sds_id)) goto 99999
 
@@ -365,15 +381,31 @@ contains
          pd % calbrtd = DECLBRTD
          
          if (sfgcal(sds_id, pd%calibr(1), pd%calibr(2), pd%calibr(3), pd%calibr(4), pd%utype) < 0) then
-            att_idx = sffattr(sds_id, 'scale_factor')
-            if (att_idx >= 0) then
-               att_idx = sffattr(sds_id, 'add_offset')
-               if (std_error(att_idx < 0, 'Error while getting calibration coefficients')) goto 99999
-            end if
-            
+            print*,'jjj'
             pd%calibr = 0.; pd%calibr(1) = 1.
             pd%calbrtd = UNCLBRTD
-            pd%utype = pd%type
+            pd%utype = pd%type            
+            print*,'ooo'
+            att_idx = sffattr(sds_id, 'scale_factor')
+            if (std_error(att_idx < 0, 'Error while getting calibration coefficients')) goto 99999
+             print*,'ooo1',att_idx, '==='
+             print*,'start',ps%nattr
+            do i = 1, ps%nattr
+               print*,trim(ps%attr(i)%name)
+               print*,ps%attr(i)%data%r4values
+            end do
+             
+            if (att_idx >= 0) pd%calibr(1) = ps%attr(att_idx)%data%r4values(1)
+            print*,'kkk'
+            att_idx = sffattr(sds_id, 'add_offset')
+            if (std_error(att_idx < 0, 'Error while getting calibration coefficients')) goto 99999
+            print*,'ooo2'
+            if (att_idx >= 0) pd%calibr(3) = ps%attr(att_idx)%data%r4values(1)
+            pd % calbrtd = DECLBRTD
+
+            print*,'kkk'
+            
+  
          
          else if (present(dclb)) then
             if (.not.dclb) pd%calbrtd = CALIBRTD
@@ -451,27 +483,27 @@ contains
          end if
 
 
-       select case (rtype)
+         select case (rtype)
 
-       case (DFNT_CHAR8)
-          allocate (pd%c1values(1:pd%nval), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (pd%calbrtd == DECLBRTD) then
-             pd%i1values = r8data
-          else
-             if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%c1values))) goto 99999
-          endif
+         case (DFNT_CHAR8)
+            allocate (pd%c1values(1:pd%nval), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (pd%calbrtd == DECLBRTD) then
+               pd%i1values = r8data
+            else
+               if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%c1values))) goto 99999
+            endif
 
-       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
-          allocate (pd%i1values(1:pd%nval), stat=ierr)
-          if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
-          if (pd%calbrtd == DECLBRTD) then
-             pd%i1values = r8data
-          else
-             if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%i1values))) goto 99999
-          endif
+         case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+            allocate (pd%i1values(1:pd%nval), stat=ierr)
+            if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
+            if (pd%calbrtd == DECLBRTD) then
+               pd%i1values = r8data
+            else
+               if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%i1values))) goto 99999
+            endif
           
-       case (DFNT_UINT16, DFNT_INT16)
+         case (DFNT_UINT16, DFNT_INT16)
           allocate (pd%i2values(1:pd%nval), stat=ierr)
           if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
           if (pd%calbrtd == DECLBRTD) then
@@ -480,7 +512,7 @@ contains
              if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%i2values))) goto 99999
           endif
           
-       case (DFNT_UINT32, DFNT_INT32)
+         case (DFNT_UINT32, DFNT_INT32)
           allocate (pd%i4values(1:pd%nval), stat=ierr)
           if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
           if (pd%calbrtd == DECLBRTD) then
@@ -489,7 +521,7 @@ contains
              if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%i4values))) goto 99999
           endif
 
-       case (DFNT_FLOAT32)
+         case (DFNT_FLOAT32)
           allocate (pd%r4values(1:pd%nval), stat=ierr)
           if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
           if (pd%calbrtd == DECLBRTD) then
@@ -498,7 +530,7 @@ contains
              if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%r4values))) goto 99999
           endif
           
-       case (DFNT_FLOAT64)
+         case (DFNT_FLOAT64)
           allocate (pd%r8values(1:pd%nval), stat=ierr)
           if (std_error(ierr /= 0, "Dynamic memory allocation error")) goto 99999
           if (pd%calbrtd == DECLBRTD) then
@@ -507,191 +539,162 @@ contains
              if (hdf_error(sfrdata(sds_id, start, stride, pd%dimsize, pd%r8values))) goto 99999
           endif
 
-       case default
+         case default
           print *, "Unimplemented data type: ", pd%type; goto 99999
-
-       end select
-
-
-       if (allocated(r8data)) then
+         end select
+         
+         if (allocated(r8data)) then
           deallocate(r8data, stat=ierr)
           if (std_error(ierr /= 0, "Dynamic memory desallocation error")) goto 99999
-       endif
+         endif
 
-       
-       if (att_sw .and. sdata(isds)%nattr > 0) then
+         if (att_sw .and. sdata(isds)%nattr > 0) then
           if (hdf_get_obj_att(sds_id, sdata(isds)%nattr, sdata(isds)%attr) < 0) goto 99999
-       endif
+         endif
 
       
-       if (hdf_error(sfendacc(sds_id))) goto 99999
+         if (hdf_error(sfendacc(sds_id))) goto 99999
 
-    end do                           !
-
-    hdf_get_file_sds = 0
+      end do             
+      hdf_get_file_sds = 0
 
 99999 continue
 
     
-    if (allocated(sdsind)) then
-       deallocate (sdsind, stat=ierr)
-       if (std_error(ierr /= 0, "Dynamic memory desallocation error")) hdf_get_file_sds = -1
-    endif
+      if (allocated(sdsind)) then
+         deallocate (sdsind, stat=ierr)
+         if (std_error(ierr /= 0, "Dynamic memory desallocation error")) hdf_get_file_sds = -1
+      endif
 
    
-    if (hdf_error(sfend(sd_id))) hdf_get_file_sds = -1
+      if (hdf_error(sfend(sd_id))) hdf_get_file_sds = -1
 
-  end function hdf_get_file_sds
+   end function hdf_get_file_sds
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
   
-  subroutine default_dclb(n, data, pente, offset)
+   subroutine default_dclb(n, data, slope, offset)
 
-    integer :: n
-    real(kind=8), dimension(n) :: data
-    real(kind=8) :: pente, offset
+      integer :: n
+      real(kind=8), dimension(n) :: data
+      real(kind=8) :: slope, offset
 
-    data = (data - offset)*pente
+      data = (data - offset) * slope
 
-  end subroutine default_dclb
+   end subroutine default_dclb
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------  
+   function hdf_error(hdfcode)
+      logical :: hdf_error
+      integer :: hdfcode, dummy
+      hdf_error = (hdfcode < 0)
+      if (hdf_error) dummy = heprnt(0)
+      return
+   end function hdf_error
+
+   !-------------------------------------------------------------------------------
+   function std_error(ierr, msg)
+      logical :: std_error, ierr
+      character (len=*) :: msg
+      std_error = ierr
+      if (ierr) print *, '***ERROR: '//msg
+   end function std_error
+
+   !-------------------------------------------------------------------------------  
+   function hdf_typesize(t)
+
+      integer :: hdf_typesize
+      integer ::   t                  
   
-  function hdf_error(hdfcode)
-    logical :: hdf_error
-    integer :: hdfcode, dummy
-    hdf_error = (hdfcode < 0)
-    if (hdf_error) dummy = heprnt(0)
-    return
-  end function hdf_error
-
-!-------------------------------------------------------------------------------
+      select case (t)
+      case (DFNT_UCHAR8, DFNT_CHAR8, DFNT_UINT8, DFNT_INT8); hdf_typesize = 1
+      case (DFNT_UINT16, DFNT_INT16)                       ; hdf_typesize = 2
+      case (DFNT_UINT32, DFNT_INT32, DFNT_FLOAT32)         ; hdf_typesize = 4
+      case (DFNT_FLOAT64)                                  ; hdf_typesize = 8
+      case default                                         ; hdf_typesize = 0
+      end select
   
-  function std_error(ierr, msg)
-    logical :: std_error, ierr
-    character (len=*) :: msg
-    std_error = ierr
-    if (ierr) print *, '***ERROR: '//msg
-  end function std_error
+   end function hdf_typesize
 
-!-------------------------------------------------------------------------------
-  
-  function hdf_typesize(t)
-    
-    
+   !-------------------------------------------------------------------------------
+   function hdf_typedesc(htyp)
+      integer :: htyp           
+      character(len=60) :: hdf_typedesc   
 
-    integer            :: &
-         hdf_typesize,    & 
-         t                  
-  
-    select case (t)
-    case (DFNT_UCHAR8, DFNT_CHAR8, DFNT_UINT8, DFNT_INT8); hdf_typesize = 1
-    case (DFNT_UINT16, DFNT_INT16)                       ; hdf_typesize = 2
-    case (DFNT_UINT32, DFNT_INT32, DFNT_FLOAT32)         ; hdf_typesize = 4
-    case (DFNT_FLOAT64)                                  ; hdf_typesize = 8
-    case default                                         ; hdf_typesize = 0
-    end select
-  
-  end function hdf_typesize
+      select case (htyp)
+      case (DFNT_UCHAR8 ); hdf_typedesc = '8-bit unsigned character / integer*1'
+      case (DFNT_CHAR8  ); hdf_typedesc = '8-bit signed character / character*1'
+      case (DFNT_UINT8  ); hdf_typedesc = '8-bit unsigned integer / not supported'
+      case (DFNT_INT8   ); hdf_typedesc = '8-bit signed integer / integer*1'
+      case (DFNT_UINT16 ); hdf_typedesc = '16-bit unsigned integer / not supported'
+      case (DFNT_INT16  ); hdf_typedesc = '16-bit signed integer / integer*2'
+      case (DFNT_UINT32 ); hdf_typedesc = '32-bit unsigned integer / not supported'
+      case (DFNT_INT32  ); hdf_typedesc = '32-bit signed integer / integer*4'
+      case (DFNT_UINT64 ); hdf_typedesc = '64-bit unsigned integer / not supported'
+      case (DFNT_INT64  ); hdf_typedesc = '64-bit signed integer / integer*4'
+      case (DFNT_FLOAT32); hdf_typedesc = '32-bit floating point number / real*4'
+      case (DFNT_FLOAT64); hdf_typedesc = '64-bit floating point number / real*8'
+      case default       ; hdf_typedesc = 'unsupported data type'
+      end select
 
-!-------------------------------------------------------------------------------
-
-  function hdf_typedesc(htyp)
-
-    
-    integer           :: &
-         htyp           
-
-    character(len=60) :: &
-         hdf_typedesc   
-
-     select case (htyp)
-     case (DFNT_UCHAR8 ); hdf_typedesc = '8-bit unsigned character / integer*1'
-     case (DFNT_CHAR8  ); hdf_typedesc = '8-bit signed character / character*1'
-     case (DFNT_UINT8  ); hdf_typedesc = '8-bit unsigned integer / not supported'
-     case (DFNT_INT8   ); hdf_typedesc = '8-bit signed integer / integer*1'
-     case (DFNT_UINT16 ); hdf_typedesc = '16-bit unsigned integer / not supported'
-     case (DFNT_INT16  ); hdf_typedesc = '16-bit signed integer / integer*2'
-     case (DFNT_UINT32 ); hdf_typedesc = '32-bit unsigned integer / not supported'
-     case (DFNT_INT32  ); hdf_typedesc = '32-bit signed integer / integer*4'
-     case (DFNT_UINT64 ); hdf_typedesc = '64-bit unsigned integer / not supported'
-     case (DFNT_INT64  ); hdf_typedesc = '64-bit signed integer / integer*4'
-     case (DFNT_FLOAT32); hdf_typedesc = '32-bit floating point number / real*4'
-     case (DFNT_FLOAT64); hdf_typedesc = '64-bit floating point number / real*8'
-     case default       ; hdf_typedesc = 'unsupported data type'
-     end select
-
-     return
+      return
    end function hdf_typedesc
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
+   subroutine dealloc_sds(nsds, sds)
 
-  subroutine dealloc_sds(nsds, sds)
+      integer :: isds, nsds, iatt
 
-    integer :: isds, nsds, iatt
+      type(hdf_sds), dimension(:), allocatable :: sds                 
 
-    type(hdf_sds), dimension(:), allocatable :: &
-         sds                 
+      do isds = 1, nsds
+         if (allocated(sds(isds)%attr)) then
+            do iatt = 1, sds(isds)%nattr
+               call dealloc_hdata(sds(isds)%attr(iatt)%data)
+            end do
+            deallocate(sds(isds)%attr)
+         end if
+         call dealloc_hdata(sds(isds)%data)
+      end do
+      if (allocated(sds)) deallocate(sds)
 
-    do isds = 1, nsds
-       if (allocated(sds(isds)%attr)) then
-          do iatt = 1, sds(isds)%nattr
-             call dealloc_hdata(sds(isds)%attr(iatt)%data)
-          enddo
-          deallocate(sds(isds)%attr)
-       endif
-       call dealloc_hdata(sds(isds)%data)
-    enddo
-    if (allocated(sds)) deallocate(sds)
+   end subroutine dealloc_sds
 
-  end subroutine dealloc_sds
+   !-------------------------------------------------------------------------------
+   subroutine dealloc_hdata(data)
 
-!-------------------------------------------------------------------------------
+      type(hdf_data) :: data           
 
-  subroutine dealloc_hdata(data)
+      if (allocated(data%c1values)) deallocate(data%c1values)
+      if (allocated(data%i1values)) deallocate(data%i1values)
+      if (allocated(data%i2values)) deallocate(data%i2values)
+      if (allocated(data%i4values)) deallocate(data%i4values)
+      !if (allocated(data%i8values)) deallocate(data%i8values)
+      if (allocated(data%r4values)) deallocate(data%r4values)
+      if (allocated(data%r8values)) deallocate(data%r8values)
 
-    type(hdf_data) :: &
-         data           
-
-    if (allocated(data%c1values)) deallocate(data%c1values)
-    if (allocated(data%i1values)) deallocate(data%i1values)
-    if (allocated(data%i2values)) deallocate(data%i2values)
-    if (allocated(data%i4values)) deallocate(data%i4values)
-    !if (allocated(data%i8values)) deallocate(data%i8values)
-    if (allocated(data%r4values)) deallocate(data%r4values)
-    if (allocated(data%r8values)) deallocate(data%r8values)
-
-  end subroutine dealloc_hdata
+   end subroutine dealloc_hdata
   
-  !-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
   
    function hdf_get_sds(hdf_file, sds_name)
 
-      character (len=*), intent( in)                   :: &
-         hdf_file               
-
-      character (len=*), intent( in)                   :: &
-         sds_name              
-      integer*1, dimension(:), pointer                 :: &
-         hdf_get_sds           
-
-      type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                   
-      integer                                          :: &
-         nsds                  
+      character (len=*), intent(in) :: hdf_file               
+      character (len=*), intent(in) :: sds_name              
+      integer*1, dimension(:), pointer :: hdf_get_sds           
+      type(hdf_sds), dimension(:), allocatable, target :: sds                   
+      integer :: nsds                  
 
       nullify(hdf_get_sds)
 
       if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), .false., .false., outtype=DFNT_UCHAR8) >= 0) then
-
          allocate(hdf_get_sds(sds(1)%data%size))
          hdf_get_sds = sds(1)%data%i1values
-
       endif
 
       call dealloc_sds(nsds, sds)
 
-  end function hdf_get_sds
+   end function hdf_get_sds
 
    !-------------------------------------------------------------------------------
 
@@ -714,7 +717,7 @@ contains
       if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
          allocate(hdf_get_int_sds(sds(1)%data%dimsize(1)))
 
-         if     (allocated(sds(1)%data%c1values)) then
+         if (allocated(sds(1)%data%c1values)) then
             hdf_get_int_sds = transfer(sds(1)%data%c1values, (/1,1/))
          elseif (allocated(sds(1)%data%i1values)) then
             hdf_get_int_sds = sds(1)%data%i1values
@@ -732,144 +735,103 @@ contains
 
       call dealloc_sds(nsds, sds)
 
-  end function hdf_get_int_sds
+   end function hdf_get_int_sds
 
-!-------------------------------------------------------------------------------
-  
-  function hdf_get_int_sds_2D(hdf_file, sds_name, raw, cal_sub)
+   !-------------------------------------------------------------------------------
+   function hdf_get_int_sds_2D(hdf_file, sds_name, raw, cal_sub)
+      character (len=*), intent( in) :: hdf_file     
+      character (len=*), intent( in) :: sds_name              
+      logical, optional  :: raw      
+      integer(kind=4), dimension(:,:), pointer :: hdf_get_int_sds_2D   
+      optional :: cal_sub
+      external cal_sub
+      type(hdf_sds), dimension(:), allocatable, target :: sds                    
+      integer :: nsds 
+      integer :: dim1
+      integer :: dim2                   
+      logical :: dclb                   
 
-    ! Déclaration des arguments de la function
+      dclb = .true.
+      if (present(raw)) dclb = (.not.raw)
+      nullify(hdf_get_int_sds_2D)
 
-    character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
+      if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
 
-    character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+         dim1 = sds(1)%data%dimsize(1)
+         dim2 = sds(1)%data%dimsize(2)
+         allocate(hdf_get_int_sds_2D(dim1, dim2))
 
-    logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
-
-    integer(kind=4), dimension(:,:), pointer         :: &
-         hdf_get_int_sds_2D     ! Valeur retournée par la fonction
-
-    optional :: &
-         cal_sub
-
-    external cal_sub
-
-    ! Déclaration des variables locales
-
-    type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
-
-    integer                                          :: &
-         nsds,                & ! Nombre de SDS effectivement extraits
-         dim1,                & ! 1ère dimension du SDS
-         dim2                   ! 2ème dimension du SDS
-
-    logical                                          :: &
-         dclb                   ! Flag réel de décalibration
-
-    dclb = .true.
-    if (present(raw)) dclb = (.not.raw)
-    nullify(hdf_get_int_sds_2D)
-
-    if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
-
-       dim1 = sds(1)%data%dimsize(1)
-       dim2 = sds(1)%data%dimsize(2)
-       allocate(hdf_get_int_sds_2D(dim1, dim2))
-
-       if     (allocated(sds(1)%data%c1values)) then
-          hdf_get_int_sds_2D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2/))
-       elseif (allocated(sds(1)%data%i1values)) then
-          hdf_get_int_sds_2D = reshape(sds(1)%data%i1values, (/dim1, dim2/))
-       elseif (allocated(sds(1)%data%i2values)) then
-          hdf_get_int_sds_2D = reshape(sds(1)%data%i2values, (/dim1, dim2/))
-       elseif (allocated(sds(1)%data%i4values)) then
-          hdf_get_int_sds_2D = reshape(sds(1)%data%i4values, (/dim1, dim2/))
-       elseif (allocated(sds(1)%data%r4values)) then
-          hdf_get_int_sds_2D = reshape(sds(1)%data%r4values, (/dim1, dim2/))
-       elseif (allocated(sds(1)%data%r8values)) then
-          hdf_get_int_sds_2D = reshape(sds(1)%data%r8values, (/dim1, dim2/))
-       endif
+         if     (allocated(sds(1)%data%c1values)) then
+            hdf_get_int_sds_2D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2/))
+         elseif (allocated(sds(1)%data%i1values)) then
+            hdf_get_int_sds_2D = reshape(sds(1)%data%i1values, (/dim1, dim2/))
+         elseif (allocated(sds(1)%data%i2values)) then
+            hdf_get_int_sds_2D = reshape(sds(1)%data%i2values, (/dim1, dim2/))
+         elseif (allocated(sds(1)%data%i4values)) then
+            hdf_get_int_sds_2D = reshape(sds(1)%data%i4values, (/dim1, dim2/))
+         elseif (allocated(sds(1)%data%r4values)) then
+            hdf_get_int_sds_2D = reshape(sds(1)%data%r4values, (/dim1, dim2/))
+         elseif (allocated(sds(1)%data%r8values)) then
+            hdf_get_int_sds_2D = reshape(sds(1)%data%r8values, (/dim1, dim2/))
+         endif
       
-    endif
+      endif
        
-    call dealloc_sds(nsds, sds)
+      call dealloc_sds(nsds, sds)
 
-  end function hdf_get_int_sds_2D
+   end function hdf_get_int_sds_2D
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
     
-  function hdf_get_int_sds_3D(hdf_file, sds_name, raw, cal_sub)
+   function hdf_get_int_sds_3D(hdf_file, sds_name, raw, cal_sub)
 
-    ! Déclaration des arguments de la function
+      character (len=*), intent(in) :: hdf_file               
+      character (len=*), intent(in) :: sds_name               
+      logical, optional :: raw                    
+      integer(kind=4), dimension(:,:,:), pointer :: hdf_get_int_sds_3D    
+      optional :: cal_sub
+      external cal_sub
+      type(hdf_sds), dimension(:), allocatable, target :: sds                   
 
-    character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
+      integer :: nsds
+      integer :: dim1
+      integer :: dim2
+      integer :: dim3
+      logical :: dclb                   
 
-    character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+      dclb = .true.
+      if (present(raw)) dclb = (.not.raw)
+      nullify(hdf_get_int_sds_3D)
 
-    logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
+      if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
 
-    integer(kind=4), dimension(:,:,:), pointer       :: &
-         hdf_get_int_sds_3D     ! Valeur retournée par la fonction
+         dim1 = sds(1)%data%dimsize(1)
+         dim2 = sds(1)%data%dimsize(2)
+         dim3 = sds(1)%data%dimsize(3)
+         allocate(hdf_get_int_sds_3D(dim1, dim2, dim3))
 
-    optional :: &
-         cal_sub
+         if (allocated(sds(1)%data%c1values)) then
+            hdf_get_int_sds_3D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i1values)) then
+            hdf_get_int_sds_3D = reshape(sds(1)%data%i1values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i2values)) then
+            hdf_get_int_sds_3D = reshape(sds(1)%data%i2values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i4values)) then
+            hdf_get_int_sds_3D = reshape(sds(1)%data%i4values, (/dim1, dim2, dim3/))
 
-    external cal_sub
-
-    ! Déclaration des variables locales
-
-    type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
-
-    integer                                          :: &
-         nsds,                & ! Nombre de SDS effectivement extraits
-         dim1,                & ! 1ère dimension du SDS
-         dim2,                & ! 2ème dimension du SDS
-         dim3                   ! 3ème dimension du SDS
-
-    logical                                          :: &
-         dclb                   ! Flag réel de décalibration
-
-    dclb = .true.
-    if (present(raw)) dclb = (.not.raw)
-    nullify(hdf_get_int_sds_3D)
-
-    if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
-
-       dim1 = sds(1)%data%dimsize(1)
-       dim2 = sds(1)%data%dimsize(2)
-       dim3 = sds(1)%data%dimsize(3)
-       allocate(hdf_get_int_sds_3D(dim1, dim2, dim3))
-
-       if     (allocated(sds(1)%data%c1values)) then
-          hdf_get_int_sds_3D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i1values)) then
-          hdf_get_int_sds_3D = reshape(sds(1)%data%i1values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i2values)) then
-          hdf_get_int_sds_3D = reshape(sds(1)%data%i2values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i4values)) then
-          hdf_get_int_sds_3D = reshape(sds(1)%data%i4values, (/dim1, dim2, dim3/))
-! En prévision...
 !       elseif (allocated(sds(1)%data%i8values)) then
 !          hdf_get_int_sds_3D = reshape(sds(1)%data%i8values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%r4values)) then
-          hdf_get_int_sds_3D = reshape(sds(1)%data%r4values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%r8values)) then
-          hdf_get_int_sds_3D = reshape(sds(1)%data%r8values, (/dim1, dim2, dim3/))
-       endif
+         elseif (allocated(sds(1)%data%r4values)) then
+            hdf_get_int_sds_3D = reshape(sds(1)%data%r4values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%r8values)) then
+            hdf_get_int_sds_3D = reshape(sds(1)%data%r8values, (/dim1, dim2, dim3/))
+         endif
       
-    endif
+      endif
        
-    call dealloc_sds(nsds, sds)
+      call dealloc_sds(nsds, sds)
 
-  end function hdf_get_int_sds_3D
+   end function hdf_get_int_sds_3D
 
 !-------------------------------------------------------------------------------
     
@@ -936,36 +898,31 @@ contains
 
   end function hdf_get_dbl_sds
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
     
-  function hdf_get_dbl_sds_2D(hdf_file, sds_name, raw, cal_sub)
+   function hdf_get_dbl_sds_2D(hdf_file, sds_name, raw, cal_sub)
 
-    ! Déclaration des arguments de la function
-
-    character (len=*), intent( in)                   :: &
-         hdf_file               ! Chemin du fichier HDF
-
-    character (len=*), intent( in)                   :: &
-         sds_name               ! Chemin du fichier HDF
+      character (len=*), intent( in) :: hdf_file              
+      character (len=*), intent( in) :: sds_name             
 
     logical, optional                                :: &
-         raw                    ! true si données brutes, .false. ou omis sinon
+         raw                   
 
     real(kind=8), dimension(:,:), pointer            :: &
          hdf_get_dbl_sds_2D
 
-    ! Déclaration des variables locales
+  
 
     type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    ! Tableau des SDS extraits
+         sds                   
 
     integer                                          :: &
-         nsds,                & ! Nombre de SDS effectivement extraits
-         dim1,                & ! 1ère dimension du SDS
-         dim2                   ! 2ème dimension du SDS
+         nsds,                & 
+         dim1,                & 
+         dim2                  
 
     logical                                          :: &
-         dclb                   ! Flag réel de décalibration
+         dclb                  
 
     optional :: &
          cal_sub
@@ -1005,73 +962,101 @@ contains
 
   end function hdf_get_dbl_sds_2D
 
-!-------------------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
     
-  function hdf_get_dbl_sds_3D(hdf_file, sds_name, raw, cal_sub)
+   function hdf_get_dbl_sds_3D(hdf_file, sds_name, raw, cal_sub)
 
-    
+      character (len=*), intent(in) :: hdf_file              
+      character (len=*), intent(in) :: sds_name              
+      logical, optional :: raw                   
+      real(kind=8), dimension(:,:,:), pointer :: hdf_get_dbl_sds_3D
+      type(hdf_sds), dimension(:), allocatable, target :: sds
+      integer :: nsds
+      integer :: dim1
+      integer :: dim2 
+      integer :: dim3                   
+      logical :: dclb                  
+      optional :: cal_sub
+      external cal_sub
 
-    character (len=*), intent( in)                   :: &
-         hdf_file              
+      dclb = .true.
+      if (present(raw)) dclb = (.not.raw)
+      nullify(hdf_get_dbl_sds_3D)
 
-    character (len=*), intent( in)                   :: &
-         sds_name              
+      if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
 
-    logical, optional                                :: &
-         raw                   
+         dim1 = sds(1)%data%dimsize(1)
+         dim2 = sds(1)%data%dimsize(2)
+         dim3 = sds(1)%data%dimsize(3)
+         allocate(hdf_get_dbl_sds_3D(dim1, dim2, dim3))
 
-    real(kind=8), dimension(:,:,:), pointer          :: &
-         hdf_get_dbl_sds_3D
+         if (allocated(sds(1)%data%c1values)) then
+            hdf_get_dbl_sds_3D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i1values)) then
+            hdf_get_dbl_sds_3D = reshape(sds(1)%data%i1values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i2values)) then
+            hdf_get_dbl_sds_3D = reshape(sds(1)%data%i2values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%i4values)) then
+            hdf_get_dbl_sds_3D = reshape(sds(1)%data%i4values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%r4values)) then
+            hdf_get_dbl_sds_3D = reshape(sds(1)%data%r4values, (/dim1, dim2, dim3/))
+         elseif (allocated(sds(1)%data%r8values)) then
+            hdf_get_dbl_sds_3D = reshape(sds(1)%data%r8values, (/dim1, dim2, dim3/))
+         endif
+      endif
 
-    
+      call dealloc_sds(nsds, sds)
 
-    type(hdf_sds), dimension(:), allocatable, target :: &
-         sds                    
-
-    integer                                          :: &
-         nsds,                & 
-         dim1,                & 
-         dim2,                & 
-         dim3                   
-
-    logical                                          :: &
-         dclb                  
-
-    optional :: &
-         cal_sub
-
-    external cal_sub
-
-    dclb = .true.
-    if (present(raw)) dclb = (.not.raw)
-    nullify(hdf_get_dbl_sds_3D)
-
-    if (hdf_get_file_sds(hdf_file, nsds, sds, 1, (/sds_name/), dclb, .false., cal_sub=cal_sub) >= 0) then
-
-       dim1 = sds(1)%data%dimsize(1)
-       dim2 = sds(1)%data%dimsize(2)
-       dim3 = sds(1)%data%dimsize(3)
-       allocate(hdf_get_dbl_sds_3D(dim1, dim2, dim3))
-
-       if     (allocated(sds(1)%data%c1values)) then
-          hdf_get_dbl_sds_3D = reshape(transfer(sds(1)%data%c1values, (/1,1/)), (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i1values)) then
-          hdf_get_dbl_sds_3D = reshape(sds(1)%data%i1values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i2values)) then
-          hdf_get_dbl_sds_3D = reshape(sds(1)%data%i2values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%i4values)) then
-          hdf_get_dbl_sds_3D = reshape(sds(1)%data%i4values, (/dim1, dim2, dim3/))
-
-       elseif (allocated(sds(1)%data%r4values)) then
-          hdf_get_dbl_sds_3D = reshape(sds(1)%data%r4values, (/dim1, dim2, dim3/))
-       elseif (allocated(sds(1)%data%r8values)) then
-          hdf_get_dbl_sds_3D = reshape(sds(1)%data%r8values, (/dim1, dim2, dim3/))
-       endif
+   end function hdf_get_dbl_sds_3D
+  
+   !-------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------
+   subroutine transform_sds_to_real (sds, data_real)
+      type(hdf_data), intent(in) :: sds
+      real, intent(out) :: data_real(:)
+   
+      select case ( sds.type)
+      case (DFNT_CHAR8)
+         print*,'CHAR8 '
+      case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+         data_real = real (sds % i1values)
+      case (DFNT_UINT16, DFNT_INT16)  
+         data_real = real (sds % i2values)
+      case (DFNT_UINT32, DFNT_INT32)  
+         data_real = real (sds % i4values)
+      case (DFNT_FLOAT32)
+         data_real = real (sds % r4values)
+      case (DFNT_FLOAT64)
+         data_real = real (sds % r8values)
+      end select
+   
+   end subroutine transform_sds_to_real
+  
+   !-------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------
+   subroutine hdf_data__info (self)
+      class(hdf_data):: self
       
-    endif
+      print*,'data size: ', self.size
+      print*,'data_type: ',self.type
+      select case ( self.type)
+      case (DFNT_CHAR8)
+         print*,'CHAR8 '
+      case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+         print*,'UINT8 '
+      case (DFNT_UINT16, DFNT_INT16)  
+         print*,'UINT16 '
+      case (DFNT_UINT32, DFNT_INT32)  
+         print*,'UINT32 '
+      case (DFNT_FLOAT32)
+         print*,'FLOAT32 '
+      case (DFNT_FLOAT64)
+         print*,'FLOAT64 '
+      end select
 
-    call dealloc_sds(nsds, sds)
-
-  end function hdf_get_dbl_sds_3D
+   end subroutine hdf_data__info
+  
 
 end module cx_hdf_read_mod

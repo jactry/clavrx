@@ -215,6 +215,7 @@ comp_asc_des_level2b_objs = comp_asc_des_level2b.o \
 
 create_level2b_objs = create_level2b.o \
                             file_tools.o  \
+                            cx_grid_tools_mod.o \
                             cx_hdf_read_mod.o
 
 #Level2b subsetting routines
@@ -315,11 +316,12 @@ calibration_constants.o: calibration_constants.f90 constant.o
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
-create_level2b.o: create_level2b.o file_tools.o cx_hdf_read_mod.o
+create_level2b.o: create_level2b.o file_tools.o cx_hdf_read_mod.o cx_grid_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
 cx_file_tools_mod.o:cx_file_tools_mod.f90
+cx_grid_tools_mod.o:cx_grid_tools_mod.f90
 cx_hdf_read_mod.o:cx_hdf_write_mod.f90
 cx_hdf_write_mod.o:cx_hdf_write_mod.f90
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90

@@ -617,7 +617,6 @@
 
       end if
 
-     
 
       !*************************************************************************
       ! Marker: Populate or read in other lookup tables
@@ -1024,7 +1023,7 @@
 
              !--- solar glint mask
              if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-               call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
+               call COMPUTE_GLINT(Geo%Glintzen, Ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
              endif
 
              !--- lunar glint mask
@@ -1033,6 +1032,19 @@
                                   Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
              endif
 
+            endif
+
+            !------------------------------------------------------------------------------
+            ! compute forward scattering masks for use in cloud detection
+            !------------------------------------------------------------------------------
+
+            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+
+             !--- solar glint mask
+             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+               call COMPUTE_FORWARD_SCATTERING_MASK (Geo%Scatangle, Ch(1)%Ref_Toa, &
+                                              Ref_Ch1_Std_3x3, Geo%Scat_Mask)
+             endif
             endif
 
             !*******************************************************************

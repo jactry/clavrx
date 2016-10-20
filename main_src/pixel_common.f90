@@ -205,6 +205,7 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable:: Lunzen
      real (kind=real4), dimension(:,:), allocatable:: Lunaz
      real (kind=real4), dimension(:,:), allocatable:: LunRelaz
+     integer (kind=int1), dimension(:,:), allocatable:: Scat_Mask
      double precision:: Moon_Phase_Angle
      real (kind=real4):: Moon_Illum_Frac
      real(kind=real4):: Solzen_Min_Limit
@@ -1346,6 +1347,7 @@ subroutine CREATE_GEO_ARRAYS(dim1,dim2)
     allocate (Geo%Coszen(dim1,dim2))
     allocate (Geo%Cossolzen(dim1,dim2))
     allocate (Geo%Scatangle(dim1,dim2))
+    allocate (Geo%Scat_Mask(dim1,dim2))
     allocate (Geo%Airmass(dim1,dim2))
     if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
            allocate(Geo%Lunzen(dim1,dim2))
@@ -1366,6 +1368,7 @@ subroutine DESTROY_GEO_ARRAYS()
   if (allocated(Geo%Coszen)) deallocate(Geo%Coszen)
   if (allocated(Geo%Cossolzen)) deallocate(Geo%Cossolzen)
   if (allocated(Geo%Scatangle)) deallocate(Geo%Scatangle)
+  if (allocated(Geo%Scat_Mask)) deallocate(Geo%Scat_Mask)
   if (allocated(Geo%Airmass)) deallocate(Geo%Airmass)
   if (allocated(Geo%Lunzen))deallocate(Geo%Lunzen)
   if (allocated(Geo%Lunaz)) deallocate(Geo%Lunaz)
@@ -1384,6 +1387,7 @@ subroutine RESET_GEO_ARRAYS()
   if (allocated(Geo%Coszen)) Geo%Coszen = Missing_Value_Real4
   if (allocated(Geo%Cossolzen)) Geo%Cossolzen = Missing_Value_Real4
   if (allocated(Geo%Scatangle)) Geo%Scatangle = Missing_Value_Real4
+  if (allocated(Geo%Scat_Mask)) Geo%Scat_Mask = Missing_Value_Int1
   if (allocated(Geo%Airmass)) Geo%Airmass = Missing_Value_Real4
   if (allocated(Geo%Lunzen)) Geo%Lunzen = Missing_Value_Real4
   if (allocated(Geo%Lunaz)) Geo%Lunaz = Missing_Value_Real4

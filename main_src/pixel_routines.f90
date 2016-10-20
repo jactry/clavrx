@@ -35,6 +35,7 @@
 ! CONVERT_TIME - compute a time in hours based on millisecond time in leveL1b
 ! COMPUTE_SNOW_CLASS - based on Snow information, make a Snow Classification
 ! COMPUTE_GLINT - derive a glint mask
+! COMPUTE_FORWARD_SCATTERING_MASK - compute forward scattering mask
 !
 ! DETERMINE_LEVEL1B_COMPRESSION
 !
@@ -70,6 +71,7 @@ MODULE PIXEL_ROUTINES
           READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
           COMPUTE_GLINT,                    &
+          COMPUTE_FORWARD_SCATTERING_MASK,  &
           QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
@@ -1929,6 +1931,112 @@ subroutine COMPUTE_GLINT(Source_GLintzen, Source_Ref_Toa, Source_Ref_Std_3x3, &
 
 
  end subroutine COMPUTE_GLINT
+
+!----------------------------------------------------------------------
+!--- Compute a mask identifying presence of forward scattering
+!--- 
+!--- input and output passed through global arrays
+!----------------------------------------------------------------------
+subroutine COMPUTE_FORWARD_SCATTERING_MASK (Source_Scat_Angle, &
+                  Source_Ref_Toa, Source_Ref_Std_3x3, Source_Scat_Mask)
+
+  real, dimension(:,:), intent(in):: Source_Scat_Angle
+  real, dimension(:,:), intent(in):: Source_Ref_Toa
+  real, dimension(:,:), intent(in):: Source_Ref_Std_3x3
+  integer(kind=int1),  dimension(:,:), intent(out):: Source_Scat_Mask
+
+  !--- define local variables
+  integer:: Number_Of_Lines
+  integer:: Number_Of_Elements
+  integer:: Elem_Idx
+  integer:: Line_Idx
+  real:: Refl_Thresh
+
+
+  !--- alias some global sizes into local values
+  Number_Of_Lines = Image%Number_Of_Lines_Per_Segment
+  Number_Of_Elements = Image%Number_Of_Elements
+
+  Source_Scat_Mask = Missing_Value_Int1
+
+     line_loop: do Line_Idx = 1, Number_Of_Lines
+
+     element_loop: do Elem_Idx = 1, Number_Of_Elements
+
+     !--- skip bad pixels
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+             cycle
+     endif
+
+     !--- initialize valid pixel to no
+     Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+
+     !--- skip snow pixels
+     !if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and. &
+     if (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) then
+
+       !--- turn on in Scat_Angle check and sufficient Ref_Ch1
+       if ((Source_Scat_Angle(Elem_Idx,Line_Idx) < Scat_Angle_Thresh)) then
+
+          !--- assume to be glint if in geometric zone
+          Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%YES
+
+          if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+
+            !--- exclude pixels colder than the freezing temperature
+            if (Ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < 273.15) then
+              Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+              cycle
+            endif
+
+            !--- exclude pixels colder than the surface
+            if (ch(31)%Bt_Toa(Elem_Idx,Line_Idx) < ch(31)%Bt_Toa_Clear(Elem_Idx,Line_Idx) - 5.0) then
+              Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+              cycle
+            endif
+
+          endif
+
+          !-turn off if non-uniform - but not near limb
+          if (Geo%Satzen(Elem_Idx,Line_Idx) < 45.0) then
+           if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+            if (Bt_Ch31_Std_3x3(Elem_Idx,Line_Idx) > 1.0) then
+             Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+             cycle
+            endif
+           endif
+
+           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+            if (Source_Ref_Std_3x3(Elem_Idx,Line_Idx) > 2.0) then
+             Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+             cycle
+            endif
+           endif
+          endif
+
+          !-checks on the value of ch1
+          if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+
+            !-turn off if dark
+            if (Source_Ref_Toa(Elem_Idx,Line_Idx) < 5.0) then
+             Source_Scat_Mask(Elem_Idx,Line_Idx) = sym%NO
+             cycle
+            endif
+
+          endif
+
+       endif  !Scat_Angle check
+
+     endif    !snow check
+
+     enddo element_loop
+   enddo line_loop
+
+!Diag_Pix_Array_1 = Source_Scat_Mask
+
+
+ end subroutine COMPUTE_FORWARD_SCATTERING_MASK
+
 
 !----------------------------------------------------------------------
 ! Read MODIS white sky albedoes

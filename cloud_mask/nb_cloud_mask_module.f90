@@ -607,8 +607,10 @@ module NB_CLOUD_MASK
               Mountain_Flag = symbol%NO
           endif
 
-          if (Input%Scatzen < Forward_Scatter_Scatzen_Max_Thresh .and. &
-              Input%Solzen < Forward_Scatter_Solzen_Max_Thresh) then
+!         if (Input%Scatzen < Forward_Scatter_Scatzen_Max_Thresh .and. &
+!              Input%Solzen < Forward_Scatter_Solzen_Max_Thresh) then
+! ---> DENIS TEST
+          if (Input%Scat_Mask == 1) then
               Forward_Scattering_Flag = symbol%YES
           else
               Forward_Scattering_Flag = symbol%NO
@@ -854,6 +856,7 @@ module NB_CLOUD_MASK
                        if (Input%Solzen < 90.0) then
                          if (Input%Chan_On_063um == symbol%NO) cycle
                          if (Day_063_Spatial_Flag == symbol%NO) cycle 
+!                         if (Forward_Scattering_Flag == symbol%YES) cycle ! ---> DENIS TEST
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
                          if (Input%Ref_063um_Std == Missing_Value_Real4) cycle
@@ -873,6 +876,7 @@ module NB_CLOUD_MASK
                        if (Input%Solzen < 90.0) then
                          if (Input%Chan_On_063um == symbol%NO) cycle
                          if (Day_063_Spatial_Flag == symbol%NO) cycle
+!                         if (Forward_Scattering_Flag == symbol%YES) cycle ! ---> DENIS TEST
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
                          if (Input%Ref_063um_Min == Missing_Value_Real4) cycle
@@ -898,6 +902,7 @@ module NB_CLOUD_MASK
                        if (Input%Chan_On_063um == symbol%NO) cycle
                        if (Input%Chan_On_086um == symbol%NO) cycle
                        if (Day_063_Flag == symbol%NO) cycle
+!                       if (Forward_Scattering_Flag == symbol%YES) cycle ! ---> DENIS TEST
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Input%Ref_063um == Missing_Value_Real4) cycle

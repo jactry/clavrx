@@ -39,6 +39,7 @@ module ALGORITHM_CONSTANTS
   implicit none
 
   real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0
+  real (kind=real4), parameter, public:: SCAT_ANGLE_THRESH = 90.0
   real (kind=real4), parameter, public:: STEFAN_BOLTZMANN_CONSTANT = 5.670e-08  !W/m^2/K^4
   real (kind=real4), parameter, public:: SOLAR_CONSTANT = 1360.0   !W/m^2
 

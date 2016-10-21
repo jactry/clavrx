@@ -39,15 +39,17 @@ implicit none
 
 
 public::  READ_SEVIRI,  &
-          CALIBRATE_SEVIRI_DARK_COMPOSITE
-
+          CALIBRATE_SEVIRI_DARK_COMPOSITE, &
+          READ_NAVIGATION_BLOCK_SEVIRI
          
 private:: GET_SEVIRI_NAVIGATION,  &
           LOAD_SEVIRI_CAL_AREA,  &
           MSG_RAD_BT
 
+! SUB_LON_MSG needs to be read from the nav block as it can be different
+! from 0.0 when looking at Met-8 Indian Ocean data.
 !---------- info needed for navigation   
-real(KIND(0.0d0)), parameter, private ::  SUB_LON_MSG = 0.0     ! Longitude of Projection Sub-Satellite Point in degrees
+!---stwreal(KIND(0.0d0)), parameter, private ::  SUB_LON_MSG = 0.0     ! Longitude of Projection Sub-Satellite Point in degrees
 !real, parameter, public ::  SUB_LON_MET8 = -3.477996     ! Longitude of actual Sub-Satellite Point for Met-8
 !real, parameter, public ::  SUB_LON_MET9 = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-9
 integer, parameter, private ::  CFAC = -781648343  
@@ -413,6 +415,7 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride
     TYPE (AREA_STRUCT), intent(in) ::AREAstr
+    type (GVAR_NAV) :: NAVstr
     
     integer :: i, j, elem, line
     real(kind=real8) :: dlat, dlon
@@ -421,8 +424,12 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
     integer ::  COFF_MSG = 1856
     integer ::  LOFF_MSG = 1856
     integer :: FGF_TYPE = 2 !MSG uses EUMETSAT GEOS navigation, so set type here
-        
-       
+    real(KIND(0.0d0)) ::  SUB_LON_MSG      ! Longitude of Projection Sub-Satellite Point in degrees
+
+    ! Read the satellite sub point longitude from the AREA file.
+    call READ_NAVIGATION_BLOCK_SEVIRI(trim(Image%Level1b_Full_Name), AREAstr, NAVstr)
+    SUB_LON_MSG = NAVstr%sublon
+
     do j=1, ysize
       line = (ystart - 1) + j
 
@@ -529,5 +536,31 @@ real(kind=real4), dimension(:,:),  intent(out):: Ref_Ch1_Dark
         end where
 
 end subroutine CALIBRATE_SEVIRI_DARK_COMPOSITE
+
+subroutine READ_NAVIGATION_BLOCK_SEVIRI(filename, AREAstr, NAVstr)
+
+  CHARACTER(len=*), intent(in):: filename
+  type(AREA_STRUCT), intent(in):: AREAstr
+  type(GVAR_NAV), intent(inout):: NAVstr
+
+  integer(kind=int4)nav_offset
+  integer:: number_of_words_read
+  integer(kind=int4), dimension(640) :: i4buf
+
+  ! Navigation block offset is read from the McIDAS AREA file.
+  nav_offset = AREAstr%sec_key_nav
+
+  ! Read the navigation block.
+  call mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
+                    number_of_words_read, i4buf)
+
+  ! Isolate the navigation block.
+  call move_bytes(4,i4buf(1),NAVstr%nav_type,0)
+
+  ! Extract the satellite sub longitude point, and convert to positive east.
+  NAVstr%sub_lon = real(i4buf(6),kind=real4) / 10000 * real(-1.0)
+  NAVstr%sublon = NAVstr%sub_lon
+
+end subroutine READ_NAVIGATION_BLOCK_SEVIRI
 
 end module SEVIRI_MODULE

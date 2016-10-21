@@ -1110,9 +1110,13 @@ module SENSOR_MODULE
     type (AREA_STRUCT), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
     REAL (KIND=REAL4)                 :: Lat_temp, Lon_temp
+    INTEGER (KIND=INT4)               :: Year_temp
 
     Sensor%Geo_Sub_Satellite_Longitude = Missing_Value_Real4
     Sensor%Geo_Sub_Satellite_Latitude = Missing_Value_Real4
+
+    ! Calculate year of the image from the McIDAS AREA file.
+    Year_temp = 1900 + int(AREAstr%img_Date / 1000)
 
     if (AREAstr%Version_Num == 4) then                          !begin valid Areafile test
 
@@ -1120,11 +1124,16 @@ module SENSOR_MODULE
  
             !test for SEVIRI
             case (51:53)
+               ! Read the satellite sub longitude point from the AREA file.
+               call READ_NAVIGATION_BLOCK_SEVIRI(trim(Level1b_Full_Name), AREAstr, NAVstr)
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat 
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
-               if (AREAstr%Sat_Id_Num == 51 ) Sensor%Geo_Sub_Satellite_Longitude = -3.477996     ! Longitude of actual Sub-Satellite Point for Met-8
+               ! Override the above for the operational sub satellite longitudes.
+               ! Longitude of actual Sub-Satellite Point for Met-8 when it was operational.  For Met-8 Indian
+               ! Ocean service, the subpoint from the AREA file is used.
+               if (AREAstr%Sat_Id_Num == 51 .AND. Year_temp < 2016 ) Sensor%Geo_Sub_Satellite_Longitude = -3.477996 
                if (AREAstr%Sat_Id_Num == 52 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-9
-               if (AREAstr%Sat_Id_Num == 53 ) Sensor%Geo_Sub_Satellite_Longitude = -0.159799     ! Longitude of actual Sub-Satellite Point for Met-10 (?? TBD ??)
+               if (AREAstr%Sat_Id_Num == 53 ) Sensor%Geo_Sub_Satellite_Longitude = 0.06          ! Longitude of actual Sub-Satellite Point for Met-10
                AREAstr%Cal_Offset = AREAstr%reserved(3)
                     
             !test for MTSAT

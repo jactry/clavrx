@@ -70,6 +70,7 @@ module CCL_MODULE
 
   integer (kind=int1), dimension(:,:), allocatable:: Mask_High
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Mid
+  integer (kind=int1), dimension(:,:), allocatable:: Mask_Temp
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Low
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Clear
   real (kind=real4), dimension(:,:), allocatable:: Pixel_Uncertainty
@@ -125,6 +126,7 @@ module CCL_MODULE
   Num_Lines = Input%Number_of_Lines
   allocate(Mask_High(Num_Elems, Num_Lines)) 
   allocate(Mask_Mid(Num_Elems, Num_Lines)) 
+  allocate(Mask_Temp(Num_Elems, Num_Lines)) 
   allocate(Mask_Low(Num_Elems, Num_Lines))
   allocate(Mask_Clear(Num_Elems, Num_Lines))
   allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
@@ -154,6 +156,7 @@ module CCL_MODULE
   !------- identify clear and H/M/L pixels
   Mask_High = 0
   Mask_Mid = 0
+  Mask_Temp = 0
   Mask_Low = 0
   Mask_Clear = 0
   where (Input%Pc /= MISSING_VALUE_REAL4 .and. Input%Pc <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
@@ -170,8 +173,19 @@ module CCL_MODULE
   endwhere
   where (Input%Cloud_Mask == Symbol%CLEAR .or. Input%Cloud_Mask == Symbol%PROB_CLEAR)
          Mask_Clear = 1
-        Output%Cloud_Layer = 0
+         Output%Cloud_Layer = 0
   endwhere 
+
+  !--- add in obscured clouds
+  where (Mask_High == 1 .and. Input%Pc_Base > HIGH_CLOUD_MAX_PRESSURE_THRESH)
+         Mask_Mid = 1
+         Output%Cloud_Layer = 12
+  endwhere
+  where (Mask_Mid == 1 .and. Input%Pc_Base > LOW_CLOUD_MIN_PRESSURE_THRESH)
+         Mask_Low = 1
+         Mask_Temp = 1
+         Output%Cloud_Layer = 21
+  endwhere
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
@@ -201,7 +215,8 @@ module CCL_MODULE
       Num_Clear = int(sum(real(Mask_Clear(i1:i2,j1:j2))))
       Num_Cloud = count(Input%Cloud_Probability(i1:i2,j1:j2) >= 0.5)        
       Num_Good = count(Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL4)        
-      Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
+      !Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
+      Num_All = Num_Cloud + Num_Clear
 
       !--- see if there are any valid mask points, if not skip this pixel
       if (Num_Good < COUNT_MIN_CCL) then

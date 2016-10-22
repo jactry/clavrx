@@ -63,6 +63,7 @@ module CCL_SERVICES_MOD
  real, dimension(:,:), pointer:: Cloud_Probability
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
  real, dimension(:,:), pointer:: Pc
+ real, dimension(:,:), pointer:: Pc_Base
 
  integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP
  integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP

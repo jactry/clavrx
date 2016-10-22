@@ -94,6 +94,7 @@ module CCL_CLAVRX_BRIDGE
      Input%Cloud_Probability => null()
      Input%Cloud_Type =>  null()
      Input%Pc =>  null()
+     Input%Pc_Base =>  null()
      Input%Elem_Idx_Nwp =>   null()
      Input%Line_Idx_Nwp =>  null()
      Input%Elem_Idx_Opposite_Corner_NWP =>  null()
@@ -208,6 +209,7 @@ module CCL_CLAVRX_BRIDGE
    Input%Cloud_Probability => Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
    Input%Pc => ACHA%Pc
+   Input%Pc_Base => ACHA%Pc_Base
 
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp

@@ -301,6 +301,14 @@ case("cld_press_base_acha")
    if (allocated ( ACHA%Pc_Base)) then
       data_dim2_dtype_r4 = ACHA%Pc_Base(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("cld_height_lower_acha")
+   if (allocated ( ACHA%Lower_zc)) then
+      data_dim2_dtype_r4 = ACHA%Lower_zc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_pressure_lower_acha")
+   if (allocated ( ACHA%Lower_pc)) then
+      data_dim2_dtype_r4 = ACHA%Lower_pc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("cld_altitude_acha")
    if (allocated ( acha%alt)) then
       data_dim2_dtype_r4 = acha%alt(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -318,8 +326,8 @@ case("acha_inversion_flag")
       data_dim2_dtype1 = ACHA%Inversion_Flag(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cld_layer")
-   if (allocated ( ACHA%Cld_Layer)) then
-      data_dim2_dtype1 = ACHA%Cld_Layer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%Cld_Layer)) then
+      data_dim2_dtype1 = CCL%Cld_Layer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("conv_cloud_probability")
    if (allocated ( ACHA%Conv_Cld_Prob)) then
@@ -494,24 +502,24 @@ case("cloud_transmission_0_65um_nom")
       data_dim2_dtype_r4 = cloud_063um_transmission_solar(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_fraction")
-   if (allocated ( Cloud_Fraction)) then
-      data_dim2_dtype_r4 = Cloud_Fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%Cloud_Fraction)) then
+      data_dim2_dtype_r4 = CCL%Cloud_Fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("high_cloud_fraction")
-   if (allocated ( high_cloud_fraction)) then
-      data_dim2_dtype_r4 = high_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%high_cloud_fraction)) then
+      data_dim2_dtype_r4 = CCL%high_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("mid_cloud_fraction")
-   if (allocated ( mid_cloud_fraction)) then
-      data_dim2_dtype_r4 = mid_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%mid_cloud_fraction)) then
+      data_dim2_dtype_r4 = CCL%mid_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("low_cloud_fraction")
-   if (allocated ( low_cloud_fraction)) then
-      data_dim2_dtype_r4 = low_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%low_cloud_fraction)) then
+      data_dim2_dtype_r4 = CCL%low_cloud_fraction(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_fraction_uncertainty")
-   if (allocated ( Cloud_Fraction_Uncer)) then
-      data_dim2_dtype_r4 = Cloud_Fraction_Uncer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CCL%Cloud_Fraction_Uncer)) then
+      data_dim2_dtype_r4 = CCL%Cloud_Fraction_Uncer(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("emiss_3_75um_nom")
    if (allocated ( Ems_Ch20)) then

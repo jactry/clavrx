@@ -68,7 +68,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(BASE):$(CTYPE):$(CMASK):$(BASELINEMASK)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CCL):$(ASOS):$(CTYPE):$(CMASK):$(BASELINEMASK):$(SASRAB):$(PFAAST)
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -119,11 +119,16 @@ clavrxorb_objs = process_clavrx.o \
 		 acha_clavrx_bridge_module.o \
                  acha_comp_module.o \
                  acha_shadow_module.o \
-                 acha_cloud_cover_layers_module.o \
                  cloud_base_module.o \
 		 cloud_base_clavrx_bridge_module.o \
 		 cloud_base_clavrx_services_module.o \
 	         cloud_height_routines.o \
+                 ccl_module.o \
+		 ccl_clavrx_services_module.o \
+		 ccl_clavrx_bridge_module.o \
+                 asos_module.o \
+		 asos_clavrx_bridge_module.o \
+		 asos_clavrx_services_module.o \
 	         file_tools.o \
 	         clavrx_message_module.o \
 	         land_sfc_properties.o \
@@ -285,7 +290,7 @@ acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nw
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_services_module.f90                    
 
 acha_clavrx_bridge_module.o: acha_clavrx_bridge_module.f90 acha_module.o acha_comp_module.o \
-                  acha_cloud_cover_layers_module.o acha_shadow_module.o acha_clavrx_services_module.o 
+                  acha_shadow_module.o acha_clavrx_services_module.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_module.f90                    
 
 acha_module.o: acha_module.f90 acha_clavrx_services_module.o
@@ -297,9 +302,6 @@ acha_comp_module.o: acha_comp_module.f90 acha_clavrx_services_module.o
 acha_shadow_module.o: acha_shadow_module.f90
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_shadow_module.f90
 
-acha_cloud_cover_layers_module.o: acha_cloud_cover_layers_module.f90
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_cloud_cover_layers_module.f90
-
 cloud_base_clavrx_bridge_module.o: cloud_base_clavrx_bridge_module.f90  cloud_base_module.o cloud_base_clavrx_services_module.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_clavrx_bridge_module.f90                    
 
@@ -309,6 +311,25 @@ cloud_base_clavrx_services_module.o: cloud_base_clavrx_services_module.f90 pixel
 
 cloud_base_module.o: cloud_base_module.f90 cloud_base_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(BASE)/cloud_base_module.f90
+
+ccl_clavrx_services_module.o: ccl_clavrx_services_module.f90 pixel_common.o nwp_common.o \
+                     rtm_common.o constant.o planck.o rtm_common.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CCL)/ccl_clavrx_services_module.f90                    
+
+ccl_clavrx_bridge_module.o: ccl_clavrx_bridge_module.f90 ccl_module.o ccl_clavrx_services_module.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CCL)/ccl_clavrx_bridge_module.f90                    
+
+ccl_module.o: ccl_module.f90 ccl_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CCL)/ccl_module.f90
+
+asos_clavrx_services_module.o: asos_clavrx_services_module.f90 pixel_common.o constant.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ASOS)/asos_clavrx_services_module.f90                    
+
+asos_clavrx_bridge_module.o: asos_clavrx_bridge_module.f90 asos_module.o asos_clavrx_services_module.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ASOS)/asos_clavrx_bridge_module.f90                    
+
+asos_module.o: asos_module.f90 asos_clavrx_services_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ASOS)/asos_module.f90
 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o 
@@ -328,10 +349,10 @@ cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 cx_file_tools_mod.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
-cx_pfaast_mod.o:cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
-cx_pfaast_tools_mod.o:cx_pfaast_tools_mod.f90 
-cx_pfaast_coef_mod.o:cx_pfaast_coef_mod.f90 strings.o
-cx_pfaast_constants_mod.o:cx_pfaast_constants_mod.f90
+cx_pfaast_mod.o:$(PFAAST)/cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
+cx_pfaast_tools_mod.o:$(PFAAST)/cx_pfaast_tools_mod.f90 
+cx_pfaast_coef_mod.o:$(PFAAST)/cx_pfaast_coef_mod.f90 strings.o
+cx_pfaast_constants_mod.o:$(PFAAST)/cx_pfaast_constants_mod.f90
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_utility.o clavrx_message_module.o level2b.o
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
@@ -427,6 +448,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf_params.o dnb_retrievals_mod.o \
               sort_module.o calibration_constants.o algorithm_constants.o  \
               acha_clavrx_bridge_module.o cloud_base_clavrx_bridge_module.o \
+              ccl_clavrx_bridge_module.o asos_clavrx_bridge_module.o \
               nb_cloud_mask_clavrx_bridge_module.o baseline_cloud_mask.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
@@ -448,13 +470,13 @@ process_clavrx.o: process_clavrx.f90 $(sub_routine)
 
 ########################### PFAST ##############################################
 sasrab.o : sasrab.f conver.o get_lun.o
-	        $(fc) -c $(fflags_sasrab_f77) sasrab.f 
+	        $(fc) -c $(fflags_sasrab_f77) $(SASRAB)/sasrab.f 
 
 conver.o : conver.f90
-	        $(fc) -c $(fflags_sasrab_f90) conver.f90
+	        $(fc) -c $(fflags_sasrab_f90) $(SASRAB)/conver.f90
 
 getmod.o : getmod.f90
-	        $(fc) -c $(fflags_sasrab_f90) getmod.f90
+	        $(fc) -c $(fflags_sasrab_f90) $(SASRAB)/getmod.f90
 
 big_endian.o : big_endian.f
 	        $(fc) -c $(fflags_pfast) big_endian.f

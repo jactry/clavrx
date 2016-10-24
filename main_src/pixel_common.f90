@@ -319,7 +319,6 @@ module PIXEL_COMMON
     integer(kind=int1), dimension(:,:), allocatable:: Processing_Order
     integer(kind=int1), dimension(:,:), allocatable:: Inversion_Flag
     integer (kind=int1), dimension(:,:), allocatable:: Quality_Flag
-    integer (kind=int1), dimension(:,:), allocatable:: Cld_Layer
     integer (kind=int1), dimension(:,:), allocatable:: Meta_Data
     integer (kind=int1), dimension(:,:,:), allocatable:: OE_Quality_Flags
     integer (kind=int1), dimension(:,:), allocatable:: Packed_Quality_Flags
@@ -332,6 +331,22 @@ module PIXEL_COMMON
     real(kind=real4):: Valid_Count
   end type acha_definition
 
+  type :: ccl_definition
+    integer (kind=int1), dimension(:,:), allocatable:: Cld_Layer
+    real(kind=real4), dimension(:,:), allocatable, public :: Cloud_Fraction
+    real(kind=real4), dimension(:,:), allocatable, public :: Cloud_Fraction_Uncer
+    real(kind=real4), dimension(:,:), allocatable, public :: High_Cloud_Fraction
+    real(kind=real4), dimension(:,:), allocatable, public :: Mid_Cloud_Fraction
+    real(kind=real4), dimension(:,:), allocatable, public :: Low_Cloud_Fraction
+  end type ccl_definition
+
+  type :: asos_definition
+    integer (kind=int1), dimension(:,:), allocatable, public:: Code
+    real(kind=real4), dimension(:,:), allocatable, public:: ECA
+    real(kind=real4), dimension(:,:), allocatable, public:: Zmin
+    real(kind=real4), dimension(:,:), allocatable, public:: Zmax
+  end type asos_definition
+
 
   !---- declare structures using above types
   type(observations), dimension(Nchan_Clavrx), public, save, target :: Ch
@@ -341,6 +356,8 @@ module PIXEL_COMMON
   type(navigation_definition), public, save, target :: Nav
   type(surface_definition), public, save, target :: Sfc
   type(acha_definition), public, save, target :: ACHA
+  type(ccl_definition), public, save, target :: CCL
+  type(asos_definition), public, save, target :: ASOS
 
   !---- declare other global variables
   integer,public, save:: Cmr_File_Flag
@@ -582,16 +599,6 @@ module PIXEL_COMMON
   real(kind=real4), dimension(:,:), allocatable, public, save:: Bt_Ch20_Std_Median_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save:: Ref_Ch1_Sfc_White_Sky_Mean_3x3
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Btd_Ch31_Ch32_Bt_Ch31_Max_3x3
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Cloud_Fraction_Uncer
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: High_Cloud_Fraction
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Mid_Cloud_Fraction
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: Low_Cloud_Fraction
-  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Class
-  integer (kind=int1), dimension(:,:), allocatable, public, target:: ASOS_Cloud_Code
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_ECA
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmin
-  real(kind=real4), dimension(:,:), allocatable, public, target, save:: ASOS_Cloud_Zmax
 
   real(kind=real4), dimension(:,:), allocatable, public, save, target:: Covar_Ch27_Ch31_5x5
 
@@ -1022,6 +1029,8 @@ subroutine CREATE_PIXEL_ARRAYS()
 ! call  CREATE_LUNAR_ARRAYS(dim1, dim2)
   call  CREATE_BTD_ARRAYS(dim1, dim2)
   call  CREATE_ACHA_ARRAYS(dim1, dim2)
+  call  CREATE_CCL_ARRAYS(dim1, dim2)
+  call  CREATE_ASOS_ARRAYS(dim1, dim2)
   call  CREATE_DCOMP_ARRAYS(dim1, dim2)
   call  CREATE_NLCOMP_ARRAYS(dim1, dim2)
   call  CREATE_SASRAB_ARRAYS(dim1, dim2)
@@ -1119,6 +1128,8 @@ subroutine DESTROY_PIXEL_ARRAYS()
 ! call DESTROY_LUNAR_ARRAYS()
   call DESTROY_BTD_ARRAYS()
   call DESTROY_ACHA_ARRAYS()
+  call DESTROY_CCL_ARRAYS()
+  call DESTROY_ASOS_ARRAYS()
   call DESTROY_DCOMP_ARRAYS()
   call DESTROY_NLCOMP_ARRAYS()
   call DESTROY_SASRAB_ARRAYS()
@@ -1195,6 +1206,8 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_EXTRA_CHANNEL_ARRAYS()
       call RESET_BTD_ARRAYS()
       call RESET_ACHA_ARRAYS()
+      call RESET_CCL_ARRAYS()
+      call RESET_ASOS_ARRAYS()
       call RESET_DCOMP_ARRAYS()
       call RESET_NLCOMP_ARRAYS()
       call RESET_SASRAB_ARRAYS()
@@ -2050,7 +2063,6 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Processing_Order(dim1,dim2)) 
     allocate(ACHA%Inversion_Flag(dim1,dim2)) 
     allocate(ACHA%Quality_Flag(dim1,dim2)) 
-    allocate(ACHA%Cld_Layer(dim1,dim2)) 
     allocate(ACHA%Meta_Data(dim1,dim2)) 
     allocate(ACHA%OE_Quality_Flags(4,dim1,dim2)) 
     allocate(ACHA%Packed_Quality_Flags(dim1,dim2)) 
@@ -2102,7 +2114,6 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Processing_Order = Missing_Value_Int1
     ACHA%Inversion_Flag = Missing_Value_Int1
     ACHA%Quality_Flag = Missing_Value_Int1
-    ACHA%Cld_Layer = Missing_Value_Int1
     ACHA%Meta_Data = 0
     ACHA%OE_Quality_Flags = 0
     ACHA%Packed_Quality_Flags = 0
@@ -2148,7 +2159,6 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Processing_Order) 
     deallocate(ACHA%Inversion_Flag) 
     deallocate(ACHA%Quality_Flag) 
-    deallocate(ACHA%Cld_Layer) 
     deallocate(ACHA%Meta_Data) 
     deallocate(ACHA%OE_Quality_Flags) 
     deallocate(ACHA%Packed_Quality_Flags) 
@@ -2158,6 +2168,61 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%base_Quality_Flag)
 
 end subroutine DESTROY_ACHA_ARRAYS
+!------------------------------------------------------------------------------
+! Cloud Cover Layers (CCL) data structure routines
+!------------------------------------------------------------------------------
+subroutine CREATE_CCL_ARRAYS(dim1,dim2)
+   integer, intent(in):: dim1, dim2
+   if (Cld_Flag == sym%YES) then
+    allocate (CCL%Cld_Layer(dim1,dim2))
+    allocate (CCL%Cloud_Fraction(dim1,dim2))
+    allocate (CCL%Cloud_Fraction_Uncer(dim1,dim2))
+    allocate (CCL%High_Cloud_Fraction(dim1,dim2))
+    allocate (CCL%Mid_Cloud_Fraction(dim1,dim2))
+    allocate (CCL%Low_Cloud_Fraction(dim1,dim2))
+   endif
+end subroutine CREATE_CCL_ARRAYS
+subroutine RESET_CCL_ARRAYS()
+    if (allocated(CCL%Cld_Layer)) CCL%Cld_Layer = Missing_Value_Int1
+    if (allocated(CCL%Cloud_Fraction)) CCL%Cloud_Fraction = Missing_Value_Real4
+    if (allocated(CCL%Cloud_Fraction_Uncer)) CCL%Cloud_Fraction_Uncer = Missing_Value_Real4
+    if (allocated(CCL%High_Cloud_Fraction)) CCL%High_Cloud_Fraction = Missing_Value_Real4
+    if (allocated(CCL%Mid_Cloud_Fraction)) CCL%Mid_Cloud_Fraction = Missing_Value_Real4
+    if (allocated(CCL%Low_Cloud_Fraction)) CCL%Low_Cloud_Fraction = Missing_Value_Real4
+end subroutine RESET_CCL_ARRAYS
+subroutine DESTROY_CCL_ARRAYS()
+    if (allocated(CCL%Cld_Layer)) deallocate (CCL%Cld_Layer)
+    if (allocated(CCL%Cloud_Fraction)) deallocate (CCL%Cloud_Fraction)
+    if (allocated(CCL%Cloud_Fraction_Uncer)) deallocate (CCL%Cloud_Fraction_Uncer)
+    if (allocated(CCL%High_Cloud_Fraction)) deallocate (CCL%High_Cloud_Fraction)
+    if (allocated(CCL%Mid_Cloud_Fraction)) deallocate (CCL%Mid_Cloud_Fraction)
+    if (allocated(CCL%Low_Cloud_Fraction)) deallocate (CCL%Low_Cloud_Fraction)
+end subroutine DESTROY_CCL_ARRAYS
+!------------------------------------------------------------------------------
+! Automatic Surface Observing System (ASOS) data structure routines
+!------------------------------------------------------------------------------
+subroutine CREATE_ASOS_ARRAYS(dim1,dim2)
+   integer, intent(in):: dim1, dim2
+   if (Cld_Flag == sym%YES) then
+    allocate(ASOS%Code(dim1,dim2))
+    allocate(ASOS%ECA(dim1,dim2))
+    allocate(ASOS%Zmax(dim1,dim2))
+    allocate(ASOS%Zmin(dim1,dim2))
+   endif
+end subroutine CREATE_ASOS_ARRAYS
+subroutine RESET_ASOS_ARRAYS()
+   if (allocated(ASOS%Code)) ASOS%Code = Missing_Value_Int1
+   if (allocated(ASOS%ECA)) ASOS%ECA = Missing_Value_Real4
+   if (allocated(ASOS%Zmax)) ASOS%Zmax = Missing_Value_Real4
+   if (allocated(ASOS%Zmin)) ASOS%Zmin = Missing_Value_Real4
+end subroutine RESET_ASOS_ARRAYS
+subroutine DESTROY_ASOS_ARRAYS()
+   if (allocated(ASOS%Code)) deallocate(ASOS%Code)
+   if (allocated(ASOS%ECA)) deallocate(ASOS%ECA)
+   if (allocated(ASOS%Zmax)) deallocate(ASOS%Zmax)
+   if (allocated(ASOS%Zmin)) deallocate(ASOS%Zmin)
+end subroutine DESTROY_ASOS_ARRAYS
+
 !------------------------------------------------------------------------------
 !
 !------------------------------------------------------------------------------
@@ -2597,16 +2662,6 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
     allocate(Zc_CO2IRW(dim1,dim2))
     allocate(Pc_CO2IRW(dim1,dim2))
     allocate(Tc_CO2IRW(dim1,dim2))
-    allocate(Cloud_Fraction(dim1,dim2))
-    allocate(Cloud_Fraction_Uncer(dim1,dim2))
-    allocate(High_Cloud_Fraction(dim1,dim2))
-    allocate(Mid_Cloud_Fraction(dim1,dim2))
-    allocate(Low_Cloud_Fraction(dim1,dim2))
-    allocate(ASOS_Cloud_Class(dim1,dim2))
-    allocate(ASOS_Cloud_Code(dim1,dim2))
-    allocate(ASOS_Cloud_ECA(dim1,dim2))
-    allocate(ASOS_Cloud_Zmax(dim1,dim2))
-    allocate(ASOS_Cloud_Zmin(dim1,dim2))
     allocate(Tc_Co2(dim1,dim2))
     allocate(Pc_Co2(dim1,dim2))
     allocate(Zc_Co2(dim1,dim2))
@@ -2627,16 +2682,6 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
      Pc_CO2IRW = Missing_Value_Real4
      Tc_CO2IRW = Missing_Value_Real4
      Zc_CO2IRW = Missing_Value_Real4
-     Cloud_Fraction = Missing_Value_Real4
-     Cloud_Fraction_Uncer = Missing_Value_Real4
-     High_Cloud_Fraction = Missing_Value_Real4
-     Mid_Cloud_Fraction = Missing_Value_Real4
-     Low_Cloud_Fraction = Missing_Value_Real4
-     ASOS_Cloud_Class = Missing_Value_Int1
-     ASOS_Cloud_Code = Missing_Value_Int1
-     ASOS_Cloud_ECA = Missing_Value_Real4
-     ASOS_Cloud_Zmax = Missing_Value_Real4
-     ASOS_Cloud_Zmin = Missing_Value_Real4
      Tc_Co2 = Missing_Value_Real4
      Pc_Co2 = Missing_Value_Real4
      Zc_Co2 = Missing_Value_Real4
@@ -2657,16 +2702,6 @@ subroutine DESTROY_CLOUD_PROD_ARRAYS()
      deallocate(Zc_CO2IRW)
      deallocate(Tc_CO2IRW)
      deallocate(Pc_CO2IRW)
-     deallocate(Cloud_Fraction)
-     deallocate(Cloud_Fraction_Uncer)
-     deallocate(High_Cloud_Fraction)
-     deallocate(Mid_Cloud_Fraction)
-     deallocate(Low_Cloud_Fraction)
-     deallocate(ASOS_Cloud_Class)
-     deallocate(ASOS_Cloud_Code)
-     deallocate(ASOS_Cloud_ECA)
-     deallocate(ASOS_Cloud_Zmin)
-     deallocate(ASOS_Cloud_Zmax)
      deallocate(Tc_Co2)
      deallocate(Pc_Co2)
      deallocate(Zc_Co2)

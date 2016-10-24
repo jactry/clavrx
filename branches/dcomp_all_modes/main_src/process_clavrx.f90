@@ -98,6 +98,8 @@
    use SURFACE_PROPERTIES
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
+   use CCL_CLAVRX_BRIDGE
+   use ASOS_CLAVRX_BRIDGE
    use CLOUD_BASE_CLAVRX_BRIDGE
    use DCOMP_CLAVRX_BRIDGE_MOD
    
@@ -1147,6 +1149,8 @@
 
                   !--- AWG CLoud Height Algorithm (ACHA) and associated products
                   call AWG_CLOUD_HEIGHT_BRIDGE()
+                  call CCL_BRIDGE()
+                  call ASOS_BRIDGE()
 
                   !--- interpolate NWP wind profiles at cloud-top level
                   call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)

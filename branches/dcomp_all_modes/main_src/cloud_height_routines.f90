@@ -243,7 +243,6 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
   ACHA%Zc =  Missing_Value_Real4
   ACHA%Quality_Flag = 0
   ACHA%OE_Quality_Flags = 0
-  ACHA%Cld_Layer = 0
 
   !--------------------------------------------------------------------------
   ! loop over pixels in scanlines
@@ -273,15 +272,6 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
        ACHA%Quality_Flag(Elem_Idx,Line_Idx) = 1
     else
        cycle
-    endif
-
-    !------- determine cloud layer based on pressure
-    if (ACHA%Pc(Elem_Idx,Line_Idx) <= 350.0) then
-        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 3
-    elseif (ACHA%Pc(Elem_Idx,Line_Idx) < 642.0) then
-        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 2
-    else
-        ACHA%Cld_Layer(Elem_Idx,Line_Idx) = 1
     endif
 
     !----- set beta passed on temp

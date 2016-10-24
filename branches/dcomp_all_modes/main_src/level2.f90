@@ -109,8 +109,6 @@ module LEVEL2_ROUTINES
       , nlcomp_info_flag &
       , cloud_063um_albedo &
       , cloud_063um_transmission_solar &
-      , cloud_fraction &
-      , cloud_fraction_uncer &
       , ndvi_sfc &
       , Tsfc_Retrieved &
       , Tair_Nwp_Pix &
@@ -157,9 +155,7 @@ module LEVEL2_ROUTINES
       , fire_mask &
       , cost_aux &
       , hcld_dcomp &
-      , high_cloud_fraction &
-      , mid_cloud_fraction &
-      , low_cloud_fraction &
+      , CCl &
       , ems_ch20 &
       , ems_ch20_clear_rtm &
       , Ems_Ch20_Median_3x3 &

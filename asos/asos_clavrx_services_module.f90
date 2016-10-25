@@ -15,15 +15,12 @@ module ASOS_SERVICES_MOD
        Sensor, &
        Image, &
        ACHA, &
+       ASOS, &
        Sfc, &
        Bad_Pixel_Mask, &
        Cld_Mask, &
        Cld_Type, &
        Posterior_Cld_Probability, &
-       ASOS_Cloud_Code, &
-       ASOS_Cloud_ECA, &
-       ASOS_Cloud_Zmin, &
-       ASOS_Cloud_Zmax, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -40,7 +37,6 @@ module ASOS_SERVICES_MOD
  type, public :: asos_input_struct
  integer (kind=int4):: Number_of_Elements
  integer (kind=int4):: Number_Of_Lines
- integer (kind=int4):: Num_Line_Max
  real (kind=real4):: Sensor_Resolution_KM
 
  integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask

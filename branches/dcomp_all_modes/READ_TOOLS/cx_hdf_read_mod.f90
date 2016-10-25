@@ -60,6 +60,7 @@ module cx_hdf_read_mod
    public :: hdf_get_file_sds
    public :: hdf_get_finfo
    public :: hdf_get_file_att
+   public :: transform_sds_to_real
    
 contains
    !
@@ -312,6 +313,7 @@ contains
       real(kind=8), allocatable :: r8data(:)
       type(hdf_sds), pointer :: ps
       type(hdf_data), pointer :: pd  
+      integer :: i
 
       hdf_get_file_sds = -1
 
@@ -366,7 +368,18 @@ contains
             att_idx = sffattr(sds_id, 'scale_factor')
             if (att_idx >= 0) then
                att_idx = sffattr(sds_id, 'add_offset')
-               if (std_error(att_idx >= 0, 'Error while getting calibration coefficients')) goto 99999
+               if (std_error(att_idx >= 0, 'Error while getting calibration coefficients')) then
+                  print*,isds,ps%name
+                  print*,'ooo1',att_idx, '===',nsds
+             print*,'start',ps%nattr
+             do i = 1, ps%nattr
+               print*,i
+               print*,shape(ps%attr)
+               print*,trim(ps%attr(1)%name)
+               !print*,ps%attr(i)%data%r4values
+            end do
+                  goto 99999
+               end if   
             end if
             
             pd%calibr = 0.; pd%calibr(1) = 1.
@@ -1091,5 +1104,55 @@ contains
     call dealloc_sds(nsds, sds)
 
   end function hdf_get_dbl_sds_3D
+  
+     !-------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------
+   subroutine transform_sds_to_real (sds, data_real)
+      type(hdf_data), intent(in) :: sds
+      real, intent(out) :: data_real(:)
+   
+      select case ( sds.type)
+      case (DFNT_CHAR8)
+         print*,'CHAR8 '
+      case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+         data_real = real (sds % i1values)
+      case (DFNT_UINT16, DFNT_INT16)  
+         data_real = real (sds % i2values)
+      case (DFNT_UINT32, DFNT_INT32)  
+         data_real = real (sds % i4values)
+      case (DFNT_FLOAT32)
+         data_real = real (sds % r4values)
+      case (DFNT_FLOAT64)
+         data_real = real (sds % r8values)
+      end select
+   
+   end subroutine transform_sds_to_real
+   
+      !-------------------------------------------------------------------------------
+   !
+   !-------------------------------------------------------------------------------
+   subroutine hdf_data__info (self)
+      class(hdf_data):: self
+      
+      print*,'data size: ', self.size
+      print*,'data_type: ',self.type
+      select case ( self.type)
+      case (DFNT_CHAR8)
+         print*,'CHAR8 '
+      case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
+         print*,'UINT8 '
+      case (DFNT_UINT16, DFNT_INT16)  
+         print*,'UINT16 '
+      case (DFNT_UINT32, DFNT_INT32)  
+         print*,'UINT32 '
+      case (DFNT_FLOAT32)
+         print*,'FLOAT32 '
+      case (DFNT_FLOAT64)
+         print*,'FLOAT64 '
+      end select
+
+   end subroutine hdf_data__info
+  
 
 end module cx_hdf_read_mod

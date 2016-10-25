@@ -9,7 +9,7 @@
 module ASOS_CLAVRX_BRIDGE
 
  use ASOS_SERVICES_MOD
- use ASOS
+ use ASOS_MODULE
  use CLAVRX_MESSAGE_MODULE, only: MESG
    
  implicit none
@@ -65,10 +65,10 @@ module ASOS_CLAVRX_BRIDGE
    call COMPUTE_ASOS(Input, Symbol, Output) !, Diag)
 
    !--- copy output into CLAVR-x variables
-   ASOS_Cloud_Code = Output%ASOS_Cloud_Code
-   ASOS_Cloud_ECA = Output%ASOS_Cloud_ECA
-   ASOS_Cloud_Zmin = Output%ASOS_Cloud_Zmin
-   ASOS_Cloud_Zmax = Output%ASOS_Cloud_Zmax
+   ASOS%Code = Output%ASOS_Cloud_Code
+   ASOS%ECA = Output%ASOS_Cloud_ECA
+   ASOS%Zmin = Output%ASOS_Cloud_Zmin
+   ASOS%Zmax = Output%ASOS_Cloud_Zmax
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -177,17 +177,17 @@ module ASOS_CLAVRX_BRIDGE
  end subroutine SET_SYMBOL
 
  subroutine SET_OUTPUT()
-   Output%ASOS_Cloud_Code => ASOS_Cloud_Code
-   Output%ASOS_Cloud_ECA => ASOS_Cloud_ECA
-   Output%ASOS_Cloud_Zmin => ASOS_Cloud_Zmin
-   Output%ASOS_Cloud_Zmax => ASOS_Cloud_Zmax
+   Output%ASOS_Cloud_Code => ASOS%Code
+   Output%ASOS_Cloud_ECA => ASOS%ECA
+   Output%ASOS_Cloud_Zmin => ASOS%Zmin
+   Output%ASOS_Cloud_Zmax => ASOS%Zmax
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
 
    Input%Number_of_Elements = Image%Number_Of_Elements
-   Input%Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
-   Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
+   Input%Number_of_Lines = Image%Number_Of_Lines_Per_Segment
+   Input%Invalid_Data_Mask =>  Bad_Pixel_Mask
    Input%Latitude => Nav%Lat
    Input%Longitude => Nav%Lon
    Input%Surface_Type => Sfc%Sfc_Type

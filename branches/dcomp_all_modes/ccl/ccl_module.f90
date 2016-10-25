@@ -26,7 +26,7 @@
 ! Public routines used in this MODULE:
 !
 !--------------------------------------------------------------------------------------
-module CLOUD_COVER_LAYERS
+module CCL_MODULE
 
   use CCL_SERVICES_MOD, only : &
            real4, int1, int4, ccl_output_struct,ccl_symbol_struct, &
@@ -70,6 +70,7 @@ module CLOUD_COVER_LAYERS
 
   integer (kind=int1), dimension(:,:), allocatable:: Mask_High
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Mid
+  integer (kind=int1), dimension(:,:), allocatable:: Mask_Temp
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Low
   integer (kind=int1), dimension(:,:), allocatable:: Mask_Clear
   real (kind=real4), dimension(:,:), allocatable:: Pixel_Uncertainty
@@ -125,11 +126,11 @@ module CLOUD_COVER_LAYERS
   Num_Lines = Input%Number_of_Lines
   allocate(Mask_High(Num_Elems, Num_Lines)) 
   allocate(Mask_Mid(Num_Elems, Num_Lines)) 
+  allocate(Mask_Temp(Num_Elems, Num_Lines)) 
   allocate(Mask_Low(Num_Elems, Num_Lines))
   allocate(Mask_Clear(Num_Elems, Num_Lines))
   allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
 
-print *, "here 1"
   !--- make cloud fraction pixel level uncertainty
   Pixel_Uncertainty = MISSING_VALUE_REAL4
   where(Input%Cloud_Probability >= 0.5)
@@ -138,7 +139,6 @@ print *, "here 1"
   where(Input%Cloud_Probability < 0.5)
      Pixel_Uncertainty = Input%Cloud_Probability
   endwhere
-print *, "here 2"
 
 ! do j = 1,Input%Number_of_Lines
 !     do i = 1, Input%Number_of_Elements
@@ -153,13 +153,10 @@ print *, "here 2"
 !     enddo
 ! enddo
 
-
-
-
-print *, "here 3"
   !------- identify clear and H/M/L pixels
   Mask_High = 0
   Mask_Mid = 0
+  Mask_Temp = 0
   Mask_Low = 0
   Mask_Clear = 0
   where (Input%Pc /= MISSING_VALUE_REAL4 .and. Input%Pc <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
@@ -176,9 +173,19 @@ print *, "here 3"
   endwhere
   where (Input%Cloud_Mask == Symbol%CLEAR .or. Input%Cloud_Mask == Symbol%PROB_CLEAR)
          Mask_Clear = 1
-        Output%Cloud_Layer = 0
+         Output%Cloud_Layer = 0
   endwhere 
-print *, "here 4"
+
+  !--- add in obscured clouds
+  where (Mask_High == 1 .and. Input%Pc_Base > HIGH_CLOUD_MAX_PRESSURE_THRESH)
+         Mask_Mid = 1
+         Output%Cloud_Layer = 12
+  endwhere
+  where (Mask_Mid == 1 .and. Input%Pc_Base > LOW_CLOUD_MIN_PRESSURE_THRESH)
+         Mask_Low = 1
+         Mask_Temp = 1
+         Output%Cloud_Layer = 21
+  endwhere
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
@@ -208,7 +215,8 @@ print *, "here 4"
       Num_Clear = int(sum(real(Mask_Clear(i1:i2,j1:j2))))
       Num_Cloud = count(Input%Cloud_Probability(i1:i2,j1:j2) >= 0.5)        
       Num_Good = count(Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL4)        
-      Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
+      !Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
+      Num_All = Num_Cloud + Num_Clear
 
       !--- see if there are any valid mask points, if not skip this pixel
       if (Num_Good < COUNT_MIN_CCL) then
@@ -270,4 +278,4 @@ end subroutine COMPUTE_BOX_WIDTH
 !-----------------------------------------------------------
 ! end of MODULE
 !-----------------------------------------------------------
-end module CLOUD_COVER_LAYERS
+end module CCL_MODULE

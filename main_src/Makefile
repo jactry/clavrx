@@ -320,8 +320,8 @@ asos_clavrx_bridge_module.o: asos_clavrx_bridge_module.f90 asos_module.o asos_cl
 asos_module.o: asos_module.f90 asos_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ASOS)/asos_module.f90
 
-cx_hdf_read_mod.o:cx_hdf_write_mod.f90
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(hdflibs) ../READ_TOOLS/cx_hdf_read_mod.f90
+cx_hdf_read_mod.o: ../CX_DATA_IO/cx_hdf_read_mod.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(hdflibs) ../CX_DATA_IO/cx_hdf_read_mod.f90
 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
 avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_utility.o 

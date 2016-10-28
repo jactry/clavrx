@@ -26,7 +26,7 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 
 #Compilation rule for f90 files
 .f90.o:
-	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${hdflibs}   $<
+	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${hdflibs}  ${cx_data_libs} ${cx_data_links}   $<
 	
 	
 OBJS = dcomp_one_pixel_run_program.o \
@@ -73,13 +73,13 @@ all_dncomp:  dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'Building target for test lut'
-	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  $(LFLAGS)
+	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs} ${hdflibs}  ${cx_data_libs} ${cx_data_links}  $(LFLAGS)
 	
-dcomp_one_pixel_run: $(OBJS)
+dcomp_one_pixel_run: $(OBJS) 
 	@echo 'Building target: $@'
 	
 	
-	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS)  ${hdf5libs} ${hdflibs}  $(LFLAGS) $(PATH_FLAGS)
+	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS)  ${hdf5libs} ${hdflibs} ${cx_data_libs} ${cx_data_links} $(LFLAGS) $(PATH_FLAGS)
    
 	@echo 'Finished building target: $@'
 	@echo ' '	
@@ -87,7 +87,7 @@ dcomp_one_pixel_run: $(OBJS)
 nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 	@echo 'Building target: $@'
 	
-	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)  $(LFLAGS) ${hdf5libs} ${hdflibs}  $(PATH_FLAGS) 
+	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)  $(LFLAGS) ${hdf5libs} ${hdflibs}  ${cx_data_libs} ${cx_data_links}  $(PATH_FLAGS) 
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -96,8 +96,8 @@ libdncomp.a: $(OBJS)
 	
 	ar rvc libdncomp.a $(OBJS) $(OBJS_NLCOMP)
 
-cx_hdf_read_mod.o:../READ_TOOLS/cx_hdf_read_mod.f90	
-	$(fc) -c $(fflags) $(FFLAGS) $(cpp) ${hdflibs}  ../READ_TOOLS/cx_hdf_read_mod.f90
+cx_hdf_read_mod.o:../CX_DATA_IO/cx_hdf_read_mod.f90	
+	$(fc) -c $(fflags) $(FFLAGS) $(cpp) ${hdflibs}  ../CX_DATA_IO/cx_hdf_read_mod.f90
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
 dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dncomp_interface_def_mod.o view2d.o sensorname_from_wmoid.o dncomp_trans_atmos_mod.o

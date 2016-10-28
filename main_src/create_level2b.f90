@@ -13,8 +13,8 @@ program create_level2b
       , hdf_get_file_sds &
       , hdf_sds &
       ,  hdf_data &
-      , transform_sds_to_real
-      
+      , transform_sds_to_real &
+      , hdf_get_dbl_sds_2D
       
       use cx_grid_tools_mod
       
@@ -112,6 +112,8 @@ program create_level2b
    real(kind=real4), dimension(:), allocatable::  Output_Array_1d
    
    real(kind=real4), dimension(:), allocatable:: data_real
+   
+   real(kind = 8), pointer :: pp(:,:)
    
    
    ! ++++++++
@@ -241,8 +243,7 @@ program create_level2b
       end if
       
       if (is_first_file) then
-         allocate (sds_out(Num_Sds_Input))        
-         
+         allocate (sds_out(Num_Sds_Input))                 
       end if
       
       ! - read some inportant variables to check if we have right data before read all..
@@ -307,10 +308,10 @@ program create_level2b
       
       
       ! - read science data
-      if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = num_sds_input , sds_name = sds_name, dclb = .true.) < 0) then
-            print*,'hdf file not readable ', trim(file)
-            stop  
-      end if 
+    !  if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = num_sds_input , sds_name = sds_name, dclb = .true.) < 0) then
+    !        print*,'hdf file not readable ', trim(file)
+    !        stop  
+    !  end if 
       
       num_sds_output = size ( sds_out)
       
@@ -318,6 +319,18 @@ program create_level2b
       do Isds = 1, Num_Sds_Input   
          ps => sds_new(Isds) ; psd=> ps%data
         
+         print*,allocated (psd%c1values)
+         print*,allocated (psd%i1values)
+         print*,allocated (psd%i2values)
+         print*,allocated (psd%i4values)
+         print*,allocated (psd%r4values)
+         print*,allocated (psd%r8values)
+        
+         pp =  hdf_get_dbl_sds_2D ( file,sds_name (isds) )
+         print*,associated(pp)
+         print*,'===> ', pp, ' < ======'
+         !if ( associated(pp)) stop
+         
          if (is_First_file) then
             sds_out(isds) % name = ps % name
             allocate (sds_out(isds) % data (Nlon_Out, Nlat_Out) )
@@ -339,7 +352,8 @@ program create_level2b
             
             
             call transform_sds_to_real ( psd, Input_Array_1d)
-            
+            call psd.info
+            print*,psd.type,Input_Array_1d(21200)
            ! Input_Array_1d = reshape(data_real, (/Num_Elem_Inp * Num_Line_Inp/)) 
              
             Scaled_Sds_Data_Output = sds_out(isds) % data 
@@ -350,7 +364,7 @@ program create_level2b
            
             sds_out(isds) % data  = reshape(Output_Array_1d, (/Nlon_Out,Nlat_Out/))
             
-            print*,sds_out(isds) % data (2170,644),maxval(sds_out(isds) % data ),minval(sds_out(isds) % data )
+          !  print*,sds_out(isds) % data (2170,44),maxval(sds_out(isds) % data ),minval(sds_out(isds) % data )
             
                
               

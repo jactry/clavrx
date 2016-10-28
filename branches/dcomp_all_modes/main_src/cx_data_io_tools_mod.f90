@@ -20,9 +20,12 @@ module cx_data_io_tools_mod
          , hdf_sds &
          , hdf_get_file_sds
    
-   use string_functions
+   use string_functions,only: &
+      copy_a2s
    
-   use constants
+   use constants,only: &
+       int1
+   
    private
    public :: copy_global_attributes
    public :: cx_get_sds

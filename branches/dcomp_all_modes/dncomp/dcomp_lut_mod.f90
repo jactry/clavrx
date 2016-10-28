@@ -58,11 +58,11 @@ module dcomp_lut_mod
    
    type lut_dim_type
       logical :: is_set
-      real  :: sat_zen ( NUM_SAT )
-      real  :: sol_zen ( NUM_SOL )
-      real  :: rel_azi ( NUM_AZI )
-      real  :: cod ( NUM_COD )
-      real  :: cps ( NUM_REF )  
+      real, allocatable  :: sat_zen ( : )
+      real, allocatable  :: sol_zen ( : )
+      real, allocatable  :: rel_azi ( : )
+      real , allocatable :: cod ( : )
+      real, allocatable  :: cps ( : )  
       integer :: n_sat_zen
       integer :: n_sol_zen
       integer :: n_rel_azi

@@ -5,7 +5,8 @@ module cx_sds_io_mod
 
    use cx_hdf_read_mod, only: &
     hdf_get_finfo &
-    , hdf_get_file_sds 
+    , hdf_get_file_sds &
+    , hdf_get_file_att
    
    use  cx_sds_type_definitions_mod, only: &
       cx_sds_type &
@@ -29,6 +30,7 @@ module cx_sds_io_mod
    public :: cx_sds_finfo
    public :: cx_sds_read_raw
    public :: cx_sds_read    
+   public :: cx_sds_att
    contains
    
 
@@ -55,6 +57,36 @@ module cx_sds_io_mod
          
    
    end function cx_sds_finfo
+   ! ------------------------------------------------------------------------------
+   !
+   ! ------------------------------------------------------------------------------
+   function cx_sds_att (file, att_name, att )
+      integer :: cx_sds_att
+      character(len =*), intent(in) :: file
+      character(len =*), intent(in) :: att_name
+      type (cx_att_type),intent(out) :: att
+      
+      integer :: natt
+      type(cx_att_type),  allocatable :: attrs(:)
+      
+      integer :: i
+      
+      
+      
+      cx_sds_att = hdf_get_file_att(trim(file), natt, attrs)
+      
+      do i = 1, natt 
+        
+         if (trim(att_name) .EQ. trim(attrs(i) % name )) then
+            att = attrs(i)
+         end if
+      
+      end do
+      
+   
+   end function cx_sds_att
+   
+   
    ! ------------------------------------------------------------------------------
    !
    ! ------------------------------------------------------------------------------
@@ -164,6 +196,7 @@ module cx_sds_io_mod
       missing = ps.get_att('SCALED_MISSING')
       scaled = ps.get_att('SCALED')
       
+     
     
      
      
@@ -179,7 +212,7 @@ module cx_sds_io_mod
       
       out = reshape (temp_1d,(/dim1,dim2/))
       if (scaled(1) .EQ. 1) then
-         !out = out * slope(1) + add_offset(1) 
+         out = out * slope(1) + add_offset(1) 
       end if
      
       where (reshape (temp_1d,(/dim1,dim2/)) .EQ. missing(1))

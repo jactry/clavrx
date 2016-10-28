@@ -79,7 +79,7 @@ CLAVRX_ID_FLAG = -DISCLAVRX
 
 #Compilation rule for f90 files
 .f90.o:
-	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(fflags_clavr) $(CLAVRX_ID_FLAG)  $(hdflibs) $(cpp) $<
+	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(fflags_clavr) $(CLAVRX_ID_FLAG)  $(hdflibs) $(dncomplinks) $(dncomplibs) $(cpp) $<
 
 #Compilation rule for F files (needed for AIX compilation)
 .F.o:
@@ -202,7 +202,6 @@ clavrxorb_objs = process_clavrx.o \
                  cx_file_tools_mod.o \
                  cx_ssec_areafile_mod.o \
                  cx_read_ascii_line_mod.o \
-                 cx_data_io_tools_mod.o \
                  csv_mod.o  \
                  cx_array_tools_mod.o
 
@@ -241,7 +240,7 @@ endif
 
 
 create_level2b: $(create_level2b_objs) bindir
-	$(fc) $(ldflags) -o ../clavrx_bin/create_level2b $(create_level2b_objs) $(hdflibs)
+	$(fc) $(ldflags) -o ../clavrx_bin/create_level2b $(create_level2b_objs) $(hdflibs) $(dncomplinks) $(dncomplibs)
    
 drive_subset_level2b: $(drive_subset_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/drive_subset_level2b $(drive_subset_level2b_objs) $(hdflibs)
@@ -328,11 +327,9 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 calibration_constants.o: calibration_constants.f90 constant.o 
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
-comp_asc_des_level2b.o: version.inc comp_asc_des_level2b.f90 constant.o num_mod.o level2b.o file_utility.o cx_hdf_write_mod.o cx_hdf_read_mod.o cx_data_io_tools_mod.o
 create_level2b.o: create_level2b.f90 file_tools.o cx_hdf_read_mod.o cx_grid_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
-cx_data_io_tools_mod.o: cx_data_io_tools_mod.f90 cx_hdf_read_mod.o cx_hdf_write_mod.o  string_functions.o
 cx_file_tools_mod.o:cx_file_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
 
@@ -523,7 +520,7 @@ clean:
 
 # This target also removes all the executables.
 distclean: clean
-	-rm ../clavrx_bin/clavrxorb ../clavrx_bin/comp_asc_des_level2b ../clavrx_bin/drive_subset_level2b  ../clavrx_bin/create_level2
+	-rm ../clavrx_bin/clavrxorb  ../clavrx_bin/drive_subset_level2b  ../clavrx_bin/create_level2
 
 #------------------------------------------------------------------------
 # To put all necessary files in one file ready for distribution,

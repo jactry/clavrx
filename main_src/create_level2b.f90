@@ -5,25 +5,23 @@ program create_level2b
       use FILE_TOOLS, only: &
          getlun
       
-      use cx_hdf_read_mod, only: &
-         hdf_att &
-      , MAXNCNAM &
-      , hdf_get_file_att &
-      , hdf_get_finfo &
-      , hdf_get_file_sds &
-      , hdf_sds &
-      ,  hdf_data &
-      , transform_sds_to_real &
-      , hdf_get_dbl_sds_2D
+   use cx_sds_io_mod,only: &
+      cx_sds_finfo &
+      , cx_sds_read &
+      , cx_sds_read_raw &
+      , cx_sds_att
+   
+   use cx_sds_type_definitions_mod, only: &
+      cx_sds_type &
+      , cx_att_type &
+      , cx_sds_data_type &
+      , MAXNCNAM
       
       use cx_grid_tools_mod
       
       
    implicit none
-   
-   
-   
-   
+
    integer :: N_Command_Line_Args
    integer :: ios
    integer :: ifile
@@ -58,6 +56,7 @@ program create_level2b
    type sds_out_type
       real(kind = real4), allocatable :: data(:,:)
       character(len = MAXNCNAM) :: name
+      logical :: set
    end type
    
    type(sds_out_type), allocatable :: sds_out(:)
@@ -76,10 +75,10 @@ program create_level2b
    integer :: num_sds_output
    character(len=240) :: file
    integer :: natt,nsds
-   type(hdf_att), allocatable:: attrs(:)
+   !type(hdf_att), allocatable:: attrs(:)
    character ( len = MAXNCNAM), allocatable :: att_name(:)
    character ( len = MAXNCNAM), allocatable :: sds_name(:) 
-   type(hdf_sds), dimension(:), target, allocatable :: sds_new  
+  ! type(hdf_sds), dimension(:), target, allocatable :: sds_new  
    
    logical :: is_first_file
    
@@ -88,8 +87,8 @@ program create_level2b
    integer :: num_line_inp
    
   
-   type(hdf_sds), pointer :: ps                          
-   type(hdf_data), pointer :: psd   
+ !  type(hdf_sds), pointer :: ps                          
+ !  type(hdf_data), pointer :: psd   
    real, dimension(:,:), allocatable :: Lon_Inp
    real, dimension(:,:), allocatable :: Lat_Inp
    logical, dimension(:,:), allocatable :: Gap_Inp
@@ -114,6 +113,10 @@ program create_level2b
    real(kind=real4), dimension(:), allocatable:: data_real
    
    real(kind = 8), pointer :: pp(:,:)
+   integer :: test
+   type(cx_att_type) :: att
+   integer :: ftype
+   real , allocatable :: temp_i1_2d(:,:)
    
    
    ! ++++++++
@@ -209,16 +212,17 @@ program create_level2b
       print *, "processing file ", ifile, " of ", cnf % n_files, " ", trim(cnf % File_Input(ifile))
       file = trim(trim(cnf%dir_in)//trim(cnf%File_Input(ifile)))
    
-      if ( hdf_get_file_att (file,natt,attrs) < 0 ) then
-         print*,'error reading attributes'
-         stop
-      end if
       
       
-      do i = 1, natt
+      test = cx_sds_att (file,'NUMBER_OF_ELEMENTS',att)      
+      num_elem_inp = att % data % i2values(1)
+      
+      test = cx_sds_att (file,'NUMBER_OF_SCANS_LEVEL2',att)
+      Num_Line_Inp = att % data % i2values(1)
+      
+     
             
-         if ( attrs(i) % name .eq. 'NUMBER_OF_ELEMENTS' ) Num_Elem_Inp = attrs(i) % data % i2values (1)
-         if ( attrs(i) % name .eq. 'NUMBER_OF_SCANS_LEVEL2' ) Num_Line_Inp = attrs(i) % data % i2values (1)
+        
          !if ( attrs(i) % name .eq. 'START_YEAR' ) Start_Year_Input = attrs(i) % data % i2values (1)
          !if ( attrs(i) % name .eq. 'END_YEAR' ) End_Year_Input = attrs(i) % data % i2values (1)
          !if ( attrs(i) % name .eq. 'START_DAY_OF_YEAR' ) Start_Day_Input = attrs(i) % data % i2values (1)
@@ -228,16 +232,15 @@ program create_level2b
          !if ( attrs(i) % name .eq. 'WMO_SATELLITE_CODE' ) Sc_Id_Input = attrs(i) % data % i2values (1)
          !if ( attrs(i) % name .eq. 'L1B' ) L1b_input = attrs(i) % data % c1values (1)
          
-      end do
-      
+ 
       
       num_points = num_elem_inp * num_line_inp
       allocate(Input_Update_Index(Num_Points))
       allocate(Output_Update_Index(Num_Points))
       allocate(Input_Array_1d(Num_Points))
-      
-      ! - this retuens information about sds data and aglobal attributes
-      if ( hdf_get_finfo(file, num_sds_input, sds_name, natt, att_name) < 0 ) then
+
+      ! - this returns information about sds data and aglobal attributes
+      if ( cx_sds_finfo ( file, ftype, num_sds_input, sds_name, natt, att_name) < 0 ) then
          print*,'error reading attributes'
          stop
       end if
@@ -252,20 +255,15 @@ program create_level2b
       allocate(Lat_Inp(Num_Elem_Inp,Num_Line_Inp))
       allocate(Gap_Inp(Num_Elem_Inp,Num_Line_Inp))
       
+      test = cx_sds_read(file, 'longitude',lon_inp)
+      test = cx_sds_read(file, 'latitude',lat_inp)
+      test = cx_sds_read(file, 'gap_pixel_mask',temp_i1_2d)
       
-      if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = 3, sds_name = ['longitude','latitude','gap_pixel_mask']) < 0) then
-         print*,'hdf file not readable ', trim(file)
-         stop  
-      end if 
+      gap_inp = temp_i1_2d .GT. 0
       
-      ps => sds_new(1) ; psd=> ps%data
-      lon_inp =  reshape(psd%i2values,[Num_Elem_Inp,Num_Line_Inp])   * (ps % attr(7) % data % r4values(1) )   
       
-      ps => sds_new(2) ; psd=> ps%data
-      lat_inp =  reshape(psd%i2values,[Num_Elem_Inp,Num_Line_Inp])   * (ps % attr(7) % data % r4values(1) ) 
       
-      ps => sds_new(3) ; psd=> ps%data
-      Gap_Inp = (reshape(psd%i1values  ,[Num_Elem_Inp,Num_Line_Inp]) .gt. 0)
+    
       
       
       allocate ( Ielem_out(nlon_out,nlat_out))
@@ -287,6 +285,9 @@ program create_level2b
         
       pix_to_update = Ielem_out .gt. 0  
       
+      
+      
+     
       ! - set flags that let us decide if we take this pixel or what we have already in
       
         !----- compute 1d input to output index mapping 
@@ -306,76 +307,55 @@ program create_level2b
          end do
       end do
       
-      
-      ! - read science data
-    !  if (hdf_get_file_sds(file, nsds, sds_new, nsdsn = num_sds_input , sds_name = sds_name, dclb = .true.) < 0) then
-    !        print*,'hdf file not readable ', trim(file)
-    !        stop  
-    !  end if 
+
       
       num_sds_output = size ( sds_out)
       
       ! - loop over input variables
       do Isds = 1, Num_Sds_Input   
-         ps => sds_new(Isds) ; psd=> ps%data
-        
-         print*,allocated (psd%c1values)
-         print*,allocated (psd%i1values)
-         print*,allocated (psd%i2values)
-         print*,allocated (psd%i4values)
-         print*,allocated (psd%r4values)
-         print*,allocated (psd%r8values)
-        
-         pp =  hdf_get_dbl_sds_2D ( file,sds_name (isds) )
-         print*,associated(pp)
-         print*,'===> ', pp, ' < ======'
-         !if ( associated(pp)) stop
-         
+         sds_out(isds) % set = .false.
+         test = cx_sds_read ( file, sds_name (isds) , temp_i1_2d)
+         if ( sds_name (isds) .EQ. 'scan_line_number' ) cycle
+         if ( sds_name (isds) .EQ. 'scan_line_time' ) cycle
+         if ( sds_name (isds) .EQ. 'bad_scan_line_flag' ) cycle
+         if ( sds_name (isds) .EQ. 'asc_des_flag' ) cycle
+         sds_out(isds) % set = .true.
          if (is_First_file) then
-            sds_out(isds) % name = ps % name
+            
+            sds_out(isds) % name = sds_name (isds)
             allocate (sds_out(isds) % data (Nlon_Out, Nlat_Out) )
             sds_out(isds) % data = -999.
          end if 
-         
+        
          ! - loop over already defined output variables
          ! - this is done to get sure to match identical variables even 
          ! - the level2 files are not identical
          do isds2 = 1, num_sds_output
-            if ( .NOT. ps % name .EQ. sds_out(isds2) % name ) cycle
-            print*,isds2,trim(sds_out(isds2) % name)
-            print*,psd % calibr
+          
+            if ( .NOT. sds_name (isds) .EQ. sds_out(isds2) % name ) cycle
             
-           ! do i = 1, ps%nattr
-           !    print*,trim(ps%attr(i)%name)
-           !    print*,ps%attr(i)%data%r4values
-           ! end do
-            
-            
-            call transform_sds_to_real ( psd, Input_Array_1d)
-            call psd.info
-            print*,psd.type,Input_Array_1d(21200)
-           ! Input_Array_1d = reshape(data_real, (/Num_Elem_Inp * Num_Line_Inp/)) 
-             
+            Input_Array_1d = reshape(temp_i1_2d, (/Num_Elem_Inp * Num_Line_Inp/)) 
+                      
             Scaled_Sds_Data_Output = sds_out(isds) % data 
-            
+             
             Output_Array_1d = reshape(Scaled_Sds_Data_Output, (/Nlon_Out*Nlat_Out/))  
-            
+             
             Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
-           
+            
             sds_out(isds) % data  = reshape(Output_Array_1d, (/Nlon_Out,Nlat_Out/))
-            
-          !  print*,sds_out(isds) % data (2170,44),maxval(sds_out(isds) % data ),minval(sds_out(isds) % data )
-            
-               
-              
-              
-               
+             
+
          end do
           
       end do
       
       !- normally number is the same, but we take the number of first file in case it is different
-      
+      do i = 1, Num_Sds_Input
+         if (sds_out(i) % set ) then
+            print*,trim(sds_out(i) % name),maxval(sds_out(i) % data)
+            
+         end if   
+      end do
       print*,'success'
       
    
@@ -395,6 +375,21 @@ program create_level2b
    
    
 ! ++++++++++++++ write in level2b  +++++++++++++++++
+! we have now all data stored in sds_out
+! lets write this in level2b file
+!  
+! lets start with what I want
+!  
+!    open and create file
+!    do i = 1, num_sds_output
+         
+
+
+
+!     end do 
+
+
+
 
 
 end program create_level2b

@@ -17,7 +17,10 @@ program create_level2b
       , cx_sds_data_type &
       , MAXNCNAM
       
-      use cx_grid_tools_mod
+   use cx_grid_tools_mod
+   
+   
+   use cx_hdf_write_mod
       
       
    implicit none
@@ -118,6 +121,14 @@ program create_level2b
    integer :: ftype
    real , allocatable :: temp_i1_2d(:,:)
    
+   integer :: id_file
+   integer :: id 
+   character (len =1024 ) :: file_level2b
+   
+   integer :: sds_dim_2d (2)
+   
+   
+   
    
    ! ++++++++
    
@@ -215,11 +226,11 @@ program create_level2b
       
       
       test = cx_sds_att (file,'NUMBER_OF_ELEMENTS',att)      
-      num_elem_inp = att % data % i2values(1)
-      
+      if (allocated (att % data % i4values)) num_elem_inp = att % data % i4values(1)
+      if (allocated (att % data % i2values)) num_elem_inp = att % data % i2values(1)
       test = cx_sds_att (file,'NUMBER_OF_SCANS_LEVEL2',att)
-      Num_Line_Inp = att % data % i2values(1)
-      
+      if (allocated (att % data % i4values)) Num_Line_Inp = att % data % i4values(1)
+      if (allocated (att % data % i2values)) num_line_inp = att % data % i2values(1)
      
             
         
@@ -261,13 +272,10 @@ program create_level2b
       
       gap_inp = temp_i1_2d .GT. 0
       
-      
-      
-    
-      
-      
+
       allocate ( Ielem_out(nlon_out,nlat_out))
       allocate ( Iline_out(nlon_out,nlat_out))
+      
       ! - compute indicies
       call INDEX_IN_REGULAR_GRID ( &
           cnf % Lat_South &
@@ -287,6 +295,7 @@ program create_level2b
       
       
       
+      
      
       ! - set flags that let us decide if we take this pixel or what we have already in
       
@@ -300,14 +309,16 @@ program create_level2b
                Ielem = Ielem_Out(Ilon,Ilat)
                Iline = Iline_Out(Ilon,Ilat)
                Input_Update_Index(Ipoint) = Ielem + (Iline-1)*num_elem_inp
-               
+              
                Output_Update_Index(Ipoint) = Ilon + (Ilat-1)*Nlon_Out
               ! Scan_Element_Number_Output(Ilon,Ilat) = Ielem
             end if
          end do
       end do
       
-
+      
+      deallocate ( Ielem_out)
+      deallocate ( Iline_out)
       
       num_sds_output = size ( sds_out)
       
@@ -329,7 +340,7 @@ program create_level2b
         
          ! - loop over already defined output variables
          ! - this is done to get sure to match identical variables even 
-         ! - the level2 files are not identical
+         ! - if the level2 files are not identical
          do isds2 = 1, num_sds_output
           
             if ( .NOT. sds_name (isds) .EQ. sds_out(isds2) % name ) cycle
@@ -338,7 +349,7 @@ program create_level2b
                       
             Scaled_Sds_Data_Output = sds_out(isds) % data 
              
-            Output_Array_1d = reshape(Scaled_Sds_Data_Output, (/Nlon_Out*Nlat_Out/))  
+            Output_Array_1d = reshape(Scaled_Sds_Data_Output, (/Nlon_Out*Nlat_Out/))        
              
             Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
             
@@ -349,23 +360,16 @@ program create_level2b
           
       end do
       
-      !- normally number is the same, but we take the number of first file in case it is different
-      do i = 1, Num_Sds_Input
-         if (sds_out(i) % set ) then
-            print*,trim(sds_out(i) % name),maxval(sds_out(i) % data)
-            
-         end if   
-      end do
-      print*,'success'
-      
-   
+     
+      deallocate(Input_Update_Index)
+      deallocate(Output_Update_Index)
+      deallocate(Input_Array_1d)
       
       deallocate(Lon_Inp)
       deallocate(Lat_Inp)
       deallocate(Gap_inp)
       
-      deallocate ( Ielem_out)
-      deallocate ( Iline_out)
+     
       
       
       is_first_file = .false.
@@ -382,8 +386,22 @@ program create_level2b
 !  
 !    open and create file
 !    do i = 1, num_sds_output
-         
-
+   !File_Level2b= trim(File_2b_Root)//".level2b.hdf"         
+   File_Level2b= 'test_level2b.hdf'
+   id_file = hdf_file_open(trim(File_Level2b), create=.true.)
+   
+   sds_dim_2d = [nlon_out,nlat_out]
+   print*,'sds dim 2d: ',sds_dim_2d
+   do i = 1,  num_sds_output 
+     
+      id = create_sds ( id_file, sds_out(i) % name, sds_dim_2d, 4)
+      
+      Istatus = write_sds ( id, [0,0], [1,1], [nlon_out,nlat_out],  &
+                       sds_out(i) % data ) + Istatus 
+      call close_sds(id)                 
+   end do
+   call close_file (id_file)    
+   
 
 
 !     end do 

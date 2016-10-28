@@ -1,3 +1,6 @@
+! $Id$
+!
+
 module cx_grid_tools_mod
    real, parameter :: real4 = selected_real_kind(6,37)
    integer, parameter :: int4 = selected_int_kind(8)
@@ -38,6 +41,8 @@ contains
         , gap_inp &
         , Ielem_out &
         , Iline_out )
+      
+      implicit none
       
       real(kind=real4), intent(in):: Lat_South
       real(kind=real4), intent(in):: dlat
@@ -81,7 +86,7 @@ contains
       real:: Lon_East_abs
       real:: lon_inp_abs
       real:: xrand
-
+      integer, parameter :: Missing_Value_Int4 = -999
       big_number = 999999.9
 
       !--- construct boundaries
@@ -97,19 +102,15 @@ contains
       nx = size(Lat_Inp,1)
       ny = size(Lat_Inp,2)
       
-      print*,nx,ny,nlon,nlat
-      print*,lat_south,dlat,nlat,lat_north
-      
-
-      Ielem_Output = Missing_Value_Int4
-      Iline_Output = Missing_Value_Int4
+      Ielem_Out = Missing_Value_Int4
+      Iline_Out = Missing_Value_Int4
 
       Max_Allowable_Distance = 1.0*sqrt(dlat**2 + dlon**2)
 
       ALLOCATE(Min_Dist_Grid(Nlon,Nlat))
       
       Min_Dist_Grid = big_number
-
+      
       do Ielem = 1, nx
          do Iline = 1, ny
             
@@ -210,7 +211,8 @@ contains
       DEALLOCATE(Min_Dist_Grid)
       !--- make grid lat and lons
  
-
+      
+      
    end subroutine INDEX_IN_REGULAR_GRID
    
    ! ----------------------- !

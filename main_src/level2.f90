@@ -1413,7 +1413,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "not specified", &
                               "standard deviation of the 0.63 micron reflectance computed over a 3x3 "//&
                               "pixel array", &
-                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_Ch1_std, Max_Ref_Ch1_std, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -1425,7 +1425,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "not specified", &
                               "standard deviation of the 11 micron brightness temperature "// &
                               "computed over a 3x3 pixel array", &
-                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Bt31_std, Max_Bt31_std, "K", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -3110,6 +3110,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !---  total precipitable water above cloud
+     if (Sds_Num_Level2_Tpw_Ac_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Tpw_Ac),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "total_precipitable_water_nwp_above_cloud", &
+                              "atmosphere_mass_content_of_water_vapor_above_cloud", &
+                              "total precipitable water above cloud from NWP ancillary data", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Tpw, Max_Tpw, "cm", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !---  total ozone
      if (Sds_Num_Level2_Ozone_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ozone),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -4557,18 +4568,18 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
       !--- Ch1_Std_3x3
       if (Sds_Num_Level2_Ch1_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Ref_Ch1_Std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std, &
-                                 Missing_Value_Real4,One_Byte_Temp)
+       call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_std,Max_Ref_Ch1_std, &
+                                 Missing_Value_Real4,Two_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !--- Bt_Ch31_std_3x3
       if (Sds_Num_Level2_Ch31_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-       call SCALE_VECTOR_I1_RANK2(Bt_Ch31_Std_3x3,sym%LINEAR_SCALING,Min_Bt31_std,Max_Bt31_std, &
-                                 Missing_Value_Real4,One_Byte_Temp)
+       call SCALE_VECTOR_I2_RANK2(Bt_Ch31_Std_3x3,sym%LINEAR_SCALING,Min_Bt31_std,Max_Bt31_std, &
+                                 Missing_Value_Real4,Two_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                      One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
       !--- Bt_Ch31_Max_3x3
@@ -5547,6 +5558,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     if (Sds_Num_Level2_Tpw_Flag == sym%YES) then
       call SCALE_VECTOR_I1_RANK2(Tpw_Nwp_Pix,sym%LINEAR_SCALING,Min_Tpw,Max_Tpw,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tpw), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- tpw ac
+    if (Sds_Num_Level2_Tpw_Ac_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(Tpw_Above_Cloud_Nwp_Pix,sym%LINEAR_SCALING,Min_Tpw,Max_Tpw,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Tpw_Ac), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

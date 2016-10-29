@@ -242,6 +242,8 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Coast_Mask_Nwp
      integer(kind=int1), dimension(:,:), allocatable:: Glint_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Glint_Mask_Lunar
+     integer(kind=int1), dimension(:,:), allocatable:: Forward_Scatter_Mask
+     integer(kind=int1), dimension(:,:), allocatable:: Forward_Scatter_Mask_Lunar
      integer(kind=int1), dimension(:,:), allocatable:: Desert_Mask
      integer(kind=int1), dimension(:,:), allocatable:: City_Mask
      integer(kind=int1), dimension(:,:), allocatable:: Volcano_Mask
@@ -645,6 +647,8 @@ module PIXEL_COMMON
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Qf
   real (kind=real4),dimension(:,:),allocatable, public, save, target:: &
                                                        Posterior_Cld_Probability
+  real (kind=real4),dimension(:,:),allocatable, public, save, target:: &
+                                                       Prior_Cld_Probability
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
@@ -813,6 +817,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Base_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Top_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public:: Inversion_Strength_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public:: Tpw_Above_Cloud_Nwp_Pix
 
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Total_Rtm
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Rtm
@@ -1463,6 +1468,7 @@ subroutine CREATE_NWP_PIX_ARRAYS(dim1,dim2)
    allocate(Inversion_Base_Nwp_Pix(dim1,dim2))
    allocate(Inversion_Top_Nwp_Pix(dim1,dim2))
    allocate(Inversion_Strength_Nwp_Pix(dim1,dim2))
+   allocate(Tpw_Above_Cloud_Nwp_Pix(dim1,dim2))
    allocate(I_Nwp(dim1,dim2))
    allocate(J_Nwp(dim1,dim2))
    allocate(I_Nwp_x(dim1,dim2))
@@ -1499,6 +1505,7 @@ subroutine RESET_NWP_PIX_ARRAYS()
    Inversion_Base_Nwp_Pix = Missing_Value_Real4
    Inversion_Top_Nwp_Pix = Missing_Value_Real4
    Inversion_Strength_Nwp_Pix = Missing_Value_Real4
+   Tpw_Above_Cloud_Nwp_Pix = Missing_Value_Real4
    I_Nwp = Missing_Value_Int4
    J_Nwp = Missing_Value_Int4
    I_Nwp_x = Missing_Value_Int4
@@ -1535,6 +1542,7 @@ subroutine DESTROY_NWP_PIX_ARRAYS()
    deallocate(Inversion_Base_Nwp_Pix)
    deallocate(Inversion_Top_Nwp_Pix)
    deallocate(Inversion_Strength_Nwp_Pix)
+   deallocate(Tpw_Above_Cloud_Nwp_Pix)
    deallocate(I_Nwp)
    deallocate(J_Nwp)
    deallocate(I_Nwp_x)
@@ -1964,6 +1972,8 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Coast_Mask_Nwp(dim1,dim2))
    allocate(Sfc%Glint_Mask(dim1,dim2))
    allocate(Sfc%Glint_Mask_Lunar(dim1,dim2))
+   allocate(Sfc%Forward_Scatter_Mask(dim1,dim2))
+   allocate(Sfc%Forward_Scatter_Mask_Lunar(dim1,dim2))
    allocate(Sfc%Desert_Mask(dim1,dim2))
    allocate(Sfc%City_Mask(dim1,dim2))
    allocate(Sfc%Volcano_Mask(dim1,dim2))
@@ -1984,6 +1994,8 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Coast_Mask_Nwp = Missing_Value_Int1
    Sfc%Glint_Mask = Missing_Value_Int1
    Sfc%Glint_Mask_Lunar = Missing_Value_Int1
+   Sfc%Forward_Scatter_Mask = Missing_Value_Int1
+   Sfc%Forward_Scatter_Mask_Lunar = Missing_Value_Int1
    Sfc%Desert_Mask = Missing_Value_Int1
    Sfc%City_Mask = Missing_Value_Int1
    Sfc%Volcano_Mask = Missing_Value_Int1
@@ -2004,6 +2016,8 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Coast_Mask_Nwp)
    deallocate(Sfc%Glint_Mask)
    deallocate(Sfc%Glint_Mask_Lunar)
+   deallocate(Sfc%Forward_Scatter_Mask)
+   deallocate(Sfc%Forward_Scatter_Mask_Lunar)
    deallocate(Sfc%Desert_Mask)
    deallocate(Sfc%City_Mask)
    deallocate(Sfc%Volcano_Mask)
@@ -2451,6 +2465,7 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
      allocate(Cld_Mask(dim1,dim2))
      allocate(Adj_Pix_Cld_Mask(dim1,dim2))
      allocate(Posterior_Cld_Probability(dim1,dim2))
+     allocate(Prior_Cld_Probability(dim1,dim2))
      allocate(Bayes_Mask_Sfc_Type_Global(dim1,dim2))
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
@@ -2468,6 +2483,7 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
      Cld_Mask_Aux = Missing_Value_Int1
      Adj_Pix_Cld_Mask = Missing_Value_Int1
      Posterior_Cld_Probability = Missing_Value_Real4
+     Prior_Cld_Probability = Missing_Value_Real4
      Cld_Test_Vector_Packed = 0
      Bayes_Mask_Sfc_Type_Global = Missing_Value_Int1
   endif
@@ -2486,6 +2502,7 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
      deallocate(Cld_Mask)
      deallocate(Adj_Pix_Cld_Mask)
      deallocate(Posterior_Cld_Probability)
+     deallocate(Prior_Cld_Probability)
      deallocate(Bayes_Mask_Sfc_Type_Global)
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR

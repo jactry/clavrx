@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 279
+ integer, parameter, private:: Num_Level2_Sds =280 
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 1
@@ -288,4 +288,5 @@
      Sds_Num_Level2_Cbh_Qf = 276,         Sds_Num_Level2_Cbh_Qf_Flag = 0, &
      Sds_Num_Level2_Cld_Phase_IR = 277,   Sds_Num_Level2_Cld_Phase_IR_Flag = 0, &
      Sds_Num_Level2_Cld_Type_IR = 278,    Sds_Num_Level2_Cld_Type_IR_Flag = 0, &
-     Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 0
+     Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 0, &
+     Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0

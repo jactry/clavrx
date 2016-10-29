@@ -1112,9 +1112,11 @@
                else  
 
                   call CLOUD_TYPE_BRIDGE()
-                  call IR_CLOUD_TYPE_BAUM()
+!                 call IR_CLOUD_TYPE_BAUM()
 
                   if (Use_IR_Cloud_Type_Flag) then
+print *, "************* USING BAUM IR *******************"
+stop
                      Cld_Type = Cld_Type_IR
                      Cld_Phase = Cld_Phase_IR
                   endif
@@ -1174,11 +1176,10 @@
 
                   !--- AWG CLoud Height Algorithm (ACHA) and associated products
                   call AWG_CLOUD_HEIGHT_BRIDGE()
-                  call CCL_BRIDGE()
                   call ASOS_BRIDGE()
 
-                  !--- interpolate NWP wind profiles at cloud-top level
-                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+                  !--- interpolate NWP wind and tpw profiles at cloud-top level
+                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND_AND_TPW(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--- interpolate ACHA cloud heights to flight level altitude.
                   call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc,ACHA%Alt)
@@ -1244,6 +1245,7 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (ACHA%Mode > 0) then 
                  call CLOUD_BASE_BRIDGE()
+                 call CCL_BRIDGE()
 
                  !---Calculate flight level altitude of the base for AWC
                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc_Base,ACHA%Base_Alt)

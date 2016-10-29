@@ -1,6 +1,6 @@
 !$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 279
+ integer, parameter, private:: Num_Level2_Sds = 280
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -250,12 +250,12 @@
      Sds_Num_Level2_Beta_11_85 = 238,     Sds_Num_Level2_Beta_11_85_Flag = 0, &
      Sds_Num_Level2_Beta_11_12 = 239,     Sds_Num_Level2_Beta_11_12_Flag = 0, &
      Sds_Num_Level2_Beta_11_13 = 240,     Sds_Num_Level2_Beta_11_13_Flag = 0, &
-     Sds_Num_Level2_Ctp_Top = 241,        Sds_Num_Level2_Ctp_Top_Flag = 0, &
+     Sds_Num_Level2_Ctp_Top = 241,        Sds_Num_Level2_Ctp_Top_Flag = 1, &
      Sds_Num_Level2_Ctp_Top1_Aux = 242,   Sds_Num_Level2_Ctp_Top1_Aux_Flag = 0, &
      Sds_Num_Level2_Ctp_Top2_Aux = 243,   Sds_Num_Level2_Ctp_Top2_Aux_Flag = 0, &
-     Sds_Num_Level2_Ctp_Base = 244,       Sds_Num_Level2_Ctp_Base_Flag = 0, &
+     Sds_Num_Level2_Ctp_Base = 244,       Sds_Num_Level2_Ctp_Base_Flag = 1, &
      Sds_Num_Level2_Supercool_Prob = 245, Sds_Num_Level2_Supercool_Prob_Flag = 0, &
-     Sds_Num_Level2_Ctp_Acha_Uncer = 246, Sds_Num_Level2_Ctp_Acha_Uncer_Flag = 0, &
+     Sds_Num_Level2_Ctp_Acha_Uncer = 246, Sds_Num_Level2_Ctp_Acha_Uncer_Flag = 1, &
      Sds_Num_Level2_Ctp_Aux_Uncer1 = 247, Sds_Num_Level2_Ctp_Aux_Uncer1_Flag = 0, &
      Sds_Num_Level2_Ctp_Aux_Uncer2 = 248, Sds_Num_Level2_Ctp_Aux_Uncer2_Flag = 0, &
      Sds_Num_Level2_Ch34_Clear = 249,     Sds_Num_Level2_Ch34_Clear_Flag = 0, &
@@ -288,4 +288,5 @@
      Sds_Num_Level2_Cbh_Qf = 276,         Sds_Num_Level2_Cbh_Qf_Flag = 0, &
      Sds_Num_Level2_Cld_Phase_IR = 277,   Sds_Num_Level2_Cld_Phase_IR_Flag = 0, &
      Sds_Num_Level2_Cld_Type_IR = 278,    Sds_Num_Level2_Cld_Type_IR_Flag = 0, &
-     Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 1
+     Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 1, &
+     Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0

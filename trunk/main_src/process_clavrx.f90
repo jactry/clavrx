@@ -1060,6 +1060,7 @@
                call COMPUTE_SIMPLE_SOLAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
                call COMPUTE_SIMPLE_LUNAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
+               call OPAQUE_CLOUD_HEIGHT()
                call CO2IRW_CLOUD_HEIGHT()
                call H2O_CLOUD_HEIGHT()
                call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &

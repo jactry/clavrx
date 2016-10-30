@@ -38,9 +38,6 @@ module ACHA_SERVICES_MOD
        Cld_Test_Vector_Packed, &
        Shadow_Mask, &
        Tc_Cirrus_Background, &
-       Tc_Opaque_Cloud, &
-       Pc_Opaque_Cloud, &
-       Zc_Opaque_Cloud, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -228,9 +225,6 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
    integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
-   real, dimension(:,:), pointer:: Pc_Opaque
-   real, dimension(:,:), pointer:: Tc_Opaque
-   real, dimension(:,:), pointer:: Zc_Opaque
   end type acha_output_struct
   
 !Symbol stucture

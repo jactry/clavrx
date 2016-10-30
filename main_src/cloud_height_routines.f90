@@ -35,6 +35,7 @@ module CLOUD_HEIGHT_ROUTINES
 
   public::  COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND_AND_TPW
   public::  COMPUTE_ALTITUDE_FROM_PRESSURE
+  public::  OPAQUE_CLOUD_HEIGHT
   public::  H2O_CLOUD_HEIGHT
   public::  CO2IRW_CLOUD_HEIGHT
   public::  CO2_SLICING_CLOUD_HEIGHT
@@ -495,6 +496,68 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
   enddo Line_Loop_1
 
 end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
+
+subroutine OPAQUE_CLOUD_HEIGHT() 
+
+   integer:: Line_Idx
+   integer:: Elem_Idx
+   integer:: Num_Elements
+   integer:: Num_Lines
+   integer:: Nwp_Lon_Idx
+   integer:: Nwp_Lat_Idx
+   integer:: Vza_Rtm_Idx
+   integer:: Tropo_Level_Idx
+   integer:: Sfc_Level_Idx
+   integer:: Level_Idx
+   integer:: Level_Idx_Start
+   integer:: Level_Idx_End
+
+   Num_Elements = Image%Number_Of_Elements
+   Num_Lines = Image%Number_Of_Lines_Per_Segment
+
+   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+
+   do Elem_Idx = 1, Num_Elements
+     do Line_Idx = 1, Num_Lines
+
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+      !--- indice aliases
+      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+      !-- check if indices are valid
+      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+      !--- restrict levels to consider
+      Level_Idx_Start = Tropo_Level_Idx
+      Level_Idx_End = Sfc_Level_Idx
+
+      !--- loop through levels
+      Pc_Opaque_Cloud(Elem_Idx,Line_Idx) = P_Std_Rtm(Level_Idx_End)
+      Zc_Opaque_Cloud(Elem_Idx,Line_Idx) = Rtm(Nwp_Lon_Idx, Nwp_Lat_Idx)%Z_Prof(Level_Idx_End)
+      Tc_Opaque_Cloud(Elem_Idx,Line_Idx) = Rtm(Nwp_Lon_Idx, Nwp_Lat_Idx)%T_Prof(Level_Idx_End)
+
+      level_loop: do Level_Idx = Level_Idx_Start, Level_Idx_End
+        if (rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile(Level_Idx) >  &
+            ch(31)%Rad_Toa(Elem_Idx,Line_Idx)) then
+            Pc_Opaque_Cloud(Elem_Idx,Line_Idx) = P_Std_Rtm(Level_Idx - 1)
+            Zc_Opaque_Cloud(Elem_Idx,Line_Idx) = Rtm(Nwp_Lon_Idx, Nwp_Lat_Idx)%Z_Prof(Level_Idx - 1)
+            Tc_Opaque_Cloud(Elem_Idx,Line_Idx) = Rtm(Nwp_Lon_Idx, Nwp_Lat_Idx)%T_Prof(Level_Idx - 1)
+           exit
+       endif
+      enddo Level_Loop
+
+      enddo
+   enddo
+
+end subroutine OPAQUE_CLOUD_HEIGHT
 !----------------------------------------------------------------------
 ! water vapor intercept
 !----------------------------------------------------------------------

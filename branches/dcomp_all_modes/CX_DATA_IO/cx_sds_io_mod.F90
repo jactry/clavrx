@@ -22,9 +22,14 @@ module cx_sds_io_mod
    integer, parameter, public :: MAXNCNAM = 128
    
    interface cx_sds_read
-      module procedure cx_sds_read_2d_real , cx_sds_read_1d_real, cx_sds_read_3d_real, cx_sds_read_5d_real
+      module procedure cx_sds_read_2d_real &
+          , cx_sds_read_1d_real &
+          , cx_sds_read_3d_real &
+          , cx_sds_read_5d_real
    
    end interface
+   
+   
    
    
    public :: cx_sds_finfo
@@ -38,8 +43,10 @@ module cx_sds_io_mod
    !
    ! ------------------------------------------------------------------------------
    function cx_sds_finfo ( file , ftype, nsds, sds_name, natt, att_name )
-      integer :: cx_sds_finfo
+      implicit none
       
+      integer :: cx_sds_finfo
+   
       integer, intent(out) :: ftype
       character(len=*), intent(in) :: file
       integer, intent(out) :: nsds
@@ -48,7 +55,9 @@ module cx_sds_io_mod
       character ( len = MAXNCNAM), intent(out), allocatable :: att_name(:)
       
       
+      ! - inialize
       cx_sds_finfo = 1
+      
       !- first check which kind of file
       ! --   
       ftype = 1 ! todo define params for HDF4, HDF5(2) and NCDF(3), not_existing(-1), not defined(0)
@@ -61,6 +70,7 @@ module cx_sds_io_mod
    !
    ! ------------------------------------------------------------------------------
    function cx_sds_att (file, att_name, att )
+      implicit none
       integer :: cx_sds_att
       character(len =*), intent(in) :: file
       character(len =*), intent(in) :: att_name
@@ -70,9 +80,7 @@ module cx_sds_io_mod
       type(cx_att_type),  allocatable :: attrs(:)
       
       integer :: i
-      
-      
-      
+
       cx_sds_att = hdf_get_file_att(trim(file), natt, attrs)
       
       do i = 1, natt 
@@ -110,7 +118,9 @@ module cx_sds_io_mod
    
    end function cx_sds_read_raw
    
-   
+   ! ------------------------------------------------------------------------------
+   !
+   ! ------------------------------------------------------------------------------     
    function cx_sds_read_1d_real ( file, sds_name, out )
       integer :: cx_sds_read_1d_real
       character (len = * ), intent(in) :: file

@@ -202,6 +202,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_ssec_areafile_mod.o \
                  cx_read_ascii_line_mod.o \
                  csv_mod.o  \
+                 cx_prd_mod.o \
                  cx_array_tools_mod.o
 
 
@@ -210,6 +211,9 @@ clavrxorb_objs = process_clavrx.o \
 create_level2b_objs = create_level2b.o \
                             file_tools.o  \
                             cx_grid_tools_mod.o \
+                            cx_prd_mod.o \
+                            csv_mod.o \
+                            strings.o \
                             cx_hdf_read_mod.o
 
 #Level2b subsetting routines
@@ -326,12 +330,12 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 calibration_constants.o: calibration_constants.f90 constant.o 
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
-create_level2b.o: create_level2b.f90 file_tools.o cx_hdf_read_mod.o cx_grid_tools_mod.o
+create_level2b.o: create_level2b.f90 file_tools.o cx_hdf_read_mod.o cx_grid_tools_mod.o cx_prd_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_file_tools_mod.o:cx_file_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
-
+cx_prd_mod.o:cx_prd_mod.f90 constant.o csv_mod.o strings.o
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 cx_file_tools_mod.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
@@ -378,7 +382,7 @@ ncep_reanalysis.o: ncep_reanalysis.f90 constant.o  nwp_common.o sort_module.o nu
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
-level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o csv_mod.o cloud_type_bridge_module.o calibration_constants.o  avhrr_module.o
+level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o  avhrr_module.o cx_prd_mod.o
 
 level2b.o: level2b.f90 constant.o file_utility.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o

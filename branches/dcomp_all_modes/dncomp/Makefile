@@ -66,7 +66,7 @@ file_tools.o
 
 .PHONY: all_dncomp clean hdf4
 
-all_dncomp:  dcomp_one_pixel_run  libdncomp.a
+all_dncomp:  dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
 	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)

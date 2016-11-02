@@ -37,9 +37,6 @@ module MODIS_MODULE
                 , missing_value_int1
 
  
-        use FILE_UTILITY,only: &
-                get_lun
- 
         use PIXEL_COMMON, only: &
                 sensor &
                 , geo &
@@ -71,7 +68,8 @@ module MODIS_MODULE
                 , scattering_angle
  
         use FILE_TOOLS, only: &
-                file_search
+                file_search &
+                , get_lun
  
         use CALIBRATION_CONSTANTS, only: &
                 sat_name &

@@ -108,7 +108,7 @@ module USER_OPTIONS
       , Exe_Prompt &
       , Nchan_Clavrx
       
-   use FILE_UTILITY, only: &
+   use FILE_TOOLS, only: &
       Get_Lun
 
    use LEVEL2B_ROUTINES, only: &

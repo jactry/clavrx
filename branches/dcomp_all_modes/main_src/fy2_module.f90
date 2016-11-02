@@ -36,7 +36,8 @@ use CALIBRATION_CONSTANTS
 use PLANCK
 use NUMERICAL_ROUTINES
 use GOES_MODULE
-use FILE_UTILITY
+use FILE_TOOLS, only: &
+   get_lun
 use VIEWING_GEOMETRY_MODULE
   
  implicit none

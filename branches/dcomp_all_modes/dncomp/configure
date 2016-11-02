@@ -163,7 +163,7 @@ else
 print CONFIG "hdf4root = $opt{hdf4root}\n";
 print CONFIG "hdflibs = -L$opt{hdf4root}/lib -lmfhdf -ldf -ljpeg -lz\n";
 
-print CONFIG "cx_data_libs = -L../CX_DATA_IO/ -I./CX_DATA_IO/\n";
+print CONFIG "cx_data_libs = -L../CX_DATA_IO/ -I../CX_DATA_IO/\n";
 print CONFIG "cx_data_links = -lcx_data_io\n";
 
 if (exists($opt{'hdf5root'})) {

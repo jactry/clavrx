@@ -629,6 +629,8 @@ module ACHA_CLAVRX_BRIDGE_MOD
                                     Output%Inversion_Flag)
    
    Output%Zc_Uncertainty = MISSING_VALUE_REAL4
+   Output%Pc_Uncertainty = MISSING_VALUE_REAL4
+   Output%Tc_Uncertainty = MISSING_VALUE_REAL4   
    Output%Cost = MISSING_VALUE_REAL4
    
    ! ALLOCATE Dummy array

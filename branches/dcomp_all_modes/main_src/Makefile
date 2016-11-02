@@ -197,7 +197,6 @@ clavrxorb_objs = process_clavrx.o \
                  geo_sat_navigation_mod.o \
                  precision.o \
                  cx_conf_mod.o \
-                 cx_file_tools_mod.o \
                  cx_ssec_areafile_mod.o \
                  cx_read_ascii_line_mod.o \
                  csv_mod.o  \
@@ -330,13 +329,12 @@ clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod.o cx_scale_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
-cx_file_tools_mod.o:cx_file_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
 cx_prd_mod.o:cx_prd_mod.f90 constant.o csv_mod.o strings.o
 cx_scale_tools_mod.o:cx_scale_tools_mod.f90 constant.o
-cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90
+cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90 file_tools.o
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
-cx_conf_mod.o:cx_conf_mod.f90 cx_file_tools_mod.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
+cx_conf_mod.o:cx_conf_mod.f90 file_tools.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
 cx_pfaast_mod.o:$(PFAAST)/cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:$(PFAAST)/cx_pfaast_tools_mod.f90 

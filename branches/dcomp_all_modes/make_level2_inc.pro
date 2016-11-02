@@ -7,7 +7,7 @@ pro make_level2_inc
 csv_file= 'clavrx_level2_products.csv'
 data = read_csv(csv_file)
 
-file_l2 = 'level2_assign.inc'
+file_l2 = 'main_src/level2_assign.inc'
 openw,10,file_l2
 printf,10,'select case(trim(name))'
 for i=0,n_elements(data.field01) -1  do begin

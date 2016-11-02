@@ -84,24 +84,24 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Bt45 = 180.0, Max_Bt45 = 340.0
  real, parameter, public:: Min_Btd_Ch31_Ch32 = -4.0, Max_Btd_Ch31_Ch32 = 12.0
  real, parameter, public:: Min_Btd_3b_4 = -20.0, Max_Btd_3b_4 = 100.0
- real, parameter, public:: Min_Ref_Ch1_std = 0.0, Max_Ref_Ch1_std = 20.0
- real, parameter, public:: Min_Ref_Ch2_std = 0.0, Max_Ref_Ch2_std = 20.0
- real, parameter, public:: Min_Ref_Ch6_std = 0.0, Max_Ref_Ch6_std = 20.0
- real, parameter, public:: Min_Ref_Ch20_std = 0.0, Max_Ref_Ch20_std = 20.0
- real, parameter, public:: Min_Rad_Ch20_std = 0.0, Max_Rad_Ch20_std = 4.0
- real, parameter, public:: Min_Rad_Ch31_std = 0.0, Max_Rad_Ch31_std = 20.0
- real, parameter, public:: Min_Rad_Ch32_std = 0.0, Max_Rad_Ch32_std = 20.0
- real, parameter, public:: Min_Bt20_std = 0.0, Max_Bt20_std = 20.0
- real, parameter, public:: Min_Bt31_std = 0.0, Max_Bt31_std = 20.0
- real, parameter, public:: Min_Bt32_std = 0.0, Max_Bt32_std = 20.0
- real, parameter, public:: Min_t45_std = 0.0, Max_t45_std = 12.0
+ real, parameter, public:: Min_Ref_Ch1_Std = 0.0, Max_Ref_Ch1_Std = 20.0
+ real, parameter, public:: Min_Ref_Ch2_Std = 0.0, Max_Ref_Ch2_Std = 20.0
+ real, parameter, public:: Min_Ref_Ch6_Std = 0.0, Max_Ref_Ch6_Std = 20.0
+ real, parameter, public:: Min_Ref_Ch20_Std = 0.0, Max_Ref_Ch20_Std = 20.0
+ real, parameter, public:: Min_Rad_Ch20_Std = 0.0, Max_Rad_Ch20_Std = 4.0
+ real, parameter, public:: Min_Rad_Ch31_Std = 0.0, Max_Rad_Ch31_Std = 20.0
+ real, parameter, public:: Min_Rad_Ch32_Std = 0.0, Max_Rad_Ch32_Std = 20.0
+ real, parameter, public:: Min_Bt20_Std = 0.0, Max_Bt20_Std = 50.0
+ real, parameter, public:: Min_Bt31_Std = 0.0, Max_Bt31_Std = 50.0
+ real, parameter, public:: Min_Bt32_Std = 0.0, Max_Bt32_Std = 50.0
+ real, parameter, public:: Min_t45_Std = 0.0, Max_t45_Std = 12.0
  real, parameter, public:: Min_Psfc = 700.0, Max_Psfc = 1100.0
  real, parameter, public:: Min_Pmsl = 850.0, Max_Pmsl = 1100.0
  real, parameter, public:: Min_Kindex = -40.0, Max_Kindex = 80.0
- real, parameter, public:: Min_Tsfc = 220.0, Max_Tsfc = 340.0, Min_Tsfc_std = 0.0, Max_Tsfc_std = 20.0
- real, parameter, public:: Min_Sst = 265.0, Max_Sst = 315.0, Min_Sst_std = 0.0, Max_Sst_std = 20.0
- real, parameter, public:: Min_Lst = 220.0, Max_Lst = 340.0, Min_Lst_std = 0.0, Max_Lst_std = 20.0
- real, parameter, public:: Min_Ndvi = -0.5, Max_Ndvi = 1.0, Min_Ndvi_std = 0.0, Max_Ndvi_std = 1.0
+ real, parameter, public:: Min_Tsfc = 220.0, Max_Tsfc = 340.0, Min_Tsfc_Std = 0.0, Max_Tsfc_Std = 20.0
+ real, parameter, public:: Min_Sst = 265.0, Max_Sst = 315.0, Min_Sst_Std = 0.0, Max_Sst_Std = 20.0
+ real, parameter, public:: Min_Lst = 220.0, Max_Lst = 340.0, Min_Lst_Std = 0.0, Max_Lst_Std = 20.0
+ real, parameter, public:: Min_Ndvi = -0.5, Max_Ndvi = 1.0, Min_Ndvi_Std = 0.0, Max_Ndvi_Std = 1.0
  real, parameter, public:: Min_Ndsi = -0.5, Max_Ndsi = 1.0
  real, parameter, public:: Min_Zen = 0.0, Max_Zen = 90.0
  real, parameter, public:: Min_Relaz = 0.0, Max_Relaz = 180.0
@@ -119,23 +119,23 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Pc_Uncer = 0.0, Max_Pc_Uncer = 1000.0
  real, parameter, public:: Min_Tc = 160.0, Max_Tc = 320.0, Min_Tc_Std = 0.0, Max_Tc_Std = 40.0
  real, parameter, public:: Min_Tc_Uncer = 0.0, Max_Tc_Uncer = 100.0
- real, parameter, public:: Min_ec = 0.0, Max_ec = 1.0, Min_ec_std = 0.0, Max_ec_std = 1.0
- real, parameter, public:: Min_Beta = 0.0, Max_Beta = 2.0, Min_Beta_std = 0.0, Max_Beta_std = 2.0
- real, parameter, public:: Min_Tau = -0.2, Max_Tau = 160.0, Min_Tau_std = 0.0, Max_Tau_std = 100.0
+ real, parameter, public:: Min_ec = 0.0, Max_ec = 1.0, Min_ec_Std = 0.0, Max_ec_Std = 1.0
+ real, parameter, public:: Min_Beta = 0.0, Max_Beta = 2.0, Min_Beta_Std = 0.0, Max_Beta_Std = 2.0
+ real, parameter, public:: Min_Tau = -0.2, Max_Tau = 160.0, Min_Tau_Std = 0.0, Max_Tau_Std = 100.0
  real, parameter, public:: Min_Tau_Acha = -0.2, Max_Tau_Acha = 8.0
  real, parameter, public:: Min_Acha_Cost = 0.0, Max_Acha_Cost = 1000.0 ! 18.0
- real, parameter, public:: Min_Reff = 0.0, Max_Reff = 160.0, Min_Reff_std = 0.0, Max_Reff_std = 100.0
+ real, parameter, public:: Min_Reff = 0.0, Max_Reff = 160.0, Min_Reff_Std = 0.0, Max_Reff_Std = 100.0
  real, parameter, public:: Min_Hcld = 0.0, Max_Hcld = 4000.0
  real, parameter, public:: Min_Cdnc = 0.0, Max_Cdnc = 1000.0
- real, parameter, public:: Min_lwp = 0.0, Max_lwp = 2000.0, Min_lwp_std = 0.0, Max_lwp_std = 100.0
- real, parameter, public:: Min_iwp = 0.0, Max_iwp = 2000.0, Min_iwp_std = 0.0, Max_iwp_std = 100.0
+ real, parameter, public:: Min_lwp = 0.0, Max_lwp = 2000.0, Min_lwp_Std = 0.0, Max_lwp_Std = 100.0
+ real, parameter, public:: Min_iwp = 0.0, Max_iwp = 2000.0, Min_iwp_Std = 0.0, Max_iwp_Std = 100.0
  real, parameter, public:: Min_frac = 0.0, Max_frac = 1.0
  real, parameter, public:: Min_tpw = 0.0, Max_tpw = 10.0
  real, parameter, public:: Min_Ozone = 100.0, Max_Ozone = 550.0
  real, parameter, public:: Min_rh = 0.0, Max_rh = 110.0
  real, parameter, public:: Min_hght500 = 4500.0, Max_hght500 = 6500.0
- real, parameter, public:: Min_aot = -0.2, Max_aot = 5.0, Min_aot_std = 0.0, Max_aot_std = 1.0
- real, parameter, public:: Min_olr = 50.0, Max_olr = 350.0, Min_olr_std = 0.0, Max_olr_std = 100.0
+ real, parameter, public:: Min_Aot = -0.2, Max_Aot = 5.0, Min_Aot_Std = 0.0, Max_Aot_Std = 1.0
+ real, parameter, public:: Min_Olr = 50.0, Max_Olr = 350.0, Min_Olr_Std = 0.0, Max_Olr_Std = 100.0
  real, parameter, public:: Min_Insol = 0.0, Max_Insol = 1500.0
  real, parameter, public:: Min_weasd = 0.0, Max_weasd = 5500.0
  real, parameter, public:: Min_wndspd = 0.0, Max_wndspd = 50.0 
@@ -143,8 +143,8 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_ems_Ch20 = 0.5, Max_ems_Ch20 = 3.0 
  real, parameter, public:: Min_etropo = -0.5, Max_etropo = 1.2 
  real, parameter, public:: Min_Ttropo = 160.0, Max_Ttropo = 260
- real, parameter, public:: Min_rsr = -2.0, Max_rsr = 10.0, Min_rsr_std = 0.0, Max_rsr_std = 2.0
- real, parameter, public:: Min_albedo = 0.0, Max_albedo = 1.0, Min_transmission = 0.0, Max_transmission = 1.0 
+ real, parameter, public:: Min_Rsr = -2.0, Max_Rsr = 10.0, Min_Rsr_Std = 0.0, Max_Rsr_Std = 2.0
+ real, parameter, public:: Min_Albedo = 0.0, Max_Albedo = 1.0, Min_transmission = 0.0, Max_transmission = 1.0 
  real, parameter, public:: Min_dcomp_atmos_vis = 0.0,Max_dcomp_atmos_vis = 1.5, &
                            Min_dcomp_atmos_ir = 0.0, Max_dcomp_atmos_ir = 1.5 
  real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 

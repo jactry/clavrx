@@ -1042,6 +1042,7 @@
                call COMPUTE_SIMPLE_SOLAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
                call COMPUTE_SIMPLE_LUNAR_COD(Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)               
 
+               call OPAQUE_CLOUD_HEIGHT()
                call CO2IRW_CLOUD_HEIGHT()
                call H2O_CLOUD_HEIGHT()
                call CO2_SLICING_CLOUD_HEIGHT(Image%Number_Of_Elements,Line_Idx_Min_Segment, &
@@ -1151,11 +1152,10 @@
 
                   !--- AWG CLoud Height Algorithm (ACHA) and associated products
                   call AWG_CLOUD_HEIGHT_BRIDGE()
-                  call CCL_BRIDGE()
                   call ASOS_BRIDGE()
 
-                  !--- interpolate NWP wind profiles at cloud-top level
-                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+                  !--- interpolate NWP wind and tpw profiles at cloud-top level
+                  call COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND_AND_TPW(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                   !--- interpolate ACHA cloud heights to flight level altitude.
                   call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc,ACHA%Alt)
@@ -1228,6 +1228,7 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if (ACHA%Mode > 0) then 
                  call CLOUD_BASE_BRIDGE()
+                 call CCL_BRIDGE()
 
                  !---Calculate flight level altitude of the base for AWC
                  call COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,ACHA%Pc_Base,ACHA%Base_Alt)

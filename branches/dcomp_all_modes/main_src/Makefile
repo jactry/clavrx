@@ -107,7 +107,6 @@ clavrxorb_objs = process_clavrx.o \
                  planck.o \
                  sfc_prop_umd.o \
                  cgms_nav.o \
-                 file_tools.o \
                  scaling_params.o \
                  netcdf_read_module.o \
                  oisst_analysis.o \
@@ -241,7 +240,7 @@ endif
 
 
 create_level2b: $(create_level2b_objs) bindir
-	$(fc) $(ldflags) -o ../clavrx_bin/create_level2b $(create_level2b_objs) $(hdflibs) $(dncomplinks) $(dncomplibs)
+	$(fc) $(ldflags) -o ../clavrx_bin/create_level2b $(create_level2b_objs) $(dncomplinks) $(dncomplibs) $(hdflibs)
    
 drive_subset_level2b: $(drive_subset_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/drive_subset_level2b $(drive_subset_level2b_objs) $(hdflibs)

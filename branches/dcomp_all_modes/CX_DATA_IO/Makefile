@@ -3,7 +3,11 @@ fc=ifort -g
 fflags=-I./
 DEPS=cx_sds_constants.F90
 OBJ=cx_sds_test.o cx_sds_io_mod.o cx_hdf_read_mod.o cx_sds_type_definitions_mod.o cx_hdf_write_mod.o
-HDF4_LIB=-L/Users/awalther/lib/hdf4//lib/ -I/Users/awalther/lib/hdf4//include/ -lmfhdf -ldf -ljpeg -lz
+
+
+HDFDIR = $(hdf4root)
+HDF4_LIB = -L$(HDFDIR)/lib -I$(HDFDIR)/include  -lmfhdf -ldf -ljpeg -lz
+
 
 .SUFFIXES: .F90 .F .o
 

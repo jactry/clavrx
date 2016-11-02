@@ -1,4 +1,8 @@
 #
+#
+
+include config.mk
+
 fc=ifort -g 
 fflags=-I./
 DEPS=cx_sds_constants.F90

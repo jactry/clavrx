@@ -66,7 +66,7 @@ file_tools.o
 
 .PHONY: all_dncomp clean hdf4
 
-all_dncomp:  dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
+all_dncomp:  dcomp_one_pixel_run  libdncomp.a
 	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
@@ -85,7 +85,7 @@ dcomp_one_pixel_run: $(OBJS)
 nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 	@echo 'Building target: $@'
 	
-	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)  $(LFLAGS) ${hdf5libs} ${hdflibs}  ${cx_data_libs} ${cx_data_links}  $(PATH_FLAGS) 
+	$(fc) ${fflags}  $(FFLAGS)    -o "nlcomp_one_pixel_run" $(OBJS_NLCOMP)   ${hdf5libs}   ${cx_data_libs} ${cx_data_links} $(LFLAGS)  $(PATH_FLAGS) 
 	@echo 'Finished building target: $@'
 	@echo ' '
 

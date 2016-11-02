@@ -92,8 +92,10 @@
   
    use PIXEL_COMMON
    use PIXEL_ROUTINES
+   
    use LEVEL2_ROUTINES, only: &
       write_pixel_hdf_records
+      
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
    use CLOUD_HEIGHT_ROUTINES
@@ -395,8 +397,8 @@
       !**********************************************************************
 
       !-- see if level-1b file exists
-      Level1b_Exists = file_exists(trim(Image%Level1b_Path)//trim(File_1b_Temp))
-      if (Level1b_Exists .eqv. .FALSE.) then
+      Level1b_Exists = file_test(trim(Image%Level1b_Path)//trim(File_1b_Temp))
+      if (.not. Level1b_Exists ) then
          print *, EXE_PROMPT, "ERROR: Level-1b file not found, skipping"
          cycle file_loop
       end if

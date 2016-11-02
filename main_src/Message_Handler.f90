@@ -30,7 +30,7 @@
 MODULE Message_Handler
 
   ! Module use statements
-  USE File_Utility, ONLY: Get_Lun
+  USE File_Tools, ONLY: Get_Lun
   USE CONSTANTS
 
   ! Disable all implicit typing

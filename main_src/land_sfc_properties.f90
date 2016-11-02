@@ -31,7 +31,8 @@ MODULE land_sfc_properties
   
   use CONSTANTS
   use NUMERICAL_ROUTINES
-  use FILE_UTILITY
+  use FILE_TOOLS, only: &
+   file_test
   
   implicit none
   
@@ -89,14 +90,14 @@ FUNCTION open_land_sfc_hdf(data_dir, filename, grid_str) result(id)
   INTEGER(kind=int4) :: id  
   CHARACTER(len=1020) :: filename_full
   
-  logical :: file_exists
+  logical :: file_test
   
   INTEGER :: sfstart
   
   filename_full = trim(data_dir)//trim(filename)
   
-  inquire(file = filename_full, exist = file_exists)
-  if (.not. file_exists) then
+  inquire(file = filename_full, exist = file_test)
+  if (.not. file_test) then
     print "(/,a,'Land surface file, ',a,' does not exist.')",EXE_PROMPT,trim(filename_full)
     stop
   endif
@@ -180,7 +181,7 @@ END SUBROUTINE close_land_sfc_hdf
                snow_filename_tmp = "snow_map_4km_" //year_string//month_string// &
                        day_string//".hdf"
    
-               if (file_exists(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
+               if (file_test(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
                   snow_filename = snow_filename_tmp
                   exit
                endif

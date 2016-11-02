@@ -377,7 +377,7 @@ contains
    !-----------------------------------------------------------------
    subroutine READ_VIIRS_INSTR_CONSTANTS(Instr_Const_file)
       use calibration_constants
-      use file_tools , only: getlun
+      use file_tools , only: get_lun
       
       implicit none
  
@@ -385,7 +385,7 @@ contains
       integer:: ios0, erstat
       integer:: Instr_Const_lun
 
-      Instr_Const_lun = GETLUN()
+      Instr_Const_lun = get_lun()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
       call mesg ("opening "//trim(Instr_Const_file), level = verb_lev % VERBOSE) 

@@ -33,7 +33,7 @@ module VIIRS_NASA_READ_MODULE
   use READH5DATASET 
   use FILE_TOOLS, only: &
         FILE_SEARCH &
-      , GETLUN
+      , GET_LUN
   use PIXEL_COMMON, only: &
         Sensor &
       , Gap_Pixel_Mask
@@ -367,7 +367,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
 
          ! - mapping file (maps from dnb to M-bands resolution)
          File_Dnb_Idx = trim(Ancil_Data_Dir)//'static/viirs/dnb2m_indx.txt'
-         Lun = GETLUN()
+         Lun = GET_LUN()
          Dim_Dnb_Seg(1) = 4064
          Dim_Dnb_Seg(2) = Dim_Seg(2)
 

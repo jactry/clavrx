@@ -76,9 +76,9 @@ use NUMERICAL_ROUTINES, only: &
    leap_year_fct &
    , compute_median
    
-use FILE_UTILITY, only: &
+use FILE_TOOLS, only: &
    get_lun &
-   , file_exists
+   , file_test
    
 use VIEWING_GEOMETRY_MODULE, only: &
    SENSOR_ZENITH &
@@ -3444,7 +3444,7 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     Dark_Composite_Name = trim(Goes_Name)//"_"//Year_String//"_"// &
                            Jday_String//"_"//Time_String// &
                            "_drk_ch1_pix.dat"
-    Does_File_Exist = file_exists(trim(Dark_Comp_Data_Dir_Temp)// &
+    Does_File_Exist = file_test(trim(Dark_Comp_Data_Dir_Temp)// &
                                   trim(Dark_Composite_Name))
 
     !-- if found, exit loop
@@ -3456,11 +3456,11 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     !--- test for existence - assume gzip compressed
     Dark_Composite_Name = trim(Dark_Composite_Name)//".gz"
 
-    Does_File_Exist = file_exists(trim(Dark_Comp_Data_Dir_Temp)// &
+    Does_File_Exist = file_test(trim(Dark_Comp_Data_Dir_Temp)// &
                                   trim(Dark_Composite_Name))
 
     !-- if found, exit loop
-    if (Does_File_Exist .neqv. .false.) then
+    if (Does_File_Exist ) then
         print *, 'Found: '//trim(Dark_Composite_Name)
         exit
     endif

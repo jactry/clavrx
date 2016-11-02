@@ -21,7 +21,7 @@ module file_tools
   public :: file_dirname
   public :: file_search
   public :: file_test
-  public :: getlun
+  public :: get_lun
   public :: file_nr_lines
   public :: uncompress_file
 
@@ -65,7 +65,7 @@ contains
     character(len=1) :: junk
     integer :: lun
 
-    lun = getlun()
+    lun = get_lun()
 
     nr = 0
     open( UNIT=lun,FILE=file)
@@ -159,7 +159,7 @@ contains
       
       
       call system ( 'rm -f list')
-      lun = getlun()
+      lun = get_lun()
      
       call system('ls -1 -phd '// trim (path) //''// trim (spec) //' > list')
       nr = file_nr_lines ('list')
@@ -182,7 +182,7 @@ contains
   !
   !
   !
-  FUNCTION getlun() RESULT( lun )
+  FUNCTION get_lun() RESULT( lun )
 
 
     ! -----------------
@@ -221,7 +221,7 @@ contains
     
 
 
-  END FUNCTION getlun
+  END FUNCTION get_lun
   
   
    !

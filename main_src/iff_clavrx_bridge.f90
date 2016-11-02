@@ -267,7 +267,7 @@ contains
 !-----------------------------------------------------------------
    subroutine READ_IFF_VIIRS_INSTR_CONSTANTS(Instr_Const_file)
       use CALIBRATION_CONSTANTS 
-      use FILE_TOOLS , only: GETLUN
+      use FILE_TOOLS , only: GET_LUN
 
       implicit none
 
@@ -275,7 +275,7 @@ contains
       integer:: ios0, erstat
       integer:: Instr_Const_lun
 
-      Instr_Const_lun = GETLUN()
+      Instr_Const_lun = GET_LUN()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
       print *, "opening ", trim(Instr_Const_file)
@@ -322,7 +322,7 @@ contains
 !----------------------------------------------------------------------
    subroutine READ_IFF_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
       use CALIBRATION_CONSTANTS 
-      use FILE_TOOLS , only: GETLUN 
+      use FILE_TOOLS , only: GET_LUN 
 
       implicit none
 
@@ -330,7 +330,7 @@ contains
       integer:: ios0, erstat
       integer:: Instr_Const_lun
 
-      Instr_Const_lun = GETLUN()
+      Instr_Const_lun = GET_LUN()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
       print *, "opening ", trim(Instr_Const_file)

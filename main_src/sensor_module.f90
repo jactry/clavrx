@@ -42,7 +42,8 @@ module SENSOR_MODULE
    use CALIBRATION_CONSTANTS
    use ALGORITHM_CONSTANTS
    use CONSTANTS
-   use FILE_UTILITY
+   use FILE_TOOLS,only: &
+      get_lun
    use AVHRR_MODULE
    use GOES_MODULE
    use MODIS_MODULE, only : &

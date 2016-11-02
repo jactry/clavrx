@@ -32,11 +32,10 @@
       module OCA_MODULE
 
 
-      use FILE_UTILITY,only: &
-             GET_LUN
 
       use FILE_TOOLS, only: &
-             FILE_SEARCH
+             FILE_SEARCH &
+              , get_lun 
 
       use PIXEL_COMMON, only: &
              Sensor &

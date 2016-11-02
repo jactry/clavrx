@@ -36,7 +36,8 @@ program DRIVE_SUBSET_LEVEL2B
  use NUMERICAL_ROUTINES
  use SCALING_PARAMETERS
  use LEVEL2B_ROUTINES
- use FILE_UTILITY
+ use FILE_TOOLS,only: &
+  get_lun
  
 
  implicit none

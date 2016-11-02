@@ -33,7 +33,9 @@
 module GLOBSNOW_READ_ROUTINES
   use CONSTANTS
   use NUMERICAL_ROUTINES
-  use FILE_UTILITY
+  use FILE_TOOLS,only: &
+   get_lun, file_test
+  
   implicit none
   include 'hdf.f90'  
 private
@@ -101,7 +103,7 @@ private
                  //"GlobSnow_SWE_L3A_"//year_string//month_string//day_string//"_v1.0.hdf"
        GlobSnow_full = trim(GlobSnow_path)//trim(GlobSnow_filename_tmp)
        
-       if (file_exists(trim(GlobSnow_full)) .eqv. .true.) then
+       if (file_test(trim(GlobSnow_full)) ) then
          GlobSnow_filename = GlobSnow_filename_tmp
          print *, EXE_PROMPT, "Found ", trim(GlobSnow_filename_tmp)
          exit

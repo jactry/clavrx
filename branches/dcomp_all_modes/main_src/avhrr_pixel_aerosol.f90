@@ -67,7 +67,8 @@
 module AEROSOL_PROPERTIES
  use PIXEL_COMMON
  use CONSTANTS
- use FILE_UTILITY
+ use FILE_TOOLS,only: &
+   get_lun
  use NUMERICAL_ROUTINES
  implicit none
  private

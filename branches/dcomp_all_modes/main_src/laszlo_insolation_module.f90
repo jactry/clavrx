@@ -30,7 +30,8 @@ module LASZLO_INSOLATION
       use CONSTANTS
       use PIXEL_COMMON
       use NWP_COMMON
-      use FILE_UTILITY
+      use FILE_TOOLS, only: &
+         get_lun
 
    implicit none
    

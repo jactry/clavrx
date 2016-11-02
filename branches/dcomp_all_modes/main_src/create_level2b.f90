@@ -3,7 +3,7 @@
 
 program create_level2b
       use FILE_TOOLS, only: &
-         getlun
+         get_lun
       
    use cx_sds_io_mod,only: &
       cx_sds_finfo &
@@ -175,7 +175,7 @@ program create_level2b
    
    compress_flag = 1
    
-   config_file_lun = GETLUN()
+   config_file_lun = GET_LUN()
    
    open(unit=config_file_lun &
       ,file="comp_asc_des_level2b_input" &

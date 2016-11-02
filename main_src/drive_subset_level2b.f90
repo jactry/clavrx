@@ -37,6 +37,7 @@ program DRIVE_SUBSET_LEVEL2B
  use SCALING_PARAMETERS
  use LEVEL2B_ROUTINES
  use FILE_UTILITY
+ 
 
  implicit none
 
@@ -92,7 +93,7 @@ program DRIVE_SUBSET_LEVEL2B
 !-----------------------------------------------------------------------------
 ! Search for level2b in the path
 !-----------------------------------------------------------------------------
-call FILE_SEARCH(Path_Input,'level2b.hdf',Num_Files,Files)
+!call FILE_SEARCH(Path_Input,'level2b.hdf',Num_Files,Files)
 
 File_Loop: do Idx = 1, Num_Files
 

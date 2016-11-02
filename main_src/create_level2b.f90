@@ -41,6 +41,9 @@ program create_level2b
       , MISSING_VALUE_INT2 &
       , MISSING_VALUE_INT4 &
       , MISSING_VALUE_REAL4 
+    
+    use cx_scale_tools_mod, only: &
+      scale_i2_rank2  
       
    implicit none
 
@@ -69,8 +72,7 @@ program create_level2b
       real :: dlon_output
       real :: dlat_output
       character(len=1020) :: file_input (N_FILES_MAX)
-      integer :: n_files
-      
+      integer :: n_files      
    end type
    
    type ( l2b_config ) :: cnf
@@ -97,10 +99,10 @@ program create_level2b
    integer :: num_sds_output
    character(len=240) :: file
    integer :: natt,nsds
-   !type(hdf_att), allocatable:: attrs(:)
+   
    character ( len = MAXNCNAM), allocatable :: att_name(:)
    character ( len = MAXNCNAM), allocatable :: sds_name(:) 
-  ! type(hdf_sds), dimension(:), target, allocatable :: sds_new  
+ 
    
    logical :: is_first_file
    
@@ -108,9 +110,6 @@ program create_level2b
    integer :: num_elem_inp
    integer :: num_line_inp
    
-  
- !  type(hdf_sds), pointer :: ps                          
- !  type(hdf_data), pointer :: psd   
    real, dimension(:,:), allocatable :: Lon_Inp
    real, dimension(:,:), allocatable :: Lat_Inp
    logical, dimension(:,:), allocatable :: Gap_Inp
@@ -415,11 +414,9 @@ program create_level2b
 ! we have now all data stored in sds_out
 ! lets write this in level2b file
 !  
-! lets start with what I want
-!  
 !    open and create file
 !    do i = 1, num_sds_output
-   !File_Level2b= trim(File_2b_Root)//".level2b.hdf"   
+!   File_Level2b= trim(File_2b_Root)//".level2b.hdf"   
    
    call prd % read_products()
          
@@ -439,11 +436,10 @@ program create_level2b
       end do  
       if (idx .eq. -999) cycle
       
-     
-      
+      ! - when found set pointer 
       prd_i => prd % product(idx)
       
-      ! first define hdf variables
+      ! first define and create sds variables
       select case ( prd_i % dim)
       case(1)
          prd_i % Sds_Id= create_sds (id_file, prd_i % name ,  nlon_out, prd_i % dtype)
@@ -481,99 +477,54 @@ program create_level2b
       ! - write
       select case (prd_i % dim)
        
-               
-               case(2)
-                  select case (prd_i % dtype)
-                  case(1)
-                  if (prd_i % scaling == 1 ) then
+      case(2)
+         select case (prd_i % dtype)
+         
+         case(1)
+            if (prd_i % scaling == 1 ) then
                      
                  !    call SCALE_VECTOR_I1_RANK2(sds_out(i) % data,prd_i % scaling &
                  !       ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                  !       ,sds_out(i) % data)
                  !    Istatus = write_sds ( prd_i % sds_id,[0,0],[1,1],sds_dims_2d, &
                  !       sds_out(i) % data) + Istatus 
-                  else
+            else
                      
                  !    Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_dims_2d, &
                  !              data_dim2_dtype1) + Istatus
-                  end if
+            end if
                   
-                  case(2)
-                  if (prd_i % scaling == 1) then
-                     allocate ( two_byte_dummy(sds_dims_2d(1),sds_dims_2d(2)))
-                     call SCALE_VECTOR_I2_RANK2(sds_out(i) % data,prd_i % scaling &
-                        ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
-                        ,Two_Byte_dummy)
-                     Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_dims_2d, &
+         case(2)
+            if (prd_i % scaling == 1) then
+               call scale_i2_rank2(sds_out(i) % data  &
+                     ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4,two_byte_dummy)
+
+               Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_dims_2d, &
                         Two_Byte_Dummy ) + Istatus
-                      deallocate(two_byte_dummy)  
-                  else 
+               if ( allocated (two_byte_dummy) ) deallocate(two_byte_dummy)  
+            else 
                  !    Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                  !              data_dim2_dtype2) + Istatus
-                  end if 
+            end if 
                   
-                  case(4)
+         case(4)
                   !- this is only diagnostic variables, we don't scale..
-                  Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_dims_2d,  &
+            Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d, Sds_Stride_2d, Sds_dims_2d,  &
                       sds_out(i) % data ) + Istatus   
-                  end select   
-               end select
-      
-      ! id = create_sds ( id_file, sds_out(i) % name, sds_dim_2d, 4)
-      
-      ! Istatus = write_sds ( id, [0,0], [1,1], [nlon_out,nlat_out],  &
-      !                 sds_out(i) % data ) + Istatus 
-      !call close_sds(id)                 
+         end select   
+      end select
+       
+      call close_sds(prd_i % sds_id)                 
    end do
+   
    call close_file (id_file)    
    
 
 
 !     end do 
 
-contains
-   subroutine SCALE_VECTOR_I1_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i1)
-      real, dimension(:,:), intent(in):: temp_r4
-      integer, intent(in):: iscaled
-      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
-      integer(kind=int1), dimension(:,:),  intent(out):: temp_i1
-      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
 
-      scratch_r4 = 0.0
-      !---- linear
-      if (iscaled == 1) then
-         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
-         temp_i1 = one_byte_min + scratch_r4 * (one_byte_max - one_byte_min)
-      endif
-
-      !--- set scaled missing values
-      where (temp_r4 == unscaled_missing)
-         temp_i1 = missing_value_int1
-      end where
-   end subroutine SCALE_VECTOR_I1_RANK2
    
    
-   subroutine SCALE_VECTOR_I2_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i2)
-      real, dimension(:,:), intent(in):: temp_r4
-      integer, intent(in):: iscaled
-      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
-      integer(kind=int2), dimension(:,:), intent(out):: temp_i2
-      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
-        
-      !---- linear
-      if (iscaled == 1) then
-         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))       
-         temp_i2 = two_byte_min + scratch_r4 * (two_byte_max - two_byte_min)
-      endif
-
-      !--- set scaled missing values
-      where (temp_r4 == unscaled_missing)
-         temp_i2 = missing_value_int2
-      end where
-   end subroutine SCALE_VECTOR_I2_RANK2
-   
-   
-
-
-
+  
 end program create_level2b

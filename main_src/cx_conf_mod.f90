@@ -136,7 +136,7 @@ contains
    !
    subroutine read_input_files (conf)
    
-      use cx_file_tools_mod, only: get_lun &
+      use file_tools, only: get_lun &
          , file_nr_lines, file_test
       
       

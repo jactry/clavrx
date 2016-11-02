@@ -1,6 +1,7 @@
+! $Id$
 module cx_ssec_areafile_mod
    
-   use cx_file_tools_mod
+   use file_tools
    
    type, public:: area_header_type
       integer :: Area_Status           ! Area status

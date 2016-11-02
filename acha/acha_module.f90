@@ -372,6 +372,7 @@ module AWG_CLOUD_HEIGHT
   real:: Beta_Ap
   real:: Ts_Ap
   real:: Tc_Ap_Uncer
+  real:: Ts_Ap_Uncer
   real:: Ec_Ap_Uncer
   real:: Tc_Ap_Imager
   real:: Tc_Ap_Sounder
@@ -413,8 +414,12 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), dimension(:,:), allocatable:: Fail_Flag
   integer(kind=int4), dimension(:,:), allocatable:: Converged_Flag
   real (kind=real4), allocatable, dimension(:,:):: Temperature_Cirrus
+  real (kind=real4), allocatable, dimension(:,:):: Temperature_Lower_Cloud_Apriori
   integer (kind=int4):: Box_Half_Width_Cirrus
   integer (kind=int4):: Box_Half_Width_Lower
+  real (kind=real4), allocatable, dimension(:,:):: Pc_Opaque
+  real (kind=real4), allocatable, dimension(:,:):: Zc_Opaque
+  real (kind=real4), allocatable, dimension(:,:):: Tc_Opaque
 
   !--- local POINTERs to global arrays or data structures
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
@@ -504,6 +509,13 @@ module AWG_CLOUD_HEIGHT
   allocate(Converged_Flag(Input%Number_of_Elements,Input%Number_of_Lines))
   allocate(Temperature_Cirrus(Input%Number_of_Elements,Input%Number_of_Lines))
 
+  allocate(Pc_Opaque(Input%Number_of_Elements,Input%Number_of_Lines))
+  allocate(Tc_Opaque(Input%Number_of_Elements,Input%Number_of_Lines))
+  allocate(Zc_Opaque(Input%Number_of_Elements,Input%Number_of_Lines))
+
+  !--- allocate array to hold lowe cloud temp
+  allocate(Temperature_Lower_Cloud_Apriori(Input%Number_of_Elements,Input%Number_of_Lines))
+
   !--- allocate 1D-VAR arrays based on number of channels
   allocate(y(Num_Obs))
   allocate(y_variance(Num_Obs))
@@ -562,6 +574,10 @@ module AWG_CLOUD_HEIGHT
   Line_Idx_LRC = MISSING_VALUE_INTEGER4
   Skip_LRC_Mask = Input%Invalid_Data_Mask
   Temperature_Cirrus = MISSING_VALUE_REAL4
+  Pc_Opaque = MISSING_VALUE_REAL4
+  Tc_Opaque = MISSING_VALUE_REAL4
+  Zc_Opaque = MISSING_VALUE_REAL4
+  Temperature_Lower_Cloud_Apriori = MISSING_VALUE_REAL4
 
   !--- call LRC routine
   if (Use_Lrc_Flag == symbol%YES) then
@@ -600,8 +616,16 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--------------------------------------------------------------------------
+  ! Assume all CIRRUS are Overlapped - Experimental
+  !-------------------------------------------------------------------------
+  where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
+     Input%Cloud_Type = symbol%OVERLAP_TYPE
+  endwhere
+
+  !--------------------------------------------------------------------------
   ! determine processing order of pixels
   !--------------------------------------------------------------------------
+
   call COMPUTE_PROCESSING_ORDER(&
                                 Input%Invalid_Data_Mask, Input%Cloud_Type,&
                                 ELem_Idx_LRC,Line_Idx_LRC, &
@@ -628,7 +652,8 @@ module AWG_CLOUD_HEIGHT
                                         COUNT_MIN_LOWER,      &
                                         Box_Half_Width_Lower, &
                                         MISSING_VALUE_REAL4, &
-                                        Output%Lower_Tc)
+                                        Temperature_Lower_Cloud_Apriori)
+!Diag%Array_2 = Temperature_Lower_Cloud_Apriori
 
    endif
 
@@ -763,9 +788,9 @@ module AWG_CLOUD_HEIGHT
                                 Temp_Prof_RTM, &
                                 Tropo_Level_RTM, &
                                 Sfc_Level_RTM, &
-                                Output%Pc_Opaque(Elem_Idx,Line_Idx), &
-                                Output%Tc_Opaque(Elem_Idx,Line_Idx), &
-                                Output%Zc_Opaque(Elem_Idx,Line_Idx))
+                                Pc_Opaque(Elem_Idx,Line_Idx), &
+                                Tc_Opaque(Elem_Idx,Line_Idx), &
+                                Zc_Opaque(Elem_Idx,Line_Idx))
 
   !-------------------------------------------------------------------
   ! Apply Opaque Retrieval for Acha_Mode_Flag = 1, then cycle
@@ -780,9 +805,9 @@ module AWG_CLOUD_HEIGHT
           Output%Ec(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
         else
-          Output%Tc(Elem_Idx,Line_Idx) = Output%Tc_Opaque(Elem_Idx,Line_Idx)
-          Output%Pc(Elem_Idx,Line_Idx) = Output%Pc_Opaque(Elem_Idx,Line_Idx)
-          Output%Zc(Elem_Idx,Line_Idx) = Output%Zc_Opaque(Elem_Idx,Line_Idx)
+          Output%Tc(Elem_Idx,Line_Idx) = Tc_Opaque(Elem_Idx,Line_Idx)
+          Output%Pc(Elem_Idx,Line_Idx) = Pc_Opaque(Elem_Idx,Line_Idx)
+          Output%Zc(Elem_Idx,Line_Idx) = Zc_Opaque(Elem_Idx,Line_Idx)
           Output%Ec(Elem_Idx,Line_Idx) = 1.0
           Output%Beta(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
         endif
@@ -814,7 +839,6 @@ module AWG_CLOUD_HEIGHT
         (Cloud_Type  == symbol%OVERSHOOTING_TYPE)) then
         Cloud_Phase = symbol%ICE_PHASE
    endif
-
 
   !-----------------------------------------------------------------------
   !----- data quality check
@@ -1064,8 +1088,8 @@ module AWG_CLOUD_HEIGHT
 
   !--- logic for unmasked or untyped pixels (UndetOutput%Ected cloud)
   if (Undetected_Cloud == symbol%YES) then
-         if (Output%Tc_Opaque(Elem_Idx,Line_Idx) < 260.0 .and.  &
-             Output%Tc_Opaque(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+         if (Tc_Opaque(Elem_Idx,Line_Idx) < 260.0 .and.  &
+             Tc_Opaque(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
              Cloud_Type = symbol%CIRRUS_TYPE
          else
              Cloud_Type = symbol%FOG_TYPE
@@ -1095,7 +1119,7 @@ module AWG_CLOUD_HEIGHT
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
                        Bt_11um_Lrc, &
-                       Output%Tc_Opaque(Elem_Idx,Line_Idx), &
+                       Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                        Input%Snow_Class(Elem_Idx,Line_Idx), &
                        Input%Surface_Air_Temperature(Elem_Idx,Line_Idx), &
@@ -1129,9 +1153,11 @@ module AWG_CLOUD_HEIGHT
   Tsfc_Est = Input%Surface_Temperature(Elem_Idx,Line_Idx)
 
   if (Cloud_Type == symbol%OVERLAP_TYPE) then
-    Ts_Ap = Output%Lower_Tc(Elem_Idx,Line_Idx)
+    Ts_Ap = Temperature_Lower_Cloud_Apriori(Elem_Idx,Line_Idx)
+    Ts_Ap_Uncer = Ts_Ap_Uncer_Lower_Cld
   else
     Ts_Ap = Tsfc_Est
+    Ts_Ap_Uncer = Ts_Ap_Uncer_Sfc
   endif
 
   !------------------------------------------------------------------------
@@ -1528,6 +1554,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Tc(Elem_Idx,Line_Idx) = x(1)
  Output%Ec(Elem_Idx,Line_Idx) = x(2)   !note, this is slant
  Output%Beta(Elem_Idx,Line_Idx) = x(3)
+
  if (Cloud_Type == symbol%OVERLAP_TYPE) then
     Output%Lower_Tc(Elem_Idx,Line_Idx) = x(4)
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
@@ -1542,6 +1569,22 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Ec_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(2,2))
  Output%Beta_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(3,3))
  Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = sqrt(Sx(4,4))   
+
+ !-------------------------------------------------------------------------- 
+ !--  If Lower Cloud is placed at surface - assume this single layer
+ !--------------------------------------------------------------------------
+ if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
+     Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
+    Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+    Output%Lower_Tc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+    Output%Lower_Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+    Input%Cloud_Type(Elem_Idx,Line_Idx) = symbol%CIRRUS_TYPE
+    Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+ endif  
+
+!if (Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
+!    Diag%Array_3(Elem_Idx,Line_Idx) = 1.0 - Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) / Ts_Ap_Uncer
+!endif
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1630,10 +1673,15 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
                                             ABS_LAPSE_RATE_DT_DZ_UNCER
 
- Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
-                                            ABS_LAPSE_RATE_DT_DZ_UNCER
+ if (Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+      Output%Lower_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+                                                       ABS_LAPSE_RATE_DT_DZ_UNCER
+ endif
 
  !-- Compute Pressure Uncertainty
+ Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+                                            ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
+
  Output%LOWER_Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
                                             ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%LOWER_Pc(Elem_Idx,Line_Idx)
 
@@ -1779,6 +1827,9 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  Box_Half_Width_CIRRUS,      &
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
+
+!Diag%Array_1 = Temperature_Cirrus
+
 endif
 
 end do pass_loop
@@ -1798,6 +1849,10 @@ end do pass_loop
   if (allocated(Line_Idx_LRC)) deallocate(Line_Idx_LRC)
   if (allocated(Skip_LRC_Mask)) deallocate(Skip_LRC_Mask)
   if (allocated(Temperature_Cirrus)) deallocate(Temperature_Cirrus)
+  if (allocated(Pc_Opaque)) deallocate(Pc_Opaque)
+  if (allocated(Tc_Opaque)) deallocate(Tc_Opaque)
+  if (allocated(Zc_Opaque)) deallocate(Zc_Opaque)
+  if (allocated(Temperature_Lower_Cloud_Apriori)) deallocate(Temperature_Lower_Cloud_Apriori)
   if (allocated(Fail_Flag)) deallocate(Fail_Flag)
   if (allocated(Converged_Flag)) deallocate(Converged_Flag)
 

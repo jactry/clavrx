@@ -66,7 +66,7 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output) ! , Diag)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
    !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
@@ -203,9 +203,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
      Output%Inversion_Flag  =>  null()
-     Output%Pc_Opaque =>  null()
-     Output%Tc_Opaque =>  null()
-     Output%Zc_Opaque =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -299,9 +296,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
    Output%Processing_Order  => ACHA%Processing_Order
    Output%Inversion_Flag  => ACHA%Inversion_Flag
-   Output%Pc_Opaque => Pc_Opaque_Cloud
-   Output%Tc_Opaque => Tc_Opaque_Cloud
-   Output%Zc_Opaque => Zc_Opaque_Cloud
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()

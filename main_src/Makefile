@@ -199,6 +199,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_read_ascii_line_mod.o \
                  csv_mod.o  \
                  cx_prd_mod.o \
+					  file_tools.o \
                  cx_array_tools_mod.o
 
 

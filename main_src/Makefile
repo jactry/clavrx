@@ -128,7 +128,6 @@ clavrxorb_objs = process_clavrx.o \
                  asos_module.o \
 		 asos_clavrx_bridge_module.o \
 		 asos_clavrx_services_module.o \
-	         file_tools.o \
 	         clavrx_message_module.o \
 	         land_sfc_properties.o \
 	         avhrr_pixel_aerosol.o \
@@ -366,7 +365,7 @@ hdf_read_module.o: hdf_read_module.f90 Compare_Float_Numbers.o constant.o file_t
 hdf_params.o: version.inc hdf_params.f90  constant.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o num_mod.o file_tools.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o file_tools.o viewing_geometry_module.o file_tools.o calibration_constants.o
+modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
 iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o 
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o get_lun.o file_tools.o avhrr_module.o
@@ -382,7 +381,7 @@ level2b.o: level2b.f90 constant.o file_tools.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
-oca_module.o: oca_module.f90  file_tools.o constant.o pixel_common.o file_tools.o
+oca_module.o: oca_module.f90  file_tools.o constant.o pixel_common.o
 sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o

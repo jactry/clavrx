@@ -16,7 +16,7 @@ module cx_prd_mod
    type prd_individual_dtype
       logical :: switch
       integer :: dim
-      character(len=30) :: name
+      character(len=50) :: name
       character(len=50) :: name_clavrx
       integer :: dtype
       integer :: scaling

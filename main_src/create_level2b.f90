@@ -20,8 +20,7 @@ program create_level2b
    use cx_grid_tools_mod,only: &
       INDEX_IN_REGULAR_GRID &
       , lonlat_edge_to_array
-   
-   
+     
    use cx_hdf_write_mod,only: &
       hdf_file_open &
       , create_sds &
@@ -52,7 +51,7 @@ program create_level2b
    integer :: ifile
    
    integer, PARAMETER :: N_FILES_MAX = 1200
-  ! integer, parameter:: int4 = selected_int_kind(8)
+ 
    type l2b_config 
       character ( len = 3) :: node = 'asc'
       character ( len = 4) :: spatial = 'near'
@@ -151,8 +150,8 @@ program create_level2b
    integer :: istatus
    integer :: compress_flag
    
-      integer(kind=int4), parameter :: two_byte_max = 32767, & !(2**15)/2 - 1
-                                        two_byte_min = -32767   !-(2**15)/2
+      integer(kind=int4), parameter :: TWO_BYTE_MAX = 32767, & !(2**15)/2 - 1
+                                        TWO_BYTE_MIN = -32767   !-(2**15)/2
                                         
    integer(kind=int4), parameter :: one_byte_max = 127, & !(2**8)/2 - 1
                                         one_byte_min = -127   !-(2**8)/2
@@ -212,7 +211,7 @@ program create_level2b
     ! -check input
     
    
-   ! - confgure output arrays and structures   
+   ! - configure output arrays and structures   
    has_dateline = .false.
    
    if ( cnf % lon_west .gt. cnf % lon_east ) has_dateline = .true.
@@ -256,13 +255,15 @@ program create_level2b
       file = trim(trim(cnf%dir_in)//trim(cnf%File_Input(ifile)))
    
       
-      
+      ! - we have to check both i2 and i4, because it seems to have changed in last time..
+      ! - we could also add a tool to check this outside this file
       test = cx_sds_att (file,'NUMBER_OF_ELEMENTS',att)      
       if (allocated (att % data % i4values)) num_elem_inp = att % data % i4values(1)
       if (allocated (att % data % i2values)) num_elem_inp = att % data % i2values(1)
       test = cx_sds_att (file,'NUMBER_OF_SCANS_LEVEL2',att)
       if (allocated (att % data % i4values)) Num_Line_Inp = att % data % i4values(1)
       if (allocated (att % data % i2values)) num_line_inp = att % data % i2values(1)
+      test = cx_sds_att (file,'START_YEAR',att)
      
             
         
@@ -275,7 +276,8 @@ program create_level2b
          !if ( attrs(i) % name .eq. 'WMO_SATELLITE_CODE' ) Sc_Id_Input = attrs(i) % data % i2values (1)
          !if ( attrs(i) % name .eq. 'L1B' ) L1b_input = attrs(i) % data % c1values (1)
          
- 
+      !- test if file is in time window
+      
       
       num_points = num_elem_inp * num_line_inp
       allocate(Input_Update_Index(Num_Points))
@@ -324,10 +326,7 @@ program create_level2b
         , Iline_out )
         
       pix_to_update = Ielem_out .gt. 0  
-      
-      
-      
-      
+
      
       ! - set flags that let us decide if we take this pixel or what we have already in
       

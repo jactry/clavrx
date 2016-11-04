@@ -55,7 +55,7 @@ contains
    , press_cld &
    , air_mass  &
    , trans )
-       trans_uncert = 1.
+       trans_uncert = 0.
        
     !  print*,tpw_ac &
  !   , ozone_dobson &  
@@ -101,7 +101,7 @@ contains
    , press_cld &
    , air_mass  &
    , trans )
-   trans_uncert = 1.
+   trans_uncert = 0.
    end subroutine trans_atm_above_cloud_2d
    
    subroutine trans_atm_above_cloud_1d( &
@@ -139,7 +139,7 @@ contains
    , press_cld &
    , air_mass  &
    , trans )
-   trans_uncert = 1.
+   trans_uncert = 0.
    end subroutine trans_atm_above_cloud_1d
    
    !

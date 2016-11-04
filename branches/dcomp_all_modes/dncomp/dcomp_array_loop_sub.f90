@@ -5,7 +5,9 @@
 !           02/05/2014 : add AHI (AW)
 subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
-   use dcomp_retrieval_mod
+   use dcomp_retrieval_mod, only: &
+    dcomp_output_structure &
+    , dcomp_algorithm
    
    use dncomp_interface_def_mod, only: &
       dncomp_in_type &
@@ -13,7 +15,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       , EM_cloud_type &
       , EM_cloud_mask &
       , EM_snow_class
-   use dncomp_trans_atmos_mod   
+   use dncomp_trans_atmos_mod,only: &
+    trans_atm_above_cloud  
       
    
    implicit none
@@ -297,6 +300,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          ! - NIR                
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
          obs_unc ( 1 ) =   trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         
          alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
          alb_unc ( 1) = 0.05
          trans_vec ( 1) = trans_total ( CHN_VIS )

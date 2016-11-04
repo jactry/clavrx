@@ -216,12 +216,13 @@ contains
          chan_string(20) = '2'
       
       case ('MODIS-AQUA', 'MODIS-TERRA')    sensor_block
-         has_sol_table(1:2) = .true.
+         has_sol_table(1) = .true.
+         has_sol_table(2) = .false.
          has_sol_table(5:7) = .true.
          has_sol_table(20) = .true.
          has_ems_table(20) = .true.
          chan_string(1) = '1'
-         chan_string(2) = '2'
+         !chan_string(2) = '2'
          chan_string(5) = '5'
          chan_string(6) = '6'
          chan_string(7) = '7'

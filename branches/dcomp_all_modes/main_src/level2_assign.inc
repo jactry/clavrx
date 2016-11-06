@@ -1,3 +1,6 @@
+! Created on Mon Nov  7 00:28:44 2016
+! by awalther
+! on machine: kuu.local
 select case(trim(name))
 case("scan_line_number")
    if (allocated ( scan_number)) then

@@ -200,6 +200,9 @@ module LEVEL2_ROUTINES
    
    use cx_prd_mod
    
+   use strings, only: &
+    is_numeric
+   
    implicit none
    
    include 'hdf.f90'
@@ -280,7 +283,11 @@ CONTAINS
       integer :: ii
       real(kind=real4):: Add_Offset
       real(kind=real4):: Scale_Factor
-
+      integer ::  idx_1, idx_2 , idx_3
+      character :: substring_1
+      character(len=2) :: substring_2
+      logical :: change_switch
+      integer :: ch_switch
                                         
       File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
@@ -307,7 +314,52 @@ CONTAINS
                                
       do ii = 1, prd % num_products
          prd_i => prd % product(ii)
+         ! --- switch off if channel is needed but not set
+         ! --- 
+         change_switch = .false.
+         
+         ! - clavrx name indicates if this is a channel sensitive ouptput
+         idx_1 = index(prd_i % name_clavrx,'Ch')
+         idx_2 = index(prd_i % name_clavrx,'ch(')
+         idx_3 = index(prd_i % name_clavrx,'ch')
+         
+        
+         if ( idx_1 .NE. 0) then
+            substring_1 =  prd_i % name_clavrx(idx_1+2:idx_1+2)
+            substring_2 =  prd_i % name_clavrx(idx_1+2:idx_1+3)
+            change_switch = .true.
+         else if ( idx_2 .NE. 0) then
+            substring_1 =  prd_i % name_clavrx(idx_2+3:idx_2+3)
+            substring_2 =  prd_i % name_clavrx(idx_2+3:idx_2+4)
+            change_switch = .true.
+         else if ( idx_3 .NE. 0) then
+            substring_1 =  prd_i % name_clavrx(idx_3+2:idx_3+2)
+            substring_2 =  prd_i % name_clavrx(idx_3+2:idx_3+3)
+            change_switch = .true.
+         end if
+         
+         if (change_switch) then
+             
+            if (is_numeric(substring_2) .and. substring_2(2:) .ne. ')') then
+               
+               read (substring_2,'(I2)') ch_switch
+               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.
+               
+              
+               
+            else if (is_numeric(substring_1)) then
+              
+               read (substring_1,'(I1)') ch_switch
+               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.
+            
+            end if
+            
+         end if
+         
+         if (trim(prd_i % name_clavrx) .EQ. '"NOT_SET_YET"') prd_i % switch = .false.
+         
          if ( prd_i % switch ) then
+            
             select case ( prd_i % dim)
             case(1)
               prd_i % Sds_Id= create_sds (id_file, prd_i % name ,  Image%Number_Of_Lines, prd_i % dtype)

@@ -358,6 +358,8 @@ CONTAINS
          
          if (trim(prd_i % name_clavrx) .EQ. '"NOT_SET_YET"') prd_i % switch = .false.
          
+         if (index(prd_i % name,'iband') .NE. 0 .and. trim(sensor % sensor_name) .NE. 'VIIRS') prd_i % switch = .false. 
+         
          if ( prd_i % switch ) then
             
             select case ( prd_i % dim)

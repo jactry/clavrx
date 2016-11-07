@@ -35,9 +35,18 @@
 !  READ_GFS_DATA
 !--------------------------------------------------------------------------------------
 module GFS
+
   use CONSTANTS
-  use NUMERICAL_ROUTINES
-  use Sort_Module
+  
+  use NUMERICAL_ROUTINES, only: &
+   leap_year_fct &
+   , compute_month &
+   , compute_day &
+   , wind_speed &
+   , wind_direction &
+   , vapor &
+   , vapor_ice
+  
   use NWP_COMMON
   
   

@@ -357,7 +357,7 @@ geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o  file_tools.o avhrr_module.o constant.o
 Message_Handler.o: Message_Handler.f90 file_tools.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
-gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o clavrx_message_module.o
+gfs_hdf_module.o: gfs_hdf_module.f90 constant.o num_mod.o nwp_common.o clavrx_message_module.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o num_mod.o file_tools.o
 netcdf_read_module.o: netcdf_read_module.f90 constant.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90

@@ -210,6 +210,7 @@ create_level2b_objs = create_level2b.o \
                             cx_grid_tools_mod.o \
                             cx_prd_mod.o \
                             csv_mod.o \
+                            date_tools_mod.o \
                             strings.o \
                             cx_scale_tools_mod.o 
 
@@ -218,6 +219,7 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
 		                    hdf_params.o \
                             level2b.o \
                             num_mod.o \
+                            date_tools_mod.o \
                             file_tools.o \
                             constant.o
 
@@ -325,7 +327,7 @@ avhrr_module.o: avhrr_module.f90 constant.o pixel_common.o viewing_geometry_modu
 calibration_constants.o: calibration_constants.f90 constant.o 
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
-create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod.o cx_scale_tools_mod.o
+create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod.o cx_scale_tools_mod.o date_tools_mod.o
 csv_mod.o:csv_mod.f90 strings.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90

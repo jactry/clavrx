@@ -350,6 +350,18 @@ contains
    
    end function time_diff_weight
    
+   function time_is_in_window ( time, time0, time1 ) 
+      type (date_type) , intent(in) :: time, time0 , time1
+      logical :: time_is_in_window
+      real :: diff
+      time_is_in_window = .false.
+      
+      diff = time_diff_weight ( time, time0, time1 )
+      if ( diff .GE. 0. .and.  diff .le. 1) time_is_in_window = .true.
+   
+   end function time_is_in_window
+   
+   
    !           arithmetic functions 'izlr' and 'iday' are taken from remark on
    !        algorithm 398, by j. douglas robertson, cacm 15(10):918.
    function iday(yyyy, mm, dd) result(ival)

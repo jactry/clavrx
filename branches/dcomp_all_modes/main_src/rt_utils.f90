@@ -128,7 +128,7 @@ module RT_UTILITIES
       , Pixel_Local_Time_Hours &
       , Ancil_Data_Dir
       
-   use NUMERICAL_ROUTINES , only: &
+   use NUMERICAL_TOOLS_MOD , only: &
          LOCATE
    
    use date_tools_mod, only: &

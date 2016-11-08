@@ -114,7 +114,7 @@
 !--------------------------------------------------------------------------------------
 module OISST_ANALYSIS
   use CONSTANTS
-  use NUMERICAL_ROUTINES
+  use NUMERICAL_TOOLS_MOD
   use PIXEL_COMMON
   use FILE_TOOLS
   

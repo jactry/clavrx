@@ -72,7 +72,7 @@ use PLANCK, only: &
    PLANCK_TEMP_FAST &
    , PLANCK_TEMP_FAST
    
-use NUMERICAL_ROUTINES, only: &
+use NUMERICAL_TOOLS_MOD, only: &
    compute_median
 
  use date_tools_mod, only: &

@@ -69,7 +69,7 @@ module NWP_COMMON
    
   use CONSTANTS
   use PIXEL_COMMON
-  use NUMERICAL_ROUTINES
+  use NUMERICAL_TOOLS_MOD
   
   use cx_science_tools_mod,only : &
    vapor &

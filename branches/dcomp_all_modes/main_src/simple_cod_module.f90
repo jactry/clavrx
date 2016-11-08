@@ -6,7 +6,7 @@ module SIMPLE_COD
 
    use CONSTANTS
    use PIXEL_COMMON
-   use NUMERICAL_ROUTINES
+   use NUMERICAL_TOOLS_MOD 
    use FILE_TOOLS, only: &
       get_lun
    use SURFACE_PROPERTIES

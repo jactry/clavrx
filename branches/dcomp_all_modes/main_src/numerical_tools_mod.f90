@@ -47,7 +47,7 @@
 !   COMPUTE_MEDIAN_SEGMENT
 !
 !--------------------------------------------------------------------------------------
- module NUMERICAL_ROUTINES
+ module NUMERICAL_TOOLS_MOD
   use CONSTANTS
   
   implicit none
@@ -1202,4 +1202,4 @@ function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
 
 !------------------------------------------------------------------------------------- 
 
-end module NUMERICAL_ROUTINES
+end module NUMERICAL_TOOLS_MOD

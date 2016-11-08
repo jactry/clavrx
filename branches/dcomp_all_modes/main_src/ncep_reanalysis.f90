@@ -46,7 +46,7 @@ module NCEP_REANALYSIS
 use CONSTANTS
 use NWP_COMMON
 use SORT_MODULE
-use NUMERICAL_ROUTINES
+use NUMERICAL_TOOLS_MOD
 
 implicit none
 include 'hdf.f90'

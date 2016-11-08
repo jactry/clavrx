@@ -36,9 +36,7 @@
 MODULE hdf_read_module
 
   USE CONSTANTS
-  !USE FILE_UTILITY
-  !USE COMPARE_FLOAT_NUMBERS
-  !USE MESSAGE_HANDLER
+ 
 
   implicit none
   private

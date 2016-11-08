@@ -39,7 +39,7 @@
 module AVHRR_REPOSITION_ROUTINES
  use CONSTANTS
  use PIXEL_COMMON
- use NUMERICAL_ROUTINES
+ use NUMERICAL_TOOLS_MOD
  
   use date_tools_mod, only: &
          leap_year_fct &

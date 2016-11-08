@@ -88,36 +88,190 @@
 !*****************************************************************************
 ! Marker: ACCESS MODULES 
 !******************************************************************************
-   use CONSTANTS
-  
-   use PIXEL_COMMON
-   use PIXEL_ROUTINES
+   use ACHA_CLAVRX_BRIDGE, only: &
+      AWG_CLOUD_HEIGHT_BRIDGE
    
-   use LEVEL2_ROUTINES, only: &
-      write_pixel_hdf_records
+   use AWG_CLOUD_HEIGHT, only: &
+      local_linear_radiative_center
       
-   use OISST_ANALYSIS
-   use SURFACE_PROPERTIES
-   use CLOUD_HEIGHT_ROUTINES
-   use ACHA_CLAVRX_BRIDGE
-   use CCL_CLAVRX_BRIDGE
-   use ASOS_CLAVRX_BRIDGE
-   use CLOUD_BASE_CLAVRX_BRIDGE
-   use DCOMP_CLAVRX_BRIDGE_MOD
-   
    use AEROSOL_PROPERTIES, only: &
       pixel_aer_ret_ocean &
       , read_aer_ch123a_ref_luts
-
-   use LAND_SFC_PROPERTIES
-   use GLOBSNOW_READ_ROUTINES
+      
+   use ASOS_CLAVRX_BRIDGE, only: &
+      asos_bridge
+   
+   use AVHRR_REPOSITION_ROUTINES, only: &
+      interpolate_clock_error &
+      , reposition_for_clock_error &
+      , setup_clock_corrections
+   
+   use BASELINE_CLOUD_MASK, only: &
+      BASELINE_CLOUD_MASK_MAIN
+   
+   use calibration_constants, only: &
+      Solar_Ch20_Nu &
+      ,launch_Date
+   
+   use CCL_CLAVRX_BRIDGE, only: &
+      ccl_bridge
+   
+   use CLAVRX_MESSAGE_MODULE, only: &
+      MESG &
+      , VERB_LEV
+   
+   use CLAVRX_OLR_MODULE, only: &
+      compute_olr &
+      , setup_olr
+   
+   use CLAVRX_SST_MODULE, only: &
+    compute_masked_sst &
+    , compute_sst &
+    , setup_sst
+   
+   use CLOUD_BASE_CLAVRX_BRIDGE, only: &
+      cloud_base_bridge
+   
+   use CLOUD_TYPE_BRIDGE_MODULE, only: &
+    cloud_type_bridge
+   
+   use CLOUD_HEIGHT_ROUTINES, only: &
+      co2_slicing_cloud_height &
+      , co2irw_cloud_height &
+      , compute_altitude_from_pressure &
+      , compute_cloud_top_level_nwp_wind_and_tpw &
+      , compute_csbt_cloud_masks &
+      , convective_cloud_probability &
+      , CTP_MULTILAYER &
+      , h2o_cloud_height &
+      , make_cirrus_prior_temperature &
+      , mode_zero_cloud_height &
+      , modify_cloud_type_with_sounder  &
+      , opaque_cloud_height &
+      , opaque_transmission_height &
+      , sounder_emissivity &
+      , supercooled_cloud_probability
+   
+   use CONSTANTS
+   
+   use cx_conf_mod , only:  &
+      conf_main_type &
+      , set_config
+   
+   use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day &
+         , compute_time_hours
+   
+   use DCOMP_CLAVRX_BRIDGE_MOD, only:
+   
+   use DCOMP_DERIVED_PRODUCTS_MODULE, only: &
+      compute_adiabatic_cloud_props &
+      , compute_cloud_water_path &
+      , compute_dcomp_insolation &
+      , compute_precipitation
+   
+   use DNB_RETRIEVALS_MOD, only: &
+      COMPUTE_LUNAR_REFLECTANCE
+   
+   use DNCOMP_CLAVRX_BRIDGE_MOD, only: &
+      AWG_CLOUD_DNCOMP_ALGORITHM &
+      , awg_cloud_dncomp_algorithm_iband &
+      , set_dcomp_version
+   
+   use file_tools, only: &
+      file_test &
+      , get_lun
+   
    use GFS, only: &
     read_gfs_data
-   use NCEP_REANALYSIS
-   use DCOMP_DERIVED_PRODUCTS_MODULE
-   use CLAVRX_OLR_MODULE
-   use CLAVRX_SST_MODULE
    
+   use GLOBSNOW_READ_ROUTINES, only: &
+      get_globsnow_filename &
+      , get_pixel_globsnow_analysis &
+      , read_globsnow_analysis_map
+   
+   use GOES_MODULE, only: &
+      area_struct &
+      , gvar_nav &
+      , dark_composite_cloud_mask &
+      , determine_dark_composite_name &
+      , post_process_goes_dark_composite
+   
+   use LAND_SFC_PROPERTIES, only: &
+      land_grid_description &
+      , get_snow_map_filename &
+      , close_land_sfc_hdf &
+      , open_land_sfc_hdf &
+      , read_land_sfc_hdf
+   
+   use LASZLO_INSOLATION, only: &
+      insolation
+   
+   use LEVEL2_ROUTINES, only: &
+      write_pixel_hdf_records
+   
+   use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
+       NB_CLOUD_MASK_BRIDGE
+   
+   use NCEP_REANALYSIS, only: &
+      read_ncep_reanalysis_data
+   
+   use NWP_COMMON   
+   
+   use NUMERICAL_TOOLS_MOD, only: &
+           compute_median_segment
+   
+   use MODIS_MODULE, only:
+   
+    use OCA_MODULE, only: &
+       READ_OCA
+   
+   use OISST_ANALYSIS, only: &
+      GET_OISST_MAP_FILENAME &
+      , get_pixel_sst_analysis &
+      , read_oisst_analysis_map
+   
+   use PIXEL_COMMON
+   
+   
+   use PIXEL_ROUTINES, only: &
+      sun_earth_distance &
+      , DESERT_MASK_FOR_CLOUD_DETECTION &
+      , CITY_MASK_FOR_CLOUD_DETECTION &
+      , ADJACENT_PIXEL_CLOUD_MASK &
+      , ASSIGN_CLEAR_SKY_QUALITY_FLAGS &
+      , ATMOS_CORR &
+      , CH20_PSEUDO_REFLECTANCE &
+      , compute_cloud_mask_performance_metrics &
+      , compute_acha_performance_metrics &
+      , compute_dcomp_performance_metrics &
+      , compute_glint &
+      , compute_pixel_arrays &
+      , compute_snow_class &
+      , compute_snow_class_nwp &
+      , compute_snow_class_oisst &
+      , compute_spatial_correlation_arrays &
+      , COMPUTE_SPATIAL_UNIFORMITY &
+      , convert_time &
+      , determine_level1b_compression &
+      , expand_space_mask_for_user_limits &
+      , merge_nwp_hires_zsfc &
+      , modify_land_class_with_ndvi &
+      , normalize_reflectances &
+      , quality_control_ancillary_data &
+      , read_modis_white_sky_albedo &
+      , set_bad_pixel_mask &
+      , set_chan_on_flag &
+      , set_solar_contamination_mask &
+      , surface_remote_sensing
+   
+   use PLANCK, only: &
+    populate_planck_tables &
+    , populate_planck_tables_sounder
+   
+
    use RT_UTILITIES, only: &
         RTM_NVZEN &
       , SETUP_SOLAR_RTM &
@@ -129,49 +283,44 @@
       , DEALLOCATE_RTM &
       , DEALLOCATE_RTM_VARS &
       , DEALLOCATE_RTM_CELL 
-      
+   
    use RTM_COMMON, only: &
-      NLEVELS_RTM
- 
+      NLEVELS_RTM &
+      , P_Std_Rtm &
+      , rtm
    
-   use SFC_EMISS
-   use PLANCK
-   use AVHRR_REPOSITION_ROUTINES
-   use NB_CLOUD_MASK_CLAVRX_BRIDGE, only: &
-       NB_CLOUD_MASK_BRIDGE
-   use MODIS_MODULE
-   use IFF_CLAVRX_BRIDGE
-   use GOES_MODULE
-   use LASZLO_INSOLATION
-   use SEVIRI_MODULE
-   use OCA_MODULE, only: &
-       READ_OCA
-   use MTSAT_MODULE
-   use COMS_MODULE
-   use FY2_MODULE
-   use SENSOR_MODULE
-   use USER_OPTIONS
-   use CLAVRX_MESSAGE_MODULE, only: &
-      MESG &
-      , VERB_LEV
-   use CLOUD_TYPE_BRIDGE_MODULE
-   use SIMPLE_COD
- 
-   use DNB_RETRIEVALS_MOD, only: &
-      COMPUTE_LUNAR_REFLECTANCE
+   use SENSOR_MODULE, only: &
+    detect_sensor_from_file &
+    , output_image_to_screen &
+    , output_processing_limits_to_screen &
+    , output_sensor_to_screen &
+    , read_instr_constants &
+    , read_level1b_data &
+    , set_data_date_and_time &
+    , set_file_dimensions
    
-   use cx_conf_mod   
+    use SEVIRI_MODULE, only:
       
-   use BASELINE_CLOUD_MASK, only: &
-      BASELINE_CLOUD_MASK_MAIN
+   use SFC_EMISS, only: &
+      close_seebor_emiss &
+      , open_seebor_emiss &
+      , read_seebor_emiss
    
-   use date_tools_mod, only: &
-         leap_year_fct &
-         , compute_month &
-         , compute_day &
-         , compute_time_hours
-         
-
+   use SIMPLE_COD, only: &
+    compute_simple_lunar_cod &
+    , compute_simple_solar_cod
+      
+   use SURFACE_PROPERTIES, only: &
+    compute_binary_land_coast_masks &
+    , get_pixel_sfc_emiss_from_sfc_type &
+    , setup_umd_props
+   
+   use USER_OPTIONS, only: &
+    setup_user_defined_options &
+    , update_configuration
+   
+        
+  
    implicit none
  
    !***********************************************************************
@@ -281,13 +430,35 @@
    integer:: Chan_Idx
    type (conf_main_type) :: conf
    
-   call set_config (conf)
+  
+   
+ !  interface 
+ !  subroutine AWG_CLOUD_DNCOMP_ALGORITHM_IBAND (  iseg_in , infile, path, algorithm_started )  
+    !--- input
+ !     integer, intent(in),optional :: iseg_in
+!		character(len=*) , intent(in) :: infile
+!      character(len=*) , intent(in) :: path
+!      ! - output 
+!      logical , intent(out) :: algorithm_started
+!   end subroutine AWG_CLOUD_DNCOMP_ALGORITHM_IBAND
+!   end interface
+   
+   !      interface
+   !    function open_land_sfc_hdf(data_dir, filename, grid_str) result(id)  
+   !    use LAND_SFC_PROPERTIES, only: &
+   !   land_grid_description
+      
+   !   CHARACTER(len=*), intent(in) :: data_dir, filename
+   !   TYPE(land_grid_description), optional, intent(inout) :: grid_str
+   !   end function open_land_sfc_hdf
+   !   end interface  
    
   
-
+   
    !***********************************************************************
    ! Begin Executable Code
    !***********************************************************************
+    call set_config (conf)
    call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
 
@@ -1503,8 +1674,11 @@ contains
 !*************************************************************************
 ! open modis white sky reflectance files 
 !*************************************************************************
-subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
-
+   subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
+   
+ 
+      
+      INTEGER(kind=int4) :: id  
          !--- determine 16 day period and its string value
          iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
          write(Day_String,fmt="(i3.3)") iperiod16

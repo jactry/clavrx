@@ -633,15 +633,13 @@ CONTAINS
       
       call add_att (id_file, 'MACHINE',trim(machine))
       call add_att (id_file, 'date_created',hdf_timestamp())
-       call add_att (id_file, 'user_created',trim(user))
+      call add_att (id_file, 'user_created',trim(user))
       call add_att (id_file, 'institution','CIMSS')
       call add_att (id_file, 'sensor',trim(sensor% sensor_name))
       call add_att (id_file, 'satellite', trim(sensor%platform_name))
       call add_att (id_file,  'L1B', trim(Image%Level1b_Name))
       !call add_att (id_file,   'RESOLUTION_KM',
       !call add_att (id_file,   'spatial_resolution'
-      print*,image%start_year
-      print*,'==================================== ===================== ================'
       call add_att (id_file,  'START_YEAR',image%start_year)
       call add_att (id_file,  'START_DAY_OF_YEAR',image%start_doy)
       call add_att (id_file,  'START_TIME_FRACTION_DAY',image%start_time/3600000.0)
@@ -663,10 +661,7 @@ CONTAINS
       call add_att ( id_file, 'NUMBER_OF_ELEMENTS', Image%Number_Of_Elements )
       call add_att ( id_file, 'NUMBER_OF_SCANS_LEVEL1B', Image%Number_Of_Lines) 
       call add_att ( id_file, 'NUMBER_OF_SCANS_LEVEL2', Num_Scans_Level2_Hdf)
-    !        Istatus = 0
-    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_ELEMENTS", DFNT_INT32,1,Image%Number_Of_Elements)+Istatus
-    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL1B", DFNT_INT32,1,Image%Number_Of_Lines)+Istatus
-    !  Istatus = sfsnatt(Sd_Id_Level2, "NUMBER_OF_SCANS_LEVEL2", DFNT_INT32,1,Num_Scans_Level2_Hdf)+Istatus
+    
     !  Istatus = sfsnatt(Sd_Id_Level2, "PROCESSING_TIME_MINUTES", DFNT_FLOAT32,1,Orbital_Processing_Time_Minutes)+Istatus
     !  Istatus = sfsnatt(Sd_Id_Level2, "NONCONFIDENT_CLOUD_MASK_FRACTION", DFNT_FLOAT32,1,NONCONFIDENT_CLOUD_MASK_Fraction)+Istatus
     !  Istatus = sfsnatt(Sd_Id_Level2, "ACHA_SUCCESS_FRACTION", DFNT_FLOAT32,1,ACHA%Success_Fraction)+Istatus

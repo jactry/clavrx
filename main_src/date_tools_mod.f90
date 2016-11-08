@@ -26,6 +26,7 @@ module date_tools_mod
            
    contains
       procedure :: set_date 
+      
       procedure :: set_date_with_doy
       procedure :: set_jday
       procedure :: print_data 
@@ -43,6 +44,8 @@ module date_tools_mod
   
 contains   
    ! --
+   !
+   ! ---
    subroutine set_date (this , year , month, day, hour ,minute, second)
       class ( date_type) :: this
       integer , optional :: year , month ,day, hour , minute, second
@@ -58,9 +61,10 @@ contains
        
    end subroutine set_date
    
+
+   ! ----------------------------
    !
-   !
-   !
+   ! ----------------------------
    subroutine get_date ( this , year , month, day, hour ,minute, second, doy , hour_frac, msec_of_day)
       class ( date_type) :: this
       integer , optional :: year , month ,day, hour , minute, second, doy
@@ -78,6 +82,8 @@ contains
       if ( present ( msec_of_day )) msec_of_day = this % msec_of_day
    
    end subroutine get_date
+   
+   
    
    
    
@@ -151,7 +157,7 @@ contains
       class ( date_type) :: this
       integer ( kind = r15 ) :: jday
       this % julday = jday
-   !   call this % update_from_jd()
+      call this % update_from_jd()
    end subroutine set_jday
    !
    !
@@ -279,11 +285,12 @@ contains
       character ( len = 2 ) :: day_s
       character ( len = 2 ) :: hour_s
       character ( len = 2 ) :: minute_s
+      character ( len =3 ) :: doy_s
       integer :: len_fmt
       
       len_fmt = len(fmt) 
       ! not supported by gfortran 4.7!
-      ! allocate ( character(len = 5 ) :: out  )
+      allocate ( character(len = len_fmt ) :: out  )
       
       write ( year_s2d, fmt ='(i2.2)') mod(this % year , 100)
       write ( year_s, fmt = '(i4.4)') this % year
@@ -291,8 +298,10 @@ contains
       write ( day_s, fmt = '(i2.2)') this % day
       write ( hour_s , fmt = '(i2.2)') this % hour
       write ( minute_s , fmt = '(i2.2)') this % minute
+      write ( doy_s , fmt = '(i3.3)') this % dayofyear
       
       out='start'  
+      
       
       select case (fmt)
          case ('yymmdd')
@@ -308,7 +317,9 @@ contains
          case ('yy/mm/hhmm')
            out = year_s2d//'/'//month_s//'/'//hour_s//minute_s     
          case ('yyyy')
-           out = year_s   
+           out = year_s  
+         case ('yyyy_doy')
+           out = year_s//'_'//doy_s    
          case default
             out='format not set'
             print*,'WARNING: ',out, '> ',fmt

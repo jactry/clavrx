@@ -31,7 +31,8 @@ program create_level2b
       , add_att &
       , close_file &
       , compress_sds &
-      , close_sds
+      , close_sds &
+      , copy_global_attributes
    
     use cx_prd_mod, only: &
       prd_dtype &
@@ -50,10 +51,10 @@ program create_level2b
    use date_tools_mod , only: &
         date_type &
         , time_is_in_window
-      
-      
+            
    implicit none
-
+   
+   
    integer :: N_Command_Line_Args
    integer :: ios
    integer :: ifile
@@ -181,6 +182,8 @@ program create_level2b
    type(date_type) :: date_file_start,date_file_end
    type(date_type) :: date_cnf_start,date_cnf_end
    
+   character(len=36) :: machine
+   
    ! ++++++++
    
    !  check users desires
@@ -223,6 +226,9 @@ program create_level2b
          
    call date_cnf_end.set_date_with_doy (cnf % Year, cnf % Jday &
          ,23, 59)
+         
+   
+  
    
    do ifile = 1, N_FILES_MAX
        read(unit=config_file_lun,fmt=*,iostat=ios) cnf % File_Input(ifile)
@@ -285,6 +291,7 @@ program create_level2b
       test = cx_att_int (file,'NUMBER_OF_SCANS_LEVEL2',Num_Line_Inp)     
       test = cx_att_int (file,'START_YEAR',start_year)
       test = cx_att_int (file,'END_YEAR',end_year)
+      ! - double check because we changed filename in level-2
       test = cx_att_int (file,'START_DAY_OF_YEAR',start_day_of_year)
       if ( test .NE. 0) test = cx_att_int (file,'START_DAY',start_day_of_year)
       test = cx_att_int (file,'END_DAY_OF_YEAR',end_day_of_year)
@@ -428,32 +435,32 @@ program create_level2b
      
       deallocate(Input_Update_Index)
       deallocate(Output_Update_Index)
-      deallocate(Input_Array_1d)
-      
+      deallocate(Input_Array_1d)      
       deallocate(Lon_Inp)
       deallocate(Lat_Inp)
       deallocate(Gap_inp)
-      
-     
-      
-      
+
       is_first_file = .false.
    end do file_loop
    
    
    
    
-! ++++++++++++++ write in level2b  +++++++++++++++++
-! we have now all data stored in sds_out
-! lets write this in level2b file
-!  
-!    open and create file
-!    do i = 1, num_sds_output
-!   File_Level2b= trim(File_2b_Root)//".level2b.hdf"   
+   ! ++++++++++++++ write in level2b  +++++++++++++++++
+   ! we have now all data stored in sds_out
+   ! lets write this in level2b file
+   !  
+   !    open and create file
+   !    do i = 1, num_sds_output
+   !   File_Level2b= trim(File_2b_Root)//".level2b.hdf"   
    
    call prd % read_products()
          
-   File_Level2b= 'test_level2b.hdf'
+   File_Level2b= trim(cnf % dir_out)//"patmosx_"//trim(cnf % Sensor_Name)//'_'//trim(cnf % Node)//"_"// &
+         trim(date_cnf_start.date_string('yyyy_doy'))//'.level2b.hdf'
+         
+   print*,'File level 2b: ', trim(File_Level2b)
+        
    id_file = hdf_file_open(trim(File_Level2b), create=.true.)
    
    sds_dims_2d = [nlon_out,nlat_out]
@@ -550,13 +557,34 @@ program create_level2b
       call close_sds(prd_i % sds_id)                 
    end do
    
-   call close_file (id_file)    
    
-
+   ! - do global attributes here
+   !-
+    
+   call add_att (id_file, 'date_created',hdf_timestamp())
+   
+   
+   
+   call close_file (id_file)   
+    
+   call copy_global_attributes (trim(file),trim(File_Level2b)) 
+   !- add all the other global attributes
 
 !     end do 
 
+   contains
+   
+    function hdf_timestamp() result(string)
+         character (len = 36) ::string
+         character(len=10), dimension(3):: ctime
 
+         call date_and_time(ctime(1), ctime(2), ctime(3))
+         ! Timestamp string format in accordance with the ISO-8601 standard.
+         string = ctime(1)(1:4)//"-"//ctime(1)(5:6)//"-"//ctime(1)(7:8)&
+                //"T"//ctime(2)(1:2)//":"//ctime(2)(3:4)//":"//ctime(2)(5:6)&
+                //ctime(3)(1:3)//":"//ctime(3)(4:5)
+         return
+      end function hdf_timestamp 
    
    
   

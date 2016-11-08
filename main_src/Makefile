@@ -176,7 +176,6 @@ clavrxorb_objs = process_clavrx.o \
                  getmod.o \
                  sensor_module.o \
                  simple_cod_module.o \
-                 level2b.o \
                  user_options.o \
                  ir_cloud_type_baum_module.o \
                  cloud_type_bridge_module.o \
@@ -217,7 +216,6 @@ create_level2b_objs = create_level2b.o \
 #Level2b subsetting routines
 drive_subset_level2b_objs = drive_subset_level2b.o \
 		                    hdf_params.o \
-                            level2b.o \
                             num_mod.o \
                             date_tools_mod.o \
                             file_tools.o \
@@ -342,7 +340,7 @@ cx_pfaast_tools_mod.o:$(PFAAST)/cx_pfaast_tools_mod.f90
 cx_pfaast_coef_mod.o:$(PFAAST)/cx_pfaast_coef_mod.f90 strings.o
 cx_pfaast_constants_mod.o:$(PFAAST)/cx_pfaast_constants_mod.f90
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
-user_options.o: user_options.f90 constant.o pixel_common.o file_tools.o clavrx_message_module.o level2b.o
+user_options.o: user_options.f90 constant.o pixel_common.o file_tools.o clavrx_message_module.o 
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
 pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_tools.o calibration_constants.o
 dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o cx_array_tools_mod.o
@@ -352,7 +350,7 @@ cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_commo
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 
-drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o  level2b.o file_tools.o
+drive_subset_level2b.o: drive_subset_level2b.f90 constant.o hdf_params.o  file_tools.o
 date_tools_mod.o: date_tools_mod.f90
 file_tools.o: file_tools.f90
 geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
@@ -380,7 +378,6 @@ viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
 level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o  avhrr_module.o cx_prd_mod.o
 
-level2b.o: level2b.f90 constant.o file_tools.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
@@ -441,7 +438,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o \
               seviri_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
-              coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
+              coms_module.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
 
 

@@ -36,6 +36,8 @@ module cx_sds_io_mod
    public :: cx_sds_read_raw
    public :: cx_sds_read    
    public :: cx_sds_att
+   public :: cx_att_int
+   public :: cx_att_r4 
    contains
    
 
@@ -93,6 +95,80 @@ module cx_sds_io_mod
       
    
    end function cx_sds_att
+   
+   
+   ! This is a wrapper for integer output
+   ! plaeas use this if you know that attribute is an integer
+   function cx_att_int ( file, att_name, att_int)
+      implicit none
+      integer :: cx_att_int
+      character(len =*), intent(in) :: file
+      character(len =*), intent(in) :: att_name
+      integer ,intent(out) :: att_int
+      integer :: test
+      type (cx_att_type) :: att
+      
+      test = cx_sds_att (file,att_name,att) 
+      cx_att_int = -1
+      att_int = -999
+      if (allocated (att % data % i4values)) then
+         att_int = att % data % i4values(1)
+         cx_att_int = 0
+      end if
+          
+      if (allocated (att % data % i2values)) then
+         att_int = att % data % i2values(1)
+         cx_att_int = 0
+      end if    
+      
+   
+   end function cx_att_int
+   
+   
+   ! This is a wrapper for integer output
+   ! plaeas use this if you know that attribute is an integer
+   function cx_att_cha ( file, att_name, att_cha)
+      implicit none
+      integer :: cx_att_cha
+      character(len =*), intent(in) :: file
+      character(len =*), intent(in) :: att_name
+      character ,intent(out) :: att_cha(:)
+      integer :: test
+      type (cx_att_type) :: att
+      
+      test = cx_sds_att (file,att_name,att) 
+      cx_att_cha = -1
+      att_cha = 'none'
+      if (allocated (att % data % c1values)) then
+         att_cha(1:att % data %dimsize(1)) = att % data % c1values(1:att % data %dimsize(1))
+         cx_att_cha = 0
+      end if
+          
+      
+      
+   
+   end function cx_att_cha
+   
+   
+     ! This is a wrapper for integer output
+   ! plaeas use this if you know that attribute is an integer
+   function cx_att_r4 ( file, att_name, att_r4)
+      implicit none
+      integer :: cx_att_r4
+      character(len =*), intent(in) :: file
+      character(len =*), intent(in) :: att_name
+      real ,intent(out) :: att_r4
+      integer :: test
+      type (cx_att_type) :: att
+      
+      test = cx_sds_att (file,att_name,att) 
+      cx_att_r4 = -1
+      att_r4 = -999.
+      if (allocated (att % data % r4values)) then
+         att_r4 = att % data % r4values(1)
+         cx_att_r4 = 0
+      end if
+    end function cx_att_r4      
    
    
    ! ------------------------------------------------------------------------------

@@ -2,14 +2,17 @@
 
 
 program create_level2b
-      use FILE_TOOLS, only: &
+
+   use FILE_TOOLS, only: &
          get_lun
       
    use cx_sds_io_mod,only: &
-      cx_sds_finfo &
+        cx_sds_finfo &
       , cx_sds_read &
       , cx_sds_read_raw &
-      , cx_sds_att
+      , cx_sds_att &
+      , cx_att_int &
+      , cx_att_r4 
    
    use cx_sds_type_definitions_mod, only: &
       cx_sds_type &
@@ -43,6 +46,11 @@ program create_level2b
     
     use cx_scale_tools_mod, only: &
       scale_i2_rank2  
+    
+   use date_tools_mod , only: &
+        date_type &
+        , time_is_in_window
+      
       
    implicit none
 
@@ -118,19 +126,19 @@ program create_level2b
    logical, allocatable :: idx_name(:)
    integer :: isds, isds2
    integer (kind = int4) :: num_points
-   integer(kind=int4), dimension(:), allocatable:: Input_Update_Index
-   integer(kind=int4), dimension(:), allocatable:: Output_Update_Index
-   real(kind=real4), dimension(:), allocatable:: Input_Array_1d
+   integer(kind=int4), allocatable:: Input_Update_Index(:)
+   integer(kind=int4), allocatable:: Output_Update_Index(:)
+   real(kind=real4),  allocatable:: Input_Array_1d(:)
    
    integer(kind=int4 ) :: ilon,ilat,ipoint
    
    logical, allocatable :: pix_to_update(:,:)
    
    integer :: ielem, iline
-   real(kind=real4), dimension(:,:), allocatable:: Scaled_Sds_Data_Output
-   real(kind=real4), dimension(:), allocatable::  Output_Array_1d
+   real(kind=real4), allocatable:: Scaled_Sds_Data_Output(:,:)
+   real(kind=real4), allocatable::  Output_Array_1d(:)
    
-   real(kind=real4), dimension(:), allocatable:: data_real
+   real(kind=real4), allocatable:: data_real(:)
    
    real(kind = 8), pointer :: pp(:,:)
    integer :: test
@@ -159,6 +167,19 @@ program create_level2b
    real :: scale_factor
    real :: Add_Offset
    integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
+   
+   
+   integer :: start_year
+   integer :: end_year
+   integer :: start_day_of_year
+   integer :: end_day_of_year
+   real :: start_time
+   real :: end_time
+   integer :: wmo_sat
+   integer :: l1b  
+   
+   type(date_type) :: date_file_start,date_file_end
+   type(date_type) :: date_cnf_start,date_cnf_end
    
    ! ++++++++
    
@@ -197,6 +218,11 @@ program create_level2b
       read(unit=config_file_lun,fmt=*) cnf % Lat_South, cnf % Lat_North, cnf % Dlat_output
    endif
    
+   call date_cnf_start.set_date_with_doy (cnf % Year, cnf % Jday &
+         , 0,0 )
+         
+   call date_cnf_end.set_date_with_doy (cnf % Year, cnf % Jday &
+         ,23, 59)
    
    do ifile = 1, N_FILES_MAX
        read(unit=config_file_lun,fmt=*,iostat=ios) cnf % File_Input(ifile)
@@ -254,30 +280,37 @@ program create_level2b
       print *, "processing file ", ifile, " of ", cnf % n_files, " ", trim(cnf % File_Input(ifile))
       file = trim(trim(cnf%dir_in)//trim(cnf%File_Input(ifile)))
    
-      
-      ! - we have to check both i2 and i4, because it seems to have changed in last time..
-      ! - we could also add a tool to check this outside this file
-      test = cx_sds_att (file,'NUMBER_OF_ELEMENTS',att)      
-      if (allocated (att % data % i4values)) num_elem_inp = att % data % i4values(1)
-      if (allocated (att % data % i2values)) num_elem_inp = att % data % i2values(1)
-      test = cx_sds_att (file,'NUMBER_OF_SCANS_LEVEL2',att)
-      if (allocated (att % data % i4values)) Num_Line_Inp = att % data % i4values(1)
-      if (allocated (att % data % i2values)) num_line_inp = att % data % i2values(1)
-      test = cx_sds_att (file,'START_YEAR',att)
-     
-            
+      ! - read global variables, assume those are integers
+      test = cx_att_int (file,'NUMBER_OF_ELEMENTS',num_elem_inp) 
+      test = cx_att_int (file,'NUMBER_OF_SCANS_LEVEL2',Num_Line_Inp)     
+      test = cx_att_int (file,'START_YEAR',start_year)
+      test = cx_att_int (file,'END_YEAR',end_year)
+      test = cx_att_int (file,'START_DAY_OF_YEAR',start_day_of_year)
+      if ( test .NE. 0) test = cx_att_int (file,'START_DAY',start_day_of_year)
+      test = cx_att_int (file,'END_DAY_OF_YEAR',end_day_of_year)
+      if ( test .NE. 0) test = cx_att_int (file,'END_DAY',end_day_of_year)
+      test = cx_att_r4 (file,'START_TIME',start_time)
+      test = cx_att_r4 (file,'END_TIME',end_time)
+      test = cx_att_int (file,'WMO_SATELLITE_CODE',wmo_sat)
+      !test = cx_att_cha (file,'L1B',l1b)      
         
-         !if ( attrs(i) % name .eq. 'START_YEAR' ) Start_Year_Input = attrs(i) % data % i2values (1)
-         !if ( attrs(i) % name .eq. 'END_YEAR' ) End_Year_Input = attrs(i) % data % i2values (1)
-         !if ( attrs(i) % name .eq. 'START_DAY_OF_YEAR' ) Start_Day_Input = attrs(i) % data % i2values (1)
-         !if ( attrs(i) % name .eq. 'END_DAY_OF_YEAR' ) End_Day_Input = attrs(i) % data % i2values (1)
-         !if ( attrs(i) % name .eq. 'START_TIME' ) Start_Time_Input = attrs(i) % data % r4values (1)
-         !if ( attrs(i) % name .eq. 'END_TIME' ) End_Time_Input = attrs(i) % data % r4values (1)
-         !if ( attrs(i) % name .eq. 'WMO_SATELLITE_CODE' ) Sc_Id_Input = attrs(i) % data % i2values (1)
-         !if ( attrs(i) % name .eq. 'L1B' ) L1b_input = attrs(i) % data % c1values (1)
-         
       !- test if file is in time window
+      print*,start_year,start_day_of_year
+      print*
       
+      call date_file_start.set_date_with_doy (start_year, start_day_of_year &
+         , floor(start_time), floor(60*(start_time-floor(start_time))) )
+      call date_file_end.set_date_with_doy (end_year, end_day_of_year &
+         , floor(end_time) ,  floor(60*(end_time-floor(end_time))))
+      
+      
+      ! - check time
+      
+      if (time_is_in_window ( date_file_start, date_cnf_start, date_cnf_end ) ) print*,'yesy'
+      call date_file_start.print_data
+      call date_cnf_start.print_data
+      call date_cnf_end.print_data
+      print*,'no'
       
       num_points = num_elem_inp * num_line_inp
       allocate(Input_Update_Index(Num_Points))

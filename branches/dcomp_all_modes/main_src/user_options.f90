@@ -110,9 +110,6 @@ module USER_OPTIONS
       
    use FILE_TOOLS, only: &
       Get_Lun
-
-   use LEVEL2B_ROUTINES, only: &
-      INIT_RANDOM_SEED
  
    use  CLAVRX_MESSAGE_MODULE, only: &
       Mesg &
@@ -1202,5 +1199,26 @@ contains
       endif
   
    end subroutine EXPERT_MODE_CHANNEL_ALGORITHM_CHECK
+   
+   !----------------------------------------------------------------------
+   ! An example of how to reset a random seed based on system time
+   !
+   ! taken from:
+   !   http://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fSEED.html
+   !----------------------------------------------------------------------
+   SUBROUTINE init_random_seed()
+            INTEGER :: i, n, clock
+            INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+          
+            CALL RANDOM_SEED(size = n)
+            ALLOCATE(seed(n))
+          
+            CALL SYSTEM_CLOCK(COUNT=clock)
+          
+            seed = clock + 37 * (/ (i - 1, i = 1, n) /)
+            CALL RANDOM_SEED(PUT = seed)
+          
+            DEALLOCATE(seed)
+   END SUBROUTINE init_random_seed
    
 end module USER_OPTIONS

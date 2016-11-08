@@ -42,7 +42,7 @@ module ACHA_SERVICES_MOD
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
  
-       use NUMERICAL_ROUTINES, only: INVERT_MATRIX, LOCATE
+       use NUMERICAL_TOOLS_MOD, only: INVERT_MATRIX, LOCATE
 
  implicit none
 

@@ -29,7 +29,7 @@ module CLOUD_HEIGHT_ROUTINES
   use PIXEL_COMMON
   use NWP_COMMON
   use RTM_COMMON
-  use NUMERICAL_ROUTINES
+  use NUMERICAL_TOOLS_MOD
   
   use cx_science_tools_mod,only: &
     wind_direction &

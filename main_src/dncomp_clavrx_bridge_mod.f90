@@ -29,7 +29,7 @@
 !   02/10.2013 : first version
 !   10/21/2013 : bridge to array instead to pixel-based    
 !--------------------------------------------------------------------------------------
-module dcomp_clavrx_bridge_mod
+module dncomp_clavrx_bridge_mod
 
 
    ! -- MODULES USED
@@ -614,5 +614,5 @@ contains
    end subroutine set_dcomp_version
 
     
-end module dcomp_clavrx_bridge_mod 
+end module dncomp_clavrx_bridge_mod 
 

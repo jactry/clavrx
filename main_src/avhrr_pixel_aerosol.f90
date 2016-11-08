@@ -69,7 +69,7 @@ module AEROSOL_PROPERTIES
  use CONSTANTS
  use FILE_TOOLS,only: &
    get_lun
- use NUMERICAL_ROUTINES
+ use NUMERICAL_TOOLS_MOD
  implicit none
  private
  public:: READ_AER_CH123A_REF_LUTS,&

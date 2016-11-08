@@ -62,7 +62,7 @@
  module PLANCK
   use CONSTANTS
   use CALIBRATION_CONSTANTS
-  use NUMERICAL_ROUTINES
+  use NUMERICAL_TOOLS_MOD
   use PIXEL_COMMON, only: &
         Sensor, &
         Ch

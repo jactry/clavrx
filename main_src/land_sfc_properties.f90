@@ -153,7 +153,12 @@ END SUBROUTINE close_land_sfc_hdf
 ! Function to find the snow map name.
 !-------------------------------------------------------------------
 
-  FUNCTION get_snow_map_filename(year_in,day_of_year,snow_path) result(snow_filename)
+   FUNCTION get_snow_map_filename(year_in,day_of_year,snow_path) result(snow_filename)
+      use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+            
    CHARACTER(*), intent(in) :: snow_path
    INTEGER(kind=int2), intent(in):: year_in
    INTEGER(kind=int2), intent(in):: day_of_year

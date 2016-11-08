@@ -117,6 +117,13 @@ module OISST_ANALYSIS
   use NUMERICAL_ROUTINES
   use PIXEL_COMMON
   use FILE_TOOLS
+  
+   use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+  
+  
   implicit none
   private
   public:: GET_PIXEL_SST_ANALYSIS, GET_OISST_MAP_FILENAME, READ_OISST_ANALYSIS_MAP

@@ -73,8 +73,10 @@ use PLANCK, only: &
    , PLANCK_TEMP_FAST
    
 use NUMERICAL_ROUTINES, only: &
-   leap_year_fct &
-   , compute_median
+   compute_median
+
+ use date_tools_mod, only: &
+         leap_year_fct 
    
 use FILE_TOOLS, only: &
    get_lun &

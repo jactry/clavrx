@@ -202,10 +202,11 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
          , hdf_sds_reader &
          , hdf_sds_attribute_reader
          
-      use NUMERICAL_ROUTINES, only: &
+      use cx_string_tools_mod, only: &
           COUNTSUBSTRING &
           , SPLIT_STRING &
           , REPLACE_CHAR_IN_STRG
+          
 
       type ( iff_data_config ) , intent ( in ) :: config
       type ( iff_data_out ) , intent ( out ) :: out
@@ -878,9 +879,10 @@ end subroutine READ_IFF_LEVEL1B
 subroutine READ_IFF_DATE_TIME(Path,Infile,year,doy,start_time, &
                   end_year,end_doy,end_time)
    
- use NUMERICAL_ROUTINES, only: &
+ use date_tools_mod, only: &
      LEAP_YEAR_FCT &
      , JULIAN
+     
    implicit none
    CHARACTER(Len=*), INTENT(IN) :: Path
    CHARACTER(Len=*), INTENT(IN) :: Infile

@@ -53,24 +53,19 @@
   implicit none
   private
   public:: LOCATE, &
-           JULIAN, &
-           COMPUTE_MONTH, &
-           COMPUTE_DAY, &
+          
            INVERT_MATRIX,  &
            INVERT_2x2,  &
            INVERT_3x3,  &
            INVERT_4x4,  &
            INVERT_DIAGONAL,  &
            FIND_BOUNDS,  &
-           COMPUTE_TIME_HOURS, &
+           
            COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES,  &
            GRADIENT_MEANDER, &
            COMPUTE_MEDIAN, &
            COMPUTE_MEDIAN_SEGMENT, &
-           LEAP_YEAR_FCT, &
-           COUNTSUBSTRING, &
-           SPLIT_STRING, &
-           REPLACE_CHAR_IN_STRG, &
+           
            COVARIANCE
            
   contains
@@ -264,134 +259,6 @@ end subroutine COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES
     endif
 
   end subroutine LOCATE
-
-!-------------------------------------------------
-! subroutine JULIAN(iday,imonth,iyear,jday)
-! compute julian day
-! input:
-!         iday - integer day
-!         imonth - integer month
-!         iyear - integer year (2 or four digits)
-!         
-! output : jday - julian day
-!--------------------------------------------------
- subroutine JULIAN(iday,imonth,iyear,jday)
-
-!-- Computes julian day (1-365/366)
-        integer, intent(in)::  iday,imonth,iyear
-        integer, intent(out):: jday
-        integer::  j
-        integer, dimension(12)::  jmonth
-
-        jmonth = reshape ((/31,28,31,30,31,30,31,31,30,31,30,31/),(/12/))
-
-        jday = iday
-        if (modulo(iyear,4) == 0) then
-            jmonth(2)=29
-        endif
-
-        do j = 1,imonth-1
-           jday = jday + jmonth(j)
-        end do
-
-   end subroutine JULIAN
-
-!--------------------------------------------
-! compute the month
-!---------------------------------------------
- function COMPUTE_MONTH(jday,ileap) result(month)
-   integer, intent(in):: ileap
-   integer, intent(in):: jday
-   integer:: month
-
-   month = 0
-   if (jday < 32) then
-     month = 1
-   elseif (jday < 60+ileap) then
-     month = 2
-   elseif (jday < 91+ileap) then
-     month = 3
-   elseif (jday < 121+ileap) then
-     month = 4
-   elseif (jday < 152+ileap) then
-     month = 5
-   elseif (jday < 182+ileap) then
-     month = 6
-   elseif (jday < 213+ileap) then
-     month = 7
-   elseif (jday < 244+ileap) then
-     month = 8
-   elseif (jday < 274+ileap) then
-     month = 9
-   elseif (jday < 305+ileap) then
-     month = 10
-   elseif (jday < 335+ileap) then
-     month = 11
-   else
-     month = 12
-   endif
-
- end function COMPUTE_MONTH
-!--------------------------------------------
-! compute the day
-!---------------------------------------------
- function COMPUTE_DAY(jday,ileap) result(day)
-   integer, intent(in):: ileap
-   integer, intent(in):: jday
-   integer:: day
-
-   if (jday < 32) then
-     day = jday
-   elseif (jday < 60) then
-     day = jday - 31
-   elseif ((jday == 60).and.(ileap == 1)) then
-     day = jday - 31
-   elseif ((jday == 60).and.(ileap == 0)) then
-     day = jday - 59
-   elseif (jday < 91+ileap) then
-     day = jday - (59 + ileap)
-   elseif (jday < 121+ileap) then
-     day = jday - (90 + ileap)
-   elseif (jday < 152+ileap) then
-     day = jday - (120 + ileap)
-   elseif (jday < 182+ileap) then
-     day = jday - (151 + ileap)
-   elseif (jday < 213+ileap) then
-     day = jday - (181 + ileap)
-   elseif (jday < 244+ileap) then
-     day = jday - (212 + ileap)
-   elseif (jday < 274+ileap) then
-     day = jday - (243 + ileap)
-   elseif (jday < 305+ileap) then
-     day = jday - (273 + ileap)
-   elseif (jday < 335+ileap) then
-     day = jday - (304 + ileap)
-   else
-     day = jday - (334 + ileap)
-   endif
-
-   return
-
- end function COMPUTE_DAY
-
- !---- function to return the system in fractional hours
- function COMPUTE_TIME_HOURS()   result(time_hours)
-   character(len=8):: system_date
-   character(len=10):: system_time
-   character(len=5):: system_time_zone
-   integer, dimension(8):: system_time_value
-
-   real:: time_hours
-
-   call DATE_AND_TIME(system_date,system_time,system_time_zone, system_time_value)
-
-   time_hours = real(system_time_value(5)) +  &
-                     (real(system_time_value(6)) + &
-                      real(system_time_value(7) + &
-                      real(system_time_value(8))/1000.0)/60.0)/60.0
-   return
-
- end function COMPUTE_TIME_HOURS
 
 
 
@@ -1328,99 +1195,10 @@ function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
    
  end function Covariance
  
-!---------------------------------------------------------------------
-! function leap_year_fct(yyyy) result(leap_flg)
-!
-! Function to determine if an input year is a leap year.
-!---------------------------------------------------------------------
-
-function leap_year_fct(yyyy) result(leap_flg)
-  integer, intent(in) :: yyyy
-  integer :: leap_flg
-
-  leap_flg = 0
-
-  if ((modulo(yyyy,4) == 0 .and. modulo(yyyy,100) /= 0) .or. &
-       modulo(yyyy,400) == 0) leap_flg = 1
-
-  return
-
-end function leap_year_fct
 
 
-!------------------------------------------------------------------------------------- 
 
-!-------------------------------------------------------------------------------------                                                   
-! count how many characters in the string 
-!-------------------------------------------------------------------------------------                                                                 
-function COUNTSUBSTRING (s1, s2) result(c)
-  character(*), intent(in) :: s1, s2
-  integer :: c, p, posn
 
-  c = 0
-  if(len(s2) == 0) return
-  p = 1
-  do
-    posn = index(s1(p:), s2)
-    if(posn == 0) return
-    c = c + 1
-    p = p + posn + len(s2)
-  end do
-
-end function
-
-!-------------------------------------------------------------------------------------                                                   
-! splits a string to substrings, returns array
-!-------------------------------------------------------------------------------------
-
-function SPLIT_STRING (str, separ, dims, word) result(error_status)
-  character(*), intent(in) :: str
-  character(*), intent(in) :: separ
-  integer, intent(in) :: dims
-  integer :: error_status
-  character(100), dimension(:), allocatable, intent (out) :: word
-  integer :: pos1, pos2, i
-
-  error_status = 0
-  pos1 = 1
-  if (allocated (word) ) deallocate (word)
-  allocate (word (dims))
-  do i = 1, dims
-    pos2 = INDEX(str(pos1:), separ)
-    if (pos2 == 0) THEN
-       word(i) = str(pos1:)
-       EXIT
-    endif
-    word(i) = str(pos1:pos1+pos2-2)
-    pos1 = pos2+pos1
- enddo
-
-end function
-
-!------------------------------------------------------------------------------------- 
-
-function REPLACE_CHAR_IN_STRG (string_inout,target_char,substring_char, &
-                    what_del) result(error_status)
- character(*), intent(inout) :: string_inout
- character(*), intent(in) :: target_char, substring_char, what_del
- integer :: indx, error_status
-
- error_status = 0
- indx = index(string_inout,target_char)
- if (indx > 0) then
-    if (trim(what_del) == 'before') then
-       string_inout = trim(substring_char)//trim(string_inout(indx+1:))
-    elseif (trim(what_del) == 'after') then
-       string_inout = trim(string_inout(:indx-1))//trim(substring_char)
-    else
-       error_status = 1
-    endif
- else
-    error_status = 1
-    return
- endif
-
-endfunction 
 
 !------------------------------------------------------------------------------------- 
 

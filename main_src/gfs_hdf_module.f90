@@ -38,10 +38,10 @@ module GFS
 
   use CONSTANTS
   
-  use NUMERICAL_ROUTINES, only: &
-   leap_year_fct &
-   , compute_month &
-   , compute_day 
+  use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
   
    USE cx_science_tools_mod, only: &
        wind_speed &

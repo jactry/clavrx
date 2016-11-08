@@ -40,6 +40,12 @@ module AVHRR_REPOSITION_ROUTINES
  use CONSTANTS
  use PIXEL_COMMON
  use NUMERICAL_ROUTINES
+ 
+  use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+ 
  implicit none
  private
  public:: REPOSITION_FOR_CLOCK_ERROR, &

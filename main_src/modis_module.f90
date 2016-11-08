@@ -56,9 +56,11 @@ module MODIS_MODULE
                 , Line_Idx_Min_segment
 
         use PIXEL_ROUTINES,only: &
-                julian &
-                , qc_modis
- 
+               qc_modis
+         
+        use date_tools_mod, only: &
+            julian 
+         
         use PLANCK , only: &
                 convert_radiance &
                 , compute_bt_array

@@ -183,14 +183,13 @@ clavrxorb_objs = process_clavrx.o \
                  viewing_geometry_module.o \
                  ahi_clavrx_bridge.o \
                  cx_read_ahi_mod.o \
-                 string_functions.o \
                  date_tools_mod.o \
                  geos_transform_pix.o \
                  cx_pfaast_mod.o \
                  cx_pfaast_tools_mod.o \
                  cx_pfaast_coef_mod.o \
                  cx_pfaast_constants_mod.o \
-                 strings.o \
+                 cx_string_tools_mod.o \
                  geo_sat_navigation_mod.o \
                  precision.o \
                  cx_conf_mod.o \
@@ -199,6 +198,7 @@ clavrxorb_objs = process_clavrx.o \
                  csv_mod.o  \
                  cx_prd_mod.o \
 					  file_tools.o \
+                 cx_science_tools_mod.o \
                  cx_array_tools_mod.o
 
 
@@ -210,7 +210,7 @@ create_level2b_objs = create_level2b.o \
                             cx_prd_mod.o \
                             csv_mod.o \
                             date_tools_mod.o \
-                            strings.o \
+                            cx_string_tools_mod.o \
                             cx_scale_tools_mod.o 
 
 #Level2b subsetting routines
@@ -326,18 +326,19 @@ calibration_constants.o: calibration_constants.f90 constant.o
 clavrx_olr_module.o: clavrx_olr_module.f90 constant.o pixel_common.o algorithm_constants.o
 clavrx_sst_module.o: clavrx_sst_module.f90 constant.o pixel_common.o
 create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod.o cx_scale_tools_mod.o date_tools_mod.o
-csv_mod.o:csv_mod.f90 strings.o
+csv_mod.o:csv_mod.f90 cx_string_tools_mod.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
-cx_prd_mod.o:cx_prd_mod.f90 constant.o csv_mod.o strings.o
+cx_prd_mod.o:cx_prd_mod.f90 constant.o csv_mod.o cx_string_tools_mod.o
 cx_scale_tools_mod.o:cx_scale_tools_mod.f90 constant.o
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90 file_tools.o
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 file_tools.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
-cx_read_ahi_mod.o: cx_read_ahi_mod.f90 string_functions.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 cx_string_tools_mod.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
+cx_science_tools_mod.o:cx_science_tools_mod.f90
 cx_pfaast_mod.o:$(PFAAST)/cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:$(PFAAST)/cx_pfaast_tools_mod.f90 
-cx_pfaast_coef_mod.o:$(PFAAST)/cx_pfaast_coef_mod.f90 strings.o
+cx_pfaast_coef_mod.o:$(PFAAST)/cx_pfaast_coef_mod.f90 cx_string_tools_mod.o
 cx_pfaast_constants_mod.o:$(PFAAST)/cx_pfaast_constants_mod.f90
 dcomp_derived_products_module.o: dcomp_derived_products_module.f90 constant.o pixel_common.o nwp_common.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_tools.o clavrx_message_module.o 
@@ -346,7 +347,7 @@ pixel_routines.o: pixel_routines.f90 constant.o num_mod.o pixel_common.o nwp_com
 dncomp_clavrx_bridge_mod.o:dncomp_clavrx_bridge_mod.f90  dcomp_rtm_module.o clavrx_message_module.o cx_array_tools_mod.o
 dcomp_rtm_module.o:dcomp_rtm_module.f90
 dnb_retrievals_mod.o:dnb_retrievals_mod.f90 file_tools.o
-cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	
+cloud_height_routines.o: cloud_height_routines.f90 constant.o planck.o rtm_common.o	cx_science_tools_mod.o
 clavrx_message_module.o: clavrx_message_module.f90 file_tools.o
 cgms_nav.o: cgms_nav.f90
 
@@ -357,7 +358,7 @@ geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o num_mod.o  file_tools.o avhrr_module.o constant.o
 Message_Handler.o: Message_Handler.f90 file_tools.o constant.o
 Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
-gfs_hdf_module.o: gfs_hdf_module.f90 constant.o num_mod.o nwp_common.o clavrx_message_module.o
+gfs_hdf_module.o: gfs_hdf_module.f90 constant.o num_mod.o nwp_common.o clavrx_message_module.o cx_science_tools_mod.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o num_mod.o file_tools.o
 netcdf_read_module.o: netcdf_read_module.f90 constant.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
@@ -375,7 +376,7 @@ coms_module.o: coms_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o go
 ncep_reanalysis.o: ncep_reanalysis.f90 constant.o  nwp_common.o sort_module.o num_mod.o
 num_mod.o: num_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
-nwp_common.o: nwp_common.f90 pixel_common.o constant.o
+nwp_common.o: nwp_common.f90 pixel_common.o constant.o cx_science_tools_mod.o
 level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o  avhrr_module.o cx_prd_mod.o
 
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o num_mod.o
@@ -386,10 +387,9 @@ sfc_emiss.o: sfc_emiss.f90 constant.o num_mod.o
 scaling_params.o: scaling_params.f90 constant.o
 sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o constant.o
 sort_module.o: sort_module.f90
-string_functions.o:string_functions.f90
-strings.o:strings.f90 precision.o
+cx_string_tools_mod.o:cx_string_tools_mod.f90 precision.o
 simple_cod_module.o: simple_cod_module.f90 constant.o pixel_common.o num_mod.o file_tools.o sfc_prop_umd.o
-rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o calibration_constants.o
+rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o constant.o cx_pfaast_mod.o calibration_constants.o cx_science_tools_mod.o
 
 #sensor
 ifdef hdf5libs

@@ -275,7 +275,7 @@ contains
    !
    ! --------------------------------------------------------------------------------------
    subroutine set_filenames ( config)
-      use string_functions, only: replace_text
+      use cx_string_tools_mod, only: replace_text
       
       type ( ahi_config_type ) :: config
       

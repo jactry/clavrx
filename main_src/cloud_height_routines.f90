@@ -30,6 +30,10 @@ module CLOUD_HEIGHT_ROUTINES
   use NWP_COMMON
   use RTM_COMMON
   use NUMERICAL_ROUTINES
+  
+  use cx_science_tools_mod,only: &
+    wind_direction &
+   , wind_speed
 
   implicit none
 

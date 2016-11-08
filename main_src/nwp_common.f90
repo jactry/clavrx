@@ -70,6 +70,10 @@ module NWP_COMMON
   use CONSTANTS
   use PIXEL_COMMON
   use NUMERICAL_ROUTINES
+  
+  use cx_science_tools_mod,only : &
+   vapor &
+   , vapor_ice
 
   implicit none
   private

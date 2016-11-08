@@ -294,23 +294,24 @@ program create_level2b
       test = cx_att_int (file,'WMO_SATELLITE_CODE',wmo_sat)
       !test = cx_att_cha (file,'L1B',l1b)      
         
-      !- test if file is in time window
-      print*,start_year,start_day_of_year
-      print*
+     
       
       call date_file_start.set_date_with_doy (start_year, start_day_of_year &
          , floor(start_time), floor(60*(start_time-floor(start_time))) )
+         
       call date_file_end.set_date_with_doy (end_year, end_day_of_year &
          , floor(end_time) ,  floor(60*(end_time-floor(end_time))))
       
       
-      ! - check time
+      ! - check time window
       
-      if (time_is_in_window ( date_file_start, date_cnf_start, date_cnf_end ) ) print*,'yesy'
-      call date_file_start.print_data
-      call date_cnf_start.print_data
-      call date_cnf_end.print_data
-      print*,'no'
+      if (.not. time_is_in_window ( date_file_start, date_cnf_start, date_cnf_end ) ) then
+         print*,'file is not in window'
+         print*,'next file'
+         cycle
+      
+      end if 
+      
       
       num_points = num_elem_inp * num_line_inp
       allocate(Input_Update_Index(Num_Points))

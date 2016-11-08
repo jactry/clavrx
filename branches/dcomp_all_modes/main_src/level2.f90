@@ -200,7 +200,7 @@ module LEVEL2_ROUTINES
    
    use cx_prd_mod
    
-   use strings, only: &
+   use cx_string_tools_mod, only: &
     is_numeric
    
    implicit none

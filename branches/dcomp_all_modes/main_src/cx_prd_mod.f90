@@ -7,7 +7,7 @@ module cx_prd_mod
       , csv_file_open_read &
       , csv_value_count
    
-    use strings, only: &
+    use cx_string_tools_mod, only: &
       split
    
     use CONSTANTS, only: &

@@ -41,8 +41,10 @@ module GFS
   use NUMERICAL_ROUTINES, only: &
    leap_year_fct &
    , compute_month &
-   , compute_day &
-   , wind_speed &
+   , compute_day 
+  
+   USE cx_science_tools_mod, only: &
+       wind_speed &
    , wind_direction &
    , vapor &
    , vapor_ice

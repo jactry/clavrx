@@ -129,10 +129,12 @@ module RT_UTILITIES
       , Ancil_Data_Dir
       
    use NUMERICAL_ROUTINES , only: &
-         VAPOR &
-       , COMPUTE_TIME_HOURS &
+         COMPUTE_TIME_HOURS &
        , LOCATE
-      
+       
+   use cx_science_tools_mod, only: &
+      vapor  
+       
    use PLANCK, only: &
         PLANCK_RAD_FAST &
       , PLANCK_TEMP_FAST 

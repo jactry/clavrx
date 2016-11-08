@@ -30,6 +30,7 @@ module cx_hdf_write_mod
 	include 'hdf.f90'
    
    public  hdf_file_open 
+   public copy_global_attributes
 contains
    !
    !
@@ -290,10 +291,97 @@ contains
       istatus = sfend ( id_file)
       
       if ( istatus /= 0 ) then
-         print*,'level-2 file error whil closing ', istatus,id_file
+         print*,'level-2 file error while closing ', istatus,id_file
          stop
       end if
    end subroutine close_file
+   
+   !------------------------------------------------------------------------------------------------
+! SUBROUTINE Name: COPY_GLOBAL_ATTRIBUTES
+!
+! Function:
+!    Copies the global attributes from one file and puts them in a different file
+!-----------------------------------------------------------------------------------------------
+
+   subroutine COPY_GLOBAL_ATTRIBUTES(File_in,file_out, exclude)
+      
+      character (len = * ) :: file_in
+      character (len = * ) :: file_out
+      character (len =100), optional :: exclude (:)
+      integer:: Sd_Id_Input
+      integer:: Sd_Id_Output
+      integer:: Istatus
+      integer:: num_global_attrs
+      integer:: Num_Sds_Input
+      integer:: iattr
+      character(len=100):: Attr_Name
+      integer:: Data_Type
+      integer:: count
+      integer:: Attr_Buffer_i4
+      integer:: Attr_Buffer_i2
+      integer:: Attr_Buffer_i1
+      real:: Attr_Buffer_r4
+      character(len=500):: Attr_Buffer_char
+
+      integer:: sffinfo
+      integer:: sfgainfo
+      integer:: sfrnatt
+      integer:: sfsnatt
+   
+   sd_id_input = hdf_file_open(trim(File_in))
+   sd_id_output = hdf_file_open(trim(File_out))
+   
+   Istatus = sffinfo(Sd_Id_Input,Num_Sds_Input,num_global_attrs)
+
+   do iattr = 0, num_global_attrs-1
+
+       Istatus = sfgainfo(Sd_Id_Input,iattr,Attr_Name,Data_Type,count)
+
+       !--- skip certain level2 attributes in level2b
+       if (Attr_Name == "FILENAME" .or. &
+           Attr_Name == "L1B" .or. &
+           Attr_Name == "NUMBER_OF_SCANS_LEVEL1B" .or. &
+           Attr_Name == "NUMBER_OF_SCANS_LEVEL2" .or. &
+           Attr_Name == "START_YEAR" .or.  &
+           Attr_Name == "END_YEAR" .or.  &
+           Attr_Name == "START_DAY" .or.  &
+           Attr_Name == "END_DAY" .or.  &
+           Attr_Name == "START_TIME" .or.  &
+           Attr_Name == "END_TIME") then
+           cycle
+        endif
+
+       if (Data_Type == DFNT_INT8) then
+           Istatus = sfrnatt(Sd_Id_Input,iattr,Attr_Buffer_i1)
+           Istatus = sfsnatt(Sd_Id_Output,trim(Attr_Name),Data_Type,count,Attr_Buffer_i1)
+       endif
+
+       if (Data_Type == DFNT_INT16) then
+           Istatus = sfrnatt(Sd_Id_Input,iattr,Attr_Buffer_i2)
+           Istatus = sfsnatt(Sd_Id_Output,trim(Attr_Name),Data_Type,count,Attr_Buffer_i2)
+       endif
+
+       if (Data_Type == DFNT_INT32) then
+           Istatus = sfrnatt(Sd_Id_Input,iattr,Attr_Buffer_i4)
+           Istatus = sfsnatt(Sd_Id_Output,trim(Attr_Name),Data_Type,count,Attr_Buffer_i4)
+       endif
+
+       if (Data_Type == DFNT_FLOAT32) then
+           Istatus = sfrnatt(Sd_Id_Input,iattr,Attr_Buffer_r4)
+           Istatus = sfsnatt(Sd_Id_Output,trim(Attr_Name),Data_Type,count,Attr_Buffer_r4)
+       endif
+
+       if (Data_Type == DFNT_CHAR) then
+           Istatus = sfrnatt(Sd_Id_Input,iattr,Attr_Buffer_char)
+           Istatus = sfsnatt(Sd_Id_Output,trim(Attr_Name),Data_Type,count,trim(Attr_Buffer_char))
+       endif
+   enddo
+   
+   call close_file (sd_id_input)   
+   call close_file (sd_id_output)   
+
+   end subroutine 
+
    
 
 end module cx_hdf_write_mod

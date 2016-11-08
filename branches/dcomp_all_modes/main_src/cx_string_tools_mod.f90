@@ -981,6 +981,79 @@ DO i = 1,LEN(s1)
 END DO
 END FUNCTION Lower
 
+!------------------------------------------------------------------------------------- 
+
+!-------------------------------------------------------------------------------------                                                   
+! count how many characters in the string 
+!-------------------------------------------------------------------------------------                                                                 
+function COUNTSUBSTRING (s1, s2) result(c)
+  character(*), intent(in) :: s1, s2
+  integer :: c, p, posn
+
+  c = 0
+  if(len(s2) == 0) return
+  p = 1
+  do
+    posn = index(s1(p:), s2)
+    if(posn == 0) return
+    c = c + 1
+    p = p + posn + len(s2)
+  end do
+
+end function
+
+!-------------------------------------------------------------------------------------                                                   
+! splits a string to substrings, returns array
+!-------------------------------------------------------------------------------------
+
+function SPLIT_STRING (str, separ, dims, word) result(error_status)
+  character(*), intent(in) :: str
+  character(*), intent(in) :: separ
+  integer, intent(in) :: dims
+  integer :: error_status
+  character(100), dimension(:), allocatable, intent (out) :: word
+  integer :: pos1, pos2, i
+
+  error_status = 0
+  pos1 = 1
+  if (allocated (word) ) deallocate (word)
+  allocate (word (dims))
+  do i = 1, dims
+    pos2 = INDEX(str(pos1:), separ)
+    if (pos2 == 0) THEN
+       word(i) = str(pos1:)
+       EXIT
+    endif
+    word(i) = str(pos1:pos1+pos2-2)
+    pos1 = pos2+pos1
+ enddo
+
+end function
+
+!------------------------------------------------------------------------------------- 
+
+function REPLACE_CHAR_IN_STRG (string_inout,target_char,substring_char, &
+                    what_del) result(error_status)
+ character(*), intent(inout) :: string_inout
+ character(*), intent(in) :: target_char, substring_char, what_del
+ integer :: indx, error_status
+
+ error_status = 0
+ indx = index(string_inout,target_char)
+ if (indx > 0) then
+    if (trim(what_del) == 'before') then
+       string_inout = trim(substring_char)//trim(string_inout(indx+1:))
+    elseif (trim(what_del) == 'after') then
+       string_inout = trim(string_inout(:indx-1))//trim(substring_char)
+    else
+       error_status = 1
+    endif
+ else
+    error_status = 1
+    return
+ endif
+
+endfunction 
 
 
 

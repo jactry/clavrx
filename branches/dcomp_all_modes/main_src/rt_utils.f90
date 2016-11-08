@@ -129,8 +129,10 @@ module RT_UTILITIES
       , Ancil_Data_Dir
       
    use NUMERICAL_ROUTINES , only: &
-         COMPUTE_TIME_HOURS &
-       , LOCATE
+         LOCATE
+   
+   use date_tools_mod, only: &
+      compute_time_hours
        
    use cx_science_tools_mod, only: &
       vapor  

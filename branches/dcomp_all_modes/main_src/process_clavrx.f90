@@ -164,6 +164,13 @@
       
    use BASELINE_CLOUD_MASK, only: &
       BASELINE_CLOUD_MASK_MAIN
+   
+   use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day &
+         , compute_time_hours
+         
 
    implicit none
  

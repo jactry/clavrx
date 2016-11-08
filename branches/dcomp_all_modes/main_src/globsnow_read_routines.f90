@@ -36,6 +36,11 @@ module GLOBSNOW_READ_ROUTINES
   use FILE_TOOLS,only: &
    get_lun, file_test
   
+  use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day 
+  
   implicit none
   include 'hdf.f90'  
 private

@@ -68,6 +68,7 @@ module USER_OPTIONS
       , Temporary_Data_Dir &
       , Therm_Cal_1b &
       , Ancil_Data_Dir &
+      , CSV_file &
       , Cfsr_Data_Dir &
       , Merra_Data_Dir &
       , Gdas_Data_Dir &
@@ -459,7 +460,9 @@ contains
       if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"
       end if 
- 
+      
+      Csv_file = trim('clavrx_level2_products.csv')
+      
       do i=1, fargc
 
         call getarg(i,fargv)
@@ -516,7 +519,12 @@ contains
         elseif(trim(fargv) == "-ancil_data_dir") then
           call getarg(i+1,ancil_data_dir)
           ancil_data_dir=trim(ancil_data_dir)
-
+         
+        !Change CSV file
+        elseif(trim(fargv) == "-csv_file") then
+          call getarg(i+1,csv_file)
+          csv_file=trim(csv_file)
+          
         !Smooth/not smooth NWP data
         elseif(trim(fargv) == "-smooth_nwp") then
           Smooth_Nwp_Flag = sym%YES
@@ -572,6 +580,7 @@ contains
 
       !--- default ancillary data directory
       Ancil_Data_Dir = trim(Data_Base_Path)
+      
       Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
       Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'

@@ -1,16 +1,16 @@
 ! $Id$
 module cx_prd_mod
    
-      use csv_mod, only: &
+   use CSV_MOD, only: &
       csv_file_close_read &
       , csv_file_line_count &
       , csv_file_open_read &
       , csv_value_count
    
-    use cx_string_tools_mod, only: &
+   use CX_STRING_TOOLS_MOD, only: &
       split
    
-    use CONSTANTS, only: &
+   use CONSTANTS, only: &
       int4   
    
    type prd_individual_dtype
@@ -44,6 +44,7 @@ module cx_prd_mod
       type (prd_individual_dtype), allocatable :: product (:) 
       contains
       procedure :: read_products
+      procedure :: set_csv_file
    end type prd_dtype
    
    public:: prd_dtype
@@ -52,12 +53,13 @@ module cx_prd_mod
    !
    !   read csv file into product structure
    !
-   subroutine read_products ( this)
+   subroutine read_products ( this, csv_file)
       implicit none
       class (prd_dtype) :: this
+      character(len=*), intent(in), optional :: csv_file
       
       integer :: line_num
-      integer  (kind = int4) :: csv_fle_unit
+      
       integer  (kind = int4) :: csv_file_status
       integer  (kind = int4) :: csv_record_status
       integer  (kind = int4) :: csv_file_unit
@@ -66,6 +68,11 @@ module cx_prd_mod
       integer   ( kind = 4 ) :: value_count
       integer, parameter :: N_CSV = 12
       character ( len = 300) :: rec_arr ( N_CSV )
+      
+      
+      if ( present( csv_file)) call this.set_csv_file (csv_file)
+      
+     
       
       call csv_file_line_count ( this % csv_filename, line_num )
       this % num_products = line_num - 1
@@ -126,9 +133,18 @@ module cx_prd_mod
       
       end function extract_single
       
+
+      
       
    end subroutine 
 
-
+   !
+   !
+   !
+   subroutine set_csv_file (this,file)
+      class (prd_dtype) :: this
+      character(len = *) :: file
+      this.csv_filename = file      
+   end subroutine
 
 end module cx_prd_mod

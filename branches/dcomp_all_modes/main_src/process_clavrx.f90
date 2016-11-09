@@ -1376,9 +1376,9 @@
                   call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
                   
                   if ( dcomp_mode .GE. 8 .and. trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
-							print*,'aaa'
+							
                      call AWG_CLOUD_DNCOMP_ALGORITHM_IBAND ( Iseg_In = Segment_Number, infile = trim(File_1b_Temp), path= trim(dir_level2),algorithm_started = dncomp_run )                        
-                     print*,'bbbb'
+                    
                   end if 
                   
                   

@@ -199,7 +199,8 @@ clavrxorb_objs = process_clavrx.o \
                  get_lun.o \
 					  file_tools.o \
                  cx_science_tools_mod.o \
-                 cx_array_tools_mod.o
+                 cx_array_tools_mod.o \
+                 cx_scale_tools_mod.o
 
 
 
@@ -360,7 +361,7 @@ iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o 
 iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o numerical_tools_mod.o file_tools.o date_tools_mod.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o
+level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o cx_scale_tools_mod.o
 modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
 netcdf_read_module.o: netcdf_read_module.f90 constant.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90

@@ -40,7 +40,7 @@ use PIXEL_COMMON, only: ch, sensor, geo, sfc, Bad_Pixel_Mask, Sst_Unmasked, Sst_
 use ALGORITHM_CONSTANTS
 
 implicit none
-
+private
 public:: SETUP_SST, COMPUTE_SST, COMPUTE_MASKED_SST
 private::  MCSST
 

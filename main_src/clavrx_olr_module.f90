@@ -35,9 +35,18 @@
 !
 !--------------------------------------------------------------------------------------
 module CLAVRX_OLR_MODULE
-use CONSTANTS
-use PIXEL_COMMON, only: ch, sensor, geo, olr
-use ALGORITHM_CONSTANTS
+
+   use ALGORITHM_CONSTANTS,only: &
+      stefan_boltzmann_constant
+      
+   use CONSTANTS,only: &
+      sym &
+      , MISSING_VALUE_REAL4
+   
+   
+   use PIXEL_COMMON, only: &
+       ch, sensor, geo, olr
+   
 
 implicit none
 

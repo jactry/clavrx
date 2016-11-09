@@ -25,24 +25,46 @@
 !--------------------------------------------------------------------------------------
 
 module SEVIRI_MODULE
-use CONSTANTS
-use PIXEL_COMMON
-use CALIBRATION_CONSTANTS
-use PLANCK
-use NUMERICAL_TOOLS_MOD
-use GOES_MODULE
-use CGMS_NAV
-use FILE_TOOLS,only: &
-   get_lun
-use VIEWING_GEOMETRY_MODULE
+   
+   use CALIBRATION_CONSTANTS,only: &
+    Planck_nu &
+    , Planck_A1 &
+    , Planck_A2 &
+    , sat_name &
+    , Solar_Ch20 &
+    , EW_Ch20 &
+    , Solar_ch20_nu &
+    , Ch1_dark_count &
+    , Ch2_dark_count
+   
+   use CGMS_NAV,only:
+   
+   use CONSTANTS
+   
+   use FILE_TOOLS,only: &
+      get_lun
+   
+   use GOES_MODULE,only: &
+      area_struct &
+      , gvar_nav &
+      , COMPUTE_SATELLITE_ANGLES &
+      , GET_IMAGE_FROM_AREAFILE
+   
+    use NUMERICAL_TOOLS_MOD
+   
+   use PIXEL_COMMON
+   
+   use PLANCK
+  
+   use VIEWING_GEOMETRY_MODULE
 
-implicit none
+   implicit none
+   private
 
-
-public::  READ_SEVIRI,  &
+   public::  READ_SEVIRI,  &
           CALIBRATE_SEVIRI_DARK_COMPOSITE, &
           READ_NAVIGATION_BLOCK_SEVIRI
-         
+   public :: READ_MSG_INSTR_CONSTANTS        
 private:: GET_SEVIRI_NAVIGATION,  &
           LOAD_SEVIRI_CAL_AREA,  &
           MSG_RAD_BT

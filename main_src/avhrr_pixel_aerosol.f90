@@ -64,17 +64,35 @@
 ! Note, aerosol product quality flags are computed elsewhere.
 !
 !--------------------------------------------------------------------------------------
-module AEROSOL_PROPERTIES
- use PIXEL_COMMON
- use CONSTANTS
- use FILE_TOOLS,only: &
-   get_lun
- use NUMERICAL_TOOLS_MOD
- implicit none
- private
- public:: READ_AER_CH123A_REF_LUTS,&
+module AVHRR_PIXEL_AEROSOL
+   
+   use CONSTANTS,only: &
+      sym &
+      , real4 &
+      , Missing_Value_Real4 &
+      , DTOR
+   
+   use FILE_TOOLS,only: &
+    get_lun
+   
+   
+   use PIXEL_COMMON,only: &
+      image &
+      , geo &
+      , bad_pixel_mask &
+      , sfc &
+      , ch &
+      , aot1 &
+      , aot2 &
+      , aot3a &
+      , sensor &
+      , ch3a_on_avhrr
+
+   implicit none
+   private
+   public:: READ_AER_CH123A_REF_LUTS,&
           PIXEL_AER_RET_OCEAN
- private:: AER_RET
+  
 
 !------------------------------------------------------------------------
  integer, parameter, private:: nzen = 15, Naz = 19, Nsolzen = 15, Ntau = 7
@@ -360,4 +378,4 @@ end subroutine AER_RET
 
  end subroutine READ_AER_CH123A_REF_LUTS
 
-end module AEROSOL_PROPERTIES
+end module AVHRR_PIXEL_AEROSOL

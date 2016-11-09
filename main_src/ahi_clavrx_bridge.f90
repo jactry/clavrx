@@ -1,7 +1,7 @@
 ! $Id$
 module AHI_CLAVRX_BRIDGE 
    
-      use Pixel_Common , only : &
+   use Pixel_Common , only : &
         Image &
       , Sensor &
       , Geo &
@@ -17,18 +17,20 @@ module AHI_CLAVRX_BRIDGE
       , Gap_Pixel_Mask &
       , Ch 
    
-    use Constants, only: &
+   use Constants, only: &
       Int4 &
-     , Missing_Value_Real4
+      ,Missing_Value_Real4
       
       
-    use Calibration_Constants, only: &
+   use Calibration_Constants, only: &
             Planck_Nu
    
    use Planck, only: CONVERT_RADIANCE
    
    implicit none
-
+   private
+   public :: read_ahi_data
+    
 contains
 
    subroutine READ_AHI_DATA ( Segment_Number , File_Ch01 , Error_Out )

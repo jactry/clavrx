@@ -29,51 +29,56 @@
 
 MODULE land_sfc_properties
   
-  use CONSTANTS
-  use NUMERICAL_TOOLS_MOD
-  use FILE_TOOLS, only: &
-   file_test
+   use CONSTANTS
   
-  implicit none
+   use FILE_TOOLS, only: &
+      file_test
   
-  private :: read_hdf_sds
-  private :: read_hdf_global_attribute_float64
-  private :: read_hdf_sds_dimenions
-  public  :: read_land_sfc_hdf
-  public  :: get_snow_map_filename
+   use NUMERICAL_TOOLS_MOD
+  
+  
+   implicit none
+   private
+   private :: read_hdf_sds
+   private :: read_hdf_global_attribute_float64
+   private :: read_hdf_sds_dimenions
+   public  :: read_land_sfc_hdf
+   public  :: get_snow_map_filename
+   public :: close_land_sfc_hdf
+   public :: open_land_sfc_hdf
   
    interface read_land_sfc_hdf
         module procedure  &
            read_land_sfc_hdf_i1,  &
            read_land_sfc_hdf_i2
-    end interface
+   end interface
 
    interface read_hdf_sds
         module procedure  &
            read_hdf_sds_i1,  &
            read_hdf_sds_i2
-    end interface
+   end interface
 
-  INTEGER(kind=int4), parameter, private :: num_lat_default = 4500
-  INTEGER(kind=int4), parameter, private :: num_lon_default = 9000
-  REAL(kind=real8), parameter, private :: first_lat_default = -90.0_real8
-  REAL(kind=real8), parameter, private :: last_lat_default = 90.0_real8
-  REAL(kind=real8), parameter, private :: first_lon_default = -180.0_real8
-  REAL(kind=real8), parameter, private :: last_lon_default = 180.0_real8
-  REAL(kind=real8), parameter, private :: del_lat_default = 0.04_real8
-  REAL(kind=real8), parameter, private :: del_lon_default = 0.04_real8
+   INTEGER(kind=int4), parameter, private :: num_lat_default = 4500
+   INTEGER(kind=int4), parameter, private :: num_lon_default = 9000
+   REAL(kind=real8), parameter, private :: first_lat_default = -90.0_real8
+   REAL(kind=real8), parameter, private :: last_lat_default = 90.0_real8
+   REAL(kind=real8), parameter, private :: first_lon_default = -180.0_real8
+   REAL(kind=real8), parameter, private :: last_lon_default = 180.0_real8
+   REAL(kind=real8), parameter, private :: del_lat_default = 0.04_real8
+   REAL(kind=real8), parameter, private :: del_lon_default = 0.04_real8
 
-  INTEGER(kind=int4), parameter, private :: MAX_SNOW_LATENCY = 4 !including current day
+   INTEGER(kind=int4), parameter, private :: MAX_SNOW_LATENCY = 4 !including current day
 
-  TYPE, public :: land_grid_description
-    CHARACTER(len=256) :: sds_name
-    INTEGER(kind=int4) :: num_lat
-    INTEGER(kind=int4) :: num_lon
-    REAL(kind=real8) :: del_lat
-    REAL(kind=real8) :: del_lon
-    REAL(kind=real8) :: first_lat
-    REAL(kind=real8) :: first_lon
-  END TYPE land_grid_description
+   TYPE, public :: land_grid_description
+      CHARACTER(len=256) :: sds_name
+      INTEGER(kind=int4) :: num_lat
+      INTEGER(kind=int4) :: num_lon
+      REAL(kind=real8) :: del_lat
+      REAL(kind=real8) :: del_lon
+      REAL(kind=real8) :: first_lat
+      REAL(kind=real8) :: first_lon
+   END TYPE land_grid_description
   
   include 'hdf.f90'
     

@@ -34,16 +34,17 @@
 !-----------------------------------------------------------------------
 module ALGORITHM_CONSTANTS
 
-  use CONSTANTS
+   use CONSTANTS, only: &
+      real4
 
-  implicit none
+   implicit none
 
-  real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0
-  real (kind=real4), parameter, public:: STEFAN_BOLTZMANN_CONSTANT = 5.670e-08  !W/m^2/K^4
-  real (kind=real4), parameter, public:: SOLAR_CONSTANT = 1360.0   !W/m^2
+   real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0
+   real (kind=real4), parameter, public:: STEFAN_BOLTZMANN_CONSTANT = 5.670e-08  !W/m^2/K^4
+   real (kind=real4), parameter, public:: SOLAR_CONSTANT = 1360.0   !W/m^2
 
   !--- default modis white sky values for Snow and water
-  real, parameter, public:: REF_SFC_WHITE_SKY_WATER = 5.0 
+   real, parameter, public:: REF_SFC_WHITE_SKY_WATER = 5.0 
 
 !--- End of module
 

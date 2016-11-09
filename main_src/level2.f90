@@ -42,7 +42,9 @@ module LEVEL2_ROUTINES
       , MISSING_VALUE_REAL4 &
       , EXE_PROMPT &
       , dcomp_version &
-      , acha_version
+      , acha_version &
+      , cloud_mask_version &
+      , cloud_mask_thresholds_version
    
    ! - many of those variables are in level2_assign.inc   
    use PIXEL_COMMON, only: &
@@ -176,11 +178,6 @@ module LEVEL2_ROUTINES
       , Beta_11um_12um_Tropo_Rtm &
       , aot1
       
-   use AVHRR_MODULE,only: &
-       cloud_mask_version   &  !- comes from anywhere else!
-      , cloud_mask_thresholds_version &   !- comes from anywhere else!
-      , acha_version      !- comes from anywhere else!
-     
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &
       cloud_type_version &
@@ -198,20 +195,23 @@ module LEVEL2_ROUTINES
       , close_sds &
       , close_file
    
-   use cx_prd_mod
+   use cx_prd_mod, only: &
+      prd_dtype &
+      , prd_individual_dtype
    
    use cx_string_tools_mod, only: &
     is_numeric
+    
+   
    
    implicit none
    
-   include 'hdf.f90'
    private
+   include 'hdf.f90'
+   
 
    public:: WRITE_PIXEL_HDF_RECORDS
 
-   private:: DEFINE_HDF_FILE_STRUCTURES, &
-            file_root_from_l1b
 
  
    !----------------------------------------------------------------------

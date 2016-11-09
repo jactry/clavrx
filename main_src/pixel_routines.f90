@@ -40,18 +40,47 @@
 !
 !--------------------------------------------------------------------------------------
 MODULE PIXEL_ROUTINES
- use CONSTANTS
- use ALGORITHM_CONSTANTS
- use PIXEL_COMMON
- use NUMERICAL_TOOLS_MOD
- use NWP_COMMON
- use PLANCK
- use LAND_SFC_PROPERTIES
- use FILE_TOOLS, only:
- use SURFACE_PROPERTIES
- use CALIBRATION_CONSTANTS
+   
+   use ALGORITHM_CONSTANTS,only: &
+      Glint_Zen_Thresh &
+      , Ref_Sfc_White_Sky_Water
+   
+   use CONSTANTS
+      
+   use LAND_SFC_PROPERTIES,only: &
+      Land_grid_description &      
+      , read_land_sfc_hdf
+   
+   use NUMERICAL_TOOLS_MOD,only: &
+    COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES &
+    , Covariance
+
+   use NWP_COMMON,only: &
+      Zsfc_nwp &
+      , Bad_Nwp_Mask
+   
+   use PIXEL_COMMON   
+      
+   use PLANCK,only: &
+      PLANCK_TEMP_FAST &
+      , PLANCK_RAD_FAST &
+      , PLANCK_TEMP_FAST
+   
+   use SURFACE_PROPERTIES,only: &
+      Ch1_sfc_alb_umd &
+      , Ch1_Snow_Sfc_Alb_Umd &
+      , Ch2_Sfc_Alb_Umd &
+      , Ch2_Snow_Sfc_Alb_Umd &
+      , Ch6_Sfc_Alb_Umd &
+      , Ch5_Snow_Sfc_Alb_Umd &
+      , Ch6_Snow_Sfc_Alb_Umd &
+      , Ch7_Snow_Sfc_Alb_Umd
+   
+   
+   
 
  implicit none
+ private
  public:: COMPUTE_PIXEL_ARRAYS, &
           SURFACE_REMOTE_SENSING,  &
           ATMOS_CORR,&

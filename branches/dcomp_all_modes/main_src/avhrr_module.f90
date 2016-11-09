@@ -47,17 +47,151 @@
 !
 !--------------------------------------------------------------------------------------
 module AVHRR_MODULE
-
-  use PIXEL_COMMON
-  use CALIBRATION_CONSTANTS
-  use CONSTANTS
-  use FILE_TOOLS,only: get_lun
-  use VIEWING_GEOMETRY_MODULE
-  use PLANCK
+   
+   use CALIBRATION_CONSTANTS, only: &
+    sat_name &
+    , Solar_Ch20 &
+    , ew_ch20 &
+    , Space_Rad_3b &
+    , b0_3b &
+    , b1_3b &
+    , b2_3b &
+    , Space_Rad_4 &
+    , b0_4 &
+    , b1_4 &
+    , b2_4 &
+    , Space_Rad_5 &
+    , b0_5 &
+    , b1_5 &
+    , b2_5 &
+    , Planck_nu &
+    , Planck_A1 &
+    , Planck_A2 &
+    , Ch1_Dark_Count &
+    , Ch2_Dark_Count &
+    , Ch3a_Dark_count &
+    , Ch1_Gain_Low_0 &
+    , Ch1_Degrad_Low_1 &
+    , Ch1_Degrad_Low_2 &
+    , Ch1_Gain_High_0 &
+    , Ch1_Degrad_High_1 &
+    , Ch1_Degrad_High_2 &
+    , Ch2_Gain_Low_0 &
+    , Ch2_Degrad_Low_1 &
+    , Ch2_Degrad_Low_2 &
+    , Ch2_Gain_High_0 &
+    , Ch2_Degrad_High_1 &
+    , Ch2_Degrad_High_2 &
+    , Ch3a_Gain_Low_0 &
+    , Ch3a_Degrad_Low_1 &
+    , Ch3a_Degrad_Low_2 &
+    , Ch3a_Gain_High_0 &
+    , Ch3a_Degrad_High_1 &
+    , Ch3a_Degrad_High_2 &
+    , launch_date &
+    , Ch1_Switch_Count &
+    , Ch2_Switch_Count &
+    , Ch3a_Switch_Count &
+    , Prt_Coef &
+    , prt_weight &
+    , Solar_Ch20_Nu &
+    , Ch1_Gain_Low &
+    , Ch1_Gain_High &
+    , Ch2_Gain_Low &
+    , Ch2_Gain_High &
+    , Ch3a_Gain_Low &
+    , Ch3a_Gain_High &
+    , Ch1_Dark_Count_Cal &
+    , Ch1_Switch_Count_Cal &
+    , Ch2_Dark_Count_Cal &
+    , Ch2_Switch_Count_Cal &
+    , Ch3a_Dark_Count_Cal &
+    , Ch3a_Switch_Count_Cal &
+    , Ref_Ch1_Switch &
+    , Ref_Ch2_Switch &
+    , Ref_Ch6_Switch
+   
+   use CONSTANTS, only: &
+    real4 &
+    , int1 &
+    , int2 &
+    , int4 &
+    , ipre &
+    , sym &
+    , EXE_PROMPT &
+    , Missing_Value_Real4 &
+    , DTOR &
+    , MISSING_VALUE_INT4 &
+    , MISSING_VALUE_INT2 &
+    , MISSING_VALUE_INT1
+   
+   use FILE_TOOLS,only: &
+       get_lun
+       
+   use PIXEL_COMMON, only: &
+      AVHRR_KLM_Flag &
+      , image &
+      , Sc_Id_AVHRR &
+      , sensor &
+      , AVHRR_1_FLAG &
+      , l1b_rec_length &
+      ,  Num_Anchors &
+      , Line_Idx_Min_Segment &
+      , Ch3a_On_AVHRR &
+      , Lat_Anchor_1b &
+      , LON_ANCHOR_1B &
+      , nav &
+      , scan_day &
+      , scan_time &
+      , satzen_Anchor &
+      , Solzen_Anchor &
+      , Relaz_Anchor &
+      , Solaz_Anchor &
+      , Sataz_Anchor &
+      , Glintzen_Anchor &
+      , Scatangle_Anchor &
+      , geo &
+      , Ch &
+      , Bad_Scan_Flag &
+      , scan_number &
+      , AVHRR_GAC_FLAG &
+      , AVHRR_DATA_TYPE &
+      , TIP_PARITY &
+      , aux_sync &
+      , ramp_auto_cal &
+      , proc_block_id &
+      , avhrr_ver_1b &
+      , REF_CAL_1B &
+      , therm_cal_1b &
+      , temp_pix_array_1 &
+      , Ch20_Counts_Filtered &
+      , One_Byte_Temp &
+      , Byte_swap_1b &
+      , scan_year &
+      , num_loc &
+      , cld_mask_aux &
+      , Cloud_Mask_Aux_Read_Flag &
+      , Ch1_Counts &
+      , Ch2_Counts &
+      , Ch6_Counts
+   
+   use PLANCK, only: &
+    PLANCK_TEMP_FAST &
+    , PLANCK_RAD_FAST
+ 
+   use VIEWING_GEOMETRY_MODULE, only: &
+      great_circle_angle &
+      , sensor_zenith_avhrr_anchor &
+      , relative_azimuth_avhrr_anchor &
+      , SENSOR_AZIMUTH &
+      , GLINT_ANGLE &
+      , SCATTERING_ANGLE &
+      , possol
+  
 
   implicit none
   
-  !private
+  private
   public:: &
            ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL, &
            READ_AVHRR_INSTR_CONSTANTS, &
@@ -68,26 +202,6 @@ module AVHRR_MODULE
            DEFINE_1B_DATA, &
            CALCULATE_ASC_DES
 
-  private::  &
-           LAGRANGIAN_ANCHOR_INTERP, &
-           LINEAR_ANCHOR_INTERP, &
-           GNOMIC_ANCHOR_INTERP, &
-           COMPUTE_ANGLE_ANCHORS, &
-           i4word_to_string, &
-           REF_CAL,  &
-           THERM_CAL, &
-           COMPUTE_NEW_THERM_CAL_COEF,  &
-           MAKE_I4WORD, &
-           MAKE_I2WORD, &
-           UNPACK_AVHRR_HEADER_RECORD, &
-           UNPACK_AVHRR_HEADER_RECORD_KLM, &
-           UNPACK_AVHRR_DATA_RECORD,  &
-           UNPACK_AVHRR_DATA_RECORD_KLM, &
-           UNPACK_AVHRR_DATA_RECORD_AAPP, &
-           CREATE_AVHRR_ARRAYS, &
-           RESET_AVHRR_ARRAYS, &
-           DESTROY_AVHRR_ARRAYS, &
-           CONVERT_AVHRR_COUNTS_SINGLE_GAIN
 
   !--- variable declaration
   integer(kind=int2), dimension(5,10), private:: Space_Count_Temp

@@ -270,7 +270,7 @@ oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o  numerical_tools_
 
 constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o
-avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o 
+avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o constant.o file_tools.o
 
 #acha & cloud base
 acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \
@@ -356,13 +356,20 @@ globsnow_read_routines.o: globsnow_read_routines.f90 constant.o numerical_tools_
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o numerical_tools_mod.o  file_tools.o avhrr_module.o constant.o date_tools_mod.o
 hdf_params.o: version.inc hdf_params.f90  constant.o
 hdf_read_module.o: hdf_read_module.f90 Compare_Float_Numbers.o constant.o file_tools.o Message_Handler.o clavrx_message_module.o
+iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
+iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o numerical_tools_mod.o file_tools.o date_tools_mod.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 constant.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
+level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o
+modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
 netcdf_read_module.o: netcdf_read_module.f90 constant.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
+numerical_tools_mod.o: numerical_tools_mod.f90 constant.o   
+nwp_common.o: nwp_common.f90 pixel_common.o constant.o cx_science_tools_mod.o  numerical_tools_mod.o  
 pixel_common.o: pixel_common.f90 constant.o clavrx_message_module.o
-pixel_routines.o: pixel_routines.f90 constant.o numerical_tools_mod.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o file_tools.o calibration_constants.o
+pixel_routines.o: pixel_routines.f90 constant.o pixel_common.o nwp_common.o planck.o algorithm_constants.o land_sfc_properties.o sfc_prop_umd.o  
 precision.o:precision.f90
+seviri_module.o: seviri_module.f90 pixel_common.o constant.o numerical_tools_mod.o goes_module.o file_tools.o viewing_geometry_module.o
 user_options.o: user_options.f90 constant.o pixel_common.o file_tools.o clavrx_message_module.o 
 
 
@@ -371,26 +378,18 @@ Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 
 
 
-
-
-
-
-
-modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
-iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
-iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
 mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o avhrr_module.o
 fy2_module.o: fy2_module.f90 pixel_common.o constant.o numerical_tools_mod.o mtsat_module.o goes_module.o file_tools.o viewing_geometry_module.o
 coms_module.o: coms_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
 ncep_reanalysis.o: ncep_reanalysis.f90 constant.o  nwp_common.o sort_module.o numerical_tools_mod.o
-numerical_tools_mod.o: numerical_tools_mod.f90 constant.o
+
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
-nwp_common.o: nwp_common.f90 pixel_common.o constant.o cx_science_tools_mod.o
-level2.o: level2.f90 constant.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o  avhrr_module.o cx_prd_mod.o
+
+
 
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o numerical_tools_mod.o
 reposition_module.o: reposition_module.f90 constant.o numerical_tools_mod.o pixel_common.o reposnx.o date_tools_mod.o
-seviri_module.o: seviri_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
+
 oca_module.o: oca_module.f90  file_tools.o constant.o pixel_common.o
 sfc_emiss.o: sfc_emiss.f90 constant.o numerical_tools_mod.o
 scaling_params.o: scaling_params.f90 constant.o

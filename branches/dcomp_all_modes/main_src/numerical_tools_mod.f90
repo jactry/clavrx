@@ -47,12 +47,13 @@
 !   COMPUTE_MEDIAN_SEGMENT
 !
 !--------------------------------------------------------------------------------------
- module NUMERICAL_TOOLS_MOD
-  use CONSTANTS
+module NUMERICAL_TOOLS_MOD
+   use CONSTANTS
   
-  implicit none
-  private
-  public:: LOCATE, &
+   implicit none
+   private
+   
+   public:: LOCATE, &
           
            INVERT_MATRIX,  &
            INVERT_2x2,  &

@@ -176,7 +176,8 @@ module LEVEL2_ROUTINES
       , reff_aux &
       , Beta_11um_85um_Tropo_Rtm &
       , Beta_11um_12um_Tropo_Rtm &
-      , aot1
+      , aot1 &
+      , csv_file
       
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &
@@ -451,11 +452,12 @@ CONTAINS
       ! first segment
       if (Segment_Number == 1) then
 
-         !--- place algorithm cvs tags into global strings for output find better place for this..
+         !--- place algorithm svn tags into global strings for output find better place for this..
          call SET_CLOUD_TYPE_VERSION()
          
          !- read csv file
-         if (.not. prd % is_set) call prd % read_products()
+        
+         if (.not. prd % is_set) call prd % read_products(csv_file)
            
          Num_Scans_Level2_Hdf = 0
          ! - these values come from globals

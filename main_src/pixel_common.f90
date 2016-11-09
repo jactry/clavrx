@@ -445,6 +445,7 @@ module PIXEL_COMMON
   ! CLAVR-x file list variables
   !---------------------------------------------------------------------------------
   character(len=1020),public,save:: Ancil_Data_Dir
+  character(len=1020),public,save:: CSV_File
   character(len=1020),public,save:: Gfs_Data_Dir
   character(len=1020),public,save:: Ncep_Data_Dir
   character(len=1020),public,save:: Cfsr_Data_Dir

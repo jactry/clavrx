@@ -1677,7 +1677,7 @@ contains
    
  
       
-      INTEGER(kind=int4) :: id  
+    
          !--- determine 16 day period and its string value
          iperiod16 = 16 * ((Image%Start_Doy-1) / 16) + 1 
          write(Day_String,fmt="(i3.3)") iperiod16

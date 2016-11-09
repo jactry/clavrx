@@ -493,7 +493,7 @@ subroutine INVERT_DIAGONAL(A,A_inv,ierr)
   real, dimension(:,:), intent(out):: A_inv
   integer, intent(out):: ierr
   integer:: i, j, ni, nj
-  real:: determinant
+  
   real:: zero
 
   zero = epsilon(zero)

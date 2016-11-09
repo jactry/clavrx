@@ -1,5 +1,4 @@
 
-
 ! $Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
@@ -10,6 +9,7 @@
 ! PURPOSE: Routines for creating, writing and closing pixel-level output files
 !
 ! DESCRIPTION: 
+!      One public Subroutine: WRITE_PIXEL_HDF_RECORDS
 !
 ! AUTHORS:
 !  Andrew Heidinger, Andrew.Heidinger@noaa.gov
@@ -181,8 +181,7 @@ module LEVEL2_ROUTINES
       
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &
-      cloud_type_version &
-      , SET_CLOUD_TYPE_VERSION
+      cloud_type_version
       
    use clavrx_message_module, only: &
        mesg
@@ -203,6 +202,9 @@ module LEVEL2_ROUTINES
    use cx_string_tools_mod, only: &
     is_numeric
     
+   use cx_scale_tools_mod, only: &
+      scale_i2_rank2 &
+      , scale_i1_rank2
    
    
    implicit none
@@ -219,23 +221,20 @@ module LEVEL2_ROUTINES
    ! the following variables taken from process_avhrr_clavr
    !----------------------------------------------------------------------
    !--- hdf specific variables
-   integer(kind=int4),private:: Dim_Id
-
-   integer(kind=int4),parameter,private:: Sds_Rank_1d = 1
-   integer(kind=int4),dimension(1),private:: Sds_Dims_1d
-   integer(kind=int4),parameter,private:: Sds_Rank_2d = 2
-   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Dims_2d
-   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Start_2d
-   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Stride_2d
-   integer(kind=int4),dimension(Sds_Rank_2d),private:: Sds_Edge_2d
-   integer,dimension(Sds_Rank_2d),private:: Sds_Chunk_Size_2d
+   integer(kind=int4) :: Dim_Id
+   integer(kind=int4),parameter :: SDS_RANK_1D = 1
+   integer(kind=int4),dimension(1) :: Sds_Dims_1d
+   integer(kind=int4),parameter :: SDS_RANK_2D = 2
+   integer(kind=int4),dimension(SDS_RANK_2D) :: Sds_Dims_2d
+   integer(kind=int4),dimension(SDS_RANK_2D) :: Sds_Start_2d
+   integer(kind=int4),dimension(SDS_RANK_2D) :: Sds_Stride_2d
+   integer(kind=int4),dimension(SDS_RANK_2D) :: Sds_Edge_2d
+   integer,dimension(SDS_RANK_2D) :: Sds_Chunk_Size_2d
 
    character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
-   character(len=18), private, parameter:: coordinates_string = "longitude latitude" 
+   character(len=18), private, parameter:: COORDINATES_STRING = "longitude latitude" 
    integer(kind=int4),  save:: Num_Scans_Level2_Hdf
   
-
-   
    type(prd_dtype), save, target :: prd
    type(prd_individual_dtype), pointer:: prd_i
    
@@ -427,12 +426,9 @@ CONTAINS
       implicit none
       integer, intent(in) :: segment_number
       
-   
       integer:: Istatus
       integer:: Line_Idx
-
-      ! HDF function declarations
-      integer:: sfwdata
+      
       integer (kind=int1), allocatable :: data_dim1_dtype1(:)
       integer (kind=int4), allocatable :: data_dim1_dtype3(:)
       real(kind=real4), allocatable ::data_dim1_dtype4(:)
@@ -453,7 +449,7 @@ CONTAINS
       if (Segment_Number == 1) then
 
          !--- place algorithm svn tags into global strings for output find better place for this..
-         call SET_CLOUD_TYPE_VERSION()
+        
          
          !- read csv file
         
@@ -550,7 +546,7 @@ CONTAINS
                   case(1)
                   if (prd_i % scaling == 1 ) then
                      
-                     call SCALE_VECTOR_I1_RANK2(data_dim2_dtype_r4,prd_i % scaling &
+                     call scale_i1_rank2(data_dim2_dtype_r4  &
                         ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,One_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
@@ -563,7 +559,7 @@ CONTAINS
                   
                   case(2)
                   if (prd_i % scaling == 1) then
-                     call SCALE_VECTOR_I2_RANK2(data_dim2_dtype_r4,prd_i % scaling &
+                     call scale_i2_rank2(data_dim2_dtype_r4  &
                         ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,Two_Byte_dummy)
                      Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d, &
@@ -616,9 +612,9 @@ CONTAINS
     
    end subroutine WRITE_PIXEL_HDF_RECORDS
 
+   ! ----------------------------------------------------------------
    !
-   !
-   !
+   ! ----------------------------------------------------------------
    subroutine add_global_attributes ( id_file)
        
        use pixel_common, only: &
@@ -685,27 +681,25 @@ CONTAINS
       end function hdf_timestamp 
         
    end subroutine add_global_attributes
+   
    !============================================================================
    !
-   !   returns flename toot for level-2 output from level-1b filename
+   !   returns filename root for level-2 output from level-1b filename
    !
    function file_root_from_l1b (filename, sensor,spatial_resolution_meters) result (file_root)
       character (len = *), intent(in) :: filename
       character (len = *), intent(in) :: sensor
-      integer, intent(in)::spatial_resolution_meters
-      
+      integer, intent(in)::spatial_resolution_meters      
       character (len = 200) :: file_root
-      
       character(len=4):: l1b_ext
       integer:: ipos,ilen
       
       !--- make a file name base for output
       File_Root = trim (filename)
   
-
       !--- special processing for modis - remove hdf suffix
       l1b_ext = file_root(len_trim(file_root)-3:len_trim(file_root))
-      if (trim(l1b_ext) == ".hdf") then
+      if (trim(l1b_ext) == '.hdf') then
          file_root = file_root(1:len_trim(file_root)-4)
       endif
 
@@ -728,7 +722,7 @@ CONTAINS
       ! endif
 
       !--- do this for GOES names which are named goesxx_1_year_jday_hour.area
-      if (trim(Sensor) == 'GOES-IL-IMAGER' .or.  &
+      if(trim(Sensor) == 'GOES-IL-IMAGER' .or.  &
          trim(Sensor) == 'GOES-MP-IMAGER' .or.  &
          trim(Sensor) == 'COMS-IMAGER' .or.  &
          trim(Sensor) == 'MTSAT-IMAGER' .or.  &
@@ -757,46 +751,6 @@ CONTAINS
       file_root = 'clavrx_' // file_root
          
    end function file_root_from_l1b
-   
-   subroutine SCALE_VECTOR_I1_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i1)
-      real, dimension(:,:), intent(in):: temp_r4
-      integer, intent(in):: iscaled
-      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
-      integer(kind=int1), dimension(:,:),  intent(out):: temp_i1
-      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
-
-      scratch_r4 = 0.0
-      !---- linear
-      if (iscaled == 1) then
-         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))
-         temp_i1 = one_byte_min + scratch_r4 * (one_byte_max - one_byte_min)
-      endif
-
-      !--- set scaled missing values
-      where (temp_r4 == unscaled_missing)
-         temp_i1 = missing_value_int1
-      end where
-   end subroutine SCALE_VECTOR_I1_RANK2
-   
-   
-   subroutine SCALE_VECTOR_I2_RANK2(temp_r4,iscaled,unscaled_min,unscaled_max,unscaled_missing,temp_i2)
-      real, dimension(:,:), intent(in):: temp_r4
-      integer, intent(in):: iscaled
-      real, intent(in):: unscaled_min, unscaled_max, unscaled_missing
-      integer(kind=int2), dimension(:,:), intent(out):: temp_i2
-      real, dimension(size(temp_r4,1),size(temp_r4,2)):: scratch_r4
-        
-      !---- linear
-      if (iscaled == 1) then
-         scratch_r4 = min(1.0,max(0.0,(temp_r4 - unscaled_min)/(unscaled_max - unscaled_min)))       
-         temp_i2 = two_byte_min + scratch_r4 * (two_byte_max - two_byte_min)
-      endif
-
-      !--- set scaled missing values
-      where (temp_r4 == unscaled_missing)
-         temp_i2 = missing_value_int2
-      end where
-   end subroutine SCALE_VECTOR_I2_RANK2
    
 
 end module LEVEL2_ROUTINES

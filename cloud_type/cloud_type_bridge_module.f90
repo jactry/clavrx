@@ -133,7 +133,7 @@ contains
    !  record svn version as a global variable for output to hdf
    !====================================================================
    subroutine Set_CLOUD_TYPE_VERSION()
-      Cloud_Type_Version = "$Id: cloud_type_bridge_module.f90 412 2014-06-11 17:35:49Z heidinger $"
+      Cloud_Type_Version = "$Id:$"
    end subroutine Set_CLOUD_TYPE_VERSION
 
 
@@ -155,8 +155,9 @@ contains
       
       
       ! ------  Executable  ------------------------------------
-      if (First_Call .eqv. .true.) then
+      if (First_Call) then
         call MESG('Cloud Type starts ', color = 46)
+         call SET_CLOUD_TYPE_VERSION()
       endif
 
       ice_prob = -999.0

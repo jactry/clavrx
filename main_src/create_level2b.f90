@@ -106,7 +106,7 @@ program create_level2b
    integer :: num_sds_input
    integer :: num_sds_output
    character(len=240) :: file
-   integer :: natt,nsds
+   integer :: natt
    
    character ( len = MAXNCNAM), allocatable :: att_name(:)
    character ( len = MAXNCNAM), allocatable :: sds_name(:) 
@@ -124,7 +124,7 @@ program create_level2b
    integer, allocatable :: ielem_out(:,:)
    integer, allocatable :: iline_out(:,:)
    
-   logical, allocatable :: idx_name(:)
+   
    integer :: isds, isds2
    integer (kind = int4) :: num_points
    integer(kind=int4), allocatable:: Input_Update_Index(:)
@@ -139,16 +139,12 @@ program create_level2b
    real(kind=real4), allocatable:: Scaled_Sds_Data_Output(:,:)
    real(kind=real4), allocatable::  Output_Array_1d(:)
    
-   real(kind=real4), allocatable:: data_real(:)
-   
-   real(kind = 8), pointer :: pp(:,:)
    integer :: test
-   type(cx_att_type) :: att
    integer :: ftype
    real , allocatable :: temp_i1_2d(:,:)
    
    integer :: id_file
-   integer :: id 
+   
    character (len =1024 ) :: file_level2b
    
    integer :: sds_dims_2d (2), sds_start_2d(2), sds_stride_2d(2)
@@ -167,8 +163,7 @@ program create_level2b
    
    real :: scale_factor
    real :: Add_Offset
-   integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
-   
+   integer(kind=int2),allocatable :: Two_Byte_dummy(:,:)
    
    integer :: start_year
    integer :: end_year
@@ -177,14 +172,11 @@ program create_level2b
    real :: start_time
    real :: end_time
    integer :: wmo_sat
-   integer :: l1b  
+     
+   type(date_type) :: date_file_start, date_file_end
+   type(date_type) :: date_cnf_start, date_cnf_end 
    
-   type(date_type) :: date_file_start,date_file_end
-   type(date_type) :: date_cnf_start,date_cnf_end
-   
-   character(len=36) :: machine
-   
-   ! ++++++++
+   ! ----------------------------------------------------------- 
    
    !  check users desires
    N_Command_Line_Args = iargc()
@@ -193,7 +185,7 @@ program create_level2b
    if (N_Command_Line_Args .GE. 3) call getarg(3, cnf % Overlap)
    if (N_Command_Line_Args .EQ. 4) call getarg(4, cnf % Geo)
    if (N_Command_Line_Args .GT. 4 ) then
-      print *,  "COMP_ASC_DES_LEVEL2b ERROR:: Unexpected Number of Command Line Arguments"
+      print *,  "CREATE LEVEL2B ERROR:: Unexpected Number of Command Line Arguments"
    end if 
    
    compress_flag = 1
@@ -221,15 +213,14 @@ program create_level2b
       read(unit=config_file_lun,fmt=*) cnf % Lat_South, cnf % Lat_North, cnf % Dlat_output
    endif
    
+   ! - set time objects
    call date_cnf_start.set_date_with_doy (cnf % Year, cnf % Jday &
          , 0,0 )
          
    call date_cnf_end.set_date_with_doy (cnf % Year, cnf % Jday &
          ,23, 59)
-         
    
-  
-   
+   ! - read input files
    do ifile = 1, N_FILES_MAX
        read(unit=config_file_lun,fmt=*,iostat=ios) cnf % File_Input(ifile)
        if (ios /= 0) then
@@ -247,6 +238,7 @@ program create_level2b
    has_dateline = .false.
    
    if ( cnf % lon_west .gt. cnf % lon_east ) has_dateline = .true.
+   
    if (has_dateline) then
       nlon_out = nint( ((360.0 + cnf % Lon_East) - cnf % Lon_West) / cnf % dlon_Output) + 1
    else 
@@ -334,9 +326,7 @@ program create_level2b
       if (is_first_file) then
          allocate (sds_out(Num_Sds_Input))                 
       end if
-      
-      ! - read some inportant variables to check if we have right data before read all..
-      
+            
       allocate(Lon_Inp(Num_Elem_Inp,Num_Line_Inp))
       allocate(Lat_Inp(Num_Elem_Inp,Num_Line_Inp))
       allocate(Gap_Inp(Num_Elem_Inp,Num_Line_Inp))
@@ -347,7 +337,6 @@ program create_level2b
       
       gap_inp = temp_i1_2d .GT. 0
       
-
       allocate ( Ielem_out(nlon_out,nlat_out))
       allocate ( Iline_out(nlon_out,nlat_out))
       
@@ -380,10 +369,8 @@ program create_level2b
                ipoint = max(0,min(Ipoint,Num_Points))
                Ielem = Ielem_Out(Ilon,Ilat)
                Iline = Iline_Out(Ilon,Ilat)
-               Input_Update_Index(Ipoint) = Ielem + (Iline-1)*num_elem_inp
-              
-               Output_Update_Index(Ipoint) = Ilon + (Ilat-1)*Nlon_Out
-              ! Scan_Element_Number_Output(Ilon,Ilat) = Ielem
+               Input_Update_Index(Ipoint) = Ielem + (Iline-1)* num_elem_inp
+               Output_Update_Index(Ipoint) = Ilon + (Ilat-1) * Nlon_Out
             end if
          end do
       end do
@@ -403,8 +390,8 @@ program create_level2b
          if ( sds_name (isds) .EQ. 'bad_scan_line_flag' ) cycle
          if ( sds_name (isds) .EQ. 'asc_des_flag' ) cycle
          sds_out(isds) % set = .true.
-         if (is_First_file) then
-            
+         
+         if (is_First_file) then           
             sds_out(isds) % name = sds_name (isds)
             allocate (sds_out(isds) % data (Nlon_Out, Nlat_Out) )
             sds_out(isds) % data = -999.
@@ -427,7 +414,6 @@ program create_level2b
             
             sds_out(isds) % data  = reshape(Output_Array_1d, (/Nlon_Out,Nlat_Out/))
              
-
          end do
           
       end do
@@ -442,10 +428,7 @@ program create_level2b
 
       is_first_file = .false.
    end do file_loop
-   
-   
-   
-   
+
    ! ++++++++++++++ write in level2b  +++++++++++++++++
    ! we have now all data stored in sds_out
    ! lets write this in level2b file

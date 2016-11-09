@@ -289,7 +289,8 @@ CONTAINS
       logical :: change_switch
       integer :: ch_switch
                                         
-      File_1b_Root = file_root_from_l1b ( file_1b, Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
+      File_1b_Root = file_root_from_l1b ( file_1b, &
+         Sensor%Sensor_Name,Sensor%Spatial_Resolution_Meters)
 
       !
       sds_dims_2d = (/ Image%Number_Of_Elements, Image%Number_Of_Lines /)

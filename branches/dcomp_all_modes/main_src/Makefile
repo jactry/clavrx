@@ -146,7 +146,6 @@ clavrxorb_objs = process_clavrx.o \
                  flip_rtc.o \
                  re4flip.o \
                  big_endian.o \
-                 get_lun.o \
                  seviri_module.o \
 	         oca_module.o \
 	         reposnx.o \
@@ -197,6 +196,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_read_ascii_line_mod.o \
                  csv_mod.o  \
                  cx_prd_mod.o \
+                 get_lun.o \
 					  file_tools.o \
                  cx_science_tools_mod.o \
                  cx_array_tools_mod.o
@@ -379,9 +379,9 @@ Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 modis_module.o: modis_module.f90 constant.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
 iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
-mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o get_lun.o file_tools.o avhrr_module.o
-fy2_module.o: fy2_module.f90 pixel_common.o constant.o numerical_tools_mod.o mtsat_module.o get_lun.o goes_module.o file_tools.o viewing_geometry_module.o
-coms_module.o: coms_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o get_lun.o file_tools.o viewing_geometry_module.o
+mtsat_module.o: mtsat_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o avhrr_module.o
+fy2_module.o: fy2_module.f90 pixel_common.o constant.o numerical_tools_mod.o mtsat_module.o goes_module.o file_tools.o viewing_geometry_module.o
+coms_module.o: coms_module.f90 pixel_common.o constant.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
 ncep_reanalysis.o: ncep_reanalysis.f90 constant.o  nwp_common.o sort_module.o numerical_tools_mod.o
 numerical_tools_mod.o: numerical_tools_mod.f90 constant.o
 viewing_geometry_module.o: viewing_geometry_module.f90 constant.o

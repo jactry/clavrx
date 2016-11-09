@@ -27,87 +27,87 @@
 !--------------------------------------------------------------------------------------
 module GOES_MODULE
 
-use PIXEL_COMMON, only: &
-   CH1_COUNTS &
-   , image &
-   , ch &
-   , scan_time &
-   , nav &
-   , geo &
-   , sensor &
-   , temporary_file_name &
-   , temporary_data_dir &
-   , scan_number &
-   , space_mask &
-   , ileap &
-   , two_byte_temp &
-   , bad_pixel_mask &
-   , temp_pix_array_1 &
-   , sfc &
-   , ref_ch1_dark_composite &
-   , dark_composite_name &
-   , Goes_Scan_Line_Flag &
-   , dark_comp_data_dir &
-   , line_idx_min_segment &
-   , number_of_temporary_files &
-   , l1b_bzip2 &
-   , l1b_gzip
+   use PIXEL_COMMON, only: &
+      CH1_COUNTS &
+      , image &
+      , ch &
+      , scan_time &
+      , nav &
+      , geo &
+      , sensor &
+      , temporary_file_name &
+      , temporary_data_dir &
+      , scan_number &
+      , space_mask &
+      , ileap &
+      , two_byte_temp &
+      , bad_pixel_mask &
+      , temp_pix_array_1 &
+      , sfc &
+      , ref_ch1_dark_composite &
+      , dark_composite_name &
+      , Goes_Scan_Line_Flag &
+      , dark_comp_data_dir &
+      , line_idx_min_segment &
+      , number_of_temporary_files &
+      , l1b_bzip2 &
+      , l1b_gzip
    
-use CALIBRATION_CONSTANTS, only: &
-   planck_nu &
-   , planck_a1 &
-   , planck_a2 &
-   , sat_name &
-   , solar_ch20 &
-   , solar_ch20_nu &
-   , ew_ch20 &
-   , launch_date &
-   , ch1_dark_count &
-   , ch2_dark_count &
-   , ch1_gain_low_0 &
-   , ch1_degrad_low_1 &
-   , ch1_degrad_low_2
+   use CALIBRATION_CONSTANTS, only: &
+      planck_nu &
+      , planck_a1 &
+      , planck_a2 &
+      , sat_name &
+      , solar_ch20 &
+      , solar_ch20_nu &
+      , ew_ch20 &
+      , launch_date &
+      , ch1_dark_count &
+      , ch2_dark_count &
+      , ch1_gain_low_0 &
+      , ch1_degrad_low_1 &
+      , ch1_degrad_low_2
    
-use PLANCK, only: &
-   PLANCK_TEMP_FAST &
-   , PLANCK_TEMP_FAST
+   use PLANCK, only: &
+      PLANCK_TEMP_FAST &
+      , PLANCK_TEMP_FAST
    
-use NUMERICAL_TOOLS_MOD, only: &
-   compute_median
+   use NUMERICAL_TOOLS_MOD, only: &
+      compute_median
 
- use date_tools_mod, only: &
+   use date_tools_mod, only: &
          leap_year_fct 
    
-use FILE_TOOLS, only: &
-   get_lun &
-   , file_test
+   use FILE_TOOLS, only: &
+      get_lun &
+      , file_test
    
-use VIEWING_GEOMETRY_MODULE, only: &
-   SENSOR_ZENITH &
-   , SENSOR_AZIMUTH &
-   , RELATIVE_AZIMUTH & 
-   , glint_angle &
-   , scattering_angle &
-   , possol
+   use VIEWING_GEOMETRY_MODULE, only: &
+      SENSOR_ZENITH &
+      , SENSOR_AZIMUTH &
+      , RELATIVE_AZIMUTH & 
+      , glint_angle &
+      , scattering_angle &
+      , possol
    
    
-use CONSTANTS, only: &
-   real4 &
-   , int1 &
-   , int2 &
-   , int4 &
-   , real8 &
-   , sym &
-   , EXE_PROMPT &
-   , Missing_value_real4 &
-   , DTOR &
-   , Missing_value_int2
+   use CONSTANTS, only: &
+      real4 &
+      , int1 &
+      , int2 &
+      , int4 &
+      , real8 &
+      , sym &
+      , EXE_PROMPT &
+      , Missing_value_real4 &
+      , DTOR &
+      , Missing_value_int2
 
-implicit none
+   implicit none
 
 
-
-public:: GET_GOES_HEADERS, &
+   private
+   public:: GET_GOES_HEADERS, &
          READ_GOES, &
          READ_GOES_SNDR, &
          GET_IMAGE_FROM_AREAFILE, &
@@ -121,7 +121,7 @@ public:: GET_GOES_HEADERS, &
          POST_PROCESS_GOES_DARK_COMPOSITE, &
          DARK_COMPOSITE_CLOUD_MASK
 
-private:: GET_GOES_NAVIGATION, &
+   private:: GET_GOES_NAVIGATION, &
           CALIBRATE_GOES_REFLECTANCE, &
           READ_IMGR_RP, &
           READ_IMGR_SIN, &
@@ -132,30 +132,30 @@ private:: GET_GOES_NAVIGATION, &
           INST2E, &
           GPOINT, &
           TIME50
-private
 
- integer(kind=int4), public, parameter:: Goes_Xstride = 1    ! goes is oversampled by 50% in x
- integer(kind=int4), public, parameter:: Goes_Sndr_Xstride = 1
- integer(kind=int4), private, parameter:: Num_4km_Scans_Goes_Fd = 2704 
- integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
- integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
- real, private, save:: Scan_rate    !scan rate in millsec / line
- character(len=1020), save, public:: Dark_Comp_Data_Dir_Temp
- integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
- integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
- real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
+   ! goes is   oversampled by 50% in x
+   integer(kind=int4), public, parameter:: Goes_Xstride = 1    
+   integer(kind=int4), public, parameter:: Goes_Sndr_Xstride = 1
+   integer(kind=int4), private, parameter:: Num_4km_Scans_Goes_Fd = 2704 
+   integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
+   integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
+   real, private, save:: Scan_rate    !scan rate in millsec / line
+   character(len=1020), save, public:: Dark_Comp_Data_Dir_Temp
+   integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
+   integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
+   real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
 
-!-----------------------------------------------------------------------------
-! define derived data types used for holding GVAR parameters
-!-----------------------------------------------------------------------------
-!
-!C	Imager ONA repeat sinusoid T.
-!C
+   !-----------------------------------------------------------------------------
+   ! define derived data types used for holding GVAR parameters
+   !-----------------------------------------------------------------------------
+   !
+   !C	Imager ONA repeat sinusoid T.
+   !C
 
-        type, public:: IMGR_SIN 
-          integer :: mag_Sinu
-          integer :: phase_ang_Sinu
-        end type IMGR_SIN
+   type, public:: IMGR_SIN 
+      integer :: mag_Sinu
+      integer :: phase_ang_Sinu
+   end type IMGR_SIN
 !C
 !C	Imager repeat monomial T.
 !C
@@ -332,24 +332,25 @@ end type AREA_STRUCT
 
 contains
 
-!----------------------------------------------------------------
-! read the goes constants into memory
-!-----------------------------------------------------------------
-subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
- character(len=*), intent(in):: Instr_Const_File
- integer:: ios0, erstat
- integer:: Instr_Const_lun
+   !----------------------------------------------------------------
+   ! read the goes constants into memory
+   !-----------------------------------------------------------------
+   subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
+      character(len=*), intent(in):: Instr_Const_File
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+      Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old" &
+          ,position="rewind",action="read",iostat=ios0)
 
- erstat = 0
- if (ios0 /= 0) then
-    erstat = 19
-    print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
-    stop 19
- endif
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
+         stop 19
+      endif
 
   read(unit=Instr_Const_lun,fmt="(a3)") sat_name
   read(unit=Instr_Const_lun,fmt=*) Solar_Ch20

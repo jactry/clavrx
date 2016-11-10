@@ -25,22 +25,19 @@ module cx_sds_io_mod
       module procedure cx_sds_read_2d_real &
           , cx_sds_read_1d_real &
           , cx_sds_read_3d_real &
-          , cx_sds_read_5d_real
+          , cx_sds_read_5d_real &
+          , cx_sds_read_7d_real
    
    end interface
-   
-   
-   
-   
+
    public :: cx_sds_finfo
    public :: cx_sds_read_raw
    public :: cx_sds_read    
    public :: cx_sds_att
    public :: cx_att_int
    public :: cx_att_r4 
-   contains
    
-
+   contains
    ! ------------------------------------------------------------------------------
    !
    ! ------------------------------------------------------------------------------
@@ -213,6 +210,7 @@ module cx_sds_io_mod
       real :: missing(1)
       real :: scaled(1)
       
+      ! -------------
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
       
@@ -224,17 +222,11 @@ module cx_sds_io_mod
       missing = ps.get_att('SCALED_MISSING')
       scaled = ps.get_att('SCALED')
      
-      
-      
       allocate(temp_1d(pd.nval))
       call pd.transform_to_real(temp_1d)
-      
-      
-       
-      
+   
       dim1 = pd%dimsize(1)
-     
-     
+    
       allocate(out(dim1))
       
       out = reshape (temp_1d,(/dim1/))
@@ -246,16 +238,16 @@ module cx_sds_io_mod
       where (reshape (temp_1d,(/dim1/)) .EQ. missing(1))
          out = -999.
       end where
-      
-      
-      
+    
       cx_sds_read_1d_real = 0
 9999 continue
       !cx_sds_read_2d_real = -1 
    
    end function cx_sds_read_1d_real   
    
-   
+   !
+   !
+   !
    function cx_sds_read_2d_real ( file, sds_name, out )
       integer :: cx_sds_read_2d_real
       character (len = * ), intent(in) :: file
@@ -281,16 +273,10 @@ module cx_sds_io_mod
       slope = ps.get_att('scale_factor')
       missing = ps.get_att('SCALED_MISSING')
       scaled = ps.get_att('SCALED')
-      
-     
     
-     
-     
       allocate(temp_1d(pd.nval))
       call pd.transform_to_real(temp_1d)
-      
-     
-      
+   
       dim1 = pd%dimsize(1)
       dim2 = pd%dimsize(2)
      
@@ -304,15 +290,15 @@ module cx_sds_io_mod
       where (reshape (temp_1d,(/dim1,dim2/)) .EQ. missing(1))
          out = -999.
       end where
-      
-     
-      
+  
       cx_sds_read_2d_real = 0
 9999 continue
       !cx_sds_read_2d_real = -1 
    
    end function cx_sds_read_2d_real
-   
+   !
+   !
+   !
    function cx_sds_read_3d_real ( file, sds_name, out )
       integer :: cx_sds_read_3d_real
       character (len = * ), intent(in) :: file
@@ -370,6 +356,10 @@ module cx_sds_io_mod
    
    end function cx_sds_read_3d_real
    
+   
+   ! -------------------------------------------------------
+   !
+   ! -------------------------------------------------------
    function cx_sds_read_5d_real ( file, sds_name, out )
       integer :: cx_sds_read_5d_real
       character (len = * ), intent(in) :: file
@@ -429,5 +419,66 @@ module cx_sds_io_mod
       !cx_sds_read_2d_real = -1 
    
    end function cx_sds_read_5d_real
-
+   
+   
+   ! -------------------------------------------------------
+   !
+   ! -------------------------------------------------------
+   function cx_sds_read_7d_real ( file, sds_name, out )
+      integer :: cx_sds_read_7d_real
+      character (len = * ), intent(in) :: file
+      character (len = * ), intent(in) :: sds_name 
+      real, intent(out), allocatable :: out(:,:,:,:,:,:,:)
+      real, allocatable:: temp_1d(:)
+      type ( cx_sds_type), allocatable, target :: sds(:)
+      type ( cx_sds_data_type), pointer :: pd
+      type ( cx_sds_type), pointer :: ps
+      integer :: test
+      integer :: dim1, dim2, dim3, dim4 , dim5, dim6, dim7
+      real :: add_offset(1)
+      real :: slope (1)
+      real :: missing(1)
+      real :: scaled(1)
+      
+      
+      if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
+      pd=>sds(1).data
+      ps=>sds(1)
+      
+      add_offset = ps.get_att('add_offset')
+      slope = ps.get_att('scale_factor')
+      missing = ps.get_att('SCALED_MISSING')
+      scaled = ps.get_att('SCALED')
+      
+      allocate(temp_1d(pd.nval))
+      call pd.transform_to_real(temp_1d)
+    
+      dim1 = pd%dimsize(1)
+      dim2 = pd%dimsize(2)
+      dim3 = pd%dimsize(3)
+      dim4 = pd%dimsize(4)
+      dim5 = pd%dimsize(5)
+      dim6 = pd%dimsize(6)
+      dim7 = pd%dimsize(7)      
+      
+     
+      allocate(out(dim1,dim2,dim3,dim4,dim5,dim6,dim7))
+      
+      out = reshape (temp_1d,(/dim1,dim2,dim3,dim4,dim5,dim6,dim7/))
+      if (scaled(1) .EQ. 1) then
+         out = out * slope(1) + add_offset(1) 
+      end if 
+      
+     
+      where (reshape (temp_1d,(/dim1,dim2,dim3,dim4,dim5,dim6,dim7/)) .EQ. missing(1))
+         out = -999.
+      end where
+      
+     
+      
+      cx_sds_read_7d_real = 0
+9999 continue
+      !cx_sds_read_2d_real = -1 
+   
+   end function cx_sds_read_7d_real
 end module

@@ -323,8 +323,7 @@ CONTAINS
          idx_1 = index(prd_i % name_clavrx,'Ch')
          idx_2 = index(prd_i % name_clavrx,'ch(')
          idx_3 = index(prd_i % name_clavrx,'ch')
-         
-        
+                 
          if ( idx_1 .NE. 0) then
             substring_1 =  prd_i % name_clavrx(idx_1+2:idx_1+2)
             substring_2 =  prd_i % name_clavrx(idx_1+2:idx_1+3)
@@ -341,18 +340,12 @@ CONTAINS
          
          if (change_switch) then
              
-            if (is_numeric(substring_2) .and. substring_2(2:) .ne. ')') then
-               
+            if (is_numeric(substring_2) .and. substring_2(2:) .ne. ')') then              
                read (substring_2,'(I2)') ch_switch
-               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.
-               
-              
-               
-            else if (is_numeric(substring_1)) then
-              
+               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.   
+            else if (is_numeric(substring_1)) then             
                read (substring_1,'(I1)') ch_switch
-               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.
-            
+               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.            
             end if
             
          end if
@@ -388,24 +381,16 @@ CONTAINS
                   add_offset = prd_i%act_min - scale_factor * two_byte_min 
                   call add_att ( prd_i % sds_id, 'scaled_missing',Missing_Value_Int2 )  
                end select   
-              
-            
+                          
                call add_att ( prd_i % sds_id, 'add_offset', add_offset)
                call add_att ( prd_i % sds_id, 'scale_factor',scale_factor)
                call add_att ( prd_i % sds_id, 'actual_min',prd_i%act_min )
                call add_att ( prd_i % sds_id, 'actual_max',prd_i%act_max )
             end if
-              
-  
- 
          end if
       end do
-
-      
-     
+ 
    end subroutine DEFINE_HDF_FILE_STRUCTURES
-   
-
 
    !====================================================================
    ! SUBROUTINE Name: WRITE_PIXEL_HDF_RECORDS
@@ -429,20 +414,18 @@ CONTAINS
       integer:: Istatus
       integer:: Line_Idx
       
-      integer (kind=int1), allocatable :: data_dim1_dtype1(:)
-      integer (kind=int4), allocatable :: data_dim1_dtype3(:)
-      real(kind=real4), allocatable ::data_dim1_dtype4(:)
-      integer ( kind = int1), allocatable :: data_dim2_dtype1(:,:)
-      integer ( kind = int2), allocatable :: data_dim2_dtype2(:,:)
-      integer (kind=int4), allocatable :: data_dim2_dtype3(:,:)
-      real(kind=real4), allocatable ::data_dim2_dtype4(:,:)
+      integer(kind=int1), allocatable :: data_dim1_dtype1(:)
+      integer(kind=int4), allocatable :: data_dim1_dtype3(:)
+      real(kind=real4), allocatable :: data_dim1_dtype4(:)
+      integer(kind = int1), allocatable :: data_dim2_dtype1(:,:)
+      integer( kind = int2), allocatable :: data_dim2_dtype2(:,:)
+      integer(kind=int4), allocatable :: data_dim2_dtype3(:,:)
+      real(kind=real4), allocatable :: data_dim2_dtype4(:,:)
       real(kind=real4), allocatable :: data_dim1_dtype_r4(:)
       real(kind=real4), allocatable :: data_dim2_dtype_r4(:,:)
-      
-      
-      character (len=40) :: name
-      integer(kind=int2), dimension(:,:),allocatable :: Two_Byte_dummy
-      integer(kind=int1), dimension(:,:),allocatable :: One_Byte_dummy
+     
+      integer(kind=int2), allocatable :: Two_Byte_dummy(:,:)
+      integer(kind=int1), allocatable :: One_Byte_dummy(:,:)
       integer :: ii
       
       ! first segment
@@ -450,20 +433,17 @@ CONTAINS
 
          !--- place algorithm svn tags into global strings for output find better place for this..
         
-         
-         !- read csv file
-        
+         !- read csv file        
          if (.not. prd % is_set) call prd % read_products(csv_file)
-           
-         Num_Scans_Level2_Hdf = 0
-         ! - these values come from globals
          
-         call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
-                              Dir_Level2, &
-                              Image%Level1b_Name)
-      
-      
-      
+         !- initialize  
+         Num_Scans_Level2_Hdf = 0
+         
+         call DEFINE_HDF_FILE_STRUCTURES( &
+                     Image % Number_Of_Lines, &
+                     Dir_Level2, &
+                     Image%Level1b_Name)
+
       end if
       !-----------------------------------------------------------------------
       ! Get time of each scan line and convert to scale
@@ -486,7 +466,7 @@ CONTAINS
       Sds_Edge_2d(1) = Image%Number_Of_Elements
       Sds_Edge_2d(2) = min(Image%Number_Of_Lines_Read_This_Segment,Image%Number_Of_Lines - Sds_Start_2d(2))
 
-      if (Sds_Edge_2d(2) <= 0) then
+      if (Sds_Edge_2d(2) .LE. 0) then
          return
       end if
 
@@ -515,23 +495,20 @@ CONTAINS
          allocate ( data_dim2_dtype_r4 (sds_edge_2d(1),sds_edge_2d(2)))
         
          do ii = 1, prd % num_products
-            prd_i => prd % product(ii)
-            name = prd_i %name
+            prd_i => prd % product(ii)            
              
             if ( prd_i % switch ) then
                include 'level2_assign.inc'
                
                select case (prd_i % dim)
                   
-               case ( 1 )
-               
+               case(1)               
                   select case (prd_i % dtype)
                   case(1)
                   Istatus = write_sds ( prd_i % sds_id, Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype1 ) + Istatus
                   
-                  case(3)
-                         
+                  case(3)                       
                   Istatus = write_sds ( prd_i % sds_id,Sds_Start_2d(2), Sds_Stride_2d(2),          &
                          Sds_Edge_2d(2), data_dim1_dtype3 ) + Istatus
                   
@@ -544,8 +521,7 @@ CONTAINS
                case(2)
                   select case (prd_i % dtype)
                   case(1)
-                  if (prd_i % scaling == 1 ) then
-                     
+                  if (prd_i % scaling == 1 ) then                     
                      call scale_i1_rank2(data_dim2_dtype_r4  &
                         ,prd_i % act_min,prd_i % act_max,Missing_Value_Real4 &
                         ,One_Byte_dummy)
@@ -588,17 +564,15 @@ CONTAINS
          if ( allocated ( data_dim2_dtype4)) deallocate ( data_dim2_dtype4)
          if ( allocated ( two_byte_dummy)) deallocate (two_byte_dummy)
          if ( allocated ( one_byte_dummy)) deallocate (one_byte_dummy)
-         
-         
-         !--- check for and report errors
-         
+                  
+         !--- check for and report errors         
          if (Istatus /= 0) then
             print *, EXE_PROMPT, MOD_PROMPT, "Error writing to level2 file: ", Istatus
             stop
          endif
          
          ! final segment, write global attributes and closing.. bye bye
-         if ( segment_number == Image%Number_Of_Segments) then 
+         if ( segment_number .EQ. Image%Number_Of_Segments) then 
            
             call add_global_attributes ( id_file) 
             do ii = 1, prd % num_products

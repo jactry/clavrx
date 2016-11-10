@@ -31,9 +31,7 @@ module cx_prd_mod
       character(len=30) :: unit
       character (len=300):: long_name
       character (len=300):: flagvalues
-      
       integer(kind=int4) :: Sds_Id
-      
    end type prd_individual_dtype
    
    type prd_dtype
@@ -59,7 +57,6 @@ module cx_prd_mod
       character(len=*), intent(in), optional :: csv_file
       
       integer :: line_num
-      
       integer  (kind = int4) :: csv_file_status
       integer  (kind = int4) :: csv_record_status
       integer  (kind = int4) :: csv_file_unit
@@ -71,9 +68,7 @@ module cx_prd_mod
       
       
       if ( present( csv_file)) call this.set_csv_file (csv_file)
-      
-     
-      
+ 
       call csv_file_line_count ( this % csv_filename, line_num )
       this % num_products = line_num - 1
       allocate (this % product (this % num_products))
@@ -91,7 +86,7 @@ module cx_prd_mod
          this % product(i_prd) % switch = trim(rec_arr(1))  .eq. "1"
               
          read ( rec_arr(2), * ) this%product(i_prd)%name 
-         read( rec_arr(3), '(a)' ) this%product(i_prd)%name_clavrx
+         read ( rec_arr(3), '(a)' ) this%product(i_prd)%name_clavrx
          read ( rec_arr(4), * ) this%product(i_prd)%dim
          read ( rec_arr(5), * ) this%product(i_prd)%dtype
          read ( rec_arr(6), * ) this%product(i_prd)%scaling

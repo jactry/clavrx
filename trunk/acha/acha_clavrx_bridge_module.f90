@@ -102,7 +102,6 @@ module ACHA_CLAVRX_BRIDGE
    !---  read CVS Tag from ACHA and store in global variable for output
    !-----------------------------------------------------------------------
    call SET_ACHA_VERSION(Acha_Version)
-
   
    First_Call = .false.
 
@@ -119,7 +118,9 @@ module ACHA_CLAVRX_BRIDGE
      Input%Bt_12um =>  null()
      Input%Bt_133um =>  null()
      Input%Rad_67um =>  null()
+     Input%Rad_85um =>  null()
      Input%Rad_11um =>  null()
+     Input%Rad_12um =>  null()
      Input%Rad_133um =>  null()
      Input%Rad_136um =>  null()
      Input%Rad_139um =>  null()
@@ -203,6 +204,11 @@ module ACHA_CLAVRX_BRIDGE
      Output%Packed_Meta_Data =>  null()
      Output%Processing_Order  =>  null()
      Output%Inversion_Flag  =>  null()
+     Output%Ec_67um =>  null()
+     Output%Ec_85um =>  null()
+     Output%Ec_11um =>  null()
+     Output%Ec_12um =>  null()
+     Output%Ec_133um =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -296,6 +302,11 @@ module ACHA_CLAVRX_BRIDGE
    Output%Packed_Meta_Data => ACHA%Packed_Meta_Data_Flags
    Output%Processing_Order  => ACHA%Processing_Order
    Output%Inversion_Flag  => ACHA%Inversion_Flag
+   Output%Ec_67um => ACHA%Ec_67um
+   Output%Ec_85um => ACHA%Ec_85um
+   Output%Ec_11um => ACHA%Ec_11um
+   Output%Ec_12um => ACHA%Ec_12um
+   Output%Ec_133um => ACHA%Ec_133um
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -329,7 +340,9 @@ module ACHA_CLAVRX_BRIDGE
    Input%Bt_139um => ch(35)%Bt_Toa
    Input%Bt_142um => ch(36)%Bt_Toa
    Input%Rad_67um => ch(27)%Rad_Toa
+   Input%Rad_85um => ch(29)%Rad_Toa
    Input%Rad_11um => ch(31)%Rad_Toa
+   Input%Rad_12um => ch(32)%Rad_Toa
    Input%Rad_133um => ch(33)%Rad_Toa
    Input%Rad_136um => ch(34)%Rad_Toa
    Input%Rad_139um => ch(35)%Rad_Toa

@@ -331,6 +331,11 @@ module PIXEL_COMMON
     real(kind=real4):: Success_Fraction
     real(kind=real4):: Processed_Count
     real(kind=real4):: Valid_Count
+    real (kind=real4), dimension(:,:), allocatable:: Ec_67um
+    real (kind=real4), dimension(:,:), allocatable:: Ec_85um
+    real (kind=real4), dimension(:,:), allocatable:: Ec_11um
+    real (kind=real4), dimension(:,:), allocatable:: Ec_12um
+    real (kind=real4), dimension(:,:), allocatable:: Ec_133um
   end type acha_definition
 
   type :: ccl_definition
@@ -2076,7 +2081,12 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Packed_Meta_Data_Flags(dim1,dim2)) 
     allocate(ACHA%Conv_Cld_Prob(dim1,dim2)) 
     allocate(ACHA%Supercooled_Cld_Prob(dim1,dim2)) 
-    allocate(ACHA%base_Quality_Flag(dim1,dim2))
+    allocate(ACHA%Base_Quality_Flag(dim1,dim2))
+    allocate(ACHA%Ec_67um(dim1,dim2))
+    allocate(ACHA%Ec_85um(dim1,dim2))
+    allocate(ACHA%Ec_11um(dim1,dim2))
+    allocate(ACHA%Ec_12um(dim1,dim2))
+    allocate(ACHA%Ec_133um(dim1,dim2))
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2128,6 +2138,11 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Conv_Cld_Prob = Missing_Value_Real4
     ACHA%Supercooled_Cld_Prob = Missing_Value_Real4
     ACHA%base_Quality_Flag = 1   ! Missing_Value_Int1
+    ACHA%Ec_67um = Missing_Value_Real4
+    ACHA%Ec_85um = Missing_Value_Real4
+    ACHA%Ec_11um = Missing_Value_Real4
+    ACHA%Ec_12um = Missing_Value_Real4
+    ACHA%Ec_133um = Missing_Value_Real4
 
 end subroutine RESET_ACHA_ARRAYS
 
@@ -2173,6 +2188,11 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Conv_Cld_Prob) 
     deallocate(ACHA%Supercooled_Cld_Prob) 
     deallocate(ACHA%base_Quality_Flag)
+    deallocate(ACHA%Ec_67um) 
+    deallocate(ACHA%Ec_85um) 
+    deallocate(ACHA%Ec_11um) 
+    deallocate(ACHA%Ec_12um) 
+    deallocate(ACHA%Ec_133um) 
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------

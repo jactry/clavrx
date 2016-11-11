@@ -427,6 +427,7 @@ CONTAINS
       integer(kind=int2), allocatable :: Two_Byte_dummy(:,:)
       integer(kind=int1), allocatable :: One_Byte_dummy(:,:)
       integer :: ii
+      character (len =50) :: name
       
       ! first segment
       if (Segment_Number == 1) then

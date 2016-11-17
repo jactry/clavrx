@@ -67,6 +67,8 @@ module AWG_CLOUD_HEIGHT
            INVERT_MATRIX, ACHA_FETCH_PIXEL_NWP_RTM, &
            LOCATE, acha_diag_struct
 
+  use ACHA_MICROPHYSICAL_MODULE
+
   implicit none
 
   public:: AWG_CLOUD_HEIGHT_ALGORITHM
@@ -461,6 +463,12 @@ module AWG_CLOUD_HEIGHT
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+
+  
+  !---------------------------------------------------------------------------
+  !-- setup microphysical models
+  !---------------------------------------------------------------------------
+  call SETUP_ICE_MICROPHYSICAL_MODEL(Input%WMO_Id)
 
   !---------------------------------------------------------------------------
   !-- Acha Mode set to  -1, determine based on channels
@@ -1844,7 +1852,6 @@ endif     ! ---------- end of data check
 
  !---- null profile pointers each time 
  call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
-
 
  !---close diagnostic output
  if (lun_diag > 0) then

@@ -16,12 +16,6 @@
  ! include other include files to this file
  !-----------------------------------------------------------
 
- !--- water cloud microphysical model
- include 'acha_water_cloud_microphysical_model.inc'
-
- !--- ice cloud microphysical model
- include 'acha_ice_cloud_microphysical_model.inc'
-
  !--- clear-sky covariance terms
  include 'acha_clear_sky_covariances.inc'
 
@@ -30,6 +24,8 @@
  !------------------------------------------------------------
  integer(kind=INT4), parameter, private:: idiag_output = 0 ! (0=off, 1=on)
  real(kind=real4), parameter, private:: count_diag_max = 1000   ! maximum number of diagnostic files allowed
+ integer(kind=INT4), parameter, private:: habit_idx = 8   ! 1(droxtals),2(solid_bullet_rosettes),3(hollow_bullet_rosettes),  $
+             ! 4(solid_columns),5(hollow_columns),6(plates),7(aggregate_columns),8(small_aggregate_plates),9(large_aggregate_plates),10(empirical)
 
  !--- set starting index value
  integer(kind=INT4), parameter, private:: Element_Idx_Min = 1

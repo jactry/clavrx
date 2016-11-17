@@ -317,6 +317,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Smooth_Nwp_Fields_Flag = Smooth_Nwp_Flag
    Input%Process_Undetected_Cloud_Flag = Process_Undetected_Cloud_Flag
    Input%Sensor_Resolution_KM = Sensor%Spatial_Resolution_Meters/1000.0
+   Input%WMO_Id = Sensor%WMO_Id
    Input%Chan_Idx_67um = 27      !channel number for 6.7
    Input%Chan_Idx_85um = 29      !channel number for 8.5
    Input%Chan_Idx_11um = 31      !channel number for 11

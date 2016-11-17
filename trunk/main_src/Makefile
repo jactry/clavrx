@@ -116,6 +116,7 @@ clavrxorb_objs = process_clavrx.o \
                  calibration_constants.o \
                  algorithm_constants.o \
                  acha_module.o \
+                 acha_microphysical_module.o \
 		 acha_clavrx_services_module.o \
 		 acha_clavrx_bridge_module.o \
                  acha_comp_module.o \
@@ -275,10 +276,13 @@ acha_clavrx_bridge_module.o: acha_clavrx_bridge_module.f90 acha_module.o acha_co
                   acha_shadow_module.o acha_clavrx_services_module.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_clavrx_bridge_module.f90                    
 
-acha_module.o: acha_module.f90 acha_clavrx_services_module.o
+acha_module.o: acha_module.f90 acha_clavrx_services_module.o acha_microphysical_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_module.f90
 
-acha_comp_module.o: acha_comp_module.f90 acha_clavrx_services_module.o
+acha_microphysical_module.o: acha_microphysical_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_microphysical_module.f90
+
+acha_comp_module.o: acha_comp_module.f90 acha_clavrx_services_module.o acha_microphysical_module.f90
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(ACHA)/acha_comp_module.f90
 
 acha_shadow_module.o: acha_shadow_module.f90

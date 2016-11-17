@@ -67,8 +67,9 @@ module ACHA_SERVICES_MOD
  integer (kind=int4):: Smooth_Nwp_Fields_Flag
  integer (kind=int4):: Process_Undetected_Cloud_Flag
  real (kind=real4):: Sensor_Resolution_KM
+ integer (kind=int4):: WMO_Id
 
- !-- local pointers that point to global variables
+ !-- local channel indices
  integer:: Chan_Idx_67um
  integer:: Chan_Idx_85um
  integer:: Chan_Idx_11um
@@ -86,6 +87,7 @@ module ACHA_SERVICES_MOD
  integer:: Chan_On_139um
  integer:: Chan_On_142um
 
+ !-- local pointers that point to global variables
  integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Bt_67um
  real, dimension(:,:), pointer:: Bt_85um

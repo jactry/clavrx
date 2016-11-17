@@ -15,6 +15,8 @@ module ACHA_COMP
            acha_output_struct,acha_symbol_struct, &
            acha_input_struct
 
+  use ACHA_MICROPHYSICAL_MODULE
+
   implicit none
 
   public:: ACHA_COMP_ALGORITHM
@@ -84,6 +86,12 @@ module ACHA_COMP
    ! Initialization
    !-------------------------------------------------------------------------
    symbol = symbol_in   !symbol is a module-wide variable
+
+  !---------------------------------------------------------------------------
+  !-- setup microphysical models
+  !---------------------------------------------------------------------------
+  call SETUP_ICE_MICROPHYSICAL_MODEL(Input%WMO_Id)
+
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
    !--------------------------------------------------------------------------

@@ -3,6 +3,8 @@ module ACHA_MICROPHYSICAL_MODULE
 
 implicit none
 
+integer, parameter, private:: Habit_Idx = 7
+
 public:: SETUP_ICE_MICROPHYSICAL_MODEL
 
 
@@ -88,99 +90,17 @@ public:: SETUP_ICE_MICROPHYSICAL_MODEL
    select case(WMO_Id)
 
      case(3:5,200:223,706:708)  !avhrr, goes-im
-        A_BETA_11um_67um_FIT_ICE =    1.05090
-        B_BETA_11um_67um_FIT_ICE =   -0.01637
-        A_BETA_11um_85um_FIT_ICE =    1.50435
-        B_BETA_11um_85um_FIT_ICE =   -0.48727
-        A_BETA_11um_133um_FIT_ICE =    0.03881
-        B_BETA_11um_133um_FIT_ICE =    1.01095
-        A_Re_Beta_FIT_ICE =  -10.93929
-        B_Re_Beta_FIT_ICE =   24.70588
-        C_Re_Beta_FIT_ICE =  -17.89442
-        D_Re_Beta_FIT_ICE =    4.61250
-        A_Qe_065um_FIT_ICE =    2.24008
-        B_Qe_065um_FIT_ICE =   -0.22154
-        C_Qe_065um_FIT_ICE =    0.05269
-        A_Qe_11um_FIT_ICE =   -0.25110
-        B_Qe_11um_FIT_ICE =    2.30356
-        C_Qe_11um_FIT_ICE =   -0.59547
-        A_wo_11um_FIT_ICE =   -0.00289
-        B_wo_11um_FIT_ICE =    0.58422
-        C_wo_11um_FIT_ICE =   -0.16068
-        A_g_11um_FIT_ICE =    0.63572
-        B_g_11um_FIT_ICE =    0.39030
-        C_g_11um_FIT_ICE =   -0.10809
+        include 'acha_ice_cloud_microphysical_model_noaa19.inc'
 
      case(173)  !goes-np 3 chan
-        A_BETA_11um_67um_FIT_ICE =    2.17382
-        B_BETA_11um_67um_FIT_ICE =   -1.10936
-        A_BETA_11um_85um_FIT_ICE =    2.94619
-        B_BETA_11um_85um_FIT_ICE =   -1.88164
-        A_BETA_11um_133um_FIT_ICE =    0.10731
-        B_BETA_11um_133um_FIT_ICE =    0.93036
-        A_Re_Beta_FIT_ICE = -153.69155
-        B_Re_Beta_FIT_ICE =  403.09795
-        C_Re_Beta_FIT_ICE = -353.06676
-        D_Re_Beta_FIT_ICE =  103.95095
-        A_Qe_065um_FIT_ICE =    2.24167
-        B_Qe_065um_FIT_ICE =   -0.22339
-        C_Qe_065um_FIT_ICE =    0.05323
-        A_Qe_11um_FIT_ICE =    0.18912
-        B_Qe_11um_FIT_ICE =    1.95161
-        C_Qe_11um_FIT_ICE =   -0.52995
-        A_wo_11um_FIT_ICE =    0.03123
-        B_wo_11um_FIT_ICE =    0.52542
-        C_wo_11um_FIT_ICE =   -0.13696
-        A_g_11um_FIT_ICE =    0.62559
-        B_g_11um_FIT_ICE =    0.40393
-        C_g_11um_FIT_ICE =   -0.11503
+        include 'acha_ice_cloud_microphysical_model_abi.inc'
 
      case(224) ! VIIRS 
-        A_BETA_11um_67um_FIT_ICE =    0.95539
-        B_BETA_11um_67um_FIT_ICE =    0.07902
-        A_BETA_11um_85um_FIT_ICE =    1.40457
-        B_BETA_11um_85um_FIT_ICE =   -0.39163
-        A_BETA_11um_133um_FIT_ICE =   -0.02641
-        B_BETA_11um_133um_FIT_ICE =    1.08386
-        A_Re_Beta_FIT_ICE =   -8.46300
-        B_Re_Beta_FIT_ICE =   18.82502
-        C_Re_Beta_FIT_ICE =  -13.19113
-        D_Re_Beta_FIT_ICE =    3.34004
-        A_Qe_065um_FIT_ICE =    2.25389
-        B_Qe_065um_FIT_ICE =   -0.23436
-        C_Qe_065um_FIT_ICE =    0.05582
-        A_Qe_11um_FIT_ICE =   -0.34298
-        B_Qe_11um_FIT_ICE =    2.42808
-        C_Qe_11um_FIT_ICE =   -0.63351
-        A_wo_11um_FIT_ICE =    0.00705
-        B_wo_11um_FIT_ICE =    0.59694
-        C_wo_11um_FIT_ICE =   -0.16978
-        A_g_11um_FIT_ICE =    0.64054
-        B_g_11um_FIT_ICE =    0.37904
-        C_g_11um_FIT_ICE =   -0.10336
+        include 'acha_ice_cloud_microphysical_model_viirs.inc'
+
      case default  !MODIS
-        A_BETA_11um_67um_FIT_ICE =    1.54172
-        B_BETA_11um_67um_FIT_ICE =   -0.49635
-        A_BETA_11um_85um_FIT_ICE =    2.17033
-        B_BETA_11um_85um_FIT_ICE =   -1.14189
-        A_BETA_11um_133um_FIT_ICE =    0.11629
-        B_BETA_11um_133um_FIT_ICE =    0.93978
-        A_Re_Beta_FIT_ICE =  -39.22696
-        B_Re_Beta_FIT_ICE =   97.67353
-        C_Re_Beta_FIT_ICE =  -81.09035
-        D_Re_Beta_FIT_ICE =   23.08110
-        A_Qe_065um_FIT_ICE =    2.24408
-        B_Qe_065um_FIT_ICE =   -0.23005
-        C_Qe_065um_FIT_ICE =    0.05641
-        A_Qe_11um_FIT_ICE =   -0.02317
-        B_Qe_11um_FIT_ICE =    2.12770
-        C_Qe_11um_FIT_ICE =   -0.57337
-        A_wo_11um_FIT_ICE =   -0.01382
-        B_wo_11um_FIT_ICE =    0.57493
-        C_wo_11um_FIT_ICE =   -0.15368
-        A_g_11um_FIT_ICE =    0.59489
-        B_g_11um_FIT_ICE =    0.46862
-        C_g_11um_FIT_ICE =   -0.14131
+        include 'acha_ice_cloud_microphysical_model_modis.inc'
+
    end select
 
    end subroutine SETUP_ICE_MICROPHYSICAL_MODEL

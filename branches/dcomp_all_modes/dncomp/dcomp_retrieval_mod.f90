@@ -38,6 +38,7 @@ contains
          , rel_azi &
          , cld_temp &
          , cld_phase &
+         , snow_class &
          , rad_abv_cld &
          , rad_clear_toc  &
          , sensor &
@@ -70,6 +71,7 @@ contains
       real, intent ( in ) :: cld_temp
       
       logical, intent ( in ) :: cld_phase 
+      integer, intent(in) :: snow_class
       real, intent ( in ) :: rad_abv_cld 
       real, intent ( in ) :: rad_clear_toc
       character ( len = * ) , intent ( in ) :: sensor

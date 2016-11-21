@@ -68,7 +68,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real :: rad_clear_sky_toa_ch20 = -999.
    real :: rad_clear_sky_toc_ch20 = -999.
   
-   real     , allocatable :: air_mass_array (:,:)
+   real , allocatable :: air_mass_array (:,:)
   
    logical  , allocatable :: cloud_array(:,:)
    logical  , allocatable :: obs_array(:,:)
@@ -113,10 +113,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real :: sat_zen 
    
    integer :: line_idx 
-   integer ::  elem_idx
-   
-   
-   
+   integer :: elem_idx
    integer :: tried 
    integer :: success
    
@@ -279,27 +276,21 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             alb_unc_sfc  (chn_idx) = 0.05
                         
             if ( chn_idx == 20 ) then
-               chn20_block : associate ( rad_toa => input % rad (chn_idx)  % d (elem_idx, line_idx) &
-                        & , sun_earth_dist => input % sun_earth_dist &
-                        & , solar_irradiance => input % solar_irradiance (chn_idx) )
-               
-                 
-                  trans_total (chn_idx) = input % trans_ac_nadir ( chn_idx) % d  (elem_idx, line_idx)
-                  rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) / ( solar_irradiance / input % sun_earth_dist ** 2 )
-                  refl_toc( chn_idx ) = rad_toa * rad_to_refl_factor
+              
+               trans_total (chn_idx) = input % trans_ac_nadir ( chn_idx) % d  (elem_idx, line_idx)
+               rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) / ( input % solar_irradiance (chn_idx) / input % sun_earth_dist ** 2 )
+               refl_toc( chn_idx ) = input % rad (chn_idx)  % d (elem_idx, line_idx) * rad_to_refl_factor
                   
-               end associate chn20_block
-               
-               rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( 20) % d (elem_idx, line_idx) 
-               rad_clear_sky_toa_ch20 = input % rad_clear_sky_toa ( 20) % d (elem_idx, line_idx)
+               rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( chn_idx) % d (elem_idx, line_idx) 
+               rad_clear_sky_toa_ch20 = input % rad_clear_sky_toa ( chn_idx) % d (elem_idx, line_idx)
                
             end if
              
          end do loop_chn
 
-         ! - NIR                
+         ! - vis               
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
-         obs_unc ( 1 ) =   trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         obs_unc ( 1 ) = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
          
          alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
          alb_unc ( 1) = 0.05
@@ -339,7 +330,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , sat_zen &
                 & , rel_azi &
                 & , cld_temp &
-                & , water_phase_array ( elem_idx, line_idx)  &
+                & , water_phase_array ( elem_idx, line_idx) &
+                & , input % snow_class % d ( elem_idx, line_idx) &
                 & , rad_clear_sky_toc_ch20 &
                 & , rad_clear_sky_toa_ch20 &
                 & , trim(sensorname_from_wmoid(input % sensor_wmo_id)) &

@@ -23,7 +23,17 @@ contains
       print*,'start muri algorithm'
       print*,inp
       
+      
+      ! - first prepare input
+      ! - - done
+      
+      
+      ! - now prepare the table
+      
+      
+      
       call muri_forward ( 4.5, fwd)
+      
       
       
       

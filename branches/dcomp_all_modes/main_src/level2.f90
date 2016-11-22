@@ -263,22 +263,22 @@ CONTAINS
    !       the HDF global attributes are put into the various HDF files 
    !
    !====================================================================
-   subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
+   subroutine DEFINE_HDF_FILE_STRUCTURES( &
       Dir_Level2, &
       File_1b )
       
       implicit none
 
       character(len=*), intent(in):: Dir_Level2
-      integer(kind=int4), intent(in):: Num_Scans
+      
       character(len=*), intent(in):: File_1b
       character(len=1020):: File_1b_root
       character(len=1020):: File_Level2
-      character(len=1020):: Long_Name_Temp
+     
       
       integer:: erstat, istatus
       
-      integer :: ssd_dims_2d(2)
+     
  
       integer :: ii
       real(kind=real4):: Add_Offset
@@ -412,7 +412,7 @@ CONTAINS
       integer, intent(in) :: segment_number
       
       integer:: Istatus
-      integer:: Line_Idx
+    
       
       integer(kind=int1), allocatable :: data_dim1_dtype1(:)
       integer(kind=int4), allocatable :: data_dim1_dtype3(:)
@@ -441,7 +441,6 @@ CONTAINS
          Num_Scans_Level2_Hdf = 0
          
          call DEFINE_HDF_FILE_STRUCTURES( &
-                     Image % Number_Of_Lines, &
                      Dir_Level2, &
                      Image%Level1b_Name)
 
@@ -496,7 +495,8 @@ CONTAINS
          allocate ( data_dim2_dtype_r4 (sds_edge_2d(1),sds_edge_2d(2)))
         
          do ii = 1, prd % num_products
-            prd_i => prd % product(ii)            
+            prd_i => prd % product(ii)  
+            name =  prd_i % name         
              
             if ( prd_i % switch ) then
                include 'level2_assign.inc'

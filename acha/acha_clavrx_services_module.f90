@@ -67,8 +67,9 @@ module ACHA_SERVICES_MOD
  integer (kind=int4):: Smooth_Nwp_Fields_Flag
  integer (kind=int4):: Process_Undetected_Cloud_Flag
  real (kind=real4):: Sensor_Resolution_KM
+ integer (kind=int4):: WMO_Id
 
- !-- local pointers that point to global variables
+ !-- local channel indices
  integer:: Chan_Idx_67um
  integer:: Chan_Idx_85um
  integer:: Chan_Idx_11um
@@ -86,6 +87,7 @@ module ACHA_SERVICES_MOD
  integer:: Chan_On_139um
  integer:: Chan_On_142um
 
+ !-- local pointers that point to global variables
  integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Bt_67um
  real, dimension(:,:), pointer:: Bt_85um
@@ -96,7 +98,9 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Bt_139um
  real, dimension(:,:), pointer:: Bt_142um
  real, dimension(:,:), pointer:: Rad_67um
+ real, dimension(:,:), pointer:: Rad_85um
  real, dimension(:,:), pointer:: Rad_11um
+ real, dimension(:,:), pointer:: Rad_12um
  real, dimension(:,:), pointer:: Rad_133um
  real, dimension(:,:), pointer:: Rad_136um
  real, dimension(:,:), pointer:: Rad_139um
@@ -174,6 +178,7 @@ module ACHA_SERVICES_MOD
    real, dimension(:), pointer :: Atm_Trans_Prof_139um
    real, dimension(:), pointer :: Atm_Trans_Prof_142um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_67um
+   real, dimension(:), pointer :: Black_Body_Rad_Prof_85um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_11um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_12um
    real, dimension(:), pointer :: Black_Body_Rad_Prof_133um
@@ -219,6 +224,11 @@ end type acha_rtm_nwp_struct
    real, dimension(:,:), pointer:: Lower_Tc
    real, dimension(:,:), pointer:: Lower_Zc
    real, dimension(:,:), pointer:: Cost
+   real, dimension(:,:), pointer:: Ec_67um
+   real, dimension(:,:), pointer:: Ec_85um
+   real, dimension(:,:), pointer:: Ec_11um
+   real, dimension(:,:), pointer:: Ec_12um
+   real, dimension(:,:), pointer:: Ec_133um
    integer (kind=int1), dimension(:,:), pointer:: Qf
    integer (kind=int1), dimension(:,:,:), pointer:: OE_Qf
    integer (kind=int1), dimension(:,:), pointer :: Packed_Qf
@@ -379,6 +389,7 @@ end type acha_rtm_nwp_struct
    if (Acha_Input%Chan_On_85um == sym%YES) then
      Acha_RTM_NWP%Atm_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Rad_Atm_Profile
      Acha_RTM_NWP%Atm_Trans_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Trans_Atm_Profile
+     Acha_RTM_NWP%Black_Body_Rad_Prof_85um => Rtm(Inwp,Jnwp)%d(Ivza)%ch(29)%Rad_BB_Cloud_Profile
    endif
 
    if (Acha_Input%Chan_On_11um == sym%YES) then

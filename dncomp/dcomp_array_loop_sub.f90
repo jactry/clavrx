@@ -18,8 +18,9 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    use dncomp_trans_atmos_mod,only: &
     trans_atm_above_cloud  
       
-   
+  
    implicit none
+   
    type (dncomp_in_type) , intent(in) :: input
    type (dncomp_out_type) :: output
    integer , intent(in) , optional :: debug_mode_user
@@ -48,10 +49,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
  
    real :: gas_coeff (3)
    
-   real :: trans_ozone ( N_CHAN )
    real :: trans_unc_ozone ( N_CHAN )
    real :: trans_rayleigh ( N_CHAN )
-   real :: trans_wvp ( N_CHAN )
    real :: trans_unc_wvp ( N_CHAN )
    real :: trans_total ( N_CHAN )
       

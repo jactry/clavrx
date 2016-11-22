@@ -67,6 +67,8 @@ module AWG_CLOUD_HEIGHT
            INVERT_MATRIX, ACHA_FETCH_PIXEL_NWP_RTM, &
            LOCATE, acha_diag_struct
 
+  use ACHA_MICROPHYSICAL_MODULE
+
   implicit none
 
   public:: AWG_CLOUD_HEIGHT_ALGORITHM
@@ -297,7 +299,7 @@ module AWG_CLOUD_HEIGHT
   integer:: Param_Idx
   integer:: i
   integer:: Singular_Flag
-  integer:: Ilev
+  integer:: Lev_Idx
   integer:: Inwp
   integer:: Jnwp
   integer:: Inwp_x
@@ -309,7 +311,6 @@ module AWG_CLOUD_HEIGHT
   integer:: jlrc
   integer:: Iter_Idx
   integer:: ierror
-  integer:: Lev_Idx
   integer:: Pass_Idx
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
@@ -463,6 +464,12 @@ module AWG_CLOUD_HEIGHT
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
+  
+  !---------------------------------------------------------------------------
+  !-- setup microphysical models
+  !---------------------------------------------------------------------------
+  call SETUP_ICE_MICROPHYSICAL_MODEL(Input%WMO_Id)
+
   !---------------------------------------------------------------------------
   !-- Acha Mode set to  -1, determine based on channels
   !---------------------------------------------------------------------------
@@ -563,6 +570,11 @@ module AWG_CLOUD_HEIGHT
   Output%Qf = 0
   Meta_Data_Flags = 0
   Output%Inversion_Flag = 0
+  if (Input%Chan_On_67um == symbol%YES) Output%Ec_67um = MISSING_VALUE_REAL4
+  if (Input%Chan_On_85um == symbol%YES) Output%Ec_85um = MISSING_VALUE_REAL4
+  if (Input%Chan_On_11um == symbol%YES) Output%Ec_11um = MISSING_VALUE_REAL4
+  if (Input%Chan_On_12um == symbol%YES) Output%Ec_12um = MISSING_VALUE_REAL4
+  if (Input%Chan_On_133um == symbol%YES) Output%Ec_133um = MISSING_VALUE_REAL4
   
   !--------------------------------------------------------------------------
   ! spatial processing pixels
@@ -653,8 +665,6 @@ module AWG_CLOUD_HEIGHT
                                         Box_Half_Width_Lower, &
                                         MISSING_VALUE_REAL4, &
                                         Temperature_Lower_Cloud_Apriori)
-!Diag%Array_2 = Temperature_Lower_Cloud_Apriori
-
    endif
 
    !--------------------------------------------------------------------------
@@ -1308,8 +1318,8 @@ Retrieval_Loop: do
   Tc_Temp = x(1)
   Ts_Temp = x(4)
 
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Ilev,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
   !--- compute 11um radiative transfer terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
@@ -1493,7 +1503,7 @@ Retrieval_Loop: do
   endif
 
   !---------------------------------------------------------
-  ! update retrieved vOutput%Ector
+  ! update retrieved Output%Vector
   !---------------------------------------------------------
   x = x + Delta_X
 
@@ -1560,7 +1570,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
                                Output%Lower_Tc(Elem_Idx,Line_Idx), &
                                Output%Lower_Zc(Elem_Idx,Line_Idx), &
-                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+                               Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif
 
 
@@ -1593,7 +1603,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx),&
-                            Ilev,ierror,NWP_Profile_Inversion_Flag)
+                            Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
  !--- check for NWP profile inversion and set meta data flag.
  if (NWP_Profile_Inversion_Flag == 1) then
@@ -1644,7 +1654,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
        endif
 
        !--- compute pressure
-       call KNOWING_Z_COMPUTE_T_P(Output%Pc(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc(Elem_Idx,Line_Idx),Ilev)
+       call KNOWING_Z_COMPUTE_T_P(Output%Pc(Elem_Idx,Line_Idx),R4_Dummy,Output%Zc(Elem_Idx,Line_Idx),Lev_Idx)
 
        !--- set meta data flag
        Meta_Data_Flags(7) = symbol%YES
@@ -1714,7 +1724,7 @@ else
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx),&
                                Output%Lower_Tc(Elem_Idx,Line_Idx),&
                                Output%Lower_Zc(Elem_Idx,Line_Idx),&
-                               Ilev,ierror,NWP_Profile_Inversion_Flag)
+                               Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif 
 
  !--- set derived parameters to missing
@@ -1733,7 +1743,7 @@ else
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx), &
-                            Ilev,ierror,NWP_Profile_Inversion_Flag)
+                            Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
 endif                              !end successful retrieval if statement
 
@@ -1800,9 +1810,48 @@ endif     ! ---------- end of data check
  enddo
 
 
+ !-------------------------------------------------------------------------
+ !--- spectral cloud emissivity
+ !-------------------------------------------------------------------------
+  call KNOWING_P_COMPUTE_T_Z(Output%Pc(Elem_Idx,Line_Idx),Tc_Temp,Zc_Temp,Lev_Idx)
+
+  if (Input%Chan_On_67um == symbol%YES) then
+        Output%Ec_67um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+                             Input%Rad_67um(Elem_Idx,Line_Idx), &
+                             Input%Rad_Clear_67um(Elem_Idx,Line_Idx), &
+                             ACHA_RTM_NWP%Black_Body_Rad_Prof_67um)
+  endif
+  if (Input%Chan_On_85um == symbol%YES) then
+        Output%Ec_85um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+                             Input%Rad_85um(Elem_Idx,Line_Idx), &
+                             Input%Rad_Clear_85um(Elem_Idx,Line_Idx), &
+                             ACHA_RTM_NWP%Black_Body_Rad_Prof_85um)
+  endif
+
+  if (Input%Chan_On_11um == symbol%YES) then
+        Output%Ec_11um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+                             Input%Rad_11um(Elem_Idx,Line_Idx), &
+                             Input%Rad_Clear_11um(Elem_Idx,Line_Idx), &
+                             ACHA_RTM_NWP%Black_Body_Rad_Prof_11um)
+  endif
+
+  if (Input%Chan_On_12um == symbol%YES) then
+        Output%Ec_12um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+                             Input%Rad_12um(Elem_Idx,Line_Idx), &
+                             Input%Rad_Clear_12um(Elem_Idx,Line_Idx), &
+                             ACHA_RTM_NWP%Black_Body_Rad_Prof_12um)
+  endif
+
+  if (Input%Chan_On_133um == symbol%YES) then
+        Output%Ec_133um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+                             Input%Rad_133um(Elem_Idx,Line_Idx), &
+                             Input%Rad_Clear_133um(Elem_Idx,Line_Idx), &
+                             ACHA_RTM_NWP%Black_Body_Rad_Prof_133um)
+  endif
+
+
  !---- null profile pointers each time 
  call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
-
 
  !---close diagnostic output
  if (lun_diag > 0) then
@@ -1828,8 +1877,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
 
-!Diag%Array_1 = Temperature_Cirrus
-
 endif
 
 end do pass_loop
@@ -1844,6 +1891,9 @@ end do pass_loop
                      Output%Latitude_Pc,&
                      Output%Longitude_Pc) 
 
+!------------------------------------------------------------------------
+! clean-up and prepare for exit
+!------------------------------------------------------------------------
   !--- deallocate 2D arrays
   if (allocated(Elem_Idx_LRC)) deallocate(Elem_Idx_LRC)
   if (allocated(Line_Idx_LRC)) deallocate(Line_Idx_LRC)
@@ -1879,31 +1929,31 @@ end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 !-----------------------------------------------------------------
 ! InterpoLate within profiles knowing P to determine T and Z
 !-----------------------------------------------------------------
-subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Ilev)
+subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Lev_Idx)
 
      real, intent(in):: P
      real, intent(out):: T
      real, intent(out):: Z
-     integer, intent(out):: Ilev
+     integer, intent(out):: Lev_Idx
      real:: dp
      real:: dt
      real:: dz
 
      !--- interpoLate pressure profile
-     call LOCATE(Press_Prof_RTM,Num_Levels_RTM_Prof,P,Ilev)
-     Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
+     call LOCATE(Press_Prof_RTM,Num_Levels_RTM_Prof,P,Lev_Idx)
+     Lev_Idx = max(1,min(Num_Levels_RTM_Prof-1,Lev_Idx))
 
-     dp = Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)
-     dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
-     dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
+     dp = Press_Prof_RTM(Lev_Idx+1) - Press_Prof_RTM(Lev_Idx)
+     dt = Temp_Prof_RTM(Lev_Idx+1) - Temp_Prof_RTM(Lev_Idx)
+     dz = Hght_Prof_RTM(Lev_Idx+1) - Hght_Prof_RTM(Lev_Idx)
 
      !--- perform interpoLation
        if (dp /= 0.0) then
-           T = Temp_Prof_RTM(Ilev) + dt/dp * (P - Press_Prof_RTM(Ilev))
-           Z = Hght_Prof_RTM(Ilev) + dz/dp * (P - Press_Prof_RTM(Ilev))
+           T = Temp_Prof_RTM(Lev_Idx) + dt/dp * (P - Press_Prof_RTM(Lev_Idx))
+           Z = Hght_Prof_RTM(Lev_Idx) + dz/dp * (P - Press_Prof_RTM(Lev_Idx))
        else
-           T = Temp_Prof_RTM(Ilev)
-           Z = Hght_Prof_RTM(Ilev)
+           T = Temp_Prof_RTM(Lev_Idx)
+           Z = Hght_Prof_RTM(Lev_Idx)
        endif
 
        !--- Some negative cloud heights are observed because  of bad height
@@ -1917,31 +1967,31 @@ end subroutine KNOWING_P_COMPUTE_T_Z
 !-----------------------------------------------------------------
 ! InterpoLate within profiles knowing Z to determine T and P
 !-----------------------------------------------------------------
-subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Ilev)
+subroutine KNOWING_Z_COMPUTE_T_P(P,T,Z,Lev_Idx)
 
      real, intent(in):: Z
      real, intent(out):: T
      real, intent(out):: P
-     integer, intent(out):: Ilev
+     integer, intent(out):: Lev_Idx
      real:: dp
      real:: dt
      real:: dz
 
      !--- interpoLate pressure profile
-     call LOCATE(Hght_Prof_RTM,Num_Levels_RTM_Prof,Z,Ilev)
-     Ilev = max(1,min(Num_Levels_RTM_Prof-1,Ilev))
+     call LOCATE(Hght_Prof_RTM,Num_Levels_RTM_Prof,Z,Lev_Idx)
+     Lev_Idx = max(1,min(Num_Levels_RTM_Prof-1,Lev_Idx))
 
-     dp = Press_Prof_RTM(Ilev+1) - Press_Prof_RTM(Ilev)
-     dt = Temp_Prof_RTM(Ilev+1) - Temp_Prof_RTM(Ilev)
-     dz = Hght_Prof_RTM(Ilev+1) - Hght_Prof_RTM(Ilev)
+     dp = Press_Prof_RTM(Lev_Idx+1) - Press_Prof_RTM(Lev_Idx)
+     dt = Temp_Prof_RTM(Lev_Idx+1) - Temp_Prof_RTM(Lev_Idx)
+     dz = Hght_Prof_RTM(Lev_Idx+1) - Hght_Prof_RTM(Lev_Idx)
 
      !--- perform interpoLation
      if (dz /= 0.0) then
-           T = Temp_Prof_RTM(Ilev) + dt/dz * (Z - Hght_Prof_RTM(Ilev))
-           P = Press_Prof_RTM(Ilev) + dp/dz * (Z - Hght_Prof_RTM(Ilev))
+           T = Temp_Prof_RTM(Lev_Idx) + dt/dz * (Z - Hght_Prof_RTM(Lev_Idx))
+           P = Press_Prof_RTM(Lev_Idx) + dp/dz * (Z - Hght_Prof_RTM(Lev_Idx))
      else
-           T = Temp_Prof_RTM(Ilev)
-           P = Press_Prof_RTM(Ilev)
+           T = Temp_Prof_RTM(Lev_Idx)
+           P = Press_Prof_RTM(Lev_Idx)
      endif
 
 end subroutine KNOWING_Z_COMPUTE_T_P
@@ -2062,25 +2112,25 @@ function GENERIC_PROFILE_INTERPOLATION(X_value,X_Profile,Y_Profile)  &
      real, dimension(:), intent(in):: Y_Profile
      real:: Y_value
 
-     integer:: Ilev
+     integer:: Lev_Idx
      real:: dx
      integer:: nlevels
 
      nlevels = size(X_Profile)
 
      !--- interpoLate pressure profile
-     call LOCATE(X_Profile,nlevels,X_value,Ilev)
-     Ilev = max(1,min(nlevels-1,Ilev))
+     call LOCATE(X_Profile,nlevels,X_value,Lev_Idx)
+     Lev_Idx = max(1,min(nlevels-1,Lev_Idx))
 
-     dx = X_Profile(Ilev+1) - X_Profile(Ilev)
+     dx = X_Profile(Lev_Idx+1) - X_Profile(Lev_Idx)
 
      !--- perform interpoLation
      if (dx /= 0.0) then
-        Y_value = Y_Profile(Ilev) +  &
-                 (X_value - X_Profile(Ilev))  * &
-                 (Y_Profile(Ilev+1) - Y_Profile(Ilev)) / dx
+        Y_value = Y_Profile(Lev_Idx) +  &
+                 (X_value - X_Profile(Lev_Idx))  * &
+                 (Y_Profile(Lev_Idx+1) - Y_Profile(Lev_Idx)) / dx
      else
-          Y_value = Y_Profile(Ilev)
+          Y_value = Y_Profile(Lev_Idx)
      endif
 
 end function GENERIC_PROFILE_INTERPOLATION
@@ -2122,6 +2172,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
                               Convergence_Criteria,Delta_X_Max, &
                               y,f,x,x_Ap,K,Sy,Sa_inv, &
                               Sx,AKM,Delta_x,Conv_Test,Converged_Flag,Fail_Flag)
+       
 
   integer, intent(in):: Iter_Idx
   integer, intent(in):: Iter_Idx_Max
@@ -3333,9 +3384,9 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
    real(kind=real4), intent(out):: Pc_Opaque
    real(kind=real4), intent(out):: Tc_Opaque
    real(kind=real4), intent(out):: Zc_Opaque
-   integer:: Ilev
-   integer:: Ilev_Start
-   integer:: Ilev_End
+   integer:: Lev_Idx
+   integer:: Lev_Idx_Start
+   integer:: Lev_Idx_End
 
    !--- initialize
    Pc_Opaque =  MISSING_VALUE_REAL4
@@ -3343,15 +3394,15 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
    Tc_Opaque =  MISSING_VALUE_REAL4
 
    !--- restrict levels to consider
-   Ilev_Start = Tropo_Level 
-   Ilev_End = Sfc_Level
+   Lev_Idx_Start = Tropo_Level 
+   Lev_Idx_End = Sfc_Level
 
    !--- loop through levels
-   level_loop: do Ilev = Ilev_Start, Ilev_End
-      Pc_Opaque = Press_Prof(Ilev-1)
-      Zc_Opaque = Height_Prof(Ilev-1)
-      Tc_Opaque = Temp_Prof(Ilev-1)
-     if (Black_Body_Rad_Prof_11um(Ilev) > Radiance_11um) then
+   level_loop: do Lev_Idx = Lev_Idx_Start, Lev_Idx_End
+      Pc_Opaque = Press_Prof(Lev_Idx-1)
+      Zc_Opaque = Height_Prof(Lev_Idx-1)
+      Tc_Opaque = Temp_Prof(Lev_Idx-1)
+     if (Black_Body_Rad_Prof_11um(Lev_Idx) > Radiance_11um) then
          exit
      endif
    end do Level_Loop

@@ -16,12 +16,6 @@
  ! include other include files to this file
  !-----------------------------------------------------------
 
- !--- water cloud microphysical model
- include 'acha_water_cloud_microphysical_model.inc'
-
- !--- ice cloud microphysical model
- include 'acha_ice_cloud_microphysical_model.inc'
-
  !--- clear-sky covariance terms
  include 'acha_clear_sky_covariances.inc'
 

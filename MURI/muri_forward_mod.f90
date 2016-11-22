@@ -15,6 +15,7 @@ module muri_forward_mod
       real, allocatable :: aot_aer(:,:,:,:,:,:,:) 
       real :: aot_aer_fine (8,6,4)
       real :: aot_aer_coarse (8,6,5)
+      
       contains
       procedure :: read_lut
    end type muri_lut_type
@@ -26,15 +27,13 @@ module muri_forward_mod
    end type muri_fwd_type
    
    
-   
-   
-   
 contains
    subroutine muri_forward ( state, fwd)
       real, intent(in) :: state
       type ( muri_fwd_type ), intent(out) :: fwd
    
       fwd % rfl(1) = 2.1
+      call lut.read_lut
    
    end subroutine
    
@@ -67,6 +66,9 @@ contains
       lut % aot_aer_coarse = this % aot_aer(1,1,1,:,:,1,5:9)
       
       print*,lut% sol, shape(lut%sol)
+      print*,' '
+      print*,this % aot_aer(:,3,4,2,2,1,2)
+      print*,'done'
       !print*,aer_tot
       
    end subroutine read_lut

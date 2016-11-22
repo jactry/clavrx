@@ -37,7 +37,7 @@ program dcomp_one_pixel_run
    integer :: ier
    
    logical :: water_phase  
-   integer :: snow_class 
+   integer(kind=1) :: snow_class 
    type ( dcomp_output_structure ) :: dcomp_results
 
    integer :: dcomp_mode

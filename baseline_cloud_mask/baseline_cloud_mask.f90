@@ -1,5 +1,5 @@
 MODULE Baseline_Cloud_Mask
-!$Id: baseline_cloud_mask.f90,v 1.60 2012/11/27 00:03:49 ccalvert Exp $
+!$Id:
 !
 ! Module Name:
 !   baseline_cloud_mask
@@ -70,7 +70,7 @@ PUBLIC:: Baseline_Cloud_Mask_Main
 
 PRIVATE:: Compute_Probably_Clear_Restoral
 PRIVATE:: Compute_Probably_Cloudy
-!PRIVATE:: Clear_Chn2_Reflectance_Field
+PRIVATE:: Clear_Chn2_Reflectance_Field
 PRIVATE:: RUT_Routine
 PRIVATE:: TUT_Routine
 PRIVATE:: RTCT_Routine
@@ -94,6 +94,7 @@ PRIVATE:: Term_Refl_Norm
 
 PRIVATE:: compute_spatial_uniformity
 PRIVATE:: destroy_spatial_uniformity
+PRIVATE:: gradient2d
 
 !have to add PACK_BYTES here because it isn't available in CLAVRX
  interface PACK_BYTES
@@ -289,10 +290,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Max_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Min_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Stddev_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Mean_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Min_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear_Stddev_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Mean_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Max_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Min_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Stddev_3X3
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_Chn14_Stddev_3x3
 
    INTEGER(KIND=INT4):: Num_Pix
@@ -348,14 +349,19 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    REAL(KIND=REAL4):: Aerosol_Optical_Depth_Chn2
    REAL(KIND=REAL4):: NDSI
    
-   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: Refl_Chn2_Clear
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear
 
    REAL(KIND=REAL4):: RGCT_Threshold
 
    INTEGER:: Array_Right, Array_Left, Array_Top
    INTEGER:: Array_Bottom,Array_Width, Array_Hgt
 
-   !--- quality flag 
+    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE :: X_LRC_Idx
+    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE :: Y_LRC_Idx
+    INTEGER(KIND=INT1), DIMENSION(:,:), ALLOCATABLE :: LRC_Mask
+
+
+   !--- quality flag
    INTEGER(KIND=INT4):: IR_Test_Sum
    INTEGER(KIND=INT4):: VIS_Test_Sum
    INTEGER(KIND=INT4):: SWIR_SOLAR_Test_Sum
@@ -387,9 +393,6 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    INTEGER(KIND=INT1), DIMENSION(:,:,:), POINTER :: Test_Results
    INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_QF
    INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_Tmpy
-   INTEGER(KIND=INT4), DIMENSION(:,:), POINTER :: X_LRC_Idx
-   INTEGER(KIND=INT4), DIMENSION(:,:), POINTER :: Y_LRC_Idx
-   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: LRC_Mask
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Emiss_Tropo_Chn14
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag1
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag2
@@ -438,23 +441,28 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ALLOCATE(Test_Results_Temp(Total_Num_Tests, Num_Elem, Number_of_Lines_in_this_Segment))
    ALLOCATE(Temp_Array(Num_Elem, Number_of_Lines_in_this_Segment))
 
+    !--- LRC arrays (re-implmented
+    ALLOCATE(LRC_Mask(Num_Elem, Number_of_Lines_in_this_Segment))
+    ALLOCATE(X_LRC_Idx(Num_Elem, Number_of_Lines_in_this_Segment))
+    ALLOCATE(Y_LRC_Idx(Num_Elem, Number_of_Lines_in_this_Segment))
+
+
 
    !-----------------------------------------------------------------
    ! Read IN background Chn2 Reflectance Field 
    !-----------------------------------------------------------------
-   !CALL Clear_Chn2_Reflectance_Field(Num_Elem, &
-   !                                  Max_Num_Lines_per_Seg, &
-   !                                  Refl_Chn2_Clear)
+   ! WCS - While CLAVR-x does this, we want to do it exactly as implmented in the GS - 20 Nov
+
+   CALL Clear_Chn2_Reflectance_Field(Num_Elem, &
+                                     Max_Num_Lines_per_Seg, &
+                                     Refl_Chn2_Clear)
 
    !-----------------------------------------------------------------
-   ! Read IN background Chn2 Reflectance Field 
-   ! Calculated by CLAVR-x
+   ! WCS - While CLAVR-x 0.64 Clear sky stuff, so reimplmented GS code- 20 Nov 2016
+   !-----------------------------------------------------------------
+   ! 11um 3x3 Calculated by CLAVR-x same way as GS
    !-----------------------------------------------------------------
                                      
-    Refl_Chn2_Clear => ch(1)%Ref_Toa_Clear
-    Refl_Chn2_Clear_Max_3x3 => Ref_Ch1_Clear_Max_3x3
-    Refl_Chn2_Clear_Min_3x3 => Ref_Ch1_Clear_Min_3x3
-    Refl_Chn2_Clear_Stddev_3x3 => Ref_Ch1_Clear_Std_3x3
     BT_Chn14_Stddev_3x3 => Bt_Ch31_Std_3x3
 
    !-----------------------------------------------------------------
@@ -478,10 +486,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    
    
    !inputs
-   X_LRC_Idx => I_LRC
-   Y_LRC_Idx => J_LRC
+!   X_LRC_Idx => I_LRC
+!   Y_LRC_Idx => J_LRC
 !   LRC_Mask => out2(Algo_Num)%LRC_Mask
-   Emiss_Tropo_Chn14 => ch(31)%Emiss_Tropo   
+   Emiss_Tropo_Chn14 => ch(31)%Emiss_Tropo   !11um Tropo calculated same way as GS - 20 Nov. 2016 - WCS3
 
    !
    !--- set bit depths for packed Output (all here are 1 bit)
@@ -524,9 +532,19 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
    ENDIF
 
-   CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3x3, &
-                                   Sfc_Hgt_Max_3x3, Sfc_Hgt_Min_3x3, Sfc_Hgt_Stddev_3x3)
+!    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn14BT, BT_Chn14_Mean_3x3, &
+!                                    BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
+!    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn2Refl, Refl_Chn2_Mean_3X3, &
+!                                    Refl_Chn2_Max_3x3, Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
 
+!NOTE - All the thermal and measured spatial metrics are the same. Owing to the MODIS WS issue, this
+!       must be computed internally to the BCM - 20 NOV 2016 - WCS3
+
+    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3X3, &
+                                    Sfc_Hgt_Max_3X3, Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
+    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
+                                    Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3X3, &
+                                    Refl_Chn2_Clear_Stddev_3X3)
    ! Temporal commented out due to CLAVR-x not having that capability
 
    !=======================================================================
@@ -560,7 +578,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
    !=======================================================================
    ! Compute 11 micron emissivity at Tropopause
-   ! -------------- removed - CLAVR-x computes emiss11 already------------!
+   ! -------------- removed - CLAVR-x computes emiss11 already same way as GS!
    !=======================================================================
 
 
@@ -568,9 +586,28 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! compute local radiative center
    !======================================================================
    
-   !-------------- removed - CLAVR-x computes LRC already ------------------!
+    !--- determine which pixels to skip
+    LRC_Mask = sym%NO
 
-   !----------------------------------------------------------------------
+    WHERE(Emiss_Tropo_Chn14 /= Missing_Value_Real4)
+        LRC_Mask = sym%YES
+    ENDWHERE
+
+    !--- initialize indices
+    X_LRC_Idx = Missing_Value_INT4
+    Y_LRC_Idx = Missing_Value_INT4
+
+    !--- call routines to compute emiss lrc indices
+    CALL gradient2d(Emiss_Tropo_Chn14, &
+                    Num_Elem, &
+                    Number_of_Lines_in_this_Segment, &
+                    LRC_Mask, &
+                    EMISS_TROPO_CHN14_GRADIENT_MIN, &
+                    EMISS_TROPO_CHN14_GRADIENT_MAX, &
+                    EMISS_TROPO_CHN14_GRADIENT_THRESH, &
+                    X_LRC_Idx, &
+                    Y_LRC_Idx)
+!----------------------------------------------------------------------
    ! set flag to enforce uniformity IN land Mask for these computations
    !----------------------------------------------------------------------
    Uni_Land_Mask_Flag_Yes  = sym%YES
@@ -1282,19 +1319,56 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !--------------------------------------------------------------------
          Refl_Sing_Scat = 0.0
          
-         ! WCS - clear sky reflectance in CLAVRX is already corrected.
-!         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
-            !--- most of this is done behind the scenes of CLAVR-x, so commented out
-            !--- and set to CLAVRx globals
-!            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = ch(1)%Ref_Toa_Clear(Elem_Idx,Line_Idx) 
-                    
-!            Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Ref_Ch1_Clear_Max_3x3(Elem_Idx,Line_Idx)
-                    
-!            Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Ref_Ch1_Clear_Min_3x3(Elem_Idx,Line_Idx)
+         ! WCS - re-implmented clear sky reflectance as GS does it
+         IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
+
+            IF (Is_Land == sym%YES) THEN
+                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Land
+            ELSE
+                Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Ocean
+            ENDIF
+
+            CALL Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
+                                           Aerosol_Single_Scatter_Albedo_Chn2, &
+                                           Aerosol_Asymmetry_Parameter, &
+                                           Rayleigh_Optical_Depth_Chn2, &
+                                           Sat_Name, &
+                                           Total_Precipitable_Water_NWP, &
+                                           Total_Ozone_Path_NWP, &
+                                           Scat_Zen, &
+                                           Cos_Sat_Zen, &
+                                           Cos_Sol_Zen, &
+                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
+                                           Refl_Chn2_Clear(Elem_Idx,Line_Idx)/100.0, &
+                                           Transmission_Sing_Scat, &
+                                           Refl_Sing_Scat)
+
+            !--- add it IN to the clear-sky estimate
+            Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+            Refl_Chn2_Clear(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+
+            Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+            Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
+
+            Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Transmission_Sing_Scat * &
+            Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
 
             !--- renormalize for improved terminator performance
-            !--- Already done by CLAVRX, so removing calls
-!         ENDIF
+            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+
+                Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+                                                     Refl_Chn2_Clear(Elem_Idx,Line_Idx))
+
+                Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+                                                Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx))
+
+                Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
+                                                Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
+
+        ENDIF
+
+    ENDIF
+
 
          !=====================================================================
          ! Determine 0.65 micron clear sky background reflectance
@@ -1307,14 +1381,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                            RGCT_Threshold = 10.0 + 1.2 * Refl_Chn2_Clear_Max_3x3(Elem_Idx, Line_Idx) + &
                                             Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
 
-                      ENDIF 
+                      ENDIF
                   ENDIF
-                  
+
                   IF (Is_Land == sym%NO) THEN
                       RGCT_Threshold = 99.0
                       IF (Is_Glint == sym%NO) THEN
                          IF (Refl_Chn2_Clear(Elem_Idx, Line_Idx) /= Missing_Value_Real4)  THEN
-                                RGCT_Threshold = 5.0 + 1.2 * Refl_Chn2_Clear_Max_3x3(Elem_Idx, Line_Idx) 
+                                RGCT_Threshold = 5.0 + 1.2 * Refl_Chn2_Clear_Max_3x3(Elem_Idx, Line_Idx)
                          ENDIF
                        ENDIF
                   ENDIF
@@ -1869,13 +1943,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    Test_Results => null()
    Cloud_Mask_QF => null()
    Cloud_Mask_Tmpy => null()
-   LRC_Mask => null()
-   X_LRC_Idx => null()
-   Y_LRC_Idx => null()
    Emiss_Tropo_Chn14 => null()
-   Refl_Chn2_Clear =>null()
-   Refl_Chn2_Clear_Max_3x3 => null()
-   Refl_Chn2_Clear_Min_3x3 => null()
    BT_WaterVapor_Stddev_3x3 =>null()
    BT_Chn14_Stddev_3x3 => null()
 
@@ -1887,9 +1955,25 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    CALL Destroy_Spatial_Uniformity(Sfc_Hgt_Mean_3x3, Sfc_Hgt_Max_3x3,  &
                                    Sfc_Hgt_Min_3x3, Sfc_Hgt_Stddev_3x3)
 
-   !Initialize total deallocation status 
+    CALL Destroy_Spatial_Uniformity(Refl_Chn2_Clear_Mean_3x3, Refl_Chn2_Clear_Max_3x3,  &
+                                    Refl_Chn2_Clear_Min_3x3, Refl_Chn2_Clear_Stddev_3x3)
+
+
+   !Initialize total deallocation status
    Alloc_Status_Total = 0 
-   
+
+    IF (ALLOCATED(LRC_Mask)) DEALLOCATE(LRC_Mask,stat=Alloc_Status)
+    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
+
+    IF (ALLOCATED(X_LRC_Idx)) DEALLOCATE(X_LRC_Idx,stat=Alloc_Status)
+    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
+
+    IF (ALLOCATED(Y_LRC_Idx)) DEALLOCATE(Y_LRC_Idx,stat=Alloc_Status)
+    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
+
+
+
+
    IF (ALLOCATED(X_NWC_Idx)) DEALLOCATE(X_NWC_Idx,stat=Alloc_Status)
    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
    
@@ -1905,11 +1989,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !======================================================================
    ! deallocate 2nd darkest composite data array
    !======================================================================
-  ! IF (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
-   !Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
+   IF (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
+   Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
-   Refl_Chn2_Clear => null()
-   
    IF (Alloc_Status /= 0) THEN
 
        WRITE (Err_Message, *) &
@@ -2193,35 +2275,35 @@ END SUBROUTINE Compute_Probably_Cloudy
 ! Restrictions:  None
 !
 !====================================================================
-! WCS - commented out this routine since CLAVR-x does this already
+! WCS - While CLAVR-x does this, we want to do it exactly as implmented in the GS - 20 Nov
 
-! SUBROUTINE Clear_Chn2_Reflectance_Field(Num_Elem, &
-!                                         Max_Num_Lines_per_Seg, &
-!                                         Refl_Chn2_Clear)
-!
-!   REAL(KIND=REAL4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
-!   INTEGER(KIND=INT4),INTENT(IN) :: Num_Elem
-!   INTEGER(KIND=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
+ SUBROUTINE Clear_Chn2_Reflectance_Field(Num_Elem, &
+                                         Max_Num_Lines_per_Seg, &
+                                         Refl_Chn2_Clear)
+
+   REAL(KIND=REAL4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
+   INTEGER(KIND=INT4),INTENT(IN) :: Num_Elem
+   INTEGER(KIND=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
 
 
    !--- If create one and populate background reflectance using default or global WS albedo data
-!       IF (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
-!                           Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
+       IF (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
+                           Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
 
-!       Refl_Chn2_Clear = 5.0
-!       WHERE(Sfc%Land == sym%LAND)
-!          Refl_Chn2_Clear = 45.0
-!       ENDWHERE 
-!       !--- use MODIS white sky from mapped data if available
-!       WHERE(sat%ws_albedo2 /= Missing_Value_Real4)
-!          Refl_Chn2_Clear = sat%ws_albedo2
-!       ENDWHERE 
-!       !--- ensure consistent missing value
-!       WHERE(Refl_Chn2_Clear <= 0.0)
-!          Refl_Chn2_Clear = Missing_Value_Real4
-!       ENDWHERE
-!
-! END SUBROUTINE Clear_Chn2_Reflectance_Field
+       Refl_Chn2_Clear = 5.0
+       WHERE(Sfc%Land == sym%LAND)
+          Refl_Chn2_Clear = 45.0
+       ENDWHERE
+       !--- use MODIS white sky from mapped data if available
+       WHERE(ch(1)%Sfc_Ref_White_Sky /= Missing_Value_Real4)
+          Refl_Chn2_Clear = ch(1)%Sfc_Ref_White_Sky
+       ENDWHERE
+       !--- ensure consistent missing value
+       WHERE(Refl_Chn2_Clear <= 0.0)
+          Refl_Chn2_Clear = Missing_Value_Real4
+       ENDWHERE
+
+ END SUBROUTINE Clear_Chn2_Reflectance_Field
 
 
 !====================================================================
@@ -4580,7 +4662,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
 ! End ACM test Subroutines and functions 
 !--------------------------------------------------------------------------
 
-!---------- added in for CLAVR-x -------!
+!---------- GS/SAPF routines added in for CLAVR-x implmentation of BCM -------!
 
 !-----------------------------------------------------------------
 !
@@ -4677,6 +4759,104 @@ SUBROUTINE destroy_spatial_uniformity(data_mean, data_max, data_min, data_uni)
   endif
   
 END SUBROUTINE destroy_spatial_uniformity
+
+
+!-----------------------------------------------------------------
+! GS/SAPF/GEOCAT LRC routine
+!-----------------------------------------------------------------
+
+SUBROUTINE gradient2d(grid, nx, ny, mask, min_valid, max_valid, threshold_value, xmax, ymax, num_steps)
+
+  REAL (kind=real4), dimension(:,:), intent(in) :: grid
+  INTEGER (kind=int4), intent(in) :: nx, ny
+  INTEGER (kind=int1), dimension(:,:), intent(in) :: mask
+  REAL (kind=real4), intent(in) :: min_valid, max_valid, threshold_value
+  INTEGER (kind=int4), dimension(:,:), intent(inout) :: xmax, ymax
+  INTEGER (kind=int4), dimension(:,:), intent(inout), optional :: num_steps
+  
+  INTEGER (kind=int4), parameter :: max_step = 150
+  INTEGER (kind=int4) :: ielem, iline, im, jm, ip, jp, dx_start, dy_start, index
+  INTEGER (kind=int4) :: direction, di, dj, i0, j0, i1, j1, ibad
+  REAL (kind=real4) :: min_grad, ref_value
+  INTEGER (kind=int4), dimension(8) :: icol, irow, di_default, dj_default
+  REAL (kind=real4), dimension(8) :: grad
+  
+  dx_start = 2
+  dy_start = 2
+  
+  di_default = (/0,1,1,1,0,-1,-1,-1/)
+  dj_default = (/-1,-1,0,1,1,1,0,-1/)
+  
+  xmax = missing_value_int4
+  ymax = missing_value_int4
+  
+  if (present(num_steps)) then
+    num_steps = missing_value_int4
+  endif
+  
+  line_loop: do iline=1, ny
+    
+    jm = max(1,iline-dy_start)
+    jp = min(ny,iline+dy_start)    
+    
+    element_loop: do ielem=1, nx
+    
+      if (mask(ielem,iline) == sym%YES .and. grid(ielem,iline) >= min_valid .and. grid(ielem,iline) <= max_valid) then
+      
+        im = max(1,ielem-dx_start)
+        ip = min(nx,ielem+dx_start)
+        
+        icol = (/ielem,ip,ip,ip,ielem,im,im,im/)        
+        irow = (/jm,jm,iline,jp,jp,jp,iline,jm/)
+        
+        direction = -999
+        min_grad = 99999.0
+        do index=1, 8 
+          if (grid(icol(index),irow(index)) >= min_valid .and. grid(icol(index),irow(index)) <= max_valid) then
+            grad(index) = grid(ielem,iline) - grid(icol(index),irow(index))
+            if (grad(index) < min_grad) then
+              min_grad = grad(index)
+              direction = index
+            endif
+          endif
+        end do
+        
+        if (direction >= 1 .and. direction <= 8) then
+        
+          di = di_default(direction)
+          dj = dj_default(direction)
+        
+          do index = 1, max_step
+            i0 = max(1,min(ielem + di*index,nx))
+            j0 = max(1,min(iline + dj*index,ny))
+            i1 = max(1,min(ielem + di*index + di,nx))
+            j1 = max(1,min(iline + dj*index + dj,ny))
+          
+            ref_value = grid(i0,j0)
+            ibad = 1
+            if (grid(i1,j1) >= min_valid .and. grid(i1,j1) <= max_valid) then 
+              ibad = 0
+            endif
+          
+            if (grid(i1,j1) >= threshold_value .or. index == max_step .or. grid(i1,j1) < ref_value .or. ibad == 1) then
+              xmax(ielem,iline) = i0
+              ymax(ielem,iline) = j0
+              if (present(num_steps)) then
+                num_steps(ielem,iline) = index
+              endif
+              exit
+            endif
+          end do
+          
+        endif
+        
+      endif
+    
+    end do element_loop    
+  end do line_loop
+
+END SUBROUTINE gradient2d
+
 
 
 

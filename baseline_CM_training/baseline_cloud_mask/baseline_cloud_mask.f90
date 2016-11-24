@@ -1366,6 +1366,16 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                                                 Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
 
         ENDIF
+        
+        !-- STORE IN GLOBAL ARRAYS FOR OUTPUT
+        Ref_Ch1_Clr_Min_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
+
+        Ref_Ch1_Clr_Max_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
+
+        Ref_Ch1_Clr_Std_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
+
+        Ref_Ch1_Clr_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
+        
 
     ENDIF
 

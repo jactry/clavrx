@@ -1,4 +1,4 @@
-! $Header$
+! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/baseline_CM_training/main_src/cloud_shadow_mod.f90 1270 2015-05-29 19:38:27Z awalther $
 !
 !
 !

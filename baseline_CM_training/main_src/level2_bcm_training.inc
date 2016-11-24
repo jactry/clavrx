@@ -292,4 +292,5 @@
      Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0, &
      Sds_Num_Level2_Ch1_Clr_BCM = 281,  Sds_Num_Level2_Ch1_Clr_BCM_Flag = 1, &
      Sds_Num_Level2_Ch1_Clr_Min_BCM = 282,  Sds_Num_Level2_Ch1_Clr_Min_BCM_Flag = 1, &
-     Sds_Num_Level2_Ch1_Clr_Max_BCM = 283,  Sds_Num_Level2_Ch1_Clr_Max_BCM_Flag = 1
+     Sds_Num_Level2_Ch1_Clr_Max_BCM = 283,  Sds_Num_Level2_Ch1_Clr_Max_BCM_Flag = 1, &
+     Sds_Num_Level2_Ch1_Clr_Std_BCM = 284,  Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag = 1

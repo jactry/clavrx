@@ -3848,12 +3848,87 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      endif
 
 
+!-------------- BCM  output variables
+!--- Ref_Ch1_Clear_BCM
+     if (Sds_Num_Level2_Ch1_Clr_BCM_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clr_sky_bcm", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies"// &
+                               "at the nominal wavelength of 0.65 microns "// &
+                               "as determined by the baseline CM", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+!--- 3x3 min Ref_Ch1_Clear_BCM
+     if (Sds_Num_Level2_Ch1_Clr_Min_BCM_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Min_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clr_sky_bcm_min_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "minmum 3x3 top of atmosphere bidirectional"// &
+                               " reflectance modeled assuming clear skies"// &
+                               "at the nominal wavelength of 0.65 microns "// &
+                               "as determined by the baseline CM", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+!--- 3x3 Max Ref_Ch1_Clear_BCM
+     if (Sds_Num_Level2_Ch1_Clr_Max_BCM_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Max_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clr_sky_bcm_max_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "maximum 3x3 top of atmosphere bidirectional"// &
+                               " reflectance modeled assuming clear skies"// &
+                               "at the nominal wavelength of 0.65 microns "// &
+                               "as determined by the baseline CM", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+!--- 3x3 Stdev Ref_Ch1_Clear_BCM
+     if (Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Std_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clr_sky_bcm_max_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "3x3 Standard Deviation top of atmosphere bidirectional"// &
+                               " reflectance modeled assuming clear skies"// &
+                               "at the nominal wavelength of 0.65 microns "// &
+                               "as determined by the baseline CM", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1_std, Max_Ref_Ch1_std, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
+
+
+
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
        print *, EXE_PROMPT, MOD_PROMPT, "Error defining sds in level2 hdf file"
        stop
      endif
   endif
+
+
+
+
+
+
+
+
 
 end subroutine DEFINE_HDF_FILE_STRUCTURES
 
@@ -6077,6 +6152,36 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Sndr_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
+    
+    
+    !---------- Baseline Cloud mask variables
+    !--- Ref_Ch1 clear
+    if (Sds_Num_Level2_Ch1_Clr_BCM_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clr_BCM,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Ref_Ch1 clear Min
+    if (Sds_Num_Level2_Ch1_Clr_Min_BCM_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clr_Min_3x3_BCM,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Min_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif    
+    
+    !--- Ref_Ch1 clear Max
+    if (Sds_Num_Level2_Ch1_Clr_Max_BCM_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clr_Max_3x3_BCM,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Max_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif    
+   
+    !--- Ref_Ch1 clear Standard Deviation
+    if (Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clr_Std_3x3_BCM,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Std_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif    
 
 
     !--- check for and report errors

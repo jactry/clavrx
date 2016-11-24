@@ -1,5 +1,5 @@
 MODULE Baseline_Cloud_Mask
-!$Id: baseline_cloud_mask.f90,v 1.60 2012/11/27 00:03:49 ccalvert Exp $
+!$Id$
 !
 ! Module Name:
 !   baseline_cloud_mask

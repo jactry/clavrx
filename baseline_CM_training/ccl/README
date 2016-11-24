@@ -1,0 +1,14 @@
+Files for supporting the Cloud Cover Layers (CCL) suite of products.
+
+General Files
+--------------
+ccl_module.f90   - module that holds the algorithm
+ccl_parameters.inc - parameters used by the algorithm
+
+CLAVR-x Files
+--------------
+ccl_clavrx_bridge_module.f90 - the bridge module between CLAVR-x and CCL module
+ccl_clavrx_services_module.f90 - module holding required CLAVR-x services
+
+SAPF Files
+--------------

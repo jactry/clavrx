@@ -783,6 +783,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          IF (Elem_LRC_Idx > 0 .and. Line_LRC_Idx > 0) THEN
            Emiss_Tropo_Chn14_LRC = Emiss_Tropo_Chn14(Elem_LRC_Idx,Line_LRC_Idx)
          ENDIF
+         
+         Emiss_Tropo_11um_LRC_BCM(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
 
          !
          !--- NWC Indices
@@ -797,6 +799,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                                       ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
            ENDIF
          ENDIF
+         
+         BTD_11_12um_NWC_BCM(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
 
          !
          !---cosine of satellite viewing zenith angle
@@ -961,6 +965,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 Emiss_Chn7_NWC = Ems_Ch20(Elem_NWC_Idx,Line_NWC_Idx)
             ENDIF
+            
+            Emiss_39_NWC_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
            
             !
             !---3.9 um surface emissivity
@@ -977,8 +983,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
             !
             !---solar energy IN channel 7
-            Chn7_Sol_Energy =      ch(20)%Ref_Toa(Elem_Idx,Line_Idx) 
-         ENDIF
+            !
+            Chn7_Sol_Energy =      Solar_Ch20_Nu
+          ENDIF
 
 
          !--- Channel 10 Aliases and Derived Parameters
@@ -1728,6 +1735,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Solar_BT_Chn7_Clr = PLANCK_TEMP_FAST (20,Solar_Rad_Chn7_Clr)
 
             Emiss_Chn7_Clr = Solar_Rad_Chn7_Clr / Planck_Emission_Chn7_Clr
+            
+            !output to L2 file
+            Emiss_39_clr_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_Clr
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = EMISS4_Routine(Is_Glint,  &
                          Is_Land, &

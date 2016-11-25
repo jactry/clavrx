@@ -1,6 +1,6 @@
-!$Id: level2_realtime.inc 1820 2016-10-29 16:42:33Z heidinger $
+!$Id:$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 285
+ integer, parameter, private:: Num_Level2_Sds = 290
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
  integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
@@ -109,7 +109,7 @@
      Sds_Num_Level2_Ch1_Unnorm = 97,     Sds_Num_Level2_Ch1_Unnorm_Flag = 0, &
      Sds_Num_Level2_Ch2_Unnorm = 98,     Sds_Num_Level2_Ch2_Unnorm_Flag = 0, &
      Sds_Num_Level2_Ch6_Unnorm = 99,     Sds_Num_Level2_Ch6_Unnorm_Flag = 0, &
-     Sds_Num_Level2_Ch1_Clear = 100,     Sds_Num_Level2_Ch1_Clear_Flag = 0, &
+     Sds_Num_Level2_Ch1_Clear = 100,     Sds_Num_Level2_Ch1_Clear_Flag = 1, &
      Sds_Num_Level2_Ch1_Mean = 101,      Sds_Num_Level2_Ch1_Mean_Flag = 1, &
      Sds_Num_Level2_Sst_Unmasked = 102,  Sds_Num_Level2_Sst_Unmasked_Flag = 1, &
      Sds_Num_Level2_Wnd_Spd = 103,       Sds_Num_Level2_Wnd_Spd_Flag = 0, &

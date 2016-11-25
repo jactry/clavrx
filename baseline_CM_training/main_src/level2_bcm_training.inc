@@ -1,4 +1,4 @@
-!$Id:$
+!$Id$
  !--- level2 indices
  integer, parameter, private:: Num_Level2_Sds = 290
  integer, private, save:: Sd_Id_Level2
@@ -290,7 +290,11 @@
      Sds_Num_Level2_Cld_Type_IR = 278,    Sds_Num_Level2_Cld_Type_IR_Flag = 0, &
      Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 0, &
      Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0, &
-     Sds_Num_Level2_Ch1_Clr_BCM = 281,  Sds_Num_Level2_Ch1_Clr_BCM_Flag = 1, &
+     Sds_Num_Level2_Ch1_Clr_BCM = 281,    Sds_Num_Level2_Ch1_Clr_BCM_Flag = 1, &
      Sds_Num_Level2_Ch1_Clr_Min_BCM = 282,  Sds_Num_Level2_Ch1_Clr_Min_BCM_Flag = 1, &
      Sds_Num_Level2_Ch1_Clr_Max_BCM = 283,  Sds_Num_Level2_Ch1_Clr_Max_BCM_Flag = 1, &
-     Sds_Num_Level2_Ch1_Clr_Std_BCM = 284,  Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag = 1
+     Sds_Num_Level2_Ch1_Clr_Std_BCM = 284,  Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag = 1, &
+     Sds_Num_Level2_BTD_11_12_NWC = 285,    Sds_Num_Level2_BTD_11_12_NWC_Flag = 1, &
+     Sds_Num_Level2_EMISS_39_NWC = 286,     Sds_Num_Level2_EMISS_39_NWC_Flag = 1, &
+     Sds_Num_Level2_EMISS_39_Clr_BCM = 287, Sds_Num_Level2_EMISS_39_Clr_BCM_Flag = 1, &
+     Sds_Num_Level2_etrop_11um_LRC = 288,   Sds_Num_Level2_etrop_11um_LRC_Flag = 1

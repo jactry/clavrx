@@ -855,6 +855,10 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_Max_3x3_BCM
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_Std_3x3_BCM
      real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: BTD_11_12um_NWC_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39_NWC_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39_clr_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_Tropo_11um_LRC_BCM
 
 
 
@@ -1070,6 +1074,14 @@ subroutine CREATE_PIXEL_ARRAYS()
            Utc_Scan_Time_Hours(dim2), &
            Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
+           
+  ! Other BCM output arrays
+  allocate (BTD_11_12um_NWC_BCM(dim1,dim2), &
+            Emiss_39_NWC_BCM(dim1,dim2), &
+            Emiss_39_clr_BCM(dim1,dim2), &
+            Emiss_Tropo_11um_LRC_BCM(dim1,dim2))
+
+  
 
   !--------------------------------------------------------------------------------
   ! Initialize variables that are not reset for each segment
@@ -1195,6 +1207,14 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Gap_Pixel_Mask_Pattern)) deallocate(Gap_Pixel_Mask_Pattern)
   if (allocated(Gap_Line_Idx_Pattern)) deallocate(Gap_Line_Idx_Pattern)
   if (allocated(IFF_Gap_Mask)) deallocate(IFF_Gap_Mask)
+  
+  
+  !--- BCM arrays
+  deallocate (BTD_11_12um_NWC_BCM, &
+              Emiss_39_NWC_BCM, &
+              Emiss_39_clr_BCM, &
+              Emiss_Tropo_11um_LRC_BCM)
+
 
 
 end subroutine DESTROY_PIXEL_ARRAYS
@@ -1280,7 +1300,13 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       !--- note do not reset the patterns
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
-      IFF_Gap_Mask = sym%NO     
+      IFF_Gap_Mask = sym%NO
+      
+      !--- BCM arrays
+      BTD_11_12um_NWC_BCM = Missing_Value_Real4
+      Emiss_39_NWC_BCM = Missing_Value_Real4
+      Emiss_39_clr_BCM = Missing_Value_Real4
+      Emiss_Tropo_11um_LRC_BCM = Missing_Value_Real4
 
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING

@@ -28,19 +28,26 @@
 !--------------------------------------------------------------------------------------
 MODULE FY2_MODULE
 
-
-
 use CONSTANTS
+
 use PIXEL_COMMON
+
 use CALIBRATION_CONSTANTS
+
 use PLANCK
-use NUMERICAL_TOOLS_MOD
+
+use NUMERICAL_TOOLS_MOD, only:
+
 use GOES_MODULE
+
 use FILE_TOOLS, only: &
    get_lun
 use VIEWING_GEOMETRY_MODULE
   
+  use CX_SSEC_AREAFILE_MOD
+  
  implicit none
+ private
  public :: FY_navigation, READ_FY
  public:: READ_FY_INSTR_CONSTANTS
  private :: FY_RADIANCE_BT,FY_Reflectance, MGIVSR
@@ -111,7 +118,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
 
    integer(kind=int4), intent(in):: segment_number
    character(len=*), intent(in):: channel_1_filename
-   TYPE (AREA_STRUCT), intent(in) :: AREAstr
+   TYPE (area_header_type), intent(in) :: AREAstr
    TYPE (GVAR_NAV), intent(in)    :: NAVstr_FY
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
@@ -447,7 +454,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
-    type (AREA_STRUCT) :: AREAstr
+    type (area_header_type) :: AREAstr
     type (GVAR_NAV), intent(in)    :: NAVstr_FY
     
     integer :: i, j, ii, jj, ierr, imode
@@ -540,7 +547,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
 
 subroutine load_fy_calibration(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   integer(kind=int4), dimension(6528) :: ibuf
   integer :: nref, nbt, i, j, offset
   integer(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &

@@ -83,7 +83,7 @@ module GOES_MODULE
       , file_test
    
    use VIEWING_GEOMETRY_MODULE, only: &
-      SENSOR_ZENITH &
+         SENSOR_ZENITH &
       , SENSOR_AZIMUTH &
       , RELATIVE_AZIMUTH & 
       , glint_angle &
@@ -102,7 +102,10 @@ module GOES_MODULE
       , Missing_value_real4 &
       , DTOR &
       , Missing_value_int2
-
+   
+   use CX_SSEC_AREAFILE_MOD, only: &
+      area_header_type
+   
    implicit none
 
 
@@ -128,10 +131,8 @@ module GOES_MODULE
           READ_IMGR_MON, &
           LPOINT, &
           COMP_ES, &
-          COMP_LP, &
           INST2E, &
-          GPOINT, &
-          TIME50
+          GPOINT
 
    ! goes is   oversampled by 50% in x
    integer(kind=int4), public, parameter:: Goes_Xstride = 1    
@@ -178,54 +179,7 @@ module GOES_MODULE
            integer :: num_mono_Sinu
            type(IMGR_MON), dimension(4) :: monomial
         end type IMGR_RP
-!
-!     Define McIDAS area structre
-!
-type, public:: AREA_STRUCT
-   integer ::Area_Status           ! Area status
-!  integer(kind=int4) :: Swap_Bytes !whether or not bytes need to be swapped
-   integer ::Version_Num           ! Area version number
-   integer ::Sat_Id_Num            ! Satellite ID (SSS)
-   integer ::Img_Date              ! Year and Julian day (YYDDD)
-   integer ::Img_Time              ! Time of image (HHMMSS)
-   integer ::North_Bound           ! Upper left line in Sat coords (Y-Coord)
-   integer ::West_Vis_Pixel        ! Upper left element in Sat coords (X-Coord)
-   integer ::Z_Coor                ! Upper z-coord (Z-Coord)
-   integer ::Num_Line              ! Number of lines in image (Y-SIZE)
-   integer ::Num_Elem              ! Number of elememts in image (X-SIZE)
-   integer ::Bytes_Per_Pixel       ! Number of bytes per data element
-   integer ::Line_Res              ! Line resolution (Y-RES) 
-   integer ::Elem_Res              ! Element resolution (X-RES)
-   integer ::Num_Chan              ! Number of bands (Z-RES)
-   integer ::Num_Byte_Ln_Prefix    ! Number of bytes in line prefix (multiple of 4)
-   integer ::Proj_Num              ! Project number
-   integer ::Creation_Date         ! Creation date (YYDDD)
-   integer ::Creation_Time         ! Creation time (HHMMSS)
-   integer ::Sndr_Filter_Map       ! Filter map for soundings
-   integer ::img_id_num            ! Image ID number
-   integer, dimension(4) :: id     ! Reserved for radar appications
-   character(len=32):: comment     ! 32 char comments
-   integer ::pri_key_calib         ! Calibration colicil (area number)
-   integer ::pri_key_nav           ! Primary navigation codicil  (data)
-   integer ::sec_key_nav           ! Secondary navigation codicil (nav)
-   integer ::val_code              ! Validity code
-   integer, dimension(8) :: pdl    ! PDL in packed-byte format
-   integer ::band8                 ! Where band-8 came from
-   integer ::act_Img_Date          ! Actual image start day (YYDDD)
-   integer ::act_Img_Time          ! Actual image start time (HHMMSS)
-   integer ::act_Start_Scan        ! Actual start scan
-   integer ::len_prefix_doc        ! Length of prefix documentation (DOC)
-   integer ::len_prefix_calib      ! Length of prefix calibration (CAL)
-   integer ::len_prefix_lev        ! Length of prefix level (LEV)
-   character(len=4)::src_Type      ! Source type
-   character(len=4)::calib_Type    ! Calibration type
-   integer ::avg_or_Sample         ! Data was averaged (0) or sampled (1)
-   integer ::poes_Signal           ! LAC, GAC, HRPT
-   integer ::poes_up_down          ! POES ascending/descending
-   integer ::cal_offset            ! needed for SEVIRI
-   character(len=4) :: orig_Src_Type   ! Original source type of data
-   integer, dimension(7) ::reserved    ! Reserved (6 calib pointer)
-end type AREA_STRUCT
+
 !
 !	Define GVAR Navigation block
 !
@@ -445,7 +399,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_Time_ms
@@ -771,7 +725,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_Time_ms
@@ -1401,7 +1355,7 @@ end subroutine READ_GOES_SNDR
 !------------------------------------------------------------------------------------------------------
  subroutine GET_GOES_HEADERS(filename,AREAstr,NAVStr)
    character(len=*), intent(in):: filename
-   type(AREA_STRUCT), intent(out):: AREAstr
+   type(area_header_type), intent(out):: AREAstr
    type(GVAR_NAV), intent(out):: NAVstr
    integer:: i
    integer:: recnum
@@ -1606,7 +1560,7 @@ end subroutine READ_GOES_SNDR
 
  character(len=*), intent(in):: filename 
  integer(kind=int4), intent(in):: Byte_Shift 
- type (AREA_STRUCT), intent(in) :: AREAstr
+ type (area_header_type), intent(in) :: AREAstr
  integer(kind=int4), intent(in):: Xstride
  integer(kind=int4), intent(in):: Segment_Number
  integer(kind=int4), intent(in):: Num_Lines_Per_Segment
@@ -1738,7 +1692,7 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
                                 Num_Lines_Read,NAVstr,AREAstr, Xstride)
 
  type (GVAR_NAV), intent(in) :: NAVstr
- type (AREA_STRUCT), intent(in) ::AREAstr
+ type (area_header_type), intent(in) ::AREAstr
  integer(kind=int4), intent(in):: Segment_Number
  integer(kind=int4), intent(in):: Num_Lines_Per_Segment
  integer(kind=int4), intent(in):: Num_Lines_Read
@@ -1965,131 +1919,7 @@ end subroutine GET_GOES_NAVIGATION
 !
       return
       end subroutine INST2E
-!======================================================================
-!     T I M E 5 0
-!======================================================================
-      real*8 FUNCTION TIME50(btim)
-!
-!     AUTHOR:         Garrett Campbell and Kelly Dean
-!
-!     CREATED:        October 1994
-!   
-!     DEVELOPED FOR:  CIRA/COLORAdo STATE UNIVERSITY
-!
-!     PURPOSE:        
-!	Function TIME50 will take the epoch time from the GVAR NAVstr%and
-!      convert it to Minutes from January 1, 1950.  NOTE - Epoch time in
-!      the NAVstr%is not in the same format as other BCD times.C
-!
-!     REVISION:       0.0
-!
-!     ARGUMENTS:
-!       NAME:   type:       PURPOSE:                          IN/OUT:
-!	btim     BYTE        Binary coded data (BCD) time      IN
-!    
-!     FUNCTIONS:
-!       NAME:   type:       PURPOSE:                        LIBRARY:
-!       MOD     integer     Returns a remainder              Intrinsic
-!
-!       NAME:    PURPOSE:
-!       ****************  integer    *****************
-!       day_100   Part of day extracted from BCD
-!       day_10    Part of day extracted from BCD
-!       day_1     Part of day extracted from BCD
-!       Hour_10   Part of Hour extracted from BCD
-!       Hour_1    Part of Hour extracted from BCD
-!       min_10    Part of Minute extracted from BCD
-!       min_1     Part of Minute extracted from BCD
-!       NY        YEAR
-!       ND        DAY OF YEAR
-!       NH        HOUR
-!       NM        MINUTE
-!       ibt
-!       J         Loop control variable
-!       year_1000 Part of year extracted from BCD
-!       year_100  Part of year extracted from BCD
-!       year_10   Part of year extracted from BCD
-!       year_1    Part of year extracted from BCD
-!       ****************  real*8     *****************
-!       S        SECONDS - Double precision
-!
-!     -------------------------------------------------------
-!     --------------  ACTUAL CODE STARTS HERE  --------------
-!     -------------------------------------------------------
-!
-!     VARIABLE DECLARATION SECTION:
-!
-      byte btim(8),bt
-      integer NY,ND,NH,NM,J
-      integer year_1000, year_100, year_10, year_1
-      integer day_100, day_10, day_1, Hour_10, Hour_1, min_10, min_1
-      integer sec_10, sec_1, msec_100, msec_10, msec_1
-      integer ibt
-      real flywheel
-      real*8 S
-!
-!     Equivalence DECLARATION SECTION:
-!
-      equivalence (bt,ibt)
-!
-!     ******--------------------------------------------******
-!     ******--------  MAIN BODY STARTS HERE  -----------******
-!     ******--------------------------------------------******
-!
-!    Extract the Binary Coded Time into separate year, Julian day, Hour
-!    Minutes, seconds.
-!
-!     bt = btim(1)
-      day_1   = ibt/16
-      Hour_10 = mod(ibt,16)
-      bt = btim(2)
-      day_100  = mod(ibt/16,8)
-      day_10   = mod(ibt,16)
-      flywheel = mod(ibt,2)
-      bt = btim(3)
-      year_10   = ibt/16
-      year_1   = mod(ibt,16)
-      bt = btim(4)
-      year_1000 = ibt/16
-      year_100  = mod(ibt,16)
-      bt = btim(5)
-      msec_10 = ibt/16
-      msec_1  = mod(ibt,16)
-      bt = btim(6)
-      sec_1    = ibt/16
-      msec_100 = mod(ibt,16)
-      bt = btim(7)
-      min_1  = ibt/16
-      sec_10 = mod(ibt,16)
-      bt = btim(8)
-      Hour_1 = ibt/16
-      min_10 = mod(ibt,16)
-!
-!     Make the year, Julian day, Hour, Minute, and seconds.
-!
-      ny = year_1000 * 1000 + year_100 * 100 + year_10 * 10 + year_1
-      nd = day_100 * 100 + day_10 * 10 + day_1 
-      nh = Hour_10 * 10 + Hour_1
-      nm = min_10 * 10 + min_1
-      s  = sec_10 * 10.0D0 + sec_1 +                               &
-          msec_100 * 0.1D0 + msec_10 * 0.01D0 + msec_1 * 0.001D0
 
-!
-!     HERE WE CONVERT integer YEAR AND DAY OF YEAR TO NUMBER OF                 
-!     DAYS FROM 0 HOUR UT, 1950 JAN. 1.0                                        
-!     THIS CONVERTION IS BASED ON AN ALGORITHM BY FLIEGEL AND VAN               
-!     FLANDERN, COMM. OF ACM, VOL.11, NO. 10, OCT. 1968 (P.657)                 
-!
-      j = nd + 1461 * (ny + 4799) / 4 - 3 *     &
-         ( ( ny + 4899 ) / 100 ) / 4 - 2465022
-!
-!    Compute time in Minutes from January 1.0, 1950 as double precision.
-!
-      TIME50 = j * 1440.0D0 + nh * 60.0D0 + nm + s / 60.0D0
-!
-!
-      return
-      end FUNCTION TIME50
 !=======================================================================
 !    L M O D E L
 !=======================================================================
@@ -3089,106 +2919,7 @@ end subroutine GET_GOES_NAVIGATION
 !
       return
       end subroutine COMP_ES
-!======================================================================
-!     C O M P _ L P
-!======================================================================
-      subroutine COMP_LP( NAVstr, ELEV, SCAN, RL, RP )
-!
-!     AUTHOR:         KELLY DEAN
-!
-!     CREATED:        January 1995
-!   
-!     DEVELOPED FOR:  CIRA/COLORAdo STATE UNIVERSITY
-!
-!     PURPOSE:        
-!	  Subroutine COMP_LP converts elevation and scan angles to the
-!       fractional line and pixel numbers.
-!
-!     REVISION:       0.0
-!
-!     ARGUMENTS:
-!       NAME:   type:       PURPOSE:                        IN/OUT:
-!	 NAVstr   Structure   Navigation information         IN
-!	 ELEV	  real*8     Elevation angle (rad)           IN
-!	 SCAN	  real*8:    Scan angle (rad)                IN
-!	 RL	  real*8     Line Number                     OUT
-!	 RP	  real*8     Pixel Number                    OUT
-!
-!     CONSTANTS:
-!       NAME:    PURPOSE:
-!       ****************  real*8       *****************
-!  	elvln    Elevation angle per detector line (rad)
-! 	elvmax   Bounds in elevation
-!	scnmax   Bounds in scan angle
-!	scnpx    Scan angle per pixel (rad)
-!
-!     -------------------------------------------------------
-!     --------------  ACTUAL CODE STARTS HERE  --------------
-!     -------------------------------------------------------
-!
-!     INCLUDE DECLARATION SECTION:
-!
-!     include 'kdf.inc'
-!
-!     CONSTANT DECLARATION SECTION:
-!
-      integer incmax(2) /6136,2805/
-      real*8  elvmax(2) / 0.2208960D0, 0.22089375D0/
-      real*8  elvln(2)  /28.0D-6,    280.0D-6/
-      real*8  elvinc(2) / 8.0D-6,     17.5D-6/
-      real*8  scnmax(2) / 0.245440D0,  0.2454375D0 /
-      real*8  scnpx(2)  /16.0D-6,    280.0D-6/
-      real*8  scninc(2) /16.0D-6,     35.0D-6/
-!
-!     VARIABLE DECLARATION SECTION:
-!
-      type(GVAR_NAV):: NAVstr
-      real*8 ELEV, SCAN, RL, RP
-!
-!     ******--------------------------------------------******
-!     ******--------  MAIN BODY STARTS HERE  -----------******
-!     ******--------------------------------------------******
-!
-      if ( NAVstr%instr == 1 ) then
-!	Recompute elevation and scan biases based on user inputs of
-!	cycles and increments obtained from GVAR.
-       elvmax(NAVstr%instr) = ( NAVstr%ns_cyl *      &
-                               incmax(NAVstr%instr) +      &
-                               NAVstr%ns_inc ) *      &
-                               elvinc(NAVSTR%instr)
-       scnmax(NAVstr%instr) = ( NAVstr%ew_cyl *     &
-                                incmax(NAVstr%instr) +      &
-                                NAVstr%ew_inc ) *           &
-                                scninc(NAVstr%instr)
-!       Compute fractional line number.
-      RL = ( ELVMAX(NAVstr%instr) - ELEV ) / ELVLN(NAVstr%instr) 
-      RL = RL + 4.5D0
-!       Compute fractional pixel number.
-       RP = ( SCNMAX(NAVstr%instr) + SCAN ) / SCNPX(NAVstr%instr)+1.0D0 
-      else if ( NAVstr%instr == 2 ) then
-!       Recompute elevation and scan biases based on user inputs of
-!       cycles and increments obtained from GVAR.
-        elvmax(NAVstr%instr)  = ( (9 - NAVstr%ns_cyl) *    &
-                                incmax(NAVstr%instr) -     &
-                                NAVstr%ns_inc ) *     &
-                                elvinc(NAVstr%instr)   
-        scnmax(NAVstr%instr) = ( NAVstr%ew_cyl *     &
-                                incmax(NAVstr%instr) +    & 
-                                NAVstr%ew_inc ) *     &
-                                scninc(NAVstr%instr)
-!       Compute fractional line number.
-        RL = ( ELVMAX(NAVstr%instr) - ELEV ) / ELVLN(NAVstr%instr) 
-        RL = RL + 2.5D0
-!       Compute fractional pixel number.
-        RP = ( SCNMAX(NAVstr%instr)+SCAN ) / SCNPX(NAVstr%instr)+1.0D0 
-      else
-!      Unknown instrument.....
-       RL = 0.0D0
-       RP = 0.0D0
-      endif
-!
-      return
-      end subroutine COMP_LP
+
 !======================================================================
 ! End of CIRA GOES IMAGER ROUTINES
 !======================================================================
@@ -3350,7 +3081,7 @@ end subroutine UNPKTIME
 !----------------------------------------------------------------------
 subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
 
- type(AREA_STRUCT), intent(in):: AREAstr
+ type(area_header_type), intent(in):: AREAstr
  character(len=9):: Goes_Name
  character(len=4):: Year_String
  character(len=3):: Jday_String
@@ -3481,11 +3212,11 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    integer(kind=int4), intent(in):: Segment_Number
    integer(kind=int4), intent(in):: Xstride
    character(len=*), intent(in):: Dark_Composite_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr_Image
+   type (area_header_type), intent(in) :: AREAstr_Image
    integer(kind=int2), dimension(:,:), intent(out):: Ch1_Dark_Composite_Counts
    integer:: Io_Status
 
-   type (AREA_STRUCT), save :: AREAstr_Dark
+   type (area_header_type), save :: AREAstr_Dark
    integer:: Dark_Lun_Header
    integer, save:: Dark_Lun_Data
    integer, save:: Element_Offset
@@ -3803,61 +3534,61 @@ end do element_loop
    Temp_Pix_Array_1 =  0.0
 
 end subroutine POST_PROCESS_GOES_DARK_COMPOSITE
-!---------------------------------------------------------------------------
-!
-!---------------------------------------------------------------------------
-subroutine DARK_COMPOSITE_CLOUD_MASK(Cloud_Mask)
+   !---------------------------------------------------------------------------
+   !
+   !---------------------------------------------------------------------------
+   subroutine DARK_COMPOSITE_CLOUD_MASK(Cloud_Mask)
 
-   integer(kind=int1), dimension(:,:),  intent(inout):: Cloud_Mask
-   integer:: Elem_Idx
-   integer:: Line_Idx
-   integer:: Num_Elements
-   integer:: Num_Lines
-   real, parameter:: Solzen_Max_Threshold = 60.0
-   real, parameter:: Ref_Delta_Cloud = 10.0
-   real, parameter:: Ref_Delta_Clear = 5.0
+      integer(kind=int1), dimension(:,:),  intent(inout):: Cloud_Mask
+      integer:: Elem_Idx
+      integer:: Line_Idx
+      integer:: Num_Elements
+      integer:: Num_Lines
+      real, parameter:: Solzen_Max_Threshold = 60.0
+      real, parameter:: Ref_Delta_Cloud = 10.0
+      real, parameter:: Ref_Delta_Clear = 5.0
   
-   Num_Elements = size(Cloud_Mask(:,1)) 
-   Num_Lines = size(Cloud_Mask(1,:)) 
+      Num_Elements = size(Cloud_Mask(:,1)) 
+      Num_Lines = size(Cloud_Mask(1,:)) 
  
-element_loop:   Do Elem_Idx = 1, Num_Elements
+      element_loop:   Do Elem_Idx = 1, Num_Elements
 
-line_loop:  DO Line_Idx = 1, Num_Lines
+         line_loop:  DO Line_Idx = 1, Num_Lines
 
-   !--- check for valid data
-   if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
-   if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
-   if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
-   if (Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
+            !--- check for valid data
+            if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+            if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
+            if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
+            if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
+            if (Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
 
-   !---  if clear or prob clear, look for cloud
-   if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or.      &
-       Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
+            !---  if clear or prob clear, look for cloud
+            if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or.      &
+                & Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
 
-       if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) > Ref_Delta_Cloud) then
-          Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLOUDY
-       endif
+               if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) > Ref_Delta_Cloud) then
+                  Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLOUDY
+               end if
 
-   endif
+            end if
 
-   !---  if cloudy or prob cloudy, look for clear
-   if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY .or.      &
-       Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY) then
+            !---  if cloudy or prob cloudy, look for clear
+            if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY .or.      &
+               Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY) then
 
-       if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) < Ref_Delta_Clear) then
-          Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
-       endif
+               if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) < Ref_Delta_Clear) then
+                  Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
+               end if
 
-   endif
+            end if
 
 
-end do line_loop
+         end do line_loop
 
-end do element_loop
+      end do element_loop
 
-end subroutine DARK_COMPOSITE_CLOUD_MASK
+   end subroutine DARK_COMPOSITE_CLOUD_MASK
 
 
 

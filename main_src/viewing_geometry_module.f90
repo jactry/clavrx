@@ -89,7 +89,7 @@
  module VIEWING_GEOMETRY_MODULE
 
   implicit none
-  
+  private
   public:: sensor_zenith, &
            great_circle_angle, & 
            sensor_zenith_avhrr_anchor, & 

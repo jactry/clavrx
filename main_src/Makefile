@@ -6,20 +6,7 @@
 #
 ############################## Makefile Settings ###############################
 
-#--- attributes written to hdf files to describe data
-#Title_String = " PATMOS-x AVHRR reflectance, brightness temperature and cloud product CDRs"
-#Calibration_String = "mc5y2011"
-#Institution_String = " NOAA/NESDIS and the University of Wisconsin-Madison / CIMSS"
-#Product_Version_String = "v05r03"
-#Program_String = " NOAA Climate Data Record Program for satellites"
-#Status_String = " Interim"
-#Summary_String = " Included in this file are PATMOS-x/CLAVR-x calibrated reflectance, brightness temperature and cloud products developed by NOAA in collaboration with the University of Wisconsin-Madison CIMSS"
-#Variable_String = " refl_0_65um_nom, refl_0_86um_nom, refl_1_60um_nom, refl_3_75um_nom, temp_3_75um_nom, temp_11_0um_nom, temp_12_0um_nom, cld_temp_acha, cld_emiss_acha, cld_opd_dcomp, cld_reff_dcomp"
-#Keywords_String = "EARTH SCIENCE > LAND SURFACE > SURFACE RADIATIVE PROPERTIES > REFLECTANCE, EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > REFLECTANCE, EARTH SCIENCE > SPECTRAL/ENGINEERING > INFRARED WAVELENGTHS > BRIGHTNESS TEMPERATURE, EARTH SCIENCE > SPECTRAL/ENGINEERING > SENSOR #CHARACTERISTICS > VIEWING GEOMETRY"
-#Keywords_Vocabulary_String = "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 8.0"
-#Metadata_Link_String = "gov.noaa.ncdc:C00837 gov.noaa.ncdc.C00840"
-#Time_Coverage_Resolution_String = "P1D"
-#Spatial_Resolution_String = "0.1 x 0.1 degree equal-angle grid"
+
 
 #--- attributes written to hdf files to describe data
 Title_String = " PATMOS-x "
@@ -358,7 +345,7 @@ file_tools.o: file_tools.f90
 geo_sat_navigation_mod.o:geo_sat_navigation_mod.f90
 gfs_hdf_module.o: gfs_hdf_module.f90 constant.o date_tools_mod.o nwp_common.o clavrx_message_module.o cx_science_tools_mod.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o numerical_tools_mod.o file_tools.o date_tools_mod.o
-goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o numerical_tools_mod.o  file_tools.o avhrr_module.o constant.o date_tools_mod.o
+goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o numerical_tools_mod.o  file_tools.o avhrr_module.o constant.o date_tools_mod.o cx_ssec_areafile_mod.o
 hdf_params.o: version.inc hdf_params.f90  constant.o
 hdf_read_module.o: hdf_read_module.f90 Compare_Float_Numbers.o constant.o file_tools.o Message_Handler.o clavrx_message_module.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
@@ -411,10 +398,10 @@ viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clav
 viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
 viirs_nasa_read_module.o: viirs_nasa_read_module.f90 file_tools.o pixel_common.o constant.o readh5dataset.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(hdf5libs)  viirs_nasa_read_module.f90
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o ahi_clavrx_bridge.o 
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o  ahi_clavrx_bridge.o cx_ssec_areafile_mod.o
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
-sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o
+sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o algorithm_constants.o clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o cx_ssec_areafile_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cppflags_vcld) $(cpp) sensor_module.f90
 endif
 

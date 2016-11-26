@@ -26,215 +26,221 @@
 !--------------------------------------------------------------------------------------
 module MTSAT_MODULE
 
-use CONSTANTS
-use PIXEL_COMMON
-use CALIBRATION_CONSTANTS
-use PLANCK
-use NUMERICAL_TOOLS_MOD
-use CGMS_NAV
-use GOES_MODULE
-use FILE_TOOLS, only: &
-   get_lun
-use VIEWING_GEOMETRY_MODULE
+   use CONSTANTS
+   use PIXEL_COMMON
+   use CALIBRATION_CONSTANTS
+   use PLANCK
+   use NUMERICAL_TOOLS_MOD
+   use CGMS_NAV
+   use GOES_MODULE,only: &
+      GVAR_NAV &
+      , compute_satellite_angles &
+      , get_image_from_areafile
+   use FILE_TOOLS, only: &
+      get_lun
+   use VIEWING_GEOMETRY_MODULE
 
-implicit none
-public :: READ_MTSAT
-public :: READ_NAVIGATION_BLOCK_MTSAT_FY
-public :: CALIBRATE_MTSAT_DARK_COMPOSITE
-public :: READ_MTSAT_INSTR_CONSTANTS
+   use CX_SSEC_AREAFILE_MOD
+
+   implicit none
+   private
+   public :: READ_MTSAT
+   public :: READ_NAVIGATION_BLOCK_MTSAT_FY
+   public :: CALIBRATE_MTSAT_DARK_COMPOSITE
+   public :: READ_MTSAT_INSTR_CONSTANTS
          
-private :: MTSAT_RADIANCE_BT
-private :: MTSAT_REFLECTANCE_PRELAUNCH
-private :: MTSAT_REFLECTANCE_GSICS
-private :: MTSAT_NAVIGATION
-private :: MGIVSR 
+   private :: MTSAT_RADIANCE_BT
+   private :: MTSAT_REFLECTANCE_PRELAUNCH
+   private :: MTSAT_REFLECTANCE_GSICS
+   private :: MTSAT_NAVIGATION
+   private :: MGIVSR 
  
 
- type (GVAR_NAV), PRIVATE    :: NAVstr_MTSAT_NAV
- integer, PARAMETER, PRIVATE :: nchan_mtsat= 5
- integer, PARAMETER, PRIVATE :: ndet_mtsat = 4
- integer, PARAMETER, PRIVATE :: ntable_mtsat = 1024
+   type (GVAR_NAV), PRIVATE    :: NAVstr_MTSAT_NAV
+   integer, PARAMETER, PRIVATE :: nchan_mtsat= 5
+   integer, PARAMETER, PRIVATE :: ndet_mtsat = 4
+   integer, PARAMETER, PRIVATE :: ntable_mtsat = 1024
 
- integer, PRIVATE :: nref_table_mtsat
- integer, PRIVATE :: nbt_table_mtsat
- character(len=4), SAVE, PRIVATE:: calib_type
+   
+   integer, PRIVATE :: nbt_table_mtsat
+   character(len=4), SAVE, PRIVATE:: calib_type
 
- integer (kind=int4), dimension(nchan_mtsat,ndet_mtsat,ntable_mtsat), PRIVATE  :: ref_table
- integer (kind=int4), dimension(nchan_mtsat,ndet_mtsat,ntable_mtsat), PRIVATE  :: bt_table
- integer (kind=int4), dimension(nchan_mtsat,ndet_mtsat,ntable_mtsat), PRIVATE  :: rad_table
+   integer (kind=int4), dimension(ndet_mtsat,ntable_mtsat), PRIVATE  :: ref_table
+   integer (kind=int4), dimension(nchan_mtsat,ndet_mtsat,ntable_mtsat), PRIVATE  :: bt_table
+   integer (kind=int4), dimension(nchan_mtsat,ndet_mtsat,ntable_mtsat), PRIVATE  :: rad_table
 
- integer(kind=int4), public, parameter:: Mtsat_Xstride = 1
- integer(kind=int4), private, parameter:: Num_4km_Scans_Fd = 3712
- integer(kind=int4), private, parameter:: Num_4km_elem_fd = 3712
- integer(kind=int4), private, parameter:: Time_For_Fd_Scan =  1560000 !milliseconds (26min)
- real, private, save:: Scan_rate    !scan rate in millsec / line
- integer(kind=int4), private, parameter:: Mtsat_Byte_Shift = 0
+   integer(kind=int4), public, parameter:: Mtsat_Xstride = 1
+   integer(kind=int4), private, parameter:: Num_4km_Scans_Fd = 3712
+   integer(kind=int4), private, parameter:: Num_4km_elem_fd = 3712
+   integer(kind=int4), private, parameter:: Time_For_Fd_Scan =  1560000 !milliseconds (26min)
+   real, private, save:: Scan_rate    !scan rate in millsec / line
+   integer(kind=int4), private, parameter:: Mtsat_Byte_Shift = 0
 
- contains
+contains
 
-!----------------------------------------------------------------
-! read the MTSAT constants into memory
-!-----------------------------------------------------------------
-subroutine READ_MTSAT_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
- integer:: ios0, erstat
- integer:: Instr_Const_lun
+   !----------------------------------------------------------------
+   ! read the MTSAT constants into memory
+   !-----------------------------------------------------------------
+   subroutine READ_MTSAT_INSTR_CONSTANTS(Instr_Const_file)
+      character(len=*), intent(in):: Instr_Const_file
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+      Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
 
- print *, "opening ", trim(Instr_Const_file)
- erstat = 0
- if (ios0 /= 0) then
-    erstat = 19
-    print *, EXE_PROMPT, "Error opening MTSAT constants file, ios0 = ", ios0
-    stop 19
- endif
-  read(unit=Instr_Const_lun,fmt="(a3)") sat_name
-  read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
-  read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20),planck_nu(20)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27),planck_nu(27)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31),planck_nu(31)
-  read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32),planck_nu(32)
+      print *, "opening ", trim(Instr_Const_file)
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening MTSAT constants file, ios0 = ", ios0
+         stop 19
+      endif
+      
+      read(unit=Instr_Const_lun,fmt="(a3)") sat_name
+      read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
+      read(unit=Instr_Const_lun,fmt=*) Ew_Ch20
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(20), planck_a2(20),planck_nu(20)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(27), planck_a2(27),planck_nu(27)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(31), planck_a2(31),planck_nu(31)
+      read(unit=Instr_Const_lun,fmt=*) planck_a1(32), planck_a2(32),planck_nu(32)
+      read(unit=Instr_Const_lun,fmt=*) Ch1_Dark_Count
+      read(unit=Instr_Const_lun,fmt=*) Ch1_Gain_Low_0,Ch1_Degrad_Low_1, Ch1_Degrad_Low_2
+      read(unit=Instr_Const_lun,fmt=*) Launch_Date
 
-  read(unit=Instr_Const_lun,fmt=*) Ch1_Dark_Count
-  read(unit=Instr_Const_lun,fmt=*) Ch1_Gain_Low_0,Ch1_Degrad_Low_1, Ch1_Degrad_Low_2
-  read(unit=Instr_Const_lun,fmt=*) Launch_Date
+      close(unit=Instr_Const_lun)
 
-  close(unit=Instr_Const_lun)
+      !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
+      Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / ew_Ch20
 
-  !-- convert solar flux in channel 20 to mean with units mW/m^2/cm^-1
-  Solar_Ch20_Nu = 1000.0 * Solar_Ch20 / ew_Ch20
+   end subroutine READ_MTSAT_INSTR_CONSTANTS
 
-end subroutine READ_MTSAT_INSTR_CONSTANTS
-
-! Perform MTSAT Reflectance and BT calibration
-subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
+   ! Perform MTSAT Reflectance and BT calibration
+   !
+   !
+   subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
                      jday, image_time_ms, Time_Since_Launch, &
                      AREAstr,NAVstr_MTSAT)
 
-   integer(kind=int4), intent(in):: segment_number
-   character(len=*), intent(in):: Channel_1_Filename
-   TYPE (AREA_STRUCT), intent(in) :: AREAstr
-   TYPE (GVAR_NAV), intent(in)    :: NAVstr_MTSAT
-   integer(kind=int2), intent(in):: jday
-   integer(kind=int4), intent(in):: image_time_ms
-   real(kind=real4), intent(in):: Time_Since_Launch
+      integer(kind=int4), intent(in):: segment_number
+      character(len=*), intent(in):: Channel_1_Filename
+      TYPE (area_header_type), intent(in) :: AREAstr
+      TYPE (GVAR_NAV), intent(in)    :: NAVstr_MTSAT
+      integer(kind=int2), intent(in):: jday
+      integer(kind=int4), intent(in):: image_time_ms
+      real(kind=real4), intent(in):: Time_Since_Launch
+      character(len=1020):: Channel_X_Filename
+      character(len=1020):: Channel_X_Filename_Full
+      character(len=1020):: Channel_X_Filename_Full_uncompressed
+      character(len=1020):: System_String
+      integer:: ipos
+      integer:: ilen
+      integer:: ielem
+      integer:: iline
+      integer:: Chan_Idx_Mtsat
+      integer:: Chan_Idx_Modis
+      integer:: mtsat_file_id
+      real(kind=real4):: image_time_hours
+      integer(kind=int4):: image_jday
+      integer(kind=int4):: first_line_in_segment
+      character(len=2):: Chan_Idx_Mtsat_String
+      integer:: Num_Elements_This_Image
+      integer:: Num_Scans_This_Image
+      integer:: Line_Idx
 
-   character(len=1020):: Channel_X_Filename
-   character(len=1020):: Channel_X_Filename_Full
-   character(len=1020):: Channel_X_Filename_Full_uncompressed
-   character(len=1020):: System_String
-   integer:: ipos
-   integer:: ilen
-   integer:: ielem
-   integer:: iline
-   integer:: Chan_Idx_Mtsat
-   integer:: Chan_Idx_Modis
-   integer:: mtsat_file_id
-   real(kind=real4):: image_time_hours
-   integer(kind=int4):: image_jday
-   integer(kind=int4):: first_line_in_segment
-   character(len=2):: Chan_Idx_Mtsat_String
-   integer:: Num_Elements_This_Image
-   integer:: Num_Scans_This_Image
-   integer:: Line_Idx
-
-   
-
-   !--- assume Channel_1_file name has a unique "_1_" in the name. 
-   !--- determine indices needed to replace that string
-   ipos = index(Channel_1_Filename, "_1_")
-   ilen = len(Channel_1_Filename)
+      !--- assume Channel_1_file name has a unique "_1_" in the name. 
+      !--- determine indices needed to replace that string
+      ipos = index(Channel_1_Filename, "_1_")
+      ilen = len(Channel_1_Filename)
     
-   first_line_in_segment = (segment_number-1)*Image%Number_Of_Lines_Per_Segment
+      first_line_in_segment = (segment_number-1)*Image%Number_Of_Lines_Per_Segment
 
-   !---------------------------------------------------------------------------
-   ! MTSAT Navigation (Do Navigation and Solar angles first)
-   !---------------------------------------------------------------------------
+      !---------------------------------------------------------------------------
+      ! MTSAT Navigation (Do Navigation and Solar angles first)
+      !---------------------------------------------------------------------------
    
-   call mtsat_navigation(1,first_line_in_segment,&
+      call mtsat_navigation(1,first_line_in_segment,&
                               Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                               AREAstr,NAVstr_MTSAT)
    
-   if (segment_number == 1) then
+      if (segment_number == 1) then
 
-      image_jday = jday
-      image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
+         image_jday = jday
+         image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
 
-      !--- compute scan rate for future use
-      Num_Elements_This_Image =  int(AREAstr%num_elem / MTSAT_Xstride) + 1
-      Num_Scans_This_Image = AREAstr%num_line
-      Scan_Rate = real((Num_Elements_This_Image)/               &
+         !--- compute scan rate for future use
+         Num_Elements_This_Image =  int(AREAstr%num_elem / MTSAT_Xstride) + 1
+         Num_Scans_This_Image = AREAstr%num_line
+         Scan_Rate = real((Num_Elements_This_Image)/               &
                   real(Num_4km_elem_fd/MTSAT_Xstride)) * &
                   real((Num_Scans_This_Image) / real(Num_4km_Scans_Fd)) * &
                   real(Time_For_Fd_Scan) / real(Num_Scans_This_Image)
 
-       do Chan_Idx_Mtsat = 2,5
+         do Chan_Idx_Mtsat = 2,5
 
-       if (Chan_Idx_Mtsat == 5) Chan_Idx_Modis = 20
-       if (Chan_Idx_Mtsat == 4) Chan_Idx_Modis = 27
-       if (Chan_Idx_Mtsat == 2) Chan_Idx_Modis = 31
-       if (Chan_Idx_Mtsat == 3) Chan_Idx_Modis = 32
+            if (Chan_Idx_Mtsat == 5) Chan_Idx_Modis = 20
+            if (Chan_Idx_Mtsat == 4) Chan_Idx_Modis = 27
+            if (Chan_Idx_Mtsat == 2) Chan_Idx_Modis = 31
+            if (Chan_Idx_Mtsat == 3) Chan_Idx_Modis = 32
        
-       write(Chan_Idx_Mtsat_String,fmt="(I1.1)") Chan_Idx_Mtsat
-       if(Chan_Idx_Mtsat > 9) write(Chan_Idx_Mtsat_String,fmt="(I2.2)") Chan_Idx_Mtsat
+            write(Chan_Idx_Mtsat_String,fmt="(I1.1)") Chan_Idx_Mtsat
+            if(Chan_Idx_Mtsat > 9) write(Chan_Idx_Mtsat_String,fmt="(I2.2)") Chan_Idx_Mtsat
 
-       if (Sensor%Chan_On_Flag_Default(Chan_Idx_Modis) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx_Modis) == sym%YES) then
 
-          Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_Mtsat_String)//"_" // &
+               Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_Mtsat_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
           
-          if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
-          else
-               Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          endif
+               if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+                  Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
+               else
+                  Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
+               endif
 
-          Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          if (l1b_gzip == sym%YES) then
-              System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
+               Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
+               
+               if (l1b_gzip == sym%YES) then
+                  System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
                                 
-              call system(System_String)
+                  call system(System_String)
 
-              Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-              Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
+                  Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+                  Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
-          endif
-          if (l1b_bzip2 == sym%YES) then
-              System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
+               end if
+               
+               if (l1b_bzip2 == sym%YES) then
+                  System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
-              call system(System_String)
+                  call system(System_String)
 
-              Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-              Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
-          endif
+                  Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+                  Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
+               end if
 
-      endif
+            end if
+
+         end do
+
+         ! On first segment, reflectance, BT and rad tables
+         ! On first segment, get slope/offset information from McIDAS Header
+         mtsat_file_id = get_lun()   
+         if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+            call mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
+         else
+            call mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
+         end if  
+
+         call load_mtsat_calibration(mtsat_file_id, AREAstr)
+         call mread_close(mtsat_file_id)
 
 
-    enddo
-
-    ! On first segment, reflectance, BT and rad tables
-    ! On first segment, get slope/offset information from McIDAS Header
-    mtsat_file_id = get_lun()   
-    if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-        call mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
-    else
-      call mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
-    endif  
-
-    call load_mtsat_calibration(mtsat_file_id, AREAstr)
-    call mread_close(mtsat_file_id)
-
-
-   endif
+      end if
    
    
-   !---   read channel 1 (MTSAT channel 1)
+      !---   read channel 1 (MTSAT channel 1)
    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
 
        if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
@@ -400,20 +406,22 @@ subroutine READ_MTSAT(segment_number,Channel_1_Filename, &
    Nav%Ascend(Line_Idx_Min_Segment) = Nav%Ascend(Line_Idx_Min_Segment+1)
 
 end subroutine READ_MTSAT
- 
-subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
-  integer(kind=int4), intent(in) :: lun
-  type(AREA_STRUCT), intent(in):: AREAstr
-  integer(kind=int4), dimension(6528) :: ibuf
-  character(len=25) :: cbuf
-  integer :: nref, nbt, i, j, offset
-  integer(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
+!
+!
+! 
+   subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
+      integer(kind=int4), intent(in) :: lun
+      type(area_header_type), intent(in):: AREAstr
+      integer(kind=int4), dimension(6528) :: ibuf
+      character(len=25) :: cbuf
+      integer :: nref, nbt, i, j, offset
+      integer(kind=int4) :: band_offset_2, band_offset_14, band_offset_15, &
                         band_offset_9, band_offset_7, dir_offset
-  real(kind=real4) :: albedo, temperature, radiance
-  real(kind=real4), dimension(5)  :: a_mtsat, b_mtsat, nu_mtsat
+      real(kind=real4) :: albedo, temperature, radiance
+      real(kind=real4), dimension(5)  :: a_mtsat, b_mtsat, nu_mtsat
 
-  call mreadf_int_o(lun,AREAstr%cal_offset,4,6528,ibuf)
-  !if (AREAstr%swap_bytes > 0) call swap_bytes4(ibuf,6528)
+      call mreadf_int_o(lun,AREAstr%cal_offset,4,6528,ibuf)
+      !if (AREAstr%swap_bytes > 0) call swap_bytes4(ibuf,6528)
   
   dir_offset = ibuf(4)
   band_offset_2 = ibuf(6)
@@ -424,7 +432,7 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
   
   nref = 256
   nbt = 1024
-  nref_table_mtsat = nref
+  
   nbt_table_mtsat = nbt
   
   ! We need to get the vis calibration type. This is in 5th
@@ -443,10 +451,10 @@ subroutine LOAD_MTSAT_CALIBRATION(lun, AREAstr)
       offset = band_offset_2/4 + (j-1) * 64
       albedo = real(ibuf(offset+i/4+1),kind=real4) / 10000.
       
-      ref_table(2,j,i)   = nint(albedo * 100.) 
-      ref_table(2,j,i+1) = nint(albedo * 100.)
-      ref_table(2,j,i+2) = nint(albedo * 100.)
-      ref_table(2,j,i+3) = nint(albedo * 100.)
+      ref_table(j,i)   = nint(albedo * 100.) 
+      ref_table(j,i+1) = nint(albedo * 100.)
+      ref_table(j,i+2) = nint(albedo * 100.)
+      ref_table(j,i+3) = nint(albedo * 100.)
     end do
   end do
 
@@ -624,7 +632,7 @@ subroutine MTSAT_REFLECTANCE_PRELAUNCH(Mtsat_Counts, alb_temp)
             if((index .GT. 0) .AND. (index .LE. 1024)) then
             
                 alb_temp(i,j) = &
-             (real(ref_table(2,1,index),kind=real4) /  100.0) 
+             (real(ref_table(1,index),kind=real4) /  100.0) 
      
             endif                        
             
@@ -646,7 +654,7 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
-    type (AREA_STRUCT) :: AREAstr
+    type (area_header_type) :: AREAstr
     TYPE (GVAR_NAV), intent(in)    :: NAVstr_MTSAT
     
     integer :: i, j, ii, jj, ierr, imode
@@ -769,10 +777,10 @@ end subroutine MTSAT_REFLECTANCE_PRELAUNCH
  end subroutine mtsat_navigation
  
  
-!------------------------------------------------------------------
-! subroutine to convert MTSAT counts to radiance and brightness
-! temperature
-!------------------------------------------------------------------
+   !------------------------------------------------------------------
+   ! subroutine to convert MTSAT counts to radiance and brightness
+   ! temperature
+   !------------------------------------------------------------------
   
   subroutine MTSAT_RADIANCE_BT(chan_num,Mtsat_Counts, rad2, temp1)
 
@@ -1259,7 +1267,7 @@ end subroutine MGI240
 
  subroutine READ_NAVIGATION_BLOCK_MTSAT_FY(filename, AREAstr, NAVstr)
   character(len=*), intent(in):: filename
-  TYPE(AREA_STRUCT), intent(in):: AREAstr
+  TYPE(area_header_type), intent(in):: AREAstr
   TYPE(GVAR_NAV), intent(inout):: NAVstr
  
   character(len=1), dimension(3200) :: CBUF

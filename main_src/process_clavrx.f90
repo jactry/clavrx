@@ -194,11 +194,13 @@
       , read_globsnow_analysis_map
    
    use GOES_MODULE, only: &
-      area_struct &
-      , gvar_nav &
+         gvar_nav &
       , dark_composite_cloud_mask &
       , determine_dark_composite_name &
       , post_process_goes_dark_composite
+      
+   use CX_SSEC_AREAFILE_MOD,only: &
+      area_header_type   
    
    use LAND_SFC_PROPERTIES, only: &
       land_grid_description &
@@ -408,7 +410,7 @@
    real, parameter:: Max_Bt_11um_LRC = 300.0
      
    ! GOES header structures
-   TYPE (AREA_STRUCT) :: AREAstr
+   TYPE (area_header_type) :: AREAstr
    TYPE (GVAR_NAV)    :: NAVstr
    
    logical :: dncomp_run

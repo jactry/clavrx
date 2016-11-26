@@ -159,6 +159,8 @@ contains
       integer :: day
       integer :: hour
       integer :: minute
+      
+      integer, parameter :: TIME_PERIOD_AHI_MINUTE = 8
    
       read(file_base(8:11), fmt="(I4)") year
       read(file_base(12:13), fmt="(I2)") month
@@ -172,7 +174,7 @@ contains
       
       time1 = time0
       
-      call time1 % add_time ( minute = 8)
+      call time1 % add_time ( minute = TIME_PERIOD_AHI_MINUTE)
        
    end subroutine ahi_time_from_filename
    

@@ -115,23 +115,10 @@ subroutine IR_CLOUD_TYPE_BAUM()
   integer:: Elem_Idx
   integer:: Num_Elem
   integer:: Num_Line
-  integer:: Elem_Start
-  integer:: Elem_End
   integer:: Nwp_Lon_Idx
   integer:: Nwp_Lat_Idx
-  integer:: Vza_Idx
-  integer:: i1,i2,j1,j2
-  integer:: Elem_Lrc_Idx
-  integer:: Line_Lrc_Idx
-  integer:: Number_Rtm_Levels
-
+  integer:: Vza_Idx 
   logical:: Fire_Flag
-
-  integer:: water_count
-  integer:: ice_count
-
-  integer(kind=int1) :: smoke_pixel
-  integer(kind=int1) :: dust_pixel
 
   real(kind=real4) :: BTD8511
   real(kind=real4) :: Beta_11um_133um

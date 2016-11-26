@@ -128,8 +128,6 @@ clavrxorb_objs = process_clavrx.o \
                  sfc_emiss.o \
 	         rt_utils.o  \
                  rtm_common.o \
-	         Message_Handler.o \
-	         Compare_Float_Numbers.o \
 	         hdf_read_module.o \
                  flip_rtc.o \
                  re4flip.o \
@@ -347,7 +345,7 @@ gfs_hdf_module.o: gfs_hdf_module.f90 constant.o date_tools_mod.o nwp_common.o cl
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o numerical_tools_mod.o file_tools.o date_tools_mod.o
 goes_module.o: goes_module.f90 pixel_common.o viewing_geometry_module.o numerical_tools_mod.o  file_tools.o avhrr_module.o constant.o date_tools_mod.o cx_ssec_areafile_mod.o
 hdf_params.o: version.inc hdf_params.f90  constant.o
-hdf_read_module.o: hdf_read_module.f90 Compare_Float_Numbers.o constant.o file_tools.o Message_Handler.o clavrx_message_module.o
+hdf_read_module.o: hdf_read_module.f90 constant.o file_tools.o clavrx_message_module.o
 iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o constant.o file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o
 iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
 land_sfc_properties.o: land_sfc_properties.f90 constant.o numerical_tools_mod.o file_tools.o date_tools_mod.o
@@ -365,8 +363,8 @@ seviri_module.o: seviri_module.f90 pixel_common.o constant.o numerical_tools_mod
 user_options.o: user_options.f90 constant.o pixel_common.o file_tools.o clavrx_message_module.o 
 
 
-Message_Handler.o: Message_Handler.f90 file_tools.o constant.o
-Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
+
+
 
 
 

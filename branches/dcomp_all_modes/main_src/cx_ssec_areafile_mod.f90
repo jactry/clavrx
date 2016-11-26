@@ -25,13 +25,13 @@ module cx_ssec_areafile_mod
       integer :: Creation_Time         ! Creation time (HHMMSS)
       integer :: Sndr_Filter_Map       ! Filter map for soundings
       integer :: img_id_num            ! Image ID number
-      integer, dimension(4) :: id     ! Reserved for radar appications
+      integer :: id (4)    ! Reserved for radar appications
       character(len=32):: comment     ! 32 char comments
       integer :: pri_key_calib         ! Calibration colicil (area number)
       integer :: pri_key_nav           ! Primary navigation codicil  (data)
       integer :: sec_key_nav           ! Secondary navigation codicil (nav)
       integer :: val_code              ! Validity code
-      integer, dimension(8) :: pdl    ! PDL in packed-byte format
+      integer :: pdl(8)    ! PDL in packed-byte format
       integer :: band8                 ! Where band-8 came from
       integer :: act_Img_Date          ! Actual image start day (YYDDD)
       integer :: act_Img_Time          ! Actual image start time (HHMMSS)
@@ -47,8 +47,16 @@ module cx_ssec_areafile_mod
       integer :: cal_offset               ! needed for SEVIRI
       character(len=4) :: orig_Src_Type   ! Original source type of data
       integer, dimension(7) :: reserved    ! Reserved (6 calib pointer)
+   
    end type area_header_type
-
+   
+   
+   type area_type
+      type(area_header_type) :: a
+   contains
+      
+      !module procedure :: read_it => area_header_type__read_it
+   end type area_type
 contains
 
    logical function is_area_file ( file , sat_id_num )
@@ -88,6 +96,10 @@ contains
       print*,file
    
    end subroutine read_area_header 
+   
+   
+ 
+   
    
 
 end module cx_ssec_areafile_mod

@@ -95,11 +95,14 @@ module dncomp_clavrx_bridge_mod
 
    private
    
-   logical :: first_call = .true.
-   logical :: first_call_iband = .true.
+ 
    public :: set_dcomp_version              
    public :: awg_cloud_dncomp_algorithm
    public :: awg_cloud_dncomp_algorithm_iband
+   
+   
+   logical :: first_call = .true.
+   logical :: first_call_iband = .true.
    
    character(len = 200) :: DCOMP_RELEASE_VERSION = 'DCOMP version 2_0_0'
   

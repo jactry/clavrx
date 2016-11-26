@@ -38,14 +38,77 @@
 ! end loop
 !--------------------------------------------------------------------------------------
 module SENSOR_MODULE
-   use PIXEL_COMMON, only:
-   use CALIBRATION_CONSTANTS
-   use ALGORITHM_CONSTANTS
-   use CONSTANTS
+   use PIXEL_COMMON, only: &
+      sensor &
+      , image &
+      , avhrr_data_type &
+      , AVHRR_Ver_1b &
+      , AVHRR_GAC_FLAG &
+      , AVHRR_KLM_FLAG &
+      , AVHRR_AAPP_FLAG &
+      , AVHRR_IFF_Flag &
+      , AVHRR_1_Flag &
+      , nav &
+      , geo &
+      , Sc_Id_AVHRR  &
+      , Byte_Swap_1b &
+      , Ancil_Data_Dir &
+      , Cloud_Mask_Aux_Flag &
+      , Cloud_Mask_Bayesian_Flag &
+      , Cloud_Mask_Aux_Read_Flag &
+      , L1b_Rec_Length &
+      , Dark_Composite_Name &
+      , Two_Byte_Temp &
+      , Ref_Ch1_Dark_Composite &
+      , Therm_Cal_1b 
+      
+   use CALIBRATION_CONSTANTS,only: &
+       Planck_A1 &
+      , Planck_A2 &
+      , Planck_nu &
+      , goes_input_time &
+      , Goes_Epoch_Time &
+      , Solar_Ch20 &
+      , sat_name &
+      , ew_ch20 &
+      , solar_ch20_nu
+      
+   use ALGORITHM_CONSTANTS,only:
+   
+   use CONSTANTS, only: &
+    int4 &
+    , real4 &
+    , MISSING_VALUE_INT4 &
+    , MISSING_VALUE_REAL4 &
+    , sym &
+    , DTOR &
+    , EXE_PROMPT
+   
    use FILE_TOOLS,only: &
       get_lun
-   use AVHRR_MODULE
-   use GOES_MODULE
+      
+   use AVHRR_MODULE,only: &
+      read_avhrr_instr_constants &
+      , assign_avhrr_sat_id_num_internal &
+      , define_1b_data &
+      , determine_avhrr_file_type &
+      , read_avhrr_level1b_data &
+      , read_avhrr_level1b_header 
+   
+   use GOES_MODULE, only: &
+    gvar_nav &
+    , goes_xstride &
+    , Goes_Sndr_Xstride &
+    , CALIBRATE_GOES_DARK_COMPOSITE &
+    , get_goes_headers &
+    , LMODEL &
+    , read_dark_composite_counts &
+    , read_goes &
+    , read_goes_instr_constants &
+    , read_goes_sndr &
+    , read_goes_sndr_instr_constants
+   
+   
    use MODIS_MODULE, only : &
        DETERMINE_MODIS_CLOUD_MASK_FILE &
      , READ_MODIS_INSTR_CONSTANTS &
@@ -58,15 +121,35 @@ module SENSOR_MODULE
       READ_FY &
     , READ_FY_INSTR_CONSTANTS
 
-   use COMS_MODULE
+   use COMS_MODULE, only: &
+      read_coms &
+      , read_coms_instr_constants &
+      , read_navigation_block_coms
+   
+   
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
       , READ_IFF_VIIRS_INSTR_CONSTANTS &
       , READ_IFF_AVHRR_INSTR_CONSTANTS &
       , READ_IFF_DATE_TIME &
       , GET_IFF_DIMS_BRIDGE
-   use MTSAT_MODULE
-   use SEVIRI_MODULE
+      
+   use MTSAT_MODULE,only: &
+      mtsat_xstride &
+      , calibrate_mtsat_dark_composite &
+      , read_mtsat &
+      , read_mtsat_instr_constants &
+      , read_navigation_block_mtsat_fy
+   
+   use SEVIRI_MODULE, only: &
+      seviri_xstride &
+      , calibrate_seviri_dark_composite &
+      , read_msg_instr_constants &
+      , read_navigation_block_seviri &
+      , read_seviri
+   
+   
+   
 #ifdef HDF5LIBS
    use VIIRS_CLAVRX_BRIDGE , only : &
        READ_VIIRS_DATE_TIME &
@@ -81,6 +164,9 @@ module SENSOR_MODULE
 #endif
 
    use CLAVRX_MESSAGE_MODULE
+   
+   use CX_SSEC_AREAFILE_MOD, only: &
+   area_header_type
 
    implicit none
 
@@ -120,7 +206,7 @@ module SENSOR_MODULE
       type ( date_type ) :: time0_obj, time1_obj
       
       ! - this is only needed/used for AVHRR
-      type (AREA_STRUCT), intent(in) :: AREAstr
+      type (area_header_type), intent(in) :: AREAstr
 
       integer(kind=int4):: Start_Year_Tmp
       integer(kind=int4):: Start_Day_Tmp
@@ -460,7 +546,7 @@ module SENSOR_MODULE
          , NAVstr &
          , Ierror)
 
-      TYPE (AREA_STRUCT), intent(out) :: AREAstr
+      TYPE (area_header_type), intent(out) :: AREAstr
       TYPE (GVAR_NAV), intent(out)    :: NAVstr
       integer(kind=int4) :: Ierror
       integer(kind=int4) :: Ifound
@@ -1108,7 +1194,7 @@ module SENSOR_MODULE
    subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION(Level1b_Full_Name,AREAstr,NAVstr)
 
     character(len=*), intent(in):: Level1b_Full_Name
-    type (AREA_STRUCT), intent(inout) :: AREAstr
+    type (area_header_type), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
     REAL (KIND=REAL4)                 :: Lat_temp, Lon_temp
     INTEGER (KIND=INT4)               :: Year_temp
@@ -1210,7 +1296,7 @@ module SENSOR_MODULE
          ,ahi_config_type
                                                                
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr ! AVHRR only
+      TYPE (area_header_type), intent(in) :: AREAstr ! AVHRR only
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header ! AVHRR only
       integer(kind=int4), intent(out) :: Ierror
 
@@ -1360,14 +1446,20 @@ print*,'after nscans> ', Image%Number_Of_Lines
    end subroutine SET_FILE_DIMENSIONS
 
    !--------------------------------------------------------------------------------------------------
-   !
+   ! this routine is called in process_clavrx
    !--------------------------------------------------------------------------------------------------
-   subroutine READ_LEVEL1B_DATA(Level1b_Full_Name,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
+   subroutine READ_LEVEL1B_DATA(Level1b_Full_Name &
+      , Segment_Number &
+      , Time_Since_Launch &
+      , AREAstr &
+      , NAVstr &
+      , Nrec_Avhrr_Header &
+      , Ierror_Level1b)
 
       character(len=*), intent(in):: Level1b_Full_Name
       integer, intent(in):: Segment_Number
       integer, intent(in):: Nrec_Avhrr_Header
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr
+      TYPE (area_header_type), intent(in) :: AREAstr
       TYPE (GVAR_NAV), intent(in)    :: NAVstr
       real, intent(in):: Time_Since_Launch
       integer, intent(out):: Ierror_Level1b

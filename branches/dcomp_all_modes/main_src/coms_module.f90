@@ -37,8 +37,10 @@ use GOES_MODULE
 use FILE_TOOLS, only: &
    get_lun
 use VIEWING_GEOMETRY_MODULE
-
+   
+   use CX_SSEC_AREAFILE_MOD
  implicit none
+   private
  public :: READ_COMS
  public:: READ_NAVIGATION_BLOCK_COMS
  public:: GET_COMS_IMAGE
@@ -122,7 +124,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
    integer(kind=int4), intent(in):: segment_number
    character(len=*), intent(in):: channel_1_filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr_COMS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
@@ -392,7 +394,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
  
  subroutine load_COMS_calibration(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   integer(kind=int4), dimension(6528) :: ibuf
   CHARACTER(len=25) :: cbuf
   integer :: nref, nbt, i, offset
@@ -519,7 +521,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
-    type (AREA_STRUCT) :: AREAstr
+    type (area_header_type) :: AREAstr
     type (GVAR_NAV), intent(in)    :: NAVstr_COMS
     
     integer :: i, j, ii, jj, imode
@@ -637,7 +639,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  subroutine READ_NAVIGATION_BLOCK_COMS(filename, AREAstr, NAVstr)
   CHARACTER(len=*), intent(in):: filename
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   type(GVAR_NAV), intent(inout):: NAVstr
  
   integer :: geos_nav
@@ -675,7 +677,7 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
                                     num_lines_read, image)
 
  character(len=*), intent(in):: filename 
- type (AREA_STRUCT), intent(in) :: AREAstr
+ type (area_header_type), intent(in) :: AREAstr
  integer(kind=int4), intent(in):: segment_number
  integer(kind=int4), intent(in):: num_lines_per_segment
  integer(kind=int4), intent(out):: num_lines_read

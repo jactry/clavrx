@@ -45,8 +45,7 @@ module SEVIRI_MODULE
       get_lun
    
    use GOES_MODULE,only: &
-      area_struct &
-      , gvar_nav &
+      gvar_nav &
       , COMPUTE_SATELLITE_ANGLES &
       , GET_IMAGE_FROM_AREAFILE
    
@@ -57,6 +56,8 @@ module SEVIRI_MODULE
    use PLANCK
   
    use VIEWING_GEOMETRY_MODULE
+   
+   use CX_SSEC_AREAFILE_MOD
 
    implicit none
    private
@@ -184,7 +185,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
-   TYPE (AREA_STRUCT), intent(in) :: AREAstr
+   TYPE (area_header_type), intent(in) :: AREAstr
    integer(kind=int2), intent(in):: Day_Of_Year
    integer(kind=int4), intent(in):: Image_Time_Ms
 
@@ -437,7 +438,7 @@ subroutine GET_SEVIRI_NAVIGATION(xstart,ystart,xsize,ysize,xstride,AREAstr)
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride
-    TYPE (AREA_STRUCT), intent(in) ::AREAstr
+    TYPE (area_header_type), intent(in) ::AREAstr
     type (GVAR_NAV) :: NAVstr
     
     integer :: i, j, elem, line
@@ -509,7 +510,7 @@ end subroutine GET_SEVIRI_NAVIGATION
 !--------------------------------------------------------------------------------
 subroutine LOAD_SEVIRI_CAL_AREA(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   character(len=1252) :: cbuf
   character(len=104) :: cout
   integer :: bandoffset, band, avoid_warning
@@ -560,30 +561,33 @@ real(kind=real4), dimension(:,:),  intent(out):: Ref_Ch1_Dark
 
 end subroutine CALIBRATE_SEVIRI_DARK_COMPOSITE
 
-subroutine READ_NAVIGATION_BLOCK_SEVIRI(filename, AREAstr, NAVstr)
+   !
+   !
+   !
+   subroutine READ_NAVIGATION_BLOCK_SEVIRI(filename, AREAstr, NAVstr)
 
-  CHARACTER(len=*), intent(in):: filename
-  type(AREA_STRUCT), intent(in):: AREAstr
-  type(GVAR_NAV), intent(inout):: NAVstr
+      CHARACTER(len=*), intent(in):: filename
+      type(area_header_type), intent(in):: AREAstr
+      type(GVAR_NAV), intent(inout):: NAVstr
 
-  integer(kind=int4)nav_offset
-  integer:: number_of_words_read
-  integer(kind=int4), dimension(640) :: i4buf
+      integer(kind=int4) :: nav_offset
+      integer:: number_of_words_read
+      integer(kind=int4), dimension(640) :: i4buf
 
-  ! Navigation block offset is read from the McIDAS AREA file.
-  nav_offset = AREAstr%sec_key_nav
+      ! Navigation block offset is read from the McIDAS AREA file.
+      nav_offset = AREAstr%sec_key_nav
 
-  ! Read the navigation block.
-  call mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
+      ! Read the navigation block.
+      call mreadf_int(trim(filename)//CHAR(0),nav_offset,4,640,&
                     number_of_words_read, i4buf)
 
-  ! Isolate the navigation block.
-  call move_bytes(4,i4buf(1),NAVstr%nav_type,0)
+      ! Isolate the navigation block.
+      call move_bytes(4,i4buf(1),NAVstr%nav_type,0)
 
-  ! Extract the satellite sub longitude point, and convert to positive east.
-  NAVstr%sub_lon = real(i4buf(6),kind=real4) / 10000 * real(-1.0)
-  NAVstr%sublon = NAVstr%sub_lon
+      ! Extract the satellite sub longitude point, and convert to positive east.
+      NAVstr%sub_lon = real(i4buf(6),kind=real4) / 10000 * real(-1.0)
+      NAVstr%sublon = NAVstr%sub_lon
 
-end subroutine READ_NAVIGATION_BLOCK_SEVIRI
+   end subroutine READ_NAVIGATION_BLOCK_SEVIRI
 
 end module SEVIRI_MODULE

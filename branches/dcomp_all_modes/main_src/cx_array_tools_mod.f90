@@ -1,5 +1,8 @@
 ! $Header$
-
+!
+!  HISTIRY:
+!       Created Sep 2016 (AW)      
+!
 module cx_array_tools_mod
 
    implicit none
@@ -11,8 +14,8 @@ module cx_array_tools_mod
 
 contains
 
- ! thjos function redo the IDL rebin function
-   ! this should be moved to a module asasp.
+ ! this function redo the IDL rebin function
+   
    function cx_rebin_real ( array, d1, d2 )
       real, intent(in) :: array(:,:)
       integer, intent(in) :: d1, d2
@@ -34,8 +37,8 @@ contains
    
    end function cx_rebin_real
 
- ! thjos function redo the IDL rebin function
-   ! this should be moved to a module asasp.
+ ! this function redo the IDL rebin function
+  
    function cx_rebin_i1 ( array, d1, d2 )
       integer(kind=1), intent(in) :: array(:,:)
       integer, intent(in) :: d1, d2

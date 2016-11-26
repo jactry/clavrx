@@ -69,13 +69,14 @@ contains
       
       size_arrays = shape ( data_r4)
       allocate (out_i1(size_arrays(1),size_arrays(2)))
-      out_i1 = two_byte_min + min(1.0,max(0.0,(data_r4 - unscaled_min)/(unscaled_max - unscaled_min))) &
+      out_i1 = one_byte_min + min(1.0,max(0.0,(data_r4 - unscaled_min)/(unscaled_max - unscaled_min))) &
          * (ONE_BYTE_MAX - ONE_BYTE_MIN)
            
       !--- set scaled missing values
       where (data_r4 == unscaled_missing)
          out_i1 = missing_value_int1
       end where
+      
    
    end subroutine scale_i1_rank2
    

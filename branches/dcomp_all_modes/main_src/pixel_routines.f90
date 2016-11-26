@@ -41,7 +41,7 @@
 !--------------------------------------------------------------------------------------
 MODULE PIXEL_ROUTINES
    
-   use ALGORITHM_CONSTANTS,only: &
+   use CX_SCIENCE_TOOLS_MOD,only: &
       Glint_Zen_Thresh &
       , Ref_Sfc_White_Sky_Water
    

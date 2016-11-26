@@ -88,7 +88,8 @@ module dncomp_clavrx_bridge_mod
      
    use dcomp_rtm_module
    
-   use cx_array_tools_mod
+   use cx_array_tools_mod, only: &
+      cx_rebin
           
    implicit none
 
@@ -126,7 +127,6 @@ contains
       
       integer :: debug_mode      
       integer :: dim_1, dim_2
-      integer :: idx_chn
       
       logical :: run_nlcomp
       
@@ -389,13 +389,15 @@ contains
    !    This is the DCOMP bridge from CLAVR-x
    !   this is for iband VIIRS 0.6/1.6 algorithm only
    !---------------------------------------------------------------------- 
-   subroutine awg_cloud_dncomp_algorithm_iband (  iseg_in , infile, path, algorithm_started )   
-      use pixel_common   
+   subroutine awg_cloud_dncomp_algorithm_iband (  infile, path, algorithm_started )   
+      
+      use pixel_common, only: &
+         Ref_chi1 &
+         , ref_chi3   
        
       implicit none
  
       !--- input
-      integer, intent(in),optional :: iseg_in
 		character(len=*) , intent(in) :: infile
       character(len=*) , intent(in) :: path
       ! - output 
@@ -407,18 +409,9 @@ contains
       
       integer :: debug_mode      
       integer :: dim_1, dim_2
-      integer :: idx_chn
-      
-      
-      
-      integer, allocatable :: possible_channels ( : )
+
       logical :: chan_on ( N_CHN ) = .false.
-      integer :: i, i_mode
-      integer :: CHN_VIS
-      integer :: CHN_NIR
-      
-      integer :: dcomp_mode_local
-      
+   
       interface
          subroutine dcomp_array_loop (a , b , debug_mode_user)
             import dncomp_in_type

@@ -1,4 +1,4 @@
-! Created on Mon Nov  7 16:45:24 2016
+! Created on Sat Nov 26 22:06:56 2016
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -215,9 +215,9 @@ case("refl_0_65um_nom_min_3x3")
       data_dim2_dtype_r4 = ref_Ch1_Min_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_stddev_3x3")
-   if (allocated ( Ref_Ch1_Min_3x3)) then
+   if (allocated ( Ref_Ch1_Std_3x3)) then
       if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
-      data_dim2_dtype_r4 = Ref_Ch1_Min_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+      data_dim2_dtype_r4 = Ref_Ch1_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_stddev_3x3")
    if (allocated ( Ref_Ch1_Std_3x3)) then

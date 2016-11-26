@@ -30,7 +30,9 @@ MODULE Compare_Float_Numbers
   ! Environment setup
   ! -----------------
   ! Module usage
-  USE CONSTANTS
+  USE CONSTANTS,only: &
+   real4 &
+   , real8
   ! Disable all implicit typing
   IMPLICIT NONE
 

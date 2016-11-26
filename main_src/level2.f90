@@ -494,6 +494,8 @@ CONTAINS
          allocate ( data_dim1_dtype_r4 (sds_edge_2d(2)))
          allocate ( data_dim2_dtype_r4 (sds_edge_2d(1),sds_edge_2d(2)))
         
+        
+       
          do ii = 1, prd % num_products
             prd_i => prd % product(ii)  
             name =  prd_i % name         

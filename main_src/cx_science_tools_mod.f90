@@ -2,6 +2,17 @@
 !   this is for all basics scientific meteoerological etc routines
 !
 module cx_science_tools_mod
+   
+   
+   use CONSTANTS, only: &
+      real4
+
+   real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0
+   real (kind=real4), parameter, public:: STEFAN_BOLTZMANN_CONSTANT = 5.670e-08  !W/m^2/K^4
+   real (kind=real4), parameter, public:: SOLAR_CONSTANT = 1360.0   !W/m^2
+
+  !--- default modis white sky values for Snow and water
+   real, parameter, public:: REF_SFC_WHITE_SKY_WATER = 5.0 
 
 contains
 

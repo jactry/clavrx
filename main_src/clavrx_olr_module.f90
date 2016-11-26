@@ -36,7 +36,7 @@
 !--------------------------------------------------------------------------------------
 module CLAVRX_OLR_MODULE
 
-   use ALGORITHM_CONSTANTS,only: &
+   use CX_SCIENCE_TOOLS_MOD,only: &
       stefan_boltzmann_constant
       
    use CONSTANTS,only: &

@@ -253,8 +253,8 @@ contains
       integer(kind=int4) , dimension(2) :: dim_seg 
       integer(kind=int4) , dimension(2) :: dim_seg_iband
       integer(kind=int4) , dimension(2) :: dim_seg_dnb
-      ! - this is to delete
-      integer :: i
+      
+     
       integer , dimension (: ) , allocatable:: time_msec_day
       integer (kind = int8) , parameter :: microsec_per_day =  86400000000_8
       integer, dimension(2)::shape_buffer

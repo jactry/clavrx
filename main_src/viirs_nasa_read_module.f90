@@ -81,38 +81,12 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       , Nav &
       , Scan_Number &
       , Ancil_Data_Dir &
-      , Cloud_Mask_Aux_Flag &
-      , Cloud_Mask_Aux_Read_Flag &
-      , Cld_Mask_Aux &
-      , Cld_Type_Aux &
-      , Cld_Phase_Aux &
+      
       , Scan_Time &
-      , Ch &
-      , Ref_ChI1 &
-      , Ref_ChI2 &
-      , Ref_ChI3 &
-      , Bt_ChI4 &
-      , Bt_ChI5 &
-      , Ref_Min_ChI1 &
-      , Ref_Max_ChI1 &
-      , Ref_Mean_ChI1 &
-      , Ref_Uni_ChI1 &
-      , Ref_Min_ChI2 &
-      , Ref_Max_ChI2 &
-      , Ref_Mean_ChI2 &
-      , Ref_Uni_ChI2 &
-      , Ref_Min_ChI3 &
-      , Ref_Max_ChI3 &
-      , Ref_Mean_ChI3 &
-      , Ref_Uni_ChI3 &
-      , Bt_Min_ChI4 &
-      , Bt_Max_ChI4 &
-      , Bt_Mean_ChI4 &
-      , Bt_Uni_ChI4 &
-      , Bt_Min_ChI5 &
-      , Bt_Max_ChI5 &
-      , Bt_Mean_ChI5 &
-      , Bt_Uni_ChI5
+      , Ch
+     
+     
+      
 
    use PLANCK
 
@@ -502,7 +476,7 @@ subroutine READ_VIIRS_NASA_DATE_TIME (Path, Infile, Year , Doy , Start_Time &
       integer :: Start_Minute
       integer :: Start_Sec
 
-      integer :: Days_Of_Year
+     
       integer :: End_Hour
       integer :: End_Minute
       integer :: End_Sec
@@ -558,7 +532,7 @@ subroutine READ_NUMBER_OF_SCANS_VIIRS_NASA (Infile, Number_Of_Viirs_Lines, &
       character(len=100) :: Setname
       integer, dimension(:), pointer :: Test
       integer, dimension(1) :: Dims
-      integer :: Status
+     
 
 
       Error_Out = 0

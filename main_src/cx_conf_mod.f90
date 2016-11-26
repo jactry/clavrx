@@ -328,7 +328,6 @@ contains
       integer :: lun
       integer :: ios0
       integer :: errstat
-      integer :: int_dummy
       logical :: dum_l6(6)
       integer :: i
     

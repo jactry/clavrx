@@ -177,7 +177,28 @@ module LEVEL2_ROUTINES
       , Beta_11um_85um_Tropo_Rtm &
       , Beta_11um_12um_Tropo_Rtm &
       , aot1 &
-      , csv_file
+      , csv_file &
+      , Covar_Ch27_Ch31_5x5 &
+      , Ref_Max_chi1 &
+      , Ref_min_chi1 &
+      , Ref_mean_chi1 &
+      , Ref_uni_chi1  &
+      , Ref_Max_chi2 &
+      , Ref_min_chi2 &
+      , Ref_mean_chi2 &
+      , Ref_uni_chi2 &
+      , Ref_Max_chi3 &
+      , Ref_min_chi3 &
+      , Ref_mean_chi3 &
+      , Ref_uni_chi3 &
+      , Ref_Max_chi4 &
+      , Ref_min_chi4 &
+      , Ref_mean_chi4 &
+      , Ref_uni_chi4 &
+      , Ref_Max_chi5 &
+      , Ref_min_chi5 &
+      , Ref_mean_chi5 &
+      , Ref_uni_chi5
       
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &

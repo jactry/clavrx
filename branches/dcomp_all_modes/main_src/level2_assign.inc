@@ -1,4 +1,4 @@
-! Created on Sun Nov 27 13:56:35 2016
+! Created on Sun Nov 27 14:02:20 2016
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -957,36 +957,36 @@ case("refl_1_61um_nom_iband_uni")
       data_dim2_dtype_r4 = Ref_Uni_ChI3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_74um_nom_iband_max")
-   if (allocated ( Ref_Max_ChI4)) then
-      data_dim2_dtype_r4 = Ref_Max_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Max_ChI4)) then
+      data_dim2_dtype_r4 = Bt_Max_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_74um_nom_iband_min")
-   if (allocated ( Ref_Min_ChI4)) then
-      data_dim2_dtype_r4 = Ref_Min_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Min_ChI4)) then
+      data_dim2_dtype_r4 = Bt_Min_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_74um_nom_iband_mean")
-   if (allocated ( Ref_Mean_ChI4)) then
-      data_dim2_dtype_r4 = Ref_Mean_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Mean_ChI4)) then
+      data_dim2_dtype_r4 = Bt_Mean_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_74um_nom_iband_uni")
-   if (allocated ( Ref_Uni_ChI4)) then
-      data_dim2_dtype_r4 = Ref_Uni_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Uni_ChI4)) then
+      data_dim2_dtype_r4 = Bt_Uni_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_iband_max")
-   if (allocated ( Ref_Max_ChI5)) then
-      data_dim2_dtype_r4 = Ref_Max_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Max_ChI5)) then
+      data_dim2_dtype_r4 = Bt_Max_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_iband_min")
-   if (allocated ( Ref_Min_ChI5)) then
-      data_dim2_dtype_r4 = Ref_Min_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Min_ChI5)) then
+      data_dim2_dtype_r4 = Bt_Min_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_iband_mean")
-   if (allocated ( Ref_Mean_ChI5)) then
-      data_dim2_dtype_r4 = Ref_Mean_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Mean_ChI5)) then
+      data_dim2_dtype_r4 = Bt_Mean_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_iband_uni")
-   if (allocated ( Ref_Uni_ChI5)) then
-      data_dim2_dtype_r4 = Ref_Uni_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Uni_ChI5)) then
+      data_dim2_dtype_r4 = Bt_Uni_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("radiance_11_0um_nom")
    if (allocated ( ch(31)%Rad_Toa)) then

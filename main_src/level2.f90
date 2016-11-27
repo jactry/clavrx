@@ -198,7 +198,13 @@ module LEVEL2_ROUTINES
       , Bt_Max_chi5 &
       , Bt_min_chi5 &
       , Bt_mean_chi5 &
-      , Bt_uni_chi5
+      , Bt_uni_chi5 &
+      , Cld_Type_Ir &
+      , Cld_Phase_Ir &
+      , Tpw_Above_Cloud_Nwp_Pix &
+      , Inversion_Strength_Nwp_Pix &
+      , Inversion_Base_Nwp_Pix &
+      , Inversion_Top_Nwp_Pix
       
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &

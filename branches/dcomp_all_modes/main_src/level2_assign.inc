@@ -1,4 +1,4 @@
-! Created on Sun Nov 27 13:40:02 2016
+! Created on Sun Nov 27 13:56:35 2016
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -853,6 +853,61 @@ case("refl_0_94um_nom")
       if (sensor%chan_on_flag_default(19) .NE. sym%YES) cycle 
       data_dim2_dtype_r4 = ch(19)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
+case("temp_6_7um_nom")
+   if (allocated ( ch(27)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(27)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_7_3um_nom")
+   if (allocated ( ch(28)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(28) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(28)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_9_7um_nom")
+   if (allocated ( ch(30)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(30) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(30)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_13_3um_nom")
+   if (allocated ( ch(33)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(33) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(33)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_13_6um_nom")
+   if (allocated ( ch(34)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(34) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(34)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_13_9um_nom")
+   if (allocated ( ch(35)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(35) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(35)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_14_2um_nom")
+   if (allocated ( ch(36)%Bt_Toa)) then
+      if (sensor%chan_on_flag_default(36) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(36)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("csbt_mask_6_7um_nom")
+   if (allocated ( ch(27)%CSBT_Mask)) then
+      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      data_dim2_dtype1 = ch(27)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("csbt_mask_7_3um_nom")
+   if (allocated ( ch(28)%CSBT_Mask)) then
+      if (sensor%chan_on_flag_default(28) .NE. sym%YES) cycle 
+      data_dim2_dtype1 = ch(28)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("csbt_mask_13_3um_nom")
+   if (allocated ( ch(33)%CSBT_Mask)) then
+      if (sensor%chan_on_flag_default(33) .NE. sym%YES) cycle 
+      data_dim2_dtype1 = ch(33)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_11um_vs_67um_covar_5x5")
+   if (allocated ( Covar_Ch27_Ch31_5x5)) then
+      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = Covar_Ch27_Ch31_5x5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
 case("refl_0_65um_nom_iband_max")
    if (allocated ( Ref_Max_ChI1)) then
       data_dim2_dtype_r4 = Ref_Max_ChI1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
@@ -953,5 +1008,25 @@ case("cld_height_sounder")
 case("cld_temp_lower_acha")
    if (allocated ( ACHA%Lower_Tc)) then
       data_dim2_dtype_r4 = ACHA%Lower_Tc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_base_hgt_qf")
+   if (allocated ( ACHA%base_Quality_Flag)) then
+      data_dim2_dtype1 = ACHA%base_Quality_Flag(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("total_precipitable_water_nwp_above_cloud")
+   if (allocated ( Tpw_Above_Cloud_Nwp_Pix)) then
+      data_dim2_dtype_r4 = Tpw_Above_Cloud_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("inversion_strength_nwp")
+   if (allocated ( Inversion_Strength_Nwp_Pix)) then
+      data_dim2_dtype_r4 = Inversion_Strength_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("inversion_base_height_nwp")
+   if (allocated ( Inversion_Base_Nwp_Pix)) then
+      data_dim2_dtype_r4 = Inversion_Base_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("inversion_top_height_nwp")
+   if (allocated ( Inversion_Top_Nwp_Pix)) then
+      data_dim2_dtype_r4 = Inversion_Top_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 end select

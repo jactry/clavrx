@@ -91,16 +91,19 @@ public:: SETUP_ICE_MICROPHYSICAL_MODEL
    !-- ice clouds modeled as aggregate_columns (b=0.10)
    select case(WMO_Id)
 
-     case(3:5,200:223,706:708)  !avhrr, goes-im
+     case(3:5,200:209,223,706:708)  ! AVHRR
         include 'acha_ice_cloud_microphysical_model_noaa19.inc'
 
-     case(173)  !goes-np 3 chan
+     case(173)  ! AHI
         include 'acha_ice_cloud_microphysical_model_abi.inc'
 
      case(224) ! VIIRS 
         include 'acha_ice_cloud_microphysical_model_viirs.inc'
 
-     case default  !MODIS
+     case(252:259) ! GOES 8-15
+        include 'acha_ice_cloud_microphysical_model_goes15.inc'
+
+     case default  ! MODIS
         include 'acha_ice_cloud_microphysical_model_modis.inc'
 
    end select

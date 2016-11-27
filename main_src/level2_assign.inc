@@ -1,4 +1,4 @@
-! Created on Sat Nov 26 22:06:56 2016
+! Created on Sun Nov 27 13:40:02 2016
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -852,5 +852,106 @@ case("refl_0_94um_nom")
    if (allocated ( ch(19)%Ref_Toa)) then
       if (sensor%chan_on_flag_default(19) .NE. sym%YES) cycle 
       data_dim2_dtype_r4 = ch(19)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_65um_nom_iband_max")
+   if (allocated ( Ref_Max_ChI1)) then
+      data_dim2_dtype_r4 = Ref_Max_ChI1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_65um_nom_iband_min")
+   if (allocated ( Ref_Min_ChI1)) then
+      data_dim2_dtype_r4 = Ref_Min_ChI1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_65um_nom_iband_mean")
+   if (allocated ( Ref_Mean_ChI1)) then
+      data_dim2_dtype_r4 = Ref_Mean_ChI1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_65um_nom_iband_uni")
+   if (allocated ( Ref_Uni_ChI1)) then
+      data_dim2_dtype_r4 = Ref_Uni_ChI1(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_86um_nom_iband_max")
+   if (allocated ( Ref_Max_ChI2)) then
+      data_dim2_dtype_r4 = Ref_Max_ChI2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_86um_nom_iband_min")
+   if (allocated ( Ref_Min_ChI2)) then
+      data_dim2_dtype_r4 = Ref_Min_ChI2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_86um_nom_iband_mean")
+   if (allocated ( Ref_Mean_ChI2)) then
+      data_dim2_dtype_r4 = Ref_Mean_ChI2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_0_86um_nom_iband_uni")
+   if (allocated ( Ref_Uni_ChI2)) then
+      data_dim2_dtype_r4 = Ref_Uni_ChI2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_61um_nom_iband_max")
+   if (allocated ( Ref_Max_ChI3)) then
+      data_dim2_dtype_r4 = Ref_Max_ChI3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_61um_nom_iband_min")
+   if (allocated ( Ref_Min_ChI3)) then
+      data_dim2_dtype_r4 = Ref_Min_ChI3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_61um_nom_iband_mean")
+   if (allocated ( Ref_Mean_ChI3)) then
+      data_dim2_dtype_r4 = Ref_Mean_ChI3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("refl_1_61um_nom_iband_uni")
+   if (allocated ( Ref_Uni_ChI3)) then
+      data_dim2_dtype_r4 = Ref_Uni_ChI3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_3_74um_nom_iband_max")
+   if (allocated ( Ref_Max_ChI4)) then
+      data_dim2_dtype_r4 = Ref_Max_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_3_74um_nom_iband_min")
+   if (allocated ( Ref_Min_ChI4)) then
+      data_dim2_dtype_r4 = Ref_Min_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_3_74um_nom_iband_mean")
+   if (allocated ( Ref_Mean_ChI4)) then
+      data_dim2_dtype_r4 = Ref_Mean_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_3_74um_nom_iband_uni")
+   if (allocated ( Ref_Uni_ChI4)) then
+      data_dim2_dtype_r4 = Ref_Uni_ChI4(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_11_0um_nom_iband_max")
+   if (allocated ( Ref_Max_ChI5)) then
+      data_dim2_dtype_r4 = Ref_Max_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_11_0um_nom_iband_min")
+   if (allocated ( Ref_Min_ChI5)) then
+      data_dim2_dtype_r4 = Ref_Min_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_11_0um_nom_iband_mean")
+   if (allocated ( Ref_Mean_ChI5)) then
+      data_dim2_dtype_r4 = Ref_Mean_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("temp_11_0um_nom_iband_uni")
+   if (allocated ( Ref_Uni_ChI5)) then
+      data_dim2_dtype_r4 = Ref_Uni_ChI5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("radiance_11_0um_nom")
+   if (allocated ( ch(31)%Rad_Toa)) then
+      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      data_dim2_dtype_r4 = ch(31)%Rad_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cloud_type_ir")
+   if (allocated ( Cld_Type_Ir)) then
+      data_dim2_dtype1 = Cld_Type_Ir(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cloud_phase_ir")
+   if (allocated ( Cld_Phase_Ir)) then
+      data_dim2_dtype1 = Cld_Phase_Ir(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_height_sounder")
+   if (allocated ( Zc_Co2)) then
+      data_dim2_dtype_r4 = Zc_Co2(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("cld_temp_lower_acha")
+   if (allocated ( ACHA%Lower_Tc)) then
+      data_dim2_dtype_r4 = ACHA%Lower_Tc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 end select

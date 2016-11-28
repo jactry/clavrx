@@ -1,0 +1,15 @@
+Files for supporting the supplemental cloud products for inclusion in the 
+Automated Surface Observing System (ASOS).
+
+General Files
+--------------
+asos_module.f90   - module that holds the algorithm
+asos_parameters.inc - parameters used by the algorithm
+
+CLAVR-x Files
+--------------
+asos_clavrx_bridge_module.f90 - the bridge module between CLAVR-x and CCL module
+asos_clavrx_services_module.f90 - module holding required CLAVR-x services
+
+SAPF Files
+--------------

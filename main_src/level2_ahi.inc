@@ -1,4 +1,4 @@
-!$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
+!$Id$
  !--- level2 indices
  integer, parameter, private:: Num_Level2_Sds = 280
  integer, private, save:: Sd_Id_Level2

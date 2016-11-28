@@ -1,4 +1,4 @@
-! - $Header$
+! - $Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/baseline_CM_training/main_src/clavrx_message_module.f90 1403 2015-10-15 21:40:38Z dbotambekov $
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

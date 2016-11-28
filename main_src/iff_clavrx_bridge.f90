@@ -1,4 +1,4 @@
-!$Header$
+!$Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/baseline_CM_training/main_src/iff_clavrx_bridge.f90 1757 2016-09-09 20:46:30Z dbotambekov $
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !

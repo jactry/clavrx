@@ -848,6 +848,20 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
 
+
+!--- BCM Variables 
+
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_Min_3x3_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_Max_3x3_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_Std_3x3_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Ref_Ch1_Clr_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: BTD_11_12um_NWC_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39_NWC_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39_clr_BCM
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_Tropo_11um_LRC_BCM
+
+
+
 !---- other static arrays carried by this module
 
 
@@ -1060,6 +1074,14 @@ subroutine CREATE_PIXEL_ARRAYS()
            Utc_Scan_Time_Hours(dim2), &
            Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
+           
+  ! Other BCM output arrays
+  allocate (BTD_11_12um_NWC_BCM(dim1,dim2), &
+            Emiss_39_NWC_BCM(dim1,dim2), &
+            Emiss_39_clr_BCM(dim1,dim2), &
+            Emiss_Tropo_11um_LRC_BCM(dim1,dim2))
+
+  
 
   !--------------------------------------------------------------------------------
   ! Initialize variables that are not reset for each segment
@@ -1185,6 +1207,14 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Gap_Pixel_Mask_Pattern)) deallocate(Gap_Pixel_Mask_Pattern)
   if (allocated(Gap_Line_Idx_Pattern)) deallocate(Gap_Line_Idx_Pattern)
   if (allocated(IFF_Gap_Mask)) deallocate(IFF_Gap_Mask)
+  
+  
+  !--- BCM arrays
+  deallocate (BTD_11_12um_NWC_BCM, &
+              Emiss_39_NWC_BCM, &
+              Emiss_39_clr_BCM, &
+              Emiss_Tropo_11um_LRC_BCM)
+
 
 
 end subroutine DESTROY_PIXEL_ARRAYS
@@ -1270,7 +1300,13 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       !--- note do not reset the patterns
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
-      IFF_Gap_Mask = sym%NO     
+      IFF_Gap_Mask = sym%NO
+      
+      !--- BCM arrays
+      BTD_11_12um_NWC_BCM = Missing_Value_Real4
+      Emiss_39_NWC_BCM = Missing_Value_Real4
+      Emiss_39_clr_BCM = Missing_Value_Real4
+      Emiss_Tropo_11um_LRC_BCM = Missing_Value_Real4
 
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
@@ -1574,6 +1610,14 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Ref_Ch1_Clear_Std_3x3(dim1,dim2))
            allocate(Ref_Ch1_Dark_Composite(dim1,dim2))
            allocate(Ref_Ch1_Sfc_White_Sky_Mean_3x3(dim1,dim2))
+           ! BCM Arrays
+           allocate(Ref_Ch1_Clr_Min_3x3_BCM(dim1,dim2))
+           allocate(Ref_Ch1_Clr_Max_3x3_BCM(dim1,dim2))
+           allocate(Ref_Ch1_Clr_Std_3x3_BCM(dim1,dim2))
+           allocate(Ref_Ch1_Clr_BCM(dim1,dim2))
+ 
+ 
+ 
    endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
@@ -1625,6 +1669,11 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       Ref_Ch1_Clear_Std_3x3 = Missing_Value_Real4
       Ref_Ch1_Dark_Composite = Missing_Value_Real4
       Ref_Ch1_Sfc_White_Sky_Mean_3x3 = Missing_Value_Real4
+      ! BCM Arrays
+      Ref_Ch1_Clr_Min_3x3_BCM = Missing_Value_Real4
+      Ref_Ch1_Clr_Max_3x3_BCM = Missing_Value_Real4
+      Ref_Ch1_Clr_Std_3x3_BCM = Missing_Value_Real4
+      Ref_Ch1_Clr_BCM = Missing_Value_Real4
    endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
@@ -1650,6 +1699,11 @@ subroutine DESTROY_REF_CHANNEL_ARRAYS
    if (allocated(Ref_Ch1_Clear_Std_3x3)) deallocate (Ref_Ch1_Clear_Std_3x3)
    if (allocated(Ref_Ch1_Dark_Composite)) deallocate (Ref_Ch1_Dark_Composite)
    if (allocated(Ref_Ch1_Sfc_White_Sky_Mean_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Mean_3x3)
+   ! BCM Arrays
+   if (allocated(Ref_Ch1_Clr_Min_3x3_BCM)) deallocate (Ref_Ch1_Clr_Min_3x3_BCM)
+   if (allocated(Ref_Ch1_Clr_Max_3x3_BCM)) deallocate (Ref_Ch1_Clr_Max_3x3_BCM)
+   if (allocated(Ref_Ch1_Clr_Std_3x3_BCM)) deallocate (Ref_Ch1_Clr_Std_3x3_BCM)
+   if (allocated(Ref_Ch1_Clr_BCM)) deallocate (Ref_Ch1_Clr_BCM)
   endif
 
    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then

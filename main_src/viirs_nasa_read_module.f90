@@ -1,4 +1,4 @@
-!$Id: viirs_nasa_read_module.f90 1541 2016-02-26 23:18:41Z dbotambekov $
+!$Id$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version
 ! 5.4

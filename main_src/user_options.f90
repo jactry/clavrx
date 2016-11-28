@@ -440,7 +440,7 @@ contains
          else if  ( trim(fargv) == "-version" .or. &
              trim(fargv) == "-ver") then
             print*,&
-            &'$Header$'
+            &'$Header: https://svn.ssec.wisc.edu/repos/cloud_team_clavrx/baseline_CM_training/main_src/user_options.f90 1779 2016-09-26 18:23:36Z stevew $'
             stop
         
          else if (trim(fargv) == "-no_default") then 

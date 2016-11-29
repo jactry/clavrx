@@ -381,7 +381,7 @@ program create_level2b
       
       num_sds_output = size ( sds_out)
       
-      ! - loop over input variables
+      !AW - loop over input variables
       do Isds = 1, Num_Sds_Input   
          sds_out(isds) % set = .false.
          test = cx_sds_read ( file, sds_name (isds) , temp_i1_2d)
@@ -397,9 +397,9 @@ program create_level2b
             sds_out(isds) % data = -999.
          end if 
         
-         ! - loop over already defined output variables
-         ! - this is done to get sure to match identical variables even 
-         ! - if the level2 files are not identical
+         !AW - loop over only already defined output variables
+         !AW - this is done to get sure to match only identical variables even 
+         !AW - if the level2 files are not identical
          do isds2 = 1, num_sds_output
           
             if ( .NOT. sds_name (isds) .EQ. sds_out(isds2) % name ) cycle

@@ -95,6 +95,7 @@ module CX_READ_AHI_MOD
    end type ahi_chn_type
    
    type :: geo_str
+      logical :: is_set
       real , dimension (:,:) , allocatable :: solzen
       real , dimension (:,:) , allocatable :: satzen
       real , dimension (:,:) , allocatable :: solaz
@@ -111,6 +112,8 @@ module CX_READ_AHI_MOD
    type, public :: ahi_data_out_type
       type ( ahi_chn_type ) , allocatable :: chn (:)
       type ( geo_str ) :: geo
+      type (geo_str ) :: geo_3
+      type ( geo_str ) :: geo_124
       type ( date_type ) :: time_start_obj
       type ( date_type ) :: time_end_obj
       logical :: success
@@ -169,8 +172,7 @@ contains
       read(file_base(19:20), fmt="(I2)") minute
       
       call time0 % set_date ( &
-            year , month, day , hour, minute &
-            )
+            year , month, day , hour, minute )
       
       time1 = time0
       
@@ -222,14 +224,12 @@ contains
       if ( config % lon_range(2) .lt. config % lon_range(1) ) then
         
          inside =  (( out % geo % lon .lt. config % lon_range(2) .and. &
-               out % geo % lon .ge. -180.0 )  .or. &
+               & out % geo % lon .ge. -180.0 )  .or. &
+               & (out % geo % lon .gt. config % lon_range(1) .and. &
+               & out % geo % lon .lt. 180.0 )) .and. &
                
-               (out % geo % lon .gt. config % lon_range(1) .and. &
-               out % geo % lon .lt. 180.0 )) .and. &
-               
-               
-           out % geo % lat .gt. config % lat_range(1) .and. &
-           out % geo % lat .lt. config % lat_range(2)
+               & out % geo % lat .gt. config % lat_range(1) .and. &
+               & out % geo % lat .lt. config % lat_range(2)
       
       end if
       
@@ -357,12 +357,12 @@ contains
        ! - navigation
      
       ! - should be removed later then we trust the values in the file! 
-      cfac = 20466276.
-      coff = 2750.
-      lfac = 20466276.
-      loff = 2750.
-      sub_lon =  140.70
-      sub_lat = 0.
+      !cfac = 20466276.
+      !coff = 2750.
+      !lfac = 20466276.
+      !loff = 2750.
+      !sub_lon =  140.70
+      !sub_lat = 0.
       
       ! - read in the constants fom file
 
@@ -449,7 +449,7 @@ contains
       integer ( kind = 2 ) :: fillvalue
       integer ( kind = 4 ) , allocatable :: buffer_fake_i4 (:,:)
       real ( 8 ) :: cprime 
-      logical :: is_solar_channel = .false.
+     
             
       ! - executable
       
@@ -458,7 +458,7 @@ contains
       do i_chn = 1 ,16
         
          if ( .not. config % chan_on ( i_chn ) ) cycle
-                 
+                 print*,'====> ',i_chn
          if ( .not. file_test ( trim(config % filename ( i_chn ) ) ) ) then 
             print*, 'AHI READER ERROR>> file '// trim(config % filename ( i_chn )) // ' not existing !!'
             ahi % success = .false.
@@ -468,6 +468,7 @@ contains
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
                , config % h5_offset,config % h5_count, i2d_buffer )
+               
              
          if ( .not. allocated (buffer_fake_i4) ) allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
         
@@ -501,10 +502,10 @@ contains
          
          if (allocated ( buffer_fake_i4 ) )  deallocate ( buffer_fake_i4 )
         
-         is_solar_channel = .false.
-         if ( i_chn < 7 ) is_solar_channel = .true.
+         ahi % chn(i_chn) % is_solar_channel = .false.
+         if ( i_chn < 7 ) ahi % chn(i_chn) % is_solar_channel = .true.
          
-         if ( is_solar_channel ) then
+         if ( ahi % chn(i_chn) % is_solar_channel ) then
             attr_name = trim(config % varname(i_chn))//'/cprime'
             call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), cprime )
             allocate ( ahi % chn(i_chn) % ref (config % h5_count(1),config % h5_count(2)))

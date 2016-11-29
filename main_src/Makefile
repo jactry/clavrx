@@ -207,6 +207,18 @@ drive_subset_level2b_objs = drive_subset_level2b.o \
                             file_tools.o \
                             constant.o
 
+
+cx_ahi_test_objs = cx_read_ahi_test_program.o \
+		                    cx_read_ahi_mod.o \
+                          date_tools_mod.o \
+                          cx_string_tools_mod.o \
+                          viewing_geometry_module.o \
+                          readh5dataset.o \
+                          geo_sat_navigation_mod.o \
+                          file_tools.o \
+                          view2d.o
+
+
   CLAVRX_OBJ_FILES = $(clavrxorb_objs)
 
 dncomp:
@@ -230,6 +242,13 @@ create_level2b: $(create_level2b_objs) bindir
    
 drive_subset_level2b: $(drive_subset_level2b_objs) bindir
 	$(fc) $(ldflags) -o ../clavrx_bin/drive_subset_level2b $(drive_subset_level2b_objs) $(hdflibs)
+   
+   
+ahi_test: $(cx_ahi_test_objs) bindir   
+	$(fc) $(ldflags) -o ahi_test $(cx_ahi_test_objs) ${hdf5libs} ${hdf5links}
+   
+   
+      
 version.inc: Makefile
 	echo ' Title_String = $(Title_String)' > version.inc
 	echo ' Calibration_String = $(Calibration_String)' >> version.inc
@@ -323,9 +342,10 @@ cx_grid_tools_mod.o:cx_grid_tools_mod.f90
 cx_prd_mod.o:cx_prd_mod.f90 constant.o csv_mod.o cx_string_tools_mod.o
 cx_scale_tools_mod.o:cx_scale_tools_mod.f90 constant.o
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90 file_tools.o
+cx_read_ahi_test_program.o:cx_read_ahi_test_program.f90 cx_read_ahi_mod.o
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 file_tools.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
-cx_read_ahi_mod.o: cx_read_ahi_mod.f90 cx_string_tools_mod.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o
+cx_read_ahi_mod.o: cx_read_ahi_mod.f90 cx_string_tools_mod.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o viewing_geometry_module.o readh5dataset.o
 cx_science_tools_mod.o:cx_science_tools_mod.f90
 cx_pfaast_mod.o:$(PFAAST)/cx_pfaast_mod.f90 cx_pfaast_constants_mod.o cx_pfaast_coef_mod.o cx_pfaast_tools_mod.o
 cx_pfaast_tools_mod.o:$(PFAAST)/cx_pfaast_tools_mod.f90 

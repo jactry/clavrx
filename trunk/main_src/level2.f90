@@ -840,7 +840,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- sensor zenith
      if (Sds_Num_Level2_Zen_Flag == sym%YES) then
       Sds_Name = "sensor_zenith_angle"
-      if (NCDC_Attribute_Flag == 1) Sds_Name = "anchor_sensor_zenith"
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Zen),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "sensor_zenith_angle", &
@@ -853,7 +852,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- solar zenith
      if (Sds_Num_Level2_Solzen_Flag == sym%YES) then
       Sds_Name = "solar_zenith_angle"
-      if (NCDC_Attribute_Flag == 1) Sds_Name = "anchor_solar_zenith"
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Solzen),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "solar_zenith_angle", &
@@ -866,7 +864,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- relative azimuth
      if (Sds_Num_Level2_Relaz_Flag == sym%YES) then
       Sds_Name = "relative_azimuth_angle"
-      if (NCDC_Attribute_Flag == 1) Sds_Name = "anchor_relative_azimuth"
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Relaz),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                trim(Sds_Name), &
                                "relative_sensor_azimuth_angle", &
@@ -879,7 +876,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- solar azimuth
      if (Sds_Num_Level2_Solaz_Flag == sym%YES) then
       Sds_Name = "solar_azimuth_angle"
-      if (NCDC_Attribute_Flag == 1) Sds_Name = "anchor_solar_azimuth"
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Solaz),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                                trim(Sds_Name), &
                                "solar_azimuth_angle", &
@@ -1044,7 +1040,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- Ch1 reflectance
      if (Sds_Num_Level2_Ch1_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
       Sds_Name = "refl_0_65um_nom"
-      if (NCDC_Attribute_Flag == 1) Sds_Name = "ch1_reflectance"
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "toa_bidirectional_reflectance", &
@@ -1057,7 +1052,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- Ch2 reflectance
      if (Sds_Num_Level2_Ch2_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(2) == sym%YES) then
        Sds_Name = "refl_0_86um_nom"
-       if (NCDC_Attribute_Flag == 1) Sds_Name = "ch2_reflectance"
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch2),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "toa_bidirectional_reflectance", &
@@ -1070,7 +1064,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- Ch3 reflectance
      if (Sds_Num_Level2_Ch3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(3) == sym%YES) then
        Sds_Name = "refl_0_47um_nom"
-       if (NCDC_Attribute_Flag == 1) Sds_Name = "ch3_reflectance"
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "not specified", &
@@ -1083,7 +1076,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- Ch4 reflectance
      if (Sds_Num_Level2_Ch4_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(4) == sym%YES) then
        Sds_Name = "refl_0_55um_nom"
-       if (NCDC_Attribute_Flag == 1) Sds_Name = "ch4_reflectance"
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch4),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "not specified", &
@@ -1107,7 +1099,6 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      !--- Ch6 reflectance
      if (Sds_Num_Level2_Ch6_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(6) == sym%YES) then
        Sds_Name = "refl_1_60um_nom"
-       if (NCDC_Attribute_Flag == 1) Sds_Name = "ch3a_reflectance"
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch6),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               trim(Sds_Name), &
                               "toa_bidirectional_reflectance", &

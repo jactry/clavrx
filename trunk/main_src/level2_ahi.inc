@@ -3,7 +3,6 @@
  integer, parameter, private:: Num_Level2_Sds = 280
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
- integer(kind=int4), public, parameter:: NCDC_Attribute_Flag = 0
 
 !--- set sds order and flags for level2 files
 !

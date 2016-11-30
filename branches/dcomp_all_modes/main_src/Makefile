@@ -216,7 +216,8 @@ cx_ahi_test_objs = cx_read_ahi_test_program.o \
                           readh5dataset.o \
                           geo_sat_navigation_mod.o \
                           file_tools.o \
-                          view2d.o
+                          view2d.o \
+                          aw_image_idl.o
 
 
   CLAVRX_OBJ_FILES = $(clavrxorb_objs)

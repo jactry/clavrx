@@ -109,6 +109,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       integer(kind=int4) :: k , i
       integer(kind=int4) :: Lun
       integer(kind=int4) :: Io_Err_Stat
+      integer(kind=int8) :: N_Valid
       integer(kind=int4), dimension(2) :: Dim_Seg
       integer(kind=int4), dimension(2) :: Dim_Dnb_Seg
       integer(kind=int4), dimension(2) :: Offset_Mband
@@ -243,9 +244,9 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
 
       ! --- read global attribute Day_Night_Flag
       !!!!! Note: if Day_Night_Flag = 'Night' NO M01 - M06, M09, and M11 bands  !!!!!
-      !!!!! If Day_Night_Flag = 'Day' or 'Mixed' then ALL M-bands exist         !!!!!
+      !!!!! If Day_Night_Flag = 'Day' or 'Both' then ALL M-bands exist         !!!!!
       call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
-                                       'day_night_flag', Day_Night_Flag)
+                                       'DayNightFlag', Day_Night_Flag)
       Mband_Start = 1
       if (trim(Day_Night_Flag) .eq. 'Night') Mband_Start = 7
 
@@ -394,30 +395,64 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
          endwhere
          deallocate ( I2d_Buffer )
 
-         ! - read moon phase angle and moon illumination fraction
-         call H5READATTRIBUTE (trim(Image%Level1b_Path)//trim(File_2_Read), &
-                      'moon_phase_angle', Geo % Moon_Phase_Angle)
-         call H5READATTRIBUTE (trim(Image%Level1b_Path)//trim(File_2_Read), &                                                                                   
-                      'moon_illumination_fraction', Geo % Moon_Illum_Frac)
+         ! --- read moon phase angle 
+!         call H5READATTRIBUTE (trim(Image%Level1b_Path)//trim(File_2_Read), &
+!                      'moon_phase_angle', Geo % Moon_Phase_Angle)
+!         call H5READATTRIBUTE (trim(Image%Level1b_Path)//trim(File_2_Read), &                                                                                   
+!                      'moon_illumination_fraction', Geo % Moon_Illum_Frac)
+         Setname_Name = 'geolocation_data/moon_phase_angle'
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name,Offset_Mband, Dim_Dnb_Seg, I2d_Buffer)
 
-         ! - compute lunar relative azimuth
+         ! - read attribute to unscale
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/scale_factor', Scale_Factor)
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/add_offset', Add_Offset)
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/_FillValue', Fill_Value)
+
+         ! - unscale and save mean value
+         N_Valid = count (I2d_Buffer .ne. Fill_Value)
+         Geo % Moon_Phase_Angle = sum((I2d_Buffer * Scale_Factor) + Add_Offset,MASK=I2d_Buffer /= Fill_Value) / N_Valid
+         deallocate ( I2d_Buffer )
+
+         ! --- read moon illumination fraction
+         Setname_Name = 'geolocation_data/moon_illumination_fraction'
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name,Offset_Mband, Dim_Dnb_Seg, I2d_Buffer)
+
+         ! - read attribute to unscale
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/scale_factor', Scale_Factor)
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/add_offset', Add_Offset)
+         call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
+                              Setname_Name//'/_FillValue', Fill_Value)
+
+         ! - unscale and save mean value
+         N_Valid = count (I2d_Buffer .ne. Fill_Value)
+         Geo % Moon_Illum_Frac = sum((I2d_Buffer * Scale_Factor) + Add_Offset,MASK=I2d_Buffer /= Fill_Value) / N_Valid
+         deallocate ( I2d_Buffer )
+
+         ! --- compute lunar relative azimuth
          Geo % Lunrelaz (:, 1:N_Seg_Lines) = RELATIVE_AZIMUTH ( &
                    Geo % Lunaz (:, 1:N_Seg_Lines), &
                    Geo % Sataz (:, 1:N_Seg_Lines) )
 
-         ! - compute lunar glint zenith
+         ! --- compute lunar glint zenith
          Geo % Glintzen_Lunar (:, 1:N_Seg_Lines) = GLINT_ANGLE ( &
                    Geo % Lunzen (:, 1:N_Seg_Lines), &
                    Geo % Satzen (:, 1:N_Seg_Lines), &
                    Geo % Lunrelaz (:, 1:N_Seg_Lines) )
 
-         ! - compute lunar scattering angle
+         ! --- compute lunar scattering angle
          Geo % Scatangle_Lunar (:, 1:N_Seg_Lines) = SCATTERING_ANGLE ( &
                    Geo % Lunzen (:, 1:N_Seg_Lines), &
                    Geo % Satzen (:, 1:N_Seg_Lines), &
                    Geo % Lunrelaz (:, 1:N_Seg_Lines) )
 
-         ! - find dnb file
+         ! --- find dnb file
          call DETERMINE_VIIRS_NASA_FILE(trim(Image%Level1b_Path),trim(VGEOM_File), &
                                     'VL1BD',File_2_Read)
          ! - if no file quit
@@ -426,7 +461,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
             cycle
          endif
 
-         ! - read dnb data
+         ! --- read dnb data
          Setname_Name = 'observation_data/DNB_observations'
          call H5READDATASET (trim(Image%Level1b_Path)//trim(File_2_Read), &
                         Setname_Name, Offset_Mband, Dim_Dnb_Seg, R2d_Buffer)

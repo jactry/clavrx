@@ -95,6 +95,9 @@ module cloud_type_bridge_module
       , cld_type &
       , cld_phase &
       , cld_mask &
+      , Dust_Mask &
+      , Smoke_Mask &
+      , Fire_Mask &
       , i_lrc, j_lrc &
       , Beta_11um_12um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
@@ -182,6 +185,21 @@ contains
                cld_type (i,j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if
+
+            if (Dust_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % DUST
+               cycle
+            end if
+
+            if (Smoke_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % SMOKE
+               cycle
+            end if
+
+            if (Fire_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % FIRE
+               cycle
+            end if
             
             ! - take only LRC cores
             if ( i /= i_lrc (i,j) .or. j /= j_lrc (i,j) ) cycle
@@ -214,6 +232,21 @@ contains
                cld_type (i , j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if   
+
+            if (Dust_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % DUST
+               cycle
+            end if
+
+            if (Smoke_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % SMOKE
+               cycle
+            end if
+
+            if (Fire_Mask (i,j) == 1 ) then
+               cld_type (i,j ) = et_cloud_type % FIRE
+               cycle
+            end if
             
             ii = i_lrc (i,j)
             jj = j_lrc (i,j)

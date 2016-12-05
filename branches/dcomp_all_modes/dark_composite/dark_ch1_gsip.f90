@@ -30,6 +30,8 @@ program CLEAR_CH1_GSIP
 
 !- GSIP_MAIN start---------
   implicit none
+  
+  private
 
   type(AREA_STRUCT)::  AREAstr
   type(GVAR_NAV)::       NAVstr
@@ -73,7 +75,6 @@ program CLEAR_CH1_GSIP
   character(len=4):: output_format
   character(len=4):: year_string
   character(len=4):: year_temp_string
-  character(len=1):: chan_string
   character(len=3):: jday_string
   character(len=3):: jday_temp_string
   character(len=3):: nday_string

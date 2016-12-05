@@ -120,9 +120,10 @@ contains
       ! nav % ascend (1:c_seg_lines)     = ahi_data % geo % ascend
    
       do i_chn = 1, NUM_CHN_AHI
-
-         modis_chn = modis_chn_list (i_chn)
+         print*,i_chn, shape ( ahi_data % chn (i_chn) % ref),is_solar_channel ( i_chn)
          
+         modis_chn = modis_chn_list (i_chn)
+         print*,shape( ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines))
          if ( .not. ahi_data % chn ( i_chn ) % is_read ) then
             sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = SYM_NO 
             cycle   
@@ -131,6 +132,7 @@ contains
          if ( .not. ahi_c % chan_on(i_chn) ) cycle
       
          if ( is_solar_channel ( i_chn) ) then
+            print*,'reached..'
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
          else
             if ( modis_chn > 38) then

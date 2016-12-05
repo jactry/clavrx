@@ -1,6 +1,6 @@
 !$Id: level2_all_off.inc 1555 2016-03-23 21:54:05Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 280
+ integer, parameter, private:: Num_Level2_Sds = 285
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
 
@@ -288,5 +288,9 @@
      Sds_Num_Level2_Cld_Phase_IR = 277,   Sds_Num_Level2_Cld_Phase_IR_Flag = 0, &
      Sds_Num_Level2_Cld_Type_IR = 278,    Sds_Num_Level2_Cld_Type_IR_Flag = 0, &
      Sds_Num_Level2_Tc_Lower = 279,       Sds_Num_Level2_Tc_Lower_Flag = 0, &
-     Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0
-
+     Sds_Num_Level2_Tpw_Ac = 280,         Sds_Num_Level2_Tpw_Ac_Flag = 0, &
+     Sds_Num_Level2_Ec_67 = 281,          Sds_Num_Level2_Ec_67_Flag = 0, &
+     Sds_Num_Level2_Ec_85 = 282,          Sds_Num_Level2_Ec_85_Flag = 0, &
+     Sds_Num_Level2_Ec_11 = 283,          Sds_Num_Level2_Ec_11_Flag = 0, &
+     Sds_Num_Level2_Ec_12 = 284,          Sds_Num_Level2_Ec_12_Flag = 0, &
+     Sds_Num_Level2_Ec_133 = 285,         Sds_Num_Level2_Ec_133_Flag = 0

@@ -2155,6 +2155,66 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- diagnostic cloud emissivity at 6.7um from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_67_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ec_67),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_emiss_67um_diag", &
+                              "convective_cloud_longwave_emissivity_67um", &
+                              "diagnostic cloud emissivity at the nominal wavelength of 67 microns, "// &
+                              "determined from the AWG cloud height algorithm - NOAA CDR", &
+                              DFNT_INT8, sym%LINEAR_SCALING, Min_Ec, Max_Ec, &
+                             "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- diagnostic cloud emissivity at 8.5um from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_85_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ec_85),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_emiss_85um_diag", &
+                              "convective_cloud_longwave_emissivity_85um", &
+                              "diagnostic cloud emissivity at the nominal wavelength of 85 microns, "// &
+                              "determined from the AWG cloud height algorithm - NOAA CDR", &
+                              DFNT_INT8, sym%LINEAR_SCALING, Min_Ec, Max_Ec, &
+                             "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- diagnostic cloud emissivity at 11um from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_11_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ec_11),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_emiss_11um_diag", &
+                              "convective_cloud_longwave_emissivity_11um", &
+                              "diagnostic cloud emissivity at the nominal wavelength of 11 microns, "// &
+                              "determined from the AWG cloud height algorithm - NOAA CDR", &
+                              DFNT_INT8, sym%LINEAR_SCALING, Min_Ec, Max_Ec, &
+                             "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- diagnostic cloud emissivity at 12um from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_12_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ec_12),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_emiss_12um_diag", &
+                              "convective_cloud_longwave_emissivity_12um", &
+                              "diagnostic cloud emissivity at the nominal wavelength of 12 microns, "// &
+                              "determined from the AWG cloud height algorithm - NOAA CDR", &
+                              DFNT_INT8, sym%LINEAR_SCALING, Min_Ec, Max_Ec, &
+                             "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- diagnostic cloud emissivity at 13.3um from acha
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_133_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ec_133),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cld_emiss_133um_diag", &
+                              "convective_cloud_longwave_emissivity_133um", &
+                              "diagnostic cloud emissivity at the nominal wavelength of 133 microns, "// &
+                              "determined from the AWG cloud height algorithm - NOAA CDR", &
+                              DFNT_INT8, sym%LINEAR_SCALING, Min_Ec, Max_Ec, &
+                             "none", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- aux O.E. cost
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Aux_Cost_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Aux_Cost),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -5018,6 +5078,41 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       call SCALE_VECTOR_I2_RANK2(ACHA%Cost,sym%LINEAR_SCALING,Min_Acha_Cost,Max_Acha_Cost,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Acha_Cost), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld diagnostic emissivity for 6.7um
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_67_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ACHA%Ec_67um,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec_67), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld diagnostic emissivity for 8.5um
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_85_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ACHA%Ec_85um,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec_85), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld diagnostic emissivity for 11um
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_11_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ACHA%Ec_11um,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec_11), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld diagnostic emissivity for 12um
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_12_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ACHA%Ec_12um,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec_12), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- cld diagnostic emissivity for 13.3um
+     if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Ec_133_Flag == sym%YES) then
+      call SCALE_VECTOR_I1_RANK2(ACHA%Ec_133um,sym%LINEAR_SCALING,Min_ec,Max_ec,Missing_Value_Real4,One_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_ec_133), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- Aux Cost

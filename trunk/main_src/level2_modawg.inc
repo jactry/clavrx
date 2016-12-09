@@ -274,7 +274,7 @@
      Sds_Num_Level2_Btd_Ch31_Ch32 = 263,  Sds_Num_Level2_Btd_Ch31_Ch32_Flag = 0, &
      Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 0, &
      Sds_Num_Level2_Ch20_Bt_Median = 265, Sds_Num_Level2_Ch20_Bt_Median_Flag = 0, &
-     Sds_Num_Level2_Tsfc_Uni_Back = 266,  Sds_Num_Level2_Tsfc_Uni_Back_Flag = 0, &
+     Sds_Num_Level2_Tsfc_Uni_Back = 266,  Sds_Num_Level2_Tsfc_Uni_Back_Flag = 1, &
      Sds_Num_Level2_Ceps_Aux = 267,       Sds_Num_Level2_Ceps_Aux_Flag = 0, &
      Sds_Num_Level2_Sndr_Fov = 268,       Sds_Num_Level2_Sndr_Fov_Flag = 0, &
      Sds_Num_Level2_Sndr_X = 269,         Sds_Num_Level2_Sndr_X_Flag = 0, &

@@ -297,4 +297,5 @@
      Sds_Num_Level2_BTD_11_12_NWC = 285,    Sds_Num_Level2_BTD_11_12_NWC_Flag = 1, &
      Sds_Num_Level2_EMISS_39_NWC = 286,     Sds_Num_Level2_EMISS_39_NWC_Flag = 1, &
      Sds_Num_Level2_EMISS_39_Clr_BCM = 287, Sds_Num_Level2_EMISS_39_Clr_BCM_Flag = 1, &
-     Sds_Num_Level2_etrop_11um_LRC = 288,   Sds_Num_Level2_etrop_11um_LRC_Flag = 1
+     Sds_Num_Level2_etrop_11um_LRC = 288,   Sds_Num_Level2_etrop_11um_LRC_Flag = 1, &
+     Sds_Num_Level2_sfc_Ch1_Clr_fill = 289,   Sds_Num_Level2_sfc_Ch1_Clr_fill_flag = 1

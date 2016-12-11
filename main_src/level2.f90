@@ -3243,6 +3243,19 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Ref_Ch1_Clear - nonatmos corr, fixed ocean and snow - WCS3
+     if (Sds_Num_Level2_sfc_Ch1_Clr_fill_flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_sfc_Ch1_Clr_fill),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_non_corr_clear_sky", &
+                               "surface_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "surface reflectance modeled assuming clear skies "// &
+                               "at the nominal wavelength of 0.65 microns with fixed ocean and snow", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
      !--- Bt_Ch20_Clear
      if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and.  Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch20_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -5712,6 +5725,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
+
+    !---  Ref_Ch1_Clear - nonatmos corr, fixed ocean and snow - WCS3
+    if (Sds_Num_Level2_sfc_Ch1_Clr_fill_flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(ch(1)%Sfc_Ref_White_Sky_fill,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+
 
     !--- Ch20 temperature clear
     if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then

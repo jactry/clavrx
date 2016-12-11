@@ -181,6 +181,8 @@ module PIXEL_COMMON
     real, dimension(:,:), allocatable:: Sfc_Emiss
     real, dimension(:,:), allocatable:: Emiss_Tropo
     real, dimension(:,:), allocatable:: Sfc_Ref_White_Sky
+                     !WCS - added for BCM/ECM testing
+    real, dimension(:,:), allocatable:: Sfc_Ref_White_Sky_fill
     real, dimension(:,:), allocatable:: Opd
     integer (kind=int1), dimension(:,:), allocatable:: Unc
     integer (kind=int1), dimension(:,:), allocatable:: CSBT_Mask
@@ -1123,6 +1125,8 @@ subroutine DESTROY_PIXEL_ARRAYS()
       if (allocated(Ch(idx)%Opd)) deallocate(Ch(idx)%Opd)
       if (allocated(Ch(idx)%Sfc_Emiss)) deallocate(Ch(idx)%Sfc_Emiss)
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) deallocate(Ch(idx)%Sfc_Ref_White_Sky)
+                     !WCS - added for BCM/ECM testing
+      if (allocated(Ch(idx)%Sfc_Ref_White_Sky_fill)) deallocate(Ch(idx)%Sfc_Ref_White_Sky_fill)
       if (allocated(Ch(idx)%Emiss_Tropo)) deallocate(Ch(idx)%Emiss_Tropo)
       if (allocated(Ch(idx)%Unc)) deallocate(Ch(idx)%Unc)
       if (allocated(Ch(idx)%CSBT_Mask)) deallocate(Ch(idx)%CSBT_Mask)
@@ -1651,6 +1655,8 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Opd)) Ch(idx)%Opd = Missing_Value_Real4
       if (allocated(Ch(idx)%Sfc_Emiss)) Ch(idx)%Sfc_Emiss = Missing_Value_Real4
       if (allocated(Ch(idx)%Sfc_Ref_White_Sky)) Ch(idx)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                     !WCS - added for BCM/ECM testing
+      if (allocated(Ch(idx)%Sfc_Ref_White_Sky_fill)) Ch(idx)%Sfc_Ref_White_Sky_fill = Missing_Value_Real4
       if (allocated(Ch(idx)%Emiss_Tropo)) Ch(idx)%Emiss_Tropo = Missing_Value_Real4
       if (allocated(Ch(idx)%Unc)) Ch(idx)%Unc = Missing_Value_Int1
       if (allocated(Ch(idx)%CSBT_Mask)) Ch(idx)%CSBT_Mask = Missing_Value_Int1

@@ -1805,6 +1805,12 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
                 if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
                      allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
+                     
+                     !WCS - added for BCM/ECM testing
+                                          allocate(ch(1)%Sfc_Ref_White_Sky_fill(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
+                     ch(1)%Sfc_Ref_White_Sky_fill = Missing_Value_Real4
+                     
+                     
                 endif
                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
                                         ch(1)%Sfc_Ref_White_Sky)

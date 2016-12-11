@@ -1072,6 +1072,9 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then 
               Albedo_View = Ch1_Snow_Sfc_Alb_Umd(Sfc%Sfc_Type(Elem_Idx,Line_Idx)) / 100.0
          endif
+         
+         !WCS - added for BCM/ECM testing
+         ch(1)%Sfc_Ref_White_Sky_fill(Elem_Idx,Line_Idx) = Albedo_View * 100.0
 
        case(2)
          if (ch(2)%Sfc_Ref_White_Sky(Elem_Idx,Line_Idx) /= Missing_Value_Real4) then

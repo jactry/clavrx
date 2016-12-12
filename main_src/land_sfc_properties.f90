@@ -29,7 +29,7 @@
 
 MODULE land_sfc_properties
   
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
   
    use FILE_TOOLS, only: &
       file_test

@@ -38,7 +38,7 @@ program create_level2b
       prd_dtype &
       , prd_individual_dtype
     
-    use constants, only: &
+    use cx_constants_mod, only: &
       int4, real4, int1, int2  &
       , MISSING_VALUE_INT1 &
       , MISSING_VALUE_INT2 &

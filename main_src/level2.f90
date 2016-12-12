@@ -30,7 +30,7 @@
 !--------------------------------------------------------------------------------------
 module LEVEL2_ROUTINES
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       int4 &
       , int1 &
       , int2 &

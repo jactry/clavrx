@@ -28,7 +28,7 @@
 !--------------------------------------------------------------------------------------
 module RT_COEFFICIENTS
 
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
 !  use GFS
   use SOI
   use NWP_COMMON

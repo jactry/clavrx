@@ -4,7 +4,7 @@
 module cx_science_tools_mod
    
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       real4
 
    real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0

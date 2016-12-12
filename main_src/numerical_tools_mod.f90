@@ -48,7 +48,7 @@
 !
 !--------------------------------------------------------------------------------------
 module NUMERICAL_TOOLS_MOD
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
   
    implicit none
    private

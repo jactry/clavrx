@@ -36,7 +36,7 @@
 !--------------------------------------------------------------------------------------
 module GFS
 
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   
   use date_tools_mod, only: &
          leap_year_fct &

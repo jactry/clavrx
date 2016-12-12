@@ -39,7 +39,7 @@ module CLAVRX_OLR_MODULE
    use CX_SCIENCE_TOOLS_MOD,only: &
       stefan_boltzmann_constant
       
-   use CONSTANTS,only: &
+   use CX_CONSTANTS_MOD,only: &
       sym &
       , MISSING_VALUE_REAL4
    

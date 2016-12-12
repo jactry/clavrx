@@ -27,7 +27,7 @@
 !
 !--------------------------------------------------------------------------------------
 module SFC_EMISS
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    use NUMERICAL_TOOLS_MOD
   
    implicit none

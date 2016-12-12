@@ -3,7 +3,7 @@
 module cx_scale_tools_mod
   
    
-   use constants, only: &
+   use cx_constants_mod, only: &
       int4, real4, int2, int1 &
       , missing_value_int2 &
       , missing_value_int1

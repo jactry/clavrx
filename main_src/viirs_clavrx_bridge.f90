@@ -106,7 +106,7 @@ module VIIRS_CLAVRX_BRIDGE
       , Bt_Uni_ChI5 
       
 
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Int4 &
     , Sym &
     , Missing_Value_Real4

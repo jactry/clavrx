@@ -51,7 +51,7 @@ module IFF_CLAVRX_BRIDGE
        , Cld_Temp_Sounder &
        , Cld_Press_Sounder &
        , Cld_Height_Sounder
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    use IFF_MODULE
 
    implicit none

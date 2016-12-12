@@ -37,7 +37,7 @@
 ! REPOSITION_FOR_CLOCK_ERROR - compute the time for each pixel from the scan value
 !--------------------------------------------------------------------------------------
 module AVHRR_REPOSITION_ROUTINES
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use PIXEL_COMMON
  use NUMERICAL_TOOLS_MOD
  

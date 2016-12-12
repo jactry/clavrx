@@ -29,7 +29,7 @@
 !
 !--------------------------------------------------------------------------------------
 MODULE DCOMP_DERIVED_PRODUCTS_MODULE
- use CONSTANTS, only: & 
+ use CX_CONSTANTS_MOD, only: & 
    real4 &
    ,sym &
    , DTOR &

@@ -10,7 +10,7 @@ module cx_prd_mod
    use CX_STRING_TOOLS_MOD, only: &
       split
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       int4   
    
    type prd_individual_dtype

@@ -39,7 +39,7 @@ module OCA_MODULE
              Sensor &
            , Cloud_Mask_Aux_Read_Flag
 
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
              Real4 &
            , Int4 &
            , Int2 &

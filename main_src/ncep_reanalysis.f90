@@ -43,7 +43,7 @@
 !--------------------------------------------------------------------------------------
 module NCEP_REANALYSIS
 
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use NWP_COMMON
 use SORT_MODULE
 use NUMERICAL_TOOLS_MOD

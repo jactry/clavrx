@@ -78,7 +78,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
 
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
        sym, &
        CLOUD_MASK_VERSION, & 
        Cloud_Mask_Thresholds_Version

@@ -28,7 +28,7 @@
 !--------------------------------------------------------------------------------------
 MODULE FY2_MODULE
 
-use CONSTANTS
+use CX_CONSTANTS_MOD
 
 use PIXEL_COMMON
 

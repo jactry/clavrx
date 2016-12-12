@@ -33,8 +33,10 @@
 !
 ! Public Routines within in this Module: None
 !--------------------------------------------------------------------------------------
-module CONSTANTS
+module CX_CONSTANTS_MOD
   implicit none
+  
+  private
   
   integer, parameter, public:: int1 = selected_int_kind(1)
   integer, parameter, public:: int2 = selected_int_kind(3)
@@ -251,12 +253,12 @@ module CONSTANTS
   END TYPE symbol_struct
 
 !ccm  character(len=4), parameter:: SOLAR_OBS_TYPE = "SOLAR"
-  character(len=5), parameter:: SOLAR_OBS_TYPE = "SOLAR"
-  character(len=5), parameter:: LUNAR_OBS_TYPE = "LUNAR"
-  character(len=5), parameter:: MIXED_OBS_TYPE = "MIXED"
-  character(len=5), parameter:: THERMAL_OBS_TYPE = "THERM"
+  character(len=5), parameter, public :: SOLAR_OBS_TYPE = "SOLAR"
+  character(len=5), parameter, public :: LUNAR_OBS_TYPE = "LUNAR"
+  character(len=5), parameter, public :: MIXED_OBS_TYPE = "MIXED"
+  character(len=5), parameter, public :: THERMAL_OBS_TYPE = "THERM"
      
 
   TYPE(symbol_struct), public, save :: sym
   
-end module CONSTANTS
+end module CX_CONSTANTS_MOD

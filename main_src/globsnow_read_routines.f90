@@ -31,7 +31,7 @@
 !
 !--------------------------------------------------------------------------------------
 module GLOBSNOW_READ_ROUTINES
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use NUMERICAL_TOOLS_MOD
   use FILE_TOOLS,only: &
    get_lun, file_test

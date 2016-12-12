@@ -12,7 +12,7 @@
 !----------------------------------------------------------------------
 module NETCDF_READ_MODULE
 
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use NETCDF
 
  implicit none

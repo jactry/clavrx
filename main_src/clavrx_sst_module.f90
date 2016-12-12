@@ -34,7 +34,7 @@
 !
 !--------------------------------------------------------------------------------------
 module CLAVRX_SST_MODULE
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use PIXEL_COMMON, only: ch, sensor, geo, sfc, Bad_Pixel_Mask, Sst_Unmasked, Sst_Masked,  &
                         Cld_Mask
 

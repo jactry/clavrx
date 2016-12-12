@@ -60,7 +60,7 @@
 !
 !--------------------------------------------------------------------------------------
  module PLANCK
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use CALIBRATION_CONSTANTS
   use NUMERICAL_TOOLS_MOD
   use PIXEL_COMMON, only: &

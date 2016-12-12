@@ -39,7 +39,7 @@ module SEVIRI_MODULE
    
    use CGMS_NAV,only:
    
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    
    use FILE_TOOLS,only: &
       get_lun

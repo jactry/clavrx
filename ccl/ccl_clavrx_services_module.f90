@@ -5,7 +5,7 @@
 module CCL_SERVICES_MOD
 
  use PLANCK
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use NWP_COMMON
  use RTM_COMMON
  use PIXEL_COMMON, only: &

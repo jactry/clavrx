@@ -72,7 +72,7 @@
 !end select
 !--------------------------------------------------------------------------------------
 program GEO_DARK_SKY_VIS
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use GOES_MODULE
 
   implicit none

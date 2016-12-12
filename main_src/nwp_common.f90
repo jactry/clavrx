@@ -67,7 +67,7 @@
 !--------------------------------------------------------------------------------------
 module NWP_COMMON
    
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use PIXEL_COMMON
   use NUMERICAL_TOOLS_MOD
   

@@ -111,7 +111,7 @@ module AVHRR_MODULE
     , Ref_Ch2_Switch &
     , Ref_Ch6_Switch
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
     real4 &
     , int1 &
     , int2 &

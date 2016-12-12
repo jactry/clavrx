@@ -22,7 +22,7 @@
 ! SUPPORT TO USERS.
 !
 !--------------------------------------------------------------------------------------
-module CLOUD_MASK_ADDONS
+module NB_CLOUD_MASK_ADDONS
 
  use NB_CLOUD_MASK_SERVICES
 
@@ -593,4 +593,4 @@ module CLOUD_MASK_ADDONS
 !-----------------------------------------------------------
 ! end of module
 !-----------------------------------------------------------
-end module CLOUD_MASK_ADDONS
+end module NB_CLOUD_MASK_ADDONS

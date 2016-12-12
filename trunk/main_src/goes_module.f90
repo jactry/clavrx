@@ -1595,7 +1595,7 @@ end subroutine READ_GOES_SNDR
  integer(kind=int2), dimension(:), allocatable:: Word_Buffer,imgbuf 
  integer(kind=int1), dimension(:), allocatable:: Word_Buffer_I1
  integer:: Nwords
- INTEGER(kind=int4), DIMENSION(64) :: i4buf_temp
+ integer(kind=int4), DIMENSION(64) :: i4buf_temp
  integer(kind=int4):: dummy
  integer(kind=int4), intent(inout):: Goes_Scan_Line_Flag
 
@@ -1603,13 +1603,13 @@ end subroutine READ_GOES_SNDR
  ! this is needed because the 0.64 and other channels have different values
  ! in the MTSAT HIRID format.
   
- call mreadf_int(trim(filename)//CHAR(0),0,4,64,dummy,i4buf_temp)
+ call MREADF_INT(trim(filename)//CHAR(0),0,4,64,dummy,i4buf_temp)
  bytes_per_pixel = i4buf_temp(11)
  num_byte_ln_prefix = i4buf_temp(15)
 
  image = 0
 
- bytes_per_line = num_byte_ln_prefix + (AREAstr%Num_Elem*Bytes_Per_Pixel) 
+ bytes_per_line = Num_Byte_Ln_Prefix + (AREAstr%Num_Elem*Bytes_Per_Pixel) 
 
  Words_In_Prefix = num_byte_ln_prefix / Bytes_Per_Pixel
 
@@ -1627,13 +1627,13 @@ end subroutine READ_GOES_SNDR
  allocate(Word_Buffer(Number_Of_Words_In_Segment), imgbuf(Number_Of_Words_In_Segment))
 
  !--- Account for different Bytes_Per_Pixel value (Some MTSAT data is 1 byte per pixel) 
- select case (bytes_per_pixel)
+ select case (Bytes_Per_Pixel)
 
    case(1)
 
      allocate(Word_Buffer_I1(Number_Of_Words_In_Segment))
 
-     call mreadf_int(filename//CHAR(0), &
+     call MREADF_INT(filename//CHAR(0), &
                  First_Byte_In_Segment,  &
                  bytes_per_pixel, &
                  Number_Of_Words_In_Segment, &
@@ -1648,9 +1648,9 @@ end subroutine READ_GOES_SNDR
   
    case(2)
 
-     call mreadf_int(filename//CHAR(0), &
+     call MREADF_INT(filename//CHAR(0), &
                  First_Byte_In_Segment,  &
-                 bytes_per_pixel, &
+                 Bytes_Per_Pixel, &
                  Number_Of_Words_In_Segment, &
                  Number_Of_Words_Read,Word_Buffer)
      
@@ -1670,12 +1670,12 @@ end subroutine READ_GOES_SNDR
 !    Word_End = min(Word_Start + AREAstr%Num_Elem,Number_Of_Words_In_Segment)
      Word_End = min(Word_Start + (AREAstr%Num_Elem-1),Number_Of_Words_In_Segment)
      Nwords = int(Word_End - Word_Start)/Xstride + 1
-     image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
+     Image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
      
     Word_Start_Prefix = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + 1
 
     if (allocated(Scan_Time)) then
-      if (Words_In_Prefix .LT. 116 .AND. Goes_Scan_Line_Flag==sym%NO) then
+      if (Words_In_Prefix < 116 .and. Goes_Scan_Line_Flag==sym%NO) then
         Scan_Time(Line_Idx) = 0
       else
         if (Goes_Scan_Line_Flag==sym%NO) then
@@ -2550,11 +2550,11 @@ end subroutine GET_GOES_NAVIGATION
       SUBROUTINE LPOINT(INSTR,FLIP_FLG,ALPHA0,ZETA0,RLAT,RLON,IERR)
       IMPLICIT NONE
 !
-! CALLING PARAMETERS
+! CALLING parameterS
 !
-      INTEGER*4 INSTR
+      integer*4 INSTR
 ! INSTRUMENT CODE (1=IMAGER,2=SOUNDER)
-      INTEGER*4 FLIP_FLG
+      integer*4 FLIP_FLG
 ! S/C ORIENTATION FLAG (1=NORMAL,-1=INVERTED)
       REAL*8 ALPHA0
 ! ELEVATION ANGLE (RAD)
@@ -2564,7 +2564,7 @@ end subroutine GET_GOES_NAVIGATION
 ! LATITUDE IN RADIANS (OUTPUT)
       REAL*8 RLON
 ! LONGITUDE IN RADIANS (OUTPUT)
-      INTEGER IERR
+      integer IERR
 ! OUTPUT STATUS; 0 - POINT ON THE EARTH
 ! 1 - INSTRUMENT POINTS OFF EARTH
 !
@@ -2612,27 +2612,27 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************
 !
       REAL*8 PI
-      PARAMETER (PI=3.141592653589793D0)
+      parameter (PI=3.141592653589793D0)
       REAL*8 DEG
-      PARAMETER (DEG=180.D0/PI)
+      parameter (DEG=180.D0/PI)
       REAL*8 RAD
-      PARAMETER (RAD=PI/180.D0)
+      parameter (RAD=PI/180.D0)
 ! DEGREES TO RADIANS CONVERSION PI/180
       REAL*8 NOMORB
-      PARAMETER (NOMORB=42164.365D0)
+      parameter (NOMORB=42164.365D0)
 ! NOMINAL RADIAL DISTANCE OF SATELLITE (km)
       REAL*8 AE
-      PARAMETER (AE=6378.137D0)
+      parameter (AE=6378.137D0)
 ! EARTH EQUATORIAL RADIUS (km)
       REAL*8 FER
-      PARAMETER (FER=1.D0/298.25D0)
+      parameter (FER=1.D0/298.25D0)
 ! EARTH FLATTENING COEFFICIENT = 1-(BE/AE)
       REAL*4 AEBE2
-      PARAMETER (AEBE2=1.D0/(1.D0-FER)**2)
+      parameter (AEBE2=1.D0/(1.D0-FER)**2)
       REAL*4 AEBE3
-      PARAMETER (AEBE3=AEBE2-1.)
+      parameter (AEBE3=AEBE2-1.)
       REAL*4 AEBE4
-      PARAMETER (AEBE4=(1.D0-FER)**4-1.)
+      parameter (AEBE4=(1.D0-FER)**4-1.)
 !
 !***********************************************************************
 !     INCLUDE 'ELCOMM.INC'
@@ -2697,7 +2697,7 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************
 !**
 !** DESCRIPTION
-!** COMMON AREA FOR INSTRUMENT-RELATED CONTROL PARAMETERS
+!** COMMON AREA FOR INSTRUMENT-RELATED CONTROL parameterS
 !**
 !***********************************************************************
 !***********************************************************************
@@ -2707,7 +2707,7 @@ end subroutine GET_GOES_NAVIGATION
 ! LATITUDE/LONGITUDE, LINE/PIXEL AND INSTRUMENT CYCLES/INCREMENTS
 ! COORDINATES.
 !
-      INTEGER*4 INCMAX(2)
+      integer*4 INCMAX(2)
 ! NUMBER OF INCREMENTS PER CYCLE
       REAL*4 ELVMAX(2)
 ! BOUNDS IN ELEVATION (RADIANS)
@@ -2844,7 +2844,7 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************        
       subroutine GPOINT(RLAT,RLON,ALF,GAM,IERR)                                 
 !                                                                               
-!     CALLING PARAMETERS                                                        
+!     CALLING parameterS                                                        
 !                                                                               
       real*8   RLAT    ! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
       real*8   RLON    ! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
@@ -2864,27 +2864,27 @@ end subroutine GET_GOES_NAVIGATION
 !     INCLUDE FILES                                                             
 !                                                                               
       real*8 PI                                                                 
-           PARAMETER (PI=3.141592653589793D0)                                   
+           parameter (PI=3.141592653589793D0)                                   
       real*8 DEG                                                                
-           PARAMETER (DEG=180.D0/PI)                                            
+           parameter (DEG=180.D0/PI)                                            
       real*8 RAD                                                                
-           PARAMETER (RAD=PI/180.D0)                                            
+           parameter (RAD=PI/180.D0)                                            
 !                    DEGREES TO RADIANS CONVERSION PI/180                       
       real*8 NOMORB                                                             
-           PARAMETER (NOMORB=42164.365D0)                                       
+           parameter (NOMORB=42164.365D0)                                       
 !                    NOMINAL RADIAL DISTANCE OF SATELLITE (km)                  
       real*8 AE                                                                 
-           PARAMETER (AE=6378.137D0)                                            
+           parameter (AE=6378.137D0)                                            
 !                    EARTH EQUATORIAL RADIUS (km)                               
       real*8 FER                                                                
-           PARAMETER (FER=1.D0-(6356.7533D0/AE))                                
+           parameter (FER=1.D0-(6356.7533D0/AE))                                
 !                    EARTH FLATTENING COEFFICIENT = 1-(BE/AE)                   
       real*4 AEBE2                                                              
-           PARAMETER (AEBE2=1.D0/(1.D0-FER)**2)                                 
+           parameter (AEBE2=1.D0/(1.D0-FER)**2)                                 
       real*4 AEBE3                                                              
-           PARAMETER (AEBE3=AEBE2-1.)                                           
+           parameter (AEBE3=AEBE2-1.)                                           
       real*4 AEBE4                                                              
-           PARAMETER (AEBE4=(1.D0-FER)**4-1.)
+           parameter (AEBE4=(1.D0-FER)**4-1.)
       real*8 XS(3)                                                              
 !                      NORMALIZED S/C POSITION IN ECEF COORDINATES              
       real*8 BT(3,3)                                                            
@@ -3225,90 +3225,99 @@ end subroutine GET_GOES_NAVIGATION
 !
 ! buf = an int2 vector of the areafile words on a line including the prefix
 !-----------------------------------------------------------------------------
-subroutine PRINT_PREFIX(buf, ms_Time)
+subroutine PRINT_PREFIX(Buf, Ms_Time)
 
-  integer (kind=int2), DIMENSION(:), INTENT(in) :: buf
-  integer (kind=int4), INTENT(out) :: ms_Time
-  real (kind=real4):: frac_Hours
-  integer ITIMES(16)
-  integer year,dayofyr,Hour,minute,sec,msec
+  integer (kind=int2), dimension(:), INTENT(in) :: Buf
+  integer (kind=int4), intent(out) :: Ms_Time
+  real (kind=real4):: Frac_Hours
+  integer, dimension(16):: ITIMES
+  integer :: year,dayofyr,Hour,minute,sec,msec
   real (kind=real4) :: Minute_Time
   integer (kind=int2), dimension(128) :: buf2
-  logical*1 :: ldoc(256)
+! logical*1 :: ldoc(256)
+  integer(kind=int1) :: ldoc(256)
 
-!  integer, parameter :: LOC = 4  ! imager value, from mcidas code
-!  integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
-!  integer, parameter :: LOC = 0  ! sounder value, from mcidas code
+! integer, parameter :: LOC = 4  ! imager value, from mcidas code
+! integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
+! integer, parameter :: LOC = 0  ! sounder value, from mcidas code
   integer, parameter :: LOC = 1   ! value experimentally determined to work for CLAVRx.
+
   integer:: min_size
 
   equivalence(buf2, ldoc)
   
 ! caused error on 1km
-!  buf2(:) = buf(:128)
+! buf2(:) = buf(:128)
 
   ! works but does not solve above problem
   min_size = min(size(buf2), size(buf))
   buf2(1:min_size) = buf(1:min_size)
 
-  CALL UNPKTIME (ldoc ,ITIMES,9+LOC)
-  
-  year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
-  dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
+  call UNPKTIME (ldoc ,itimes,9+LOC)
+ 
+! print *, "itimes = ", itimes 
+  Year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
+  Dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
   Hour = itimes(8)*10 + itimes(9)
-  minute  = itimes(10)*10 + itimes(11)
-  sec  = itimes(12)*10 + itimes(13)
-  msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
+  Minute  = itimes(10)*10 + itimes(11)
+  Sec  = itimes(12)*10 + itimes(13)
+  Msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
 
 ! PRINT STATEMENT KEPT for verification
 !      write (6,6005) year,dayofyr,Hour,minute,sec,msec
 !6005  FORMAT ('time: year',i5,' day of year',i4,' hh:mm:ss ',i2,1h:,i2,1h:,i2,' msec',i4)
 !      read *
   !Calculate miliseconds since midnight of current day
-   ms_Time = (((Hour * 60 * 60) + (minute * 60) + sec) * 1000) + msec
+   Ms_Time = (((Hour * 60 * 60) + (Minute * 60) + Sec) * 1000) + Msec
  
   !Calculates fractions of an Hour since midnight of current day
   Minute_Time = minute + (((msec / 1000.0) + sec) / 60.0 )
-  frac_Hours = Hour + (Minute_Time / 60.0)
+  Frac_Hours = Hour + (Minute_Time / 60.0)
 
+! print *, 'PREFIX TIME ', Hour, Minute, Sec, Msec, Minute_Time, Frac_Hours
 
 end subroutine PRINT_PREFIX
 
 
+!-------------------------------------------------------------------------------------------
 ! FIXME: provisional routine -- from Mcidas, extracts line date and time from data buffer
 ! Minimally modified to compile with gfortran options 
+!-------------------------------------------------------------------------------------------
 subroutine UNPKTIME (LDOC,ITIMES,LOC)
+
 !C LOC is 13 for sounder,  11 for imager
 !CCC      integer IDOC(256)                    ! This array is NOT USED -- 10/24/2003  JPN
+
   integer ITIMES(16)
 
-  integer mask1, mask2
+  integer mask1
+  integer mask2
   integer mask3
 
-  logical lword
-!  logical*1 ldoc(256)
-  logical*1, intent(in) :: ldoc(256)
+! logical lword
+! logical*1, intent(in) :: ldoc(:)
+
+  integer(kind=int1):: lword
+  integer(kind=int1), intent(in) :: ldoc(:)
 
   integer LOC       
-  integer I,K,iword 
+  integer i,k,iword 
 
   equivalence (lword,iword)
   data mask1 /z'0000000F'/, mask2 /z'000000F0'/
   data mask3 /z'000000FF'/
   !C
   K = 0
-  !      do 1 I=1,8
-  do I=1, 8
+  do i=1, 8
      lword = ldoc(LOC+i)
      iword = iand(iword,mask3)
-     K = K + 1
+     k = k + 1
      ITIMES(k) = iand(iword,mask2)
      ITIMES(k) = ISHFT(ITIMES(k),-4)
-     K = K + 1
+     k = k + 1
      ITIMES(k) = iand(iword,mask1)
-     !1        CONTINUE
   end do
-  return
+
 end subroutine UNPKTIME
 
 !----------------------------------------------------------------------
@@ -3827,25 +3836,23 @@ end subroutine DARK_COMPOSITE_CLOUD_MASK
 
 
 
+!-------------------------------------------------------------------
 ! convert integer to real, but interpret it as an unsigned integer
 ! This is needed for the sounder
+!-------------------------------------------------------------------
 elemental function UNSIGNED_TO_REAL4(i) result (r)
   integer(kind=int2), intent(in) :: i
   real(kind=real4) :: r
 
-  INTEGER(kind=int4), PARAMETER :: INT2_SIGN_CORRECTION_OFFSET = 65536
+  integer(kind=int4), parameter :: INT2_SIGN_CORRECTION_OFFSET = 65536
   
- 
   if(i < 0) then
      r = real(i,kind=real4) + INT2_SIGN_CORRECTION_OFFSET
   else 
      r = real(i,kind=real4)
   end if
+
 end function UNSIGNED_TO_REAL4
-
-
-
-
 
 !
 !-- end of module

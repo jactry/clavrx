@@ -159,7 +159,10 @@ clavrxorb_objs = process_clavrx.o \
                  nb_cloud_mask_clavrx_bridge_module.o \
                  nb_cloud_mask_clavrx_services_module.o \
 		 nb_cloud_mask_module.o \
+                 nb_cloud_mask_lut_module.o \
+                 nb_cloud_mask_solar_rtm_module.o \
                  nb_cloud_mask_addons_module.o \
+                 nb_cloud_mask_netcdf_read_module.o \
                  baseline_cloud_mask.o \
                  move_bytes.o \
 	         mreadf.o \
@@ -349,7 +352,7 @@ Compare_Float_Numbers.o: Compare_Float_Numbers.f90 constant.o
 gfs_hdf_module.o: gfs_hdf_module.f90 constant.o sort_module.o num_mod.o nwp_common.o hdf.o clavrx_message_module.o
 globsnow_read_routines.o: globsnow_read_routines.f90 constant.o hdf.o num_mod.o file_utility.o
 hdf.o: hdf.f90
-netcdf_read_module.o: netcdf_read_module.f90 constant.o
+netcdf_read_module.o: netcdf_read_module.f90
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
 precision.o:precision.f90
 hdf_read_module.o: hdf_read_module.f90 hdf.o Compare_Float_Numbers.o constant.o file_utility.o Message_Handler.o clavrx_message_module.o
@@ -396,18 +399,30 @@ sensor_module.o: sensor_module.f90 constant.o pixel_common.o avhrr_module.o goes
 endif
 
 #cloud t&m
-cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o nb_cloud_mask_module.o
+cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 constant.o pixel_common.o cloud_type_algo_module.o  rtm_common.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)   $(CTYPE)/cloud_type_bridge_module.f90
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 constant.o pixel_common.o
-nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90 pixel_common.o num_mod.o nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_module.o nb_cloud_mask_addons_module.o file_tools.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs)  $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
+
+nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90 pixel_common.o num_mod.o nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_module.o \
+	nb_cloud_mask_addons_module.o file_tools.o nb_cloud_mask_solar_rtm_module.o 
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
+
+nb_cloud_mask_lut_module.o: $(CMASK)/nb_cloud_mask_lut_module.f90 nb_cloud_mask_netcdf_read_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_lut_module.f90
+
+nb_cloud_mask_solar_rtm_module.o: $(CMASK)/nb_cloud_mask_solar_rtm_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_solar_rtm_module.f90
+
 nb_cloud_mask_clavrx_services_module.o: $(CMASK)/nb_cloud_mask_clavrx_services_module.f90
 
-nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o netcdf_read_module.o
-	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_module.f90
+nb_cloud_mask_module.o: $(CMASK)/nb_cloud_mask_module.f90 nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_lut_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(CMASK)/nb_cloud_mask_module.f90
 
 nb_cloud_mask_addons_module.o: $(CMASK)/nb_cloud_mask_addons_module.f90 nb_cloud_mask_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_addons_module.f90
+
+nb_cloud_mask_netcdf_read_module.o: $(CMASK)/nb_cloud_mask_netcdf_read_module.f90
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_netcdf_read_module.f90
 
 #universal_cloud_type.o:$(CTYPE)/universal_cloud_type.f90 constant.o pixel_common.o
 ir_cloud_type_baum_module.o: ir_cloud_type_baum_module.f90 constant.o pixel_common.o

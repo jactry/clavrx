@@ -5729,7 +5729,11 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     !---  Ref_Ch1_Clear - nonatmos corr, fixed ocean and snow - WCS3
     if (Sds_Num_Level2_sfc_Ch1_Clr_fill_flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(ch(1)%Sfc_Ref_White_Sky_fill,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
-      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+     
+     
+     
+     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_sfc_Ch1_Clr_fill), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 

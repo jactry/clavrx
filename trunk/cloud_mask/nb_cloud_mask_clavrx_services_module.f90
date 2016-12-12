@@ -37,6 +37,7 @@
     integer(kind=int1) :: Oceanic_Glint_Mask                   !Mask of oceanic solar glint (0=no,1=yes)
     integer(kind=int1) :: Lunar_Oceanic_Glint_Mask             !Mask of oceanic lunar glint (0=no,1=yes)
     integer(kind=int1) :: Coastal_Mask                         !binary coast mask (0=no,1=yes)
+    integer(kind=int1) :: Scat_Mask                            !binary scattering mask (0=no,1=yes)
     real(kind=real4) :: Solzen                                 !Solar zenith angle (degrees)
     real(kind=real4) :: Scatzen                                !Solar Scattering angle (degrees)
     real(kind=real4) :: Lunscatzen                             !Lunar Scattering angle (degrees)

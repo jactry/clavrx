@@ -411,6 +411,7 @@ contains
       Input%Coastal_Mask = Sfc%Coast_Mask(i,j)
       Input%Solzen = Geo%Solzen(i,j)
       Input%Scatzen = Geo%Scatangle(i,j)
+      Input%Scat_Mask = Geo%Scat_Mask(i,j)
       Input%Senzen = Geo%Satzen(i,j)
       Input%Lat = Nav%Lat(i,j)
       Input%Lon = Nav%Lon(i,j)

@@ -22,7 +22,18 @@ module CLOUD_TYPE_ALGO_MODULE
 
    public :: cloud_type_input_type
    public :: et_cloud_type
+   public :: et_cloudiness_class
    public :: cloud_type_diag_type
+
+   type, public :: et_cloudiness_class_type
+      integer :: SPACE = 0
+      integer :: MISSING = -999.0
+      integer :: CLOUDY = 3
+      integer :: PROB_CLOUDY = 2
+      integer :: PROB_CLEAR = 1
+      integer :: CLEAR  = 0
+   end type
+   type ( et_cloudiness_class_type ), save :: et_cloudiness_Class
   
    type  et_cloudtype_class_type
       integer :: FIRST = 0 

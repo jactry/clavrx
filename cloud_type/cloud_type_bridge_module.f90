@@ -114,11 +114,9 @@ module cloud_type_bridge_module
        , cloud_type_input_type &
        , cloud_type_diag_type &
        , et_cloud_type &
+       , et_cloudiness_class &
        , set_cloud_phase
        
-   use NB_CLOUD_MASK, only: &
-      et_cloudiness_class
-   
    use RTM_COMMON , only: &
       p_std_rtm &
       , rtm
@@ -128,14 +126,14 @@ module cloud_type_bridge_module
    implicit none
    
    public :: CLOUD_TYPE_BRIDGE  
-   public :: Set_CLOUD_TYPE_VERSION
+   public :: SET_CLOUD_TYPE_VERSION
 
 contains
 
    !====================================================================
    !  record svn version as a global variable for output to hdf
    !====================================================================
-   subroutine Set_CLOUD_TYPE_VERSION()
+   subroutine SET_CLOUD_TYPE_VERSION()
       Cloud_Type_Version = "$Id: cloud_type_bridge_module.f90 412 2014-06-11 17:35:49Z heidinger $"
    end subroutine Set_CLOUD_TYPE_VERSION
 

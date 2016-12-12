@@ -3,33 +3,12 @@
  !-----------------------------------------------------------------------------
  module NB_CLOUD_MASK_SERVICES
 
+ use CONSTANTS, only: int1, int2, int4, int8, real4, real8,  &
+                      MISSING_VALUE_REAL4, MISSING_VALUE_INT1, dtor, pi
+ 
  implicit none
 
  include 'nb_cloud_mask.inc'
-
- integer, parameter, public:: int1 = selected_int_kind(1)
- integer, parameter, public:: int2 = selected_int_kind(3)
- integer, parameter, public:: int4 = selected_int_kind(8)
- integer, parameter, public:: int8 = selected_int_kind(10)
- integer, parameter, public:: real4 = selected_real_kind(6,37)
- integer, parameter, public:: real8 = selected_real_kind(15,307)
-
- !--- missing value
- real, parameter, public :: MISSING_VALUE_REAL4 = -999.0
- integer(kind=int1), parameter, public :: MISSING_VALUE_INT1 = -128
-
- !--- numerical constants
- real, parameter, public:: pi = 3.14159265
- real, parameter, public:: dtor = pi/180.0
-
- type, public :: et_cloudiness_class_type
-      integer :: SPACE 
-      integer :: MISSING
-      integer :: CLOUDY
-      integer :: PROB_CLOUDY
-      integer :: PROB_CLEAR
-      integer :: CLEAR
- end type
 
  type, public :: mask_input
     integer :: Num_Elem                                        !x-dimension of data arrays
@@ -110,6 +89,7 @@
     integer(kind=int1) :: Sfc_Type                             !surface type based on UMD classification
     real(kind=real4) :: Sfc_Temp                               !surface temperature from ancillary sources
     real(kind=real4) :: Path_Tpw                               !TPW along IR path from ancillary sources
+    real(kind=real4) :: Prior                                  !Prior from a precomputed source
  end type mask_input 
 
  !-----------------------------------------------------------------------------

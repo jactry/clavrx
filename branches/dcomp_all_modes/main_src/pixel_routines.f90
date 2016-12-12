@@ -45,7 +45,7 @@ MODULE PIXEL_ROUTINES
       Glint_Zen_Thresh &
       , Ref_Sfc_White_Sky_Water
    
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
       
    use LAND_SFC_PROPERTIES,only: &
       Land_grid_description &      

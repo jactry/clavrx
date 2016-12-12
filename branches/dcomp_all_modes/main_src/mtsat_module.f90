@@ -26,7 +26,7 @@
 !--------------------------------------------------------------------------------------
 module MTSAT_MODULE
 
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    use PIXEL_COMMON
    use CALIBRATION_CONSTANTS
    use PLANCK

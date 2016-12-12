@@ -66,7 +66,7 @@
 !--------------------------------------------------------------------------------------
 module AVHRR_PIXEL_AEROSOL
    
-   use CONSTANTS,only: &
+   use CX_CONSTANTS_MOD,only: &
       sym &
       , real4 &
       , Missing_Value_Real4 &

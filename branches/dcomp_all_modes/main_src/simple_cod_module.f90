@@ -4,7 +4,7 @@
 !==============================================================================
 module SIMPLE_COD
 
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    use PIXEL_COMMON
    use NUMERICAL_TOOLS_MOD 
    use FILE_TOOLS, only: &

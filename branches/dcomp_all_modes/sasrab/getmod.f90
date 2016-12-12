@@ -140,7 +140,7 @@ subroutine Getmod(Unit16, Unit1, &
                   Iaer, Itable, Isrmod, Isrtyp, Tauclm, Ilat, Ilon)
 
    ! Modules
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
 
    ! Parameters
    integer, parameter :: Numlat = 2880

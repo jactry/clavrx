@@ -153,7 +153,30 @@
       , sounder_emissivity &
       , supercooled_cloud_probability
    
-   use CONSTANTS
+   use CX_CONSTANTS_MOD,only: &
+      int1, int2,  int4, real4 &
+      , DTOR &
+      , Missing_Value_Int1 &
+      , missing_value_int4 &
+      , missing_value_real4 &
+      , SOLAR_OBS_TYPE &
+      , LUNAR_OBS_TYPE &
+      , MIXED_OBS_TYPE &
+      , THERMAL_OBS_TYPE &
+      , sym &
+      , EXE_PROMPT &
+      , Nchan_Clavrx &
+      , SFC_TYPE_SDS_NAME &
+      , VOLCANO_MASK_SDS_NAME &
+      , LAND_MASK_SDS_NAME &
+      , COAST_MASK_SDS_NAME &
+      , SURFACE_ELEV_SDS_NAME &
+      , SNOW_MASK_SDS_NAME &
+      , MODIS_ALB_2_13_SDS_NAME &
+      , MODIS_ALB_1_64_SDS_NAME &
+      , MODIS_ALB_1_24_SDS_NAME &
+      , MODIS_ALB_0_66_SDS_NAME &
+      , MODIS_ALB_0_86_SDS_NAME
    
    use cx_conf_mod , only:  &
       conf_main_type &

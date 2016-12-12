@@ -75,7 +75,7 @@ module SENSOR_MODULE
       
    use ALGORITHM_CONSTANTS,only:
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
     int4 &
     , real4 &
     , MISSING_VALUE_INT4 &

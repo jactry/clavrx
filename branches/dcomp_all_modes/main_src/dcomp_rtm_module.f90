@@ -43,7 +43,7 @@
 
 module dcomp_rtm_module
    
-   use constants, only: &
+   use cx_constants_mod, only: &
       INT1 , REAL4 , PI , INT4
    
       

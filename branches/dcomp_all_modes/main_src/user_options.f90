@@ -104,7 +104,7 @@ module USER_OPTIONS
       , Globsnow_Data_Dir, &
         Use_IR_Cloud_Type_Flag
       
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Sym &
       , Exe_Prompt &
       , Nchan_Clavrx

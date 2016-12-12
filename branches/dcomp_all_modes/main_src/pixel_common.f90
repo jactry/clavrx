@@ -108,7 +108,7 @@
 !--------------------------------------------------------------------------------------
 module PIXEL_COMMON
 
-  use CONSTANTS, only: &
+  use CX_CONSTANTS_MOD, only: &
     real4 &
   , real8 &
   , int4 &

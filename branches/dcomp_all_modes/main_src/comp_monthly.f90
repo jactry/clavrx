@@ -70,7 +70,7 @@
 ! this version, does keep the files open
 !--------------------------------------------------------------------------------------
 program COMPILE_MONTHLY
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use HDF
  use HDF_PARAMS
  use NUMERICAL_ROUTINES

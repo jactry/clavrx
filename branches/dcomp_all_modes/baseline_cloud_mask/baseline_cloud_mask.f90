@@ -51,7 +51,7 @@ MODULE Baseline_Cloud_Mask
 !--- module use statements
 !
 use PIXEL_COMMON
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use NWP_COMMON
 use RTM_COMMON
 use PLANCK, only: &

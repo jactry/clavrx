@@ -49,7 +49,7 @@
 !
 !--------------------------------------------------------------------------------------
 module SURFACE_PROPERTIES
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use PIXEL_COMMON
 
 implicit none

@@ -31,7 +31,7 @@ module IFF_MODULE
  use PIXEL_COMMON, only: &
      sensor &
      , image
- use CONSTANTS, only: &
+ use CX_CONSTANTS_MOD, only: &
      sym &
      , int1 &
      , int2 &

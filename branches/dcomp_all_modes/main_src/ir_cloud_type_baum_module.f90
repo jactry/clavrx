@@ -50,7 +50,7 @@ module IR_CLOUD_TYPE_BAUM_MODULE
 ! ICE_PHASE = 4
 ! UNKNOWN_PHASE = 5
 !====================================================================
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use PIXEL_COMMON, only: Image,  &
                           Ch,     &
                           Geo,    &

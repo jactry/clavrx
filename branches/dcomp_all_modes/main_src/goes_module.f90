@@ -91,7 +91,7 @@ module GOES_MODULE
       , possol
    
    
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       real4 &
       , int1 &
       , int2 &

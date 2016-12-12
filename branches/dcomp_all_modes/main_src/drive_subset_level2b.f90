@@ -31,7 +31,7 @@
 !
 !--------------------------------------------------------------------------------------
 program DRIVE_SUBSET_LEVEL2B
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use HDF_PARAMS
  use NUMERICAL_TOOLS_MOD
  use SCALING_PARAMETERS,only:

@@ -32,7 +32,7 @@
 !--------------------------------------------------------------------------------------
 module HDF_PARAMS
 
-use CONSTANTS, only: &
+use CX_CONSTANTS_MOD, only: &
    int1 &
    , int2 &
    , int4 &

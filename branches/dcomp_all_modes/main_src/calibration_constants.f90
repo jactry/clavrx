@@ -32,7 +32,7 @@
 !--------------------------------------------------------------------------------------
 module CALIBRATION_CONSTANTS
 
-  use CONSTANTS, only: &
+  use CX_CONSTANTS_MOD, only: &
   real4 & 
   , real8 &
   , nchan_clavrx

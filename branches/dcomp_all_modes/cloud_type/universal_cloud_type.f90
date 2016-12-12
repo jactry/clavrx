@@ -35,7 +35,7 @@ module UNIVERSAL_CLOUD_TYPE_MODULE
 !  Step 7 - Deal with remaining unknown pixels
 !  Step 8 - Derive Type from Phase with additional logic
 !====================================================================
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use PIXEL_COMMON
   use NWP_COMMON
   use RT_UTILITIES

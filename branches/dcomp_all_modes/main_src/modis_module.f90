@@ -27,7 +27,7 @@
 !--------------------------------------------------------------------------------------
 module MODIS_MODULE
 
-        use CONSTANTS, only: &
+        use CX_CONSTANTS_MOD, only: &
                 int4, real4 &
                 , int2 &
                 , int1 &

@@ -63,7 +63,7 @@
 !--------------------------------------------------------------------------------------
 module RT_UTILITIES
  
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Real4 &
       , Int4 &
       , Int1 &

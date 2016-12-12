@@ -30,7 +30,7 @@
 !--------------------------------------------------------------------------------------
 module SCALING_PARAMETERS
   
- use CONSTANTS, only: &
+ use CX_CONSTANTS_MOD, only: &
    int4 
  implicit none
  

@@ -37,7 +37,7 @@ module VIIRS_NASA_READ_MODULE
   use PIXEL_COMMON, only: &
         Sensor &
       , Gap_Pixel_Mask
-  use CONSTANTS, only: &
+  use CX_CONSTANTS_MOD, only: &
         Real4 &
       , Real8 &
       , Int8 &

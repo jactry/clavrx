@@ -35,7 +35,7 @@
 
 MODULE hdf_read_module
 
-  USE CONSTANTS
+  USE CX_CONSTANTS_MOD
  
 
   implicit none

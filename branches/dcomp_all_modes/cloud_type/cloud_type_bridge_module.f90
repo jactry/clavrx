@@ -106,7 +106,7 @@ module cloud_type_bridge_module
       , Diag_Pix_Array_3 &
       , bad_pixel_mask
                  
-   use CONSTANTS, only : &
+   use CX_CONSTANTS_MOD, only : &
         Cloud_Type_Version
 
    use CLOUD_TYPE_ALGO_MODULE, only : &

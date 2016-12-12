@@ -59,7 +59,7 @@
 !--------------------------------------------------------------------------------------
 module RTM_COMMON
  
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
 
    implicit none
 

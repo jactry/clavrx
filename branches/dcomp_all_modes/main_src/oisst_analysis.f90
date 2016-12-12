@@ -113,7 +113,7 @@
 !  an extra 4 byte header and trailer word to the total record.
 !--------------------------------------------------------------------------------------
 module OISST_ANALYSIS
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use NUMERICAL_TOOLS_MOD
   use PIXEL_COMMON
   use FILE_TOOLS

@@ -34,7 +34,7 @@ module dncomp_clavrx_bridge_mod
 
    ! -- MODULES USED
 
-   use constants, only: &
+   use cx_constants_mod, only: &
         REAL4 , INT4, INT2, INT1 , SYM &
       , MISSING_VALUE_REAL4 , PI &
       , dcomp_version   ! -- this is not a constant!

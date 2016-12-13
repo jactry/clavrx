@@ -6760,7 +6760,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
     istatus = 0
     istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_VERSION", DFNT_CHAR8, len_trim(Cloud_Mask_Version), trim(Cloud_Mask_Version))+istatus
     istatus = sfscatt(Sd_Id_Level2, "CLOUD_MASK_THRESHOLDS_VERSION", DFNT_CHAR8,  &
-                 len_trim(Cloud_Mask_Thresholds_Version), trim(Cloud_Mask_Thresholds_Version))+istatus 
+                 len_trim(Cloud_Mask_Lut_Version), trim(Cloud_Mask_Lut_Version))+istatus 
     istatus = sfscatt(Sd_Id_Level2, "CLOUD_TYPE_VERSION", DFNT_CHAR8, len_trim(Cloud_Type_Version), trim(Cloud_Type_Version))+istatus 
     istatus = sfscatt(Sd_Id_Level2, "ACHA_VERSION", DFNT_CHAR8, len_trim(ACHA_Version), trim(ACHA_Version))+istatus 
     istatus = sfscatt(Sd_Id_Level2, "DCOMP_VERSION", DFNT_CHAR8, len_trim(dcomp_version), trim(dcomp_version))+istatus

@@ -407,7 +407,7 @@ nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_modul
 	nb_cloud_mask_addons_module.o file_tools.o nb_cloud_mask_solar_rtm_module.o 
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
 
-nb_cloud_mask_lut_module.o: $(CMASK)/nb_cloud_mask_lut_module.f90 nb_cloud_mask_netcdf_read_module.o constant.o
+nb_cloud_mask_lut_module.o: $(CMASK)/nb_cloud_mask_lut_module.f90 nb_cloud_mask_netcdf_read_module.o nb_cloud_mask_clavrx_services_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_lut_module.f90
 
 nb_cloud_mask_solar_rtm_module.o: $(CMASK)/nb_cloud_mask_solar_rtm_module.f90

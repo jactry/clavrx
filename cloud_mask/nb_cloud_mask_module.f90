@@ -81,7 +81,6 @@ module NB_CLOUD_MASK
 
  public:: NB_CLOUD_MASK_ALGORITHM
  public:: SET_CLOUD_MASK_VERSION
- public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
 
  !--- set thresholds and algorithm specific constants
  include 'nb_cloud_mask.inc'
@@ -116,23 +115,16 @@ module NB_CLOUD_MASK
           sds_stride_3d, sds_dims_3d
 
  contains
-!====================================================================
-!  record cvs version as a global variable for output to hdf
-!====================================================================
- subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
-   character(len=*), intent(out):: Cloud_Mask_Version
-   Cloud_Mask_Version = "$Id$"
- end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================
 !  pass threshold version to bridge
 !  Cloud_Mask_Thresholds_Version is a module-wide variable
 !  that is private
 !====================================================================
- subroutine SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_CVS_Tag)
-   character(len=*), intent(out):: Cloud_Mask_CVS_Tag
-   Cloud_Mask_CVS_Tag = Cloud_Mask_Thresholds_Version
- end subroutine SET_CLOUD_MASK_THRESHOLDS_VERSION
+ subroutine SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
+   character(len=*), intent(out):: Cloud_Mask_Version
+   Cloud_Mask_Version = "$Id$"
+ end subroutine SET_CLOUD_MASK_VERSION
 
 !====================================================================
 ! SUBROUTINE Name: CLOUD_MASK_NAIVE_BAYES

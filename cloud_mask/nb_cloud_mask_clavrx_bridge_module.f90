@@ -155,7 +155,8 @@ contains
             "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
 
        call READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
-                                Output%Cloud_Mask_Bayesian_Flag)
+                                 Output%Cloud_Mask_Bayesian_Flag,  &
+                                 Cloud_Mask_Thresholds_Version)
 
    endif
 
@@ -251,7 +252,6 @@ contains
    !------------------------------------------------------------------------------
    if (Segment_Number == 1) then
      call SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
-     call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
    endif
 
    !-------------------------------------------------------------------------------

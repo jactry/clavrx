@@ -15,8 +15,7 @@
 module NB_CLOUD_MASK_LUT_MODULE
 
  use NB_CLOUD_MASK_NETCDF_READ
- use CONSTANTS, only: int1, int2, int4, real4, real8, MISSING_VALUE_REAL4, &
-                      Cloud_Mask_Thresholds_Version
+ use NB_CLOUD_MASK_SERVICES, only: int1, int2, int4, real4, real8, MISSING_VALUE_REAL4
 
  implicit none
 
@@ -92,9 +91,12 @@ module NB_CLOUD_MASK_LUT_MODULE
 !
 !====================================================================
  subroutine READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
-                                Cloud_Mask_Bayesian_Flag)
+                                 Cloud_Mask_Bayesian_Flag, &
+                                 Cloud_Mask_Thresholds_Version) 
 
    character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
+   character(len=*), intent(out):: Cloud_Mask_Thresholds_Version
+
    !--- Need a method to flag things
    integer, intent(out):: Cloud_Mask_Bayesian_Flag
 

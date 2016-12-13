@@ -82,7 +82,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    use CONSTANTS, only: &
        sym, &
        Cloud_Mask_Version, & 
-       Cloud_Mask_Thresholds_Version
+       Cloud_Mask_Lut_Version
        
    use NB_CLOUD_MASK
    use NB_CLOUD_MASK_ADDONS
@@ -155,8 +155,7 @@ contains
             "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
 
        call READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
-                                 Output%Cloud_Mask_Bayesian_Flag,  &
-                                 Cloud_Mask_Thresholds_Version)
+                                 Output%Cloud_Mask_Bayesian_Flag)
 
    endif
 
@@ -252,6 +251,7 @@ contains
    !------------------------------------------------------------------------------
    if (Segment_Number == 1) then
      call SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
+     call SET_CLOUD_MASK_LUT_VERSION(Cloud_Mask_Lut_Version)
    endif
 
    !-------------------------------------------------------------------------------

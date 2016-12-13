@@ -24,8 +24,10 @@ module NB_CLOUD_MASK_LUT_MODULE
  public:: READ_PRIOR
  public:: COMPUTE_PRIOR
  public:: RESET_NB_CLOUD_MASK_PRIOR_LUT
+ public:: SET_CLOUD_MASK_LUT_VERSION
 
- character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask LUT Module >> "
+ character(len=*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask LUT Module >> "
+ character(len=100), private:: Cloud_Mask_Lut_Version
 
  !--- set thresholds and algorithm specific constants
  include 'nb_cloud_mask.inc'
@@ -82,6 +84,13 @@ module NB_CLOUD_MASK_LUT_MODULE
 !-------------------------------------------------------------------------------
 ! NetCDF LUT routines:
 !-------------------------------------------------------------------------------
+subroutine SET_CLOUD_MASK_LUT_VERSION(Cloud_Mask_Lut_Version_Out)
+  character(len=*), intent(out):: Cloud_Mask_Lut_Version_Out
+  integer:: n_in, n_out
+  n_in = len(Cloud_Mask_Lut_Version)
+  n_out = len(Cloud_Mask_Lut_Version_Out)
+  Cloud_Mask_Lut_Version_Out = Cloud_Mask_Lut_Version(1:min(n_in,n_out))
+end subroutine SET_CLOUD_MASK_LUT_VERSION
 
 !====================================================================
 ! SUBROUTINE Name: READ_NAIVE_BAYES_LUT
@@ -91,11 +100,9 @@ module NB_CLOUD_MASK_LUT_MODULE
 !
 !====================================================================
  subroutine READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
-                                 Cloud_Mask_Bayesian_Flag, &
-                                 Cloud_Mask_Thresholds_Version) 
+                                 Cloud_Mask_Bayesian_Flag)
 
    character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
-   character(len=*), intent(out):: Cloud_Mask_Thresholds_Version
 
    !--- Need a method to flag things
    integer, intent(out):: Cloud_Mask_Bayesian_Flag
@@ -118,7 +125,7 @@ module NB_CLOUD_MASK_LUT_MODULE
       return
    endif
 
-   status = nf90_get_att(ncid, nf90_global, "data_file", Cloud_Mask_Thresholds_Version)
+   status = nf90_get_att(ncid, nf90_global, "data_file", Cloud_Mask_Lut_Version)
    if (status /= nf90_noerr) then
       print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Version Read Failed'
       return

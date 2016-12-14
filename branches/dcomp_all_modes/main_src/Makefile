@@ -398,7 +398,7 @@ viewing_geometry_module.o: viewing_geometry_module.f90 cx_constants_mod.o
 
 
 
-planck.o: planck.f90 cx_constants_mod.o calibration_constants.o pixel_common.o numerical_tools_mod.o
+planck.o: planck.f90 cx_constants_mod.o calibration_constants.o pixel_common.o 
 reposition_module.o: reposition_module.f90 cx_constants_mod.o numerical_tools_mod.o pixel_common.o reposnx.o date_tools_mod.o
 
 oca_module.o: oca_module.f90  file_tools.o cx_constants_mod.o pixel_common.o

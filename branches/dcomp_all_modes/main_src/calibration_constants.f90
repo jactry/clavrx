@@ -38,10 +38,11 @@ module CALIBRATION_CONSTANTS
   , nchan_clavrx
 
   implicit none
+   private
 
 !--- Planck Constants
-  real (kind=real4), parameter, public:: c1 = 1.191062e-5, &
-                                         c2 = 1.4387863
+  real (kind=real4), parameter, public:: C1 = 1.191062e-5, &
+                                         C2 = 1.4387863
 
   real (kind=real4), dimension(20:Nchan_Clavrx), public, save:: Planck_A1 = 0.0
   real (kind=real4), dimension(20:Nchan_Clavrx), public, save:: Planck_A2 = 1.0

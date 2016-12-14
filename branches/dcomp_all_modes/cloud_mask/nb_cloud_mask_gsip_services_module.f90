@@ -3,7 +3,7 @@
  !-----------------------------------------------------------------------------
  module NB_CLOUD_MASK_SERVICES
 
-   use CX_CONSTANTS_MOD
+   use CONSTANTS
    use PIXEL_COMMON
    use NUMERICAL_ROUTINES
 

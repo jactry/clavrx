@@ -20,7 +20,7 @@ module cx_pfaast_coef_mod
       procedure :: read_it => read_coef 
       procedure :: read_general 
       procedure :: read_modis
-      procedure :: read_ahi
+      procedure :: read_ahi_abi
       procedure :: read_avhrr
       procedure :: read_data_standard
    end type coef_type 
@@ -100,12 +100,16 @@ contains
       case ('MODIS')
          call this % read_modis( satellite)
       case ('AHI')
-         call this % read_ahi ()  
+         call this % read_ahi_abi (trim(device))  
       case ( 'AVHRR','HIRS')
          call this % read_avhrr ( device,  satellite )
       case ( 'SEVIRI','MTSAT','VIIRS','FY2','GOES')
-         call this % read_general ( device, satellite  )
-      
+         ! - GOES-16 is ABI 
+         if ( trim(device) .EQ. 'GOES' .and. satellite .EQ. '16') then
+            call this % read_ahi_abi(trim(device))
+         else 
+            call this % read_general ( device, satellite  )
+         end if
       case default
          print*,'sensor not found in cx_pfaast:  ',sensor,device   
          print*,'stopping ...'
@@ -153,15 +157,14 @@ contains
    
    end subroutine deallocate_it
    
-   
-  !>
+   !> 
    !!  @todo check and test
    !!  @todo make lun safe
    !!
-   subroutine read_ahi ( this )
+   subroutine read_ahi_abi ( this , sat)
       class (coef_type), intent(inout) :: this
-
-      character ( len =100) :: cfile = 'ahixxx101.dat'
+      character(len=3), intent(in) :: sat
+      character ( len =100) :: cfile 
       
       integer :: l
       integer, parameter :: ND = 10
@@ -177,6 +180,11 @@ contains
       integer :: i,j,k
       
       !- executable
+      
+      cfile = 'ahixxx101.dat'
+      if ( sat .eq. 'ABI' ) cfile = 'abixxx101.dat'
+      
+      
       call open_files ( cfile, 4, lun_s ) 
       
       do k = 1 , N_CHANNELS
@@ -192,13 +200,13 @@ contains
          close(lun_s(l))
       end do
          
-      if ( big_endian()) then
-         call flip_rtc(coefd,ncd,nm, N_CHANNELS)
-         call flip_rtc(coefo,nco,nm, N_CHANNELS)
-         call flip_rtc(coefc,ncc,nm, N_CHANNELS)
-         call flip_rtc(coefl,ncl,nm, N_CHANNELS)
-         call flip_rtc(coefs,ncs,nm, N_CHANNELS)
-      end if
+    !  if ( big_endian) then
+    !     call flip_rtc(coefd,ncd,nm, N_CHANNELS)
+    !     call flip_rtc(coefo,nco,nm, N_CHANNELS)
+    !     call flip_rtc(coefc,ncc,nm, N_CHANNELS)
+    !     call flip_rtc(coefl,ncl,nm, N_CHANNELS)
+    !     call flip_rtc(coefs,ncs,nm, N_CHANNELS)
+    !  end if
          
       call this % allocate_it(N_CHANNELS)
          
@@ -214,7 +222,8 @@ contains
       this % modis_channel_eqv = [ 20,37,27,28,29,30,38,31,32,33 ]
       this % native_channel = [(i , i=7 , 16 ) , 1 ]
         
-   end subroutine read_ahi
+   end subroutine read_ahi_abi
+  
    
    
    !>
@@ -334,7 +343,7 @@ contains
          
       ! define and open the coefficient files
       cfile (18:20) = 'lit'
-      if ( big_endian()) cfile (18:20) = 'big'
+      !if ( big_endian()) cfile (18:20) = 'big'
       
       ksat = 1 ! terra
       if ( trim(satellite) == 'AQUA' ) ksat = 2

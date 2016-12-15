@@ -171,7 +171,7 @@ MODULE ReadH5Dataset
   ! If set true here all routines show debugging messages.
   ! If set false here only routines that have their own debug
   ! activated show debugging messages.
- ! LOGICAL             :: DebugMsg = .true.
+  !LOGICAL             :: DebugMsg = .true.
   LOGICAL             :: DebugMsg = .false.
 
 

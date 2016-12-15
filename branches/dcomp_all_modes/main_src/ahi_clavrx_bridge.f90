@@ -72,12 +72,13 @@ contains
       is_solar_channel(1:6) = .true.
     
       ahi_c % file_base = file_ch01
-      ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) == SYM_YES
+      ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) 
     
       ahi_c % data_path = trim(Image%Level1b_Path)
       
       offset_all = [0,0]
       
+      ! - find the correct offset and count
       if ( nav % lon_lat_limits_set ) then
       
          ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
@@ -125,20 +126,20 @@ contains
          modis_chn = modis_chn_list (i_chn)
         
          if ( .not. ahi_data % chn ( i_chn ) % is_read ) then
-            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = SYM_NO 
+            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = .false.
             cycle   
          end if
       
          if ( .not. ahi_c % chan_on(i_chn) ) cycle
       
          if ( is_solar_channel ( i_chn) ) then
-           
+           print*,i_chn,shape(ahi_data % chn (i_chn) % ref)
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
          else
             if ( modis_chn > 38) then
                cycle
             end if
-            
+            print*,i_chn,shape(ahi_data % chn (i_chn) % rad)
             ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
             call CONVERT_RADIANCE ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
             call COMPUTE_BT_ARRAY ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &

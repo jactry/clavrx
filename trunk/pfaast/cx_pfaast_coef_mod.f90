@@ -71,7 +71,9 @@ contains
    !!
    !!
    subroutine read_coef ( this , sensor, ancil_path)
-      use strings
+      use strings,only: &
+         split
+      
       implicit none   
       class ( coef_type ) :: this
       character ( len =*) :: sensor

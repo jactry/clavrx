@@ -101,6 +101,7 @@ module cx_conf_mod
       procedure, private :: read_user_configuration
       procedure, private :: read_input_files
       procedure, public :: update_modes
+      procedure, public :: print_files
    end type conf_main_type
    
    enum , bind(C)
@@ -432,6 +433,24 @@ contains
     
       
    end subroutine read_user_configuration
+   
+   
+   !
+   !
+   !
+   subroutine print_files (self)
+      class(conf_main_type) :: self
+      integer :: i
+      
+      
+      do i = 1, self%n_files
+         print*,i,trim(self%file%infile(i)),self%file% ETSensor(i)
+      
+      end do
+   
+   
+   end subroutine print_files
+   
 
 end module cx_conf_mod
 

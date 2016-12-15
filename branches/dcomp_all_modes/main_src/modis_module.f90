@@ -53,10 +53,10 @@ module MODIS_MODULE
                 , Zc_Aux &
                 , Tau_Aux &
                 , Reff_Aux &
-                , Line_Idx_Min_segment
+                , Line_Idx_Min_segment &
+                , Bad_pixel_mask
 
-        use PIXEL_ROUTINES,only: &
-               qc_modis
+      
          
         use date_tools_mod, only: &
             julian 
@@ -1398,5 +1398,28 @@ subroutine READ_MODIS_THERMAL_BAND(Chan_Idx, &
    call COMPUTE_BT_ARRAY(Brightness_Temp,Radiance,Chan_Idx,Missing_Value_Real4)
 
 end subroutine  READ_MODIS_THERMAL_BAND
+
+
+!----------------------------------------------------------------------
+! rudimentary quality check of modis
+!----------------------------------------------------------------------
+subroutine QC_MODIS(jmin,nj)
+
+  integer, intent(in):: jmin,nj
+  integer:: Line_Idx
+
+  Bad_Pixel_Mask = sym%NO
+
+  line_loop: do Line_Idx= jmin, nj- jmin + 1
+     if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
+        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
+     endif
+     if (maxval(Nav%Lat_1b(:,Line_Idx)) < -100.0) then
+        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
+     endif
+  enddo line_loop
+
+end subroutine QC_MODIS
+
 
 end module MODIS_MODULE

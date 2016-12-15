@@ -67,14 +67,63 @@
 !--------------------------------------------------------------------------------------
 module NWP_COMMON
    
-  use CX_CONSTANTS_MOD
-  use PIXEL_COMMON
-  use NUMERICAL_TOOLS_MOD
+  use CX_CONSTANTS_MOD,only: &
+   int4,real8,real4,int1, int2 &
+   , sym &
+   , missing_value_int1 &
+   , missing_value_int2 &
+   , missing_value_int4 &
+   , missing_value_real4 &
+   , g
   
-  use cx_science_tools_mod,only : &
-   vapor &
-   , vapor_ice
-
+  
+  use PIXEL_COMMON,only: &
+   bad_pixel_mask &
+   , tsfc_nwp_pix &
+   , i_nwp &
+   , j_nwp &
+   , i_nwp_x &
+   , j_nwp_x &
+   , sfc &
+   , lon_nwp_fac &
+   , lat_nwp_fac &
+   , ttropo_nwp_pix &
+   , tair_nwp_pix &
+   , rh_nwp_pix &
+   , psfc_nwp_pix &
+   , pmsl_nwp_pix &
+   , weasd_nwp_pix &
+   , sea_ice_frac_nwp_pix &
+   , TPW_NWP_PIX &
+   , ozone_nwp_pix &
+   , k_index_nwp_pix &
+   , sc_lwp_nwp_pix &
+   , lwp_nwp_pix &
+   , IWP_NWP_PIX &
+   , cwp_nwp_pix &
+   , pc_nwp_pix &
+   , CFRAC_NWP_PIX &
+   , NCLD_LAYERS_NWP_PIX &
+   , CLD_TYPE_NWP_PIX &
+   , WND_SPD_10M_NWP_PIX &
+   , WND_DIR_10M_NWP_PIX &
+   , LCL_HEIGHT_NWP_PIX &
+   , CCL_HEIGHT_NWP_PIX &
+   , INVERSION_STRENGTH_NWP_PIX &
+   , INVERSION_BASE_NWP_PIX &
+   , INVERSION_TOP_NWP_PIX &
+   , nav &
+   , smooth_nwp_flag &
+   , image &
+   , space_mask
+   
+   use cx_science_tools_mod,only : &
+      vapor &
+      , vapor_ice
+   
+   use numerical_tools_mod,only: &
+      locate
+   
   implicit none
   private
   private:: FIND_NWP_LEVELS, &
@@ -113,13 +162,13 @@ module NWP_COMMON
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_R4
  end interface
 
- interface INTERPOLATE_NWP
-     module procedure  &
+   interface INTERPOLATE_NWP
+      module procedure  &
          INTERPOLATE_NWP_I1, &
          INTERPOLATE_NWP_I2, &
          INTERPOLATE_NWP_I4, &
          INTERPOLATE_NWP_R4
- end interface
+   end interface
 !----------------------------------------------------------------------
 !--- set this parameter to 1 when reading GFS hdf files that have
 !--- x as the first index, not z
@@ -1059,6 +1108,7 @@ subroutine DESTROY_NWP_ARRAYS
 ! derive height and temperature from a profile knowing pressure
 !----------------------------------------------------------------------
  subroutine KNOWING_P_COMPUTE_T_Z_NWP(Lon_Nwp_Idx,Lat_Nwp_Idx,P,T,Z,Ilev)
+   implicit none
   integer, intent(in):: Lon_Nwp_Idx, Lat_Nwp_Idx
   real, intent(in):: P
   real, intent(out):: T,Z
@@ -1068,6 +1118,7 @@ subroutine DESTROY_NWP_ARRAYS
 
   !--- interpolate pressure profile
   call LOCATE(P_Std_Nwp,Nlevels_Nwp,P,Ilev)
+  
   Ilev = max(1,min(Nlevels_Nwp-1,Ilev))
 
   dp = P_Std_Nwp(Ilev+1) - P_Std_Nwp(Ilev)

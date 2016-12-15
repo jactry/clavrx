@@ -267,8 +267,8 @@ module PIXEL_COMMON
     character(len=1020):: Algo_Const_File
     real(kind=real8):: Geo_Sub_Satellite_Longitude
     real(kind=real8):: Geo_Sub_Satellite_Latitude
-    integer(kind=int1), dimension(Nchan_Clavrx):: Chan_On_Flag_Default
-    integer(kind=int1), dimension(:,:), allocatable:: Chan_On_Flag_Per_Line
+    logical, dimension(NCHAN_CLAVRX):: Chan_On_Flag_Default
+    logical, dimension(:,:), allocatable:: Chan_On_Flag_Per_Line
   end type sensor_definition
 
   type :: image_definition

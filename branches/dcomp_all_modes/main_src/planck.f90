@@ -254,6 +254,7 @@ contains
 ! look-up table *Function that returns a scalar*.
 !------------------------------------------------------------------
   function PLANCK_TEMP_FAST(ichan, B, dB_dT) result(T)
+   use numerical_tools_mod,only: locate
     integer (kind=int4), intent(in) :: ichan
     real (kind=real4), intent(in) :: B 
     real (kind=real4), optional, intent(out) :: dB_dT
@@ -275,6 +276,7 @@ contains
 
     !---- compute brightness temperature
     call LOCATE(BB_Rad(ichan,:),Nplanck,B,l)
+    
     l = max(1,min(Nplanck-1,l))
     dB_dT_tmp = (BB_Rad(ichan,l+1)-BB_Rad(ichan,l))/(T_Planck(l+1)-T_Planck(l))
     T = T_Planck(l) + (B - BB_Rad(ichan,l)) / (dB_dT_tmp)
@@ -293,6 +295,7 @@ contains
 ! look-up table *Function that returns a scalar*.
 !------------------------------------------------------------------
   function PLANCK_TEMP_FAST_SOUNDER(ichan, B) result(T)
+   use numerical_tools_mod
     integer (kind=int4), intent(in) :: ichan
     real (kind=real4), intent(in) :: B
     real(kind=int4), dimension(Nplanck) :: BB_Rad_Tmp

@@ -97,7 +97,11 @@ contains
          if (  use_modis_channel_equivalent ) then
             ! - modis channel
             if ( .not. any ( kban_in ==  coef % modis_channel_eqv)) then
-               taut = -1.
+               ! - this is the correct way, but it is commented now
+               ! - because I cannpt oversee the side effects
+               ! -  of transmission eq -1
+               !TODO set a success output and avoid bad input to next routines
+               !-taut = -1.
                return            
             end if
             kban = minloc ( abs ( coef % modis_channel_eqv - kban_in ), 1)

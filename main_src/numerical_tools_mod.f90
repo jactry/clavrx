@@ -237,7 +237,7 @@ end subroutine COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES
 
 !   Local variables
     integer :: i, jl, jm, ju
-
+      
     jl = 0
     ju = n + 1
     do i = 1, 2*n

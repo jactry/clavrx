@@ -99,7 +99,6 @@ MODULE PIXEL_ROUTINES
           READ_MODIS_WHITE_SKY_ALBEDO,      &
           COMPUTE_CLEAR_SKY_SCATTER,        &
           COMPUTE_GLINT,                    &
-          QC_MODIS,                         &
           SET_CHAN_ON_FLAG,                 &
           COMPUTE_SPATIAL_CORRELATION_ARRAYS, &
           DETERMINE_LEVEL1B_COMPRESSION, &
@@ -132,34 +131,34 @@ MODULE PIXEL_ROUTINES
    !----------------------------------------------------------------------
    subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line)
 
-     integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
-     integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
-     integer:: Number_of_Elements
-     integer:: Number_of_Lines
-     integer:: Line_Idx
+      logical, dimension(:), intent(in):: Chan_On_Flag_Default
+      logical, dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
+      integer:: Number_of_Elements
+      integer:: Number_of_Lines
+      integer:: Line_Idx
 
-     Number_of_Elements = Image%Number_Of_Elements
-     Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+      Number_of_Elements = Image%Number_Of_Elements
+      Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
       
-     line_loop: do Line_Idx = 1, Number_Of_Lines
+      line_loop: do Line_Idx = 1, Number_Of_Lines
       
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
          Chan_On_Flag_Per_Line(:,Line_Idx) = Chan_On_Flag_Default   
          
          ! two exceptions
-         if (trim(Sensor%Platform_Name)=='AQUA' .and. Chan_On_Flag_Default(6) == sym%YES ) then
+         if (trim(Sensor%Platform_Name)=='AQUA' .and. Chan_On_Flag_Default(6) ) then
             if (minval(ch(6)%Unc(:,Line_Idx)) >= 15) then
-                 Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO 
+                 Chan_On_Flag_Per_Line(6,Line_Idx) = .false.
             end if  
          end if
          
          if (index(Sensor%Sensor_Name,'AVHRR') > 0) then
             if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
                Chan_On_Flag_Per_Line(6,Line_Idx) = Chan_On_Flag_Default(6)   
-               Chan_On_Flag_Per_Line(20,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(20,Line_Idx) = .false.   
             end if
             if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-               Chan_On_Flag_Per_Line(6,Line_Idx) = sym%NO   
+               Chan_On_Flag_Per_Line(6,Line_Idx) = .false.  
                Chan_On_Flag_Per_Line(20,Line_Idx) = Chan_On_Flag_Default(20)   
             end if
          endif
@@ -168,26 +167,7 @@ MODULE PIXEL_ROUTINES
 
    end subroutine SET_CHAN_ON_FLAG
 
-!----------------------------------------------------------------------
-! rudimentary quality check of modis
-!----------------------------------------------------------------------
-subroutine QC_MODIS(jmin,nj)
 
-  integer, intent(in):: jmin,nj
-  integer:: Line_Idx
-
-  Bad_Pixel_Mask = sym%NO
-
-  line_loop: do Line_Idx= jmin, nj- jmin + 1
-     if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
-        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
-     endif
-     if (maxval(Nav%Lat_1b(:,Line_Idx)) < -100.0) then
-        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
-     endif
-  enddo line_loop
-
-end subroutine QC_MODIS
 
 !======================================================================
 ! Modify the space mask based the limits on lat, lon, satzen and solzen 
@@ -1981,7 +1961,7 @@ subroutine READ_MODIS_WHITE_SKY_ALBEDO(modis_alb_id,modis_alb_str,Ref_Sfc_White_
     !--- modify for water
     where(Sfc%Land_Mask == sym%NO)
             Ref_Sfc_White_Sky = Ref_Sfc_White_Sky_Water
-    endwhere
+    end where
 
 end subroutine READ_MODIS_WHITE_SKY_ALBEDO
 
@@ -2195,7 +2175,7 @@ end subroutine MODIFY_LAND_CLASS_WITH_NDVI
 !
 ! Function:
 !    Renormalize reflectances to improve performance near the terminator 
-! using the parameteization given by Li et. al. 2006
+! using the parameteization given by Li and Shibata 2006
 !
 ! Description: Renormalizes reflectances in the terminator region
 !   
@@ -2214,7 +2194,8 @@ end subroutine MODIFY_LAND_CLASS_WITH_NDVI
 !
 ! Restrictions:  None
 !
-! Reference: Li et. al. 2006
+! Reference: Li and Shibata 2006 Eq.(6)
+!    http://journals.ametsoc.org/doi/pdf/10.1175/JAS3682.1
 !
 !====================================================================
  FUNCTION TERM_REFL_NORM(Cos_Sol_Zen,Reflectance)  &

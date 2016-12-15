@@ -371,14 +371,15 @@ iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_s
 land_sfc_properties.o: land_sfc_properties.f90 cx_constants_mod.o numerical_tools_mod.o file_tools.o date_tools_mod.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 cx_constants_mod.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
 level2.o: level2.f90 cx_constants_mod.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o cx_scale_tools_mod.o
-modis_module.o: modis_module.f90 cx_constants_mod.o  file_tools.o pixel_common.o pixel_routines.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
+modis_module.o: modis_module.f90 cx_constants_mod.o  file_tools.o pixel_common.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
 mtsat_module.o: mtsat_module.f90 pixel_common.o cx_constants_mod.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o avhrr_module.o
 netcdf_read_module.o: netcdf_read_module.f90 cx_constants_mod.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(netcdflibs) netcdf_read_module.f90
 numerical_tools_mod.o: numerical_tools_mod.f90 cx_constants_mod.o   
-nwp_common.o: nwp_common.f90 pixel_common.o cx_constants_mod.o cx_science_tools_mod.o  numerical_tools_mod.o  
+nwp_common.o: nwp_common.f90 pixel_common.o cx_constants_mod.o cx_science_tools_mod.o  numerical_tools_mod.o
 pixel_common.o: pixel_common.f90 cx_constants_mod.o clavrx_message_module.o
 pixel_routines.o: pixel_routines.f90 cx_constants_mod.o pixel_common.o nwp_common.o planck.o land_sfc_properties.o sfc_prop_umd.o  cx_science_tools_mod.o
+planck.o: planck.f90 cx_constants_mod.o calibration_constants.o pixel_common.o numerical_tools_mod.o
 precision.o:precision.f90
 seviri_module.o: seviri_module.f90 pixel_common.o cx_constants_mod.o numerical_tools_mod.o goes_module.o file_tools.o viewing_geometry_module.o
 user_options.o: user_options.f90 cx_constants_mod.o pixel_common.o file_tools.o clavrx_message_module.o 
@@ -398,7 +399,7 @@ viewing_geometry_module.o: viewing_geometry_module.f90 cx_constants_mod.o
 
 
 
-planck.o: planck.f90 cx_constants_mod.o calibration_constants.o pixel_common.o 
+
 reposition_module.o: reposition_module.f90 cx_constants_mod.o numerical_tools_mod.o pixel_common.o reposnx.o date_tools_mod.o
 
 oca_module.o: oca_module.f90  file_tools.o cx_constants_mod.o pixel_common.o

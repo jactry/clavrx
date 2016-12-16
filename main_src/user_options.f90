@@ -141,6 +141,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_Goes_IL = 6
    integer,parameter:: ACHA_Mode_Default_Goes_MP = 7
    integer,parameter:: ACHA_Mode_Default_Goes_SNDR = 7
+   integer,parameter:: ACHA_Mode_Default_Goes_RU = 8
    integer,parameter:: ACHA_Mode_Default_COMS = 6
    integer,parameter:: ACHA_Mode_Default_VIIRS = 5
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
@@ -838,6 +839,8 @@ contains
          default_acha_mode  = ACHA_Mode_Default_Goes_IL   
       case ( 'GOES-IP-SOUNDER')
          default_acha_mode  = ACHA_Mode_Default_Goes_SNDR 
+      case ( 'GOES-RU-IMAGER')
+         default_acha_mode  = ACHA_Mode_Default_Goes_RU
       case ( 'MTSAT-IMAGER')
           default_acha_mode  = ACHA_Mode_Default_MTSAT
       case ('SEVIRI')
@@ -906,6 +909,8 @@ contains
          filename  = 'goesil_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-IP-SOUNDER')
          filename  = 'goesmp_default_nb_cloud_mask_lut.nc' 
+      case ( 'GOES-RU-IMAGER')
+         filename  = 'ahi_default_nb_cloud_mask_lut.nc'
       case ( 'MTSAT-IMAGER')
           filename  = 'mtsat_default_nb_cloud_mask_lut.nc'
       case ('SEVIRI')
@@ -985,6 +990,9 @@ contains
       case ( 'GOES-IP-SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
+      case ( 'GOES-RU-IMAGER')
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ( 'MTSAT-IMAGER')
          possible_acha_modes(1:4)   =  [ 1, 2, 3 , 6 ]
          possible_dcomp_modes(1)    =  3
@@ -1063,6 +1071,8 @@ contains
          Valid_Channels (1:5) = [1,20,27,31,33]   
       case ( 'GOES-IP-SOUNDER')
          Valid_Channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
+      case ('GOES-RU-IMAGER')
+         Valid_Channels(1:16) = [1,2,3,6,7,20,26,27,28,29,30,31,32,33,37,38]
       case ( 'MTSAT-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]  
       case ('SEVIRI')

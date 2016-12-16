@@ -169,8 +169,7 @@ clavrxorb_objs = process_clavrx.o \
 		 file_tools.o \
                  cx_science_tools_mod.o \
                  cx_array_tools_mod.o \
-                 cx_scale_tools_mod.o \
-                 cx_sat_mod.o
+                 cx_scale_tools_mod.o 
 
 
 
@@ -330,7 +329,7 @@ cx_scale_tools_mod.o:cx_scale_tools_mod.f90 cx_constants_mod.o
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90 file_tools.o
 cx_read_ahi_test_program.o:cx_read_ahi_test_program.f90 cx_read_ahi_mod.o
 cx_read_ascii_line_mod.o:cx_read_ascii_line_mod.f90
-cx_sat_mod.o:cx_sat_mod.f90
+#cx_sat_mod.o:cx_sat_mod.f90
 cx_conf_mod.o:cx_conf_mod.f90 file_tools.o cx_ssec_areafile_mod.o cx_read_ascii_line_mod.o
 cx_read_ahi_mod.o: cx_read_ahi_mod.f90 cx_string_tools_mod.o date_tools_mod.o file_tools.o geo_sat_navigation_mod.o viewing_geometry_module.o readh5dataset.o
 cx_science_tools_mod.o:cx_science_tools_mod.f90

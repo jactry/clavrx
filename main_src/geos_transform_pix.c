@@ -193,7 +193,7 @@ void sat_to_earth(const enum SCAN_GEOMETRIES scan_geom, const double lamda, cons
   double geographic_lat = atan(FP*(s_3/s_xy));
 
   if (scan_geom == GOES) { /* GOES has this flip of FP, while SEVIRI/MTSAT doesn't */
-    double geographic_lat = atan(-FP*(s_3/s_xy));
+    geographic_lat = atan(-FP*(s_3/s_xy));
   }
   
  

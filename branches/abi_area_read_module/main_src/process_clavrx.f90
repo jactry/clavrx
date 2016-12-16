@@ -138,6 +138,7 @@
    use MODIS_MODULE
    use IFF_CLAVRX_BRIDGE
    use GOES_MODULE
+   use ABI_MODULE
    use LASZLO_INSOLATION
    use SEVIRI_MODULE
    use OCA_MODULE, only: &
@@ -850,7 +851,7 @@
                call COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
 
             end if
-   
+
             !--- determine a pixel-level mask to exclude data solar contaminiation
             call SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
 

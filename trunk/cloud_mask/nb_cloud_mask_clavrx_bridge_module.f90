@@ -168,7 +168,8 @@ contains
 
    !--- Compute TOA Clear-Sky 0.65um Reflectance
    if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1) == sym%YES)  then 
-     call  CLEAR_SKY_TOA_RTM_065UM(Tpw_Nwp_Pix, &
+     call  CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
+                                   Tpw_Nwp_Pix, &
                                    Ozone_Nwp_Pix, &
                                    Geo%Scatangle, &
                                    Geo%Satzen, &

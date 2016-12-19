@@ -102,7 +102,8 @@ module NB_CLOUD_MASK_SOLAR_RTM
 ! Restrictions:  None
 !
 !====================================================================
- subroutine CLEAR_SKY_TOA_RTM_065UM(TPW, &
+ subroutine CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
+                                    TPW, &
                                     TOzone, &
                                     Scat_Zen, &
                                     Sat_Zen, &
@@ -112,6 +113,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
                                     Snow_Class, &
                                     Toa_Clear_Sky_Refl)
 
+   integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
    real, dimension(:,:), intent(in):: TPW
    real, dimension(:,:), intent(in):: TOzone
    real, dimension(:,:), intent(in):: Scat_Zen
@@ -146,11 +148,13 @@ module NB_CLOUD_MASK_SOLAR_RTM
    real:: OD_h2o
    integer:: Elem_Idx,Line_Idx, Num_Elem, Num_Line
 
+   Num_Elem = size(Sol_Zen,1)
    Num_Line = size(Sol_Zen,2)
 
    do Elem_Idx = 1, Num_Elem
     do Line_Idx = 1, Num_Line
 
+    if (Bad_Pixel_Mask(ELem_Idx,Line_Idx) == 1) cycle
 
     !--- compute cosine of scattering angle
     Cos_Scat_Zen = cos(Scat_Zen(Elem_Idx,Line_Idx) * dtor)
@@ -160,13 +164,18 @@ module NB_CLOUD_MASK_SOLAR_RTM
     !-------------------------------------------------------------------------------
     !  Surface Albedo
     !-------------------------------------------------------------------------------
+    if (Sfc_Type(Elem_Idx,Line_Idx) < 0) cycle   !check for missing sfc type
+
     Sfc_Alb_Sun = Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
+
     if (Surface_Reflectance(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
        Sfc_Alb_Sun =  Surface_Reflectance(Elem_Idx,Line_Idx) / 100.0    ! must be between 0 and 1
     endif
+
     if (Snow_Class(Elem_Idx,Line_Idx) > 1) then
          Sfc_Alb_Sun = Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
     endif
+
     Sfc_Alb_View =  Sfc_Alb_Sun
 
     !-------------------------------------------------------------------------------

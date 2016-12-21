@@ -1202,10 +1202,6 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
                                         
             Space_Mask(i,j) = sym%NO_SPACE
 
-            !---stw Debug
-            print*,"jj,ii,latitude,longitude : ", ii, jj, Nav%Lat_1b(i,j), Nav%Lon_1b(i,j)
-            !---stw End Debug
-
           endif
         
         end DO

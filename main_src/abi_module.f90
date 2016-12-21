@@ -1028,6 +1028,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
          !--- Convert RAD to ALB.
          if (dRAD == calb_invalidValue) then 
            dALB = 0
+           rALB = 0.0
          else
            dALB = calb_rad2albedo*dRAD
            rALB = REAL(dALB) * 100.0   ! To match McIDAS.
@@ -1079,6 +1080,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
          !--- Convert RAD to TEMP.
          if (dRAD == calb_invalidValue) then
+           dRAD =  calb_invalidValue
            rTEMP = calb_invalidValue
          else
            rRAD = REAL(dRAD)
@@ -1086,8 +1088,13 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
          endif
 
          !--- Fill look up tables with RAD and TEMP. Scale to integers.
-         bt_table(band,1,i) = NINT(rTEMP * 100.0)
-         rad_table(band,1,i) = NINT(dRAD * 1000.0)
+         if (dRAD == calb_invalidValue) then
+           bt_table(band,1,i) = NINT(Missing_Value_Real4)
+           rad_table(band,1,i) = NINT(Missing_Value_Real4)
+         else
+           bt_table(band,1,i) = NINT(rTEMP * 100.0)
+           rad_table(band,1,i) = NINT(dRAD * 1000.0)
+         endif
 
        enddo
 

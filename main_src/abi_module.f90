@@ -1120,19 +1120,19 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
     !---stw Debug
     !print*,"nav type : ", NAVstr_ABI%nav_type
-    print*,"ysize : ", ysize
-    print*,"xsize : ", xsize
-    print*,"ystart : ", ystart
-    print*,"north_bound : ", AREAstr%north_bound
-    print*,"west vis pixel : ", AREAstr%west_vis_pixel
-    print*,"line_res : ", AREAstr%line_res
-    print*,"AREA String : ", AREAstr
-    print*,"CFAC : ", NAVstr_ABI%abiCFAC
-    print*,"COFF : ", NAVstr_ABI%abiCOFF
-    print*,"LFAC : ", NAVstr_ABI%abiLFAC
-    print*,"LOFF : ", NAVstr_ABI%abiLOFF
-    print*,"sub lon : ", NAVstr_ABI%sub_lon
-    print*,"xstride : ", xstride
+    !print*,"ysize : ", ysize
+    !print*,"xsize : ", xsize
+    !print*,"ystart : ", ystart
+    !print*,"north_bound : ", AREAstr%north_bound
+    !print*,"west vis pixel : ", AREAstr%west_vis_pixel
+    !print*,"line_res : ", AREAstr%line_res
+    !print*,"AREA String : ", AREAstr
+    !print*,"CFAC : ", NAVstr_ABI%abiCFAC
+    !print*,"COFF : ", NAVstr_ABI%abiCOFF
+    !print*,"LFAC : ", NAVstr_ABI%abiLFAC
+    !print*,"LOFF : ", NAVstr_ABI%abiLOFF
+    !print*,"sub lon : ", NAVstr_ABI%sub_lon
+    !print*,"xstride : ", xstride
     !stop
     !---stw End Debug
     

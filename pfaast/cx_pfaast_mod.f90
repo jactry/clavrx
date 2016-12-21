@@ -54,7 +54,7 @@ contains
       character (len =* ), intent(in) :: sensor
       integer, intent(in)  :: kban_in 
       logical , optional , intent(in) :: use_modis_channel_equivalent 
-      
+
       
        
       integer :: kban
@@ -69,14 +69,14 @@ contains
       real :: xdry(nxd,nm),xozo(nxo,nm),xwet(nxw,nm),xcon(nxc,nm)
       real, dimension(NL)  ::taud,tauw,tauo,tauc
       logical :: use_native_channel_number = .true.
-      
+
       
       taud = 1.
       tauw = 1.
       tauc = 1.
       taut = 1.
       tauo = 1.
-      
+
       ! - start
       !-  this saves coefs for up to two sensors for IFF data )
       if ( trim(sensor) == trim(coef_1 % sensor) ) then
@@ -88,15 +88,16 @@ contains
          call coef % read_it ( trim(sensor) , ancil_data_path ) 
          if ( trim(coef_1 % sensor) == 'not_set' ) then
              coef_1 = coef
-        else
+         else
              coef_2 = coef
-          end if      
+         end if
       end if
-      
+
       if ( present ( use_modis_channel_equivalent  )) then
          if (  use_modis_channel_equivalent ) then
             ! - modis channel
             if ( .not. any ( kban_in ==  coef % modis_channel_eqv)) then
+               taut = -1.
                return            
             end if
             kban = minloc ( abs ( coef % modis_channel_eqv - kban_in ), 1)
@@ -115,8 +116,10 @@ contains
          end if
          kban = minloc ( abs ( coef % native_channel - kban_in ), 1)
       
-      end if  
-      
+      end if
+
+
+
       ! - computes mid-layer values for reference
       if ( .not. are_ref_profiles_set ) then
          call conpir ( pstd,tstd,wstd,ostd,nl,1,pavg,tref,wref,oref )

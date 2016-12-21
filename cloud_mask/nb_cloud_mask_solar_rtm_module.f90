@@ -23,7 +23,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
  real, parameter, private:: Aerosol_Asymmetry_Parameter = 0.6
  real, dimension(3), parameter, private:: OD_ozone_coef = (/0.000566454,8.25224e-05,1.94007e-08/)
  real, dimension(3), parameter, private:: OD_h2o_coef = (/  0.000044758, 0.00264790,-0.0000713698/)
- real, parameter, private:: dtor = 57.29578
+ real, parameter, private:: dtor = 0.0174533
 
  real, dimension(0:13),parameter, private:: Ch1_Sfc_Alb_Umd = &
                                                       (/0.0500, & !0

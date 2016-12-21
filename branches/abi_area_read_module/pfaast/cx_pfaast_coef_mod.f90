@@ -20,7 +20,7 @@ module cx_pfaast_coef_mod
       procedure :: read_it => read_coef 
       procedure :: read_general 
       procedure :: read_modis
-      procedure :: read_ahi
+      procedure :: read_ahi_abi
       procedure :: read_avhrr
       procedure :: read_data_standard
    end type coef_type 
@@ -94,18 +94,22 @@ contains
       end if
       
       pfast_path = trim( ancil_path)//"/static/pfaast/"
-      
+
       select case ( trim(device) )
-      
+
       case ('MODIS')
          call this % read_modis( satellite)
       case ('AHI')
-         call this % read_ahi ()  
+         call this % read_ahi_abi (trim(device))
       case ( 'AVHRR','HIRS')
          call this % read_avhrr ( device,  satellite )
       case ( 'SEVIRI','MTSAT','VIIRS','FY2','GOES')
-         call this % read_general ( device, satellite  )
-      
+         ! - GOES-16 is ABI
+         if ( trim(device) .EQ. 'GOES' .and. satellite .EQ. '16') then
+            call this % read_ahi_abi(trim(device))
+         else
+            call this % read_general ( device, satellite  )
+         end if
       case default
          print*,'sensor not found in cx_pfaast:  ',sensor,device   
          print*,'stopping ...'
@@ -119,7 +123,7 @@ contains
    subroutine allocate_it (this , n_chan)
       class ( coef_type) :: this
       integer, intent(in) :: n_chan
-      
+
       call this % deallocate_it ()
       
       allocate ( this % dry (NCD, NM, n_chan))
@@ -153,15 +157,14 @@ contains
    
    end subroutine deallocate_it
    
-   
-  !>
+   !>
    !!  @todo check and test
    !!  @todo make lun safe
    !!
-   subroutine read_ahi ( this )
+   subroutine read_ahi_abi ( this , sat)
       class (coef_type), intent(inout) :: this
-
-      character ( len =100) :: cfile = 'ahixxx101.dat'
+      character(len=3), intent(in) :: sat
+      character ( len =100) :: cfile
       
       integer :: l
       integer, parameter :: ND = 10
@@ -177,7 +180,12 @@ contains
       integer :: i,j,k
       
       !- executable
-      call open_files ( cfile, 4, lun_s ) 
+
+      cfile = 'ahixxx101.dat'
+      if ( sat .eq. 'ABI' ) cfile = 'abixxx101.dat'
+
+
+      call open_files ( cfile, 4, lun_s )
       
       do k = 1 , N_CHANNELS
             krec = k 
@@ -192,13 +200,13 @@ contains
          close(lun_s(l))
       end do
          
-      if ( big_endian()) then
-         call flip_rtc(coefd,ncd,nm, N_CHANNELS)
-         call flip_rtc(coefo,nco,nm, N_CHANNELS)
-         call flip_rtc(coefc,ncc,nm, N_CHANNELS)
-         call flip_rtc(coefl,ncl,nm, N_CHANNELS)
-         call flip_rtc(coefs,ncs,nm, N_CHANNELS)
-      end if
+    !  if ( big_endian) then
+    !     call flip_rtc(coefd,ncd,nm, N_CHANNELS)
+    !     call flip_rtc(coefo,nco,nm, N_CHANNELS)
+    !     call flip_rtc(coefc,ncc,nm, N_CHANNELS)
+    !     call flip_rtc(coefl,ncl,nm, N_CHANNELS)
+    !     call flip_rtc(coefs,ncs,nm, N_CHANNELS)
+    !  end if
          
       call this % allocate_it(N_CHANNELS)
          
@@ -214,7 +222,8 @@ contains
       this % modis_channel_eqv = [ 20,37,27,28,29,30,38,31,32,33 ]
       this % native_channel = [(i , i=7 , 16 ) , 1 ]
         
-   end subroutine read_ahi
+   end subroutine read_ahi_abi
+
    
    
    !>
@@ -334,7 +343,7 @@ contains
          
       ! define and open the coefficient files
       cfile (18:20) = 'lit'
-      if ( big_endian()) cfile (18:20) = 'big'
+      !if ( big_endian()) cfile (18:20) = 'big'
       
       ksat = 1 ! terra
       if ( trim(satellite) == 'AQUA' ) ksat = 2
@@ -404,7 +413,7 @@ contains
       integer :: pos_in_coeffile
       integer :: idx_sat
       integer :: i
-      
+
       select case ( trim ( sensor ))
       
       case ('VIIRS')
@@ -455,9 +464,9 @@ contains
       end select
      
       call open_files ( cfile, pos_in_coeffile, lun_s )
-     
+
       call this % read_data_standard (n_channels, koff,lun_s)
-     
+
       select case ( trim ( sensor ))
       case ('VIIRS')
          this % modis_channel_eqv = [20,22,29,31,32]
@@ -477,8 +486,8 @@ contains
          this % modis_channel_eqv(19:23) = [20,27,31,32,33]
          this % native_channel(19:23) = [ 2 ,3,4,5,6  ] 
       end select
-      
-      
+
+
    end subroutine read_general
    
    
@@ -493,7 +502,7 @@ contains
       integer :: lun_s(5)
       character (len =100) :: cfile_loc
       integer :: iux , l
-         
+
       cfile_loc = cfile
       iux = 70
 
@@ -506,7 +515,7 @@ contains
          
          lun_s(l)=iux
       end do
-      
+
    end subroutine open_files
       
       !>  THis function reads PFAAST coefficient files for most sensors
@@ -519,10 +528,10 @@ contains
          integer :: lun_s(5)
          integer :: i,j,k,l
          integer :: krec
-         
+
          call this % allocate_it(N_CHANNELS)
-         
-         
+
+
          do k=1,N_CHANNELS
             krec = k + koff
             read(lun_s(1),rec=krec) ((this % dry(i,j,k),i=1,ncd),j=1,nm)   
@@ -531,7 +540,7 @@ contains
             read(lun_s(4),rec=krec) ((this % wvp_liquid(i,j,k),i=1,ncl),j=1,nm)
             read(lun_s(5),rec=krec) ((this % wvp_solid(i,j,k),i=1,ncs),j=1,nm)
          end do
-         
+
           do l=1,nk
             close(lun_s(l))
          enddo

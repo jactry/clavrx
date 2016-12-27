@@ -853,7 +853,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !
          !---land type
-         Land_Type =      Sfc%Land_Mask(Elem_Idx,Line_Idx)    
+         Land_Type =      Sfc%Land(Elem_Idx,Line_Idx)    
 
          !
          !---coast type

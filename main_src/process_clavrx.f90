@@ -1761,7 +1761,7 @@ subroutine OPEN_MODIS_WHITE_SKY_SFC_REFLECTANCE_FILES()
         if (Read_Snow_Mask == sym%READ_SNOW_HIRES .and. Failed_IMS_Snow_Mask_Flag == sym%NO) then
              call READ_LAND_SFC_HDF(Snow_Mask_Id, Snow_Mask_Str, Nav%Lat, Nav%Lon, Space_Mask, Sfc%Snow_IMS)
         end if
-   
+
         if (Read_Snow_Mask == sym%READ_SNOW_GLOB .and. Failed_Glob_Snow_Mask_Flag == sym%NO ) then
             call GET_PIXEL_GLOBSNOW_ANALYSIS(Nav%Lat,Nav%Lon,Sfc%Land,Bad_Pixel_Mask,Sfc%Snow_Glob)
         end if

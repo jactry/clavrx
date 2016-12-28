@@ -269,7 +269,7 @@ SUBROUTINE read_land_sfc_hdf_i1(id, grid_str, lat, lon, space_mask, land)
   
   nx = size(land,1)
   ny = size(land,2)
-  
+
   call find_bounds(lat,lon,wlon,elon,slat,nlat,dateline_flg)
 
   if (dateline_flg == 0) then
@@ -302,18 +302,18 @@ SUBROUTINE read_land_sfc_hdf_i1(id, grid_str, lat, lon, space_mask, land)
       do i = 1, nx
     
         if (space_mask(i,j) == sym%NO_SPACE) then
-                
+
               ilat = max(1,min(grid_str%num_lat,int(abs(lat(i,j) - grid_str%first_lat)/grid_str%del_lat) + 1))
               ilon = max(1,min(grid_str%num_lon,int(abs(lon(i,j) - grid_str%first_lon)/grid_str%del_lon) + 1))
               ilat_ad = max(1,min((ilat - start_2d(2)) + 1,size(land_grid,2)))
               ilon_ad = max(1,min((ilon - start_2d(1)) + 1,size(land_grid,1)))
               land(i,j) = land_grid(ilon_ad,ilat_ad)
-  
+
         endif
       
       enddo
     enddo
-    
+
     deallocate(land_grid, stat=astatus)
     if (astatus /= 0) then
       print "(a,'Error deallocating land surface grid.')",EXE_PROMPT
@@ -421,7 +421,6 @@ SUBROUTINE read_land_sfc_hdf_i2(id, grid_str, lat, lon, space_mask, land)
     return
   endif
  
-
   nx = size(land,1)
   ny = size(land,2)
 

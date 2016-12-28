@@ -110,6 +110,7 @@
     integer(kind=int1) :: Sfc_Type                             !surface type based on UMD classification
     real(kind=real4) :: Sfc_Temp                               !surface temperature from ancillary sources
     real(kind=real4) :: Path_Tpw                               !TPW along IR path from ancillary sources
+    real(kind=real4) :: Prior                                  !Prior from a precomputed source
  end type mask_input 
 
  !-----------------------------------------------------------------------------

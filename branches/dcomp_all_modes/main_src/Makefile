@@ -122,8 +122,11 @@ clavrxorb_objs = process_clavrx.o \
 		 dcomp_derived_products_module.o \
                  nb_cloud_mask_clavrx_bridge_module.o \
                  nb_cloud_mask_clavrx_services_module.o \
-		 nb_cloud_mask_module.o \
+ nb_cloud_mask_module.o \
+                 nb_cloud_mask_lut_module.o \
+                 nb_cloud_mask_solar_rtm_module.o \
                  nb_cloud_mask_addons_module.o \
+                 nb_cloud_mask_netcdf_read_module.o \
                  baseline_cloud_mask.o \
                  move_bytes.o \
 	         mreadf.o \
@@ -416,7 +419,7 @@ cloud_type_bridge_module.o:$(CTYPE)/cloud_type_bridge_module.f90 cx_constants_mo
 cloud_type_algo_module.o:$(CTYPE)/cloud_type_algo_module.f90 cx_constants_mod.o pixel_common.o
 
 nb_cloud_mask_clavrx_bridge_module.o: $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90 pixel_common.o numerical_tools_mod.o nb_cloud_mask_clavrx_services_module.o nb_cloud_mask_module.o \
-	nb_cloud_mask_addons_module.o file_tools.o nb_cloud_mask_solar_rtm_module.o 
+	nb_cloud_mask_addons_module.o file_tools.o nb_cloud_mask_solar_rtm_module.o nb_cloud_mask_lut_module.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_clavrx_bridge_module.f90
 
 nb_cloud_mask_lut_module.o: $(CMASK)/nb_cloud_mask_lut_module.f90 nb_cloud_mask_netcdf_read_module.o nb_cloud_mask_clavrx_services_module.o

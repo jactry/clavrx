@@ -1208,6 +1208,7 @@ end subroutine ATMOS_CORR
             (trim(Sensor%Sensor_Name) == 'AVHRR-3') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') .or. &
+            (trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') .or. &
             (trim(Sensor%Sensor_Name) == 'SEVIRI') .or. &
             (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER') .or. &
@@ -2144,9 +2145,11 @@ subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
     if (Sensor%Chan_On_Flag_Default(2) == sym%NO) cycle
     if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Threshold) cycle
     if (index(Sensor%Sensor_Name,'MODIS') > 0) cycle                         !modis ch2 saturates, need to modify for MODIS
+    if (index(Sensor%Sensor_Name,'GOES-RU-IMAGER') > 0) cycle
 
     Ndvi_Temp = (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) - ch(1)%Ref_Toa(Elem_idx,Line_Idx)) / &
                 (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) + ch(1)%Ref_Toa(Elem_idx,Line_Idx)) 
+
 
     if (Ndvi_Temp > Ndvi_Land_Threshold) then
       Sfc%Land(Elem_Idx,Line_Idx) = sym%LAND

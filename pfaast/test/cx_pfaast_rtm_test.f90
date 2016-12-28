@@ -20,7 +20,7 @@ program cx_pfaast_rtm_test
    temp = tstd
    wvmr = wstd
    ozmr = ostd
-   theta = 62.
+   theta = 0.
    sensor='VIIRS'
    sensor='MODIS-AQUA'
    sensor = 'GOES-16'

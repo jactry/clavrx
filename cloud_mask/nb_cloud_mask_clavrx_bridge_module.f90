@@ -49,11 +49,12 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Bayes_Mask_Sfc_Type_Global, &
        Bad_Pixel_Mask, &
        Cld_Mask, &
-       Cld_Test_Vector_Packed, &
+       Cld_Test_Vector_Packed, &       
        Dust_Mask, &
        Fire_Mask, &
        Thin_Cirr_Mask, &
        Posterior_Cld_Probability, &
+       Prior_Cld_Probability, &
        Smoke_Mask, &
        SST_Anal_Uni, &
        Solar_Contamination_Mask, &
@@ -74,6 +75,8 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Bt_Uni_ChI5, &
        Tsfc_Nwp_Pix, &
        Tpw_Nwp_Pix, &
+       Ozone_Nwp_Pix, &
+       Month, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -81,11 +84,20 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    use CX_CONSTANTS_MOD, only: &
        sym, &
        CLOUD_MASK_VERSION, & 
-       Cloud_Mask_Thresholds_Version
+       Cloud_Mask_Lut_Version
        
    use NB_CLOUD_MASK
    use CLOUD_MASK_ADDONS
    use NB_CLOUD_MASK_SERVICES
+   use NB_CLOUD_MASK_SOLAR_RTM
+   use NB_CLOUD_MASK_LUT_MODULE,only: &
+      is_classifiers_read &
+      , is_prior_read &
+      , compute_prior &
+      , read_naive_bayes_lut &
+      
+      , read_prior
+ 
    use CLAVRX_MESSAGE_MODULE, only: MESG
 
    implicit none
@@ -119,30 +131,60 @@ contains
 
    integer :: i, j
    character (len=1020):: Naive_Bayes_File_Name_Full_Path
+   character (len=1020):: Prior_File_Name_Full_Path
 
    logical, save:: First_Call = .true.
    integer, parameter:: Nmed = 2
    real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
-   logical:: Use_Diag
-
-
-   Use_Diag = .false.
+   logical, parameter:: USE_DIAG = .false.
+   logical, parameter:: USE_PRIOR_TABLE = .true.
+   logical, parameter:: USE_065UM_RTM = .true.
 
    if (First_Call .eqv. .true.) then
        call MESG('NB Cloud Mask starts ', color = 46)
    endif
 
-   !---- set paths and mask classifier file name to their values in this framework
-   Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
-         "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
-
    !--- set structure (symbol, input, output, diag)  
    !    elements to corresponding values in this framework
    call SET_SYMBOL()
 
-   ! -----------    loop over pixels -----   
+   !------------------------------------------------------------------------------------------
+   !--- on first segment, read table
+   !------------------------------------------------------------------------------------------
+   if (.not. Is_Classifiers_Read) then
+
+       Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+            "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
+
+       call READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
+                                 Output%Cloud_Mask_Bayesian_Flag)
+
+   endif
+
+   !---  Read and Compute Prior Cloud Probability
+   if (USE_PRIOR_TABLE) then 
+     Prior_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//"nb_cloud_mask_calipso_prior.nc"
+     if (.not. Is_Prior_Read) call READ_PRIOR(Prior_File_Name_Full_Path)
+     call COMPUTE_PRIOR(Nav%Lon,Nav%Lat,Month,Prior_Cld_Probability) 
+   endif
+
+   !--- Compute TOA Clear-Sky 0.65um Reflectance
+   if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1) == sym%YES)  then 
+     call  CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
+                                   Tpw_Nwp_Pix, &
+                                   Ozone_Nwp_Pix, &
+                                   Geo%Scatangle, &
+                                   Geo%Satzen, &
+                                   Geo%Solzen, &
+                                   ch(1)%Sfc_Ref_White_Sky, &
+                                   Sfc%Sfc_Type, &
+                                   Sfc%Snow, &
+                                   ch(1)%Ref_Toa_Clear)
+   endif
+
+   !-----------    loop over pixels -----   
    line_loop: do i = 1, Image%Number_Of_Elements
       elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
          call SET_INPUT(i,j)
@@ -152,7 +194,8 @@ contains
                       Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
                       Input,   &
-                      Output)
+                      Output,  &
+                      USE_PRIOR_TABLE)
                       !Diag)   !optional
 
          !--- call non-cloud detection routines (smoke, dust and fire)
@@ -162,7 +205,7 @@ contains
                                           !Diag)   !optional
 
          call SET_OUTPUT(i,j)
-         if (Use_Diag) call SET_DIAG(i,j)
+         if (USE_DIAG) call SET_DIAG(i,j)
    
          !-----------------------------------------------------------------------
          ! CLAVR-x specific processing
@@ -213,7 +256,7 @@ contains
    !------------------------------------------------------------------------------
    if (Segment_Number == 1) then
      call SET_CLOUD_MASK_VERSION(Cloud_Mask_Version)
-     call SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_Thresholds_Version)
+     call SET_CLOUD_MASK_LUT_VERSION(Cloud_Mask_Lut_Version)
    endif
 
    !-------------------------------------------------------------------------------
@@ -221,11 +264,14 @@ contains
    !-------------------------------------------------------------------------------
    if (Segment_Number == Input%Num_Segments) then
        call RESET_NB_CLOUD_MASK_LUT()
+       
+       if (USE_PRIOR_TABLE) call RESET_NB_CLOUD_MASK_PRIOR_LUT()
    endif
 
    First_Call = .false.
 
    end subroutine NB_CLOUD_MASK_BRIDGE
+
 
    !====================================================================
    ! Function Name: Covariance_LOCAL

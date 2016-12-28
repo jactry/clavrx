@@ -86,6 +86,7 @@ module CX_CONSTANTS_MOD
   character(120), public :: DCOMP_Version
   character(120), public :: Cloud_Mask_Version
   character(120), public :: Cloud_Mask_Thresholds_Version
+  character(120), public :: Cloud_Mask_Lut_Version
   character(120), public :: Cloud_Type_Version
   character(120), public :: Cloud_Type_IR_Version
   

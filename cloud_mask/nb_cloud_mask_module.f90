@@ -64,12 +64,12 @@
 module NB_CLOUD_MASK
 
  use NB_CLOUD_MASK_SERVICES
- use NETCDF
+use NB_CLOUD_MASK_LUT_MODULE
 
  implicit none
 
  private:: COMPUTE_BAYES_SFC_TYPE
- private:: READ_NAIVE_BAYES
+
  private:: split_window_test
  private:: reflectance_gross_contrast_test
  private:: relative_visible_contrast_test
@@ -80,37 +80,18 @@ module NB_CLOUD_MASK
  private:: emiss_375um_night_test
  private:: PACK_BITS_INTO_BYTES
 
- private:: READ_NAIVE_BAYES_NC
- private:: read_netcdf_1d_real
- private:: read_netcdf_1d_int
- private:: read_netcdf_2d_real
- private:: read_netcdf_2d_int
- private:: read_netcdf_2d_char
- private:: read_netcdf_3d
-
  public:: NB_CLOUD_MASK_ALGORITHM
  public:: SET_CLOUD_MASK_VERSION
- public:: SET_CLOUD_MASK_THRESHOLDS_VERSION
- public:: RESET_NB_CLOUD_MASK_LUT
 
- !--- set thresholds and algorithm specific constants
+
+
+  !--- set thresholds and algorithm specific constants
  include 'nb_cloud_mask.inc'
 
- !--- parameters
-!integer, parameter, private:: int1 = selected_int_kind(1)
-!integer, parameter, private:: int2 = selected_int_kind(3)
-!integer, parameter, private:: int4 = selected_int_kind(8)
-!integer, parameter, private:: int8 = selected_int_kind(10)
-!integer, parameter, private:: real4 = selected_real_kind(6,37)
-!integer, parameter, private:: real8 = selected_real_kind(15,307)
  ! --- set cloud mask probability thresholds based on sfc type
  real, dimension (7), parameter :: CONF_CLEAR_PROB_CLEAR_THRESH =  [0.01, 0.01, 0.01, 0.10, 0.10, 0.10, 0.10]
  real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50]
  real, dimension (7), parameter :: PROB_CLOUDY_CONF_CLOUD_THRESH = [0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90]
- !real, dimension (7), parameter :: PROB_CLEAR_PROB_CLOUD_THRESH =  [0.05, 0.05, 0.05, 0.50, 0.50, 0.50, 0.50]
-
- !--- string to hold version id
- character(225), private, save :: Cloud_Mask_Thresholds_Version
 
  !--- string to control on-screen prompts
  character(*), parameter, private :: EXE_PROMPT_CM = "Naive Bayesian Cloud Mask>> "
@@ -118,33 +99,10 @@ module NB_CLOUD_MASK
  !--------------------------------------------------------------------------------
  ! store table values as module-wide arrays
  !--------------------------------------------------------------------------------
- integer, private, save:: N_class
- integer, private, save:: N_sfc_bayes 
- integer, private, save:: N_bounds
- real, dimension(:), allocatable, save:: Prior_Yes
- real, dimension(:), allocatable, save:: Prior_No
- real, dimension(:), allocatable, save:: Optimal_Posterior_Prob
- integer, dimension(:), allocatable, save:: Skip_Sfc_Type_Flag
- real, dimension(:,:), allocatable, private, save:: Classifier_Bounds_Min
- real, dimension(:,:), allocatable, private, save:: Classifier_Bounds_Max
- real, dimension(:,:), allocatable, private, save:: Delta_Classifier_Bounds
- integer, dimension(:,:), allocatable, private, save:: First_valid_Classifier_Bounds
- integer, dimension(:,:), allocatable, private, save:: Last_valid_Classifier_Bounds
- real, dimension(:,:,:), allocatable, private, save:: Class_Cond_Yes
- real, dimension(:,:,:), allocatable, private, save:: Class_Cond_No 
- real, dimension(:,:,:), allocatable, private, save:: Class_Cond_Ratio
- character (len=30), dimension(:,:), allocatable, private, save:: Classifier_Value_Name
- integer, dimension(:), allocatable,private,save:: Class_To_Test_Idx
 
- real, dimension(:), allocatable, private, save:: Cond_Yes
- real, dimension(:), allocatable, private, save:: Cond_No
  real, dimension(:), allocatable, private, save:: Cond_Ratio
  real, dimension(:), allocatable, private, save:: Posterior_Cld_Probability_By_Class
  real, dimension(:), allocatable, private, save:: Classifier_Value
-
- logical, private, save:: Is_Classifiers_Read = .false.
-
- type ( ET_cloudiness_class_type), public :: ET_cloudiness_class
 
  ! netCDF parameters
    integer, parameter, private :: sds_rank_1d = 1
@@ -168,174 +126,7 @@ module NB_CLOUD_MASK
    Cloud_Mask_Version = "$Id$"
  end subroutine SET_CLOUD_MASK_VERSION
 
-!====================================================================
-!  pass threshold version to bridge
-!  Cloud_Mask_Thresholds_Version is a module-wide variable
-!  that is private
-!====================================================================
- subroutine SET_CLOUD_MASK_THRESHOLDS_VERSION(Cloud_Mask_CVS_Tag)
-   character(len=*), intent(out):: Cloud_Mask_CVS_Tag
-   Cloud_Mask_CVS_Tag = Cloud_Mask_Thresholds_Version
- end subroutine SET_CLOUD_MASK_THRESHOLDS_VERSION
 
-!====================================================================
-! SUBROUTINE Name: READ_NAIVE_BAYES
-!
-! Function:
-!   Allocate and Read in the LUTs needed for Bayesian cloud mask tables
-!
-!====================================================================
- subroutine READ_NAIVE_BAYES( Naive_Bayes_File_Name_Full_Path &
-                              , Symbol &
-                              , Cloud_Mask_Bayesian_Flag)
-
-   character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
-   ! Need a method to flag things
-   TYPE(symbol_naive_bayesian), intent(in) :: symbol
-   integer, intent(out):: Cloud_Mask_Bayesian_Flag 
-   
-   !local variables
-   integer:: lun
-   integer:: Class_Idx
-   integer:: Class_Idx_Temp
-   integer:: Sfc_Idx
-   integer:: Sfc_Idx_file
-   integer:: ios
-   integer:: ios_sum
-   character(len=72):: Header
-   real:: time_Diff_max
-   integer*4 get_lun
-   
-   lun = GET_LUN()
-   ios_sum = 0
-   
-   open(unit=lun, file=trim(Naive_Bayes_File_Name_Full_Path), &
-        action="read", form="formatted", status="old", iostat=ios)
-   if (ios /= 0) then
-     print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
-     print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
-     cloud_mask_bayesian_flag = symbol%NO
-     print*,trim(Naive_Bayes_File_Name_Full_Path)
-     return
-   endif
-   ios_sum = ios_sum + ios
-
-   !--- skip first two lines which is a meta-data
-   read (unit=lun,fmt="(a120)") Cloud_Mask_Thresholds_Version
-
-   !--- check to see if this file has a cvs tag
-   if (index(Cloud_Mask_Thresholds_Version,'$Id:') > 0) then
-      print *, EXE_PROMPT_CM, "Cloud Mask Threshold Version: ", trim(Cloud_Mask_Thresholds_Version)
-      read (unit=lun,fmt=*) Header
-   else
-      Header = Cloud_Mask_Thresholds_Version
-      Cloud_Mask_Thresholds_Version = 'unknown'
-   endif
-
-   print *, EXE_PROMPT_CM, "Cloud Mask Bayesian File Header: ", trim(Header)
-
-   read (unit=lun,fmt=*) 
-   read (unit=lun,fmt=*) time_Diff_max, N_Class, N_bounds, N_sfc_bayes
-
-   !--- allocate
-   allocate(Prior_Yes(N_sfc_bayes))
-   allocate(Prior_No(N_sfc_bayes))
-   allocate(Optimal_Posterior_Prob(N_sfc_bayes))
-   allocate(Skip_Sfc_Type_Flag(N_sfc_bayes))
-   allocate(Classifier_Bounds_Min(N_class,N_sfc_bayes))
-   allocate(Classifier_Bounds_Max(N_class,N_sfc_bayes))
-   allocate(Delta_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(First_valid_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Class_Cond_Ratio(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Classifier_Value_Name(N_class,N_sfc_bayes))
-   allocate(Class_To_Test_Idx(N_class))
-
-   !--- initialize 
-   Prior_Yes = Missing_Value_Real4
-   Prior_No = Missing_Value_Real4
-   Optimal_Posterior_Prob = Missing_Value_Real4
-   Skip_Sfc_Type_Flag = 0
-   First_valid_Classifier_Bounds = 0
-   Last_valid_Classifier_Bounds = 0
-
-   do Sfc_Idx = 1, N_sfc_bayes
-
-   read (unit=lun,fmt=*,iostat=ios) Sfc_Idx_file, Header
-   ios_sum = ios_sum + ios
-
-   !--- check if file has the expected classifiers
-   if (Sfc_Idx_file /= Sfc_Idx) then
-         print *, EXE_PROMPT_CM," ERROR: Confused on Naive Bayesian Cloud Mask Classifiers"
-         print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
-         cloud_mask_bayesian_flag = symbol%NO
-         return
-   endif
-
-   read(unit=lun,fmt=*,iostat=ios) Prior_Yes(Sfc_Idx), Prior_No(Sfc_Idx)
-   ios_sum = ios_sum + ios
-
-   read(unit=lun,fmt=*,iostat=ios) Optimal_Posterior_Prob(Sfc_Idx)
-   ios_sum = ios_sum + ios
-
-
-   !--- if data are missing, skip this surface type
-   if (Optimal_Posterior_Prob(Sfc_Idx) == Missing_Value_Real4) then 
-      Skip_Sfc_Type_Flag(Sfc_Idx) = symbol%YES 
-   endif
-
-   do Class_Idx = 1,N_class
-
-            read(unit=lun,fmt=*,iostat=ios)  &
-                                 Class_Idx_Temp, First_valid_Classifier_Bounds(Class_Idx,Sfc_Idx), &
-                                 Last_valid_Classifier_Bounds(Class_Idx,Sfc_Idx), &
-                                 Classifier_Value_Name(Class_Idx,Sfc_Idx)
-            ios_sum = ios_sum + ios
-
-            Classifier_Value_Name(Class_Idx,Sfc_Idx) = trim(Classifier_Value_Name(Class_Idx,Sfc_Idx))
-
-            read(unit=lun,fmt=*,iostat=ios)  &
-                                 Classifier_Bounds_Min(Class_Idx,Sfc_Idx), &
-                                 Classifier_Bounds_Max(Class_Idx,Sfc_Idx), &
-                                 Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)
-            ios_sum = ios_sum + ios
-
-            read(unit=lun,fmt=*,iostat=ios) Class_Cond_Yes(:,Class_Idx,Sfc_Idx)
-            ios_sum = ios_sum + ios
-
-            read(unit=lun,fmt=*,iostat=ios) Class_Cond_No(:,Class_Idx,Sfc_Idx)
-            ios_sum = ios_sum + ios
-
-    end do
-
-   end do 
-
-   !--- close file
-   close(unit=lun,iostat=ios)
-
-   !--- begin compute ratio
-   Class_Cond_Ratio = 1
-   where(Class_Cond_Yes == 0.0)
-       Class_Cond_Ratio = Max_Cond_Ratio
-   endwhere
-   where(Class_Cond_Yes > 0.0)
-       Class_Cond_Ratio = Class_Cond_No /  Class_Cond_Yes 
-   endwhere
-   !--- end compute ratio
-
-   if (ios_sum == 0) then
-           print *, EXE_PROMPT_CM, ' Bayesian Cloud Mask Data Read in Successfully'
-   else
-           print *, EXE_PROMPT_CM, 'ERROR:  Bayesian Cloud Mask Data Not Read in Successfully'
-           print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
-           Cloud_Mask_Bayesian_Flag = symbol%NO
-   endif
-
-   Is_Classifiers_Read = .true.
-
- end subroutine READ_NAIVE_BAYES
 
 
 !====================================================================
@@ -360,6 +151,7 @@ module NB_CLOUD_MASK
             Symbol, &                                !local copy of sym structure
             Input,  &
             Output,  &
+            Use_Prior_Table, &
             Diag)
 
 
@@ -367,6 +159,7 @@ module NB_CLOUD_MASK
    type(symbol_naive_bayesian), intent(in) :: Symbol
    type(mask_input), intent(in) :: Input
    type(mask_output), intent(out) :: Output
+   logical, intent(in):: Use_Prior_Table
    type(diag_output), intent(out), Optional :: Diag
 
    !-- local pointers that point to global variables
@@ -386,110 +179,33 @@ module NB_CLOUD_MASK
    integer:: Day_063_Spatial_Flag
    integer:: Night_Lunar_Flag
    integer:: Lunar_Spatial_Flag
-!  integer:: All_375_Flag
    integer:: Day_375_Flag
    integer:: Night_375_Flag
    integer:: Forward_Scattering_Flag
+   integer:: Solar_Contam_Flag
    integer:: Lunar_Forward_Scattering_Flag
    integer:: Cold_Scene_375um_Flag
    integer:: Cold_Scene_Flag
    integer:: Dry_Scene_Flag
-   integer:: Solar_Contam_Flag
    integer:: City_Flag
 
    real (kind=real4):: Airmass
    integer, parameter:: Spare_Value = 0
    
    real:: r
+   real:: Prior_Yes_Temp
 
    !------------------------------------------------------------------------------------------
    !---  begin executable code
    !------------------------------------------------------------------------------------------
    
    !------------------------------------------------------------------------------------------
-   !--- on first segment, read table
-   !------------------------------------------------------------------------------------------
-   if (.not. Is_Classifiers_Read) then
-
-!      call READ_NAIVE_BAYES(Naive_Bayes_File_Name_Full_Path, &
-       call READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
-                                symbol,Output%Cloud_Mask_Bayesian_Flag)
-
-        !--- set up enumerated types for cloud mask values
-        ET_cloudiness_class%SPACE = 10
-        ET_cloudiness_class%MISSING = -128
-        ET_cloudiness_class%CLOUDY = symbol%CLOUDY
-        ET_cloudiness_class%PROB_CLOUDY = symbol%PROB_CLOUDY
-        ET_cloudiness_class%PROB_CLEAR = symbol%PROB_CLEAR
-        ET_cloudiness_class%CLEAR = symbol%CLEAR
-
-        !---set up Classifier to Test Mapping
-        do Class_Idx = 1, N_Class
-
-          select case (trim(Classifier_Value_Name(Class_Idx,1)))
-                    case("T_11") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 1
-                    case("T_Max-T") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 2
-                    case("T_Std") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 3
-                    case("Emiss_Tropo") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 4
-                    case("FMFT") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 5
-                    case("Btd_11_67") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 6
-                    case("Bt_11_67_Covar") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 7
-                    case("Btd_11_85") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 8
-                    case("Emiss_375") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 9
-                    case("Btd_375_11_All") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 9
-                    case("Btd_375_11_Day") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 10
-                    case("Emiss_375_Day")   
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 10
-                    case("Btd_375_11_Night")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 11
-                    case("Emiss_375_Night")  
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 11
-                    case("Spare") 
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 12
-                    case("Ref_063_Day")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 13
-                    case("Ref_Std")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 14
-                    case("Ref_063_Min_3x3_Day")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 15
-                    case("Ref_Ratio_Day")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 16
-                    case("Ref_138_Day")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 17
-                    case("Ndsi_Day")
-                       Class_To_Test_Idx(Class_Idx) = NUMBER_OF_NONCLOUD_FLAGS + 18
-                    case default
-                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
-                       print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
-                       return
-           end select
-
-         end do
-
-   end if
-
-   !------------------------------------------------------------------------------------------
    !--- allocate memory for local arrays
    !------------------------------------------------------------------------------------------
-   if (allocated(Cond_Yes)) deallocate(Cond_Yes)
-   if (allocated(Cond_No)) deallocate(Cond_No)
    if (allocated(Cond_Ratio)) deallocate(Cond_Ratio)
    if (allocated(Classifier_Value)) deallocate(Classifier_Value)
    if (allocated(Posterior_Cld_Probability_By_Class)) deallocate(Posterior_Cld_Probability_By_Class)
 
-   allocate(Cond_Yes(N_Class))
-   allocate(Cond_No(N_Class)) 
    allocate(Cond_Ratio(N_Class)) 
    allocate(Posterior_Cld_Probability_By_Class(N_Class)) 
    allocate(Classifier_Value(N_Class)) 
@@ -528,6 +244,14 @@ module NB_CLOUD_MASK
                                        Input%Sst_Anal_Uni, &
                                        Input%Emiss_Sfc_375um, &
                                        symbol)
+
+
+      !----- compute prior
+      if (Input%Prior /= MISSING_VALUE_REAL4 .and. Use_Prior_Table .eqv. .true.) then
+         Prior_Yes_Temp = Input%Prior
+      else
+         Prior_Yes_Temp = Prior_Yes(Sfc_Idx)
+      endif
 
       !--- check for a surface types without sufficient training for processing
       if (Skip_Sfc_Type_Flag(Sfc_Idx) == symbol%YES) then
@@ -594,13 +318,6 @@ module NB_CLOUD_MASK
               Night_375_Flag = symbol%YES
           endif
 
-       !  if (Input%Solzen < Emiss_375um_Night_Solzen_Thresh .and. &
-       !      Input%Solzen > Emiss_375um_Day_Solzen_Thresh) then
-       !      All_375_Flag = symbol%YES
-       !  else
-       !      All_375_Flag = symbol%No
-       !  endif
-
           if (Sfc_Idx /= 6 .and. Input%Zsfc > 2000.0) then
               Mountain_Flag = symbol%YES
           else
@@ -666,14 +383,16 @@ module NB_CLOUD_MASK
           Cld_Flags(17) = Sfc_Idx              ;    Cld_Flag_Bit_Depth(17) = 3
           Cld_Flags(18) = Spare_Value          ;    Cld_Flag_Bit_Depth(18) = 1
 
+
+          !---------------------------------------------------------------------------------
+          ! compute cloud probability for 1d NB classifiers
+          !---------------------------------------------------------------------------------
           class_loop: do Class_Idx = 1, N_class
 
              Classifier_Value(Class_Idx) = Missing_Value_Real4
-             Cond_Yes(Class_Idx) = 1.0 
-             Cond_No(Class_Idx) =  1.0
              Cond_Ratio(Class_Idx) =  1.0
 
-             select case (Classifier_Value_Name(Class_Idx,Sfc_Idx))
+             select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("T_11") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -716,7 +435,6 @@ module NB_CLOUD_MASK
                     case("Btd_11_67") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
-!--->                  if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_67um == Missing_Value_Real4) cycle
                        if (Sfc_Idx == 1) cycle
@@ -747,7 +465,6 @@ module NB_CLOUD_MASK
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
-                      !if (All_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
                        if (Input%Bt_375um == Missing_Value_Real4) cycle
                        if (Input%Emiss_375um == Missing_Value_Real4) cycle
@@ -957,9 +674,14 @@ module NB_CLOUD_MASK
                            Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
              Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
 
-             Cond_Yes(Class_Idx) = Class_Cond_Yes(Bin_Idx,Class_Idx,Sfc_Idx)
-             Cond_No(Class_Idx) = Class_Cond_No(Bin_Idx,Class_Idx,Sfc_Idx)
              Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
+
+!print *, "Cond Ratio T_Std = ", Class_Cond_Ratio(Bin_Idx,:,Sfc_Idx)
+!stop
+
+!            if (Class_Idx == 7) then
+!               print *, Classifier_Value(Class_Idx), Classifier_Bounds_Min(Class_Idx,Sfc_Idx), Delta_Classifier_Bounds(Class_Idx,Sfc_Idx), Bin_Idx,  Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
+!            endif
 
         enddo  class_loop 
 
@@ -967,13 +689,19 @@ module NB_CLOUD_MASK
         !------------------------------------------------------------------------------------------------------------
         !--- compute prosterior probabilites for each pixel
         !-----------------------------------------------------------------------------------------------------------
-        if (Prior_Yes(Sfc_Idx) == Missing_Value_Real4) then
+
+        r = product(Cond_Ratio)
+        Output%Posterior_Cld_Probability =  1.0 / (1.0 + r/Prior_Yes_Temp - r)
+
+        !--- constrain 
+        if (r < 0.001) Output%Posterior_Cld_Probability = 1.0
+        if (r > 99.0) Output%Posterior_Cld_Probability = 0.0
+
+        !--- check for a missing prior
+        if (Prior_Yes_Temp == Missing_Value_Real4) then 
           Output%Posterior_Cld_Probability = Missing_Value_Real4
           Posterior_Cld_Probability_By_Class = Missing_Value_Real4
         endif
-
-        r = product(Cond_Ratio)
-        Output%Posterior_Cld_Probability =  1.0 / (1.0 + r/Prior_Yes(Sfc_Idx) - r)
 
         !------------------------------------------------------------------------------------------------------------
         !--- make a cloud mask
@@ -1045,8 +773,11 @@ module NB_CLOUD_MASK
          !     if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
          ! endif
 
-         enddo
+!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Night") Diag%Array_1 = Posterior_Cld_Probability_By_Class(Class_Idx)
+!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_Tropo") Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
+!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") Diag%Array_3 = Posterior_Cld_Probability_By_Class(Class_Idx)
 
+         enddo
 
          !-------------------------------------------------------------------
          ! Pack Bytes
@@ -1058,8 +789,6 @@ module NB_CLOUD_MASK
    endif   !If Invalid_Data_Mask
 
    !----- deallocate memory
-   if (allocated(Cond_Yes)) deallocate(Cond_Yes)
-   if (allocated(Cond_No)) deallocate(Cond_No)
    if (allocated(Cond_Ratio)) deallocate(Cond_Ratio)
    if (allocated(Classifier_Value)) deallocate(Classifier_Value)
    if (allocated(Posterior_Cld_Probability_By_Class)) deallocate(Posterior_Cld_Probability_By_Class)
@@ -1430,387 +1159,6 @@ module NB_CLOUD_MASK
     enddo
 
   end subroutine  PACK_BITS_INTO_BYTES
-
-!-------------------------------------------------------------------------------
-! NetCDF LUT routines:
-!-------------------------------------------------------------------------------
-
-!====================================================================
-! SUBROUTINE Name: READ_NAIVE_BAYES_NC
-!
-! Function:
-!   Allocate and Read in the LUTs needed for Bayesian cloud mask tables
-!
-!====================================================================
- subroutine READ_NAIVE_BAYES_NC(Naive_Bayes_File_Name_Full_Path, &
-                             symbol, Cloud_Mask_Bayesian_Flag)
-
-   character(len=*), intent(in):: Naive_Bayes_File_Name_Full_Path
-   ! Need a method to flag things
-   TYPE(symbol_naive_bayesian), intent(in) :: symbol
-   integer, intent(out):: Cloud_Mask_Bayesian_Flag
-
-   !local variables
-   integer:: ncid
-   integer:: status
-   character(30):: var_name
-   integer:: Sfc_Idx
-
-   Is_Classifiers_Read = .FALSE.
-
-   status = nf90_open(Naive_Bayes_File_Name_Full_Path, mode = nf90_nowrite, ncid = ncid)
-   if (status /= nf90_noerr) then
-      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Classifier Open Failed '
-      print *, EXE_PROMPT_CM , 'Bayesian Cloud Mask Turned Off'
-      cloud_mask_bayesian_flag = symbol%NO
-      print*, EXE_PROMPT_CM ,' filename is: ', Naive_Bayes_File_Name_Full_Path
-      return
-   endif
-
-   status = nf90_get_att(ncid, nf90_global, "data_file", Cloud_Mask_Thresholds_Version)
-   if (status /= nf90_noerr) then
-      print *, EXE_PROMPT_CM , 'ERROR: Bayesian Cloud Mask Version Read Failed'
-      return
-   endif
-
-   status = nf90_get_att(ncid, nf90_global, "n_class", N_Class)
-   status = nf90_get_att(ncid, nf90_global, "n_bounds_reg", N_bounds)
-   status = nf90_get_att(ncid, nf90_global, "n_sfc_type", N_sfc_bayes)
-
-   !--- allocate
-   allocate(Prior_Yes(N_sfc_bayes))
-   allocate(Prior_No(N_sfc_bayes))
-   allocate(Optimal_Posterior_Prob(N_sfc_bayes))
-   allocate(Skip_Sfc_Type_Flag(N_sfc_bayes))
-   allocate(Classifier_Bounds_Min(N_class,N_sfc_bayes))
-   allocate(Classifier_Bounds_Max(N_class,N_sfc_bayes))
-   allocate(Delta_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(First_valid_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(Last_valid_Classifier_Bounds(N_class,N_sfc_bayes))
-   allocate(Class_Cond_Yes(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Class_Cond_No(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Class_Cond_Ratio(N_bounds-1,N_class,N_sfc_bayes))
-   allocate(Classifier_Value_Name(N_class,N_sfc_bayes))
-   allocate(Class_To_Test_Idx(N_class))
-
-   !--- initialize
-   Prior_Yes = Missing_Value_Real4
-   Prior_No = Missing_Value_Real4
-   Optimal_Posterior_Prob = Missing_Value_Real4
-   First_valid_Classifier_Bounds = 0
-   Last_valid_Classifier_Bounds = 0
-   Skip_Sfc_Type_Flag = symbol%NO
-
-
-   !Now read in to the 1D variables
-
-   var_name="prior_yes"
-   call read_netcdf_1d_real( ncid,N_sfc_bayes,var_name,Prior_Yes)
-
-   var_name="prior_no"
-   call read_netcdf_1d_real( ncid,N_sfc_bayes,var_name,Prior_No)
-
-   var_name="optimal_posterior_prob"
-   call read_netcdf_1d_real( ncid, N_sfc_bayes, var_name, Optimal_Posterior_Prob)
-
-   !--- if data are missing, skip this surface type
-   do Sfc_Idx = 1, N_sfc_bayes
-      if (Optimal_Posterior_Prob(Sfc_Idx) == Missing_Value_Real4) then
-            Skip_Sfc_Type_Flag(Sfc_Idx) = symbol%YES
-      endif
-   end do
-
-   !Now the 2D variables
-
-   sds_start_2d = 1
-   sds_edge_2d(1) = N_class
-   sds_edge_2d(2) = N_sfc_bayes
-
-   var_name="bin_start"
-   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, &
-                              var_name,Classifier_Bounds_Min)
-
-   var_name="bin_end" !real
-   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, & 
-                              var_name,Classifier_Bounds_Max)
-
-   var_name="delta_bin" !real
-   call read_netcdf_2d_real(ncid, sds_start_2d, sds_edge_2d, &
-                              var_name,Delta_Classifier_Bounds)
-
-   var_name="first_valid_bounds" !integer
-   call read_netcdf_2d_int(ncid, sds_start_2d, sds_edge_2d, &
-                              var_name, First_valid_Classifier_Bounds)
-
-   var_name="last_valid_bounds" !integer
-   call read_netcdf_2d_int(ncid, sds_start_2d, sds_edge_2d, &
-                              var_name, Last_valid_Classifier_Bounds)
-
-   var_name="classifier_names" !character
-   call read_netcdf_2d_char(ncid, var_name, Classifier_Value_Name)
-
-   !finally 3D variables
-   sds_start_3d = 1
-   sds_edge_3d(1) = N_bounds-1
-   sds_edge_3d(2) = N_class
-   sds_edge_3d(3) = N_sfc_bayes
-
-!  var_name="class_cond_yes_reg" !real
-!  call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
-!                             var_name,Class_Cond_Yes)
-!  var_name="class_cond_no_reg" !real
-!  call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
-!                             var_name,Class_Cond_No)
-
-   var_name="class_cond_ratio_reg" !real
-   call read_netcdf_3d(ncid, sds_start_3d, sds_edge_3d, &
-                              var_name,Class_Cond_Ratio)
-
-
-   status = nf90_close(ncid)
-
-   Is_Classifiers_Read = .true.
-
-
-   !============= START TEST
-!  Prior_Yes = 1.1*Prior_Yes
-!  Prior_No = 1.0 - Prior_Yes
-   !============= END TEST
-
- end subroutine READ_NAIVE_BAYES_NC
-
-
-   ! ----------------------------------------------------------
-   ! Read in 1D arrays (used code from DCOMP reader
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_1d_real (nc_file_id, var_dim, var_name, var_output)
-        implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: var_dim
-      character(30), intent(in) :: var_name
-      real, intent(out), dimension(:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status
-
-      Sds_Start_1D = 1
-      Sds_Stride_1D = 1
-      Sds_Edge_1D = var_dim
-
-      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
-      if (status /= nf90_noerr) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-   end subroutine read_netcdf_1d_real                                                                                                                           
-
-   ! ----------------------------------------------------------
-   ! Read in 1D arrays (used code from DCOMP reader
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_1d_int (nc_file_id, var_dim, var_name, var_output)
-        implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: var_dim
-      character(len=*), intent(in) :: var_name
-      integer, intent(out), dimension(:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status
-
-      Sds_Start_1D = 1
-      Sds_Stride_1D = 1
-      Sds_Edge_1D = var_dim
-
-      status = nf90_inq_varid(nc_file_id,trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then 
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=Sds_Start_1D, count=Sds_Edge_1D)
-      if (status /= nf90_noerr) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-   end subroutine read_netcdf_1d_int
-
-   ! ----------------------------------------------------------
-   ! Read in 2D arrays (used code from DCOMP reader)
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_2d_real (nc_file_id, start_var, var_dim, var_name, var_output)
-        implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: start_var(:)
-      integer, dimension(:), intent(in) :: var_dim
-
-      character(len=*), intent(in) :: var_name
-      real, intent(out), dimension(:,:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status
-
-      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
-      if ((status /= nf90_noerr)) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-   end subroutine read_netcdf_2d_real
-
-   ! ----------------------------------------------------------
-   ! Read in 2D arrays Integers
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_2d_int (nc_file_id, start_var, var_dim, var_name, var_output)
-        implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: start_var(:)
-      integer, dimension(:), intent(in) :: var_dim
-
-      character(len=*), intent(in) :: var_name
-      integer , intent(out), dimension(:,:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status
-
-      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
-      if ((status /= nf90_noerr)) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-   end subroutine read_netcdf_2d_int
-
-   ! ----------------------------------------------------------
-   ! Read in 2D arrays Characters
-   ! ----------------------------------------------------------
-
-   subroutine read_netcdf_2d_char (nc_file_id, var_name, var_output)
-        implicit none
-      integer, intent(in) :: nc_file_id
-
-      character(len=*), intent(in) :: var_name
-      character(len=30) , intent(out), dimension(:,:) :: var_output
-      character(len=30), allocatable, dimension(:,:) :: var
-
-      integer :: nc_var_id
-      integer :: status, tmp1, tmp2, i
-      integer, dimension(2) ::dimIDs
-
-      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !find dimentions
-      status = nf90_inquire_variable(nc_file_id, nc_var_id, dimids = dimIDs)
-      status = nf90_inquire_dimension(nc_file_id, dimIDs(1), len = tmp1)
-      status = nf90_inquire_dimension(nc_file_id, dimIDs(2), len = tmp2)
-      allocate (var(tmp1,tmp2))
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var, start=(/1,1/), count=(/tmp1,tmp2/) )
-      if ((status /= nf90_noerr)) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-      !extract and save classifier names to the final array
-      do i = 1, tmp2
-        if ((var(i,1) .ge. 'a' .and. var(i,1) .le. 'z') &
-        .or.(var(i,1) .ge. 'A' .and. var(i,1) .le. 'Z')) then 
-           var_output(i,:) = trim(var(i,1))
-        endif
-      enddo
-
-      if (allocated(var)) deallocate (var)
-
-
-   end subroutine read_netcdf_2d_char
-
-   ! ----------------------------------------------------------
-   ! Read in 3D arrays (used code from DCOMP reader
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_3d (nc_file_id, start_var, var_dim, var_name, var_output)
-         implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: start_var(:)
-      integer, dimension(:), intent(in) :: var_dim
-
-      character(len=30), intent(in) :: var_name
-      real, intent(out), dimension(:,:,:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status = 0
-
-      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
-      if ((status /= nf90_noerr)) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      ENDIF
-
-
-   end subroutine read_netcdf_3d
-
-
-!-----------------------------------------------------------------------------------------
-! This routine deallocates all LUT arrays and resets Is_Classifiers_Read to be  false
-!
-! This should be called from the bridge code using whatever mechanism exists to 
-! identify the appropriate time to reset the LUT.  This could be
-! 1. end of a file
-! 2. change from one sensor to another
-!-----------------------------------------------------------------------------------------
-
-subroutine RESET_NB_CLOUD_MASK_LUT()
-        if (allocated(Prior_Yes)) deallocate(Prior_Yes)
-        if (allocated(Prior_No)) deallocate(Prior_No)
-        if (allocated(Optimal_Posterior_Prob)) deallocate(Optimal_Posterior_Prob)
-        if (allocated(Skip_Sfc_Type_Flag)) deallocate(Skip_Sfc_Type_Flag)
-        if (allocated(Classifier_Bounds_Min)) deallocate(Classifier_Bounds_Min)
-        if (allocated(Classifier_Bounds_Max)) deallocate(Classifier_Bounds_Max)
-        if (allocated(Delta_Classifier_Bounds)) deallocate(Delta_Classifier_Bounds)
-        if (allocated(First_Valid_Classifier_Bounds)) deallocate(First_Valid_Classifier_Bounds)
-        if (allocated(Last_Valid_Classifier_Bounds)) deallocate(Last_Valid_Classifier_Bounds)
-        if (allocated(Class_Cond_Yes)) deallocate(Class_Cond_Yes)
-        if (allocated(Class_Cond_No)) deallocate(Class_Cond_No)
-        if (allocated(Class_Cond_Ratio)) deallocate(Class_Cond_Ratio)
-        if (allocated(Classifier_Value_Name)) deallocate(Classifier_Value_Name)
-        if (allocated(Class_To_Test_Idx)) deallocate(Class_To_Test_Idx)
-        Is_Classifiers_Read = .false.
-end subroutine RESET_NB_CLOUD_MASK_LUT 
- 
 
 
 !-----------------------------------------------------------------------------------

@@ -138,6 +138,7 @@
    use MODIS_MODULE
    use IFF_CLAVRX_BRIDGE
    use GOES_MODULE
+   use ABI_MODULE
    use LASZLO_INSOLATION
    use SEVIRI_MODULE
    use OCA_MODULE, only: &

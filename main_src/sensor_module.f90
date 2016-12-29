@@ -57,6 +57,11 @@ module SENSOR_MODULE
       READ_FY &
     , READ_FY_INSTR_CONSTANTS
 
+   use ABI_MODULE, only: &
+      READ_ABI &
+    , READ_ABI_INSTR_CONSTANTS &
+    , READ_NAVIGATION_BLOCK_ABI
+
    use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
@@ -383,6 +388,8 @@ module SENSOR_MODULE
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')
               call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('GOES-RU-IMAGER')
+           call READ_ABI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('SEVIRI')
               call READ_MSG_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MTSAT-IMAGER')
@@ -672,7 +679,7 @@ module SENSOR_MODULE
                Sensor%Algo_Const_File = 'coms1_algo.dat'
                exit test_loop
 
-            case (70,72,74,76,78,180,182,184)
+            case (70,72,74,76,78,180,182,184,186)
 
                if (AREAstr%Sat_Id_Num == 70) then
                   Sensor%Sensor_Name = 'GOES-IL-IMAGER'
@@ -744,6 +751,15 @@ module SENSOR_MODULE
                   Sensor%WMO_Id = 259
                   Sensor%Instr_Const_File = 'goes_15_instr.dat'
                   Sensor%Algo_Const_File = 'goes_15_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 186) then
+                  Sensor%Sensor_Name = 'GOES-RU-IMAGER'
+                  Sensor%Spatial_Resolution_Meters = 2000
+                  Sensor%Platform_Name = 'GOES-16'
+                  Sensor%WMO_Id = 270
+                  Sensor%Instr_Const_File = 'goes_16_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_16_algo.dat'
                   exit test_loop
                endif
 
@@ -1174,6 +1190,18 @@ module SENSOR_MODULE
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
+            !test for GOES-16
+            case (186)
+               ! This is needed to determine type of navigation
+               ! as Nav coefficents specific to GOES-16. These
+               ! coefficients are based on 1 km data, not 2 km.
+               ! Navigation transformations in abi_module.f90 will
+               ! account for this difference.
+
+               call READ_NAVIGATION_BLOCK_ABI(trim(Level1b_Full_Name), AREAstr,NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
+
             !test for GOES Imagers or Sounders
             case (70:79,180:185)
 
@@ -1337,6 +1365,11 @@ module SENSOR_MODULE
                      (AREAstr%Num_Elem*AREAstr%Bytes_Per_Pixel)
       end if
 
+      if (trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem)
+         Image%Number_Of_Lines = AREAstr%Num_Line
+      end if
+
       if (trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then
          Image%Number_Of_Elements =  int(AREAstr%Num_Elem / Goes_Sndr_Xstride)
          Image%Number_Of_Lines = AREAstr%Num_Line
@@ -1396,6 +1429,11 @@ module SENSOR_MODULE
          call READ_GOES_SNDR(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
+                     AREAstr,NAVstr)
+
+       case('GOES-RU-IMAGER')
+         call READ_ABI(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      AREAstr,NAVstr)
 
        case('SEVIRI')

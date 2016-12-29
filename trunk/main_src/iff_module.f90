@@ -561,7 +561,7 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                      case (933) ! Pseudo
                         band_names_int_rad(ii) = 45
                   end select
-                  if (sounder_ch(ii)) sounder_avail = .true.
+                  if (any (sounder_ch)) sounder_avail = .true.
                enddo
             elseif (trim(Sensor%Sensor_Name) == 'AQUA-IFF') then
                do ii = 1, num_char_band_names                                                                                                                                      

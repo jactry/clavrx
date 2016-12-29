@@ -336,6 +336,7 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Ec_11um
     real (kind=real4), dimension(:,:), allocatable:: Ec_12um
     real (kind=real4), dimension(:,:), allocatable:: Ec_133um
+    integer (kind=int1), dimension(:,:), allocatable:: Cloud_Type
   end type acha_definition
 
   type :: ccl_definition
@@ -2087,6 +2088,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Ec_11um(dim1,dim2))
     allocate(ACHA%Ec_12um(dim1,dim2))
     allocate(ACHA%Ec_133um(dim1,dim2))
+    allocate(ACHA%Cloud_Type(dim1,dim2)) 
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2143,6 +2145,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Ec_11um = Missing_Value_Real4
     ACHA%Ec_12um = Missing_Value_Real4
     ACHA%Ec_133um = Missing_Value_Real4
+    ACHA%Cloud_Type = Missing_Value_Int1
 
 end subroutine RESET_ACHA_ARRAYS
 
@@ -2193,6 +2196,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Ec_11um) 
     deallocate(ACHA%Ec_12um) 
     deallocate(ACHA%Ec_133um) 
+    deallocate(ACHA%Cloud_Type) 
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------

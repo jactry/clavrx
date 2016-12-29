@@ -1,6 +1,6 @@
 !$Id: level2_modawg.inc 122 2014-03-19 22:41:30Z dbotambekov $
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds = 285
+ integer, parameter, private:: Num_Level2_Sds = 286
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
 
@@ -233,7 +233,7 @@
      Sds_Num_Level2_Fire = 222,           Sds_Num_Level2_Fire_Flag = 0, &
      Sds_Num_Level2_Zc_Lower = 223,       Sds_Num_Level2_Zc_Lower_Flag = 1, &
      Sds_Num_Level2_Pc_Lower = 224,       Sds_Num_Level2_Pc_Lower_Flag = 0, &
-     Sds_Num_Level2_Cod_Mask = 225,       Sds_Num_Level2_Cod_Mask_Flag = 0, &
+     Sds_Num_Level2_Cod_Mask = 225,       Sds_Num_Level2_Cod_Mask_Flag = 1, &
      Sds_Num_Level2_Cod_Aux = 226,        Sds_Num_Level2_Cod_Aux_Flag = 0, &
      Sds_Num_Level2_Ch37 = 227,           Sds_Num_Level2_Ch37_Flag = 1, &
      Sds_Num_Level2_Ch38 = 228,           Sds_Num_Level2_Ch38_Flag = 1, &
@@ -272,7 +272,7 @@
      Sds_Num_Level2_Ch1_Min_3x3 = 261,    Sds_Num_Level2_Ch1_Min_3x3_Flag = 0, &
      Sds_Num_Level2_Bt_11_67_Covar = 262, Sds_Num_Level2_Bt_11_67_Covar_Flag = 0, &
      Sds_Num_Level2_Btd_Ch31_Ch32 = 263,  Sds_Num_Level2_Btd_Ch31_Ch32_Flag = 0, &
-     Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 0, &
+     Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 1, &
      Sds_Num_Level2_Ch20_Bt_Median = 265, Sds_Num_Level2_Ch20_Bt_Median_Flag = 0, &
      Sds_Num_Level2_Tsfc_Uni_Back = 266,  Sds_Num_Level2_Tsfc_Uni_Back_Flag = 0, &
      Sds_Num_Level2_Ceps_Aux = 267,       Sds_Num_Level2_Ceps_Aux_Flag = 0, &
@@ -293,4 +293,5 @@
      Sds_Num_Level2_Ec_85 = 282,          Sds_Num_Level2_Ec_85_Flag = 0, &
      Sds_Num_Level2_Ec_11 = 283,          Sds_Num_Level2_Ec_11_Flag = 0, &
      Sds_Num_Level2_Ec_12 = 284,          Sds_Num_Level2_Ec_12_Flag = 0, &
-     Sds_Num_Level2_Ec_133 = 285,         Sds_Num_Level2_Ec_133_Flag = 0
+     Sds_Num_Level2_Ec_133 = 285,         Sds_Num_Level2_Ec_133_Flag = 0, &
+     Sds_Num_Level2_Cld_Type_ACHA = 286,  Sds_Num_Level2_Cld_Type_ACHA_Flag = 0

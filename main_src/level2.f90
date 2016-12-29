@@ -1923,6 +1923,18 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- cloud type from acha
+     if (Sds_Num_Level2_Cld_Type_ACHA_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Type_ACHA),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "cloud_type_acha", &
+                               "not specified", &
+                               "integer classification of the cloud type including clear "// &
+                               "and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,"//&
+                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Cld_Type, Max_Cld_Type, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
 
      !--- cloud height from h2o
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Cth_H2O_Flag == sym%YES) then
@@ -4940,6 +4952,12 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       call SCALE_VECTOR_I1_RANK2(ACHA%Supercooled_Cld_Prob,sym%LINEAR_SCALING,Min_Prob,Max_Prob,Missing_Value_Real4,One_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Supercool_Prob), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         One_Byte_Temp(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+     !--- acha cld type
+     if (Sds_Num_Level2_Cld_Type_ACHA_Flag == sym%YES) then     
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        ACHA%Cloud_Type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld height from h2o

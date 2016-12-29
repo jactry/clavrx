@@ -29,6 +29,7 @@
  integer(kind=INT4), parameter, private:: Element_Idx_Min = 1
  integer(kind=INT4), parameter, private:: Line_Idx_Min = 1
  integer(kind=INT4), parameter, private:: LRC_Meander_Flag = 1
+ integer(kind=INT4), parameter, private:: MULTI_LAYER_LOGIC_Flag = 0
 
  !--- number of meta data flags
  integer(kind=INT4), parameter :: NUM_META_DATA = 8

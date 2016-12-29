@@ -48,6 +48,11 @@ module AWG_CLOUD_HEIGHT
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
 ! 9 - 11 + 12 + 13.3-pseudo um       -
+!
+! MULTI_LAYER_LOGIC_FLAG
+! 0 - (baseline) just use the multilayer id in cloud type
+! 1 - treat all multilayer like cirrus
+! 2 - assume all cirrus are multilayer and let acha decide
 !----------------------------------------------------------------------
 !Changes needed to get into SAPF
 !
@@ -628,18 +633,28 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--------------------------------------------------------------------------
-  ! Assume all CIRRUS are Overlapped - Experimental
+  ! Multi-Layer Logic Implemented via cloud type
   !-------------------------------------------------------------------------
-  where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
-     Input%Cloud_Type = symbol%OVERLAP_TYPE
-  endwhere
+
+  Output%Cloud_Type = Input%Cloud_Type
+ 
+  if (MULTI_LAYER_LOGIC_FLAG == 1) then 
+   where(Input%Cloud_Type == symbol%OVERLAP_TYPE)
+     Output%Cloud_Type = symbol%CIRRUS_TYPE
+   endwhere
+  endif
+
+  if (MULTI_LAYER_LOGIC_FLAG == 2) then 
+   where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
+     Output%Cloud_Type = symbol%OVERLAP_TYPE
+   endwhere
+  endif
 
   !--------------------------------------------------------------------------
   ! determine processing order of pixels
   !--------------------------------------------------------------------------
-
   call COMPUTE_PROCESSING_ORDER(&
-                                Input%Invalid_Data_Mask, Input%Cloud_Type,&
+                                Input%Invalid_Data_Mask, Output%Cloud_Type,&
                                 ELem_Idx_LRC,Line_Idx_LRC, &
                                 Pass_Idx_Min,Pass_Idx_Max,USE_CIRRUS_FLAG, &
                                 Output%Processing_Order) 
@@ -657,7 +672,7 @@ module AWG_CLOUD_HEIGHT
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
 
-     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Input%Cloud_Type, &
+     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Output%Cloud_Type, &
                                         USE_LOWER_INTERP_FLAG, &
                                         Input%Surface_Temperature, &
                                         Output%Tc,&
@@ -724,7 +739,7 @@ module AWG_CLOUD_HEIGHT
     Ivza =  Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx)
     ilrc = Elem_Idx_LRC(Elem_Idx,Line_Idx)
     jlrc = Line_Idx_LRC(Elem_Idx,Line_Idx)
-    Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
+    Cloud_Type = Output%Cloud_Type(Elem_Idx,Line_Idx)
     
     !--- Qc indices
     if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
@@ -738,8 +753,8 @@ module AWG_CLOUD_HEIGHT
     !---  filter pixels for last pass for cirrus correction
     if (Pass_Idx == Pass_Idx_Max .and. USE_CIRRUS_FLAG == symbol%YES) then
 
-        if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%CIRRUS_TYPE .and. &
-            Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE) then
+        if (Output%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%CIRRUS_TYPE .and. &
+            Output%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE) then
              cycle
         endif
 
@@ -1583,18 +1598,16 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !-------------------------------------------------------------------------- 
  !--  If Lower Cloud is placed at surface - assume this single layer
  !--------------------------------------------------------------------------
- if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
-     Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
-    Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Output%Lower_Tc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Output%Lower_Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Input%Cloud_Type(Elem_Idx,Line_Idx) = symbol%CIRRUS_TYPE
-    Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
- endif  
-
-!if (Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
-!    Diag%Array_3(Elem_Idx,Line_Idx) = 1.0 - Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) / Ts_Ap_Uncer
-!endif
+ if (MULTI_LAYER_LOGIC_FLAG > 0) then 
+   if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
+      Output%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
+      Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Lower_Tc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Lower_Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Cloud_Type(Elem_Idx,Line_Idx) = symbol%CIRRUS_TYPE
+      Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+   endif  
+ endif
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1868,7 +1881,7 @@ end do Line_Loop
 if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
 
     call COMPUTE_TEMPERATURE_CIRRUS( &
-                 Input%Cloud_Type,   &
+                 Output%Cloud_Type,   &
                  Output%Tc,          &
                  Output%Ec,          &
                  EMISSIVITY_MIN_CIRRUS, &

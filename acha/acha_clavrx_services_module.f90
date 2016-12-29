@@ -235,6 +235,7 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
    integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
+   integer(kind=int1), dimension(:,:), pointer :: Cloud_Type
   end type acha_output_struct
   
 !Symbol stucture

@@ -277,7 +277,9 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             if ( chn_idx == 20 ) then
               
                trans_total (chn_idx) = input % trans_ac_nadir ( chn_idx) % d  (elem_idx, line_idx)
-               rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) / ( input % solar_irradiance (chn_idx) / input % sun_earth_dist ** 2 )
+               rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) &
+					/ ( input % solar_irradiance (chn_idx) &
+					/ input % sun_earth_dist ** 2 )
                refl_toc( chn_idx ) = input % rad (chn_idx)  % d (elem_idx, line_idx) * rad_to_refl_factor
                   
                rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( chn_idx) % d (elem_idx, line_idx) 

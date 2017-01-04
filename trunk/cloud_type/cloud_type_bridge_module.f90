@@ -94,7 +94,7 @@ module cloud_type_bridge_module
       , Covar_Ch27_Ch31_5x5 &
       , cld_type &
       , cld_phase &
-      , cld_mask &
+      , CLDMASK &
       , Dust_Mask &
       , Smoke_Mask &
       , Fire_Mask &
@@ -173,12 +173,12 @@ contains
                cycle
             end if 
             
-            if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
+            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i,j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (cld_mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i,j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if
@@ -220,12 +220,12 @@ contains
                cycle
             end if 
             
-            if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
+            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (cld_mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i , j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if   

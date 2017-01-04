@@ -56,9 +56,9 @@ module dcomp_clavrx_bridge_mod
        , sfc &
        , sensor &
        , image &
+       , cldmask &
        , acha &
        , cld_type &
-       , cld_mask &
        , bad_pixel_mask &
        , lwp_dcomp, reff_dcomp, tau_dcomp, iwp_dcomp &
        , tau_dcomp_qf, reff_dcomp_qf &
@@ -292,7 +292,7 @@ contains
       dcomp_input % cloud_press % d = acha % pc
       dcomp_input % cloud_temp % d  = acha % tc
       dcomp_input % tau_acha % d    = acha % tau
-      dcomp_input % cloud_mask % d  = cld_mask
+      dcomp_input % cloud_mask % d  = cldmask % cld_mask
 !ccm
       dcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
 !end ccm

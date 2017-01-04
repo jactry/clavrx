@@ -41,18 +41,14 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Nav, &
        Sfc, &
        Image, &
+       CLDMASK, &
        Sensor, &
        Ancil_Data_Dir, &
        Bayesian_Cloud_Mask_Name, &
-       Bayes_Mask_Sfc_Type_Global, &
        Bad_Pixel_Mask, &
-       Cld_Mask, &
-       Cld_Test_Vector_Packed, &
        Dust_Mask, &
        Fire_Mask, &
        Thin_Cirr_Mask, &
-       Posterior_Cld_Probability, &
-       Prior_Cld_Probability, &
        Smoke_Mask, &
        SST_Anal_Uni, &
        Solar_Contamination_Mask, &
@@ -128,6 +124,10 @@ contains
    integer :: i, j
    character (len=1020):: Naive_Bayes_File_Name_Full_Path
    character (len=1020):: Prior_File_Name_Full_Path
+   character (len=1020):: Naive_Bayes_Default_2d_File_Name_Full_Path
+   character (len=1020):: Naive_Bayes_Night_2d_File_Name_Full_Path
+   character (len=1020):: Naive_Bayes_Day_160_2d_File_Name_Full_Path
+   character (len=1020):: Naive_Bayes_Day_375_2d_File_Name_Full_Path
 
    logical, save:: First_Call = .true.
    integer, parameter:: Nmed = 2
@@ -136,6 +136,7 @@ contains
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
    logical, parameter:: USE_DIAG = .false.
    logical, parameter:: USE_PRIOR_TABLE = .true.
+   logical, parameter:: USE_CORE_TABLES = .true.
    logical, parameter:: USE_065UM_RTM = .true.
 
    if (First_Call .eqv. .true.) then
@@ -153,9 +154,26 @@ contains
 
        Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
             "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
-
        call READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
                                  Output%Cloud_Mask_Bayesian_Flag)
+
+       if (USE_CORE_TABLES) then
+         Naive_Bayes_Default_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_default_2d.nc')
+         call READ_CORE_LUT_DEFAULT(Naive_Bayes_Default_2D_File_Name_Full_Path)
+
+         Naive_Bayes_Night_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_night_2d.nc')
+         call READ_CORE_LUT_NIGHT(Naive_Bayes_Night_2D_File_Name_Full_Path)
+
+         Naive_Bayes_Day_160_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_day_2d_160um.nc')
+         call READ_CORE_LUT_DAY_160UM(Naive_Bayes_Day_160_2D_File_Name_Full_Path)
+
+         Naive_Bayes_Day_375_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
+            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_day_2d_375um.nc')
+         call READ_CORE_LUT_DAY_375UM(Naive_Bayes_Day_375_2D_File_Name_Full_Path)
+       endif
 
    endif
 
@@ -163,7 +181,7 @@ contains
    if (USE_PRIOR_TABLE) then 
      Prior_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//"nb_cloud_mask_calipso_prior.nc"
      if (.not. Is_Prior_Read) call READ_PRIOR(Prior_File_Name_Full_Path)
-     call COMPUTE_PRIOR(Nav%Lon,Nav%Lat,Month,Prior_Cld_Probability) 
+     call COMPUTE_PRIOR(Nav%Lon,Nav%Lat,Month,CLDMASK%Prior_Cld_Probability) 
    endif
 
    !--- Compute TOA Clear-Sky 0.65um Reflectance
@@ -183,6 +201,7 @@ contains
    !-----------    loop over pixels -----   
    line_loop: do i = 1, Image%Number_Of_Elements
       elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
+
          call SET_INPUT(i,j)
 
          !---call cloud mask routine
@@ -191,7 +210,8 @@ contains
                       Symbol,  &
                       Input,   &
                       Output,  &
-                      USE_PRIOR_TABLE)
+                      USE_PRIOR_TABLE, &
+                      USE_CORE_TABLES)
                       !Diag)   !optional
 
          !--- call non-cloud detection routines (smoke, dust and fire)
@@ -208,7 +228,7 @@ contains
          !-----------------------------------------------------------------------
 
          !--- unpack elements of the cloud test vector into clavr-x global arrays
-         Bayes_Mask_Sfc_Type_Global(i,j) = ibits(Cld_Test_Vector_Packed(3,i,j),0,3)
+         CLDMASK%Bayes_Mask_Sfc_Type(i,j) = ibits(CLDMASK%Cld_Test_Vector_Packed(3,i,j),0,3)
 
       end do elem_loop
    end do line_loop
@@ -238,10 +258,10 @@ contains
    !-------------------------------------------------------------------------------------------------------
    line_loop_pack: do i = 1, Image%Number_Of_Elements
       elem_loop_pack: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
-           if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
-           if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
-           if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
-           if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = ibset(Cld_Test_Vector_Packed(3,i,j),3)
+           if (Smoke_Mask(i,j) == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),4)
+           if (Dust_Mask(i,j)  == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j)  == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),7)
+           if (Thin_Cirr_Mask(i,j) == 1) CLDMASK%Cld_Test_Vector_Packed(3,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(3,i,j),3)
       end do elem_loop_pack
    end do line_loop_pack
 
@@ -262,6 +282,14 @@ contains
        call RESET_NB_CLOUD_MASK_LUT()
        
        if (USE_PRIOR_TABLE) call RESET_NB_CLOUD_MASK_PRIOR_LUT()
+
+       if (USE_CORE_TABLES) then
+          call RESET_CORE_LUT_DEFAULT()
+          call RESET_CORE_LUT_NIGHT()
+          call RESET_CORE_LUT_DAY_375UM()
+          call RESET_CORE_LUT_DAY_160UM()
+       endif
+
    endif
 
    First_Call = .false.
@@ -422,7 +450,7 @@ contains
       Input%Sfc_Type = Sfc%Sfc_Type(i,j)
       Input%Sfc_Temp = Tsfc_Nwp_Pix(i,j)
       Input%Path_Tpw = Tpw_Nwp_Pix(i,j) / Geo%Coszen(i,j)
-      Input%Prior = Prior_Cld_Probability(i,j)
+      Input%Prior = CLDMASK%Prior_Cld_Probability(i,j)
 
 
       if (Input%Chan_On_041um == sym%YES)  then 
@@ -510,9 +538,9 @@ contains
    subroutine SET_OUTPUT(i,j)
       integer, intent (in) :: i, j
 
-      Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
-      Cld_Mask(i,j) = Output%Cld_Mask_Bayes
-      Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
+      CLDMASK%Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
+      CLDMASK%Cld_Mask(i,j) = Output%Cld_Mask_Bayes
+      CLDMASK%Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
       Dust_Mask(i,j) = Output%Dust_Mask
       Smoke_Mask(i,j) = Output%Smoke_Mask
       Fire_Mask(i,j) = Output%Fire_Mask

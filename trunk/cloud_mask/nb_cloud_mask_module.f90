@@ -40,7 +40,7 @@
 ! 19           2            21-22     3    T_11           (TGCT)
 ! 20           2            23-24     3    T_Max-T        (RTCT)
 ! ---
-! 21           2            25-26     4    T_std          (TUT)
+! 21           2            25-26     4    T_Std          (TUT)
 ! 22           2            27-28     4    Emiss_Tropo
 ! 23           2            29-30     4    FMFT mask (Btd_11_12)
 ! 24           2            31-32     4    Btd_11_67 
@@ -149,6 +149,7 @@ module NB_CLOUD_MASK
             Input,  &
             Output,  &
             Use_Prior_Table, &
+            Use_Core_Tables, &
             Diag)
 
 
@@ -157,6 +158,7 @@ module NB_CLOUD_MASK
    type(mask_input), intent(in) :: Input
    type(mask_output), intent(out) :: Output
    logical, intent(in):: Use_Prior_Table
+   logical, intent(in):: Use_Core_Tables
    type(diag_output), intent(out), Optional :: Diag
 
    !-- local pointers that point to global variables
@@ -191,6 +193,10 @@ module NB_CLOUD_MASK
    
    real:: r
    real:: Prior_Yes_Temp
+   real:: Cond_Ratio_Core
+   real:: Cond_Ratio_1D_All
+   real:: Cond_Ratio_1D_Cirrus
+   real:: Prob_Clear_Core, Prob_Water_Core, Prob_Ice_Core
 
    !------------------------------------------------------------------------------------------
    !---  begin executable code
@@ -380,11 +386,33 @@ module NB_CLOUD_MASK
           Cld_Flags(17) = Sfc_Idx              ;    Cld_Flag_Bit_Depth(17) = 3
           Cld_Flags(18) = Spare_Value          ;    Cld_Flag_Bit_Depth(18) = 1
 
+          !---------------------------------------------------------------------------------
+          ! compute cloud probability for core classifiers
+          !---------------------------------------------------------------------------------
+          Cond_Ratio_Core = 1.0
+          Prob_Clear_Core = MISSING_VALUE_REAL4
+          Prob_Water_Core = MISSING_VALUE_REAL4
+          Prob_Ice_Core = MISSING_VALUE_REAL4
+
+          if (Use_Core_Tables .eqv. .true.) then
+             call COMPUTE_CORE(Input%Emiss_11um_Tropo,Input%Ref_375um, Input%Ref_160um, Input%Bt_11um_Std,Input%Solzen, &
+                Sfc_Idx, Input%Chan_On_11um, Input%Chan_On_375um, Input%Chan_On_160um, &
+                Prob_Clear_Core, Prob_Water_Core, Prob_Ice_Core)
+
+             if (Prob_Clear_Core /= MISSING_VALUE_REAL4) then
+               if (Prob_Clear_Core < 1.0) then
+                   Cond_Ratio_Core = (Prob_Clear_Core) / (1.0 - Prob_Clear_Core)
+               else
+                   Cond_Ratio_Core = 100.0
+               endif
+             endif
+          endif
 
           !---------------------------------------------------------------------------------
-          ! compute cloud probability for 1d NB classifiers
+          ! compute cloud probability for All 1d NB classifiers
           !---------------------------------------------------------------------------------
-          class_loop: do Class_Idx = 1, N_class
+          Cond_Ratio_1D_All = 1.0
+          all_class_loop: do Class_Idx = 1, N_class
 
              Classifier_Value(Class_Idx) = Missing_Value_Real4
              Cond_Ratio(Class_Idx) =  1.0
@@ -411,24 +439,6 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std
 
-                    case("Emiss_Tropo") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
-                       if (Cold_Scene_Flag == symbol%YES) cycle
-                       Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
-
-                    case("FMFT") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_12um == symbol%NO) cycle
-                       if (Cold_Scene_Flag == symbol%YES) cycle
-                       if (Input%Bt_11um == Missing_Value_Real4) cycle
-                       if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
-                       if (Input%Bt_12um == Missing_Value_Real4) cycle
-                       if (Input%Bt_12um_Clear == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) =  &
-                           split_window_test(Input%Bt_11um_Clear, Input%Bt_12um_Clear, &
-                                             Input%Bt_11um, Input%Bt_12um)
-
                     case("Btd_11_67") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_67um == symbol%NO) cycle
@@ -442,13 +452,6 @@ module NB_CLOUD_MASK
                        if (Input%Use_Sounder_11um == symbol%YES) then
                          Classifier_Value(Class_Idx) = Input%Bt_11um_Sounder - Input%Bt_67um
                        endif
-
-                    case("Bt_11_67_Covar") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_67um == symbol%NO) cycle
-                       if (Dry_Scene_Flag == symbol%YES) cycle
-                       if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
                     case("Btd_11_85") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -655,9 +658,11 @@ module NB_CLOUD_MASK
                                                      (Input%Ref_063um + Input%Ref_160um)
                     
                      case default
-                       print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
-                       print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
-                       return
+                       Classifier_Value(Class_Idx) = Missing_Value_Real4
+
+                   !   print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                   !   print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
+                   !   return
              end select
 
              !--- Turn off Classifiers if Chosen Metric is Missing
@@ -673,21 +678,92 @@ module NB_CLOUD_MASK
 
              Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
 
-!print *, "Cond Ratio T_Std = ", Class_Cond_Ratio(Bin_Idx,:,Sfc_Idx)
-!stop
+        enddo  all_class_loop 
 
-!            if (Class_Idx == 7) then
-!               print *, Classifier_Value(Class_Idx), Classifier_Bounds_Min(Class_Idx,Sfc_Idx), Delta_Classifier_Bounds(Class_Idx,Sfc_Idx), Bin_Idx,  Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
-!            endif
+        Cond_Ratio_1D_All = product(Cond_Ratio)
 
-        enddo  class_loop 
+        !---------------------------------------------------------------------------------
+        ! compute cloud probability for All 1d NB classifiers
+        !---------------------------------------------------------------------------------
+        Cond_Ratio_1D_Cirrus = 1.0
 
+        !--- run if no core value or core value shows a likely water cloud
+        if ((Prob_Water_Core  == MISSING_VALUE_REAL4) .or. &
+            (Prob_Water_Core /= MISSING_VALUE_REAL4 .and. Prob_Water_Core < 0.5)) then   ! prob_water_if_loop
+
+        cirrus_class_loop: do Class_Idx = 1, N_class
+
+             Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Cond_Ratio(Class_Idx) =  1.0
+
+             select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
+
+                    case("Emiss_Tropo")
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
+                       Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
+
+                    case("FMFT")
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_12um == symbol%NO) cycle
+                       if (Cold_Scene_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um == Missing_Value_Real4) cycle
+                       if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
+                       if (Input%Bt_12um == Missing_Value_Real4) cycle
+                       if (Input%Bt_12um_Clear == Missing_Value_Real4) cycle
+                       Classifier_Value(Class_Idx) =  &
+                           split_window_test(Input%Bt_11um_Clear, Input%Bt_12um_Clear, &
+                                             Input%Bt_11um, Input%Bt_12um)
+
+                    case("Bt_11_67_Covar") 
+                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if (Dry_Scene_Flag == symbol%YES) cycle
+                       if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
+                       Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
+
+
+                    case("Ref_138_Day")
+                       if (Input%Chan_On_138um == symbol%NO) cycle
+                       if (Forward_Scattering_Flag == symbol%YES) cycle
+                       if (Day_063_Flag == symbol%NO) cycle
+                       if (Mountain_Flag == symbol%YES) cycle
+                       if (Input%Ref_138um == Missing_Value_Real4) cycle
+                       Classifier_Value(Class_Idx) = Input%Ref_138um
+
+                     case default
+                       Classifier_Value(Class_Idx) = Missing_Value_Real4
+                      !print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
+                      !print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
+                      !return
+             end select
+
+             !--- Turn off Classifiers if Chosen Metric is Missing
+             if (Classifier_Value(Class_Idx) == Missing_Value_Real4) then
+                cycle
+             endif
+
+
+             !--- interpolate class conditional values
+             Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
+                           Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
+             Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
+
+             Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
+
+        enddo  cirrus_class_loop 
+
+        Cond_Ratio_1D_Cirrus = product(Cond_Ratio)
+
+        endif    ! water_prob_if_loop
 
         !------------------------------------------------------------------------------------------------------------
-        !--- compute prosterior probabilites for each pixel
+        !--- compute posterior probabilites for each pixel
         !-----------------------------------------------------------------------------------------------------------
 
-        r = product(Cond_Ratio)
+        r = Cond_Ratio_Core*Cond_Ratio_1D_All*Cond_Ratio_1D_Cirrus
+
         Output%Posterior_Cld_Probability =  1.0 / (1.0 + r/Prior_Yes_Temp - r)
 
         !--- constrain 
@@ -761,18 +837,14 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_375_Night") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Bt_11_67_Covar") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_Tropo") then
-         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_std") then
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Std") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Day") then
          !     if (present(Diag)) Diag%Array_1 = Classifier_Value(Class_Idx)
          !     if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
          !     if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
-         ! endif
-
-!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Night") Diag%Array_1 = Posterior_Cld_Probability_By_Class(Class_Idx)
-!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "Emiss_Tropo") Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
-!        if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") Diag%Array_3 = Posterior_Cld_Probability_By_Class(Class_Idx)
+         !endif
 
          enddo
 
@@ -1158,5 +1230,6 @@ module NB_CLOUD_MASK
   end subroutine  PACK_BITS_INTO_BYTES
 
 !-----------------------------------------------------------------------------------
-
+! end of module
+!-----------------------------------------------------------------------------------
 end module NB_CLOUD_MASK

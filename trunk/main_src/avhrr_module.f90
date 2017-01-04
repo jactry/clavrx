@@ -2846,7 +2846,7 @@ endif
            exit
          endif
          i = (Pix_Idx - Start_Pixel) + 1
-         Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
+         CLDMASK%Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
       enddo
     enddo
 

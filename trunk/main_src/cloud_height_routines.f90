@@ -1456,7 +1456,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
      !--- skip bad pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
 
-     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      do Chan_Idx = 27, 38
 
@@ -1468,12 +1468,12 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
            ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 3
 
            !--- if full mask is clear, set channel masks to clear
-           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
+           if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 0
               cycle
            endif
 
-           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
+           if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 1
               cycle
            endif

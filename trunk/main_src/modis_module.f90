@@ -52,7 +52,7 @@ module MODIS_MODULE
                 , scan_number &
                 , Cloud_Mask_Aux_Read_Flag &
                 , Cloud_Mask_Aux_Flag &
-                , Cld_mask_Aux &
+                , CLDMASK &
                 , Cld_Phase_Aux &
                 , Cld_Type_Aux &
                 , Zc_Aux &
@@ -1041,7 +1041,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
           call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
                                              trim(Image%Auxiliary_Cloud_Mask_File_Name), &
-                                             Cld_Mask_Aux, & 
+                                             CLDMASK%Cld_Mask_Aux, & 
                                              Cld_Phase_Aux, & 
                                              Cld_Type_Aux, & 
                                              Zc_Aux, & 

@@ -55,12 +55,12 @@ module cx_sds_type_definitions_mod
    subroutine cx_sds_data_type__info (self)
       class(cx_sds_data_type):: self
       
-      print*,'data size: ', self.size
-      print*,'data rank: ',self.rank
-      print*,'dimsize: ',self.dimsize(1:self.rank)
-      print*,'Calibr: ',self.calibr
-      print*,'data_type: ',self.type
-      select case ( self.type)
+      print*,'data size: ', self%size
+      print*,'data rank: ',self%rank
+      print*,'dimsize: ',self%dimsize(1:self%rank)
+      print*,'Calibr: ',self%calibr
+      print*,'data_type: ',self%type
+      select case ( self%type)
       case (DFNT_CHAR8)
          print*,'CHAR8 '
       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
@@ -94,7 +94,7 @@ module cx_sds_type_definitions_mod
       class(cx_sds_data_type), intent(in) :: self
       real, intent(out) :: data_real(:)
          
-      select case ( self.type)
+      select case ( self%type)
       case (DFNT_CHAR8)
         
       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
@@ -120,7 +120,7 @@ module cx_sds_type_definitions_mod
       class(cx_sds_data_type), intent(in) :: self
       real(kind = 8), intent(out) :: data_dbl(:)
    
-      select case ( self.type)
+      select case ( self%type)
       case (DFNT_CHAR8)
         
       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)
@@ -143,12 +143,12 @@ module cx_sds_type_definitions_mod
    subroutine cx_sds_type__info(self)
       class(cx_sds_type):: self
       integer :: i
-      print*,self.name
+      print*,self%name
       print*,'info SDS TYPE'
-      print*,'number attributes: ', self.nattr
+      print*,'number attributes: ', self%nattr
       
-      do i=1, self.nattr
-         print*,self.attr(i).name
+      do i=1, self%nattr
+         print*,self%attr(i) % name
       
       end do
       
@@ -163,11 +163,11 @@ module cx_sds_type_definitions_mod
       type ( cx_sds_data_type), pointer :: pd
       integer :: i
       
-      do i =1, self.nattr
+      do i =1, self % nattr
 
-         if (self.attr(i).name .EQ. trim(att_name)) then
-            pd=>self.attr(i).data
-            call pd.transform_to_real(cx_sds_type__get_att)
+         if (self % attr(i) % name .EQ. trim(att_name)) then
+            pd=>self % attr(i) % data
+            call pd  % transform_to_real(cx_sds_type__get_att)
          end if
                
       end do

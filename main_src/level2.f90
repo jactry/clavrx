@@ -3935,7 +3935,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "BTD_11_12_NWC", &
                                "BTD_11_12_NWC", &
                                "11-12um BTD @ NWC", &
-                                DFNT_FLOAT32, sym%NO_SCALING, &
+                                DFNT_FLOAT, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -3947,7 +3947,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "EMISS_39_NWC", &
                                "EMISS_39_NWC", &
                                "3.9um Emissivity @ NWC", &
-                                DFNT_FLOAT32, sym%NO_SCALING, &
+                                DFNT_FLOAT, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -3959,7 +3959,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "EMISS_39_Clr_BCM", &
                                "EMISS_39_Clr_BCM", &
                                "3.9um clr sky Emissivity", &
-                                DFNT_FLOAT32, sym%NO_SCALING, &
+                                DFNT_FLOAT, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -6263,25 +6263,23 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Sds_Num_Level2_BTD_11_12_NWC_Flag == sym%YES .and. &
           Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
           Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-       Two_Byte_Temp = BTD_11_12um_NWC_BCM
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_BTD_11_12_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                       BTD_11_12um_NWC_BCM(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
 !--- Sds_Num_Level2_EMISS_39_NWC  - WCS3
      if (Sds_Num_Level2_EMISS_39_NWC_Flag == sym%YES .and. &
           Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       Two_Byte_Temp = Emiss_39_NWC_BCM
+             
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                       Emiss_39_NWC_BCM(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
 !--- Sds_Num_Level2_EMISS_39_Clr_BCM  - WCS3
      if (Sds_Num_Level2_EMISS_39_Clr_BCM_Flag == sym%YES .and. &
           Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-       Two_Byte_Temp = Emiss_39_clr_BCM
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_Clr_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                       Emiss_39_clr_BCM(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
 

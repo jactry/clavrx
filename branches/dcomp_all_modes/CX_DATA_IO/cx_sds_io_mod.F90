@@ -182,7 +182,7 @@ module cx_sds_io_mod
       
       cx_sds_read_raw = -1
       
-      sds.nattr = 9
+      sds % nattr = 9
       
      
       cx_sds_read_raw = hdf_get_file_sds(file, nsds,sds,1, (/sds_name/), .false.,.false.) 
@@ -214,16 +214,16 @@ module cx_sds_io_mod
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
       
-      pd=>sds(1).data
+      pd=>sds(1)  % data
       ps=>sds(1)
       
-      add_offset = ps.get_att('add_offset')
-      slope = ps.get_att('scale_factor')
-      missing = ps.get_att('SCALED_MISSING')
-      scaled = ps.get_att('SCALED')
+      add_offset = ps % get_att('add_offset')
+      slope = ps % get_att('scale_factor')
+      missing = ps % get_att('SCALED_MISSING')
+      scaled = ps % get_att('SCALED')
      
-      allocate(temp_1d(pd.nval))
-      call pd.transform_to_real(temp_1d)
+      allocate(temp_1d(pd % nval))
+      call pd % transform_to_real(temp_1d)
    
       dim1 = pd%dimsize(1)
     
@@ -266,16 +266,16 @@ module cx_sds_io_mod
       
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
-      pd=>sds(1).data
+      pd=>sds(1) % data
       ps=>sds(1)
       
-      add_offset = ps.get_att('add_offset')
-      slope = ps.get_att('scale_factor')
-      missing = ps.get_att('SCALED_MISSING')
-      scaled = ps.get_att('SCALED')
+      add_offset = ps %get_att('add_offset')
+      slope = ps%get_att('scale_factor')
+      missing = ps%get_att('SCALED_MISSING')
+      scaled = ps%get_att('SCALED')
     
-      allocate(temp_1d(pd.nval))
-      call pd.transform_to_real(temp_1d)
+      allocate(temp_1d(pd%nval))
+      call pd%transform_to_real(temp_1d)
    
       dim1 = pd%dimsize(1)
       dim2 = pd%dimsize(2)
@@ -317,18 +317,18 @@ module cx_sds_io_mod
       
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
-      pd=>sds(1).data
+      pd=>sds(1)%data
       ps=>sds(1)
       
-      add_offset = ps.get_att('add_offset')
-      slope = ps.get_att('scale_factor')
-      missing = ps.get_att('SCALED_MISSING')
-      scaled = ps.get_att('SCALED')
+      add_offset = ps%get_att('add_offset')
+      slope = ps%get_att('scale_factor')
+      missing = ps%get_att('SCALED_MISSING')
+      scaled = ps%get_att('SCALED')
       
       
       
-      allocate(temp_1d(pd.nval))
-      call pd.transform_to_real(temp_1d)
+      allocate(temp_1d(pd%nval))
+      call pd%transform_to_real(temp_1d)
       
       
       
@@ -378,18 +378,18 @@ module cx_sds_io_mod
       
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
-      pd=>sds(1).data
+      pd=>sds(1)%data
       ps=>sds(1)
       
-      add_offset = ps.get_att('add_offset')
-      slope = ps.get_att('scale_factor')
-      missing = ps.get_att('SCALED_MISSING')
-      scaled = ps.get_att('SCALED')
+      add_offset = ps%get_att('add_offset')
+      slope = ps%get_att('scale_factor')
+      missing = ps%get_att('SCALED_MISSING')
+      scaled = ps%get_att('SCALED')
       
       
       
-      allocate(temp_1d(pd.nval))
-      call pd.transform_to_real(temp_1d)
+      allocate(temp_1d(pd%nval))
+      call pd % transform_to_real(temp_1d)
       
       
       
@@ -442,16 +442,16 @@ module cx_sds_io_mod
       
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
-      pd=>sds(1).data
+      pd=>sds(1)%data
       ps=>sds(1)
       
-      add_offset = ps.get_att('add_offset')
-      slope = ps.get_att('scale_factor')
-      missing = ps.get_att('SCALED_MISSING')
-      scaled = ps.get_att('SCALED')
+      add_offset = ps%get_att('add_offset')
+      slope = ps%get_att('scale_factor')
+      missing = ps%get_att('SCALED_MISSING')
+      scaled = ps%get_att('SCALED')
       
-      allocate(temp_1d(pd.nval))
-      call pd.transform_to_real(temp_1d)
+      allocate(temp_1d(pd%nval))
+      call pd%transform_to_real(temp_1d)
     
       dim1 = pd%dimsize(1)
       dim2 = pd%dimsize(2)

@@ -39,7 +39,7 @@ program cx_sds_test
   
    test = cx_sds_read_raw ( file, 'cloud_water_path', sds)
    
-   wert = sds(1).get_att('RANGE_MAX')
+   wert = sds(1) % get_att('RANGE_MAX')
    
   
    if ( cx_sds_read ( file, 'cloud_water_path', cwp_2d) < 0 ) goto 9999

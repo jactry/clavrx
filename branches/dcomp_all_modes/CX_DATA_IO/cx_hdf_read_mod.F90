@@ -1026,7 +1026,7 @@ contains
       type(cx_sds_data_type), intent(in) :: sds
       real, intent(out) :: data_real(:)
    
-      select case ( sds.type)
+      select case ( sds % type)
       case (DFNT_CHAR8)
         
       case (DFNT_UCHAR8, DFNT_UINT8, DFNT_INT8)

@@ -79,7 +79,6 @@ program COMPILE_ASC_DES_LEVEL2B
 
  implicit none
 
- integer, parameter:: NCDC_Attributes_Flag = 0    !Set this to 1 to emulate NCDC 2009 data format
  integer, parameter:: N_Files_Max = 1200
  integer(kind=int4):: N_Command_Line_Args
  integer, parameter:: Source_Length_Max = 1000

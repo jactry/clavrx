@@ -50,6 +50,8 @@ module LEVEL2_ROUTINES
  integer, private, save:: Sd_Id_Rtm
  integer(kind=int4), dimension(Num_Rtm_Sds), save, private:: Sds_Id_Rtm
 
+ integer, parameter:: NCDC_Attributes_Flag = 0    !Set this to 1 to emulate NCDC 2009 data format
+
 !----------------------------------------------------------------------
 ! the following variables taken from process_avhrr_clavr
 !----------------------------------------------------------------------
@@ -80,9 +82,9 @@ module LEVEL2_ROUTINES
  character(len=11), private, parameter:: MOD_PROMPT = "LEVEL2:"
  character(len=18), private, parameter:: coordinates_string = "longitude latitude"
 
- INCLUDE 'level2.inc'
+ include 'level2.inc'
 
- CONTAINS
+ contains
 
 !====================================================================
 ! SUBROUTINE Name: DEFINE_HDF_FILE_STRUCTURES
@@ -4158,7 +4160,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
    !---  bayes_sfc_mask
    Istatus = sfwdata(Sds_Id_Rtm(28), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                     Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                     CLDMASK%Bayes_Mask_Sfc_Type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 
    !--- check for and report errors
    if (Istatus /= 0) then
@@ -4238,8 +4240,8 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
        do Line_Idx = 1, Image%Number_Of_Lines_Per_Segment
          Temp_Mask(:,Line_Idx) = Sensor%Chan_On_Flag_Per_Line(6,Line_Idx)
        enddo
-       One_Byte_Temp = ishft(Bayes_Mask_Sfc_Type_Global,3) + ishft(Temp_Mask,2)+ &
-                       ishft(solar_contamination_mask,1) + bad_pixel_mask
+       One_Byte_Temp = ishft(CLDMASK%Bayes_Mask_Sfc_Type,3) + ishft(Temp_Mask,2)+ &
+                       ishft(Solar_Contamination_Mask,1) + bad_pixel_mask
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Meta_Data), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
@@ -4658,7 +4660,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- cloud probability
      if (Sds_Num_Level2_Cldprob_Flag == sym%YES) then     
-      call SCALE_VECTOR_I2_RANK2(posterior_cld_probability, &
+      call SCALE_VECTOR_I2_RANK2(CLDMASK%Posterior_Cld_Probability, &
                                  sym%LINEAR_SCALING,Min_frac,Max_frac,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cldprob), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
@@ -4667,13 +4669,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      !--- cld mask
      if (Sds_Num_Level2_Cld_Mask_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        cld_mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        CLDMASK%Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- adjacent pixel cloud mask
      if (Sds_Num_Level2_Adj_Pix_Cld_Mask_Flag == sym%YES) then
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Adj_Pix_Cld_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Adj_Pix_Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        CLDMASK%Adj_Pix_Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- cld mask test vector (first byte - acm only)
@@ -4695,13 +4697,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                         Sds_Start_3d, &
                         Sds_Stride_3d, &
                         Sds_Edge_3d, &
-                        Cld_Test_Vector_Packed(:,:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        CLDMASK%Cld_Test_Vector_Packed(:,:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- bayes mask sfc type
      if (Sds_Num_Level2_Bayes_Sfc_Type_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Bayes_Sfc_Type), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Bayes_Mask_Sfc_Type_Global(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        CLDMASK%Bayes_Mask_Sfc_Type(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- dust mask
@@ -4801,7 +4803,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      !--- auxiliary cld mask
      if (Sds_Num_Level2_Cld_Mask_Aux_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Aux), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
-                        Cld_Mask_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        CLDMASK%Cld_Mask_Aux(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- auxiliary cld type
@@ -5631,7 +5633,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_Qf2_Flag == sym%YES) then
         !--- second level 2 packed quality flags
         One_Byte_Temp = 0
-        One_Byte_Temp = ishft(Reff_Dcomp_Qf,6) + ishft(Aot_Qf,4) + ishft(Rsr_Qf,2) + cld_mask
+        One_Byte_Temp = ishft(Reff_Dcomp_Qf,6) + ishft(Aot_Qf,4) + ishft(Rsr_Qf,2) + CLDMASK%Cld_Mask
 
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Qf2), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus

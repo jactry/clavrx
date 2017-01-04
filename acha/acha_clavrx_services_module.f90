@@ -15,6 +15,7 @@ module ACHA_SERVICES_MOD
        Sensor, &
        Image, &
        ACHA, &
+       CLDMASK, &
        Sfc, &
        Bad_Pixel_Mask, &
        I_Lrc, &
@@ -32,10 +33,7 @@ module ACHA_SERVICES_MOD
        Psfc_Nwp_Pix, &
        Smooth_Nwp_Flag, &
        Process_Undetected_Cloud_Flag, &
-       Posterior_Cld_Probability, &
-       Cld_Mask, &
        Cld_Type, &
-       Cld_Test_Vector_Packed, &
        Shadow_Mask, &
        Tc_Cirrus_Background, &
        Diag_Pix_Array_1, &

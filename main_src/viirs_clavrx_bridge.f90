@@ -73,7 +73,7 @@ module VIIRS_CLAVRX_BRIDGE
       , Ancil_Data_Dir & 
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
-      , Cld_Mask_Aux &
+      , CLDMASK &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
       , Scan_Time &
@@ -316,7 +316,7 @@ contains
   
 
       if ( v_conf % viirs_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
-         Cld_Mask_Aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
+         CLDMASK%Cld_Mask_Aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
          Cloud_Mask_Aux_Read_Flag = 1
       else
          Cloud_Mask_Aux_Read_Flag = 0

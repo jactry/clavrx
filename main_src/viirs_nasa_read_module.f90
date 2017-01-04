@@ -83,7 +83,6 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       , Ancil_Data_Dir &
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
-      , Cld_Mask_Aux &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
       , Scan_Time &

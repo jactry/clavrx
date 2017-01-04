@@ -468,7 +468,6 @@ module AWG_CLOUD_HEIGHT
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
-
   
   !---------------------------------------------------------------------------
   !-- setup microphysical models

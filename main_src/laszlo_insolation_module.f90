@@ -134,7 +134,7 @@ contains
             end if
             
      
-            if ((Cld_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY) .or. (Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY)) then
+            if ((CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY) .or. (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY)) then
                Cdfrac = 1.0
                Cldref = ch(1)%Ref_Toa(Elem_Idx,Line_Idx)/100.0
                Clrref = Missing_Value_Real4

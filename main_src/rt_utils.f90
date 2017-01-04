@@ -152,6 +152,7 @@ module RT_UTILITIES
 
     use CX_PFAAST_MOD, only: &
        COMPUTE_TRANSMISSION_PFAAST
+
    implicit none
    
    private:: EMISSIVITY, &
@@ -736,11 +737,11 @@ contains
                 
                      Chan_Idx_For_Pfaast = Chan_Idx
                      if (Chan_Idx .eq. 45) Chan_Idx_For_Pfaast = 33
-                     Sc_Name_Rtm = SENSOR_NAME_FOR_RTM(sensor%wmo_id,sensor%sensor_name, Chan_Idx)
+                     Sc_Name_Rtm = SENSOR_NAME_FOR_RTM(Sensor%WMO_id,Sensor%Sensor_Name, Chan_Idx)
                     
 !print *, 'Calling PFAAST ', Chan_Idx, Chan_Idx_For_Pfaast, Sc_Name_Rtm
  
-                     CALL COMPUTE_TRANSMISSION_PFAAST( &
+                     call COMPUTE_TRANSMISSION_PFAAST( &
                            trim(Ancil_Data_Dir) &
                         ,  T_Prof_rtm &
                         ,  Wvmr_Prof_Rtm &

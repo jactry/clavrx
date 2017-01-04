@@ -3935,7 +3935,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "BTD_11_12_NWC", &
                                "BTD_11_12_NWC", &
                                "11-12um BTD @ NWC", &
-                                DFNT_INT16, sym%NO_SCALING, &
+                                DFNT_FLOAT32, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -3947,7 +3947,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "EMISS_39_NWC", &
                                "EMISS_39_NWC", &
                                "3.9um Emissivity @ NWC", &
-                                DFNT_INT16, sym%NO_SCALING, &
+                                DFNT_FLOAT32, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -3959,7 +3959,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "EMISS_39_Clr_BCM", &
                                "EMISS_39_Clr_BCM", &
                                "3.9um clr sky Emissivity", &
-                                DFNT_INT16, sym%NO_SCALING, &
+                                DFNT_FLOAT32, sym%NO_SCALING, &
                                 -1000., 1000., "1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif

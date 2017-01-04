@@ -3243,17 +3243,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- Ref_Ch1_Clear - nonatmos corr, fixed ocean and snow - WCS3
-     if (Sds_Num_Level2_sfc_Ch1_Clr_fill_flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_sfc_Ch1_Clr_fill),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                               "refl_0_65um_non_corr_clear_sky", &
-                               "surface_reflectance_assuming_clear_sky_0_65_micron_nominal", &
-                               "surface reflectance modeled assuming clear skies "// &
-                               "at the nominal wavelength of 0.65 microns with fixed ocean and snow", &
-                                DFNT_INT16, sym%LINEAR_SCALING, &
-                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
-       Istatus_Sum = Istatus_Sum + Istatus
-     endif
+
 
 
      !--- Bt_Ch20_Clear
@@ -3923,6 +3913,58 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                 Min_Ref_Ch1_std, Max_Ref_Ch1_std, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
+
+
+!--- Ref_Ch1_Clear - nonatmos corr, fixed ocean and snow - WCS3
+     if (Sds_Num_Level2_sfc_Ch1_Clr_fill_flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_sfc_Ch1_Clr_fill),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_non_corr_clear_sky", &
+                               "surface_reflectance_assuming_clear_sky_0_65_micron_nominal", &
+                               "surface reflectance modeled assuming clear skies "// &
+                               "at the nominal wavelength of 0.65 microns with fixed ocean and snow", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+!--- Sds_Num_Level2_BTD_11_12_NWC - WCS3
+     if (Sds_Num_Level2_BTD_11_12_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_BTD_11_12_NWC),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "BTD_11_12_NWC", &
+                               "BTD_11_12_NWC", &
+                               "11-12um BTD @ NWC", &
+                                DFNT_INT16, sym%NO_SCALING, &
+                                -1000., 1000., "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+!--- Sds_Num_Level2_EMISS_39_NWC  - WCS3
+     if (Sds_Num_Level2_EMISS_39_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_NWC),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "EMISS_39_NWC", &
+                               "EMISS_39_NWC", &
+                               "3.9um Emissivity @ NWC", &
+                                DFNT_INT16, sym%NO_SCALING, &
+                                -1000., 1000., "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+!--- Sds_Num_Level2_EMISS_39_Clr_BCM  - WCS3
+     if (Sds_Num_Level2_EMISS_39_Clr_BCM_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_Clr_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "EMISS_39_Clr_BCM", &
+                               "EMISS_39_Clr_BCM", &
+                               "3.9um clr sky Emissivity", &
+                                DFNT_INT16, sym%NO_SCALING, &
+                                -1000., 1000., "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
 
 
 
@@ -6208,6 +6250,41 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Std_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif    
+
+
+    !--- Ref_Ch1 clear Standard Deviation
+    if (Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clr_Std_3x3_BCM,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Std_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif    
+
+!--- Sds_Num_Level2_BTD_11_12_NWC - WCS3
+     if (Sds_Num_Level2_BTD_11_12_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+       Two_Byte_Temp = BTD_11_12um_NWC_BCM
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_BTD_11_12_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+!--- Sds_Num_Level2_EMISS_39_NWC  - WCS3
+     if (Sds_Num_Level2_EMISS_39_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       Two_Byte_Temp = Emiss_39_NWC_BCM
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+!--- Sds_Num_Level2_EMISS_39_Clr_BCM  - WCS3
+     if (Sds_Num_Level2_EMISS_39_Clr_BCM_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       Two_Byte_Temp = Emiss_39_clr_BCM
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_EMISS_39_Clr_BCM), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+
 
 
     !--- check for and report errors

@@ -10,7 +10,6 @@ module AHI_CLAVRX_BRIDGE
       , Ancil_Data_Dir & 
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
-      , Cld_Mask_Aux &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
       , Scan_Time &
@@ -151,8 +150,6 @@ contains
 
       nav % ascend = 0 
       Cloud_Mask_Aux_Read_Flag = 0 
-      
-     
       
       ! - update time
       call AHI_DATA % TIME_START_OBJ % GET_DATE ( msec_of_day = Image%Start_Time  )

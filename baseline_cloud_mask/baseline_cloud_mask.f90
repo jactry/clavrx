@@ -1135,7 +1135,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          Is_Valid_Pixel = sym%YES
 
          !--- check for a bad pixel (added by Denis B.)
-         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+         if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
             Is_Valid_Pixel = sym%NO
          endif
 

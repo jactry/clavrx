@@ -500,8 +500,8 @@ contains
 !ccm      dcomp_input % cloud_type % d  = cld_type
                 
          ! - Flags
-      dcomp_input % is_land % d = cx_rebin(sfc % land_mask, dim_1, dim_2) == 1 
-      dcomp_input % is_valid % d =cx_rebin( bad_pixel_mask, dim_1, dim_2) /= 1
+      dcomp_input % is_land % d = cx_rebin(sfc % land_mask, dim_1, dim_2)  
+      dcomp_input % is_valid % d =.NOT. cx_rebin( bad_pixel_mask, dim_1, dim_2)
      
        
       dcomp_input % press_sfc % d = cx_rebin( dcomp_rtm % sfc_nwp, dim_1, dim_2)

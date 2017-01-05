@@ -1193,7 +1193,7 @@ contains
 
       !--- check based on available channels
       if (Dcomp_Mode == 1 .and. &
-         (.NOT. Sensor%Chan_On_Flag_Default(1)  .or. .NOT. Sensor%Chan_On_Flag_Default(6))) then
+         (.NOT. Sensor%Chan_On_Flag_Default(1)  .or. .NOT. Sensor%Chan_On_Flag_Default(6)) then
          print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
       endif
       

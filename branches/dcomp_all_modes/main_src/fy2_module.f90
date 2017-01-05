@@ -179,12 +179,12 @@ end subroutine READ_FY_INSTR_CONSTANTS
        write(ichan_goes_string,fmt="(I1.1)") ichan_goes
        if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
 
-       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(ichan_modis) ) then
 
           channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
           
-          if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
           else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -192,7 +192,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
 
           channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
                     
-          if (l1b_gzip == sym%YES) then
+          if (l1b_gzip ) then
               System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
                                 " > "//trim(channel_x_filename_full)
                                 
@@ -202,7 +202,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
               Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2 ) then
               System_String = "bunzip2 -c "//trim(channel_x_filename_full_uncompressed)//".bz2"// &
                                 " > "//trim(channel_x_filename_full)
               call system(System_String)
@@ -218,7 +218,7 @@ end subroutine READ_FY_INSTR_CONSTANTS
     
     ! On first segment, reflectance, BT and rad tables from McIDAS Header
     fy_file_id = get_lun()   
-    if(l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) THEN
+    if(l1b_gzip  .OR. l1b_bzip2 ) THEN
       call MREAD_OPEN(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), fy_file_id)
     else 
       call MREAD_OPEN(trim(Image%Level1b_Path)//trim(channel_1_filename)//CHAR(0), fy_file_id)
@@ -230,9 +230,9 @@ end subroutine READ_FY_INSTR_CONSTANTS
    endif
   
         
-    IF(Sensor%Chan_On_Flag_Default(1) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(1) ) THEN
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_1_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_1_filename)
@@ -257,12 +257,12 @@ end subroutine READ_FY_INSTR_CONSTANTS
     endif
     
         
-    IF(Sensor%Chan_On_Flag_Default(20) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(20) ) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_5_" // &
                             channel_1_filename(ipos+3:ilen)
        
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -287,12 +287,12 @@ end subroutine READ_FY_INSTR_CONSTANTS
 
 
 
-    if (Sensor%Chan_On_Flag_Default(27) == sym%YES) THEN
+    if (Sensor%Chan_On_Flag_Default(27) ) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_4_" // &
                             channel_1_filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -312,12 +312,12 @@ end subroutine READ_FY_INSTR_CONSTANTS
            
     ENDif    
     
-    IF(Sensor%Chan_On_Flag_Default(31) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(31) ) THEN
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_2_" // &
                             channel_1_filename(ipos+3:ilen)
        
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -339,13 +339,13 @@ end subroutine READ_FY_INSTR_CONSTANTS
     
 
 
-    IF(Sensor%Chan_On_Flag_Default(32) == sym%YES) THEN
+    IF(Sensor%Chan_On_Flag_Default(32) ) THEN
            
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_3_" // &
                             channel_1_filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)

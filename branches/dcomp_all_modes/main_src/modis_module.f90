@@ -1061,7 +1061,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
        !--- read channel data
        do Chan_Idx = 1,36
 
-         if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default (Chan_Idx)) cycle
 
          if (Chan_Idx < 20 .or. Chan_Idx == 26) then
             call READ_MODIS_LEVEL1B(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
@@ -1408,14 +1408,14 @@ subroutine QC_MODIS(jmin,nj)
   integer, intent(in):: jmin,nj
   integer:: Line_Idx
 
-  Bad_Pixel_Mask = sym%NO
+  Bad_Pixel_Mask = .FALSE.
 
   line_loop: do Line_Idx= jmin, nj- jmin + 1
      if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
-        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
+        Bad_Pixel_Mask(:,Line_Idx) = .TRUE.
      endif
      if (maxval(Nav%Lat_1b(:,Line_Idx)) < -100.0) then
-        Bad_Pixel_Mask(:,Line_Idx) = sym%YES
+        Bad_Pixel_Mask(:,Line_Idx) = .TRUE.
      endif
   enddo line_loop
 

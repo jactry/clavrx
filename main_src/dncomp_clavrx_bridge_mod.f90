@@ -152,6 +152,16 @@ contains
 
       end interface
       
+		  interface
+         subroutine nlcomp_array_loop_sub ( a, b, debug_mode_user )
+           import dncomp_in_type
+           import dncomp_out_type
+           type ( dncomp_in_type), intent(in) :: a
+           type ( dncomp_out_type), intent(in) :: b
+           integer, intent(in), optional :: debug_mode_user
+         end subroutine              
+
+      end interface
       
       ! ----- executable  --------------------------------------------------- !
       run_nlcomp = .false.
@@ -321,7 +331,7 @@ contains
          ! === THE MAIN CALL of DCOMP ===  
       
          if (run_nlcomp) then
-            call nlcomp_array_loop_sub (dcomp_input,dncomp_output )
+            call nlcomp_array_loop_sub (dcomp_input,dncomp_output,debug_mode_user =debug_mode )
          else  
             debug_mode = 0
             call dcomp_input % check_input (debug_mode)
@@ -401,7 +411,7 @@ contains
       implicit none
  
       !--- input
-		character(len=*) , intent(in) :: infile
+      character(len=*) , intent(in) :: infile
       character(len=*) , intent(in) :: path
       ! - output 
       logical , intent(out) :: algorithm_started
@@ -426,6 +436,7 @@ contains
 
       end interface
       
+    
 
       
       

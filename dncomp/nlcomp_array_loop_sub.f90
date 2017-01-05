@@ -104,51 +104,42 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    
    ! - executable
    
-   
    debug_mode = 1
-   if ( present ( debug_mode_user)) debug_mode = debug_mode_user
-   
+ if ( present ( debug_mode_user)) debug_mode = debug_mode_user
    array_dim = shape ( input % sat % d )
-   dim_1 = array_dim (1) 
+dim_1 = array_dim (1) 
    dim_2 = array_dim (2)
    nr_lines = array_dim(2)
    nr_elem = array_dim(1)
       
    ALBEDO_OCEAN (:) = 0.03
    calib_err ( : ) = 0.03
-  
    allocate ( is_obs ( dim_1 , dim_2 ) &
                   ,  is_cloud ( dim_1 , dim_2 ) )
    allocate ( is_water_phase (  dim_1 , dim_2 ) )	
    allocate ( air_mass_array  ( dim_1 , dim_2 ) )
    allocate ( has_city_lights  ( dim_1 , dim_2 ) )
-   
     
    ! - flag masks
    air_mass_array = 1.0 / cos (input % sat % d * pi / 180. ) &
                 & + 1.0 / cos ( input % zen_lunar % d * pi / 180.)
    
-  
    is_obs = input % is_valid % d   &
                        & .and. input % sat % d <= SAT_ZEN_MAX &
                        & .and. input % sol % d > SOL_ZEN_MIN &
                        & .and. input % zen_lunar % d < 80 &
                        & .and. input % refl (44) % d  >= 0. &
                        & .and. air_mass_array >= 2.
-	
    has_city_lights = input % rad (44) % d > 1.E-06
-   
     
    is_cloud =  is_obs &
                         & .and. ( input % cloud_mask % d == EM_cloud_mask % CLOUDY &
                         & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) &
                         & .and. input % cloud_temp % d > 10 
-    
    is_water_phase = input % cloud_type % d == EM_cloud_type % FOG &
                         &  .or. input % cloud_type % d == EM_cloud_type % WATER &
                         &  .or. input % cloud_type % d == EM_cloud_type % SUPERCOOLED &
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
-  
   !-allocation
    allocate ( output % cod % d         ( dim_1 , dim_2))
    allocate ( output % cps % d         ( dim_1 , dim_2))
@@ -191,7 +182,6 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
-         
          
          if ( .not. is_cloud (elem_idx,line_idx)  ) cycle elem_loop
          if ( input % refl (CHN_VIS)  % d (elem_idx, line_idx) < 0 ) cycle elem_loop 

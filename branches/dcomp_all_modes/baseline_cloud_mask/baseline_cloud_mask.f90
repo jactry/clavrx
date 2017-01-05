@@ -4399,8 +4399,8 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
                       Array_Width,Array_Hght) RESULT(Pearson_Corr_Coeff)
    REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_One
    REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_Two
-   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_One
-   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_Two
+   logical, INTENT(IN), DIMENSION(:,:):: Bad_Pixel_One
+   logical, INTENT(IN), DIMENSION(:,:):: Bad_Pixel_Two
    INTEGER(KIND=INT4), INTENT(IN):: Array_Width
    INTEGER(KIND=INT4), INTENT(IN):: Array_Hght
    REAL(KIND=REAL4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_1
@@ -4416,7 +4416,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
    REAL(KIND=REAL8):: Sum_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
-   IF (sum(Bad_Pixel_One) > 0 .OR. sum(Bad_Pixel_Two) > 0) THEN
+   IF (count(Bad_Pixel_One) > 0 .OR. count(Bad_Pixel_Two) > 0) THEN
       Pearson_Corr_Coeff = Missing_Value_Real4
       RETURN
    ENDIF

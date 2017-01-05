@@ -145,7 +145,7 @@ module dcomp_rtm_module
        line_loop: do line_idx = 1 , dim_2   
          element_loop: do elem_idx= 1 ,dim_1
            
-            if ( bad_pixel_mask(  elem_idx , line_idx ) == 1 ) cycle
+            if ( bad_pixel_mask(  elem_idx , line_idx ) ) cycle
             
             ! - alias local variables	
             cld_height_loc = acha % zc (elem_idx,line_idx)

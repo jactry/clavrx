@@ -87,7 +87,7 @@ module CLOUD_HEIGHT_ROUTINES
 ! Compute the ACHA values without calling ACHA (mode = 0)
 !----------------------------------------------------------------------
 subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Prob)
-  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  logical, dimension(:,:), intent(in):: Bad_Pixel_Mask
   real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
   real(kind=real4), dimension(:,:), intent(out):: Conv_Cld_Prob
 
@@ -130,7 +130,7 @@ end subroutine CONVECTIVE_CLOUD_PROBABILITY
 ! Supercooled Cloud Probability
 !--------------------------------------------------------------------------------------------------
 subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Temperature,Supercooled_Cld_Prob)
-  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  logical, dimension(:,:), intent(in):: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), intent(in):: Cloud_Type
   real(kind=real4), dimension(:,:), intent(in):: Cloud_Temperature
   real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob

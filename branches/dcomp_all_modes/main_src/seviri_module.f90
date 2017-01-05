@@ -249,20 +249,20 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
           write(Chan_Idx_MSG_String,fmt="(I2.2)") Chan_Idx_MSG
        endif
 
-       if (Sensor%Chan_On_Flag_Default(Chan_Idx(Chan_Idx_Msg)) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Chan_Idx(Chan_Idx_Msg)) ) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) //  &
                                "_"//trim(Chan_Idx_MSG_String)//"_" // &
                                Channel_1_Filename(ipos+3:ilen)
 
-          if (L1b_gzip == sym%YES .or. L1b_bzip2 == sym%YES) then
+          if (L1b_gzip  .or. L1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
                Channel_X_Filename_Full = trim(Image%LeveL1b_Path)//trim(Channel_X_Filename)
           endif
 
           Channel_X_Filename_Full_uncompressed = trim(Image%LeveL1b_Path)//trim(Channel_X_Filename)
-          if (L1b_gzip == sym%YES) then
+          if (L1b_gzip ) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -271,7 +271,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
               Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
           endif
-          if (L1b_bzip2 == sym%YES) then
+          if (L1b_bzip2 ) then
               System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -287,7 +287,7 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
     ! On first segment, get slope/offset information from McIDAS Header
     Severi_File_Id = get_lun()   
 
-    if (L1b_gzip == sym%YES .OR. L1b_bzip2 == sym%YES) then
+    if (L1b_gzip  .OR. L1b_bzip2 ) then
       call MREAD_OPEN(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), Severi_File_Id)
     else
       call MREAD_OPEN(trim(Image%LeveL1b_Path)//trim(Channel_1_Filename)//CHAR(0), Severi_File_Id)
@@ -308,12 +308,12 @@ subroutine READ_SEVIRI(Segment_Number,Channel_1_Filename, &
           write(Chan_Idx_MSG_String,fmt="(I2.2)") Chan_Idx_MSG
        endif
 
-       if (Sensor%Chan_On_Flag_Default(Chan_Idx(Chan_Idx_MSG)) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Chan_Idx(Chan_Idx_MSG))) then
 
          Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_MSG_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-         if (L1b_gzip == sym%YES .or. L1b_bzip2 == sym%YES) then
+         if (L1b_gzip  .or. L1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
          else
                Channel_X_Filename_Full = trim(Image%LeveL1b_Path)//trim(Channel_X_Filename)

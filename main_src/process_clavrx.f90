@@ -946,7 +946,7 @@
          ! Compute Lunar Reflectance
          !-------------------------------------------------------------------
          if ((trim(Sensor%Sensor_Name) == 'VIIRS' .or. trim(Sensor%Sensor_Name) == 'VIIRS-NASA') &
-             .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+             .and. Sensor%Chan_On_Flag_Default(44)) then
 
            ! - check the angles if this is a good lunar scene
            ! - lun and solar zenith angle
@@ -1074,7 +1074,7 @@
             call NORMALIZE_REFLECTANCES(Sun_Earth_Distance)
    
             !--- compute the channel 20 pseudo reflectance
-            if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(20)  .and.  Sensor%Chan_On_Flag_Default(31) ) then
               call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa,ch(31)%Bt_Toa, &
                                            Sun_Earth_Distance,ch(20)%Ref_Toa,Ems_Ch20)
             endif
@@ -1096,7 +1096,7 @@
             Sfc%Desert_Mask =  DESERT_MASK_FOR_CLOUD_DETECTION(ch(20)%Sfc_Emiss, Nav%Lat, Sfc%Snow, Sfc%Sfc_Type)
 
             !--- compute city mask cloud detection
-            if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(44) ) then
              Sfc%City_Mask =  CITY_MASK_FOR_CLOUD_DETECTION(ch(44)%Rad_Toa, Sfc%Sfc_Type)
             endif
 
@@ -1134,7 +1134,7 @@
                call ATMOS_CORR(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
                !--- compute the channel 20 pseudo reflectance for clear-skies
-               if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and.  Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(20)   .and.  Sensor%Chan_On_Flag_Default(31)) then
                   call CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Geo%CosSolzen,ch(20)%Rad_Toa_Clear,ch(31)%Bt_Toa_Clear,Sun_Earth_Distance, &
                                                ch(20)%Ref_Toa_Clear,Ems_Ch20_Clear_Rtm)
  
@@ -1159,7 +1159,7 @@
             !--- call spatial correlation routines
             call COMPUTE_SPATIAL_CORRELATION_ARRAYS()
 
-            if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(20) ) then
 
                !--- apply median filter to Bt_Ch20
                call COMPUTE_MEDIAN_SEGMENT(ch(20)%Bt_Toa,Bad_Pixel_Mask, One, &
@@ -1178,7 +1178,7 @@
 
             !--- populate local radiative center arrays
             if (LRC_Flag == sym%YES) then
-               if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(31) ) then
 
                   call LOCAL_LINEAR_RADIATIVE_CENTER(sym%YES,sym%NO, &
                                    LRC_Meander_Flag, &
@@ -1208,15 +1208,15 @@
             ! compute glint masks for use in cloud detection
             !------------------------------------------------------------------------------
 
-            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(31) ) then
 
              !--- solar glint mask
-             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+             if (Sensor%Chan_On_Flag_Default(1) ) then
                call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
              endif
 
              !--- lunar glint mask
-             if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+             if (Sensor%Chan_On_Flag_Default(44) ) then
                call COMPUTE_GLINT(Geo%Glintzen_Lunar,ch(44)%Ref_Lunar_Toa,  &
                                   Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
              endif
@@ -1387,7 +1387,7 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                
                if ((trim(Sensor%Sensor_Name) == 'VIIRS' .or. trim(Sensor%Sensor_Name) == 'VIIRS-NASA') &
-                       .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
+                       .and. Sensor%Chan_On_Flag_Default(44)  .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
                      call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , nlcomp_mode = .true. &
                         , algorithm_started = dncomp_run)
@@ -1405,7 +1405,7 @@
                   
                   call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
                   
-                  if ( dcomp_mode .GE. 8 .and. trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(39) == sym%YES) then
+                  if ( dcomp_mode .GE. 8 .and. trim(Sensor%Sensor_Name) == 'VIIRS' .and. Sensor%Chan_On_Flag_Default(39) ) then
 							
                      call AWG_CLOUD_DNCOMP_ALGORITHM_IBAND ( infile = trim(File_1b_Temp), path= trim(dir_level2),algorithm_started = dncomp_run )                        
                     
@@ -1713,7 +1713,7 @@ contains
          write(Day_String,fmt="(i3.3)") iperiod16
 
          !--- Open Modis white sky 0.66 um albedo
-         if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(1) ) then
             Modis_White_Sky_0_66_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.659_x4.hdf"
             Modis_Alb_0_66_Str%sds_Name = MODIS_ALB_0_66_SDS_NAME
@@ -1723,7 +1723,7 @@ contains
          end if
 
          !--- Open Modis white sky 0.86 um albedo
-         if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(2) ) then
             Modis_White_Sky_0_86_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".0.858_x4.hdf"
             Modis_Alb_0_86_Str%sds_Name = MODIS_ALB_0_86_SDS_NAME
@@ -1733,7 +1733,7 @@ contains
          end if
 
          !--- Open Modis white sky 1.24 um albedo
-         if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(5) ) then
             Modis_White_Sky_1_24_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.24_x4.hdf"
             Modis_Alb_1_24_Str%sds_Name = MODIS_ALB_1_24_SDS_NAME
@@ -1743,7 +1743,7 @@ contains
          end if
 
          !--- Open Modis white sky 1.66 um albedo
-         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(6)) then
             Modis_White_Sky_1_64_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".1.64_x4.hdf"
             Modis_Alb_1_64_Str%sds_Name = MODIS_ALB_1_64_SDS_NAME
@@ -1753,7 +1753,7 @@ contains
          end if                                    
 
          !--- Open Modis white sky 2.13 um albedo
-         if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(7) ) then
             Modis_White_Sky_2_13_Name = "AlbMap.WS.c004.v2.0.00-04."// &
                                  Day_String//".2.13_x4.hdf"
          Modis_Alb_2_13_Str%sds_Name = MODIS_ALB_2_13_SDS_NAME
@@ -1896,7 +1896,7 @@ contains
                if (ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE .and. &
                    ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE) cycle
 
-               if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+               if (Sensor%Chan_On_Flag_Default(Chan_Idx)) then
                  call READ_SEEBOR_EMISS(Emiss_File_Id, Emiss_Chan_Idx(Chan_Idx), Nav%Lat, Nav%Lon, Space_Mask, Ch(Chan_Idx)%Sfc_Emiss)
                endif
 
@@ -1992,7 +1992,7 @@ contains
         !--- interpolate white sky albedoes to each pixel in segment
         if (Modis_Clr_Alb_Flag == sym%YES) then
 
-           if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(1) ) then
                 if (.not. allocated(ch(1)%Sfc_Ref_White_Sky)) then
                      allocate(ch(1)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(1)%Sfc_Ref_White_Sky = Missing_Value_Real4
@@ -2000,7 +2000,7 @@ contains
                 call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_66_Id, Modis_Alb_0_66_Str, &
                                         ch(1)%Sfc_Ref_White_Sky)
            endif
-           if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(2) ) then
                   if (.not. allocated(ch(2)%Sfc_Ref_White_Sky)) then
                      allocate(ch(2)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(2)%Sfc_Ref_White_Sky = Missing_Value_Real4
@@ -2008,7 +2008,7 @@ contains
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_0_86_Id, Modis_Alb_0_86_Str, &
                                           ch(2)%Sfc_Ref_White_Sky)
            endif
-           if (Sensor%Chan_On_Flag_Default(5) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(5) ) then
                   if (.not. allocated(ch(5)%Sfc_Ref_White_Sky)) then
                      allocate(ch(5)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(5)%Sfc_Ref_White_Sky = Missing_Value_Real4
@@ -2016,7 +2016,7 @@ contains
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_24_Id, Modis_Alb_1_24_Str, &
                                           ch(5)%Sfc_Ref_White_Sky)
            endif
-           if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(6) ) then
                   if (.not. allocated(ch(6)%Sfc_Ref_White_Sky)) then
                      allocate(ch(6)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(6)%Sfc_Ref_White_Sky = Missing_Value_Real4
@@ -2024,7 +2024,7 @@ contains
                   call READ_MODIS_WHITE_SKY_ALBEDO(Modis_Alb_1_64_Id, Modis_Alb_1_64_Str, &
                                           ch(6)%Sfc_Ref_White_Sky)
            endif
-           if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
+           if (Sensor%Chan_On_Flag_Default(7) ) then
                   if (.not. allocated(ch(7)%Sfc_Ref_White_Sky)) then
                      allocate(ch(7)%Sfc_Ref_White_Sky(Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment))
                      ch(7)%Sfc_Ref_White_Sky = Missing_Value_Real4

@@ -192,7 +192,7 @@ contains
                Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_Mtsat_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
           
-               if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+               if (l1b_gzip  .or. l1b_bzip2 ) then
                   Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
                else
                   Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -200,7 +200,7 @@ contains
 
                Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
                
-               if (l1b_gzip == sym%YES) then
+               if (l1b_gzip ) then
                   System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
                                 
@@ -211,7 +211,7 @@ contains
 
                end if
                
-               if (l1b_bzip2 == sym%YES) then
+               if (l1b_bzip2) then
                   System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
                   call system(System_String)
@@ -227,7 +227,7 @@ contains
          ! On first segment, reflectance, BT and rad tables
          ! On first segment, get slope/offset information from McIDAS Header
          mtsat_file_id = get_lun()   
-         if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+         if (l1b_gzip .OR. l1b_bzip2 ) then
             call mread_open(trim(Temporary_Data_Dir)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
          else
             call mread_open(trim(Image%Level1b_Path)//trim(Channel_1_Filename)//CHAR(0), mtsat_file_id)
@@ -241,9 +241,9 @@ contains
    
    
       !---   read channel 1 (MTSAT channel 1)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
@@ -266,12 +266,12 @@ contains
    endif
    
    !---   read channel 20 (MTSAT channel 5)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -293,12 +293,12 @@ contains
                     
    
    !---   read channel 27 (MTSAT channel 4)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -321,12 +321,12 @@ contains
 
    
    !---   read channel 31 (MTSAT channel 2)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
        
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -348,12 +348,12 @@ contains
    
    
    !---   read channel 32 (MTSAT channel 3)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)

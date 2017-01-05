@@ -737,11 +737,11 @@
                                                  trim(OiSst_Data_Dir) )
 
       if (trim(OiSst_File_Name) == "no_file") then
-          Use_Sst_Anal = sym%NO
+          Use_Sst_Anal = .FALSE.
           call mesg ("WARNING: Could not find daily OISST file", level = verb_lev % WARNING )
       else
           call READ_OISST_ANALYSIS_MAP(OISST_File_Name)
-          Use_Sst_Anal = sym%YES
+          Use_Sst_Anal = .TRUE.
       end if
       
        !------- store previous day and year to prevent reading of same data for next orbit
@@ -848,7 +848,7 @@
             call POPULATE_PLANCK_TABLES_SOUNDER()
          endif
  
-         if (Aer_Flag == sym%YES .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
+         if (Aer_Flag  .and. index(Sensor%Sensor_Name,'AVHRR') > 0) then
             call READ_AER_CH123A_REF_LUTS(Ancil_Data_Dir,Sensor%WMO_Id)
          end if
 
@@ -1227,7 +1227,7 @@
             !*******************************************************************
 
             !---- pixel level aerosol
-            if (index(Sensor%Sensor_Name,'AVHRR') > 0 .and. Aer_Flag == sym%YES) then
+            if (index(Sensor%Sensor_Name,'AVHRR') > 0 .and. Aer_Flag ) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1239,7 +1239,7 @@
             end if
 
             !--- only apply cloud mask and type routines if nwp/rtm information available
-            if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
+            if (Cld_Flag  .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1311,7 +1311,7 @@
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)
             !--------------------------------------------------------------------
-            if (Cld_Flag == sym%YES .and. Nwp_Opt > 0) then
+            if (Cld_Flag  .and. Nwp_Opt > 0) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1447,7 +1447,7 @@
             end if
 
             !--- Non-cloud Detection
-            if (Aer_Flag == sym%YES) then
+            if (Aer_Flag ) then
 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
@@ -1478,7 +1478,7 @@
             call COMPUTE_OLR()
 
             !---  SASRAB
-            if ( Sasrab_Flag == sym%YES) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
+            if ( Sasrab_Flag ) call INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(12) =  Segment_Time_Point_Seconds(12) + &
@@ -1959,7 +1959,7 @@ contains
         call COMPUTE_BINARY_LAND_COAST_MASKS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)   
 
         !--- interpolate sst analyses to each pixel
-        if (Use_Sst_Anal == 1) then
+        if (Use_Sst_Anal) then
                call GET_PIXEL_SST_ANALYSIS(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                call COMPUTE_SNOW_CLASS_OISST(SST_Anal_Cice,Sfc%Snow_OISST)
         end if

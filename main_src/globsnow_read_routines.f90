@@ -232,7 +232,7 @@ private
   real(kind=real4), dimension(:,:), intent(in) :: Latitude
   real(kind=real4), dimension(:,:), intent(in) :: Longitude
   integer(kind=int1), dimension(:,:), intent(in)::Land_Class
-  integer(kind=int1), dimension(:,:), intent(in)::Invalid_Pixel_Mask
+  logical, dimension(:,:), intent(in)::Invalid_Pixel_Mask
   integer(kind=int1), dimension(:,:), intent(out)::Snow_Out
   integer:: ielem
   integer:: iline
@@ -269,7 +269,7 @@ private
     element_loop:    do ielem = 1, nx
 
       !--- skip bad pixels
-      if (Invalid_Pixel_Mask(ielem,iline) == sym%YES) then
+      if (Invalid_Pixel_Mask(ielem,iline) ) then
          cycle
       endif
 

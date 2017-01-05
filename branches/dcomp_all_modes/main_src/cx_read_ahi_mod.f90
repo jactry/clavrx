@@ -355,7 +355,7 @@ contains
       type ( ahi_config_type ) :: config
       integer, intent(in) :: chn
       integer :: ndim
-      integer,pointer::dims(:)=>null()
+      integer,pointer::dims(:)
      
        if (.not. config % filenames_set) call set_filenames(config)
       

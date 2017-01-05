@@ -350,7 +350,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
   do Elem_Idx = Elem_Idx_Start, Elem_Idx_End
     do Line_Idx = Line_Idx_Start,Line_Idx_End
 
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
              Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
              cycle
      endif
@@ -1626,7 +1626,7 @@ end subroutine FIND_NWP_LEVELS
         Sfc%Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%NO
        
         !--- check for valid pixels
-        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)  then
+        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx))  then
           cycle
         endif
 
@@ -2104,12 +2104,12 @@ SUBROUTINE COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
      element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
 
       !--- check for bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
         cycle
       endif
 
       !--- check for space views
-      if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+      if (Space_Mask(Elem_Idx,Line_Idx) == 1 ) then
         cycle
       endif
 

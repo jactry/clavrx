@@ -109,7 +109,7 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
                                           j_loc_of_min)
 
   real(kind=real4), dimension(:,:), intent(in):: z
-  integer(kind=int1), dimension(:,:), intent(in):: bad_mask
+  logical, dimension(:,:), intent(in):: bad_mask
   integer(kind=int1), dimension(:,:), intent(in):: land_mask
   integer, intent(in):: uni_land_mask_flag
   real(kind=real4), dimension(:,:), intent(out):: z_mean
@@ -155,7 +155,7 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
 
 
      !--- initial checks for this pixel
-     if (bad_mask(i,j) == sym%YES .or. z(i,j) == Missing_Value_Real4) then
+     if (bad_mask(i,j)  .or. z(i,j) == Missing_Value_Real4) then
          z_mean(i,j) = Missing_Value_Real4
          z_std(i,j) = Missing_Value_Real4
          z_min(i,j) = Missing_Value_Real4
@@ -179,7 +179,7 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
      sub_line_loop: do jj = j1,j2
       sub_element_loop: do ii = i1,i2
 
-        if (bad_mask(ii,jj) == sym%YES) then
+        if (bad_mask(ii,jj) ) then
           cycle
         endif
 
@@ -1166,7 +1166,7 @@ function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
    real(kind=real4), intent(in), dimension(:,:):: Array_Two
    integer(kind=INT4), intent(in):: Array_Width
    integer(kind=INT4), intent(in):: Array_Hght
-   integer(kind=INT1), intent(in), dimension(:,:):: Invalid_Data_Mask
+   logical, intent(in), dimension(:,:):: Invalid_Data_Mask
 
    real(kind=real8):: Mean_Array_One
    real(kind=real8):: Mean_Array_Two
@@ -1177,7 +1177,7 @@ function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
    real(kind=real4):: Covar_Array_One_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
-   if (sum(Invalid_Data_Mask) > 0) then
+   if (count( Invalid_Data_Mask .EQV. .FALSE. ) > 0) then
       Covar_Array_One_Array_Two = Missing_Value_Real4
       return
    endif

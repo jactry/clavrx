@@ -179,7 +179,7 @@ contains
          if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
              & Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) cycle
          
-         if (Sensor%Chan_On_Flag_Default(ichan)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(ichan)) then
             BB_Rad(ichan,:) = c1*(Planck_Nu(ichan)**3)/ &
                &  (exp((c2*Planck_Nu(ichan))/((T_Planck-Planck_A1(ichan))/Planck_A2(ichan)))-1.0)
          end if
@@ -229,7 +229,7 @@ contains
     !--- check for appropriate channel
     if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
         Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
-    if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then 
+    if ( .NOT. Sensor%Chan_On_Flag_Default(ichan) ) then 
       print *, "unsupported channel number ",ichan," in Fast Planck Rad Computation, stopping"
       stop
     endif
@@ -269,7 +269,7 @@ contains
     if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
         Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
 
-    if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
+    if ( .NOT. Sensor%Chan_On_Flag_Default(ichan) ) then
       print *, "unsupported channel number ",ichan," in Fast Planck Temp Computation, stopping"
       stop
     endif
@@ -341,7 +341,7 @@ contains
       if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
          Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
       
-      if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
+      if ( .NOT. Sensor%Chan_On_Flag_Default(ichan) ) then
          print *, "unsupported channel number ",ichan," in Planck Rad Computation, stopping"
          stop
       end if
@@ -365,7 +365,7 @@ contains
       !--- check for appropriate channel
       if (Ch(ichan)%Obs_Type /= THERMAL_OBS_TYPE .and. &
          Ch(ichan)%Obs_Type /= MIXED_OBS_TYPE) return
-      if (Sensor%Chan_On_Flag_Default(ichan) == sym%NO) then
+      if ( .NOT. Sensor%Chan_On_Flag_Default(ichan) ) then
          print *, "unsupported channel number ",ichan," in Planck Temp Computation, stopping"
          stop
       endif

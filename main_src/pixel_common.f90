@@ -381,10 +381,10 @@ module PIXEL_COMMON
   integer,public, save:: Rtm_File_Flag
   integer,public, save:: Ash_File_Flag
   integer,public, save:: Level2_File_Flag
-  integer,public, save:: Use_Sst_Anal
+  logical,public, save:: Use_Sst_Anal
   logical,public, save:: Use_IR_Cloud_Type_Flag
-  integer,public, save:: L1b_Gzip
-  integer,public, save:: L1b_Bzip2
+  logical,public, save:: L1b_Gzip
+  logical,public, save:: L1b_Bzip2
   
   integer,public, save:: Use_Seebor
   integer,public, save:: Read_Volcano_Mask
@@ -401,11 +401,11 @@ module PIXEL_COMMON
   integer,public, save:: DCOMP_Mode
   integer,public, save:: NLCOMP_Mode
   integer,public, save:: Mask_Mode
-  integer,public, save:: Cld_Flag
+  logical,public, save:: Cld_Flag
   integer,public, save:: Blank_Flag
-  integer,public, save:: Aer_Flag
+  logical,public, save:: Aer_Flag
   integer,public, save:: Ash_Flag
-  integer,public, save:: Sasrab_Flag
+  logical,public, save:: Sasrab_Flag
   integer,public, save:: Nwp_Opt
   integer,public, save:: Modis_Clr_Alb_Flag
 
@@ -485,7 +485,7 @@ module PIXEL_COMMON
   real(kind=real4), public, save:: dLat_hist2d
 
   !------- pixel array declarations
-  integer (kind=int1), dimension(:), allocatable, public:: Bad_Scan_Flag
+  logical, dimension(:), allocatable, public:: Bad_Scan_Flag
   integer (kind=int1), dimension(:), allocatable, public:: Ch3a_On_AVHRR
 
   integer (kind=int4), dimension(:), allocatable, public:: Scan_Number
@@ -624,9 +624,9 @@ module PIXEL_COMMON
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch31
   real (kind=real4), dimension(:,:), allocatable, public:: Btd_Ch20_Ch32
 
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
-  integer(kind=int1), dimension(:,:), allocatable, public:: Space_Mask
+  logical, dimension(:,:), allocatable, public, target:: Solar_Contamination_Mask
+  logical, dimension(:,:), allocatable, public, target:: Bad_Pixel_Mask
+  integer (kind = int1), dimension(:,:), allocatable, public:: Space_Mask
   integer(kind=int4), dimension(:,:), allocatable, public:: Sfc_Level_Rtm_Pixel
   real, public:: Segment_Valid_Fraction
 
@@ -914,7 +914,7 @@ subroutine CREATE_PIXEL_ARRAYS()
 
   !--- loop through each that is on, allocate fields based on obs type 
   do idx = 1,Nchan_Clavrx
-      if (Sensor%Chan_On_Flag_Default(idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(idx) ) then
 
         allocate(Ch(idx)%Unc(dim1,dim2))
 
@@ -982,8 +982,8 @@ subroutine CREATE_PIXEL_ARRAYS()
 !  end allocation of ch structure
 !----------------------------------------------------------------------
 
-   if ((Sensor%Chan_On_Flag_Default(27) == sym%YES) .and.   &
-       (Sensor%Chan_On_Flag_Default(31) == sym%YES)) then
+   if ((Sensor%Chan_On_Flag_Default(27) ) .and.   &
+       (Sensor%Chan_On_Flag_Default(31) )) then
            allocate(Covar_Ch27_Ch31_5x5(dim1,dim2))
    endif
 
@@ -999,7 +999,7 @@ subroutine CREATE_PIXEL_ARRAYS()
    allocate(Gap_Line_Idx(dim1,dim2))
 
    !--- 3x3 uni
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
           allocate (Bt_Ch27_Max_3x3(dim1,dim2))
    endif
 
@@ -1176,7 +1176,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(j_LRC)) deallocate(j_LRC)
 
 !--- pixel rtm parameters
-  if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(27) ) then
     if (allocated(Bt_Ch27_Max_3x3)) deallocate(Bt_Ch27_Max_3x3)
   endif
 
@@ -1202,8 +1202,8 @@ end subroutine DESTROY_PIXEL_ARRAYS
 !-----------------------------------------------------------------------------
 subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
-      Bad_Scan_Flag = sym%NO        !not initialized to missing
-      Bad_Pixel_Mask = sym%NO      !not initialized to missing
+      Bad_Scan_Flag = .FALSE.      !not initialized to missing
+      Bad_Pixel_Mask = .FALSE.     !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
 
       call RESET_SENSOR_ARRAYS()
@@ -1230,7 +1230,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_SFC_PROD_ARRAYS()
       call RESET_CLOUD_PROD_ARRAYS()
 
-      if (Sensor%Chan_On_Flag_Default(27) == sym%YES) THEN
+      if (Sensor%Chan_On_Flag_Default(27) ) THEN
         Bt_Ch27_Max_3x3 = Missing_Value_Real4
       endif
 
@@ -1242,24 +1242,24 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
 
       Zen_Idx_Rtm = Missing_Value_Int1
 
-      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Sensor%Chan_On_Flag_Default(32) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+          (Sensor%Chan_On_Flag_Default(32) )) then
         Beta_11um_12um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Sensor%Chan_On_Flag_Default(27) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+          (Sensor%Chan_On_Flag_Default(27) )) then
         Beta_11um_67um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Sensor%Chan_On_Flag_Default(29) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+          (Sensor%Chan_On_Flag_Default(29) )) then
         Beta_11um_85um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Sensor%Chan_On_Flag_Default(33) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+          (Sensor%Chan_On_Flag_Default(33) )) then
         Beta_11um_133um_Tropo_Rtm = Missing_Value_Real4
       endif
-      if ((Sensor%Chan_On_Flag_Default(31) == sym%YES) .and. &
-          (Sensor%Chan_On_Flag_Default(45) == sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+          (Sensor%Chan_On_Flag_Default(45) )) then
         Beta_11um_133fusum_Tropo_Rtm = Missing_Value_Real4
       endif
 
@@ -1365,7 +1365,7 @@ subroutine CREATE_GEO_ARRAYS(dim1,dim2)
     allocate (Geo%Cossolzen(dim1,dim2))
     allocate (Geo%Scatangle(dim1,dim2))
     allocate (Geo%Airmass(dim1,dim2))
-    if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(44) ) then
            allocate(Geo%Lunzen(dim1,dim2))
            allocate(Geo%Lunaz(dim1,dim2))
            allocate(Geo%LunRelaz(dim1,dim2))
@@ -1570,7 +1570,7 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
 
    integer, intent(in):: dim1, dim2
 
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
            allocate(Ch1_Counts(dim1,dim2))
            allocate(Ref_Ch1_Mean_3x3(dim1,dim2))
            allocate(Ref_Ch1_Max_3x3(dim1,dim2))
@@ -1584,11 +1584,11 @@ subroutine CREATE_REF_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Ref_Ch1_Sfc_White_Sky_Mean_3x3(dim1,dim2))
    endif
 
-   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) ) then
       allocate(Ch2_Counts(dim1,dim2))
    endif
 
-   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) ) then
       allocate(Ch6_Counts(dim1,dim2))
    endif
 
@@ -1621,7 +1621,7 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       if (allocated(Ch(idx)%Opaque_Height)) Ch(idx)%Opaque_Height = Missing_Value_Real4
    enddo
 
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
       Ch1_Counts = Missing_Value_Int2
       Ref_Ch1_Mean_3x3 = Missing_Value_Real4
       Ref_Ch1_Min_3x3 = Missing_Value_Real4
@@ -1635,18 +1635,18 @@ subroutine RESET_REF_CHANNEL_ARRAYS
       Ref_Ch1_Sfc_White_Sky_Mean_3x3 = Missing_Value_Real4
    endif
 
-   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) ) then
       Ch2_Counts = Missing_Value_Int2
    endif
 
-   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) ) then
       Ch6_Counts = Missing_Value_Int2
    endif
 
 end subroutine RESET_REF_CHANNEL_ARRAYS
 subroutine DESTROY_REF_CHANNEL_ARRAYS
 
-  if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(1) ) then
    if (allocated(Ch1_Counts)) deallocate (Ch1_Counts)
    if (allocated(Ref_Ch1_Mean_3x3)) deallocate (Ref_Ch1_Mean_3x3)
    if (allocated(Ref_Ch1_Max_3x3)) deallocate (Ref_Ch1_Max_3x3)
@@ -1660,11 +1660,11 @@ subroutine DESTROY_REF_CHANNEL_ARRAYS
    if (allocated(Ref_Ch1_Sfc_White_Sky_Mean_3x3)) deallocate (Ref_Ch1_Sfc_White_Sky_Mean_3x3)
   endif
 
-   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(2) ) then
       deallocate(Ch2_Counts)
    endif
 
-   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) ) then
       deallocate(Ch6_Counts)
    endif
 
@@ -1675,7 +1675,7 @@ end subroutine DESTROY_REF_CHANNEL_ARRAYS
 subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
 
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
       !allocate(Rad_Ch20_Ems(dim1,dim2))
        allocate(Ems_Ch20(dim1,dim2))
        allocate(Bt_Ch20_Std_3x3(dim1,dim2))
@@ -1689,7 +1689,7 @@ subroutine CREATE_THERM_CHANNEL_ARRAYS(dim1,dim2)
        allocate(Ems_Ch20_Clear_Rtm(dim1,dim2))
    endif
 
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
       allocate(Bt_Ch31_Mean_3x3(dim1,dim2))
       allocate(Bt_Ch31_Max_3x3(dim1,dim2))
       allocate(Bt_Ch31_Min_3x3(dim1,dim2))
@@ -1705,7 +1705,7 @@ end subroutine CREATE_THERM_CHANNEL_ARRAYS
 
 subroutine RESET_THERM_CHANNEL_ARRAYS()
 
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 !      Rad_Ch20_Ems = Missing_Value_Real4
        Ems_Ch20 = Missing_Value_Real4
        Bt_Ch20_Std_3x3 = Missing_Value_Real4
@@ -1719,7 +1719,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
        Ems_Ch20_Clear_Rtm = Missing_Value_Real4
    endif
 
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
       Bt_Ch31_Mean_3x3 = Missing_Value_Real4
       Bt_Ch31_Max_3x3 = Missing_Value_Real4
       Bt_Ch31_Min_3x3 = Missing_Value_Real4
@@ -1734,7 +1734,7 @@ subroutine RESET_THERM_CHANNEL_ARRAYS()
 end subroutine RESET_THERM_CHANNEL_ARRAYS
 subroutine DESTROY_THERM_CHANNEL_ARRAYS()
 
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 !      deallocate(Rad_Ch20_Ems)
        deallocate(Ems_Ch20)
        deallocate(Bt_Ch20_Std_3x3)
@@ -1747,7 +1747,7 @@ subroutine DESTROY_THERM_CHANNEL_ARRAYS()
        deallocate(Trans_Atm_Ch20_Solar_Total_Rtm)
        deallocate(Ems_Ch20_Clear_Rtm)
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
       deallocate(Bt_Ch31_Mean_3x3)
       deallocate(Bt_Ch31_Max_3x3)
       deallocate(Bt_Ch31_Min_3x3)
@@ -1778,42 +1778,42 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
            allocate(Cld_Height_Sounder(dim1,dim2))
            allocate(Cld_Emiss_Sounder(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(39) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(39) ) then
            allocate(Ref_ChI1(2*dim1,2*dim2))
            allocate(Ref_Max_ChI1(dim1,dim2))
            allocate(Ref_Min_ChI1(dim1,dim2))
            allocate(Ref_Uni_ChI1(dim1,dim2))
            allocate(Ref_Mean_ChI1(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(40) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(40) ) then
            allocate(Ref_ChI2(2*dim1,2*dim2))
            allocate(Ref_Max_ChI2(dim1,dim2))
            allocate(Ref_Min_ChI2(dim1,dim2))
            allocate(Ref_Uni_ChI2(dim1,dim2))
            allocate(Ref_Mean_ChI2(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(41) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(41) ) then
            allocate(Ref_ChI3(2*dim1,2*dim2))
            allocate(Ref_Max_ChI3(dim1,dim2))
            allocate(Ref_Min_ChI3(dim1,dim2))
            allocate(Ref_Uni_ChI3(dim1,dim2))
            allocate(Ref_Mean_ChI3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(42) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(42) ) then
            allocate(Bt_ChI4(2*dim1,2*dim2))
            allocate(Bt_Max_ChI4(dim1,dim2))
            allocate(Bt_Min_ChI4(dim1,dim2))
            allocate(Bt_Uni_ChI4(dim1,dim2))
            allocate(Bt_Mean_ChI4(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(43) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(43) ) then
            allocate(Bt_ChI5(2*dim1,2*dim2))
            allocate(Bt_Max_ChI5(dim1,dim2))
            allocate(Bt_Min_ChI5(dim1,dim2))
            allocate(Bt_Uni_ChI5(dim1,dim2))
            allocate(Bt_Mean_ChI5(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(44) ) then
            allocate(Ref_ChDNB_Lunar_Mean_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Max_3x3(dim1,dim2))
            allocate(Ref_ChDNB_Lunar_Min_3x3(dim1,dim2))
@@ -1822,35 +1822,35 @@ subroutine CREATE_EXTRA_CHANNEL_ARRAYS(dim1,dim2)
 end subroutine CREATE_EXTRA_CHANNEL_ARRAYS
 
 subroutine RESET_EXTRA_CHANNEL_ARRAYS()
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Max_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Min_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Uni_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(39) == sym%YES) Ref_Mean_ChI1 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Max_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Min_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Uni_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(40) == sym%YES) Ref_Mean_ChI2 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Max_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Min_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Uni_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(41) == sym%YES) Ref_Mean_ChI3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Max_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Min_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Uni_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(42) == sym%YES) Bt_Mean_ChI4 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Max_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Min_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Uni_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(43) == sym%YES) Bt_Mean_ChI5 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39)) Ref_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39)) Ref_Max_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39)) Ref_Min_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39)) Ref_Uni_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(39)) Ref_Mean_ChI1 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40)) Ref_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40)) Ref_Max_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40)) Ref_Min_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40)) Ref_Uni_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(40)) Ref_Mean_ChI2 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41)) Ref_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41)) Ref_Max_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41)) Ref_Min_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41)) Ref_Uni_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(41)) Ref_Mean_ChI3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42)) Bt_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42)) Bt_Max_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42)) Bt_Min_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42)) Bt_Uni_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(42)) Bt_Mean_ChI4 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43)) Bt_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43)) Bt_Max_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43)) Bt_Min_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43)) Bt_Uni_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(43)) Bt_Mean_ChI5 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44)) Ref_ChDNB_Lunar_Mean_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44)) Ref_ChDNB_Lunar_Max_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44)) Ref_ChDNB_Lunar_Min_3x3 = Missing_Value_Real4
+      if (Sensor%Chan_On_Flag_Default(44)) Ref_ChDNB_Lunar_Std_3x3 = Missing_Value_Real4
       if (index(Sensor%Sensor_Name,'IFF') > 0) then
           Bt_375um_Sounder = Missing_Value_Real4
           Bt_11um_Sounder = Missing_Value_Real4
@@ -1908,68 +1908,76 @@ end subroutine DESTROY_EXTRA_CHANNEL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_BTD_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(31) ) then
       allocate(Btd_Ch20_Ch31(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       allocate(Btd_Ch20_Ch32(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       allocate(Btd_Ch31_Ch32(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Std_3x3(dim1,dim2))
       allocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(27) ) then
       allocate(Btd_Ch31_Ch27_Std_3x3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(29) ) then
       allocate(Btd_Ch31_Ch29_Std_3x3(dim1,dim2))
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(33) ) then
       allocate(Btd_Ch31_Ch33_Std_3x3(dim1,dim2))
    endif
 end subroutine CREATE_BTD_ARRAYS
+
+!
+!
+!
 subroutine RESET_BTD_ARRAYS()
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(31) ) then
       Btd_Ch20_Ch31 = Missing_Value_Real4
    endif
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       Btd_Ch20_Ch32 = Missing_Value_Real4
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       Btd_Ch31_Ch32 = Missing_Value_Real4
       Btd_Ch31_Ch32_Std_3x3 = Missing_Value_Real4
       Btd_Ch31_Ch32_Bt_Ch31_Max_3x3 = Missing_Value_Real4
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(27) ) then
       Btd_Ch31_Ch27_Std_3x3 = Missing_Value_Real4
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(29) ) then
       Btd_Ch31_Ch29_Std_3x3 = Missing_Value_Real4
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(33) ) then
       Btd_Ch31_Ch33_Std_3x3 = Missing_Value_Real4
    endif
 end subroutine RESET_BTD_ARRAYS
+
+!
+!
+!
 subroutine DESTROY_BTD_ARRAYS()
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(31) ) then
       deallocate(Btd_Ch20_Ch31)
    endif
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       deallocate(Btd_Ch20_Ch32)
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(32) ) then
       deallocate(Btd_Ch31_Ch32)
       deallocate(Btd_Ch31_Ch32_Std_3x3)
       deallocate(Btd_Ch31_Ch32_Bt_Ch31_Max_3x3)
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(27) ) then
       deallocate(Btd_Ch31_Ch27_Std_3x3)
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(29) ) then
       deallocate(Btd_Ch31_Ch29_Std_3x3)
    endif
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)  .and. Sensor%Chan_On_Flag_Default(33) ) then
       deallocate(Btd_Ch31_Ch33_Std_3x3)
    endif
 end subroutine DESTROY_BTD_ARRAYS
@@ -2048,7 +2056,7 @@ end subroutine DESTROY_SURFACE_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
 
     allocate(ACHA%Tc(dim1,dim2)) 
     allocate(ACHA%Ec(dim1,dim2)) 
@@ -2208,7 +2216,7 @@ end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_CCL_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
     allocate (CCL%Cld_Layer(dim1,dim2))
     allocate (CCL%Cloud_Fraction(dim1,dim2))
     allocate (CCL%Cloud_Fraction_Uncer(dim1,dim2))
@@ -2238,7 +2246,7 @@ end subroutine DESTROY_CCL_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_ASOS_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
     allocate(ASOS%Code(dim1,dim2))
     allocate(ASOS%ECA(dim1,dim2))
     allocate(ASOS%Zmax(dim1,dim2))
@@ -2263,7 +2271,7 @@ end subroutine DESTROY_ASOS_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
       allocate(Tau_DCOMP(dim1,dim2))
       allocate(Tau_DCOMP_1(dim1,dim2))
       allocate(Tau_DCOMP_2(dim1,dim2))
@@ -2316,7 +2324,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    endif
 end subroutine CREATE_DCOMP_ARRAYS
 subroutine RESET_DCOMP_ARRAYS()
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
       Tau_DCOMP = Missing_Value_Real4
       Tau_DCOMP_1 = Missing_Value_Real4
       Tau_DCOMP_2 = Missing_Value_Real4
@@ -2369,7 +2377,7 @@ subroutine RESET_DCOMP_ARRAYS()
    endif
 end subroutine RESET_DCOMP_ARRAYS
 subroutine DESTROY_DCOMP_ARRAYS()
-   if (Cld_Flag == sym%YES) then
+   if (Cld_Flag ) then
       deallocate(Tau_DCOMP)
       deallocate(Tau_DCOMP_1)
       deallocate(Tau_DCOMP_2)
@@ -2426,7 +2434,7 @@ end subroutine DESTROY_DCOMP_ARRAYS
 !------------------------------------------------------------------------------
 subroutine CREATE_SASRAB_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
-   if (Sasrab_Flag == sym%YES) then
+   if (Sasrab_Flag ) then
       allocate(Insolation_All_Sky(dim1,dim2))
       allocate(Insolation_All_Sky_Diffuse(dim1,dim2))
       allocate(Insolation_Clear_Sky(dim1,dim2))
@@ -2435,7 +2443,7 @@ subroutine CREATE_SASRAB_ARRAYS(dim1,dim2)
    endif
 end subroutine CREATE_SASRAB_ARRAYS
 subroutine RESET_SASRAB_ARRAYS()
-   if (Sasrab_Flag == sym%YES) then
+   if (Sasrab_Flag ) then
       Insolation_All_Sky = Missing_Value_Real4
       Insolation_All_Sky_Diffuse = Missing_Value_Real4
       Insolation_Clear_Sky = Missing_Value_Real4
@@ -2444,7 +2452,7 @@ subroutine RESET_SASRAB_ARRAYS()
    endif
 end subroutine RESET_SASRAB_ARRAYS
 subroutine DESTROY_SASRAB_ARRAYS()
-   if (sasrab_Flag == sym%YES) then
+   if (sasrab_Flag ) then
       deallocate(Insolation_All_Sky)
       deallocate(Insolation_All_Sky_Diffuse)
       deallocate(Insolation_Clear_Sky)
@@ -2477,7 +2485,7 @@ end subroutine DESTROY_OLR_ARRAYS
 subroutine CREATE_AEROSOL_ARRAYS(dim1,dim2)
   integer, intent(in):: dim1, dim2
   allocate(Aot_Qf(dim1,dim2))
-  if (Aer_Flag == sym%YES) then
+  if (Aer_Flag ) then
      allocate(Aot1(dim1,dim2))
      allocate(Aot2(dim1,dim2))
      allocate(Aot3a(dim1,dim2))
@@ -2485,7 +2493,7 @@ subroutine CREATE_AEROSOL_ARRAYS(dim1,dim2)
 end subroutine CREATE_AEROSOL_ARRAYS 
 subroutine RESET_AEROSOL_ARRAYS()
    Aot_Qf = 0
-   if (Aer_Flag == sym%YES) then
+   if (Aer_Flag ) then
     Aot1 = Missing_Value_Real4
     Aot2 = Missing_Value_Real4
     Aot3a = Missing_Value_Real4
@@ -2493,7 +2501,7 @@ subroutine RESET_AEROSOL_ARRAYS()
 end subroutine RESET_AEROSOL_ARRAYS 
 subroutine DESTROY_AEROSOL_ARRAYS()
   deallocate(Aot_Qf)
-  if (Aer_Flag == sym%YES) then
+  if (Aer_Flag ) then
      deallocate(Aot1)
      deallocate(Aot2)
      deallocate(Aot3a)
@@ -2505,7 +2513,7 @@ end subroutine DESTROY_AEROSOL_ARRAYS
 subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   integer, intent(in):: dim1, dim2, dim3
   allocate(Cld_Mask_Qf(dim1,dim2))
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      allocate(Cld_Mask_Aux(dim1,dim2))
      allocate(Cld_Test_Vector_Packed(dim3,dim1,dim2))
      allocate(Cld_Mask(dim1,dim2))
@@ -2524,7 +2532,7 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
   Cld_Mask_Qf = Missing_Value_Int1
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      Cld_Mask = Missing_Value_Int1
      Cld_Mask_Aux = Missing_Value_Int1
      Adj_Pix_Cld_Mask = Missing_Value_Int1
@@ -2542,7 +2550,7 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(Cld_Mask_Qf)
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      deallocate(Cld_Mask_Aux)
      deallocate(Cld_Test_Vector_Packed)
      deallocate(Cld_Mask)
@@ -2563,7 +2571,7 @@ end subroutine DESTROY_CLOUD_MASK_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_CLOUD_TYPE_ARRAYS(dim1,dim2)
   integer, intent(in):: dim1, dim2
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      allocate(Cld_Type_Aux(dim1,dim2))
      allocate(Cld_Phase_Aux(dim1,dim2))
      allocate(Cld_Phase(dim1,dim2))
@@ -2575,7 +2583,7 @@ subroutine CREATE_CLOUD_TYPE_ARRAYS(dim1,dim2)
   endif
 end subroutine CREATE_CLOUD_TYPE_ARRAYS
 subroutine RESET_CLOUD_TYPE_ARRAYS()
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
       Cld_Phase = Missing_Value_Int1
       Cld_Type = Missing_Value_Int1
       Cld_Phase_IR = Missing_Value_Int1
@@ -2587,7 +2595,7 @@ subroutine RESET_CLOUD_TYPE_ARRAYS()
   endif
 end subroutine RESET_CLOUD_TYPE_ARRAYS
 subroutine DESTROY_CLOUD_TYPE_ARRAYS
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      deallocate(Cld_Type_Aux)
      deallocate(Cld_Phase_Aux)
      deallocate(Cld_Phase)
@@ -2689,7 +2697,7 @@ end subroutine DESTROY_SFC_PROD_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
   integer, intent(in):: dim1, dim2
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
     allocate(Pc_Opaque_Cloud(dim1,dim2))
     allocate(Zc_Opaque_Cloud(dim1,dim2))
     allocate(Tc_Opaque_Cloud(dim1,dim2))
@@ -2709,7 +2717,7 @@ subroutine CREATE_CLOUD_PROD_ARRAYS(dim1,dim2)
   endif
 end subroutine CREATE_CLOUD_PROD_ARRAYS
 subroutine RESET_CLOUD_PROD_ARRAYS()
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      Pc_Opaque_Cloud = Missing_Value_Real4
      Zc_Opaque_Cloud = Missing_Value_Real4
      Tc_Opaque_Cloud = Missing_Value_Real4
@@ -2729,7 +2737,7 @@ subroutine RESET_CLOUD_PROD_ARRAYS()
   endif
 end subroutine RESET_CLOUD_PROD_ARRAYS
 subroutine DESTROY_CLOUD_PROD_ARRAYS()
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      deallocate(Pc_Opaque_Cloud)
      deallocate(Zc_Opaque_Cloud)
      deallocate(Tc_Opaque_Cloud)
@@ -2753,7 +2761,7 @@ end subroutine DESTROY_CLOUD_PROD_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_NLCOMP_ARRAYS(dim1,dim2)
   integer, intent(in):: dim1, dim2
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      allocate(Tau_Nlcomp(dim1,dim2))
      allocate(Reff_Nlcomp(dim1,dim2))
      allocate(Nlcomp_Info_Flag(dim1,dim2))
@@ -2763,7 +2771,7 @@ subroutine CREATE_NLCOMP_ARRAYS(dim1,dim2)
   endif
 end subroutine CREATE_NLCOMP_ARRAYS
 subroutine RESET_NLCOMP_ARRAYS()
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
       Tau_Nlcomp = Missing_Value_Real4
       Reff_Nlcomp = Missing_Value_Real4
       Tau_Nlcomp_Cost = Missing_Value_Real4
@@ -2773,7 +2781,7 @@ subroutine RESET_NLCOMP_ARRAYS()
   endif
 end subroutine RESET_NLCOMP_ARRAYS
 subroutine DESTROY_NLCOMP_ARRAYS()
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      deallocate(Tau_Nlcomp)
      deallocate(Reff_Nlcomp)
      deallocate(Nlcomp_Info_Flag)

@@ -107,7 +107,7 @@ contains
       modis_chn_list = [  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, &
                          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, &
                          29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 45 ]
-      is_band_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) == sym%YES
+      is_band_on = Sensor%Chan_On_Flag_Default ( modis_chn_list) 
 
       y_start = ( segment_number - 1 ) * Image%Number_Of_Lines_Per_Segment + 1
       c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment - 1 , Image%Number_Of_Lines )  &
@@ -119,7 +119,7 @@ contains
       iff_conf % doy_int = Image % Start_Doy
       iff_conf % n_chan = num_chan
       iff_conf % chan_list = Modis_Chn_List
-      iff_conf % chan_on = Sensor%Chan_On_Flag_Default ( modis_chn_list ) == sym%YES
+      iff_conf % chan_on = Sensor%Chan_On_Flag_Default ( modis_chn_list ) 
       iff_conf % iff_cloud_mask_on = Cloud_Mask_Aux_Flag /= sym%NO_AUX_CLOUD_MASK
 
       iff_conf % offset = [ 1 , y_start]
@@ -181,7 +181,7 @@ contains
       sounder_flag = .false.
       do i_band = 1 , iff_conf % n_chan
          if ( .not. out % band ( i_band ) % is_read ) then
-            Sensor%Chan_On_Flag_Per_Line (modis_chn_list (i_band) ,1:c_seg_lines) = sym % no
+            Sensor%Chan_On_Flag_Per_Line (modis_chn_list (i_band) ,1:c_seg_lines) = .FALSE.
             cycle
          end if
 

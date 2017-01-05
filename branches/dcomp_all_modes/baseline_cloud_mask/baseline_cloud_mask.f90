@@ -982,7 +982,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
 
          !--- Channel 10 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(27) ) THEN
 
             Is_Chn(9) = sym%YES
 
@@ -1013,7 +1013,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
 
          !--- Channel 14 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(31) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(31)) THEN
 
             Is_Chn(14) = sym%YES
 
@@ -2456,7 +2456,7 @@ SUBROUTINE Compute_NWC( Input_Array, &
                         Loc_Max_Line)
 
   REAL(KIND=REAL4), DIMENSION(:,:), INTENT(IN):: Input_Array
-  INTEGER(KIND=INT1), DIMENSION(:,:), INTENT(IN):: Bad_Mask
+  logical, DIMENSION(:,:), INTENT(IN):: Bad_Mask
   INTEGER(KIND=INT1), DIMENSION(:,:), INTENT(IN):: Land_Mask
   REAL(KIND=REAL4):: Input_Array_NxN_Max
   INTEGER, INTENT(IN):: Uni_Land_Mask_Flag
@@ -2499,7 +2499,7 @@ SUBROUTINE Compute_NWC( Input_Array, &
     Line_Loop_NxN: DO Line_Idx_NxN = Line_Idx_NxN_Top,Line_Idx_NxN_Bottom
       Element_Loop_NxN: DO Elem_Idx_NxN = Elem_Idx_NxN_Right,Elem_Idx_NxN_Left
 
-        IF (Bad_Mask(Elem_Idx_NxN,Line_Idx_NxN) == sym%YES) THEN
+        IF (Bad_Mask(Elem_Idx_NxN,Line_Idx_NxN) ) THEN
           CYCLE
         ENDIF
 

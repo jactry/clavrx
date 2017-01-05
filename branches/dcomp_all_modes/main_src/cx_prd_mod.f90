@@ -67,7 +67,7 @@ module cx_prd_mod
       character ( len = 300) :: rec_arr ( N_CSV )
       
       
-      if ( present( csv_file)) call this.set_csv_file (csv_file)
+      if ( present( csv_file)) call this % set_csv_file (csv_file)
  
       call csv_file_line_count ( this % csv_filename, line_num )
       this % num_products = line_num - 1
@@ -139,7 +139,7 @@ module cx_prd_mod
    subroutine set_csv_file (this,file)
       class (prd_dtype) :: this
       character(len = *) :: file
-      this.csv_filename = file      
+      this%csv_filename = file      
    end subroutine
 
 end module cx_prd_mod

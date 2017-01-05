@@ -78,7 +78,7 @@ module CLOUD_MASK_ADDONS
   !------------------------------------------------------------------------------------------
 
    !--- check for valid data
-   if (Input%Invalid_Data_Mask == Symbol%NO) then
+   if ( .NOT. Input%Invalid_Data_Mask ) then
 
         !----------------------------------------------------------------------------
         ! CLAVR-x SMOKE TEST
@@ -234,12 +234,12 @@ module CLOUD_MASK_ADDONS
      real, intent(in):: Emiss_11_Tropo
      real, intent(in):: Refl_065_Std
      real, intent(in):: T11_Std
-     integer, intent(in):: Chan_On_065
-     integer, intent(in):: Chan_On_138
-     integer, intent(in):: Chan_On_160
-     integer, intent(in):: Chan_On_375
-     integer, intent(in):: Chan_On_11
-     integer, intent(in):: Chan_On_12
+     logical, intent(in):: Chan_On_065
+     logical, intent(in):: Chan_On_138
+     logical, intent(in):: Chan_On_160
+     logical, intent(in):: Chan_On_375
+     logical, intent(in):: Chan_On_11
+     logical, intent(in):: Chan_On_12
      real, intent(in):: Solzen
 
      integer:: IR_Flag

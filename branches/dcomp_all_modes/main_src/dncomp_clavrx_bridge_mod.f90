@@ -193,7 +193,7 @@ contains
       end if
       
       do i = 1 , size ( possible_channels )   
-         if ( sensor % chan_on_flag_default ( possible_channels ( i) ) == 1 ) then
+         if ( sensor % chan_on_flag_default ( possible_channels ( i) )  ) then
             chan_on (possible_channels ( i)  )  = .true.
          end if
       end do 
@@ -306,7 +306,7 @@ contains
                   
          ! - Flags
          dcomp_input % is_land % d = sfc % land_mask == 1 
-         dcomp_input % is_valid % d = bad_pixel_mask /= 1
+         dcomp_input % is_valid % d = .NOT. bad_pixel_mask 
       
            
          dcomp_input % press_sfc % d =  dcomp_rtm % sfc_nwp

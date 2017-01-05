@@ -181,9 +181,9 @@ contains
       Nlcomp_Mode = 1            
       Level2_File_Flag = 1
       Rtm_File_Flag = 0
-      Cld_Flag = 1
+      Cld_Flag = .TRUE.
       Image%Number_Of_Lines_Per_Segment = 240
-      Sasrab_Flag = 0
+      Sasrab_Flag = .FALSE.
       Nwp_Opt = 1
       Rtm_Opt = 1 
       Compress_Flag = 1 
@@ -240,6 +240,8 @@ contains
       character(len=1020):: Temporary_Data_Dir_Root
       integer:: String_Length
       character(len=1):: Last_Char
+      integer :: Cld_Flag_dummy
+      integer :: Sasrab_Flag_dummy
       
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
@@ -297,9 +299,11 @@ contains
       
       read(unit=Default_Lun,fmt=*) Level2_File_Flag
       read(unit=Default_Lun,fmt=*) Rtm_File_Flag
-      read(unit=Default_Lun,fmt=*) Cld_Flag
+      read(unit=Default_Lun,fmt=*) Cld_Flag_dummy
+      Cld_Flag = Cld_Flag_dummy == 1
       read(unit=Default_Lun,fmt=*) Image%Number_Of_Lines_Per_Segment
-      read(unit=Default_Lun,fmt=*) Sasrab_Flag
+      read(unit=Default_Lun,fmt=*) Sasrab_Flag_dummy
+      Sasrab_Flag = Sasrab_Flag_dummy == 1
       Dark_Comp_Data_Dir=trim(Data_Base_Path)//'/dynamic/goes_dark_sky_composites/'
       if ( Sasrab_Flag == 1 )  then
           Read_Dark_Comp=1
@@ -606,9 +610,9 @@ contains
       select case ( nwp_opt)
       case ( 0 )   
          print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
-         Cld_Flag = sym%NO
+         Cld_Flag = .FALSE.
        
-         Sasrab_Flag = sym%NO
+         Sasrab_Flag = .FALSE.
          Rtm_File_Flag = sym%NO
          Cloud_Mask_Bayesian_Flag = sym%NO
          Cloud_Mask_Aux_Flag = sym%NO ! this is to determine if the lut's are being read in

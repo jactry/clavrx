@@ -58,9 +58,9 @@ contains
       end do   
    
    
-   end function cx_rebin_lo
+   end function cx_rebin_i1
    
-   function cx_rebin_i1 ( array, d1, d2 )
+   function cx_rebin_lo ( array, d1, d2 )
       logical, intent(in) :: array(:,:)
       integer, intent(in) :: d1, d2
       logical, allocatable :: cx_rebin_lo(:,:)

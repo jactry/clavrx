@@ -425,7 +425,7 @@ module AWG_CLOUD_HEIGHT
   !--- local POINTERs to global arrays or data structures
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
   integer(kind=int4), allocatable, dimension(:,:):: Line_Idx_LRC
-  integer(kind=int1), allocatable, dimension(:,:):: Skip_LRC_Mask
+  logical, allocatable, dimension(:,:):: Skip_LRC_Mask
   real (kind=real4):: Bt_11um_Lrc
   real (kind=real4):: Bt_11um_Std
   real (kind=real4):: Btd_11um_67um_Std
@@ -603,7 +603,7 @@ module AWG_CLOUD_HEIGHT
     else
 
       where(Input%Cloud_Mask == symbol%CLEAR .or. Input%Cloud_Mask == symbol%PROB_CLEAR)
-          Skip_LRC_Mask = symbol%YES
+          Skip_LRC_Mask = .TRUE.
       endwhere
 
       call LOCAL_LINEAR_RADIATIVE_CENTER(symbol%YES,symbol%NO,&
@@ -3473,7 +3473,7 @@ end subroutine  DETERMINE_ACHA_MODE_BASED_ON_CHANNELS
   real (kind=real4), intent(in):: Max_Grad_Value
   integer (kind=int4), intent(in):: Grad_Flag
   integer (kind=int4), intent(in):: Missing_LRC_Value
-  integer (kind=int1), intent(in), dimension(:,:):: Skip_LRC_Mask
+  logical, intent(in), dimension(:,:):: Skip_LRC_Mask
   real (kind=real4), intent(in):: Min_Grid_Data_Valid
   real (kind=real4), intent(in):: Max_Grid_Data_Valid
   integer (kind=int4), intent(out), dimension(:,:):: Elem_Idx_LRC
@@ -3507,7 +3507,7 @@ Element_Loop:  do Elem_Idx = Element_Start+1, Element_End-1
 Line_Loop:    do Line_Idx = Line_Start+1, Line_End-1
 
       !--- skip data due to mask
-      if (Skip_LRC_Mask(Elem_Idx,Line_Idx) == symbol_YES) cycle
+      if (Skip_LRC_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !-- check for out of bounds data
       if (Grad_Flag ==  1 .and. Grid_Data(Elem_Idx,Line_Idx) < Min_Grid_Data_Valid) cycle
@@ -3584,7 +3584,7 @@ Gradient_Loop:    do ipoint = 1,Max_Grad_Distance
          endif
 
          !--- check for hitting bad data
-         if (Skip_LRC_Mask(Elem_Idx_Next,Line_Idx_Next) == symbol_YES) then
+         if (Skip_LRC_Mask(Elem_Idx_Next,Line_Idx_Next) ) then
               Elem_Idx_LRC(Elem_Idx,Line_Idx) = Elem_Idx_Previous
               Line_Idx_LRC(Elem_Idx,Line_Idx) = Line_Idx_Previous
               exit

@@ -55,7 +55,7 @@ module CCL_SERVICES_MOD
  integer (kind=int4):: Number_Of_Lines
  real (kind=real4):: Sensor_Resolution_KM
 
- integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ logical, dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Latitude
  real, dimension(:,:), pointer:: Longitude
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type

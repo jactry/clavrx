@@ -163,7 +163,7 @@ contains
    ! ---------------------------------------------------------------------------------
    subroutine SET_DEFAULT_VALUES
            
-      Aer_Flag = sym%YES
+      Aer_Flag = .TRUE.
       Ash_Flag = sym%NO
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
       output_scaled_reflectances = sym%NO !default is to output ref / cossolzen
@@ -305,7 +305,7 @@ contains
       read(unit=Default_Lun,fmt=*) Sasrab_Flag_dummy
       Sasrab_Flag = Sasrab_Flag_dummy == 1
       Dark_Comp_Data_Dir=trim(Data_Base_Path)//'/dynamic/goes_dark_sky_composites/'
-      if ( Sasrab_Flag == 1 )  then
+      if ( Sasrab_Flag  )  then
           Read_Dark_Comp=1
       end if 
 

@@ -1,4 +1,6 @@
 ! $Id$
+!
+!   fix for allocatable variable -1/06/2017 AW
 
 module date_tools_mod
    
@@ -278,7 +280,7 @@ contains
    function date_string ( this , fmt ) result(out)
       class ( date_type) :: this
       character ( len = * ) , intent (in) :: fmt 
-      character (len=20) , allocatable :: out
+      character (len=:) , allocatable :: out
       character ( len = 2 ) :: year_s2d
       character ( len = 4 ) :: year_s
       character ( len = 2 ) :: month_s

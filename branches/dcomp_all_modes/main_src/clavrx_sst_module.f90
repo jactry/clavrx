@@ -162,8 +162,8 @@ subroutine COMPUTE_SST()
 
       Sst_Unmasked = MISSING_VALUE_REAL4
 
-      if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. &
-          Sensor%Chan_On_Flag_Default(32)==sym%YES .and. &
+      if (Sensor%Chan_On_Flag_Default(31) .and. &
+          Sensor%Chan_On_Flag_Default(32) .and. &
           maxval(sst_coef) /= MISSING_VALUE_REAL4) then
 
           Sst_Unmasked = MCSST(ch(31)%Bt_Toa,ch(32)%Bt_Toa,Geo%Seczen)
@@ -171,7 +171,7 @@ subroutine COMPUTE_SST()
       endif
 
       !--- mask bad pixels, land and snow/ice
-      where(Bad_Pixel_Mask == sym%YES .or.  &
+      where(Bad_Pixel_Mask .or.  &
             Sfc%Land == sym%Land .or. Sfc%Land == sym%COASTLINE .or. &
             Sfc%Snow /= sym%NO_SNOW) 
 

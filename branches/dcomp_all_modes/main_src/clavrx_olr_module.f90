@@ -238,8 +238,8 @@ subroutine COMPUTE_OLR()
 
       case('avhrr')
 
-         if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. &
-             Sensor%Chan_On_Flag_Default(32)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) .and. &
+             Sensor%Chan_On_Flag_Default(32)) then
 
           where(ch(31)%Bt_Toa /= MISSING_VALUE_REAL4 .and.  &
                 ch(32)%Bt_Toa /= MISSING_VALUE_REAL4) 
@@ -252,8 +252,8 @@ subroutine COMPUTE_OLR()
 
 
       case('goes')
-         if (Sensor%Chan_On_Flag_Default(27)==sym%YES .and. &
-             Sensor%Chan_On_Flag_Default(31)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(27) .and. &
+             Sensor%Chan_On_Flag_Default(31) ) then
 
 
           where(ch(27)%Bt_Toa /= MISSING_VALUE_REAL4 .and.  &

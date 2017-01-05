@@ -169,7 +169,7 @@ contains
       elem_loop: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
          line_loop: do i = 1, Image%Number_Of_Elements  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
+            if ( bad_pixel_mask (i,j)  ) then
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
@@ -216,7 +216,7 @@ contains
       elem_loop1: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
          line_loop1: do i = 1, Image%Number_Of_Elements  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
+            if ( bad_pixel_mask (i,j)  ) then
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 

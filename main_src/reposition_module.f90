@@ -673,7 +673,7 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
      
 !--- check for bad scans
       if ((scan_time(j) == missing_value_int4) .or. &
-          (bad_scan_flag(j) == sym%YES))  then
+          (bad_scan_flag(j) ))  then
            cycle 
       endif
 

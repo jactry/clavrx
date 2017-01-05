@@ -917,12 +917,12 @@ end subroutine DETERMINE_AVHRR_1
       !------------------------------------------------------------------------------
       ! check for bad scan lines here
       !------------------------------------------------------------------------------
-       Bad_Scan_Flag(Line_Idx) = sym%NO
+       Bad_Scan_Flag(Line_Idx) = .FALSE.
        Error_Code = 0
 
        !--- any scan with a fatal error is considered bad
        if (Fatal_AVHRR(Line_Idx) == sym%YES) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 1
        endif
 
@@ -930,13 +930,13 @@ end subroutine DETERMINE_AVHRR_1
        !--- note, these are also set to have a fatal code, but this overwrites
        !--- it to limit printing to screen of excessive reports
        if ((Therm_Cal_1b == sym%NO) .and. (Spinup_New_Therm_Cal .eqv. .true.)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 2
        endif
 
        !---- check for missing navigation
        if ( (sum(Lat_Anchor_1b(:,Line_Idx)) == 0.00).or. (sum(Lon_Anchor_1b(:,Line_Idx)) == 0.00)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 3
        endif
 
@@ -950,28 +950,28 @@ end subroutine DETERMINE_AVHRR_1
        !---- check angle Anchors on AVHRR_KLM_Flag data
        if (AVHRR_KLM_Flag == sym%YES) then
          if ((minval(Satzen_Anchor(:,Line_Idx)) < 0.0) .or. (maxval(Satzen_Anchor(:,Line_Idx)) > 90.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code  = 5
          endif
          if ((minval(Solzen_Anchor(:,Line_Idx)) < 0.0) .or. (maxval(Solzen_Anchor(:,Line_Idx)) > 180.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 5
          endif
          if ((minval(Relaz_Anchor(:,Line_Idx)) < -180.0) .or. (maxval(Relaz_Anchor(:,Line_Idx)) > 180.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 5
          endif
        endif
 
        !----- report bad scan code to standard output (but not bad scans during
        !----- spin-up of thermal cal
-       if (Bad_Scan_Flag(Line_Idx) == sym%YES .and. Error_Code /= 2) then
+       if (Bad_Scan_Flag(Line_Idx)  .and. Error_Code /= 2) then
          write(unit=6,fmt="(a,a,a,i6,a,i2)") EXE_PROMPT, MOD_PROMPT,  &
                "BAD SCAN: Numbers = ", Scan_Number(Line_Idx), " error code = ", Error_Code
        endif 
 
        !---- set geolocation to missing for bad-scans to avoid ancil-data interp
-       if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
+       if (Bad_Scan_Flag(Line_Idx) ) then
                Nav%Lat_1b(:,Line_Idx) = Missing_Value_Real4
                Nav%Lon_1b(:,Line_Idx) = Missing_Value_Real4
        endif
@@ -1384,7 +1384,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
   !------------------------------------------------------------------------
   do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
 
-    if (Bad_Scan_Flag(j) == sym%YES) then
+    if (Bad_Scan_Flag(j)) then
        cycle
     endif 
 
@@ -1486,7 +1486,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
   !----- additional quality check on Bt_Ch31
   do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
     if (minval(ch(31)%Bt_Toa(:,j)) < 0.0) then
-      Bad_Scan_Flag(j) = sym%YES
+      Bad_Scan_Flag(j) = .TRUE.
     endif
   enddo
 
@@ -3159,7 +3159,7 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
 
         do j = Line_Idx_Min_Segment+1, Number_Of_Lines_Read_This_Segment - 2
         
-         if (Bad_Scan_Flag(j) == sym%YES) then
+         if (Bad_Scan_Flag(j) ) then
 
             if (j > Line_Idx_Min_Segment + 1) then
               Nav%Ascend(j) = Nav%Ascend(j-1)
@@ -3174,8 +3174,8 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
          Nav%Ascend(j) = 1
          if (diff <= 0) Nav%Ascend(j) = 0
 
-         if (Bad_Scan_Flag(j+1) == sym%YES .and.  &
-              Bad_Scan_Flag(j-1) == sym%NO) then
+         if (Bad_Scan_Flag(j+1)  .and.  &
+              .NOT. Bad_Scan_Flag(j-1) ) then
               Nav%Ascend(j) = Nav%Ascend(j-1)
          endif
 
@@ -3313,7 +3313,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
   do j = j1, j1+j2-1
 
    !--- check for bad scans (note Bad_Pixel_Mask does yet exist)
-   if (Bad_Scan_Flag(j) == sym%YES) then
+   if (Bad_Scan_Flag(j) ) then
         cycle
    endif
 

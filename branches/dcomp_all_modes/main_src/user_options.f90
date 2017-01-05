@@ -591,7 +591,7 @@ contains
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
       
-      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
+      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set == 1
 
    end subroutine DETERMINE_USER_CONFIG
 
@@ -1116,11 +1116,11 @@ contains
       
       Valid_Channels = Existing_Channels ( SensorName )
           
-      Sensor%Chan_On_Flag_Default =  0
+      Sensor%Chan_On_Flag_Default =  .FALSE.
 
       do i = 1, Nchan_Clavrx
          if (Valid_Channels (i) < 0 ) cycle
-         Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = 1
+         Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = .TRUE.
       end do
    
    end subroutine CHANNEL_SWITCH_ON
@@ -1146,7 +1146,7 @@ contains
 
       do i = 1, Nchan_Clavrx
          if ( any ( i == Valid_Channels )) cycle
-         Sensor%Chan_On_Flag_Default ( i ) = 0
+         Sensor%Chan_On_Flag_Default ( i ) = .FALSE.
       end do
 
       !--- check ACHA mode based on available channels

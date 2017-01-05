@@ -88,7 +88,7 @@ module ACHA_SERVICES_MOD
  integer:: Chan_On_142um
 
  !-- local pointers that point to global variables
- integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ logical, dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Bt_67um
  real, dimension(:,:), pointer:: Bt_85um
  real, dimension(:,:), pointer:: Bt_11um

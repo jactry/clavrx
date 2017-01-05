@@ -73,7 +73,6 @@ module SENSOR_MODULE
       , ew_ch20 &
       , solar_ch20_nu
       
-   use ALGORITHM_CONSTANTS,only:
    
    use CX_CONSTANTS_MOD, only: &
     int4 &

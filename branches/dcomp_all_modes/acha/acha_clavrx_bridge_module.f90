@@ -311,7 +311,7 @@ module ACHA_CLAVRX_BRIDGE
 !--------------------------------------------------------
  subroutine SET_INPUT()
    
-   integer, target :: bad_pixel_mask_i1
+   integer(kind=int1), target :: bad_pixel_mask_i1
    
    Input%ACHA_Mode_Flag_In = ACHA%Mode
    Input%Number_of_Elements = Image%Number_Of_Elements

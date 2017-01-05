@@ -35,23 +35,23 @@
     integer :: Num_Elem                                        !x-dimension of data arrays
     integer :: Num_Line                                        !number of lines of arrays with data
     integer :: Num_Line_Max                                    !y-dimension of data arrays
-    integer(kind=int1) :: Invalid_Data_Mask                    !bad data mask (0=good,1=bad)
-    integer :: Chan_On_041um                                   !flag if 0.41um channel on (0=no,1=yes)
-    integer :: Chan_On_063um                                   !flag if 0.63um channel on (0=no,1=yes)
-    integer :: Chan_On_086um                                   !flag if 0.86um channel on (0=no,1=yes)
-    integer :: Chan_On_138um                                   !flag if 1.38um channel on (0=no,1=yes)
-    integer :: Chan_On_160um                                   !flag if 1.60um channel on (0=no,1=yes)
-    integer :: Chan_On_213um                                   !flag if 2.13um channel on (0=no,1=yes)
-    integer :: Chan_On_375um                                   !flag if 3.75um channel on (0=no,1=yes)
-    integer :: Chan_On_67um                                    !flag if 6.7um channel on (0=no,1=yes)
-    integer :: Chan_On_85um                                    !flag if 8.5um channel on (0=no,1=yes)
-    integer :: Chan_On_10um                                    !flag if 10.0um channel on (0=no,1=yes)
-    integer :: Chan_On_11um                                    !flag if 11.0um channel on (0=no,1=yes)
-    integer :: Chan_On_12um                                    !flag if 12.0um channel on (0=no,1=yes)
-    integer :: Chan_On_I1_064um                                !flag if I1 0.64um channel on (0=no,1=yes)
-    integer :: Chan_On_I4_374um                                !flag if I4 3.74um channel on (0=no,1=yes)
-    integer :: Chan_On_I5_114um                                !flag if I5 11.4um channel on (0=no,1=yes)
-    integer :: Chan_On_DNB                                     !flag if DNB channel on (0=no,1=yes)
+    logical :: Invalid_Data_Mask                               !bad data mask 
+    logical :: Chan_On_041um                                   !flag if 0.41um channel on (0=no,1=yes)
+    logical :: Chan_On_063um                                   !flag if 0.63um channel on (0=no,1=yes)
+    logical :: Chan_On_086um                                   !flag if 0.86um channel on (0=no,1=yes)
+    logical :: Chan_On_138um                                   !flag if 1.38um channel on (0=no,1=yes)
+    logical :: Chan_On_160um                                   !flag if 1.60um channel on (0=no,1=yes)
+    logical :: Chan_On_213um                                   !flag if 2.13um channel on (0=no,1=yes)
+    logical :: Chan_On_375um                                   !flag if 3.75um channel on (0=no,1=yes)
+    logical :: Chan_On_67um                                    !flag if 6.7um channel on (0=no,1=yes)
+    logical :: Chan_On_85um                                    !flag if 8.5um channel on (0=no,1=yes)
+    logical :: Chan_On_10um                                    !flag if 10.0um channel on (0=no,1=yes)
+    logical :: Chan_On_11um                                    !flag if 11.0um channel on (0=no,1=yes)
+    logical :: Chan_On_12um                                    !flag if 12.0um channel on (0=no,1=yes)
+    logical :: Chan_On_I1_064um                                !flag if I1 0.64um channel on (0=no,1=yes)
+    logical :: Chan_On_I4_374um                                !flag if I4 3.74um channel on (0=no,1=yes)
+    logical :: Chan_On_I5_114um                                !flag if I5 11.4um channel on (0=no,1=yes)
+    logical :: Chan_On_DNB                                     !flag if DNB channel on (0=no,1=yes)
     integer :: Use_Sounder_11um                                !flag for IFF files where both imager and sounder 11um are available    
     integer(kind=int1) :: Snow_Class                           !Snow Classification 
     integer(kind=int1) :: Land_Class                           !Land Classification

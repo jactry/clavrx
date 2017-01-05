@@ -187,7 +187,7 @@ contains
             write(Chan_Idx_Mtsat_String,fmt="(I1.1)") Chan_Idx_Mtsat
             if(Chan_Idx_Mtsat > 9) write(Chan_Idx_Mtsat_String,fmt="(I2.2)") Chan_Idx_Mtsat
 
-            if (Sensor%Chan_On_Flag_Default(Chan_Idx_Modis) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx_Modis)) then
 
                Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Chan_Idx_Mtsat_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)

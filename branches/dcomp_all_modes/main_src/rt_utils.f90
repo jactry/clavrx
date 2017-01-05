@@ -851,7 +851,7 @@ contains
             !--- if an sst analysis is available, use that
             if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
               (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
-              (Use_Sst_Anal == sym%YES) .and.  &
+              (Use_Sst_Anal) .and.  &
               (Sst_Anal(Elem_Idx,Line_Idx) > 270.0 )) then
                  Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Sst_Anal(Elem_Idx,Line_Idx)
             end if 

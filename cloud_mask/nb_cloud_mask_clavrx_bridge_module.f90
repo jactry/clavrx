@@ -430,29 +430,29 @@ contains
       Input%Path_Tpw = Tpw_Nwp_Pix(i,j) / Geo%Coszen(i,j)
 
 
-      if (Input%Chan_On_041um == sym%YES)  then 
+      if (Input%Chan_On_041um )  then 
         Input%Ref_041um = ch(8)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_063um == sym%YES)  then 
+      if (Input%Chan_On_063um )  then 
         Input%Ref_063um = ch(1)%Ref_Toa(i,j)
         Input%Ref_063um_Clear = ch(1)%Ref_Toa_Clear(i,j)
         Input%Ref_063um_Std = Ref_Ch1_Std_3x3(i,j)
         Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
       endif
-      if (Input%Chan_On_086um == sym%YES)  then 
+      if (Input%Chan_On_086um )  then 
         Input%Ref_086um = ch(2)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_138um == sym%YES)  then 
+      if (Input%Chan_On_138um )  then 
         Input%Ref_138um = ch(26)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_160um == sym%YES)  then 
+      if (Input%Chan_On_160um )  then 
         Input%Ref_160um = ch(6)%Ref_Toa(i,j)
         Input%Ref_160um_Clear = ch(6)%Ref_Toa_Clear(i,j)
       endif
-      if (Input%Chan_On_213um == sym%YES)  then 
+      if (Input%Chan_On_213um )  then 
         Input%Ref_213um = ch(7)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_375um == sym%YES)  then 
+      if (Input%Chan_On_375um )  then 
         Input%Ref_375um = ch(20)%Ref_Toa(i,j)
         Input%Ref_375um_Clear = ch(20)%Ref_Toa_Clear(i,j)
         Input%Bt_375um = ch(20)%Bt_Toa(i,j)
@@ -461,7 +461,7 @@ contains
         Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
         Input%Emiss_375um_Clear = Ems_Ch20_Clear_Rtm(i,j)
       endif
-      if (Input%Chan_On_67um == sym%YES)  then 
+      if (Input%Chan_On_67um )  then 
         Input%Bt_67um = ch(27)%Bt_Toa (i,j)
         if (Input%Chan_On_11um == sym%YES)  then 
            Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5(i,j)
@@ -472,26 +472,26 @@ contains
         Input%Bt_11um_Sounder = Bt_11um_Sounder(i,j)
         Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
       endif
-      if (Input%Chan_On_85um == sym%YES)  then 
+      if (Input%Chan_On_85um )  then 
         Input%Bt_85um = ch(29)%Bt_Toa(i,j)
       endif
-      if (Input%Chan_On_10um == sym%YES)  then                                                                                                      
+      if (Input%Chan_On_10um )  then                                                                                                      
         Input%Bt_10um = ch(38)%Bt_Toa(i,j)
       else
         Input%Bt_10um = Missing_Value_Real4
       endif
-      if (Input%Chan_On_11um == sym%YES)  then 
+      if (Input%Chan_On_11um )  then 
         Input%Bt_11um = ch(31)%Bt_Toa(i,j)
         Input%Bt_11um_Std = Bt_Ch31_Std_3x3(i,j)
         Input%Bt_11um_Max = Bt_Ch31_Max_3x3(i,j)
         Input%Bt_11um_Clear = ch(31)%Bt_Toa_Clear(i,j)
         Input%Emiss_11um_Tropo = ch(31)%Emiss_Tropo(i,j)
       endif
-      if (Input%Chan_On_12um == sym%YES)  then 
+      if (Input%Chan_On_12um )  then 
         Input%Bt_12um = ch(32)%Bt_Toa(i,j)
         Input%Bt_12um_Clear = ch(32)%Bt_Toa_Clear(i,j)
       endif
-      if (Input%Chan_On_DNB == sym%YES)  then 
+      if (Input%Chan_On_DNB )  then 
         Input%Lunscatzen = Geo%Scatangle_Lunar(i,j)
         Input%Lunar_Oceanic_Glint_Mask = Sfc%Glint_Mask_Lunar(i,j)
         Input%Rad_Lunar = ch(44)%Rad_Toa(i,j)
@@ -501,13 +501,13 @@ contains
         Input%Ref_Lunar_Clear = ch(44)%Ref_Lunar_Toa_Clear(i,j)
         Input%Lunzen = Geo%Lunzen(i,j)
       endif
-      if (Input%Chan_On_I1_064um == sym%YES) then
+      if (Input%Chan_On_I1_064um ) then
          Input%Ref_I1_064um_Std = Ref_Uni_ChI1(i,j)
       endif
-      if (Input%Chan_On_I4_374um == sym%YES) then
+      if (Input%Chan_On_I4_374um ) then
          Input%Bt_I4_374um_Std = Bt_Uni_ChI4(i,j)
       endif
-      if (Input%Chan_On_I5_114um == sym%YES) then
+      if (Input%Chan_On_I5_114um ) then
          Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)
       endif
    end subroutine SET_INPUT

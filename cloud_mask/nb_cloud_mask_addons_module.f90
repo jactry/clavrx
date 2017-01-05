@@ -259,29 +259,29 @@ module CLOUD_MASK_ADDONS
            SPLIT_WIN_Flag = 1
 
            !--- IR test - smoke should be nearly invisible
-           if (Chan_On_11 == 1) then
+           if (Chan_On_11 ) then
                if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Water_Thresh) IR_Flag = 0
                if (T11_Std > T11_Std_Max_Smoke_Water_Thresh) IR_Flag = 0
            endif
 
            !--- VIS test - smoke should be nearly invisible
-           if (Chan_On_065 == 1) then
+           if (Chan_On_065 ) then
                if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Water_Thresh .or.   &
                    Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Water_Thresh) VIS_Flag = 0
                if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Water_Thresh) VIS_Flag = 0
            endif
 
            !--- NIR Tests
-           if (Chan_On_375 == 1) then
+           if (Chan_On_375 ) then
                if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Water_Thresh) NIR_Flag = 0
                if (Refl_375 > Refl_375_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
-           if (Chan_On_160 == 1 .and. Chan_On_375 == 0) then
+           if (Chan_On_160  .and. .NOT. Chan_On_375 ) then
                if (Refl_160 > Refl_160_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
-           if (Chan_On_138 == 1) then
+           if (Chan_On_138 ) then
                if (Refl_138 > Refl_138_Max_Smoke_Water_Thresh) NIR_Flag = 0
            endif
 
@@ -291,7 +291,7 @@ module CLOUD_MASK_ADDONS
            endif
 
            !--- SPLIT_WIN_Tests
-           if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+           if (Chan_On_11  .and. Chan_On_12 ) then
              if (abs(split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)) > 1) SPLIT_WIN_Flag = 0
            endif
 

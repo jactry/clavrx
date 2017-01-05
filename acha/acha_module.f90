@@ -3646,15 +3646,15 @@ function COMPUTE_STANDARD_DEVIATION(Data_Array,Invalid_Mask) Result(Stddev_of_Ar
    real(kind=real8):: Num_Good
    real(kind=real8):: temp
 
-   Num_Good = real(sum(1 - Invalid_Mask))
+   Num_Good = real(count ( .NOT. Invalid_Mask))
 
    if (Num_Good == 0) then
     Stddev_of_Array_r8 = MISSING_VALUE_REAL4
    elseif (Num_Good == 1) then
     Stddev_of_Array_r8 = 0.0
    else
-    Data_Sum = sum(Data_Array * (1.0 - Invalid_Mask))
-    Data_Sum_Squared = sum((Data_Array*(1.0-Invalid_Mask))**2)
+    Data_Sum = sum(Data_Array * (1.0 - abs(transfer(Invalid_Mask,1))))
+    Data_Sum_Squared = sum((Data_Array*(1.0- abs(transfer(Invalid_Mask,1))))**2)
     temp = Data_Sum_Squared / Num_Good - (Data_Sum/Num_Good)**2
     if (temp > 0.0) then
       Stddev_of_Array_r8 = sqrt(temp)

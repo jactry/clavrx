@@ -136,11 +136,11 @@ subroutine IR_CLOUD_TYPE_BAUM()
   !------------------------------------------------------------------
   ! Step #0: Check the needed data are present
   !------------------------------------------------------------------
-  if (Sensor%Chan_On_Flag_Default(29) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .and. &
-      Sensor%Chan_On_Flag_Default(45) == sym%NO) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(29) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(31) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(32) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(33)  .and. &
+       .NOT. Sensor%Chan_On_Flag_Default(45) ) return
 
   !------------------------------------------------------------------
   ! Step #1: Check for non-cloud conditions and
@@ -192,10 +192,10 @@ subroutine IR_CLOUD_TYPE_BAUM()
      BTD8511 = ch(29)%Bt_Toa(Elem_Idx,Line_Idx) - ch(31)%Bt_Toa(Elem_Idx,Line_Idx)
 
      !--- use 13.3 fusion beta when availble
-     if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(33) ) then
           Beta_11um_133um = Beta_11um_133um_Tropo_Rtm(Elem_Idx,Line_Idx)
      endif
-     if (Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(45) ) then
           Beta_11um_133um = Beta_11um_133fusum_Tropo_Rtm(Elem_Idx,Line_Idx)
      endif
 

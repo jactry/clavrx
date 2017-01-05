@@ -447,14 +447,14 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//Ichan_Goes_String//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-          if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
           Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          if (L1b_Gzip == sym%YES) then
+          if (L1b_Gzip) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -463,7 +463,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
               Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2) then
               System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -483,7 +483,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    !---   read channel 1 (GOES channel 1)
    if (Sensor%Chan_On_Flag_Default(1) ) then
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
@@ -512,7 +512,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -537,7 +537,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -562,7 +562,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -587,7 +587,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -612,7 +612,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_6_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -786,14 +786,14 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Ichan_Goes_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-          if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
           Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          if (L1b_Gzip == sym%YES) then
+          if (L1b_Gzip) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -802,7 +802,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
               Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2) then
               System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -824,7 +824,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -851,7 +851,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -877,7 +877,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -903,7 +903,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -930,7 +930,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_7_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -957,7 +957,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_8_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -984,7 +984,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_9_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1010,7 +1010,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_10_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1036,7 +1036,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_12_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1062,7 +1062,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_13_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1089,7 +1089,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_14_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1115,7 +1115,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_16_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1141,7 +1141,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_17_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1168,7 +1168,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_18_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1196,7 +1196,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_19_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -3503,7 +3503,7 @@ line_loop:  DO Line_Idx = 1, Num_Lines
 
    !--- check for valid data
    if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle 
 
    ELem_Idx_1 = max(1,min(Num_Elements,Elem_Idx - N_box))
    ELem_Idx_2 = max(1,min(Num_Elements,Elem_Idx + N_box))
@@ -3557,7 +3557,7 @@ end subroutine POST_PROCESS_GOES_DARK_COMPOSITE
 
             !--- check for valid data
             if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) cycle 
             if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
             if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
             if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 

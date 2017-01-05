@@ -325,14 +325,14 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_Idx_136um = 34     !channel number for 13.6
    Input%Chan_Idx_139um = 35     !channel number for 13.9
    Input%Chan_Idx_142um = 36     !channel number for 14.2
-   Input%Chan_On_67um = abs(transfer(Sensor%Chan_On_Flag_Default(27),1.0))
-   Input%Chan_On_85um = abs(transfer(Sensor%Chan_On_Flag_Default(29),1.0))
-   Input%Chan_On_11um = abs(transfer(Sensor%Chan_On_Flag_Default(31),1.0))
-   Input%Chan_On_12um = abs(transfer(Sensor%Chan_On_Flag_Default(32),1.0))
-   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(34),1.0))
-   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(35),1.0))
-   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(36),1.0))
-   Input%Invalid_Data_Mask => Bad_Pixel_Mask
+   Input%Chan_On_67um = abs(transfer(Sensor%Chan_On_Flag_Default(27),1))
+   Input%Chan_On_85um = abs(transfer(Sensor%Chan_On_Flag_Default(29),1))
+   Input%Chan_On_11um = abs(transfer(Sensor%Chan_On_Flag_Default(31),1))
+   Input%Chan_On_12um = abs(transfer(Sensor%Chan_On_Flag_Default(32),1))
+   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(34),1))
+   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(35),1))
+   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(36),1))
+   Input%Invalid_Data_Mask => abs(transfer(Bad_Pixel_Mask,1))
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
    Input%Bt_11um => ch(31)%Bt_Toa
@@ -399,13 +399,13 @@ module ACHA_CLAVRX_BRIDGE
      Input%Chan_Idx_133um = 33     !channel number for 13.3
    endif
 
-   Input%Chan_On_133um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um),1.0))
+   Input%Chan_On_133um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um),1))
    Input%Bt_133um => ch(Input%Chan_Idx_133um)%Bt_Toa
    Input%Rad_Clear_133um => ch(Input%Chan_Idx_133um)%Rad_Toa_Clear
 
-   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_136um),1.0))
-   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_139um),1.0))
-   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_142um),1.0))
+   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_136um),1))
+   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_139um),1))
+   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_142um),1))
 
  end subroutine SET_INPUT
 !----------------------------------------------------------------------

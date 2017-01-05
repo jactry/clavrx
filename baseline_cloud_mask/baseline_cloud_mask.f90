@@ -521,10 +521,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! Compute spatial uniformity metrics - Already done by CLAVRx.
    ! But set appropriate WV/IR 3x3
    !=======================================================================
-   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29) > 0) .AND. &
-        (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
+   IF ((Sensor%Chan_On_Flag_Default(27) ) .OR. (Sensor%Chan_On_Flag_Default(29) ) .AND. &
+        (Sensor%Chan_On_Flag_Default(31) )) THEN
         
-         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(27)) THEN
             BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch27_Std_3x3
          ELSE
             BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch29_Std_3x3
@@ -666,8 +666,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    ! compute Correlation of Chn10 and Chn14
    ! WCS - must remain to match GS implmentation
    !----------------------------------------------------------------------
-   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29)  > 0) .AND. &
-        (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
+   IF ((Sensor%Chan_On_Flag_Default(27)) .OR. (Sensor%Chan_On_Flag_Default(29) ) .AND. &
+        (Sensor%Chan_On_Flag_Default(31) )) THEN
    
         Alloc_Status_Total = 0 
         
@@ -714,14 +714,14 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     ENDIF
 
                     
-                    IF (Sensor%Chan_On_Flag_Default(29)  > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(29)  ) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
                                                        ch(29)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
-                    ELSEIF (Sensor%Chan_On_Flag_Default(27)  > 0) THEN
+                    ELSEIF (Sensor%Chan_On_Flag_Default(27)  ) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
                                                                     ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
@@ -791,7 +791,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          !--- store BTD_Chn14_Chn15 at NWC
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
-         IF (Sensor%Chan_On_Flag_Default(14) > 0 .and. Sensor%Chan_On_Flag_Default(15) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(14)  .and. Sensor%Chan_On_Flag_Default(15) ) THEN
            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
                                       ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
@@ -880,7 +880,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          !--------------------------------------------------------
 
          !--- Channel 2 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(1) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(1) ) THEN
 
             Is_Chn(2) = sym%YES
             !
@@ -899,7 +899,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 4 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(26) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(26) ) THEN
 
             Is_Chn(4) = sym%YES
 
@@ -915,7 +915,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 5 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(6) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(6) ) THEN
 
             Is_Chn(5) = sym%YES
 
@@ -931,7 +931,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 7 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(20) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(20) ) THEN
 
             Is_Chn(7) = sym%YES
 
@@ -992,7 +992,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 10 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(28)  ) THEN
 
             Is_Chn(10) = sym%YES
 
@@ -1002,7 +1002,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 11 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(29) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(29) ) THEN
 
             Is_Chn(11) = sym%YES
 
@@ -1036,7 +1036,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          ENDIF
 
          !--- Channel 15 Aliases and Derived Parameters
-         IF (Sensor%Chan_On_Flag_Default(32) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(32) ) THEN
 
             Is_Chn(15) = sym%YES
 
@@ -1824,21 +1824,21 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
          ! Set QF's based on available information
         
-         IF ((Sensor%Chan_On_Flag_Default(20) > 0) .AND. (Is_Chn(7) == sym%NO)) THEN
+         IF ((Sensor%Chan_On_Flag_Default(20) ) .AND. (Is_Chn(7) == sym%NO)) THEN
              
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN7
          
-         ELSE IF ((Sensor%Chan_On_Flag_Default(1) > 0) .AND. &
+         ELSE IF ((Sensor%Chan_On_Flag_Default(1) ) .AND. &
                   (Is_Day == sym%YES) .AND. (Is_Chn(2) == sym%NO)) THEN
          
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN2
              
           ELSE IF (((Is_Day == sym%YES) .AND. &
-                    (((Sensor%Chan_On_Flag_Default(26) > 0) .AND. (Is_Chn(4) == sym%NO)) .OR. &
-                    ((Sensor%Chan_On_Flag_Default(6) > 0) .AND. (Is_Chn(5) == sym%NO))))  .OR. &
-                    ((Sensor%Chan_On_Flag_Default(28)  > 0) .AND. (Is_Chn(10) == sym%NO))  .OR. &             
-                    ((Sensor%Chan_On_Flag_Default(29) > 0) .AND. (Is_Chn(11) == sym%NO))  .OR. &             
-                    ((Sensor%Chan_On_Flag_Default(32) > 0) .AND. (Is_Chn(15) == sym%NO))) THEN
+                    (((Sensor%Chan_On_Flag_Default(26) ) .AND. (Is_Chn(4) == sym%NO)) .OR. &
+                    ((Sensor%Chan_On_Flag_Default(6) ) .AND. (Is_Chn(5) == sym%NO))))  .OR. &
+                    ((Sensor%Chan_On_Flag_Default(28)  ) .AND. (Is_Chn(10) == sym%NO))  .OR. &             
+                    ((Sensor%Chan_On_Flag_Default(29) ) .AND. (Is_Chn(11) == sym%NO))  .OR. &             
+                    ((Sensor%Chan_On_Flag_Default(32) ) .AND. (Is_Chn(15) == sym%NO))) THEN
 
              Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_OTHER
  

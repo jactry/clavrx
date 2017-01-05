@@ -166,7 +166,7 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
  
  
   !--  channel 1
-  if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(1)) then
     temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch1_aer(it,iu,:,iv) +  &
                  (1.0-t)*(1.0-u)*(v)*Ref_Lut_Ch1_aer(it,iu,:,iv+1) +  &
                  (t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch1_aer(it+1,iu,:,iv) +  &
@@ -179,7 +179,7 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
   endif
 
   !--  channel 2
-  if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(2)) then
      temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch2_aer(it,iu,:,iv) +  &
                  (1.0-t)*(1.0-u)*(v)*Ref_Lut_Ch2_aer(it,iu,:,iv+1) +  &
                  (t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch2_aer(it+1,iu,:,iv) +  &
@@ -192,7 +192,7 @@ if ((Geo%Solzen(i,j) > 87.0) .or. (Sfc%Sfc_Type(i,j) /= sym%WATER_SFC) .or. (Sfc
    endif
 
 
-   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(6) ) then
      if (Ch3a_On_AVHRR(j) == sym%YES) then
      !--  channel 3a
        temp_Ref_Lut = (1.0-t)*(1.0-u)*(1.0-v)*Ref_Lut_Ch3a_aer(it,iu,:,iv) +  &

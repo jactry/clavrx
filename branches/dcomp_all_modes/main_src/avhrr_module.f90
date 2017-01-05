@@ -1244,7 +1244,7 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
    if (Valid_Ref_Cal .eqv. .true.) then
 
      !--- channel 1
-     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(1) ) then
       where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
         ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
       elsewhere
@@ -1253,7 +1253,7 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
      endif
 
      !--- channel 2
-     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(2) ) then
       where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
         ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
       elsewhere
@@ -1262,9 +1262,9 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
      endif
 
      !--- channel 3a
-     if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(6) ) then
        if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
-         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+          ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
        else 
          where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
            ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
@@ -1276,9 +1276,9 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
 
   else
 
-    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(1)) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(2)) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(6)) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
 
   endif
 
@@ -1393,15 +1393,15 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
        if (AVHRR_KLM_Flag == sym%YES) then       !apply level-1b non-linear correction
 
-         if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+         if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20)) then
            ch(20)%Rad_Toa(:,j) = ir_coef_1_1b(3,j) + ir_coef_2_1b(3,j)*Chan_Counts_Avhrr(3,:,j) +  &
                         ir_coef_3_1b(3,j)*Chan_Counts_Avhrr(3,:,j)**2
          endif
-         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) ) then
              ch(31)%Rad_Toa(:,j) = ir_coef_1_1b(4,j) + ir_coef_2_1b(4,j)*Chan_Counts_Avhrr(4,:,j) +  &
                        ir_coef_3_1b(4,j)*Chan_Counts_Avhrr(4,:,j)**2
          endif
-         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32)) then
             ch(32)%Rad_Toa(:,j) = ir_coef_1_1b(5,j) + ir_coef_2_1b(5,j)*Chan_Counts_Avhrr(5,:,j) +  &
                             ir_coef_3_1b(5,j)*Chan_Counts_Avhrr(5,:,j)**2
          endif
@@ -1409,13 +1409,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
        else                         !compute level-1b linear correction for pre-AVHRR_KLM_Flag
 
          !--- Eqn 7.1.2.4-7
-         if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(20) ) then
            ch(20)%Rad_Toa(:,j) = ir_linear_slope_1b(3,j)*Chan_Counts_Avhrr(3,:,j) + ir_linear_intercept_1b(3,j)
          endif
-         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) ) then
            ch(31)%Rad_Toa(:,j) = ir_linear_slope_1b(4,j)*Chan_Counts_Avhrr(4,:,j) + ir_linear_intercept_1b(4,j)
          endif
-         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32) ) then
            ch(32)%Rad_Toa(:,j) = ir_linear_slope_1b(5,j)*Chan_Counts_Avhrr(5,:,j) + ir_linear_intercept_1b(5,j)
          endif
 
@@ -1423,13 +1423,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
     else    !generate linear radiance using internally computed coefficients
 
-      if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+      if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20)) then
          ch(20)%Rad_Toa(:,j) = IR_Linear_Slope_New(3,j)*Chan_Counts_Avhrr(3,:,j) + IR_Linear_Intercept_New(3,j)
       endif
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) ) then
         ch(31)%Rad_Toa(:,j) = IR_Linear_Slope_New(4,j)*Chan_Counts_Avhrr(4,:,j) + IR_Linear_Intercept_New(4,j)
       endif
-      if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(32) ) then
         ch(32)%Rad_Toa(:,j) = IR_Linear_Slope_New(5,j)*Chan_Counts_Avhrr(5,:,j) + IR_Linear_Intercept_New(5,j)
       endif
     endif
@@ -1437,13 +1437,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
    !--- apply non-linear correction where appropriate (non-AVHRR_KLM_Flag or any if thermal cal redone)
    if ((AVHRR_KLM_Flag == sym%NO) .or. (Therm_Cal_1b == sym%NO)) then 
 
-     if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+     if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) ) then
        ch(20)%Rad_Toa(:,j) = ch(20)%Rad_Toa(:,j) + b0_3b + b1_3b*ch(20)%Rad_Toa(:,j) + b2_3b*ch(20)%Rad_Toa(:,j)**2
      endif
-     if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(31) ) then
        ch(31)%Rad_Toa(:,j) = ch(31)%Rad_Toa(:,j) + b0_4 + b1_4*ch(31)%Rad_Toa(:,j) + b2_4*ch(31)%Rad_Toa(:,j)**2
      endif
-     if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(32)) then
        ch(32)%Rad_Toa(:,j) = ch(32)%Rad_Toa(:,j) + b0_5 + b1_5*ch(32)%Rad_Toa(:,j) + b2_5*ch(32)%Rad_Toa(:,j)**2
      endif
    endif
@@ -1452,7 +1452,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
     do i = 1, Image%Number_Of_Elements
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) ) then
          if (ch(20)%Rad_Toa(i,j) > 0.0) then
           ch(20)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(i,j)) 
          else
@@ -1461,7 +1461,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
          endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
          if (ch(31)%Rad_Toa(i,j) > 0.0) then
            ch(31)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(i,j)) 
          else
@@ -1470,7 +1470,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
          endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
          if (ch(32)%Rad_Toa(i,j) > 0.0) then
            ch(32)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(i,j)) 
          else
@@ -3320,7 +3320,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
    do i = 1, Image%Number_Of_Elements
 
      !--- channel 1
-     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(1) ) then
       if (Chan_Counts_Avhrr(1,i,j) < Ch1_Switch_Count) then
          Chan_Counts_Avhrr_Sg(1,i,j) = Scan_Space_Counts_Avhrr(1,j) + 0.5*(Chan_Counts_Avhrr(1,i,j) - Scan_Space_Counts_Avhrr(1,j))
        else
@@ -3331,7 +3331,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
      endif
 
      !--- channel 2
-     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(2) ) then
       if (Chan_Counts_Avhrr(2,i,j) < Ch2_Switch_Count) then
        Chan_Counts_Avhrr_Sg(2,i,j) = Scan_Space_Counts_Avhrr(2,j) + 0.5*(Chan_Counts_Avhrr(2,i,j) - Scan_Space_Counts_Avhrr(2,j))
       else
@@ -3342,7 +3342,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
     endif
 
     !--- channel 3a
-    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(6) ) then
 
      if (Ch3a_On_AVHRR(j) == sym%YES) then
 

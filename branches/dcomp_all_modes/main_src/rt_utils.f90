@@ -518,7 +518,7 @@ contains
          !if (Chan_Idx < 20) cycle
          !if (Chan_Idx == 26) cycle
          !if (Chan_Idx > 38) cycle
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx)) cycle
 
          Rad_Atm_Prof(1,Chan_Idx) = 0.0
          Rad_BB_Cloud_Prof(1,Chan_Idx) = 0.0
@@ -545,7 +545,7 @@ contains
 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx /= 31) cycle
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (.NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
 
          Trans_Total = 1.0
          Rad_Atm_Dwn_Prof(1,Chan_Idx) = 0.0

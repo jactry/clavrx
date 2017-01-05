@@ -689,7 +689,7 @@ module AWG_CLOUD_HEIGHT
     !---------------------------------------------------------------
     Bad_Input_Flag = .false.
 
-    if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) Bad_Input_Flag = .true.
+    if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) ) Bad_Input_Flag = .true.
 
     if (Input%Sensor_Zenith_Angle(Elem_Idx,Line_Idx) > Sensor_Zenith_Threshold) Bad_Input_Flag = .true.
 
@@ -3638,7 +3638,7 @@ end subroutine LOCAL_LINEAR_RADIATIVE_CENTER
 !----------------------------------------------------------------------
 function COMPUTE_STANDARD_DEVIATION(Data_Array,Invalid_Mask) Result(Stddev_of_Array_r4)
    real(kind=real4), dimension(:,:), intent(in):: Data_Array
-   integer(kind=int1), dimension(:,:), intent(in):: Invalid_Mask
+   logical, dimension(:,:), intent(in):: Invalid_Mask
    real:: Stddev_of_Array_r4
    real(kind=real8):: Stddev_of_Array_r8
    real(kind=real8):: Data_Sum

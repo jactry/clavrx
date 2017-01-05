@@ -310,9 +310,7 @@ module ACHA_CLAVRX_BRIDGE
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
-   
-   integer(kind=int1), target :: bad_pixel_mask_i1
-   
+
    Input%ACHA_Mode_Flag_In = ACHA%Mode
    Input%Number_of_Elements = Image%Number_Of_Elements
    Input%Number_of_Lines = Image%Number_Of_Lines_Per_Segment
@@ -334,8 +332,7 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(34),1))
    Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(35),1))
    Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(36),1))
-   bad_pixel_mask_i1 = abs(transfer(Bad_Pixel_Mask,1))
-   Input%Invalid_Data_Mask => bad_pixel_mask_i1
+   Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
    Input%Bt_11um => ch(31)%Bt_Toa

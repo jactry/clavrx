@@ -188,7 +188,6 @@
          , compute_day &
          , compute_time_hours
    
-   use DCOMP_CLAVRX_BRIDGE_MOD, only:
    
    use DCOMP_DERIVED_PRODUCTS_MODULE, only: &
       compute_adiabatic_cloud_props &

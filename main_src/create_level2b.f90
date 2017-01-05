@@ -214,10 +214,10 @@ program create_level2b
    endif
    
    ! - set time objects
-   call date_cnf_start.set_date_with_doy (cnf % Year, cnf % Jday &
+   call date_cnf_start%set_date_with_doy (cnf % Year, cnf % Jday &
          , 0,0 )
          
-   call date_cnf_end.set_date_with_doy (cnf % Year, cnf % Jday &
+   call date_cnf_end%set_date_with_doy (cnf % Year, cnf % Jday &
          ,23, 59)
    
    ! - read input files
@@ -295,10 +295,10 @@ program create_level2b
         
      
       
-      call date_file_start.set_date_with_doy (start_year, start_day_of_year &
+      call date_file_start % set_date_with_doy (start_year, start_day_of_year &
          , floor(start_time), floor(60*(start_time-floor(start_time))) )
          
-      call date_file_end.set_date_with_doy (end_year, end_day_of_year &
+      call date_file_end % set_date_with_doy (end_year, end_day_of_year &
          , floor(end_time) ,  floor(60*(end_time-floor(end_time))))
       
       
@@ -440,7 +440,7 @@ program create_level2b
    call prd % read_products()
          
    File_Level2b= trim(cnf % dir_out)//"patmosx_"//trim(cnf % Sensor_Name)//'_'//trim(cnf % Node)//"_"// &
-         trim(date_cnf_start.date_string('yyyy_doy'))//'.level2b.hdf'
+         trim(date_cnf_start % date_string('yyyy_doy'))//'.level2b.hdf'
          
    print*,'File level 2b: ', trim(File_Level2b)
         

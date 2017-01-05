@@ -171,7 +171,7 @@ contains
    endif
 
    !--- Compute TOA Clear-Sky 0.65um Reflectance
-   if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1) == sym%YES)  then 
+   if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1))  then 
      call  CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
                                    Tpw_Nwp_Pix, &
                                    Ozone_Nwp_Pix, &
@@ -463,7 +463,7 @@ contains
       endif
       if (Input%Chan_On_67um )  then 
         Input%Bt_67um = ch(27)%Bt_Toa (i,j)
-        if (Input%Chan_On_11um == sym%YES)  then 
+        if (Input%Chan_On_11um )  then 
            Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5(i,j)
         endif
       endif

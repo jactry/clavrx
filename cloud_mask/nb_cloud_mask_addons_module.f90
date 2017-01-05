@@ -151,8 +151,8 @@ module CLOUD_MASK_ADDONS
       !-----------------------------------------------------------------------------
       ! EUMETSAT Fire Algorithm
       !-----------------------------------------------------------------------------
-      if (Input%Chan_On_11um == symbol%YES .and.   &
-          Input%Chan_On_375um == symbol%YES .and.  &
+      if (Input%Chan_On_11um  .and.   &
+          Input%Chan_On_375um  .and.  &
           Input%Land_Class == Symbol%Land .and.    &
           Input%Sfc_Type /= Symbol%BARE_SFC .and. &
           Input%Sfc_Type /= Symbol%OPEN_SHRUBS_SFC) then

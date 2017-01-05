@@ -257,7 +257,7 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
     Element_loop:   do Elem_Idx = 1, Number_Of_Elements
 
     !--- check for a bad pixel
-    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
           cycle
     endif
 
@@ -341,7 +341,7 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND_AND_TPW(Line_Idx_Min,Num_Lines)
      Ivza = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !-- check if indices are valid
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
@@ -456,7 +456,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- check if indices are valid
      !--- stw May not need this.
@@ -667,7 +667,7 @@ subroutine CO2IRW_CLOUD_HEIGHT()
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 !     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
@@ -742,7 +742,7 @@ subroutine CTP_MULTILAYER()
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !---- filter on cloud type
       if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
@@ -1004,7 +1004,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- skip data without sounder data
      if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
@@ -1413,7 +1413,7 @@ subroutine OPAQUE_TRANSMISSION_HEIGHT()
      Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !-- check if indices are valid
      if (Lon_Idx < 0 .or. Lat_Idx < 0) cycle
@@ -1458,7 +1458,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 

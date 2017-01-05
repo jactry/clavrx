@@ -286,7 +286,7 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
     element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !--- skip non cloud pixels
       if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
@@ -429,7 +429,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
     element_loop: DO Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) cycle
 
       !--- skip non cloud pixels
       if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
@@ -593,7 +593,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       Fo = Fo_Toa * atm_trans
 
       !--- skip data that can not be processed
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
       if (Solar_Zenith_Angle > 70.0) cycle
 
       !--- determine surface albedo

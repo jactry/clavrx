@@ -325,7 +325,7 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
 
      do i = 1, Image%Number_Of_Elements
 
-     if (bad_pixel_mask(i,j) == sym%YES) then
+     if (bad_pixel_mask(i,j)) then
       cycle
      endif
 

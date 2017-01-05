@@ -1,4 +1,4 @@
-!$Id$
+!$Id:$
 module IR_CLOUD_TYPE_BAUM_MODULE
 !====================================================================
 ! Module Name: IR_CLOUD_TYPE_BAUM_MODULE
@@ -150,7 +150,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- save indices
      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)

@@ -107,7 +107,7 @@ contains
          line_loop: do Line_Idx = 1, Number_of_Lines
 
             !--- check for a bad pixel
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
                cycle
             endif
             

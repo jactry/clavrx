@@ -286,7 +286,7 @@ module CLOUD_MASK_ADDONS
            endif
 
            !--- NIR IR_Tests
-           if (Chan_On_375 == 1 .and. Chan_On_11 == 1) then
+           if (Chan_On_375  .and. Chan_On_11 ) then
                if ((Bt_375 - Bt_11) > Btd_4_11_Max_Smoke_Water_Thresh) NIR_IR_Flag = 0
            endif
 
@@ -334,12 +334,12 @@ module CLOUD_MASK_ADDONS
      real, intent(in):: Emiss_11_Tropo
      real, intent(in):: Refl_065_Std
      real, intent(in):: T11_Std
-     integer, intent(in):: Chan_On_065
-     integer, intent(in):: Chan_On_138
-     integer, intent(in):: Chan_On_160
-     integer, intent(in):: Chan_On_375
-     integer, intent(in):: Chan_On_11
-     integer, intent(in):: Chan_On_12
+     logical, intent(in):: Chan_On_065
+     logical, intent(in):: Chan_On_138
+     logical, intent(in):: Chan_On_160
+     logical, intent(in):: Chan_On_375
+     logical, intent(in):: Chan_On_11
+     logical, intent(in):: Chan_On_12
      real, intent(in):: Solzen
   
 
@@ -361,41 +361,41 @@ module CLOUD_MASK_ADDONS
            SPLIT_WIN_Flag = 1
 
            !--- IR test - smoke should be nearly invisible
-           if (Chan_On_11 == 1) then
+           if (Chan_On_11) then
                if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Smoke_Land_Thresh) IR_Flag = 0
                if (T11_Std > T11_Std_Max_Smoke_Land_Thresh) IR_Flag = 0
            endif
 
            !--- VIS test - smoke should be nearly invisible
-           if (Chan_On_065 == 1) then
+           if (Chan_On_065 ) then
                if (Refl_065 - Refl_065_Clear > Refl_065_Max_Smoke_Land_Thresh .or.   &
                    Refl_065 - Refl_065_Clear < Refl_065_Min_Smoke_Land_Thresh) VIS_Flag = 0
                if (Refl_065_Std  > Refl_065_Std_Max_Smoke_Land_Thresh) VIS_Flag = 0
            endif
 
            !--- NIR Tests
-           if (Chan_On_375 == 1) then
+           if (Chan_On_375 ) then
                if (Refl_375 - Refl_375_Clear > Refl_375_Max_Smoke_Land_Thresh) NIR_Flag = 0
                if (Refl_375 > Refl_375_Max_Smoke_Land_Thresh) NIR_Flag = 0
            endif
 
            !if (Chan_On_160 == 1 .and. Chan_On_375 == 0) then
-           if (Chan_On_160 == 1) then
+           if (Chan_On_160 ) then
                NIR_Smoke_Ratio = (Refl_160 - Refl_065)/(Refl_086 - Refl_065)
                if (NIR_Smoke_Ratio > NIR_Smoke_Ratio_Max_Land_Thresh) NIR_Flag = 0
            endif
 
-           if (Chan_On_138 == 1) then
+           if (Chan_On_138 ) then
                if (Refl_138 > Refl_138_Max_Smoke_Land_Thresh) NIR_Flag = 0
            endif
 
            !--- NIR IR_Tests
-           if (Chan_On_375 == 1 .and. Chan_On_11 == 1) then
+           if (Chan_On_375  .and. Chan_On_11) then
                if ((Bt_375 - Bt_11) > Btd_4_11_Max_Smoke_Land_Thresh) NIR_IR_Flag = 0
            endif
 
            !--- SPLIT_WIN_Tests
-           if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+           if (Chan_On_11 .and. Chan_On_12) then
              if (abs(split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)) > 1) SPLIT_WIN_Flag = 0
            endif
 

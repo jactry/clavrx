@@ -25,7 +25,7 @@
 !--------------------------------------------------------------------------------------
 module IFF_MODULE
 
- use HDF, only:
+! use HDF, only:
  use PLANCK, only: &
    convert_radiance
  use PIXEL_COMMON, only: &

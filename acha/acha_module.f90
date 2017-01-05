@@ -4020,7 +4020,7 @@ subroutine COMPUTE_PROCESSING_ORDER(Invalid_Data_Mask, &
                                     USE_CIRRUS_FLAG, &
                                     Processing_Order) 
   
-  integer(kind=int1), intent(in), dimension(:,:):: Invalid_Data_Mask
+  logical, intent(in), dimension(:,:):: Invalid_Data_Mask
   integer(kind=int1), intent(in), dimension(:,:):: Cloud_Type
   integer(kind=int4), intent(in), dimension(:,:):: Elem_Idx_LRC, Line_Idx_LRC
   integer, intent(out):: Pass_Idx_Min, Pass_Idx_Max
@@ -4034,7 +4034,7 @@ subroutine COMPUTE_PROCESSING_ORDER(Invalid_Data_Mask, &
   Number_of_Lines = size(Elem_Idx_LRC,2)
 
   Processing_Order = MISSING_VALUE_INTEGER1
-  where(Invalid_Data_Mask == symbol%NO) 
+  where( .NOT. Invalid_Data_Mask ) 
     Processing_Order =  0
   endwhere
 
@@ -4048,7 +4048,7 @@ subroutine COMPUTE_PROCESSING_ORDER(Invalid_Data_Mask, &
      Element_Loop:   do Elem_Idx = 1, Number_of_Elements
 
         !--- skip data marked as bad
-        if (Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) then
+        if (Invalid_Data_Mask(Elem_Idx,Line_Idx) ) then
             cycle
         endif
 

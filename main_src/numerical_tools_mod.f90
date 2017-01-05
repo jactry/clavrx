@@ -932,7 +932,7 @@ subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
  real, intent(out):: z_median
  real, intent(out):: z_mean
  real, intent(out):: z_std_median
- integer(kind=int1), dimension(:,:), intent(in):: mask 
+ logical, dimension(:,:), intent(in):: mask 
  integer:: i,j,k,nx,ny,nelem
  real, dimension(:), allocatable::x
  real(kind=real4):: u
@@ -952,7 +952,7 @@ subroutine COMPUTE_MEDIAN(z,mask,z_median,z_mean,z_std_median)
  k = 0
  do i = 1, nx
    do j = 1, ny
-      if (mask(i,j) == sym%NO .and. z(i,j) /= missing_value_real4) then
+      if ( .NOT. mask(i,j) .and. z(i,j) /= missing_value_real4) then
            k = k + 1   
            x(k) = z(i,j)
       endif

@@ -220,7 +220,7 @@ end subroutine EXPAND_SPACE_MASK_FOR_USER_LIMITS
 !======================================================================
 subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask) 
 
-   integer(kind=int1), dimension(:,:), intent(out):: Solar_Contamination_Mask
+   logical, dimension(:,:), intent(out):: Solar_Contamination_Mask
    integer:: Number_of_Elements
    integer:: Number_of_Lines
    integer:: Elem_Idx
@@ -232,7 +232,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
    Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
 
    !--- initialize 
-   Solar_Contamination_Mask(:,1:Number_Of_Lines) = sym%NO
+   Solar_Contamination_Mask(:,1:Number_Of_Lines) = .FALSE.
 
    !---  loop through lines and elements
    line_loop: do Line_Idx = 1, Number_of_Lines
@@ -246,11 +246,11 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
             if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
               if (therm_cal_1b == sym%NO) then
                 if (Ch1_Counts(Elem_Idx,Line_Idx) > Solar_Contamination_Thresh_AVHRR) then 
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = .TRUE.
                 endif
               else
                 if (Ch1_Counts(Elem_Idx,Line_Idx) > Solar_Contamination_Thresh_AVHRR) then 
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = .TRUE.
                 endif 
               endif
 
@@ -262,7 +262,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
           if (index(Sensor%Sensor_Name,'GOES') > 0) then
              if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and. (Geo%Scatangle(Elem_Idx,Line_Idx) < 60.0)) then
                 if (Ch1_Counts(Elem_Idx,Line_Idx) > Solar_Contamination_Thresh_GEO) then
-                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+                   Solar_Contamination_Mask(Elem_Idx,Line_Idx) = .TRUE.
                 endif 
              endif
           endif
@@ -273,7 +273,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
         if (index(Sensor%Sensor_Name,'GOES') > 0) then
           if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) .and.  (Geo%Scatangle(Elem_Idx,Line_Idx) < 180.0)) then
             if (Ch1_Counts(Elem_Idx,Line_Idx)  > Solar_Contamination_Thresh_GEO) then
-              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = .TRUE.
             endif
           endif
         endif
@@ -285,7 +285,7 @@ subroutine SET_SOLAR_CONTAMINATION_MASK(Solar_Contamination_Mask)
         
         if (index(Sensor%Sensor_Name,'FY2-IMAGER') > 0) then
           if ((Geo%Solzen(Elem_Idx,Line_Idx) > 90.0)) then
-              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = sym%YES
+              Solar_Contamination_Mask(Elem_Idx,Line_Idx) = .TRUE.
           endif
         endif
 
@@ -454,7 +454,7 @@ end subroutine SET_SOLAR_CONTAMINATION_MASK
 ! Note, Bad_Pixel_Mask is modified but not created here. Do not initialize
 !--------------------------------------------------------------------------
 subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
-   integer(kind=int1), dimension(:,:), intent(inout):: Bad_Pixel_Mask
+   logical, dimension(:,:), intent(inout):: Bad_Pixel_Mask
    integer:: Number_of_Elements
    integer:: Number_of_Lines
    integer:: Elem_Idx
@@ -469,7 +469,7 @@ subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
 
         !--- invalid sfc type observations
         if (Sfc%Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) > 15) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = .TRUE.
         endif
 
       enddo

@@ -254,7 +254,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       !                 041 044 048 055 068  074  085 124 138  160 225 375  405  855  108  120
       !                 M1  M2  M3  M4  M5   M6   M7  M8  M9   M10 M11 M12  M13  M14  M15  M16
       Modis_Chn_List = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
-      Is_Mband_On = Sensor%Chan_On_Flag_Default (Modis_Chn_List) == sym%YES
+      Is_Mband_On = Sensor%Chan_On_Flag_Default (Modis_Chn_List) 
 
       ! --- loop over m-band channels
       do I_Mband = Mband_Start , 16
@@ -328,7 +328,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
 
 
       ! --- read dnb data (use do loop to quit if no file)
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(44)) then
       do k = 1, 1
 
          ! - find dnb geo file

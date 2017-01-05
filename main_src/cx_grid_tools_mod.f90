@@ -2,7 +2,7 @@
 !
 
 module cx_grid_tools_mod
-   real, parameter :: real4 = selected_real_kind(6,37)
+   real, public,parameter :: real4 = selected_real_kind(6,37)
    integer, parameter :: int4 = selected_int_kind(8)
 contains
 

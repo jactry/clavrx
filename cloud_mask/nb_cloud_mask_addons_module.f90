@@ -130,7 +130,7 @@ module CLOUD_MASK_ADDONS
         !-------------------------------------------------------------------------
         !-- IR Dust algorithm
         !-------------------------------------------------------------------------
-        if (Input%SNOW_Class == symbol%NO_SNOW .and. Input%Chan_On_12um == symbol%YES .and. &
+        if (Input%SNOW_Class == symbol%NO_SNOW .and. Input%Chan_On_12um  .and. &
             (Input%Land_Class == symbol%DEEP_OCEAN .or. Input%Land_Class == symbol%MODERATE_OCEAN)) then
 
               Output%Dust_Mask = 0
@@ -498,9 +498,9 @@ module CLOUD_MASK_ADDONS
                     Bt_11_Std, &
                     Emiss_11_Tropo)
 
-   integer , intent(in) :: Chan_On_85
-   integer , intent(in) :: Chan_On_11
-   integer , intent(in) :: Chan_On_12
+   logical , intent(in) :: Chan_On_85
+   logical , intent(in) :: Chan_On_11
+   logical , intent(in) :: Chan_On_12
    real , intent(in) :: Bt_85
    real , intent(in) :: Bt_11
    real , intent(in) :: Bt_12
@@ -521,7 +521,7 @@ module CLOUD_MASK_ADDONS
    IR_Win_85_Diff_Flag = 1
 
    !--- Split Window
-   if (Chan_On_11 == 1 .and. Chan_On_12 == 1) then
+   if (Chan_On_11 .and. Chan_On_12 ) then
       Btd_11_12 = (Bt_11 - Bt_12)
       Btd_11_12_Metric = split_window_test(Bt_11_Clear, Bt_12_Clear,Bt_11, Bt_12)
       if (Btd_11_12 > Btd_11_12_Max_Dust_Thresh) Split_Win_Flag = 0
@@ -531,18 +531,18 @@ module CLOUD_MASK_ADDONS
 
    !--- 8.5-11 should be moderately negative.  ice clouds are positive
    !--- water clouds are very negative
-   if (Chan_On_11 == 1 .and. chan_On_12 == 1 .and. Chan_On_85 == 1) then
+   if (Chan_On_11  .and. chan_On_12  .and. Chan_On_85 ) then
       if ((Bt_85 - Bt_11) > Btd_85_11_Max_Dust_Thresh) IR_Win_85_Diff_Flag = 0
       if ((Bt_85 - Bt_11) < Btd_85_11_Min_Dust_Thresh) IR_Win_85_Diff_Flag = 0
    endif
 
    !--- 11um variabilty
-   if (Chan_On_11 == 1) then
+   if (Chan_On_11 ) then
       if (Bt_11_Std > Bt_11_Std_Max_Dust_Thresh) IR_Win_Std_Flag = 0
    endif
 
    !--- IR test - dust should low to moderate emissivity
-   if (Chan_On_11 == 1) then
+   if (Chan_On_11 ) then
        if (Emiss_11_Tropo > Emiss_11_Tropo_Max_Dust_Thresh) IR_Win_Flag = 0
        if (Emiss_11_Tropo < Emiss_11_Tropo_Min_Dust_Thresh) IR_Win_Flag = 0
        if (Bt_11 - Bt_11_Clear < Bt_11_Clear_Diff_Min_Dust_Thresh) IR_Win_Flag = 0

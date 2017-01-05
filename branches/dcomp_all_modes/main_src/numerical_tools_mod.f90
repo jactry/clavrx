@@ -1009,7 +1009,7 @@ subroutine COMPUTE_MEDIAN_SEGMENT(z,mask,n,imin,imax,jmin,jmax, &
                                   z_median, &
                                   z_std_median)
   real(kind=real4), dimension(:,:), intent(in):: z
-  integer(kind=int1), dimension(:,:), intent(in):: mask
+  logical, dimension(:,:), intent(in):: mask
   real(kind=real4), dimension(:,:), intent(out):: z_std_median
   real(kind=real4), dimension(:,:), intent(out):: z_median
 ! real(kind=real4), dimension(:,:), intent(out):: z_mean

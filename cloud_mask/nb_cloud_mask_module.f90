@@ -285,7 +285,7 @@ use NB_CLOUD_MASK_LUT_MODULE
           Night_Lunar_Flag = symbol%NO
           Lunar_Forward_Scattering_Flag = symbol%NO
 
-          if (Input%Chan_On_DNB == symbol%YES) then
+          if (Input%Chan_On_DNB ) then
              Lunar_Oceanic_Glint_Flag = Input%Lunar_Oceanic_Glint_Mask
              Lunar_Spatial_Flag = symbol%YES
              if (Input%Lunzen > Reflectance_Spatial_Solzen_Thresh) then
@@ -332,7 +332,7 @@ use NB_CLOUD_MASK_LUT_MODULE
           endif
 
           Cold_Scene_375um_Flag = symbol%NO
-          if (Input%Chan_On_375um == symbol%YES) then
+          if (Input%Chan_On_375um ) then
            if (Input%Bt_375um < Bt_375um_Cold_Scene_Thresh .and.  &
                Input%Bt_375um /= Missing_Value_Real4) then
               Cold_Scene_375um_Flag = symbol%YES
@@ -358,7 +358,7 @@ use NB_CLOUD_MASK_LUT_MODULE
 
           !--- City Flag of DNB Lunar Tests
           City_Flag = symbol%NO 
-          if (Input%Chan_On_DNB == symbol%YES) then
+          if (Input%Chan_On_DNB ) then
             if (Input%Rad_Lunar > Radiance_Lunar_City_Thresh) City_Flag = symbol%YES
           endif
 
@@ -395,12 +395,12 @@ use NB_CLOUD_MASK_LUT_MODULE
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("T_11") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um
 
                     case("T_Max-T") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
@@ -408,21 +408,21 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max - Input%Bt_11um
 
                     case("T_Std") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um =) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std
 
                     case("Emiss_Tropo") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
                        if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
 
                     case("FMFT") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_12um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
+                       if ( .NOT. Input%Chan_On_12um ) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
@@ -433,8 +433,8 @@ use NB_CLOUD_MASK_LUT_MODULE
                                              Input%Bt_11um, Input%Bt_12um)
 
                     case("Btd_11_67") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
+                       if ( .NOT. Input%Chan_On_67um ) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_67um == Missing_Value_Real4) cycle
                        if (Sfc_Idx == 1) cycle
@@ -447,22 +447,22 @@ use NB_CLOUD_MASK_LUT_MODULE
                        endif
 
                     case("Bt_11_67_Covar") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
+                       if ( .NOT. Input%Chan_On_67um ) cycle
                        if (Dry_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
                     case("Btd_11_85") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_85um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
+                       if ( .NOT. Input%Chan_On_85um ) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_85um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um - Input%Bt_85um
 
                     case("Emiss_375") 
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
@@ -474,7 +474,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                                          Input%Emiss_375um,Input%Emiss_375um_Clear)
 
                     case("Emiss_375_Day") 
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
                        if (Day_375_Flag == symbol%NO) cycle
@@ -487,7 +487,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                                          Input%Emiss_375um,Input%Emiss_375um_Clear)
 
                     case("Emiss_375_Night") 
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
@@ -499,8 +499,8 @@ use NB_CLOUD_MASK_LUT_MODULE
                                         Input%Emiss_375um,Input%Emiss_375um_Clear)
 
                      case("Btd_375_11_All") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_11um ) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                       !if (All_375_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
@@ -512,8 +512,8 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
                                                      (Input%Bt_375um_Clear - Input%Bt_11um_Clear)
                      case("Btd_375_11_Day") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_11um ) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Day_375_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
@@ -526,8 +526,8 @@ use NB_CLOUD_MASK_LUT_MODULE
                                                      (Input%Bt_375um_Clear - Input%Bt_11um_Clear)
 
                      case("Btd_375_11_Night") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_11um ) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
                        if (Cold_Scene_375um_Flag == symbol%YES) cycle
@@ -539,7 +539,7 @@ use NB_CLOUD_MASK_LUT_MODULE
 
                     case("Ref_063_Day")
                        if (Input%Solzen < 90.0) then
-                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_063um ) cycle
                          if (Oceanic_Glint_Flag == symbol%YES) cycle
                          if (Forward_Scattering_Flag == symbol%YES) cycle
                          if (Mountain_Flag == symbol%YES) cycle
@@ -551,7 +551,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                              reflectance_gross_contrast_test(Input%Ref_063um_Clear, Input%Ref_063um)
 
                        else
-                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_DNB) cycle
                          if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
                          if (Lunar_Forward_Scattering_Flag == symbol%YES) cycle
                          if (Mountain_Flag == symbol%YES) cycle
@@ -569,14 +569,14 @@ use NB_CLOUD_MASK_LUT_MODULE
 
                     case("Ref_Std")
                        if (Input%Solzen < 90.0) then
-                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_063um ) cycle
                          if (Day_063_Spatial_Flag == symbol%NO) cycle 
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
                          if (Input%Ref_063um_Std == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_063um_Std
                        else
-                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_DNB) cycle
                          if (Lunar_Spatial_Flag == symbol%NO) cycle
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
@@ -588,7 +588,7 @@ use NB_CLOUD_MASK_LUT_MODULE
 
                     case("Ref_063_Min_3x3_Day")
                        if (Input%Solzen < 90.0) then
-                         if (Input%Chan_On_063um == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_063um ) cycle
                          if (Day_063_Spatial_Flag == symbol%NO) cycle
                          if (Mountain_Flag == symbol%YES) cycle
                          if (Coastal_Flag == symbol%YES) cycle
@@ -597,7 +597,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_063um_Min, Input%Ref_063um)
                        else
-                         if (Input%Chan_On_DNB == symbol%NO) cycle
+                         if (.NOT. Input%Chan_On_DNB) cycle
                          if (Lunar_Spatial_Flag == symbol%NO) cycle
                          if (Night_Lunar_Flag == symbol%NO) cycle
                          if (Mountain_Flag == symbol%YES) cycle
@@ -612,7 +612,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                        endif
 
                     case("Ref_Ratio_Day")
-                       if (Input%Chan_On_063um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_063um ) cycle
                        if (Input%Chan_On_086um == symbol%NO) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
@@ -623,7 +623,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                                          Input%Ref_063um,Input%Ref_086um)
 
                     case("Ref_138_Day")
-                       if (Input%Chan_On_138um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_138um ) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
@@ -631,7 +631,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = Input%Ref_138um
 
                     case("Ref_160_Day")
-                       if (Input%Chan_On_160um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_160um ) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
@@ -639,7 +639,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = Input%Ref_160um
 
                     case("Ref_375_Day")
-                       if (Input%Chan_On_375um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_375um ) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
@@ -647,8 +647,8 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = Input%Ref_375um
 
                     case("Ndsi_Day")
-                       if (Input%Chan_On_063um == symbol%NO) cycle
-                       if (Input%Chan_On_160um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_063um ) cycle
+                       if (.NOT. Input%Chan_On_160um ) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle

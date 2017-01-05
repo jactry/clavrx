@@ -117,7 +117,7 @@ module CLOUD_BASE
 
     Element_Loop:   do Elem_Idx = 1, Input%Number_of_Elements
 
-     if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) == symbol%YES) cycle
+     if (Input%Invalid_Data_Mask(Elem_Idx,Line_Idx) ) cycle
      if ((Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0) .or. &
          (Input%Line_Idx_Nwp(Elem_Idx,Line_Idx) <= 0)) then
          cycle

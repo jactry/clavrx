@@ -69,11 +69,11 @@ contains
       integer :: i, j
       
       dim_array = shape ( array)
-      allocate (cx_rebin_i1(d1,d2))
+      allocate (cx_rebin_lo(d1,d2))
       
       do i = 1 , dim_array(1)
          do j = 1, d2/2
-            cx_rebin_i1(2*i-1 : 2*i, 2*j-1 : 2*j) = array(i,j)
+            cx_rebin_lo(2*i-1 : 2*i, 2*j-1 : 2*j) = array(i,j)
          
          end do
       end do   

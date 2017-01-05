@@ -182,11 +182,13 @@ module cx_sds_io_mod
       
       cx_sds_read_raw = -1
       
-      sds % nattr = 9
-      
+      !sds % nattr = 9
+      !call sds % info()
      
       cx_sds_read_raw = hdf_get_file_sds(file, nsds,sds,1, (/sds_name/), .false.,.false.) 
       
+		
+		
       ! sds.copy_from_
    
    end function cx_sds_read_raw
@@ -213,7 +215,7 @@ module cx_sds_io_mod
       ! -------------
       
       if (  cx_sds_read_raw ( file, sds_name, sds) < 0 ) goto 9999 
-      
+     
       pd=>sds(1)  % data
       ps=>sds(1)
       

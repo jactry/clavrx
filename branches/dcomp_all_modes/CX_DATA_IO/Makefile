@@ -4,7 +4,7 @@
 include config.mk
 
 #fc=ifort -g 
-fflags=-I./
+fflags=-C -g -O2 -I./
 DEPS=cx_sds_constants.F90
 OBJ=cx_sds_test.o cx_sds_io_mod.o cx_hdf_read_mod.o cx_sds_type_definitions_mod.o cx_hdf_write_mod.o
 

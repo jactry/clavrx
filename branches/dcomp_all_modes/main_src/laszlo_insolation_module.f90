@@ -96,7 +96,7 @@ contains
       Insolation_Aer_Opd = Missing_Value_Real4
 
       !--- check for required channels
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
+      if ( .not. Sensor%Chan_On_Flag_Default(1) ) return
       
       Year = Image%Start_Year
       Month_Local = month

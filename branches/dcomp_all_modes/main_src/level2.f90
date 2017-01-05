@@ -369,10 +369,10 @@ CONTAINS
              
             if (is_numeric(substring_2) .and. substring_2(2:) .ne. ')') then              
                read (substring_2,'(I2)') ch_switch
-               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.   
+               if ( .NOT. sensor % chan_on_flag_default(ch_switch) ) prd_i % switch = .false.   
             else if (is_numeric(substring_1)) then             
                read (substring_1,'(I1)') ch_switch
-               if ( sensor % chan_on_flag_default(ch_switch) .NE. sym%YES) prd_i % switch = .false.            
+               if ( .NOT. sensor % chan_on_flag_default(ch_switch) ) prd_i % switch = .false.            
             end if
             
          end if

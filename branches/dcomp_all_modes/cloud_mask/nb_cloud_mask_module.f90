@@ -230,7 +230,7 @@ use NB_CLOUD_MASK_LUT_MODULE
 
    Cld_Flags(1) = symbol%YES          ;    Cld_Flag_Bit_Depth(1) = 1
    !--- check for a bad pixel
-   if (Input%Invalid_Data_Mask == symbol%YES) then
+   if (Input%Invalid_Data_Mask ) then
       Cld_Flags(1) = symbol%NO
    else
 
@@ -408,7 +408,7 @@ use NB_CLOUD_MASK_LUT_MODULE
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max - Input%Bt_11um
 
                     case("T_Std") 
-                       if ( .NOT. Input%Chan_On_11um =) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
@@ -613,7 +613,7 @@ use NB_CLOUD_MASK_LUT_MODULE
 
                     case("Ref_Ratio_Day")
                        if (.NOT. Input%Chan_On_063um ) cycle
-                       if (Input%Chan_On_086um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_086um ) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle

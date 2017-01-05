@@ -442,7 +442,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
        write(Ichan_Goes_String,fmt="(I1)") Ichan_Goes
 
-       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) ) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//Ichan_Goes_String//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -481,7 +481,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 1 (GOES channel 1)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
        if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
@@ -507,7 +507,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 20 (GOES channel 2)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -532,7 +532,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 27 (GOES channel 3)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -557,7 +557,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 31 (GOES channel 4)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -582,7 +582,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 32 (GOES channel 5)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -607,7 +607,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 33 (GOES channel 6)
-   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_6_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -637,31 +637,31 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    do Elem_Idx = 1,Image%Number_Of_Elements
      do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20)) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) ) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) ) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
@@ -781,7 +781,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
           write(ichan_goes_string,fmt="(I2.2)") ichan_goes
        endif
 
-       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) ) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Ichan_Goes_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -819,7 +819,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 36 (GOES Sounder channel 2)
-   if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(36) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -846,7 +846,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 35 (GOES Sounder channel 3)
-   if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(35)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -872,7 +872,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 34 (GOES Sounder channel 4)
-   if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(34) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -898,7 +898,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
    !---   read channel 33 (GOES Sounder channel 5)
-   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -925,7 +925,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 32 (GOES Sounder channel 7)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_7_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -952,7 +952,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 31 (GOES Sounder channel 8)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_8_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -979,7 +979,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 30 (GOES Sounder channel 9)
-   if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(30) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_9_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1005,7 +1005,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 28 (GOES Sounder channel 10)
-   if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(28)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_10_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1031,7 +1031,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 27 (GOES Sounder channel 12)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_12_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1057,7 +1057,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 25 (GOES Sounder channel 13)
-   if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(25) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_13_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1084,7 +1084,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 24 (GOES Sounder channel 14)
-   if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(24) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_14_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1110,7 +1110,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 23 (GOES Sounder channel 16)
-   if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(23) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_16_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1136,7 +1136,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 21 (GOES Sounder channel 17)
-   if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(21)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_17_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1163,7 +1163,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 20 (GOES Sounder channel 18)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_18_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1191,7 +1191,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    
       !---   read channel 2 (GOES Sounder channel 19)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_19_" // &
                             Channel_1_Filename(ipos+3:ilen)
@@ -1224,90 +1224,90 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    !--------------------------------------------------------------------------
    do Elem_Idx = 1,Image%Number_Of_Elements
      do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
-        if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(36) ) then
            if (ch(36)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(36)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(36,ch(36)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(35) ) then
            if (ch(35)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(35)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(35,ch(35)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(34)) then
            if (ch(34)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(34)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(34,ch(34)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) ) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(30) ) then
            if (ch(30)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(30)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(30,ch(30)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(28) ) then
            if (ch(28)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(28)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(28,ch(28)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) ) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(25) ) then
             if (ch(25)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(25)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(25,ch(25)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(24) ) then
            if (ch(24)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(24)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(24,ch(24)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(23) ) then
             if (ch(23)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(23)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(23,ch(23)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(21) ) then
            if (ch(21)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(21)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(21,ch(21)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) ) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif

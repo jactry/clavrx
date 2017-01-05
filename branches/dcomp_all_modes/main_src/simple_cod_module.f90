@@ -57,7 +57,7 @@ module SIMPLE_COD
       real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
       integer:: Elem_Idx, Line_Idx
 
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return
+      if (.NOT. Sensor%Chan_On_Flag_Default(1))  return
 
       if (Table_Read_Flag == 0) then
          call READ_LUT(Read_Table_Error)
@@ -126,9 +126,9 @@ module SIMPLE_COD
       real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
       integer:: Elem_Idx, Line_Idx
 
-      if (Sensor%Chan_On_Flag_Default(44) == sym%NO)  return
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return     !issue - we need ch1 and ch2 white sky
-      if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return 
+      if ( .NOT. Sensor%Chan_On_Flag_Default(44) )  return
+      if (.NOT. Sensor%Chan_On_Flag_Default(1) )  return     !issue - we need ch1 and ch2 white sky
+      if (.NOT. Sensor%Chan_On_Flag_Default(2) ) return 
 
       if (Table_Read_Flag == 0) then
          call READ_LUT(Read_Table_Error)

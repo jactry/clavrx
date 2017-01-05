@@ -100,26 +100,26 @@ subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,
   Conv_Cld_Prob = 0.0
 
   !--- set bad data to missing
-  where(Bad_Pixel_Mask ==sym%YES)
+  where(Bad_Pixel_Mask )
     Conv_Cld_Prob = Missing_Value_Real4
   endwhere
 
   !--- if only 11 micron, use a tight threshold
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(31) ) then
     where(Emiss_11_Tropo >= Etrop_Thresh_1) 
       Conv_Cld_Prob = 1.0
     endwhere
   endif
 
-  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
-      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(27)  .and. &
+      Sensor%Chan_On_Flag_Default(31) ) then
     where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
      Conv_Cld_Prob = 1.0
     endwhere
   endif
 
   !--- limit false alarms over elevated terrain
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(31) ) then
     where(Tsfc - Bt11 < Tsfc_Thresh)
        Conv_Cld_Prob = 0.0
     endwhere
@@ -153,7 +153,7 @@ subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Tempera
      do Line_Idx = 1, Number_Of_Lines
         
        !--- filter bad
-       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
        !--- filter missing temps
        if (Cloud_Temperature(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
        !--- filter with cloud type
@@ -519,13 +519,13 @@ subroutine OPAQUE_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (.not. Sensor%Chan_On_Flag_Default(31)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !--- indice aliases
       Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
@@ -582,14 +582,14 @@ subroutine H2O_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if (.not. Sensor%Chan_On_Flag_Default(27)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
 !     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
@@ -659,9 +659,9 @@ subroutine CO2IRW_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(27)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(33)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
@@ -732,9 +732,9 @@ subroutine CTP_MULTILAYER()
    Ctp_Multilayer_Flag = Missing_Value_Int1
 
    !--- check if channels are on
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(27)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(33)) return
 
  
    !--- loop through pixels in the segment
@@ -818,10 +818,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
+  if ( .not. Sensor%Chan_On_Flag_Default(33)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(34)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(35) .or. &
+      .not. Sensor%Chan_On_Flag_Default(36) ) then
      return
   endif
 
@@ -829,7 +829,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- skip data without sounder data
      if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
@@ -988,10 +988,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
+  if ( .not. Sensor%Chan_On_Flag_Default(33)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(34)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(35)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(36) ) then
      return
   endif
 
@@ -1153,7 +1153,7 @@ subroutine SOUNDER_EMISSIVITY()
   integer:: Nwp_Lat_Idx
   integer:: Vza_Rtm_Idx
 
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
+  if ( .not. Sensor%Chan_On_Flag_Default(31) ) return
   if (.not. allocated(Cld_Press_Sounder)) return
   if (.not. allocated(Cld_Emiss_Sounder)) return
 
@@ -1422,7 +1422,7 @@ subroutine OPAQUE_TRANSMISSION_HEIGHT()
 
      do Chan_Idx = 27,38
 
-         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+         if ( .not. sensor % Chan_On_Flag_Default(Chan_Idx)  ) cycle
 
          Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
 
@@ -1464,7 +1464,7 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
 
      do Chan_Idx = 27, 38
 
-         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+         if ( .not. sensor % Chan_On_Flag_Default(Chan_Idx)  ) cycle
          if (ch(Chan_Idx)%Bt_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
            !--- initialize to cloudy

@@ -1478,7 +1478,7 @@ print*,'after nscans> ', Image%Number_Of_Lines
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
 
-         if (Sensor%Chan_On_Flag_Default(1)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(1)) then
             call READ_DARK_COMPOSITE_COUNTS(Segment_Number, Goes_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
             call CALIBRATE_GOES_DARK_COMPOSITE(Two_Byte_Temp,Time_Since_Launch,Ref_Ch1_Dark_Composite)

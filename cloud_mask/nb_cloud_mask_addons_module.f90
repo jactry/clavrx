@@ -171,7 +171,7 @@ module CLOUD_MASK_ADDONS
       !-----------------------------------------------------------------------------
       ! VCM Thin Cirrus Algorithm (only for daytime)
       !-----------------------------------------------------------------------------
-      if (Input%Chan_On_138um == symbol%YES .and.  &
+      if (Input%Chan_On_138um  .and.  &
           Input%Solzen <= Reflectance_Spatial_Solzen_Thresh) then
            
           Output%Thin_Cirr_Mask = 0

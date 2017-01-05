@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !
 !   this tool reads HDF LUTs
 !    

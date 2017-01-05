@@ -233,7 +233,7 @@ module ASOS_MODULE
       i22 = min(Input%Number_of_Elements,i+M)
 
       !--- check for a bad pixel pixel
-      if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle
+      if (Input%Invalid_Data_Mask(i,j) ) cycle
 
       !--- check for an ocean pixel
       if (Input%Surface_Type(i,j) == Symbol%WATER_SFC) cycle

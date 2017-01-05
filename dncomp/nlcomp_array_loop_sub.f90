@@ -1,4 +1,4 @@
-! $Id:$
+! $Id$
 !
 !  HISTORY: 2014/01/12
 !         : AW first verisob of NLCOMP for arrays

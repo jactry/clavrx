@@ -1,4 +1,4 @@
-! $Header: https://svn.ssec.wisc.edu/repos/cloud_team_nlcomp/trunk/nlcomp_array.f90 8 2014-01-31 08:14:58Z awalther $
+! $Id:$
 !
 !  HISTORY: 2014/01/12
 !         : AW first verisob of NLCOMP for arrays
@@ -28,11 +28,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    integer , parameter :: N_CHAN = 44
    real  :: ALBEDO_OCEAN (N_CHAN)
    real, parameter :: SAT_ZEN_MAX = 80.
-   real, parameter :: SOL_ZEN_MIN = 90.
-   
+   real, parameter :: SOL_ZEN_MIN = 90. 
    real, parameter :: PI = 3.14159265359
   
-   
    ! - local logical arrays 
    real,  allocatable    :: air_mass_array( : , : )
    logical , allocatable :: is_cloud( : , : )
@@ -44,31 +42,22 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    integer ( kind = int2)  , allocatable :: quality_flag ( :,:)
    ! - 
    type ( nlcomp_output_structure ) :: nlcomp_out
-   
    integer :: debug_mode
-   
    integer :: array_dim(2)
    integer :: dim_1 
    integer :: dim_2
    integer :: nr_lines
    integer :: nr_elem
-   
-   
-   real ::calib_err ( N_CHAN )
-   
-   
-   
-    real :: cld_height
+   real :: calib_err ( N_CHAN )
+   real :: cld_height
    real :: cld_press
    real :: cld_temp
-   
    real :: rel_azi , lunar_rel_azi
    real :: sol_zen , sat_zen , lunar_zen
    integer :: line_idx , elem_idx
-   
    integer :: chn_idx
-   integer , parameter :: CHN_VIS = 44
-   integer ,parameter  :: CHN_NIR = 20
+   integer, parameter :: CHN_VIS = 44
+   integer, parameter  :: CHN_NIR = 20
    real(kind=real4) :: gas_coeff (3)
    
    real( kind = real4 ) :: trans_ozone ( N_CHAN )
@@ -77,10 +66,8 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real( kind = real4 ) :: trans_wvp ( N_CHAN )
    real( kind = real4 ) :: trans_unc_wvp ( N_CHAN )
    real( kind = real4 ) :: trans_total ( N_CHAN )
-   
    real( kind = real4 ) :: assumed_tpw_error 
    real( kind = real4 ), parameter :: ozone_coeff (3)    = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ]
-   
    real ( kind = real4 ) :: refl_toc(N_CHAN)
    real ( kind = real4 ) :: alb_sfc(N_CHAN)
    real ( kind = real4 ) :: alb_unc_sfc(N_CHAN)
@@ -105,9 +92,9 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    ! - executable
    
    debug_mode = 1
- if ( present ( debug_mode_user)) debug_mode = debug_mode_user
+   if ( present ( debug_mode_user)) debug_mode = debug_mode_user
    array_dim = shape ( input % sat % d )
-dim_1 = array_dim (1) 
+   dim_1 = array_dim (1) 
    dim_2 = array_dim (2)
    nr_lines = array_dim(2)
    nr_elem = array_dim(1)

@@ -140,7 +140,7 @@ scan_loop: do j = jmin, jmax + jmin - 1
 pixel_loop:  do i = 1, Image%Number_Of_Elements
 
 !--- check for a bad pixel
-if (Bad_Pixel_Mask(i,j) == sym%YES) then 
+if (Bad_Pixel_Mask(i,j) ) then 
     cycle
 endif
 

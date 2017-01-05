@@ -622,7 +622,7 @@ contains
          element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
                                                                        
             !--- check for bad scans
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
                cycle
             endif
 
@@ -2566,7 +2566,7 @@ contains
 
       !--- check for missing tropopause level
       if (Rtm(Lon_Idx,Lat_Idx)%Tropo_Level == 0) then
-         Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+         Bad_Pixel_Mask(Elem_Idx,Line_Idx) = .TRUE.
          return
       end if
 

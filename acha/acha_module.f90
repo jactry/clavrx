@@ -1597,7 +1597,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !-------------------------------------------------------------------------- 
  !--  If Lower Cloud is placed at surface - assume this single layer
  !--------------------------------------------------------------------------
- if (MULTI_LAYER_LOGIC_FLAG > 0) then 
+ if (MULTI_LAYER_LOGIC_FLAG == 0 .or. MULTI_LAYER_LOGIC_FLAG == 2) then 
    if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
       Output%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
       Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4

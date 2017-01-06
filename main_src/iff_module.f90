@@ -688,37 +688,37 @@ subroutine READ_IFF_LEVEL1B ( config, out, error_out )
                     stride_3d,edge_3d,out % geo % nearest_sounder_y) + Status
 
         ! --- loop over all pixels and interpolate all channels based on 11um
-        ! SOUNDER 11um = ch 37, imager 11um = ch 31
-        ! i is ele index, j is line index
-        do empty_i = 1, size(out % band (37) % rad, 1)
-            do empty_j = 1, size(out % band (37) % rad, 2)
-                if (out % band (37) % rad(empty_i, empty_j) /= missing_value) cycle
-                ! ! --- nearest neighbor:
-                ! --- 11um comparison scheme
-                this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
-                best_diff_11um = 1.e30
-                do nearest_i = 1, 4
-                    ! subtract ny_start to get indices into this *segment*!
-                    ! also careful 1-based indexing!!!
-                    interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
-                    interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
-                    if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
-                        diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
-                        if (diff_11um < best_diff_11um) then
-                           ! assign sounder bands w/this index
-                           do i_band = 22, 36 !config % n_chan 
-                              !if ( i_band == 37 .or. i_band == 38 ) cycle
-                              if ( sounder_ch (i_band) ) then
-                                 out % band (i_band) % rad(empty_i, empty_j) = &
-                                     out % band (i_band) % rad(interp_i, interp_j)
-                              endif
-                           enddo
-                           best_diff_11um = diff_11um
-                        endif
-                    endif
-                enddo
-            enddo
-        enddo
+!       ! SOUNDER 11um = ch 37, imager 11um = ch 31
+!       ! i is elem index, j is line index
+!       do empty_i = 1, size(out % band (37) % rad, 1)
+!           do empty_j = 1, size(out % band (37) % rad, 2)
+!               if (out % band (37) % rad(empty_i, empty_j) /= missing_value) cycle
+!               ! ! --- nearest neighbor:
+!               ! --- 11um comparison scheme
+!               this_imgr_11um = out % band (31) % rad(empty_i, empty_j)  ! avhrr ch4 for comparison
+!               best_diff_11um = 1.e30
+!               do nearest_i = 1, 4
+!                   ! subtract ny_start to get indices into this *segment*!
+!                   ! also careful 1-based indexing!!!
+!                   interp_j = out % geo % nearest_sounder_y (empty_i, empty_j, nearest_i) - ny_start + 1
+!                   interp_i = out % geo % nearest_sounder_x (empty_i, empty_j, nearest_i) + 1
+!                   if (interp_j > 0 .and. interp_j <= size(out % band (37) % rad, 2)) then
+!                       diff_11um = abs(this_imgr_11um - out % band (37) % rad(interp_i, interp_j))
+!                       if (diff_11um < best_diff_11um) then
+!                          ! assign sounder bands w/this index
+!                          do i_band = 22, 36 !config % n_chan 
+!                             !if ( i_band == 37 .or. i_band == 38 ) cycle
+!                             if ( sounder_ch (i_band) ) then
+!                                out % band (i_band) % rad(empty_i, empty_j) = &
+!                                    out % band (i_band) % rad(interp_i, interp_j)
+!                             endif
+!                          enddo
+!                          best_diff_11um = diff_11um
+!                       endif
+!                   endif
+!               enddo
+!           enddo
+!       enddo
  
         ! --- Read indices from sounder
         setname_band = 'SounderFOV'

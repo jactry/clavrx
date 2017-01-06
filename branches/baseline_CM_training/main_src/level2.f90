@@ -3903,7 +3903,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
      if (Sds_Num_Level2_Ch1_Clr_Std_BCM_Flag == sym%YES .and. &
          Sensor%Chan_On_Flag_Default(1) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clr_Std_BCM),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
-                               "refl_0_65um_nom_clr_sky_bcm_max_3x3", &
+                               "refl_0_65um_nom_clr_sky_bcm_stddev_3x3", &
                                "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal", &
                                "3x3 Standard Deviation top of atmosphere bidirectional"// &
                                " reflectance modeled assuming clear skies"// &

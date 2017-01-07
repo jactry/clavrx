@@ -1227,19 +1227,19 @@ module AWG_CLOUD_HEIGHT
      write(unit=lun_diag,fmt=*) "initial Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
    endif 
 
-  !--- modify a priori values based on lrc
-  if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
-    if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
-        (jlrc /= MISSING_VALUE_INTEGER4)) then
-         if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
-            (Output%Ec(ilrc,jlrc) > 0.00) .and. &
-            (Output%Ec(ilrc,jlrc) <= 1.0)) then
-          !-- use lrc value but weight uncertainty
-          x_Ap(1) = Output%Tc(ilrc,jlrc)
-          Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
-        endif
-    endif
-  endif
+! !--- modify a priori values based on lrc
+! if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
+!   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
+!       (jlrc /= MISSING_VALUE_INTEGER4)) then
+!        if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
+!           (Output%Ec(ilrc,jlrc) > 0.00) .and. &
+!           (Output%Ec(ilrc,jlrc) <= 1.0)) then
+!         !-- use lrc value but weight uncertainty
+!         x_Ap(1) = Output%Tc(ilrc,jlrc)
+!         Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
+!       endif
+!   endif
+! endif
 
   !--- square the individual elements to convert to variances (not a matmul)
   Sa = Sa**2
@@ -1354,6 +1354,7 @@ Retrieval_Loop: do
  
   Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
+
   Bs = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
 
   Rad_Clear_11um = Rad_Atm + Trans_Atm*Emiss_Sfc_11um*Bs   
@@ -2690,7 +2691,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4):: Emiss_Weight2
 
   !--- calipso values (not multiplier on uncer values)
-  call compute_cirrus_apriori(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
+  call COMPUTE_CIRRUS_APRIORI(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
 
   Tc_Ap_Opaque = Tc_Opaque
 
@@ -2744,10 +2745,8 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
 
     if (Emiss_11um_Tropo > 0.90) then
       Tc_Ap = Tc_Ap_Opaque
-      Tc_Ap_Uncer = Tc_Ap_Opaque
+      Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
     endif
-
-
 
   endif
 
@@ -4251,7 +4250,7 @@ end function OCEANIC_LAPSE_RATE_OLD
 ! estimate cirrus aprior temperature and uncertainty from a precomputed 
 ! latitude table (stored in acha_parameters.inc)
 !----------------------------------------------------------------------------
-subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_uncer)
+subroutine COMPUTE_CIRRUS_APRIORI(t_tropo, latitude, tc_apriori, tc_apriori_uncer)
   real, intent(in):: t_tropo
   real, intent(in):: latitude
   real, intent(out):: tc_apriori
@@ -4264,11 +4263,17 @@ subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_unce
   lat_idx = int((latitude - lat_min) / delta_lat) + 1
   lat_idx = max(1,min(lat_idx, num_lat_cirrus_ap))
   
-  tc_apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)
-  tc_apriori_uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
+  Tc_Apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)
+  Tc_Apriori_Uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
+  
+  !--- values of the std dev are too small so use a fixed value for uncertainty
+  Tc_Apriori_Uncer = 20.0
 
-end subroutine compute_cirrus_apriori
+end subroutine COMPUTE_CIRRUS_APRIORI
 
+!--------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------
   FUNCTION get_lun_acha() RESULT( lun )
 
 

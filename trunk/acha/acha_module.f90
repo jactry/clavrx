@@ -1227,19 +1227,19 @@ module AWG_CLOUD_HEIGHT
      write(unit=lun_diag,fmt=*) "initial Sa = ", Tc_Ap_Uncer,Ec_Ap_Uncer, Beta_Ap_Uncer, Ts_Ap_Uncer
    endif 
 
-! !--- modify a priori values based on lrc
-! if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
-!   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
-!       (jlrc /= MISSING_VALUE_INTEGER4)) then
-!        if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
-!           (Output%Ec(ilrc,jlrc) > 0.00) .and. &
-!           (Output%Ec(ilrc,jlrc) <= 1.0)) then
-!         !-- use lrc value but weight uncertainty
-!         x_Ap(1) = Output%Tc(ilrc,jlrc)
-!         Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
-!       endif
-!   endif
-! endif
+  !--- modify a priori values based on lrc
+  if (Pass_Idx /= Pass_Idx_Max .or. USE_CIRRUS_FLAG == symbol%NO) then
+    if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
+        (jlrc /= MISSING_VALUE_INTEGER4)) then
+         if ((Output%Tc(ilrc,jlrc) /= MISSING_VALUE_REAL4) .and. &
+            (Output%Ec(ilrc,jlrc) > 0.00) .and. &
+            (Output%Ec(ilrc,jlrc) <= 1.0)) then
+          !-- use lrc value but weight uncertainty
+          x_Ap(1) = Output%Tc(ilrc,jlrc)
+          Sa(1,1) = 5.0 + (1.0-Output%Ec(ilrc,jlrc))*Tc_Ap_Uncer
+        endif
+    endif
+  endif
 
   !--- square the individual elements to convert to variances (not a matmul)
   Sa = Sa**2

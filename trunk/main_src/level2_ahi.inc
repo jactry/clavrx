@@ -269,7 +269,7 @@
      Sds_Num_Level2_Ch20_Emiss = 258,     Sds_Num_Level2_Ch20_Emiss_Flag = 1, &
      Sds_Num_Level2_Ch20_Emiss_Clear=259, Sds_Num_Level2_Ch20_Emiss_Clear_Flag = 1, &
      Sds_Num_Level2_Ch20_Emiss_Median=260,Sds_Num_Level2_Ch20_Emiss_Median_Flag = 1, &
-     Sds_Num_Level2_Ch1_Min_3x3 = 261,    Sds_Num_Level2_Ch1_Min_3x3_Flag = 0, &
+     Sds_Num_Level2_Ch1_Min_3x3 = 261,    Sds_Num_Level2_Ch1_Min_3x3_Flag = 1, &
      Sds_Num_Level2_Bt_11_67_Covar = 262, Sds_Num_Level2_Bt_11_67_Covar_Flag = 1, &
      Sds_Num_Level2_Btd_Ch31_Ch32 = 263,  Sds_Num_Level2_Btd_Ch31_Ch32_Flag = 1, &
      Sds_Num_Level2_Ctt_Opa = 264,        Sds_Num_Level2_Ctt_Opa_Flag = 1, &

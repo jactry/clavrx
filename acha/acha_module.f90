@@ -1890,6 +1890,9 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
 
+Diag%Array_1 = Output%Tc
+Diag%Array_2 = Temperature_Cirrus
+
 endif
 
 end do pass_loop
@@ -3913,6 +3916,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Cld_Type, &
    Mask1 = 0
    where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
            Cld_Type == symbol%OPAQUE_ICE_TYPE .or.  &
+           Cld_Type == symbol%OVERSHOOTING_TYPE .or.  &
            Cld_Type == symbol%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud >= Emissivity_Thresh)
@@ -3922,14 +3926,14 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Cld_Type, &
    !---- make target mask
    Mask2 = 0
    where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
-           Cld_Type == symbol%OPAQUE_ICE_TYPE) .and.  &
+           Cld_Type == symbol%OVERLAP_TYPE) .and. &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud < Emissivity_Thresh)
       Mask2 = 1
    end where
 
 
-   call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
+   call MEAN_SMOOTH(Mask1,Mask2,Missing,5,5,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
                     Temperature_Cloud,Temperature_Cirrus)
 
    !--------------------------------------
@@ -4175,10 +4179,13 @@ end subroutine COMPUTE_BOX_WIDTH
         j1 = min(Num_Lines,max(1,j - N))
         j2 = min(Num_Lines,max(1,j + N))
 
-        do i = 1 + N + di, Num_Elements - N - di, di + 1
+        !do i = 1 + N + di, Num_Elements - N - di, di + 1
+        do i = 1 + di, Num_Elements - di, di + 1
 
-          i1 = i - N
-          i2 = i + N
+        !  i1 = i - N
+        !  i2 = i + N
+           i1 = min(Num_Elements,max(1,i - N))
+           i2 = min(Num_ELements,max(1,i + N))
 
           Z_Out(i,j) = Missing
 

@@ -51,10 +51,10 @@
  real, private, parameter :: Max_Bt_11um_LRC = 290.0
 
  !--- Cirrus Box Parameters
- integer, private, parameter :: USE_CIRRUS_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)
+ integer, private, parameter :: USE_CIRRUS_FLAG = 0  ! (0 = sym%NO, 1 = sym%YES)
  real (kind=real4), parameter:: EMISSIVITY_MIN_CIRRUS = 0.7
- integer (kind=int4), parameter:: COUNT_MIN_CIRRUS = 3 !5
- integer (kind=int4), parameter:: CIRRUS_BOX_WIDTH_KM = 200 !200
+ integer (kind=int4), parameter:: COUNT_MIN_CIRRUS = 50 !5
+ integer (kind=int4), parameter:: CIRRUS_BOX_WIDTH_KM = 400 !200
 
  !---- Lower Cloud Parameters
  integer, private, parameter :: USE_LOWER_INTERP_FLAG = 1  ! (0 = sym%NO, 1 = sym%YES)

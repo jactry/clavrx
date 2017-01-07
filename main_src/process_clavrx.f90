@@ -95,7 +95,6 @@
    use LEVEL2_ROUTINES
    use OISST_ANALYSIS
    use SURFACE_PROPERTIES
-!  use UNIVERSAL_CLOUD_TYPE_MODULE
    use IR_CLOUD_TYPE_BAUM_MODULE
    use CLOUD_HEIGHT_ROUTINES
    use ACHA_CLAVRX_BRIDGE
@@ -486,9 +485,7 @@ print *, "HERE 3"
       !------------------------------------------------------------------
       ! Create pixel arrays which data for this segment
       !------------------------------------------------------------------
-print *, "BEFORE CREATE PIXEL"
       call CREATE_PIXEL_ARRAYS()
-print *, "AFTER CREATE PIXEL"
 
       !------------------------------------------------------------------
       ! Read in Dark Sky Composite
@@ -1120,7 +1117,6 @@ print *, "AFTER CREATE PIXEL"
                else  
 
                   call CLOUD_TYPE_BRIDGE()
-!                 call UNIVERSAL_CLOUD_TYPE()
                   call IR_CLOUD_TYPE_BAUM()
 
                   if (Use_IR_Cloud_Type_Flag) then

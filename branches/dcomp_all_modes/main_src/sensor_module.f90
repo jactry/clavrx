@@ -130,8 +130,10 @@ module SENSOR_MODULE
       READ_IFF_DATA &
       , READ_IFF_VIIRS_INSTR_CONSTANTS &
       , READ_IFF_AVHRR_INSTR_CONSTANTS &
-      , READ_IFF_DATE_TIME &
       , GET_IFF_DIMS_BRIDGE
+   
+   use IFF_MODULE, only: &
+         READ_IFF_DATE_TIME
       
    use MTSAT_MODULE,only: &
       mtsat_xstride &

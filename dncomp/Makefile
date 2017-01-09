@@ -3,8 +3,9 @@
 
 RM := rm -rf
 
-include config.mk
 
+ARCH=gfortran
+include arch/$(ARCH)
 
 HDFDIR = $(hdf4root)
 HDFINC = $(HDFDIR)/include

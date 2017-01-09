@@ -8,8 +8,8 @@ ARCH=gfortran
 include arch/$(ARCH)
 
 HDFDIR = $(hdf4root)
-HDFINC = $(HDFDIR)/include
-HDFLIB = $(HDFDIR)/lib
+HDFINC = $(SSEC_HDF4_INC)
+HDFLIB = $(SSEC_HDF4_LIB)
 
 CFLAGS = -O2 -w  -I$(HDFINC)
 LFLAGS =  -L$(HDFLIB)  -lmfhdf -ldf -ljpeg -lz -lm -w

@@ -12,10 +12,10 @@ ldflags = -O2 -assume byterecl
 cpp = -cpp
 cppflags = 
 beconv = -convert big_endian
-hdflibs = -L/Users/awalther/lib/hdf4//lib -I/Users/awalther/lib/hdf4//include/ -lmfhdf -ldf -ljpeg -lz
-hdfincs = -I/Users/awalther/lib/hdf4//include
-netcdflibs = -L/Users/awalther/lib/netcdf3/lib -I/Users/awalther/lib/netcdf3/include -lnetcdf
-hdf5libs = -I/Users/awalther/lib/hdf5/include/ -L/Users/awalther/lib/hdf5/lib/
+hdflibs = -L$(HOME)/lib/hdf4/lib/ -I$(HOME)/lib/hdf4//include/ -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(HOME)/lib/hdf4//include
+netcdflibs = -L$(HOME)/lib/netcdf3/lib -I$(HOME)/lib/netcdf3/include -lnetcdf
+hdf5libs = -I$(HOME)/lib/hdf5/include/ -L$(HOME)/lib/hdf5/lib/
 hdf5links = -lhdf5_fortran -lhdf5 -lz
 
 

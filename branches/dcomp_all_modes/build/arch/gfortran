@@ -12,9 +12,9 @@ ldflags = -O2
 cpp = -cpp
 cppflags = 
 beconv = -fconvert=big-endian
-hdflibs = -L$(HOME)/lib/hdf4_gcc//lib  -I$(HOME)/lib/hdf4_gcc//include/ -lmfhdf -ldf -ljpeg -lz
-hdfincs = -I$(HOME)/lib/hdf4_gcc//include
+hdflibs = -L$(SSEC_HDF4_LIB)  -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(SSEC_HDF4_INC)
 netcdflibs = -L$(HOME)/lib/netcdf3_gcc/lib -I$(HOME)/lib/netcdf3_gcc/include -lnetcdf
-hdf5libs = -I$(HOME)/lib/hdf5_gcc/include/ -L$(HOME)/lib/hdf5_gcc/lib/
+hdf5libs = -I$(SSEC_HDF5_INC) -L$(SSEC_HDF5_LIB)
 hdf5links = -lhdf5_fortran -lhdf5 -lz
 

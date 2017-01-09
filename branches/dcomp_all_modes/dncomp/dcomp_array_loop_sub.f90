@@ -15,6 +15,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       , EM_cloud_type &
       , EM_cloud_mask &
       , EM_snow_class
+      
    use dncomp_trans_atmos_mod,only: &
     trans_atm_above_cloud  
       

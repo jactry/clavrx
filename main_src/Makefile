@@ -16,6 +16,7 @@
 #
 
 TOPDIR=..
+ARCH=gfortran
 include $(TOPDIR)/build/Makefile.inc
 
 
@@ -215,7 +216,7 @@ cx_ahi_test_objs = cx_read_ahi_test_program.o \
   CLAVRX_OBJ_FILES = $(clavrxorb_objs)
 
 dncomp:
-	$(MAKE)  -C $(DNCOMP) 
+	$(MAKE)  -C $(DNCOMP) ARCH=$(ARCH)
 
 
 clavrxorb: $(clavrxorb_objs) bindir

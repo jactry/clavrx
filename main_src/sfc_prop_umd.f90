@@ -48,7 +48,7 @@
 ! Private Routines: None
 !
 !--------------------------------------------------------------------------------------
-module SURFACE_PROPERTIES
+module SURFACE_PROPERTIES_UMD_MOD
 use CX_CONSTANTS_MOD
 use PIXEL_COMMON
 
@@ -556,4 +556,4 @@ i_loop:    do i = 1,Image%Number_Of_Elements
 
 	end subroutine COMPUTE_COAST_MASK_FROM_LAND_MASK
 
-end module SURFACE_PROPERTIES
+end module SURFACE_PROPERTIES_UMD_MOD

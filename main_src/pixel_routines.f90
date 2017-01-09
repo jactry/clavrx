@@ -66,7 +66,7 @@ MODULE PIXEL_ROUTINES
       , PLANCK_RAD_FAST &
       , PLANCK_TEMP_FAST
    
-   use SURFACE_PROPERTIES,only: &
+   use SFC_PROP_UMD_MOD,only: &
       Ch1_sfc_alb_umd &
       , Ch1_Snow_Sfc_Alb_Umd &
       , Ch2_Sfc_Alb_Umd &

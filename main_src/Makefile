@@ -82,7 +82,7 @@ clavrxorb_objs = process_clavrx.o \
                  clavrx_sst_module.o \
                  numerical_tools_mod.o \
                  planck.o \
-                 sfc_prop_umd.o \
+                 sfc_prop_umd_mod.o \
                  cgms_nav.o \
                  scaling_params.o \
                  netcdf_read_module.o \
@@ -372,7 +372,7 @@ netcdf_read_module.o: netcdf_read_module.f90 cx_constants_mod.o
 numerical_tools_mod.o: numerical_tools_mod.f90 cx_constants_mod.o   
 nwp_common.o: nwp_common.f90 pixel_common.o cx_constants_mod.o cx_science_tools_mod.o  numerical_tools_mod.o
 pixel_common.o: pixel_common.f90 cx_constants_mod.o clavrx_message_module.o
-pixel_routines.o: pixel_routines.f90 cx_constants_mod.o pixel_common.o nwp_common.o planck.o land_sfc_properties.o sfc_prop_umd.o  cx_science_tools_mod.o
+pixel_routines.o: pixel_routines.f90 cx_constants_mod.o pixel_common.o nwp_common.o planck.o land_sfc_properties.o sfc_prop_umd_mod.o  cx_science_tools_mod.o
 planck.o: planck.f90 cx_constants_mod.o calibration_constants.o pixel_common.o numerical_tools_mod.o
 precision.o:precision.f90
 seviri_module.o: seviri_module.f90 pixel_common.o cx_constants_mod.o numerical_tools_mod.o goes_module.o file_tools.o viewing_geometry_module.o
@@ -392,9 +392,9 @@ reposition_module.o: reposition_module.f90 cx_constants_mod.o numerical_tools_mo
 oca_module.o: oca_module.f90  file_tools.o cx_constants_mod.o pixel_common.o
 sfc_emiss.o: sfc_emiss.f90 cx_constants_mod.o numerical_tools_mod.o
 scaling_params.o: scaling_params.f90 cx_constants_mod.o
-sfc_prop_umd.o: sfc_prop_umd.f90 pixel_common.o cx_constants_mod.o
+sfc_prop_umd_mod.o: sfc_prop_umd_mod.f90 pixel_common.o cx_constants_mod.o
 cx_string_tools_mod.o:cx_string_tools_mod.f90 precision.o
-simple_cod_module.o: simple_cod_module.f90 cx_constants_mod.o pixel_common.o numerical_tools_mod.o file_tools.o sfc_prop_umd.o
+simple_cod_module.o: simple_cod_module.f90 cx_constants_mod.o pixel_common.o numerical_tools_mod.o file_tools.o sfc_prop_umd_mod.o
 rt_utils.o: rt_utils.f90 rtm_common.o pixel_common.o nwp_common.o cx_constants_mod.o cx_pfaast_mod.o calibration_constants.o cx_science_tools_mod.o date_tools_mod.o
 
 #sensor
@@ -441,7 +441,7 @@ baseline_cloud_mask.o: $(BASELINEMASK)/baseline_cloud_mask.f90 pixel_common.o cx
 
 sub_routine = cx_constants_mod.o pixel_common.o pixel_routines.o clavrx_sst_module.o clavrx_sst_module.o clavrx_olr_module.o gfs_hdf_module.o \
               avhrr_module.o sensor_module.o user_options.o oisst_analysis.o \
-              sfc_prop_umd.o sfc_emiss.o ir_cloud_type_baum_module.o cloud_type_bridge_module.o \
+              sfc_prop_umd_mod.o sfc_emiss.o ir_cloud_type_baum_module.o cloud_type_bridge_module.o \
               land_sfc_properties.o file_tools.o level2.o cloud_height_routines.o \
               dncomp_clavrx_bridge_mod.o \
               clavrx_message_module.o avhrr_pixel_aerosol.o hdf_params.o dnb_retrievals_mod.o \

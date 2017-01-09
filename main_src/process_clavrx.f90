@@ -332,7 +332,7 @@
     compute_simple_lunar_cod &
     , compute_simple_solar_cod
       
-   use SURFACE_PROPERTIES, only: &
+   use SFC_PROP_UMD_MOD, only: &
     compute_binary_land_coast_masks &
     , get_pixel_sfc_emiss_from_sfc_type &
     , setup_umd_props

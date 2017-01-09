@@ -86,7 +86,7 @@ module NCEP_REANALYSIS
       , CREATE_NWP_ARRAYS
       
       
-   use SORT_MODULE, only: &
+   use cx_array_tools_mod, only: &
        SORT
        
 

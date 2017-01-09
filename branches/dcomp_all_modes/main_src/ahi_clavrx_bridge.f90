@@ -133,13 +133,13 @@ contains
          if ( .not. ahi_c % chan_on(i_chn) ) cycle
       
          if ( is_solar_channel ( i_chn) ) then
-           print*,i_chn,shape(ahi_data % chn (i_chn) % ref)
+           !print*,i_chn,shape(ahi_data % chn (i_chn) % ref)
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
          else
             if ( modis_chn > 38) then
                cycle
             end if
-            print*,i_chn,shape(ahi_data % chn (i_chn) % rad)
+            ! print*,i_chn,shape(ahi_data % chn (i_chn) % rad)
             ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
             call CONVERT_RADIANCE ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
             call COMPUTE_BT_ARRAY ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &

@@ -1,0 +1,24 @@
+FC=ifort
+FC77=ifort
+LDFLAGS_ARCH=-g -pg
+
+# -debug-parameters      debug info for PARAMETERS
+# -warn	                 enable all compiler warnings
+# -check bounds          enable run-time bounds checking
+# -check uninit          enable checking for uninitialised variables
+# -traceback             enable traceback info for severe errors
+# -stand f95             warnings for non-standard Fortran 95
+
+FFLAGS_ARCH=-g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback -stand f95 -diag-disable 5268,7712,6371
+AR=ar r
+
+FFLAGS_ARCH_rttov_test=-g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_iniscatt=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_iniscatt_tl=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_iniscatt_ad=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_scatt=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_scatt_tl=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+FFLAGS_ARCH_rttov_scatt_ad=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
+
+
+FFLAGS_ARCH_lapack=-g -check bounds -check uninit -traceback

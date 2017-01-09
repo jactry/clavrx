@@ -1,0 +1,32 @@
+FC=gfortran
+FC77=gfortran
+LDFLAGS_ARCH=
+
+# -fbounds-check            runtime bounds checking
+# -finit-integer=-1         init integers to -1
+# -finit-real=nan           init all reals to NaN
+# -finit-character=127      init all characters to a weird value
+# -std=f95                  Enforce Fortran 95 standard
+# -Wall                     all warnings
+# -pedantic                 warnings for Fortran extensions
+# -fbacktrace               backtrace when a runtime error occurs
+# -fcheck-array-temporaries issue a warning when a temporary array is created
+# -ffree-line-length-none   no restrictions on free form line length
+
+FFLAGS_ARCH=-g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 -std=f95 \
+            -pedantic -Wall -fbacktrace -fcheck-array-temporaries -ffree-line-length-none
+AR=ar r
+
+# do not enforce Fortran 95 standard so that usual intrinsics be availiable
+FFLAGS_ARCH_rttov_unix_env = -g -fbounds-check -finit-integer=-1 -finit-real=nan \
+                             -finit-character=127 -pedantic -Wall -fbacktrace -fcheck-array-temporaries
+FFLAGS_ARCH_lapack = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
+            -pedantic -Wall -fbacktrace -fcheck-array-temporaries 
+FFLAGS_ARCH_lapack_lbl = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
+            -pedantic -Wall -fbacktrace -fcheck-array-temporaries
+
+FFLAGS_ARCH_rttov_scatt_make_coef = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
+            -pedantic -Wall -fbacktrace -fcheck-array-temporaries
+
+FFLAGS_ARCH_rttov789_opencoeff=-g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 -std=f95 \
+            -pedantic -Wall -fbacktrace -fcheck-array-temporaries -ffree-line-length-none

@@ -381,7 +381,7 @@ user_options.o: user_options.f90 cx_constants_mod.o pixel_common.o file_tools.o 
 
 
 coms_module.o: coms_module.f90 pixel_common.o cx_constants_mod.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o viewing_geometry_module.o
-ncep_reanalysis.o: ncep_reanalysis.f90 cx_constants_mod.o  nwp_common.o sort_module.o numerical_tools_mod.o
+ncep_reanalysis.o: ncep_reanalysis.f90 cx_constants_mod.o  nwp_common.o sort_module.o
 
 viewing_geometry_module.o: viewing_geometry_module.f90 cx_constants_mod.o
 

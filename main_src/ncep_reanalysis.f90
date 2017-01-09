@@ -43,12 +43,59 @@
 !--------------------------------------------------------------------------------------
 module NCEP_REANALYSIS
 
-use CX_CONSTANTS_MOD
-use NWP_COMMON
-use SORT_MODULE
-use NUMERICAL_TOOLS_MOD
+   use CX_CONSTANTS_MOD,only: &
+      real4,int2,int1, int4, real8, missing_value_real4 &
+      ,DTOR
+      
+   use NWP_COMMON, only: &
+      nwp_start_hour &
+      , nwp_end_hour &
+      , missing_nwp &
+      , nlat_nwp &
+      , nlon_nwp &
+      , npoints &
+      , nlevels_nwp &
+      , lat1_nwp &
+      , lon1_nwp &
+      , dlat_nwp &
+      , dlon_nwp &
+      , P_std_nwp &
+      , ozone_prof_nwp &
+      , z_prof_nwp &
+      , t_prof_nwp &
+      , rh_prof_nwp &
+      , psfc_nwp &
+      , tmpair_nwp &
+      , tpw_nwp &
+      , zsfc_nwp &
+      , rhsfc_nwp &
+      , land_nwp &
+      , t_trop_nwp &
+      , p_trop_nwp &
+      , tmpsfc_nwp_before &
+      , tmpsfc_nwp_after &
+      , tmpsfc_nwp &
+      , weasd_nwp &
+      , u_wnd_10m_nwp &
+      , v_wnd_10m_nwp &
+      , hght500_nwp &
+      , wnd_spd_10m_nwp &
+      , wnd_dir_10m_nwp &
+      , tmpair_uni_nwp &
+      , tmpsfc_uni_nwp &
+      , CREATE_NWP_ARRAYS
+      
+      
+   use SORT_MODULE, only: &
+       SORT
+       
+
+
 
 implicit none
+
+private
+
 include 'hdf.f90'
 private:: READ_DATA_1D, READ_DATA_2D, READ_DATA_3D, LOCATE_OUR_TIME
 public:: READ_NCEP_REANALYSIS_DATA

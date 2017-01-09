@@ -258,7 +258,7 @@ contains
       integer, intent(out)  :: nsds
       type(cx_sds_type), intent(out),  allocatable, target :: sdata(:)
       integer, optional, intent( in) :: nsdsn
-      character (len=*), intent( in), optional :: sds_name(*)
+      character (len=*), intent( in), optional :: sds_name(:)
 
       logical, optional :: dclb
       logical, optional :: attr

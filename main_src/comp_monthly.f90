@@ -70,12 +70,13 @@
 ! this version, does keep the files open
 !--------------------------------------------------------------------------------------
 program COMPILE_MONTHLY
- use CX_CONSTANTS_MOD
- use HDF
- use HDF_PARAMS
- use NUMERICAL_ROUTINES
- use SCALING_PARAMETERS
- implicit none
+   
+   use CX_CONSTANTS_MOD
+   use HDF
+   use HDF_PARAMS
+   use NUMERICAL_ROUTINES
+   use SCALING_PARAMETERS
+   implicit none
 
 !--- hard-wired parameters
  integer, parameter:: n_files_max = 200

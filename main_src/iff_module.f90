@@ -25,28 +25,30 @@
 !--------------------------------------------------------------------------------------
 module IFF_MODULE
 
-! use HDF, only:
- use PLANCK, only: &
-   convert_radiance
- use PIXEL_COMMON, only: &
-     sensor &
-     , image
- use CX_CONSTANTS_MOD, only: &
-     sym &
-     , int1 &
-     , int2 &
-     , int4 &
-     , int8 &
-     , real4 & 
-     , real8 & 
-     , ipre
- use CALIBRATION_CONSTANTS, only: &
-     Planck_Nu
+   ! use HDF, only:
+   use PLANCK, only: &
+      convert_radiance
+   use PIXEL_COMMON, only: &
+      sensor &
+      , image
+   use CX_CONSTANTS_MOD, only: &
+      sym &
+      , int1 &
+      , int2 &
+      , int4 &
+      , int8 &
+      , real4 & 
+      , real8 & 
+      , ipre
+   use CALIBRATION_CONSTANTS, only: &
+      Planck_Nu
 
- implicit none
-
- public :: GET_IFF_DATA
- public :: READ_IFF_DATE_TIME
+   implicit none
+ 
+   private
+   public :: GET_IFF_DATA
+   public :: READ_IFF_DATE_TIME
+   public :: GET_IFF_DIMS
 
    type , public :: iff_data_config
       integer , dimension( 2 ) :: year_int

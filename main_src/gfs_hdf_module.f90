@@ -49,7 +49,56 @@ module GFS
    , vapor &
    , vapor_ice
   
-  use NWP_COMMON
+  use NWP_COMMON,only:  &
+      nwp_start_hour &
+      , nwp_end_hour &
+      , missing_nwp &
+      , nlat_nwp &
+      , nlon_nwp &
+      , npoints &
+      , nlevels_nwp &
+      , lat1_nwp &
+      , lon1_nwp &
+      , dlat_nwp &
+      , dlon_nwp &
+      , P_std_nwp &
+      , ozone_prof_nwp &
+      , z_prof_nwp &
+      , t_prof_nwp &
+      , rh_prof_nwp &
+      , psfc_nwp &
+      , tmpair_nwp &
+      , tpw_nwp &
+      , zsfc_nwp &
+      , rhsfc_nwp &
+      , land_nwp &
+      , t_trop_nwp &
+      , p_trop_nwp &
+      , tmpsfc_nwp_before &
+      , tmpsfc_nwp_after &
+      , tmpsfc_nwp &
+      , weasd_nwp &
+      , u_wnd_10m_nwp &
+      , v_wnd_10m_nwp &
+      , hght500_nwp &
+      , wnd_spd_10m_nwp &
+      , wnd_dir_10m_nwp &
+      , tmpair_uni_nwp &
+      , tmpsfc_uni_nwp &
+      , CREATE_NWP_ARRAYS &
+      , REFORMAT_GFS_ZXY &
+      , temp2d_Nwp_1 &
+      , Sea_Ice_Frac_Nwp &
+      , Sea_Ice_Frac_Nwp &
+      , Pmsl_Nwp &
+      , ozone_Nwp &
+      , U_WND_PROF_NWP &
+      , v_wnd_prof_nwp &
+      , clwmr_prof_nwp &
+      , temp2d_nwp_2 &
+      , temp3d &
+      , temp3d_Nwp_1 &
+      , temp3d_Nwp_2 
   
   
   use clavrx_message_module

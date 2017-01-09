@@ -1,0 +1,8 @@
+FC=gfortran
+FC77=gfortran
+LDFLAGS_ARCH=-fopenmp
+FFLAGS_ARCH=-g -O3 -fopenmp -ffree-line-length-none
+AR=ar r
+
+FFLAGS_ARCH_lapack=-g  
+FFLAGS_ARCH_rttov789_opencoeff=-ffree-line-length-none

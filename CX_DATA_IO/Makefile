@@ -1,8 +1,12 @@
 #
 #
 
-include config.mk
 
+# default for compiler architecture macro is gfortran
+# any value given on the command line gets higher priority
+
+ARCH=gfortran
+include arch/$(ARCH)
 #fc=ifort -g 
 fflags=-C -g -O2 -I./
 DEPS=cx_sds_constants.F90

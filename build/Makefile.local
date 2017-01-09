@@ -1,0 +1,53 @@
+# ------------------------------------------------------------------------
+# Use this file to include the NetCDF library 
+# Any other external libraries required may also be specified here.
+# ------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------- 
+# Specify path to NetCDF library here 
+# --------------------------------------------------------------
+# NETCDF_PREFIX  = /Users/awalther/lib/netcdf3/
+# FFLAGS_NETCDF  = -I$(NETCDF_PREFIX)/include  -lnetcdf
+# LDFLAGS_NETCDF = -L$(NETCDF_PREFIX)/lib -lnetcdf
+
+
+# -------------------------------------------------------------- 
+# Specify path to NetCDF library here 
+# --------------------------------------------------------------
+ HDF_PREFIX  = /opt/hdf4/4.2.9-intel-14.0-2/
+ FFLAGS_HDF  = -I$(HDF_PREFIX)/include/
+ LDFLAGS_HDF = -L$(HDF_PREFIX)/lib/ -lmfhdf -ldf -ljpeg -lz
+ 
+ 
+# HDF5_PREFIX  = /Users/awalther/lib/hdf5_gfortran/
+# FFLAGS_HDF5  = -I$(HDF5_PREFIX)/include/
+# LDFLAGS_HDF5 = -L$(HDF5_PREFIX)/lib/ -lhdf5_fortran -lhdf5 -lz -lcsv_io
+
+# -----------------------------------------
+# Specify other libraries here 
+# -----------------------------------------
+# DRHOOK_PREFIX  = path-to-drhook-install
+# FFLAGS_DRHOOK  = -I$(DRHOOK_PREFIX)
+# LDFLAGS_DRHOOK = -L$(DRHOOK_PREFIX) -ldrhook -lmpi_serial
+
+
+# Include all required macros on the following lines:
+
+FFLAGS_EXTERN  = $(FFLAGS_NETCDF) $(FFLAGS_HDF) $(FFLAGS_HDF5) $(FFLAGS_DRHOOK)  $(LDFLAGS_HDF)
+LDFLAGS_EXTERN = $(LDFLAGS_NETCDF) $(LDFLAGS_HDF) $(LDFLAGS_HDF5) $(LDFLAGS_DRHOOK)
+
+export CMASK=../cloud_mask/
+export BASELINEMASK=../baseline_cloud_mask/
+export CTYPE=../cloud_type/
+export ACHA=../acha/
+export CCL=../ccl/
+export ASOS=../asos/
+export PFAAST=../pfaast/
+export SASRAB=../sasrab/
+export BASE=../cloud_base/
+export CX_DATA_IO=../CX_DATA_IO/
+export DNCOMP=../dncomp/
+dncomplibs=-L$(DNCOMP) -I$(DNCOMP) -L$(CX_DATA_IO) -I$(CX_DATA_IO)
+dncomplinks= -ldncomp -lcx_data_io
+ 

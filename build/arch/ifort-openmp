@@ -1,0 +1,9 @@
+FC=ifort
+FC77=ifort
+LDFLAGS_ARCH=-openmp
+FFLAGS_ARCH=-g -O3 -openmp
+AR=ar r
+
+# Standard deviations returned by IR emissivity atlas differ
+# slightly with ifort v12 for higher optimisation settings
+FFLAGS_ARCH_mod_iratlas=-g -O1

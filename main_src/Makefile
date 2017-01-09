@@ -14,7 +14,12 @@
 #   6.5.3  Added ned VIIRS read routine (AW 2013/03/21 )
 #
 #
-include config.mk
+
+TOPDIR=..
+include $(TOPDIR)/build/Makefile.inc
+
+
+#include config.mk
 
 INC_DNCOMP = -I$(DNCOMP)
 fflags += $(INC_DNCOMP)
@@ -211,7 +216,7 @@ cx_ahi_test_objs = cx_read_ahi_test_program.o \
 
 dncomp:
 	$(MAKE)  -C $(DNCOMP) 
-	
+
 
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs

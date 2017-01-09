@@ -9,7 +9,7 @@ module SIMPLE_COD
    use NUMERICAL_TOOLS_MOD 
    use FILE_TOOLS, only: &
       get_lun
-   use SURFACE_PROPERTIES
+   use SFC_PROP_UMD_MOD
 
    implicit none
 

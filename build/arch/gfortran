@@ -12,9 +12,9 @@ ldflags = -O2
 cpp = -cpp
 cppflags = 
 beconv = -fconvert=big-endian
-hdflibs = -L/Users/awalther/lib/hdf4_gcc//lib  -I/Users/awalther/lib/hdf4_gcc//include/ -lmfhdf -ldf -ljpeg -lz
-hdfincs = -I/Users/awalther/lib/hdf4_gcc//include
-netcdflibs = -L/Users/awalther/lib/netcdf3_gcc/lib -I/Users/awalther/lib/netcdf3_gcc/include -lnetcdf
-hdf5libs = -I/Users/awalther/lib/hdf5_gcc/include/ -L/Users/awalther/lib/hdf5_gcc/lib/
+hdflibs = -L$(HOME)/lib/hdf4_gcc//lib  -I$(HOME)/lib/hdf4_gcc//include/ -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(HOME)/lib/hdf4_gcc//include
+netcdflibs = -L$(HOME)/lib/netcdf3_gcc/lib -I$(HOME)/lib/netcdf3_gcc/include -lnetcdf
+hdf5libs = -I$(HOME)/lib/hdf5_gcc/include/ -L$(HOME)/lib/hdf5_gcc/lib/
 hdf5links = -lhdf5_fortran -lhdf5 -lz
 

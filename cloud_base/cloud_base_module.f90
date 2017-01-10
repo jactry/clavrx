@@ -488,7 +488,7 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thicknes
     if ( CCL > Surf_Elev .and. CCL < Zc_Base ) then
        if ( Cwp_local >= 1.2 ) Zc_Base = CCL
        if ( Cwp_local >= 1.0 .and. Cwp_local < 1.2 ) &                 
-            Zc_Base = CCL + (Zc_Base-CCL)*( (Cwp_local-1.0)/(1.2-1.0) )                    
+            Zc_Base = Zc_Base + (CCL-Zc_Base)*( (Cwp_local-1.0)/(1.2-1.0) )                    
     endif
 !ynoh (cira/csu)
 !--------

@@ -1115,10 +1115,6 @@
                   call CLOUD_TYPE_BRIDGE()
                   call IR_CLOUD_TYPE_BAUM()
 
-!----- TEST
-                  call SOLUTION_SPACE()
-!----- TEST
-
                   if (Use_IR_Cloud_Type_Flag) then
                      Cld_Type = Cld_Type_IR
                      Cld_Phase = Cld_Phase_IR

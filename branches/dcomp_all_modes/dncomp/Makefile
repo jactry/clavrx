@@ -1,3 +1,4 @@
+
 # $Header$
 
 
@@ -10,7 +11,7 @@ include arch/$(ARCH)
 HDFDIR = $(hdf4root)
 HDFINC = $(SSEC_HDF4_INC)
 HDFLIB = $(SSEC_HDF4_LIB)
-
+CX_READ_IO_DIR = ../CX_DATA_IO
 CFLAGS = -O2 -w  -I$(HDFINC)
 LFLAGS =  -L$(HDFLIB)  -lmfhdf -ldf -ljpeg -lz -lm -w
 
@@ -67,7 +68,7 @@ file_tools.o
 
 .PHONY: all_dncomp clean hdf4
 
-all_dncomp:  dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
+all_dncomp:  cx_read_io dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
 	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
@@ -94,6 +95,10 @@ nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 libdncomp.a: $(OBJS)
 	
 	ar rvc libdncomp.a $(OBJS) $(OBJS_NLCOMP)
+
+
+cx_read_io:
+	$(MAKE)  -C $(CX_READ_IO_DIR) ARCH=$(ARCH)
 
 dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
@@ -132,5 +137,5 @@ clean:
 	rm -f *.a
 	rm -f test_lut
 	rm -rf hdf4/lib
-	
+	$(MAKE) clean -C $(CX_READ_IO_DIR) 	
 	-@echo ' '

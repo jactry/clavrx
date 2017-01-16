@@ -1,7 +1,7 @@
-FC=ifort
+fc=ifort
 FC77=ifort
-LDFLAGS_ARCH=-g -pg
-
+LDFLAGS_ARCH=
+FFLAGS_ARCH=-c -g -pg -O0 -assume byterecl
 # -debug-parameters      debug info for PARAMETERS
 # -warn	                 enable all compiler warnings
 # -check bounds          enable run-time bounds checking
@@ -10,8 +10,8 @@ LDFLAGS_ARCH=-g -pg
 # -stand f95             warnings for non-standard Fortran 95
 
 
-
-fflags = -g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback -stand f95 -diag-disable 5268,7712,6371
+fflags = -g -pg -assume byterecl 
+#fflags = -g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback -stand f95 -diag-disable 5268,7712,6371
 fflags_pfast = -O2 -assume byterecl -fixed
 fflags_sasrab_f77 = -O2 -assume byterecl -fixed -save
 fflags_sasrab_f90 = -O2 -assume byterecl -save

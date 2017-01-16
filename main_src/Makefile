@@ -267,7 +267,7 @@ oisst_analysis.o: oisst_analysis.f90 pixel_common.o cx_constants_mod.o  numerica
 	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90
 
 cx_constants_mod.o: cx_constants_mod.f90
-avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o cx_constants_mod.o file_tools.o
+avhrr_pixel_aerosol.o: avhrr_pixel_aerosol.f90 pixel_common.o cx_constants_mod.o file_tools.o numerical_tools_mod.o
 
 #acha & cloud base
 acha_clavrx_services_module.o: acha_clavrx_services_module.f90 pixel_common.o nwp_common.o \

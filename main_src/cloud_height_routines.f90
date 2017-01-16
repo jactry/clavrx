@@ -50,6 +50,8 @@ module CLOUD_HEIGHT_ROUTINES
   public::  SLICING_CLOUD_PRESSURE
   public::  CTP_MULTILAYER
 
+  public:: SOLUTION_SPACE
+
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
   integer(kind=int4), private, parameter :: Chan_Idx_67um = 27   !channel number for 6.7 micron
@@ -496,7 +498,9 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
   enddo Line_Loop_1
 
 end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
-
+!-----------------------------------------------------------------------------
+! Opaque cloud height
+!-----------------------------------------------------------------------------
 subroutine OPAQUE_CLOUD_HEIGHT() 
 
    integer:: Line_Idx
@@ -1764,6 +1768,157 @@ subroutine SLICING_CLOUD_PRESSURE(Ch_X_Rad_Toa, &
    endif
 
 end subroutine SLICING_CLOUD_PRESSURE
+!-----------------------------------------------------------------------------
+! Solution Space
+!-----------------------------------------------------------------------------
+subroutine SOLUTION_SPACE() 
+
+   integer:: Line_Idx
+   integer:: Elem_Idx
+   integer:: Num_Elements
+   integer:: Num_Lines
+   integer:: Nwp_Lon_Idx
+   integer:: Nwp_Lat_Idx
+   integer:: Vza_Rtm_Idx
+   integer:: Tropo_Level_Idx
+   integer:: Sfc_Level_Idx
+   integer:: Level_Idx
+   integer:: Level_Idx_Start
+   integer:: Level_Idx_End
+  
+   real, dimension(NLevels_Rtm):: ch29_emiss_profile
+   real, dimension(NLevels_Rtm):: ch31_emiss_profile
+   real, dimension(NLevels_Rtm):: ch32_emiss_profile
+   real, dimension(NLevels_Rtm):: beta_ch31_ch32_profile
+   real, dimension(NLevels_Rtm):: beta_ch31_ch29_profile
+   real, dimension(NLevels_Rtm):: beta_ch31_ch29_predicted_profile
+   real, dimension(NLevels_Rtm):: beta_diff_profile
+
+   integer:: Pc_Idx
+
+   real:: A_BETA_11um_85um_FIT_ICE 
+   real:: B_BETA_11um_85um_FIT_ICE
+
+!-------------------------------------------------------------------------
+! fits
+!-------------------------------------------------------------------------
+
+   !--- empirical
+   !     A_BETA_11um_85um_FIT_ICE =   2.20137
+   !     B_BETA_11um_85um_FIT_ICE =  -1.21641
+
+   !--- droxtals
+   !     A_BETA_11um_85um_FIT_ICE =    1.92649
+   !     B_BETA_11um_85um_FIT_ICE =   -0.90985
+
+   !--- solid bullet rosettes
+   !    A_BETA_11um_85um_FIT_ICE =    2.11873
+   !    B_BETA_11um_85um_FIT_ICE =   -1.11750
+
+   !--- hollow bullet rosettes
+   !    A_BETA_11um_85um_FIT_ICE =    2.11873
+   !    B_BETA_11um_85um_FIT_ICE =   -1.11750
+
+   !--- solid columns
+   !    A_BETA_11um_85um_FIT_ICE =    1.93440
+   !    B_BETA_11um_85um_FIT_ICE =   -0.92610
+
+   !--- hollow columns
+   !    A_BETA_11um_85um_FIT_ICE =    1.91655
+   !    B_BETA_11um_85um_FIT_ICE =   -0.92072
+
+   !--- plates
+   !    A_BETA_11um_85um_FIT_ICE =    1.79394
+   !    B_BETA_11um_85um_FIT_ICE =   -0.82640
+
+   !--- aggregate columns
+        A_BETA_11um_85um_FIT_ICE =    2.17033
+        B_BETA_11um_85um_FIT_ICE =   -1.14189
+
+   !--- small_aggregate_plates
+   !    A_BETA_11um_85um_FIT_ICE =    2.16052
+   !    B_BETA_11um_85um_FIT_ICE =   -1.17359
+
+   !---large_aggregate_plates
+   !    A_BETA_11um_85um_FIT_ICE =    2.15038
+   !    B_BETA_11um_85um_FIT_ICE =   -1.20337
+
+   Num_Elements = Image%Number_Of_Elements
+   Num_Lines = Image%Number_Of_Lines_Per_Segment
+
+   if (Sensor%Chan_On_Flag_Default(29)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (Sensor%Chan_On_Flag_Default(32)==sym%NO) return
+
+   do Elem_Idx = 1, Num_Elements
+     do Line_Idx = 1, Num_Lines
+
+      !--- skip bad pixels
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+
+      !--- skip non cirrus
+      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. &
+          Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) cycle
+
+      !--- skip non cirrus
+      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) < 0.1) cycle
+      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) > 0.9) cycle
+
+      !--- indice aliases
+      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
+      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
+      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+      !-- check if indices are valid
+      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
+
+      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
+      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
+      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
+
+      !--- restrict levels to consider
+      Level_Idx_Start = Tropo_Level_Idx
+      Level_Idx_End = Sfc_Level_Idx
+
+      ch29_emiss_profile = MISSING_VALUE_REAL4
+      ch31_emiss_profile = MISSING_VALUE_REAL4
+      ch32_emiss_profile = MISSING_VALUE_REAL4
+      beta_diff_profile = 1000.0
+
+      level_loop: do Level_Idx = Level_Idx_Start, Level_Idx_End
+
+      !-- compute emissivity profiles
+      ch29_emiss_profile(Level_Idx) = EMISSIVITY(ch(29)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                       ch(29)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(29)%Rad_BB_Cloud_Profile(Level_Idx))
+
+      ch31_emiss_profile(Level_Idx) = EMISSIVITY(ch(31)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                       ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile(Level_Idx))
+
+      ch32_emiss_profile(Level_Idx) = EMISSIVITY(ch(32)%Rad_Toa(Elem_Idx,Line_Idx),  &
+                                       ch(32)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
+                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(32)%Rad_BB_Cloud_Profile(Level_Idx))
+
+
+      beta_ch31_ch32_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch32_emiss_profile(Level_Idx)) 
+      beta_ch31_ch29_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch29_emiss_profile(Level_Idx)) 
+      beta_ch31_ch29_predicted_profile(Level_Idx) = A_Beta_11um_85um_FIT_ICE + B_Beta_11um_85um_FIT_ICE * beta_ch31_ch32_profile(Level_Idx)
+
+      beta_diff_profile(level_Idx) = abs(beta_ch31_ch29_profile(Level_Idx) -  beta_ch31_ch29_predicted_profile(Level_Idx))
+
+      enddo Level_Loop
+
+       Pc_Idx = minloc(beta_diff_profile,1) 
+       Diag_Pix_Array_1(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+       if (abs(beta_diff_profile(Pc_Idx)) < 0.1) then
+          Diag_Pix_Array_1(Elem_Idx,Line_Idx) = P_Std_Rtm(Pc_Idx)
+       endif
+
+      enddo
+   enddo
+
+end subroutine SOLUTION_SPACE
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

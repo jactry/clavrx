@@ -873,14 +873,15 @@ contains
    !   returns default dcomp mode
    ! -----------------------------------------------------------------
    integer function default_dcomp_mode ( )
-   
+		
+   	implicit none
       default_dcomp_mode = 3
-      
-      if (Sensor%WMO_Id == 208) Dcomp_Mode = 1 !NOAA-17
-      if (Sensor%WMO_Id == 3) Dcomp_Mode = 1   !METOP-A
-      if (Sensor%WMO_Id == 4) Dcomp_Mode = 1   !METOP-B
-      if (Sensor%WMO_Id == 5) Dcomp_Mode = 1   !METOP-C
-
+     
+      if (Sensor%WMO_Id == 208) default_Dcomp_Mode = 1 !NOAA-17
+      if (Sensor%WMO_Id == 3) default_Dcomp_Mode = 1   !METOP-A
+      if (Sensor%WMO_Id == 4) default_Dcomp_Mode = 1   !METOP-B
+      if (Sensor%WMO_Id == 5) default_Dcomp_Mode = 1   !METOP-C
+		
 
 !---- AKH - What about NOAA-16?
      
@@ -974,7 +975,13 @@ contains
       
       case ( 'AVHRR-3')  
          possible_acha_modes(1:2)   = [1, 3]
-         possible_dcomp_modes(1)    =  3 
+         possible_dcomp_modes(1:2)    = [1,3] 
+			
+			!if (Sensor%WMO_Id == 208) possible_dcomp_modes(1) = 1 !NOAA-17
+      	!if (Sensor%WMO_Id == 3) possible_dcomp_modes(1) = 1   !METOP-A
+      	!if (Sensor%WMO_Id == 4) possible_dcomp_modes(1) = 1   !METOP-B
+      	!if (Sensor%WMO_Id == 5) possible_dcomp_modes(1) = 1   !METOP-C
+			
       case ( 'AVHRR-2')  
          possible_acha_modes(1:2)   = [1, 3]
          possible_dcomp_modes(1)    =  3 
@@ -1042,7 +1049,8 @@ contains
       
       if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( )
-         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( )
+			
+         print*, 'User set DCOMP mode ',dcomp_mode_user_set,' not possible for '//trim(SensorName)//'  with WMO ID ',Sensor%WMO_Id, ' switched to default ', dcomp_mode
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES

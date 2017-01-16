@@ -85,6 +85,7 @@ module SENSOR_MODULE
 #endif
 
    use CLAVRX_MESSAGE_MODULE
+   use MVCM_READ_MODULE
 
    implicit none
 
@@ -189,6 +190,15 @@ module SENSOR_MODULE
 
          Image%Start_Time = Start_Time_Tmp
          Image%End_Time = End_Time_Tmp
+
+
+         !---- determine auxilliary cloud mask name
+!   integer(kind=int1) :: NO_AUX_CLOUD_MASK = 0
+!   integer(kind=int1) :: USE_AUX_CLOUD_MASK = 1
+!   integer(kind=int1) :: READ_BUT_DO_NOT_USE_AUX_CLOUD_MASK = 2
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+          call DETERMINE_MVCM_NAME()
+         endif
 #else
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
@@ -1484,8 +1494,11 @@ module SENSOR_MODULE
 #ifdef HDF5LIBS
          call READ_VIIRS_NASA_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
 
-         ! If error reading, then go to next file
+         !--- If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
+
+         !--- read auxillary cloud mask
+         call READ_MVCM_DATA(Segment_Number)
 #else
          print *, "No HDF5 library installed, stopping"
          stop

@@ -152,6 +152,7 @@ clavrxorb_objs = process_clavrx.o \
                  big_endian.o \
                  get_lun.o \
                  seviri_module.o \
+	         mvcm_read_module.o \
 	         oca_module.o \
 	         reposnx.o \
                  reposition_module.o \
@@ -373,6 +374,7 @@ viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
 level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o clavrx_message_module.o
 level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
+mvcm_read_module.o: mvcm_read_module.f90 hdf.o file_utility.o constant.o pixel_common.o file_tools.o
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o
@@ -444,7 +446,7 @@ sub_routine = constant.o pixel_common.o pixel_routines.o clavrx_sst_module.o cla
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o iff_clavrx_bridge.f90 iff_module.o fy2_module.o goes_module.o abi_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o \
-              seviri_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
+              seviri_module.o mvcm_read_module.o oca_module.o mtsat_module.o simple_cod_module.o clavrx_message_module.o \
               coms_module.o level2b.o dcomp_rtm_module.o dcomp_derived_products_module.o  
 
 
@@ -459,6 +461,7 @@ process_clavrx.o: process_clavrx.f90 $(sub_routine)
 
 ######### .o files that depend on .inc files ########
 level2.o: level2.inc
+acha_module.o: $(ACHA)/acha_parameters.inc
 
 ########################### PFAST ##############################################
 sasrab.o : sasrab.f conver.o get_lun.o

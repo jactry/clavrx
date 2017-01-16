@@ -145,6 +145,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    allocate ( water_phase_array (  dim_1 , dim_2 ) )	
    allocate ( air_mass_array  ( dim_1 , dim_2 ) )		   
    
+
       
    air_mass_array = 1.0 / cos (input % sat % d * PI / 180. ) + 1.0 / cos ( input % sol % d * pi / 180.)
       
@@ -154,19 +155,34 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                        & .and. input % refl (1) % d  >= 0. &
                        & .and. air_mass_array >= 2.
 	
+
+	
+		   ! - check input options
+   
+   select case ( input % mode )
+      case ( 1 ) 
+         CHN_NIR = 6 
+			obs_array = obs_array .and. input % refl(6) % d >=0.              
+      case ( 2 )
+         CHN_NIR = 7
+			obs_array = obs_array .and. input % refl(7) % d >=0. 
+      case ( 3)
+         CHN_NIR = 20
+			obs_array = obs_array .and. input % rad(20) % d >=0. 
+      case default
+	end select
+	
+	
    obs_and_acha_array =  obs_array .and. input % cloud_temp % d > 10 
     
    cloud_array =  obs_and_acha_array &
                         & .and. ( input % cloud_mask % d == EM_cloud_mask % CLOUDY &
                         & .or. input % cloud_mask % d == EM_cloud_mask % PROB_CLOUDY ) 
-     
+   
    water_phase_array = input % cloud_type % d == EM_cloud_type % FOG &
                         &  .or. input % cloud_type % d == EM_cloud_type % WATER &
                         &  .or. input % cloud_type % d == EM_cloud_type % SUPERCOOLED &
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
-  
-
-   
   
    ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    
@@ -199,20 +215,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    ! - initialize
    info_flag  = 0
-      
-   ! - check input options
-   
-   select case ( input % mode )
-      case ( 1 ) 
-         CHN_NIR = 6               
-      case ( 2 )
-         CHN_NIR = 7
-      case ( 3)
-         CHN_NIR = 20
-      case default
-        
-   end select
-    
+
    if ( input % is_channel_on (CHN_NIR) .eqv. .false.) then
       print*, 'dcomp NIR channel not set! ==> MODIS equaivalant channel: ', CHN_NIR
       print*, 'all dcomp results are set to missing values'
@@ -308,6 +311,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             obs_unc( 2 ) = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
          end if
          
+		
          
          alb_vec( 2 ) = alb_sfc ( CHN_NIR)
          alb_unc( 2 ) = 0.05
@@ -360,9 +364,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             print*,'==============================='
            
          end if
-         
-         
-         
+         	
          output % cod % d (elem_idx,line_idx) = dcomp_out % cod
          output % cps % d (elem_idx, line_idx) = dcomp_out % cps 
      

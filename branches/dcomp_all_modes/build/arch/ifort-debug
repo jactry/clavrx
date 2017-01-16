@@ -9,16 +9,19 @@ LDFLAGS_ARCH=-g -pg
 # -traceback             enable traceback info for severe errors
 # -stand f95             warnings for non-standard Fortran 95
 
-FFLAGS_ARCH=-g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback -stand f95 -diag-disable 5268,7712,6371
-AR=ar r
-
-FFLAGS_ARCH_rttov_test=-g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_iniscatt=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_iniscatt_tl=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_iniscatt_ad=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_scatt=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_scatt_tl=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
-FFLAGS_ARCH_rttov_scatt_ad=-g -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback
 
 
-FFLAGS_ARCH_lapack=-g -check bounds -check uninit -traceback
+fflags = -g -pg -debug-parameters -debug semantic_stepping -warn -nogen-interfaces -check bounds -check uninit -traceback -stand f95 -diag-disable 5268,7712,6371
+fflags_pfast = -O2 -assume byterecl -fixed
+fflags_sasrab_f77 = -O2 -assume byterecl -fixed -save
+fflags_sasrab_f90 = -O2 -assume byterecl -save
+ldflags = -O2 -assume byterecl
+cpp = -cpp
+cppflags = 
+beconv = -convert big_endian
+hdflibs = -L$(SSEC_HDF4_LIB) -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(HOME)/lib/hdf4//include
+netcdflibs = -L$(HOME)/lib/netcdf3/lib -I$(HOME)/lib/netcdf3/include -lnetcdf
+hdf5libs = -I$(HOME)/lib/hdf5/include/ -L$(HOME)/lib/hdf5/lib/
+hdf5links = -lhdf5_fortran -lhdf5 -lz
+

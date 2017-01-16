@@ -382,7 +382,6 @@
       !--------------------------------------------------------------
       ! Determine if this level-1b file can be opended, if not skip
       !--------------------------------------------------------------
-print *, "HERE 1"
 
       !**********************************************************************
       ! Marker: Prepare to read Level-1b file
@@ -401,7 +400,6 @@ print *, "HERE 1"
       !--------------------------------------------------------------
       call DETERMINE_LEVEL1B_COMPRESSION(File_1b_Temp,L1b_Gzip,L1b_Bzip2)
 
-print *, "HERE 2"
       !------------------------------------------------------------------------
       ! Determine from which sensor this file comes from (MODIS,AVHRR or VIIRS)
       ! and populate sensor structure
@@ -437,8 +435,6 @@ print *, "HERE 2"
          print *, EXE_PROMPT, "ERROR: Could not set file dimensions, skipping file "
          cycle file_loop
       endif
-
-print *, "HERE 3"
 
       if (Image%Number_Of_Lines <= 0) then
          print*,' File dimensions were not set correctly for this sensor ', sensor%sensor_name
@@ -1118,6 +1114,10 @@ print *, "HERE 3"
 
                   call CLOUD_TYPE_BRIDGE()
                   call IR_CLOUD_TYPE_BAUM()
+
+!----- TEST
+                  call SOLUTION_SPACE()
+!----- TEST
 
                   if (Use_IR_Cloud_Type_Flag) then
                      Cld_Type = Cld_Type_IR

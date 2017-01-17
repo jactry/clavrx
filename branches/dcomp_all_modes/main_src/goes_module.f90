@@ -249,7 +249,10 @@ module GOES_MODULE
           !--Needed for HRIT MTSAT
           real(KIND(0.0d0)) :: sub_lon
           integer(kind=int4) :: CFAC, LFAC, COFF, LOFF
-
+			
+			          !-- Needed for GOES-16 ABI navigation.
+          real(kind=real8) :: abiCFAC, abiLFAC, abiCOFF, abiLOFF ! ABI needs double precision
+          integer(kind=int4) :: BRES ! Base resolution of AREA file.
         end type GVAR_NAV
   
       

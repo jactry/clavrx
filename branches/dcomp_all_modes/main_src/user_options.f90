@@ -139,6 +139,7 @@ module USER_OPTIONS
    integer,parameter:: ACHA_Mode_Default_Goes_IL = 6
    integer,parameter:: ACHA_Mode_Default_Goes_MP = 7
    integer,parameter:: ACHA_Mode_Default_Goes_SNDR = 7
+   integer,parameter:: ACHA_Mode_Default_Goes_RU = 8
    integer,parameter:: ACHA_Mode_Default_COMS = 6
    integer,parameter:: ACHA_Mode_Default_VIIRS = 5
    integer,parameter:: ACHA_Mode_Default_MTSAT = 6
@@ -848,6 +849,8 @@ contains
          default_acha_mode  = ACHA_Mode_Default_Goes_IL   
       case ( 'GOES-IP-SOUNDER')
          default_acha_mode  = ACHA_Mode_Default_Goes_SNDR 
+      case ( 'GOES-RU-IMAGER')
+         default_acha_mode  = ACHA_Mode_Default_Goes_RU
       case ( 'MTSAT-IMAGER')
           default_acha_mode  = ACHA_Mode_Default_MTSAT
       case ('SEVIRI')
@@ -880,14 +883,15 @@ contains
    !   returns default dcomp mode
    ! -----------------------------------------------------------------
    integer function default_dcomp_mode ( )
-   
+		
+   	implicit none
       default_dcomp_mode = 3
-      
-      if (Sensor%WMO_Id == 208) Dcomp_Mode = 1 !NOAA-17
-      if (Sensor%WMO_Id == 3) Dcomp_Mode = 1   !METOP-A
-      if (Sensor%WMO_Id == 4) Dcomp_Mode = 1   !METOP-B
-      if (Sensor%WMO_Id == 5) Dcomp_Mode = 1   !METOP-C
-
+     
+      if (Sensor%WMO_Id == 208) default_Dcomp_Mode = 1 !NOAA-17
+      if (Sensor%WMO_Id == 3) default_Dcomp_Mode = 1   !METOP-A
+      if (Sensor%WMO_Id == 4) default_Dcomp_Mode = 1   !METOP-B
+      if (Sensor%WMO_Id == 5) default_Dcomp_Mode = 1   !METOP-C
+		
 
 !---- AKH - What about NOAA-16?
      
@@ -916,6 +920,8 @@ contains
          filename  = 'goesil_default_nb_cloud_mask_lut.nc'   
       case ( 'GOES-IP-SOUNDER')
          filename  = 'goesmp_default_nb_cloud_mask_lut.nc' 
+      case ( 'GOES-RU-IMAGER')
+         filename  = 'ahi_default_nb_cloud_mask_lut.nc'
       case ( 'MTSAT-IMAGER')
           filename  = 'mtsat_default_nb_cloud_mask_lut.nc'
       case ('SEVIRI')
@@ -979,7 +985,13 @@ contains
       
       case ( 'AVHRR-3')  
          possible_acha_modes(1:2)   = [1, 3]
-         possible_dcomp_modes(1)    =  3 
+         possible_dcomp_modes(1:2)    = [1,3] 
+			
+			!if (Sensor%WMO_Id == 208) possible_dcomp_modes(1) = 1 !NOAA-17
+      	!if (Sensor%WMO_Id == 3) possible_dcomp_modes(1) = 1   !METOP-A
+      	!if (Sensor%WMO_Id == 4) possible_dcomp_modes(1) = 1   !METOP-B
+      	!if (Sensor%WMO_Id == 5) possible_dcomp_modes(1) = 1   !METOP-C
+			
       case ( 'AVHRR-2')  
          possible_acha_modes(1:2)   = [1, 3]
          possible_dcomp_modes(1)    =  3 
@@ -995,6 +1007,9 @@ contains
       case ( 'GOES-IP-SOUNDER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
+      case ( 'GOES-RU-IMAGER')
+         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_dcomp_modes(1:3)  =  [1, 2, 3]
       case ( 'MTSAT-IMAGER')
          possible_acha_modes(1:4)   =  [ 1, 2, 3 , 6 ]
          possible_dcomp_modes(1)    =  3
@@ -1044,7 +1059,8 @@ contains
       
       if ( dcomp_mode_user_set /= 0 .and. .not. ANY ( dcomp_mode_User_Set == possible_dcomp_modes ) ) then
          dcomp_mode = default_dcomp_mode ( )
-         print*, 'User set DCOMP mode not possible for '//trim(SensorName)//' switched to default ', default_dcomp_mode ( )
+			
+         print*, 'User set DCOMP mode ',dcomp_mode_user_set,' not possible for '//trim(SensorName)//'  with WMO ID ',Sensor%WMO_Id, ' switched to default ', dcomp_mode
       end if
 
    end subroutine CHECK_ALGORITHM_CHOICES
@@ -1073,6 +1089,8 @@ contains
          Valid_Channels (1:5) = [1,20,27,31,33]   
       case ( 'GOES-IP-SOUNDER')
          Valid_Channels (1:18) = [1,20,21,23,24,25,30,31,32,33,34,35,36,37,38,39,40,41]      
+      case ('GOES-RU-IMAGER')
+         Valid_Channels(1:16) = [1,2,3,6,7,20,26,27,28,29,30,31,32,33,37,38]
       case ( 'MTSAT-IMAGER')
          Valid_Channels (1:5) = [1,20,27,31,32]  
       case ('SEVIRI')

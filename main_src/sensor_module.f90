@@ -120,12 +120,12 @@ module SENSOR_MODULE
       READ_FY &
     , READ_FY_INSTR_CONSTANTS
 
-   use COMS_MODULE, only: &
-      read_coms &
-      , read_coms_instr_constants &
-      , read_navigation_block_coms
-   
-   
+   use ABI_MODULE, only: &
+      READ_ABI &
+    , READ_ABI_INSTR_CONSTANTS &
+    , READ_NAVIGATION_BLOCK_ABI
+
+   use COMS_MODULE
    use IFF_CLAVRX_BRIDGE , only : &
       READ_IFF_DATA &
       , READ_IFF_VIIRS_INSTR_CONSTANTS &
@@ -165,9 +165,7 @@ module SENSOR_MODULE
 #endif
 
    use CLAVRX_MESSAGE_MODULE
-   
-   use CX_SSEC_AREAFILE_MOD, only: &
-   area_header_type
+  ! use MVCM_READ_MODULE
 
    implicit none
 
@@ -203,6 +201,9 @@ module SENSOR_MODULE
       
       use CX_READ_AHI_MOD, only: &
          ahi_time_from_filename
+		
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type		
       
       type ( date_type ) :: time0_obj, time1_obj
       
@@ -272,6 +273,15 @@ module SENSOR_MODULE
 
          Image%Start_Time = Start_Time_Tmp
          Image%End_Time = End_Time_Tmp
+
+
+         !---- determine auxilliary cloud mask name
+!   integer(kind=int1) :: NO_AUX_CLOUD_MASK = 0
+!   integer(kind=int1) :: USE_AUX_CLOUD_MASK = 1
+!   integer(kind=int1) :: READ_BUT_DO_NOT_USE_AUX_CLOUD_MASK = 2
+       !  if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+         ! call DETERMINE_MVCM_NAME()
+        ! endif
 #else
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
@@ -471,6 +481,8 @@ module SENSOR_MODULE
               call READ_GOES_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('GOES-IP-SOUNDER')
               call READ_GOES_SNDR_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
+         case('GOES-RU-IMAGER')
+           call READ_ABI_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('SEVIRI')
               call READ_MSG_INSTR_CONSTANTS(trim(Sensor%Instr_Const_File))
          case('MTSAT-IMAGER')
@@ -546,7 +558,8 @@ module SENSOR_MODULE
            AREAstr &
          , NAVstr &
          , Ierror)
-
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
       TYPE (area_header_type), intent(out) :: AREAstr
       TYPE (GVAR_NAV), intent(out)    :: NAVstr
       integer(kind=int4) :: Ierror
@@ -760,7 +773,7 @@ module SENSOR_MODULE
                Sensor%Algo_Const_File = 'coms1_algo.dat'
                exit test_loop
 
-            case (70,72,74,76,78,180,182,184)
+            case (70,72,74,76,78,180,182,184,186)
 
                if (AREAstr%Sat_Id_Num == 70) then
                   Sensor%Sensor_Name = 'GOES-IL-IMAGER'
@@ -832,6 +845,15 @@ module SENSOR_MODULE
                   Sensor%WMO_Id = 259
                   Sensor%Instr_Const_File = 'goes_15_instr.dat'
                   Sensor%Algo_Const_File = 'goes_15_algo.dat'
+                  exit test_loop
+               endif
+               if (AREAstr%Sat_Id_Num == 186) then
+                  Sensor%Sensor_Name = 'GOES-RU-IMAGER'
+                  Sensor%Spatial_Resolution_Meters = 2000
+                  Sensor%Platform_Name = 'GOES-16'
+                  Sensor%WMO_Id = 270
+                  Sensor%Instr_Const_File = 'goes_16_instr.dat'
+                  Sensor%Algo_Const_File = 'goes_16_algo.dat'
                   exit test_loop
                endif
 
@@ -1193,7 +1215,8 @@ module SENSOR_MODULE
    !
    !=====================================================================
    subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION(Level1b_Full_Name,AREAstr,NAVstr)
-
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
     character(len=*), intent(in):: Level1b_Full_Name
     type (area_header_type), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
@@ -1262,6 +1285,18 @@ module SENSOR_MODULE
                Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
                Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
 
+            !test for GOES-16
+            case (186)
+               ! This is needed to determine type of navigation
+               ! as Nav coefficents specific to GOES-16. These
+               ! coefficients are based on 1 km data, not 2 km.
+               ! Navigation transformations in abi_module.f90 will
+               ! account for this difference.
+
+               call READ_NAVIGATION_BLOCK_ABI(trim(Level1b_Full_Name), AREAstr,NAVstr)
+               Sensor%Geo_Sub_Satellite_Latitude = NAVstr%sublat
+               Sensor%Geo_Sub_Satellite_Longitude = NAVstr%sublon
+
             !test for GOES Imagers or Sounders
             case (70:79,180:185)
 
@@ -1295,7 +1330,8 @@ module SENSOR_MODULE
       use cx_read_ahi_mod, only : &
          ahi_segment_information_region &
          ,ahi_config_type
-                                                               
+       use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type                                                        
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
       TYPE (area_header_type), intent(in) :: AREAstr ! AVHRR only
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header ! AVHRR only
@@ -1425,6 +1461,11 @@ print*,'after nscans> ', Image%Number_Of_Lines
                      (AREAstr%Num_Elem*AREAstr%Bytes_Per_Pixel)
       end if
 
+      if (trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER') then
+         Image%Number_Of_Elements =  int(AREAstr%Num_Elem)
+         Image%Number_Of_Lines = AREAstr%Num_Line
+      end if
+
       if (trim(Sensor%Sensor_Name) == 'GOES_IP_SOUNDER') then
          Image%Number_Of_Elements =  int(AREAstr%Num_Elem / Goes_Sndr_Xstride)
          Image%Number_Of_Lines = AREAstr%Num_Line
@@ -1456,7 +1497,10 @@ print*,'after nscans> ', Image%Number_Of_Lines
       , NAVstr &
       , Nrec_Avhrr_Header &
       , Ierror_Level1b)
-
+		
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
+		
       character(len=*), intent(in):: Level1b_Full_Name
       integer, intent(in):: Segment_Number
       integer, intent(in):: Nrec_Avhrr_Header
@@ -1490,6 +1534,11 @@ print*,'after nscans> ', Image%Number_Of_Lines
          call READ_GOES_SNDR(Segment_Number,Image%Level1b_Name, &
                      Image%Start_Doy, Image%Start_Time, &
                      Time_Since_Launch, &
+                     AREAstr,NAVstr)
+
+       case('GOES-RU-IMAGER')
+         call READ_ABI(Segment_Number,Image%Level1b_Name, &
+                     Image%Start_Doy, Image%Start_Time, &
                      AREAstr,NAVstr)
 
        case('SEVIRI')
@@ -1540,8 +1589,11 @@ print*,'after nscans> ', Image%Number_Of_Lines
 #ifdef HDF5LIBS
          call READ_VIIRS_NASA_DATA (Segment_Number, trim(Image%Level1b_Name), Ierror_Level1b)
 
-         ! If error reading, then go to next file
+         !--- If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
+
+         !--- read auxillary cloud mask
+        ! call READ_MVCM_DATA(Segment_Number)
 #else
          print *, "No HDF5 library installed, stopping"
          stop

@@ -139,6 +139,7 @@ clavrxorb_objs = process_clavrx.o \
 	         iff_clavrx_bridge.o \
 	         iff_module.o \
                  goes_module.o   \
+					   abi_module.o   \
                  mtsat_module.o \
                  fy2_module.o \
                  coms_module.o \
@@ -321,6 +322,7 @@ asos_module.o: asos_module.f90 asos_clavrx_services_module.o
 
 
 ahi_clavrx_bridge.o:ahi_clavrx_bridge.f90 cx_read_ahi_mod.o
+abi_module.o: abi_module.f90 pixel_common.o goes_module.o  viewing_geometry_module.o numerical_tools_mod.o file_tools.o cx_constants_mod.o cx_ssec_areafile_mod.o
 avhrr_module.o: avhrr_module.f90 cx_constants_mod.o pixel_common.o viewing_geometry_module.o planck.o calibration_constants.o mreadf.o file_tools.o 
 calibration_constants.o: calibration_constants.f90 cx_constants_mod.o 
 cgms_nav.o: cgms_nav.f90
@@ -404,7 +406,7 @@ viirs_clavrx_bridge.o: viirs_clavrx_bridge.f90 readh5dataset.o file_tools.o clav
 viirs_read_mod.o: viirs_read_mod.f90 file_tools.o readh5dataset.o
 viirs_nasa_read_module.o: viirs_nasa_read_module.f90 file_tools.o pixel_common.o cx_constants_mod.o readh5dataset.o
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(hdf5libs)  viirs_nasa_read_module.f90
-sensor_module.o: sensor_module.f90 cx_constants_mod.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o  ahi_clavrx_bridge.o cx_ssec_areafile_mod.o iff_module.o
+sensor_module.o: sensor_module.f90 cx_constants_mod.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_clavrx_bridge.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o  ahi_clavrx_bridge.o abi_module.o cx_ssec_areafile_mod.o iff_module.o
 	$(fc) -c $(fflags) $(fflags_clavr) ${hdf5libs} $(cpp) sensor_module.f90 
 else
 sensor_module.o: sensor_module.f90 cx_constants_mod.o pixel_common.o avhrr_module.o goes_module.f90 modis_module.o fy2_module.o viirs_nasa_read_module.o seviri_module.o coms_module.o iff_clavrx_bridge.o  clavrx_message_module.o date_tools_mod.o cx_read_ahi_mod.o cx_ssec_areafile_mod.o

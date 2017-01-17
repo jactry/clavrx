@@ -49,6 +49,8 @@ character(len=20) :: sensor_name
          sensor_name = 'GOES-14'
       case(259)
          sensor_name = 'GOES-15'
+      case(270)
+         sensor_name = 'ABI'   
       case(705)
          sensor_name = 'NOAA-05'   
       case(706)

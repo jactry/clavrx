@@ -383,6 +383,7 @@ module PIXEL_COMMON
   integer,public, save:: Cmr_File_Flag
   integer,public, save:: Cloud_Mask_Aux_Flag
   integer,public, save:: Cloud_Mask_Aux_Read_Flag
+  integer,public, save:: Cloud_Type_Aux_Read_Flag
   integer,public, save:: Cloud_Mask_Bayesian_Flag
   integer,public, save:: Ref_cal_1b 
   integer,public, save:: Therm_cal_1b
@@ -1199,6 +1200,9 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Bad_Scan_Flag = sym%NO        !not initialized to missing
       Bad_Pixel_Mask = sym%NO      !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
+
+      Cloud_Mask_Aux_Read_Flag = sym%NO
+      Cloud_Type_Aux_Read_Flag = sym%NO
 
       call RESET_SENSOR_ARRAYS()
       call RESET_NAV_ARRAYS()

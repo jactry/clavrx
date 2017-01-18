@@ -69,7 +69,7 @@ CC = gcc
 .PHONY: all clean distclean
 
 #Default target is to build all executables.
-all: dncomp clavrxorb  drive_subset_level2b create_level2b
+all: dncomp clavrxorb   create_level2b
 
 ################################# Executables ##################################
 

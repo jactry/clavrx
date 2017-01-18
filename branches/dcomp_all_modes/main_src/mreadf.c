@@ -20,7 +20,7 @@
 		
   Output:
         buffer: contains the integer data read in from file
-
+  
  AUTHORS:
  Michael J. Pavolonis
  National Oceanic and Atmospheric Administration

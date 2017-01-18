@@ -978,7 +978,7 @@
 
          !--- check to see that some data was read in
          if (Image%Number_Of_Lines_Read_This_Segment == 0) then
-            print *, EXE_PROMPT, "WARNING: no scans read in, exiting segment processing loop"
+            print *, EXE_PROMPT, "PROCESS CLAVRX WARNING: no scans read in, exiting segment processing loop"
             Skip_Processing_Flag = sym%YES
             !exit
          end if

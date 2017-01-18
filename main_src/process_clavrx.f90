@@ -1069,7 +1069,12 @@
                                              Pc_Co2,Tc_Co2,Zc_Co2)
 
                !--- cloud mask
-               if (Cloud_Mask_Aux_Flag /= sym%USE_AUX_CLOUD_MASK) then
+               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Cloud_Mask_Aux_Read_Flag == sym%YES) then
+
+                  CLDMASK%Cld_Mask = CLDMASK%Cld_Mask_Aux
+
+               else
+
                   if (Cloud_Mask_Bayesian_Flag == sym%YES) then
                      call NB_CLOUD_MASK_BRIDGE(Segment_Number)
                   elseif (Cloud_Mask_Bayesian_Flag == sym%NO) then
@@ -1078,11 +1083,13 @@
                      print *, "Only the Bayesian and Baseline Cloud Masks are available, check selection"
                      stop 
                   endif
+
+                  if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK) then
+                     print *, EXE_PROMPT, "Auxilliary Cloud Mask Selected but Unavailable"
+                  endif
+
                endif
 
-               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Cloud_Mask_Aux_Read_Flag == sym%YES) then
-                  CLDMASK%Cld_Mask = CLDMASK%Cld_Mask_Aux
-               endif
 
                !--- Compute Adjacent pixels Cloud Mask
                call ADJACENT_PIXEL_CLOUD_MASK(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
@@ -1104,7 +1111,8 @@
 
                !--- cloud type 
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. trim(Sensor%Sensor_Name) == 'VIIRS') then
+
+               if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Cloud_Type_Aux_Read_Flag == sym%YES) then
 
                   Cld_Type = Cld_Type_Aux
                   Cld_Phase = Cld_Phase_Aux

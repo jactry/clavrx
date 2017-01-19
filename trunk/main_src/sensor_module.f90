@@ -193,9 +193,6 @@ module SENSOR_MODULE
 
 
          !---- determine auxilliary cloud mask name
-!   integer(kind=int1) :: NO_AUX_CLOUD_MASK = 0
-!   integer(kind=int1) :: USE_AUX_CLOUD_MASK = 1
-!   integer(kind=int1) :: READ_BUT_DO_NOT_USE_AUX_CLOUD_MASK = 2
          if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
           call DETERMINE_MVCM_NAME()
          endif
@@ -544,7 +541,6 @@ module SENSOR_MODULE
         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
         Sensor%WMO_Id = 784
-        print*,'mydatml'
         exit test_loop
       endif
 
@@ -1122,6 +1118,11 @@ module SENSOR_MODULE
                   Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
+
+         !---- determine auxilliary cloud mask name
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+          call DETERMINE_MVCM_NAME()
+         endif
       endif
 
 
@@ -1420,6 +1421,11 @@ module SENSOR_MODULE
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
          call READ_MODIS(Segment_Number,Ierror_Level1b)
          if (Ierror_Level1b /= 0) return
+
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+           call READ_MVCM_DATA(Segment_Number)
+         endif
+
       end if
 
       select case (trim(Sensor%Sensor_Name))
@@ -1498,7 +1504,9 @@ module SENSOR_MODULE
          if (Ierror_Level1b /= 0) return
 
          !--- read auxillary cloud mask
-         call READ_MVCM_DATA(Segment_Number)
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+           call READ_MVCM_DATA(Segment_Number)
+         endif
 #else
          print *, "No HDF5 library installed, stopping"
          stop

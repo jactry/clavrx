@@ -230,6 +230,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
   !--- do this for GOES names which are named goesxx_1_year_jday_hour.area
   if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER' .or.  &
+      trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'COMS-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER' .or.  &
       trim(Sensor%Sensor_Name) == 'FY2-IMAGER' .or.  &

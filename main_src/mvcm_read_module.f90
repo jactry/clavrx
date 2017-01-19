@@ -1,3 +1,4 @@
+!$Id:$
 !--------------------------------------------------------------------------------------
 ! This module reads the MVCM cloud mask to allow CLAVR-x to simulate the MODAWG chain
 !
@@ -7,11 +8,15 @@
 !
 !VGEOM_snpp_d20130426_t101800_c20161107162802.nc
 !IFFCMO_npp_d20130426_t101800_c20161029052326_ssec_dev.hdf
+!
+!
+!IFFCMO_aqua_d20121229_t051500_c20170114104543_ssec_dev.hdf 
 ! 
 !-------------------------------------------------------------------------------------
 module MVCM_READ_MODULE
 
     use PIXEL_COMMON, only: Image, Cldmask, Cloud_Mask_Aux_Flag, Cloud_Mask_Aux_Read_Flag
+    use NUMERICAL_ROUTINES, only: COMPUTE_MONTH, COMPUTE_DAY, LEAP_YEAR_FCT
     use FILE_TOOLS, only: FILE_SEARCH
     use CONSTANTS, only: &
              Real4 &
@@ -42,6 +47,10 @@ module MVCM_READ_MODULE
   character(len=100):: Search_String
   character(len=1020), dimension(:), pointer:: Files
   integer:: Num_Files
+  character(len=4):: Year_String, Time_String
+  character(len=2):: Month_String, Dom_String
+  character(len=3):: Doy_String
+  integer:: Year, Month, Dom, Doy,Ileap
 
   Image%Auxiliary_Cloud_Mask_File_Name = 'no_file'
 
@@ -60,10 +69,42 @@ module MVCM_READ_MODULE
 
     Image%Auxiliary_Cloud_Mask_File_Name = Files(1)
 
-    print *, EXE_PROMPT, MVCM_PROMPT, "MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
+    print *, EXE_PROMPT, MVCM_PROMPT, "NASA VIIRS Level1b MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
 
   endif
+
   !--- NASA MODIS Level1b
+  if (index(Image%Level1b_Name,'MYD021KM') == 1) then 
+
+    !--- search should be the date and start time (ie. d20130426_t083000
+    Search_String = 'IFFCMO_aqua_'//Image%Level1b_Name(11:27)//'*.hdf'
+    Year_String = Image%Level1b_Name(11:14)
+    Time_String = Image%Level1b_Name(19:22)
+    Doy_String = Image%Level1b_Name(15:17)
+
+    read(Doy_String,*) Doy
+    read(Year_String,*) Year
+    Ileap = LEAP_YEAR_FCT(Year)
+    Month = COMPUTE_MONTH(Doy, ileap)
+    Dom = COMPUTE_Day(Doy, ileap)
+    write(Dom_String,fmt="(I2.2)") Dom
+    write(Month_String,fmt="(I2.2)") Month
+
+    Search_String = 'IFFCMO_aqua_d'//Year_String//Month_String//Dom_String//"_t"//Time_String//'*.hdf'
+
+    Files => FILE_SEARCH(trim(Image%Level1b_Path),trim(Search_String),count=Num_Files)
+
+    if (Num_Files == 0 .or. Num_Files > 1) then
+        print *, EXE_PROMPT, MVCM_PROMPT, "Multiple NASA MODIS Level1b MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
+        return
+    endif
+
+    Image%Auxiliary_Cloud_Mask_File_Name = Files(1)
+
+    print *, EXE_PROMPT, MVCM_PROMPT, "NASA MODIS Level1b MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
+
+  endif
+
   !--- SIPS IFF VIIRS Level1b
   !--- SIPS IFF MODIS Level1b
 

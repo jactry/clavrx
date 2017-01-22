@@ -1120,7 +1120,8 @@ module SENSOR_MODULE
          endif
 
          !---- determine auxilliary cloud mask name
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK .and. &
+             trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file") then 
           call DETERMINE_MVCM_NAME()
          endif
       endif
@@ -1422,7 +1423,8 @@ module SENSOR_MODULE
          call READ_MODIS(Segment_Number,Ierror_Level1b)
          if (Ierror_Level1b /= 0) return
 
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK .and. &
+             index(Image%Auxiliary_Cloud_Mask_File_Name, 'IFF') > 0) then 
            call READ_MVCM_DATA(Segment_Number)
          endif
 

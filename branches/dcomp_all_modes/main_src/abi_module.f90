@@ -298,7 +298,27 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
       !--- Band 1 - 0.47 um
 		
-		do i = 1, 16 
+		do i = 1, 1
+			
+			ABI_file_id = get_lun()   
+			write ( channel_string,"(i1)") i
+			if (i .gt. 9 ) write ( channel_string,"(i2)") i
+			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
+                            channel_1_filename(ipos+3:ilen)
+			print*,"Channel ",i," calibration for : ", trim(filename)
+			if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+       		call mread_open(trim(Temporary_Data_Dir)//trim(filename)//CHAR(0), ABI_file_id)
+      	else
+       		call mread_open(trim(Image%Level1b_Path)//trim(filename)//CHAR(0), ABI_file_id)
+      	endif 
+			
+			ichan_modis = modis_chn_list(i)
+			call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
+			call mread_close(ABI_file_id)
+		end do
+		
+		
+				do i = 2, 16 
 			
 			ABI_file_id = get_lun()   
 			write ( channel_string,"(i1)") i

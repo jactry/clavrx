@@ -4,7 +4,7 @@ LDFLAGS_ARCH=
 FFLAGS_ARCH=-c -O2 -assume byterecl
 
 
-fflags = -O2    -assume byterecl
+fflags = -c -O2    -assume byterecl
 fflags_pfast = -O2 -assume byterecl -fixed
 fflags_sasrab_f77 = -O2 -assume byterecl -fixed -save
 fflags_sasrab_f90 = -O2 -assume byterecl -save

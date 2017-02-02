@@ -709,6 +709,7 @@ module PIXEL_COMMON
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_Qf
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: DCOMP_Quality_Flag
      integer (kind=int2), dimension(:,:), allocatable, public,target, save:: DCOMP_Info_Flag
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Fit
 
      !-- Nlcomp cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_Nlcomp
@@ -2276,6 +2277,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Iwp_DCOMP(dim1,dim2))
       allocate(Iwp_Tau_DCOMP(dim1,dim2))
       allocate(Cwp_DCOMP(dim1,dim2))
+      allocate(Cwp_Fit(dim1,dim2))
       allocate(Cwp_Ice_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Water_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Scwater_Layer_DCOMP(dim1,dim2))
@@ -2323,6 +2325,7 @@ subroutine RESET_DCOMP_ARRAYS()
       Iwp_DCOMP = Missing_Value_Real4
       Iwp_Tau_DCOMP = Missing_Value_Real4
       Cwp_DCOMP = Missing_Value_Real4
+      Cwp_Fit = Missing_Value_Real4
       Cwp_Ice_Layer_DCOMP = Missing_Value_Real4
       Cwp_Water_Layer_DCOMP = Missing_Value_Real4
       Cwp_Scwater_Layer_DCOMP = Missing_Value_Real4
@@ -2370,6 +2373,7 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Iwp_DCOMP)
       deallocate(Iwp_Tau_DCOMP)
       deallocate(Cwp_DCOMP)
+      deallocate(Cwp_Fit)
       deallocate(Cwp_Ice_Layer_DCOMP)
       deallocate(Cwp_Water_Layer_DCOMP)
       deallocate(Cwp_Scwater_Layer_DCOMP)

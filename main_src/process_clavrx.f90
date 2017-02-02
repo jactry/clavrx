@@ -1235,6 +1235,9 @@
                      call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,Sun_Earth_Distance)
                      call COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Image%Number_Of_Lines_Read_This_Segment)
                      call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
+                     call ADJUST_DCOMP_LWP()
+                     Diag_Pix_Array_1 = Cwp_Fit
+                     Diag_Pix_Array_2 = Temp_Pix_Array_1
                   endif
                   
                endif

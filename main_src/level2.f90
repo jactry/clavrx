@@ -3547,6 +3547,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Cloud Water Path from DCOMP Fitted to Match AMSR2
+     if (Sds_Num_Level2_Cwp_Fit_Flag == sym%YES .and. Cld_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cwp_Fit),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "cloud_water_path_fit", &
+                              "not specified", &
+                              "integrated total cloud water over whole column", &
+                              DFNT_INT8, sym%LINEAR_SCALING, &
+                              Min_Cwp, Max_Cwp, "g m-2", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Rain Rate from DCOMP
      if (Sds_Num_Level2_Rain_Rate_Flag == sym%YES .and. Cld_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Rain_Rate),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -5900,6 +5911,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cwp), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                           One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
+
+    !-- Cloud Water Path Adjusted
+    if (Sds_Num_Level2_Cwp_Fit_Flag == sym%YES .and. Cld_Flag == sym%YES) then
+        call SCALE_VECTOR_I1_RANK2(Cwp_Fit,sym%LINEAR_SCALING,Min_Cwp, &
+                                   Max_Cwp,Missing_Value_Real4,One_Byte_Temp)
+        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cwp_Fit), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
 
     !-- Rain Rate
     if (Sds_Num_Level2_Rain_Rate_Flag == sym%YES .and. Cld_Flag == sym%YES) then

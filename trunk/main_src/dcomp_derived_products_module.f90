@@ -41,7 +41,7 @@ MODULE DCOMP_DERIVED_PRODUCTS_MODULE
    , acha &
    , rain_rate_dcomp &
    , hcld_dcomp &
-   , cwp_dcomp &
+   , Cwp_Dcomp &
    , iwp_dcomp &
    , lwp_dcomp &
    , cdnc_dcomp &
@@ -63,7 +63,10 @@ MODULE DCOMP_DERIVED_PRODUCTS_MODULE
    , ch  &
    , i_nwp &
    , j_nwp &
-   , geo
+   , geo &
+   , cwp_Fit &
+   , Dcomp_Mode &
+   , Temp_Pix_Array_1
  
  use NWP_COMMON,only: &
       psfc_nwp &
@@ -75,7 +78,8 @@ MODULE DCOMP_DERIVED_PRODUCTS_MODULE
  public:: COMPUTE_CLOUD_WATER_PATH, &
           COMPUTE_PRECIPITATION, &
           COMPUTE_ADIABATIC_CLOUD_PROPS, &
-          COMPUTE_DCOMP_INSOLATION
+          COMPUTE_DCOMP_INSOLATION, &
+          ADJUST_DCOMP_LWP
 
   contains
 
@@ -114,7 +118,7 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
   Lwp_Dcomp = Missing_Value_Real4
   Cwp_Ice_Layer_Dcomp = Missing_Value_Real4
   Cwp_Water_Layer_Dcomp = Missing_Value_Real4
-  Cwp_Scwater_Layer_Dcomp = Missing_Value_Real4
+  Cwp_Scwater_Layer_dcomp = Missing_Value_Real4
   Tau = Missing_Value_Real4
   Reff = Missing_Value_Real4
 
@@ -123,8 +127,8 @@ subroutine COMPUTE_CLOUD_WATER_PATH(jmin,jmax)
 
      !--- assign optical depth and particle size
      if (Geo%Solzen(Elem_Idx,Line_Idx) < 90.0) then 
-       Tau = Tau_Dcomp(Elem_Idx,Line_Idx)
-       Reff = Reff_Dcomp(Elem_Idx,Line_Idx)
+       Tau = Tau_dcomp(Elem_Idx,Line_Idx)
+       Reff = Reff_dcomp(Elem_Idx,Line_Idx)
      else
        Tau = Tau_Nlcomp(Elem_Idx,Line_Idx)
        Reff = Reff_Nlcomp(Elem_Idx,Line_Idx)
@@ -278,8 +282,8 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  Hcld_Dcomp = Missing_Value_Real4
-  Cdnc_Dcomp = Missing_Value_Real4
+  Hcld_dcomp = Missing_Value_Real4
+  Cdnc_dcomp = Missing_Value_Real4
 
   line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
@@ -291,8 +295,8 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
       !--- skip non cloud pixels
       if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
           Cld_Type(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) then
-          Hcld_Dcomp(Elem_Idx,Line_Idx) = 0.0
-          Cdnc_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          Hcld_dcomp(Elem_Idx,Line_Idx) = 0.0
+          Cdnc_dcomp(Elem_Idx,Line_Idx) = 0.0
           cycle
       endif
 
@@ -306,8 +310,8 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
       !--- make local aliases of global variables
       Water_Path_Cloud = Cwp_Dcomp(Elem_Idx,Line_Idx) / 1000.0   !kg/m^2
       T_Cloud = ACHA%Tc(Elem_Idx,Line_Idx)
-      Reff_Cloud = Reff_Dcomp(Elem_Idx,Line_Idx)
-      Tau_Cloud = Tau_Dcomp(Elem_Idx,Line_Idx)
+      Reff_Cloud = Reff_dcomp(Elem_Idx,Line_Idx)
+      Tau_Cloud = Tau_dcomp(Elem_Idx,Line_Idx)
 
      !--- compute Number concentration and Geometrical Height
      !--- filter for the clouds where this is applicable
@@ -319,11 +323,11 @@ subroutine COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min,Num_Lines)
          Condensation_Rate = exp(-21.0553+T_cloud*0.0536887) / 1000.0
 
          !geometrical height (meters)
-         Hcld_Dcomp(Elem_Idx,Line_Idx)  =  &
+         Hcld_dcomp(Elem_Idx,Line_Idx)  =  &
                     ( 2.0 / Condensation_Rate * Water_Path_Cloud )**0.5
 
          !Number concentration (cm-3)
-         Cdnc_Dcomp(Elem_Idx,Line_Idx) = 2.0**(-5.0/2.0)/Drop_Dis_Width *   &
+         Cdnc_dcomp(Elem_Idx,Line_Idx) = 2.0**(-5.0/2.0)/Drop_Dis_Width *   &
                              Tau_Cloud**3.0 * Water_Path_Cloud**(-5.0/2.0) *  &
                             (3.0/5.0*Q_eff_sca*pi)**(-3.0) *  &
                             (3.0*Condensation_Rate/4.0/pi/rho_water)**(-2.0) * &
@@ -419,7 +423,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  Rain_Rate_Dcomp = Missing_Value_Real4
+  Rain_Rate_dcomp = Missing_Value_Real4
 
   line_loop: DO Line_Idx = Line_Idx_Min, Line_Idx_Max
 
@@ -434,13 +438,13 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
       !--- skip non cloud pixels
       if (Cld_Type(Elem_Idx,Line_Idx) == sym%CLEAR_TYPE .or. &
           Cld_Type(Elem_Idx,Line_Idx) == sym%PROB_CLEAR_TYPE) then
-          Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+          Rain_Rate_dcomp(Elem_Idx,Line_Idx) = 0.0
           cycle
       endif
 
       CWP_Pix = Cwp_Dcomp(Elem_Idx,Line_Idx)
       CTT_Pix = ACHA%Tc(Elem_Idx,Line_Idx)
-      Reff_Pix = Reff_Dcomp(Elem_Idx,Line_Idx)
+      Reff_Pix = Reff_dcomp(Elem_Idx,Line_Idx)
 
       if (Geo%Solzen(Elem_Idx,Line_Idx) > 90.0) then
         Reff_Pix = Reff_Nlcomp(Elem_Idx,Line_Idx)
@@ -451,7 +455,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
       !--- screen low water path clouds
       if (CWP_Pix < CWP_T) then
-        Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+        Rain_Rate_dcomp(Elem_Idx,Line_Idx) = 0.0
         cycle
       endif
 
@@ -460,7 +464,7 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
           Cld_Type(Elem_Idx,Line_Idx) == sym%WATER_TYPE .or. &
           Cld_Type(Elem_Idx,Line_Idx) == sym%SUPERCOOLED_TYPE) then
          if (Reff_Pix < Ceps_T) then
-            Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = 0.0
+            Rain_Rate_dcomp(Elem_Idx,Line_Idx) = 0.0
             cycle
          endif
       endif
@@ -478,8 +482,8 @@ subroutine COMPUTE_PRECIPITATION(Line_Idx_Min,Num_Lines)
 
       !--- compute rain rate
       Rain_Rate_Max = 5.0 + dH**Alpha
-      Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = (((CWP_Pix - CWP_0)/CWP_0)**Alpha) / dH
-      Rain_Rate_Dcomp(Elem_Idx,Line_Idx) = min(Rain_Rate_Max,Rain_Rate_Dcomp(Elem_Idx,Line_Idx))
+      Rain_Rate_dcomp(Elem_Idx,Line_Idx) = (((CWP_Pix - CWP_0)/CWP_0)**Alpha) / dH
+      Rain_Rate_dcomp(Elem_Idx,Line_Idx) = min(Rain_Rate_Max,Rain_Rate_dcomp(Elem_Idx,Line_Idx))
 
 
     enddo element_loop
@@ -523,10 +527,10 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
   real (kind=real4) :: Cloud_Transmission_Direct
   real (kind=real4) :: Surface_Albedo_Direct
   real (kind=real4) :: Surface_Albedo_Diffuse
-  real (kind=real4) :: Insolation_Dcomp_Diffuse_Black_Surface
-  real (kind=real4) :: Insolation_Dcomp_Direct_Black_Surface
-  real (kind=real4) :: Insolation_Dcomp_Diffuse
-  real (kind=real4) :: Insolation_Dcomp_Direct
+  real (kind=real4) :: Insolation_dcomp_Diffuse_Black_Surface
+  real (kind=real4) :: Insolation_dcomp_Direct_Black_Surface
+  real (kind=real4) :: Insolation_dcomp_Diffuse
+  real (kind=real4) :: Insolation_dcomp_Direct
   real (kind=real4) :: Fo_Toa
   real (kind=real4) :: Fo
   real (kind=real4) :: Tpw
@@ -554,7 +558,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
   Elem_Idx_Max = Elem_Idx_Min + Num_Elements - 1
   Line_Idx_Max = Line_Idx_Min + Num_Lines - 1
 
-  Insolation_Dcomp = Missing_Value_Real4
+  Insolation_dcomp = Missing_Value_Real4
 
   Fo_Toa = SOLAR_CONSTANT / (Sun_Earth_Distance**2)
 
@@ -564,7 +568,7 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
       Lon_Nwp_Idx = I_Nwp(Elem_Idx,Line_Idx)
       Lat_Nwp_Idx = J_Nwp(Elem_Idx,Line_Idx)
 
-      Cloud_Optical_Depth = Tau_Dcomp(Elem_Idx,Line_Idx)  
+      Cloud_Optical_Depth = Tau_dcomp(Elem_Idx,Line_Idx)  
       Solar_Zenith_Angle = Geo%Solzen(Elem_Idx,Line_Idx)
       Land_Class = Sfc%Land(Elem_Idx,Line_Idx)
       TPW = Tpw_Nwp_Pix(Elem_Idx,Line_Idx)
@@ -619,31 +623,81 @@ subroutine COMPUTE_DCOMP_INSOLATION(Line_Idx_Min,Num_Lines,Sun_Earth_Distance)
         Cloud_Transmission_Diffuse =  0.0
       endif
        
-      Insolation_Dcomp_Direct_Black_Surface = Fo * Cloud_Transmission_Direct * Cosine_Solar_Zenith_Angle
+      Insolation_dcomp_Direct_Black_Surface = Fo * Cloud_Transmission_Direct * Cosine_Solar_Zenith_Angle
 
-      Insolation_Dcomp_Diffuse_Black_Surface = Fo * Cloud_Transmission_Diffuse * Cosine_Solar_Zenith_Angle
+      Insolation_dcomp_Diffuse_Black_Surface = Fo * Cloud_Transmission_Diffuse * Cosine_Solar_Zenith_Angle
 
 !     !-- Coakley
-!     Insolation_Dcomp_Direct = Insolation_Dcomp_Direct_Black_Surface * (1.0 +  &
+!     Insolation_dcomp_Direct = Insolation_dcomp_Direct_Black_Surface * (1.0 +  &
 !                 Surface_Albedo_Direct * Cloud_Spherical_Albedo / (1.0 - Surface_Albedo_Diffuse * Cloud_Spherical_Albedo))
 
-!     Insolation_Dcomp_Diffuse = Insolation_Dcomp_Diffuse_Black_Surface / &
+!     Insolation_dcomp_Diffuse = Insolation_dcomp_Diffuse_Black_Surface / &
 !                                (1.0 - Surface_Albedo_Diffuse * Cloud_Spherical_Albedo) 
 
       !-- Heidinger Formulation
-      Insolation_Dcomp_Direct = Insolation_Dcomp_Direct_Black_Surface * (1.0 +  &
+      Insolation_dcomp_Direct = Insolation_dcomp_Direct_Black_Surface * (1.0 +  &
                   Surface_Albedo_Direct * Cloud_Spherical_Albedo / (1.0 - Surface_Albedo_Diffuse * Cloud_Spherical_Albedo))
 
-      Insolation_Dcomp_Diffuse = Insolation_Dcomp_Diffuse_Black_Surface *  &
+      Insolation_dcomp_Diffuse = Insolation_dcomp_Diffuse_Black_Surface *  &
                   (1.0 + Surface_Albedo_Diffuse * Cloud_Spherical_Albedo / (1.0 - Surface_Albedo_Diffuse * Cloud_Spherical_Albedo))
 
       !--- combine
-      Insolation_Dcomp(Elem_Idx,Line_Idx) = Insolation_Dcomp_Direct + Insolation_Dcomp_Diffuse
+      Insolation_dcomp(Elem_Idx,Line_Idx) = Insolation_dcomp_Direct + Insolation_dcomp_Diffuse
 
     enddo element_loop
   enddo line_loop
 
 end subroutine COMPUTE_DCOMP_INSOLATION
+
+!----------------------------------------------------------------------------------------------
+!    adjust lwp to bring in line with AMSR2 by adjust reff
+!    coefficients depend on mode
+!----------------------------------------------------------------------------------------------
+subroutine ADJUST_DCOMP_LWP()
+
+   real, parameter:: a_mode1 = -0.643933
+   real, parameter:: b_mode1 = 0.535210
+   real, parameter:: a_mode2 = -1.31944
+   real, parameter:: b_mode2 = 0.632442
+   real, parameter:: a_mode3 = -1.13540
+   real, parameter:: b_mode3 = 0.776837
+   real:: a,b
+   real, dimension(:,:), pointer:: Reff_Fit
+
+   select case (Dcomp_Mode)
+    case(1)
+      a = a_mode1
+      b = b_mode1
+    case(2)
+      a = a_mode2
+      b = b_mode2
+    case(3)
+      a = a_mode3
+      b = b_mode3
+   end select   
+
+   Reff_Fit => Temp_Pix_Array_1
+
+   Reff_Fit = MISSING_VALUE_REAL4
+   Cwp_Fit = Cwp_Dcomp
+
+   where(Cld_Type < 6 .and. Cld_Type > 1 .and.  &
+         Tau_dcomp /= MISSING_VALUE_REAL4 .and. &
+         Reff_dcomp /= MISSING_VALUE_REAL4)
+
+         Reff_Fit = a + b * Reff_dcomp
+
+   endwhere
+
+   where(Reff_Fit /= MISSING_VALUE_REAL4)
+
+         Cwp_Fit = 0.666 * Tau_dcomp * Reff_Fit
+
+   end where
+
+   Reff_Fit => Null()
+
+end subroutine ADJUST_DCOMP_LWP
 
 !-----------------------------------------------------------
 ! end of MODULE

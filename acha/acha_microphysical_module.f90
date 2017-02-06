@@ -3,7 +3,7 @@ module ACHA_MICROPHYSICAL_MODULE
 
 implicit none
 
-integer, parameter, private:: Habit_Idx = 10  ! 1(droxtals),2(solid_bullet_rosettes),3(hollow_bullet_rosettes),  $
+integer, parameter, private:: Habit_Idx = 9  ! 1(droxtals),2(solid_bullet_rosettes),3(hollow_bullet_rosettes),  $
                                              ! 4(solid_columns),5(hollow_columns),6(plates),7(aggregate_columns), $
                                              ! 8(small_aggregate_plates),9(large_aggregate_plates),10(empirical)
 

@@ -674,6 +674,9 @@ subroutine ADJUST_DCOMP_LWP()
     case(3)
       a = a_mode3
       b = b_mode3
+    case default
+      a = 0.0
+      b = 1.0
    end select   
 
    Reff_Fit => Temp_Pix_Array_1
@@ -682,8 +685,8 @@ subroutine ADJUST_DCOMP_LWP()
    Cwp_Fit = Cwp_Dcomp
 
    where(Cld_Type < 6 .and. Cld_Type > 1 .and.  &
-         Tau_dcomp /= MISSING_VALUE_REAL4 .and. &
-         Reff_dcomp /= MISSING_VALUE_REAL4)
+         Tau_Dcomp /= MISSING_VALUE_REAL4 .and. &
+         Reff_Dcomp /= MISSING_VALUE_REAL4)
 
          Reff_Fit = a + b * Reff_dcomp
 
@@ -691,7 +694,7 @@ subroutine ADJUST_DCOMP_LWP()
 
    where(Reff_Fit /= MISSING_VALUE_REAL4)
 
-         Cwp_Fit = 0.666 * Tau_dcomp * Reff_Fit
+         Cwp_Fit = 0.666 * Tau_Dcomp * Reff_Fit
 
    end where
 

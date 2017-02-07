@@ -1816,8 +1816,8 @@ subroutine SOLUTION_SPACE()
    !    B_BETA_11um_85um_FIT_ICE =   -1.11750
 
    !--- hollow bullet rosettes
-   !    A_BETA_11um_85um_FIT_ICE =    2.11873
-   !    B_BETA_11um_85um_FIT_ICE =   -1.11750
+   !    A_BETA_11um_85um_FIT_ICE =    2.10412 
+   !    B_BETA_11um_85um_FIT_ICE =   -1.13382
 
    !--- solid columns
    !    A_BETA_11um_85um_FIT_ICE =    1.93440
@@ -1883,6 +1883,9 @@ subroutine SOLUTION_SPACE()
       ch29_emiss_profile = MISSING_VALUE_REAL4
       ch31_emiss_profile = MISSING_VALUE_REAL4
       ch32_emiss_profile = MISSING_VALUE_REAL4
+      beta_ch31_ch32_profile = MISSING_VALUE_REAL4
+      beta_ch31_ch29_profile = MISSING_VALUE_REAL4
+      beta_ch31_ch29_predicted_profile = MISSING_VALUE_REAL4
       beta_diff_profile = 1000.0
 
       level_loop: do Level_Idx = Level_Idx_Start, Level_Idx_End
@@ -1903,9 +1906,11 @@ subroutine SOLUTION_SPACE()
 
       beta_ch31_ch32_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch32_emiss_profile(Level_Idx)) 
       beta_ch31_ch29_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch29_emiss_profile(Level_Idx)) 
-      beta_ch31_ch29_predicted_profile(Level_Idx) = A_Beta_11um_85um_FIT_ICE + B_Beta_11um_85um_FIT_ICE * beta_ch31_ch32_profile(Level_Idx)
+      if (beta_ch31_ch32_profile(Level_Idx) /= MISSING_VALUE_REAL4) &
+          beta_ch31_ch29_predicted_profile(Level_Idx) = A_Beta_11um_85um_FIT_ICE + B_Beta_11um_85um_FIT_ICE * beta_ch31_ch32_profile(Level_Idx)
 
-      beta_diff_profile(level_Idx) = abs(beta_ch31_ch29_profile(Level_Idx) -  beta_ch31_ch29_predicted_profile(Level_Idx))
+      if (beta_ch31_ch29_profile(Level_Idx) /= MISSING_VALUE_REAL4 .and. beta_ch31_ch29_predicted_profile(Level_Idx) /= MISSING_VALUE_REAL4) &
+          beta_diff_profile(level_Idx) = abs(beta_ch31_ch29_profile(Level_Idx) -  beta_ch31_ch29_predicted_profile(Level_Idx))
 
       enddo Level_Loop
 

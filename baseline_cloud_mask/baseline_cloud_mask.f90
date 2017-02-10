@@ -468,8 +468,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
-   Cloud_Mask => Cld_Mask
-   Cloud_Mask_Packed => Cld_Test_Vector_Packed
+   Cloud_Mask => CLDMASK%Cld_Mask
+   Cloud_Mask_Packed => CLDMASK%Cld_Test_Vector_Packed
    Test_Results => Test_Results_Temp !will just null for now
    Cloud_Mask_QF => Temp_Array !null() !will just null for now
    Cloud_Mask_Tmpy => One_Byte_Temp !need to find
@@ -714,9 +714,9 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                     ENDIF
 
                     
-                    IF (Sensor%Chan_On_Flag_Default(29)  > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
-                                                       ch(29)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
+                                                       ch(28)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
@@ -784,8 +784,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
            Emiss_Tropo_Chn14_LRC = Emiss_Tropo_Chn14(Elem_LRC_Idx,Line_LRC_Idx)
          ENDIF
          
-!         Emiss_Tropo_11um_LRC_BCM(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
-
+         !Emiss_Tropo_11um_LRC_BCM(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
+         
          !
          !--- NWC Indices
          Elem_NWC_Idx = X_NWC_Idx(Elem_Idx,Line_Idx)
@@ -800,7 +800,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
            ENDIF
          ENDIF
          
-!         BTD_11_12um_NWC_BCM(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
+         !BTD_11_12um_NWC_BCM(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
 
          !
          !---cosine of satellite viewing zenith angle
@@ -966,7 +966,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                 Emiss_Chn7_NWC = Ems_Ch20(Elem_NWC_Idx,Line_NWC_Idx)
             ENDIF
             
-!            Emiss_39_NWC_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
+            !Emiss_39_NWC_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
            
             !
             !---3.9 um surface emissivity
@@ -1378,13 +1378,13 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
         ENDIF
         
         !-- STORE IN GLOBAL ARRAYS FOR OUTPUT
-!        Ref_Ch1_Clr_Min_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
+        !Ref_Ch1_Clr_Min_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
+        
+        !Ref_Ch1_Clr_Max_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
 
-!        Ref_Ch1_Clr_Max_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
+        !Ref_Ch1_Clr_Std_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
 
-!        Ref_Ch1_Clr_Std_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
-
-!        Ref_Ch1_Clr_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
+        !Ref_Ch1_Clr_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
         
 
     ENDIF

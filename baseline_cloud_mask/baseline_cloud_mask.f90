@@ -1,4 +1,4 @@
-module BASELINE_CLOUD_MASK
+MODULE Baseline_Cloud_Mask
 !$Id$
 !
 ! Module Name:
@@ -57,44 +57,44 @@ use RTM_COMMON
 use PLANCK, only: &
         PLANCK_RAD_FAST &
       , PLANCK_TEMP_FAST
-use CLAVRX_MESSAGE_module
+use CLAVRX_MESSAGE_MODULE
 use CALIBRATION_CONSTANTS, only: &
          Sun_Earth_Distance  &
         , Solar_Ch20_Nu
         
-implicit none
+IMPLICIT NONE
 
-private
+PRIVATE
 
-public:: BASELINE_CLOUD_MASK_MAIN
+PUBLIC:: Baseline_Cloud_Mask_Main
 
-private:: Compute_Probably_Clear_Restoral
-private:: Compute_Probably_Cloudy
-private:: Clear_Chn2_Reflectance_Field
-private:: RUT_Routine
-private:: TUT_Routine
-private:: RTCT_Routine
-private:: ETROP_Routine
-private:: PFMFT_Routine
-private:: CIRH2O_Routine
-private:: RFMFT_Routine
-private:: TEMPIR_Routine
-private:: RGCT_Routine
-private:: RVCT_Routine
-private:: NIRREF_Chn5_Routine
-private:: NIRREF_Chn7_Routine
-private:: CIRREF_Routine
-private:: EMISS4_Routine
-private:: ULST_Routine
-private:: Set_Cmask_Thresholds
+PRIVATE:: Compute_Probably_Clear_Restoral
+PRIVATE:: Compute_Probably_Cloudy
+PRIVATE:: Clear_Chn2_Reflectance_Field
+PRIVATE:: RUT_Routine
+PRIVATE:: TUT_Routine
+PRIVATE:: RTCT_Routine
+PRIVATE:: ETROP_Routine
+PRIVATE:: PFMFT_Routine
+PRIVATE:: CIRH2O_Routine
+PRIVATE:: RFMFT_Routine
+PRIVATE:: TEMPIR_Routine
+PRIVATE:: RGCT_Routine
+PRIVATE:: RVCT_Routine
+PRIVATE:: NIRREF_Chn5_Routine
+PRIVATE:: NIRREF_Chn7_Routine
+PRIVATE:: CIRREF_Routine
+PRIVATE:: EMISS4_Routine
+PRIVATE:: ULST_Routine
+PRIVATE:: Set_Cmask_Thresholds
 
-private:: Compute_NWC
-private:: Compute_Clear_Sky_Scatter
-private:: Term_Refl_Norm
+PRIVATE:: Compute_NWC
+PRIVATE:: Compute_Clear_Sky_Scatter
+PRIVATE:: Term_Refl_Norm
 
-private:: compute_spatial_uniformity
-private:: destroy_spatial_uniformity
-private:: gradient2d
+PRIVATE:: compute_spatial_uniformity
+PRIVATE:: destroy_spatial_uniformity
+PRIVATE:: gradient2d
 
 !have to add PACK_BYTES here because it isn't available in CLAVRX
  interface PACK_BYTES
@@ -106,16 +106,16 @@ private:: gradient2d
 !
 !--- include fixed thresholds via this include statement
 !
-include 'baseline_cloud_mask_thresholds.inc'
+INCLUDE 'baseline_cloud_mask_thresholds.inc'
 
-contains
+CONTAINS
 
 !====================================================================
 ! Baseline Cloud Mask from GOES-R AWG Cloud Application Team
 !
 ! Principal Author: Andrew Heidinger
 !
-! Subroutine Name: Baseline_Cld_Mask_Main
+! Subroutine Name: Baseline_Cloud_Mask_Main
 !
 ! Function:
 !   Serve as the baseline cloud Mask for all ABI processing
@@ -127,7 +127,7 @@ contains
 !   The Output includes all test decisions
 !
 ! CALLing Sequence:
-!   CALL Baseline_Cld_Mask_Main(internal_algorithm_index)
+!   CALL Baseline_Cloud_Mask_Main(internal_algorithm_index)
 !
 ! Inputs: All input passed through geocat structures (satellite, nwp, 
 !         rtm and temporal)
@@ -138,9 +138,9 @@ contains
 !                        =  test results packed into bytes
 !      test_results = out2(ialgo)%qflg1 = actual test results (unpacked)
 !      cloud_mask_qf = out2(ialgo)%qflg2 = quality flag for whole Mask
-!      out2(ialgo)%r4_generic1 = generic real4 array used for diagnostic Output
-!      out2(ialgo)%r4_generic2 = generic real4 array used for diagnostic Output
-!      out2(ialgo)%r4_generic3 = generic real4 array used for diagnostic Output
+!      out2(ialgo)%r4_generic1 = generic REAL4 array used for diagnostic Output
+!      out2(ialgo)%r4_generic2 = generic REAL4 array used for diagnostic Output
+!      out2(ialgo)%r4_generic3 = generic REAL4 array used for diagnostic Output
 !
 ! Dependencies:
 !        GEOCAT satellite, rtm, nwp, and temporal structures must be
@@ -151,7 +151,7 @@ contains
 !  History:
 !   2/2007 - Andrew Heidinger - Created based on CLAVR-x
 !   7/2007 - Added Temporal IR Test
-!   1/2008 - Fixed bugs seen IN real-time processing
+!   1/2008 - Fixed bugs seen IN REAL-time processing
 !   2/2008 - v3 delivered to AIT
 !
 ! Local Variables:
@@ -237,175 +237,178 @@ contains
 !  - you must ensure that geocat array hold test_results IN big enough
 !    this is done IN algorithm_mod.f90
 !====================================================================
-subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
+SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
-   integer(kind=INT4), INTENT(IN) :: Algo_Num
+   INTEGER(KIND=INT4), INTENT(IN) :: Algo_Num
    CHARACTER(len=*), PARAMETER:: Routine_Name =  &
-                                 "baseline_cloud_mask: test_Baseline_Cld_Mask_main"
-   integer(kind=INT4) :: Elem_Idx
-   integer(kind=INT4) :: Line_Idx
-   integer(kind=INT4) :: Num_Elem
-   integer(kind=INT4) :: Number_of_Lines_in_this_Segment
-   integer(kind=INT4) :: Max_Num_Lines_per_Seg
+                                 "baseline_cloud_mask: test_Baseline_Cloud_Mask_main"
+   INTEGER(KIND=INT4) :: Elem_Idx
+   INTEGER(KIND=INT4) :: Line_Idx
+   INTEGER(KIND=INT4) :: Num_Elem
+   INTEGER(KIND=INT4) :: Number_of_Lines_in_this_Segment
+   INTEGER(KIND=INT4) :: Max_Num_Lines_per_Seg
    CHARACTER(LEN=10) :: Sat_Name
    CHARACTER(LEN=40) :: Algo_Name
    CHARACTER(LEN=100) :: Err_Message
-   integer(kind=INT4) :: Chn_Num
-   integer(kind=INT4) :: Elem_LRC_Idx
-   integer(kind=INT4) :: Line_LRC_Idx
-   integer(kind=INT4) :: Elem_NWC_Idx
-   integer(kind=INT4) :: Line_NWC_Idx
-   real(kind=real4) :: Refl_Chn2
-   real(kind=real4) :: Refl_Chn4
-   real(kind=real4) :: Refl_Chn5
-   real(kind=real4) :: BT_Chn7
-   real(kind=real4) :: Rad_Chn7
-   real(kind=real4) :: Refl_Chn7
-   real(kind=real4) :: Emiss_Chn7
-   real(kind=real4) :: Emiss_Chn7_Clr
-   real(kind=real4) :: Rad_Chn7_Clr
-   real(kind=real4) :: BT_Chn9
-   real(kind=real4) :: BT_Chn10
-   real(kind=real4) :: BT_Chn14
-   real(kind=real4) :: BT_Chn14_Clr
-   real(kind=real4) :: BT_Chn14_Min_3x3
-   real(kind=real4) :: BT_Chn14_Max_3x3
-   real(kind=real4) :: BT_Chn15
-   real(kind=real4) :: BT_Chn15_Clr
-   integer(kind=INT4) :: Alloc_Status
-   integer(kind=INT4) :: Alloc_Status_Total
-   integer(kind=INT4) :: Have_Prev_BT_Chn14_15min
-   integer(kind=INT4) :: Have_Prev_BT_Chn14_Clr_15min
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE:: BT_WV_BT_Window_Corr
-   real(kind=real4), DIMENSION(:,:), POINTER:: BT_WaterVapor_Stddev_3x3
-   integer(kind=INT4), DIMENSION(:,:), ALLOCATABLE:: X_NWC_Idx
-   integer(kind=INT4), DIMENSION(:,:), ALLOCATABLE:: Y_NWC_Idx
+   INTEGER(KIND=INT4) :: Chn_Num
+   INTEGER(KIND=INT4) :: Elem_LRC_Idx
+   INTEGER(KIND=INT4) :: Line_LRC_Idx
+   INTEGER(KIND=INT4) :: Elem_NWC_Idx
+   INTEGER(KIND=INT4) :: Line_NWC_Idx
+   REAL(KIND=REAL4) :: Refl_Chn2
+   REAL(KIND=REAL4) :: Refl_Chn4
+   REAL(KIND=REAL4) :: Refl_Chn5
+   REAL(KIND=REAL4) :: BT_Chn7
+   REAL(KIND=REAL4) :: Rad_Chn7
+   REAL(KIND=REAL4) :: Refl_Chn7
+   REAL(KIND=REAL4) :: Emiss_Chn7
+   REAL(KIND=REAL4) :: Emiss_Chn7_Clr
+   REAL(KIND=REAL4) :: Rad_Chn7_Clr
+   REAL(KIND=REAL4) :: BT_Chn9
+   REAL(KIND=REAL4) :: BT_Chn10
+   REAL(KIND=REAL4) :: BT_Chn14
+   REAL(KIND=REAL4) :: BT_Chn14_Clr
+   REAL(KIND=REAL4) :: BT_Chn14_Min_3x3
+   REAL(KIND=REAL4) :: BT_Chn14_Max_3x3
+   REAL(KIND=REAL4) :: BT_Chn15
+   REAL(KIND=REAL4) :: BT_Chn15_Clr
+   INTEGER(KIND=INT4) :: Alloc_Status
+   INTEGER(KIND=INT4) :: Alloc_Status_Total
+   INTEGER(KIND=INT4) :: Have_Prev_BT_Chn14_15min
+   INTEGER(KIND=INT4) :: Have_Prev_BT_Chn14_Clr_15min
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: BT_WV_BT_Window_Corr
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_WaterVapor_Stddev_3x3
+   INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE:: X_NWC_Idx
+   INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE:: Y_NWC_Idx
 
    !some allocatables changed to pointers
-   real(kind=real4):: Refl_Chn2_Mean_3x3
-   real(kind=real4):: Refl_Chn2_Max_3x3
-   real(kind=real4):: Refl_Chn2_Min_3x3
-   real(kind=real4):: Refl_Chn2_Stddev_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Mean_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Max_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Min_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Stddev_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Mean_3X3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Max_3x3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Min_3X3
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Stddev_3X3
-   real(kind=real4), DIMENSION(:,:), POINTER:: BT_Chn14_Stddev_3x3
+   REAL(KIND=REAL4):: Refl_Chn2_Mean_3x3
+   REAL(KIND=REAL4):: Refl_Chn2_Max_3x3
+   REAL(KIND=REAL4):: Refl_Chn2_Min_3x3
+   REAL(KIND=REAL4):: Refl_Chn2_Stddev_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Mean_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Max_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Min_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Stddev_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Mean_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Max_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Min_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Stddev_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_Chn14_Stddev_3x3
 
-   integer(kind=INT4):: Num_Pix
-   integer(kind=INT4):: Snow_Mask
-   integer(kind=INT4):: Desert_Mask
-   integer(kind=INT4):: Coast_Type
-   integer(kind=INT4):: Land_Type
-   integer(kind=INT4):: Is_Day
-   integer(kind=INT4):: Is_Terminator
-   integer(kind=INT4):: Is_Land
-   integer(kind=INT4):: Is_Coast
-   integer(kind=INT4):: Is_Glint
-   integer(kind=INT4):: Is_Desert
-   integer(kind=INT4):: Is_Snow
-   integer(kind=INT4):: Is_Valid_Pixel
-   integer(kind=INT4), DIMENSION(16):: Is_Chn ! ABI channel #
-   integer(kind=INT4):: Num_Tests
-   integer(kind=INT4):: Error_Level
-   real(kind=real4):: Total_Precipitable_Water_NWP
-   real(kind=real4):: Total_Ozone_Path_NWP
-   real(kind=real4):: Sfc_Temp_Uni_NWP
-   real(kind=real4):: Sfc_Temp
-   real(kind=real4):: Sol_Zen
-   real(kind=real4):: Sfc_Hgt
-   real(kind=real4):: Scat_Zen
-   real(kind=real4):: Emiss_Tropo_Chn14_LRC
-   real(kind=real4):: BTD_Chn14_Chn15_NWC
-   real(kind=real4):: Emiss_Chn7_NWC
-   real(kind=real4):: BT_Chn14_NWC
-   real(kind=real4):: Planck_Emission_Chn7_Clr
-   real(kind=real4):: Chn7_Sol_Energy
-   real(kind=real4):: Sun_Earth_Dist
-   real(kind=real4):: Glint_Zen
-   real(kind=real4):: Sfc_Emiss_Chn7_RTM
-   real(kind=real4):: Atm_Trans_Chn7_RTM
-   real(kind=real4):: Atm_Solar_Trans_Chn7
-   real(kind=real4):: Solar_Rad_Chn7_Clr
-   real(kind=real4):: Solar_BT_Chn7_Clr
-   real(kind=real4):: Cos_Sat_Zen
-   real(kind=real4):: Cos_Scat_Zen
-   real(kind=real4):: Cos_Sol_Zen
-   integer(kind=INT1):: Tropo_Idx_NWP
-   integer(kind=INT1):: View_Zen_Idx
-   integer(kind=INT1):: Sfc_Idx_NWP
-   integer(kind=INT1):: Is_Coast_NWP
-   integer(kind=INT4):: X_NWP_Idx
-   integer(kind=INT4):: Y_NWP_Idx
-   real(kind=real4):: BT_Chn14_15min
-   real(kind=real4):: BT_Chn14_15min_Clr
-   integer:: Is_Cold_Surface !a flag that identifies cold surfaces
-   integer(kind=INT4):: Uni_Land_Mask_Flag_Yes
-   integer(kind=INT4):: Uni_Land_Mask_Flag_No
-   real(kind=real4):: Aerosol_Optical_Depth_Chn2
-   real(kind=real4):: NDSI
+   INTEGER(KIND=INT4):: Num_Pix
+   INTEGER(KIND=INT4):: Snow_Mask
+   INTEGER(KIND=INT4):: Desert_Mask
+   INTEGER(KIND=INT4):: Coast_Type
+   INTEGER(KIND=INT4):: Land_Type
+   INTEGER(KIND=INT4):: Is_Day
+   INTEGER(KIND=INT4):: Is_Terminator
+   INTEGER(KIND=INT4):: Is_Land
+   INTEGER(KIND=INT4):: Is_Coast
+   INTEGER(KIND=INT4):: Is_Glint
+   INTEGER(KIND=INT4):: Is_Desert
+   INTEGER(KIND=INT4):: Is_Snow
+   INTEGER(KIND=INT4):: Is_Valid_Pixel
+   INTEGER(KIND=INT4), DIMENSION(16):: Is_Chn ! ABI channel #
+   INTEGER(KIND=INT4):: Num_Tests
+   INTEGER(KIND=INT4):: Error_Level
+   REAL(KIND=REAL4):: Total_Precipitable_Water_NWP
+   REAL(KIND=REAL4):: Total_Ozone_Path_NWP
+   REAL(KIND=REAL4):: Sfc_Temp_Uni_NWP
+   REAL(KIND=REAL4):: Sfc_Temp
+   REAL(KIND=REAL4):: Sol_Zen
+   REAL(KIND=REAL4):: Sfc_Hgt
+   REAL(KIND=REAL4):: Scat_Zen
+   REAL(KIND=REAL4):: Emiss_Tropo_Chn14_LRC
+   REAL(KIND=REAL4):: BTD_Chn14_Chn15_NWC
+   REAL(KIND=REAL4):: Emiss_Chn7_NWC
+   REAL(KIND=REAL4):: BT_Chn14_NWC
+   REAL(KIND=REAL4):: Planck_Emission_Chn7_Clr
+   REAL(KIND=REAL4):: Chn7_Sol_Energy
+   REAL(KIND=REAL4):: Sun_Earth_Dist
+   REAL(KIND=REAL4):: Glint_Zen
+   REAL(KIND=REAL4):: Sfc_Emiss_Chn7_RTM
+   REAL(KIND=REAL4):: Atm_Trans_Chn7_RTM
+   REAL(KIND=REAL4):: Atm_Solar_Trans_Chn7
+   REAL(KIND=REAL4):: Solar_Rad_Chn7_Clr
+   REAL(KIND=REAL4):: Solar_BT_Chn7_Clr
+   REAL(KIND=REAL4):: Cos_Sat_Zen
+   REAL(KIND=REAL4):: Cos_Scat_Zen
+   REAL(KIND=REAL4):: Cos_Sol_Zen
+   INTEGER(KIND=INT1):: Tropo_Idx_NWP
+   INTEGER(KIND=INT1):: View_Zen_Idx
+   INTEGER(KIND=INT1):: Sfc_Idx_NWP
+   INTEGER(KIND=INT1):: Is_Coast_NWP
+   INTEGER(KIND=INT4):: X_NWP_Idx
+   INTEGER(KIND=INT4):: Y_NWP_Idx
+   REAL(KIND=REAL4):: BT_Chn14_15min
+   REAL(KIND=REAL4):: BT_Chn14_15min_Clr
+   INTEGER:: Is_Cold_Surface !a flag that identifies cold surfaces
+   INTEGER(KIND=INT4):: Uni_Land_Mask_Flag_Yes
+   INTEGER(KIND=INT4):: Uni_Land_Mask_Flag_No
+   REAL(KIND=REAL4):: Aerosol_Optical_Depth_Chn2
+   REAL(KIND=REAL4):: NDSI
    
-   real(kind=real4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear
 
-   real(kind=real4):: RGCT_Threshold
+   REAL(KIND=REAL4):: RGCT_Threshold
 
-   integer:: Array_Right, Array_Left, Array_Top
-   integer:: Array_Bottom,Array_Width, Array_Hgt
+   INTEGER:: Array_Right, Array_Left, Array_Top
+   INTEGER:: Array_Bottom,Array_Width, Array_Hgt
 
-    integer(kind=INT4), DIMENSION(:,:), ALLOCATABLE :: X_LRC_Idx
-    integer(kind=INT4), DIMENSION(:,:), ALLOCATABLE :: Y_LRC_Idx
-    integer(kind=INT1), DIMENSION(:,:), ALLOCATABLE :: LRC_Mask
+    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE :: X_LRC_Idx
+    INTEGER(KIND=INT4), DIMENSION(:,:), ALLOCATABLE :: Y_LRC_Idx
+    INTEGER(KIND=INT1), DIMENSION(:,:), ALLOCATABLE :: LRC_Mask
 
 
    !--- quality flag
-   integer(kind=INT4):: IR_Test_Sum
-   integer(kind=INT4):: VIS_Test_Sum
-   integer(kind=INT4):: SWIR_SOLAR_Test_Sum
-   integer(kind=INT4):: SWIR_THERMAL_Test_Sum
-   integer(kind=INT4):: IR_Test_Mask
-   integer(kind=INT4):: VIS_Test_Mask
-   integer(kind=INT4):: SWIR_Test_Mask
+   INTEGER(KIND=INT4):: IR_Test_Sum
+   INTEGER(KIND=INT4):: VIS_Test_Sum
+   INTEGER(KIND=INT4):: SWIR_SOLAR_Test_Sum
+   INTEGER(KIND=INT4):: SWIR_THERMAL_Test_Sum
+   INTEGER(KIND=INT4):: IR_Test_Mask
+   INTEGER(KIND=INT4):: VIS_Test_Mask
+   INTEGER(KIND=INT4):: SWIR_Test_Mask
 
-   real(kind=real4):: Air_Mass_Factor
-   real(kind=real4):: Transmission_Sing_Scat
-   real(kind=real4):: Refl_Sing_Scat
+   REAL(KIND=REAL4):: Air_Mass_Factor
+   REAL(KIND=REAL4):: Transmission_Sing_Scat
+   REAL(KIND=REAL4):: Refl_Sing_Scat
 
    !
    !--- cloud Mask arrays
    !
-   integer(kind=INT4), DIMENSION(Total_Num_Tests):: Test_Bit_Depth
+   INTEGER(KIND=INT4), DIMENSION(Total_Num_Tests):: Test_Bit_Depth
    !needed for CLAVR-x
-   integer(kind=INT1), DIMENSION(:,:,:), ALLOCATABLE, target:: Test_Results_Temp
-   integer(kind=INT1), DIMENSION(:,:), ALLOCATABLE, target:: Temp_Array
+   INTEGER(KIND=INT1), DIMENSION(:,:,:), ALLOCATABLE, target:: Test_Results_Temp
+   INTEGER(KIND=INT1), DIMENSION(:,:), ALLOCATABLE, target:: Temp_Array
 
    !
    !--- local pointers
    !
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask_Binary
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask_IR
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask_SST
-   integer(kind=INT1), DIMENSION(:,:,:), POINTER :: Cld_Mask_Packed
-   integer(kind=INT1), DIMENSION(:,:,:), POINTER :: Test_Results
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask_QF
-   integer(kind=INT1), DIMENSION(:,:), POINTER :: Cld_Mask_Tmpy
-   real(kind=real4), DIMENSION(:,:), POINTER :: Emiss_Tropo_Chn14
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_Binary
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_IR
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_SST
+   INTEGER(KIND=INT1), DIMENSION(:,:,:), POINTER :: Cloud_Mask_Packed
+   INTEGER(KIND=INT1), DIMENSION(:,:,:), POINTER :: Test_Results
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_QF
+   INTEGER(KIND=INT1), DIMENSION(:,:), POINTER :: Cloud_Mask_Tmpy
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Emiss_Tropo_Chn14
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag1
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag2
+   REAL(KIND=REAL4), DIMENSION(:,:), POINTER :: Diag3
 
 
    ! ------------- Variables needed for Term stability test
-   real(kind=real4) :: BT_Chn11
-   real(kind=real4) :: BT_Chn11_1Hr
-   real(kind=real4) :: BT_Chn14_1Hr
-   real(kind=real4) :: BT_Chn15_1Hr
-   integer(kind=INT4):: Cmask_1Hr
-   integer(kind=INT4) :: Have_Prev_BT_Chn11_1Hr
-   integer(kind=INT4) :: Have_Prev_BT_Chn14_1Hr
-   integer(kind=INT4) :: Have_Prev_BT_Chn15_1Hr
-   integer(kind=INT4) :: Have_Prev_Cmask_1Hr
+   REAL(KIND=REAL4) :: BT_Chn11
+   REAL(KIND=REAL4) :: BT_Chn11_1Hr
+   REAL(KIND=REAL4) :: BT_Chn14_1Hr
+   REAL(KIND=REAL4) :: BT_Chn15_1Hr
+   INTEGER(KIND=INT4):: Cmask_1Hr
+   INTEGER(KIND=INT4) :: Have_Prev_BT_Chn11_1Hr
+   INTEGER(KIND=INT4) :: Have_Prev_BT_Chn14_1Hr
+   INTEGER(KIND=INT4) :: Have_Prev_BT_Chn15_1Hr
+   INTEGER(KIND=INT4) :: Have_Prev_Cmask_1Hr
 
    !----------------------------------------------------------------------
    ! Executable Code
@@ -465,15 +468,22 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
-   Cld_Mask => CLDMASK%Cld_Mask
-   Cld_Mask_Packed => CLDMASK%Cld_Test_Vector_Packed
+   Cloud_Mask => Cld_Mask
+   Cloud_Mask_Packed => Cld_Test_Vector_Packed
    Test_Results => Test_Results_Temp !will just null for now
-   Cld_Mask_QF => Temp_Array !null() !will just null for now
-   Cld_Mask_Tmpy => One_Byte_Temp !need to find
-   Cld_Mask_Binary => Temp_Array 
-   Cld_Mask_IR => Temp_Array 
-   Cld_Mask_SST => Temp_Array 
+   Cloud_Mask_QF => Temp_Array !null() !will just null for now
+   Cloud_Mask_Tmpy => One_Byte_Temp !need to find
+   Cloud_Mask_Binary => Temp_Array 
+   Cloud_Mask_IR => Temp_Array 
+   Cloud_Mask_SST => Temp_Array 
 
+   !-----------------------------------------------------------------
+   ! Initialize Diagnostic variables
+   !-----------------------------------------------------------------
+   Diag1 => Diag_Pix_Array_1
+   Diag2 => Diag_Pix_Array_2
+   Diag3 => Diag_Pix_Array_3
+   
    
    !inputs
 !   X_LRC_Idx => I_LRC
@@ -491,36 +501,36 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
    !
    !---don't initialize to clear
-   Cld_Mask = sym%PROB_CLEAR   
-   Cld_Mask_Binary = CLD_MASK_BIN_CLEAR  
-   Cld_Mask_IR = sym%PROB_CLEAR   
-   Cld_Mask_SST = sym%PROB_CLEAR   
+   Cloud_Mask = sym%PROB_CLEAR   
+   Cloud_Mask_Binary = CLD_MASK_BIN_CLEAR  
+   Cloud_Mask_IR = sym%PROB_CLEAR   
+   Cloud_Mask_SST = sym%PROB_CLEAR   
 
    !
    !---This must be to zero. So the bit associated
-   Cld_Mask_Packed = 0         
+   Cloud_Mask_Packed = 0         
 
    !
    !with ivalid is initialized to zero
    Test_Results = 0
 
    !Initialize quality flag to invalid
-   Cld_Mask_QF = INVALID_CMASK_RETREVAL
+   Cloud_Mask_QF = INVALID_CMASK_RETREVAL
 
    !=======================================================================
    ! Compute spatial uniformity metrics - Already done by CLAVRx.
    ! But set appropriate WV/IR 3x3
    !=======================================================================
-   if ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29) > 0) .AND. &
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29) > 0) .AND. &
         (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
         
-         if (Sensor%Chan_On_Flag_Default(27) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
             BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch27_Std_3x3
          ELSE
             BT_WaterVapor_Stddev_3x3 => Btd_Ch31_Ch29_Std_3x3
          
-         endif
-   endif
+         ENDIF
+   ENDIF
 
 !    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn14BT, BT_Chn14_Mean_3x3, &
 !                                    BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
@@ -619,7 +629,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
    ! Check allocation of NWC arrays
    !======================================================================
 
-   if (Alloc_Status_Total /= 0) THEN
+   IF (Alloc_Status_Total /= 0) THEN
        WRITE (Err_Message, *) &
              'Error allocating NWC arrays'
              
@@ -634,7 +644,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
         !  CALL Error_Messaging (Routine_Name, Error_Message, Error_Level)           
         RETURN
 
-   endif
+   ENDIF
 
    !------------------------------------------------------------------------
    ! Call Routine to Compute Neighboring Warm Center
@@ -656,7 +666,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
    ! compute Correlation of Chn10 and Chn14
    ! WCS - must remain to match GS implmentation
    !----------------------------------------------------------------------
-   if ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29)  > 0) .AND. &
+   IF ((Sensor%Chan_On_Flag_Default(27) > 0) .OR. (Sensor%Chan_On_Flag_Default(29)  > 0) .AND. &
         (Sensor%Chan_On_Flag_Default(31) > 0)) THEN
    
         Alloc_Status_Total = 0 
@@ -671,7 +681,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
         ! Check allocation of arrays
         !======================================================================
         
-        if (Alloc_Status_Total /= 0) THEN
+        IF (Alloc_Status_Total /= 0) THEN
            
             WRITE (Err_Message, *) &
              'Error allocating BT_WV_BT_Window_Corr arrays'
@@ -687,10 +697,10 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
             
             RETURN
 
-        endif
+        ENDIF
  
-        Line_Loop_Corr: do Line_Idx=1, Number_of_Lines_in_this_Segment
-                Element_Loop_Corr: do Elem_Idx=1, Num_Elem
+        Line_Loop_Corr: DO Line_Idx=1, Number_of_Lines_in_this_Segment
+                Element_Loop_Corr: DO Elem_Idx=1, Num_Elem
                 
                     Array_Right = max(1,min(Elem_Idx - 2,Num_Elem))
                     Array_Left = max(1,min(Elem_Idx + 2,Num_Elem))
@@ -698,55 +708,55 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                     Array_Bottom = max(1,min(Line_Idx + 2,Max_Num_Lines_per_Seg))
                     Array_Width = Array_Left -Array_Right + 1
                     Array_Hgt = Array_Bottom -Array_Top + 1
-                    if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
+                    IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
                         BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Missing_Value_Real4
-                        cycle
-                    endif
+                        CYCLE
+                    ENDIF
 
                     
-                    if (Sensor%Chan_On_Flag_Default(29)  > 0) THEN
+                    IF (Sensor%Chan_On_Flag_Default(29)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr(&
                                                        ch(29)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                        Array_Width, Array_Hgt)
-                    ELSEif (Sensor%Chan_On_Flag_Default(27)  > 0) THEN
+                    ELSEIF (Sensor%Chan_On_Flag_Default(27)  > 0) THEN
                          BT_WV_BT_Window_Corr(Elem_Idx,Line_Idx) = Pearson_Corr( &
                                                                     ch(27)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     ch(31)%Bt_Toa(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     Bad_Pixel_Mask(Array_Right:Array_Left,Array_Top:Array_Bottom), &
                                                                     Array_Width, Array_Hgt)
-                    endif
+                    ENDIF
                     
-                end do Element_Loop_Corr
-        end do Line_Loop_Corr
+                END DO Element_Loop_Corr
+        END DO Line_Loop_Corr
 
-   endif
+   ENDIF
          
    !=======================================================================
    ! Loop over pixels apply cloud tests
    !=======================================================================
 
-   Line_Loop_2: do Line_Idx=1, Number_of_Lines_in_this_Segment
+   Line_Loop_2: DO Line_Idx=1, Number_of_Lines_in_this_Segment
 
-      Element_Loop_2: do Elem_Idx=1, Num_Elem
+      Element_Loop_2: DO Elem_Idx=1, Num_Elem
 
          !
          !--- check for space pixel. QF already set to invalid
          !
-         if (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
-            cycle
-         endif
+         IF (Space_Mask(Elem_Idx,Line_Idx) == sym%SPACE) THEN
+            CYCLE
+         ENDIF
 
          !
          !--- check for pixel located beyond zone of operation. Set QF
          !
-         if (Geo%Solzen(Elem_Idx,Line_Idx) > SENSOR_ZEN_THRESH) THEN
-            Cld_Mask_QF(Elem_Idx,Line_Idx) = CMASK_OUTSIDE_SEN_ZEN_RANGE
-            cycle
-         endif
+         IF (Geo%Satzen(Elem_Idx,Line_Idx) > SENSOR_ZEN_THRESH) THEN
+            Cloud_Mask_QF(Elem_Idx,Line_Idx) = CMASK_OUTSIDE_SEN_ZEN_RANGE
+            CYCLE
+         ENDIF
 
 
          !
@@ -770,9 +780,11 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Elem_LRC_Idx = X_LRC_Idx(Elem_Idx,Line_Idx)
          Line_LRC_Idx = Y_LRC_Idx(Elem_Idx,Line_Idx)
          Emiss_Tropo_Chn14_LRC = Missing_Value_Real4
-         if (Elem_LRC_Idx > 0 .and. Line_LRC_Idx > 0) THEN
+         IF (Elem_LRC_Idx > 0 .and. Line_LRC_Idx > 0) THEN
            Emiss_Tropo_Chn14_LRC = Emiss_Tropo_Chn14(Elem_LRC_Idx,Line_LRC_Idx)
-         endif
+         ENDIF
+         
+!         Emiss_Tropo_11um_LRC_BCM(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
 
          !
          !--- NWC Indices
@@ -781,12 +793,14 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
          !--- store BTD_Chn14_Chn15 at NWC
          BTD_Chn14_Chn15_NWC = Missing_Value_Real4
-         if (Sensor%Chan_On_Flag_Default(14) > 0 .and. Sensor%Chan_On_Flag_Default(15) > 0) THEN
-           if (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(31) > 0 .and. Sensor%Chan_On_Flag_Default(32) > 0) THEN
+           IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 BTD_Chn14_Chn15_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx) - &
                                       ch(32)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
-           endif
-         endif
+           ENDIF
+         ENDIF
+         
+!         BTD_11_12um_NWC_BCM(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
 
          !
          !---cosine of satellite viewing zenith angle
@@ -839,7 +853,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
          !
          !---land type
-         Land_Type =      Sfc%Land_Mask(Elem_Idx,Line_Idx)    
+         Land_Type =      Sfc%Land(Elem_Idx,Line_Idx)    
 
          !
          !---coast type
@@ -865,12 +879,12 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !---snow Mask
          Snow_Mask =      Sfc%Snow(Elem_Idx,Line_Idx)     
 
-        !--------------------------------------------------------
+         !--------------------------------------------------------
          !--- local aliases for observations that are available
          !--------------------------------------------------------
 
          !--- Channel 2 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(1) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(1) > 0) THEN
 
             Is_Chn(2) = sym%YES
             !
@@ -883,13 +897,13 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             !--- renormalize for improved terminator performance
             !--- already done in CLAVRx
-            !if (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
             !  Refl_Chn2 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn2)
-            !endif
-         endif
-
+            !ENDIF
+         ENDIF
+         
          !--- Channel 4 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(26) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(26) > 0) THEN
 
             Is_Chn(4) = sym%YES
 
@@ -899,13 +913,13 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             !--- renormalize for improved terminator performance
             !--- already done in CLAVRx
-            !if (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
             !  Refl_Chn4 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn4)
-            !endif
-         endif
+            !ENDIF
+         ENDIF
 
          !--- Channel 5 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(6) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(6) > 0) THEN
 
             Is_Chn(5) = sym%YES
 
@@ -915,13 +929,13 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             !--- renormalize for improved terminator performance
             !--- already done in CLAVRx
-            !if (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
             !  Refl_Chn5 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn5)
-            !endif
-         endif
+            !ENDIF
+         ENDIF
 
          !--- Channel 7 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(20) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(20) > 0) THEN
 
             Is_Chn(7) = sym%YES
 
@@ -939,18 +953,20 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             !--- renormalize for improved terminator performance
             !--- already done in CLAVRx
-            !if (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            !IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
             !  Refl_Chn7 = Term_Refl_Norm(Cos_Sol_Zen,Refl_Chn7)
-            !endif
+            !ENDIF
 
             !
             !---3.9 um emissivity
             Emiss_Chn7 =        Ems_Ch20(Elem_Idx,Line_Idx)
                   
             Emiss_Chn7_NWC = Missing_Value_Real4
-            if (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
+            IF (Elem_NWC_Idx > 0 .and. Line_NWC_Idx > 0) THEN
                 Emiss_Chn7_NWC = Ems_Ch20(Elem_NWC_Idx,Line_NWC_Idx)
-            endif
+            ENDIF
+            
+!            Emiss_39_NWC_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
            
             !
             !---3.9 um surface emissivity
@@ -967,43 +983,47 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             !
             !---solar energy IN channel 7
-            Chn7_Sol_Energy =      ch(20)%Ref_Toa(Elem_Idx,Line_Idx) 
-         endif
+            !
+            Chn7_Sol_Energy =      Solar_Ch20_Nu
+          ENDIF
 
 
          !--- Channel 10 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(27) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(27) > 0) THEN
 
             Is_Chn(9) = sym%YES
 
             !
             !---6.7 micron bt
             BT_Chn9  =         ch(27)%Bt_Toa(Elem_Idx,Line_Idx)
-         endif
+         ENDIF
 
          !--- Channel 10 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(28)  > 0) THEN
 
             Is_Chn(10) = sym%YES
 
             !
             !---7.3 micron bt
             BT_Chn10  =         ch(28)%Bt_Toa(Elem_Idx,Line_Idx)
-         endif
+         ENDIF
 
          !--- Channel 11 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(29) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(29) > 0) THEN
 
             Is_Chn(11) = sym%YES
 
             !
             !---8.5 micron bt
             BT_Chn11  =         ch(29)%Bt_Toa(Elem_Idx,Line_Idx)
-         endif
+         ENDIF
+         
+         
+         
 
 
          !--- Channel 14 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(31) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(31) > 0) THEN
 
             Is_Chn(14) = sym%YES
 
@@ -1019,14 +1039,14 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
             BT_Chn14_NWC = Missing_Value_Real4
 
-            if ((Elem_NWC_Idx > 0) .and. (Line_NWC_Idx > 0)) THEN
+            IF ((Elem_NWC_Idx > 0) .and. (Line_NWC_Idx > 0)) THEN
                 BT_Chn14_NWC = ch(31)%Bt_Toa(Elem_NWC_Idx,Line_NWC_Idx)
-            endif
+            ENDIF
 
-         endif
+         ENDIF
 
          !--- Channel 15 Aliases and Derived Parameters
-         if (Sensor%Chan_On_Flag_Default(32) > 0) THEN
+         IF (Sensor%Chan_On_Flag_Default(32) > 0) THEN
 
             Is_Chn(15) = sym%YES
 
@@ -1037,20 +1057,20 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
             !
             !---12 um clear bt
             BT_Chn15_Clr =  ch(32)%Bt_Toa_Clear(Elem_Idx,Line_Idx)     
-         endif
+         ENDIF
 
          !--------------------------------------------------------------------
          !--- compute a transmission term for solar +viewing path for ch7
          !--------------------------------------------------------------------
-         if (Is_Chn(7) == sym%YES) THEN
+         IF (Is_Chn(7) == sym%YES) THEN
 
             Atm_Solar_Trans_Chn7 = 0.0
 
-            if ((Cos_Sol_Zen > 0.0) .AND. (Cos_Sat_Zen > 0.0) &
+            IF ((Cos_Sol_Zen > 0.0) .AND. (Cos_Sat_Zen > 0.0) &
                .AND. Atm_Trans_Chn7_RTM >= 0.0) THEN
                Atm_Solar_Trans_Chn7 = Atm_Trans_Chn7_RTM ** (1.0 + Cos_Sat_Zen / Cos_Sol_Zen)
-            endif
-         endif
+            ENDIF
+         ENDIF
 
          !--------------------------------------------------------------------
          !---- alias temporal parameters
@@ -1058,52 +1078,52 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          
          !--- WCS3 - REMOVED BECAUSE CLAVRX HAS NO TEMPORAL ------------------!
             Have_Prev_BT_Chn14_15min = sym%FAILURE
-            if (Have_Prev_BT_Chn14_15min == sym%SUCCESS) THEN
+            IF (Have_Prev_BT_Chn14_15min == sym%SUCCESS) THEN
                !BT_Chn14_15min = temporal(minus_i_15min)%bt14%DATA(Elem_Idx,Line_Idx)
             ELSE
                BT_Chn14_15min = Missing_Value_Real4
-            endif
+            ENDIF
 
             Have_Prev_BT_Chn14_Clr_15min = sym%FAILURE
-            if (Have_Prev_BT_Chn14_Clr_15min == sym%SUCCESS) THEN
+            IF (Have_Prev_BT_Chn14_Clr_15min == sym%SUCCESS) THEN
                !BT_Chn14_15min_Clr = temporal(minus_i_15min)    &
                !                      %bt_clr14%DATA(Elem_Idx,Line_Idx)
             ELSE
                BT_Chn14_15min_Clr = Missing_Value_Real4
-            endif
+            ENDIF
 
             !---- TERM_THERM_STAB parameters
             Have_Prev_BT_Chn11_1Hr = sym%FAILURE
-            if (Have_Prev_BT_Chn11_1Hr == sym%SUCCESS) THEN
+            IF (Have_Prev_BT_Chn11_1Hr == sym%SUCCESS) THEN
                !BT_Chn11_1Hr = temporal(minus_i_01hrs)    &
                !                      %bt11%DATA(Elem_Idx,Line_Idx)
             ELSE
                BT_Chn11_1Hr = Missing_Value_Real4
-            endif
+            ENDIF
 
             Have_Prev_BT_Chn14_1Hr= sym%FAILURE
-            if (Have_Prev_BT_Chn14_1Hr == sym%SUCCESS) THEN
+            IF (Have_Prev_BT_Chn14_1Hr == sym%SUCCESS) THEN
                !BT_Chn14_1Hr = temporal(minus_i_01hrs)    &
                !                      %bt14%DATA(Elem_Idx,Line_Idx)
             ELSE
                BT_Chn14_1Hr = Missing_Value_Real4
-            endif
+            ENDIF
 
             Have_Prev_BT_Chn15_1Hr = sym%FAILURE
-            if (Have_Prev_BT_Chn15_1Hr == sym%SUCCESS) THEN
+            IF (Have_Prev_BT_Chn15_1Hr == sym%SUCCESS) THEN
                !BT_Chn15_1Hr = temporal(minus_i_01hrs)    &
                !                      %bt15%DATA(Elem_Idx,Line_Idx)
             ELSE
                BT_Chn15_1Hr = Missing_Value_Real4
-            endif
+            ENDIF
 
             Have_Prev_Cmask_1Hr = sym%FAILURE
-            if (Have_Prev_Cmask_1Hr == sym%SUCCESS) THEN
+            IF (Have_Prev_Cmask_1Hr == sym%SUCCESS) THEN
                !Cmask_1Hr = temporal(minus_i_01hrs)    &
                !                      %cldmask%DATA(Elem_Idx,Line_Idx)
             ELSE
                Cmask_1Hr = Missing_Value_Real4
-            endif
+            ENDIF
 
 
          !---------------------------------------------------------------------
@@ -1112,9 +1132,9 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !---------------------------------------------------------------------
          Is_Coast_NWP = sym%NO
 
-         if (Sfc_Temp_Uni_NWP > Sfc_Temp_Uni_NWP_Thresh) THEN
+         IF (Sfc_Temp_Uni_NWP > Sfc_Temp_Uni_NWP_Thresh) THEN
             Is_Coast_NWP = sym%YES
-         endif
+         ENDIF
 
          !---------------------------------------------------------------------
          !--- set flags that control how this pixel is processed
@@ -1128,46 +1148,46 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
             Is_Valid_Pixel = sym%NO
          endif
-
+         
          !
          !--- solar channels (1-6)
-         if (Sol_Zen < Day_Sol_Zen_Thresh) THEN
-           do Chn_Num = 1, 6 
+         IF (Sol_Zen < Day_Sol_Zen_Thresh) THEN
+           DO Chn_Num = 1, 6 
 
-            if ((Is_Chn(Chn_Num) > 0) .AND.                  &
+            IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
                 (Is_Valid_Pixel == sym%NO)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
-            endif
-           enddo
-         endif  
+            ENDIF
+           ENDDO
+         ENDIF  
 
          !
          !--- thermal channels (7-16)
-         do Chn_Num = 7, 16 !Nchan_Max
+         DO Chn_Num = 7, 16 !Nchan_Max
 
-            if ((Is_Chn(Chn_Num) > 0) .AND.                  &
+            IF ((Is_Chn(Chn_Num) > 0) .AND.                  &
                 (Is_Valid_Pixel == sym%NO)) THEN
 
                Is_Chn(Chn_Num) = sym%NO
 
-            endif
-         enddo
+            ENDIF
+         ENDDO
 
          !
          !--- Based on Channel Availability, determine validity of pixel
-         if (Is_Chn(14) == sym%NO) THEN
+         IF (Is_Chn(14) == sym%NO) THEN
                Is_Valid_Pixel = sym%NO
-         endif
+         ENDIF
 
          !
          !--- Also check for RTM calculations (use bt14_clr)
-          if (Is_Chn(14) == sym%YES) THEN
-                 if (BT_Chn14_Clr < 200.0) then
+          IF (Is_Chn(14) == sym%YES) THEN
+                 IF (BT_Chn14_Clr < 200.0) then
                       Is_Valid_Pixel = sym%NO
-                 endif   
-         endif
+                 ENDIF   
+         ENDIF
 
          !
          !--- store valid Mask IN test_results location
@@ -1175,18 +1195,18 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
          !
          !---- if a pixel is invalid, set QF and the skip to next one
-         if (Is_Valid_Pixel == sym%NO) THEN
-            Cld_Mask_QF(Elem_Idx,Line_Idx) = INVALID_CMASK_BAD_CHN14
-            cycle
-         endif
+         IF (Is_Valid_Pixel == sym%NO) THEN
+            Cloud_Mask_QF(Elem_Idx,Line_Idx) = INVALID_CMASK_BAD_CHN14
+            CYCLE
+         ENDIF
 
          !
          !--- day/night
          Is_Day = sym%NO
 
-         if (Sol_Zen < Day_Sol_Zen_Thresh) THEN
+         IF (Sol_Zen < Day_Sol_Zen_Thresh) THEN
             Is_Day = sym%YES
-         endif
+         ENDIF
 
          Test_Results(2,Elem_Idx,Line_Idx) = Is_Day
 
@@ -1203,9 +1223,9 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !--- land/ocean
          Is_Land = sym%NO
 
-         if (Land_Type == sym%LAND .or. Land_Type == sym%COASTLINE) THEN
+         IF (Land_Type == sym%LAND .or. Land_Type == sym%COASTLINE) THEN
             Is_Land = sym%YES
-         endif
+         ENDIF
 
          Test_Results(4,Elem_Idx,Line_Idx) = Is_Land
 
@@ -1213,9 +1233,9 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !--- coast
          Is_Coast = sym%NO
  
-         if (Coast_Type /= sym%NO_COAST) THEN
+         IF (Coast_Type /= sym%NO_COAST) THEN
             Is_Coast = sym%YES
-         endif
+         ENDIF
 
          Test_Results(5,Elem_Idx,Line_Idx) = Is_Coast
 
@@ -1225,28 +1245,28 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
          
          !-- Initial classification based on geometry
-         if ((Is_Day == sym%YES) .AND.  &
+         IF ((Is_Day == sym%YES) .AND.  &
              (Is_Land == sym%NO) .AND.  &
              (Glint_Zen < Glint_Zen_Thresh))  THEN  
 
             Is_Glint = sym%YES
-         endif
+         ENDIF
          
          !-- restore cold pixels IN glint zone to be non-glint
-         if ((Is_Glint == sym%YES) .AND.              &
+         IF ((Is_Glint == sym%YES) .AND.              &
              ((BT_Chn14 < WATER_FREEZING_POINT) .OR.  &
              (BT_Chn14 < BT_Chn14_Clr - MAX_GLINT_CLR_OBS_BT_CHN14_DIFF))) THEN
              Is_Glint = sym%NO
-         endif
+         ENDIF
 
 
          !--- restore pixels with reflectance non-uni
-         if ((Is_Glint == sym%YES) .AND.              &
+         IF ((Is_Glint == sym%YES) .AND.              &
              (Refl_Chn2_Stddev_3x3 >  &
                  Max_Glint_Clr_Rel_Refl2_Stddev_Thresh * &
                  Refl_Chn2_Mean_3x3)) THEN
              Is_Glint = sym%NO
-         endif
+         ENDIF
    
         
          !--- store result into test vector
@@ -1257,11 +1277,11 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !
          Is_Desert = sym%NO
 
-         if (Desert_Mask == sym%BRIGHT_DESERT) THEN
+         IF (Desert_Mask == sym%BRIGHT_DESERT) THEN
 
             Is_Desert = sym%YES
 
-         endif
+         ENDIF
 
          Test_Results(7,Elem_Idx,Line_Idx) = Is_Desert
 
@@ -1270,11 +1290,11 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !
          Is_Snow = sym%NO
 
-         if (Snow_Mask == sym%SNOW .or. Snow_Mask == sym%SEA_ICE) THEN
+         IF (Snow_Mask == sym%SNOW .or. Snow_Mask == sym%SEA_ICE) THEN
 
             Is_Snow = sym%YES
 
-         endif
+         ENDIF
 
 
          !
@@ -1282,11 +1302,11 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !
 
          !--- only do this for nwp snow source - akh
-         if (BT_Chn14 > BT_Chn14_Snow_Thresh) THEN
+         IF (BT_Chn14 > BT_Chn14_Snow_Thresh) THEN
 
             Is_Snow = sym%NO
 
-         endif
+         ENDIF
 
          Test_Results(8,Elem_Idx,Line_Idx) = Is_Snow
 
@@ -1296,12 +1316,12 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
      
          Is_Cold_Surface = sym%NO
      
-         if (Sfc_Temp < 265.0) THEN
+         IF (Sfc_Temp < 265.0) THEN
             Is_Cold_Surface = sym%YES
-         endif 
+         ENDIF 
 
          Test_Results(9,Elem_Idx,Line_Idx) = Is_Cold_Surface
-         
+                  
          
          !--------------------------------------------------------------------
          !--- add single scattering rayleigh reflectance for chn2 clear estimate
@@ -1312,11 +1332,11 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          ! WCS - re-implmented clear sky reflectance as GS does it
          IF(Sol_Zen < Day_Sol_Zen_Thresh) THEN
 
-            if (Is_Land == sym%YES) THEN
+            IF (Is_Land == sym%YES) THEN
                 Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Land
             ELSE
                 Aerosol_Optical_Depth_Chn2 = Aerosol_Optical_Depth_Chn2_Ocean
-            endif
+            ENDIF
 
             CALL Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
                                            Aerosol_Single_Scatter_Albedo_Chn2, &
@@ -1344,7 +1364,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
             Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) + Refl_Sing_Scat
 
             !--- renormalize for improved terminator performance
-            if (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
+            IF (Sol_Zen > TERMINATOR_REFLECTANCE_SOL_ZEN_THRESH) THEN
 
                 Refl_Chn2_Clear(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
                                                      Refl_Chn2_Clear(Elem_Idx,Line_Idx))
@@ -1355,34 +1375,52 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                 Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx) = Term_Refl_Norm(Cos_Sol_Zen, &
                                                 Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx))
 
-        endif
+        ENDIF
+        
+        !-- STORE IN GLOBAL ARRAYS FOR OUTPUT
+!        Ref_Ch1_Clr_Min_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
 
-    endif
+!        Ref_Ch1_Clr_Max_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
+
+!        Ref_Ch1_Clr_Std_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
+
+!        Ref_Ch1_Clr_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
+        
+
+    ENDIF
 
 
          !=====================================================================
          ! Determine 0.65 micron clear sky background reflectance
          !=====================================================================
                   RGCT_Threshold = 45.0
-                  if (Is_Land == sym%YES .or. Is_Coast == sym%YES) THEN
+                  IF (Is_Land == sym%YES .or. Is_Coast == sym%YES) THEN
                       RGCT_Threshold = 45.0
-                      if (Refl_Chn2_Clear(Elem_Idx, Line_Idx) /= Missing_Value_Real4) then
+                      IF (Refl_Chn2_Clear(Elem_Idx, Line_Idx) /= Missing_Value_Real4) then
 
                            RGCT_Threshold = 10.0 + 1.2 * Refl_Chn2_Clear_Max_3x3(Elem_Idx, Line_Idx) + &
                                             Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
 
-                      endif
-                  endif
+                      ENDIF
+                  ENDIF
 
-                  if (Is_Land == sym%NO) THEN
+                  IF (Is_Land == sym%NO) THEN
                       RGCT_Threshold = 99.0
-                      if (Is_Glint == sym%NO) THEN
-                         if (Refl_Chn2_Clear(Elem_Idx, Line_Idx) /= Missing_Value_Real4)  THEN
+                      IF (Is_Glint == sym%NO) THEN
+                         IF (Refl_Chn2_Clear(Elem_Idx, Line_Idx) /= Missing_Value_Real4)  THEN
                                 RGCT_Threshold = 5.0 + 1.2 * Refl_Chn2_Clear_Max_3x3(Elem_Idx, Line_Idx)
-                         endif
-                       endif
-                  endif
+                         ENDIF
+                       ENDIF
+                  ENDIF
 
+
+!         Is_Chn = sym%NO
+!         Is_Chn(14) = sym%YES
+!         Is_Chn(7) = sym%YES
+!         Is_Chn(10) = sym%YES
+!         Is_Chn(11) = sym%YES
+!         Is_Chn(15) = sym%YES
+         
          !=====================================================================
          ! Apply Clear Spatial Uniformity Tests
          !=====================================================================
@@ -1393,7 +1431,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = 1 + Num_Ancil_Tests
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(2) == sym%YES) THEN
+         IF ((Is_Chn(2) == sym%YES) .AND. (Is_Day  == sym%YES)) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = RUT_Routine (&
                               Is_Land, &
@@ -1403,7 +1441,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                               Refl_Chn2_Stddev_3x3, &
                               Sol_Zen)
 
-          endif 
+          ENDIF 
 
          !
          !--- 11 micron clear uniformity test
@@ -1411,7 +1449,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = 2 + Num_Ancil_Tests
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(14) == sym%YES) THEN
+         IF (Is_Chn(14) == sym%YES) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = TUT_Routine (&
                               Is_Land, &
@@ -1419,7 +1457,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                               BT_Chn14_Stddev_3x3(Elem_Idx,Line_Idx), &
                               Sfc_Hgt_Stddev_3x3(Elem_Idx,Line_Idx))
 
-         endif
+         ENDIF
 
          !=====================================================================
          ! Apply Cloud Detection Tests
@@ -1435,7 +1473,8 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 0
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(14) == sym%YES) THEN
+
+         IF (Is_Chn(14) == sym%YES) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = RTCT_Routine(&
                               Is_Land,  &
@@ -1446,7 +1485,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                               BT_Chn14_Min_3x3, &
                               BT_Chn14_Max_3x3, &
                               Sfc_Hgt_Stddev_3x3(Elem_Idx,Line_Idx))
-         endif
+         ENDIF
 
          !--------------------------------------------------------------------
          !--- 11 micron Tropospheric Emissivity Test - ETROP
@@ -1454,7 +1493,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 1
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(14) == sym%YES) THEN
+         IF (Is_Chn(14) == sym%YES) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = ETROP_Routine( &
                                Is_Snow, &
@@ -1468,7 +1507,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                                Emiss_Tropo_Chn14(Elem_Idx,Line_Idx), &
                                Emiss_Tropo_Chn14_LRC, &
                                BT_Chn14_Stddev_3x3(Elem_Idx,Line_Idx))
-         endif
+         ENDIF
 
          !--------------------------------------------------------------------
          !--- Positive 11-12 micron Test 
@@ -1476,7 +1515,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 2
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
+         IF ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = PFMFT_Routine( &
                       Is_Land, &
                       Is_Snow, &
@@ -1486,7 +1525,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                       BT_Chn14_Clr, &
                       BT_Chn15_Clr, &
                       BT_Chn14_Stddev_3x3(Elem_Idx,Line_Idx)) 
-         endif
+         ENDIF
 
          !------------------------------------------------------------
          !--- NFMFT - Negative 11-12 micron Test
@@ -1494,7 +1533,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 3
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
+         IF ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
              Test_Results(Num_Tests,Elem_Idx,Line_Idx) = NFMFT_Routine( &
                       Is_Land, &
                       Is_Snow, &
@@ -1503,7 +1542,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                       BT_Chn15, &
                       BT_Chn14_Clr, &
                       BT_Chn15_Clr)
-         endif
+         ENDIF
 
          !---------------------------------------------------------------------
          !---  Relative FMFT
@@ -1511,7 +1550,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 4
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
+         IF ((Is_Chn(14) == sym%YES) .and. (Is_Chn(15) == sym%YES)) THEN
 
            Test_Results(Num_Tests,Elem_Idx,Line_Idx) = RFMFT_Routine( &
                       Is_Land, &
@@ -1519,7 +1558,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                       BT_Chn14, &
                       BT_Chn15, &
                       BTD_Chn14_Chn15_NWC)
-         endif
+         ENDIF
 
 
          !---------------------------------------------------------------------
@@ -1528,7 +1567,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 5
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (((Is_Chn(10) == sym%YES) .or. (Is_Chn(9) == sym%YES)) .and.  &
+         IF (((Is_Chn(10) == sym%YES) .or. (Is_Chn(9) == sym%YES)) .and.  &
              (Is_Chn(14) == sym%YES)) THEN
              
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = CIRH2O_Routine( &
@@ -1540,7 +1579,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                       Cos_Sat_Zen)
 
 
-         endif
+         ENDIF
 
          !---------------------------------------------------------------------
          !---  Temporal IR test
@@ -1548,14 +1587,14 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 6
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(14) == sym%YES) THEN
+         IF (Is_Chn(14) == sym%YES) THEN
 
                Test_Results(Num_Tests,Elem_Idx,Line_Idx) = TEMPIR_Routine( &
                           BT_Chn14, &
                           BT_Chn14_Clr, &
                           BT_Chn14_15min, &
                           BT_Chn14_15min_Clr)
-         endif
+         ENDIF
 
          !---------------------------------------------------------------------
          !---  Terminator Temporal IR test
@@ -1563,7 +1602,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_IR_Cld_Mask_Test + 7
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(11) == sym%YES .AND. &
+         IF (Is_Chn(11) == sym%YES .AND. &
              Is_Chn(14) == sym%YES .AND. &
              Is_Chn(15) == sym%YES .AND. &
              BT_Chn11 /= Missing_Value_Real4 .AND. &
@@ -1588,7 +1627,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                               BT_Chn15, &
                               BT_Chn15_1Hr, &
                               Cmask_1Hr)     
-         endif
+         ENDIF
 
 
          !=====================================================================
@@ -1601,7 +1640,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_Vis_Cld_Mask_Test + 0
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(2) == sym%YES) THEN
+         IF ((Is_Chn(2) == sym%YES) .AND. (Is_Day  == sym%YES)) THEN
 
                Test_Results(Num_Tests,Elem_Idx,Line_Idx) = RGCT_Routine( &
                             Is_Snow, &
@@ -1610,7 +1649,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                             Refl_Chn2, &
                             RGCT_Threshold)
 
-         endif
+         ENDIF
 
          !----------------------------------------------------------------------
          !---  Relative Visible Contrast Test - RVCT
@@ -1618,7 +1657,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_Vis_Cld_Mask_Test + 1
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(2) == sym%YES) THEN
+         IF ((Is_Chn(2) == sym%YES) .AND. (Is_Day  == sym%YES)) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = RVCT_Routine( &
                          Is_Coast, &
@@ -1629,7 +1668,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                          Sol_Zen, &
                          Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx), &
                          Refl_Chn2_Min_3x3)
-         endif
+         ENDIF
 
          !=====================================================================
          ! SWIR Solar Cloud Tests
@@ -1641,7 +1680,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_SWIR_Solar_Cld_Mask_Test + 0
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if ((Is_Chn(5) == sym%YES) .AND. (Is_Chn(2) == sym%YES)) THEN
+         IF ((Is_Chn(5) == sym%YES) .AND. (Is_Chn(2) == sym%YES) .AND. (Is_Day  == sym%YES)) THEN
 
             NDSI = (Refl_Chn2 - Refl_Chn5)/(Refl_Chn5 + Refl_Chn2)
 
@@ -1653,9 +1692,9 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                          NDSI, &
                          Refl_Chn5)
 
-         endif
+         ENDIF
 
-         if ((Is_Chn(7) == sym%YES) .and. (Is_Chn(5) == sym%NO)) THEN
+         IF ((Is_Chn(7) == sym%YES) .and. (Is_Chn(5) == sym%NO) .AND. (Is_Day  == sym%YES)) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = NIRREF_Chn7_Routine( &
                          Is_Snow, &
@@ -1663,7 +1702,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                          Sfc_Hgt, &
                          Refl_Chn7)
 
-         endif
+         ENDIF
  
          !---------------------------------------------------------------------
          !--- Cirrus Reflectance Test (CIRREF)
@@ -1671,7 +1710,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_SWIR_Solar_Cld_Mask_Test + 1
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(4) == sym%YES) THEN
+         IF ((Is_Chn(4) == sym%YES) .AND. (Is_Day  == sym%YES)) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = CIRREF_Routine( &
                          Is_Snow, &
@@ -1679,7 +1718,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                          Sfc_Hgt_Max_3x3(Elem_Idx,Line_Idx), &
                          Sol_Zen)
 
-         endif
+         ENDIF
 
          !=====================================================================
          ! SWIR Solar Thermal Tests
@@ -1691,7 +1730,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_SWIR_Thermal_Cld_Mask_Test + 0
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if ((Is_Chn(7) == sym%YES) .AND. &
+         IF ((Is_Chn(7) == sym%YES) .AND. &
              (Emiss_Chn7 /= Missing_Value_Real4) .AND. &
              (Rad_Chn7_Clr /= Missing_Value_Real4)) THEN
 
@@ -1700,14 +1739,17 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
             Planck_Emission_Chn7_Clr = PLANCK_RAD_FAST (20,BT_Chn14_Clr)
             Solar_Rad_Chn7_Clr = Rad_Chn7_Clr
 
-            if (Is_Day == sym%YES .or. Is_Terminator == sym%YES) THEN
+            IF (Is_Day == sym%YES .or. Is_Terminator == sym%YES) THEN
               Solar_Rad_Chn7_Clr = Rad_Chn7_Clr + (1.0 - Sfc_Emiss_Chn7_RTM)         &
                      * Atm_Solar_Trans_Chn7 * max(Cos_Sol_Zen,0.05) * (Chn7_Sol_Energy/PI)
-            endif
+            ENDIF
 
             Solar_BT_Chn7_Clr = PLANCK_TEMP_FAST (20,Solar_Rad_Chn7_Clr)
 
             Emiss_Chn7_Clr = Solar_Rad_Chn7_Clr / Planck_Emission_Chn7_Clr
+            
+            !output to L2 file
+            !Emiss_39_clr_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_Clr
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = EMISS4_Routine(Is_Glint,  &
                          Is_Land, &
@@ -1717,7 +1759,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                          Emiss_Chn7,  &
                          Emiss_Chn7_Clr, &
                          Sfc_Emiss_Chn7_RTM)
-         endif
+         ENDIF
          
          
 
@@ -1727,7 +1769,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          Num_Tests = First_SWIR_Thermal_Cld_Mask_Test + 1
          Test_Results(Num_Tests,Elem_Idx,Line_Idx) = sym%NO
 
-         if (Is_Chn(7) == sym%YES) THEN
+         IF (Is_Chn(7) == sym%YES) THEN
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = ULST_Routine(&
                        Is_Land, &
@@ -1740,7 +1782,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
                        Emiss_Chn7_NWC, &
                        Sfc_Emiss_Chn7_RTM)
 
-        endif
+        ENDIF
 
         !======================================================================
         ! Combine each test into final 2 bit cloud Mask(0,1,2,3)
@@ -1749,51 +1791,51 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          !
          !--- full cloud Mask: vis + ir + swir tests
          !
-         if (SUM(Test_Results(First_Cld_Mask_Test:Last_Cld_Mask_Test,   &
+         IF (SUM(Test_Results(First_Cld_Mask_Test:Last_Cld_Mask_Test,   &
             Elem_Idx,Line_Idx)) == Num_Cld_Mask_Tests*sym%NO) THEN  
 
             !
             !---check cld tests
-            if (SUM(Test_Results(First_Clr_Uni_Test:Last_Clr_Uni_Test,  &
+            IF (SUM(Test_Results(First_Clr_Uni_Test:Last_Clr_Uni_Test,  &
                Elem_Idx,Line_Idx)) == Num_Clr_Uni_Tests*sym%NO) THEN   
 
                !
                !---check uni tests
-               Cld_Mask(Elem_Idx,Line_Idx) = sym%CLEAR
+               Cloud_Mask(Elem_Idx,Line_Idx) = sym%CLEAR
 
             ELSE
 
-               Cld_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
+               Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
 
-            endif
+            ENDIF
 
          ELSE
 
-            Cld_Mask(Elem_Idx,Line_Idx) = sym%CLOUDY
+            Cloud_Mask(Elem_Idx,Line_Idx) = sym%CLOUDY
 
-         endif
+         ENDIF
 
          !
          !--- ir tests
-         if ((SUM(Test_Results(First_IR_Cld_Mask_Test:Last_IR_Cld_Mask_Test,Elem_Idx,Line_Idx))  + &
+         IF ((SUM(Test_Results(First_IR_Cld_Mask_Test:Last_IR_Cld_Mask_Test,Elem_Idx,Line_Idx))  + &
               SUM(Test_Results(First_SWIR_Thermal_Cld_Mask_Test:Last_SWIR_Thermal_Cld_Mask_Test,Elem_Idx,Line_Idx)) )  &
               == (Num_IR_Cld_Mask_Tests + Num_SWIR_Thermal_Cld_Mask_Tests)*sym%NO) THEN  
 
          !
          !---check cld tests
 
-            if (SUM(Test_Results(First_Clr_Uni_Test:Last_Clr_Uni_Test,      &
+            IF (SUM(Test_Results(First_Clr_Uni_Test:Last_Clr_Uni_Test,      &
                 Elem_Idx,Line_Idx)) == Num_Clr_Uni_Tests*sym%NO) THEN   
 
                !
                !---check uni tests
-               Cld_Mask_IR(Elem_Idx,Line_Idx) = sym%CLEAR
+               Cloud_Mask_IR(Elem_Idx,Line_Idx) = sym%CLEAR
             ELSE
-               Cld_Mask_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
-            endif
+               Cloud_Mask_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
+            ENDIF
          ELSE
-            Cld_Mask_IR(Elem_Idx,Line_Idx) = sym%CLOUDY
-         endif
+            Cloud_Mask_IR(Elem_Idx,Line_Idx) = sym%CLOUDY
+         ENDIF
 
          !-----------------------------------------------------
          ! Assign a Quality Flag
@@ -1805,7 +1847,7 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
          SWIR_THERMAL_TEST_Sum = SUM(Test_Results(First_SWIR_THERMAL_Cld_Mask_Test: &
                                                Last_SWIR_THERMAL_Cld_Mask_Test,Elem_Idx,Line_Idx))
 
-         Cld_Mask_QF(Elem_Idx,Line_Idx) = IR_Test_Sum + VIS_Test_Sum +  &
+         Cloud_Mask_QF(Elem_Idx,Line_Idx) = IR_Test_Sum + VIS_Test_Sum +  &
                                             SWIR_Solar_Test_Sum + SWIR_Thermal_Test_Sum
 
          IR_Test_Mask = max(1,IR_Test_Sum)
@@ -1814,32 +1856,32 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
          ! Set QF's based on available information
         
-         if ((Sensor%Chan_On_Flag_Default(20) > 0) .AND. (Is_Chn(7) == sym%NO)) THEN
+         IF ((Sensor%Chan_On_Flag_Default(20) > 0) .AND. (Is_Chn(7) == sym%NO)) THEN
              
-             Cld_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN7
+             Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN7
          
-         ELSE if ((Sensor%Chan_On_Flag_Default(1) > 0) .AND. &
+         ELSE IF ((Sensor%Chan_On_Flag_Default(1) > 0) .AND. &
                   (Is_Day == sym%YES) .AND. (Is_Chn(2) == sym%NO)) THEN
          
-             Cld_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN2
+             Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_CHN2
              
-          ELSE if (((Is_Day == sym%YES) .AND. &
+          ELSE IF (((Is_Day == sym%YES) .AND. &
                     (((Sensor%Chan_On_Flag_Default(26) > 0) .AND. (Is_Chn(4) == sym%NO)) .OR. &
                     ((Sensor%Chan_On_Flag_Default(6) > 0) .AND. (Is_Chn(5) == sym%NO))))  .OR. &
                     ((Sensor%Chan_On_Flag_Default(28)  > 0) .AND. (Is_Chn(10) == sym%NO))  .OR. &             
                     ((Sensor%Chan_On_Flag_Default(29) > 0) .AND. (Is_Chn(11) == sym%NO))  .OR. &             
                     ((Sensor%Chan_On_Flag_Default(32) > 0) .AND. (Is_Chn(15) == sym%NO))) THEN
 
-             Cld_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_OTHER
+             Cloud_Mask_QF(Elem_Idx,Line_Idx) = REDUCED_QUAL_BAD_OTHER
  
          ELSE
          
-             Cld_Mask_QF(Elem_Idx,Line_Idx) = VALID_CMASK_RETRIEVAL
+             Cloud_Mask_QF(Elem_Idx,Line_Idx) = VALID_CMASK_RETRIEVAL
              
-         endif
+         ENDIF
                   
-      end do Element_Loop_2
-   end do Line_Loop_2
+      END DO Element_Loop_2
+   END DO Line_Loop_2
    
    !======================================================================
    ! Apply Restoral Tests Here
@@ -1853,13 +1895,13 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
    Num_Pix = 2 !pixel radius of window
 
-   Cld_Mask_Tmpy = Cld_Mask
+   Cloud_Mask_Tmpy = Cloud_Mask
 
-   CALL Compute_Probably_Clear_Restoral(Cld_Mask_Tmpy,Cld_Mask,   &
+   CALL Compute_Probably_Clear_Restoral(Cloud_Mask_Tmpy,Cloud_Mask,   &
                                         Test_Results(1,:,:), &
                                         Test_Results(Num_Tests,:,:),Num_Pix)
 
-   Cld_Mask_Tmpy = 0
+   Cloud_Mask_Tmpy = 0
 
    !======================================================================
    ! Probably Cloudy Values
@@ -1872,12 +1914,12 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
    Num_Pix = 1    
 
-   Cld_Mask_Tmpy = Cld_Mask
+   Cloud_Mask_Tmpy = Cloud_Mask
 
-   CALL Compute_Probably_Cloudy(Cld_Mask_Tmpy,Cld_Mask,  &
+   CALL Compute_Probably_Cloudy(Cloud_Mask_Tmpy,Cloud_Mask,  &
                                 Test_Results(Num_Tests,:,:),Num_Pix)
 
-   Cld_Mask_Tmpy = 0
+   Cloud_Mask_Tmpy = 0
 
    !----------------------------------------------------------------------
    ! Probably Cloudy Restoral Test
@@ -1887,52 +1929,52 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
 
    Num_Pix = 5 !pixel radius of window
 
-   Cld_Mask_Tmpy = Cld_Mask
+   Cloud_Mask_Tmpy = Cloud_Mask
 
-   Cld_Mask_Tmpy = 0
+   Cloud_Mask_Tmpy = 0
 
    !======================================================================
    ! Pack test results into bytes for Output
    !======================================================================
 
-   Line_Loop_3: do Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
+   Line_Loop_3: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
-      Element_Loop_3: do Elem_Idx=1, Num_Elem
+      Element_Loop_3: DO Elem_Idx=1, Num_Elem
 
          CALL PACK_BYTES(Test_Results(1:Total_Num_Tests,Elem_Idx,Line_Idx), &
                                    Test_Bit_Depth(1:Total_Num_Tests), &
-                                   Cld_Mask_Packed(1:5,Elem_Idx,Line_Idx))
+                                   Cloud_Mask_Packed(1:5,Elem_Idx,Line_Idx))
 
-      end do Element_Loop_3
-   end do Line_Loop_3
+      END DO Element_Loop_3
+   END DO Line_Loop_3
 
    !======================================================================
    ! Make Binary Cloud Mask - WCS 03052012
    !======================================================================
 
-   Line_Loop_4: do Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
+   Line_Loop_4: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
-      Element_Loop_4: do Elem_Idx=1, Num_Elem
+      Element_Loop_4: DO Elem_Idx=1, Num_Elem
 
-         if ((Cld_Mask(Elem_Idx,Line_Idx) .EQ. sym%PROB_CLOUDY) .OR. &
-             (Cld_Mask(Elem_Idx,Line_Idx) .EQ. sym%CLOUDY)) THEN
+         IF ((Cloud_Mask(Elem_Idx,Line_Idx) .EQ. sym%PROB_CLOUDY) .OR. &
+             (Cloud_Mask(Elem_Idx,Line_Idx) .EQ. sym%CLOUDY)) THEN
              
-             Cld_Mask_Binary(Elem_Idx,Line_Idx) = CLD_MASK_BIN_CLOUD
-         endif
+             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = CLD_MASK_BIN_CLOUD
+         ENDIF
 
-      end do Element_Loop_4
-   end do Line_Loop_4
+      END DO Element_Loop_4
+   END DO Line_Loop_4
 
    !======================================================================
    ! nullify local pointers
    !======================================================================
 
-   Cld_Mask => null()
-   Cld_Mask_IR => null()
-   Cld_Mask_Packed => null()
+   Cloud_Mask => null()
+   Cloud_Mask_IR => null()
+   Cloud_Mask_Packed => null()
    Test_Results => null()
-   Cld_Mask_QF => null()
-   Cld_Mask_Tmpy => null()
+   Cloud_Mask_QF => null()
+   Cloud_Mask_Tmpy => null()
    Emiss_Tropo_Chn14 => null()
    BT_WaterVapor_Stddev_3x3 =>null()
    BT_Chn14_Stddev_3x3 => null()
@@ -1952,37 +1994,37 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
    !Initialize total deallocation status
    Alloc_Status_Total = 0 
 
-    if (ALLOCATED(LRC_Mask)) DEALLOCATE(LRC_Mask,stat=Alloc_Status)
+    IF (ALLOCATED(LRC_Mask)) DEALLOCATE(LRC_Mask,stat=Alloc_Status)
     Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
-    if (ALLOCATED(X_LRC_Idx)) DEALLOCATE(X_LRC_Idx,stat=Alloc_Status)
+    IF (ALLOCATED(X_LRC_Idx)) DEALLOCATE(X_LRC_Idx,stat=Alloc_Status)
     Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
-    if (ALLOCATED(Y_LRC_Idx)) DEALLOCATE(Y_LRC_Idx,stat=Alloc_Status)
+    IF (ALLOCATED(Y_LRC_Idx)) DEALLOCATE(Y_LRC_Idx,stat=Alloc_Status)
     Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
 
 
 
-   if (ALLOCATED(X_NWC_Idx)) DEALLOCATE(X_NWC_Idx,stat=Alloc_Status)
+   IF (ALLOCATED(X_NWC_Idx)) DEALLOCATE(X_NWC_Idx,stat=Alloc_Status)
    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
    
-   if (ALLOCATED(Y_NWC_Idx)) DEALLOCATE(Y_NWC_Idx,stat=Alloc_Status)
+   IF (ALLOCATED(Y_NWC_Idx)) DEALLOCATE(Y_NWC_Idx,stat=Alloc_Status)
    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
    
-   if (ALLOCATED(BT_WV_BT_Window_Corr)) DEALLOCATE(BT_WV_BT_Window_Corr,stat=Alloc_Status)
+   IF (ALLOCATED(BT_WV_BT_Window_Corr)) DEALLOCATE(BT_WV_BT_Window_Corr,stat=Alloc_Status)
    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
-   if (ALLOCATED(Test_Results_Temp)) DEALLOCATE(Test_Results_Temp)
-   if (ALLOCATED(Temp_Array)) DEALLOCATE(Temp_Array)
+   IF (ALLOCATED(Test_Results_Temp)) DEALLOCATE(Test_Results_Temp)
+   IF (ALLOCATED(Temp_Array)) DEALLOCATE(Temp_Array)
 
    !======================================================================
    ! deallocate 2nd darkest composite data array
    !======================================================================
-   if (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
+   IF (ALLOCATED(Refl_Chn2_Clear)) DEALLOCATE(Refl_Chn2_Clear,stat=Alloc_Status)
    Alloc_Status_Total = Alloc_Status_Total + Alloc_Status
 
-   if (Alloc_Status /= 0) THEN
+   IF (Alloc_Status /= 0) THEN
 
        WRITE (Err_Message, *) &
              'Error deallocating Chn32 Clear-sky Reflectance'
@@ -1998,14 +2040,14 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
         !  CALL Error_Messaging (Routine_Name, Error_Message, Error_Level)           
         RETURN      
       
-   endif
+   ENDIF
 
 
    !======================================================================
    ! Check deallocation of arrays
    !======================================================================
 
-   if (Alloc_Status_Total /= 0) THEN
+   IF (Alloc_Status_Total /= 0) THEN
 
         WRITE (Err_Message, *) &
             'Error deallocating arrays'
@@ -2019,15 +2061,17 @@ subroutine BASELINE_CLOUD_MASK_MAIN(Algo_Num)
         !  CALL Error_Messaging (Routine_Name, Error_Message, Error_Level)           
         RETURN      
 
-   endif
+   ENDIF
    
 
 !
-!---end subroutine Baseline_Cld_Mask_Main
+!---END SUBROUTINE Baseline_Cloud_Mask_Main
 !
 
 
-end subroutine BASELINE_CLOUD_MASK_MAIN
+END SUBROUTINE Baseline_Cloud_Mask_Main
+
+
 
 !====================================================================
 ! Subroutine Name: Compute_Probably_Clear_Restoral
@@ -2055,18 +2099,18 @@ end subroutine BASELINE_CLOUD_MASK_MAIN
 ! Restrictions:  None
 !
 !====================================================================
-subroutine Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_Pix)
-   integer(kind=INT1), INTENT(IN), DIMENSION(:,:):: input
-   integer(kind=INT1), INTENT(IN), DIMENSION(:,:):: Valid_Mask
-   integer(kind=INT1), INTENT(OUT), DIMENSION(:,:):: Output
-   integer(kind=INT1), INTENT(OUT), DIMENSION(:,:):: Mask
-   integer, INTENT(IN):: Num_Pix
-   integer:: Elem_Idx  !index for pixel IN east-west direction
-   integer:: Line_Idx  !index for pixel IN north-south direction
-   integer:: Array_Right  !temporary index IN ielem-direction
-   integer:: Array_Left  !temporaty index IN ielem-direction
-   integer:: Array_Top  !temporary index IN iline-direction
-   integer:: Array_Bottom  !temporary index IN iline-direction
+SUBROUTINE Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_Pix)
+   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: input
+   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Valid_Mask
+   INTEGER(KIND=INT1), INTENT(OUT), DIMENSION(:,:):: Output
+   INTEGER(KIND=INT1), INTENT(OUT), DIMENSION(:,:):: Mask
+   INTEGER, INTENT(IN):: Num_Pix
+   INTEGER:: Elem_Idx  !index for pixel IN east-west direction
+   INTEGER:: Line_Idx  !index for pixel IN north-south direction
+   INTEGER:: Array_Right  !temporary index IN ielem-direction
+   INTEGER:: Array_Left  !temporaty index IN ielem-direction
+   INTEGER:: Array_Top  !temporary index IN iline-direction
+   INTEGER:: Array_Bottom  !temporary index IN iline-direction
 
    !
    !--- initialize Output
@@ -2077,7 +2121,7 @@ subroutine Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_P
    !
    !--- loop over scan lines IN segment
    !
-   Line_Loop: do Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
+   Line_Loop: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       !
       !--- determine y-dimensions of array to check
@@ -2085,14 +2129,14 @@ subroutine Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_P
       Array_Top = max(1,Line_Idx-Num_Pix)
       Array_Bottom = min(Image%Number_Of_Lines_Read_This_Segment,Line_Idx+Num_Pix)
 
-      Element_Loop: do Elem_Idx = 1, Image%Number_Of_Elements
+      Element_Loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
          !
          !--- check to see if Mask is valid, if not cycle to next
          !
-         if (Valid_Mask(Elem_Idx,Line_Idx) == sym%NO) THEN
-                 cycle
-         endif
+         IF (Valid_Mask(Elem_Idx,Line_Idx) == sym%NO) THEN
+                 CYCLE
+         ENDIF
 
          !
          !--- determine x-dimensions of array to check
@@ -2100,37 +2144,37 @@ subroutine Compute_Probably_Clear_Restoral(input, Output, Valid_Mask, Mask,Num_P
          Array_Right = max(1,Elem_Idx-Num_Pix)
          Array_Left = min(Image%Number_Of_Elements,Elem_Idx+Num_Pix)
 
-         if (input(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) THEN
+         IF (input(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) THEN
 
 
-            if ( (sym%CLEAR < sym%CLOUDY) .AND.  &
+            IF ( (sym%CLEAR < sym%CLOUDY) .AND.  &
                  ( (MAXVAL(input(Array_Right:Array_Left,Array_Top:Array_Bottom)) /= sym%CLOUDY) .AND. &
                    (MAXVAL(input(Array_Right:Array_Left,Array_Top:Array_Bottom)) /= sym%PROB_CLOUDY))) THEN
 
                Mask(Elem_Idx,Line_Idx) = sym%YES
                Output(Elem_Idx,Line_Idx) = sym%CLEAR
 
-            endif
+            ENDIF
 
-            if ( (sym%CLEAR > sym%CLOUDY) .AND.  &
+            IF ( (sym%CLEAR > sym%CLOUDY) .AND.  &
                  ( (MINVAL(input(Array_Right:Array_Left,Array_Top:Array_Bottom)) /= sym%CLOUDY) .AND. &
                    (MINVAL(input(Array_Right:Array_Left,Array_Top:Array_Bottom)) /= sym%PROB_CLOUDY))) THEN
 
                Mask(Elem_Idx,Line_Idx) = sym%YES
                Output(Elem_Idx,Line_Idx) = sym%CLEAR
 
-            endif
+            ENDIF
 
-         endif
+         ENDIF
 
-      end do Element_Loop
+      END DO Element_Loop
 
-   end do Line_Loop
+   END DO Line_Loop
 
 !
-! end subroutine Compute_Probably_Clear_Restoral
+! end SUBROUTINE Compute_Probably_Clear_Restoral
 !
-end subroutine Compute_Probably_Clear_Restoral
+END SUBROUTINE Compute_Probably_Clear_Restoral
 
 !====================================================================
 ! Subroutine Name: Compute_Probably_Cloudy
@@ -2159,19 +2203,19 @@ end subroutine Compute_Probably_Clear_Restoral
 !====================================================================
 
 
-subroutine  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
-   integer(kind=INT1), INTENT(IN), DIMENSION(:,:):: input
-   integer(kind=INT1), INTENT(OUT), DIMENSION(:,:):: Output
-   integer(kind=INT1), INTENT(OUT), DIMENSION(:,:):: Mask
-   integer, INTENT(IN):: Num_Pix
-   integer:: Elem_Idx
-   integer:: Line_Idx
-   integer:: Array_Right
-   integer:: Array_Left
-   integer:: Array_Top
-   integer:: Array_Bottom
-   integer:: Num_Cloudy
-   integer:: Num_Cloudy_Max
+SUBROUTINE  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
+   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: input
+   INTEGER(KIND=INT1), INTENT(OUT), DIMENSION(:,:):: Output
+   INTEGER(KIND=INT1), INTENT(OUT), DIMENSION(:,:):: Mask
+   INTEGER, INTENT(IN):: Num_Pix
+   INTEGER:: Elem_Idx
+   INTEGER:: Line_Idx
+   INTEGER:: Array_Right
+   INTEGER:: Array_Left
+   INTEGER:: Array_Top
+   INTEGER:: Array_Bottom
+   INTEGER:: Num_Cloudy
+   INTEGER:: Num_Cloudy_Max
 
 
 
@@ -2188,7 +2232,7 @@ subroutine  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
    !
    !--- loop over scan lines IN segment
    !
-   Line_Loop: do Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
+   Line_Loop: DO Line_Idx=1, Image%Number_Of_Lines_Read_This_Segment
 
       !
       !--- determine y-dimensions of array to check
@@ -2196,7 +2240,7 @@ subroutine  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
       Array_Top = max(1,Line_Idx-Num_Pix)
       Array_Bottom = min(Image%Number_Of_Lines_Read_This_Segment,Line_Idx+Num_Pix)
 
-      Element_Loop: do Elem_Idx=1, Image%Number_Of_Elements
+      Element_Loop: DO Elem_Idx=1, Image%Number_Of_Elements
 
          !
          !--- determine x-dimensions of array to check
@@ -2207,7 +2251,7 @@ subroutine  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
          !
          !--- check to see if a cloudy pixel neighbors a non-cloudy pixel
          !
-         if (input(Elem_Idx,Line_Idx) == sym%CLOUDY) THEN
+         IF (input(Elem_Idx,Line_Idx) == sym%CLOUDY) THEN
 
             Num_Cloudy = SUM(input(Array_Right:Array_Left,Array_Top:Array_Bottom))
             
@@ -2218,22 +2262,22 @@ subroutine  Compute_Probably_Cloudy(input,Output,Mask,Num_Pix)
             !--- if the value is less, set to probably cloudy
             !
 
-            if (Num_Cloudy /= Num_Cloudy_Max) THEN
+            IF (Num_Cloudy /= Num_Cloudy_Max) THEN
 
                Mask(Elem_Idx,Line_Idx) = sym%YES
                Output(Elem_Idx,Line_Idx) = sym%PROB_CLOUDY
 
-            endif
+            ENDIF
 
-         endif
+         ENDIF
 
-      end do Element_Loop
+      END DO Element_Loop
 
-   end do Line_Loop
+   END DO Line_Loop
 !
-!end subroutine Compute_Probably_Cloudy
+!end SUBROUTINE Compute_Probably_Cloudy
 !
-end subroutine Compute_Probably_Cloudy
+END SUBROUTINE Compute_Probably_Cloudy
 
 
 !====================================================================
@@ -2265,17 +2309,17 @@ end subroutine Compute_Probably_Cloudy
 !====================================================================
 ! WCS - While CLAVR-x does this, we want to do it exactly as implmented in the GS - 20 Nov
 
- subroutine Clear_Chn2_Reflectance_Field(Num_Elem, &
+ SUBROUTINE Clear_Chn2_Reflectance_Field(Num_Elem, &
                                          Max_Num_Lines_per_Seg, &
                                          Refl_Chn2_Clear)
 
-   real(kind=real4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
-   integer(kind=INT4),INTENT(IN) :: Num_Elem
-   integer(kind=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
+   REAL(KIND=REAL4), INTENT(INOUT), ALLOCATABLE, DIMENSION(:,:):: Refl_Chn2_Clear
+   INTEGER(KIND=INT4),INTENT(IN) :: Num_Elem
+   INTEGER(KIND=INT4),INTENT(IN) :: Max_Num_Lines_per_Seg
 
 
    !--- If create one and populate background reflectance using default or global WS albedo data
-       if (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
+       IF (.NOT. ALLOCATED(Refl_Chn2_Clear)) ALLOCATE( &
                            Refl_Chn2_Clear(Num_Elem,Max_Num_Lines_per_Seg))
 
        Refl_Chn2_Clear = 5.0
@@ -2291,7 +2335,7 @@ end subroutine Compute_Probably_Cloudy
           Refl_Chn2_Clear = Missing_Value_Real4
        ENDWHERE
 
- end subroutine Clear_Chn2_Reflectance_Field
+ END SUBROUTINE Clear_Chn2_Reflectance_Field
 
 
 !====================================================================
@@ -2319,27 +2363,27 @@ end subroutine Compute_Probably_Cloudy
 ! Restrictions:  None
 !
 !====================================================================
- subroutine Compute_Emiss_Tropo_Chn14(Emiss_Tropo_Chn14,&
+ SUBROUTINE Compute_Emiss_Tropo_Chn14(Emiss_Tropo_Chn14,&
                                       Number_of_Lines_in_this_Segment)
-   integer(kind=INT4),INTENT(IN) :: Number_of_Lines_in_this_Segment
-   real(kind=real4), DIMENSION(:,:), INTENT(OUT):: Emiss_Tropo_Chn14
-   integer(kind=INT1):: Tropo_Idx_NWP
-   integer(kind=INT1):: View_Zen_Idx
-   integer:: X_NWP_Idx
-   integer:: Y_NWP_Idx
-   integer:: Elem_Idx
-   integer:: Line_Idx
-   real(kind=real4) :: Rad_Chn14
-   real(kind=real4) :: Clr_Rad_Chn14
-   real(kind=real4) :: Blkbdy_Tropo_Rad_Chn14
+   INTEGER(KIND=INT4),INTENT(IN) :: Number_of_Lines_in_this_Segment
+   REAL(KIND=REAL4), DIMENSION(:,:), INTENT(OUT):: Emiss_Tropo_Chn14
+   INTEGER(KIND=INT1):: Tropo_Idx_NWP
+   INTEGER(KIND=INT1):: View_Zen_Idx
+   INTEGER:: X_NWP_Idx
+   INTEGER:: Y_NWP_Idx
+   INTEGER:: Elem_Idx
+   INTEGER:: Line_Idx
+   REAL(KIND=REAL4) :: Rad_Chn14
+   REAL(KIND=REAL4) :: Clr_Rad_Chn14
+   REAL(KIND=REAL4) :: Blkbdy_Tropo_Rad_Chn14
 
    !--- initialize
    Emiss_Tropo_Chn14 = Missing_Value_Real4
 
-    Line_Loop: do Line_Idx=1, Number_of_Lines_in_this_Segment
-      Element_Loop: do Elem_Idx = 1, Image%Number_Of_Elements
+    Line_Loop: DO Line_Idx=1, Number_of_Lines_in_this_Segment
+      Element_Loop: DO Elem_Idx = 1, Image%Number_Of_Elements
 
-       if (Space_Mask(Elem_Idx,Line_Idx) == sym%NO) THEN
+       IF (Space_Mask(Elem_Idx,Line_Idx) == sym%NO) THEN
 
             !
             !---nwp longitude cell
@@ -2382,11 +2426,11 @@ end subroutine Compute_Probably_Cloudy
             Emiss_Tropo_Chn14(Elem_Idx,Line_Idx) =  &
                   (Rad_Chn14 - Clr_Rad_Chn14) / (Blkbdy_Tropo_Rad_Chn14 - Clr_Rad_Chn14)
 
-      end IF
-    end do Element_Loop
-  end do Line_Loop
+      END IF
+    END DO Element_Loop
+  END DO Line_Loop
 
- end subroutine Compute_Emiss_Tropo_Chn14
+ END SUBROUTINE Compute_Emiss_Tropo_Chn14
 
 !====================================================================
 ! Subroutine Name: Compute_NWC
@@ -2431,7 +2475,7 @@ end subroutine Compute_Probably_Cloudy
 ! Restrictions:  None
 !
 !====================================================================
-subroutine Compute_NWC( Input_Array, &
+SUBROUTINE Compute_NWC( Input_Array, &
                         Box_Size, &
                         Uni_Land_Mask_Flag, &
                         Bad_Mask, &
@@ -2443,38 +2487,38 @@ subroutine Compute_NWC( Input_Array, &
                         Loc_Max_Elem,  &
                         Loc_Max_Line)
 
-  real(kind=real4), DIMENSION(:,:), INTENT(IN):: Input_Array
-  integer(kind=INT1), DIMENSION(:,:), INTENT(IN):: Bad_Mask
-  integer(kind=INT1), DIMENSION(:,:), INTENT(IN):: Land_Mask
-  real(kind=real4):: Input_Array_NxN_Max
-  integer, INTENT(IN):: Uni_Land_Mask_Flag
-  integer, INTENT(IN):: Box_Size
-  integer, INTENT(IN):: Elem_Start
-  integer, INTENT(IN):: Elem_End
-  integer, INTENT(IN):: Line_Start
-  integer, INTENT(IN):: Line_End
-  integer, DIMENSION(:,:), INTENT(out):: Loc_Max_Elem
-  integer, DIMENSION(:,:), INTENT(out):: Loc_Max_Line
-  integer:: Elem_Idx 
-  integer:: Line_Idx
-  integer:: Elem_Idx_NxN_Right
-  integer:: Elem_Idx_NxN_Left
-  integer:: Line_Idx_NxN_Top
-  integer:: Line_Idx_NxN_Bottom
-  integer:: Elem_Idx_NxN
-  integer:: Line_Idx_NxN
+  REAL(KIND=REAL4), DIMENSION(:,:), INTENT(IN):: Input_Array
+  INTEGER(KIND=INT1), DIMENSION(:,:), INTENT(IN):: Bad_Mask
+  INTEGER(KIND=INT1), DIMENSION(:,:), INTENT(IN):: Land_Mask
+  REAL(KIND=REAL4):: Input_Array_NxN_Max
+  INTEGER, INTENT(IN):: Uni_Land_Mask_Flag
+  INTEGER, INTENT(IN):: Box_Size
+  INTEGER, INTENT(IN):: Elem_Start
+  INTEGER, INTENT(IN):: Elem_End
+  INTEGER, INTENT(IN):: Line_Start
+  INTEGER, INTENT(IN):: Line_End
+  INTEGER, DIMENSION(:,:), INTENT(out):: Loc_Max_Elem
+  INTEGER, DIMENSION(:,:), INTENT(out):: Loc_Max_Line
+  INTEGER:: Elem_Idx 
+  INTEGER:: Line_Idx
+  INTEGER:: Elem_Idx_NxN_Right
+  INTEGER:: Elem_Idx_NxN_Left
+  INTEGER:: Line_Idx_NxN_Top
+  INTEGER:: Line_Idx_NxN_Bottom
+  INTEGER:: Elem_Idx_NxN
+  INTEGER:: Line_Idx_NxN
 
   !--- initialize to missing
   Loc_Max_Elem = MISSING_VALUE_INT1
   Loc_Max_Line = MISSING_VALUE_INT1
 
-  Line_Loop: do Line_Idx = Line_Start, Line_End
+  Line_Loop: DO Line_Idx = Line_Start, Line_End
 
   !--- set limits of NxN array in the j-direction
   Line_Idx_NxN_Top = max(Line_Start,Line_Idx-Box_Size)   !top index of local array
   Line_Idx_NxN_Bottom = min(Line_End,Line_Idx+Box_Size)     !bottom index of local array
 
-  Element_Loop: do Elem_Idx = Elem_Start, Elem_End
+  Element_Loop: DO Elem_Idx = Elem_Start, Elem_End
 
     !--- set limits of NxN array in the i-direction
     Elem_Idx_NxN_Right = max(Elem_Start,Elem_Idx - Box_Size)   !left index of local array
@@ -2484,36 +2528,36 @@ subroutine Compute_NWC( Input_Array, &
     Input_Array_NxN_Max = -1.0*huge(Input_Array_NxN_Max)
 
     !--- go through each element in NxN array
-    Line_Loop_NxN: do Line_Idx_NxN = Line_Idx_NxN_Top,Line_Idx_NxN_Bottom
-      Element_Loop_NxN: do Elem_Idx_NxN = Elem_Idx_NxN_Right,Elem_Idx_NxN_Left
+    Line_Loop_NxN: DO Line_Idx_NxN = Line_Idx_NxN_Top,Line_Idx_NxN_Bottom
+      Element_Loop_NxN: DO Elem_Idx_NxN = Elem_Idx_NxN_Right,Elem_Idx_NxN_Left
 
-        if (Bad_Mask(Elem_Idx_NxN,Line_Idx_NxN) == sym%YES) THEN
-          cycle
-        endif
+        IF (Bad_Mask(Elem_Idx_NxN,Line_Idx_NxN) == sym%YES) THEN
+          CYCLE
+        ENDIF
 
-        if (Input_Array(Elem_Idx_NxN,Line_Idx_NxN) == MISSING_VALUE_real4) THEN
-          cycle
-        endif
+        IF (Input_Array(Elem_Idx_NxN,Line_Idx_NxN) == MISSING_VALUE_REAL4) THEN
+          CYCLE
+        ENDIF
        
-        if ((Uni_Land_Mask_Flag == sym%YES) .and. &
+        IF ((Uni_Land_Mask_Flag == sym%YES) .and. &
              (Land_Mask(Elem_Idx,Line_Idx) /= Land_Mask(Elem_Idx_NxN,Line_Idx_Nxn))) THEN    
-          cycle
-        endif
+          CYCLE
+        ENDIF
 
-        if (Input_Array(Elem_Idx_NxN,Line_Idx_Nxn) > Input_Array_NxN_Max) THEN
+        IF (Input_Array(Elem_Idx_NxN,Line_Idx_Nxn) > Input_Array_NxN_Max) THEN
            Input_Array_NxN_Max = Input_Array(Elem_Idx_NxN,Line_Idx_Nxn)
            Loc_Max_Elem(Elem_Idx,Line_Idx) = Elem_Idx_NxN
            Loc_Max_Line(Elem_Idx,Line_Idx) = Line_Idx_NxN
-        endif
+        ENDIF
 
-       end do Element_Loop_NxN
-    end do Line_Loop_NxN
+       END DO Element_Loop_NxN
+    END DO Line_Loop_NxN
 
- end do Element_Loop
+ END DO Element_Loop
 
-end do Line_Loop
+END DO Line_Loop
 
-end subroutine Compute_NWC
+END SUBROUTINE Compute_NWC
 
 !--------------------------------------------------------------------------
 ! The subroutines and functions that contain the cloud mask tests go below here
@@ -2544,7 +2588,7 @@ end subroutine Compute_NWC
 !
 !====================================================================
 
- subroutine Set_Cmask_Thresholds(Sat_name, Algo_Name)
+ SUBROUTINE Set_Cmask_Thresholds(Sat_name, Algo_Name)
     CHARACTER(*), INTENT(IN) :: Sat_name
     CHARACTER(*), INTENT(inout) :: Algo_Name
     CHARACTER(len=1020) :: Algo_Name_Tmpy
@@ -2552,7 +2596,7 @@ end subroutine Compute_NWC
     Algo_Name_Tmpy = TRIM(trim(Algo_Name)//"abi")
        
    ! Set thresholds for AVHRR  
-   if ((index(TRIM(Sat_name),'AVHRR')) /= 0) THEN
+   IF ((index(TRIM(Sat_name),'AVHRR')) /= 0) THEN
       ULST_Emiss_Chn7_DIFf_Thresh_Land = ULST_EMISS_CHN7_DIFF_THRESH_LAND_AVHRR
       ULST_Emiss_Chn7_DIFf_Thresh_Ocean = ULST_EMISS_CHN7_DIFF_THRESH_OCN_AVHRR
       ULST_Emiss_Chn7_DIFf_Thresh_Snow = ULST_EMISS_CHN7_DIFF_THRESH_SNOW_AVHRR
@@ -2562,7 +2606,7 @@ end subroutine Compute_NWC
       EMISS4_Emiss_Chn7_Desert_Thresh = EMISS4_EMISS_CHN7_DESERT_THRESH_AVHRR
 
    ! Set thresholds for EOS TERRA MODIS
-   ELSE if ((index(TRIM(Sat_name),'Terra')) /= 0) THEN
+   ELSE IF ((index(TRIM(Sat_name),'Terra')) /= 0) THEN
       ULST_Emiss_Chn7_DIFf_Thresh_Land = ULST_EMISS_CHN7_DIFF_THRESH_LAND_MODIS
       ULST_Emiss_Chn7_DIFf_Thresh_Ocean = ULST_EMISS_CHN7_DIFF_THRESH_OCN_MODIS
       ULST_Emiss_Chn7_DIFf_Thresh_Snow = ULST_EMISS_CHN7_DIFF_THRESH_SNOW_MODIS
@@ -2572,7 +2616,7 @@ end subroutine Compute_NWC
       EMISS4_Emiss_Chn7_Desert_Thresh = EMISS4_EMISS_CHN7_DESERT_THRESH_MODIS
 
    ! Set thresholds for EOS AQUA MODIS
-   ELSE if ((index(TRIM(Sat_name),'Aqua')) /= 0) THEN
+   ELSE IF ((index(TRIM(Sat_name),'Aqua')) /= 0) THEN
       ULST_Emiss_Chn7_DIFf_Thresh_Land = ULST_EMISS_CHN7_DIFF_THRESH_LAND_MODIS
       ULST_Emiss_Chn7_DIFf_Thresh_Ocean = ULST_EMISS_CHN7_DIFF_THRESH_OCN_MODIS
       ULST_Emiss_Chn7_DIFf_Thresh_Snow = ULST_EMISS_CHN7_DIFF_THRESH_SNOW_MODIS
@@ -2582,7 +2626,7 @@ end subroutine Compute_NWC
       EMISS4_Emiss_Chn7_Desert_Thresh = EMISS4_EMISS_CHN7_DESERT_THRESH_MODIS
          
    ! Set thresholds for MSG 
-   ELSE if ((index(TRIM(Sat_name),'Meteosat')) /= 0) THEN
+   ELSE IF ((index(TRIM(Sat_name),'Meteosat')) /= 0) THEN
       ULST_Emiss_Chn7_DIFf_Thresh_Land = ULST_EMISS_CHN7_DIFF_THRESH_LAND_SEVIRI
       ULST_Emiss_Chn7_DIFf_Thresh_Ocean = ULST_EMISS_CHN7_DIFF_THRESH_OCN_SEVIRI
       ULST_Emiss_Chn7_DIFf_Thresh_Snow = ULST_EMISS_CHN7_DIFF_THRESH_SNOW_SEVIRI
@@ -2593,7 +2637,7 @@ end subroutine Compute_NWC
       Algo_Name_Tmpy = TRIM(trim(Algo_Name)//"seviri")
 
    ! Set thresholds for MTSAT
-   ELSE if ((index(TRIM(Sat_name),'MTSAT')) /= 0) THEN
+   ELSE IF ((index(TRIM(Sat_name),'MTSAT')) /= 0) THEN
       ULST_Emiss_Chn7_DIFf_Thresh_Land = ULST_EMISS_CHN7_DIFF_THRESH_LAND_MTSAT
       ULST_Emiss_Chn7_DIFf_Thresh_Ocean = ULST_EMISS_CHN7_DIFF_THRESH_OCN_MTSAT
       ULST_Emiss_Chn7_DIFf_Thresh_Snow = ULST_EMISS_CHN7_DIFF_THRESH_SNOW_MTSAT
@@ -2611,12 +2655,12 @@ end subroutine Compute_NWC
       EMISS4_Emiss_Chn7_Land_Thresh = EMISS4_EMISS_CHN7_LAND_THRESH_GOES
       EMISS4_Emiss_Chn7_Snow_Thresh = EMISS4_EMISS_CHN7_SNOW_THRESH_GOES
       EMISS4_Emiss_Chn7_Desert_Thresh = EMISS4_EMISS_CHN7_DESERT_THRESH_GOES
-   endif 
+   ENDIF 
    
    
     Algo_Name = trim(Algo_Name_Tmpy)
    
- end subroutine Set_Cmask_Thresholds
+ END SUBROUTINE Set_Cmask_Thresholds
 
 !====================================================================
 ! Function Name: Compute_Clear_Sky_Scatter
@@ -2669,7 +2713,7 @@ end subroutine Compute_NWC
 !====================================================================
 
 
- subroutine Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
+ SUBROUTINE Compute_Clear_Sky_Scatter(Aerosol_Optical_Depth_Chn2, &
                                      Aerosol_Single_Scatter_Albedo_Chn2, &
                                      Aerosol_Asymmetry_Parameter, &
                                      Rayleigh_Optical_Depth_Chn2, &
@@ -2684,40 +2728,40 @@ end subroutine Compute_NWC
                                      Transmission_Sing_Scat, &
                                      Refl_Sing_Scat)
 
-   real, INTENT(IN):: Aerosol_Optical_Depth_Chn2
-   real, INTENT(IN):: Aerosol_Single_Scatter_Albedo_Chn2
-   real, INTENT(IN):: Aerosol_Asymmetry_Parameter
-   real, INTENT(IN):: Rayleigh_Optical_Depth_Chn2
+   REAL, INTENT(IN):: Aerosol_Optical_Depth_Chn2
+   REAL, INTENT(IN):: Aerosol_Single_Scatter_Albedo_Chn2
+   REAL, INTENT(IN):: Aerosol_Asymmetry_Parameter
+   REAL, INTENT(IN):: Rayleigh_Optical_Depth_Chn2
    CHARACTER (len=*), INTENT(IN):: Sat_Name 
-   real, INTENT(IN):: TPW
-   real, INTENT(IN):: Total_Ozone_Path_NWP
-   real, INTENT(IN):: Scat_Zen
-   real, INTENT(IN):: Cos_Sat_Zen
-   real, INTENT(IN):: Cos_Sol_Zen
-   real, INTENT(IN):: Sfc_Alb_View
-   real, INTENT(IN):: Sfc_Alb_Sun
-   real, INTENT(out):: Transmission_Sing_Scat
-   real, INTENT(out):: Refl_Sing_Scat
-   real:: Air_Mass_Factor
-   real:: Aero_Phase_Funct
-   real:: Ray_Phase_Funct
-   real:: OD_Gas
-   real:: OD_Total
-   real:: OD_Scat_Total
-   real:: OD_Iso_Total
-   real:: Trans_Iso_Total_View
-   real:: Trans_Iso_Total_Sun
-   real:: OD_Iso_Scat_Total
-   real:: Cos_Scat_Zen
-   real:: Eff_Phase_Funct
-   real:: Single_Scat_Alb
-   real:: Refl_Sing_Scat_a
-   real:: Refl_Sing_Scat_b
-   real:: Refl_Sing_Scat_c
-   real:: OD_ozone
-   real:: OD_h2o
-   real, DIMENSION(3):: OD_ozone_coef
-   real, DIMENSION(3):: OD_h2o_coef
+   REAL, INTENT(IN):: TPW
+   REAL, INTENT(IN):: Total_Ozone_Path_NWP
+   REAL, INTENT(IN):: Scat_Zen
+   REAL, INTENT(IN):: Cos_Sat_Zen
+   REAL, INTENT(IN):: Cos_Sol_Zen
+   REAL, INTENT(IN):: Sfc_Alb_View
+   REAL, INTENT(IN):: Sfc_Alb_Sun
+   REAL, INTENT(out):: Transmission_Sing_Scat
+   REAL, INTENT(out):: Refl_Sing_Scat
+   REAL:: Air_Mass_Factor
+   REAL:: Aero_Phase_Funct
+   REAL:: Ray_Phase_Funct
+   REAL:: OD_Gas
+   REAL:: OD_Total
+   REAL:: OD_Scat_Total
+   REAL:: OD_Iso_Total
+   REAL:: Trans_Iso_Total_View
+   REAL:: Trans_Iso_Total_Sun
+   REAL:: OD_Iso_Scat_Total
+   REAL:: Cos_Scat_Zen
+   REAL:: Eff_Phase_Funct
+   REAL:: Single_Scat_Alb
+   REAL:: Refl_Sing_Scat_a
+   REAL:: Refl_Sing_Scat_b
+   REAL:: Refl_Sing_Scat_c
+   REAL:: OD_ozone
+   REAL:: OD_h2o
+   REAL, DIMENSION(3):: OD_ozone_coef
+   REAL, DIMENSION(3):: OD_h2o_coef
 
    !--- Set Default Gas Transmission Coefficients
    OD_ozone_coef = (/0.000566454,8.25224e-05,1.94007e-08/)
@@ -2725,10 +2769,10 @@ end subroutine Compute_NWC
 
 
    !--- Set Satellite SpecIFic Gas Transmission Coefficients
-   if ((index(TRIM(Sat_Name),'Meteosat')) /= 0) THEN
+   IF ((index(TRIM(Sat_Name),'Meteosat')) /= 0) THEN
        OD_ozone_coef = (/0.000566454,8.25224e-05,1.94007e-08/)
        OD_h2o_coef = (/  0.000044758, 0.00264790,-0.0000713698/)
-   endif
+   ENDIF
 
    !--- compute cosine of scattering angle
    Cos_Scat_Zen = cos(Scat_Zen * dtor)
@@ -2791,7 +2835,7 @@ end subroutine Compute_NWC
 
    Refl_Sing_Scat = 100.0 * (Refl_Sing_Scat_a + Refl_Sing_Scat_b + Refl_Sing_Scat_c)
 
- end subroutine Compute_Clear_Sky_Scatter
+ END SUBROUTINE Compute_Clear_Sky_Scatter
 
 !====================================================================
 ! Function Name: RUT_Routine
@@ -2839,41 +2883,41 @@ end subroutine Compute_NWC
                      Sol_Zen) &
                      RESULT(Test_Result)
 
-       integer(kind=INT4), INTENT(IN) :: Is_Land
-       integer(kind=INT4), INTENT(IN) :: Is_Snow
-       integer(kind=INT4), INTENT(IN) :: Is_Coast
-       real(kind=real4), INTENT(IN) :: Refl_Chn2_Clear
-       real(kind=real4), INTENT(IN) :: Refl_Chn2_Stddev_3x3
-       real(kind=real4), INTENT(IN) :: Sol_Zen
-       integer(kind=int1) :: Test_Result
+       INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+       INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+       INTEGER(KIND=INT4), INTENT(IN) :: Is_Coast
+       REAL(KIND=REAL4), INTENT(IN) :: Refl_Chn2_Clear
+       REAL(KIND=REAL4), INTENT(IN) :: Refl_Chn2_Stddev_3x3
+       REAL(KIND=REAL4), INTENT(IN) :: Sol_Zen
+       INTEGER(KIND=int1) :: Test_Result
 
-       real(kind=real4) :: Test_Threshold
+       REAL(KIND=REAL4) :: Test_Threshold
 
        Test_Result = sym%NO
 
-       if (Is_Snow == sym%NO .AND. Is_Coast == sym%NO) THEN
+       IF (Is_Snow == sym%NO .AND. Is_Coast == sym%NO) THEN
 
-          if (Sol_Zen < RUT_SOL_ZEN_THRESH) THEN
+          IF (Sol_Zen < RUT_SOL_ZEN_THRESH) THEN
 
               !--- compute threshold
-              if (Is_Land == sym%YES) THEN
+              IF (Is_Land == sym%YES) THEN
                  Test_Threshold = MAX(0.5,Refl_Chn2_Clear * REFL_CHN2_CLR_UNI_THRESH_LAND)
               ELSE
                  Test_Threshold = REFL_CHN2_CLR_UNI_THRESH_OCEAN
-              endif
+              ENDIF
 
               !--- apply test
-              if (Refl_Chn2_Stddev_3x3 > Test_Threshold) THEN
+              IF (Refl_Chn2_Stddev_3x3 > Test_Threshold) THEN
                      Test_Result = sym%YES
-              endif
+              ENDIF
 
-           endif
+           ENDIF
 
-       endif
+       ENDIF
 
        RETURN
 
- end FUNCTION RUT_Routine
+ END FUNCTION RUT_Routine
 
 !====================================================================
 ! Function Name: TUT_Routine
@@ -2915,47 +2959,47 @@ end subroutine Compute_NWC
                       Sfc_Hgt_Stddev_3x3)  &
                       RESULT (Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Land 
-   integer(kind=INT4), INTENT(IN) :: Is_Coast
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Stddev_3x3
-   real(kind=real4), INTENT(IN) :: Sfc_Hgt_Stddev_3x3
-   integer(kind=int1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land 
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Coast
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Stddev_3x3
+   REAL(KIND=REAL4), INTENT(IN) :: Sfc_Hgt_Stddev_3x3
+   INTEGER(KIND=int1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
 
    Test_Result = sym%NO
 
-   if (Is_Coast == sym%NO) THEN
+   IF (Is_Coast == sym%NO) THEN
 
          !
          !7K/km is the adiabatic lapse rate
          !
          Test_Threshold = 3.0 * 7.0*Sfc_Hgt_Stddev_3x3/1000.0  
 
-         if (Is_Land == sym%YES) THEN
+         IF (Is_Land == sym%YES) THEN
 
-      if (BT_Chn14_Stddev_3x3 > BT_CHN14_CLR_UNI_THRESH_LAND  &
+      IF (BT_Chn14_Stddev_3x3 > BT_CHN14_CLR_UNI_THRESH_LAND  &
           +Test_Threshold) THEN
 
          Test_Result = sym%YES
 
-      endif
+      ENDIF
 
          ELSE
 
-      if (BT_Chn14_Stddev_3x3 > BT_CHN14_CLR_UNI_THRESH_OCN  &
+      IF (BT_Chn14_Stddev_3x3 > BT_CHN14_CLR_UNI_THRESH_OCN  &
            +Test_Threshold) THEN
 
          Test_Result = sym%YES
 
-      endif
+      ENDIF
 
-         endif
+         ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION TUT_Routine
+ END FUNCTION TUT_Routine
 
 !====================================================================
 ! Function Name: RTCT_Routine
@@ -3009,22 +3053,22 @@ end subroutine Compute_NWC
                       Sfc_Hgt_Stddev_3x3) &
                       RESULT (Test_Result)
 
-   integer (kind=INT4), INTENT(IN) :: Is_Land
-   integer (kind=INT4), INTENT(IN) :: Is_Coast
-   integer (kind=INT4), INTENT(IN) :: Is_Snow
-   integer (kind=INT4), INTENT(IN) :: Is_Cold_Surface
-   real (kind=real4), INTENT(IN) :: BT_Chn14
-   real (kind=real4), INTENT(IN) :: BT_Chn14_Min_3x3
-   real (kind=real4), INTENT(IN) :: BT_Chn14_Max_3x3
-   real (kind=real4), INTENT(IN) :: Sfc_Hgt_Stddev_3x3
-   integer (kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
+   INTEGER (KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER (KIND=INT4), INTENT(IN) :: Is_Coast
+   INTEGER (KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER (KIND=INT4), INTENT(IN) :: Is_Cold_Surface
+   REAL (KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL (KIND=REAL4), INTENT(IN) :: BT_Chn14_Min_3x3
+   REAL (KIND=REAL4), INTENT(IN) :: BT_Chn14_Max_3x3
+   REAL (KIND=REAL4), INTENT(IN) :: Sfc_Hgt_Stddev_3x3
+   INTEGER (KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
 
    Test_Result = sym%NO
 
-   if (Is_Cold_Surface == sym%NO) THEN
+   IF (Is_Cold_Surface == sym%NO) THEN
 
-       if (Is_Land == sym%NO) THEN
+       IF (Is_Land == sym%NO) THEN
 
             Test_Threshold = RTCT_OCN_THRESH
 
@@ -3032,25 +3076,25 @@ end subroutine Compute_NWC
 
             Test_Threshold = RTCT_LAND_THRESH
 
-       endif
+       ENDIF
 
        !
        !7K/km is the adiabatic lapse rate
        !
        Test_Threshold = Test_Threshold + 3.0 * 7.0*Sfc_Hgt_Stddev_3x3/1000.0
 
-       if ((Is_Coast == sym%NO) .AND.  &
+       IF ((Is_Coast == sym%NO) .AND.  &
            (Is_Snow == sym%NO) .AND.  &
            (BT_Chn14_Min_3x3 <= 300.0) .AND.  &
            (BT_Chn14_Max_3x3 - BT_Chn14 > Test_Threshold)) THEN
 
            Test_Result = sym%YES
 
-       endif
+       ENDIF
 
-   endif
+   ENDIF
 
- end FUNCTION RTCT_Routine
+ END FUNCTION RTCT_Routine
 
 !====================================================================
 ! Function Name: ETROP_Routine
@@ -3112,25 +3156,25 @@ end subroutine Compute_NWC
                         BT_Chn14_Stddev_3x3) &
                         RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Snow
-   integer(kind=INT4), INTENT(IN) :: Is_Land
-   integer(kind=INT4), INTENT(IN) :: Is_Coast
-   integer(kind=INT4), INTENT(IN) :: Is_Desert
-   integer(kind=INT4), INTENT(IN) :: Is_Cold_Surface
-   integer(kind=INT4), INTENT(IN) :: Land_Type
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Clr
-   real(kind=real4), INTENT(IN) :: Emiss_Tropo_Chn14
-   real(kind=real4), INTENT(IN) :: Emiss_Tropo_Chn14_LRC
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Stddev_3x3
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Value
-   real(kind=real4) :: Test_Threshold
-   real(kind=real4) :: Test_LRC_Threshold
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Coast
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Desert
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Cold_Surface
+   INTEGER(KIND=INT4), INTENT(IN) :: Land_Type
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: Emiss_Tropo_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: Emiss_Tropo_Chn14_LRC
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Stddev_3x3
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Value
+   REAL(KIND=REAL4) :: Test_Threshold
+   REAL(KIND=REAL4) :: Test_LRC_Threshold
 
    Test_Result = sym%NO
 
-   if ((BT_Chn14 > 170.0) .AND.  &
+   IF ((BT_Chn14 > 170.0) .AND.  &
        (BT_Chn14 < 315.0) .AND.  &
        (BT_Chn14_Clr > 240.0)) THEN
 
@@ -3138,75 +3182,75 @@ end subroutine Compute_NWC
        Test_Threshold = EMISS_CHN14_TROPO_LAND_THRESH
        Test_LRC_Threshold = EMISS_CHN14_TROPO_LRC_LAND_THRESH
        
-       if (Is_Land == sym%NO .AND. Is_Coast == sym%NO) THEN 
+       IF (Is_Land == sym%NO .AND. Is_Coast == sym%NO) THEN 
          Test_Threshold = EMISS_CHN14_TROPO_OCN_THRESH
          Test_LRC_Threshold = EMISS_CHN14_TROPO_LRC_OCN_THRESH
-       endif
-       if (Is_Snow == sym%YES) THEN 
+       ENDIF
+       IF (Is_Snow == sym%YES) THEN 
          Test_Threshold = EMISS_CHN14_TROPO_SNOW_THRESH
          Test_LRC_Threshold = EMISS_CHN14_TROPO_LRC_SNOW_THRESH
-       endif
-       if (Is_Desert == sym%YES) THEN 
+       ENDIF
+       IF (Is_Desert == sym%YES) THEN 
          Test_Threshold = EMISS_CHN14_TROPO_DESERT_THRESH
          Test_LRC_Threshold = EMISS_CHN14_TROPO_LRC_DESERT_THRESH
-       endif
-       if (Is_Cold_Surface == sym%YES) THEN 
+       ENDIF
+       IF (Is_Cold_Surface == sym%YES) THEN 
          Test_Threshold = EMISS_CHN14_TROPO_COLD_SURFACE_THRESH
          Test_LRC_Threshold = EMISS_CHN14_TROPO_LRC_COLD_SURFACE_THRESH
-       endif
+       ENDIF
 
        !--- select value to test
        Test_Value = Emiss_Tropo_Chn14
 
        !--- apply test
-       if (Test_Value > Test_Threshold) THEN
+       IF (Test_Value > Test_Threshold) THEN
          Test_Result = sym%YES
-       endif
+       ENDIF
 
        !--- apply LRC portion of test
-       if (Emiss_Tropo_Chn14_LRC /= Missing_Value_real4) THEN
+       IF (Emiss_Tropo_Chn14_LRC /= Missing_Value_REAL4) THEN
 
          !--- select value to test
          Test_Value = Emiss_Tropo_Chn14_LRC
         
          !--- apply test
-         if (Test_Value > Test_LRC_Threshold) THEN
+         IF (Test_Value > Test_LRC_Threshold) THEN
           Test_Result = sym%YES
-         endif
+         ENDIF
 
-       endif
+       ENDIF
 
 
 
       !--- apply a tigher threshold for highly nonunIForm pixels
       Test_Threshold = 0.20
-      if ((Is_Coast == sym%NO) .AND. (BT_Chn14_Stddev_3x3 > 0.5)) THEN
-         if (Test_Value > Test_Threshold) THEN
+      IF ((Is_Coast == sym%NO) .AND. (BT_Chn14_Stddev_3x3 > 0.5)) THEN
+         IF (Test_Value > Test_Threshold) THEN
              Test_Result = sym%YES
-         endif
-      endif 
+         ENDIF
+      ENDIF 
 
 
       !--- perform a restoral near land where sst field is often errorneous
       !--- select value to test
       Test_Value = Emiss_Tropo_Chn14
 
-      if (Test_Result == sym%YES) THEN
-         if ((Test_Value < 0.20) .AND.  &
+      IF (Test_Result == sym%YES) THEN
+         IF ((Test_Value < 0.20) .AND.  &
             (BT_Chn14_Stddev_3x3 < 1.0) .AND. &
             (Land_Type /= sym%LAND) .AND.  &
             (Land_Type /= sym%DEEP_OCEAN)) THEN
 
             Test_Result = sym%NO
 
-         end if 
-      end if 
+         END IF 
+      END IF 
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION ETROP_Routine
+ END FUNCTION ETROP_Routine
 
 !====================================================================
 ! Function Name: PFMFT_Routine
@@ -3260,17 +3304,17 @@ end subroutine Compute_NWC
                       BT_Chn14_Stddev_3x3) &
                       RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Land
-   integer(kind=INT4), INTENT(IN) :: Is_Snow
-   integer(kind=INT4), INTENT(IN) :: Is_Cold_Surface
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: BT_Chn15
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Clr
-   real(kind=real4), INTENT(IN) :: BT_Chn15_Clr
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Stddev_3x3
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
-   real(kind=real4) :: Test_Value
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Cold_Surface
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn15
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn15_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Stddev_3x3
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
+   REAL(KIND=REAL4) :: Test_Value
 
    Test_Result = sym%NO
 
@@ -3278,38 +3322,38 @@ end subroutine Compute_NWC
       (BT_Chn14_Clr - BT_Chn15_Clr > BTDIFF_CHN14_CHN15_MIN_FMFT_THRESH) .AND. &
       (BT_Chn14_Stddev_3x3 > PFMFT_BT_CHN14_STDDEV_3x3_THRESH)) THEN
 
-      if ((BT_Chn14 > 270.0) .AND. (BT_Chn14_Clr > 270.0)) then
+      IF ((BT_Chn14 > 270.0) .AND. (BT_Chn14_Clr > 270.0)) then
         Test_Value = (BT_Chn14 - BT_Chn15) -  &
                      (BT_Chn14_Clr - BT_Chn15_Clr) *(BT_Chn14 - 260.0) / &
                      (BT_Chn14_Clr - 260.0)
       ELSE
         Test_Value = (BT_Chn14 - BT_Chn15)
-      endif
+      ENDIF
  
  
       !-- set appropriate threshold
-      if (Is_Land == sym%NO) THEN
+      IF (Is_Land == sym%NO) THEN
             Test_Threshold = PFMFT_OCEAN_THRESH
       ELSE
             Test_Threshold = PFMFT_LAND_THRESH
-      endif
-      if (Is_Snow == sym%YES) THEN
+      ENDIF
+      IF (Is_Snow == sym%YES) THEN
             Test_Threshold = PFMFT_SNOW_THRESH
-      endif
-      if (Is_Cold_Surface == sym%YES) THEN
+      ENDIF
+      IF (Is_Cold_Surface == sym%YES) THEN
             Test_Threshold = PFMFT_COLD_SURFACE_THRESH
-      endif
+      ENDIF
 
       !--- Apply Test
-      if (Test_Value > Test_Threshold) THEN
+      IF (Test_Value > Test_Threshold) THEN
           Test_Result = sym%YES
-      endif
+      ENDIF
  
-   endif
+   ENDIF
  
    RETURN
 
- end FUNCTION PFMFT_Routine
+ END FUNCTION PFMFT_Routine
  
 !====================================================================
 ! Function Name: NFMFT_Routine
@@ -3360,46 +3404,46 @@ end subroutine Compute_NWC
                       BT_Chn15_Clr) &
                       RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Land
-   integer(kind=INT4), INTENT(IN) :: Is_Snow
-   integer(kind=INT4), INTENT(IN) :: Is_Desert
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: BT_Chn15
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Clr
-   real(kind=real4), INTENT(IN) :: BT_Chn15_Clr
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
-   real(kind=real4) :: Test_Value
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Desert
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn15
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn15_Clr
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
+   REAL(KIND=REAL4) :: Test_Value
 
    Test_Result = sym%NO
 
    !--- skip this test for elevated values of BT_Chn14-BT_Chn15
-   if (BT_Chn14 - BT_Chn15 > NFMFT_BTD_CHN14_CHN15_MAX_THRESH) THEN
+   IF (BT_Chn14 - BT_Chn15 > NFMFT_BTD_CHN14_CHN15_MAX_THRESH) THEN
       RETURN
-   endif
+   ENDIF
 
    !-- set appropriate threshold
    Test_Threshold = NFMFT_LAND_THRESH
-   if (Is_Land == sym%NO) THEN
+   IF (Is_Land == sym%NO) THEN
          Test_Threshold = NFMFT_OCEAN_THRESH
-   endif
-   if (Is_Desert == sym%YES) THEN
+   ENDIF
+   IF (Is_Desert == sym%YES) THEN
         Test_Threshold = NFMFT_DESERT_THRESH
-   endif
-   if (Is_Snow == sym%YES) THEN
+   ENDIF
+   IF (Is_Snow == sym%YES) THEN
         Test_Threshold = NFMFT_SNOW_THRESH
-   endif
+   ENDIF
 
    !--- Compute Value to Test
    Test_Value = (BT_Chn14 - BT_Chn15) -  &
                 (BT_Chn14_Clr - BT_Chn15_Clr)
 
    !--- Apply Test
-   if (Test_Value < Test_Threshold) THEN
+   IF (Test_Value < Test_Threshold) THEN
        Test_Result = sym%YES
-   endif
+   ENDIF
 
- end FUNCTION NFMFT_Routine
+ END FUNCTION NFMFT_Routine
 
 !====================================================================
 ! Function Name: RFMFT_Routine
@@ -3445,50 +3489,50 @@ end subroutine Compute_NWC
                       BTD_Chn14_Chn15_NWC) &
                       RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Land
-   integer(kind=INT4), INTENT(IN) :: Is_Coast
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: BT_Chn15
-   real(kind=real4), INTENT(IN) :: BTD_Chn14_Chn15_NWC
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Value
-   real(kind=real4) :: Test_Threshold
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Coast
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn15
+   REAL(KIND=REAL4), INTENT(IN) :: BTD_Chn14_Chn15_NWC
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Value
+   REAL(KIND=REAL4) :: Test_Threshold
 
    !--- initialize
    Test_Result = sym%NO
 
    !--- do not apply over hot land due to NWP surface temperature biases
-   if ((Is_Land == sym%YES) .AND. (BT_Chn14 > RFMFT_BT_CHN14_MAX_THRESH)) THEN
+   IF ((Is_Land == sym%YES) .AND. (BT_Chn14 > RFMFT_BT_CHN14_MAX_THRESH)) THEN
         Test_Result = sym%NO
         RETURN
-   endif
+   ENDIF
 
-   if (BT_Chn14 - BT_Chn15 < RFMFT_BTDIFF_CHN14_CHN15_MIN_THRESH) THEN
+   IF (BT_Chn14 - BT_Chn15 < RFMFT_BTDIFF_CHN14_CHN15_MIN_THRESH) THEN
         Test_Result = sym%NO
         RETURN
-   endif
+   ENDIF
 
-   if (Is_Coast == sym%YES) THEN
+   IF (Is_Coast == sym%YES) THEN
         Test_Result = sym%NO
         RETURN
-   endif
+   ENDIF
 
    !--- test for high departures - cirrus
 
    !--- pick thresholds
    Test_Threshold = RFMFT_HI_LAND_THRESH
-   if (Is_Land == sym%NO) THEN
+   IF (Is_Land == sym%NO) THEN
         Test_Threshold = RFMFT_HI_OCEAN_THRESH
-   endif
+   ENDIF
 
    !--- apply test
    Test_Value = abs((BT_Chn14 - BT_Chn15) - BTD_Chn14_Chn15_NWC)
 
-   if (Test_Value > Test_Threshold) THEN
+   IF (Test_Value > Test_Threshold) THEN
         Test_Result = sym%YES
-   endif
+   ENDIF
 
- end FUNCTION RFMFT_Routine
+ END FUNCTION RFMFT_Routine
 
 !====================================================================
 ! Function Name: RFMFT_Routine
@@ -3533,18 +3577,18 @@ end subroutine Compute_NWC
                           BT_Chn14_15min_Clr) &
                           RESULT(Test_Result)
 
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: BT_Chn14_Clr
-   real(kind=real4), INTENT(IN) :: BT_Chn14_15min
-   real(kind=real4), INTENT(IN) :: BT_Chn14_15min_Clr
-   real(kind=real4) :: Test_Threshold
-   integer(kind=INT1) :: Test_Result
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_15min
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14_15min_Clr
+   REAL(KIND=REAL4) :: Test_Threshold
+   INTEGER(KIND=INT1) :: Test_Result
 
    !--- initialize output
    Test_Result = sym%NO
 
-   if ((BT_Chn14_15min /= Missing_Value_real4) .AND. &
-       (BT_Chn14_15min_Clr /= Missing_Value_real4) .AND. &
+   IF ((BT_Chn14_15min /= Missing_Value_REAL4) .AND. &
+       (BT_Chn14_15min_Clr /= Missing_Value_REAL4) .AND. &
        (BT_Chn14_15min < 330.0) .AND. &
        (BT_Chn14_15min_Clr < 330.0)) THEN
 
@@ -3553,17 +3597,17 @@ end subroutine Compute_NWC
                         TEMPIR_BT_CHN14_15MIN_TEMPORAL_OFFSET
 
       !--- apply test
-      if ((BT_Chn14_15min - BT_Chn14) > Test_Threshold)  THEN
+      IF ((BT_Chn14_15min - BT_Chn14) > Test_Threshold)  THEN
 
         Test_Result = sym%YES
  
-      endif
+      ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION TEMPIR_Routine
+ END FUNCTION TEMPIR_Routine
 
 !====================================================================
 ! Function Name: RGCT_Routine
@@ -3610,13 +3654,13 @@ end subroutine Compute_NWC
                        RGCT_Threshold) &
                        RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Snow
-   integer(kind=INT4), INTENT(IN) :: Is_Glint
-   real(kind=real4), INTENT(IN) :: Sol_Zen
-   real(kind=real4), INTENT(IN) :: Refl_Chn2
-   real(kind=real4), INTENT(IN) :: RGCT_Threshold
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Glint
+   REAL(KIND=REAL4), INTENT(IN) :: Sol_Zen
+   REAL(KIND=REAL4), INTENT(IN) :: Refl_Chn2
+   REAL(KIND=REAL4), INTENT(IN) :: RGCT_Threshold
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
 
 
    !--- initialize
@@ -3624,25 +3668,25 @@ end subroutine Compute_NWC
 
 
    !--- apply test
-   if (Is_Snow == sym%NO .AND. Is_Glint == sym%NO) THEN
+   IF (Is_Snow == sym%NO .AND. Is_Glint == sym%NO) THEN
 
-        if (Sol_Zen < RGCT_Sol_Zen_Thresh) THEN 
+        IF (Sol_Zen < RGCT_Sol_Zen_Thresh) THEN 
 
             Test_Threshold = RGCT_Threshold
 
-            if (Refl_Chn2 > Test_Threshold) THEN
+            IF (Refl_Chn2 > Test_Threshold) THEN
 
                 Test_Result =  sym%YES
   
-            endif
+            ENDIF
 
-        endif
+        ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION RGCT_Routine
+ END FUNCTION RGCT_Routine
 
 !====================================================================
 ! Function Name: RVCT_Routine
@@ -3698,46 +3742,46 @@ end subroutine Compute_NWC
                         Refl_Chn2_Min_3x3) &
                         RESULT(Test_Result)
 
-   integer(kind=INT4),INTENT(IN) :: Is_Coast
-   integer(kind=INT4),INTENT(IN) :: Is_Snow
-   integer(kind=INT4),INTENT(IN) :: Is_Land
-   real(kind=real4),INTENT(IN) :: Refl_Chn2
-   real(kind=real4),INTENT(IN) :: Scat_Zen
-   real(kind=real4),INTENT(IN) :: Sol_Zen
-   real(kind=real4),INTENT(IN) :: Refl_Chn2_Clear_Stddev_3x3
-   real(kind=real4),INTENT(IN) :: Refl_Chn2_Min_3x3
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Coast
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Land
+   REAL(KIND=REAL4),INTENT(IN) :: Refl_Chn2
+   REAL(KIND=REAL4),INTENT(IN) :: Scat_Zen
+   REAL(KIND=REAL4),INTENT(IN) :: Sol_Zen
+   REAL(KIND=REAL4),INTENT(IN) :: Refl_Chn2_Clear_Stddev_3x3
+   REAL(KIND=REAL4),INTENT(IN) :: Refl_Chn2_Min_3x3
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold
 
    !--- initialize
    Test_Result = sym%NO
 
    !--- derive threshold
    Test_Threshold = 999.0
-   if ( (Is_Coast == sym%NO) .AND. (Is_Snow == sym%NO) .AND.  &
+   IF ( (Is_Coast == sym%NO) .AND. (Is_Snow == sym%NO) .AND.  &
         (Scat_Zen > RVCT_SCAT_ZEN_THRESH) .AND. &
         (Sol_Zen < RVCT_SOL_ZEN_THRESH)) THEN
 
       Test_Threshold = 5.0 
 
-      if (Is_Land == sym%YES) THEN
+      IF (Is_Land == sym%YES) THEN
            Test_Threshold = Test_Threshold + 5.0 + 4.0*Refl_Chn2_Clear_Stddev_3x3 
-      endif
+      ENDIF
 
-      if (Is_Land == sym%NO .OR. Refl_Chn2_Clear_Stddev_3x3 <= 0.0) THEN
+      IF (Is_Land == sym%NO .OR. Refl_Chn2_Clear_Stddev_3x3 <= 0.0) THEN
            Test_Threshold = 10.0
-      endif
+      ENDIF
 
       !--- apply test
-      if (Refl_Chn2 - Refl_Chn2_Min_3x3 > Test_Threshold) THEN
+      IF (Refl_Chn2 - Refl_Chn2_Min_3x3 > Test_Threshold) THEN
            Test_Result = sym%YES
-      endif
+      ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION RVCT_Routine
+ END FUNCTION RVCT_Routine
 
 !====================================================================
 ! Function Name: NIRREF_Chn5_Routine
@@ -3785,35 +3829,35 @@ end subroutine Compute_NWC
                          Refl_Chn5) &
                          RESULT(Test_Result)
 
-   integer(kind=INT4),INTENT(IN) :: Is_Coast
-   integer(kind=INT4),INTENT(IN) :: Is_Snow
-   real(kind=real4),INTENT(IN) :: Sol_Zen
-   real(kind=real4),INTENT(IN) :: Sfc_Hgt
-   real(kind=real4),INTENT(IN) :: NDSI
-   real(kind=real4),INTENT(IN) :: Refl_Chn5
-   integer(kind=INT1) :: Test_Result
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Coast
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Snow
+   REAL(KIND=REAL4),INTENT(IN) :: Sol_Zen
+   REAL(KIND=REAL4),INTENT(IN) :: Sfc_Hgt
+   REAL(KIND=REAL4),INTENT(IN) :: NDSI
+   REAL(KIND=REAL4),INTENT(IN) :: Refl_Chn5
+   INTEGER(KIND=INT1) :: Test_Result
 
     !--- initialize
     Test_Result = sym%NO
 
     !--- apply test
-    if ( (Is_Coast == sym%NO) .AND.  &
+    IF ( (Is_Coast == sym%NO) .AND.  &
          (Is_Snow == sym%YES) .AND.  &
          (Sol_Zen < NIRREF_CHN5_SOL_ZEN_THRESH) .AND.  &
          (NDSI < NIRREF_NDSI_THRESH_SNOW) .AND.  &
          (Sfc_Hgt < NIRREF_SFC_HGT_LIMIT)) THEN
 
-         if (Refl_Chn5 > NIRREF_CHN5_REFL_THRESH_SNOW) THEN
+         IF (Refl_Chn5 > NIRREF_CHN5_REFL_THRESH_SNOW) THEN
 
             Test_Result = sym%YES
 
-         endif
+         ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION NIRREF_Chn5_Routine
+ END FUNCTION NIRREF_Chn5_Routine
  
 !====================================================================
 ! Function Name: NIRREF_Chn7_Routine
@@ -3855,31 +3899,31 @@ end subroutine Compute_NWC
                          Refl_Chn7) &
                          RESULT(Test_Result)
 
-   integer(kind=INT4),INTENT(IN) :: Is_Snow
-   real(kind=real4),INTENT(IN) :: Sol_Zen
-   real(kind=real4),INTENT(IN) :: Sfc_Hgt
-   real(kind=real4),INTENT(IN) :: Refl_Chn7
-   integer(kind=INT1) :: Test_Result
+   INTEGER(KIND=INT4),INTENT(IN) :: Is_Snow
+   REAL(KIND=REAL4),INTENT(IN) :: Sol_Zen
+   REAL(KIND=REAL4),INTENT(IN) :: Sfc_Hgt
+   REAL(KIND=REAL4),INTENT(IN) :: Refl_Chn7
+   INTEGER(KIND=INT1) :: Test_Result
 
     !--- initialize
     Test_Result = sym%NO
 
     !--- apply test
-    if ( (Is_Snow == sym%YES) .AND.  &
+    IF ( (Is_Snow == sym%YES) .AND.  &
          (Sol_Zen < NIRREF_CHN7_SOL_ZEN_THRESH) .AND.  &
          (Sfc_Hgt < NIRREF_SFC_HGT_LIMIT)) THEN
 
-         if (Refl_Chn7 > NIRREF_CHN7_REFL_THRESH_SNOW) THEN
+         IF (Refl_Chn7 > NIRREF_CHN7_REFL_THRESH_SNOW) THEN
 
             Test_Result = sym%YES
 
-         endif
+         ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION NIRREF_Chn7_Routine
+ END FUNCTION NIRREF_Chn7_Routine
 
 !====================================================================
 ! Function Name: CIRREF_Routine
@@ -3924,31 +3968,31 @@ end subroutine Compute_NWC
                          Sol_Zen) &
                          RESULT(Test_Result)
 
-   integer(kind=INT4) :: Is_Snow
-   real(kind=real4), INTENT(IN) :: Refl_Chn4
-   real(kind=real4), INTENT(IN) :: Sfc_Hgt_Max_3x3
-   real(kind=real4), INTENT(IN) :: Sol_Zen
-   integer(kind=INT1) :: Test_Result
+   INTEGER(KIND=INT4) :: Is_Snow
+   REAL(KIND=REAL4), INTENT(IN) :: Refl_Chn4
+   REAL(KIND=REAL4), INTENT(IN) :: Sfc_Hgt_Max_3x3
+   REAL(KIND=REAL4), INTENT(IN) :: Sol_Zen
+   INTEGER(KIND=INT1) :: Test_Result
 
    !--- initialize
    Test_Result = sym%NO
 
    !--- apply test
-   if ( (Is_Snow == sym%NO) .AND.             &
+   IF ( (Is_Snow == sym%NO) .AND.             &
         (Sfc_Hgt_Max_3x3 < CIRREF_SFC_HGT_LIMIT) .AND. &
         (Sol_Zen < CIRREF_SOL_ZEN_THRESH)) THEN
 
-      if (Refl_Chn4 > CIRREF_THRESH) THEN
+      IF (Refl_Chn4 > CIRREF_THRESH) THEN
 
          Test_Result = sym%YES
 
-      endif
+      ENDIF
 
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION CIRREF_Routine
+ END FUNCTION CIRREF_Routine
 
 !====================================================================
 ! Function Name: EMISS4_Routine
@@ -3995,65 +4039,65 @@ end subroutine Compute_NWC
                          Emiss_Chn7_Clr, &
                          Sfc_Emiss_Chn7_RTM) &
                          RESULT (Test_Result)
-  integer(kind=INT4), INTENT(IN):: Is_Glint
-  integer(kind=INT4), INTENT(IN):: Is_Land
-  integer(kind=INT4), INTENT(IN):: Is_Snow
-  integer(kind=INT4), INTENT(IN):: Is_Desert
-  real(kind=real4), INTENT(IN):: BT_Chn14
-  real(kind=real4), INTENT(IN):: Emiss_Chn7
-  real(kind=real4), INTENT(IN):: Emiss_Chn7_Clr
-  real(kind=real4), INTENT(IN):: Sfc_Emiss_Chn7_RTM
-  integer(kind=INT1):: Test_Result
-  real(kind=real4):: Test_Value
-  real(kind=real4):: Test_Threshold
+  INTEGER(KIND=INT4), INTENT(IN):: Is_Glint
+  INTEGER(KIND=INT4), INTENT(IN):: Is_Land
+  INTEGER(KIND=INT4), INTENT(IN):: Is_Snow
+  INTEGER(KIND=INT4), INTENT(IN):: Is_Desert
+  REAL(KIND=REAL4), INTENT(IN):: BT_Chn14
+  REAL(KIND=REAL4), INTENT(IN):: Emiss_Chn7
+  REAL(KIND=REAL4), INTENT(IN):: Emiss_Chn7_Clr
+  REAL(KIND=REAL4), INTENT(IN):: Sfc_Emiss_Chn7_RTM
+  INTEGER(KIND=INT1):: Test_Result
+  REAL(KIND=REAL4):: Test_Value
+  REAL(KIND=REAL4):: Test_Threshold
 
   Test_Result = sym%NO
 
    !
    !---avoid glint
    !
-   if (Is_Glint == sym%YES) THEN   
+   IF (Is_Glint == sym%YES) THEN   
       RETURN
-   endif
+   ENDIF
 
    !
    !---avoid warm pixels
    !
-   if (BT_Chn14 > EMISS4_BT_CHN14_MAX_THRESH) THEN   
+   IF (BT_Chn14 > EMISS4_BT_CHN14_MAX_THRESH) THEN   
       RETURN
-   endif
+   ENDIF
 
    !--- Determine threshold based on surface condition
    Test_Threshold = EMISS4_Emiss_Chn7_Ocn_Thresh
-   if (Is_Land == sym%Yes) THEN
+   IF (Is_Land == sym%Yes) THEN
        Test_Threshold = EMISS4_Emiss_Chn7_Land_Thresh
-   endif
-   if (Is_Desert == sym%Yes) THEN
+   ENDIF
+   IF (Is_Desert == sym%Yes) THEN
        Test_Threshold = EMISS4_Emiss_Chn7_Desert_Thresh
-   endif
-   if (Is_Snow == sym%Yes) THEN
+   ENDIF
+   IF (Is_Snow == sym%Yes) THEN
        Test_Threshold = EMISS4_Emiss_Chn7_Snow_Thresh
-   endif
+   ENDIF
 
    !--- Augment in presence of very low emissive surfaces
-   if (Sfc_Emiss_Chn7_RTM < EMISS4_SFC_EMISS_CHN7_THRESH) then
+   IF (Sfc_Emiss_Chn7_RTM < EMISS4_SFC_EMISS_CHN7_THRESH) then
        Test_Threshold = Test_Threshold + 0.5
-   endif
+   ENDIF
 
    !--- Compute value to test
    Test_Value = (Emiss_Chn7 - Emiss_Chn7_Clr) / Emiss_Chn7_Clr
 
    !--- apply test
-   if (Test_Value > Test_Threshold) THEN
+   IF (Test_Value > Test_Threshold) THEN
 
        Test_Result = sym%YES
 
-   endif
+   ENDIF
 
 
    RETURN
 
-end FUNCTION EMISS4_Routine
+END FUNCTION EMISS4_Routine
 
 
 !====================================================================
@@ -4109,82 +4153,82 @@ end FUNCTION EMISS4_Routine
                        Sfc_Emiss_Chn7) &
                        RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN) :: Is_Land
-   integer(kind=INT4), INTENT(IN) :: Is_Day
-   integer(kind=INT4), INTENT(IN) :: Is_Snow
-   integer(kind=INT4), INTENT(IN) :: Is_Cold_Surface
-   real(kind=real4), INTENT(IN) :: BT_Chn14
-   real(kind=real4), INTENT(IN) :: Emiss_Chn7
-   real(kind=real4), INTENT(IN) :: Emiss_Chn7_Clr
-   real(kind=real4), INTENT(IN) :: Emiss_Chn7_NWC
-   real(kind=real4), INTENT(IN) :: Sfc_Emiss_Chn7
-   integer(kind=INT1) :: Test_Result
-   real(kind=real4) :: Test_Threshold 
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Land
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Day
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Snow
+   INTEGER(KIND=INT4), INTENT(IN) :: Is_Cold_Surface
+   REAL(KIND=REAL4), INTENT(IN) :: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN) :: Emiss_Chn7
+   REAL(KIND=REAL4), INTENT(IN) :: Emiss_Chn7_Clr
+   REAL(KIND=REAL4), INTENT(IN) :: Emiss_Chn7_NWC
+   REAL(KIND=REAL4), INTENT(IN) :: Sfc_Emiss_Chn7
+   INTEGER(KIND=INT1) :: Test_Result
+   REAL(KIND=REAL4) :: Test_Threshold 
 
    !--- initialize
    Test_Result = sym%NO
 
    !--- exclude day time data
-   if (Is_Day == sym%YES) THEN
+   IF (Is_Day == sym%YES) THEN
         RETURN
-   endif
+   ENDIF
 
    !--- exclude day time data
-   if (Is_Cold_Surface == sym%YES) THEN
+   IF (Is_Cold_Surface == sym%YES) THEN
         RETURN
-   endif
+   ENDIF
 
    !--- exclude very warm pixels
-   if (BT_Chn14 > ULST_BT_CHN14_MAX_THRESH) THEN
+   IF (BT_Chn14 > ULST_BT_CHN14_MAX_THRESH) THEN
         RETURN
-   endif
+   ENDIF
 
    !--- exclude pixels with large Emiss_Chn7
-   if (Emiss_Chn7 > ULST_EMISS_CHN7_MAX_THRESH) THEN
+   IF (Emiss_Chn7 > ULST_EMISS_CHN7_MAX_THRESH) THEN
         RETURN
-   endif
+   ENDIF
 
    !--- exclude deserts
-   if (Sfc_Emiss_Chn7 < ULST_EMISS_CHN7_SFC_THRESH) THEN
+   IF (Sfc_Emiss_Chn7 < ULST_EMISS_CHN7_SFC_THRESH) THEN
         RETURN
-   endif
+   ENDIF
 
    !--- exclude values whose clear values are suspect
-   if ((Emiss_Chn7_Clr < ULST_EMISS_CHN7_CLR_MIN_THRESH) .OR. &
+   IF ((Emiss_Chn7_Clr < ULST_EMISS_CHN7_CLR_MIN_THRESH) .OR. &
        (Emiss_Chn7_Clr > ULST_EMISS_CHN7_CLR_MAX_THRESH)) THEN
         RETURN
-   endif
+   ENDIF
 
 !  !--- Apply Test for Difference with NWC
    Test_Threshold = ULST_EMISS_CH7_NWC_THRESH
-   if (( Emiss_Chn7_NWC > 0) .AND. &
+   IF (( Emiss_Chn7_NWC > 0) .AND. &
        ( Emiss_Chn7_NWC - Emiss_Chn7 > Test_Threshold)) THEN
        Test_Result = sym%YES
-   endif
+   ENDIF
 
    !--- Set Threshold
    Test_Threshold = ULST_EMISS_CHN7_DIFF_THRESH_OCEAN
-   if (Is_Land == sym%YES) THEN
+   IF (Is_Land == sym%YES) THEN
         Test_Threshold = ULST_EMISS_CHN7_DIFF_THRESH_LAND
-   endif
-   if (Is_Snow == sym%YES) THEN
+   ENDIF
+   IF (Is_Snow == sym%YES) THEN
         Test_Threshold = ULST_EMISS_CHN7_DIFF_THRESH_SNOW
-   endif
+   ENDIF
 
    !--- Apply Test for DIFferences Relative to Clear Sky
-   if (Emiss_Chn7_Clr - Emiss_Chn7 > Test_Threshold) THEN
+   IF (Emiss_Chn7_Clr - Emiss_Chn7 > Test_Threshold) THEN
         Test_Result = sym%YES
-   endif
+   ENDIF
 
 
    !--- Bulk Threshold
-   if (Emiss_Chn7 < 0.80) THEN
+   IF (Emiss_Chn7 < 0.80) THEN
         Test_Result = sym%YES
-   endif
+   ENDIF
 
    RETURN
 
- end FUNCTION ULST_Routine
+ END FUNCTION ULST_Routine
 
 !====================================================================
 ! Function Name: TERM_THERM_STAB_Routine
@@ -4237,37 +4281,37 @@ end FUNCTION EMISS4_Routine
              Cmask_1Hr) &
       RESULT(Test_Result)
 
-   integer(kind=INT4), INTENT(IN):: Is_Land
-   real(kind=real4), INTENT(IN):: Sol_Zen
-   real(kind=real4), INTENT(IN):: BT_Chn11
-   real(kind=real4), INTENT(IN):: BT_Chn11_1Hr
-   real(kind=real4), INTENT(IN):: BT_Chn14
-   real(kind=real4), INTENT(IN):: BT_Chn14_1Hr
-   real(kind=real4), INTENT(IN):: BT_Chn15
-   real(kind=real4), INTENT(IN):: BT_Chn15_1Hr
-   integer(kind=INT4), INTENT(IN):: Cmask_1Hr
-   integer(kind=INT1):: Test_Result
-   real(kind=real4):: BT14_DIFf 
-   real(kind=real4):: Test_Value 
-   real(kind=real4):: Threshold
+   INTEGER(KIND=INT4), INTENT(IN):: Is_Land
+   REAL(KIND=REAL4), INTENT(IN):: Sol_Zen
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn11
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn11_1Hr
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn14
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn14_1Hr
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn15
+   REAL(KIND=REAL4), INTENT(IN):: BT_Chn15_1Hr
+   INTEGER(KIND=INT4), INTENT(IN):: Cmask_1Hr
+   INTEGER(KIND=INT1):: Test_Result
+   REAL(KIND=REAL4):: BT14_DIFf 
+   REAL(KIND=REAL4):: Test_Value 
+   REAL(KIND=REAL4):: Threshold
 
 
    !--- initialize
    Test_Result = sym%NO
 
    !--- exclude day time data
-   if (Sol_Zen < TERM_THERM_STAB_SOLZEN_MIN_THRESH .OR.  &
+   IF (Sol_Zen < TERM_THERM_STAB_SOLZEN_MIN_THRESH .OR.  &
        Sol_Zen > TERM_THERM_STAB_SOLZEN_MAX_THRESH) THEN
         RETURN
-   endif
+   ENDIF
    
    !--- exclude large B14_DIFF
    BT14_DIFf = ABS(BT_Chn14 - BT_Chn14_1Hr)
-   if (BT14_DIFf > TERM_THERM_STAB_BT14_DIFF_THRESH) THEN
+   IF (BT14_DIFf > TERM_THERM_STAB_BT14_DIFF_THRESH) THEN
         RETURN
-   endif
+   ENDIF
   
-   if (Is_Land == sym%YES) THEN
+   IF (Is_Land == sym%YES) THEN
         Test_Value = ABS((BT_Chn14_1Hr - BT_Chn11_1Hr) - &
             (BT_Chn14 - BT_Chn11))
         Threshold = TERM_THERM_STAB_BTD_14_11_THRESH
@@ -4276,17 +4320,17 @@ end FUNCTION EMISS4_Routine
         Test_Value = ABS((BT_Chn14_1Hr - BT_Chn15_1Hr) - &
             (BT_Chn14 - BT_Chn15))
         Threshold = TERM_THERM_STAB_BTD_14_15_THRESH
-   endif
+   ENDIF
    
    !--- Apply Test 
-   if (Test_Value < Threshold .and. Cmask_1Hr == sym%CLOUDY) THEN
+   IF (Test_Value < Threshold .and. Cmask_1Hr == sym%CLOUDY) THEN
         Test_Result = sym%YES
-   endif
+   ENDIF
 
 
    RETURN
 
- end FUNCTION Term_Therm_Stab_Routine
+ END FUNCTION Term_Therm_Stab_Routine
 
 
 !====================================================================
@@ -4324,29 +4368,29 @@ end FUNCTION EMISS4_Routine
                          Cos_Sen_Zen)&
                          RESULT(Test_Result) 
 
-   real(kind=real4), INTENT(IN):: Sfc_Hgt
-   real(kind=real4), INTENT(IN):: WaterVapor_Window_Correlation
-   real(kind=real4), INTENT(IN):: WaterVapor_Stddev
-   real(kind=real4), INTENT(IN):: Window_Stddev
-   real(kind=real4), INTENT(IN):: Total_Precipitable_Water
-   real(kind=real4), INTENT(IN):: Cos_Sen_Zen
-   integer(kind=INT1):: Test_Result
+   REAL(KIND=REAL4), INTENT(IN):: Sfc_Hgt
+   REAL(KIND=REAL4), INTENT(IN):: WaterVapor_Window_Correlation
+   REAL(KIND=REAL4), INTENT(IN):: WaterVapor_Stddev
+   REAL(KIND=REAL4), INTENT(IN):: Window_Stddev
+   REAL(KIND=REAL4), INTENT(IN):: Total_Precipitable_Water
+   REAL(KIND=REAL4), INTENT(IN):: Cos_Sen_Zen
+   INTEGER(KIND=INT1):: Test_Result
 
    Test_Result = sym%NO
 
-   if (Total_Precipitable_Water / Cos_Sen_Zen < CIRH2O_TPW_THRESH) THEN
+   IF (Total_Precipitable_Water / Cos_Sen_Zen < CIRH2O_TPW_THRESH) THEN
       RETURN
-   endif
+   ENDIF
 
-   if (WaterVapor_Window_Correlation > CIRH2O_CORRELATION_THRESH .AND.  &
+   IF (WaterVapor_Window_Correlation > CIRH2O_CORRELATION_THRESH .AND.  &
        WaterVapor_Stddev > CIRH2O_BT_CHN10_STDDEV_THRESH .AND. &
        Window_Stddev > CIRH2O_BT_CHN14_STDDEV_THRESH .AND. &
        Sfc_Hgt < CIRH2O_SFC_HGT_LIMIT) THEN
         Test_Result = sym%YES
-   endif
+   ENDIF
 
 
- end FUNCTION CIRH2O_Routine
+ END FUNCTION CIRH2O_Routine
 
 !====================================================================
 ! Function Name: Pearson_Corr
@@ -4385,29 +4429,29 @@ end FUNCTION EMISS4_Routine
 FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
                       Bad_Pixel_Two, &
                       Array_Width,Array_Hght) RESULT(Pearson_Corr_Coeff)
-   real(kind=real4), INTENT(IN), DIMENSION(:,:):: Array_One
-   real(kind=real4), INTENT(IN), DIMENSION(:,:):: Array_Two
-   integer(kind=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_One
-   integer(kind=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_Two
-   integer(kind=INT4), INTENT(IN):: Array_Width
-   integer(kind=INT4), INTENT(IN):: Array_Hght
-   real(kind=real4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_1
-   real(kind=real4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_2
-   real(kind=real8):: Pearson_Corr_Top_Term_1
-   real(kind=real8):: Pearson_Corr_Top_Term_2
-   real(kind=real8):: Pearson_Corr_Bottom_Term_1
-   real(kind=real8):: Pearson_Corr_Bottom_Term_2
-   real(kind=real4):: Pearson_Corr_Coeff
-   real(kind=real8):: Mean_Array_One
-   real(kind=real8):: Mean_Array_Two
-   real(kind=real8):: Sum_Array_One
-   real(kind=real8):: Sum_Array_Two
+   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_One
+   REAL(KIND=REAL4), INTENT(IN), DIMENSION(:,:):: Array_Two
+   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_One
+   INTEGER(KIND=INT1), INTENT(IN), DIMENSION(:,:):: Bad_Pixel_Two
+   INTEGER(KIND=INT4), INTENT(IN):: Array_Width
+   INTEGER(KIND=INT4), INTENT(IN):: Array_Hght
+   REAL(KIND=REAL4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_1
+   REAL(KIND=REAL4), DIMENSION(Array_Width,Array_Hght):: Pearson_Corr_Term_2
+   REAL(KIND=REAL8):: Pearson_Corr_Top_Term_1
+   REAL(KIND=REAL8):: Pearson_Corr_Top_Term_2
+   REAL(KIND=REAL8):: Pearson_Corr_Bottom_Term_1
+   REAL(KIND=REAL8):: Pearson_Corr_Bottom_Term_2
+   REAL(KIND=REAL4):: Pearson_Corr_Coeff
+   REAL(KIND=REAL8):: Mean_Array_One
+   REAL(KIND=REAL8):: Mean_Array_Two
+   REAL(KIND=REAL8):: Sum_Array_One
+   REAL(KIND=REAL8):: Sum_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
-   if (sum(Bad_Pixel_One) > 0 .OR. sum(Bad_Pixel_Two) > 0) THEN
+   IF (sum(Bad_Pixel_One) > 0 .OR. sum(Bad_Pixel_Two) > 0) THEN
       Pearson_Corr_Coeff = Missing_Value_Real4
       RETURN
-   endif
+   ENDIF
 
 
    Sum_Array_One = sum(Array_One)
@@ -4439,7 +4483,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
                          sqrt(Pearson_Corr_Bottom_Term_1 * &
                               Pearson_Corr_Bottom_Term_2)
    
- end FUNCTION Pearson_Corr
+ END FUNCTION Pearson_Corr
  
 !====================================================================
 ! Function Name: Term_Refl_Norm
@@ -4471,10 +4515,10 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
  FUNCTION Term_Refl_Norm(Cos_Sol_Zen,Reflectance)  &
           RESULT(Reflectance_Normalized)
 
-   real(kind=real4), INTENT(IN):: Cos_Sol_Zen
-   real(kind=real4), INTENT(IN):: Reflectance
-   real(kind=real4):: Reflectance_Normalized
-   real(kind=real4):: Norm_Param
+   REAL(KIND=REAL4), INTENT(IN):: Cos_Sol_Zen
+   REAL(KIND=REAL4), INTENT(IN):: Reflectance
+   REAL(KIND=REAL4):: Reflectance_Normalized
+   REAL(KIND=REAL4):: Norm_Param
 
    Reflectance_Normalized = Reflectance * Cos_Sol_Zen
 
@@ -4482,7 +4526,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
 
    Reflectance_Normalized = Reflectance_Normalized*Norm_Param 
 
- end FUNCTION Term_Refl_Norm
+ END FUNCTION Term_Refl_Norm
 
 !--------------------------------------------------------------------------
 ! The subroutines and functions to pack bytes
@@ -4632,7 +4676,7 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
 
 !--- place input byte into correct position
      temp_byte =0
-     temp_byte = ishft(INT(input_bytes(i_in),kind=INT2),word_bit_depth-bit_depth(i_in))   !first ishft
+     temp_byte = ishft(INT(input_bytes(i_in),KIND=INT2),word_bit_depth-bit_depth(i_in))   !first ishft
      temp_byte = ishft(temp_byte,bit_end - word_bit_depth) !second ishft
 
 !--- modify output byte
@@ -4656,15 +4700,15 @@ FUNCTION Pearson_Corr(Array_One,Array_Two,Bad_Pixel_One, &
 !
 !-----------------------------------------------------------------
 
-subroutine compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_max, data_min, data_uni)
+SUBROUTINE compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_max, data_min, data_uni)
                                                                                                            
-  integer (kind=int4), intent(in) :: dx, dy
-  integer (kind=int1), intent(in), dimension(:,:) :: space_mask
-  real (kind=real4), intent(in), dimension(:,:) :: data
-  real (kind=real4), intent(out), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
-  integer (kind=int4) :: nx, ny, nsub, nx_uni, ny_uni, astatus
-  integer (kind=int4) :: ielem, iline, ielem1, ielem2, iline1, iline2, elem_idx, line_idx, n_good
-  real (kind=real4), dimension(:), allocatable :: temp
+  INTEGER (kind=int4), intent(in) :: dx, dy
+  INTEGER (kind=int1), intent(in), dimension(:,:) :: space_mask
+  REAL (kind=real4), intent(in), dimension(:,:) :: data
+  REAL (kind=real4), intent(out), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
+  INTEGER (kind=int4) :: nx, ny, nsub, nx_uni, ny_uni, astatus
+  INTEGER (kind=int4) :: ielem, iline, ielem1, ielem2, iline1, iline2, elem_idx, line_idx, n_good
+  REAL (kind=real4), dimension(:), allocatable :: temp
   
   nx = size(data,1)
   ny = size(data,2)
@@ -4692,7 +4736,7 @@ subroutine compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_
       data_uni(ielem,iline) = missing_value_real4
       
       if ((data(ielem,iline) == missing_value_real4) .or. &
-          (space_mask(ielem,iline) == Sym%SPACE)) cycle
+          (space_mask(ielem,iline) == Sym%SPACE)) CYCLE
       
       ielem1 = max(1,ielem-dx)
       ielem2 = min(nx,ielem+dx)
@@ -4704,7 +4748,7 @@ subroutine compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_
         do elem_idx=ielem1, ielem2
           
           if ((data(elem_idx,line_idx) == missing_value_real4) .or. &
-              (space_mask(elem_idx,line_idx) == Sym%SPACE)) cycle
+              (space_mask(elem_idx,line_idx) == Sym%SPACE)) CYCLE
           
           n_good = n_good + 1
           temp(n_good) = data(elem_idx,line_idx)
@@ -4729,16 +4773,16 @@ subroutine compute_spatial_uniformity(dx, dy, space_mask, data, data_mean, data_
     stop
   endif
   
-end subroutine compute_spatial_uniformity
+END SUBROUTINE compute_spatial_uniformity
 
 !-----------------------------------------------------------------
 !
 !-----------------------------------------------------------------
 
-subroutine destroy_spatial_uniformity(data_mean, data_max, data_min, data_uni)
+SUBROUTINE destroy_spatial_uniformity(data_mean, data_max, data_min, data_uni)
                                                                                                            
-  real (kind=real4), intent(inout), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
-  integer (kind=int4) :: astatus
+  REAL (kind=real4), intent(inout), dimension(:,:), allocatable :: data_mean, data_max, data_min, data_uni
+  INTEGER (kind=int4) :: astatus
   
   deallocate(data_mean, data_max, data_min, data_uni,stat=astatus)
   if (astatus /= 0) then
@@ -4746,28 +4790,28 @@ subroutine destroy_spatial_uniformity(data_mean, data_max, data_min, data_uni)
     stop
   endif
   
-end subroutine destroy_spatial_uniformity
+END SUBROUTINE destroy_spatial_uniformity
 
 
 !-----------------------------------------------------------------
 ! GS/SAPF/GEOCAT LRC routine
 !-----------------------------------------------------------------
 
-subroutine gradient2d(grid, nx, ny, mask, min_valid, max_valid, threshold_value, xmax, ymax, num_steps)
+SUBROUTINE gradient2d(grid, nx, ny, mask, min_valid, max_valid, threshold_value, xmax, ymax, num_steps)
 
-  real (kind=real4), dimension(:,:), intent(in) :: grid
-  integer (kind=int4), intent(in) :: nx, ny
-  integer (kind=int1), dimension(:,:), intent(in) :: mask
-  real (kind=real4), intent(in) :: min_valid, max_valid, threshold_value
-  integer (kind=int4), dimension(:,:), intent(inout) :: xmax, ymax
-  integer (kind=int4), dimension(:,:), intent(inout), optional :: num_steps
+  REAL (kind=real4), dimension(:,:), intent(in) :: grid
+  INTEGER (kind=int4), intent(in) :: nx, ny
+  INTEGER (kind=int1), dimension(:,:), intent(in) :: mask
+  REAL (kind=real4), intent(in) :: min_valid, max_valid, threshold_value
+  INTEGER (kind=int4), dimension(:,:), intent(inout) :: xmax, ymax
+  INTEGER (kind=int4), dimension(:,:), intent(inout), optional :: num_steps
   
-  integer (kind=int4), parameter :: max_step = 150
-  integer (kind=int4) :: ielem, iline, im, jm, ip, jp, dx_start, dy_start, index
-  integer (kind=int4) :: direction, di, dj, i0, j0, i1, j1, ibad
-  real (kind=real4) :: min_grad, ref_value
-  integer (kind=int4), dimension(8) :: icol, irow, di_default, dj_default
-  real (kind=real4), dimension(8) :: grad
+  INTEGER (kind=int4), parameter :: max_step = 150
+  INTEGER (kind=int4) :: ielem, iline, im, jm, ip, jp, dx_start, dy_start, index
+  INTEGER (kind=int4) :: direction, di, dj, i0, j0, i1, j1, ibad
+  REAL (kind=real4) :: min_grad, ref_value
+  INTEGER (kind=int4), dimension(8) :: icol, irow, di_default, dj_default
+  REAL (kind=real4), dimension(8) :: grad
   
   dx_start = 2
   dy_start = 2
@@ -4843,9 +4887,12 @@ subroutine gradient2d(grid, nx, ny, mask, min_valid, max_valid, threshold_value,
     end do element_loop    
   end do line_loop
 
-end subroutine gradient2d
+END SUBROUTINE gradient2d
+
+
+
 
 !--------------------------------------------------------------------------
 ! End of the Module
 !--------------------------------------------------------------------------
-end module BASELINE_CLOUD_MASK
+END MODULE Baseline_Cloud_Mask

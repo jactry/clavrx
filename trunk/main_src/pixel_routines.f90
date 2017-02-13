@@ -108,12 +108,31 @@ MODULE PIXEL_ROUTINES
      integer:: Number_of_Elements
      integer:: Number_of_Lines
      integer:: Line_Idx
+     
+      logical :: dcomp_first_valid_line_avhrr_set = .false. 
 
      Number_of_Elements = Image%Number_Of_Elements
      Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
-      
+     
      line_loop: do Line_Idx = 1, Number_Of_Lines
-      
+          ! - change dcomp _mode according ch3a_on flag
+          ! - this change of dcomp_mode is only possible once for one file
+          ! - First daytime line determines dcomp mode for whole file
+          ! - AW 02/13/2017
+         if ( index(Sensor%Sensor_Name,'AVHRR') &
+            .and. .not. dcomp_first_valid_line_avhrr_set  &
+            .and. Geo%Solzen(1,line_idx) .lt. 82) then
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
+                dcomp_first_valid_line_avhrr_set = .true.
+                dcomp_mode = 1
+            end if
+            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
+               dcomp_first_valid_line_avhrr_set = .true.
+                dcomp_mode = 3
+            
+            end if
+         end if   
+         
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
          Chan_On_Flag_Per_Line(:,Line_Idx) = Chan_On_Flag_Default   
          
@@ -136,6 +155,11 @@ MODULE PIXEL_ROUTINES
          endif
 
       end do line_loop
+      
+     
+      
+      
+     
 
    end subroutine SET_CHAN_ON_FLAG
 

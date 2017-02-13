@@ -119,7 +119,7 @@ MODULE PIXEL_ROUTINES
           ! - this change of dcomp_mode is only possible once for one file
           ! - First daytime line determines dcomp mode for whole file
           ! - AW 02/13/2017
-         if ( index(Sensor%Sensor_Name,'AVHRR') &
+         if ( index(Sensor%Sensor_Name,'AVHRR') > 0 &
             .and. .not. dcomp_first_valid_line_avhrr_set  &
             .and. Geo%Solzen(1,line_idx) .lt. 82) then
             if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then

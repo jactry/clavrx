@@ -158,8 +158,8 @@ module AWG_CLOUD_HEIGHT
   real, private:: Btd_11um_12um_Btd_11um_85um_Covar
   real, private:: Btd_11um_67um_Btd_11um_133um_Covar
 
-  real, private, PARAMETER:: Dt_Dz_Strato = -6500.0 !K/m
-  real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
+! real, private, PARAMETER:: Dt_Dz_Strato = -0.0065 !K/m
+! real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
   real, private, PARAMETER:: MISSING_VALUE_REAL4 = -999.0
   integer(kind=int1), private, PARAMETER:: MISSING_VALUE_INTEGER1 = -128
   integer(kind=int4), private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
@@ -320,7 +320,6 @@ module AWG_CLOUD_HEIGHT
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
   real:: Lapse_Rate
-  real:: Abs_Lapse_Rate_dP_dZ
   real:: Delta_Cld_Temp_Sfc_Temp
 
   real:: Convergence_Criteria
@@ -431,12 +430,16 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
   integer(kind=int4), allocatable, dimension(:,:):: Line_Idx_LRC
   integer(kind=int1), allocatable, dimension(:,:):: Skip_LRC_Mask
+  real (kind=real4):: Tc_Opaque_Lrc
   real (kind=real4):: Bt_11um_Lrc
   real (kind=real4):: Bt_11um_Std
   real (kind=real4):: Btd_11um_67um_Std
   real (kind=real4):: Btd_11um_85um_Std
   real (kind=real4):: Btd_11um_12um_Std
   real (kind=real4):: Btd_11um_133um_Std
+  real (kind=real4):: T_Tropo
+  real (kind=real4):: Z_Tropo
+  real (kind=real4):: P_Tropo
 
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
@@ -649,6 +652,7 @@ module AWG_CLOUD_HEIGHT
    endwhere
   endif
 
+
   !--------------------------------------------------------------------------
   ! determine processing order of pixels
   !--------------------------------------------------------------------------
@@ -739,6 +743,9 @@ module AWG_CLOUD_HEIGHT
     ilrc = Elem_Idx_LRC(Elem_Idx,Line_Idx)
     jlrc = Line_Idx_LRC(Elem_Idx,Line_Idx)
     Cloud_Type = Output%Cloud_Type(Elem_Idx,Line_Idx)
+    T_Tropo = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
+    Z_Tropo = Input%Tropopause_Height(Elem_Idx,Line_Idx)
+    P_Tropo = Input%Tropopause_Pressure(Elem_Idx,Line_Idx)
     
     !--- Qc indices
     if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
@@ -1132,8 +1139,10 @@ module AWG_CLOUD_HEIGHT
   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
       (jlrc /= MISSING_VALUE_INTEGER4)) then
            Bt_11um_Lrc =  Input%Bt_11um(ilrc,jlrc)
+           Tc_Opaque_Lrc = Tc_Opaque(ilrc,jlrc)
   else
            Bt_11um_Lrc = MISSING_VALUE_REAL4
+           Tc_Opaque_Lrc = MISSING_VALUE_REAL4
   endif
 
   call COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
@@ -1142,7 +1151,7 @@ module AWG_CLOUD_HEIGHT
                        Input%Latitude(Elem_Idx,Line_Idx), &
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
-                       Bt_11um_Lrc, &
+                       Tc_Opaque_Lrc, &
                        Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                        Input%Snow_Class(Elem_Idx,Line_Idx), &
@@ -1150,6 +1159,10 @@ module AWG_CLOUD_HEIGHT
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
+
+   Diag%Array_1(Elem_Idx,Line_Idx) = T_Tropo
+   Diag%Array_2(Elem_Idx,Line_Idx) = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
+   Diag%Array_3(Elem_Idx,Line_Idx) = Z_Tropo
 
    if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "==========================================================="
@@ -1167,9 +1180,9 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-   if (lun_diag > 0) then 
+  if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "Cirrus Temperature = ", Temperature_Cirrus(Elem_Idx,Line_Idx)
-   endif 
+  endif 
 
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
@@ -1332,8 +1345,8 @@ Retrieval_Loop: do
   Tc_Temp = x(1)
   Ts_Temp = x(4)
 
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,T_Tropo,Z_Tropo,P_Tropo,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,T_Tropo,Z_Tropo,P_Tropo,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
   !--- compute 11um radiative transfer terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
@@ -1585,6 +1598,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
                                Output%Lower_Tc(Elem_Idx,Line_Idx), &
                                Output%Lower_Zc(Elem_Idx,Line_Idx), &
+                               T_Tropo, Z_Tropo,P_Tropo, &
                                Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif
 
@@ -1616,6 +1630,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx),&
+                            T_Tropo, Z_Tropo, P_Tropo,&
                             Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
  !--- check for NWP profile inversion and set meta data flag.
@@ -1737,6 +1752,7 @@ else
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx),&
                                Output%Lower_Tc(Elem_Idx,Line_Idx),&
                                Output%Lower_Zc(Elem_Idx,Line_Idx),&
+                               T_Tropo, Z_Tropo, P_Tropo,&
                                Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif 
 
@@ -1756,6 +1772,7 @@ else
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx), &
+                            T_Tropo, Z_Tropo, P_Tropo,&
                             Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
 endif                              !end successful retrieval if statement
@@ -1890,9 +1907,6 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
 
-Diag%Array_1 = Output%Tc
-Diag%Array_2 = Temperature_Cirrus
-
 endif
 
 end do pass_loop
@@ -2015,12 +2029,15 @@ end subroutine KNOWING_Z_COMPUTE_T_P
 !-----------------------------------------------------------------
 ! InterpoLate within profiles knowing T to determine P and Z
 !-----------------------------------------------------------------
-subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
+subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,T_Tropo,Z_Tropo,P_Tropo,klev,ierr,Level_Within_Inversion_Flag)
 
      integer (kind=int1), intent(in):: Cloud_Type
      real, intent(in):: T
      real, intent(out):: P
      real, intent(out):: Z
+     real, intent(in):: T_Tropo
+     real, intent(in):: Z_Tropo
+     real, intent(in):: P_Tropo
      integer, intent(out):: klev
      integer, intent(out):: ierr
      real:: dp
@@ -2059,13 +2076,13 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
      !--- check to see if colder than min, than assume above tropopause
      !--- and either limit height to tropopause or extrapoLate in stratosphere
-     if (T < minval(Temp_Prof_RTM(kstart:kend))) then
+     if (T < minval(Temp_Prof_RTM(kstart:kend)) .or. T < T_Tropo) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-           Z = Hght_Prof_RTM(kstart) + (T - Temp_Prof_RTM(kstart)) / Dt_Dz_Strato
-           call KNOWING_Z_COMPUTE_T_P(P,R4_Dummy,Z,klev)
+           Z = Z_Tropo + (T - T_Tropo) / Dt_Dz_Strato
+           P = P_Tropo + (Z - Z_Tropo) * Dp_Dz_Strato
          else
-           P = Press_Prof_RTM(kstart)
-           Z = Hght_Prof_RTM(kstart)
+           P = P_Tropo
+           Z = Z_Tropo
            klev = kstart + 1
          endif
          ierr = symbol%NO
@@ -2658,7 +2675,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            Latitude, &
                            Ttropo, &
                            T11um, &
-                           T11um_Lrc, &
+                           Tc_Opaque_Lrc, &
                            Tc_Opaque, &
                            Mu, &
                            Snow_Flag, &
@@ -2675,7 +2692,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4), intent(in):: Latitude
   real(kind=real4), intent(in):: Ttropo
   real(kind=real4), intent(in):: T11um
-  real(kind=real4), intent(in):: T11um_Lrc
+  real(kind=real4), intent(in):: Tc_Opaque_Lrc
   real(kind=real4), intent(in):: Tc_Opaque
   real(kind=real4), intent(in):: Mu
   integer(kind=int1), intent(in):: Snow_Flag
@@ -2696,11 +2713,14 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   !--- calipso values (not multiplier on uncer values)
   call COMPUTE_CIRRUS_APRIORI(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
 
+
+  !-- -initialize with the opaque cloud temperature
   Tc_Ap_Opaque = Tc_Opaque
 
-  if (T11um_Lrc /= MISSING_VALUE_REAL4) then
-      Tc_Ap_Opaque = T11um_Lrc
+  if (Tc_Opaque_Lrc /= MISSING_VALUE_REAL4) then
+      Tc_Ap_Opaque = Tc_Opaque_Lrc
   endif
+
   if (Tc_Ap_Opaque == MISSING_VALUE_REAL4) then
      Tc_Ap_Opaque = T11um
   endif
@@ -2716,40 +2736,55 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
 
   if (Cloud_Phase == symbol%ICE_PHASE) then
 
-!   if (Emiss_11um_Tropo <= 0.0) then
-!           Emiss_Weight = 0.0
-!   elseif (Emiss_11um_Tropo > 1.0) then
-!           Emiss_Weight = 1.0
-!   else
-!           Emiss_Weight = Emiss_11um_Tropo
-!   endif
+!==============
+    if (Emiss_11um_Tropo <= 0.0) then
+            Emiss_Weight = 0.0
+    elseif (Emiss_11um_Tropo > 1.0) then
+            Emiss_Weight = 1.0
+    else
+            Emiss_Weight = Emiss_11um_Tropo
+    endif
 
-!   Emiss_Weight2 = Emiss_Weight
+    Emiss_Weight2 = Emiss_Weight
 
-!   Tc_Ap = Emiss_Weight2*Tc_Ap_Opaque + &
-!           (1.0-Emiss_Weight2)*Tc_Ap_Cirrus
+    Tc_Ap = Emiss_Weight2*Tc_Ap_Opaque + &
+            (1.0-Emiss_Weight2)*Tc_Ap_Cirrus
 
-!   Tc_Ap_Uncer = Emiss_Weight2*Tc_Ap_Uncer_Opaque + &
-!           (1.0-Emiss_Weight2)*Tc_Ap_Uncer_Cirrus
+    Tc_Ap_Uncer = Emiss_Weight2*Tc_Ap_Uncer_Opaque + &
+            (1.0-Emiss_Weight2)*Tc_Ap_Uncer_Cirrus
 
-!   Ec_Ap = min(0.99,max(0.1,Emiss_Weight)) 
-!   Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
+    !---- for very thick clouds, we want to ignore the LRC to 
+    !---  to maintain spatial structure like overshooting columns
+    if (Emiss_11um_Tropo > 0.95 .and. Tc_Opaque /= MISSING_VALUE_REAL4) then
+      Tc_Ap = Tc_Opaque
+      Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
+    endif
 
-!   Beta_Ap = Beta_Ap_Ice
-!   Beta_Ap_Uncer = Beta_Ap_Uncer_Ice
+    !---- for very thin clouds, ignore opaque solution
+    if (Emiss_11um_Tropo < 0.5) then
+      Tc_Ap = Tc_Ap_Cirrus
+      Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+    endif
+
 
 !==============
-    Tc_Ap = min(Tc_Ap_Cirrus,Tc_Ap_Opaque)
-    Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+!   Tc_Ap = min(Tc_Ap_Cirrus,Tc_Ap_Opaque)
+!   Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+
+    !---- for very thick clouds, we want to ignore the LRC to 
+    !---  to maintain spatial structure like overshooting columns
+!   if (Emiss_11um_Tropo > 0.95 .and. Tc_Opaque /= MISSING_VALUE_REAL4) then
+!     Tc_Ap = Tc_Opaque
+!     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
+!   endif
+!==============
+
+    !--- emissivity and beta a priori
     Ec_Ap = min(0.99,max(0.1,Emiss_11um_Tropo)) 
     Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
     Beta_Ap = Beta_Ap_Ice
     Beta_Ap_Uncer = Beta_Ap_Uncer_Ice
 
-    if (Emiss_11um_Tropo > 0.90) then
-      Tc_Ap = Tc_Ap_Opaque
-      Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-    endif
 
   endif
 

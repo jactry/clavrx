@@ -832,6 +832,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ttropo_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ztropo_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ptropo_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_Nadir_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_12um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_85um_Tropo_Rtm
@@ -849,6 +851,7 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Background 
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Background 
+
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
 
@@ -1474,6 +1477,8 @@ subroutine CREATE_NWP_PIX_ARRAYS(dim1,dim2)
    allocate(Tpw_Nwp_Pix(dim1,dim2))
    allocate(Ozone_Nwp_Pix(dim1,dim2))
    allocate(Ttropo_Nwp_Pix(dim1,dim2))
+   allocate(Ztropo_Nwp_Pix(dim1,dim2))
+   allocate(Ptropo_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Spd_10m_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Dir_10m_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Spd_Cld_Top_Nwp_Pix(dim1,dim2))
@@ -1511,6 +1516,8 @@ subroutine RESET_NWP_PIX_ARRAYS()
    Tpw_Nwp_Pix = Missing_Value_Real4
    Ozone_Nwp_Pix = Missing_Value_Real4
    Ttropo_Nwp_Pix = Missing_Value_Real4
+   Ztropo_Nwp_Pix = Missing_Value_Real4
+   Ptropo_Nwp_Pix = Missing_Value_Real4
    Wnd_Spd_10m_Nwp_Pix = Missing_Value_Real4
    Wnd_Dir_10m_Nwp_Pix = Missing_Value_Real4
    Wnd_Spd_Cld_Top_Nwp_Pix = Missing_Value_Real4
@@ -1548,6 +1555,8 @@ subroutine DESTROY_NWP_PIX_ARRAYS()
    deallocate(Tpw_Nwp_Pix)
    deallocate(Ozone_Nwp_Pix)
    deallocate(Ttropo_Nwp_Pix)
+   deallocate(Ztropo_Nwp_Pix)
+   deallocate(Ptropo_Nwp_Pix)
    deallocate(Wnd_Spd_10m_Nwp_Pix)
    deallocate(Wnd_Dir_10m_Nwp_Pix)
    deallocate(Wnd_Spd_Cld_Top_Nwp_Pix)

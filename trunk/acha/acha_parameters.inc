@@ -24,6 +24,9 @@
  !------------------------------------------------------------
  integer(kind=INT4), parameter, private:: idiag_output = 0 ! (0=off, 1=on)
  real(kind=real4), parameter, private:: count_diag_max = 1000   ! maximum number of diagnostic files allowed
+ real(kind=real4), private, PARAMETER:: Dt_Dz_Strato = -0.0065 !K/m
+ real(kind=real4), private, PARAMETER:: Dp_Dz_Strato = -0.0150 !hpa/m
+ real(kind=real4), private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
 
  !--- set starting index value
  integer(kind=INT4), parameter, private:: Element_Idx_Min = 1

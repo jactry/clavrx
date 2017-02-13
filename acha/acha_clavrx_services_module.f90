@@ -30,6 +30,8 @@ module ACHA_SERVICES_MOD
        Tair_Nwp_Pix, &
        Tsfc_Nwp_Pix, &
        Ttropo_Nwp_Pix, &
+       Ztropo_Nwp_Pix, &
+       Ptropo_Nwp_Pix, &
        Psfc_Nwp_Pix, &
        Smooth_Nwp_Flag, &
        Process_Undetected_Cloud_Flag, &
@@ -109,6 +111,8 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Surface_Temperature
  real, dimension(:,:), pointer:: Surface_Air_Temperature
  real, dimension(:,:), pointer:: Tropopause_Temperature
+ real, dimension(:,:), pointer:: Tropopause_Height
+ real, dimension(:,:), pointer:: Tropopause_Pressure
  real, dimension(:,:), pointer:: Surface_Pressure
  real, dimension(:,:), pointer:: Surface_Elevation
  real, dimension(:,:), pointer:: Latitude

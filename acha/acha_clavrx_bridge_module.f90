@@ -67,8 +67,8 @@ module ACHA_CLAVRX_BRIDGE
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
 
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
-   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
+   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -132,6 +132,8 @@ module ACHA_CLAVRX_BRIDGE
      Input%Surface_Temperature => null()
      Input%Surface_Air_Temperature =>  null()
      Input%Tropopause_Temperature =>  null()
+     Input%Tropopause_Height =>  null()
+     Input%Tropopause_Pressure =>  null()
      Input%Surface_Pressure =>  null()
      Input%Surface_Elevation =>  null()
      Input%Latitude =>  null()
@@ -357,6 +359,8 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Temperature =>Tsfc_Nwp_Pix
    Input%Surface_Air_Temperature => Tair_Nwp_Pix
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
+   Input%Tropopause_Height => Ztropo_Nwp_Pix
+   Input%Tropopause_Pressure => Ptropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
    Input%Surface_Elevation => Sfc%Zsfc
    Input%Latitude => Nav%Lat

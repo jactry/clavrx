@@ -1,0 +1,587 @@
+#!/usr/bin/perl -w
+# LAST MODIFICATION: "Wed, 13 Jul 2005 11:33:22 -0400 (ajelenak)"
+# Author: Aleksandar Jelenak <Aleksandar.Jelenak@noaa.gov>
+# $Id$
+
+
+use strict;
+use Cwd qw(abs_path);
+use Getopt::Long;
+
+# Make sure there's a Makefile file.
+die "Makefile is missing in the current directory!\n" unless -e 'Makefile';
+
+# Default values for command-line options.
+my %opt = (
+            hdflib => '/usr/local/hdf/lib',
+            hdfinc => '/usr/local/hdf/include',
+            'with-lores-elev' => 0,
+            help => 0,
+          );
+
+
+#my %opt = (
+#            hdflib => '/usr/local/hdf/lib',
+#            hdfinc => '/usr/local/hdf/include',
+#            hdf5root => '/usr/local/hdf5/',
+#            'with-lores-elev' => 0,
+#            help => 0,
+#          );
+
+
+# Parse the command line.
+my @sargv = @ARGV;
+GetOptions(
+   \%opt,
+   'hdf4root=s',
+   'hdf5root=s',
+   'netcdflib=s',
+   'cmask_dir=s',
+   'baselinemask_dir=s',
+   'ctype_dir=s',
+   'acha_dir=s',
+   'ccl_dir=s',
+   'pfaast_dir=s',
+   'sasrab_dir=s',
+   'dncomp_dir=s',
+   'with-xlf90:s',
+   'with-ifort:s',
+   'with-gfortran:s',
+   'with-ifort_debug:s',
+   'with-szip:s',
+   'with-lores-elev',
+   'hdf5-default',
+   'with-vcld:s',
+   'static',
+   'help'
+) or die "Error parsing command-line options!\n";
+
+my $STATIC = "";
+if (exists($opt{'static'})) {
+  $STATIC = "-static";
+}
+
+# Compiler/linker settings.
+my %fc = (
+   xlf90 => {
+      fc => 'xlf90',
+      fflags => '-O2 -qmaxmem=20000 -bmaxdata:0x80000000 -qfree=f90 -qsuffix=f=f90',
+      fflags_pfast => '-O2 -qmaxmem=20000 -qfixed -qsave',
+      fflags_sasrab_f77 => '-O2 -qmaxmem=20000 -qfixed -qsave',
+      fflags_sasrab_f90 => '-O2 -qmaxmem=20000 -qsave',
+      ldflags => '-O2 -bexpall -brtl -qextname -bmaxdata:0x80000000',
+      cpp => '',
+      beconv => '',
+   },
+   gfortran => {
+      fc => "gfortran",
+#      fflags => '-O2 -ffast-math -funroll-loops -ffree-line-length-200',
+#      fflags_pfast => '-O2 -ffast-math -funroll-loops -ffixed-form -fno-automatic',
+#      fflags_sasrab_f77 => '-O2 -ffast-math -funroll-loops -ffixed-form -fno-automatic',
+#      fflags_sasrab_f90 => '-O2 -ffast-math -funroll-loops -fno-automatic',
+#      ldflags => '-O2',
+      fflags => "-O2 $STATIC -ffast-math -funroll-loops -fno-range-check -ffree-line-length-200",
+      fflags_pfast => "-O2 $STATIC -ffast-math -funroll-loops -ffixed-form -fno-automatic",
+      fflags_sasrab_f77 => "-O2 $STATIC -ffast-math -funroll-loops -ffixed-form -fno-automatic",
+      fflags_sasrab_f90 => "-O2 $STATIC -ffast-math -funroll-loops -fno-automatic",
+      ldflags => "-O2 $STATIC", 
+      cpp => "-cpp",
+      beconv => "-fconvert=big-endian",
+   },
+   ifort => {
+      fc => 'ifort',
+      fflags => '-O2 -assume byterecl',
+      fflags_pfast => '-O2 -assume byterecl -fixed',
+      fflags_sasrab_f77 => '-O2 -assume byterecl -fixed -save',
+      fflags_sasrab_f90 => '-O2 -assume byterecl -save',
+      ldflags => '-O2 -assume byterecl',
+      cpp => '-cpp',
+      beconv => '-convert big_endian',
+   }, 
+   ifort_debug => {
+      fc => 'ifort',
+      fflags => '-g -O0 -assume byterecl',
+      fflags_pfast => '-g -O0 -assume byterecl -fixed',
+      fflags_sasrab_f77 => '-g -O0 -assume byterecl -fixed -save',
+      fflags_sasrab_f90 => '-g -O0 -assume byterecl -save',
+      ldflags => '-g -O0 -assume byterecl',
+      cpp => '-cpp',
+      beconv => '-convert big_endian',
+   }
+);
+
+# Help.
+usage() if $opt{help};
+
+# Make sure the user has selected only one compiler.
+my $fcs = exists($opt{'with-xlf90'}) + exists($opt{'with-gfortran'}) +
+   exists($opt{'with-ifort'}) + exists($opt{'with-ifort_debug'});
+if ($fcs == 0)
+{
+    die "No compiler specified.\n";
+}
+elsif ($fcs != 1)
+{
+    die "More than one compiler specified.\n";
+}
+
+# Check the HDF directory.
+$opt{hdf4root} = abs_path($opt{hdf4root}) if $opt{hdf4root} =~ /^\./;
+$opt{hdf4root} =~ s/^~/$ENV{HOME}/;
+-d $opt{hdf4root} or die "Doesn't exist or not a directory: $opt{hdf4root}\n";
+
+$opt{netcdflib} = abs_path($opt{netcdflib}) if $opt{netcdflib} =~ /^\./;
+$opt{netcdflib} =~ s/^~/$ENV{HOME}/;                                                                                                                                                    
+-d $opt{netcdflib} or die "Doesn't exist or not a directory: $opt{netcdflib}\n";
+
+# Check the HDF5 directory.
+if (exists($opt{'hdf5root'})) {
+    $opt{hdf5root} = abs_path($opt{hdf5root}) if $opt{hdf5root} =~ /^\./;
+    $opt{hdf5root} =~ s/^~/$ENV{HOME}/;
+    -d $opt{hdf5root} or die "Doesn't exist or not a directory: $opt{hdf5root}\n";
+}
+
+# Check the SZIP directory.
+if (exists($opt{'with-szip'}) and length($opt{'with-szip'}))
+{
+   -d $opt{'with-szip'} or
+       die "Doesn't exist or not a directory: $opt{'with-szip'}\n";
+}
+
+# Generate linker options for the HDF lib.
+my $hdflibs = "-L$opt{hdf4root}/lib -I$opt{hdf4root}/include/"
+   . (exists($opt{'with-szip'})
+      and length($opt{'with-szip'}) ? " -L$opt{'with-szip'}" : '')
+   . " -lmfhdf -ldf -ljpeg"
+   . (exists($opt{'with-szip'}) ? ' -lsz' : '')
+   . " -lz";
+
+my $hdfincs = "-I$opt{hdf4root}/include";
+
+my $netcdflibs = "-L$opt{netcdflib}lib -I$opt{netcdflib}include -lnetcdf";
+
+# Inform about HDF5 libraries
+if (exists($opt{'hdf5root'}) || exists($opt{'hdf5-default'})) {
+    print "(Turning on HDF5)\n";
+}
+else
+{
+    print "(Turning off HDF5)\n";
+}
+
+# Determine the endianness of the system.
+my $isLittleEndian = unpack('c', pack('s', 1));
+my $isBigEndian = unpack('xc', pack('s', 1));
+die "Endianness test on this system failed!\n" unless $isBigEndian
+                                                   or $isLittleEndian;
+die "Endianness test indicates both big- and little-endian system!\n"
+   if $isBigEndian and $isLittleEndian;
+
+# Write configuration vars to a file.
+open CONFIG, '> config.mk' or die "open(config.mk) error: $!)\n";
+print CONFIG '# This file was generated on ' . localtime() . " by $ENV{USER}",
+   " with the following command-line arguments: @sargv.\n# System info: ",
+   `uname -a`;
+
+if (exists($opt{'with-ifort'}))
+{
+   if (length($opt{'with-ifort'}))
+   {
+      print CONFIG "fc = $opt{'with-ifort'}\n";
+   }
+   else
+   {
+      print CONFIG "fc = $fc{ifort}->{fc}\n";
+   }
+   print CONFIG "fflags = $fc{ifort}->{fflags}\n";
+   print CONFIG "fflags_pfast = $fc{ifort}->{fflags_pfast}\n";
+   print CONFIG "fflags_sasrab_f77 = $fc{ifort}->{fflags_sasrab_f77}\n";
+   print CONFIG "fflags_sasrab_f90 = $fc{ifort}->{fflags_sasrab_f90}\n";
+   print CONFIG "ldflags = $fc{ifort}->{ldflags}\n";
+   print CONFIG "cpp = $fc{ifort}->{cpp}\n";
+   print CONFIG "cppflags = ", $isBigEndian ? '-DBIG_ENDIAN' : '',
+      $opt{'with-lores-elev'} ? ' -DWITH_LORES_ELEV' : '', "\n";
+   print CONFIG "beconv = $fc{ifort}->{beconv}\n" if $isLittleEndian;
+   print CONFIG "cppflags_vcld = -DVCLD\n" if exists($opt{'with-vcld'});
+}
+elsif (exists($opt{'with-ifort_debug'}))
+{
+   if (length($opt{'with-ifort_debug'}))
+   {
+      print CONFIG "fc = $opt{'with-ifort_debug'}\n";
+   }
+   else
+   {
+      print CONFIG "fc = $fc{ifort_debug}->{fc}\n";
+   }
+   print CONFIG "fflags = $fc{ifort_debug}->{fflags}\n";
+   print CONFIG "fflags_pfast = $fc{ifort_debug}->{fflags_pfast}\n";
+   print CONFIG "fflags_sasrab_f77 = $fc{ifort_debug}->{fflags_sasrab_f77}\n";
+   print CONFIG "fflags_sasrab_f90 = $fc{ifort_debug}->{fflags_sasrab_f90}\n";
+   print CONFIG "ldflags = $fc{ifort_debug}->{ldflags}\n";
+   print CONFIG "cpp = $fc{ifort_debug}->{cpp}\n";
+   print CONFIG "cppflags = ", $isBigEndian ? '-DBIG_ENDIAN' : '',
+      $opt{'with-lores-elev'} ? ' -DWITH_LORES_ELEV' : '', "\n";
+   print CONFIG "beconv = $fc{ifort_debug}->{beconv}\n" if $isLittleEndian;
+   print CONFIG "cppflags_vcld = -DVCLD\n" if exists($opt{'with-vcld'});
+}
+elsif (exists($opt{'with-gfortran'}))
+{
+   if (length($opt{'with-gfortran'}))
+   {
+      print CONFIG "fc = $opt{'with-gfortran'}\n";
+   }
+   else
+   {
+      print CONFIG "fc = $fc{gfortran}->{fc}\n";
+   }
+   print CONFIG "fflags = $fc{gfortran}->{fflags}\n";
+   print CONFIG "fflags_pfast = $fc{gfortran}->{fflags_pfast}\n";
+   print CONFIG "fflags_sasrab_f77 = $fc{gfortran}->{fflags_sasrab_f77}\n";
+   print CONFIG "fflags_sasrab_f90 = $fc{gfortran}->{fflags_sasrab_f90}\n";
+   print CONFIG "ldflags = $fc{gfortran}->{ldflags}\n";
+   print CONFIG "cpp = $fc{gfortran}->{cpp}\n";
+   print CONFIG "cppflags = ", $isBigEndian ? '-DBIG_ENDIAN' : '',
+      $opt{'with-lores-elev'} ? ' -DWITH_LORES_ELEV' : '', "\n";
+   print CONFIG "beconv = $fc{gfortran}->{beconv}\n" if $isLittleEndian;
+   print CONFIG "cppflags_vcld = -DVCLD\n" if exists($opt{'with-vcld'});
+}
+else
+{
+   die "Not an AIX computer." unless $^O =~ /aix/i;
+   print CONFIG "xlf90 = 1\n";
+   if (length($opt{'with-xlf90'}))
+   {
+      print CONFIG "fc = $opt{'with-xlf90'}\n";
+   }
+   else
+   {
+      print CONFIG "fc = $fc{xlf90}->{fc}\n";
+   }
+
+   print CONFIG "fflags = $fc{xlf90}->{fflags}\n";
+   print CONFIG "fflags_pfast = $fc{xlf90}->{fflags_pfast}\n";
+   print CONFIG "fflags_sasrab_f77 = $fc{xlf90}->{fflags_sasrab_f77}\n";
+   print CONFIG "fflags_sasrab_f90 = $fc{xlf90}->{fflags_sasrab_f90}\n";
+   print CONFIG "ldflags = $fc{xlf90}->{ldflags}\n";
+   print CONFIG "cpp = $fc{xlf90}->{cpp}\n";
+   print CONFIG "cppflags = -WF", $isBigEndian ? ',-DBIG_ENDIAN' : '',
+      $opt{'with-lores-elev'} ? ',-DWITH_LORES_ELEV' : '', "\n";
+   print CONFIG "beconv = $fc{xlf90}->{beconv}\n" if $isLittleEndian;
+   print CONFIG "cppflags_vcld = -DVCLD\n" if exists($opt{'with-vcld'});
+}
+print CONFIG "hdflibs = $hdflibs\n";
+print CONFIG "hdfincs = $hdfincs\n";
+print CONFIG "netcdflibs = $netcdflibs\n";
+
+if (exists($opt{'hdf5root'})) {
+    print CONFIG "hdf5libs = -I$opt{hdf5root}include/ -L$opt{hdf5root}lib/\n";
+    print CONFIG "hdf5links = -lhdf5_fortran -lhdf5 -lz\n";
+ }
+ 
+if (exists($opt{'hdf5-default'})) {
+    print CONFIG "hdf5libs = -I/usr/local/hdf5/include/ -L/usr/local/hdf5/lib/\n";
+    print CONFIG "hdf5links = -lhdf5_fortran -lhdf5 -lz\n";
+ }
+  
+ 
+print CONFIG "lowres_elev = 1\n" if $opt{'with-lores-elev'};
+
+if (exists($opt{'with-vcld'}))
+{
+   if (length($opt{'with-vcld'}))
+   {
+      print CONFIG "export VCLD=$opt{'with-vcld'}\n";
+   }
+   else
+   {
+      print CONFIG "export VCLD=./volcat/\n";
+   }
+}
+
+if (exists($opt{'cmask_dir'}))
+{
+   if (length($opt{'cmask_dir'}))
+   {
+      print CONFIG "export CMASK=$opt{'cmask_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export CMASK=../cloud_mask/\n";
+   }
+}
+else
+{
+      print CONFIG "export CMASK=../cloud_mask/\n";
+
+}
+
+if (exists($opt{'baselinemask_dir'}))
+{
+   if (length($opt{'baselinemask_dir'}))
+   {
+      print CONFIG "export BASELINEMASK=$opt{'baselinemask_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export BASELINEMASK=../baseline_cloud_mask/\n";
+   }
+}
+else
+{
+      print CONFIG "export BASELINEMASK=../baseline_cloud_mask/\n";
+
+}
+
+if (exists($opt{'ctype_dir'}))
+{
+   if (length($opt{'ctype_dir'}))
+   {
+      print CONFIG "export CTYPE=$opt{'ctype_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export CTYPE=../cloud_type/\n";
+   }
+}
+else
+{
+      print CONFIG "export CTYPE=../cloud_type/\n";
+
+}
+
+if (exists($opt{'acha_dir'}))
+{
+   if (length($opt{'acha_dir'}))
+   {
+      print CONFIG "export ACHA=$opt{'acha_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export ACHA=../acha/\n";
+   }
+}
+else
+{
+      print CONFIG "export ACHA=../acha/\n";
+
+}
+if (exists($opt{'ccl_dir'}))
+{
+   if (length($opt{'ccl_dir'}))
+   {
+      print CONFIG "export CCL=$opt{'ccl_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export CCL=../ccl/\n";
+   }
+}
+else
+{
+      print CONFIG "export CCL=../ccl/\n";
+
+}
+if (exists($opt{'asos_dir'}))
+{
+   if (length($opt{'asos_dir'}))
+   {
+      print CONFIG "export ASOS=$opt{'asos_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export ASOS=../asos/\n";
+   }
+}
+else
+{
+      print CONFIG "export ASOS=../asos/\n";
+
+}
+if (exists($opt{'pfaast_dir'}))
+{
+   if (length($opt{'pfaast_dir'}))
+   {
+      print CONFIG "export PFAAST=$opt{'pfaast_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export PFAAST=../pfaast/\n";
+   }
+}
+else
+{
+      print CONFIG "export PFAAST=../pfaast/\n";
+
+}
+if (exists($opt{'sasrab_dir'}))
+{
+   if (length($opt{'sasrab_dir'}))
+   {
+      print CONFIG "export SASRAB=$opt{'sasrab_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export SASRAB=../sasrab/\n";
+   }
+}
+else
+{
+      print CONFIG "export SASRAB=../sasrab/\n";
+
+}
+if (exists($opt{'base_dir'}))
+{
+   if (length($opt{'base_dir'}))
+   {
+      print CONFIG "export BASE=$opt{'base_dir'}\n";
+   }
+   else
+   {
+      print CONFIG "export BASE=../cloud_base/\n";
+   }
+}
+else
+{
+      print CONFIG "export BASE=../cloud_base/\n";
+
+}
+
+
+if (exists($opt{'dncomp_dir'}))
+{
+   if (length($opt{'dncomp_dir'}))
+   {  
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
+      print CONFIG "export DNCOMP=$opt{'dncomp_dir'}\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
+     
+      
+   }
+   else
+   {   
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
+      print CONFIG "export DNCOMP=../dncomp/\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)  -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
+   }
+}
+else
+{
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
+      print CONFIG "export DNCOMP=../dncomp/\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)  -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
+
+}
+
+ 
+close CONFIG;
+print "The CLAVR-x source code is configured for build on this system.\n";
+
+exit;
+
+sub usage
+{
+   print <<HELP;
+CLAVR-x configure script. Run it in order to configure CLAVR-x build process.
+It should be executed in the CLAVR-x source directory.
+
+Usage: configure [command line options...]
+
+Command line options:
+
+   --with-ifort[=<path>]
+         Intel FORTRAN compiler will be used. A path to the executable is
+         optional.
+
+   --with-ifort_debug[=<path>]
+         Intel FORTRAN compiler in debug mode will be used. A path to the 
+         executable is optional.
+
+   --with-gfortran[=<path>]
+         GNU FORTRAN 95 compiler will be used. A path to the executable is
+         optional.
+
+   --static
+         Adds compilation flags for creating static binaries. Only supports gfortran currently.
+
+   --with-xlf90[=<path>]
+         IBM AIX FORTRAN compiler will be used. A path to the executable is
+         optional.
+
+   --hdf4root=<directory>
+         Path to the directory where HDF library and include files are stored.
+         Default is /usr/local/hdf/.
+
+   --hdf5root=<directory>
+         Path to the directory where HDF5 lib and include directories are.
+         Default is /usr/local/hdf5/.
+
+   --netcdflib=<directory>                                                                                                                                                              
+         Path to the directory where NetCDF library files are stored.                                                                                                                   
+         Default is /usr/local/netcdf/lib.
+
+  --cmask_dir=<directory>
+         Path to the directory where bayesian cloud mask files are stored.
+         Default is ../cloud_team_cmask/. This is an optional flag in case your
+         cloud mask code is in a different location.
+
+  --baselinemask_dir=<directory>
+         Path to the directory where baseline cloud mask files are stored.
+         Default is ../baseline_cloud_mask/. This is an optional flag in case your
+         cloud mask code is in a different location.
+
+  --ctype_dir=<directory>
+         Path to the directory where universal cloud type files are stored.
+         Default is ../akh_cloud_type_repo/. This is an optional flag in case your
+         cloud type code is in a different location.
+
+  --acha_dir=<directory>
+         Default is ../acha/. This is an optional flag in case your
+         ACHA code is in a different location.
+
+  --ccl_dir=<directory>
+         Default is ../ccl/. This is an optional flag in case your
+         CCL code is in a different location.
+
+  --asos_dir=<directory>
+         Default is ../asos/. This is an optional flag in case your
+         ASOS code is in a different location.
+
+  --sasrab_dir=<directory>
+         Default is ../sasrab/. This is an optional flag in case your
+         SASRAB code is in a different location.
+
+  --pfaast_dir=<directory>
+         Default is ../sasrab/. This is an optional flag in case your
+         PFAAST code is in a different location.
+
+  --base_dir=<directory>
+         Path to the directory where cloud base files are stored.
+         Default is ../cloud_base/. This is an optional flag in case your
+         base code is in a different location.
+
+  --dncomp_dir=<directory>
+         Path to the directory where DNCOMP code is stored.
+         Default is ../aw_dcomp/. This is an optional flag in case your
+         DCOMP code is in a different location.
+
+
+   --with-szip[=<directory>]
+         Path to the SZIP library, if required by the HDF library. If
+         directory not given, the argument of '--hdf4root' option used.
+
+   --with-lores-elev
+         Enable low resolution elevation map. Default is to use the high
+         resolution map.
+  
+   --with-vcld=[<directory>]
+  	          If the volcat algorithm are desired, set this option to the directory
+  	          where they are located.
+   --help
+         Display this help message.
+HELP
+   exit;
+}

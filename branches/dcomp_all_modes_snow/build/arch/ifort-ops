@@ -1,0 +1,5 @@
+FC=ifort
+FC77=ifort
+LDFLAGS_ARCH=
+FFLAGS_ARCH=-check bounds -check format -check uninit -implicitnone -stand f95 -traceback -i-static -warn none
+AR=ar r

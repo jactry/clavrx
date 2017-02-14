@@ -1,0 +1,9 @@
+FC=ifort
+FC77=ifort
+LDFLAGS_ARCH=
+FFLAGS_ARCH=-c -O2 -assume byterecl
+AR=ar r
+
+# Standard deviations returned by IR emissivity atlas differ 
+# slightly with ifort v12 for higher optimisation settings
+FFLAGS_ARCH_mod_iratlas=-g -O1

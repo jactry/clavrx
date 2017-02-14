@@ -27,54 +27,90 @@
 !--------------------------------------------------------------------------------------
 module GOES_MODULE
 
-use PIXEL_COMMON, only: &
-   CH1_COUNTS &
-   , image &
-   , ch &
-   , scan_time &
-   , nav &
-   , geo &
-   , sensor &
-   , temporary_file_name &
-   , temporary_data_dir &
-   , scan_number &
-   , space_mask &
-   , ileap &
-   , two_byte_temp &
-   , bad_pixel_mask &
-   , temp_pix_array_1 &
-   , sfc &
-   , ref_ch1_dark_composite &
-   , dark_composite_name &
-   , Goes_Scan_Line_Flag &
-   , dark_comp_data_dir &
-   , line_idx_min_segment &
-   , number_of_temporary_files &
-   , l1b_bzip2 &
-   , l1b_gzip
+   use PIXEL_COMMON, only: &
+      CH1_COUNTS &
+      , image &
+      , ch &
+      , scan_time &
+      , nav &
+      , geo &
+      , sensor &
+      , temporary_file_name &
+      , temporary_data_dir &
+      , scan_number &
+      , space_mask &
+      , ileap &
+      , two_byte_temp &
+      , bad_pixel_mask &
+      , temp_pix_array_1 &
+      , sfc &
+      , ref_ch1_dark_composite &
+      , dark_composite_name &
+      , Goes_Scan_Line_Flag &
+      , dark_comp_data_dir &
+      , line_idx_min_segment &
+      , number_of_temporary_files &
+      , l1b_bzip2 &
+      , l1b_gzip
    
-use CALIBRATION_CONSTANTS, only: &
-   planck_nu &
-   , planck_a1 &
-   , planck_a2 &
-   , sat_name &
-   , solar_ch20 &
-   , solar_ch20_nu &
-   , ew_ch20 &
-   , launch_date &
-   , ch1_dark_count &
-   , ch2_dark_count &
-   , ch1_gain_low_0 &
-   , ch1_degrad_low_1 &
-   , ch1_degrad_low_2
+   use CALIBRATION_CONSTANTS, only: &
+      planck_nu &
+      , planck_a1 &
+      , planck_a2 &
+      , sat_name &
+      , solar_ch20 &
+      , solar_ch20_nu &
+      , ew_ch20 &
+      , launch_date &
+      , ch1_dark_count &
+      , ch2_dark_count &
+      , ch1_gain_low_0 &
+      , ch1_degrad_low_1 &
+      , ch1_degrad_low_2
    
-use PLANCK
-use NUMERICAL_ROUTINES
-use FILE_UTILITY
-use VIEWING_GEOMETRY_MODULE
-implicit none
+   use PLANCK, only: &
+      PLANCK_TEMP_FAST &
+      , PLANCK_TEMP_FAST
+   
+   use NUMERICAL_TOOLS_MOD, only: &
+      compute_median
 
-public:: GET_GOES_HEADERS, &
+   use date_tools_mod, only: &
+         leap_year_fct 
+   
+   use FILE_TOOLS, only: &
+      get_lun &
+      , file_test
+   
+   use VIEWING_GEOMETRY_MODULE, only: &
+         SENSOR_ZENITH &
+      , SENSOR_AZIMUTH &
+      , RELATIVE_AZIMUTH & 
+      , glint_angle &
+      , scattering_angle &
+      , possol
+   
+   
+   use CX_CONSTANTS_MOD, only: &
+      real4 &
+      , int1 &
+      , int2 &
+      , int4 &
+      , real8 &
+      , sym &
+      , EXE_PROMPT &
+      , Missing_value_real4 &
+      , DTOR &
+      , Missing_value_int2
+   
+   use CX_SSEC_AREAFILE_MOD, only: &
+      area_header_type
+   
+   implicit none
+
+
+   private
+   public:: GET_GOES_HEADERS, &
          READ_GOES, &
          READ_GOES_SNDR, &
          GET_IMAGE_FROM_AREAFILE, &
@@ -88,41 +124,39 @@ public:: GET_GOES_HEADERS, &
          POST_PROCESS_GOES_DARK_COMPOSITE, &
          DARK_COMPOSITE_CLOUD_MASK
 
-private:: GET_GOES_NAVIGATION, &
+   private:: GET_GOES_NAVIGATION, &
           CALIBRATE_GOES_REFLECTANCE, &
           READ_IMGR_RP, &
           READ_IMGR_SIN, &
           READ_IMGR_MON, &
           LPOINT, &
           COMP_ES, &
-          COMP_LP, &
           INST2E, &
-          GPOINT, &
-          TIME50
-private
+          GPOINT
 
- integer(kind=int4), public, parameter:: Goes_Xstride = 1    ! goes is oversampled by 50% in x
- integer(kind=int4), public, parameter:: Goes_Sndr_Xstride = 1
- integer(kind=int4), private, parameter:: Num_4km_Scans_Goes_Fd = 2704 
- integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
- integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
- real, private, save:: Scan_rate    !scan rate in millsec / line
- character(len=1020), save, public:: Dark_Comp_Data_Dir_Temp
- integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
- integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
- real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
+   ! goes is   oversampled by 50% in x
+   integer(kind=int4), public, parameter:: Goes_Xstride = 1    
+   integer(kind=int4), public, parameter:: Goes_Sndr_Xstride = 1
+   integer(kind=int4), private, parameter:: Num_4km_Scans_Goes_Fd = 2704 
+   integer(kind=int4), private, parameter:: Num_4km_Elem_Goes_Fd = 5200 
+   integer(kind=int4), private, parameter:: time_for_fd_Scan_goes =  1560000 !milliseconds
+   real, private, save:: Scan_rate    !scan rate in millsec / line
+   character(len=1020), save, public:: Dark_Comp_Data_Dir_Temp
+   integer(kind=int4), private, parameter:: Goes_Imager_Byte_Shift = -5
+   integer(kind=int4), private, parameter:: Goes_Sounder_Byte_Shift = 0  !I don't know this
+   real(kind=real4), private:: GEO_ALTITUDE = 35786.0 !km
 
-!-----------------------------------------------------------------------------
-! define derived data types used for holding GVAR parameters
-!-----------------------------------------------------------------------------
-!
-!C	Imager ONA repeat sinusoid T.
-!C
+   !-----------------------------------------------------------------------------
+   ! define derived data types used for holding GVAR parameters
+   !-----------------------------------------------------------------------------
+   !
+   !C	Imager ONA repeat sinusoid T.
+   !C
 
-        type, public:: IMGR_SIN 
-          integer :: mag_Sinu
-          integer :: phase_ang_Sinu
-        end type IMGR_SIN
+   type, public:: IMGR_SIN 
+      integer :: mag_Sinu
+      integer :: phase_ang_Sinu
+   end type IMGR_SIN
 !C
 !C	Imager repeat monomial T.
 !C
@@ -145,54 +179,7 @@ private
            integer :: num_mono_Sinu
            type(IMGR_MON), dimension(4) :: monomial
         end type IMGR_RP
-!
-!     Define McIDAS area structre
-!
-type, public:: AREA_STRUCT
-   integer ::Area_Status           ! Area status
-!  integer(kind=int4) :: Swap_Bytes !whether or not bytes need to be swapped
-   integer ::Version_Num           ! Area version number
-   integer ::Sat_Id_Num            ! Satellite ID (SSS)
-   integer ::Img_Date              ! Year and Julian day (YYDDD)
-   integer ::Img_Time              ! Time of image (HHMMSS)
-   integer ::North_Bound           ! Upper left line in Sat coords (Y-Coord)
-   integer ::West_Vis_Pixel        ! Upper left element in Sat coords (X-Coord)
-   integer ::Z_Coor                ! Upper z-coord (Z-Coord)
-   integer ::Num_Line              ! Number of lines in image (Y-SIZE)
-   integer ::Num_Elem              ! Number of elememts in image (X-SIZE)
-   integer ::Bytes_Per_Pixel       ! Number of bytes per data element
-   integer ::Line_Res              ! Line resolution (Y-RES) 
-   integer ::Elem_Res              ! Element resolution (X-RES)
-   integer ::Num_Chan              ! Number of bands (Z-RES)
-   integer ::Num_Byte_Ln_Prefix    ! Number of bytes in line prefix (multiple of 4)
-   integer ::Proj_Num              ! Project number
-   integer ::Creation_Date         ! Creation date (YYDDD)
-   integer ::Creation_Time         ! Creation time (HHMMSS)
-   integer ::Sndr_Filter_Map       ! Filter map for soundings
-   integer ::img_id_num            ! Image ID number
-   integer, dimension(4) :: id     ! Reserved for radar appications
-   character(len=32):: comment     ! 32 char comments
-   integer ::pri_key_calib         ! Calibration colicil (area number)
-   integer ::pri_key_nav           ! Primary navigation codicil  (data)
-   integer ::sec_key_nav           ! Secondary navigation codicil (nav)
-   integer ::val_code              ! Validity code
-   integer, dimension(8) :: pdl    ! PDL in packed-byte format
-   integer ::band8                 ! Where band-8 came from
-   integer ::act_Img_Date          ! Actual image start day (YYDDD)
-   integer ::act_Img_Time          ! Actual image start time (HHMMSS)
-   integer ::act_Start_Scan        ! Actual start scan
-   integer ::len_prefix_doc        ! Length of prefix documentation (DOC)
-   integer ::len_prefix_calib      ! Length of prefix calibration (CAL)
-   integer ::len_prefix_lev        ! Length of prefix level (LEV)
-   character(len=4)::src_Type      ! Source type
-   character(len=4)::calib_Type    ! Calibration type
-   integer ::avg_or_Sample         ! Data was averaged (0) or sampled (1)
-   integer ::poes_Signal           ! LAC, GAC, HRPT
-   integer ::poes_up_down          ! POES ascending/descending
-   integer ::cal_offset            ! needed for SEVIRI
-   character(len=4) :: orig_Src_Type   ! Original source type of data
-   integer, dimension(7) ::reserved    ! Reserved (6 calib pointer)
-end type AREA_STRUCT
+
 !
 !	Define GVAR Navigation block
 !
@@ -262,11 +249,10 @@ end type AREA_STRUCT
           !--Needed for HRIT MTSAT
           real(KIND(0.0d0)) :: sub_lon
           integer(kind=int4) :: CFAC, LFAC, COFF, LOFF
-
-          !-- Needed for GOES-16 ABI navigation.
+			
+			          !-- Needed for GOES-16 ABI navigation.
           real(kind=real8) :: abiCFAC, abiLFAC, abiCOFF, abiLOFF ! ABI needs double precision
           integer(kind=int4) :: BRES ! Base resolution of AREA file.
-
         end type GVAR_NAV
   
       
@@ -303,24 +289,25 @@ end type AREA_STRUCT
 
 contains
 
-!----------------------------------------------------------------
-! read the goes constants into memory
-!-----------------------------------------------------------------
-subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
- character(len=*), intent(in):: Instr_Const_File
- integer:: ios0, erstat
- integer:: Instr_Const_lun
+   !----------------------------------------------------------------
+   ! read the goes constants into memory
+   !-----------------------------------------------------------------
+   subroutine READ_GOES_INSTR_CONSTANTS(Instr_Const_File)
+      character(len=*), intent(in):: Instr_Const_File
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+      Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old",position="rewind",action="read",iostat=ios0)
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_File),status="old" &
+          ,position="rewind",action="read",iostat=ios0)
 
- erstat = 0
- if (ios0 /= 0) then
-    erstat = 19
-    print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
-    stop 19
- endif
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening GOES constants file, ios0 = ", ios0
+         stop 19
+      endif
 
   read(unit=Instr_Const_lun,fmt="(a3)") sat_name
   read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
@@ -415,7 +402,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_Time_ms
@@ -458,19 +445,19 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
        write(Ichan_Goes_String,fmt="(I1)") Ichan_Goes
 
-       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) ) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//Ichan_Goes_String//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-          if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
           Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          if (L1b_Gzip == sym%YES) then
+          if (L1b_Gzip) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -479,7 +466,7 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
               Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2) then
               System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -497,9 +484,9 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 1 (GOES channel 1)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_1_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_1_Filename)
@@ -523,12 +510,12 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 20 (GOES channel 2)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -548,12 +535,12 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 27 (GOES channel 3)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -573,12 +560,12 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 31 (GOES channel 4)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -598,12 +585,12 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 32 (GOES channel 5)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -623,12 +610,12 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 33 (GOES channel 6)
-   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_6_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -653,31 +640,31 @@ subroutine READ_GOES(Segment_Number,Channel_1_Filename, &
    do Elem_Idx = 1,Image%Number_Of_Elements
      do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20)) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) ) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) ) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
@@ -741,7 +728,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    integer(kind=int4), intent(in):: Segment_Number
    character(len=*), intent(in):: Channel_1_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_Time_ms
@@ -797,19 +784,19 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
           write(ichan_goes_string,fmt="(I2.2)") ichan_goes
        endif
 
-       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(Ichan_Modis) ) then
 
           Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_"//trim(Ichan_Goes_String)//"_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-          if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
           else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
           endif
 
           Channel_X_Filename_Full_uncompressed = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
-          if (L1b_Gzip == sym%YES) then
+          if (L1b_Gzip) then
               System_String = "gunzip -c "//trim(Channel_X_Filename_Full_uncompressed)//".gz"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -818,7 +805,7 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
               Temporary_File_Name(Number_of_Temporary_Files) = trim(Channel_X_Filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2) then
               System_String = "bunzip2 -c "//trim(Channel_X_Filename_Full_uncompressed)//".bz2"// &
                                 " > "//trim(Channel_X_Filename_Full)
               call system(System_String)
@@ -835,12 +822,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 36 (GOES Sounder channel 2)
-   if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(36) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_2_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -862,12 +849,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 35 (GOES Sounder channel 3)
-   if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(35)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_3_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -888,12 +875,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
 
    !---   read channel 34 (GOES Sounder channel 4)
-   if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(34) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_4_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -914,12 +901,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
    !---   read channel 33 (GOES Sounder channel 5)
-   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(33)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_5_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -941,12 +928,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
 
    !---   read channel 32 (GOES Sounder channel 7)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_7_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -968,12 +955,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 31 (GOES Sounder channel 8)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_8_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -995,12 +982,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 30 (GOES Sounder channel 9)
-   if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(30) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_9_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1021,12 +1008,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 28 (GOES Sounder channel 10)
-   if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(28)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_10_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1047,12 +1034,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 27 (GOES Sounder channel 12)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_12_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1073,12 +1060,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 25 (GOES Sounder channel 13)
-   if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(25) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_13_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1100,12 +1087,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 24 (GOES Sounder channel 14)
-   if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(24) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_14_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1126,12 +1113,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 23 (GOES Sounder channel 16)
-   if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(23) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_16_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1152,12 +1139,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    endif
    
       !---   read channel 21 (GOES Sounder channel 17)
-   if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(21)) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_17_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1179,12 +1166,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    
    
       !---   read channel 20 (GOES Sounder channel 18)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_18_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1207,12 +1194,12 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
 
    
       !---   read channel 2 (GOES Sounder channel 19)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
        Channel_X_Filename = Channel_1_Filename(1:ipos-1) // "_19_" // &
                             Channel_1_Filename(ipos+3:ilen)
 
-       if (L1b_Gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (L1b_Gzip .or. l1b_bzip2) then
                Channel_X_Filename_Full = trim(Temporary_Data_Dir)//trim(Channel_X_Filename)
        else
                Channel_X_Filename_Full = trim(Image%Level1b_Path)//trim(Channel_X_Filename)
@@ -1240,90 +1227,90 @@ subroutine READ_GOES_SNDR(Segment_Number,Channel_1_Filename, &
    !--------------------------------------------------------------------------
    do Elem_Idx = 1,Image%Number_Of_Elements
      do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
-        if (Sensor%Chan_On_Flag_Default(36) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(36) ) then
            if (ch(36)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(36)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(36,ch(36)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(35) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(35) ) then
            if (ch(35)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(35)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(35,ch(35)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(34) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(34)) then
            if (ch(34)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(34)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(34,ch(34)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(33) ) then
            if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(33)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(33,ch(33)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
            if (ch(32)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(32)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
            if (ch(31)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(31)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(30) ) then
            if (ch(30)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(30)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(30,ch(30)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
 
-        if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(28) ) then
            if (ch(28)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(28)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(28,ch(28)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(27) ) then
            if (ch(27)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(27)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(27,ch(27)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(25) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(25) ) then
             if (ch(25)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(25)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(25,ch(25)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(24) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(24) ) then
            if (ch(24)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(24)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(24,ch(24)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(23) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(23) ) then
             if (ch(23)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
              ch(23)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(23,ch(23)%Rad_Toa(Elem_Idx,Line_Idx))
             endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(21) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(21) ) then
            if (ch(21)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(21)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(21,ch(21)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) ) then
            if (ch(20)%Rad_Toa(Elem_Idx,Line_Idx) > 0.0) then
             ch(20)%Bt_Toa(Elem_Idx,Line_Idx) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(Elem_Idx,Line_Idx))
            endif
@@ -1371,7 +1358,7 @@ end subroutine READ_GOES_SNDR
 !------------------------------------------------------------------------------------------------------
  subroutine GET_GOES_HEADERS(filename,AREAstr,NAVStr)
    character(len=*), intent(in):: filename
-   type(AREA_STRUCT), intent(out):: AREAstr
+   type(area_header_type), intent(out):: AREAstr
    type(GVAR_NAV), intent(out):: NAVstr
    integer:: i
    integer:: recnum
@@ -1576,7 +1563,7 @@ end subroutine READ_GOES_SNDR
 
  character(len=*), intent(in):: filename 
  integer(kind=int4), intent(in):: Byte_Shift 
- type (AREA_STRUCT), intent(in) :: AREAstr
+ type (area_header_type), intent(in) :: AREAstr
  integer(kind=int4), intent(in):: Xstride
  integer(kind=int4), intent(in):: Segment_Number
  integer(kind=int4), intent(in):: Num_Lines_Per_Segment
@@ -1599,7 +1586,7 @@ end subroutine READ_GOES_SNDR
  integer(kind=int2), dimension(:), allocatable:: Word_Buffer,imgbuf 
  integer(kind=int1), dimension(:), allocatable:: Word_Buffer_I1
  integer:: Nwords
- integer(kind=int4), DIMENSION(64) :: i4buf_temp
+ INTEGER(kind=int4), DIMENSION(64) :: i4buf_temp
  integer(kind=int4):: dummy
  integer(kind=int4), intent(inout):: Goes_Scan_Line_Flag
 
@@ -1607,13 +1594,13 @@ end subroutine READ_GOES_SNDR
  ! this is needed because the 0.64 and other channels have different values
  ! in the MTSAT HIRID format.
   
- call MREADF_INT(trim(filename)//CHAR(0),0,4,64,dummy,i4buf_temp)
+ call mreadf_int(trim(filename)//CHAR(0),0,4,64,dummy,i4buf_temp)
  bytes_per_pixel = i4buf_temp(11)
  num_byte_ln_prefix = i4buf_temp(15)
 
  image = 0
 
- bytes_per_line = Num_Byte_Ln_Prefix + (AREAstr%Num_Elem*Bytes_Per_Pixel) 
+ bytes_per_line = num_byte_ln_prefix + (AREAstr%Num_Elem*Bytes_Per_Pixel) 
 
  Words_In_Prefix = num_byte_ln_prefix / Bytes_Per_Pixel
 
@@ -1631,13 +1618,13 @@ end subroutine READ_GOES_SNDR
  allocate(Word_Buffer(Number_Of_Words_In_Segment), imgbuf(Number_Of_Words_In_Segment))
 
  !--- Account for different Bytes_Per_Pixel value (Some MTSAT data is 1 byte per pixel) 
- select case (Bytes_Per_Pixel)
+ select case (bytes_per_pixel)
 
    case(1)
 
      allocate(Word_Buffer_I1(Number_Of_Words_In_Segment))
 
-     call MREADF_INT(filename//CHAR(0), &
+     call mreadf_int(filename//CHAR(0), &
                  First_Byte_In_Segment,  &
                  bytes_per_pixel, &
                  Number_Of_Words_In_Segment, &
@@ -1652,9 +1639,9 @@ end subroutine READ_GOES_SNDR
   
    case(2)
 
-     call MREADF_INT(filename//CHAR(0), &
+     call mreadf_int(filename//CHAR(0), &
                  First_Byte_In_Segment,  &
-                 Bytes_Per_Pixel, &
+                 bytes_per_pixel, &
                  Number_Of_Words_In_Segment, &
                  Number_Of_Words_Read,Word_Buffer)
      
@@ -1674,12 +1661,12 @@ end subroutine READ_GOES_SNDR
 !    Word_End = min(Word_Start + AREAstr%Num_Elem,Number_Of_Words_In_Segment)
      Word_End = min(Word_Start + (AREAstr%Num_Elem-1),Number_Of_Words_In_Segment)
      Nwords = int(Word_End - Word_Start)/Xstride + 1
-     Image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
+     image(1:Nwords,Line_Idx) = ishft(Word_Buffer(Word_Start:Word_End:Xstride),Byte_Shift)
      
     Word_Start_Prefix = (Words_In_Prefix + AREAstr%Num_Elem)*(Line_Idx-1) + 1
 
     if (allocated(Scan_Time)) then
-      if (Words_In_Prefix < 116 .and. Goes_Scan_Line_Flag==sym%NO) then
+      if (Words_In_Prefix .LT. 116 .AND. Goes_Scan_Line_Flag==sym%NO) then
         Scan_Time(Line_Idx) = 0
       else
         if (Goes_Scan_Line_Flag==sym%NO) then
@@ -1708,7 +1695,7 @@ subroutine  GET_GOES_NAVIGATION(Segment_Number, Num_Lines_Per_Segment, &
                                 Num_Lines_Read,NAVstr,AREAstr, Xstride)
 
  type (GVAR_NAV), intent(in) :: NAVstr
- type (AREA_STRUCT), intent(in) ::AREAstr
+ type (area_header_type), intent(in) ::AREAstr
  integer(kind=int4), intent(in):: Segment_Number
  integer(kind=int4), intent(in):: Num_Lines_Per_Segment
  integer(kind=int4), intent(in):: Num_Lines_Read
@@ -1935,131 +1922,7 @@ end subroutine GET_GOES_NAVIGATION
 !
       return
       end subroutine INST2E
-!======================================================================
-!     T I M E 5 0
-!======================================================================
-      real*8 FUNCTION TIME50(btim)
-!
-!     AUTHOR:         Garrett Campbell and Kelly Dean
-!
-!     CREATED:        October 1994
-!   
-!     DEVELOPED FOR:  CIRA/COLORAdo STATE UNIVERSITY
-!
-!     PURPOSE:        
-!	Function TIME50 will take the epoch time from the GVAR NAVstr%and
-!      convert it to Minutes from January 1, 1950.  NOTE - Epoch time in
-!      the NAVstr%is not in the same format as other BCD times.C
-!
-!     REVISION:       0.0
-!
-!     ARGUMENTS:
-!       NAME:   type:       PURPOSE:                          IN/OUT:
-!	btim     BYTE        Binary coded data (BCD) time      IN
-!    
-!     FUNCTIONS:
-!       NAME:   type:       PURPOSE:                        LIBRARY:
-!       MOD     integer     Returns a remainder              Intrinsic
-!
-!       NAME:    PURPOSE:
-!       ****************  integer    *****************
-!       day_100   Part of day extracted from BCD
-!       day_10    Part of day extracted from BCD
-!       day_1     Part of day extracted from BCD
-!       Hour_10   Part of Hour extracted from BCD
-!       Hour_1    Part of Hour extracted from BCD
-!       min_10    Part of Minute extracted from BCD
-!       min_1     Part of Minute extracted from BCD
-!       NY        YEAR
-!       ND        DAY OF YEAR
-!       NH        HOUR
-!       NM        MINUTE
-!       ibt
-!       J         Loop control variable
-!       year_1000 Part of year extracted from BCD
-!       year_100  Part of year extracted from BCD
-!       year_10   Part of year extracted from BCD
-!       year_1    Part of year extracted from BCD
-!       ****************  real*8     *****************
-!       S        SECONDS - Double precision
-!
-!     -------------------------------------------------------
-!     --------------  ACTUAL CODE STARTS HERE  --------------
-!     -------------------------------------------------------
-!
-!     VARIABLE DECLARATION SECTION:
-!
-      byte btim(8),bt
-      integer NY,ND,NH,NM,J
-      integer year_1000, year_100, year_10, year_1
-      integer day_100, day_10, day_1, Hour_10, Hour_1, min_10, min_1
-      integer sec_10, sec_1, msec_100, msec_10, msec_1
-      integer ibt
-      real flywheel
-      real*8 S
-!
-!     Equivalence DECLARATION SECTION:
-!
-      equivalence (bt,ibt)
-!
-!     ******--------------------------------------------******
-!     ******--------  MAIN BODY STARTS HERE  -----------******
-!     ******--------------------------------------------******
-!
-!    Extract the Binary Coded Time into separate year, Julian day, Hour
-!    Minutes, seconds.
-!
-!     bt = btim(1)
-      day_1   = ibt/16
-      Hour_10 = mod(ibt,16)
-      bt = btim(2)
-      day_100  = mod(ibt/16,8)
-      day_10   = mod(ibt,16)
-      flywheel = mod(ibt,2)
-      bt = btim(3)
-      year_10   = ibt/16
-      year_1   = mod(ibt,16)
-      bt = btim(4)
-      year_1000 = ibt/16
-      year_100  = mod(ibt,16)
-      bt = btim(5)
-      msec_10 = ibt/16
-      msec_1  = mod(ibt,16)
-      bt = btim(6)
-      sec_1    = ibt/16
-      msec_100 = mod(ibt,16)
-      bt = btim(7)
-      min_1  = ibt/16
-      sec_10 = mod(ibt,16)
-      bt = btim(8)
-      Hour_1 = ibt/16
-      min_10 = mod(ibt,16)
-!
-!     Make the year, Julian day, Hour, Minute, and seconds.
-!
-      ny = year_1000 * 1000 + year_100 * 100 + year_10 * 10 + year_1
-      nd = day_100 * 100 + day_10 * 10 + day_1 
-      nh = Hour_10 * 10 + Hour_1
-      nm = min_10 * 10 + min_1
-      s  = sec_10 * 10.0D0 + sec_1 +                               &
-          msec_100 * 0.1D0 + msec_10 * 0.01D0 + msec_1 * 0.001D0
 
-!
-!     HERE WE CONVERT integer YEAR AND DAY OF YEAR TO NUMBER OF                 
-!     DAYS FROM 0 HOUR UT, 1950 JAN. 1.0                                        
-!     THIS CONVERTION IS BASED ON AN ALGORITHM BY FLIEGEL AND VAN               
-!     FLANDERN, COMM. OF ACM, VOL.11, NO. 10, OCT. 1968 (P.657)                 
-!
-      j = nd + 1461 * (ny + 4799) / 4 - 3 *     &
-         ( ( ny + 4899 ) / 100 ) / 4 - 2465022
-!
-!    Compute time in Minutes from January 1.0, 1950 as double precision.
-!
-      TIME50 = j * 1440.0D0 + nh * 60.0D0 + nm + s / 60.0D0
-!
-!
-      return
-      end FUNCTION TIME50
 !=======================================================================
 !    L M O D E L
 !=======================================================================
@@ -2554,11 +2417,11 @@ end subroutine GET_GOES_NAVIGATION
       SUBROUTINE LPOINT(INSTR,FLIP_FLG,ALPHA0,ZETA0,RLAT,RLON,IERR)
       IMPLICIT NONE
 !
-! CALLING parameterS
+! CALLING PARAMETERS
 !
-      integer*4 INSTR
+      INTEGER*4 INSTR
 ! INSTRUMENT CODE (1=IMAGER,2=SOUNDER)
-      integer*4 FLIP_FLG
+      INTEGER*4 FLIP_FLG
 ! S/C ORIENTATION FLAG (1=NORMAL,-1=INVERTED)
       REAL*8 ALPHA0
 ! ELEVATION ANGLE (RAD)
@@ -2568,7 +2431,7 @@ end subroutine GET_GOES_NAVIGATION
 ! LATITUDE IN RADIANS (OUTPUT)
       REAL*8 RLON
 ! LONGITUDE IN RADIANS (OUTPUT)
-      integer IERR
+      INTEGER IERR
 ! OUTPUT STATUS; 0 - POINT ON THE EARTH
 ! 1 - INSTRUMENT POINTS OFF EARTH
 !
@@ -2616,27 +2479,27 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************
 !
       REAL*8 PI
-      parameter (PI=3.141592653589793D0)
+      PARAMETER (PI=3.141592653589793D0)
       REAL*8 DEG
-      parameter (DEG=180.D0/PI)
+      PARAMETER (DEG=180.D0/PI)
       REAL*8 RAD
-      parameter (RAD=PI/180.D0)
+      PARAMETER (RAD=PI/180.D0)
 ! DEGREES TO RADIANS CONVERSION PI/180
       REAL*8 NOMORB
-      parameter (NOMORB=42164.365D0)
+      PARAMETER (NOMORB=42164.365D0)
 ! NOMINAL RADIAL DISTANCE OF SATELLITE (km)
       REAL*8 AE
-      parameter (AE=6378.137D0)
+      PARAMETER (AE=6378.137D0)
 ! EARTH EQUATORIAL RADIUS (km)
       REAL*8 FER
-      parameter (FER=1.D0/298.25D0)
+      PARAMETER (FER=1.D0/298.25D0)
 ! EARTH FLATTENING COEFFICIENT = 1-(BE/AE)
       REAL*4 AEBE2
-      parameter (AEBE2=1.D0/(1.D0-FER)**2)
+      PARAMETER (AEBE2=1.D0/(1.D0-FER)**2)
       REAL*4 AEBE3
-      parameter (AEBE3=AEBE2-1.)
+      PARAMETER (AEBE3=AEBE2-1.)
       REAL*4 AEBE4
-      parameter (AEBE4=(1.D0-FER)**4-1.)
+      PARAMETER (AEBE4=(1.D0-FER)**4-1.)
 !
 !***********************************************************************
 !     INCLUDE 'ELCOMM.INC'
@@ -2701,7 +2564,7 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************
 !**
 !** DESCRIPTION
-!** COMMON AREA FOR INSTRUMENT-RELATED CONTROL parameterS
+!** COMMON AREA FOR INSTRUMENT-RELATED CONTROL PARAMETERS
 !**
 !***********************************************************************
 !***********************************************************************
@@ -2711,7 +2574,7 @@ end subroutine GET_GOES_NAVIGATION
 ! LATITUDE/LONGITUDE, LINE/PIXEL AND INSTRUMENT CYCLES/INCREMENTS
 ! COORDINATES.
 !
-      integer*4 INCMAX(2)
+      INTEGER*4 INCMAX(2)
 ! NUMBER OF INCREMENTS PER CYCLE
       REAL*4 ELVMAX(2)
 ! BOUNDS IN ELEVATION (RADIANS)
@@ -2848,7 +2711,7 @@ end subroutine GET_GOES_NAVIGATION
 !***********************************************************************        
       subroutine GPOINT(RLAT,RLON,ALF,GAM,IERR)                                 
 !                                                                               
-!     CALLING parameterS                                                        
+!     CALLING PARAMETERS                                                        
 !                                                                               
       real*8   RLAT    ! GEOGRAPHIC LATITUDE IN RADIANS (INPUT)            
       real*8   RLON    ! GEOGRAPHIC LONGITUDE IN RADIANS (INPUT)           
@@ -2868,27 +2731,27 @@ end subroutine GET_GOES_NAVIGATION
 !     INCLUDE FILES                                                             
 !                                                                               
       real*8 PI                                                                 
-           parameter (PI=3.141592653589793D0)                                   
+           PARAMETER (PI=3.141592653589793D0)                                   
       real*8 DEG                                                                
-           parameter (DEG=180.D0/PI)                                            
+           PARAMETER (DEG=180.D0/PI)                                            
       real*8 RAD                                                                
-           parameter (RAD=PI/180.D0)                                            
+           PARAMETER (RAD=PI/180.D0)                                            
 !                    DEGREES TO RADIANS CONVERSION PI/180                       
       real*8 NOMORB                                                             
-           parameter (NOMORB=42164.365D0)                                       
+           PARAMETER (NOMORB=42164.365D0)                                       
 !                    NOMINAL RADIAL DISTANCE OF SATELLITE (km)                  
       real*8 AE                                                                 
-           parameter (AE=6378.137D0)                                            
+           PARAMETER (AE=6378.137D0)                                            
 !                    EARTH EQUATORIAL RADIUS (km)                               
       real*8 FER                                                                
-           parameter (FER=1.D0-(6356.7533D0/AE))                                
+           PARAMETER (FER=1.D0-(6356.7533D0/AE))                                
 !                    EARTH FLATTENING COEFFICIENT = 1-(BE/AE)                   
       real*4 AEBE2                                                              
-           parameter (AEBE2=1.D0/(1.D0-FER)**2)                                 
+           PARAMETER (AEBE2=1.D0/(1.D0-FER)**2)                                 
       real*4 AEBE3                                                              
-           parameter (AEBE3=AEBE2-1.)                                           
+           PARAMETER (AEBE3=AEBE2-1.)                                           
       real*4 AEBE4                                                              
-           parameter (AEBE4=(1.D0-FER)**4-1.)
+           PARAMETER (AEBE4=(1.D0-FER)**4-1.)
       real*8 XS(3)                                                              
 !                      NORMALIZED S/C POSITION IN ECEF COORDINATES              
       real*8 BT(3,3)                                                            
@@ -3059,106 +2922,7 @@ end subroutine GET_GOES_NAVIGATION
 !
       return
       end subroutine COMP_ES
-!======================================================================
-!     C O M P _ L P
-!======================================================================
-      subroutine COMP_LP( NAVstr, ELEV, SCAN, RL, RP )
-!
-!     AUTHOR:         KELLY DEAN
-!
-!     CREATED:        January 1995
-!   
-!     DEVELOPED FOR:  CIRA/COLORAdo STATE UNIVERSITY
-!
-!     PURPOSE:        
-!	  Subroutine COMP_LP converts elevation and scan angles to the
-!       fractional line and pixel numbers.
-!
-!     REVISION:       0.0
-!
-!     ARGUMENTS:
-!       NAME:   type:       PURPOSE:                        IN/OUT:
-!	 NAVstr   Structure   Navigation information         IN
-!	 ELEV	  real*8     Elevation angle (rad)           IN
-!	 SCAN	  real*8:    Scan angle (rad)                IN
-!	 RL	  real*8     Line Number                     OUT
-!	 RP	  real*8     Pixel Number                    OUT
-!
-!     CONSTANTS:
-!       NAME:    PURPOSE:
-!       ****************  real*8       *****************
-!  	elvln    Elevation angle per detector line (rad)
-! 	elvmax   Bounds in elevation
-!	scnmax   Bounds in scan angle
-!	scnpx    Scan angle per pixel (rad)
-!
-!     -------------------------------------------------------
-!     --------------  ACTUAL CODE STARTS HERE  --------------
-!     -------------------------------------------------------
-!
-!     INCLUDE DECLARATION SECTION:
-!
-!     include 'kdf.inc'
-!
-!     CONSTANT DECLARATION SECTION:
-!
-      integer incmax(2) /6136,2805/
-      real*8  elvmax(2) / 0.2208960D0, 0.22089375D0/
-      real*8  elvln(2)  /28.0D-6,    280.0D-6/
-      real*8  elvinc(2) / 8.0D-6,     17.5D-6/
-      real*8  scnmax(2) / 0.245440D0,  0.2454375D0 /
-      real*8  scnpx(2)  /16.0D-6,    280.0D-6/
-      real*8  scninc(2) /16.0D-6,     35.0D-6/
-!
-!     VARIABLE DECLARATION SECTION:
-!
-      type(GVAR_NAV):: NAVstr
-      real*8 ELEV, SCAN, RL, RP
-!
-!     ******--------------------------------------------******
-!     ******--------  MAIN BODY STARTS HERE  -----------******
-!     ******--------------------------------------------******
-!
-      if ( NAVstr%instr == 1 ) then
-!	Recompute elevation and scan biases based on user inputs of
-!	cycles and increments obtained from GVAR.
-       elvmax(NAVstr%instr) = ( NAVstr%ns_cyl *      &
-                               incmax(NAVstr%instr) +      &
-                               NAVstr%ns_inc ) *      &
-                               elvinc(NAVSTR%instr)
-       scnmax(NAVstr%instr) = ( NAVstr%ew_cyl *     &
-                                incmax(NAVstr%instr) +      &
-                                NAVstr%ew_inc ) *           &
-                                scninc(NAVstr%instr)
-!       Compute fractional line number.
-      RL = ( ELVMAX(NAVstr%instr) - ELEV ) / ELVLN(NAVstr%instr) 
-      RL = RL + 4.5D0
-!       Compute fractional pixel number.
-       RP = ( SCNMAX(NAVstr%instr) + SCAN ) / SCNPX(NAVstr%instr)+1.0D0 
-      else if ( NAVstr%instr == 2 ) then
-!       Recompute elevation and scan biases based on user inputs of
-!       cycles and increments obtained from GVAR.
-        elvmax(NAVstr%instr)  = ( (9 - NAVstr%ns_cyl) *    &
-                                incmax(NAVstr%instr) -     &
-                                NAVstr%ns_inc ) *     &
-                                elvinc(NAVstr%instr)   
-        scnmax(NAVstr%instr) = ( NAVstr%ew_cyl *     &
-                                incmax(NAVstr%instr) +    & 
-                                NAVstr%ew_inc ) *     &
-                                scninc(NAVstr%instr)
-!       Compute fractional line number.
-        RL = ( ELVMAX(NAVstr%instr) - ELEV ) / ELVLN(NAVstr%instr) 
-        RL = RL + 2.5D0
-!       Compute fractional pixel number.
-        RP = ( SCNMAX(NAVstr%instr)+SCAN ) / SCNPX(NAVstr%instr)+1.0D0 
-      else
-!      Unknown instrument.....
-       RL = 0.0D0
-       RP = 0.0D0
-      endif
-!
-      return
-      end subroutine COMP_LP
+
 !======================================================================
 ! End of CIRA GOES IMAGER ROUTINES
 !======================================================================
@@ -3229,99 +2993,90 @@ end subroutine GET_GOES_NAVIGATION
 !
 ! buf = an int2 vector of the areafile words on a line including the prefix
 !-----------------------------------------------------------------------------
-subroutine PRINT_PREFIX(Buf, Ms_Time)
+subroutine PRINT_PREFIX(buf, ms_Time)
 
-  integer (kind=int2), dimension(:), INTENT(in) :: Buf
-  integer (kind=int4), intent(out) :: Ms_Time
-  real (kind=real4):: Frac_Hours
-  integer, dimension(16):: ITIMES
-  integer :: year,dayofyr,Hour,minute,sec,msec
+  integer (kind=int2), DIMENSION(:), INTENT(in) :: buf
+  integer (kind=int4), INTENT(out) :: ms_Time
+  real (kind=real4):: frac_Hours
+  integer ITIMES(16)
+  integer year,dayofyr,Hour,minute,sec,msec
   real (kind=real4) :: Minute_Time
   integer (kind=int2), dimension(128) :: buf2
-! logical*1 :: ldoc(256)
-  integer(kind=int1) :: ldoc(256)
+  logical*1 :: ldoc(256)
 
-! integer, parameter :: LOC = 4  ! imager value, from mcidas code
-! integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
-! integer, parameter :: LOC = 0  ! sounder value, from mcidas code
+!  integer, parameter :: LOC = 4  ! imager value, from mcidas code
+!  integer, parameter :: LOC = -1   ! value experimentally determined to work for CLAVRx. Shifted over 2 words, hence -1
+!  integer, parameter :: LOC = 0  ! sounder value, from mcidas code
   integer, parameter :: LOC = 1   ! value experimentally determined to work for CLAVRx.
-
   integer:: min_size
 
   equivalence(buf2, ldoc)
   
 ! caused error on 1km
-! buf2(:) = buf(:128)
+!  buf2(:) = buf(:128)
 
   ! works but does not solve above problem
   min_size = min(size(buf2), size(buf))
   buf2(1:min_size) = buf(1:min_size)
 
-  call UNPKTIME (ldoc ,itimes,9+LOC)
- 
-! print *, "itimes = ", itimes 
-  Year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
-  Dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
+  CALL UNPKTIME (ldoc ,ITIMES,9+LOC)
+  
+  year = itimes(1)*1000 + itimes(2)*100 + itimes(3)*10 + itimes(4)
+  dayofyr = itimes(5)*100 + itimes(6)*10 + itimes(7)
   Hour = itimes(8)*10 + itimes(9)
-  Minute  = itimes(10)*10 + itimes(11)
-  Sec  = itimes(12)*10 + itimes(13)
-  Msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
+  minute  = itimes(10)*10 + itimes(11)
+  sec  = itimes(12)*10 + itimes(13)
+  msec = itimes(14)*100 + itimes(15)*10 + itimes(16)
 
 ! PRINT STATEMENT KEPT for verification
 !      write (6,6005) year,dayofyr,Hour,minute,sec,msec
 !6005  FORMAT ('time: year',i5,' day of year',i4,' hh:mm:ss ',i2,1h:,i2,1h:,i2,' msec',i4)
 !      read *
   !Calculate miliseconds since midnight of current day
-   Ms_Time = (((Hour * 60 * 60) + (Minute * 60) + Sec) * 1000) + Msec
+   ms_Time = (((Hour * 60 * 60) + (minute * 60) + sec) * 1000) + msec
  
   !Calculates fractions of an Hour since midnight of current day
   Minute_Time = minute + (((msec / 1000.0) + sec) / 60.0 )
-  Frac_Hours = Hour + (Minute_Time / 60.0)
+  frac_Hours = Hour + (Minute_Time / 60.0)
 
-! print *, 'PREFIX TIME ', Hour, Minute, Sec, Msec, Minute_Time, Frac_Hours
 
 end subroutine PRINT_PREFIX
 
 
-!-------------------------------------------------------------------------------------------
 ! FIXME: provisional routine -- from Mcidas, extracts line date and time from data buffer
 ! Minimally modified to compile with gfortran options 
-!-------------------------------------------------------------------------------------------
 subroutine UNPKTIME (LDOC,ITIMES,LOC)
-
 !C LOC is 13 for sounder,  11 for imager
 !CCC      integer IDOC(256)                    ! This array is NOT USED -- 10/24/2003  JPN
-
   integer ITIMES(16)
 
-  integer mask1
-  integer mask2
+  integer mask1, mask2
   integer mask3
 
-! logical lword
-! logical*1, intent(in) :: ldoc(:)
-
-  integer(kind=int1):: lword
-  integer(kind=int1), intent(in) :: ldoc(:)
+  logical lword
+!  logical*1 ldoc(256)
+  logical*1, intent(in) :: ldoc(256)
 
   integer LOC       
-  integer i,k,iword 
+  integer I,K,iword 
 
   equivalence (lword,iword)
   data mask1 /z'0000000F'/, mask2 /z'000000F0'/
   data mask3 /z'000000FF'/
   !C
   K = 0
-  do i=1, 8
+  !      do 1 I=1,8
+  do I=1, 8
      lword = ldoc(LOC+i)
      iword = iand(iword,mask3)
-     k = k + 1
+     K = K + 1
      ITIMES(k) = iand(iword,mask2)
      ITIMES(k) = ISHFT(ITIMES(k),-4)
-     k = k + 1
+     K = K + 1
      ITIMES(k) = iand(iword,mask1)
+     !1        CONTINUE
   end do
-
+  return
 end subroutine UNPKTIME
 
 !----------------------------------------------------------------------
@@ -3329,7 +3084,7 @@ end subroutine UNPKTIME
 !----------------------------------------------------------------------
 subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
 
- type(AREA_STRUCT), intent(in):: AREAstr
+ type(area_header_type), intent(in):: AREAstr
  character(len=9):: Goes_Name
  character(len=4):: Year_String
  character(len=3):: Jday_String
@@ -3426,7 +3181,7 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     Dark_Composite_Name = trim(Goes_Name)//"_"//Year_String//"_"// &
                            Jday_String//"_"//Time_String// &
                            "_drk_ch1_pix.dat"
-    Does_File_Exist = file_exists(trim(Dark_Comp_Data_Dir_Temp)// &
+    Does_File_Exist = file_test(trim(Dark_Comp_Data_Dir_Temp)// &
                                   trim(Dark_Composite_Name))
 
     !-- if found, exit loop
@@ -3438,11 +3193,11 @@ subroutine DETERMINE_DARK_COMPOSITE_NAME(AREAstr)
     !--- test for existence - assume gzip compressed
     Dark_Composite_Name = trim(Dark_Composite_Name)//".gz"
 
-    Does_File_Exist = file_exists(trim(Dark_Comp_Data_Dir_Temp)// &
+    Does_File_Exist = file_test(trim(Dark_Comp_Data_Dir_Temp)// &
                                   trim(Dark_Composite_Name))
 
     !-- if found, exit loop
-    if (Does_File_Exist .neqv. .false.) then
+    if (Does_File_Exist ) then
         print *, 'Found: '//trim(Dark_Composite_Name)
         exit
     endif
@@ -3460,11 +3215,11 @@ subroutine READ_DARK_COMPOSITE_COUNTS(Segment_Number,Xstride,Dark_Composite_File
    integer(kind=int4), intent(in):: Segment_Number
    integer(kind=int4), intent(in):: Xstride
    character(len=*), intent(in):: Dark_Composite_Filename
-   type (AREA_STRUCT), intent(in) :: AREAstr_Image
+   type (area_header_type), intent(in) :: AREAstr_Image
    integer(kind=int2), dimension(:,:), intent(out):: Ch1_Dark_Composite_Counts
    integer:: Io_Status
 
-   type (AREA_STRUCT), save :: AREAstr_Dark
+   type (area_header_type), save :: AREAstr_Dark
    integer:: Dark_Lun_Header
    integer, save:: Dark_Lun_Data
    integer, save:: Element_Offset
@@ -3751,7 +3506,7 @@ line_loop:  DO Line_Idx = 1, Num_Lines
 
    !--- check for valid data
    if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle 
 
    ELem_Idx_1 = max(1,min(Num_Elements,Elem_Idx - N_box))
    ELem_Idx_2 = max(1,min(Num_Elements,Elem_Idx + N_box))
@@ -3782,81 +3537,83 @@ end do element_loop
    Temp_Pix_Array_1 =  0.0
 
 end subroutine POST_PROCESS_GOES_DARK_COMPOSITE
-!---------------------------------------------------------------------------
-!
-!---------------------------------------------------------------------------
-subroutine DARK_COMPOSITE_CLOUD_MASK(Cloud_Mask)
+   !---------------------------------------------------------------------------
+   !
+   !---------------------------------------------------------------------------
+   subroutine DARK_COMPOSITE_CLOUD_MASK(Cloud_Mask)
 
-   integer(kind=int1), dimension(:,:),  intent(inout):: Cloud_Mask
-   integer:: Elem_Idx
-   integer:: Line_Idx
-   integer:: Num_Elements
-   integer:: Num_Lines
-   real, parameter:: Solzen_Max_Threshold = 60.0
-   real, parameter:: Ref_Delta_Cloud = 10.0
-   real, parameter:: Ref_Delta_Clear = 5.0
+      integer(kind=int1), dimension(:,:),  intent(inout):: Cloud_Mask
+      integer:: Elem_Idx
+      integer:: Line_Idx
+      integer:: Num_Elements
+      integer:: Num_Lines
+      real, parameter:: Solzen_Max_Threshold = 60.0
+      real, parameter:: Ref_Delta_Cloud = 10.0
+      real, parameter:: Ref_Delta_Clear = 5.0
   
-   Num_Elements = size(Cloud_Mask(:,1)) 
-   Num_Lines = size(Cloud_Mask(1,:)) 
+      Num_Elements = size(Cloud_Mask(:,1)) 
+      Num_Lines = size(Cloud_Mask(1,:)) 
  
-element_loop:   Do Elem_Idx = 1, Num_Elements
+      element_loop:   Do Elem_Idx = 1, Num_Elements
 
-line_loop:  DO Line_Idx = 1, Num_Lines
+         line_loop:  DO Line_Idx = 1, Num_Lines
 
-   !--- check for valid data
-   if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
-   if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
-   if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
-   if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
-   if (Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
+            !--- check for valid data
+            if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle 
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) cycle 
+            if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Max_Threshold) cycle 
+            if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) cycle 
+            if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
+            if (Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle 
 
-   !---  if clear or prob clear, look for cloud
-   if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or.      &
-       Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
+            !---  if clear or prob clear, look for cloud
+            if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or.      &
+                & Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
 
-       if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) > Ref_Delta_Cloud) then
-          Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLOUDY
-       endif
+               if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) > Ref_Delta_Cloud) then
+                  Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLOUDY
+               end if
 
-   endif
+            end if
 
-   !---  if cloudy or prob cloudy, look for clear
-   if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY .or.      &
-       Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY) then
+            !---  if cloudy or prob cloudy, look for clear
+            if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY .or.      &
+               Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY) then
 
-       if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) < Ref_Delta_Clear) then
-          Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
-       endif
+               if (ch(1)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_Ch1_Dark_Composite(Elem_Idx,Line_Idx) < Ref_Delta_Clear) then
+                  Cloud_Mask(Elem_Idx,Line_Idx) = sym%PROB_CLEAR
+               end if
 
-   endif
-
-
-end do line_loop
-
-end do element_loop
-
-end subroutine DARK_COMPOSITE_CLOUD_MASK
+            end if
 
 
+         end do line_loop
 
-!-------------------------------------------------------------------
+      end do element_loop
+
+   end subroutine DARK_COMPOSITE_CLOUD_MASK
+
+
+
 ! convert integer to real, but interpret it as an unsigned integer
 ! This is needed for the sounder
-!-------------------------------------------------------------------
 elemental function UNSIGNED_TO_REAL4(i) result (r)
   integer(kind=int2), intent(in) :: i
   real(kind=real4) :: r
 
-  integer(kind=int4), parameter :: INT2_SIGN_CORRECTION_OFFSET = 65536
+  INTEGER(kind=int4), PARAMETER :: INT2_SIGN_CORRECTION_OFFSET = 65536
   
+ 
   if(i < 0) then
      r = real(i,kind=real4) + INT2_SIGN_CORRECTION_OFFSET
   else 
      r = real(i,kind=real4)
   end if
-
 end function UNSIGNED_TO_REAL4
+
+
+
+
 
 !
 !-- end of module

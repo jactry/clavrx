@@ -113,7 +113,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
                                     Snow_Class, &
                                     Toa_Clear_Sky_Refl)
 
-   integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+   logical, dimension(:,:), intent(in):: Bad_Pixel_Mask
    real, dimension(:,:), intent(in):: TPW
    real, dimension(:,:), intent(in):: TOzone
    real, dimension(:,:), intent(in):: Scat_Zen
@@ -159,7 +159,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
     do Line_Idx = 1, Num_Line
 
     !--- skip if bad data
-    if (Bad_Pixel_Mask(ELem_Idx,Line_Idx) == 1) cycle
+    if (Bad_Pixel_Mask(ELem_Idx,Line_Idx) ) cycle
 
     !--- skip if night
     if (Sol_Zen(ELem_Idx,Line_Idx) > 90.0) cycle

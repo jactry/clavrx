@@ -12,9 +12,13 @@
 !----------------------------------------------------------------------
 module NETCDF_READ_MODULE
 
+ use CX_CONSTANTS_MOD
  use NETCDF
 
  implicit none
+ 
+ 
+ 
  
  public :: read_netcdf_attribute_real
  public :: read_netcdf_1d_real
@@ -22,8 +26,7 @@ module NETCDF_READ_MODULE
  public :: read_netcdf_2d_real
  public :: read_netcdf_2d_int
  public :: read_netcdf_2d_char
- public :: read_netcdf_3d_real
- public :: read_netcdf_4d_real
+ public :: read_netcdf_3d
  public :: read_ahi_nav_coeff
 
  integer, parameter, private :: sds_rank_1d = 1
@@ -35,8 +38,8 @@ module NETCDF_READ_MODULE
  integer, parameter, private :: sds_rank_3d = 3
  integer, dimension(sds_rank_3d), private :: sds_start_3d, sds_edge_3d, sds_stride_3d, sds_dims_3d
    
- integer, parameter, private :: sds_rank_4d = 4
- integer, dimension(sds_rank_4d), private :: sds_start_4d, sds_edge_4d, sds_stride_4d, sds_dims_4d
+ integer, parameter, private :: sds_rank_5d = 5
+ integer, dimension(sds_rank_5d), private :: sds_start_5d, sds_edge_5d, sds_stride_5d, sds_dims_5d
 
  contains
  
@@ -132,7 +135,7 @@ module NETCDF_READ_MODULE
       if (status /= nf90_noerr) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
    end subroutine read_netcdf_1d_real                                                                                                                           
 
@@ -164,7 +167,7 @@ module NETCDF_READ_MODULE
       if (status /= nf90_noerr) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
    end subroutine read_netcdf_1d_int
 
@@ -194,7 +197,7 @@ module NETCDF_READ_MODULE
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
    end subroutine read_netcdf_2d_real
 
@@ -224,7 +227,7 @@ module NETCDF_READ_MODULE
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
    end subroutine read_netcdf_2d_int
 
@@ -263,7 +266,7 @@ module NETCDF_READ_MODULE
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
       !extract and save classifier names to the final array
       do i = 1, tmp2
@@ -279,11 +282,10 @@ module NETCDF_READ_MODULE
    end subroutine read_netcdf_2d_char
 
    ! ----------------------------------------------------------
-   ! Read in 3D arrays
+   ! Read in 3D arrays (used code from DCOMP reader
    ! ----------------------------------------------------------
-   subroutine read_netcdf_3d_real (nc_file_id, start_var, var_dim, var_name, var_output)
-
-      implicit none
+   subroutine read_netcdf_3d (nc_file_id, start_var, var_dim, var_name, var_output)
+         implicit none
       integer, intent(in) :: nc_file_id
       integer, intent(in) :: start_var(:)
       integer, dimension(:), intent(in) :: var_dim
@@ -305,41 +307,11 @@ module NETCDF_READ_MODULE
       if ((status /= nf90_noerr)) THEN
             print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
             return
-      endif
+      ENDIF
 
 
-   end subroutine read_netcdf_3d_real
-
-   ! ----------------------------------------------------------
-   ! Read in 4D arrays
-   ! ----------------------------------------------------------
-   subroutine read_netcdf_4d_real (nc_file_id, start_var, var_dim, var_name, var_output)
-
-      implicit none
-      integer, intent(in) :: nc_file_id
-      integer, intent(in) :: start_var(:)
-      integer, dimension(:), intent(in) :: var_dim
-
-      character(len=*), intent(in) :: var_name
-      real, intent(out), dimension(:,:,:,:) :: var_output
-
-      integer :: nc_var_id
-      integer :: status = 0
-
-      status = nf90_inq_varid(nc_file_id, trim(var_name), nc_var_id)
-      if (status /= nf90_noerr) then
-            print *, "Error: Unable to get variable id for ", trim(var_name)
-            return
-      endif
-
-      !get Variable
-      status = nf90_get_var(nc_file_id, nc_var_id, var_output, start=start_var, count=var_dim)
-      if ((status /= nf90_noerr)) THEN
-            print *,'Error: ',  trim(nf90_strerror(status)),'   ', trim(var_name)
-            return
-      endif
-
-
-   end subroutine read_netcdf_4d_real
+   end subroutine read_netcdf_3d
  
+
+
 end module NETCDF_READ_MODULE

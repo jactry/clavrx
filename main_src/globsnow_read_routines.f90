@@ -31,12 +31,19 @@
 !
 !--------------------------------------------------------------------------------------
 module GLOBSNOW_READ_ROUTINES
-  use HDF
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
-  use FILE_UTILITY
+  use CX_CONSTANTS_MOD
+  use NUMERICAL_TOOLS_MOD
+  use FILE_TOOLS,only: &
+   get_lun, file_test
+  
+  use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day 
+  
   implicit none
-  private
+  include 'hdf.f90'  
+private
   public:: GET_PIXEL_GLOBSNOW_ANALYSIS
   public:: GET_GLOBSNOW_FILENAME
   public:: READ_GLOBSNOW_ANALYSIS_MAP
@@ -101,7 +108,7 @@ module GLOBSNOW_READ_ROUTINES
                  //"GlobSnow_SWE_L3A_"//year_string//month_string//day_string//"_v1.0.hdf"
        GlobSnow_full = trim(GlobSnow_path)//trim(GlobSnow_filename_tmp)
        
-       if (file_exists(trim(GlobSnow_full)) .eqv. .true.) then
+       if (file_test(trim(GlobSnow_full)) ) then
          GlobSnow_filename = GlobSnow_filename_tmp
          print *, EXE_PROMPT, "Found ", trim(GlobSnow_filename_tmp)
          exit
@@ -225,7 +232,7 @@ module GLOBSNOW_READ_ROUTINES
   real(kind=real4), dimension(:,:), intent(in) :: Latitude
   real(kind=real4), dimension(:,:), intent(in) :: Longitude
   integer(kind=int1), dimension(:,:), intent(in)::Land_Class
-  integer(kind=int1), dimension(:,:), intent(in)::Invalid_Pixel_Mask
+  logical, dimension(:,:), intent(in)::Invalid_Pixel_Mask
   integer(kind=int1), dimension(:,:), intent(out)::Snow_Out
   integer:: ielem
   integer:: iline
@@ -262,7 +269,7 @@ module GLOBSNOW_READ_ROUTINES
     element_loop:    do ielem = 1, nx
 
       !--- skip bad pixels
-      if (Invalid_Pixel_Mask(ielem,iline) == sym%YES) then
+      if (Invalid_Pixel_Mask(ielem,iline) ) then
          cycle
       endif
 

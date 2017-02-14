@@ -29,22 +29,17 @@
 !   Developed - Denis B. (03/18/2016)
 !
 !--------------------------------------------------------------------------------------
-      module OCA_MODULE
+module OCA_MODULE
 
-      use HDF, only: &
-             DFACC_read
+   use FILE_TOOLS, only: &
+             FILE_SEARCH &
+              , get_lun 
 
-      use FILE_UTILITY,only: &
-             GET_LUN
-
-      use FILE_TOOLS, only: &
-             FILE_SEARCH
-
-      use PIXEL_COMMON, only: &
+   use PIXEL_COMMON, only: &
              Sensor &
            , Cloud_Mask_Aux_Read_Flag
 
-      use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
              Real4 &
            , Int4 &
            , Int2 &
@@ -55,15 +50,17 @@
            , Missing_Value_Int1
 
 
-        implicit none
-        public :: READ_OCA
-        private :: DETERMINE_OCA_FILE
+   implicit none
+   private
+   include 'hdf.f90'
+   public :: READ_OCA
+   
 
-        integer(kind=int2), parameter, private:: fill_value = 32767
-        real(kind=real4), parameter, private:: missing_value = -999.0
-        character(len=13), parameter:: OCA_PROMPT="OCA_MODULE:"
+   integer(kind=int2), parameter, private:: fill_value = 32767
+   real(kind=real4), parameter, private:: missing_value = -999.0
+   character(len=13), parameter:: OCA_PROMPT="OCA_MODULE:"
 
-      contains
+contains
 
 !--------------------------------------------------------------------
 ! read oca into memory

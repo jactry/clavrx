@@ -4,11 +4,12 @@
 !==============================================================================
 module SIMPLE_COD
 
-   use CONSTANTS
+   use CX_CONSTANTS_MOD
    use PIXEL_COMMON
-   use NUMERICAL_ROUTINES
-   use FILE_UTILITY
-   use SURFACE_PROPERTIES
+   use NUMERICAL_TOOLS_MOD 
+   use FILE_TOOLS, only: &
+      get_lun
+   use SFC_PROP_UMD_MOD
 
    implicit none
 
@@ -56,7 +57,7 @@ module SIMPLE_COD
       real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
       integer:: Elem_Idx, Line_Idx
 
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return
+      if (.NOT. Sensor%Chan_On_Flag_Default(1))  return
 
       if (Table_Read_Flag == 0) then
          call READ_LUT(Read_Table_Error)
@@ -67,7 +68,7 @@ module SIMPLE_COD
       Element_Loop: do Elem_Idx = 1, Number_Elements
          Line_Loop: do Line_Idx = 1, Number_Lines
 
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == 1) cycle
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
             if (Geo%Solzen(Elem_Idx,Line_Idx) > SOLZEN_LIMIT) cycle
 
             Ref_Toa = ch(1)%Ref_Toa(Elem_Idx,Line_Idx) / 100.0
@@ -125,9 +126,9 @@ module SIMPLE_COD
       real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
       integer:: Elem_Idx, Line_Idx
 
-      if (Sensor%Chan_On_Flag_Default(44) == sym%NO)  return
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return     !issue - we need ch1 and ch2 white sky
-      if (Sensor%Chan_On_Flag_Default(2) == sym%NO) return 
+      if ( .NOT. Sensor%Chan_On_Flag_Default(44) )  return
+      if (.NOT. Sensor%Chan_On_Flag_Default(1) )  return     !issue - we need ch1 and ch2 white sky
+      if (.NOT. Sensor%Chan_On_Flag_Default(2) ) return 
 
       if (Table_Read_Flag == 0) then
          call READ_LUT(Read_Table_Error)
@@ -138,7 +139,7 @@ module SIMPLE_COD
       Element_Loop: do Elem_Idx = 1, Number_Elements
          Line_Loop: do Line_Idx = 1, Number_Lines
 
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == 1) cycle
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
             if (Geo%Lunzen(Elem_Idx,Line_Idx) > SOLZEN_LIMIT) cycle
 
             Ref_Toa = ch(44)%Ref_Lunar_Toa(Elem_Idx,Line_Idx) / 100.0

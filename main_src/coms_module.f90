@@ -27,17 +27,20 @@
 
 module COMS_MODULE
 
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use PIXEL_COMMON
 use CALIBRATION_CONSTANTS
 use PLANCK
-use NUMERICAL_ROUTINES
+use NUMERICAL_TOOLS_MOD
 use CGMS_NAV
 use GOES_MODULE
-use FILE_UTILITY
+use FILE_TOOLS, only: &
+   get_lun
 use VIEWING_GEOMETRY_MODULE
-
+   
+   use CX_SSEC_AREAFILE_MOD
  implicit none
+   private
  public :: READ_COMS
  public:: READ_NAVIGATION_BLOCK_COMS
  public:: GET_COMS_IMAGE
@@ -121,7 +124,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
    integer(kind=int4), intent(in):: segment_number
    character(len=*), intent(in):: channel_1_filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type (area_header_type), intent(in) :: AREAstr
    type (GVAR_NAV), intent(in)    :: NAVstr_COMS
    integer(kind=int2), intent(in):: jday
    integer(kind=int4), intent(in):: image_time_ms
@@ -184,19 +187,19 @@ end subroutine READ_COMS_INSTR_CONSTANTS
        write(ichan_goes_string,fmt="(I1.1)") ichan_goes
        if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
 
-       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       if (Sensor%Chan_On_Flag_Default(ichan_modis) ) then
 
           channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
           
-          if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+          if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
           else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
           endif
 
           channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
-          if (l1b_gzip == sym%YES) then
+          if (l1b_gzip ) then
               System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
                                 " > "//trim(channel_x_filename_full)
                                 
@@ -206,7 +209,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
               Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
 
           endif
-          if (l1b_bzip2 == sym%YES) then
+          if (l1b_bzip2 ) then
               System_String = "bunzip2 -c "//trim(channel_x_filename_full_uncompressed)//".bz2"// &
                                 " > "//trim(channel_x_filename_full)
               call system(System_String)
@@ -223,7 +226,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     ! On first segment, reflectance, BT and rad tables
     ! On first segment, get slope/offset information from McIDAS Header
     COMS_file_id = get_lun()   
-    if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+    if (l1b_gzip  .OR. l1b_bzip2 ) then
         call mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
     else
         call mread_open(trim(Image%Level1b_Path)//trim(channel_1_filename)//CHAR(0), COMS_file_id)
@@ -237,9 +240,9 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    
    
    !---   read channel 1 (COMS channel 1)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(1) ) then
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_1_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_1_filename)
@@ -260,12 +263,12 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    endif
    
    !---   read channel 20 (COMS channel 2)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(20) ) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_2_" // &
                             channel_1_filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -284,12 +287,12 @@ end subroutine READ_COMS_INSTR_CONSTANTS
                     
    
    !---   read channel 27 (COMS channel 3)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(27) ) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_3_" // &
                             channel_1_filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -309,12 +312,12 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
    
    !---   read channel 31 (COMS channel 4)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(31) ) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_4_" // &
                             channel_1_filename(ipos+3:ilen)
        
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -333,12 +336,12 @@ end subroutine READ_COMS_INSTR_CONSTANTS
    
    
    !---   read channel 32 (COMS channel 5)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+   if (Sensor%Chan_On_Flag_Default(32) ) then
 
        channel_x_filename = channel_1_filename(1:ipos-1) // "_5_" // &
                             channel_1_filename(ipos+3:ilen)
 
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+       if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
        else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -391,7 +394,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
  
  subroutine load_COMS_calibration(lun, AREAstr)
   integer(kind=int4), intent(in) :: lun
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   integer(kind=int4), dimension(6528) :: ibuf
   CHARACTER(len=25) :: cbuf
   integer :: nref, nbt, i, offset
@@ -518,7 +521,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
-    type (AREA_STRUCT) :: AREAstr
+    type (area_header_type) :: AREAstr
     type (GVAR_NAV), intent(in)    :: NAVstr_COMS
     
     integer :: i, j, ii, jj, imode
@@ -636,7 +639,7 @@ end subroutine READ_COMS_INSTR_CONSTANTS
 
  subroutine READ_NAVIGATION_BLOCK_COMS(filename, AREAstr, NAVstr)
   CHARACTER(len=*), intent(in):: filename
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   type(GVAR_NAV), intent(inout):: NAVstr
  
   integer :: geos_nav
@@ -674,7 +677,7 @@ subroutine GET_COMS_IMAGE(filename,AREAstr, &
                                     num_lines_read, image)
 
  character(len=*), intent(in):: filename 
- type (AREA_STRUCT), intent(in) :: AREAstr
+ type (area_header_type), intent(in) :: AREAstr
  integer(kind=int4), intent(in):: segment_number
  integer(kind=int4), intent(in):: num_lines_per_segment
  integer(kind=int4), intent(out):: num_lines_read

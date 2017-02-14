@@ -47,16 +47,151 @@
 !
 !--------------------------------------------------------------------------------------
 module AVHRR_MODULE
-
-  use PIXEL_COMMON
-  use CALIBRATION_CONSTANTS
-  use CONSTANTS
-  use FILE_UTILITY
-  use VIEWING_GEOMETRY_MODULE
-  use PLANCK
+   
+   use CALIBRATION_CONSTANTS, only: &
+    sat_name &
+    , Solar_Ch20 &
+    , ew_ch20 &
+    , Space_Rad_3b &
+    , b0_3b &
+    , b1_3b &
+    , b2_3b &
+    , Space_Rad_4 &
+    , b0_4 &
+    , b1_4 &
+    , b2_4 &
+    , Space_Rad_5 &
+    , b0_5 &
+    , b1_5 &
+    , b2_5 &
+    , Planck_nu &
+    , Planck_A1 &
+    , Planck_A2 &
+    , Ch1_Dark_Count &
+    , Ch2_Dark_Count &
+    , Ch3a_Dark_count &
+    , Ch1_Gain_Low_0 &
+    , Ch1_Degrad_Low_1 &
+    , Ch1_Degrad_Low_2 &
+    , Ch1_Gain_High_0 &
+    , Ch1_Degrad_High_1 &
+    , Ch1_Degrad_High_2 &
+    , Ch2_Gain_Low_0 &
+    , Ch2_Degrad_Low_1 &
+    , Ch2_Degrad_Low_2 &
+    , Ch2_Gain_High_0 &
+    , Ch2_Degrad_High_1 &
+    , Ch2_Degrad_High_2 &
+    , Ch3a_Gain_Low_0 &
+    , Ch3a_Degrad_Low_1 &
+    , Ch3a_Degrad_Low_2 &
+    , Ch3a_Gain_High_0 &
+    , Ch3a_Degrad_High_1 &
+    , Ch3a_Degrad_High_2 &
+    , launch_date &
+    , Ch1_Switch_Count &
+    , Ch2_Switch_Count &
+    , Ch3a_Switch_Count &
+    , Prt_Coef &
+    , prt_weight &
+    , Solar_Ch20_Nu &
+    , Ch1_Gain_Low &
+    , Ch1_Gain_High &
+    , Ch2_Gain_Low &
+    , Ch2_Gain_High &
+    , Ch3a_Gain_Low &
+    , Ch3a_Gain_High &
+    , Ch1_Dark_Count_Cal &
+    , Ch1_Switch_Count_Cal &
+    , Ch2_Dark_Count_Cal &
+    , Ch2_Switch_Count_Cal &
+    , Ch3a_Dark_Count_Cal &
+    , Ch3a_Switch_Count_Cal &
+    , Ref_Ch1_Switch &
+    , Ref_Ch2_Switch &
+    , Ref_Ch6_Switch
+   
+   use CX_CONSTANTS_MOD, only: &
+    real4 &
+    , int1 &
+    , int2 &
+    , int4 &
+    , ipre &
+    , sym &
+    , EXE_PROMPT &
+    , Missing_Value_Real4 &
+    , DTOR &
+    , MISSING_VALUE_INT4 &
+    , MISSING_VALUE_INT2 &
+    , MISSING_VALUE_INT1
+   
+   use FILE_TOOLS,only: &
+       get_lun
+       
+   use PIXEL_COMMON, only: &
+      AVHRR_KLM_Flag &
+      , image &
+      , Sc_Id_AVHRR &
+      , sensor &
+      , AVHRR_1_FLAG &
+      , l1b_rec_length &
+      ,  Num_Anchors &
+      , Line_Idx_Min_Segment &
+      , Ch3a_On_AVHRR &
+      , Lat_Anchor_1b &
+      , LON_ANCHOR_1B &
+      , nav &
+      , scan_day &
+      , scan_time &
+      , satzen_Anchor &
+      , Solzen_Anchor &
+      , Relaz_Anchor &
+      , Solaz_Anchor &
+      , Sataz_Anchor &
+      , Glintzen_Anchor &
+      , Scatangle_Anchor &
+      , geo &
+      , Ch &
+      , Bad_Scan_Flag &
+      , scan_number &
+      , AVHRR_GAC_FLAG &
+      , AVHRR_DATA_TYPE &
+      , TIP_PARITY &
+      , aux_sync &
+      , ramp_auto_cal &
+      , proc_block_id &
+      , avhrr_ver_1b &
+      , REF_CAL_1B &
+      , therm_cal_1b &
+      , temp_pix_array_1 &
+      , Ch20_Counts_Filtered &
+      , One_Byte_Temp &
+      , Byte_swap_1b &
+      , scan_year &
+      , num_loc &
+      , cld_mask_aux &
+      , Cloud_Mask_Aux_Read_Flag &
+      , Ch1_Counts &
+      , Ch2_Counts &
+      , Ch6_Counts
+   
+   use PLANCK, only: &
+    PLANCK_TEMP_FAST &
+    , PLANCK_RAD_FAST
+ 
+   use VIEWING_GEOMETRY_MODULE, only: &
+      great_circle_angle &
+      , sensor_zenith_avhrr_anchor &
+      , relative_azimuth_avhrr_anchor &
+      , SENSOR_AZIMUTH &
+      , GLINT_ANGLE &
+      , SCATTERING_ANGLE &
+      , possol
+  
 
   implicit none
-
+  
+  private
   public:: &
            ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL, &
            READ_AVHRR_INSTR_CONSTANTS, &
@@ -67,27 +202,11 @@ module AVHRR_MODULE
            DEFINE_1B_DATA, &
            CALCULATE_ASC_DES
 
-  private::  &
-           LAGRANGIAN_ANCHOR_INTERP, &
-           LINEAR_ANCHOR_INTERP, &
-           GNOMIC_ANCHOR_INTERP, &
-           COMPUTE_ANGLE_ANCHORS, &
-           i4word_to_string, &
-           REF_CAL,  &
-           THERM_CAL, &
-           COMPUTE_NEW_THERM_CAL_COEF,  &
-           MAKE_I4WORD, &
-           MAKE_I2WORD, &
-           UNPACK_AVHRR_HEADER_RECORD, &
-           UNPACK_AVHRR_HEADER_RECORD_KLM, &
-           UNPACK_AVHRR_DATA_RECORD,  &
-           UNPACK_AVHRR_DATA_RECORD_KLM, &
-           UNPACK_AVHRR_DATA_RECORD_AAPP, &
-           CREATE_AVHRR_ARRAYS, &
-           RESET_AVHRR_ARRAYS, &
-           DESTROY_AVHRR_ARRAYS, &
-           CONVERT_AVHRR_COUNTS_SINGLE_GAIN
-
+   
+   
+   
+   
+   
   !--- variable declaration
   integer(kind=int2), dimension(5,10), private:: Space_Count_Temp
   integer(kind=int2), dimension(3:5,10),private:: Blackbody_Count
@@ -798,12 +917,12 @@ end subroutine DETERMINE_AVHRR_1
       !------------------------------------------------------------------------------
       ! check for bad scan lines here
       !------------------------------------------------------------------------------
-       Bad_Scan_Flag(Line_Idx) = sym%NO
+       Bad_Scan_Flag(Line_Idx) = .FALSE.
        Error_Code = 0
 
        !--- any scan with a fatal error is considered bad
        if (Fatal_AVHRR(Line_Idx) == sym%YES) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 1
        endif
 
@@ -811,13 +930,13 @@ end subroutine DETERMINE_AVHRR_1
        !--- note, these are also set to have a fatal code, but this overwrites
        !--- it to limit printing to screen of excessive reports
        if ((Therm_Cal_1b == sym%NO) .and. (Spinup_New_Therm_Cal .eqv. .true.)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 2
        endif
 
        !---- check for missing navigation
        if ( (sum(Lat_Anchor_1b(:,Line_Idx)) == 0.00).or. (sum(Lon_Anchor_1b(:,Line_Idx)) == 0.00)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 3
        endif
 
@@ -831,28 +950,28 @@ end subroutine DETERMINE_AVHRR_1
        !---- check angle Anchors on AVHRR_KLM_Flag data
        if (AVHRR_KLM_Flag == sym%YES) then
          if ((minval(Satzen_Anchor(:,Line_Idx)) < 0.0) .or. (maxval(Satzen_Anchor(:,Line_Idx)) > 90.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code  = 5
          endif
          if ((minval(Solzen_Anchor(:,Line_Idx)) < 0.0) .or. (maxval(Solzen_Anchor(:,Line_Idx)) > 180.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 5
          endif
          if ((minval(Relaz_Anchor(:,Line_Idx)) < -180.0) .or. (maxval(Relaz_Anchor(:,Line_Idx)) > 180.0)) then
-           Bad_Scan_Flag(Line_Idx) = sym%YES
+           Bad_Scan_Flag(Line_Idx) = .TRUE.
            Error_Code = 5
          endif
        endif
 
        !----- report bad scan code to standard output (but not bad scans during
        !----- spin-up of thermal cal
-       if (Bad_Scan_Flag(Line_Idx) == sym%YES .and. Error_Code /= 2) then
+       if (Bad_Scan_Flag(Line_Idx)  .and. Error_Code /= 2) then
          write(unit=6,fmt="(a,a,a,i6,a,i2)") EXE_PROMPT, MOD_PROMPT,  &
                "BAD SCAN: Numbers = ", Scan_Number(Line_Idx), " error code = ", Error_Code
        endif 
 
        !---- set geolocation to missing for bad-scans to avoid ancil-data interp
-       if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
+       if (Bad_Scan_Flag(Line_Idx) ) then
                Nav%Lat_1b(:,Line_Idx) = Missing_Value_Real4
                Nav%Lon_1b(:,Line_Idx) = Missing_Value_Real4
        endif
@@ -1125,7 +1244,7 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
    if (Valid_Ref_Cal .eqv. .true.) then
 
      !--- channel 1
-     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(1) ) then
       where (Chan_Counts_Avhrr(1,:,Line_Idx) <= Ch1_Switch_Count_Cal)
         ch(1)%Ref_Toa(:,Line_Idx) = Ch1_Gain_low*(Chan_Counts_Avhrr(1,:,Line_Idx) - Ch1_Dark_Count_Cal) 
       elsewhere
@@ -1134,7 +1253,7 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
      endif
 
      !--- channel 2
-     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(2) ) then
       where (Chan_Counts_Avhrr(2,:,Line_Idx) <= Ch2_Switch_Count_Cal)
         ch(2)%Ref_Toa(:,Line_Idx) = Ch2_Gain_low*(Chan_Counts_Avhrr(2,:,Line_Idx) - Ch2_Dark_Count_Cal) 
       elsewhere
@@ -1143,9 +1262,9 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
      endif
 
      !--- channel 3a
-     if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(6) ) then
        if (Ch3a_On_AVHRR(Line_Idx) == sym%NO) then
-         if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+          ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
        else 
          where (Chan_Counts_Avhrr(3,:,Line_Idx) <= Ch3a_Switch_Count_Cal)
            ch(6)%Ref_Toa(:,Line_Idx) = Ch3a_Gain_low*(Chan_Counts_Avhrr(3,:,Line_Idx) - Ch3a_Dark_Count_Cal) 
@@ -1157,9 +1276,9 @@ end subroutine READ_AVHRR_LEVEL1B_HEADER
 
   else
 
-    if (Sensor%Chan_On_Flag_Default(1) == sym%YES) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    if (Sensor%Chan_On_Flag_Default(2) == sym%YES) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
-    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(1)) ch(1)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(2)) ch(2)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
+    if (Sensor%Chan_On_Flag_Default(6)) ch(6)%Ref_Toa(:,Line_Idx) = Missing_Value_Real4 
 
   endif
 
@@ -1265,7 +1384,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
   !------------------------------------------------------------------------
   do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
 
-    if (Bad_Scan_Flag(j) == sym%YES) then
+    if (Bad_Scan_Flag(j)) then
        cycle
     endif 
 
@@ -1274,15 +1393,15 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
        if (AVHRR_KLM_Flag == sym%YES) then       !apply level-1b non-linear correction
 
-         if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+         if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20)) then
            ch(20)%Rad_Toa(:,j) = ir_coef_1_1b(3,j) + ir_coef_2_1b(3,j)*Chan_Counts_Avhrr(3,:,j) +  &
                         ir_coef_3_1b(3,j)*Chan_Counts_Avhrr(3,:,j)**2
          endif
-         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) ) then
              ch(31)%Rad_Toa(:,j) = ir_coef_1_1b(4,j) + ir_coef_2_1b(4,j)*Chan_Counts_Avhrr(4,:,j) +  &
                        ir_coef_3_1b(4,j)*Chan_Counts_Avhrr(4,:,j)**2
          endif
-         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32)) then
             ch(32)%Rad_Toa(:,j) = ir_coef_1_1b(5,j) + ir_coef_2_1b(5,j)*Chan_Counts_Avhrr(5,:,j) +  &
                             ir_coef_3_1b(5,j)*Chan_Counts_Avhrr(5,:,j)**2
          endif
@@ -1290,13 +1409,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
        else                         !compute level-1b linear correction for pre-AVHRR_KLM_Flag
 
          !--- Eqn 7.1.2.4-7
-         if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(20) ) then
            ch(20)%Rad_Toa(:,j) = ir_linear_slope_1b(3,j)*Chan_Counts_Avhrr(3,:,j) + ir_linear_intercept_1b(3,j)
          endif
-         if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) ) then
            ch(31)%Rad_Toa(:,j) = ir_linear_slope_1b(4,j)*Chan_Counts_Avhrr(4,:,j) + ir_linear_intercept_1b(4,j)
          endif
-         if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(32) ) then
            ch(32)%Rad_Toa(:,j) = ir_linear_slope_1b(5,j)*Chan_Counts_Avhrr(5,:,j) + ir_linear_intercept_1b(5,j)
          endif
 
@@ -1304,13 +1423,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
     else    !generate linear radiance using internally computed coefficients
 
-      if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+      if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20)) then
          ch(20)%Rad_Toa(:,j) = IR_Linear_Slope_New(3,j)*Chan_Counts_Avhrr(3,:,j) + IR_Linear_Intercept_New(3,j)
       endif
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31) ) then
         ch(31)%Rad_Toa(:,j) = IR_Linear_Slope_New(4,j)*Chan_Counts_Avhrr(4,:,j) + IR_Linear_Intercept_New(4,j)
       endif
-      if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(32) ) then
         ch(32)%Rad_Toa(:,j) = IR_Linear_Slope_New(5,j)*Chan_Counts_Avhrr(5,:,j) + IR_Linear_Intercept_New(5,j)
       endif
     endif
@@ -1318,13 +1437,13 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
    !--- apply non-linear correction where appropriate (non-AVHRR_KLM_Flag or any if thermal cal redone)
    if ((AVHRR_KLM_Flag == sym%NO) .or. (Therm_Cal_1b == sym%NO)) then 
 
-     if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+     if (Ch3a_On_AVHRR(j) == 0 .and. Sensor%Chan_On_Flag_Default(20) ) then
        ch(20)%Rad_Toa(:,j) = ch(20)%Rad_Toa(:,j) + b0_3b + b1_3b*ch(20)%Rad_Toa(:,j) + b2_3b*ch(20)%Rad_Toa(:,j)**2
      endif
-     if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(31) ) then
        ch(31)%Rad_Toa(:,j) = ch(31)%Rad_Toa(:,j) + b0_4 + b1_4*ch(31)%Rad_Toa(:,j) + b2_4*ch(31)%Rad_Toa(:,j)**2
      endif
-     if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(32)) then
        ch(32)%Rad_Toa(:,j) = ch(32)%Rad_Toa(:,j) + b0_5 + b1_5*ch(32)%Rad_Toa(:,j) + b2_5*ch(32)%Rad_Toa(:,j)**2
      endif
    endif
@@ -1333,7 +1452,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
 
     do i = 1, Image%Number_Of_Elements
 
-        if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(20) ) then
          if (ch(20)%Rad_Toa(i,j) > 0.0) then
           ch(20)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(20,ch(20)%Rad_Toa(i,j)) 
          else
@@ -1342,7 +1461,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
          endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(31) ) then
          if (ch(31)%Rad_Toa(i,j) > 0.0) then
            ch(31)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(31,ch(31)%Rad_Toa(i,j)) 
          else
@@ -1351,7 +1470,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
          endif
         endif
 
-        if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+        if (Sensor%Chan_On_Flag_Default(32) ) then
          if (ch(32)%Rad_Toa(i,j) > 0.0) then
            ch(32)%Bt_Toa(i,j) = PLANCK_TEMP_FAST(32,ch(32)%Rad_Toa(i,j)) 
          else
@@ -1367,7 +1486,7 @@ subroutine THERM_CAL(Number_Of_Lines_Read_This_Segment)
   !----- additional quality check on Bt_Ch31
   do j = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Number_Of_Lines_Read_This_Segment - 1
     if (minval(ch(31)%Bt_Toa(:,j)) < 0.0) then
-      Bad_Scan_Flag(j) = sym%YES
+      Bad_Scan_Flag(j) = .TRUE.
     endif
   enddo
 
@@ -2846,7 +2965,7 @@ endif
            exit
          endif
          i = (Pix_Idx - Start_Pixel) + 1
-         CLDMASK%Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
+         Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
       enddo
     enddo
 
@@ -3040,7 +3159,7 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
 
         do j = Line_Idx_Min_Segment+1, Number_Of_Lines_Read_This_Segment - 2
         
-         if (Bad_Scan_Flag(j) == sym%YES) then
+         if (Bad_Scan_Flag(j) ) then
 
             if (j > Line_Idx_Min_Segment + 1) then
               Nav%Ascend(j) = Nav%Ascend(j-1)
@@ -3055,8 +3174,8 @@ end subroutine UNPACK_AVHRR_DATA_RECORD_AAPP
          Nav%Ascend(j) = 1
          if (diff <= 0) Nav%Ascend(j) = 0
 
-         if (Bad_Scan_Flag(j+1) == sym%YES .and.  &
-              Bad_Scan_Flag(j-1) == sym%NO) then
+         if (Bad_Scan_Flag(j+1)  .and.  &
+              .NOT. Bad_Scan_Flag(j-1) ) then
               Nav%Ascend(j) = Nav%Ascend(j-1)
          endif
 
@@ -3194,14 +3313,14 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
   do j = j1, j1+j2-1
 
    !--- check for bad scans (note Bad_Pixel_Mask does yet exist)
-   if (Bad_Scan_Flag(j) == sym%YES) then
+   if (Bad_Scan_Flag(j) ) then
         cycle
    endif
 
    do i = 1, Image%Number_Of_Elements
 
      !--- channel 1
-     if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(1) ) then
       if (Chan_Counts_Avhrr(1,i,j) < Ch1_Switch_Count) then
          Chan_Counts_Avhrr_Sg(1,i,j) = Scan_Space_Counts_Avhrr(1,j) + 0.5*(Chan_Counts_Avhrr(1,i,j) - Scan_Space_Counts_Avhrr(1,j))
        else
@@ -3212,7 +3331,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
      endif
 
      !--- channel 2
-     if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(2) ) then
       if (Chan_Counts_Avhrr(2,i,j) < Ch2_Switch_Count) then
        Chan_Counts_Avhrr_Sg(2,i,j) = Scan_Space_Counts_Avhrr(2,j) + 0.5*(Chan_Counts_Avhrr(2,i,j) - Scan_Space_Counts_Avhrr(2,j))
       else
@@ -3223,7 +3342,7 @@ subroutine CONVERT_AVHRR_COUNTS_SINGLE_GAIN(AVHRR_KLM_Flag,j1,j2)
     endif
 
     !--- channel 3a
-    if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
+    if (Sensor%Chan_On_Flag_Default(6) ) then
 
      if (Ch3a_On_AVHRR(j) == sym%YES) then
 

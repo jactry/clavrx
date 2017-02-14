@@ -38,13 +38,76 @@
 ! end loop
 !--------------------------------------------------------------------------------------
 module SENSOR_MODULE
-   use PIXEL_COMMON, only:
-   use CALIBRATION_CONSTANTS
-   use ALGORITHM_CONSTANTS
-   use CONSTANTS
-   use FILE_UTILITY
-   use AVHRR_MODULE
-   use GOES_MODULE
+   use PIXEL_COMMON, only: &
+      sensor &
+      , image &
+      , avhrr_data_type &
+      , AVHRR_Ver_1b &
+      , AVHRR_GAC_FLAG &
+      , AVHRR_KLM_FLAG &
+      , AVHRR_AAPP_FLAG &
+      , AVHRR_IFF_Flag &
+      , AVHRR_1_Flag &
+      , nav &
+      , geo &
+      , Sc_Id_AVHRR  &
+      , Byte_Swap_1b &
+      , Ancil_Data_Dir &
+      , Cloud_Mask_Aux_Flag &
+      , Cloud_Mask_Bayesian_Flag &
+      , Cloud_Mask_Aux_Read_Flag &
+      , L1b_Rec_Length &
+      , Dark_Composite_Name &
+      , Two_Byte_Temp &
+      , Ref_Ch1_Dark_Composite &
+      , Therm_Cal_1b 
+      
+   use CALIBRATION_CONSTANTS,only: &
+       Planck_A1 &
+      , Planck_A2 &
+      , Planck_nu &
+      , goes_input_time &
+      , Goes_Epoch_Time &
+      , Solar_Ch20 &
+      , sat_name &
+      , ew_ch20 &
+      , solar_ch20_nu
+      
+   
+   use CX_CONSTANTS_MOD, only: &
+    int4 &
+    , real4 &
+    , MISSING_VALUE_INT4 &
+    , MISSING_VALUE_REAL4 &
+    , sym &
+    , DTOR &
+    , EXE_PROMPT
+   
+   use FILE_TOOLS,only: &
+      get_lun
+      
+   use AVHRR_MODULE,only: &
+      read_avhrr_instr_constants &
+      , assign_avhrr_sat_id_num_internal &
+      , define_1b_data &
+      , determine_avhrr_file_type &
+      , read_avhrr_level1b_data &
+      , read_avhrr_level1b_header 
+   
+   use GOES_MODULE, only: &
+    gvar_nav &
+    , goes_xstride &
+    , Goes_Sndr_Xstride &
+    , CALIBRATE_GOES_DARK_COMPOSITE &
+    , get_goes_headers &
+    , LMODEL &
+    , read_dark_composite_counts &
+    , read_goes &
+    , read_goes_instr_constants &
+    , read_goes_sndr &
+    , read_goes_sndr_instr_constants
+   
+   
    use MODIS_MODULE, only : &
        DETERMINE_MODIS_CLOUD_MASK_FILE &
      , READ_MODIS_INSTR_CONSTANTS &
@@ -67,10 +130,27 @@ module SENSOR_MODULE
       READ_IFF_DATA &
       , READ_IFF_VIIRS_INSTR_CONSTANTS &
       , READ_IFF_AVHRR_INSTR_CONSTANTS &
-      , READ_IFF_DATE_TIME &
       , GET_IFF_DIMS_BRIDGE
-   use MTSAT_MODULE
-   use SEVIRI_MODULE
+   
+   use IFF_MODULE, only: &
+         READ_IFF_DATE_TIME
+      
+   use MTSAT_MODULE,only: &
+      mtsat_xstride &
+      , calibrate_mtsat_dark_composite &
+      , read_mtsat &
+      , read_mtsat_instr_constants &
+      , read_navigation_block_mtsat_fy
+   
+   use SEVIRI_MODULE, only: &
+      seviri_xstride &
+      , calibrate_seviri_dark_composite &
+      , read_msg_instr_constants &
+      , read_navigation_block_seviri &
+      , read_seviri
+   
+   
+   
 #ifdef HDF5LIBS
    use VIIRS_CLAVRX_BRIDGE , only : &
        READ_VIIRS_DATE_TIME &
@@ -85,7 +165,7 @@ module SENSOR_MODULE
 #endif
 
    use CLAVRX_MESSAGE_MODULE
-   use MVCM_READ_MODULE
+  ! use MVCM_READ_MODULE
 
    implicit none
 
@@ -121,11 +201,14 @@ module SENSOR_MODULE
       
       use CX_READ_AHI_MOD, only: &
          ahi_time_from_filename
+		
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type		
       
       type ( date_type ) :: time0_obj, time1_obj
       
       ! - this is only needed/used for AVHRR
-      type (AREA_STRUCT), intent(in) :: AREAstr
+      type (area_header_type), intent(in) :: AREAstr
 
       integer(kind=int4):: Start_Year_Tmp
       integer(kind=int4):: Start_Day_Tmp
@@ -193,9 +276,12 @@ module SENSOR_MODULE
 
 
          !---- determine auxilliary cloud mask name
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
-          call DETERMINE_MVCM_NAME()
-         endif
+!   integer(kind=int1) :: NO_AUX_CLOUD_MASK = 0
+!   integer(kind=int1) :: USE_AUX_CLOUD_MASK = 1
+!   integer(kind=int1) :: READ_BUT_DO_NOT_USE_AUX_CLOUD_MASK = 2
+       !  if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+         ! call DETERMINE_MVCM_NAME()
+        ! endif
 #else
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
@@ -472,8 +558,9 @@ module SENSOR_MODULE
            AREAstr &
          , NAVstr &
          , Ierror)
-
-      TYPE (AREA_STRUCT), intent(out) :: AREAstr
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
+      TYPE (area_header_type), intent(out) :: AREAstr
       TYPE (GVAR_NAV), intent(out)    :: NAVstr
       integer(kind=int4) :: Ierror
       integer(kind=int4) :: Ifound
@@ -541,6 +628,7 @@ module SENSOR_MODULE
         Sensor%Instr_Const_File = 'modis_aqua_instr.dat'
         Sensor%Algo_Const_File = 'modis_aqua_algo.dat'
         Sensor%WMO_Id = 784
+        print*,'mydatml'
         exit test_loop
       endif
 
@@ -1118,12 +1206,6 @@ module SENSOR_MODULE
                   Cloud_Mask_Bayesian_Flag == sym%NO) then
             Ierror = sym%YES
          endif
-
-         !---- determine auxilliary cloud mask name
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK .and. &
-             trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file") then 
-          call DETERMINE_MVCM_NAME()
-         endif
       endif
 
 
@@ -1133,9 +1215,10 @@ module SENSOR_MODULE
    !
    !=====================================================================
    subroutine DETERMINE_GEO_SUB_SATELLITE_POSITION(Level1b_Full_Name,AREAstr,NAVstr)
-
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
     character(len=*), intent(in):: Level1b_Full_Name
-    type (AREA_STRUCT), intent(inout) :: AREAstr
+    type (area_header_type), intent(inout) :: AREAstr
     type (GVAR_NAV), intent(inout)    :: NAVstr
     REAL (KIND=REAL4)                 :: Lat_temp, Lon_temp
     INTEGER (KIND=INT4)               :: Year_temp
@@ -1247,9 +1330,10 @@ module SENSOR_MODULE
       use cx_read_ahi_mod, only : &
          ahi_segment_information_region &
          ,ahi_config_type
-                                                               
+       use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type                                                        
       CHARACTER(len=*), intent(in) :: Level1b_Full_Name
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr ! AVHRR only
+      TYPE (area_header_type), intent(in) :: AREAstr ! AVHRR only
       integer(kind=int4), intent(out) :: Nrec_Avhrr_Header ! AVHRR only
       integer(kind=int4), intent(out) :: Ierror
 
@@ -1301,7 +1385,7 @@ module SENSOR_MODULE
             Ierror = sym%YES
             return      ! skips file
          endif
-
+print*,'after nscans> ', Image%Number_Of_Lines
          ! Check if VIIRS Number of scans is regular (48) and calculate Number of y pixels
          if (Image%Number_Of_Lines .ge. 48) then
             Image%Number_Of_Lines = Image%Number_Of_Lines * 16      !16pix per Scan
@@ -1404,14 +1488,23 @@ module SENSOR_MODULE
    end subroutine SET_FILE_DIMENSIONS
 
    !--------------------------------------------------------------------------------------------------
-   !
+   ! this routine is called in process_clavrx
    !--------------------------------------------------------------------------------------------------
-   subroutine READ_LEVEL1B_DATA(Level1b_Full_Name,Segment_Number,Time_Since_Launch,AREAstr,NAVstr,Nrec_Avhrr_Header,Ierror_Level1b)
-
+   subroutine READ_LEVEL1B_DATA(Level1b_Full_Name &
+      , Segment_Number &
+      , Time_Since_Launch &
+      , AREAstr &
+      , NAVstr &
+      , Nrec_Avhrr_Header &
+      , Ierror_Level1b)
+		
+		use CX_SSEC_AREAFILE_MOD,only: &
+			area_header_type
+		
       character(len=*), intent(in):: Level1b_Full_Name
       integer, intent(in):: Segment_Number
       integer, intent(in):: Nrec_Avhrr_Header
-      TYPE (AREA_STRUCT), intent(in) :: AREAstr
+      TYPE (area_header_type), intent(in) :: AREAstr
       TYPE (GVAR_NAV), intent(in)    :: NAVstr
       real, intent(in):: Time_Since_Launch
       integer, intent(out):: Ierror_Level1b
@@ -1422,12 +1515,6 @@ module SENSOR_MODULE
       if (index(Sensor%Sensor_Name,'MODIS') > 0) then
          call READ_MODIS(Segment_Number,Ierror_Level1b)
          if (Ierror_Level1b /= 0) return
-
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK .and. &
-             index(Image%Auxiliary_Cloud_Mask_File_Name, 'IFF') > 0) then 
-           call READ_MVCM_DATA(Segment_Number)
-         endif
-
       end if
 
       select case (trim(Sensor%Sensor_Name))
@@ -1437,7 +1524,7 @@ module SENSOR_MODULE
                      Time_Since_Launch, &
                      AREAstr,NAVstr)
 
-         if (Sensor%Chan_On_Flag_Default(1)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(1)) then
             call READ_DARK_COMPOSITE_COUNTS(Segment_Number, Goes_Xstride, &
                      Dark_Composite_Name,AREAstr,Two_Byte_Temp) 
             call CALIBRATE_GOES_DARK_COMPOSITE(Two_Byte_Temp,Time_Since_Launch,Ref_Ch1_Dark_Composite)
@@ -1506,9 +1593,7 @@ module SENSOR_MODULE
          if (Ierror_Level1b /= 0) return
 
          !--- read auxillary cloud mask
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
-           call READ_MVCM_DATA(Segment_Number)
-         endif
+        ! call READ_MVCM_DATA(Segment_Number)
 #else
          print *, "No HDF5 library installed, stopping"
          stop

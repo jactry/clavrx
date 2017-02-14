@@ -1,4 +1,4 @@
-!$Id$
+!$Id:$
 module IR_CLOUD_TYPE_BAUM_MODULE
 !====================================================================
 ! Module Name: IR_CLOUD_TYPE_BAUM_MODULE
@@ -50,13 +50,13 @@ module IR_CLOUD_TYPE_BAUM_MODULE
 ! ICE_PHASE = 4
 ! UNKNOWN_PHASE = 5
 !====================================================================
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use PIXEL_COMMON, only: Image,  &
                           Ch,     &
                           Geo,    &
                           Sensor, &
                           Sfc,    &
-                          CLDMASK, &
+                          Cld_Mask, &
                           Bad_Pixel_Mask, &
                           I_Nwp, &
                           J_Nwp, &
@@ -66,6 +66,7 @@ module IR_CLOUD_TYPE_BAUM_MODULE
                           Beta_11um_67um_Tropo_Rtm, &
                           Beta_11um_133um_Tropo_Rtm, &
                           Beta_11um_133fusum_Tropo_Rtm, &
+                          Cld_Test_Vector_Packed, &
                           Cld_Phase_IR, &
                           Cld_Type_IR, &
                           Diag_Pix_Array_1, &
@@ -114,23 +115,10 @@ subroutine IR_CLOUD_TYPE_BAUM()
   integer:: Elem_Idx
   integer:: Num_Elem
   integer:: Num_Line
-  integer:: Elem_Start
-  integer:: Elem_End
   integer:: Nwp_Lon_Idx
   integer:: Nwp_Lat_Idx
-  integer:: Vza_Idx
-  integer:: i1,i2,j1,j2
-  integer:: Elem_Lrc_Idx
-  integer:: Line_Lrc_Idx
-  integer:: Number_Rtm_Levels
-
+  integer:: Vza_Idx 
   logical:: Fire_Flag
-
-  integer:: water_count
-  integer:: ice_count
-
-  integer(kind=int1) :: smoke_pixel
-  integer(kind=int1) :: dust_pixel
 
   real(kind=real4) :: BTD8511
   real(kind=real4) :: Beta_11um_133um
@@ -148,11 +136,11 @@ subroutine IR_CLOUD_TYPE_BAUM()
   !------------------------------------------------------------------
   ! Step #0: Check the needed data are present
   !------------------------------------------------------------------
-  if (Sensor%Chan_On_Flag_Default(29) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(32) == sym%NO) return
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .and. &
-      Sensor%Chan_On_Flag_Default(45) == sym%NO) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(29) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(31) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(32) ) return
+  if ( .NOT. Sensor%Chan_On_Flag_Default(33)  .and. &
+       .NOT. Sensor%Chan_On_Flag_Default(45) ) return
 
   !------------------------------------------------------------------
   ! Step #1: Check for non-cloud conditions and
@@ -162,7 +150,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- save indices
      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
@@ -173,7 +161,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
      ! Determine if a non-cloud type has been determined in the
      ! cloud mask, if so, set the type flag and exit
      !-------------------------------------------------------------
-     Fire_Flag = BTEST(CLDMASK%Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
+     Fire_Flag = BTEST(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
      if (Fire_Flag) then
         Cld_Type_IR(Elem_Idx,Line_Idx) = sym%FIRE_TYPE
         Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%UNKNOWN_PHASE
@@ -181,14 +169,14 @@ subroutine IR_CLOUD_TYPE_BAUM()
      endif
 
      !--- set clear to clear phase
-     if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
+     if (Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
           Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
           Cld_Type_IR(Elem_Idx,Line_Idx) = sym%CLEAR_TYPE
           cycle
      endif
 
      !--- set probably clear to clear phase
-     if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
+     if (Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
           Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
           Cld_Type_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE
           cycle
@@ -204,10 +192,10 @@ subroutine IR_CLOUD_TYPE_BAUM()
      BTD8511 = ch(29)%Bt_Toa(Elem_Idx,Line_Idx) - ch(31)%Bt_Toa(Elem_Idx,Line_Idx)
 
      !--- use 13.3 fusion beta when availble
-     if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(33) ) then
           Beta_11um_133um = Beta_11um_133um_Tropo_Rtm(Elem_Idx,Line_Idx)
      endif
-     if (Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+     if (Sensor%Chan_On_Flag_Default(45) ) then
           Beta_11um_133um = Beta_11um_133fusum_Tropo_Rtm(Elem_Idx,Line_Idx)
      endif
 
@@ -291,7 +279,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
 
   if (Cld_Phase_IR(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) then
 
-           if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx)== sym%CLEAR) then 
+           if (Cld_Mask(Elem_Idx,Line_Idx)== sym%CLEAR) then 
               Cld_Type_IR(Elem_Idx,Line_Idx) = sym%CLEAR_TYPE
            else
               Cld_Type_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE

@@ -31,7 +31,7 @@
 !   June 2006 - Rewrote for version 4 CLAVR-x using standardized HDF read/write commands
 !----------------------------------------------------------------------
 program COMPILE_TIME
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use HDF
  use HDF_PARAMS
  use NUMERICAL_ROUTINES

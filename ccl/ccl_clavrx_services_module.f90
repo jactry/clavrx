@@ -5,7 +5,7 @@
 module CCL_SERVICES_MOD
 
  use PLANCK
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use NWP_COMMON
  use RTM_COMMON
  use PIXEL_COMMON, only: &
@@ -16,7 +16,6 @@ module CCL_SERVICES_MOD
        ACHA, &
        CCL, &
        Sfc, &
-       CLDMASK, &
        Bad_Pixel_Mask, &
        I_Lrc, &
        J_Lrc, &
@@ -28,6 +27,8 @@ module CCL_SERVICES_MOD
        Lat_Nwp_Fac, &
        Zen_Idx_Rtm, &
        Smooth_Nwp_Flag, &
+       Posterior_Cld_Probability, &
+       Cld_Mask, &
        Cld_Type, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
@@ -54,7 +55,7 @@ module CCL_SERVICES_MOD
  integer (kind=int4):: Number_Of_Lines
  real (kind=real4):: Sensor_Resolution_KM
 
- integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ logical, dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Latitude
  real, dimension(:,:), pointer:: Longitude
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type

@@ -205,8 +205,8 @@ module CCL_CLAVRX_BRIDGE
    Input%Latitude => Nav%Lat
    Input%Longitude => Nav%Lon
    Input%Surface_Type => Sfc%Sfc_Type
-   Input%Cloud_Mask => CLDMASK%Cld_Mask
-   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
+   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Probability => Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
    Input%Pc => ACHA%Pc
    Input%Pc_Base => ACHA%Pc_Base

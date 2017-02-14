@@ -68,6 +68,7 @@ module USER_OPTIONS
       , Temporary_Data_Dir &
       , Therm_Cal_1b &
       , Ancil_Data_Dir &
+      , CSV_file &
       , Cfsr_Data_Dir &
       , Merra_Data_Dir &
       , Gdas_Data_Dir &
@@ -103,16 +104,13 @@ module USER_OPTIONS
       , Globsnow_Data_Dir, &
         Use_IR_Cloud_Type_Flag
       
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Sym &
       , Exe_Prompt &
       , Nchan_Clavrx
       
-   use FILE_UTILITY, only: &
+   use FILE_TOOLS, only: &
       Get_Lun
-
-   use LEVEL2B_ROUTINES, only: &
-      INIT_RANDOM_SEED
  
    use  CLAVRX_MESSAGE_MODULE, only: &
       Mesg &
@@ -166,7 +164,7 @@ contains
    ! ---------------------------------------------------------------------------------
    subroutine SET_DEFAULT_VALUES
            
-      Aer_Flag = sym%YES
+      Aer_Flag = .TRUE.
       Ash_Flag = sym%NO
       modis_clr_alb_Flag = 1 ! do not use clear-sky MODIS albedo maps
       output_scaled_reflectances = sym%NO !default is to output ref / cossolzen
@@ -184,9 +182,9 @@ contains
       Nlcomp_Mode = 1            
       Level2_File_Flag = 1
       Rtm_File_Flag = 0
-      Cld_Flag = 1
+      Cld_Flag = .TRUE.
       Image%Number_Of_Lines_Per_Segment = 240
-      Sasrab_Flag = 0
+      Sasrab_Flag = .FALSE.
       Nwp_Opt = 1
       Rtm_Opt = 1 
       Compress_Flag = 1 
@@ -243,6 +241,8 @@ contains
       character(len=1020):: Temporary_Data_Dir_Root
       integer:: String_Length
       character(len=1):: Last_Char
+      integer :: Cld_Flag_dummy
+      integer :: Sasrab_Flag_dummy
       
             
       call MESG ("DEFAULT FILE READ IN",level = 5 )
@@ -300,11 +300,13 @@ contains
       
       read(unit=Default_Lun,fmt=*) Level2_File_Flag
       read(unit=Default_Lun,fmt=*) Rtm_File_Flag
-      read(unit=Default_Lun,fmt=*) Cld_Flag
+      read(unit=Default_Lun,fmt=*) Cld_Flag_dummy
+      Cld_Flag = Cld_Flag_dummy == 1
       read(unit=Default_Lun,fmt=*) Image%Number_Of_Lines_Per_Segment
-      read(unit=Default_Lun,fmt=*) Sasrab_Flag
+      read(unit=Default_Lun,fmt=*) Sasrab_Flag_dummy
+      Sasrab_Flag = Sasrab_Flag_dummy == 1
       Dark_Comp_Data_Dir=trim(Data_Base_Path)//'/dynamic/goes_dark_sky_composites/'
-      if ( Sasrab_Flag == 1 )  then
+      if ( Sasrab_Flag  )  then
           Read_Dark_Comp=1
       end if 
 
@@ -463,7 +465,9 @@ contains
       if(Use_Default == sym%NO)  then
           print *, EXE_PROMPT, "Using standard defaults and command line options"
       end if 
- 
+      
+      Csv_file = trim('clavrx_level2_products.csv')
+      
       do i=1, fargc
 
         call getarg(i,fargv)
@@ -520,7 +524,12 @@ contains
         elseif(trim(fargv) == "-ancil_data_dir") then
           call getarg(i+1,ancil_data_dir)
           ancil_data_dir=trim(ancil_data_dir)
-
+         
+        !Change CSV file
+        elseif(trim(fargv) == "-csv_file") then
+          call getarg(i+1,csv_file)
+          csv_file=trim(csv_file)
+          
         !Smooth/not smooth NWP data
         elseif(trim(fargv) == "-smooth_nwp") then
           Smooth_Nwp_Flag = sym%YES
@@ -576,6 +585,7 @@ contains
 
       !--- default ancillary data directory
       Ancil_Data_Dir = trim(Data_Base_Path)
+      
       Gfs_Data_Dir = trim(Data_Base_Path)//'/dynamic/gfs/'
       Ncep_Data_Dir = trim(Data_Base_Path)//'/dynamic/ncep-reanalysis/'
       Cfsr_Data_Dir = trim(Data_Base_Path)//'/dynamic/cfsr/'
@@ -586,7 +596,7 @@ contains
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
       
-      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
+      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set == 1
 
    end subroutine DETERMINE_USER_CONFIG
 
@@ -601,9 +611,9 @@ contains
       select case ( nwp_opt)
       case ( 0 )   
          print *,  EXE_PROMPT, "No choice made for NWP data, will not run algoritms or orbital level3 files"
-         Cld_Flag = sym%NO
+         Cld_Flag = .FALSE.
        
-         Sasrab_Flag = sym%NO
+         Sasrab_Flag = .FALSE.
          Rtm_File_Flag = sym%NO
          Cloud_Mask_Bayesian_Flag = sym%NO
          Cloud_Mask_Aux_Flag = sym%NO ! this is to determine if the lut's are being read in
@@ -788,7 +798,7 @@ contains
       print *," "  
   
       print *,"  -dcomp_mode"
-      print *, "  dcomp mode 1,2 or 3 (1.6,2.2 or 3.8 micron)."
+      print *, "  dcomp mode 1,2, 3 or 9 (1.6,2.2 or 3.8 micron or all three)."
       print *," "  
 
   end subroutine HELPER
@@ -950,7 +960,7 @@ contains
       character (len=*) , intent(in) :: SensorName
       
       integer :: possible_acha_modes ( 8 )
-      integer :: possible_dcomp_modes ( 3 )
+      integer :: possible_dcomp_modes ( 5 )
  
       !------------------------------------------------------------------------
       !--- ACHA MODE Check
@@ -1005,20 +1015,20 @@ contains
          possible_dcomp_modes(1)    =  3
       case ('SEVIRI')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:2)  =  [1, 3]
+         possible_dcomp_modes(1:3)  =  [1, 3, 9]
       case ('FY2-IMAGER')
          possible_acha_modes(1:4)   =  [1, 2, 3, 6] 
          possible_dcomp_modes(1:1)  =  [3]
       case ('VIIRS','VIIRS-NASA')
          possible_acha_modes(1:3)   =  [1, 3, 5] 
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:5)  =  [1, 2, 3, 9, 8]
          nlcomp_mode_User_Set       =  1  
       case ('VIIRS-IFF')      
          possible_acha_modes(1:4)   =  [1, 3, 5, 9]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('AQUA-IFF')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('AVHRR-IFF')
          possible_acha_modes(1:4)   =  [1, 3, 4, 8]
          possible_dcomp_modes(1)    =  3
@@ -1027,16 +1037,16 @@ contains
          possible_dcomp_modes(1:1)  =  [3]
       case ('MODIS')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8] 
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('MODIS-CSPP')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('MODIS-MAC')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ( 'AHI')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   
       end select
@@ -1128,11 +1138,11 @@ contains
       
       Valid_Channels = Existing_Channels ( SensorName )
           
-      Sensor%Chan_On_Flag_Default =  0
+      Sensor%Chan_On_Flag_Default =  .FALSE.
 
       do i = 1, Nchan_Clavrx
          if (Valid_Channels (i) < 0 ) cycle
-         Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = 1
+         Sensor%Chan_On_Flag_Default (Valid_Channels (i) ) = .TRUE.
       end do
    
    end subroutine CHANNEL_SWITCH_ON
@@ -1149,7 +1159,7 @@ contains
       
       if ( Expert_Mode < 6 ) return
 
-      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set
+      Sensor%Chan_On_Flag_Default = Chan_On_Flag_Default_User_Set == 1
 
       ! - turn off channels not available for this sensor
       
@@ -1158,42 +1168,42 @@ contains
 
       do i = 1, Nchan_Clavrx
          if ( any ( i == Valid_Channels )) cycle
-         Sensor%Chan_On_Flag_Default ( i ) = 0
+         Sensor%Chan_On_Flag_Default ( i ) = .FALSE.
       end do
 
       !--- check ACHA mode based on available channels
       Not_Run_Flag = .false.
       if (ACHA%Mode > 0 .and. &
-         (Sensor%Chan_On_Flag_Default(31)==sym%NO)) then
+         ( .NOT. Sensor%Chan_On_Flag_Default(31) )) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 2 .and. &
-         (Sensor%Chan_On_Flag_Default(27)==sym%NO)) then
+         ( .NOT. Sensor%Chan_On_Flag_Default(27) )) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 3 .and. &
-         (Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(32))) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 4 .and. &
-         (Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(33))) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 5 .and. &
-         (Sensor%Chan_On_Flag_Default(29)==sym%NO .or. Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(29) .or. .NOT. Sensor%Chan_On_Flag_Default(32))) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 6 .and. &
-         (Sensor%Chan_On_Flag_Default(27)==sym%NO .or. Sensor%Chan_On_Flag_Default(32)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(27) .or. .NOT. Sensor%Chan_On_Flag_Default(32))) then
             Not_Run_Flag = .true.
       endif
       if (ACHA%Mode == 7 .and. &
-         (Sensor%Chan_On_Flag_Default(27)==sym%NO .or. Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(27) .or. .NOT. Sensor%Chan_On_Flag_Default(33))) then
             Not_Run_Flag = .true.
       endif
 
       if (ACHA%Mode == 8 .and. &
-         (Sensor%Chan_On_Flag_Default(32)==sym%NO .or. Sensor%Chan_On_Flag_Default(33)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(32) .or. .NOT. Sensor%Chan_On_Flag_Default(33))) then
             Not_Run_Flag = .true.
       endif
          
@@ -1205,20 +1215,41 @@ contains
 
       !--- check based on available channels
       if (Dcomp_Mode == 1 .and. &
-         (Sensor%Chan_On_Flag_Default(1) == sym%NO .or. Sensor%Chan_On_Flag_Default(6)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(1)  .or. .NOT. Sensor%Chan_On_Flag_Default(6))) then
          print *, EXE_PROMPT, 'DCOMP Mode 1 not possible with selected channels, DCOMP is now off'
       endif
       
       if (Dcomp_Mode == 2 .and. &
-         (Sensor%Chan_On_Flag_Default(1) == sym%NO .or. Sensor%Chan_On_Flag_Default(7)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(1)  .or. .NOT. Sensor%Chan_On_Flag_Default(7))) then
          print *, EXE_PROMPT, 'DCOMP Mode 2 not possible with selected channels, DCOMP is now off'
       endif
       
       if (Dcomp_Mode == 3 .and. &
-         (Sensor%Chan_On_Flag_Default(1) == sym%NO .or. Sensor%Chan_On_Flag_Default(20)==sym%NO)) then
+         (.NOT. Sensor%Chan_On_Flag_Default(1)  .or. .NOT. Sensor%Chan_On_Flag_Default(20))) then
          print *, EXE_PROMPT, 'DCOMP Mode 3 not possible with selected channels, DCOMP is now off'
       endif
   
    end subroutine EXPERT_MODE_CHANNEL_ALGORITHM_CHECK
+   
+   !----------------------------------------------------------------------
+   ! An example of how to reset a random seed based on system time
+   !
+   ! taken from:
+   !   http://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fSEED.html
+   !----------------------------------------------------------------------
+   SUBROUTINE init_random_seed()
+            INTEGER :: i, n, clock
+            INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+          
+            CALL RANDOM_SEED(size = n)
+            ALLOCATE(seed(n))
+          
+            CALL SYSTEM_CLOCK(COUNT=clock)
+          
+            seed = clock + 37 * (/ (i - 1, i = 1, n) /)
+            CALL RANDOM_SEED(PUT = seed)
+          
+            DEALLOCATE(seed)
+   END SUBROUTINE init_random_seed
    
 end module USER_OPTIONS

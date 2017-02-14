@@ -34,13 +34,12 @@
 !
 !--------------------------------------------------------------------------------------
 module CLAVRX_SST_MODULE
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use PIXEL_COMMON, only: ch, sensor, geo, sfc, Bad_Pixel_Mask, Sst_Unmasked, Sst_Masked,  &
-                        CLDMASK
-use ALGORITHM_CONSTANTS
+                        Cld_Mask
 
 implicit none
-
+private
 public:: SETUP_SST, COMPUTE_SST, COMPUTE_MASKED_SST
 private::  MCSST
 
@@ -131,8 +130,6 @@ select case (Sensor%WMO_Id)
 
       case(259) !GOES-15
 
-      case(270) !GOES-16
-
       case(706) !NOAA-6
 
       case(707) !NOAA-7
@@ -165,8 +162,8 @@ subroutine COMPUTE_SST()
 
       Sst_Unmasked = MISSING_VALUE_REAL4
 
-      if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. &
-          Sensor%Chan_On_Flag_Default(32)==sym%YES .and. &
+      if (Sensor%Chan_On_Flag_Default(31) .and. &
+          Sensor%Chan_On_Flag_Default(32) .and. &
           maxval(sst_coef) /= MISSING_VALUE_REAL4) then
 
           Sst_Unmasked = MCSST(ch(31)%Bt_Toa,ch(32)%Bt_Toa,Geo%Seczen)
@@ -174,7 +171,7 @@ subroutine COMPUTE_SST()
       endif
 
       !--- mask bad pixels, land and snow/ice
-      where(Bad_Pixel_Mask == sym%YES .or.  &
+      where(Bad_Pixel_Mask .or.  &
             Sfc%Land == sym%Land .or. Sfc%Land == sym%COASTLINE .or. &
             Sfc%Snow /= sym%NO_SNOW) 
 
@@ -192,7 +189,7 @@ subroutine COMPUTE_MASKED_SST()
 
       Sst_Masked = Sst_Unmasked
 
-      where(CLDMASK%Cld_Mask == sym%Cloudy .or. CLDMASK%Cld_Mask == sym%Prob_Cloudy) 
+      where(Cld_Mask == sym%Cloudy .or. Cld_Mask == sym%Prob_Cloudy) 
               Sst_Masked = MISSING_VALUE_REAL4
       endwhere
 

@@ -187,12 +187,6 @@ module CCL_MODULE
          Output%Cloud_Layer = 21
   endwhere
 
-!ynoh (cira/csu) ! for H-M-L cloud layers
-  where (Mask_High == 1 .and. Mask_Mid == 1 .and. Mask_Low == 1)
-         Output%Cloud_Layer = 31
-  endwhere
-!ynoh (cira/csu)
-
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
  !--------------------------------------------------------------------
@@ -212,7 +206,7 @@ module CCL_MODULE
       i22 = min(Num_Elems,i+M)
 
       !--- check for a bad pixel pixel
-      if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle
+      if (Input%Invalid_Data_Mask(i,j) ) cycle
 
       !--- count all of the pixels in each layer
       Num_High = int(sum(real(Mask_High(i1:i2,j1:j2))))

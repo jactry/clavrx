@@ -67,10 +67,63 @@
 !--------------------------------------------------------------------------------------
 module NWP_COMMON
    
-  use CONSTANTS
-  use PIXEL_COMMON
-  use NUMERICAL_ROUTINES
-
+  use CX_CONSTANTS_MOD,only: &
+   int4,real8,real4,int1, int2 &
+   , sym &
+   , missing_value_int1 &
+   , missing_value_int2 &
+   , missing_value_int4 &
+   , missing_value_real4 &
+   , g
+  
+  
+  use PIXEL_COMMON,only: &
+   bad_pixel_mask &
+   , tsfc_nwp_pix &
+   , i_nwp &
+   , j_nwp &
+   , i_nwp_x &
+   , j_nwp_x &
+   , sfc &
+   , lon_nwp_fac &
+   , lat_nwp_fac &
+   , ttropo_nwp_pix &
+   , tair_nwp_pix &
+   , rh_nwp_pix &
+   , psfc_nwp_pix &
+   , pmsl_nwp_pix &
+   , weasd_nwp_pix &
+   , sea_ice_frac_nwp_pix &
+   , TPW_NWP_PIX &
+   , ozone_nwp_pix &
+   , k_index_nwp_pix &
+   , sc_lwp_nwp_pix &
+   , lwp_nwp_pix &
+   , IWP_NWP_PIX &
+   , cwp_nwp_pix &
+   , pc_nwp_pix &
+   , CFRAC_NWP_PIX &
+   , NCLD_LAYERS_NWP_PIX &
+   , CLD_TYPE_NWP_PIX &
+   , WND_SPD_10M_NWP_PIX &
+   , WND_DIR_10M_NWP_PIX &
+   , LCL_HEIGHT_NWP_PIX &
+   , CCL_HEIGHT_NWP_PIX &
+   , INVERSION_STRENGTH_NWP_PIX &
+   , INVERSION_BASE_NWP_PIX &
+   , INVERSION_TOP_NWP_PIX &
+   , nav &
+   , smooth_nwp_flag &
+   , image &
+   , space_mask
+   
+   use cx_science_tools_mod,only : &
+      vapor &
+      , vapor_ice
+   
+   use numerical_tools_mod,only: &
+      locate
+   
   implicit none
   private
   private:: FIND_NWP_LEVELS, &
@@ -109,13 +162,13 @@ module NWP_COMMON
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_R4
  end interface
 
- interface INTERPOLATE_NWP
-     module procedure  &
+   interface INTERPOLATE_NWP
+      module procedure  &
          INTERPOLATE_NWP_I1, &
          INTERPOLATE_NWP_I2, &
          INTERPOLATE_NWP_I4, &
          INTERPOLATE_NWP_R4
- end interface
+   end interface
 !----------------------------------------------------------------------
 !--- set this parameter to 1 when reading GFS hdf files that have
 !--- x as the first index, not z
@@ -148,7 +201,6 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_uni_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_uni_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: T_Trop_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Z_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
@@ -298,7 +350,7 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
   do Elem_Idx = Elem_Idx_Start, Elem_Idx_End
     do Line_Idx = Line_Idx_Start,Line_Idx_End
 
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
              Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
              cycle
      endif
@@ -375,8 +427,6 @@ subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
   integer(kind=int4), intent(in):: Smooth_Nwp_Opt
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Z_Trop_Nwp,Ztropo_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(P_Trop_Nwp,Ptropo_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_Nwp_Opt)
@@ -815,7 +865,6 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(Tmpair_uni_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tmpsfc_uni_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(T_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
-    allocate(Z_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(P_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Rhsfc_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Uth_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -897,7 +946,6 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     Tmpair_Uni_Nwp = 0
     Tmpsfc_Uni_Nwp = 0
     T_Trop_Nwp = 0
-    Z_Trop_Nwp = 0
     P_Trop_Nwp = 0
     Rhsfc_Nwp = 0
     Uth_Nwp = 0
@@ -1010,7 +1058,6 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Tmpair_uni_Nwp))    deallocate(Tmpair_uni_Nwp)
     if (allocated(Tmpsfc_uni_Nwp))    deallocate(Tmpsfc_uni_Nwp)
     if (allocated(T_Trop_Nwp))        deallocate(T_Trop_Nwp)
-    if (allocated(Z_Trop_Nwp))        deallocate(Z_Trop_Nwp)
     if (allocated(P_Trop_Nwp))        deallocate(P_Trop_Nwp)
     if (allocated(Rhsfc_Nwp))         deallocate(Rhsfc_Nwp)
     if (allocated(hght500_Nwp))       deallocate(hght500_Nwp)
@@ -1061,6 +1108,7 @@ subroutine DESTROY_NWP_ARRAYS
 ! derive height and temperature from a profile knowing pressure
 !----------------------------------------------------------------------
  subroutine KNOWING_P_COMPUTE_T_Z_NWP(Lon_Nwp_Idx,Lat_Nwp_Idx,P,T,Z,Ilev)
+   implicit none
   integer, intent(in):: Lon_Nwp_Idx, Lat_Nwp_Idx
   real, intent(in):: P
   real, intent(out):: T,Z
@@ -1070,6 +1118,7 @@ subroutine DESTROY_NWP_ARRAYS
 
   !--- interpolate pressure profile
   call LOCATE(P_Std_Nwp,Nlevels_Nwp,P,Ilev)
+  
   Ilev = max(1,min(Nlevels_Nwp-1,Ilev))
 
   dp = P_Std_Nwp(Ilev+1) - P_Std_Nwp(Ilev)
@@ -1386,9 +1435,6 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
         Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = 1   !assume top level if no trop found
     endif         
 
-    !--- store tropause height so when interpolate to pixel level
-    Z_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Z_Prof_Nwp(Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Lon_Nwp_Idx,Lat_Nwp_Idx)
-
 !--------------------------------------------------------------------
 !--- find stratopause level starting at 500 mb by looking for levels
 !--- with the minimum temp
@@ -1580,7 +1626,7 @@ end subroutine FIND_NWP_LEVELS
         Sfc%Coast_Mask_Nwp(Elem_Idx,Line_Idx) = sym%NO
        
         !--- check for valid pixels
-        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES)  then
+        if (Bad_Pixel_Mask(Elem_Idx,Line_Idx))  then
           cycle
         endif
 
@@ -2058,12 +2104,12 @@ SUBROUTINE COMPUTE_SEGMENT_NWP_CLOUD_PARAMETERS()
      element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
 
       !--- check for bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
         cycle
       endif
 
       !--- check for space views
-      if (Space_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+      if (Space_Mask(Elem_Idx,Line_Idx) == 1 ) then
         cycle
       endif
 

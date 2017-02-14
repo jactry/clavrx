@@ -58,11 +58,11 @@ module dcomp_lut_mod
    
    type lut_dim_type
       logical :: is_set
-      real  :: sat_zen ( NUM_SAT )
-      real  :: sol_zen ( NUM_SOL )
-      real  :: rel_azi ( NUM_AZI )
-      real  :: cod ( NUM_COD )
-      real  :: cps ( NUM_REF )  
+      real, allocatable  :: sat_zen ( : )
+      real, allocatable  :: sol_zen ( : )
+      real, allocatable  :: rel_azi ( : )
+      real , allocatable :: cod ( : )
+      real, allocatable  :: cps ( : )  
       integer :: n_sat_zen
       integer :: n_sol_zen
       integer :: n_rel_azi
@@ -216,12 +216,13 @@ contains
          chan_string(20) = '2'
       
       case ('MODIS-AQUA', 'MODIS-TERRA')    sensor_block
-         has_sol_table(1:2) = .true.
+         has_sol_table(1) = .true.
+         has_sol_table(2) = .false.
          has_sol_table(5:7) = .true.
          has_sol_table(20) = .true.
          has_ems_table(20) = .true.
          chan_string(1) = '1'
-         chan_string(2) = '2'
+         !chan_string(2) = '2'
          chan_string(5) = '5'
          chan_string(6) = '6'
          chan_string(7) = '7'

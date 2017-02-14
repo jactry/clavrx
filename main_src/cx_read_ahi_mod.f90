@@ -71,6 +71,7 @@ module CX_READ_AHI_MOD
    public :: get_ahi_data
    public :: ahi_time_from_filename
    public :: ahi_segment_information_region
+   public :: get_var_dimension
    
    integer, parameter :: NUM_CHN = 16
    
@@ -82,8 +83,17 @@ module CX_READ_AHI_MOD
       character ( len =20) :: varname (NUM_CHN)
       integer :: h5_offset(2)
       integer :: h5_count(2)
+      integer :: h5_offset_3(2)
+      integer :: h5_count_3(2)
+      integer :: h5_offset_124(2)
+      integer :: h5_count_124(2)
       real :: lon_range (2)
       real :: lat_range (2)
+      logical :: filenames_set = .false.
+      logical :: do_res3 = .false.
+      logical :: do_res124 = .false.
+      contains
+      procedure :: clean => clean_config
    end type ahi_config_type
    
    type ahi_chn_type
@@ -95,6 +105,7 @@ module CX_READ_AHI_MOD
    end type ahi_chn_type
    
    type :: geo_str
+      logical :: is_set
       real , dimension (:,:) , allocatable :: solzen
       real , dimension (:,:) , allocatable :: satzen
       real , dimension (:,:) , allocatable :: solaz
@@ -105,19 +116,25 @@ module CX_READ_AHI_MOD
       real , dimension (:,:) , allocatable :: glintzen
       real , dimension (:,:) , allocatable :: scatangle
       real , dimension (:)   , allocatable :: scan_time
-      logical, dimension (:,:), allocatable :: is_space      
+      logical, dimension (:,:), allocatable :: is_space 
+      contains
+      procedure :: deallocate_geo
+      procedure :: allocate_geo    
    end type  geo_str
    
    type, public :: ahi_data_out_type
       type ( ahi_chn_type ) , allocatable :: chn (:)
       type ( geo_str ) :: geo
+      type (geo_str ) :: geo_3
+      type ( geo_str ) :: geo_124
       type ( date_type ) :: time_start_obj
       type ( date_type ) :: time_end_obj
+      logical :: do_res3 = .false.
+      logical :: do_res124 = .false.
       logical :: success
       contains
       procedure :: deallocate_all
-      procedure :: deallocate_geo
-      procedure :: allocate_geo
+    
    end type ahi_data_out_type
    
           
@@ -139,9 +156,13 @@ contains
       call ahi_time_from_filename ( trim ( config %file_base) , out % time_start_obj, out % time_end_obj )
      
       call read_navigation ( config , out )
+      
+      if ( config % do_res3 ) call read_navigation ( config , out , do_geo3_inp = .true.)
      
+      if ( config % do_res124 ) call read_navigation ( config , out , do_geo124_inp = .true.)
+
       if ( .not. present ( only_nav )) then
-       
+      
          call read_ahi_level1b ( config , out )
          
       end if
@@ -159,6 +180,8 @@ contains
       integer :: day
       integer :: hour
       integer :: minute
+      
+      integer, parameter :: TIME_PERIOD_AHI_MINUTE = 8
    
       read(file_base(8:11), fmt="(I4)") year
       read(file_base(12:13), fmt="(I2)") month
@@ -167,12 +190,11 @@ contains
       read(file_base(19:20), fmt="(I2)") minute
       
       call time0 % set_date ( &
-            year , month, day , hour, minute &
-            )
+            year , month, day , hour, minute )
       
       time1 = time0
       
-      call time1 % add_time ( minute = 8)
+      call time1 % add_time ( minute = TIME_PERIOD_AHI_MINUTE)
        
    end subroutine ahi_time_from_filename
    
@@ -220,14 +242,12 @@ contains
       if ( config % lon_range(2) .lt. config % lon_range(1) ) then
         
          inside =  (( out % geo % lon .lt. config % lon_range(2) .and. &
-               out % geo % lon .ge. -180.0 )  .or. &
+               & out % geo % lon .ge. -180.0 )  .or. &
+               & (out % geo % lon .gt. config % lon_range(1) .and. &
+               & out % geo % lon .lt. 180.0 )) .and. &
                
-               (out % geo % lon .gt. config % lon_range(1) .and. &
-               out % geo % lon .lt. 180.0 )) .and. &
-               
-               
-           out % geo % lat .gt. config % lat_range(1) .and. &
-           out % geo % lat .lt. config % lat_range(2)
+               & out % geo % lat .gt. config % lat_range(1) .and. &
+               & out % geo % lat .lt. config % lat_range(2)
       
       end if
       
@@ -275,26 +295,74 @@ contains
    !
    ! --------------------------------------------------------------------------------------
    subroutine set_filenames ( config)
-      use string_functions, only: replace_text
+      use cx_string_tools_mod, only: replace_text
       
       type ( ahi_config_type ) :: config
       
       integer :: i
       character(len=2) :: identifier
       character ( len=1020) :: file_for_this_channel
+      integer,pointer::dims3(:)=>null()
+      integer,pointer::dims7(:)=>null()
+      integer,pointer::dims124(:)=>null()
       
       do i = 1 , 16
-        
+         
          write (identifier , fmt ='(i2.2)') i
         
          file_for_this_channel = replace_text ( config % file_base,'B01','B'//identifier)
         
          config % filename ( i ) = trim (config % data_path)//trim(file_for_this_channel) 
          config % varname ( i ) = '/RAD'
-
+                  
       end do
+      
+      ! - compare channel 7 to 3 and 124 to find out if they are different 
+     
+      config % filenames_set = .true.
+      
+      call get_var_dimension ( config, 7, dims7)
+      call get_var_dimension ( config, 3, dims3)
+      call get_var_dimension ( config, 1, dims124)
+      
+      
+      
+      if ( dims3(1) .ne. dims7(1) ) then
+         ! 4 times bigger resolution for channel 3
+         config % do_res3 = .true.
+         config % h5_offset_3 = 4 * config % h5_offset
+         config % h5_count_3 = 4 * config % h5_count
+      end if
+      
+      
+      if ( dims124(1) .ne. dims7(1) ) then
+         ! 2 times bigger resolution for channel 3
+         config % do_res124 = .true.
+         config % h5_offset_124 = 2 * config % h5_offset
+         config % h5_count_124 = 2 * config % h5_count
+      end if
+      
 
    end subroutine set_filenames
+   
+   !--------------------------------------------------------------------------------------
+   !
+   !--------------------------------------------------------------------------------------
+   
+   subroutine get_var_dimension ( config, chn, dims )
+      use readh5dataset, only: &
+         H5_DATASET_DIMENSIONS
+      type ( ahi_config_type ) :: config
+      integer, intent(in) :: chn
+      integer :: ndim
+      integer,pointer::dims(:)
+     
+       if (.not. config % filenames_set) call set_filenames(config)
+      
+      call H5_DATASET_DIMENSIONS (trim(config % filename ( chn )),trim(config % varname ( chn )),dims)
+       
+      
+   end subroutine get_var_dimension
 
    ! --------------------------------------------------------------------------------------
    !  This reads navigation properties from AHI file
@@ -310,7 +378,7 @@ contains
    !    glintzen
    !    satangle    
    ! --------------------------------------------------------------------------------------
-   subroutine read_navigation ( config, ahi )  
+   subroutine read_navigation ( config, ahi , do_geo3_inp, do_geo124_inp)  
       
       use viewing_geometry_module, only: &
             possol &
@@ -330,6 +398,8 @@ contains
       
       type ( ahi_config_type ) :: config
       type ( ahi_data_out_type ) :: ahi
+      logical, optional :: do_geo3_inp
+      logical, optional :: do_geo124_inp
       
       character (len=120) ::  attr_name
       
@@ -346,80 +416,111 @@ contains
    
       real :: GEO_ALTITUDE = 35786.0 !km
       
-      ! - this is neede because it is not available in each of the files
-      integer :: VALID_PROJECTION = 7
+      ! - this is needed because it is not available in each of the files
+      integer :: VALID_PROJECTION_CHANNEL 
       
       integer :: day_of_year
       real :: hour_frac
       
+      type(geo_str) :: geo
+      logical :: do_geo3
+      logical :: do_geo124
+      
+      integer :: h5_offset(2)
+      integer :: h5_count(2)
+      
        ! - navigation
      
-      ! - should be removed later then we trust the values in the file! 
-      cfac = 20466276.
-      coff = 2750.
-      lfac = 20466276.
-      loff = 2750.
-      sub_lon =  140.70
-      sub_lat = 0.
+      do_geo3 = .false.
+      do_geo124 = .false.
+      h5_offset = config % h5_offset
+      h5_count = config % h5_count
+      
+      if (present(do_geo3_inp)) then
+         do_geo3 = do_geo3_inp
+         h5_offset = config % h5_offset_3
+      h5_count = config % h5_count_3
+      else if (present(do_geo124_inp)) then
+         do_geo124 = do_geo124_inp
+         h5_offset = config % h5_offset_124
+         h5_count = config % h5_count_124
+      end if
+      
+      VALID_PROJECTION_CHANNEL = 7
+      if ( do_geo3) VALID_PROJECTION_CHANNEL = 3 
+      if ( do_geo124) VALID_PROJECTION_CHANNEL = 1
+      
       
       ! - read in the constants fom file
-
       attr_name = trim('Projection/CFAC')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), CFAC )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL ) ) , trim ( attr_name ), CFAC )
       attr_name = trim('Projection/LFAC')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), LFAC )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL) ) , trim ( attr_name ), LFAC )
       attr_name = trim('Projection/COFF')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), COFF )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL ) ) , trim ( attr_name ), COFF )
       attr_name = trim('Projection/LOFF')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), LOFF )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL ) ) , trim ( attr_name ), LOFF )
       attr_name = trim('Projection/latitude_of_projection_origin')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION ) ) , trim ( attr_name ), sub_lat )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL ) ) , trim ( attr_name ), sub_lat )
       attr_name = trim('Projection/longitude_of_projection_origin')
-      call h5readattribute ( trim(config % filename ( VALID_PROJECTION) ) , trim ( attr_name ), sub_lon )
+      call h5readattribute ( trim(config % filename ( VALID_PROJECTION_CHANNEL) ) , trim ( attr_name ), sub_lon )
       
       
-      call ahi % allocate_geo (config % h5_count(1),config % h5_count(2)) 
+      call  geo %  allocate_geo ( h5_count(1), h5_count(2)) 
      
       call ahi % time_start_obj % get_date ( doy = day_of_year, hour_frac = hour_frac )
       
-      do jj = 1 , config % h5_count(2)     
-         do ii = 1 ,   config % h5_count(1)
+      do jj = 1 ,  h5_count(2)     
+         do ii = 1 ,    h5_count(1)
             
-            x_full_disk = ii + config % h5_offset(1)
-            y_full_disk = jj + config % h5_offset(2)
+            x_full_disk = ii +  h5_offset(1)
+            y_full_disk = jj +  h5_offset(2)
             
             
             call fgf_to_earth (  dble(x_full_disk), dble(y_full_disk) , cfac, coff, lfac, loff, sub_lon &
                , lonx , latx )
            
-            ahi % geo % lat (ii,jj) = latx  
-            ahi % geo % lon (ii,jj) = lonx  
+            geo % lat (ii,jj) = latx  
+            geo % lon (ii,jj) = lonx  
                         
             if ( lonx == -999. ) cycle
              
             call  possol ( day_of_year ,  hour_frac  , real(lonx) &
-                  , real(latx),ahi % geo % solzen (ii,jj),ahi % geo % solaz (ii,jj) )
+                  , real(latx), geo % solzen (ii,jj), geo % solaz (ii,jj) )
                         
-            ahi % geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat) &
+             geo % satzen (ii,jj) = sensor_zenith ( GEO_ALTITUDE, real(sub_lon),real(sub_lat) &
                ,real(lonx) , real(latx) )
              
-            ahi % geo % sataz (ii,jj) = sensor_azimuth (  real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
+              geo % sataz (ii,jj) = sensor_azimuth (  real(sub_lon),real(sub_lat),real(lonx) , real(latx) )
             
-            ahi % geo % relaz(ii,jj) = relative_azimuth (ahi % geo % solaz (ii,jj) , ahi % geo % sataz (ii,jj))
+              geo % relaz(ii,jj) = relative_azimuth ( geo % solaz (ii,jj) , geo % sataz (ii,jj))
            
-            ahi % geo % glintzen(ii,jj) = glint_angle (ahi % geo % solzen (ii,jj) ,ahi % geo % satzen (ii,jj) &
-                  ,  ahi % geo % relaz(ii,jj) )
+              geo % glintzen(ii,jj) = glint_angle ( geo % solzen (ii,jj) ,geo % satzen (ii,jj) &
+                  ,   geo % relaz(ii,jj) )
            
-            ahi % geo % scatangle(ii,jj) = scattering_angle ( ahi % geo % solzen (ii,jj)  &
-                  , ahi % geo % satzen (ii,jj), ahi % geo % relaz(ii,jj))
+             geo % scatangle(ii,jj) = scattering_angle (  geo % solzen (ii,jj)  &
+                  ,  geo % satzen (ii,jj),  geo % relaz(ii,jj))
   
          end do
       end do   
      
-      where ( ahi % geo % lat == -999.0)
-         ahi % geo % is_space = .false.
+      where (  geo % lat == -999.0)
+          geo % is_space = .false.
       end where
-
+      
+      if ( do_geo3) then
+         ahi % geo_3 = geo
+         ahi % do_res3 = .true.
+      else if ( do_geo124) then
+         ahi % geo_124 = geo
+         ahi % do_res124 = .true.
+      else
+         ahi % geo = geo
+         
+      end if
+      
+      
+      call geo % deallocate_geo
    end subroutine read_navigation
    
    ! --------------------------------------------------------------------------------------
@@ -446,17 +547,30 @@ contains
       real (8) :: scale_factor, add_offset
       integer ( kind = 2 ) :: fillvalue
       integer ( kind = 4 ) , allocatable :: buffer_fake_i4 (:,:)
-      real ( 8 ) :: cprime 
-      logical :: is_solar_channel = .false.
+      real ( 8 ) :: cprime ! name of the radiance to reflectance coefficient in AHI file
+      integer :: h5_offset(2)
+      integer :: h5_count(2)
             
       ! - executable
       
       ! - channel data read 
       
       do i_chn = 1 ,16
-        
+       
          if ( .not. config % chan_on ( i_chn ) ) cycle
-                 
+         
+         h5_offset = config % h5_offset
+         h5_count = config % h5_count
+         if (i_chn .eq. 3 .and. config % do_res3 ) then
+            h5_offset = config % h5_offset_3
+            h5_count = config % h5_count_3
+         end if
+       
+         if ((i_chn .lt. 3 .or. i_chn .eq. 4) .and. config % do_res124 ) then
+            h5_offset = config % h5_offset_124
+            h5_count = config % h5_count_124
+         end if
+           
          if ( .not. file_test ( trim(config % filename ( i_chn ) ) ) ) then 
             print*, 'AHI READER ERROR>> file '// trim(config % filename ( i_chn )) // ' not existing !!'
             ahi % success = .false.
@@ -465,9 +579,10 @@ contains
 
          ! - Read the data into buffer
          call h5readdataset ( trim(config % filename ( i_chn ) ) , trim ( config % varname(i_chn) ) &
-               , config % h5_offset,config % h5_count, i2d_buffer )
+               ,  h5_offset, h5_count, i2d_buffer )
+               
              
-         if ( .not. allocated (buffer_fake_i4) ) allocate ( buffer_fake_i4 (config % h5_count(1),config % h5_count(2)))
+         if ( .not. allocated (buffer_fake_i4) ) allocate ( buffer_fake_i4 ( h5_count(1), h5_count(2)))
         
          ! - fortran does not support unsigned integer
          
@@ -487,7 +602,7 @@ contains
          call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), fillvalue )
          if ( fillvalue < 0 ) fillvalue = fillvalue + 65536
         
-         allocate ( ahi % chn(i_chn) % rad (config % h5_count(1),config % h5_count(2)))
+         allocate ( ahi % chn(i_chn) % rad ( h5_count(1), h5_count(2)))
          
          ahi % chn(i_chn) % rad = (buffer_fake_i4 * scale_factor) + add_offset
          
@@ -499,13 +614,13 @@ contains
          
          if (allocated ( buffer_fake_i4 ) )  deallocate ( buffer_fake_i4 )
         
-         is_solar_channel = .false.
-         if ( i_chn < 7 ) is_solar_channel = .true.
+         ahi % chn(i_chn) % is_solar_channel = .false.
+         if ( i_chn < 7 ) ahi % chn(i_chn) % is_solar_channel = .true.
          
-         if ( is_solar_channel ) then
+         if ( ahi % chn(i_chn) % is_solar_channel ) then
             attr_name = trim(config % varname(i_chn))//'/cprime'
             call h5readattribute ( trim(config % filename ( i_chn ) ) , trim ( attr_name ), cprime )
-            allocate ( ahi % chn(i_chn) % ref (config % h5_count(1),config % h5_count(2)))
+            allocate ( ahi % chn(i_chn) % ref ( h5_count(1), h5_count(2)))
             ahi % chn(i_chn) % ref =100. *  ahi % chn(i_chn) % rad * cprime
          end if
        
@@ -520,33 +635,33 @@ contains
    !
    ! --------------------------------------------------------------------------------------
    subroutine allocate_geo ( this, nx , ny )
-      class ( ahi_data_out_type ) :: this
+      class ( geo_str ) :: this
       integer, intent(in) :: nx 
       integer, intent(in) :: ny
       
       call this % deallocate_geo 
           
-      allocate (  this % geo % lon        (nx , ny) )
-      allocate (  this % geo % lat        (nx , ny) )
-      allocate (  this % geo % solzen     (nx , ny) )
-      allocate (  this % geo % solaz      (nx , ny) )
-      allocate (  this % geo % satzen     (nx , ny) )
-      allocate (  this % geo % sataz      (nx , ny) )
-      allocate (  this % geo % relaz      (nx , ny) )
-      allocate (  this % geo % glintzen   (nx , ny) )
-      allocate (  this % geo % scatangle  (nx , ny) )
-      allocate (  this % geo % is_space   (nx , ny) )
+      allocate (  this  % lon        (nx , ny) )
+      allocate (  this  % lat        (nx , ny) )
+      allocate (  this  % solzen     (nx , ny) )
+      allocate (  this  % solaz      (nx , ny) )
+      allocate (  this  % satzen     (nx , ny) )
+      allocate (  this  % sataz      (nx , ny) )
+      allocate (  this  % relaz      (nx , ny) )
+      allocate (  this  % glintzen   (nx , ny) )
+      allocate (  this  % scatangle  (nx , ny) )
+      allocate (  this  % is_space   (nx , ny) )
       
-      this % geo % lon        =   -999.
-      this % geo % lat        =   -999.
-      this % geo % solzen     =   -999.
-      this % geo % solaz      =   -999.
-      this % geo % satzen     =   -999.
-      this % geo % sataz      =   -999.
-      this % geo % relaz      =   -999.
-      this % geo % glintzen   =   -999.
-      this % geo % scatangle  =   -999.
-      this % geo % is_space = .true.
+      this  % lon        =   -999.
+      this  % lat        =   -999.
+      this  % solzen     =   -999.
+      this  % solaz      =   -999.
+      this  % satzen     =   -999.
+      this  % sataz      =   -999.
+      this  % relaz      =   -999.
+      this  % glintzen   =   -999.
+      this  % scatangle  =   -999.
+      this  % is_space = .true.
       
    
    end subroutine allocate_geo
@@ -555,20 +670,20 @@ contains
    !
    ! --------------------------------------------------------------------------------------
    subroutine deallocate_geo (this )
-      class ( ahi_data_out_type ) :: this
-      if (allocated ( this % geo % lon)) deallocate ( this % geo % lon) 
-      if (allocated ( this % geo % lat)) deallocate ( this % geo % lat) 
+      class ( geo_str ) :: this
+      if (allocated ( this % lon)) deallocate ( this % lon) 
+      if (allocated ( this % lat)) deallocate ( this % lat) 
       
            
-      if ( allocated  (  this % geo % solzen   ) ) deallocate (  this % geo % solzen   )
-      if ( allocated  (  this % geo % solaz      ) ) deallocate (  this % geo % solaz   )
-      if ( allocated  (  this % geo % satzen     ) ) deallocate (  this % geo % satzen  )
-      if ( allocated  (  this % geo % sataz     ) ) deallocate (  this % geo % sataz  )
-      if ( allocated  (  this % geo % relaz      ) ) deallocate (  this % geo % relaz   )
-      if ( allocated  (  this % geo % glintzen    ) ) deallocate (  this % geo % glintzen   )
-      if ( allocated  (  this % geo % scatangle   ) ) deallocate (  this % geo % scatangle   )
-      if ( allocated  (  this % geo % is_space    ) ) deallocate (  this % geo % is_space  )
-      if ( allocated  (  this % geo % scan_time    ) ) deallocate (  this % geo % scan_time )
+      if ( allocated  (  this % solzen   ) ) deallocate (  this  % solzen   )
+      if ( allocated  (  this % solaz      ) ) deallocate (  this % solaz   )
+      if ( allocated  (  this % satzen     ) ) deallocate (  this  % satzen  )
+      if ( allocated  (  this % sataz     ) ) deallocate (  this  % sataz  )
+      if ( allocated  (  this % relaz      ) ) deallocate (  this  % relaz   )
+      if ( allocated  (  this % glintzen    ) ) deallocate (  this  % glintzen   )
+      if ( allocated  (  this % scatangle   ) ) deallocate (  this  % scatangle   )
+      if ( allocated  (  this % is_space    ) ) deallocate (  this  % is_space  )
+      if ( allocated  (  this % scan_time    ) ) deallocate (  this  % scan_time )
    
    
    end subroutine deallocate_geo 
@@ -581,7 +696,7 @@ contains
       class ( ahi_data_out_type ) :: this
       integer :: i_chn
        
-       call this % deallocate_geo
+       call this % geo % deallocate_geo
       
       do i_chn = 1 , size (  this  % chn )
          
@@ -594,5 +709,14 @@ contains
    
    
    end subroutine deallocate_all
+   
+   
+   subroutine clean_config ( this)
+      class ( ahi_config_type ) :: this
+      
+      this %  filenames_set = .false.
+      this % do_res3 = .false.
+      this % do_res124 = .false.
+   end subroutine clean_config 
 
 end module cx_read_ahi_mod

@@ -33,11 +33,11 @@ module VIIRS_NASA_READ_MODULE
   use READH5DATASET 
   use FILE_TOOLS, only: &
         FILE_SEARCH &
-      , GETLUN
+      , GET_LUN
   use PIXEL_COMMON, only: &
         Sensor &
       , Gap_Pixel_Mask
-  use CONSTANTS, only: &
+  use CX_CONSTANTS_MOD, only: &
         Real4 &
       , Real8 &
       , Int8 &
@@ -81,37 +81,12 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       , Nav &
       , Scan_Number &
       , Ancil_Data_Dir &
-      , Cloud_Mask_Aux_Flag &
-      , Cloud_Mask_Aux_Read_Flag &
-      , Cld_Type_Aux &
-      , Cld_Phase_Aux &
+      
       , Scan_Time &
-      , Ch &
-      , Ref_ChI1 &
-      , Ref_ChI2 &
-      , Ref_ChI3 &
-      , Bt_ChI4 &
-      , Bt_ChI5 &
-      , Ref_Min_ChI1 &
-      , Ref_Max_ChI1 &
-      , Ref_Mean_ChI1 &
-      , Ref_Uni_ChI1 &
-      , Ref_Min_ChI2 &
-      , Ref_Max_ChI2 &
-      , Ref_Mean_ChI2 &
-      , Ref_Uni_ChI2 &
-      , Ref_Min_ChI3 &
-      , Ref_Max_ChI3 &
-      , Ref_Mean_ChI3 &
-      , Ref_Uni_ChI3 &
-      , Bt_Min_ChI4 &
-      , Bt_Max_ChI4 &
-      , Bt_Mean_ChI4 &
-      , Bt_Uni_ChI4 &
-      , Bt_Min_ChI5 &
-      , Bt_Max_ChI5 &
-      , Bt_Mean_ChI5 &
-      , Bt_Uni_ChI5
+      , Ch
+     
+     
+      
 
    use PLANCK
 
@@ -279,7 +254,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
       !                 041 044 048 055 068  074  085 124 138  160 225 375  405  855  108  120
       !                 M1  M2  M3  M4  M5   M6   M7  M8  M9   M10 M11 M12  M13  M14  M15  M16
       Modis_Chn_List = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
-      Is_Mband_On = Sensor%Chan_On_Flag_Default (Modis_Chn_List) == sym%YES
+      Is_Mband_On = Sensor%Chan_On_Flag_Default (Modis_Chn_List) 
 
       ! --- loop over m-band channels
       do I_Mband = Mband_Start , 16
@@ -353,7 +328,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
 
 
       ! --- read dnb data (use do loop to quit if no file)
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(44)) then
       do k = 1, 1
 
          ! - find dnb geo file
@@ -367,7 +342,7 @@ subroutine READ_VIIRS_NASA_DATA (Segment_Number, VGEOM_File, Error_Out)
 
          ! - mapping file (maps from dnb to M-bands resolution)
          File_Dnb_Idx = trim(Ancil_Data_Dir)//'static/viirs/dnb2m_indx.txt'
-         Lun = GETLUN()
+         Lun = GET_LUN()
          Dim_Dnb_Seg(1) = 4064
          Dim_Dnb_Seg(2) = Dim_Seg(2)
 
@@ -536,7 +511,7 @@ subroutine READ_VIIRS_NASA_DATE_TIME (Path, Infile, Year , Doy , Start_Time &
       integer :: Start_Minute
       integer :: Start_Sec
 
-      integer :: Days_Of_Year
+     
       integer :: End_Hour
       integer :: End_Minute
       integer :: End_Sec
@@ -592,7 +567,7 @@ subroutine READ_NUMBER_OF_SCANS_VIIRS_NASA (Infile, Number_Of_Viirs_Lines, &
       character(len=100) :: Setname
       integer, dimension(:), pointer :: Test
       integer, dimension(1) :: Dims
-      integer :: Status
+     
 
 
       Error_Out = 0

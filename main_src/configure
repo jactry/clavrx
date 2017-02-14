@@ -149,7 +149,7 @@ if (exists($opt{'with-szip'}) and length($opt{'with-szip'}))
 }
 
 # Generate linker options for the HDF lib.
-my $hdflibs = "-L$opt{hdf4root}/lib"
+my $hdflibs = "-L$opt{hdf4root}/lib -I$opt{hdf4root}/include/"
    . (exists($opt{'with-szip'})
       and length($opt{'with-szip'}) ? " -L$opt{'with-szip'}" : '')
    . " -lmfhdf -ldf -ljpeg"
@@ -451,25 +451,28 @@ else
 if (exists($opt{'dncomp_dir'}))
 {
    if (length($opt{'dncomp_dir'}))
-   {
+   {  
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
       print CONFIG "export DNCOMP=$opt{'dncomp_dir'}\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
-      print CONFIG "dncomplinks= -ldncomp\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP) -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
      
       
    }
    else
    {   
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
       print CONFIG "export DNCOMP=../dncomp/\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
-      print CONFIG "dncomplinks= -ldncomp\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)  -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
    }
 }
 else
 {
+      print CONFIG "export CX_DATA_IO=../CX_DATA_IO/\n";
       print CONFIG "export DNCOMP=../dncomp/\n";
-      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)\n";
-      print CONFIG "dncomplinks= -ldncomp\n";
+      print CONFIG "dncomplibs=-L\$\(DNCOMP) -I\$\(DNCOMP)  -L\$\(CX_DATA_IO) -I\$\(CX_DATA_IO)\n";
+      print CONFIG "dncomplinks= -ldncomp -lcx_data_io\n";
 
 }
 

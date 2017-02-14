@@ -1,0 +1,21 @@
+fc = ifort
+FC77=ifort
+LDFLAGS_ARCH=
+FFLAGS_ARCH=-c -O2 -assume byterecl
+
+
+fflags = -c -O2    -assume byterecl
+fflags_pfast = -O2 -assume byterecl -fixed
+fflags_sasrab_f77 = -O2 -assume byterecl -fixed -save
+fflags_sasrab_f90 = -O2 -assume byterecl -save
+ldflags = -O2 -assume byterecl
+cpp = -cpp
+cppflags = 
+beconv = -convert big_endian
+hdflibs = -L$(SSEC_HDF4_LIB) -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(HOME)/lib/hdf4//include
+netcdflibs = -L$(HOME)/lib/netcdf3/lib -I$(HOME)/lib/netcdf3/include -lnetcdf
+hdf5libs = -I$(HOME)/lib/hdf5/include/ -L$(HOME)/lib/hdf5/lib/
+hdf5links = -lhdf5_fortran -lhdf5 -lz
+
+

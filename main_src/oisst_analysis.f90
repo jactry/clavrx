@@ -113,10 +113,17 @@
 !  an extra 4 byte header and trailer word to the total record.
 !--------------------------------------------------------------------------------------
 module OISST_ANALYSIS
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
+  use CX_CONSTANTS_MOD
+  use NUMERICAL_TOOLS_MOD
   use PIXEL_COMMON
-  use FILE_UTILITY
+  use FILE_TOOLS
+  
+   use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+  
+  
   implicit none
   private
   public:: GET_PIXEL_SST_ANALYSIS, GET_OISST_MAP_FILENAME, READ_OISST_ANALYSIS_MAP
@@ -178,14 +185,14 @@ module OISST_ANALYSIS
       oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
 
       !--- check for regular file
-      if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
+      if (file_test(trim(oisst_filename_tmp)) ) then
          oisst_filename = oisst_filename_tmp
          print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp)
          exit
       end if
 
       !--- check for preliminary file (true of recent files)
-      if (file_exists(trim(oisst_filename_tmp_preliminary)) .eqv. .true.) then
+      if (file_test(trim(oisst_filename_tmp_preliminary)) ) then
          oisst_filename = oisst_filename_tmp_preliminary
          print *, EXE_PROMPT, "Found ", trim(oisst_filename_tmp_preliminary)
          exit
@@ -318,7 +325,7 @@ subroutine GET_PIXEL_SST_ANALYSIS(j1,j2)
 
      do i = 1, Image%Number_Of_Elements
 
-     if (bad_pixel_mask(i,j) == sym%YES) then
+     if (bad_pixel_mask(i,j)) then
       cycle
      endif
 

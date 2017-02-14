@@ -94,7 +94,7 @@ module cloud_type_bridge_module
       , Covar_Ch27_Ch31_5x5 &
       , cld_type &
       , cld_phase &
-      , CLDMASK &
+      , cld_mask &
       , Dust_Mask &
       , Smoke_Mask &
       , Fire_Mask &
@@ -106,7 +106,7 @@ module cloud_type_bridge_module
       , Diag_Pix_Array_3 &
       , bad_pixel_mask
                  
-   use CONSTANTS, only : &
+   use CX_CONSTANTS_MOD, only : &
         Cloud_Type_Version
 
    use CLOUD_TYPE_ALGO_MODULE, only : &
@@ -134,7 +134,7 @@ contains
    !  record svn version as a global variable for output to hdf
    !====================================================================
    subroutine SET_CLOUD_TYPE_VERSION()
-      Cloud_Type_Version = "$Id: cloud_type_bridge_module.f90 412 2014-06-11 17:35:49Z heidinger $"
+      Cloud_Type_Version = "$Id:$"
    end subroutine Set_CLOUD_TYPE_VERSION
 
 
@@ -156,29 +156,30 @@ contains
       
       
       ! ------  Executable  ------------------------------------
-      if (First_Call .eqv. .true.) then
+      if (First_Call) then
         call MESG('Cloud Type starts ', color = 46)
+         call SET_CLOUD_TYPE_VERSION()
       endif
 
       ice_prob = -999.0
       
-      type_inp % sat % chan_on = Sensor%Chan_On_Flag_Default == 1
+      type_inp % sat % chan_on = Sensor%Chan_On_Flag_Default
       
       !-----------    loop over LRC core pixels to get ice probabbilty -----         
       elem_loop: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
          line_loop: do i = 1, Image%Number_Of_Elements  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
+            if ( bad_pixel_mask (i,j)  ) then
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
             
-            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % CLEAR ) then
+            if (cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i,j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (cld_mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i,j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if
@@ -215,17 +216,17 @@ contains
       elem_loop1: do  j = 1,Image%Number_Of_Lines_Read_This_Segment
          line_loop1: do i = 1, Image%Number_Of_Elements  
             
-            if ( bad_pixel_mask (i,j) == 1 ) then
+            if ( bad_pixel_mask (i,j)  ) then
                cld_type (i,j ) = et_cloud_type % MISSING
                cycle
             end if 
             
-            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % CLEAR ) then
+            if (cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (cld_mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i , j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if   
@@ -340,18 +341,18 @@ contains
       !-----------------------------------------------------------------------------------
       ! - sat
       !-----------------------------------------------------------------------------------
-      if (sensor % chan_on_flag_default(31) == 1 ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
-      if (sensor % chan_on_flag_default(31) == 1 ) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
-      if (sensor % chan_on_flag_default(32) == 1 ) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
-      if (sensor % chan_on_flag_default(6) == 1 ) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
-      if (sensor % chan_on_flag_default(20) == 1 ) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
+      if (sensor % chan_on_flag_default(31)  ) type_inp % sat % rad_ch31 = ch(31) % rad_toa ( i,j )
+      if (sensor % chan_on_flag_default(31)  ) type_inp % sat % bt_ch31 =  ch(31) % bt_toa  ( i,j )
+      if (sensor % chan_on_flag_default(32) ) type_inp % sat % bt_ch32 =  ch(32) % bt_toa  ( i,j )
+      if (sensor % chan_on_flag_default(6)  ) type_inp % sat % ref_ch6 =  ch(6)  % ref_toa  ( i,j )
+      if (sensor % chan_on_flag_default(20) ) type_inp % sat % ref_ch20 = ch(20) % ref_toa ( i,j )
 
-      if (sensor % chan_on_flag_default(27) == 1 ) then
+      if (sensor % chan_on_flag_default(27)  ) then
          type_inp % sat % rad_ch27 = ch(27) % rad_toa (i,j)
          type_inp % sat % bt_ch27 =  ch(27) % bt_toa  (i,j)
       end if  
       
-      if (sensor % chan_on_flag_default(29) == 1 ) then
+      if (sensor % chan_on_flag_default(29)  ) then
          type_inp % sat % rad_ch29 = ch(29) % rad_toa (i,j)
          type_inp % sat % bt_ch29 =  ch(29) % bt_toa  (i,j)
       end if         
@@ -367,10 +368,10 @@ contains
       
       
       
-      if (sensor % chan_on_flag_default(6) == 1 )  then
+      if (sensor % chan_on_flag_default(6) )  then
          type_inp % rtm % ref_ch6_clear       = ch(6)%Ref_Toa_Clear( i,j )
       endif
-      if (sensor % chan_on_flag_default(31) == 1 )  then
+      if (sensor % chan_on_flag_default(31) )  then
          
          
          allocate ( type_inp % rtm % rad_ch31_bb_prof (n_rtm_prof ) &
@@ -381,19 +382,19 @@ contains
          type_inp % rtm % rad_ch31_atm_sfc   = ch(31)%Rad_Toa_Clear(i,j)
          type_inp % rtm % bt_ch31_atm_sfc    = ch(31)%Bt_Toa_Clear( i,j )
          type_inp % rtm % emiss_tropo_ch31   = ch(31)%Emiss_Tropo( i,j )
-         if (sensor % chan_on_flag_default(27) == 1 )  then
+         if (sensor % chan_on_flag_default(27)  )  then
             type_inp % rtm % Covar_Ch27_Ch31_5x5 = Covar_Ch27_Ch31_5x5( i,j )
          endif
-         if (sensor % chan_on_flag_default(32) ==1 )  then
+         if (sensor % chan_on_flag_default(32)  )  then
             type_inp % rtm % Beta_11um_12um_Tropo  = Beta_11um_12um_Tropo_Rtm( i,j )
             type_inp % rtm % bt_ch32_atm_sfc       = ch(32)%Bt_Toa_Clear( i,j )
          endif
-         if (sensor % chan_on_flag_default(33) ==1 )  then
+         if (sensor % chan_on_flag_default(33) )  then
             type_inp % rtm % Beta_11um_133um_Tropo = Beta_11um_133um_Tropo_Rtm( i,j )
          endif
       endif
       
-      if (sensor % chan_on_flag_default(27) == 1) then
+      if (sensor % chan_on_flag_default(27) ) then
          type_inp % rtm % bt_ch27_3x3_max    = Bt_Ch27_Max_3x3( i,j )
          type_inp % rtm % rad_ch27_atm_sfc = ch(27)%Rad_Toa_Clear(i,j)
          allocate ( type_inp % rtm % rad_ch27_bb_prof(n_rtm_prof ) &

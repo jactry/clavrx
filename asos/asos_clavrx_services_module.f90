@@ -5,7 +5,7 @@
 module ASOS_SERVICES_MOD
 
  use PLANCK
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use NWP_COMMON
  use RTM_COMMON
  use PIXEL_COMMON, only: &
@@ -14,12 +14,13 @@ module ASOS_SERVICES_MOD
        Geo, &
        Sensor, &
        Image, &
-       CLDMASK, &
        ACHA, &
        ASOS, &
        Sfc, &
        Bad_Pixel_Mask, &
+       Cld_Mask, &
        Cld_Type, &
+       Posterior_Cld_Probability, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
@@ -38,7 +39,7 @@ module ASOS_SERVICES_MOD
  integer (kind=int4):: Number_Of_Lines
  real (kind=real4):: Sensor_Resolution_KM
 
- integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ logical, dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Latitude
  real, dimension(:,:), pointer:: Longitude
  integer (kind=int1),dimension(:,:), pointer:: Surface_Type

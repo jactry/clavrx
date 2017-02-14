@@ -36,7 +36,8 @@ program dcomp_one_pixel_run
    integer :: iflen 
    integer :: ier
    
-   logical :: water_phase   
+   logical :: water_phase  
+   integer(kind=1) :: snow_class 
    type ( dcomp_output_structure ) :: dcomp_results
 
    integer :: dcomp_mode
@@ -132,7 +133,7 @@ program dcomp_one_pixel_run
    call lut_obj % populate_all_at_once ( sensor,ancil_path)
    
    call dcomp_algorithm ( obs , obs_u , alb_sfc , alb_sfc_u , state_apr , air_trans_ac &
-                              & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase &
+                              & , sol_zen, sat_zen , rel_azi , cld_temp , water_phase, snow_class &
   & , rad_abv_cld , rad_sfc , sensor &
   & , dcomp_results , dcomp_mode = dcomp_mode &
   & , debug_in = debug_mode , ancil_path = ancil_path )   ! - output

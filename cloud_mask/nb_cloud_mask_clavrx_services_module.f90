@@ -3,41 +3,61 @@
  !-----------------------------------------------------------------------------
  module NB_CLOUD_MASK_SERVICES
 
- use CONSTANTS, only: int1, int2, int4, int8, real4, real8,  &
-                      MISSING_VALUE_REAL4, MISSING_VALUE_INT1, dtor, pi
- 
  implicit none
 
  include 'nb_cloud_mask.inc'
+
+ integer, parameter, public:: int1 = selected_int_kind(1)
+ integer, parameter, public:: int2 = selected_int_kind(3)
+ integer, parameter, public:: int4 = selected_int_kind(8)
+ integer, parameter, public:: int8 = selected_int_kind(10)
+ integer, parameter, public:: real4 = selected_real_kind(6,37)
+ integer, parameter, public:: real8 = selected_real_kind(15,307)
+
+ !--- missing value
+ real, parameter, public :: MISSING_VALUE_REAL4 = -999.0
+ integer(kind=int1), parameter, public :: MISSING_VALUE_INT1 = -128
+
+ !--- numerical constants
+ real, parameter, public:: pi = 3.14159265
+ real, parameter, public:: dtor = pi/180.0
+
+ type, public :: et_cloudiness_class_type
+      integer :: SPACE 
+      integer :: MISSING
+      integer :: CLOUDY
+      integer :: PROB_CLOUDY
+      integer :: PROB_CLEAR
+      integer :: CLEAR
+ end type
 
  type, public :: mask_input
     integer :: Num_Elem                                        !x-dimension of data arrays
     integer :: Num_Line                                        !number of lines of arrays with data
     integer :: Num_Line_Max                                    !y-dimension of data arrays
-    integer(kind=int1) :: Invalid_Data_Mask                    !bad data mask (0=good,1=bad)
-    integer :: Chan_On_041um                                   !flag if 0.41um channel on (0=no,1=yes)
-    integer :: Chan_On_063um                                   !flag if 0.63um channel on (0=no,1=yes)
-    integer :: Chan_On_086um                                   !flag if 0.86um channel on (0=no,1=yes)
-    integer :: Chan_On_138um                                   !flag if 1.38um channel on (0=no,1=yes)
-    integer :: Chan_On_160um                                   !flag if 1.60um channel on (0=no,1=yes)
-    integer :: Chan_On_213um                                   !flag if 2.13um channel on (0=no,1=yes)
-    integer :: Chan_On_375um                                   !flag if 3.75um channel on (0=no,1=yes)
-    integer :: Chan_On_67um                                    !flag if 6.7um channel on (0=no,1=yes)
-    integer :: Chan_On_85um                                    !flag if 8.5um channel on (0=no,1=yes)
-    integer :: Chan_On_10um                                    !flag if 10.0um channel on (0=no,1=yes)
-    integer :: Chan_On_11um                                    !flag if 11.0um channel on (0=no,1=yes)
-    integer :: Chan_On_12um                                    !flag if 12.0um channel on (0=no,1=yes)
-    integer :: Chan_On_I1_064um                                !flag if I1 0.64um channel on (0=no,1=yes)
-    integer :: Chan_On_I4_374um                                !flag if I4 3.74um channel on (0=no,1=yes)
-    integer :: Chan_On_I5_114um                                !flag if I5 11.4um channel on (0=no,1=yes)
-    integer :: Chan_On_DNB                                     !flag if DNB channel on (0=no,1=yes)
+    logical :: Invalid_Data_Mask                               !bad data mask 
+    logical :: Chan_On_041um                                   !flag if 0.41um channel on (0=no,1=yes)
+    logical :: Chan_On_063um                                   !flag if 0.63um channel on (0=no,1=yes)
+    logical :: Chan_On_086um                                   !flag if 0.86um channel on (0=no,1=yes)
+    logical :: Chan_On_138um                                   !flag if 1.38um channel on (0=no,1=yes)
+    logical :: Chan_On_160um                                   !flag if 1.60um channel on (0=no,1=yes)
+    logical :: Chan_On_213um                                   !flag if 2.13um channel on (0=no,1=yes)
+    logical :: Chan_On_375um                                   !flag if 3.75um channel on (0=no,1=yes)
+    logical :: Chan_On_67um                                    !flag if 6.7um channel on (0=no,1=yes)
+    logical :: Chan_On_85um                                    !flag if 8.5um channel on (0=no,1=yes)
+    logical :: Chan_On_10um                                    !flag if 10.0um channel on (0=no,1=yes)
+    logical :: Chan_On_11um                                    !flag if 11.0um channel on (0=no,1=yes)
+    logical :: Chan_On_12um                                    !flag if 12.0um channel on (0=no,1=yes)
+    logical :: Chan_On_I1_064um                                !flag if I1 0.64um channel on (0=no,1=yes)
+    logical :: Chan_On_I4_374um                                !flag if I4 3.74um channel on (0=no,1=yes)
+    logical :: Chan_On_I5_114um                                !flag if I5 11.4um channel on (0=no,1=yes)
+    logical :: Chan_On_DNB                                     !flag if DNB channel on (0=no,1=yes)
     integer :: Use_Sounder_11um                                !flag for IFF files where both imager and sounder 11um are available    
     integer(kind=int1) :: Snow_Class                           !Snow Classification 
     integer(kind=int1) :: Land_Class                           !Land Classification
     integer(kind=int1) :: Oceanic_Glint_Mask                   !Mask of oceanic solar glint (0=no,1=yes)
     integer(kind=int1) :: Lunar_Oceanic_Glint_Mask             !Mask of oceanic lunar glint (0=no,1=yes)
     integer(kind=int1) :: Coastal_Mask                         !binary coast mask (0=no,1=yes)
-    integer(kind=int1) :: Scat_Mask                            !binary scattering mask (0=no,1=yes)
     real(kind=real4) :: Solzen                                 !Solar zenith angle (degrees)
     real(kind=real4) :: Scatzen                                !Solar Scattering angle (degrees)
     real(kind=real4) :: Lunscatzen                             !Lunar Scattering angle (degrees)
@@ -86,7 +106,7 @@
     real(kind=real4) :: Ref_Lunar_Clear                        !Lunar reflectance for clear-skies (%)
     real(kind=real4) :: Zsfc                                   !surface altitude (km)
     integer :: Num_Segments                                    !number of segments in this data 
-    integer(kind=int1) :: Solar_Contamination_Mask             !binary mask of solar contamination (0=no,1=yes)
+    logical :: Solar_Contamination_Mask             !binary mask of solar contamination (0=no,1=yes)
     integer(kind=int1) :: Sfc_Type                             !surface type based on UMD classification
     real(kind=real4) :: Sfc_Temp                               !surface temperature from ancillary sources
     real(kind=real4) :: Path_Tpw                               !TPW along IR path from ancillary sources

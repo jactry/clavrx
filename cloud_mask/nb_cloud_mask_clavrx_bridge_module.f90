@@ -26,13 +26,15 @@
 ! SUPPORT TO USERS.
 !
 ! Note, to use the diagnostic variables, do this
-!   - set the USE_DIAG flag to true
+!   - set the Use_Diag flag to true
 !   - turn on the Diag argument to the desirefd routine
 !   - in the desired routine, set the diag variables to what you want
 !   - when done, repeat this in reverse
 !
 !--------------------------------------------------------------------------------------
 module NB_CLOUD_MASK_CLAVRX_BRIDGE
+
+! temp_11_0um_nom_sounder
 
    ! -- MODULES USED
    use PIXEL_COMMON, only: &
@@ -41,14 +43,18 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Nav, &
        Sfc, &
        Image, &
-       CLDMASK, &
        Sensor, &
        Ancil_Data_Dir, &
        Bayesian_Cloud_Mask_Name, &
+       Bayes_Mask_Sfc_Type_Global, &
        Bad_Pixel_Mask, &
+       Cld_Mask, &
+       Cld_Test_Vector_Packed, &       
        Dust_Mask, &
        Fire_Mask, &
        Thin_Cirr_Mask, &
+       Posterior_Cld_Probability, &
+       Prior_Cld_Probability, &
        Smoke_Mask, &
        SST_Anal_Uni, &
        Solar_Contamination_Mask, &
@@ -75,17 +81,23 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3
 
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
        sym, &
-       Cloud_Mask_Version, & 
+       CLOUD_MASK_VERSION, & 
        Cloud_Mask_Lut_Version
        
    use NB_CLOUD_MASK
-   use NB_CLOUD_MASK_ADDONS
+   use CLOUD_MASK_ADDONS
    use NB_CLOUD_MASK_SERVICES
    use NB_CLOUD_MASK_SOLAR_RTM
-   use NB_CLOUD_MASK_LUT_MODULE
-
+   use NB_CLOUD_MASK_LUT_MODULE,only: &
+      is_classifiers_read &
+      , is_prior_read &
+      , compute_prior &
+      , read_naive_bayes_lut &
+      
+      , read_prior
+ 
    use CLAVRX_MESSAGE_MODULE, only: MESG
 
    implicit none
@@ -104,12 +116,8 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    type(mask_output), private :: Output   
    type(diag_output), private :: Diag  
    type(symbol_naive_bayesian), private :: Symbol
-
-  !--- string to control on-screen prompts
-  character(*), parameter, private :: EXE_PROMPT_CM = "NB Cloud Mask Bridge >> "
-
+   
 contains
-
 !----------------------------------------------------------------------
 ! Bridge Routine
 !
@@ -124,10 +132,6 @@ contains
    integer :: i, j
    character (len=1020):: Naive_Bayes_File_Name_Full_Path
    character (len=1020):: Prior_File_Name_Full_Path
-   character (len=1020):: Naive_Bayes_Default_2d_File_Name_Full_Path
-   character (len=1020):: Naive_Bayes_Night_2d_File_Name_Full_Path
-   character (len=1020):: Naive_Bayes_Day_160_2d_File_Name_Full_Path
-   character (len=1020):: Naive_Bayes_Day_375_2d_File_Name_Full_Path
 
    logical, save:: First_Call = .true.
    integer, parameter:: Nmed = 2
@@ -136,7 +140,6 @@ contains
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
    logical, parameter:: USE_DIAG = .false.
    logical, parameter:: USE_PRIOR_TABLE = .true.
-   logical, parameter:: USE_CORE_TABLES = .true.
    logical, parameter:: USE_065UM_RTM = .true.
 
    if (First_Call .eqv. .true.) then
@@ -154,26 +157,9 @@ contains
 
        Naive_Bayes_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
             "static/luts/nb_cloud_mask/"//trim(Bayesian_Cloud_Mask_Name)
+
        call READ_NAIVE_BAYES_LUT(Naive_Bayes_File_Name_Full_Path, &
                                  Output%Cloud_Mask_Bayesian_Flag)
-
-       if (USE_CORE_TABLES) then
-         Naive_Bayes_Default_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
-            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_default_2d.nc')
-         call READ_CORE_LUT_DEFAULT(Naive_Bayes_Default_2D_File_Name_Full_Path)
-
-         Naive_Bayes_Night_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
-            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_night_2d.nc')
-         call READ_CORE_LUT_NIGHT(Naive_Bayes_Night_2D_File_Name_Full_Path)
-
-         Naive_Bayes_Day_160_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
-            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_day_2d_160um.nc')
-         call READ_CORE_LUT_DAY_160UM(Naive_Bayes_Day_160_2D_File_Name_Full_Path)
-
-         Naive_Bayes_Day_375_2d_File_Name_Full_Path = trim(Ancil_Data_Dir)// &
-            "static/luts/nb_cloud_mask/"//trim('nb_cloud_mask_day_2d_375um.nc')
-         call READ_CORE_LUT_DAY_375UM(Naive_Bayes_Day_375_2D_File_Name_Full_Path)
-       endif
 
    endif
 
@@ -181,11 +167,11 @@ contains
    if (USE_PRIOR_TABLE) then 
      Prior_File_Name_Full_Path = trim(Ancil_Data_Dir)//"static/luts/nb_cloud_mask/"//"nb_cloud_mask_calipso_prior.nc"
      if (.not. Is_Prior_Read) call READ_PRIOR(Prior_File_Name_Full_Path)
-     call COMPUTE_PRIOR(Nav%Lon,Nav%Lat,Month,CLDMASK%Prior_Cld_Probability) 
+     call COMPUTE_PRIOR(Nav%Lon,Nav%Lat,Month,Prior_Cld_Probability) 
    endif
 
    !--- Compute TOA Clear-Sky 0.65um Reflectance
-   if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1) == sym%YES)  then 
+   if (USE_065UM_RTM .eqv. .true. .and. Sensor%Chan_On_Flag_Default(1))  then 
      call  CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
                                    Tpw_Nwp_Pix, &
                                    Ozone_Nwp_Pix, &
@@ -201,7 +187,6 @@ contains
    !-----------    loop over pixels -----   
    line_loop: do i = 1, Image%Number_Of_Elements
       elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
-
          call SET_INPUT(i,j)
 
          !---call cloud mask routine
@@ -210,8 +195,7 @@ contains
                       Symbol,  &
                       Input,   &
                       Output,  &
-                      USE_PRIOR_TABLE, &
-                      USE_CORE_TABLES)
+                      USE_PRIOR_TABLE)
                       !Diag)   !optional
 
          !--- call non-cloud detection routines (smoke, dust and fire)
@@ -228,7 +212,7 @@ contains
          !-----------------------------------------------------------------------
 
          !--- unpack elements of the cloud test vector into clavr-x global arrays
-         CLDMASK%Bayes_Mask_Sfc_Type(i,j) = ibits(CLDMASK%Cld_Test_Vector_Packed(3,i,j),0,3)
+         Bayes_Mask_Sfc_Type_Global(i,j) = ibits(Cld_Test_Vector_Packed(3,i,j),0,3)
 
       end do elem_loop
    end do line_loop
@@ -258,10 +242,10 @@ contains
    !-------------------------------------------------------------------------------------------------------
    line_loop_pack: do i = 1, Image%Number_Of_Elements
       elem_loop_pack: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
-           if (Smoke_Mask(i,j) == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),4)
-           if (Dust_Mask(i,j)  == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),5)
-           if (Fire_Mask(i,j)  == 1) CLDMASK%Cld_Test_Vector_Packed(2,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(2,i,j),7)
-           if (Thin_Cirr_Mask(i,j) == 1) CLDMASK%Cld_Test_Vector_Packed(3,i,j) = ibset(CLDMASK%Cld_Test_Vector_Packed(3,i,j),3)
+           if (Smoke_Mask(i,j) == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),4)
+           if (Dust_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),5)
+           if (Fire_Mask(i,j)  == 1) Cld_Test_Vector_Packed(2,i,j) = ibset(Cld_Test_Vector_Packed(2,i,j),7)
+           if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = ibset(Cld_Test_Vector_Packed(3,i,j),3)
       end do elem_loop_pack
    end do line_loop_pack
 
@@ -282,19 +266,12 @@ contains
        call RESET_NB_CLOUD_MASK_LUT()
        
        if (USE_PRIOR_TABLE) call RESET_NB_CLOUD_MASK_PRIOR_LUT()
-
-       if (USE_CORE_TABLES) then
-          call RESET_CORE_LUT_DEFAULT()
-          call RESET_CORE_LUT_NIGHT()
-          call RESET_CORE_LUT_DAY_375UM()
-          call RESET_CORE_LUT_DAY_160UM()
-       endif
-
    endif
 
    First_Call = .false.
 
    end subroutine NB_CLOUD_MASK_BRIDGE
+
 
    !====================================================================
    ! Function Name: Covariance_LOCAL
@@ -412,6 +389,7 @@ contains
    !============================================================================
    subroutine SET_INPUT(i,j)
       integer, intent (in) :: i, j
+
       Input%Num_Elem = Image%Number_Of_Elements
       Input%Num_Line = Image%Number_Of_Lines_Read_This_Segment
       Input%Num_Line_Max = Image%Number_Of_Lines_Per_Segment
@@ -450,32 +428,31 @@ contains
       Input%Sfc_Type = Sfc%Sfc_Type(i,j)
       Input%Sfc_Temp = Tsfc_Nwp_Pix(i,j)
       Input%Path_Tpw = Tpw_Nwp_Pix(i,j) / Geo%Coszen(i,j)
-      Input%Prior = CLDMASK%Prior_Cld_Probability(i,j)
 
 
-      if (Input%Chan_On_041um == sym%YES)  then 
+      if (Input%Chan_On_041um )  then 
         Input%Ref_041um = ch(8)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_063um == sym%YES)  then 
+      if (Input%Chan_On_063um )  then 
         Input%Ref_063um = ch(1)%Ref_Toa(i,j)
         Input%Ref_063um_Clear = ch(1)%Ref_Toa_Clear(i,j)
         Input%Ref_063um_Std = Ref_Ch1_Std_3x3(i,j)
         Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
       endif
-      if (Input%Chan_On_086um == sym%YES)  then 
+      if (Input%Chan_On_086um )  then 
         Input%Ref_086um = ch(2)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_138um == sym%YES)  then 
+      if (Input%Chan_On_138um )  then 
         Input%Ref_138um = ch(26)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_160um == sym%YES)  then 
+      if (Input%Chan_On_160um )  then 
         Input%Ref_160um = ch(6)%Ref_Toa(i,j)
         Input%Ref_160um_Clear = ch(6)%Ref_Toa_Clear(i,j)
       endif
-      if (Input%Chan_On_213um == sym%YES)  then 
+      if (Input%Chan_On_213um )  then 
         Input%Ref_213um = ch(7)%Ref_Toa(i,j)
       endif
-      if (Input%Chan_On_375um == sym%YES)  then 
+      if (Input%Chan_On_375um )  then 
         Input%Ref_375um = ch(20)%Ref_Toa(i,j)
         Input%Ref_375um_Clear = ch(20)%Ref_Toa_Clear(i,j)
         Input%Bt_375um = ch(20)%Bt_Toa(i,j)
@@ -484,9 +461,9 @@ contains
         Input%Emiss_375um =  Ems_Ch20_Median_3x3(i,j)
         Input%Emiss_375um_Clear = Ems_Ch20_Clear_Rtm(i,j)
       endif
-      if (Input%Chan_On_67um == sym%YES)  then 
+      if (Input%Chan_On_67um )  then 
         Input%Bt_67um = ch(27)%Bt_Toa (i,j)
-        if (Input%Chan_On_11um == sym%YES)  then 
+        if (Input%Chan_On_11um )  then 
            Input%Bt_11um_Bt_67um_Covar = Covar_Ch27_Ch31_5x5(i,j)
         endif
       endif
@@ -495,26 +472,26 @@ contains
         Input%Bt_11um_Sounder = Bt_11um_Sounder(i,j)
         Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
       endif
-      if (Input%Chan_On_85um == sym%YES)  then 
+      if (Input%Chan_On_85um )  then 
         Input%Bt_85um = ch(29)%Bt_Toa(i,j)
       endif
-      if (Input%Chan_On_10um == sym%YES)  then                                                                                                      
+      if (Input%Chan_On_10um )  then                                                                                                      
         Input%Bt_10um = ch(38)%Bt_Toa(i,j)
       else
         Input%Bt_10um = Missing_Value_Real4
       endif
-      if (Input%Chan_On_11um == sym%YES)  then 
+      if (Input%Chan_On_11um )  then 
         Input%Bt_11um = ch(31)%Bt_Toa(i,j)
         Input%Bt_11um_Std = Bt_Ch31_Std_3x3(i,j)
         Input%Bt_11um_Max = Bt_Ch31_Max_3x3(i,j)
         Input%Bt_11um_Clear = ch(31)%Bt_Toa_Clear(i,j)
         Input%Emiss_11um_Tropo = ch(31)%Emiss_Tropo(i,j)
       endif
-      if (Input%Chan_On_12um == sym%YES)  then 
+      if (Input%Chan_On_12um )  then 
         Input%Bt_12um = ch(32)%Bt_Toa(i,j)
         Input%Bt_12um_Clear = ch(32)%Bt_Toa_Clear(i,j)
       endif
-      if (Input%Chan_On_DNB == sym%YES)  then 
+      if (Input%Chan_On_DNB )  then 
         Input%Lunscatzen = Geo%Scatangle_Lunar(i,j)
         Input%Lunar_Oceanic_Glint_Mask = Sfc%Glint_Mask_Lunar(i,j)
         Input%Rad_Lunar = ch(44)%Rad_Toa(i,j)
@@ -524,13 +501,13 @@ contains
         Input%Ref_Lunar_Clear = ch(44)%Ref_Lunar_Toa_Clear(i,j)
         Input%Lunzen = Geo%Lunzen(i,j)
       endif
-      if (Input%Chan_On_I1_064um == sym%YES) then
+      if (Input%Chan_On_I1_064um ) then
          Input%Ref_I1_064um_Std = Ref_Uni_ChI1(i,j)
       endif
-      if (Input%Chan_On_I4_374um == sym%YES) then
+      if (Input%Chan_On_I4_374um ) then
          Input%Bt_I4_374um_Std = Bt_Uni_ChI4(i,j)
       endif
-      if (Input%Chan_On_I5_114um == sym%YES) then
+      if (Input%Chan_On_I5_114um ) then
          Input%Bt_I5_114um_Std = Bt_Uni_ChI5(i,j)
       endif
    end subroutine SET_INPUT
@@ -538,9 +515,9 @@ contains
    subroutine SET_OUTPUT(i,j)
       integer, intent (in) :: i, j
 
-      CLDMASK%Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
-      CLDMASK%Cld_Mask(i,j) = Output%Cld_Mask_Bayes
-      CLDMASK%Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
+      Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
+      Cld_Mask(i,j) = Output%Cld_Mask_Bayes
+      Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
       Dust_Mask(i,j) = Output%Dust_Mask
       Smoke_Mask(i,j) = Output%Smoke_Mask
       Fire_Mask(i,j) = Output%Fire_Mask
@@ -620,5 +597,7 @@ subroutine MEDIAN_FILTER_MASK(z,mask,z_median)
   if (allocated(x)) deallocate(x)
 
 end subroutine MEDIAN_FILTER_MASK
+
+!============================================================================
 
 end module NB_CLOUD_MASK_CLAVRX_BRIDGE

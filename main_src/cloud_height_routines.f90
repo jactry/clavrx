@@ -25,11 +25,15 @@
 !
 !--------------------------------------------------------------------------------------
 module CLOUD_HEIGHT_ROUTINES
-  use CONSTANTS
+  use CX_CONSTANTS_MOD
   use PIXEL_COMMON
   use NWP_COMMON
   use RTM_COMMON
-  use NUMERICAL_ROUTINES
+  use NUMERICAL_TOOLS_MOD
+  
+  use cx_science_tools_mod,only: &
+    wind_direction &
+   , wind_speed
 
   implicit none
 
@@ -49,8 +53,6 @@ module CLOUD_HEIGHT_ROUTINES
   public::  INTERCEPT_CLOUD_PRESSURE
   public::  SLICING_CLOUD_PRESSURE
   public::  CTP_MULTILAYER
-
-  public:: SOLUTION_SPACE
 
   !--- include parameters for each system here
   integer(kind=int4), private, parameter :: Chan_Idx_375um = 20  !channel number for 3.75 micron
@@ -85,7 +87,7 @@ module CLOUD_HEIGHT_ROUTINES
 ! Compute the ACHA values without calling ACHA (mode = 0)
 !----------------------------------------------------------------------
 subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,Tsfc,Conv_Cld_Prob)
-  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  logical, dimension(:,:), intent(in):: Bad_Pixel_Mask
   real, dimension(:,:), intent(in):: Bt11, Bt67, Emiss_11_Tropo,Tsfc
   real(kind=real4), dimension(:,:), intent(out):: Conv_Cld_Prob
 
@@ -98,26 +100,26 @@ subroutine CONVECTIVE_CLOUD_PROBABILITY(Bad_Pixel_Mask,Bt11,Bt67,Emiss_11_Tropo,
   Conv_Cld_Prob = 0.0
 
   !--- set bad data to missing
-  where(Bad_Pixel_Mask ==sym%YES)
+  where(Bad_Pixel_Mask )
     Conv_Cld_Prob = Missing_Value_Real4
   endwhere
 
   !--- if only 11 micron, use a tight threshold
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(31) ) then
     where(Emiss_11_Tropo >= Etrop_Thresh_1) 
       Conv_Cld_Prob = 1.0
     endwhere
   endif
 
-  if (Sensor%Chan_On_Flag_Default(27) == sym%YES .and. &
-      Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(27)  .and. &
+      Sensor%Chan_On_Flag_Default(31) ) then
     where(Emiss_11_Tropo >= Etrop_Thresh_2 .and. (Bt67 - Bt11) >= Etrop_Thresh_2) 
      Conv_Cld_Prob = 1.0
     endwhere
   endif
 
   !--- limit false alarms over elevated terrain
-  if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+  if (Sensor%Chan_On_Flag_Default(31) ) then
     where(Tsfc - Bt11 < Tsfc_Thresh)
        Conv_Cld_Prob = 0.0
     endwhere
@@ -128,7 +130,7 @@ end subroutine CONVECTIVE_CLOUD_PROBABILITY
 ! Supercooled Cloud Probability
 !--------------------------------------------------------------------------------------------------
 subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Temperature,Supercooled_Cld_Prob)
-  integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
+  logical, dimension(:,:), intent(in):: Bad_Pixel_Mask
   integer(kind=int1), dimension(:,:), intent(in):: Cloud_Type
   real(kind=real4), dimension(:,:), intent(in):: Cloud_Temperature
   real(kind=real4), dimension(:,:), intent(out):: Supercooled_Cld_Prob
@@ -151,7 +153,7 @@ subroutine SUPERCOOLED_CLOUD_PROBABILITY(Bad_Pixel_Mask,Cloud_Type,Cloud_Tempera
      do Line_Idx = 1, Number_Of_Lines
         
        !--- filter bad
-       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+       if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
        !--- filter missing temps
        if (Cloud_Temperature(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
        !--- filter with cloud type
@@ -255,7 +257,7 @@ subroutine  MODE_ZERO_CLOUD_HEIGHT(Line_Idx_min,Num_Lines)
     Element_loop:   do Elem_Idx = 1, Number_Of_Elements
 
     !--- check for a bad pixel
-    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+    if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
           cycle
     endif
 
@@ -339,7 +341,7 @@ subroutine COMPUTE_CLOUD_TOP_LEVEL_NWP_WIND_AND_TPW(Line_Idx_Min,Num_Lines)
      Ivza = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !-- check if indices are valid
      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0) cycle
@@ -454,7 +456,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- check if indices are valid
      !--- stw May not need this.
@@ -498,9 +500,7 @@ subroutine COMPUTE_ALTITUDE_FROM_PRESSURE(Line_Idx_Min,Num_Lines,Pc_In,Alt_Out)
   enddo Line_Loop_1
 
 end subroutine COMPUTE_ALTITUDE_FROM_PRESSURE
-!-----------------------------------------------------------------------------
-! Opaque cloud height
-!-----------------------------------------------------------------------------
+
 subroutine OPAQUE_CLOUD_HEIGHT() 
 
    integer:: Line_Idx
@@ -519,13 +519,13 @@ subroutine OPAQUE_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
+   if (.not. Sensor%Chan_On_Flag_Default(31)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !--- indice aliases
       Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
@@ -582,14 +582,14 @@ subroutine H2O_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if (.not. Sensor%Chan_On_Flag_Default(27)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
 !     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
@@ -659,15 +659,15 @@ subroutine CO2IRW_CLOUD_HEIGHT()
    Num_Elements = Image%Number_Of_Elements
    Num_Lines = Image%Number_Of_Lines_Per_Segment
 
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(27)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(33)) return
 
    do Elem_Idx = 1, Num_Elements
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 !     if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE .and. & 
 !         Cld_Type(Elem_Idx,Line_Idx) /= sym%OPAQUE_ICE_TYPE) then
@@ -732,9 +732,9 @@ subroutine CTP_MULTILAYER()
    Ctp_Multilayer_Flag = Missing_Value_Int1
 
    !--- check if channels are on
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(27)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(33)==sym%NO) return
+   if ( .not. Sensor%Chan_On_Flag_Default(31)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(27)) return
+   if ( .not. Sensor%Chan_On_Flag_Default(33)) return
 
  
    !--- loop through pixels in the segment
@@ -742,7 +742,7 @@ subroutine CTP_MULTILAYER()
      do Line_Idx = 1, Num_Lines
 
       !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
       !---- filter on cloud type
       if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. & 
@@ -818,10 +818,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
+  if ( .not. Sensor%Chan_On_Flag_Default(33)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(34)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(35) .or. &
+      .not. Sensor%Chan_On_Flag_Default(36) ) then
      return
   endif
 
@@ -829,7 +829,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- skip data without sounder data
      if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
@@ -988,10 +988,10 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   Zc_Co2 = Missing_Value_Real4
 
   !---- check that all co2 channels are available
-  if (Sensor%Chan_On_Flag_Default(33) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(34) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(35) == sym%NO .or. &
-      Sensor%Chan_On_Flag_Default(36) == sym%NO) then
+  if ( .not. Sensor%Chan_On_Flag_Default(33)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(34)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(35)  .or. &
+      .not. Sensor%Chan_On_Flag_Default(36) ) then
      return
   endif
 
@@ -1004,7 +1004,7 @@ subroutine CO2_SLICING_CLOUD_HEIGHT_NEW(Num_Elem,Line_Idx_min,Num_Lines, &
   Element_Loop: do Elem_Idx = 1, Num_Elem
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !--- skip data without sounder data
      if (ch(33)%Rad_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
@@ -1153,7 +1153,7 @@ subroutine SOUNDER_EMISSIVITY()
   integer:: Nwp_Lat_Idx
   integer:: Vza_Rtm_Idx
 
-  if (Sensor%Chan_On_Flag_Default(31) == sym%NO) return
+  if ( .not. Sensor%Chan_On_Flag_Default(31) ) return
   if (.not. allocated(Cld_Press_Sounder)) return
   if (.not. allocated(Cld_Emiss_Sounder)) return
 
@@ -1413,7 +1413,7 @@ subroutine OPAQUE_TRANSMISSION_HEIGHT()
      Zen_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
      !-- check if indices are valid
      if (Lon_Idx < 0 .or. Lat_Idx < 0) cycle
@@ -1422,7 +1422,7 @@ subroutine OPAQUE_TRANSMISSION_HEIGHT()
 
      do Chan_Idx = 27,38
 
-         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+         if ( .not. sensor % Chan_On_Flag_Default(Chan_Idx)  ) cycle
 
          Trans_Prof => Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile 
 
@@ -1458,13 +1458,13 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
      do Line_Idx = 1, Image%Number_Of_Lines_Read_This_Segment
 
      !--- skip bad pixels
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
+     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
-     if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
+     if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
      do Chan_Idx = 27, 38
 
-         if ( sensor % Chan_On_Flag_Default(Chan_Idx) == sym % no ) cycle
+         if ( .not. sensor % Chan_On_Flag_Default(Chan_Idx)  ) cycle
          if (ch(Chan_Idx)%Bt_Toa(Elem_Idx,Line_Idx) == Missing_Value_Real4) cycle
 
            !--- initialize to cloudy
@@ -1472,12 +1472,12 @@ subroutine COMPUTE_CSBT_CLOUD_MASKS()
            ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 3
 
            !--- if full mask is clear, set channel masks to clear
-           if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
+           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.10) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 0
               cycle
            endif
 
-           if (CLDMASK%Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
+           if (Posterior_Cld_Probability(Elem_Idx,Line_Idx) <= 0.25) then
               ch(Chan_Idx)%CSBT_Mask(Elem_Idx,Line_Idx) = 1
               cycle
            endif
@@ -1768,162 +1768,6 @@ subroutine SLICING_CLOUD_PRESSURE(Ch_X_Rad_Toa, &
    endif
 
 end subroutine SLICING_CLOUD_PRESSURE
-!-----------------------------------------------------------------------------
-! Solution Space
-!-----------------------------------------------------------------------------
-subroutine SOLUTION_SPACE() 
-
-   integer:: Line_Idx
-   integer:: Elem_Idx
-   integer:: Num_Elements
-   integer:: Num_Lines
-   integer:: Nwp_Lon_Idx
-   integer:: Nwp_Lat_Idx
-   integer:: Vza_Rtm_Idx
-   integer:: Tropo_Level_Idx
-   integer:: Sfc_Level_Idx
-   integer:: Level_Idx
-   integer:: Level_Idx_Start
-   integer:: Level_Idx_End
-  
-   real, dimension(NLevels_Rtm):: ch29_emiss_profile
-   real, dimension(NLevels_Rtm):: ch31_emiss_profile
-   real, dimension(NLevels_Rtm):: ch32_emiss_profile
-   real, dimension(NLevels_Rtm):: beta_ch31_ch32_profile
-   real, dimension(NLevels_Rtm):: beta_ch31_ch29_profile
-   real, dimension(NLevels_Rtm):: beta_ch31_ch29_predicted_profile
-   real, dimension(NLevels_Rtm):: beta_diff_profile
-
-   integer:: Pc_Idx
-
-   real:: A_BETA_11um_85um_FIT_ICE 
-   real:: B_BETA_11um_85um_FIT_ICE
-
-!-------------------------------------------------------------------------
-! fits
-!-------------------------------------------------------------------------
-
-   !--- empirical
-   !     A_BETA_11um_85um_FIT_ICE =   2.20137
-   !     B_BETA_11um_85um_FIT_ICE =  -1.21641
-
-   !--- droxtals
-   !     A_BETA_11um_85um_FIT_ICE =    1.92649
-   !     B_BETA_11um_85um_FIT_ICE =   -0.90985
-
-   !--- solid bullet rosettes
-   !    A_BETA_11um_85um_FIT_ICE =    2.11873
-   !    B_BETA_11um_85um_FIT_ICE =   -1.11750
-
-   !--- hollow bullet rosettes
-   !    A_BETA_11um_85um_FIT_ICE =    2.10412 
-   !    B_BETA_11um_85um_FIT_ICE =   -1.13382
-
-   !--- solid columns
-   !    A_BETA_11um_85um_FIT_ICE =    1.93440
-   !    B_BETA_11um_85um_FIT_ICE =   -0.92610
-
-   !--- hollow columns
-   !    A_BETA_11um_85um_FIT_ICE =    1.91655
-   !    B_BETA_11um_85um_FIT_ICE =   -0.92072
-
-   !--- plates
-   !    A_BETA_11um_85um_FIT_ICE =    1.79394
-   !    B_BETA_11um_85um_FIT_ICE =   -0.82640
-
-   !--- aggregate columns
-        A_BETA_11um_85um_FIT_ICE =    2.17033
-        B_BETA_11um_85um_FIT_ICE =   -1.14189
-
-   !--- small_aggregate_plates
-   !    A_BETA_11um_85um_FIT_ICE =    2.16052
-   !    B_BETA_11um_85um_FIT_ICE =   -1.17359
-
-   !---large_aggregate_plates
-   !    A_BETA_11um_85um_FIT_ICE =    2.15038
-   !    B_BETA_11um_85um_FIT_ICE =   -1.20337
-
-   Num_Elements = Image%Number_Of_Elements
-   Num_Lines = Image%Number_Of_Lines_Per_Segment
-
-   if (Sensor%Chan_On_Flag_Default(29)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(31)==sym%NO) return
-   if (Sensor%Chan_On_Flag_Default(32)==sym%NO) return
-
-   do Elem_Idx = 1, Num_Elements
-     do Line_Idx = 1, Num_Lines
-
-      !--- skip bad pixels
-      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) cycle
-
-      !--- skip non cirrus
-      if (Cld_Type(Elem_Idx,Line_Idx) /= sym%CIRRUS_TYPE .and. &
-          Cld_Type(Elem_Idx,Line_Idx) /= sym%OVERLAP_TYPE) cycle
-
-      !--- skip non cirrus
-      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) < 0.1) cycle
-      if (Ch(31)%Emiss_Tropo(Elem_Idx,Line_Idx) > 0.9) cycle
-
-      !--- indice aliases
-      Nwp_Lon_Idx = I_Nwp(Elem_Idx,Line_Idx)
-      Nwp_Lat_Idx = J_Nwp(Elem_Idx,Line_Idx)
-      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
-
-      !-- check if indices are valid
-      if (Nwp_Lon_Idx < 0 .or. Nwp_Lat_Idx < 0 .or. Vza_Rtm_Idx < 0) cycle
-
-      Tropo_Level_Idx = rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Tropo_Level
-      Sfc_Level_Idx =   rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%Sfc_Level
-      Vza_Rtm_Idx = Zen_Idx_Rtm(Elem_Idx,Line_Idx)
-
-      !--- restrict levels to consider
-      Level_Idx_Start = Tropo_Level_Idx
-      Level_Idx_End = Sfc_Level_Idx
-
-      ch29_emiss_profile = MISSING_VALUE_REAL4
-      ch31_emiss_profile = MISSING_VALUE_REAL4
-      ch32_emiss_profile = MISSING_VALUE_REAL4
-      beta_ch31_ch32_profile = MISSING_VALUE_REAL4
-      beta_ch31_ch29_profile = MISSING_VALUE_REAL4
-      beta_ch31_ch29_predicted_profile = MISSING_VALUE_REAL4
-      beta_diff_profile = 1000.0
-
-      level_loop: do Level_Idx = Level_Idx_Start, Level_Idx_End
-
-      !-- compute emissivity profiles
-      ch29_emiss_profile(Level_Idx) = EMISSIVITY(ch(29)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                       ch(29)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(29)%Rad_BB_Cloud_Profile(Level_Idx))
-
-      ch31_emiss_profile(Level_Idx) = EMISSIVITY(ch(31)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                       ch(31)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(31)%Rad_BB_Cloud_Profile(Level_Idx))
-
-      ch32_emiss_profile(Level_Idx) = EMISSIVITY(ch(32)%Rad_Toa(Elem_Idx,Line_Idx),  &
-                                       ch(32)%Rad_Toa_Clear(Elem_Idx,Line_Idx),  &
-                                      rtm(Nwp_Lon_Idx,Nwp_Lat_Idx)%d(Vza_Rtm_Idx)%ch(32)%Rad_BB_Cloud_Profile(Level_Idx))
-
-
-      beta_ch31_ch32_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch32_emiss_profile(Level_Idx)) 
-      beta_ch31_ch29_profile(Level_Idx) = BETA_RATIO(ch31_emiss_profile(Level_Idx), ch29_emiss_profile(Level_Idx)) 
-      if (beta_ch31_ch32_profile(Level_Idx) /= MISSING_VALUE_REAL4) &
-          beta_ch31_ch29_predicted_profile(Level_Idx) = A_Beta_11um_85um_FIT_ICE + B_Beta_11um_85um_FIT_ICE * beta_ch31_ch32_profile(Level_Idx)
-
-      if (beta_ch31_ch29_profile(Level_Idx) /= MISSING_VALUE_REAL4 .and. beta_ch31_ch29_predicted_profile(Level_Idx) /= MISSING_VALUE_REAL4) &
-          beta_diff_profile(level_Idx) = abs(beta_ch31_ch29_profile(Level_Idx) -  beta_ch31_ch29_predicted_profile(Level_Idx))
-
-      enddo Level_Loop
-
-       Pc_Idx = minloc(beta_diff_profile,1) 
-       Diag_Pix_Array_1(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-       if (abs(beta_diff_profile(Pc_Idx)) < 0.1) then
-          Diag_Pix_Array_1(Elem_Idx,Line_Idx) = P_Std_Rtm(Pc_Idx)
-       endif
-
-      enddo
-   enddo
-
-end subroutine SOLUTION_SPACE
 !----------------------------------------------------------------------
 ! End of Module
 !----------------------------------------------------------------------

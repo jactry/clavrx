@@ -37,9 +37,15 @@
 ! REPOSITION_FOR_CLOCK_ERROR - compute the time for each pixel from the scan value
 !--------------------------------------------------------------------------------------
 module AVHRR_REPOSITION_ROUTINES
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use PIXEL_COMMON
- use NUMERICAL_ROUTINES
+ use NUMERICAL_TOOLS_MOD
+ 
+  use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+ 
  implicit none
  private
  public:: REPOSITION_FOR_CLOCK_ERROR, &
@@ -667,7 +673,7 @@ subroutine REPOSITION_FOR_CLOCK_ERROR(j1,j2,timerr,error_flag)
      
 !--- check for bad scans
       if ((scan_time(j) == missing_value_int4) .or. &
-          (bad_scan_flag(j) == sym%YES))  then
+          (bad_scan_flag(j) ))  then
            cycle 
       endif
 

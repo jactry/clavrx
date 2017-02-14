@@ -73,7 +73,7 @@ module VIIRS_CLAVRX_BRIDGE
       , Ancil_Data_Dir & 
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
-      , CLDMASK &
+      , Cld_Mask_Aux &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
       , Scan_Time &
@@ -106,7 +106,7 @@ module VIIRS_CLAVRX_BRIDGE
       , Bt_Uni_ChI5 
       
 
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Int4 &
     , Sym &
     , Missing_Value_Real4
@@ -157,8 +157,8 @@ contains
       !                 M1  M2   M3   M4  M5   M6   M7  M8  M9  M10 M11  M12  M13  M14  M15  M16  
       modis_chn_list = [ 8 , 9 , 3 , 4 , 1 , 15 , 2 , 5 , 26 , 6 , 7 , 20 , 22 , 29 , 31 , 32 ]
       modis_chn_list_iband = [ 39 , 40 , 41 , 42 , 43 ]
-      is_mband_on = Sensor%Chan_On_Flag_Default (modis_chn_list) == sym%YES
-      is_iband_on = Sensor%Chan_On_Flag_Default (modis_chn_list_iband) == sym%YES
+      is_mband_on = Sensor%Chan_On_Flag_Default (modis_chn_list) 
+      is_iband_on = Sensor%Chan_On_Flag_Default (modis_chn_list_iband) 
       
       y_start = ( segment_number -1 ) * Image%Number_Of_Lines_Per_Segment + 1
       c_seg_lines = min (  y_start + Image%Number_Of_Lines_Per_Segment -1 , Image%Number_Of_Lines )  - y_start  + 1
@@ -166,7 +166,7 @@ contains
       ! - configure viirs interface
       v_conf % chan_on_rfl_mband = is_mband_on
       v_conf % chan_on_iband = is_iband_on
-      v_conf % chan_on_dnb = Sensor%Chan_On_Flag_Default(44) == sym%YES
+      v_conf % chan_on_dnb = Sensor%Chan_On_Flag_Default(44) 
       v_conf % viirs_cloud_mask_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       v_conf % viirs_cloud_type_on = cloud_mask_aux_flag /= sym%NO_AUX_CLOUD_MASK
       
@@ -216,7 +216,7 @@ contains
       do i_mband = 1 , 16
          modis_chn = modis_chn_list (i_mband)
          if ( .not. out % mband ( i_mband ) % is_read ) then
-            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = sym % no 
+            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = .FALSE.
             cycle   
          end if
          
@@ -240,14 +240,14 @@ contains
          
             if ( .not. out % file_exists % svi_file_exists (i_iband)) then
                  ! - switch off chan_on in CLAVR-x if file is not there..
-               Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) = sym % NO
-               sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % NO
+               Sensor%Chan_On_Flag_Default ( modis_chn_list_iband ) = .FALSE.
+               sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = .FALSE.
                cycle
             end if
             
             
            if ( .not. out % iband ( i_iband ) % is_read ) then
-            sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = sym % no 
+            sensor % chan_on_flag_per_line (modis_chn_list_iband (i_iband) ,1:c_seg_lines) = .FALSE. 
           
             cycle   
          end if
@@ -273,7 +273,7 @@ contains
       
       end do 
     
-      if (Sensor%Chan_On_Flag_Default(44) == sym%YES .and. size(out % dnb_mgrid % rad) > 1) then
+      if (Sensor%Chan_On_Flag_Default(44)  .and. size(out % dnb_mgrid % rad) > 1) then
          ch(44)%rad_toa( : ,1:c_seg_lines)  = out % dnb_mgrid % rad
          geo % lunzen( : ,1:c_seg_lines) = out % geo % lunzen
          geo % lunaz( : ,1:c_seg_lines) = out % geo % lunaz
@@ -316,7 +316,7 @@ contains
   
 
       if ( v_conf % viirs_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
-         CLDMASK%Cld_Mask_Aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
+         Cld_Mask_Aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
          Cloud_Mask_Aux_Read_Flag = 1
       else
          Cloud_Mask_Aux_Read_Flag = 0
@@ -377,7 +377,7 @@ contains
    !-----------------------------------------------------------------
    subroutine READ_VIIRS_INSTR_CONSTANTS(Instr_Const_file)
       use calibration_constants
-      use file_tools , only: getlun
+      use file_tools , only: get_lun
       
       implicit none
  
@@ -385,7 +385,7 @@ contains
       integer:: ios0, erstat
       integer:: Instr_Const_lun
 
-      Instr_Const_lun = GETLUN()
+      Instr_Const_lun = get_lun()
 
       open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
       call mesg ("opening "//trim(Instr_Const_file), level = verb_lev % VERBOSE) 

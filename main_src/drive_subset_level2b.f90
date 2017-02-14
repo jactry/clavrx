@@ -31,13 +31,14 @@
 !
 !--------------------------------------------------------------------------------------
 program DRIVE_SUBSET_LEVEL2B
- use CONSTANTS
- use HDF
+ use CX_CONSTANTS_MOD
  use HDF_PARAMS
- use NUMERICAL_ROUTINES
- use SCALING_PARAMETERS
- use LEVEL2B_ROUTINES
- use FILE_UTILITY
+ use NUMERICAL_TOOLS_MOD
+ use SCALING_PARAMETERS,only:
+
+ use FILE_TOOLS,only: &
+  get_lun
+ 
 
  implicit none
 
@@ -93,7 +94,7 @@ program DRIVE_SUBSET_LEVEL2B
 !-----------------------------------------------------------------------------
 ! Search for level2b in the path
 !-----------------------------------------------------------------------------
-call FILE_SEARCH(Path_Input,'level2b.hdf',Num_Files,Files)
+!call FILE_SEARCH(Path_Input,'level2b.hdf',Num_Files,Files)
 
 File_Loop: do Idx = 1, Num_Files
 

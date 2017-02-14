@@ -218,11 +218,11 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Chan_Idx_12um = 32     !channel number for 12
    Input%Chan_Idx_133um = 33  !channel number for 13.3
 
-   Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
-   Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
-   Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
-   Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
-   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(33)
+   Input%Chan_On_67um = abs(transfer(Sensor%Chan_On_Flag_Default(27),1))
+   Input%Chan_On_85um = abs(transfer(Sensor%Chan_On_Flag_Default(29),1))
+   Input%Chan_On_11um = abs(transfer(Sensor%Chan_On_Flag_Default(31),1))
+   Input%Chan_On_12um = abs(transfer(Sensor%Chan_On_Flag_Default(32),1))
+   Input%Chan_On_133um = abs(transfer(Sensor%Chan_On_Flag_Default(33),1))
 
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Elem_Idx_Nwp =>  I_Nwp
@@ -241,9 +241,9 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Surface_Type => Sfc%Sfc_Type
 
    Input%Surface_Elevation => Sfc%Zsfc
-   Input%Cloud_Mask => CLDMASK%Cld_Mask
+   Input%Cloud_Mask => Cld_Mask
    Input%Cloud_Type => Cld_Type
-   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
+   Input%Cloud_Probability => Posterior_Cld_Probability
 
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC

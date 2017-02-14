@@ -35,9 +35,18 @@
 !
 !--------------------------------------------------------------------------------------
 module CLAVRX_OLR_MODULE
-use CONSTANTS
-use PIXEL_COMMON, only: ch, sensor, geo, olr
-use ALGORITHM_CONSTANTS
+
+   use CX_SCIENCE_TOOLS_MOD,only: &
+      stefan_boltzmann_constant
+      
+   use CX_CONSTANTS_MOD,only: &
+      sym &
+      , MISSING_VALUE_REAL4
+   
+   
+   use PIXEL_COMMON, only: &
+       ch, sensor, geo, olr
+   
 
 implicit none
 
@@ -182,9 +191,6 @@ select case (Sensor%WMO_Id)
          olr_type = 'goes'
          olr_coef(1:5) = (/11.4174, 0.559768, 0.366210, 0.00986985, 0.00850844/)
 
-      case(270) !GOES-16
-         olr_type = 'none'
-
       case(706) !NOAA-6
          olr_type = 'none'
 
@@ -232,8 +238,8 @@ subroutine COMPUTE_OLR()
 
       case('avhrr')
 
-         if (Sensor%Chan_On_Flag_Default(31)==sym%YES .and. &
-             Sensor%Chan_On_Flag_Default(32)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(31) .and. &
+             Sensor%Chan_On_Flag_Default(32)) then
 
           where(ch(31)%Bt_Toa /= MISSING_VALUE_REAL4 .and.  &
                 ch(32)%Bt_Toa /= MISSING_VALUE_REAL4) 
@@ -246,8 +252,8 @@ subroutine COMPUTE_OLR()
 
 
       case('goes')
-         if (Sensor%Chan_On_Flag_Default(27)==sym%YES .and. &
-             Sensor%Chan_On_Flag_Default(31)==sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(27) .and. &
+             Sensor%Chan_On_Flag_Default(31) ) then
 
 
           where(ch(27)%Bt_Toa /= MISSING_VALUE_REAL4 .and.  &

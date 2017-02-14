@@ -168,7 +168,7 @@ module ASOS_MODULE
       i22 = min(Num_Elems,i+M)
 
       !--- check for a bad pixel pixel
-      if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle
+      if (Input%Invalid_Data_Mask(i,j) ) cycle
 
       !--- count all of the pixels in each layer
       Num_High = int(sum(real(Mask_High(i1:i2,j1:j2))))
@@ -233,7 +233,7 @@ module ASOS_MODULE
       i22 = min(Input%Number_of_Elements,i+M)
 
       !--- check for a bad pixel pixel
-      if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle
+      if (Input%Invalid_Data_Mask(i,j) ) cycle
 
       !--- check for an ocean pixel
       if (Input%Surface_Type(i,j) == Symbol%WATER_SFC) cycle

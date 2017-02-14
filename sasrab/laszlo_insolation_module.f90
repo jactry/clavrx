@@ -27,7 +27,7 @@
 !
 !--------------------------------------------------------------------------------------
 module LASZLO_INSOLATION
-      use CONSTANTS
+      use CX_CONSTANTS_MOD
       use PIXEL_COMMON
       use NWP_COMMON
       use FILE_UTILITY

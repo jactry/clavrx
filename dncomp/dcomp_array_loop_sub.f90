@@ -5,7 +5,9 @@
 !           02/05/2014 : add AHI (AW)
 subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
-   use dcomp_retrieval_mod
+   use dcomp_retrieval_mod, only: &
+    dcomp_output_structure &
+    , dcomp_algorithm
    
    use dncomp_interface_def_mod, only: &
       dncomp_in_type &
@@ -14,8 +16,12 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       , EM_cloud_mask &
       , EM_snow_class
       
-   
+   use dncomp_trans_atmos_mod,only: &
+    trans_atm_above_cloud  
+      
+  
    implicit none
+   
    type (dncomp_in_type) , intent(in) :: input
    type (dncomp_out_type) :: output
    integer , intent(in) , optional :: debug_mode_user
@@ -44,10 +50,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
  
    real :: gas_coeff (3)
    
-   real :: trans_ozone ( N_CHAN )
    real :: trans_unc_ozone ( N_CHAN )
    real :: trans_rayleigh ( N_CHAN )
-   real :: trans_wvp ( N_CHAN )
    real :: trans_unc_wvp ( N_CHAN )
    real :: trans_total ( N_CHAN )
       
@@ -59,12 +63,13 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real( kind = real4 ) :: ozone_coeff (3)  
 
    ! -- nwp variables 
-   real( kind = real4 ) :: ozone_path_nwp
+   real( kind = real4 ) :: ozone_dobson
            
    real :: rad_clear_sky_toa_ch20 = -999.
    real :: rad_clear_sky_toc_ch20 = -999.
   
-   real     , allocatable :: air_mass_array (:,:)
+   real , allocatable :: air_mass_array (:,:)
+  
    logical  , allocatable :: cloud_array(:,:)
    logical  , allocatable :: obs_array(:,:)
    logical  , allocatable :: obs_and_acha_array(:,:)
@@ -108,10 +113,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    real :: sat_zen 
    
    integer :: line_idx 
-   integer ::  elem_idx
-   
-   
-   
+   integer :: elem_idx
    integer :: tried 
    integer :: success
    
@@ -232,6 +234,9 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
       call view2d ( input % cloud_press % d ,0., 1200., 'Cloud_press')
    end if
    
+
+   
+   
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
          
@@ -245,7 +250,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          sol_zen    =  input % sol % d (elem_idx,line_idx)
          sat_zen    =  input % sat % d (elem_idx,line_idx)
          rel_azi    =  input % azi % d (elem_idx,line_idx)
-         ozone_path_nwp = input % ozone_nwp % d (elem_idx,line_idx)
+         ozone_dobson = input % ozone_nwp % d (elem_idx,line_idx)
          
          ! - compute transmission 
               
@@ -253,52 +258,19 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
        
             if ( input % is_channel_on (chn_idx) .eqv. .false.) cycle  loop_chn
             
-            trans_block : associate ( tpw_ac => input % tpw_ac % d (elem_idx,line_idx)  , &
-                     
-                     press_sfc => input % press_sfc  % d (elem_idx,line_idx) , &
-                     trans_chn20_ac_nadir => input % trans_ac_nadir(20) % d , & 
-                     refl_toa => input % refl (chn_idx)  % d (elem_idx, line_idx))
-                     
-               gas_coeff = input % gas_coeff ( chn_idx) % d  
-               trans_ozone( chn_idx ) = 1.
-               trans_rayleigh( chn_idx ) = 1.
             
-               if ( chn_idx == CHN_VIS ) then
-                  if (ozone_path_nwp < 100) ozone_path_nwp = 320
-               
-                  trans_ozone( chn_idx ) = exp ( -1. * ( ozone_coeff(1) &
-                              & + ozone_coeff(2) *  ozone_path_nwp &
-                              & + ozone_coeff(3) *  ozone_path_nwp**2))
+            call trans_atm_above_cloud ( &
+               input % tpw_ac % d (elem_idx,line_idx) &
+               , ozone_dobson &  
+               , input % press_sfc  % d (elem_idx,line_idx) &
+               , cld_press &
+               , air_mass_array(elem_idx,line_idx) &
+               , input % gas_coeff ( chn_idx) % d , ozone_coeff, 0.044 &
+               , trans_total(chn_idx) &
+               , trans_unc_wvp(chn_idx) &
+                     )
 
-                  trans_unc_ozone( chn_idx ) = trans_ozone(  chn_idx  ) -  exp ( -1. * ( ozone_coeff(1) &
-                              & + ozone_coeff(2) *  (1.1 * ozone_path_nwp) &
-                              & + ozone_coeff(3) * (1.1 * ozone_path_nwp)**2))
-         
-                  trans_ozone( chn_idx ) = min ( trans_ozone(  chn_idx  ) , 1. ) 
-         
-                  ! - rayleigh
-                  trans_rayleigh (  chn_vis  ) = exp (-air_mass_array(elem_idx,line_idx)  &
-                    &    * ( 0.044 *  (cld_press / press_sfc )) * 0.84)
-            
-               end if
-              
-               assumed_tpw_error = 1.2
-                           
-               trans_wvp ( chn_idx ) =  exp( - 1. * (gas_coeff(1) &
-                          & + gas_coeff(2) * tpw_ac  &
-                          & + gas_coeff(3) * ( tpw_ac ** 2 ) ) )
-                                
-               trans_unc_wvp ( chn_idx ) = abs(trans_wvp( chn_idx ) - exp ( -1. * (gas_coeff(1)   &
-                           & + gas_coeff(2) * (assumed_tpw_error * tpw_ac) &
-                           & + gas_coeff(3) * ( ( assumed_tpw_error * tpw_ac ) **2 ) ) ) )       
-                        
-            end associate trans_block
-           
-            trans_total ( chn_idx ) = trans_rayleigh( chn_idx ) * trans_ozone( chn_idx ) * trans_wvp( chn_idx )
-            trans_total ( chn_idx ) = trans_ozone( chn_idx ) * trans_wvp( chn_idx )
-            
-            
-            refl_toc( chn_idx ) = refl_toa  * trans_total (chn_idx )
+            refl_toc( chn_idx ) = refl_toa  /  trans_total (chn_idx )
             
             alb_sfc( chn_idx ) =  ( input % alb_sfc ( chn_idx )  % d (elem_idx,line_idx) ) / 100.
             
@@ -307,27 +279,24 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             alb_unc_sfc  (chn_idx) = 0.05
                         
             if ( chn_idx == 20 ) then
-               chn20_block : associate ( rad_toa => input % rad (chn_idx)  % d (elem_idx, line_idx) &
-                        & , sun_earth_dist => input % sun_earth_dist &
-                        & , solar_irradiance => input % solar_irradiance (chn_idx) )
-               
-                 
-                  trans_total (chn_idx) = input % trans_ac_nadir ( chn_idx) % d  (elem_idx, line_idx)
-                  rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) / ( solar_irradiance / input % sun_earth_dist ** 2 )
-                  refl_toc( chn_idx ) = rad_toa * rad_to_refl_factor
+              
+               trans_total (chn_idx) = input % trans_ac_nadir ( chn_idx) % d  (elem_idx, line_idx)
+               rad_to_refl_factor = PI / cos ( sol_zen * PI / 180.) &
+					/ ( input % solar_irradiance (chn_idx) &
+					/ input % sun_earth_dist ** 2 )
+               refl_toc( chn_idx ) = input % rad (chn_idx)  % d (elem_idx, line_idx) * rad_to_refl_factor
                   
-               end associate chn20_block
-               
-               rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( 20) % d (elem_idx, line_idx) 
-               rad_clear_sky_toa_ch20 = input % rad_clear_sky_toa ( 20) % d (elem_idx, line_idx)
+               rad_clear_sky_toc_ch20 = input % rad_clear_sky_toc ( chn_idx) % d (elem_idx, line_idx) 
+               rad_clear_sky_toa_ch20 = input % rad_clear_sky_toa ( chn_idx) % d (elem_idx, line_idx)
                
             end if
              
          end do loop_chn
 
-         ! - NIR                
+         ! - vis               
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
-         obs_unc ( 1 ) =   trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         obs_unc ( 1 ) = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         
          alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
          alb_unc ( 1) = 0.05
          trans_vec ( 1) = trans_total ( CHN_VIS )
@@ -367,7 +336,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , sat_zen &
                 & , rel_azi &
                 & , cld_temp &
-                & , water_phase_array ( elem_idx, line_idx)  &
+                & , water_phase_array ( elem_idx, line_idx) &
+                & , input % snow_class % d ( elem_idx, line_idx) &
                 & , rad_clear_sky_toc_ch20 &
                 & , rad_clear_sky_toa_ch20 &
                 & , trim(sensorname_from_wmoid(input % sensor_wmo_id)) &

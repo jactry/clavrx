@@ -1,7 +1,7 @@
 ! $Id$
 module AHI_CLAVRX_BRIDGE 
    
-      use Pixel_Common , only : &
+   use Pixel_Common , only : &
         Image &
       , Sensor &
       , Geo &
@@ -10,24 +10,27 @@ module AHI_CLAVRX_BRIDGE
       , Ancil_Data_Dir & 
       , Cloud_Mask_Aux_Flag &
       , Cloud_Mask_Aux_Read_Flag &
+      , Cld_Mask_Aux &
       , Cld_Type_Aux &
       , Cld_Phase_Aux &
       , Scan_Time &
       , Gap_Pixel_Mask &
       , Ch 
    
-    use Constants, only: &
+   use CX_Constants_mod, only: &
       Int4 &
-     , Missing_Value_Real4
+      ,Missing_Value_Real4
       
       
-    use Calibration_Constants, only: &
+   use Calibration_Constants, only: &
             Planck_Nu
    
    use Planck, only: CONVERT_RADIANCE
    
    implicit none
-
+   private
+   public :: read_ahi_data
+    
 contains
 
    subroutine READ_AHI_DATA ( Segment_Number , File_Ch01 , Error_Out )
@@ -69,12 +72,13 @@ contains
       is_solar_channel(1:6) = .true.
     
       ahi_c % file_base = file_ch01
-      ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) == SYM_YES
+      ahi_c % chan_on (:) = Sensor%Chan_On_Flag_Default ( modis_chn_list) 
     
       ahi_c % data_path = trim(Image%Level1b_Path)
       
       offset_all = [0,0]
       
+      ! - find the correct offset and count
       if ( nav % lon_lat_limits_set ) then
       
          ahi_c % lon_range =[Nav%Lon_Min_Limit,Nav%Lon_Max_Limit]
@@ -117,23 +121,25 @@ contains
       ! nav % ascend (1:c_seg_lines)     = ahi_data % geo % ascend
    
       do i_chn = 1, NUM_CHN_AHI
-
-         modis_chn = modis_chn_list (i_chn)
          
+         
+         modis_chn = modis_chn_list (i_chn)
+        
          if ( .not. ahi_data % chn ( i_chn ) % is_read ) then
-            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = SYM_NO 
+            sensor % chan_on_flag_per_line (modis_chn ,1:c_seg_lines) = .false.
             cycle   
          end if
       
          if ( .not. ahi_c % chan_on(i_chn) ) cycle
       
          if ( is_solar_channel ( i_chn) ) then
+           !print*,i_chn,shape(ahi_data % chn (i_chn) % ref)
             ch(modis_chn) % Ref_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % ref
          else
             if ( modis_chn > 38) then
                cycle
             end if
-            
+            ! print*,i_chn,shape(ahi_data % chn (i_chn) % rad)
             ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines)  =  ahi_data % chn (i_chn) % rad
             call CONVERT_RADIANCE ( ch(modis_chn) % Rad_Toa ( : ,1:c_seg_lines) , nu_list(i_chn), -999. )
             call COMPUTE_BT_ARRAY ( ch(modis_chn)%bt_toa ( : ,1:c_seg_lines) &
@@ -150,6 +156,8 @@ contains
 
       nav % ascend = 0 
       Cloud_Mask_Aux_Read_Flag = 0 
+      
+     
       
       ! - update time
       call AHI_DATA % TIME_START_OBJ % GET_DATE ( msec_of_day = Image%Start_Time  )

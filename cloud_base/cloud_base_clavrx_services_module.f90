@@ -5,11 +5,11 @@
 module CLOUD_BASE_SERVICES
 
  use PLANCK
- use CONSTANTS
+ use CX_CONSTANTS_MOD
  use PIXEL_COMMON
  use NWP_COMMON
  use RTM_COMMON
- use NUMERICAL_ROUTINES, only: LOCATE
+ use NUMERICAL_TOOLS_MOD, only: LOCATE
 
  implicit none
 
@@ -38,7 +38,7 @@ module CLOUD_BASE_SERVICES
  integer:: Chan_On_12um
  integer:: Chan_On_133um
 
- integer (kind=int1), dimension(:,:), pointer:: Invalid_Data_Mask
+ logical, dimension(:,:), pointer:: Invalid_Data_Mask
  real, dimension(:,:), pointer:: Cosine_Zenith_Angle
  real, dimension(:,:), pointer:: Sensor_Zenith_Angle
  real, dimension(:,:), pointer:: Surface_Elevation

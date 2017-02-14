@@ -120,6 +120,7 @@ MODULE ReadH5Dataset
   ! Make only this available to the outside world
   PUBLIC :: H5ReadDataset, H5ReadAttribute
   PUBLIC :: ErrorFlag, ErrorMessage, LengString
+  PUBLIC :: H5_DATASET_DIMENSIONS
 
   ! The interfaces themselves
   INTERFACE H5ReadDataset
@@ -170,7 +171,7 @@ MODULE ReadH5Dataset
   ! If set true here all routines show debugging messages.
   ! If set false here only routines that have their own debug
   ! activated show debugging messages.
-!  LOGICAL             :: DebugMsg = .true.
+  !LOGICAL             :: DebugMsg = .true.
   LOGICAL             :: DebugMsg = .false.
 
 
@@ -179,6 +180,70 @@ MODULE ReadH5Dataset
 
 CONTAINS
 
+
+   ! **************************** 
+   !    Returns dataset dimensions
+   ! *******************************
+
+   subroutine H5_DATASET_DIMENSIONS  &
+        ( &
+        h5filename &
+        , datasetname &
+        , dims )
+      implicit none
+      
+      character ( len = *) :: h5filename
+      character ( len = *) :: datasetname
+      integer, pointer :: dims(:)
+      
+      INTEGER   :: ltype
+      
+      
+      INTEGER, PARAMETER                                   :: maxdims = 4
+      INTEGER                                              :: ndims
+      INTEGER(hsize_t), DIMENSION(maxdims) , target        :: datadims
+      INTEGER(hsize_t), DIMENSION(maxdims)                 :: maxdatadims
+      
+     
+      CALL H5Read_init ( H5filename, datasetname )
+      IF (ErrorFlag.lt.0) return
+      
+      ltype=OpenLevels_type(NLevels)
+
+      IF ( ltype == H5G_DATASET_F) THEN
+         CALL h5dget_space_f(d_id,dspace,ErrorFlag)
+      ELSE  !  ltype.eqv.3
+         CALL h5aget_space_f(d_id,dspace,ErrorFlag)
+      ENDIF
+      
+      
+      CALL h5sget_simple_extent_ndims_f(dspace,ndims,ErrorFlag)
+     
+    IF (ErrorFlag.lt.0) THEN
+       ErrorMessage=" *** Error determining dataspace dimensionality"
+       return
+    ENDIF
+    CALL DebugMessage("     > No. of dim.: ",ndims) 
+
+    ALLOCATE(dims(ndims),stat=AllocStat)
+    IF ( AllocStat.ne.0 ) THEN
+       ErrorFlag=-1
+       ErrorMessage=" *** Error allocating dims"
+       return
+    ENDIF
+
+    CALL h5sget_simple_extent_dims_f(dspace,datadims,maxdatadims,ErrorFlag)
+    IF (ErrorFlag.lt.0) THEN
+       ErrorMessage=" *** Error determining dataspace size"
+       return
+    ENDIF
+      
+      
+      dims = int(datadims(1:ndims))
+      CALL H5Read_close
+      
+   
+   end subroutine H5_DATASET_DIMENSIONS
 
 ! *******************************************************************
 ! *** General Routines                                            ***

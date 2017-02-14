@@ -66,9 +66,8 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-
-   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
-   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
+   call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
+   !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
@@ -89,8 +88,8 @@ module ACHA_CLAVRX_BRIDGE
          , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
-   where (Shadow_Mask == 1 .and. CLDMASK%Cld_Mask == 0 )  
-           CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
+   where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  
+           Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
    end where
 
    !-----------------------------------------------------------------------
@@ -132,8 +131,6 @@ module ACHA_CLAVRX_BRIDGE
      Input%Surface_Temperature => null()
      Input%Surface_Air_Temperature =>  null()
      Input%Tropopause_Temperature =>  null()
-     Input%Tropopause_Height =>  null()
-     Input%Tropopause_Pressure =>  null()
      Input%Surface_Pressure =>  null()
      Input%Surface_Elevation =>  null()
      Input%Latitude =>  null()
@@ -212,7 +209,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Ec_11um =>  null()
      Output%Ec_12um =>  null()
      Output%Ec_133um =>  null()
-     Output%Cloud_Type =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -311,7 +307,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Ec_11um => ACHA%Ec_11um
    Output%Ec_12um => ACHA%Ec_12um
    Output%Ec_133um => ACHA%Ec_133um
-   Output%Cloud_Type => ACHA%Cloud_Type
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -330,13 +325,13 @@ module ACHA_CLAVRX_BRIDGE
    Input%Chan_Idx_136um = 34     !channel number for 13.6
    Input%Chan_Idx_139um = 35     !channel number for 13.9
    Input%Chan_Idx_142um = 36     !channel number for 14.2
-   Input%Chan_On_67um = Sensor%Chan_On_Flag_Default(27)
-   Input%Chan_On_85um = Sensor%Chan_On_Flag_Default(29)
-   Input%Chan_On_11um = Sensor%Chan_On_Flag_Default(31)
-   Input%Chan_On_12um = Sensor%Chan_On_Flag_Default(32)
-   Input%Chan_On_136um = Sensor%Chan_On_Flag_Default(34)
-   Input%Chan_On_139um = Sensor%Chan_On_Flag_Default(35)
-   Input%Chan_On_142um = Sensor%Chan_On_Flag_Default(36)
+   Input%Chan_On_67um = abs(transfer(Sensor%Chan_On_Flag_Default(27),1))
+   Input%Chan_On_85um = abs(transfer(Sensor%Chan_On_Flag_Default(29),1))
+   Input%Chan_On_11um = abs(transfer(Sensor%Chan_On_Flag_Default(31),1))
+   Input%Chan_On_12um = abs(transfer(Sensor%Chan_On_Flag_Default(32),1))
+   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(34),1))
+   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(35),1))
+   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(36),1))
    Input%Invalid_Data_Mask => Bad_Pixel_Mask
    Input%Bt_67um => ch(27)%Bt_Toa
    Input%Bt_85um => ch(29)%Bt_Toa
@@ -359,8 +354,6 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Temperature =>Tsfc_Nwp_Pix
    Input%Surface_Air_Temperature => Tair_Nwp_Pix
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
-   Input%Tropopause_Height => Ztropo_Nwp_Pix
-   Input%Tropopause_Pressure => Ptropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
    Input%Surface_Elevation => Sfc%Zsfc
    Input%Latitude => Nav%Lat
@@ -383,8 +376,8 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
-   Input%Cloud_Mask => CLDMASK%Cld_Mask
-   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
+   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Probability => Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp
@@ -406,13 +399,13 @@ module ACHA_CLAVRX_BRIDGE
      Input%Chan_Idx_133um = 33     !channel number for 13.3
    endif
 
-   Input%Chan_On_133um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um)
+   Input%Chan_On_133um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_133um),1))
    Input%Bt_133um => ch(Input%Chan_Idx_133um)%Bt_Toa
    Input%Rad_Clear_133um => ch(Input%Chan_Idx_133um)%Rad_Toa_Clear
 
-   Input%Chan_On_136um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_136um)
-   Input%Chan_On_139um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_139um)
-   Input%Chan_On_142um = Sensor%Chan_On_Flag_Default(Input%Chan_Idx_142um)
+   Input%Chan_On_136um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_136um),1))
+   Input%Chan_On_139um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_139um),1))
+   Input%Chan_On_142um = abs(transfer(Sensor%Chan_On_Flag_Default(Input%Chan_Idx_142um),1))
 
  end subroutine SET_INPUT
 !----------------------------------------------------------------------

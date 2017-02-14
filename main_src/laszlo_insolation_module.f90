@@ -27,10 +27,11 @@
 !
 !--------------------------------------------------------------------------------------
 module LASZLO_INSOLATION
-      use CONSTANTS
+      use CX_CONSTANTS_MOD
       use PIXEL_COMMON
       use NWP_COMMON
-      use FILE_UTILITY
+      use FILE_TOOLS, only: &
+         get_lun
 
    implicit none
    
@@ -95,7 +96,7 @@ contains
       Insolation_Aer_Opd = Missing_Value_Real4
 
       !--- check for required channels
-      if (Sensor%Chan_On_Flag_Default(1) == sym%NO) return
+      if ( .not. Sensor%Chan_On_Flag_Default(1) ) return
       
       Year = Image%Start_Year
       Month_Local = month
@@ -106,7 +107,7 @@ contains
          line_loop: do Line_Idx = 1, Number_of_Lines
 
             !--- check for a bad pixel
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
                cycle
             endif
             
@@ -134,7 +135,7 @@ contains
             end if
             
      
-            if ((CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY) .or. (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY)) then
+            if ((Cld_Mask(Elem_Idx,Line_Idx) == sym%CLOUDY) .or. (Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLOUDY)) then
                Cdfrac = 1.0
                Cldref = ch(1)%Ref_Toa(Elem_Idx,Line_Idx)/100.0
                Clrref = Missing_Value_Real4

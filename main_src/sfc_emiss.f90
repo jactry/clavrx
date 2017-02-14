@@ -27,19 +27,20 @@
 !
 !--------------------------------------------------------------------------------------
 module SFC_EMISS
-   use HDF
-   use CONSTANTS
-   use NUMERICAL_ROUTINES
-  
+   use CX_CONSTANTS_MOD
+   use NUMERICAL_TOOLS_MOD
+   
    implicit none
-  
-   !--- routine access declaration
+   
+   private
+   include 'hdf.f90' 
+    !--- routine access declaration
    private :: READ_INTEGRATED_SEEBOR_HDF 
    public :: OPEN_SEEBOR_EMISS, CLOSE_SEEBOR_EMISS, READ_SEEBOR_EMISS
 
    !---------------------------------------------------------------------------------------
-   INTEGER, parameter, private :: Num_Lat_Emiss = 3600
-   INTEGER, parameter, private :: Num_Lon_Emiss = 7200
+   INTEGER, parameter, private :: NUM_LAT_EMISS = 3600
+   INTEGER, parameter, private :: NUM_LON_EMISS = 7200
    REAL(kind=real4), parameter, private :: First_Lat_Emiss = 89.9750, last_lat_emiss = -89.9750
    REAL(kind=real4), parameter, private :: First_Lon_Emiss = -179.975, last_lon_emiss = 179.975
    REAL(kind=real4), parameter, private :: Del_Lat_Emiss = 0.05
@@ -67,9 +68,9 @@ CONTAINS
       CHARACTER(len=3) :: jday_str
       CHARACTER(len=4) :: year_str
   
-  logical :: file_exists
+      logical :: file_exists
   
-  INTEGER :: sfstart
+      INTEGER :: sfstart
   
   year_str = "2005"
   

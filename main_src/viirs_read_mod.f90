@@ -253,8 +253,8 @@ contains
       integer(kind=int4) , dimension(2) :: dim_seg 
       integer(kind=int4) , dimension(2) :: dim_seg_iband
       integer(kind=int4) , dimension(2) :: dim_seg_dnb
-      ! - this is to delete
-      integer :: i
+      
+     
       integer , dimension (: ) , allocatable:: time_msec_day
       integer (kind = int8) , parameter :: microsec_per_day =  86400000000_8
       integer, dimension(2)::shape_buffer
@@ -458,7 +458,7 @@ contains
          
          ! - mapping file ( maps from dnb to M-bands resolution)
          file_dnb_idx = trim(config % Ancil_Data_Dir)//'static/viirs/dnb2m_indx.txt'
-         lun = getlun()
+         lun = get_lun()
          dim_seg_dnb(1) = 4064
          dim_seg_dnb(2) = dim_seg(2)
          

@@ -50,15 +50,16 @@
 
 module ABI_MODULE
 
-use CONSTANTS
+use CX_CONSTANTS_MOD
 use PIXEL_COMMON
 use CALIBRATION_CONSTANTS
 use PLANCK
 use CGMS_NAV
-use NUMERICAL_ROUTINES
+use NUMERICAL_TOOLS_MOD
 use GOES_MODULE
-use FILE_UTILITY
+use FILE_TOOLS
 use VIEWING_GEOMETRY_MODULE
+use CX_SSEC_AREAFILE_MOD
 
 implicit none
 public:: READ_ABI
@@ -161,7 +162,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
   integer(kind=int4), intent(in):: segment_number
   character(len=*), intent(in):: channel_1_filename
-  type (AREA_STRUCT), intent(in) :: AREAstr
+  type (area_header_type), intent(in) :: AREAstr
   type (GVAR_NAV), intent(in)    :: NAVstr_ABI
   integer(kind=int2), intent(in):: jday
   integer(kind=int4), intent(in):: image_time_ms
@@ -185,6 +186,11 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
   integer:: num_scans_this_image
   integer(kind=int2),  parameter::  Chan1_int2 = 1
   integer(kind=int2),  parameter::  Chan2_int2 = 2
+  integer :: modis_chn_list(16)
+  integer :: abi_chn_list(16)
+  integer :: i
+  character(len=1020) :: filename
+  character (len = 2) :: channel_string
 
   !--- assume channel_1_file name has a unique "_1_" in the name. 
   !--- determine indices needed to replace that string
@@ -197,329 +203,140 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
   ! ABI Navigation (Do Navigation and Solar angles first)
   !---------------------------------------------------------------------------
    
-  call ABI_NAVIGATION(1,first_line_in_segment,&
+   call ABI_NAVIGATION(1,first_line_in_segment,&
                              Image%Number_Of_Elements,Image%Number_Of_Lines_Per_Segment,1,&
                              AREAstr,NAVstr_ABI)
    
+	
+	modis_chn_list = [3,1,2,26,6,7,20,37,27,28,29,30,38,31,32,33]
+	
+	abi_chn_list  = (/(i,i=1,16)/)
+	
+	
    if (segment_number == 1) then
 
-     Ref_Table = missing_value_int4
+      Ref_Table = missing_value_int4
 
-     image_jday = jday
-     image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
+      image_jday = jday
+      image_time_hours = image_time_ms / 60.0 / 60.0 / 1000.0
 
-     !--- FIXME - Will depend on which ABI Scan Mode is uses.  This should
-     !--- be in the AREA file in an upcoming McIDAS release.
+      !--- FIXME - Will depend on which ABI Scan Mode is uses.  This should
+      !--- be in the AREA file in an upcoming McIDAS release.
 
-     !--- compute scan rate for future use
-     num_elements_this_image =  int(AREAstr%num_elem / ABI_Xstride) + 1
-     num_scans_this_image = AREAstr%num_line
-     Scan_Rate = real((num_elements_this_image)/               &
-       real(num_4km_elem_fd/ABI_Xstride)) * &
-       real((num_scans_this_image) / real(num_4km_scans_fd)) * &
-       real(time_for_fd_scan) / real(num_scans_this_image)
+      !--- compute scan rate for future use
+      num_elements_this_image =  int(AREAstr%num_elem / ABI_Xstride) + 1
+      num_scans_this_image = AREAstr%num_line
+      Scan_Rate = real((num_elements_this_image)/               &
+         & real(num_4km_elem_fd/ABI_Xstride)) * &
+       	& real((num_scans_this_image) / real(num_4km_scans_fd)) * &
+         & real(time_for_fd_scan) / real(num_scans_this_image)
 
-     !--- Need to loop over all channels as the calibration block is unique for
-     !--- each band.
-     do ichan_goes = 1,16
+      !--- Need to loop over all channels as the calibration block is unique for
+      !--- each band.
+      do ichan_goes = 1,16
 
-       if (ichan_goes == 1)  ichan_modis = 3
-       if (ichan_goes == 2)  ichan_modis = 1
-       if (ichan_goes == 3)  ichan_modis = 2
-       if (ichan_goes == 4)  ichan_modis = 26
-       if (ichan_goes == 5)  ichan_modis = 6
-       if (ichan_goes == 6)  ichan_modis = 7
-       if (ichan_goes == 7)  ichan_modis = 20
-       if (ichan_goes == 8)  ichan_modis = 37
-       if (ichan_goes == 9)  ichan_modis = 27
-       if (ichan_goes == 10) ichan_modis = 28
-       if (ichan_goes == 11) ichan_modis = 29
-       if (ichan_goes == 12) ichan_modis = 30
-       if (ichan_goes == 13) ichan_modis = 38
-       if (ichan_goes == 14) ichan_modis = 31
-       if (ichan_goes == 15) ichan_modis = 32
-       if (ichan_goes == 16) ichan_modis = 33
+       	if (ichan_goes == 1)  ichan_modis = 3
+       	if (ichan_goes == 2)  ichan_modis = 1
+       	if (ichan_goes == 3)  ichan_modis = 2
+       	if (ichan_goes == 4)  ichan_modis = 26
+       	if (ichan_goes == 5)  ichan_modis = 6
+       	if (ichan_goes == 6)  ichan_modis = 7
+       	if (ichan_goes == 7)  ichan_modis = 20
+       	if (ichan_goes == 8)  ichan_modis = 37
+       	if (ichan_goes == 9)  ichan_modis = 27
+       	if (ichan_goes == 10) ichan_modis = 28
+       	if (ichan_goes == 11) ichan_modis = 29
+       	if (ichan_goes == 12) ichan_modis = 30
+       	if (ichan_goes == 13) ichan_modis = 38
+       	if (ichan_goes == 14) ichan_modis = 31
+       	if (ichan_goes == 15) ichan_modis = 32
+       	if (ichan_goes == 16) ichan_modis = 33
        
-       write(ichan_goes_string,fmt="(I1.1)") ichan_goes
-       if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
+       	write(ichan_goes_string,fmt="(I1.1)") ichan_goes
+       	if(ichan_goes > 9) write(ichan_goes_string,fmt="(I2.2)") ichan_goes
 
-       if (Sensor%Chan_On_Flag_Default(ichan_modis) == sym%YES) then
+       	if (Sensor%Chan_On_Flag_Default(ichan_modis) ) then
 
-         channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
+         	channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
 
-         if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-           channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
-         else
-           channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
-         endif
+         	if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+            	channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
+         	else
+            	channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
+         	end if
 
-         channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
+         	channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
 
-         if (l1b_gzip == sym%YES) then
-           System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
+         	if (l1b_gzip == sym%YES) then
+            	System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
                                 " > "//trim(channel_x_filename_full)
                                 
-           call system(System_String)
+            	call system(System_String)
 
-           Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-           Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
+            	Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+            	Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
 
-         endif
-         if (l1b_bzip2 == sym%YES) then
-           System_String = "bunzip2 -c "//trim(channel_x_filename_full_uncompressed)//".bz2"// &
+         	endif
+         
+				if (l1b_bzip2 == sym%YES) then
+            	System_String = "bunzip2 -c "//trim(channel_x_filename_full_uncompressed)//".bz2"// &
                               " > "//trim(channel_x_filename_full)
-           call system(System_String)
+            	call system(System_String)
 
-           Number_of_Temporary_Files = Number_of_Temporary_Files + 1
-           Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
-         endif
+            	Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+            	Temporary_File_Name(Number_of_Temporary_Files) = trim(channel_x_filename)
+         	endif
 
-       endif
+       	endif
 
-     enddo
+      end do
      
-     !--- On first segment grab the calibration block from the AREA file.
-     !--- Need to read each AREA file separately, as the calibration block is
-     !--- unique for each AREA file.
+      !--- On first segment grab the calibration block from the AREA file.
+      !--- Need to read each AREA file separately, as the calibration block is
+      !--- unique for each AREA file.
 
-     !--- Band 1 - 0.47 um
-     ABI_file_id = get_lun()   
-     print*,"Channel 1 calibration for : ", trim(channel_1_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_1_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_1_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 3
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 2 - 0.54 um
-     ABI_file_id = get_lun()   
-     channel_2_filename = channel_1_filename(1:ipos-1) // "_2_" // &
+      !--- Band 1 - 0.47 um
+		
+		do i = 1, 1
+			
+			ABI_file_id = get_lun()   
+			write ( channel_string,"(i1)") i
+			if (i .gt. 9 ) write ( channel_string,"(i2)") i
+			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
-     print*,"Channel 2 calibration for : ", trim(channel_2_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_2_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_2_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 1
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 3 - 0.87 um
-     ABI_file_id = get_lun()   
-     channel_3_filename = channel_1_filename(1:ipos-1) // "_3_" // &
+			print*,"Channel ",i," calibration for : ", trim(filename)
+			if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+       		call mread_open(trim(Temporary_Data_Dir)//trim(filename)//CHAR(0), ABI_file_id)
+      	else
+       		call mread_open(trim(Image%Level1b_Path)//trim(filename)//CHAR(0), ABI_file_id)
+      	endif 
+			
+			ichan_modis = modis_chn_list(i)
+			call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
+			call mread_close(ABI_file_id)
+		end do
+		
+		
+				do i = 2, 16 
+			
+			ABI_file_id = get_lun()   
+			write ( channel_string,"(i1)") i
+			if (i .gt. 9 ) write ( channel_string,"(i2)") i
+			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
-     print*,"Channel 3 calibration for  : ", trim(channel_3_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_3_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_3_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 2
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 4 - 1.38 um
-     ABI_file_id = get_lun()   
-     channel_4_filename = channel_1_filename(1:ipos-1) // "_4_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 4 calibration for  : ", trim(channel_4_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_4_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_4_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 26
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 5 - 1.61 um
-     ABI_file_id = get_lun()   
-     channel_5_filename = channel_1_filename(1:ipos-1) // "_5_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 5 calibration for  : ", trim(channel_5_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_5_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_5_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 6
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 6 - 2.25 um
-     ABI_file_id = get_lun()   
-     channel_6_filename = channel_1_filename(1:ipos-1) // "_6_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 6 calibration for : ", trim(channel_6_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_6_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_6_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 7
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 7 - 3.90 um
-     ABI_file_id = get_lun()   
-     channel_7_filename = channel_1_filename(1:ipos-1) // "_7_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 7 calibration for : ", trim(channel_7_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_7_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_7_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 20
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 8 - 6.19 um
-     ABI_file_id = get_lun()   
-     channel_8_filename = channel_1_filename(1:ipos-1) // "_8_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 8 calibration for : ", trim(channel_8_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_8_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_8_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 37
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 9 - 6.95 um
-     ABI_file_id = get_lun()   
-     channel_9_filename = channel_1_filename(1:ipos-1) // "_9_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 9 calibration for : ", trim(channel_9_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_9_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_9_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 27
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 10 - 7.34 um
-     ABI_file_id = get_lun()   
-     channel_10_filename = channel_1_filename(1:ipos-1) // "_10_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 10 calibration for : ", trim(channel_10_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_10_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_10_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 28
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 11 - 8.50 um
-     ABI_file_id = get_lun()   
-     channel_11_filename = channel_1_filename(1:ipos-1) // "_11_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 11 calibration for : ", trim(channel_11_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_11_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_11_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 29
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 12 - 9.61 um
-     ABI_file_id = get_lun()   
-     channel_12_filename = channel_1_filename(1:ipos-1) // "_12_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 12 calibration for : ", trim(channel_12_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_12_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_12_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 30
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 13 - 10.35 um
-     ABI_file_id = get_lun()   
-     channel_13_filename = channel_1_filename(1:ipos-1) // "_13_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 13 calibration for : ", trim(channel_13_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_13_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_13_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 38
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 14 - 11.20 um
-     ABI_file_id = get_lun()   
-     channel_14_filename = channel_1_filename(1:ipos-1) // "_14_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 14 calibration for : ", trim(channel_14_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_14_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_14_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 31
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 15 - 12.30 um
-     ABI_file_id = get_lun()   
-     channel_15_filename = channel_1_filename(1:ipos-1) // "_15_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 15 calibration for : ", trim(channel_15_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_15_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_15_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 32
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
-
-     !--- Band 16 - 13.30 um
-     ABI_file_id = get_lun()   
-     channel_16_filename = channel_1_filename(1:ipos-1) // "_16_" // &
-                            channel_1_filename(ipos+3:ilen)
-     print*,"Channel 16 calibration for : ", trim(channel_16_filename)
-     if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
-       call mread_open(trim(Temporary_Data_Dir)//trim(channel_16_filename)//CHAR(0), ABI_file_id)
-     else
-       call mread_open(trim(Image%Level1b_Path)//trim(channel_16_filename)//CHAR(0), ABI_file_id)
-     endif  
-
-     ichan_modis = 33
-     call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
-     call mread_close(ABI_file_id)
+			print*,"Channel ",i," calibration for : ", trim(filename)
+			if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+       		call mread_open(trim(Temporary_Data_Dir)//trim(filename)//CHAR(0), ABI_file_id)
+      	else
+       		call mread_open(trim(Image%Level1b_Path)//trim(filename)//CHAR(0), ABI_file_id)
+      	endif 
+			
+			ichan_modis = modis_chn_list(i)
+			call load_ABI_calibration(ABI_file_id, AREAstr,ichan_modis)
+			call mread_close(ABI_file_id)
+		end do
+		
 
    endif !--- Segment 1
 
@@ -528,343 +345,39 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
    !--- START READ OF AREA FILE
 
    !---   read channel 3 (ABI channel 1)
-   if (Sensor%Chan_On_Flag_Default(3) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_1_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_1_filename)
-       endif
-
-       !---stw Debug
-       !print*,"filename full   : ", trim(Channel_X_Filename_Full)
-       !print*,"AREA string     : ", AREAstr
-       !print*,"Segment Num     : ", Segment_Number
-       !print*,"Lines per seg   : ", Image%Number_Of_Lines_Per_Segment
-       !print*,"Lines read this seg : ", Image%Number_Of_Lines_Read_This_Segment
-       !stop
-       !---stw End Debug
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
+	
+	do i = 1, 16 
+		if ( sensor % chan_on_flag_default(modis_chn_list(i)) ) then
+			write ( channel_string,"(i1)") i
+			if (i .gt. 9 ) write ( channel_string,"(i2)") i
+			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
+                            channel_1_filename(ipos+3:ilen)
+			
+			if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(filename)
+       	else
+               channel_x_filename_full = trim(Image%Level1b_Path)//trim(filename)
+       	end if
+			
+			
+			 call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
                                     AREAstr, &
                                     Segment_Number, &
                                     Image%Number_Of_Lines_Per_Segment, &
                                     Image%Number_Of_Lines_Read_This_Segment, &
                                     Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(3)%Ref_Toa(:,:),1)
-
-   endif
-
-   !---   read channel 1 (ABI channel 2)
-   if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_2_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_2_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(1)%Ref_Toa(:,:),2)
-
-       !--- store ch2 counts for support of PATMOS-x calibration studies
-       Ch1_Counts = Two_Byte_Temp
-
-   endif
-
-   !---   read channel 2 (ABI channel 3)
-   if (Sensor%Chan_On_Flag_Default(2) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_3_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_3_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(2)%Ref_Toa(:,:),3)
-
-   endif
-
-   !---   read channel 26 (ABI channel 4)
-   if (Sensor%Chan_On_Flag_Default(26) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_4_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_4_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(26)%Ref_Toa(:,:),4)
-
-   endif
-
-   !---   read channel 6 (ABI channel 5)
-   if (Sensor%Chan_On_Flag_Default(6) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_5_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_5_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(6)%Ref_Toa(:,:),5)
-
-   endif
-
-   !---   read channel 7 (ABI channel 6)
-   if (Sensor%Chan_On_Flag_Default(7) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_6_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_6_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       !--- Make reflectance table.
-       call ABI_Reflectance(Two_Byte_Temp,ch(7)%Ref_Toa(:,:),6)
-
-   endif
-
-   !---   read channel 20 (ABI channel 7)
-   if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_7_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_7_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-       call ABI_RADIANCE_BT(7, Two_Byte_Temp, ch(20)%Rad_Toa, ch(20)%Bt_Toa)
-
-   endif
-
-   !---   read channel 37 (ABI channel 8)
-   if (Sensor%Chan_On_Flag_Default(37) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_8_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_8_filename)
-       endif
-
-      call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(8, Two_Byte_Temp, ch(37)%Rad_Toa, ch(37)%Bt_Toa)
-
-   endif
-
-   !---   read channel 27 (ABI channel 9)
-   if (Sensor%Chan_On_Flag_Default(27) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_9_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_9_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-       
-      call ABI_RADIANCE_BT(9, Two_Byte_Temp, ch(27)%Rad_Toa, ch(27)%Bt_Toa)
-
-   endif
-
-   !---   read channel 28 (ABI channel 10)
-   if (Sensor%Chan_On_Flag_Default(28) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_10_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_10_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(10, Two_Byte_Temp, ch(28)%Rad_Toa, ch(28)%Bt_Toa)
-
-   endif
-
-   !---   read channel 29 (ABI channel 11)
-   if (Sensor%Chan_On_Flag_Default(29) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_11_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_11_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(11, Two_Byte_Temp, ch(29)%Rad_Toa, ch(29)%Bt_Toa)
-
-   endif
-
-   !---   read channel 30 (ABI channel 12)
-   if (Sensor%Chan_On_Flag_Default(30) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_12_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_12_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(12, Two_Byte_Temp, ch(30)%Rad_Toa, ch(30)%Bt_Toa)
-
-   endif
-
-   !---   read channel 38 (ABI channel 13)
-   if (Sensor%Chan_On_Flag_Default(38) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_13_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_13_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(13, Two_Byte_Temp, ch(38)%Rad_Toa, ch(38)%Bt_Toa)
-
-   endif
-
-   !---   read channel 31 (ABI channel 14)
-   if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_14_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_14_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(14, Two_Byte_Temp, ch(31)%Rad_Toa, ch(31)%Bt_Toa)
-
-   endif
-
-   !---   read channel 32 (ABI channel 15)
-   if (Sensor%Chan_On_Flag_Default(32) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_15_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_15_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(15, Two_Byte_Temp, ch(32)%Rad_Toa, ch(32)%Bt_Toa)
-
-   endif
-
-   !---   read channel 33 (ABI channel 16)
-   if (Sensor%Chan_On_Flag_Default(33) == sym%YES) then
-
-       if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
-               channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_16_filename)
-       else
-               channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_16_filename)
-       endif
-
-       call GET_ABI_IMAGE(trim(Channel_X_Filename_Full), &
-                                    AREAstr, &
-                                    Segment_Number, &
-                                    Image%Number_Of_Lines_Per_Segment, &
-                                    Image%Number_Of_Lines_Read_This_Segment, &
-                                    Two_Byte_Temp)
-
-      call ABI_RADIANCE_BT(16, Two_Byte_Temp, ch(33)%Rad_Toa, ch(33)%Bt_Toa)
-
-   endif
-
+			if ( i .LE. 7 .OR. i .EQ. 26 ) then									
+			 	call ABI_Reflectance(Two_Byte_Temp,ch(modis_chn_list(i))%Ref_Toa(:,:),i)
+			else
+				call ABI_RADIANCE_BT(i, Two_Byte_Temp, ch(modis_chn_list(i))%Rad_Toa, ch(modis_chn_list(i))%Bt_Toa)
+			end if 		
+		end if
+	
+	
+	
+	end do
+		
+  
    do Line_Idx = Line_Idx_Min_Segment, Line_Idx_Min_Segment + Image%Number_Of_Lines_Read_This_Segment - 1
      Scan_Number(Line_Idx) = first_line_in_segment + Line_Idx
      Scan_Time(Line_Idx) = image_time_ms + (Scan_Number(Line_Idx)-1) * Scan_rate
@@ -947,7 +460,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
  !-------------------------------------------------------------------------------
  subroutine load_ABI_calibration(lun, AREAstr, ichan_modis)
    integer(kind=int4), intent(in) :: lun, ichan_modis
-   type(AREA_STRUCT), intent(in):: AREAstr
+   type(area_header_type), intent(in):: AREAstr
    integer :: i
    integer(kind=int4) :: local_sndr_filter_map
    integer, parameter :: calb_size = 289
@@ -972,7 +485,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
    call mreadf_int_o(lun,0,4,64,i4buf)
    call move_bytes(4,i4buf(1+51:1+51),AREAstr%src_Type,0)
    local_sndr_filter_map = i4buf(19) ! Need band map for current open AREA file.
-
+ 
    if (AREAstr%src_Type .eq. 'ABIN') then
      print*,"ABIN calibration, proceeding ...", AREAstr%num_chan, local_sndr_filter_map, ichan_modis
    else
@@ -1110,7 +623,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
     integer(kind=int4) :: xstart, ystart
     integer(kind=int4) :: xsize, ysize
     integer(kind=int4) :: xstride  
-    type (AREA_STRUCT) :: AREAstr
+    type (area_header_type):: AREAstr
     type (GVAR_NAV), intent(in)    :: NAVstr_ABI
     
     integer :: i, j, ii, jj, imode
@@ -1271,7 +784,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
  subroutine READ_NAVIGATION_BLOCK_ABI(filename, AREAstr, NAVstr)
   CHARACTER(len=*), intent(in):: filename
-  type(AREA_STRUCT), intent(in):: AREAstr
+  type(area_header_type), intent(in):: AREAstr
   type(GVAR_NAV), intent(inout):: NAVstr
  
   integer :: geos_nav
@@ -1357,7 +870,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
                                     num_lines_read, image)
 
    character(len=*), intent(in):: filename
-   type (AREA_STRUCT), intent(in) :: AREAstr
+   type(area_header_type), intent(in) :: AREAstr
    integer(kind=int4), intent(in):: segment_number
    integer(kind=int4), intent(in):: num_lines_per_segment
    integer(kind=int4), intent(out):: num_lines_read
@@ -1449,7 +962,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
        word_buffer = word_buffer + 256
      end where
    endif
-
+	
    !--- update number of scans read
    num_lines_read = number_of_words_read / words_per_line
 

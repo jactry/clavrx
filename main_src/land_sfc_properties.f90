@@ -28,51 +28,59 @@
 !--------------------------------------------------------------------------------------
 
 MODULE land_sfc_properties
-  use HDF
-  use CONSTANTS
-  use NUMERICAL_ROUTINES
-  use FILE_UTILITY
   
-  implicit none
+   use CX_CONSTANTS_MOD
   
-  private :: read_hdf_sds
-  private :: read_hdf_global_attribute_float64
-  private :: read_hdf_sds_dimenions
-  public  :: read_land_sfc_hdf
-  public  :: get_snow_map_filename
+   use FILE_TOOLS, only: &
+      file_test
+  
+   use NUMERICAL_TOOLS_MOD
+  
+  
+   implicit none
+   private
+   private :: read_hdf_sds
+   private :: read_hdf_global_attribute_float64
+   private :: read_hdf_sds_dimenions
+   public  :: read_land_sfc_hdf
+   public  :: get_snow_map_filename
+   public :: close_land_sfc_hdf
+   public :: open_land_sfc_hdf
   
    interface read_land_sfc_hdf
         module procedure  &
            read_land_sfc_hdf_i1,  &
            read_land_sfc_hdf_i2
-    end interface
+   end interface
 
    interface read_hdf_sds
         module procedure  &
            read_hdf_sds_i1,  &
            read_hdf_sds_i2
-    end interface
+   end interface
 
-  INTEGER(kind=int4), parameter, private :: num_lat_default = 4500
-  INTEGER(kind=int4), parameter, private :: num_lon_default = 9000
-  REAL(kind=real8), parameter, private :: first_lat_default = -90.0_real8
-  REAL(kind=real8), parameter, private :: last_lat_default = 90.0_real8
-  REAL(kind=real8), parameter, private :: first_lon_default = -180.0_real8
-  REAL(kind=real8), parameter, private :: last_lon_default = 180.0_real8
-  REAL(kind=real8), parameter, private :: del_lat_default = 0.04_real8
-  REAL(kind=real8), parameter, private :: del_lon_default = 0.04_real8
+   INTEGER(kind=int4), parameter, private :: num_lat_default = 4500
+   INTEGER(kind=int4), parameter, private :: num_lon_default = 9000
+   REAL(kind=real8), parameter, private :: first_lat_default = -90.0_real8
+   REAL(kind=real8), parameter, private :: last_lat_default = 90.0_real8
+   REAL(kind=real8), parameter, private :: first_lon_default = -180.0_real8
+   REAL(kind=real8), parameter, private :: last_lon_default = 180.0_real8
+   REAL(kind=real8), parameter, private :: del_lat_default = 0.04_real8
+   REAL(kind=real8), parameter, private :: del_lon_default = 0.04_real8
 
-  INTEGER(kind=int4), parameter, private :: MAX_SNOW_LATENCY = 4 !including current day
+   INTEGER(kind=int4), parameter, private :: MAX_SNOW_LATENCY = 4 !including current day
 
-  TYPE, public :: land_grid_description
-    CHARACTER(len=256) :: sds_name
-    INTEGER(kind=int4) :: num_lat
-    INTEGER(kind=int4) :: num_lon
-    REAL(kind=real8) :: del_lat
-    REAL(kind=real8) :: del_lon
-    REAL(kind=real8) :: first_lat
-    REAL(kind=real8) :: first_lon
-  END TYPE land_grid_description
+   TYPE, public :: land_grid_description
+      CHARACTER(len=256) :: sds_name
+      INTEGER(kind=int4) :: num_lat
+      INTEGER(kind=int4) :: num_lon
+      REAL(kind=real8) :: del_lat
+      REAL(kind=real8) :: del_lon
+      REAL(kind=real8) :: first_lat
+      REAL(kind=real8) :: first_lon
+   END TYPE land_grid_description
+  
+  include 'hdf.f90'
     
   CONTAINS
   
@@ -87,14 +95,14 @@ FUNCTION open_land_sfc_hdf(data_dir, filename, grid_str) result(id)
   INTEGER(kind=int4) :: id  
   CHARACTER(len=1020) :: filename_full
   
-  logical :: file_exists
+  logical :: file_test
   
   INTEGER :: sfstart
   
   filename_full = trim(data_dir)//trim(filename)
   
-  inquire(file = filename_full, exist = file_exists)
-  if (.not. file_exists) then
+  inquire(file = filename_full, exist = file_test)
+  if (.not. file_test) then
     print "(/,a,'Land surface file, ',a,' does not exist.')",EXE_PROMPT,trim(filename_full)
     stop
   endif
@@ -150,7 +158,12 @@ END SUBROUTINE close_land_sfc_hdf
 ! Function to find the snow map name.
 !-------------------------------------------------------------------
 
-  FUNCTION get_snow_map_filename(year_in,day_of_year,snow_path) result(snow_filename)
+   FUNCTION get_snow_map_filename(year_in,day_of_year,snow_path) result(snow_filename)
+      use date_tools_mod, only: &
+         leap_year_fct &
+         , compute_month &
+         , compute_day
+            
    CHARACTER(*), intent(in) :: snow_path
    INTEGER(kind=int2), intent(in):: year_in
    INTEGER(kind=int2), intent(in):: day_of_year
@@ -178,7 +191,7 @@ END SUBROUTINE close_land_sfc_hdf
                snow_filename_tmp = "snow_map_4km_" //year_string//month_string// &
                        day_string//".hdf"
    
-               if (file_exists(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
+               if (file_test(trim(snow_path)//trim(snow_filename_tmp)) .eqv. .true.) then
                   snow_filename = snow_filename_tmp
                   exit
                endif

@@ -35,16 +35,15 @@
 
 MODULE hdf_read_module
 
-  USE CONSTANTS
-  USE HDF
-  !USE FILE_UTILITY
-  !USE COMPARE_FLOAT_NUMBERS
-  !USE MESSAGE_HANDLER
+  USE CX_CONSTANTS_MOD
+ 
 
   implicit none
   private
-  
-  interface hdf_sds_reader
+  include 'hdf.f90' 
+ integer, parameter :: MAX_RANK_HDF = 10
+
+ interface hdf_sds_reader
     module procedure read_hdf_sds_int8_1d, &
                      read_hdf_sds_int16_1d, &
                      read_hdf_sds_int32_1d, &

@@ -27,7 +27,7 @@
 !--------------------------------------------------------------------------------------
 module MODIS_MODULE
 
-        use CONSTANTS, only: &
+        use CX_CONSTANTS_MOD, only: &
                 int4, real4 &
                 , int2 &
                 , int1 &
@@ -36,11 +36,6 @@ module MODIS_MODULE
                 , sym &
                 , missing_value_int1
 
-        use HDF, only: &
-                DFACC_read
- 
-        use FILE_UTILITY,only: &
-                get_lun
  
         use PIXEL_COMMON, only: &
                 sensor &
@@ -52,18 +47,20 @@ module MODIS_MODULE
                 , scan_number &
                 , Cloud_Mask_Aux_Read_Flag &
                 , Cloud_Mask_Aux_Flag &
-                , CLDMASK &
+                , Cld_mask_Aux &
                 , Cld_Phase_Aux &
                 , Cld_Type_Aux &
                 , Zc_Aux &
                 , Tau_Aux &
                 , Reff_Aux &
-                , Line_Idx_Min_segment
+                , Line_Idx_Min_segment &
+                , Bad_pixel_mask
 
-        use PIXEL_ROUTINES,only: &
-                julian &
-                , qc_modis
- 
+      
+         
+        use date_tools_mod, only: &
+            julian 
+         
         use PLANCK , only: &
                 convert_radiance &
                 , compute_bt_array
@@ -73,7 +70,8 @@ module MODIS_MODULE
                 , scattering_angle
  
         use FILE_TOOLS, only: &
-                file_search
+                file_search &
+                , get_lun
  
         use CALIBRATION_CONSTANTS, only: &
                 sat_name &
@@ -99,7 +97,9 @@ module MODIS_MODULE
         integer(kind=int2), parameter, private:: fill_value = 32767
         real(kind=real4), parameter, private:: missing_value = -999.0
         character(len=13), parameter:: MODULE_PROMPT="MODIS_MODULE:"
+        
 
+       include 'hdf.f90'
 contains
 
 !----------------------------------------------------------------
@@ -1041,7 +1041,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
           call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
                                              trim(Image%Auxiliary_Cloud_Mask_File_Name), &
-                                             CLDMASK%Cld_Mask_Aux, & 
+                                             Cld_Mask_Aux, & 
                                              Cld_Phase_Aux, & 
                                              Cld_Type_Aux, & 
                                              Zc_Aux, & 
@@ -1061,7 +1061,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
        !--- read channel data
        do Chan_Idx = 1,36
 
-         if (Sensor%Chan_On_Flag_Default (Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default (Chan_Idx)) cycle
 
          if (Chan_Idx < 20 .or. Chan_Idx == 26) then
             call READ_MODIS_LEVEL1B(trim(Image%Level1b_Path),trim(Image%Level1b_Name), &
@@ -1398,5 +1398,28 @@ subroutine READ_MODIS_THERMAL_BAND(Chan_Idx, &
    call COMPUTE_BT_ARRAY(Brightness_Temp,Radiance,Chan_Idx,Missing_Value_Real4)
 
 end subroutine  READ_MODIS_THERMAL_BAND
+
+
+!----------------------------------------------------------------------
+! rudimentary quality check of modis
+!----------------------------------------------------------------------
+subroutine QC_MODIS(jmin,nj)
+
+  integer, intent(in):: jmin,nj
+  integer:: Line_Idx
+
+  Bad_Pixel_Mask = .FALSE.
+
+  line_loop: do Line_Idx= jmin, nj- jmin + 1
+     if (maxval(ch(31)%Rad_Toa(:,Line_Idx)) < 0.0) then
+        Bad_Pixel_Mask(:,Line_Idx) = .TRUE.
+     endif
+     if (maxval(Nav%Lat_1b(:,Line_Idx)) < -100.0) then
+        Bad_Pixel_Mask(:,Line_Idx) = .TRUE.
+     endif
+  enddo line_loop
+
+end subroutine QC_MODIS
+
 
 end module MODIS_MODULE

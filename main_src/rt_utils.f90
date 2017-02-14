@@ -63,7 +63,7 @@
 !--------------------------------------------------------------------------------------
 module RT_UTILITIES
  
-   use CONSTANTS, only: &
+   use CX_CONSTANTS_MOD, only: &
       Real4 &
       , Int4 &
       , Int1 &
@@ -128,11 +128,15 @@ module RT_UTILITIES
       , Pixel_Local_Time_Hours &
       , Ancil_Data_Dir
       
-   use NUMERICAL_ROUTINES , only: &
-         VAPOR &
-       , COMPUTE_TIME_HOURS &
-       , LOCATE
-      
+   use NUMERICAL_TOOLS_MOD , only: &
+         LOCATE
+   
+   use date_tools_mod, only: &
+      compute_time_hours
+       
+   use cx_science_tools_mod, only: &
+      vapor  
+       
    use PLANCK, only: &
         PLANCK_RAD_FAST &
       , PLANCK_TEMP_FAST 
@@ -515,7 +519,7 @@ contains
          !if (Chan_Idx < 20) cycle
          !if (Chan_Idx == 26) cycle
          !if (Chan_Idx > 38) cycle
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx)) cycle
 
          Rad_Atm_Prof(1,Chan_Idx) = 0.0
          Rad_BB_Cloud_Prof(1,Chan_Idx) = 0.0
@@ -542,7 +546,7 @@ contains
 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx /= 31) cycle
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (.NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
 
          Trans_Total = 1.0
          Rad_Atm_Dwn_Prof(1,Chan_Idx) = 0.0
@@ -619,7 +623,7 @@ contains
          element_loop: do Elem_Idx = 1, Image%Number_Of_Elements
                                                                        
             !--- check for bad scans
-            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) == sym%YES) then
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) then
                cycle
             endif
 
@@ -730,7 +734,7 @@ contains
                   !--------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
 
-                     if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+                     if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
                      if (ch(Chan_Idx)%Obs_Type == SOLAR_OBS_TYPE) cycle
                      if (ch(Chan_Idx)%Obs_Type == LUNAR_OBS_TYPE) cycle
                      
@@ -784,7 +788,7 @@ contains
                   ! Apply Gamma Scaling
                   !----------------------------------------------------------------------
                   do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-                     if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
+                     if (Sensor%Chan_On_Flag_Default(Chan_Idx)  .and. Gamma_Trans_Factor(Chan_Idx)/=1.0) then
                         Trans_Atm_Prof(:,Chan_Idx)  = Trans_Atm_Prof(:,Chan_Idx) ** Gamma_Trans_Factor(Chan_Idx)
                      end if
                   end do
@@ -848,7 +852,7 @@ contains
             !--- if an sst analysis is available, use that
             if ((Sfc%Land_Mask(Elem_Idx,Line_Idx) == sym%NO) .and.  &
               (Sfc%Snow(Elem_Idx,Line_Idx) == sym%NO_SNOW) .and.  &
-              (Use_Sst_Anal == sym%YES) .and.  &
+              (Use_Sst_Anal) .and.  &
               (Sst_Anal(Elem_Idx,Line_Idx) > 270.0 )) then
                  Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Sst_Anal(Elem_Idx,Line_Idx)
             end if 
@@ -1538,7 +1542,7 @@ contains
 
       Error_Status = 1
 
-      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) return
+      if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) return
 !     if (Chan_Idx >= 20 .and. Chan_Idx /= 26 .and. Chan_Idx/= 44) return
       if (ch(Chan_Idx)%Obs_Type /= SOLAR_OBS_TYPE .or. ch(Chan_Idx)%Obs_Type /= LUNAR_OBS_TYPE) return
 
@@ -2460,7 +2464,7 @@ contains
          select case (Chan_Idx)
          
          case (1,2,5,6,7,44)
-            if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx)) then
                if (allocated(  Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile )) then
                   Ch(Chan_Idx)%Trans_Atm_Total(Elem_Idx,Line_Idx) = &
                       Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%Ch(Chan_Idx)%Trans_Atm_Total_Profile(Sfc_Level_Idx) +  &
@@ -2479,7 +2483,7 @@ contains
       !--- upwelling
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
 
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
     
          if (Ch(Chan_Idx)%Obs_Type /= THERMAL_OBS_TYPE .and. &
              Ch(Chan_Idx)%Obs_Type /= MIXED_OBS_TYPE ) cycle
@@ -2502,7 +2506,7 @@ contains
       !--- downwelling (only channel 31) 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
          if (Chan_Idx /= 31) cycle    
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if (.NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
 
          call COMPUTE_CHANNEL_ATM_DWN_SFC_RAD( &
                 Sfc_Level_Idx, &
@@ -2515,7 +2519,7 @@ contains
       !-- Add Solar to Ch20 clear variables
       !--------------------------------------------------------------
       
-      if (Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(20) ) then
 
          !--- add in solar component - does not account for glint
          Trans_Atm_Ch20_Solar_Rtm(Elem_Idx,Line_Idx) =  &
@@ -2562,7 +2566,7 @@ contains
       real:: Rad_Ch20_Temp
       real:: Ch20_Sfc_Rad
 
-      if ((Sensor%Chan_On_Flag_Default(20) == sym%YES) .and. (Sensor%Chan_On_Flag_Default(31)==sym%YES)) then
+      if ((Sensor%Chan_On_Flag_Default(20) ) .and. (Sensor%Chan_On_Flag_Default(31))) then
 
          Ch20_Sfc_Rad = ch(20)%Sfc_Emiss(Elem_Idx,Line_Idx) * PLANCK_RAD_FAST(20,Tsfc_Nwp_Pix(Elem_Idx,Line_Idx))
 
@@ -2594,7 +2598,7 @@ contains
 
       !--- check for missing tropopause level
       if (Rtm(Lon_Idx,Lat_Idx)%Tropo_Level == 0) then
-         Bad_Pixel_Mask(Elem_Idx,Line_Idx) = sym%YES
+         Bad_Pixel_Mask(Elem_Idx,Line_Idx) = .TRUE.
          return
       end if
 
@@ -2603,7 +2607,7 @@ contains
          select case (Chan_Idx)
          
          case(27,29,31,32,33,45) 
-            if (Sensor%Chan_On_Flag_Default(Chan_Idx)==sym%YES) then
+            if (Sensor%Chan_On_Flag_Default(Chan_Idx)) then
 
                ch(Chan_Idx)%Emiss_Tropo(Elem_Idx,Line_Idx) =  &
                         EMISSIVITY(ch(Chan_Idx)%Rad_Toa(Elem_Idx,Line_Idx),  &
@@ -2623,8 +2627,8 @@ contains
       integer, intent(in):: Line_Idx
 
       !--- compute 11 and 12 beta ratio at tropopause
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-         Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31)  .and. &
+         Sensor%Chan_On_Flag_Default(32) ) then
 
          Beta_11um_12um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(32)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2632,8 +2636,8 @@ contains
       end if
       
       !--- compute 11 and 8.5 beta ratio at tropopause
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-          Sensor%Chan_On_Flag_Default(29) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31)  .and. &
+          Sensor%Chan_On_Flag_Default(29) ) then
 
          Beta_11um_85um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(29)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2641,8 +2645,8 @@ contains
       endif
   
       !--- compute 11 and 6.7 beta ratio at tropopause
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-         Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31)  .and. &
+         Sensor%Chan_On_Flag_Default(27) ) then
 
          Beta_11um_67um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(27)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2650,8 +2654,8 @@ contains
       end if
       
       !--- compute 11 and 13.3 beta ratio at tropopause
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-         Sensor%Chan_On_Flag_Default(33) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31)  .and. &
+         Sensor%Chan_On_Flag_Default(33) ) then
 
          Beta_11um_133um_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(33)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2659,8 +2663,8 @@ contains
       endif
 
       !--- compute 11 and 13.3-fusion beta ratio at tropopause
-      if (Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
-         Sensor%Chan_On_Flag_Default(45) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(31)  .and. &
+         Sensor%Chan_On_Flag_Default(45) ) then
 
          Beta_11um_133fusum_Tropo_Rtm(Elem_Idx,Line_Idx) = BETA_RATIO( &
                                         ch(45)%Emiss_Tropo(Elem_Idx,Line_Idx),  &
@@ -2766,7 +2770,7 @@ contains
       integer:: Chan_Idx    
 
       do Chan_Idx = Chan_Idx_Min, Chan_Idx_Max
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%NO) cycle
+         if ( .NOT. Sensor%Chan_On_Flag_Default(Chan_Idx) ) cycle
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile = Trans_Atm_Total_Prof(:,Chan_Idx)
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Solar_Profile = Trans_Atm_Solar_Prof(:,Chan_Idx)
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile = Trans_Atm_Prof(:,Chan_Idx)
@@ -2775,7 +2779,7 @@ contains
       end do
 
       Chan_Idx = 31
-      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) ) then
          Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile = Rad_Atm_Dwn_Prof(:,Chan_Idx)
       end if
 
@@ -2793,7 +2797,7 @@ contains
       integer:: Chan_Idx
 
       do Chan_Idx = Chan_Idx_Min,Chan_Idx_Max
-         if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+         if (Sensor%Chan_On_Flag_Default(Chan_Idx) ) then
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Profile(NLevels_Rtm),stat=Alloc_Status)
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Solar_Profile(NLevels_Rtm),stat=Alloc_Status)
             allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Trans_Atm_Total_Profile(NLevels_Rtm),stat=Alloc_Status)
@@ -2803,7 +2807,7 @@ contains
       enddo
 
       Chan_Idx = 31
-      if (Sensor%Chan_On_Flag_Default(Chan_Idx) == sym%YES) then
+      if (Sensor%Chan_On_Flag_Default(Chan_Idx) ) then
          allocate(Rtm(Lon_Idx,Lat_Idx)%d(Zen_Idx)%ch(Chan_Idx)%Rad_Atm_Dwn_Profile(NLevels_Rtm),stat=Alloc_Status)
       endif
    end subroutine ALLOCATE_GLOBAL_RTM_STRUCTURE_ELEMENT

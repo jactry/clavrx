@@ -736,7 +736,7 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Transmission_View
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Transmission_Solar
      real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_DCOMP_Diffuse
+     real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_Diffuse_DCOMP
 
      !--- SASRAB output
      real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_All_Sky
@@ -2304,7 +2304,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Cloud_063um_Transmission_View(dim1,dim2))
       allocate(Cloud_063um_Transmission_Solar(dim1,dim2))
       allocate(Insolation_DCOMP(dim1,dim2))
-      allocate(Insolation_DCOMP_Diffuse(dim1,dim2))
+      allocate(Insolation_Diffuse_DCOMP(dim1,dim2))
       allocate(Cost_DCOMP(dim1,dim2))
       allocate(Error_Cov_Matrix_Cod(dim1,dim2))
       allocate(Error_Cov_Matrix_Ref(dim1,dim2))
@@ -2352,7 +2352,7 @@ subroutine RESET_DCOMP_ARRAYS()
       Cloud_063um_Transmission_View = Missing_Value_Real4
       Cloud_063um_Transmission_Solar = Missing_Value_Real4
       Insolation_DCOMP = Missing_Value_Real4
-      Insolation_DCOMP_Diffuse = Missing_Value_Real4
+      Insolation_Diffuse_DCOMP = Missing_Value_Real4
       Cost_DCOMP = Missing_Value_Real4
       Error_Cov_Matrix_Cod = Missing_Value_Real4
       Error_Cov_Matrix_Ref = Missing_Value_Real4
@@ -2400,7 +2400,7 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Cloud_063um_Transmission_View)
       deallocate(Cloud_063um_Transmission_Solar)
       deallocate(Insolation_DCOMP)
-      deallocate(Insolation_DCOMP_Diffuse)
+      deallocate(Insolation_Diffuse_DCOMP)
       deallocate(Cost_DCOMP)
       deallocate(Error_Cov_Matrix_Cod)
       deallocate(Error_Cov_Matrix_Ref)

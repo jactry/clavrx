@@ -5234,7 +5234,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
 
      !--- diffuse insolation from dcomp
      if (Cld_Flag == sym%YES .and. Sds_Num_Level2_CldInsol_Dif_Flag == sym%YES) then
-        call SCALE_VECTOR_I2_RANK2(Insolation_Dcomp_Diffuse, &
+        call SCALE_VECTOR_I2_RANK2(Insolation_Diffuse_Dcomp, &
                                  sym%LINEAR_SCALING,Min_Insol,Max_Insol,Missing_Value_Real4,Two_Byte_Temp)
         Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_CldInsol_Dif), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus

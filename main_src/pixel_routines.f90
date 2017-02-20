@@ -101,20 +101,21 @@ MODULE PIXEL_ROUTINES
    !  called by process_clavrx inside segment loop
    !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
    !----------------------------------------------------------------------
-   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line)
+   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line, is_last_segment)
 
-     integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
-     integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
-     integer:: Number_of_Elements
-     integer:: Number_of_Lines
-     integer:: Line_Idx
+      integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
+      integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
+      logical, intent(in):: is_last_segment
+      integer:: Number_of_Elements
+      integer:: Number_of_Lines
+      integer:: Line_Idx
      
       logical :: dcomp_first_valid_line_avhrr_set = .false. 
 
-     Number_of_Elements = Image%Number_Of_Elements
-     Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
-     
-     line_loop: do Line_Idx = 1, Number_Of_Lines
+      Number_of_Elements = Image%Number_Of_Elements
+      Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+    
+      line_loop: do Line_Idx = 1, Number_Of_Lines
           ! - change dcomp _mode according ch3a_on flag
           ! - this change of dcomp_mode is only possible once for one file
           ! - First daytime line determines dcomp mode for whole file
@@ -155,6 +156,9 @@ MODULE PIXEL_ROUTINES
          endif
 
       end do line_loop
+      
+      
+      if ( is_last_segment) dcomp_first_valid_line_avhrr_set = .false. 
       
      
       

@@ -725,7 +725,8 @@
          !-------------------------------------------------------------------
          ! Modify Chan_On flags to account for channels read in
          !-------------------------------------------------------------------
-         call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line)
+         call SET_CHAN_ON_FLAG(Sensor%Chan_On_Flag_Default, Sensor%Chan_On_Flag_Per_Line &
+            , is_last_segment = segment_number .EQ. Image%Number_Of_Segments )
         
          !-------------------------------------------------------------------
          ! Compute Lunar Reflectance
@@ -1227,7 +1228,7 @@
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
                if (Dcomp_Mode > 0) then
-        
+                  
                   call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
                   call SET_DCOMP_VERSION()
                   if ( dncomp_run ) then

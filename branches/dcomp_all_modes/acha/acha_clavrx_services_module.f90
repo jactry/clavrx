@@ -31,16 +31,14 @@ module ACHA_SERVICES_MOD
        Ttropo_Nwp_Pix, &
        Psfc_Nwp_Pix, &
        Smooth_Nwp_Flag, &
-       Process_Undetected_Cloud_Flag, &
-       Posterior_Cld_Probability, &
-       Cld_Mask, &
+       CldMask, &
        Cld_Type, &
-       Cld_Test_Vector_Packed, &
        Shadow_Mask, &
        Tc_Cirrus_Background, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
-       Diag_Pix_Array_3
+       Diag_Pix_Array_3, &
+       Process_Undetected_Cloud_Flag
  
        use NUMERICAL_TOOLS_MOD, only: INVERT_MATRIX, LOCATE
 

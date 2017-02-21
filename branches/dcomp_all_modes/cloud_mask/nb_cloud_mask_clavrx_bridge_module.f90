@@ -48,8 +48,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
        Ancil_Data_Dir, &
        Bayesian_Cloud_Mask_Name, &
        Bad_Pixel_Mask, &
-       Cld_Mask, &
-       Cld_Test_Vector_Packed, &       
+       CldMask, &
        Dust_Mask, &
        Dust_Mask, &
        Fire_Mask, &

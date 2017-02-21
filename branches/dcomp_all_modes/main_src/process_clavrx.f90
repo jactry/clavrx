@@ -1268,7 +1268,7 @@
                end if
 
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Cloud_Mask_Aux_Read_Flag == sym%YES) then
-                  Cld_Mask = Cld_Mask_Aux
+                  CLDMASK%Cld_Mask = Cld_Mask_Aux
                end if
 
                !--- Compute Adjacent pixels Cloud Mask
@@ -1277,7 +1277,7 @@
                !--- if dark composite available for GOES-1km data, do this
                if (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER' .or. trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') then
                  if (Read_Dark_Comp == sym%YES .and. Dark_Composite_Name /= "no_file") then
-                   call DARK_COMPOSITE_CLOUD_MASK(Cld_Mask)
+                   call DARK_COMPOSITE_CLOUD_MASK(CLDMASK%Cld_Mask)
                  endif
                end if
 

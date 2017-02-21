@@ -1,7 +1,7 @@
 
 # $Header$
 
-
+OBJDIR=./obj
 RM := rm -rf
 
 
@@ -31,7 +31,7 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${cx_data_libs} ${cx_data_links}   $<
 	
 	
-OBJS = dcomp_one_pixel_run_program.o \
+OBJS =  \
 dcomp_retrieval_mod.o \
 dcomp_array_loop_sub.o \
 dcomp_forward_mod.o \
@@ -44,8 +44,10 @@ dcomp_lut_mod.o \
 view2d.o \
 file_tools.o \
 dcomp_lut_hdf_mod.o \
-dncomp_trans_atmos_mod.o \
-dcomp_retrieval_test.o
+dncomp_trans_atmos_mod.o
+
+OBJS_ARRAY_TEST := $(OBJS) dcomp_array_test.o
+OBJS_ONE_TEST :=  $(OBJS) dcomp_one_pixel_run_program.o
 
 OBJS_NLCOMP = dcomp_math_tools_mod.o \
 dcomp_science_tools_mod.o \
@@ -67,26 +69,32 @@ dcomp_math_tools_mod.o \
 cx_hdf_read_mod.o \
 file_tools.o
 
-OBJS_DCOMP_NEW = dcomp_retrieval_test.o \
-dcomp_test_new.o
-
 .PHONY: all_dncomp clean hdf4
 
-all_dncomp:  cx_read_io dcomp_one_pixel_run nlcomp_one_pixel_run libdncomp.a
-	
+all_dncomp:  cx_read_io dcomp_one_pixel_run nlcomp_one_pixel_run  libdncomp.a
+test_dncomp:  cx_read_io  dcomp_array_test	
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'Building target for test lut'
 	$(fc) ${fflags}  $(FFLAGS)    -o "test_lut" $(OBJS_TEST_LUT)  ${hdf5libs}  ${cx_data_libs} ${cx_data_links}  $(LFLAGS)
 	
-dcomp_one_pixel_run: $(OBJS)
+dcomp_one_pixel_run: $(OBJS_ONE_TEST)
 	@echo 'Building target: $@'
 	
 	
-	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS)  ${hdf5libs} ${cx_data_libs} ${cx_data_links} $(LFLAGS) $(PATH_FLAGS)
+	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_one_pixel_run" $(OBJS_ONE_TEST)  ${hdf5libs} ${cx_data_libs} ${cx_data_links} $(LFLAGS) $(PATH_FLAGS)
    
 	@echo 'Finished building target: $@'
 	@echo ' '	
+   
+dcomp_array_test:  $(OBJS_ARRAY_TEST)
+	@echo 'Building target: $@'
+	@echo $(OBJS_ARRAY_TEST)
+	
+	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_array_test" $(OBJS_ARRAY_TEST)  ${hdf5libs} ${cx_data_libs} ${cx_data_links} $(LFLAGS) $(PATH_FLAGS)
+   
+	@echo 'Finished building target: $@'
+	@echo ' '	   
 
 nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 	@echo 'Building target: $@'
@@ -95,22 +103,17 @@ nlcomp_one_pixel_run: $(OBJS_NLCOMP)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-dcomp_new: $(OBJS_DCOMP_NEW)
-	@echo 'Building target for dcomp new'
-	$(fc) ${fflags}  $(FFLAGS)    -o "dcomp_new" $(OBJS_DCOMP_NEW)  ${hdf5libs}  ${cx_data_libs} ${cx_data_links}  $(LFLAGS)
 
 libdncomp.a: $(OBJS)
 	
 	ar rvc libdncomp.a $(OBJS) $(OBJS_NLCOMP)
 
 
-dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o dcomp_retrieval_test.o
-
-
 cx_read_io:
 	$(MAKE)  -C $(CX_READ_IO_DIR) ARCH=$(ARCH)
 
-
+dcomp_array_test.o: dcomp_array_test.f90 dcomp_science_tools_mod.o dcomp_array_loop_sub.o
+dcomp_one_pixel_run_program.o: dcomp_one_pixel_run_program.f90  dcomp_retrieval_mod.o dcomp_science_tools_mod.o M_kracken.o
 dcomp_retrieval_mod.o:dcomp_retrieval_mod.f90 dcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o
 dcomp_array_loop_sub.o:dcomp_array_loop_sub.f90 dcomp_retrieval_mod.o dncomp_interface_def_mod.o view2d.o sensorname_from_wmoid.o dncomp_trans_atmos_mod.o
 dcomp_forward_mod.o: dcomp_forward_mod.f90  dcomp_science_tools_mod.o   dcomp_lut_mod.o
@@ -118,7 +121,6 @@ dcomp_math_tools_mod.o: dcomp_math_tools_mod.f90
 dcomp_lut_mod.o:dcomp_lut_mod.f90 dcomp_math_tools_mod.o file_tools.o dcomp_lut_hdf_mod.o
 dcomp_science_tools_mod.o:dcomp_science_tools_mod.f90
 dncomp_interface_def_mod.o:dncomp_interface_def_mod.f90
-dcomp_retrieval_test.o:dcomp_retrieval_test.f90
 dncomp_trans_atmos_mod.o:dncomp_trans_atmos_mod.f90
 dcomp_lut_hdf_mod.o:dcomp_lut_hdf_mod.f90
 sensorname_from_wmoid.o:sensorname_from_wmoid.f90
@@ -126,9 +128,6 @@ nlcomp_one_pixel_run_program.o: nlcomp_one_pixel_run_program.f90  nlcomp_retriev
 nlcomp_retrieval_mod.o:nlcomp_retrieval_mod.f90 nlcomp_forward_mod.o dcomp_math_tools_mod.o dcomp_science_tools_mod.o 
 nlcomp_array_loop_sub.o:nlcomp_array_loop_sub.f90 nlcomp_retrieval_mod.o dncomp_interface_def_mod.o
 nlcomp_forward_mod.o: nlcomp_forward_mod.f90  dcomp_math_tools_mod.o  M_kracken.o dcomp_lut_mod.o dcomp_science_tools_mod.o
-
-dcomp_retrieval_test.o:dcomp_retrieval_test.f90
-dcomp_test_new.o:dcomp_test_new.f90
 
 M_kracken.o:$(SUB_PATH)/M_kracken.f90
 	$(fc) -c ${fflags}  $(SUB_PATH)/M_kracken.f90

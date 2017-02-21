@@ -126,9 +126,6 @@ module NB_CLOUD_MASK
    Cloud_Mask_Version = "$Id$"
  end subroutine SET_CLOUD_MASK_VERSION
 
-
-
-
 !====================================================================
 ! SUBROUTINE Name: CLOUD_MASK_NAIVE_BAYES
 !
@@ -442,25 +439,6 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std
 
-                   
-                    case("Emiss_Tropo") 
-                       if ( .NOT. Input%Chan_On_11um ) cycle
-                       if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
-                       if (Cold_Scene_Flag == symbol%YES) cycle
-                       Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
-
-                    case("FMFT") 
-                       if ( .NOT. Input%Chan_On_11um ) cycle
-                       if ( .NOT. Input%Chan_On_12um ) cycle
-                       if (Cold_Scene_Flag == symbol%YES) cycle
-                       if (Input%Bt_11um == Missing_Value_Real4) cycle
-                       if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
-                       if (Input%Bt_12um == Missing_Value_Real4) cycle
-                       if (Input%Bt_12um_Clear == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) =  &
-                           split_window_test(Input%Bt_11um_Clear, Input%Bt_12um_Clear, &
-                                             Input%Bt_11um, Input%Bt_12um)
-
                     case("Btd_11_67") 
                        if ( .NOT. Input%Chan_On_11um ) cycle
                        if ( .NOT. Input%Chan_On_67um ) cycle
@@ -474,14 +452,6 @@ module NB_CLOUD_MASK
                        if (Input%Use_Sounder_11um == symbol%YES) then
                          Classifier_Value(Class_Idx) = Input%Bt_11um_Sounder - Input%Bt_67um
                        endif
-
-                    
-                    case("Bt_11_67_Covar") 
-                       if ( .NOT. Input%Chan_On_11um ) cycle
-                       if ( .NOT. Input%Chan_On_67um ) cycle
-                       if (Dry_Scene_Flag == symbol%YES) cycle
-                       if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
                     case("Btd_11_85") 
                        if ( .NOT. Input%Chan_On_11um ) cycle
@@ -1259,9 +1229,7 @@ module NB_CLOUD_MASK
 
   end subroutine  PACK_BITS_INTO_BYTES
 
-
 !-----------------------------------------------------------------------------------
 ! end of module
 !-----------------------------------------------------------------------------------
 end module NB_CLOUD_MASK
-

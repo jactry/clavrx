@@ -31,11 +31,11 @@ program dcomp_array_test
    i =1 
    
    inp % refl(i) % d = reshape([20.,40.,50.,70.],(/2,2/))
-  
-   
+   i= 6
+   inp % refl(i) % d = reshape([5.,10.,20.,30.],(/2,2/))
    
    do i = 2, 19
-      inp % refl(i) % d = 70.
+      !inp % refl(i) % d = 70.
       inp % alb_sfc ( i ) % d = 0.0      
    end do
    
@@ -54,9 +54,10 @@ program dcomp_array_test
    
    print*,'hallo array test'
    
-   call dcomp_array_loop ( inp, outp)
+   call dcomp_array_loop ( inp, outp,4)
    
    
    print*,outp % cod % d
+   print*,outp % cps  % d
 
 end program dcomp_array_test

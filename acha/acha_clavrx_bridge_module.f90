@@ -88,8 +88,9 @@ module ACHA_CLAVRX_BRIDGE
          , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
-   where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  
-           Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
+   where (Shadow_Mask == 1 .and. CLDMASK%Cld_Mask == 0 )  
+           CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  &
+            = ibset (CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
    end where
 
    !-----------------------------------------------------------------------
@@ -376,8 +377,8 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
-   Input%Cloud_Mask => Cld_Mask
-   Input%Cloud_Probability => Posterior_Cld_Probability
+   Input%Cloud_Mask => CLDMASK%Cld_Mask
+   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp

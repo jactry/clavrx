@@ -468,8 +468,8 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !-----------------------------------------------------------------
    ! Initialize masks
    !-----------------------------------------------------------------
-   Cloud_Mask => Cld_Mask
-   Cloud_Mask_Packed => Cld_Test_Vector_Packed
+   Cloud_Mask => CLDMASK%Cld_Mask
+   Cloud_Mask_Packed => CLDMASK%Cld_Test_Vector_Packed
    Test_Results => Test_Results_Temp !will just null for now
    Cloud_Mask_QF => Temp_Array !null() !will just null for now
    Cloud_Mask_Tmpy => One_Byte_Temp !need to find

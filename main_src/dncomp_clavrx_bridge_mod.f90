@@ -58,7 +58,7 @@ module dncomp_clavrx_bridge_mod
        , image &
        , acha &
        , cld_type &
-       , cld_mask &
+       , cldmask &
        , bad_pixel_mask &
        , lwp_dcomp, reff_dcomp, tau_dcomp, iwp_dcomp &
        , tau_dcomp_1, tau_dcomp_2, tau_dcomp_3 &
@@ -308,7 +308,7 @@ contains
          dcomp_input % cloud_press % d = acha % pc
          dcomp_input % cloud_temp % d  = acha % tc
          dcomp_input % tau_acha % d    = acha % tau
-         dcomp_input % cloud_mask % d  = cld_mask
+         dcomp_input % cloud_mask % d  = CLDMASK%cld_mask
 !ccm
          dcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
 !end ccm
@@ -504,7 +504,7 @@ contains
       dcomp_input % cloud_press % d = cx_rebin(acha % pc, dim_1, dim_2)
       dcomp_input % cloud_temp % d  = cx_rebin(acha % tc, dim_1, dim_2)
       dcomp_input % tau_acha % d    = cx_rebin(acha % tau, dim_1, dim_2)
-      dcomp_input % cloud_mask % d  = cx_rebin(cld_mask, dim_1, dim_2)
+      dcomp_input % cloud_mask % d  = cx_rebin(CLDMASK%cld_mask, dim_1, dim_2)
 !ccm
       dcomp_input % cloud_type % d  = cx_rebin(cld_type, dim_1, dim_2)
 !end ccm

@@ -241,9 +241,9 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Surface_Type => Sfc%Sfc_Type
 
    Input%Surface_Elevation => Sfc%Zsfc
-   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Mask => CLDMASK%Cld_Mask
    Input%Cloud_Type => Cld_Type
-   Input%Cloud_Probability => Posterior_Cld_Probability
+   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
 
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC

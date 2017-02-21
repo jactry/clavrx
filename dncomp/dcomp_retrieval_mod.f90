@@ -58,22 +58,22 @@ contains
       
       implicit none 
       
-      real, intent(in) :: obs_vec ( :) 
+      real, intent(in) :: obs_vec(:) 
       real, intent(in) :: obs_u (:) 
       real, intent(in) :: alb_sfc ( : )
       
-      real, intent(in)  :: alb_sfc_u (:)
-      real, intent(in)  :: air_trans_ac (:) 
-      real, intent(in)  :: state_apr ( 2 )
-      real, intent ( in ) :: sol_zen
-      real, intent ( in ) :: sat_zen
-      real, intent ( in ) :: rel_azi
-      real, intent ( in ) :: cld_temp
+      real, intent(in) :: alb_sfc_u (:)
+      real, intent(in) :: air_trans_ac (:) 
+      real, intent(in) :: state_apr ( 2 )
+      real, intent(in) :: sol_zen
+      real, intent(in) :: sat_zen
+      real, intent(in) :: rel_azi
+      real, intent(in) :: cld_temp
       
-      logical, intent ( in ) :: cld_phase 
+      logical, intent(in) :: cld_phase 
       integer(kind = 1), intent(in) :: snow_class
-      real, intent ( in ) :: rad_abv_cld 
-      real, intent ( in ) :: rad_clear_toc
+      real, intent(in) :: rad_abv_cld 
+      real, intent(in) :: rad_clear_toc
       character ( len = * ) , intent ( in ) :: sensor
       integer , intent(in), optional :: dcomp_mode
       integer , intent(in), optional :: debug_in
@@ -102,7 +102,7 @@ contains
       integer :: errorflag 
       real :: conv_test
       real :: delta_dstnc
-      real , parameter :: missing_real4_em = -999.
+      real , parameter :: MISSING_REAL4_EM = -999.
       integer :: algo_mode
       type ( pixel_vec ) :: pxl
       
@@ -151,6 +151,8 @@ contains
             channels = [ 1 , 7 ]
          case ( 3 )
             channels = [ 1, 20 ]
+         case ( 4)
+            channels = [6,20]   
          case default
            print*,'this mode is not set stop'
            stop

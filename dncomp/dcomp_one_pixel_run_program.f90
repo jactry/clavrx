@@ -17,6 +17,8 @@ program dcomp_one_pixel_run
    
    use dcomp_lut_mod   , only : &
       lut_obj
+   
+   use dcomp_retrieval_test   
      
    implicit none
    real, dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac
@@ -144,6 +146,8 @@ program dcomp_one_pixel_run
        ,dcomp_results%cod ,'REF: ',dcomp_results % cps &
        , 'cloud albedo: ', dcomp_results % cloud_alb_vis
 
+
+  
  ! call dcomp_array()
     
 end program dcomp_one_pixel_run

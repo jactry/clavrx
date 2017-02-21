@@ -27,7 +27,7 @@ module dcomp_forward_mod
    end type pixel_vec
     
    public :: dcomp_forward_computation
-   public :: compute_cld_albedo_vis
+   
    
    real , save :: planck_rad
    real , save :: rad_to_refl 

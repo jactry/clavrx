@@ -1451,22 +1451,22 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
       i2 = min(Image%Number_Of_Elements,i+n)
         
       !--- initial cloud mask based
-      if (cld_Mask(i,j) == sym%CLEAR) then
+      if (CLDMASK%cld_Mask(i,j) == sym%CLEAR) then
          Tsfc_Qf(i,j) = 3
          Ndvi_Qf(i,j) = 3
          Rsr_Qf(i,j) = 3
       endif
-      if (cld_Mask(i,j) == sym%PROB_CLEAR) then
+      if (CLDMASK%cld_Mask(i,j) == sym%PROB_CLEAR) then
          Tsfc_Qf(i,j) = 2
          Ndvi_Qf(i,j) = 2
          Rsr_Qf(i,j) = 2
       endif
-      if (cld_Mask(i,j) == sym%PROB_CLOUDY) then
+      if (CLDMASK%cld_Mask(i,j) == sym%PROB_CLOUDY) then
          Tsfc_Qf(i,j) = 1
          Ndvi_Qf(i,j) = 1
          Rsr_Qf(i,j) = 1
       endif
-      if (cld_Mask(i,j) == sym%CLOUDY) then
+      if (CLDMASK%cld_Mask(i,j) == sym%CLOUDY) then
          Tsfc_Qf(i,j) = 0
          Ndvi_Qf(i,j) = 0
          Rsr_Qf(i,j) = 0
@@ -1502,7 +1502,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 
         Aot_Qf(i,j) = 0
         
-        if ((Cld_Mask(i,j) == sym%CLEAR) .and.  &
+        if ((CLDMASK%Cld_Mask(i,j) == sym%CLEAR) .and.  &
             (Sfc%Land_Mask(i,j) == sym%NO) .and.  &
             (Geo%Solzen(i,j) < 70.00) .and.  &
             (Sfc%Snow(i,j) == sym%NO_SNOW)) then
@@ -1522,7 +1522,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
         endif
 
         !--- assign high quality pixels around a cloudy results as qf = 2
-        max_Mask = maxval(cld_Mask(i1:i2,j1:j2))
+        max_Mask = maxval(CLDMASK%cld_Mask(i1:i2,j1:j2))
       if (max_Mask >= 2) then
         if (Aot_Qf(i,j) == 3) then
           Aot_Qf(i,j) = 2
@@ -2293,7 +2293,7 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
 
   Number_of_Elements = Image%Number_Of_Elements
 
-  Adj_Pix_Cld_Mask = Missing_Value_Int1
+  CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
 
   line_loop: do Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
 
@@ -2305,7 +2305,7 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
       i1 = max(1,Elem_Idx - 1)
       i2 = min(Number_of_Elements,Elem_Idx + 1)
 
-      Adj_Pix_Cld_Mask(Elem_Idx,Line_Idx) = maxval(Cld_Mask(i1:i2,j1:j2))
+      CLDMASK%Adj_Pix_Cld_Mask(Elem_Idx,Line_Idx) = maxval(CLDMASK%Cld_Mask(i1:i2,j1:j2))
 
     enddo element_loop
   enddo line_loop
@@ -2431,11 +2431,12 @@ end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
       Mask_local = 0
       Nonconfident_Mask_local = 0
 
-      where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
+      where(CLDMASK%Cld_Mask == sym%CLEAR .or. CLDMASK%Cld_Mask == sym%PROB_CLEAR &
+         .or. CLDMASK%Cld_Mask == sym%PROB_CLOUDY .or. CLDMASK%Cld_Mask == sym%Cloudy)
          Mask_local = 1
       end where
 
-      where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
+      where(CLDMASK%Cld_Mask == sym%PROB_CLEAR .or. CLDMASK%Cld_Mask == sym%PROB_CLOUDY)
          Nonconfident_Mask_local = 1
       end where
 

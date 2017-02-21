@@ -169,7 +169,7 @@ module AVHRR_MODULE
       , Byte_swap_1b &
       , scan_year &
       , num_loc &
-      , cld_mask_aux &
+      , CLDMASK &
       , Cloud_Mask_Aux_Read_Flag &
       , Ch1_Counts &
       , Ch2_Counts &
@@ -2965,7 +2965,7 @@ endif
            exit
          endif
          i = (Pix_Idx - Start_Pixel) + 1
-         Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
+         CLDMASK % Cld_Mask_Aux(Pix_Idx,Line_Idx) = ishft(ishft(onebyte,2*(i-1)),-6)
       enddo
     enddo
 

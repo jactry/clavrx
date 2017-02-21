@@ -79,10 +79,7 @@ module LEVEL2_ROUTINES
       , line_idx_min_segment &
       , ref_ch1_min_3x3 &
       , ref_ch1_std_3x3 &
-      , posterior_cld_probability &
-      , cld_mask &
-      , adj_pix_cld_mask &
-      , bayes_mask_sfc_type_global &
+      , cldmask &
       , cld_type &
       , cld_phase &
       , zc_h2o &

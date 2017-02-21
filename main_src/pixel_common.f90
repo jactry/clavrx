@@ -290,7 +290,19 @@ module PIXEL_COMMON
     character(len=1020) :: Auxiliary_Cloud_Mask_File_Name
     character(len=1020) :: Auxiliary_Geolocation_File_Name
   end type image_definition
-
+   
+   type :: cloud_mask_definition
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Aux
+     integer (kind=int1),dimension(:,:),allocatable:: Adj_Pix_Cld_Mask
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Qf
+     real (kind=real4),dimension(:,:),allocatable:: Posterior_Cld_Probability
+     real (kind=real4),dimension(:,:),allocatable:: Prior_Cld_Probability
+     integer(kind=int1), dimension(:,:), allocatable:: Bayes_Mask_Sfc_Type
+     integer (kind=int1), dimension(:,:,:), allocatable:: Cld_Test_Vector_Packed
+  end type cloud_mask_definition
+   
+   
   type :: acha_definition
     integer:: Mode
     real (kind=real4), dimension(:,:), allocatable:: Tc
@@ -365,6 +377,7 @@ module PIXEL_COMMON
   type(acha_definition), public, save, target :: ACHA
   type(ccl_definition), public, save, target :: CCL
   type(asos_definition), public, save, target :: ASOS
+  type(cloud_mask_definition), public, save, target :: CLDMASK
 
   !---- declare other global variables
   integer,public, save:: Cmr_File_Flag
@@ -639,22 +652,12 @@ module PIXEL_COMMON
 
 
   !--- Mask arrays
-  integer(kind=int1), dimension(:,:), allocatable, public:: Bayes_Mask_Sfc_Type_Global
   integer(kind=int1), dimension(:,:), allocatable, public:: Shadow_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Dust_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Smoke_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Thin_Cirr_Mask
 
-  !--- cloud Mask arrays
-  integer (kind=int1), dimension(:,:,:), allocatable, public, save, target:: Cld_Test_Vector_Packed
-  integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Mask
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Adj_Pix_Cld_Mask
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Qf
-  real (kind=real4),dimension(:,:),allocatable, public, save, target:: &
-                                                       Posterior_Cld_Probability
-  real (kind=real4),dimension(:,:),allocatable, public, save, target:: &
-                                                       Prior_Cld_Probability
 
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
@@ -2512,34 +2515,34 @@ end subroutine DESTROY_AEROSOL_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   integer, intent(in):: dim1, dim2, dim3
-  allocate(Cld_Mask_Qf(dim1,dim2))
+  allocate(CLDMASK%Cld_Mask_Qf(dim1,dim2))
   if (Cld_Flag ) then
-     allocate(Cld_Mask_Aux(dim1,dim2))
-     allocate(Cld_Test_Vector_Packed(dim3,dim1,dim2))
-     allocate(Cld_Mask(dim1,dim2))
-     allocate(Adj_Pix_Cld_Mask(dim1,dim2))
-     allocate(Posterior_Cld_Probability(dim1,dim2))
-     allocate(Prior_Cld_Probability(dim1,dim2))
-     allocate(Bayes_Mask_Sfc_Type_Global(dim1,dim2))
+     allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))
+     allocate(CLDMASK%Cld_Test_Vector_Packed(dim3,dim1,dim2))
+     allocate(CLDMASK%Cld_Mask(dim1,dim2))
+     allocate(CLDMASK%Adj_Pix_Cld_Mask(dim1,dim2))
+     allocate(CLDMASK%Posterior_Cld_Probability(dim1,dim2))
+     allocate(CLDMASK%Prior_Cld_Probability(dim1,dim2))
+     allocate(CLDMASK%Bayes_Mask_Sfc_Type(dim1,dim2))
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
   if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-     if (.not. allocated(Cld_Mask_Aux)) allocate(Cld_Mask_Aux(dim1,dim2))  
+     if (.not. allocated(CLDMASK%Cld_Mask_Aux)) allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))  
   endif
   
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
-  Cld_Mask_Qf = Missing_Value_Int1
+   if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
   if (Cld_Flag ) then
-     Cld_Mask = Missing_Value_Int1
-     Cld_Mask_Aux = Missing_Value_Int1
-     Adj_Pix_Cld_Mask = Missing_Value_Int1
-     Posterior_Cld_Probability = Missing_Value_Real4
-     Prior_Cld_Probability = Missing_Value_Real4
-     Cld_Test_Vector_Packed = 0
-     Bayes_Mask_Sfc_Type_Global = Missing_Value_Int1
+     CLDMASK%Cld_Mask = Missing_Value_Int1
+     CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
+     CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
+     CLDMASK%Posterior_Cld_Probability = Missing_Value_Real4
+     CLDMASK%Prior_Cld_Probability = Missing_Value_Real4
+     CLDMASK%Cld_Test_Vector_Packed = 0
+     CLDMASK%Bayes_Mask_Sfc_Type = Missing_Value_Int1
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
   if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
@@ -2549,15 +2552,15 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
   endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
-  deallocate(Cld_Mask_Qf)
+  deallocate(CLDMASK%Cld_Mask_Qf)
   if (Cld_Flag ) then
-     deallocate(Cld_Mask_Aux)
-     deallocate(Cld_Test_Vector_Packed)
-     deallocate(Cld_Mask)
-     deallocate(Adj_Pix_Cld_Mask)
-     deallocate(Posterior_Cld_Probability)
-     deallocate(Prior_Cld_Probability)
-     deallocate(Bayes_Mask_Sfc_Type_Global)
+     deallocate(CLDMASK%Cld_Mask_Aux)
+     deallocate(CLDMASK%Cld_Test_Vector_Packed)
+     deallocate(CLDMASK%Cld_Mask)
+     deallocate(CLDMASK%Adj_Pix_Cld_Mask)
+     deallocate(CLDMASK%Posterior_Cld_Probability)
+     deallocate(CLDMASK%Prior_Cld_Probability)
+     deallocate(CLDMASK%Bayes_Mask_Sfc_Type)
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
   if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &

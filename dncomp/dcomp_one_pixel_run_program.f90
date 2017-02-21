@@ -18,7 +18,7 @@ program dcomp_one_pixel_run
    use dcomp_lut_mod   , only : &
       lut_obj
    
-   use dcomp_retrieval_test   
+  ! use dcomp_retrieval_test   
      
    implicit none
    real, dimension (20) :: obs, obs_u , alb_sfc , alb_sfc_u , air_trans_ac

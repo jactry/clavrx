@@ -200,7 +200,8 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name &
     else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
          Auxiliary_Geolocation_File_Name = TRIM(Auxiliary_Geolocation_File_Name)
     else  
-         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
+!---stw         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
+         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-30:ilen)
     endif
 
     print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Auxiliary_Geolocation_File_Name)

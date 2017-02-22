@@ -1283,6 +1283,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               Min_Bt30, Max_Bt30, "K", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
+
      !--- Ch31 Radiance
      if (Sds_Num_Level2_Ch31_Rad_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -1291,6 +1292,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               "top of atmosphere radiance at the nominal wavelength of 11.0 microns - NOAA CDR", &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ch31_Rad, Max_Ch31_Rad, "mW/m^2/cm^-1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ch27 Radiance
+     if (Sds_Num_Level2_Ch27_Rad_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch27_Rad),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "radiance_6_7um_nom", &
+                              "toa_radiance", &
+                              "top of atmosphere radiance at the nominal wavelength of 6.7 microns - NOAA CDR", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Ch27_Rad, Max_Ch27_Rad, "mW/m^2/cm^-1", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
@@ -4561,6 +4573,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
       if (Sds_Num_Level2_Ch31_Rad_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
        call SCALE_VECTOR_I2_RANK2(ch(31)%Rad_Toa,sym%LINEAR_SCALING,Min_Ch31_Rad,Max_Ch31_Rad,Missing_Value_Real4,Two_Byte_Temp)
        Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Rad), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+      endif
+
+      !--- Ch27 radiance
+      if (Sds_Num_Level2_Ch27_Rad_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+       call SCALE_VECTOR_I2_RANK2(ch(27)%Rad_Toa,sym%LINEAR_SCALING,Min_Ch27_Rad,Max_Ch27_Rad,Missing_Value_Real4,Two_Byte_Temp)
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch27_Rad), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                         Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 

@@ -61,6 +61,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Ref_ChDNB = -2.0, Max_Ref_ChDNB = 150.0
  real, parameter, public:: Min_Ref_ChDNB_lunar = -2.0, Max_Ref_ChDNB_lunar = 150.0
  real, parameter, public:: Min_Rad_Ch20 = 0.0, Max_Rad_Ch20 = 4.0
+ real, parameter, public:: Min_Rad_Ch27 = 0.0, Max_Rad_Ch27 = 75.0
  real, parameter, public:: Min_Rad_Ch31 = 0.0, Max_Rad_Ch31 = 200.0
  real, parameter, public:: Min_Rad_Ch32 = 0.0, Max_Rad_Ch32 = 200.0
  real, parameter, public:: Min_Bt20 = 180.0, Max_Bt20 = 340.0
@@ -150,6 +151,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 
  real, parameter, public:: Min_Trans = 0.0, Max_Trans = 1.0 
  real, parameter, public:: Min_Ch31_Rad = 0.0, Max_Ch31_Rad = 150.0 
+ real, parameter, public:: Min_Ch27_Rad = 0.0, Max_Ch27_Rad = 75.0 
  real, parameter, public:: Min_Ch31_Rad_Atm = 0.0, Max_Ch31_Rad_Atm = 100.0 
  real, parameter, public:: Min_Ch31_Rad_Atm_Dwn = 0.0, Max_Ch31_Rad_Atm_Dwn = 50.0 
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 

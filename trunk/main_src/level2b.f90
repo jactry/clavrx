@@ -1945,7 +1945,7 @@ subroutine WRITE_SCALING_ATTRIBUTES(Sds,Istatus_Sum)
      !--- determined if a scaled Sds, if so write needed attributes for scaling
      if (Sds%Scaling_Type > 0) then
 
-!      Istatus_Sum = sfsnatt(Sds%Id_Output, "actual_missing", DFNT_FLOAT32, 1, Sds%Unscaled_Missing) + Istatus_Sum
+      Istatus_Sum = sfsnatt(Sds%Id_Output, "unscaled_missing", DFNT_FLOAT32, 1, Sds%Unscaled_Missing) + Istatus_Sum
       Istatus_Sum = sfsnatt(Sds%Id_Output, "actual_range", DFNT_FLOAT32, 2, Sds%Actual_Range) + Istatus_Sum
       if (Sds%Data_Type == DFNT_INT8) then
          Istatus_Sum = sfsnatt(Sds%Id_Output, "valid_range", Sds%Data_Type, 2, int(Sds%valid_range,kind=int1)) + Istatus_Sum
@@ -2012,7 +2012,7 @@ subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
 
 
     if (Sds%Scaling_Type /= sym%NO_SCALING) then
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_missing"), Sds%Unscaled_Missing)
+       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"unscaled_missing"), Sds%Unscaled_Missing)
        Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_range"), Sds%Actual_Range)
     endif
 

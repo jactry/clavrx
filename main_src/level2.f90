@@ -6415,7 +6415,7 @@ end subroutine CLOSE_PIXEL_HDF_FILES
 
     !--- write actual missng and actual rangel for all scaled variables
     if (Scaled /= sym%NO_SCALING) then
-!     Istatus = sfsnatt(Sds_Id, "actual_missing", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
+     Istatus = sfsnatt(Sds_Id, "unscaled_missing", DFNT_FLOAT32, 1, Sds_Missing) + Istatus
       temp_vector_2 = [Sds_Min,Sds_Max]
      Istatus = sfsnatt(Sds_Id, "actual_range", DFNT_FLOAT32, 2, temp_vector_2) + Istatus
     endif

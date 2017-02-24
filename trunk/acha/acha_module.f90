@@ -2108,6 +2108,9 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,T_Tropo,Z_Tropo,P_Tropo,klev,i
         kend = Sfc_Level_RTM
         nlevels_temp = kend - kstart + 1
         call LOCATE(Temp_Prof_RTM(kstart:kend),nlevels_temp,T,klev)
+        if (klev == 0) then
+            klev = minloc(abs(T-Temp_Prof_RTM(kstart:kend)),1)
+        endif
         klev = klev + kstart - 1
         klev = max(1,min(Num_Levels_RTM_Prof-1,klev))
     endif

@@ -24,8 +24,11 @@
  use CloudPhase_Access_Mod
  use Numerical_Routines
  use RTM_MODULE
+ USE NWP_INTP
+ USE SFCTEMP
 
  implicit none
+
 
  include 'nb_cloud_mask.inc'
 
@@ -65,6 +68,7 @@
     integer(kind=int1) :: Oceanic_Glint_Mask                   !Mask of oceanic solar glint (0=no,1=yes)
     integer(kind=int1) :: Lunar_Oceanic_Glint_Mask             !Mask of oceanic lunar glint (0=no,1=yes)
     integer(kind=int1) :: Coastal_Mask                         !binary coast mask (0=no,1=yes)
+    integer(kind=int1) :: Scat_Mask                            !binary scattering mask (0=no,1=yes)
     real(kind=real4) :: Solzen                                 !Solar zenith angle (degrees)
     real(kind=real4) :: Scatzen                                !Solar Scattering angle (degrees)
     real(kind=real4) :: Lunscatzen                             !Lunar Scattering angle (degrees)
@@ -85,8 +89,8 @@
     real(kind=real4) :: Ref_375um_Clear                        !3.75 um toa reflectance for clear-sky (%)
     real(kind=real4) :: Ref_213um                              !2.13 um toa reflectance (%)
     real(kind=real4) :: Bt_375um                               !3.75 um toa brightness temp (K)
+    real(kind=real4) :: Bt_375um_Clear                         !3.75 um toa brightness temp (K)
     real(kind=real4) :: Bt_375um_Std                           !3.75 um toa brightness temp 3x3 Std. Dev. (K)
-    real(kind=real4) :: Bt_375um_Clear                         !3.75 um toa brightness temperature (K)
     real(kind=real4) :: Emiss_375um                            !3.75 um pseudo toa emissivity
     real(kind=real4) :: Emiss_375um_Clear                      !3.75 um pseudo toa emissivity clear-sky
     real(kind=real4) :: Bt_67um                                !6.7 um toa brightness temperature (K)
@@ -115,7 +119,9 @@
     integer :: Num_Segments                                    !number of segments in this data 
     integer(kind=int1) :: Solar_Contamination_Mask             !binary mask of solar contamination (0=no,1=yes)
     integer(kind=int1) :: Sfc_Type                             !surface type based on UMD classification
-
+    real(kind=real4) :: Sfc_Temp                               !surface temperature from ancillary sources
+    real(kind=real4) :: Path_Tpw                               !TPW along IR path from ancillary sources
+    real(kind=real4) :: Prior                                  !Prior from a precomputed source
  end type mask_input 
  !-----------------------------------------------------------------------------
  ! Output Structure
@@ -183,6 +189,12 @@
     integer(kind=int1) :: SEA_ICE
     integer(kind=int1) :: SNOW
  end type symbol_naive_bayesian
+ 
+ character(225), public, save :: Cloud_Mask_Thresholds_Version
+ 
+ 
+ contains
+ 
 
 
 end module NB_CLOUD_MASK_SERVICES

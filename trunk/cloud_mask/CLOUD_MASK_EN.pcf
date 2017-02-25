@@ -1,5 +1,6 @@
 #
 # CLOUD_MASK_EN
+# Modified - WCS3 - 12/23/2016
 #
 CLOUD_MASK_EN
 PRODUCT
@@ -95,10 +96,10 @@ CldMask_Packed_Constant: 8
 Flag_Constant: 33
 Meta10: 10
 Meta20: 20
-#Ancillary_Path: CM_new_LUT/
+#ancillary data path were both SfcAlb and sensor LUTs reside
 Ancillary_Path:/fjord/jgs/patmosx/Ancil_Data/clavrx_ancil_data_new/static/luts/nb_cloud_mask/
+#Sensor specific LUT
 FileName: viirs_default_nb_cloud_mask_lut.nc
-#FileName: viirs_fw_default_nb_cloud_mask_lut.nc
 
 
 END CLOUD_MASK_EN

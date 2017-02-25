@@ -372,9 +372,8 @@ contains
    CALL NFIA_SST_SSTClimUnif(Ctxt%SST_Src1_T00, Sst_Anal_Uni)
 
    !MODIS White sky Albedo
-   !Will need proper function calls - FIXME
-   CALL NFIA_SfcAlbd_SfcAlbedoCorr(Ctxt%SURFACE_ALBEDO_Src1_T00, 1, Ref_Ch2_Clear)
-   CALL NFIA_SfcAlbd_SfcAlbedoCorr(Ctxt%SURFACE_ALBEDO_Src1_T00, 3, Ref_Ch5_Clear)
+   CALL NFIA_SfcAlbd_SfcAlbedo(Ctxt%SURFACE_ALBEDO_Src1_T00, 1, Ref_Ch2_Clear)
+   CALL NFIA_SfcAlbd_SfcAlbedo(Ctxt%SURFACE_ALBEDO_Src1_T00, 3, Ref_Ch5_Clear)
    
    !need to calculate  Input%Ref_375um_Clear, ch(20)%Ref_Toa_Clear(i,j) 
    

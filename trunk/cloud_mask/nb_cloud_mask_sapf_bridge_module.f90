@@ -18,7 +18,6 @@
 !   - when done, repeat this in reverse
 !
 ! SAPF NOTE: set NearNbr: 1 in NWP PCF file to use interpolated 2D NWP arrays
-! SAPF NOTE 2: Will need proper corrected SFC albedo module and function calls
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 

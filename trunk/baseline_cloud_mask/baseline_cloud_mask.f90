@@ -290,10 +290,10 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Max_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Min_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE:: Sfc_Hgt_Stddev_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Mean_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Mean_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Max_3x3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Min_3X3
-   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Stddev_3X3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Min_3x3
+   REAL(KIND=REAL4), DIMENSION(:,:), ALLOCATABLE :: Refl_Chn2_Clear_Stddev_3x3
    REAL(KIND=REAL4), DIMENSION(:,:), POINTER:: BT_Chn14_Stddev_3x3
 
    INTEGER(KIND=INT4):: Num_Pix
@@ -473,7 +473,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    Test_Results => Test_Results_Temp !will just null for now
    Cloud_Mask_QF => Temp_Array !null() !will just null for now
    Cloud_Mask_Tmpy => One_Byte_Temp !need to find
-   Cloud_Mask_Binary => Temp_Array 
+   Cloud_Mask_Binary => CLDMASK%Cld_Mask_Binary
    Cloud_Mask_IR => Temp_Array 
    Cloud_Mask_SST => Temp_Array 
 
@@ -502,7 +502,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
    !
    !---don't initialize to clear
    Cloud_Mask = sym%PROB_CLEAR   
-   Cloud_Mask_Binary = CLD_MASK_BIN_CLEAR  
+   Cloud_Mask_Binary = sym%CLEAR_BINARY
    Cloud_Mask_IR = sym%PROB_CLEAR   
    Cloud_Mask_SST = sym%PROB_CLEAR   
 
@@ -534,17 +534,17 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
 
 !    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn14BT, BT_Chn14_Mean_3x3, &
 !                                    BT_Chn14_Max_3x3, BT_Chn14_Min_3x3, BT_Chn14_Stddev_3x3)
-!    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn2Refl, Refl_Chn2_Mean_3X3, &
-!                                    Refl_Chn2_Max_3x3, Refl_Chn2_Min_3X3, Refl_Chn2_Stddev_3X3)
+!    CALL Compute_Spatial_Uniformity(1, 1, SpaceMask, Chn2Refl, Refl_Chn2_Mean_3x3, &
+!                                    Refl_Chn2_Max_3x3, Refl_Chn2_Min_3x3, Refl_Chn2_Stddev_3x3)
 
 !NOTE - All the thermal and measured spatial metrics are the same. Owing to the MODIS WS issue, this
 !       must be computed internally to the BCM - 20 NOV 2016 - WCS3
 
-    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3X3, &
-                                    Sfc_Hgt_Max_3X3, Sfc_Hgt_Min_3X3, Sfc_Hgt_Stddev_3X3)
-    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3X3, &
-                                    Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3X3, &
-                                    Refl_Chn2_Clear_Stddev_3X3)
+    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Sfc%zsfc, Sfc_Hgt_Mean_3x3, &
+                                    Sfc_Hgt_Max_3x3, Sfc_Hgt_Min_3x3, Sfc_Hgt_Stddev_3x3)
+    CALL Compute_Spatial_Uniformity(1, 1, Space_Mask, Refl_Chn2_Clear, Refl_Chn2_Clear_Mean_3x3, &
+                                    Refl_Chn2_Clear_Max_3x3, Refl_Chn2_Clear_Min_3x3, &
+                                    Refl_Chn2_Clear_Stddev_3x3)
    ! Temporal commented out due to CLAVR-x not having that capability
 
    !=======================================================================
@@ -784,7 +784,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
            Emiss_Tropo_Chn14_LRC = Emiss_Tropo_Chn14(Elem_LRC_Idx,Line_LRC_Idx)
          ENDIF
          
-         !Emiss_Tropo_11um_LRC_BCM(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
+         Emiss_Tropo_11um_LRC(Elem_Idx,Line_Idx) = Emiss_Tropo_Chn14_LRC
          
          !
          !--- NWC Indices
@@ -800,7 +800,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
            ENDIF
          ENDIF
          
-         !BTD_11_12um_NWC_BCM(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
+         BTD_11_12um_NWC(Elem_Idx,Line_Idx) = BTD_Chn14_Chn15_NWC
 
          !
          !---cosine of satellite viewing zenith angle
@@ -966,7 +966,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
                 Emiss_Chn7_NWC = Ems_Ch20(Elem_NWC_Idx,Line_NWC_Idx)
             ENDIF
             
-            !Emiss_39_NWC_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
+            Emiss_39um_NWC(Elem_Idx,Line_Idx) = Emiss_Chn7_NWC
            
             !
             !---3.9 um surface emissivity
@@ -1378,13 +1378,13 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
         ENDIF
         
         !-- STORE IN GLOBAL ARRAYS FOR OUTPUT
-        !Ref_Ch1_Clr_Min_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
+        Ref_Ch1_Clear_Min_3x3(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Min_3x3(Elem_Idx,Line_Idx)
         
-        !Ref_Ch1_Clr_Max_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
+        Ref_Ch1_Clear_Max_3x3(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Max_3x3(Elem_Idx,Line_Idx)
 
-        !Ref_Ch1_Clr_Std_3x3_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
+        Ref_Ch1_Clear_Std_3x3(Elem_Idx,Line_Idx) = Refl_Chn2_Clear_Stddev_3x3(Elem_Idx,Line_Idx)
 
-        !Ref_Ch1_Clr_BCM(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
+        Ch(1)%Ref_Toa_Clear(Elem_Idx,Line_Idx) = Refl_Chn2_Clear(Elem_Idx,Line_Idx)
         
 
     ENDIF
@@ -1749,7 +1749,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
             Emiss_Chn7_Clr = Solar_Rad_Chn7_Clr / Planck_Emission_Chn7_Clr
             
             !output to L2 file
-            !Emiss_39_clr_BCM(Elem_Idx,Line_Idx) = Emiss_Chn7_Clr
+            Ems_Ch20_Clear_Rtm(Elem_Idx,Line_Idx) = Emiss_Chn7_Clr
 
             Test_Results(Num_Tests,Elem_Idx,Line_Idx) = EMISS4_Routine(Is_Glint,  &
                          Is_Land, &
@@ -1959,7 +1959,7 @@ SUBROUTINE Baseline_Cloud_Mask_Main(Algo_Num)
          IF ((Cloud_Mask(Elem_Idx,Line_Idx) .EQ. sym%PROB_CLOUDY) .OR. &
              (Cloud_Mask(Elem_Idx,Line_Idx) .EQ. sym%CLOUDY)) THEN
              
-             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = CLD_MASK_BIN_CLOUD
+             Cloud_Mask_Binary(Elem_Idx,Line_Idx) = sym%CLOUDY_BINARY
          ENDIF
 
       END DO Element_Loop_4

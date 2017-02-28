@@ -84,6 +84,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Bt38 = 180.0, Max_Bt38 = 340.0
  real, parameter, public:: Min_Bt45 = 180.0, Max_Bt45 = 340.0
  real, parameter, public:: Min_Btd_Ch31_Ch32 = -4.0, Max_Btd_Ch31_Ch32 = 12.0
+ real, parameter, public:: Min_Btd_Ch31_Ch27 = -4.0, Max_Btd_Ch31_Ch27 = 12.0
  real, parameter, public:: Min_Btd_3b_4 = -20.0, Max_Btd_3b_4 = 100.0
  real, parameter, public:: Min_Ref_Ch1_Std = 0.0, Max_Ref_Ch1_Std = 20.0
  real, parameter, public:: Min_Ref_Ch2_Std = 0.0, Max_Ref_Ch2_Std = 20.0
@@ -112,6 +113,7 @@ module SCALING_PARAMETERS
  real, parameter, public:: Min_Glintzen = 0.0, Max_Glintzen = 180.0
  real, parameter, public:: Min_Scatang = 0.0, Max_Scatang = 180.0
  real, parameter, public:: Min_Zsfc = -500, Max_Zsfc = 10000
+ real, parameter, public:: Min_Zsfc_Std = 0.0, Max_Zsfc_Std = 5000
  real, parameter, public:: Min_Lat = -90.0, Max_Lat = 90.0
  real, parameter, public:: Min_Lon = -180, Max_Lon = 180.0
  real, parameter, public:: Min_Zc = 0.0, Max_Zc = 20000.0
@@ -150,8 +152,8 @@ module SCALING_PARAMETERS
                            Min_dcomp_atmos_ir = 0.0, Max_dcomp_atmos_ir = 1.5 
  real, parameter, public:: Min_Sfc_Ems = 0.75, Max_Sfc_Ems = 1.0 
  real, parameter, public:: Min_Trans = 0.0, Max_Trans = 1.0 
- real, parameter, public:: Min_Ch31_Rad = 0.0, Max_Ch31_Rad = 150.0 
  real, parameter, public:: Min_Ch27_Rad = 0.0, Max_Ch27_Rad = 75.0 
+ real, parameter, public:: Min_Ch31_Rad = 0.0, Max_Ch31_Rad = 150.0 
  real, parameter, public:: Min_Ch31_Rad_Atm = 0.0, Max_Ch31_Rad_Atm = 100.0 
  real, parameter, public:: Min_Ch31_Rad_Atm_Dwn = 0.0, Max_Ch31_Rad_Atm_Dwn = 50.0 
  real, parameter, public:: Min_Bt_Covar = -10.0, Max_Bt_Covar = 10.0 

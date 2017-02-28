@@ -229,6 +229,7 @@ module NB_CLOUD_MASK
    !--- initialize output
    Output%Posterior_Cld_Probability = Missing_Value_Real4
    Output%Cld_Mask_Bayes = Missing_Value_Int1
+   Output%Cld_Mask_Binary = Missing_Value_Int1
    Output%Cld_Flags_Packed = 0
 
    Cld_Flags(1) = symbol%YES          ;    Cld_Flag_Bit_Depth(1) = 1
@@ -782,16 +783,20 @@ module NB_CLOUD_MASK
         ! - based on type of srfc could be different thresholds
         if (Sfc_Idx > 0) then
            Output%Cld_Mask_Bayes = symbol%CLEAR
+           Output%Cld_Mask_Binary = symbol%CLEAR_BINARY
            if (Output%Posterior_Cld_Probability >= PROB_CLOUDY_CONF_CLOUD_THRESH(Sfc_Idx)) then
                    Output%Cld_Mask_Bayes = symbol%CLOUDY
+                   Output%Cld_Mask_Binary = symbol%CLOUDY_BINARY
            endif
            if ((Output%Posterior_Cld_Probability >= PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx)) .and. &
                (Output%Posterior_Cld_Probability < PROB_CLOUDY_CONF_CLOUD_THRESH(Sfc_Idx))) then
                    Output%Cld_Mask_Bayes = symbol%PROB_CLOUDY
+                   Output%Cld_Mask_Binary = symbol%CLOUDY_BINARY
            endif
            if ((Output%Posterior_Cld_Probability > CONF_CLEAR_PROB_CLEAR_THRESH(Sfc_Idx)) .and. &
                (Output%Posterior_Cld_Probability < PROB_CLEAR_PROB_CLOUD_THRESH(Sfc_Idx))) then
                    Output%Cld_Mask_Bayes = symbol%PROB_CLEAR
+                   Output%Cld_Mask_Binary = symbol%CLEAR_BINARY
            endif
         endif
 

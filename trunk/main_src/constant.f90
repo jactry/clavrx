@@ -112,6 +112,9 @@ module CONSTANTS
     integer(kind=int1) :: PROB_CLEAR = 1
     integer(kind=int1) :: CLEAR = 0
     
+    integer(kind=int1) :: CLEAR_BINARY = 0
+    integer(kind=int1) :: CLOUDY_BINARY = 1
+
     integer(kind=int1) :: CLEAR_TYPE = 0
     integer(kind=int1) :: PROB_CLEAR_TYPE = 1
     integer(kind=int1) :: FOG_TYPE = 2

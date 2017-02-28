@@ -156,9 +156,12 @@ contains
       call AHI_DATA % TIME_END_OBJ % GET_DATE ( msec_of_day = Image%End_Time  )     
          
       scan_time(1:c_seg_lines)   = Image%Start_Time + &
-                                 ( scan_number(1:c_seg_lines) * (Image%End_Time - Image%Start_Time)) &
-                                 / Image%Number_Of_Lines
+                                      &  floor ( float ( scan_number(1:c_seg_lines) ) / float(Image%Number_Of_Lines ) &
+                                      &  * (Image%End_Time - Image%Start_Time)) 
       
+      
+     
+    
       call AHI_DATA % DEALLOCATE_ALL 
  
  

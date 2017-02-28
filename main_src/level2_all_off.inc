@@ -1,6 +1,6 @@
 !$Id$
  !--- level2 indices
- integer, parameter, private:: Num_Level2_Sds =288
+ integer, parameter, private:: Num_Level2_Sds = 300
  integer, private, save:: Sd_Id_Level2
  integer(kind=int4), dimension(Num_Level2_Sds), save, private:: Sds_Id_Level2
 
@@ -296,4 +296,16 @@
      Sds_Num_Level2_Ec_133 = 285,         Sds_Num_Level2_Ec_133_Flag = 0, &
      Sds_Num_Level2_Cld_Type_ACHA = 286,  Sds_Num_Level2_Cld_Type_ACHA_Flag = 0, &
      Sds_Num_Level2_Cwp_Fit = 287,        Sds_Num_Level2_Cwp_Fit_Flag = 0, &
-     Sds_Num_Level2_Ch27_Rad = 288,       Sds_Num_Level2_Ch27_Rad_Flag = 0
+     Sds_Num_Level2_Ch27_Rad = 288,       Sds_Num_Level2_Ch27_Rad_Flag = 0, &
+     Sds_Num_Level2_Cld_Mask_Binary=289,  Sds_Num_Level2_Cld_Mask_Binary_Flag = 0, &
+     Sds_Num_Level2_Ch1_Clear_Min = 290,  Sds_Num_Level2_Ch1_Clear_Min_Flag = 0, &
+     Sds_Num_Level2_Ch1_Clear_Max = 291,  Sds_Num_Level2_Ch1_Clear_Max_Flag = 0, &
+     Sds_Num_Level2_Ch1_Clear_Std = 292,  Sds_Num_Level2_Ch1_Clear_Std_Flag = 0, &
+     Sds_Num_Level2_BTD_11_12_NWC = 293,  Sds_Num_Level2_BTD_11_12_NWC_Flag = 0, &
+     Sds_Num_Level2_EMISS_375_NWC = 294,  Sds_Num_Level2_EMISS_375_NWC_Flag = 0, &
+     Sds_Num_Level2_Etrop_11um_LRC = 295, Sds_Num_Level2_Etrop_11um_LRC_Flag = 0, &
+     Sds_Num_Level2_Sfc_Ch1_Clr_Fill=296, Sds_Num_Level2_Sfc_Ch1_Clr_Fill_Flag = 0, &
+     Sds_Num_Level2_Zsfc_Max_3x3 = 297,   Sds_Num_Level2_Zsfc_Max_3x3_Flag = 0, &
+     Sds_Num_Level2_Zsfc_Std_3x3 = 298,   Sds_Num_Level2_Zsfc_Std_3x3_Flag = 0, &
+     Sds_Num_Level2_Ch31_Min_3x3 = 299,   Sds_Num_Level2_Ch31_Min_3x3_Flag = 0, &
+     Sds_Num_Level2_Btd_Ch31_Ch27_Std=300,Sds_Num_Level2_Btd_Ch31_Ch27_Std_Flag = 0

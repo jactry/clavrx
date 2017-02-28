@@ -375,6 +375,9 @@ contains
       symbol%PROB_CLEAR = sym%PROB_CLEAR
       symbol%CLEAR = sym%CLEAR
 
+      symbol%CLEAR_BINARY = sym%CLEAR_BINARY
+      symbol%CLOUDY_BINARY = sym%CLOUDY_BINARY
+
       symbol%NO = sym%NO
       symbol%YES = sym%YES
 
@@ -540,6 +543,7 @@ contains
 
       CLDMASK%Cld_Test_Vector_Packed(:,i,j) = Output%Cld_Flags_Packed
       CLDMASK%Cld_Mask(i,j) = Output%Cld_Mask_Bayes
+      CLDMASK%Cld_Mask_Binary(i,j) = Output%Cld_Mask_Binary
       CLDMASK%Posterior_Cld_Probability(i,j) = Output%Posterior_Cld_Probability
       Dust_Mask(i,j) = Output%Dust_Mask
       Smoke_Mask(i,j) = Output%Smoke_Mask

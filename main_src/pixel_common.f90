@@ -254,6 +254,8 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Snow
      integer(kind=int1), dimension(:,:), allocatable:: Sfc_Type
      real (kind=real4), dimension(:,:), allocatable:: Zsfc
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc_Max
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc_Std
      real (kind=real4), dimension(:,:), allocatable:: Zsfc_Hires
   end type surface_definition
 
@@ -293,6 +295,7 @@ module PIXEL_COMMON
 
   type :: cloud_mask_definition
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Binary
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Aux
      integer (kind=int1),dimension(:,:),allocatable:: Adj_Pix_Cld_Mask
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Qf
@@ -855,6 +858,13 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
 
+!--- BCM Variables 
+     real (kind=real4), dimension(:,:), allocatable, public, target:: BTD_11_12um_NWC
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39um_NWC
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_Tropo_11um_LRC
+
+
+
 !---- other static arrays carried by this module
 
 
@@ -1068,6 +1078,11 @@ subroutine CREATE_PIXEL_ARRAYS()
            Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
 
+  ! Other BCM output arrays
+  allocate (BTD_11_12um_NWC(dim1,dim2), &
+            Emiss_39um_NWC(dim1,dim2), &
+            Emiss_Tropo_11um_LRC(dim1,dim2))
+
   !--------------------------------------------------------------------------------
   ! Initialize variables that are not reset for each segment
   !--------------------------------------------------------------------------------
@@ -1193,6 +1208,11 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Gap_Line_Idx_Pattern)) deallocate(Gap_Line_Idx_Pattern)
   if (allocated(IFF_Gap_Mask)) deallocate(IFF_Gap_Mask)
 
+  !--- BCM arrays
+  deallocate (BTD_11_12um_NWC, &
+              Emiss_39um_NWC, &
+              Emiss_Tropo_11um_LRC)
+
 
 end subroutine DESTROY_PIXEL_ARRAYS
 
@@ -1282,6 +1302,11 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
       IFF_Gap_Mask = sym%NO     
+
+      !--- BCM arrays
+      BTD_11_12um_NWC = Missing_Value_Real4
+      Emiss_39um_NWC = Missing_Value_Real4
+      Emiss_Tropo_11um_LRC = Missing_Value_Real4
 
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
@@ -2006,6 +2031,8 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Snow(dim1,dim2))
    allocate(Sfc%Sfc_Type(dim1,dim2))
    allocate(Sfc%Zsfc(dim1,dim2))
+   allocate(Sfc%Zsfc_Max(dim1,dim2))
+   allocate(Sfc%Zsfc_Std(dim1,dim2))
    allocate(Sfc%Zsfc_Hires(dim1,dim2))
 end subroutine CREATE_SURFACE_ARRAYS
 subroutine RESET_SURFACE_ARRAYS
@@ -2028,6 +2055,8 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Snow = Missing_Value_Int1
    Sfc%Sfc_Type = Missing_Value_Int1
    Sfc%Zsfc = Missing_Value_Real4
+   Sfc%Zsfc_Max = Missing_Value_Real4
+   Sfc%Zsfc_Std = Missing_Value_Real4
    Sfc%Zsfc_Hires = Missing_Value_Real4
 end subroutine RESET_SURFACE_ARRAYS
 subroutine DESTROY_SURFACE_ARRAYS
@@ -2050,6 +2079,8 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Snow)
    deallocate(Sfc%Sfc_Type)
    deallocate(Sfc%Zsfc)
+   deallocate(Sfc%Zsfc_Max)
+   deallocate(Sfc%Zsfc_Std)
    deallocate(Sfc%Zsfc_Hires)
 end subroutine DESTROY_SURFACE_ARRAYS
 !------------------------------------------------------------------------------
@@ -2504,6 +2535,7 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   allocate(CLDMASK%Cld_Mask_Qf(dim1,dim2))
   if (Cld_Flag == sym%YES) then
      allocate(CLDMASK%Cld_Mask(dim1,dim2))
+     allocate(CLDMASK%Cld_Mask_Binary(dim1,dim2))
      allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))
      allocate(CLDMASK%Adj_Pix_Cld_Mask(dim1,dim2))
      allocate(CLDMASK%Posterior_Cld_Probability(dim1,dim2))
@@ -2516,6 +2548,7 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
   if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
   if (Cld_Flag == sym%YES) then
      CLDMASK%Cld_Mask = Missing_Value_Int1
+     CLDMASK%Cld_Mask_Binary = Missing_Value_Int1
      CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
      CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
      CLDMASK%Posterior_Cld_Probability = Missing_Value_Real4
@@ -2528,6 +2561,7 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(CLDMASK%Cld_Mask_Qf)
   if (Cld_Flag == sym%YES) then
      deallocate(CLDMASK%Cld_Mask)
+     deallocate(CLDMASK%Cld_Mask_Binary)
      deallocate(CLDMASK%Cld_Mask_Aux)  
      deallocate(CLDMASK%Adj_Pix_Cld_Mask)
      deallocate(CLDMASK%Posterior_Cld_Probability)

@@ -1650,6 +1650,15 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    !----------------------------------------------------------------------
    nbox = 1   !1 gives a 3x3 box
 
+   !--- Surface 
+       CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
+                                       Sfc%Zsfc,nbox, Uni_Land_Mask_Flag_No, &
+                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
+                                       1,Image%Number_Of_Elements,jmin,jmax, &
+                                       Temp_Pix_Array_1,Temp_Pix_Array_2,&
+                                       Sfc%Zsfc_Max,Sfc%Zsfc_Std, &
+                                       Elem_Idx_Max,Line_Idx_Max,Elem_Idx_Min,Line_Idx_Min)
+
    !--- Bt_Ch31 
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
 

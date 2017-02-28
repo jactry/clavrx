@@ -986,6 +986,10 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
      stop
    endif
 
+   !--- Initialize these variables
+   calb_errorCount = -999
+   calb_invalidValue = -999
+
    !--- Extract calibration block per image.
    select case(local_sndr_filter_map)
      !--- Bands 1-6 are albedo/reflectance.

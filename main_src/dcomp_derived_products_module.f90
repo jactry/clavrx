@@ -689,7 +689,7 @@ subroutine ADJUST_DCOMP_LWP()
          Tau_Dcomp /= MISSING_VALUE_REAL4 .and. &
          Reff_Dcomp /= MISSING_VALUE_REAL4)
 
-         Reff_Fit = a + b * Reff_dcomp
+         Reff_Fit = a + (b * Reff_dcomp)
 
    endwhere
 

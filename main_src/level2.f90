@@ -1036,6 +1036,29 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !---  surface height max
+     if (Sds_Num_Level2_Zsfc_Max_3x3_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Zsfc_Max_3x3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                              "surface_elevation_max_3x3", &
+                              "surface_elevation_max_3x3", &
+                              "maximum 3x3 surface elevation above mean sea level", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Zsfc, Max_Zsfc, "meters", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !---  surface height std
+     if (Sds_Num_Level2_Zsfc_Std_3x3_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Zsfc_Std_3x3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                              "surface_elevation_std_3x3", &
+                              "surface_elevation_std_3x3", &
+                              "standard deviation 3x3 pixels surface elevation above mean sea level", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Zsfc_Std, Max_Zsfc_Std, "meters", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
 !------------------------------------------------------------------------------------------------------------------------
 !----- START OF OBSERVATIONS
 !------------------------------------------------------------------------------------------------------------------------
@@ -1186,7 +1209,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_Ch26, Max_Ref_Ch26, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
-      endif
+     endif
 
      !--- ChDNB reflectance
      if (Sds_Num_Level2_ChDNB_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then 
@@ -1197,7 +1220,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_ChDNB, Max_Ref_ChDNB, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
-      endif
+     endif
   
      !--- ChDNB reflectance lunar
      if (Sds_Num_Level2_ChDNB_lunar_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(44) == sym%YES) then 
@@ -1208,7 +1231,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_ChDNB_lunar, Max_Ref_ChDNB_lunar, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
-      endif
+     endif
 
      !--- Ch20 reflectance
      if (Sds_Num_Level2_Ch20_Ref_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
@@ -1219,7 +1242,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Ref_Ch20, Max_Ref_Ch20, "%", Missing_Value_Real4, Istatus)
        Istatus_Sum = Istatus_Sum + Istatus
-      endif
+     endif
 
      !--- Ch20 temperature
      if (Sds_Num_Level2_Ch20_Bt_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(20) == sym%YES) then
@@ -1436,12 +1459,24 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
-     !--- Bt_Ch31_std_3x3
+     !--- Bt_Ch31_max_3x3
      if (Sds_Num_Level2_Ch31_Max_3x3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Max_3x3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
                               "temp_11_0um_nom_max_3x3", &
                               "not specified", &
                               "maximum of the 11 micron brightness temperature "// &
+                              "computed over a 3x3 pixel array", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Bt_Ch31_min_3x3
+     if (Sds_Num_Level2_Ch31_Min_3x3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch31_Min_3x3),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "temp_11_0um_nom_min_3x3", &
+                              "not specified", &
+                              "minimum of the 11 micron brightness temperature "// &
                               "computed over a 3x3 pixel array", &
                               DFNT_INT16, sym%LINEAR_SCALING, &
                               Min_Bt31, Max_Bt31, "K", Missing_Value_Real4, Istatus)
@@ -1470,6 +1505,17 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "integer classification of the cloud mask including clear=0, probably-clear=1, "// &
                                "probably-cloudy=2, cloudy=3", &
                                DFNT_INT8, sym%NO_SCALING, Min_Cld_Mask, Max_Cld_Mask, &
+                               "none", Real(Missing_Value_Int1,kind=real4), Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- binary cloud mask
+     if (Sds_Num_Level2_Cld_Mask_Binary_Flag == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Binary),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d,&
+                               "binary_cloud_mask", &
+                               "not specified", &
+                               "integer classification of the binary cloud mask including clear=0, cloudy=1", &
+                               DFNT_INT8, sym%NO_SCALING, Min_Binary_Mask, Max_Binary_Mask, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -2684,6 +2730,20 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Btd_Ch31_Ch27_Std_3x3
+     if (Sds_Num_Level2_Btd_Ch31_Ch27_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and.  &
+         Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Btd_Ch31_Ch27_Std),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                              "diff_ch31_ch27_Std_3x3", &
+                              "difference_11_minus_67_brightness_temperature_std_3x3", &
+                              "3x3 pixel standard deviation of 11.0 micron minus 6.7 micron"// &
+                              "brightness temperatures (nominal wavelengths)", &
+                              DFNT_INT16, sym%LINEAR_SCALING, &
+                              Min_Btd_Ch31_Ch27, Max_Btd_Ch31_Ch27, "K", Missing_Value_Real4, Istatus)
+      Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+
      !--- etrop
      if (Sds_Num_Level2_Etrop_Flag == sym%YES) then
       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Etrop),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -3321,6 +3381,42 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
        Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Ref_Ch1_Clear Min
+     if (Sds_Num_Level2_Ch1_Clear_Min_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Min),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clear_sky_min_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal_min_3x3", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
+                               "minimum of 3x3 at the nominal wavelength of 0.65 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch1_Clear Max
+     if (Sds_Num_Level2_Ch1_Clear_Max_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Max),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clear_sky_max_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal_max_3x3", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
+                               "maximum of 3x3 at the nominal wavelength of 0.65 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1, Max_Ref_Ch1, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Ref_Ch1_Clear Std
+     if (Sds_Num_Level2_Ch1_Clear_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Std),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "refl_0_65um_nom_clear_sky_std_3x3", &
+                               "toa_bidirectional_reflectance_assuming_clear_sky_0_65_micron_nominal_std_3x3", &
+                               "top of atmosphere bidirectional reflectance modeled assuming clear skies "// &
+                               "standard deviation of 3x3 at the nominal wavelength of 0.65 microns", &
+                                DFNT_INT16, sym%LINEAR_SCALING, &
+                                Min_Ref_Ch1_Std, Max_Ref_Ch1_Std, "%", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
      !--- Bt_Ch20_Clear
      if (Sds_Num_Level2_Ch20_Clear_Flag == sym%YES .and.  Sensor%Chan_On_Flag_Default(20) == sym%YES) then
        call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Ch20_Clear),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
@@ -3936,6 +4032,43 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
       Istatus_Sum = Istatus_Sum + Istatus
      endif
 
+     !--- Sds_Num_Level2_BTD_11_12_NWC - WCS3
+     if (Sds_Num_Level2_BTD_11_12_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_BTD_11_12_NWC),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "btd_11um_12um_nom_nwc", &
+                               "brightness_temperature_difference_11um_12um_nom_neighboring_warm_center", &
+                               "11-12um brightness temperature difference at neighboring warm center", &
+                                DFNT_FLOAT, sym%NO_SCALING, &
+                                -100., 100., "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Sds_Num_Level2_EMISS_375_NWC  - WCS3
+     if (Sds_Num_Level2_EMISS_375_NWC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_EMISS_375_NWC),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "emiss_3_75um_nom_nwc", &
+                               "emissivity_3_75um_nom_neighboring_warm_center", &
+                               "3.75um emissivity at neighboring warm center", &
+                                DFNT_FLOAT, sym%NO_SCALING, &
+                                Min_Sfc_Ems, Max_Sfc_Ems, "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
+     !--- Sds_Num_Level2_Etrop_11um_LRC  - WCS3
+     if (Sds_Num_Level2_Etrop_11um_LRC_Flag == sym%YES .and. &
+          Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+       call DEFINE_PIXEL_2D_SDS(Sds_Id_Level2(Sds_Num_Level2_Etrop_11um_LRC),Sd_Id_Level2,Sds_Dims_2d,Sds_Chunk_Size_2d, &
+                               "emissivity_11um_tropopause_lrc", &
+                               "emissivity_11um_tropopause_local_radiative_center", &
+                               "11um emissivity at the tropopause at local radiative center", &
+                                DFNT_FLOAT, sym%NO_SCALING, &
+                                Min_Etropo, Max_Etropo, "1", Missing_Value_Real4, Istatus)
+       Istatus_Sum = Istatus_Sum + Istatus
+     endif
+
 
      !--- check for and report errors
      if (Istatus_Sum /= 0) then
@@ -4414,6 +4547,20 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                     Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
+      !--- surface elevation max
+      if (Sds_Num_Level2_Zsfc_Max_3x3_Flag == sym%YES) then
+          call SCALE_VECTOR_I2_RANK2(Sfc%Zsfc_Max,sym%LINEAR_SCALING,Min_Zsfc,Max_Zsfc,Missing_Value_Real4,Two_Byte_Temp)
+          Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zsfc_Max_3x3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                    Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+      endif
+
+      !--- surface elevation std
+      if (Sds_Num_Level2_Zsfc_Std_3x3_Flag == sym%YES) then
+          call SCALE_VECTOR_I2_RANK2(Sfc%Zsfc_Std,sym%LINEAR_SCALING,Min_Zsfc_Std,Max_Zsfc_Std,Missing_Value_Real4,Two_Byte_Temp)
+          Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Zsfc_Std_3x3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                    Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+      endif
+
 !--------------------------------------------------------------------------------------------------
 !--- observations
 !--------------------------------------------------------------------------------------------------
@@ -4686,6 +4833,14 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
       endif
 
+      !--- Bt_Ch31_Min_3x3
+      if (Sds_Num_Level2_Ch31_Min_3x3_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+       call SCALE_VECTOR_I2_RANK2(Bt_Ch31_Min_3x3,sym%LINEAR_SCALING,Min_Bt31,Max_Bt31, &
+                                 Missing_Value_Real4,Two_Byte_Temp)
+       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch31_Min_3x3), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+      endif
+
 
 !-------- cloud properties
 
@@ -4701,6 +4856,13 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
      if (Sds_Num_Level2_Cld_Mask_Flag == sym%YES) then     
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
                         CLDMASK%Cld_Mask(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+     endif
+
+
+     !--- cld mask binary
+     if (Sds_Num_Level2_Cld_Mask_Binary_Flag == sym%YES) then
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cld_Mask_Binary), Sds_Start_2d,Sds_Stride_2d,Sds_Edge_2d,     &
+                        CLDMASK%Cld_Mask_Binary(:,Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
      !--- adjacent pixel cloud mask
@@ -5420,6 +5582,15 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
+    !--- Btd_Ch31_Ch27_Std_3x3
+    if (Sds_Num_Level2_Btd_Ch31_Ch27_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+        Sensor%Chan_On_Flag_Default(27) == sym%YES) then
+      call SCALE_VECTOR_I2_RANK2(Btd_Ch31_Ch27_Std_3x3,sym%LINEAR_SCALING,Min_Btd_Ch31_Ch27, &
+                       Max_Btd_Ch31_Ch27,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Btd_Ch31_Ch27_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
      !--- etrop
      if (Sds_Num_Level2_Etrop_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then     
       call SCALE_VECTOR_I1_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,One_Byte_Temp)
@@ -5772,6 +5943,27 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
     if (Sds_Num_Level2_Ch1_Clear_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
      call SCALE_VECTOR_I2_RANK2(Ch(1)%Ref_Toa_Clear,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Ref_Ch1 clear min
+    if (Sds_Num_Level2_Ch1_Clear_Min_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clear_Min_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Min), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Ref_Ch1 clear max
+    if (Sds_Num_Level2_Ch1_Clear_Max_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clear_Max_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1,Max_Ref_Ch1,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Max), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                       Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Ref_Ch1 clear std
+    if (Sds_Num_Level2_Ch1_Clear_Std_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+     call SCALE_VECTOR_I2_RANK2(Ref_Ch1_Clear_Std_3x3,sym%LINEAR_SCALING,Min_Ref_Ch1_Std,Max_Ref_Ch1_Std,Missing_Value_Real4,Two_Byte_Temp)
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Ch1_Clear_Std), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
@@ -6224,6 +6416,30 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
                          One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
     endif
 
+
+    !---------- Baseline Cloud mask variables
+    !--- Sds_Num_Level2_BTD_11_12_NWC - WCS3
+    if (Sds_Num_Level2_BTD_11_12_NWC_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(31) == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(32) == sym%YES) then
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_BTD_11_12_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      BTD_11_12um_NWC(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Sds_Num_Level2_EMISS_375_NWC  - WCS3
+    if (Sds_Num_Level2_EMISS_375_NWC_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(20) == sym%YES) then
+
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_EMISS_375_NWC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      Emiss_39um_NWC(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
+
+    !--- Sds_Num_Level2_Etrop_11um_LRC  - WCS3
+    if (Sds_Num_Level2_Etrop_11um_LRC_Flag == sym%YES .and. &
+         Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+      Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Etrop_11um_LRC), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
+                      Emiss_Tropo_11um_LRC(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+    endif
 
     !--- check for and report errors
     if (Istatus /= 0) then

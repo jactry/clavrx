@@ -390,7 +390,6 @@ contains
    CALL NFIA_CloudMask_Dust_Mask(Ctxt%CLOUD_MASK_Src1_T00, Dust_Mask)
    CALL NFIA_CloudMask_Smoke_Mask(Ctxt%CLOUD_MASK_Src1_T00, Smoke_Mask)
    CALL NFIA_CloudMask_Fire_Mask(Ctxt%CLOUD_MASK_Src1_T00, Fire_Mask)
-   CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
    CALL NFIA_CloudMask_Glint_Mask(Ctxt%CLOUD_MASK_Src1_T00, Glint_Mask)
 
    !Cloud Mask training outputs

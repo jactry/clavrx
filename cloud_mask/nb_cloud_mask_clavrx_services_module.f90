@@ -99,6 +99,7 @@
  type, public :: mask_output
     integer(kind=int1), dimension(NUMBER_OF_FLAG_BYTES) :: Cld_Flags_Packed    !array of packed results 
     integer(kind=int1) :: Cld_Mask_Bayes                        !Derived 4-level cloud mask
+    integer(kind=int1) :: Cld_Mask_Binary                       !Derived 2-level cloud mask
     integer :: Cloud_Mask_Bayesian_Flag                         !flag to tell if code should run
     real(kind=real4) :: Posterior_Cld_Probability               !posterior cloud probability (0-1)
     integer(kind=int1) :: Dust_Mask
@@ -124,6 +125,9 @@
     integer(kind=int1) :: PROB_CLOUDY
     integer(kind=int1) :: PROB_CLEAR
     integer(kind=int1) :: CLEAR
+
+    integer(kind=int1) :: CLOUDY_BINARY
+    integer(kind=int1) :: CLEAR_BINARY
 
     integer(kind=int1) :: NO
     integer(kind=int1) :: YES

@@ -35,9 +35,12 @@ contains
       call muri_forward ( 4.5, fwd)
       
       
+      ! - do something with forward model
       
       
       
+      
+       !- once find a good match between fwd and measurment give output
       out% aot = 3.4
       
       

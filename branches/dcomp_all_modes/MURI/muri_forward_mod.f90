@@ -32,12 +32,14 @@ contains
       real, intent(in) :: state
       type ( muri_fwd_type ), intent(out) :: fwd
    
-      fwd % rfl(1) = 2.1
+      
       call lut.read_lut
+      
+      fwd % rfl(1) = 2.1
    
    end subroutine
    
-    subroutine read_lut(this)
+   subroutine read_lut(this)
       class(muri_lut_type ) :: this
       
       character (len =400)::lut_file

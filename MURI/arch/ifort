@@ -1,0 +1,8 @@
+# This file was generated on Wed Nov  2 18:48:46 2016 by awalther with the following command-line arguments: -with-ifort -hdf4root=/Users/awalther/lib/hdf4/.
+# System info: Darwin kuu.local 15.6.0 Darwin Kernel Version 15.6.0: Thu Jun 23 18:25:34 PDT 2016; root:xnu-3248.60.10~1/RELEASE_X86_64 x86_64
+fc = ifort -warn errors
+fflags = -O2 -assume byterecl 
+hdf4root = $(SSEC_HDF4_DIR) 
+hdflibs = -L$(SSEC_HDF4_LIB) -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
+cx_data_libs = -L../CX_DATA_IO/ -I../CX_DATA_IO/
+cx_data_links = -lcx_data_io

@@ -33,7 +33,7 @@ contains
       type ( muri_fwd_type ), intent(out) :: fwd
    
       
-      call lut.read_lut
+      call lut%read_lut
       
       fwd % rfl(1) = 2.1
    

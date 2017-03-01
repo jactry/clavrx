@@ -3,7 +3,7 @@
 OBJDIR=./obj
 RM := rm -rf
 
-
+ARCH=gfortran
 include arch/$(ARCH)
 
 HDFDIR = $(hdf4root)

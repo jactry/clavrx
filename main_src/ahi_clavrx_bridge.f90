@@ -140,11 +140,9 @@ contains
                , ch(modis_chn)%rad_toa ( : ,1:c_seg_lines) &
                 , modis_chn ,MISSING_VALUE_REAL4 )
  
-         end if   
-      
+         end if         
       end do
-    
-  
+
       Image%Number_Of_Lines_Read_This_Segment = c_seg_lines
       scan_number = [(i_line , i_line = y_start+ 1 , y_start+ Image%Number_Of_Lines_Per_Segment  , 1)]
 
@@ -156,14 +154,10 @@ contains
       call AHI_DATA % TIME_END_OBJ % GET_DATE ( msec_of_day = Image%End_Time  )     
          
       scan_time(1:c_seg_lines)   = Image%Start_Time + &
-                                      &  floor ( float ( scan_number(1:c_seg_lines) ) / float(Image%Number_Of_Lines ) &
-                                      &  * (Image%End_Time - Image%Start_Time)) 
-      
-      
-     
-    
+             &  floor ( float ( scan_number(1:c_seg_lines) ) / float(Image%Number_Of_Lines ) &
+             &  * (Image%End_Time - Image%Start_Time)) 
+
       call AHI_DATA % DEALLOCATE_ALL 
- 
  
    end subroutine READ_AHI_DATA 
 

@@ -172,7 +172,7 @@ contains
       
       time1 = time0
       
-      call time1 % add_time ( minute = 8)
+      call time1 % add_time ( minute = 10)
        
    end subroutine ahi_time_from_filename
    

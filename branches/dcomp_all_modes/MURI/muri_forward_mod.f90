@@ -53,7 +53,7 @@ contains
       
       lut_file = trim('/DATA/AHI_AEROSOL/AHI_Aerosol_LUT/AHI_Ocean_Aerosol_LUT_v1.hdf')
       istatus = cx_sds_finfo ( trim(lut_file), ftype, nsds,sds_name, natt,att_name)
-      print*,sds_name
+      !print*,sds_name
       istatus = cx_sds_read ( trim(lut_file),'Solar_Zenith_Angles',this % sol)
       istatus = cx_sds_read ( trim(lut_file),'View_Zenith_Angles', this % sat)
       istatus = cx_sds_read ( trim(lut_file),'Relative_Azimuth_Angles', this % azi)

@@ -1,15 +1,15 @@
 # $Header:$
 
-
+OBJDIR=./obj
 RM := rm -rf
 
-include config.mk
 
+include arch/$(ARCH)
 
 HDFDIR = $(hdf4root)
-HDFINC = $(HDFDIR)/include
-HDFLIB = $(HDFDIR)/lib
-
+HDFINC = $(SSEC_HDF4_INC)
+HDFLIB = $(SSEC_HDF4_LIB)
+CX_READ_IO_DIR = ../CX_DATA_IO
 CFLAGS = -O2 -w  -I$(HDFINC)
 LFLAGS =  -L$(HDFLIB)  -lmfhdf -ldf -ljpeg -lz -lm -w
 
@@ -29,7 +29,7 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${cx_data_libs} ${cx_data_links}   $<
 	
 	
-OBJS = muri_mod.o muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o
+OBJS = muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o
 
 .PHONY: all_muri clean
 
@@ -49,7 +49,6 @@ muri_one_pixel_run: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
-muri_mod.o:muri_mod.f90
 muri_one_pixel_run.o:muri_one_pixel_run.f90 muri_retrieval_mod.o muri_definitions_mod.o
 muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_forward_mod.o
 muri_definitions_mod.o:muri_definitions_mod.f90

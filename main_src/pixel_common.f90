@@ -688,8 +688,11 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Pc_CO2IRW
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Zc_CO2IRW
      real (kind=real4), dimension(:,:), allocatable, public, save, target:: Tc_CO2IRW
-
-     !-- DCOMP cloud algorithm results
+   
+   ! - MURI AHI AEROSOL
+   
+   
+   !-- DCOMP cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_1
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_2

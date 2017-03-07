@@ -29,12 +29,13 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${cx_data_libs} ${cx_data_links}   $<
 	
 	
-OBJS = muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o
+OBJS = muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o muri_array_loop_sub.o muri_interface_mod.o
 
 .PHONY: all_muri clean
 
-all_muri:  muri_one_pixel_run 
-	
+muri_clavrx: cx_read_io  muri_one_pixel_run libmuri.a
+all_muri: cx_read_io  muri_one_pixel_run 
+
 	     	
 test_lut_mod: $(OBJS_TEST_LUT)
 	@echo 'Building target for test lut'
@@ -49,10 +50,19 @@ muri_one_pixel_run: $(OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '	
 
+libmuri.a: $(OBJS)
+	ar rvc libmuri.a $(OBJS) 
+   
+cx_read_io:
+	$(MAKE)  -C $(CX_READ_IO_DIR) ARCH=$(ARCH)
+
+muri_array_loop_sub.o:muri_array_loop_sub.f90 muri_interface_mod.o muri_retrieval_mod.o muri_definitions_mod.o
+muri_interface_mod.o:muri_interface_mod.f90
 muri_one_pixel_run.o:muri_one_pixel_run.f90 muri_retrieval_mod.o muri_definitions_mod.o
 muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_forward_mod.o
 muri_definitions_mod.o:muri_definitions_mod.f90
 muri_forward_mod.o:muri_forward_mod.f90
+
 
 
 

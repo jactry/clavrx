@@ -48,6 +48,7 @@ export SASRAB=../sasrab/
 export BASE=../cloud_base/
 export CX_DATA_IO=../CX_DATA_IO/
 export DNCOMP=../dncomp/
-dncomplibs=-L$(DNCOMP) -I$(DNCOMP) -L$(CX_DATA_IO) -I$(CX_DATA_IO)
-dncomplinks= -ldncomp -lcx_data_io
+export MURI=../MURI/
+dncomplibs=-L$(DNCOMP) -I$(DNCOMP) -L$(CX_DATA_IO) -I$(CX_DATA_IO) -L$(MURI) -I$(MURI)
+dncomplinks= -ldncomp -lcx_data_io -lmuri
  

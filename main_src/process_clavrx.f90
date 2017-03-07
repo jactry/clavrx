@@ -182,6 +182,9 @@
       conf_main_type &
       , set_config
    
+   
+   use cx_muri_clavrx_bridge_mod
+   
    use date_tools_mod, only: &
          leap_year_fct &
          , compute_month &
@@ -249,6 +252,7 @@
            compute_median_segment
    
    use MODIS_MODULE, only:
+   
    
     use OCA_MODULE, only: &
        READ_OCA
@@ -1396,7 +1400,15 @@
                End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(15) =  Segment_Time_Point_Seconds(15) + &
                      & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)  
-     
+               
+               
+               !- call AHI AEROSOL algorithm
+               
+               if ( trim(Sensor%Sensor_Name) == 'AHI' ) then
+                  call CX_MURI_ALGORITHM
+               end if
+              
+               
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 

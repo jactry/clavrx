@@ -197,7 +197,7 @@ contains
                           & + gas_coeff(2) * tpw_ac  &
                           & + gas_coeff(3) * ( tpw_ac ** 2 ) ) )
    
-   
+      trans_rayleigh =  1.
       transmission =trans_ozone * trans_rayleigh * trans_wvp
 
    end subroutine dncomp_trans_atm_above_cloud

@@ -60,6 +60,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    integer  :: chn_idx
 
    real( kind = real4 ) :: assumed_tpw_error 
+   real( kind = real4 ), parameter :: ozone_coeff_chn1 (3)  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
    real( kind = real4 ) :: ozone_coeff (3)  
 
    ! -- nwp variables 
@@ -184,7 +185,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                         &  .or. input % cloud_type % d == EM_cloud_type % SUPERCOOLED &
                         &  .or. input % cloud_type % d == EM_cloud_type % MIXED 
   
-   ozone_coeff  = [ -0.000606266 , 9.77984e-05,-1.67962e-08 ] 
+  
    
    output = dncomp_out_type ( dim_1, dim_2 )
    
@@ -243,6 +244,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          
          if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
          
+         
          ! - set aliases
          cld_height =  input % cloud_hgt % d (elem_idx,line_idx)
          cld_press  =  input % cloud_press % d (elem_idx,line_idx)
@@ -257,7 +259,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          loop_chn: do chn_idx = 1 , 40
        
             if ( input % is_channel_on (chn_idx) .eqv. .false.) cycle  loop_chn
-            
+            ozone_coeff(:) =0.
+            if (chn_idx == 1) ozone_coeff = ozone_coeff_chn1
             
             call trans_atm_above_cloud ( &
                input % tpw_ac % d (elem_idx,line_idx) &
@@ -269,7 +272,10 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                , trans_total(chn_idx) &
                , trans_unc_wvp(chn_idx) &
                      )
-
+           
+            
+            
+            
             refl_toc( chn_idx ) = refl_toa  /  trans_total (chn_idx )
             
             alb_sfc( chn_idx ) =  ( input % alb_sfc ( chn_idx )  % d (elem_idx,line_idx) ) / 100.
@@ -346,7 +352,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , input % lut_path &
                 & , debug_mode  )
         
-        if ( debug_mode == 4  ) then
+       
+       if ( debug_mode == 4  ) then
             print*,'=======================> input:',CHN_NIR
             print*,'Elem Line: ', elem_idx,line_idx
             print*,' Obs vector: ',obs_vec
@@ -357,6 +364,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             print*, 'Angles: ',sol_zen,sat_zen,rel_azi
             print*, 'Cloud temp mask: ',cld_temp,water_phase_array( elem_idx, line_idx)
             print*, 'Ch20 rtm: ', rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20
+            print*, 'dcomp mode:', input % mode
             print*, 'output: '
             print*, dcomp_out % cod, dcomp_out % cps
             print*

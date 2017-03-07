@@ -69,7 +69,7 @@ CC = gcc
 .PHONY: all clean distclean
 
 #Default target is to build all executables.
-all: dncomp clavrxorb   create_level2b
+all: dncomp muri clavrxorb   create_level2b
 
 ################################# Executables ##################################
 
@@ -176,6 +176,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_prd_mod.o \
                  get_lun.o \
 		 file_tools.o \
+       cx_muri_clavrx_bridge_mod.o \
                  cx_science_tools_mod.o \
                  cx_array_tools_mod.o \
                  cx_scale_tools_mod.o 
@@ -218,7 +219,9 @@ cx_ahi_test_objs = cx_read_ahi_test_program.o \
 dncomp:
 	$(MAKE)  -C $(DNCOMP) ARCH=$(ARCH)
 
-
+muri:
+	$(MAKE)  -C $(MURI) ARCH=$(ARCH)
+   
 clavrxorb: $(clavrxorb_objs) bindir
 ifdef hdf5libs
    ifdef nlcomplibs
@@ -334,6 +337,7 @@ create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod
 csv_mod.o:csv_mod.f90 cx_string_tools_mod.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
+cx_muri_clavrx_bridge_mod.o:cx_muri_clavrx_bridge_mod.f90
 cx_prd_mod.o:cx_prd_mod.f90 cx_constants_mod.o csv_mod.o cx_string_tools_mod.o
 cx_scale_tools_mod.o:cx_scale_tools_mod.f90 cx_constants_mod.o
 cx_ssec_areafile_mod.o:cx_ssec_areafile_mod.f90 file_tools.o
@@ -455,7 +459,7 @@ sub_routine = cx_constants_mod.o pixel_common.o pixel_routines.o clavrx_sst_modu
               modis_module.o  iff_module.o goes_module.o globsnow_read_routines.o \
               laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o \
               seviri_module.o oca_module.o  simple_cod_module.o clavrx_message_module.o \
-               dcomp_rtm_module.o dcomp_derived_products_module.o date_tools_mod.o 
+               dcomp_rtm_module.o dcomp_derived_products_module.o date_tools_mod.o cx_muri_clavrx_bridge_mod.o
 
 
 
@@ -529,6 +533,7 @@ geos_transform_pix.o: geos_transform_pix.c
 clean:
 	-rm -f *.o *.mod version.inc
 	$(MAKE) clean -C $(DNCOMP) 
+	$(MAKE) clean -C $(MURI)
 
 # This target also removes all the executables.
 distclean: clean

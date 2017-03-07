@@ -35,6 +35,8 @@ contains
       
       call lut%read_lut
       
+      
+      
       fwd % rfl(1) = 2.1
    
    end subroutine
@@ -67,7 +69,8 @@ contains
       lut % aot_aer_fine =   this % aot_aer(1,1,1,:,:,1,1:4)
       lut % aot_aer_coarse = this % aot_aer(1,1,1,:,:,1,5:9)
       
-      print*,lut% sol, shape(lut%sol)
+      print*,lut% sol
+      print*,'shape sol: ', shape(lut%sol)
       print*,' '
       print*,this % aot_aer(:,3,4,2,2,1,2)
       print*,'done'

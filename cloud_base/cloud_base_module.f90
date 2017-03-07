@@ -59,7 +59,7 @@ module CLOUD_BASE
 ! modification history
 !
 !------------------------------------------------------------------------------
-  subroutine CLOUD_BASE_ALGORITHM(Input, Symbol, Output)
+  subroutine CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
 
   !===============================================================================
   !  Argument Declaration
@@ -68,6 +68,7 @@ module CLOUD_BASE
   type(symbol_acha), intent(inout) :: Symbol
   type(acha_input_struct), intent(inout) :: Input
   type(acha_output_struct), intent(inout) :: Output
+  type(acha_diag_struct), intent(inout), optional :: Diag
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -109,6 +110,11 @@ module CLOUD_BASE
    Output%Zc_Base = MISSING_VALUE_REAL
    Output%Pc_Top = MISSING_VALUE_REAL
    Output%Pc_Base = MISSING_VALUE_REAL
+
+  !--- initialize diagnostic output
+  if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+  if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+  if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
@@ -273,6 +279,9 @@ module CLOUD_BASE
  end do Element_Loop
 
 end do Line_Loop
+
+!Diag%Array_1 = Output%Pc_Base
+!Diag%Array_2 = Output%Zc_Base
 
 end subroutine CLOUD_BASE_ALGORITHM
 

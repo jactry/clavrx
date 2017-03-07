@@ -28,12 +28,15 @@ module CLOUD_BASE_CLAVRX_BRIDGE
 
  public :: CLOUD_BASE_BRIDGE
 
+ private:: SET_DIAG, NULL_DIAG
+
  !--------------------------------------------------------------------
  ! define structures that will be arguments 
  !--------------------------------------------------------------------
  type(Symbol_acha), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
+ type(acha_diag_struct), private :: Diag
 
  contains
 
@@ -62,12 +65,13 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    !----set Symbols to local values
    call SET_SYMBOL()
 
+   !---- initialize diagnostic structure
+   call SET_DIAG()
+
    !-----------------------------------------------------------------------
    !--- Call algorithm to make cloud geometrical boundaries
    !-----------------------------------------------------------------------
-   call CLOUD_BASE_ALGORITHM(Input, &
-                             Symbol, &
-                             Output)
+   call CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -124,6 +128,14 @@ module CLOUD_BASE_CLAVRX_BRIDGE
      Input%CWP => null()
      Input%CWP_nwp => null()
  end subroutine NULL_INPUT_POINTERS
+ !-----------------------------------------------------------------------------
+ ! Nullify the pointers holding diagnostic
+ !-----------------------------------------------------------------------------
+ subroutine NULL_DIAG()
+     Diag%Array_1 =>  null()
+     Diag%Array_2 =>  null()
+     Diag%Array_3 =>  null()
+ end subroutine NULL_DIAG
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output
  !-----------------------------------------------------------------------------
@@ -272,5 +284,13 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%CWP => Cwp_Dcomp
    Input%CWP_nwp => Cwp_Nwp_Pix
  end subroutine SET_INPUT
+!----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------
+ subroutine SET_DIAG
+     Diag%Array_1 => Diag_Pix_Array_1 
+     Diag%Array_2 => Diag_Pix_Array_2 
+     Diag%Array_3 => Diag_Pix_Array_3 
+ end subroutine SET_DIAG
 
 end module CLOUD_BASE_CLAVRX_BRIDGE

@@ -497,49 +497,47 @@ subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
 end subroutine QUALITY_CONTROL_ANCILLARY_DATA
 
 
-!--------------------------------------------------------------------------
-! CONVERT TIME
-!
-! compute the utc time for each scan in fractional hours and compute the
-! local time for each pixel in fractional hours
-!
-!--------------------------------------------------------------------------
-subroutine CONVERT_TIME(j1,j2)
+   !--------------------------------------------------------------------------
+   ! CONVERT TIME
+   !
+   ! compute the utc time for each scan in fractional hours and compute the
+   ! local time for each pixel in fractional hours
+   !
+   !--------------------------------------------------------------------------
+   subroutine CONVERT_TIME(j1,j2)
 
-   integer, intent(in):: j1,j2
-   integer:: i,j
+      integer, intent(in):: j1,j2
+      integer:: i,j
 
-   !--- loop over scans
-   do j = j1,j1+j2-1
+      !--- loop over scans
+      do j = j1,j1+j2-1
 
-    !--- loop over pixels
-    do i = 1, Image%Number_Of_Elements
+         !--- loop over pixels
+         do i = 1, Image%Number_Of_Elements
 
-      !--- check for a bad pixel
-      if (Bad_Pixel_Mask(i,j) ) then
-        cycle
-      endif
+            !--- check for a bad pixel
+            if (Bad_Pixel_Mask(i,j) ) cycle
+           
+            !--- convert ms time in leveL1b to utc time in hours
+            Utc_Scan_Time_Hours(j) = Scan_Time(j) / 60.0 / 60.0/ 1000.0
 
-      !--- convert ms time in leveL1b to utc time in hours
-      Utc_Scan_Time_Hours(j) = Scan_Time(j) / 60.0 / 60.0/ 1000.0
+            !--- compute local time based on utc and longitude
+            Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + Nav%Lon(i,j) / 15.0
 
-      !--- compute local time based on utc and longitude
-      Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + Nav%Lon(i,j) / 15.0
+            !--- constrain local time to be between 0 and 24 
+            if (Pixel_Local_Time_Hours(i,j) > 24.0) then 
+               Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) - 24.0
+            end if
 
-      !--- constrain local time to be between 0 and 24 
-      if (Pixel_Local_Time_Hours(i,j) > 24.0) then 
-          Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) - 24.0
-      endif
+            if (Pixel_Local_Time_Hours(i,j) < 0.0) then 
+               Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) + 24.0
+            end if
 
-      if (Pixel_Local_Time_Hours(i,j) < 0.0) then 
-          Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) + 24.0
-      endif
+         end do
 
-    enddo
+      end do
 
-   enddo
-
-end subroutine CONVERT_TIME
+   end subroutine CONVERT_TIME
 
 !--------------------------------------------------------------------------
 ! COMPUTE_PIXEL_ARRAYS

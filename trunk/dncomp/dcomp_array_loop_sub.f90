@@ -387,6 +387,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             print*, 'Angles: ',sol_zen,sat_zen,rel_azi
             print*, 'Cloud temp mask: ',cld_temp,water_phase_array( elem_idx, line_idx)
             print*, 'Ch20 rtm: ', rad_clear_sky_toc_ch20 , rad_clear_sky_toa_ch20
+            print*, 'dcomp mode:', input % mode
             print*, 'output: '
             print*, dcomp_out % cod, dcomp_out % cps
             print*

@@ -120,6 +120,7 @@ program create_level2b
    
    real, dimension(:,:), allocatable :: Lon_Inp
    real, dimension(:,:), allocatable :: Lat_Inp
+   real, dimension(:,:), allocatable :: sen_Inp
    logical, dimension(:,:), allocatable :: Gap_Inp
    integer, allocatable :: ielem_out(:,:)
    integer, allocatable :: iline_out(:,:)
@@ -147,7 +148,9 @@ program create_level2b
    
    character (len =1024 ) :: file_level2b
    
-   integer :: sds_dims_2d (2), sds_start_2d(2), sds_stride_2d(2)
+   integer :: sds_dims_2d (2)
+   integer :: sds_start_2d(2)
+   integer :: sds_stride_2d(2)
    
    type(prd_dtype), target :: prd
    type(prd_individual_dtype), pointer:: prd_i
@@ -155,7 +158,7 @@ program create_level2b
    integer :: istatus
    integer :: compress_flag
    
-      integer(kind=int4), parameter :: TWO_BYTE_MAX = 32767, & !(2**15)/2 - 1
+   integer(kind=int4), parameter :: TWO_BYTE_MAX = 32767, & !(2**15)/2 - 1
                                         TWO_BYTE_MIN = -32767   !-(2**15)/2
                                         
    integer(kind=int4), parameter :: one_byte_max = 127, & !(2**8)/2 - 1
@@ -330,10 +333,13 @@ program create_level2b
       allocate(Lon_Inp(Num_Elem_Inp,Num_Line_Inp))
       allocate(Lat_Inp(Num_Elem_Inp,Num_Line_Inp))
       allocate(Gap_Inp(Num_Elem_Inp,Num_Line_Inp))
+      allocate ( sen_inp(Num_Elem_Inp,Num_Line_Inp))
       
       test = cx_sds_read(file, 'longitude',lon_inp)
       test = cx_sds_read(file, 'latitude',lat_inp)
+      test = cx_sds_read(file, 'sensor_zenith_angle',sen_inp)
       test = cx_sds_read(file, 'gap_pixel_mask',temp_i1_2d)
+      
       
       gap_inp = temp_i1_2d .GT. 0
       
@@ -359,6 +365,8 @@ program create_level2b
 
      
       ! - set flags that let us decide if we take this pixel or what we have already in
+      
+      ! - first is  this the pixel with best sensor viewing angle ?
       
         !----- compute 1d input to output index mapping 
       ipoint = 0

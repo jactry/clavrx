@@ -1025,7 +1025,8 @@ CONTAINS
     !<<<<<<<<<<<<<<<<<<<<<<< Start of routine code >>>>>>>>>>>>>>>>>>
 
     CALL DebugMessage(" === in H5ReadInteger1D int8 ===")
-
+      print*,'could be wrong in readhdf5 check.... stop here'
+      stop 
     ! Initialise the HDF5 file and open all levels up to
     ! the one that needs to be read.
 
@@ -1079,7 +1080,7 @@ CONTAINS
     CALL DebugMessage(" --- Reading the data")
     f_ptr = C_LOC(H5dataset(1))
     IF ( ltype == H5G_DATASET_F) THEN
-       CALL h5dread_f(d_id, NAT_TYPE_ID, f_ptr, ErrorFlag)
+      ! CALL h5dread_f(d_id, NAT_TYPE_ID, H5dataset , dims, ErrorFlag)
     ELSE  !  ltype.eqv.3
      !  CALL h5aread_f(d_id, H5T_NATIVE_INTEGER, H5dataset, dims, ErrorFlag)
     ENDIF

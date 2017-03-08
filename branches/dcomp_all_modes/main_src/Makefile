@@ -162,6 +162,7 @@ clavrxorb_objs = process_clavrx.o \
                  cx_read_ahi_mod.o \
                  date_tools_mod.o \
                  geos_transform_pix.o \
+                 cx_atmos_correction_mod.o \
                  cx_pfaast_mod.o \
                  cx_pfaast_tools_mod.o \
                  cx_pfaast_coef_mod.o \
@@ -336,6 +337,7 @@ cloud_height_routines.o: cloud_height_routines.f90 cx_constants_mod.o planck.o r
 create_level2b.o: create_level2b.f90 file_tools.o cx_grid_tools_mod.o cx_prd_mod.o cx_scale_tools_mod.o date_tools_mod.o
 csv_mod.o:csv_mod.f90 cx_string_tools_mod.o
 cx_array_tools_mod.o:cx_array_tools_mod.f90
+cx_atmos_correction_mod.o: cx_atmos_correction_mod.f90
 cx_grid_tools_mod.o:cx_grid_tools_mod.f90
 cx_muri_clavrx_bridge_mod.o:cx_muri_clavrx_bridge_mod.f90
 cx_prd_mod.o:cx_prd_mod.f90 cx_constants_mod.o csv_mod.o cx_string_tools_mod.o
@@ -457,7 +459,7 @@ sub_routine = cx_constants_mod.o pixel_common.o pixel_routines.o clavrx_sst_modu
               nb_cloud_mask_clavrx_bridge_module.o baseline_cloud_mask.o ncep_reanalysis.o date_tools_mod.o \
               rt_utils.o rtm_common.o reposnx.o reposition_module.o cx_read_ahi_mod.o \
               modis_module.o  iff_module.o goes_module.o globsnow_read_routines.o \
-              laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o \
+              laszlo_insolation_module.o sasrab.o conver.o cx_conf_mod.o cx_atmos_correction_mod.o \
               seviri_module.o oca_module.o  simple_cod_module.o clavrx_message_module.o \
                dcomp_rtm_module.o dcomp_derived_products_module.o date_tools_mod.o cx_muri_clavrx_bridge_mod.o
 

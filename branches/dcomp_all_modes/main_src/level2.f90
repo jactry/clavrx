@@ -160,7 +160,7 @@ module LEVEL2_ROUTINES
       , Ems_Ch20_Median_3x3 &
       , Btd_Ch31_Ch32_Bt_Ch31_Max_3x3 &
       , cld_phase_aux &
-      , cld_mask_aux &
+      , CLDMASK &
       , cld_type_aux &
       , zc_aux &
       , zc_co2 &

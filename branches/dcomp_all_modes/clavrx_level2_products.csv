@@ -66,7 +66,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,"cloud_type","cld_type",2,1,0,0.00000,0.00000,"not specified","none","integer classification of the cloud type including clear and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke","0"
 1,"cloud_phase","cld_phase",2,1,0,0.00000,0.00000,"cloud_phase","none","integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown","1"
 1,"cloud_phase_aux","Cld_Phase_Aux",2,1,0,0.00000,0.00000,"cloud_phase_aux","none","aux integer classification of the cloud phase including clear and aerosol type,0=clear,1=water,2=supercooled water,3=mixed,4=ice,5=unknown","2"
-1,"cloud_mask_aux","Cld_Mask_Aux",2,1,0,0.00000,0.00000,"cloud_mask_aux","none","integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3 from mask read from auxiliary data source","3"
+1,"cloud_mask_aux","CLDMASK%Cld_Mask_Aux",2,1,0,0.00000,0.00000,"cloud_mask_aux","none","integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3 from mask read from auxiliary data source","3"
 1,"cloud_type_aux","Cld_Type_Aux",2,1,0,0.00000,0.00000,"cloud_type_aux","none","integer classification of the cloud type including clear and aerosol type read from auxiliary data source","4"
 1,"cld_height_aux","zc_aux",2,2,1,0.00000,20000.0,"height_at_cloud_top_aux","m","cloud height from the auxiliary data source","5"
 1,"cld_height_sndr","zc_co2",2,2,1,0.00000,20000.0,"height_at_cloud_top_sndr","m","cloud height from the sounder data source","6"

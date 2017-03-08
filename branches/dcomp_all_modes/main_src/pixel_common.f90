@@ -506,7 +506,7 @@ module PIXEL_COMMON
   integer (kind=int2), dimension(:), allocatable, public:: Scan_Day
   integer (kind=int2), dimension(:), allocatable, public:: Scan_Year
   real (kind=real4), dimension(:), allocatable, public:: Utc_Scan_Time_Hours
-  real (kind=real4), dimension(:,:), allocatable, public:: Pixel_Local_Time_Hours
+  
   real (kind=real4), dimension(:,:), allocatable, public:: Pixel_Time
 
   real (kind=real4), dimension(:,:), allocatable,save,public:: Solzen_Anchor
@@ -666,7 +666,7 @@ module PIXEL_COMMON
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Ctp_Multilayer_Flag
 
   !--- Auxilliary variables
-  integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Mask_Aux
+  
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
   real (kind=real4),dimension(:,:),allocatable, public, save, target::Zc_Aux
@@ -1072,7 +1072,6 @@ subroutine CREATE_PIXEL_ARRAYS()
            Scan_Day(dim2), &
            Scan_Year(dim2), &
            Utc_Scan_Time_Hours(dim2), &
-           Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
 
   !--------------------------------------------------------------------------------
@@ -1127,7 +1126,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
              Bad_Scan_Flag,  &
              Scan_Number, &
              Scan_Time,Scan_Day,Scan_Year,Utc_Scan_Time_Hours, &
-             Pixel_Local_Time_Hours,Pixel_Time)
+             Pixel_Time)
 
   if (allocated(Covar_Ch27_Ch31_5x5)) deallocate(Covar_Ch27_Ch31_5x5)
 
@@ -1275,7 +1274,6 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
     
       Scan_Time = Missing_Value_Int4
       Utc_Scan_Time_Hours = Missing_Value_Real4
-      Pixel_Local_Time_Hours = Missing_Value_Real4
       Pixel_Time = Missing_Value_Real4
 
       i_LRC = Missing_Value_Int4
@@ -1302,7 +1300,7 @@ subroutine CREATE_SENSOR_ARRAYS(Nchan,dim2)
    allocate(Sensor%Chan_On_Flag_Per_Line(Nchan,dim2))
 end subroutine CREATE_SENSOR_ARRAYS
 subroutine RESET_SENSOR_ARRAYS()
-   if (allocated(Sensor%Chan_On_Flag_Per_Line)) Sensor%Chan_On_Flag_Per_Line = Missing_Value_Int1
+   if (allocated(Sensor%Chan_On_Flag_Per_Line)) Sensor%Chan_On_Flag_Per_Line = .FALSE.
 end subroutine RESET_SENSOR_ARRAYS
 subroutine DESTROY_SENSOR_ARRAYS()
    if (allocated(Sensor%Chan_On_Flag_Per_Line)) deallocate(Sensor%Chan_On_Flag_Per_Line)
@@ -2537,8 +2535,11 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
+  
    if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
+  
   if (Cld_Flag ) then
+  
      CLDMASK%Cld_Mask = Missing_Value_Int1
      CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
      CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
@@ -2546,12 +2547,15 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
      CLDMASK%Prior_Cld_Probability = Missing_Value_Real4
      CLDMASK%Cld_Test_Vector_Packed = 0
      CLDMASK%Bayes_Mask_Sfc_Type = Missing_Value_Int1
+     
   endif
   !Fix needed to get around issue when GFS turned off for AVHRR
   if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-     Cld_Mask_Aux = Missing_Value_Int1
+        
+     CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
+     
   endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
@@ -2569,7 +2573,7 @@ subroutine DESTROY_CLOUD_MASK_ARRAYS()
   if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
       trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-     if (allocated(Cld_Mask_Aux)) deallocate(Cld_Mask_Aux)  
+     if (allocated(CLDMASK%Cld_Mask_Aux)) deallocate(CLDMASK%Cld_Mask_Aux)  
   endif
 end subroutine DESTROY_CLOUD_MASK_ARRAYS
 !-----------------------------------------------------------

@@ -125,7 +125,6 @@ module RT_UTILITIES
       , Beta_11um_67um_Tropo_Rtm &
       , Beta_11um_133um_Tropo_Rtm &
       , Beta_11um_133fusum_Tropo_Rtm &
-      , Pixel_Local_Time_Hours &
       , Ancil_Data_Dir
       
    use NUMERICAL_TOOLS_MOD , only: &

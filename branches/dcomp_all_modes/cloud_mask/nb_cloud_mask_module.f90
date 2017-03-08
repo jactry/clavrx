@@ -264,7 +264,7 @@ module NB_CLOUD_MASK
           !--- set some flags to control processing
           Oceanic_Glint_Flag = Input%Oceanic_Glint_Mask
           Coastal_Flag = Input%Coastal_Mask
-          Solar_Contam_Flag = Input%Solar_Contamination_Mask
+          Solar_Contam_Flag = transfer(Input%Solar_Contamination_Mask ,1)
 
           !--- compute airmass
           AirMass = 1.0/cos(Input%Solzen*dtor) + 1.0 / cos(Input%Senzen*dtor)
@@ -699,14 +699,14 @@ module NB_CLOUD_MASK
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("Emiss_Tropo")
-                       if (Input%Chan_On_11um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_11um ) cycle
                        if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
 
                     case("FMFT")
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_12um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_11um ) cycle
+                       if (.NOT. Input%Chan_On_12um ) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um_Clear == Missing_Value_Real4) cycle
@@ -717,15 +717,15 @@ module NB_CLOUD_MASK
                                              Input%Bt_11um, Input%Bt_12um)
 
                     case("Bt_11_67_Covar") 
-                       if (Input%Chan_On_11um == symbol%NO) cycle
-                       if (Input%Chan_On_67um == symbol%NO) cycle
+                       if ( .NOT. Input%Chan_On_11um ) cycle
+                       if (.NOT. Input%Chan_On_67um ) cycle
                        if (Dry_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
 
 
                     case("Ref_138_Day")
-                       if (Input%Chan_On_138um == symbol%NO) cycle
+                       if (.NOT. Input%Chan_On_138um ) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle

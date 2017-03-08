@@ -1,32 +1,19 @@
-FC=gfortran
+fc=gfortran
 FC77=gfortran
 LDFLAGS_ARCH=
+FFLAGS_ARCH=-g -O0 -ffree-line-length-none
+#AR=ar r
 
-# -fbounds-check            runtime bounds checking
-# -finit-integer=-1         init integers to -1
-# -finit-real=nan           init all reals to NaN
-# -finit-character=127      init all characters to a weird value
-# -std=f95                  Enforce Fortran 95 standard
-# -Wall                     all warnings
-# -pedantic                 warnings for Fortran extensions
-# -fbacktrace               backtrace when a runtime error occurs
-# -fcheck-array-temporaries issue a warning when a temporary array is created
-# -ffree-line-length-none   no restrictions on free form line length
-
-FFLAGS_ARCH=-g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 -std=f95 \
-            -pedantic -Wall -fbacktrace -fcheck-array-temporaries -ffree-line-length-none
-AR=ar r
-
-# do not enforce Fortran 95 standard so that usual intrinsics be availiable
-FFLAGS_ARCH_rttov_unix_env = -g -fbounds-check -finit-integer=-1 -finit-real=nan \
-                             -finit-character=127 -pedantic -Wall -fbacktrace -fcheck-array-temporaries
-FFLAGS_ARCH_lapack = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
-            -pedantic -Wall -fbacktrace -fcheck-array-temporaries 
-FFLAGS_ARCH_lapack_lbl = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
-            -pedantic -Wall -fbacktrace -fcheck-array-temporaries
-
-FFLAGS_ARCH_rttov_scatt_make_coef = -g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 \
-            -pedantic -Wall -fbacktrace -fcheck-array-temporaries
-
-FFLAGS_ARCH_rttov789_opencoeff=-g -fbounds-check -finit-integer=-1 -finit-real=nan -finit-character=127 -std=f95 \
-            -pedantic -Wall -fbacktrace -fcheck-array-temporaries -ffree-line-length-none
+fflags = -O0  -ffast-math -funroll-loops -fno-range-check -ffree-line-length-200
+fflags_pfast = -O0  -ffast-math -funroll-loops -ffixed-form -fno-automatic
+fflags_sasrab_f77 = -O0  -ffast-math -funroll-loops -ffixed-form -fno-automatic
+fflags_sasrab_f90 = -O0  -ffast-math -funroll-loops -fno-automatic
+ldflags = -O20
+cpp = -cpp
+cppflags = 
+beconv = -fconvert=big-endian
+hdflibs = -L$(SSEC_HDF4_LIB)  -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
+hdfincs = -I$(SSEC_HDF4_INC)
+netcdflibs = -L$(HOME)/lib/netcdf3_2017/lib -I$(HOME)/lib/netcdf3_2017/include -lnetcdf
+hdf5libs = -I/Users/awalther/lib/old_structure/hdf5_build/hdf5_build_2017/hdf5/include/ -L/Users/awalther/lib/old_structure/hdf5_build/hdf5_build_2017/hdf5/lib/
+hdf5links = -lhdf5_fortran -lhdf5 -lz

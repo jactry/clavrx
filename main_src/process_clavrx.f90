@@ -282,7 +282,6 @@
       , compute_snow_class_oisst &
       , compute_spatial_correlation_arrays &
       , COMPUTE_SPATIAL_UNIFORMITY &
-      , convert_time &
       , determine_level1b_compression &
       , expand_space_mask_for_user_limits &
       , merge_nwp_hires_zsfc &
@@ -1026,9 +1025,7 @@
 
             end if
    
-            !--- compute time (local and utc) variables for this segment
-            call CONVERT_TIME(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-
+         
             if (Nwp_Opt /= 0) then
 
                !--- map each each into correct NWP cell
@@ -1158,10 +1155,14 @@
 
             !--- populate needed spatial uniformity arrays
             call COMPUTE_SPATIAL_UNIFORMITY(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
-
-            !--- call spatial correlation routines
-            call COMPUTE_SPATIAL_CORRELATION_ARRAYS()
-
+            
+            
+            
+            !--- call spatial correlation routines ( only 27_31 is used)
+            if (Sensor%Chan_On_Flag_Default(27) .and. Sensor%Chan_On_Flag_Default(31) ) then
+               call COMPUTE_SPATIAL_CORRELATION_ARRAYS()
+            end if
+            
             if (Sensor%Chan_On_Flag_Default(20) ) then
 
                !--- apply median filter to Bt_Ch20
@@ -1272,7 +1273,7 @@
                end if
 
                if (Cloud_Mask_Aux_Flag == sym%USE_AUX_CLOUD_MASK .and. Cloud_Mask_Aux_Read_Flag == sym%YES) then
-                  CLDMASK%Cld_Mask = Cld_Mask_Aux
+                  CLDMASK%Cld_Mask = CLDMASK%Cld_Mask_Aux
                end if
 
                !--- Compute Adjacent pixels Cloud Mask

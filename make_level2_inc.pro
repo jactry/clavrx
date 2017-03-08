@@ -49,7 +49,7 @@ for i=0,n_elements(data.field01) -1  do begin
          if strmid(global_var,0,3) eq 'ch(' then begin
             chn = strmid(global_var,3,2)
             if strmid(chn,1,1) eq ')' then chn = strmid(chn,0,1)
-            printf,10,'      if (sensor%chan_on_flag_default('+chn+') .NE. sym%YES) cycle '
+            printf,10,'      if (.NOT. sensor%chan_on_flag_default('+chn+') ) cycle '
          
          endif else begin
             if global_var.contains('ch',/FOLD_CASE) then begin
@@ -57,13 +57,13 @@ for i=0,n_elements(data.field01) -1  do begin
                chn_with = global_var.extract('Ch[1-9]{2}',/FOLD_CASE)
                if chn_with ne '' then begin
                   chn = strmid(chn_with,2,2)
-                  printf,10,'      if (sensor%chan_on_flag_default('+chn+') .NE. sym%YES) cycle '
+                  printf,10,'      if ( .NOT. sensor%chan_on_flag_default('+chn+') ) cycle '
                   done = 1
                endif 
                chn_with = global_var.extract('Ch[1-9]{1}',/FOLD_CASE)
                if chn_with ne '' and done eq 0 then begin
                   chn = strmid(chn_with,2,1)
-                  printf,10,'      if (sensor%chan_on_flag_default('+chn+') .NE. sym%YES) cycle '
+                  printf,10,'      if ( .NOT. sensor%chan_on_flag_default('+chn+') ) cycle '
                endif  
               
             

@@ -6,6 +6,7 @@ module cx_science_tools_mod
    
    use CX_CONSTANTS_MOD, only: &
       real4 , Missing_Value_Real4
+      
    implicit none
    private
    real (kind=real4), parameter, public:: GLINT_ZEN_THRESH = 40.0

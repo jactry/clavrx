@@ -1,4 +1,4 @@
-! Created on Tue Feb 21 16:44:07 2017
+! Created on Wed Mar  8 20:52:42 2017
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -121,112 +121,112 @@ case("surface_elevation")
    end if
 case("refl_0_65um_nom")
    if (allocated ( ch(1)%ref_toa)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = ch(1)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_86um_nom")
    if (allocated ( ch(2)%ref_toa)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = ch(2)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_47um_nom")
    if (allocated ( ch(3)%ref_toa)) then
-      if (sensor%chan_on_flag_default(3) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(3) ) cycle 
       data_dim2_dtype_r4 = ch(3)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_55um_nom")
    if (allocated ( ch(4)%ref_toa)) then
-      if (sensor%chan_on_flag_default(4) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(4) ) cycle 
       data_dim2_dtype_r4 = ch(4)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_1_2um_nom")
    if (allocated ( ch(5)%ref_toa)) then
-      if (sensor%chan_on_flag_default(5) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(5) ) cycle 
       data_dim2_dtype_r4 = ch(5)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_1_60um_nom")
    if (allocated ( ch(6)%ref_toa)) then
-      if (sensor%chan_on_flag_default(6) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(6) ) cycle 
       data_dim2_dtype_r4 = ch(6)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_2_1um_nom")
    if (allocated ( ch(7)%ref_toa)) then
-      if (sensor%chan_on_flag_default(7) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(7) ) cycle 
       data_dim2_dtype_r4 = ch(7)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_41um_nom")
    if (allocated ( ch(8)%ref_toa)) then
-      if (sensor%chan_on_flag_default(8) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(8) ) cycle 
       data_dim2_dtype_r4 = ch(8)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_44um_nom")
    if (allocated ( ch(9)%ref_toa)) then
-      if (sensor%chan_on_flag_default(9) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(9) ) cycle 
       data_dim2_dtype_r4 = ch(9)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_1_38um_nom")
    if (allocated ( ch(26)%ref_toa)) then
-      if (sensor%chan_on_flag_default(26) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(26) ) cycle 
       data_dim2_dtype_r4 = ch(26)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_sol_dnb_nom")
    if (allocated ( ch(44)%ref_toa)) then
-      if (sensor%chan_on_flag_default(44) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(44) ) cycle 
       data_dim2_dtype_r4 = ch(44)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_lunar_dnb_nom")
    if (allocated ( ch(44)%ref_lunar_toa)) then
-      if (sensor%chan_on_flag_default(44) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(44) ) cycle 
       data_dim2_dtype_r4 = ch(44)%ref_lunar_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_3_75um_nom")
    if (allocated ( ch(20)%ref_toa)) then
-      if (sensor%chan_on_flag_default(20) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(20) ) cycle 
       data_dim2_dtype_r4 = ch(20)%ref_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_75um_nom")
    if (allocated ( ch(20)%bt_toa)) then
-      if (sensor%chan_on_flag_default(20) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(20) ) cycle 
       data_dim2_dtype_r4 = ch(20)%bt_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_9um_nom")
    if (allocated ( ch(22)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(22) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(22) ) cycle 
       data_dim2_dtype_r4 = ch(22)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_8_5um_nom")
    if (allocated ( ch(27)%bt_toa)) then
-      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(27) ) cycle 
       data_dim2_dtype_r4 = ch(27)%bt_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom")
    if (allocated ( ch(31)%bt_toa)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%bt_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_12_0um_nom")
    if (allocated ( ch(32)%bt_toa)) then
-      if (sensor%chan_on_flag_default(32) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(32) ) cycle 
       data_dim2_dtype_r4 = ch(32)%bt_toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_min_3x3")
    if (allocated ( ref_Ch1_Min_3x3)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = ref_Ch1_Min_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_stddev_3x3")
    if (allocated ( Ref_Ch1_Std_3x3)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = Ref_Ch1_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_stddev_3x3")
    if (allocated ( Ref_Ch1_Std_3x3)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = Ref_Ch1_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_max_3x3")
    if (allocated ( Bt_Ch31_Max_3x3)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = Bt_Ch31_Max_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_probability")
@@ -275,8 +275,8 @@ case("cloud_phase_aux")
       data_dim2_dtype1 = Cld_Phase_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_mask_aux")
-   if (allocated ( Cld_Mask_Aux)) then
-      data_dim2_dtype1 = Cld_Mask_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( CLDMASK%Cld_Mask_Aux)) then
+      data_dim2_dtype1 = CLDMASK%Cld_Mask_Aux(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_type_aux")
    if (allocated ( Cld_Type_Aux)) then
@@ -548,32 +548,32 @@ case("cloud_fraction_uncertainty")
    end if
 case("emiss_3_75um_nom")
    if (allocated ( Ems_Ch20)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = Ems_Ch20(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("emiss_3_75um_nom_clear")
    if (allocated ( Ems_Ch20_Clear_Rtm)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = Ems_Ch20_Clear_Rtm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("emiss_3_75um_nom_median_3x3")
    if (allocated ( Ems_Ch20_Median_3x3)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = Ems_Ch20_Median_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_75um_nom_median_3x3")
    if (allocated ( Bt_Ch20_median_3x3)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = Bt_Ch20_median_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("diff_ch31_ch32_bt_ch31_max_3x3")
    if (allocated ( Btd_Ch31_Ch32_Bt_Ch31_Max_3x3)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = Btd_Ch31_Ch32_Bt_Ch31_Max_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("emissivity_11um_tropopause")
    if (allocated ( ch(31)%Emiss_Tropo)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Emiss_Tropo(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("beta_11um_85um_tropopause")
@@ -610,22 +610,22 @@ case("surface_temperature_retrieved")
    end if
 case("atmos_rad_11_0um_nom_nwp")
    if (allocated ( ch(31)%Rad_Atm)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Rad_Atm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("atmos_trans_11_0um_nom_nwp")
    if (allocated ( ch(31)%Trans_Atm)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Trans_Atm(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("sfc_emiss_3_75um_nom_nwp")
    if (allocated ( ch(20)%Sfc_Emiss)) then
-      if (sensor%chan_on_flag_default(20) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(20) ) cycle 
       data_dim2_dtype_r4 = ch(20)%Sfc_Emiss(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("sfc_emiss_11_0um_nom_nwp")
    if (allocated ( ch(31)%Sfc_Emiss)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Sfc_Emiss(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("surface_air_temperature_nwp")
@@ -690,17 +690,17 @@ case("ccl_nwp")
    end if
 case("refl_0_65um_nom_counts")
    if (allocated ( Ch1_Counts)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype2 = Ch1_Counts(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_86um_nom_counts")
    if (allocated ( Ch2_Counts)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype2 = Ch2_Counts(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_1_60um_nom_counts")
    if (allocated ( Ch6_Counts)) then
-      if (sensor%chan_on_flag_default(6) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(6) ) cycle 
       data_dim2_dtype2 = Ch6_Counts(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("total_precipitable_water_nwp")
@@ -713,57 +713,57 @@ case("total_column_ozone_nwp")
    end if
 case("refl_3_75um_nom_atmos_corr")
    if (allocated ( ch(20)%Ref_Sfc)) then
-      if (sensor%chan_on_flag_default(20) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(20) ) cycle 
       data_dim2_dtype_r4 = ch(20)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_atmos_corr")
    if (allocated ( ch(1)%Ref_Sfc)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = ch(1)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_86um_nom_atmos_corr")
    if (allocated ( ch(2)%Ref_Sfc)) then
-      if (sensor%chan_on_flag_default(2) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(2) ) cycle 
       data_dim2_dtype_r4 = ch(2)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_1_60um_nom_atmos_corr")
    if (allocated ( ch(6)%Ref_Sfc)) then
-      if (sensor%chan_on_flag_default(6) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(6) ) cycle 
       data_dim2_dtype_r4 = ch(6)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_2_1um_nom_atmos_corr")
    if (allocated ( ch(7)%Ref_Sfc)) then
-      if (sensor%chan_on_flag_default(7) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(7) ) cycle 
       data_dim2_dtype_r4 = ch(7)%Ref_Sfc(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_clear_sky")
    if (allocated ( ch(1)%Ref_Toa_Clear)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = ch(1)%Ref_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_3_75um_nom_clear_sky")
    if (allocated ( ch(20)%Bt_Toa_Clear)) then
-      if (sensor%chan_on_flag_default(20) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(20) ) cycle 
       data_dim2_dtype_r4 = ch(20)%Bt_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_8_5um_nom_clear_sky")
    if (allocated ( ch(27)%Bt_Toa_Clear)) then
-      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(27) ) cycle 
       data_dim2_dtype_r4 = ch(27)%Bt_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_clear_sky")
    if (allocated ( ch(31)%Bt_Toa_Clear)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Bt_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_12_0um_nom_clear_sky")
    if (allocated ( ch(32)%Bt_Toa_Clear)) then
-      if (sensor%chan_on_flag_default(32) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(32) ) cycle 
       data_dim2_dtype_r4 = ch(32)%Bt_Toa_Clear(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_mean_3x3")
    if (allocated ( Ref_Ch1_Mean_3x3)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = Ref_Ch1_Mean_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("pixel_sst_unmasked")
@@ -780,7 +780,7 @@ case("wind_direction_10m_nwp")
    end if
 case("refl_0_65um_nom_dark")
    if (allocated ( Ref_Ch1_Dark_Composite)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = Ref_Ch1_Dark_Composite(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_water_path")
@@ -825,87 +825,87 @@ case("cld_reff_dcomp_3")
    end if
 case("albedo_sfc_white_sky_0_65um")
    if (allocated ( ch(1)%sfc_ref_white_sky)) then
-      if (sensor%chan_on_flag_default(1) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(1) ) cycle 
       data_dim2_dtype_r4 = ch(1)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("albedo_sfc_white_sky_1_60um")
    if (allocated ( ch(6)%sfc_ref_white_sky)) then
-      if (sensor%chan_on_flag_default(6) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(6) ) cycle 
       data_dim2_dtype_r4 = ch(6)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("albedo_sfc_white_sky_2_20um")
    if (allocated ( ch(7)%sfc_ref_white_sky)) then
-      if (sensor%chan_on_flag_default(7) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(7) ) cycle 
       data_dim2_dtype_r4 = ch(7)%sfc_ref_white_sky(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_95um_nom")
    if (allocated ( ch(17)%Ref_Toa)) then
-      if (sensor%chan_on_flag_default(17) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(17) ) cycle 
       data_dim2_dtype_r4 = ch(17)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_93um_nom")
    if (allocated ( ch(18)%Ref_Toa)) then
-      if (sensor%chan_on_flag_default(18) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(18) ) cycle 
       data_dim2_dtype_r4 = ch(18)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_94um_nom")
    if (allocated ( ch(19)%Ref_Toa)) then
-      if (sensor%chan_on_flag_default(19) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(19) ) cycle 
       data_dim2_dtype_r4 = ch(19)%Ref_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_6_7um_nom")
    if (allocated ( ch(27)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(27) ) cycle 
       data_dim2_dtype_r4 = ch(27)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_7_3um_nom")
    if (allocated ( ch(28)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(28) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(28) ) cycle 
       data_dim2_dtype_r4 = ch(28)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_9_7um_nom")
    if (allocated ( ch(30)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(30) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(30) ) cycle 
       data_dim2_dtype_r4 = ch(30)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_13_3um_nom")
    if (allocated ( ch(33)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(33) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(33) ) cycle 
       data_dim2_dtype_r4 = ch(33)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_13_6um_nom")
    if (allocated ( ch(34)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(34) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(34) ) cycle 
       data_dim2_dtype_r4 = ch(34)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_13_9um_nom")
    if (allocated ( ch(35)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(35) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(35) ) cycle 
       data_dim2_dtype_r4 = ch(35)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_14_2um_nom")
    if (allocated ( ch(36)%Bt_Toa)) then
-      if (sensor%chan_on_flag_default(36) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(36) ) cycle 
       data_dim2_dtype_r4 = ch(36)%Bt_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("csbt_mask_6_7um_nom")
    if (allocated ( ch(27)%CSBT_Mask)) then
-      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(27) ) cycle 
       data_dim2_dtype1 = ch(27)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("csbt_mask_7_3um_nom")
    if (allocated ( ch(28)%CSBT_Mask)) then
-      if (sensor%chan_on_flag_default(28) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(28) ) cycle 
       data_dim2_dtype1 = ch(28)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("csbt_mask_13_3um_nom")
    if (allocated ( ch(33)%CSBT_Mask)) then
-      if (sensor%chan_on_flag_default(33) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(33) ) cycle 
       data_dim2_dtype1 = ch(33)%CSBT_Mask(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11um_vs_67um_covar_5x5")
    if (allocated ( Covar_Ch27_Ch31_5x5)) then
-      if (sensor%chan_on_flag_default(27) .NE. sym%YES) cycle 
+      if ( .NOT. sensor%chan_on_flag_default(27) ) cycle 
       data_dim2_dtype_r4 = Covar_Ch27_Ch31_5x5(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("refl_0_65um_nom_iband_max")
@@ -990,7 +990,7 @@ case("temp_11_0um_nom_iband_uni")
    end if
 case("radiance_11_0um_nom")
    if (allocated ( ch(31)%Rad_Toa)) then
-      if (sensor%chan_on_flag_default(31) .NE. sym%YES) cycle 
+      if (.NOT. sensor%chan_on_flag_default(31) ) cycle 
       data_dim2_dtype_r4 = ch(31)%Rad_Toa(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cloud_type_ir")

@@ -127,7 +127,11 @@ contains
             Glat = Nav%Lat(Elem_Idx,Line_Idx)
             Glon = Nav%Lon(Elem_Idx,Line_Idx)
             
-            Gmtime = Utc_Scan_Time_Hours(Line_Idx)
+            
+            
+            gmtime = Scan_Time(Line_idx)/60.0/60.0/1000.0
+            if ( Scan_Time(Line_idx) == Missing_Value_Real4) &
+               gmtime = Missing_Value_Real4
             if (Sfc%Snow(Elem_Idx,Line_Idx) /= sym%NO_SNOW) then
                Snowfr = 1.0
             else

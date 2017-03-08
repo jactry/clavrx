@@ -260,7 +260,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
          	channel_x_filename = channel_1_filename(1:ipos-1) // "_"//trim(ichan_goes_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
 
-         	if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+         	if (l1b_gzip .or. l1b_bzip2 ) then
             	channel_x_filename_full = trim(Temporary_Data_Dir)//trim(channel_x_filename)
          	else
             	channel_x_filename_full = trim(Image%Level1b_Path)//trim(channel_x_filename)
@@ -268,7 +268,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
          	channel_x_filename_full_uncompressed = trim(Image%Level1b_Path)//trim(channel_x_filename)
 
-         	if (l1b_gzip == sym%YES) then
+         	if (l1b_gzip) then
             	System_String = "gunzip -c "//trim(channel_x_filename_full_uncompressed)//".gz"// &
                                 " > "//trim(channel_x_filename_full)
                                 
@@ -279,7 +279,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 
          	endif
          
-				if (l1b_bzip2 == sym%YES) then
+				if (l1b_bzip2 ) then
             	System_String = "bunzip2 -c "//trim(channel_x_filename_full_uncompressed)//".bz2"// &
                               " > "//trim(channel_x_filename_full)
             	call system(System_String)
@@ -306,7 +306,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
 			print*,"Channel ",i," calibration for : ", trim(filename)
-			if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+			if (l1b_gzip  .OR. l1b_bzip2 ) then
        		call mread_open(trim(Temporary_Data_Dir)//trim(filename)//CHAR(0), ABI_file_id)
       	else
        		call mread_open(trim(Image%Level1b_Path)//trim(filename)//CHAR(0), ABI_file_id)
@@ -326,7 +326,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
 			print*,"Channel ",i," calibration for : ", trim(filename)
-			if (l1b_gzip == sym%YES .OR. l1b_bzip2 == sym%YES) then
+			if (l1b_gzip  .OR. l1b_bzip2) then
        		call mread_open(trim(Temporary_Data_Dir)//trim(filename)//CHAR(0), ABI_file_id)
       	else
        		call mread_open(trim(Image%Level1b_Path)//trim(filename)//CHAR(0), ABI_file_id)
@@ -353,7 +353,7 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
 			filename = channel_1_filename(1:ipos-1) // "_"//trim(channel_string)//"_" // &
                             channel_1_filename(ipos+3:ilen)
 			
-			if (l1b_gzip == sym%YES .or. l1b_bzip2 == sym%YES) then
+			if (l1b_gzip  .or. l1b_bzip2 ) then
                channel_x_filename_full = trim(Temporary_Data_Dir)//trim(filename)
        	else
                channel_x_filename_full = trim(Image%Level1b_Path)//trim(filename)

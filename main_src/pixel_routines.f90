@@ -88,7 +88,6 @@ MODULE PIXEL_ROUTINES
           CH20_PSEUDO_REFLECTANCE,  &
           COMPUTE_SPATIAL_UNIFORMITY, &
           ASSIGN_CLEAR_SKY_QUALITY_FLAGS, &
-          CONVERT_TIME, &
           COMPUTE_SNOW_CLASS, &
           COMPUTE_SNOW_CLASS_NWP, &
           COMPUTE_SNOW_CLASS_OISST, &
@@ -182,7 +181,7 @@ MODULE PIXEL_ROUTINES
          endif
 
       end do line_loop
-
+   
    end subroutine SET_CHAN_ON_FLAG
 
 
@@ -464,139 +463,88 @@ end subroutine SET_SOLAR_CONTAMINATION_MASK
                                 float(Number_of_Elements * Number_of_Lines)
 
 	end subroutine SET_BAD_PIXEL_MASK
-!--------------------------------------------------------------------------
-!QUALITY_CONTROL_ANCILLARY_DATA
-!
-! Apply some checks on ancillary data.  Call pixels bad when checks fail
-!
-! Note, Bad_Pixel_Mask is modified but not created here. Do not initialize
-!--------------------------------------------------------------------------
-subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
-   logical, dimension(:,:), intent(inout):: Bad_Pixel_Mask
-   integer:: Number_of_Elements
-   integer:: Number_of_Lines
-   integer:: Elem_Idx
-   integer:: Line_Idx
+   
+   !--------------------------------------------------------------------------
+   !QUALITY_CONTROL_ANCILLARY_DATA
+   !
+   ! Apply some checks on ancillary data.  Call pixels bad when checks fail
+   !
+   ! Note, Bad_Pixel_Mask is modified but not created here. Do not initialize
+   !  remove the loop (AW 07 March 2017)
+   !--------------------------------------------------------------------------
+   subroutine QUALITY_CONTROL_ANCILLARY_DATA (Bad_Pixel_Mask)
+      logical, dimension(:,:), intent(inout):: Bad_Pixel_Mask
+   
+   
+      where ( Sfc%Sfc_Type < 0. .OR. Sfc%Sfc_Type > 15)
+         Bad_Pixel_Mask = .TRUE.
+      end where
+   
 
-   Number_of_Elements = Image%Number_Of_Elements
-   Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+   end subroutine QUALITY_CONTROL_ANCILLARY_DATA
 
-   do Line_Idx = 1, Number_of_Lines
 
-      do Elem_Idx = 1, Number_Of_Elements
-
-        !--- invalid sfc type observations
-        if (Sfc%Sfc_Type(Elem_Idx,Line_Idx) < 0 .or. Sfc%Sfc_Type(Elem_Idx,Line_Idx) > 15) then
-           Bad_Pixel_Mask(Elem_Idx,Line_Idx) = .TRUE.
-        endif
-
-      enddo
-
-   enddo
-
-end subroutine QUALITY_CONTROL_ANCILLARY_DATA
 
 
    !--------------------------------------------------------------------------
-   ! CONVERT TIME
+   ! COMPUTE_PIXEL_ARRAYS
    !
-   ! compute the utc time for each scan in fractional hours and compute the
-   ! local time for each pixel in fractional hours
+   ! compute quantities needed for other routines, (ie cloud mask)
    !
+   ! input - none
+   !
+   ! output - only into shared memory
+   !   seczen - secant of zenith angle
+   !   Sst_Unmasked - an Sst used for cloud masking only
+   !   Btd_Ch31_Ch32 - brightness temperature difference between Bt_Ch31 and Bt_Ch32 
+   !   Btd_Ch20_Ch31 - brightness temperature difference between Bt_Ch20 and Bt_Ch31 
+   !   Ref_ratio_Ch6_Ch1 - ratio of Ref_Ch6 / Ref_Ch1
+   !   Ref_ratio_Ch20_Ch1 - ratio of Ref_Ch20 / Ref_Ch1
    !--------------------------------------------------------------------------
-   subroutine CONVERT_TIME(j1,j2)
+   subroutine COMPUTE_PIXEL_ARRAYS(j1,nj)
 
-      integer, intent(in):: j1,j2
-      integer:: i,j
+      integer, intent(in):: j1,nj
+      integer(kind=int4):: j2
 
-      !--- loop over scans
-      do j = j1,j1+j2-1
+      j2 = j1 + nj - 1
 
-         !--- loop over pixels
-         do i = 1, Image%Number_Of_Elements
+      Geo%Coszen(:,j1:j2) = cos(Geo%Satzen(:,j1:j2)*dtor)
 
-            !--- check for a bad pixel
-            if (Bad_Pixel_Mask(i,j) ) cycle
-           
-            !--- convert ms time in leveL1b to utc time in hours
-            Utc_Scan_Time_Hours(j) = Scan_Time(j) / 60.0 / 60.0/ 1000.0
+      Geo%Seczen(:,j1:j2) = 1.0 / Geo%Coszen(:,j1:j2)
 
-            !--- compute local time based on utc and longitude
-            Pixel_Local_Time_Hours(i,j) = Utc_Scan_Time_Hours(j) + Nav%Lon(i,j) / 15.0
+      Geo%Cossolzen(:,j1:j2) = cos(Geo%Solzen(:,j1:j2)*dtor)
 
-            !--- constrain local time to be between 0 and 24 
-            if (Pixel_Local_Time_Hours(i,j) > 24.0) then 
-               Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) - 24.0
-            end if
+      Geo%Airmass(:,j1:j2) = 1.0
+      
+      where(Geo%Solzen(:,j1:j2) /= 0.0 .and. Geo%Coszen(:,j1:j2) /= 0.0) 
+         Geo%Airmass(:,j1:j2) = 1.0/Geo%Cossolzen(:,j1:j2) + 1.0/Geo%Coszen(:,j1:j2)
+      end where
 
-            if (Pixel_Local_Time_Hours(i,j) < 0.0) then 
-               Pixel_Local_Time_Hours(i,j) = Pixel_Local_Time_Hours(i,j) + 24.0
-            end if
+      !--- other useful arrays 
 
-         end do
+      !--- channel 31 and channel 32 brightness temperature difference
+      if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
+            (Sensor%Chan_On_Flag_Default(32) )) then
+         Btd_Ch31_Ch32(:,j1:j2) = ch(31)%Bt_Toa(:,j1:j2) - ch(32)%Bt_Toa(:,j1:j2)
+      end if
 
-      end do
+      !--- channel 20 and channel 31 brightness temperature difference
+      if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(31) ) then
+         Btd_Ch20_Ch31 = ch(20)%Bt_Toa - ch(31)%Bt_Toa
+         where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(31)%Bt_Toa == Missing_Value_Real4)
+            Btd_Ch20_Ch31 = Missing_Value_Real4
+         end where
+      end if
 
-   end subroutine CONVERT_TIME
+      !--- channel 20 and channel 32 brightness temperature difference
+      if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(32) ) then
+         Btd_Ch20_Ch32 = ch(20)%Bt_Toa - ch(32)%Bt_Toa
+         where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(32)%Bt_Toa == Missing_Value_Real4)
+            Btd_Ch20_Ch32 = Missing_Value_Real4
+         end where
+      end if
 
-!--------------------------------------------------------------------------
-! COMPUTE_PIXEL_ARRAYS
-!
-! compute quantities needed for other routines, (ie cloud mask)
-!
-! input - none
-!
-! output - only into shared memory
-!   seczen - secant of zenith angle
-!   Sst_Unmasked - an Sst used for cloud masking only
-!   Btd_Ch31_Ch32 - brightness temperature difference between Bt_Ch31 and Bt_Ch32 
-!   Btd_Ch20_Ch31 - brightness temperature difference between Bt_Ch20 and Bt_Ch31 
-!   Ref_ratio_Ch6_Ch1 - ratio of Ref_Ch6 / Ref_Ch1
-!   Ref_ratio_Ch20_Ch1 - ratio of Ref_Ch20 / Ref_Ch1
-!--------------------------------------------------------------------------
- subroutine COMPUTE_PIXEL_ARRAYS(j1,nj)
-
-   integer, intent(in):: j1,nj
-   integer(kind=int4):: j2
-
-   j2 = j1 + nj - 1
-
-   Geo%Coszen(:,j1:j2) = cos(Geo%Satzen(:,j1:j2)*dtor)
-
-   Geo%Seczen(:,j1:j2) = 1.0 / Geo%Coszen(:,j1:j2)
-
-   Geo%Cossolzen(:,j1:j2) = cos(Geo%Solzen(:,j1:j2)*dtor)
-
-   Geo%Airmass(:,j1:j2) = 1.0
-   where(Geo%Solzen(:,j1:j2) /= 0.0 .and. Geo%Coszen(:,j1:j2) /= 0.0) 
-    Geo%Airmass(:,j1:j2) = 1.0/Geo%Cossolzen(:,j1:j2) + 1.0/Geo%Coszen(:,j1:j2)
-   endwhere
-
-!--- other useful arrays 
-
-   !--- channel 31 and channel 32 brightness temperature difference
-   if ((Sensor%Chan_On_Flag_Default(31) ) .and. &
-       (Sensor%Chan_On_Flag_Default(32) )) then
-        Btd_Ch31_Ch32(:,j1:j2) = ch(31)%Bt_Toa(:,j1:j2) - ch(32)%Bt_Toa(:,j1:j2)
-   endif
-
-   !--- channel 20 and channel 31 brightness temperature difference
-    if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(31) ) then
-     Btd_Ch20_Ch31 = ch(20)%Bt_Toa - ch(31)%Bt_Toa
-     where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(31)%Bt_Toa == Missing_Value_Real4)
-       Btd_Ch20_Ch31 = Missing_Value_Real4
-     endwhere
-    endif
-
-   !--- channel 20 and channel 32 brightness temperature difference
-    if (Sensor%Chan_On_Flag_Default(20)  .and. Sensor%Chan_On_Flag_Default(32) ) then
-     Btd_Ch20_Ch32 = ch(20)%Bt_Toa - ch(32)%Bt_Toa
-     where(ch(20)%Bt_Toa == Missing_Value_Real4 .or. ch(32)%Bt_Toa == Missing_Value_Real4)
-       Btd_Ch20_Ch32 = Missing_Value_Real4
-     endwhere
-    endif
-
- end subroutine COMPUTE_PIXEL_ARRAYS
+   end subroutine COMPUTE_PIXEL_ARRAYS
 
 !-------------------------------------------------------------------------------
 !--- populate the snow_class array based on all available sources of Snow data
@@ -1024,7 +972,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
   line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
   element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
-
+      if ( line_idx .ne. 40 .or. elem_idx .ne. 70) cycle
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
@@ -1154,7 +1102,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        !--- compute total transmission for combining terms
        Tau_Total = Tau_Aer + Tau_Ray + Tau_Gas
        Trans_Total = exp(-Tau_Total*Airmass_Factor)
-
+        print*,chan_idx,Tau_Aer , Tau_Ray , Tau_Gas, trans_total
        if (Chan_Idx /= 44) then
 
          !--- compute atmospherically corrected reflectance (at sfc level)s
@@ -1387,49 +1335,52 @@ subroutine CH20_PSEUDO_REFLECTANCE(Solar_Ch20_Nu,Cos_Solzen,Rad_Ch20,Bt_Ch31,Sun
    enddo
 
 end subroutine CH20_PSEUDO_REFLECTANCE
+   ! - called from process_clavrx.f90
+   subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
 
-subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS()
+      integer:: Elem_Idx
+      integer:: Elem_Idx_min
+      integer:: Elem_Idx_max
+      integer:: Elem_Idx_width
+      integer:: Elem_Idx_segment_max
+      integer:: Line_Idx
+      integer:: Line_Idx_min
+      integer:: Line_Idx_max
+      integer:: Line_Idx_width
+      integer:: Line_Idx_segment_max
 
-    integer:: Elem_Idx
-    integer:: Elem_Idx_min
-    integer:: Elem_Idx_max
-    integer:: Elem_Idx_width
-    integer:: Elem_Idx_segment_max
-    integer:: Line_Idx
-    integer:: Line_Idx_min
-    integer:: Line_Idx_max
-    integer:: Line_Idx_width
-    integer:: Line_Idx_segment_max
+      Elem_Idx_segment_max = Image%Number_Of_Elements
+      Line_Idx_segment_max = Line_Idx_Min_Segment + Line_Idx_Max_Segment - 1
+     
+      do Elem_Idx = 1, Elem_Idx_segment_max
+         do Line_Idx = 1, Line_Idx_segment_max
+        
+            !--- compute 5x5 arrays
+            Elem_Idx_min = max(1,min(Elem_Idx - 2,Elem_Idx_segment_max))
+            Elem_Idx_max = max(1,min(Elem_Idx + 2,Elem_Idx_segment_max))
+            Line_Idx_min = max(1,min(Line_Idx - 2,Line_Idx_segment_max))
+            Line_Idx_max = max(1,min(Line_Idx + 2,Line_Idx_segment_max))
+            Line_Idx_width = Line_Idx_max - Line_Idx_min + 1
+            Elem_Idx_width = Elem_Idx_max - Elem_Idx_min + 1
+     
+      
+            if ((Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) ) .and. & 
+               (Sensor%Chan_On_Flag_Per_Line(31,Line_Idx) )) then
+            
+               Covar_Ch27_Ch31_5x5(Elem_Idx,Line_Idx) = Covariance(&
+                  ch(31)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+                  ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+                  Elem_Idx_width, Line_Idx_width, &
+                  Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
+               
+            end if
 
-    Elem_Idx_segment_max = Image%Number_Of_Elements
-    Line_Idx_segment_max = Line_Idx_Min_Segment + Line_Idx_Max_Segment - 1
+         end do
 
-    do Elem_Idx = 1, Elem_Idx_segment_max
-       do Line_Idx = 1, Line_Idx_segment_max
-
-        !--- compute 5x5 arrays
-        Elem_Idx_min = max(1,min(Elem_Idx - 2,Elem_Idx_segment_max))
-        Elem_Idx_max = max(1,min(Elem_Idx + 2,Elem_Idx_segment_max))
-        Line_Idx_min = max(1,min(Line_Idx - 2,Line_Idx_segment_max))
-        Line_Idx_max = max(1,min(Line_Idx + 2,Line_Idx_segment_max))
-        Line_Idx_width = Line_Idx_max - Line_Idx_min + 1
-        Elem_Idx_width = Elem_Idx_max - Elem_Idx_min + 1
-
-        if ((Sensor%Chan_On_Flag_Per_Line(27,Line_Idx) ) .and. & 
-            (Sensor%Chan_On_Flag_Per_Line(31,Line_Idx) )) then
-
-            Covar_Ch27_Ch31_5x5(Elem_Idx,Line_Idx) = Covariance(&
-               ch(31)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-               ch(27)%Bt_Toa(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
-               Elem_Idx_width, Line_Idx_width, &
-               Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
-        endif
-
-      enddo
-
-    enddo
+      end do
+   
     
-end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
+   end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 
 
 !------------------------------------------------------------------------

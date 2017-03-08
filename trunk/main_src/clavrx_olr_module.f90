@@ -1,4 +1,4 @@
-! $Id: $
+! $Id:$
 !--------------------------------------------------------------------------------------
 ! Clouds from AVHRR Extended (CLAVR-x) 1b PROCESSING SOFTWARE Version 5.3
 !
@@ -289,7 +289,7 @@ real elemental function SPLIT_WINDOW_OLR(bt11,bt12,seczen)
   split_window_olr = olr_coef(5) + olr_coef(6)*split_window_olr + &
                      olr_coef(7)*(bt11-bt12) + &
                      olr_coef(8)*(bt11-bt12)*seczen + &
-                     olr_coef(9)*split_window_olr**seczen
+                     olr_coef(9)*split_window_olr*seczen
 
  !--- this make the Olr  flux (W/m^2)
  split_window_olr = stefan_boltzmann_constant * (split_window_olr)**4

@@ -1177,7 +1177,7 @@ function Covariance(Array_One,Array_Two,Array_Width,Array_Hght,Invalid_Data_Mask
    real(kind=real4):: Covar_Array_One_Array_Two
 
    !--- skip computation for pixel arrays with any missing data
-      print*,'start cov'
+     
    if (count( Invalid_Data_Mask .EQV. .FALSE. ) > 0) then
       Covar_Array_One_Array_Two = Missing_Value_Real4
       return

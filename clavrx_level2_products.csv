@@ -253,3 +253,4 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,"inversion_strength_nwp","Inversion_Strength_Nwp_Pix",2,1,1,0.00000,20.0000,"inversion_strength_nwp","K","strength of atmospheric inversion (if present) in K from NWP","none"
 1,"inversion_base_height_nwp","Inversion_Base_Nwp_Pix",2,1,1,0.00000,5000.00,"inversion_base_height_nwp","meters","height of base of atmospheric inversion (if present) in meters from NWP","none"
 1,"inversion_top_height_nwp","Inversion_Top_Nwp_Pix",2,1,1,0.00000,5000.00,"inversion_top_height_nwp","meters","height of top of atmospheric inversion (if present) in meters from NWP","none"
+1,"aerosol_optical_depth_muri","muri%aod",2,1,1,0.00000,20.00,"aeorsol optical thickness MURI","none","AOD muri","none"

@@ -1,4 +1,4 @@
-! Created on Wed Mar  8 20:52:42 2017
+! Created on Wed Mar  8 21:53:41 2017
 ! by awalther
 ! on machine: kuu.local
 select case(trim(name))
@@ -1028,5 +1028,9 @@ case("inversion_base_height_nwp")
 case("inversion_top_height_nwp")
    if (allocated ( Inversion_Top_Nwp_Pix)) then
       data_dim2_dtype_r4 = Inversion_Top_Nwp_Pix(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   end if
+case("aerosol_optical_depth_muri")
+   if (allocated ( muri%aod)) then
+      data_dim2_dtype_r4 = muri%aod(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 end select

@@ -230,6 +230,7 @@ module LEVEL2_ROUTINES
       scale_i2_rank2 &
       , scale_i1_rank2
    
+   use cx_muri_clavrx_bridge_mod
    
    implicit none
    

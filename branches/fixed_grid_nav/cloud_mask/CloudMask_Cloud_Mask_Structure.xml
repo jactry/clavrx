@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<framework_data_structure name="CloudMask">
+    <structure name="CloudMask" classification="" allocate_substructs="YES" substruct_name="" channel_dependent="">
+        <variable name="Mask" sds_name="CloudMask" long_name="Cloud Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,3">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="MaskBinary" sds_name="CloudMaskBinary" long_name="Cloud Mask Binary" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,1">
+<!--        <variable name="MaskBinary" long_name="Cloud Mask Binary" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,1">  --->
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldMaskPacked" sds_name="CloudMaskPacked" long_name="Diagnostic Cloud Mask" data_type="INTEGER" precision="BYTE" dimension="3" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="-128,127">
+            <dimension>CldMaskPkedCnst</dimension>
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Flag" sds_name="CloudMaskFlag" long_name="Cloud Mask Test" data_type="INTEGER" precision="BYTE" dimension="3" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="-128,127">
+            <dimension>FlagConst</dimension>
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Smoke_Mask" sds_name="Smoke_Mask" long_name="Smoke Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,3">
+       <!-- <variable name="Smoke_Mask" sds_name="Btd_375_11_Day" long_name="Btd_375_11_Day" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,3">-->
+<!--        <variable name="Smoke_Mask" long_name="Smoke Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,3"> -->
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Fire_Mask" sds_name="Fire_Mask" long_name="Fire Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,3">
+<!--        <variable name="Fire_Mask" long_name="Fire Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,3"> --->
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Dust_Mask" sds_name="Dust_Mask" long_name="Dust Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,3">
+<!--        <variable name="Dust_Mask" long_name="Dust Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,3"> --->
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldMaskQualFlag" sds_name="CloudMaskQualFlag" long_name="Cloud Mask Quality Flag" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="-128" units="1" valid_range="0,6">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        
+        <variable name="CldProbability" sds_name="CloudProbability" long_name="Cloud Probability" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="1" valid_range="0,1">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldMaskTmpy" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="XLRCIdx" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="YLRCIdx" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="LRCMask" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+<!---        <variable name="I1Generic1" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="I1Generic2" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="I1Generic3" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="I4Generic1" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="I4Generic2" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="R4Generic1" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="R4Generic2" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="R4Generic3" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable> --->
+		
+    	<variable name="Emiss11High" sds_name="Emiss11High" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="1" valid_range="">
+<!---    	<variable name="Emiss11High" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range=""> --->
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!---        <variable name="Glint_Mask" sds_name="Glint_Mask" long_name="Glint Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,1"> --->
+        <variable name="Glint_Mask" long_name="Glint Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,1">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!--    	<variable name="Ref_64_Std_3X3" sds_name="Ref_64_Std_3X3" long_name="0.64 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">  --->
+    	<variable name="Ref_64_Std_3X3" long_name="0.64 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10"> 
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!---    	<variable name="Ref_64_Min_3x3" sds_name="Ref_64_Min_3x3" long_name="0.64 3x3 Min" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,100"> --->
+    	<variable name="Ref_64_Min_3x3" long_name="0.64 3x3 Min" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,100">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+
+<!--    	<variable name="Bt_39_Std_3x3" sds_name="Bt_39_Std_3x3" long_name="3.9 BT 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10"> -->
+    	<variable name="Bt_39_Std_3x3" long_name="3.9 BT 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!--    	<variable name="Ems_39_Med_3x3" sds_name="Ems_39_Med_3x3" long_name="3.9 emiss 3x3 Median" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10"> --->
+    	<variable name="Ems_39_Med_3x3" long_name="3.9 emiss 3x3 Median" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!---    	<variable name="Bt11um_Std_3x3" sds_name="Bt11um_Std_3x3" long_name="11um 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">--->
+    	<variable name="Bt11um_Std_3x3" long_name="11um 3x3 Stddev" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+
+<!---     	<variable name="Bt11um_Max_3x3" sds_name="Bt11um_Max_3x3" long_name="11um 3x3 Max" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="180,330">--->
+    	<variable name="Bt11um_Max_3x3" long_name="11um 3x3 Max" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="180,330">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+<!---     	<variable name="Covar_67_11_5x5" sds_name="Covar_67_11_5x5" long_name="6.7/11um 5x5 Covar" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">--->
+    	<variable name="Covar_67_11_5x5" long_name="6.7/11um 5x5 Covar" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="-999.0" units="" valid_range="0,10">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        
+        <variable name="AncilPath" long_name="" data_type="CHARACTER" precision="LEN=128" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="AncilSubDir" long_name="" data_type="CHARACTER" precision="LEN=128" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="FileDir" long_name="" data_type="CHARACTER" precision="LEN=128" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="FileName" long_name="" data_type="CHARACTER" precision="LEN=128" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="FlagConst" sds_name="FlagConst" long_name="Flag Constant" data_type="INTEGER" precision="LONG" dimension="0" fill_value="-999" units="1">
+        </variable>
+        <variable name="CldMaskPkedCnst" sds_name="CldMaskPkedCnst" long_name="Cloud Mask Packed Constant" data_type="INTEGER" precision="LONG" dimension="0" fill_value="-999" units="1">
+        </variable>
+
+        <variable name="Meta10" sds_name="Meta10" long_name="meta 10" data_type="INTEGER" precision="LONG" dimension="0" fill_value="-999" units="1">
+        </variable>
+        <variable name="Meta20" sds_name="Meta20" long_name="meta 20" data_type="INTEGER" precision="LONG" dimension="0" fill_value="-999" units="1">
+        </variable>
+
+
+
+
+        <variable name="ClearPct" sds_name="ClearProbClear" long_name="Percent of Clear and Probably Clear" data_type="REAL" precision="SINGLE" dimension="0" ill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+
+        <variable name="NumQAFlag" sds_name="NumOfQualityFlag" long_name="Number of quality flag" data_type="INTEGER" precision="LONG" dimension="0" fill_value="4" units="1" >
+        </variable>
+
+        <variable name="Cat0Pct" sds_name="Cloudy" long_name="Percent of Pixels that passed a test for cloud and failed a test for cloud edge" data_type="REAL" precision="SINGLE" dimension="0" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat1Pct" sds_name="ProbCloudy" long_name="Percent of Pixels that passed a test for cloud and passed a test for cloud edge" data_type="REAL" precision="SINGLE" dimension="0" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat2Pct" sds_name="ProbClear" long_name="Percent of Pixels that passed no test for cloud but passed tests for spatial heterogenity" data_type="REAL" precision="SINGLE" dimension="0" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat3Pct" sds_name="Clear" long_name="Percent of Pixels that passed no test for cloud and failed a test for spatial heterogenity" data_type="REAL" precision="SINGLE" dimension="0" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+        <variable name="TotalPix" sds_name="TotalPixel" long_name=" Total Number of  pixels" data_type="INTEGER" precision="LONG" dimension="0" fill_value="0" units="1">
+        </variable>
+
+        <variable name="TermPixPct" sds_name="TerminatorPixPercent" long_name="Percent of terminator pixels" data_type="REAL" precision="SINGLE" dimension="0"  fill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+        <variable name="TotCldMskPix" sds_name="TotalCloudMaskPixel" long_name=" Total Number of  cloud Mask pixels" data_type="INTEGER" precision="LONG" dimension="0" fill_value="0" units="1">
+        </variable>
+
+
+
+        <variable name="MinClrSky" sds_name="MinClrSkyOBS_RTM" long_name="Minimum observation - RTM for Clear Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+        <variable name="MaxClrSky" sds_name="MaxClrSkyOBS_RTM" long_name="Maximum observation - RTM for Clear Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+        <variable name="MeanClrSky" sds_name="MeanClrSkyOBS_RTM" long_name="Mean observation - RTM for Clear Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+        <variable name="StdDevClrSky" sds_name="StdDevClrSkyOBS_RTM" long_name="Std Dev observation - RTM for Clear Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+        <variable name="MinAllSky" sds_name="MinAllSkyOBS_RTM" long_name="Minimum observation - RTM for All Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+        <variable name="MaxAllSky" sds_name="MaxAllSkyOBS_RTM" long_name="Maximum observation - RTM for All Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+        <variable name="MeanAllSky" sds_name="MeanAllSkyOBS_RTM" long_name="Mean observation RTM for All Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+        <variable name="StdDevAllSky" sds_name="StdDevAllSkyOBS_RTM" long_name="Std Dev observation - RTM for All Sky IR Channel 07 to 16" data_type="REAL" precision="SINGLE" dimension="1" fill_value="0" units="Kelvin">
+           <dimension>Meta10</dimension>
+        </variable>
+
+
+
+        
+
+
+
+
+        <variable name="Cat0Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat1Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat2Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat3Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="TermPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="TotPixAtpt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="ClrSkyAllSky" long_name="" data_type="STRUCTURE"
+            precision="Structure_XML/StatTools.xml" dimension="1" coordinates=""
+            fill_value="" units="" valid_range="">
+            <dimension>Meta20<specify_dim_func/></dimension>
+        </variable>
+        
+         <variable name="NDEmetaData" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="NDEPRDName" long_name="NDE Product Name" data_type="CHARACTER" precision="LEN=80" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+
+        
+    </structure>
+</framework_data_structure>

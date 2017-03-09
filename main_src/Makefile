@@ -371,7 +371,7 @@ iff_clavrx_bridge.o: iff_clavrx_bridge.f90 iff_module.o cx_constants_mod.o file_
 iff_module.o: iff_module.f90  pixel_common.o file_tools.o hdf_read_module.o cx_string_tools_mod.o date_tools_mod.o
 land_sfc_properties.o: land_sfc_properties.f90 cx_constants_mod.o numerical_tools_mod.o file_tools.o date_tools_mod.o
 laszlo_insolation_module.o: laszlo_insolation_module.f90 cx_constants_mod.o sasrab.o conver.o getmod.o pixel_common.o nwp_common.o
-level2.o: level2.f90 cx_constants_mod.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o cx_scale_tools_mod.o
+level2.o: level2.f90 cx_constants_mod.o pixel_common.o  clavrx_message_module.o cloud_type_bridge_module.o calibration_constants.o cx_prd_mod.o cx_scale_tools_mod.o cx_muri_clavrx_bridge_mod.o
 modis_module.o: modis_module.f90 cx_constants_mod.o  file_tools.o pixel_common.o planck.o viewing_geometry_module.o  calibration_constants.o date_tools_mod.o
 mtsat_module.o: mtsat_module.f90 pixel_common.o cx_constants_mod.o numerical_tools_mod.o cgms_nav.o goes_module.o file_tools.o avhrr_module.o
 ncep_reanalysis.o: ncep_reanalysis.f90 cx_constants_mod.o  nwp_common.o cx_array_tools_mod.o

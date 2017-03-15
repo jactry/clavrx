@@ -529,7 +529,7 @@ endif
                       Sds_Edges_2d,x,Missing_Nwp,U_Wnd_10m_Nwp)
     call READ_DATA_2D(sd_Id_1,sd_Id_2,"v-wind at sigma=0.995",Sds_Start_2d, Sds_Stride_2d, &
                       Sds_Edges_2d,x,Missing_Nwp,V_Wnd_10m_Nwp)
-    call READ_DATA_2D(sd_Id_1,sd_Id_2,"total ozone",Sds_Start_2d, Sds_Stride_2d,Sds_Edges_2d,x,Missing_Nwp,ozone_Nwp)
+    call READ_DATA_2D(sd_Id_1,sd_Id_2,"total ozone",Sds_Start_2d, Sds_Stride_2d,Sds_Edges_2d,x,Missing_Nwp,Ozone_Nwp)
 
 !--- read in three dimensional arrays
     call READ_DATA_3D(sd_Id_1,sd_Id_2,"temperature",Sds_Start_3d, Sds_Stride_3d, &
@@ -541,7 +541,7 @@ endif
     call READ_DATA_3D(sd_Id_1,sd_Id_2,"v-wind",Sds_Start_3d, Sds_Stride_3d, &
                       Sds_Edges_3d,x,Missing_Nwp,V_Wnd_Prof_Nwp)
     call READ_DATA_3D(sd_Id_1,sd_Id_2,"o3mr",Sds_Start_3d, Sds_Stride_3d, &
-                      Sds_Edges_3d,x,Missing_Nwp,ozone_prof_Nwp)
+                      Sds_Edges_3d,x,Missing_Nwp,Ozone_Prof_Nwp)
     call READ_DATA_3D(sd_Id_1,sd_Id_2,"rh",Sds_Start_3d, Sds_Stride_3d, &
                       Sds_Edges_3d,x,Missing_Nwp,Rh_Prof_Nwp)
     call READ_DATA_3D(sd_Id_1,sd_Id_2,"clwmr",Sds_Start_3d, Sds_Stride_3d, &
@@ -553,6 +553,11 @@ Istatus = sfend(sd_Id_2)
 
 !--- fix GFS bug in RH
 call FIX_GFS_RH()
+
+!--- convert ozone from mass mixing ratio(g/g) to volume missing ratio (ppmv)
+where(Ozone_Prof_Nwp > 0)
+    Ozone_Prof_Nwp = 1.0e06*Ozone_Prof_Nwp * 0.602
+endwhere
 
 !--- Convert Zsfc_Nwp to meters
 where (Zsfc_Nwp /= Missing_Nwp)

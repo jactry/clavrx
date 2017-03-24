@@ -84,7 +84,7 @@ integer (kind=int4), dimension(16,ndet_ABI,Ntable_ABI), PRIVATE  :: rad_table
 integer(kind=int4), private, parameter:: ABI_Xstride = 1
 integer(kind=int4), private, parameter:: num_4km_scans_fd = 5424
 integer(kind=int4), private, parameter:: num_4km_elem_fd = 5424
-integer(kind=int4), private, parameter:: time_for_fd_scan =  900000 !milliseconds (15min, mode 3)
+integer(kind=int4), private, parameter:: time_for_fd_scan =  636000 !milliseconds (10.6 min,)
 real, private, save:: Scan_rate    !scan rate in millsec / line
 integer(kind=int4), private, parameter:: IN3_Byte_Shift = 0 !number of bytes to shift for FY2
 

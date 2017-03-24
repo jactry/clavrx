@@ -82,9 +82,9 @@ integer (kind=int4), dimension(16,ndet_ABI,Ntable_ABI), PRIVATE  :: bt_table
 integer (kind=int4), dimension(16,ndet_ABI,Ntable_ABI), PRIVATE  :: rad_table
 
 integer(kind=int4), private, parameter:: ABI_Xstride = 1
-integer(kind=int4), private, parameter:: num_4km_scans_fd = 2816
-integer(kind=int4), private, parameter:: num_4km_elem_fd = 2808
-integer(kind=int4), private, parameter:: time_for_fd_scan =  1560000 !milliseconds (26min)
+integer(kind=int4), private, parameter:: num_4km_scans_fd = 5424
+integer(kind=int4), private, parameter:: num_4km_elem_fd = 5424
+integer(kind=int4), private, parameter:: time_for_fd_scan =  900000 !milliseconds (15min, mode 3)
 real, private, save:: Scan_rate    !scan rate in millsec / line
 integer(kind=int4), private, parameter:: IN3_Byte_Shift = 0 !number of bytes to shift for FY2
 
@@ -214,10 +214,19 @@ subroutine READ_ABI(segment_number,channel_1_filename, &
      !--- compute scan rate for future use
      num_elements_this_image =  int(AREAstr%num_elem / ABI_Xstride) + 1
      num_scans_this_image = AREAstr%num_line
-     Scan_Rate = real((num_elements_this_image)/               &
+     Scan_rate = real((num_elements_this_image)/               &
        real(num_4km_elem_fd/ABI_Xstride)) * &
        real((num_scans_this_image) / real(num_4km_scans_fd)) * &
        real(time_for_fd_scan) / real(num_scans_this_image)
+    
+     !---stw Debug
+     !print*,"num_elements_this_image : ", num_elements_this_image
+     !print*,"num_scans_this_image : ", num_scans_this_image
+     !print*,"num_4km_elem_fd : ", num_4km_elem_fd
+     !print*,"num_4km_scans_fd : ", num_4km_scans_fd
+     !print*,"time_for_fd_scan : ", time_for_fd_scan
+     !print*,"Scan_rate: ", Scan_rate
+     !stop
 
      !--- Need to loop over all channels as the calibration block is unique for
      !--- each band.

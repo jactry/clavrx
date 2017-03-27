@@ -550,7 +550,6 @@ module NB_CLOUD_MASK
                          if (Input%Ref_063um == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_063um_Clear, Input%Ref_063um)
-
                        else
                          if (Input%Chan_On_DNB == symbol%NO) cycle
                          if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
@@ -660,7 +659,6 @@ module NB_CLOUD_MASK
                     
                      case default
                        Classifier_Value(Class_Idx) = Missing_Value_Real4
-
                    !   print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
                    !   print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
                    !   return
@@ -684,7 +682,7 @@ module NB_CLOUD_MASK
         Cond_Ratio_1D_All = product(Cond_Ratio)
 
         !---------------------------------------------------------------------------------
-        ! compute cloud probability for All 1d NB classifiers
+        ! compute cloud probability for Likely Ice Clouds 1d NB classifiers
         !---------------------------------------------------------------------------------
         Cond_Ratio_1D_Cirrus = 1.0
 
@@ -693,9 +691,6 @@ module NB_CLOUD_MASK
             (Prob_Water_Core /= MISSING_VALUE_REAL4 .and. Prob_Water_Core < 0.5)) then   ! prob_water_if_loop
 
         cirrus_class_loop: do Class_Idx = 1, N_class
-
-             Classifier_Value(Class_Idx) = Missing_Value_Real4
-             Cond_Ratio(Class_Idx) =  1.0
 
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
@@ -733,18 +728,12 @@ module NB_CLOUD_MASK
                        if (Input%Ref_138um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um
 
-                     case default
-                       Classifier_Value(Class_Idx) = Missing_Value_Real4
-                      !print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
-                      !print *, "Name = ",trim(Classifier_Value_Name(Class_Idx,1))
-                      !return
              end select
 
              !--- Turn off Classifiers if Chosen Metric is Missing
              if (Classifier_Value(Class_Idx) == Missing_Value_Real4) then
                 cycle
              endif
-
 
              !--- interpolate class conditional values
              Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
@@ -831,7 +820,7 @@ module NB_CLOUD_MASK
          !--- Diagnostic Output for debugging in CLAVR-x
          !-----------------------------------------------------------------------
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_std") then
-         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Day") then
+          if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Min_3x3_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ndsi_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_11_67") then
@@ -846,10 +835,10 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Day") then
-         !     if (present(Diag)) Diag%Array_1 = Classifier_Value(Class_Idx)
-         !     if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
-         !     if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
-         !endif
+               if (present(Diag)) Diag%Array_1 = Classifier_Value(Class_Idx)
+               if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
+               if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
+          endif
 
          enddo
 

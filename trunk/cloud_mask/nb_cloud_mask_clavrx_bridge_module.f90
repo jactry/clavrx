@@ -137,7 +137,7 @@ contains
    logical, parameter:: USE_DIAG = .false.
    logical, parameter:: USE_PRIOR_TABLE = .true.
    logical, parameter:: USE_CORE_TABLES = .true.
-   logical, parameter:: USE_065UM_RTM = .true.
+   logical, parameter:: USE_065UM_RTM = .false.
 
    if (First_Call .eqv. .true.) then
        call MESG('NB Cloud Mask starts ', color = 46)
@@ -212,7 +212,7 @@ contains
                       Output,  &
                       USE_PRIOR_TABLE, &
                       USE_CORE_TABLES)
-                      !Diag)   !optional
+                      !DIAG)
 
          !--- call non-cloud detection routines (smoke, dust and fire)
          call NB_CLOUD_MASK_ADDONS_ALGORITHM(Symbol,  &

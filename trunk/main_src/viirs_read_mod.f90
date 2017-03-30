@@ -239,6 +239,7 @@ contains
       
       character ( len =1020 ) :: setname_iicmo
       character ( len =1020 ) :: file_iicmo
+      logical iicmo_flag
       integer :: lun
       integer :: n_files
       integer :: k
@@ -528,7 +529,13 @@ contains
      
       if ( config %  viirs_cloud_mask_on ) then 
          out % file_exists % iicmo_file_exists = .true.
+         iicmo_flag = .false.
          file_arr_dummy => file_search (trim(config %dir_1b), 'IICMO*'//trim(orbit_identifier) , n_files  )
+         if (n_files /= 0) then
+            iicmo_flag = .true.
+         else
+            file_arr_dummy => file_search (trim(config %dir_1b), 'VICMO*'//trim(orbit_identifier) , n_files  )
+         endif
          allocate ( out % prd % cld_phase ( dim_seg(1) , dim_seg(2) ) )
          allocate ( out % prd % cld_mask ( dim_seg (1), dim_seg(2) ) )
          allocate ( out % prd % cld_type ( dim_seg(1), dim_seg(2) ) )
@@ -538,7 +545,11 @@ contains
          
          if ( n_files /= 0 ) then
             file_iicmo = file_arr_dummy(1)
-            setname_iicmo='All_Data/VIIRS-CM-IP_All/QF1_VIIRSCMIP'
+            if (iicmo_flag) then
+               setname_iicmo='All_Data/VIIRS-CM-IP_All/QF1_VIIRSCMIP'
+            else
+               setname_iicmo='All_Data/VIIRS-CM-EDR_All/QF1_VIIRSCMEDR'
+            endif
             call h5readdataset ( trim(config %dir_1b)//file_iicmo, setname_iicmo  , offset_mband , dim_seg , i2d_buffer )
            
             out % prd % cld_mask = 0
@@ -558,7 +569,11 @@ contains
 
             deallocate ( i2d_buffer )
             
-            setname_iicmo='All_Data/VIIRS-CM-IP_All/QF6_VIIRSCMIP'
+            if (iicmo_flag) then
+               setname_iicmo='All_Data/VIIRS-CM-IP_All/QF6_VIIRSCMIP'
+            else
+               setname_iicmo='All_Data/VIIRS-CM-EDR_All/QF6_VIIRSCMEDR'
+            endif
             call h5readdataset ( trim(config %dir_1b)//file_iicmo, setname_iicmo , offset_mband , dim_seg , i2d_buffer )
             shape_buffer = shape (i2d_buffer)
             allocate ( cld_type_idps ( shape_buffer(1), shape_buffer(2)) )
@@ -641,7 +656,7 @@ contains
             
          else 
             out % file_exists % iicmo_file_exists = .false.
-            print*,'IICMO file not found , cld_mask_aux and cld_type_aux are set to missing'
+            print*,'IICMO/VICMO file not found , cld_mask_aux and cld_type_aux are set to missing'
             
          end if  
       end if

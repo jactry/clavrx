@@ -617,7 +617,6 @@
 
       endif
 
-     
 
       !*************************************************************************
       ! Marker: Populate or read in other lookup tables
@@ -1025,7 +1024,7 @@
 
              !--- solar glint mask
              if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
-               call COMPUTE_GLINT(Geo%Glintzen,ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
+               call COMPUTE_GLINT(Geo%Glintzen, Ch(1)%Ref_Toa, Ref_Ch1_Std_3x3, Sfc%Glint_Mask)
              endif
 
              !--- lunar glint mask
@@ -1034,6 +1033,19 @@
                                   Ref_ChDNB_Lunar_Std_3x3, Sfc%Glint_Mask_Lunar)
              endif
 
+            endif
+
+            !------------------------------------------------------------------------------
+            ! compute forward scattering masks for use in cloud detection
+            !------------------------------------------------------------------------------
+
+            if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
+
+             !--- solar glint mask
+             if (Sensor%Chan_On_Flag_Default(1) == sym%YES) then
+               call COMPUTE_FORWARD_SCATTERING_MASK (Geo%Scatangle, Ch(1)%Ref_Toa, &
+                                              Ref_Ch1_Std_3x3, Geo%Scat_Mask)
+             endif
             endif
 
             !*******************************************************************
@@ -1091,7 +1103,6 @@
 
                endif
 
-
                !--- Compute Adjacent pixels Cloud Mask
                call ADJACENT_PIXEL_CLOUD_MASK(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
 
@@ -1138,6 +1149,7 @@
                   & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
 
             endif   !end of Cld_Flag check
+
 
             !--------------------------------------------------------------------
             !   Compute Cloud Properties (Height, Optical Depth, ...)

@@ -582,7 +582,7 @@ contains
       Merra_Data_Dir = trim(Data_Base_Path)//'/dynamic/merra/'
       Gdas_Data_Dir = trim(Data_Base_Path)//'/dynamic/gdas/'
       Erai_Data_Dir = trim(Data_Base_Path)//'/dynamic/erai/'
-      Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst/'
+      Oisst_data_Dir = trim(Data_Base_Path)//'/dynamic/oisst_nc/'
       Snow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/hires/'
       Globsnow_Data_Dir = trim(Data_Base_Path)//'/dynamic/snow/globsnow/'
       

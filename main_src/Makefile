@@ -265,8 +265,8 @@ bindir:
 #The convert big endian flag is only needed for the OISST module, hence the special compilation
 #instuctions
 
-oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o hdf.o num_mod.o
-	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) oisst_analysis.f90
+oisst_analysis.o: oisst_analysis.f90 pixel_common.o constant.o file_utility.o hdf.o num_mod.o nb_cloud_mask_netcdf_read_module.o
+	        $(fc)  -c $(fflags) $(beconv) $(cppflags) $(cppflags_vcld) $(cpp) $(netcdflibs) oisst_analysis.f90
 
 constant.o: constant.f90
 algorithm_constants.o: algorithm_constants.f90 constant.o

@@ -1406,7 +1406,7 @@
                !- call AHI AEROSOL algorithm
                
                if ( trim(Sensor%Sensor_Name) == 'AHI' ) then
-                  call CX_MURI_ALGORITHM
+                  call CX_MURI_ALGORITHM (Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
                end if
               
                

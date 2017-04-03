@@ -19,6 +19,7 @@ module muri_forward_mod
       
       contains
       procedure :: read_lut
+      procedure :: make_case_lut
    end type muri_lut_type
    
    type(muri_lut_type) :: lut
@@ -33,12 +34,13 @@ contains
    subroutine muri_forward ( state, fwd)
       real, intent(in) :: state
       type ( muri_fwd_type ), intent(out) :: fwd
+      real :: sol, sat,azi
    
       
       call lut%read_lut
       
       
-      call lut % make_case_lut ()
+      call lut % make_case_lut ( sol,  sat, azi)
       stop 
       
       
@@ -55,12 +57,12 @@ contains
       real,intent(in) :: azi
       
        ! - compute pos and weights
-      call dcomp_interpolation_weight(self%dims%n_sat_zen , sat , self%dims%sat_zen &                  
-                   &, near_index = self % pos_sat  )
-      call dcomp_interpolation_weight(self%dims%n_sol_zen , sol , self%dims%sol_zen &                  
-                   &, near_index = self % pos_sol  )
-      call dcomp_interpolation_weight(self%dims%n_rel_azi , azi , self%dims%rel_azi &                  
-                   &, near_index = self % pos_azi  )  
+    !  call dcomp_interpolation_weight(self%dims%n_sat_zen , sat , self%dims%sat_zen &                  
+    !               &, near_index = self % pos_sat  )
+    !  call dcomp_interpolation_weight(self%dims%n_sol_zen , sol , self%dims%sol_zen &                  
+    !               &, near_index = self % pos_sol  )
+    !  call dcomp_interpolation_weight(self%dims%n_rel_azi , azi , self%dims%rel_azi &                  
+    !               &, near_index = self % pos_azi  )  
       
       
       

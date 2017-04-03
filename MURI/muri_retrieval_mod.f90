@@ -21,7 +21,7 @@ contains
       
       
       print*,'start muri algorithm'
-      print*,inp
+      call inp%info
       
       
       ! - first prepare input

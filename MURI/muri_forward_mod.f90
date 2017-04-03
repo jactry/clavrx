@@ -11,6 +11,7 @@ module muri_forward_mod
       real, allocatable :: sol(:,:)
       real, allocatable :: sat(:,:)
       real, allocatable :: azi(:,:)
+      real, allocatable :: ws(:,:)
       real, allocatable :: app_refl(:,:,:,:,:,:,:)
       real, allocatable :: aot_aer(:,:,:,:,:,:,:) 
       real :: aot_aer_fine (8,6,4)
@@ -21,6 +22,7 @@ module muri_forward_mod
    end type muri_lut_type
    
    type(muri_lut_type) :: lut
+   
    type muri_fwd_type
       real :: rfl(6)
       real :: jacobians
@@ -36,11 +38,39 @@ contains
       call lut%read_lut
       
       
+      call lut % make_case_lut ()
+      stop 
+      
       
       fwd % rfl(1) = 2.1
    
    end subroutine
+   !
+   !
+   !
+   subroutine make_case_lut (this,sol,sat,azi)
+      class (muri_lut_type) :: this
+      real,intent(in) :: sol
+      real,intent(in) :: sat
+      real,intent(in) :: azi
+      
+       ! - compute pos and weights
+      call dcomp_interpolation_weight(self%dims%n_sat_zen , sat , self%dims%sat_zen &                  
+                   &, near_index = self % pos_sat  )
+      call dcomp_interpolation_weight(self%dims%n_sol_zen , sol , self%dims%sol_zen &                  
+                   &, near_index = self % pos_sol  )
+      call dcomp_interpolation_weight(self%dims%n_rel_azi , azi , self%dims%rel_azi &                  
+                   &, near_index = self % pos_azi  )  
+      
+      
+      
+      
    
+   end subroutine
+   
+   !
+   !
+   !
    subroutine read_lut(this)
       class(muri_lut_type ) :: this
       
@@ -61,9 +91,10 @@ contains
       istatus = cx_sds_read ( trim(lut_file),'Solar_Zenith_Angles',this % sol)
       istatus = cx_sds_read ( trim(lut_file),'View_Zenith_Angles', this % sat)
       istatus = cx_sds_read ( trim(lut_file),'Relative_Azimuth_Angles', this % azi)
+      istatus = cx_sds_read ( trim(lut_file),'Wind_Speed', this % ws)
       
       istatus = cx_sds_read( trim(lut_file), 'Apparent_Reflectance', this%app_refl)
-      istatus = cx_sds_read( trim(lut_file), 'Apparent_Reflectance', this%app_refl)
+      !istatus = cx_sds_read( trim(lut_file), 'Apparent_Reflectance', this%app_refl)
       istatus = cx_sds_read ( trim(lut_file),'Aer_AOT_total', this % aot_aer )
       
       lut % aot_aer_fine =   this % aot_aer(1,1,1,:,:,1,1:4)
@@ -74,6 +105,9 @@ contains
       print*,' '
       print*,this % aot_aer(:,3,4,2,2,1,2)
       print*,'done'
+      print*,shape(this % ws)
+      print*,this % ws
+      
       !print*,aer_tot
       
    end subroutine read_lut

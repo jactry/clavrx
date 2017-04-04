@@ -244,7 +244,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          
          if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
          
-         if ( line_idx .ne. 40 .or. elem_idx .ne. 70) cycle
+         !if ( line_idx .ne. 40 .or. elem_idx .ne. 70) cycle
          ! - set aliases
          cld_height =  input % cloud_hgt % d (elem_idx,line_idx)
          cld_press  =  input % cloud_press % d (elem_idx,line_idx)
@@ -274,7 +274,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                      )
            
             
-            print*,'dcomp: ',chn_idx, trans_total (chn_idx )
+           ! print*,'dcomp: ',chn_idx, trans_total (chn_idx )
             
             refl_toc( chn_idx ) = refl_toa  /  trans_total (chn_idx )
             
@@ -352,7 +352,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , input % lut_path &
                 & , debug_mode  )
         
-       
+      ! debug_mode = 4
        if ( debug_mode == 4  ) then
             print*,'=======================> input:',CHN_NIR
             print*,'Elem Line: ', elem_idx,line_idx

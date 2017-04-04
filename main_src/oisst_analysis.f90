@@ -204,7 +204,7 @@ end function GET_OISST_MAP_FILENAME
 
 !   use READH5DATASET, only: &
 !      H5READDATASET
-use NB_CLOUD_MASK_NETCDF_READ
+   use NETCDF_READ_MODULE
 
    character(len=*), intent(in):: sst_anal_name
    character(len=1020):: file_temp

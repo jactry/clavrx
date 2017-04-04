@@ -820,7 +820,7 @@ module NB_CLOUD_MASK
          !--- Diagnostic Output for debugging in CLAVR-x
          !-----------------------------------------------------------------------
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_std") then
-          if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Day") then
+         !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ref_063_Min_3x3_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Ndsi_Day") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_11_67") then
@@ -835,10 +835,10 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Day") then
-               if (present(Diag)) Diag%Array_1 = Classifier_Value(Class_Idx)
-               if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
-               if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
-          endif
+              !if (present(Diag)) Diag%Array_2 = Classifier_Value(Class_Idx)
+              !if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
+              !if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
+         !endif
 
          enddo
 

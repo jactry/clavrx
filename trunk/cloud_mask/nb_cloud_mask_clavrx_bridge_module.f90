@@ -107,6 +107,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
 
   !--- string to control on-screen prompts
   character(*), parameter, private :: EXE_PROMPT_CM = "NB Cloud Mask Bridge >> "
+  REAL, DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref1_Clr_Routine
 
 contains
 
@@ -134,10 +135,12 @@ contains
    real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
-   logical, parameter:: USE_DIAG = .false.
+   logical, parameter:: USE_DIAG = .true.
    logical, parameter:: USE_PRIOR_TABLE = .true.
-   logical, parameter:: USE_CORE_TABLES = .true.
+   logical, parameter:: USE_CORE_TABLES = .false.
    logical, parameter:: USE_065UM_RTM = .false.
+   integer:: Num_Elem
+   integer:: Num_Line
 
    if (First_Call .eqv. .true.) then
        call MESG('NB Cloud Mask starts ', color = 46)
@@ -146,6 +149,16 @@ contains
    !--- set structure (symbol, input, output, diag)  
    !    elements to corresponding values in this framework
    call SET_SYMBOL()
+   
+   !--- allocate internal Ch1 clear sky albedo
+   Num_Elem = Image%Number_Of_Elements
+   Num_Line = Image%Number_Of_Lines_Read_This_Segment
+
+
+   allocate(Ref1_Clr_Routine(num_elem,num_line))
+   Ref1_Clr_Routine = Ref1_Clr_Routine
+
+
 
    !------------------------------------------------------------------------------------------
    !--- on first segment, read table
@@ -195,7 +208,7 @@ contains
                                    ch(1)%Sfc_Ref_White_Sky, &
                                    Sfc%Sfc_Type, &
                                    Sfc%Snow, &
-                                   ch(1)%Ref_Toa_Clear)
+                                   Ref1_Clr_Routine)
    endif
 
    !-----------    loop over pixels -----   
@@ -293,6 +306,8 @@ contains
    endif
 
    First_Call = .false.
+   
+   deallocate (Ref1_Clr_Routine)
 
    end subroutine NB_CLOUD_MASK_BRIDGE
 
@@ -461,7 +476,7 @@ contains
       endif
       if (Input%Chan_On_063um == sym%YES)  then 
         Input%Ref_063um = ch(1)%Ref_Toa(i,j)
-        Input%Ref_063um_Clear = ch(1)%Ref_Toa_Clear(i,j)
+        Input%Ref_063um_Clear = Ref1_Clr_Routine(i,j)
         Input%Ref_063um_Std = Ref_Ch1_Std_3x3(i,j)
         Input%Ref_063um_Min = Ref_Ch1_Min_3x3(i,j)
       endif

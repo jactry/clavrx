@@ -18,6 +18,9 @@ module muri_definitions_mod
    type muri_output_type
       real :: aot
       real :: aot_channel(6)
+      integer :: cm_mode
+      integer :: fm_mode
+      real :: fmf
    
    end type  muri_output_type
    

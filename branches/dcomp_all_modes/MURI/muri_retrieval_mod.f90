@@ -137,7 +137,9 @@ contains
       
        !- once find a good match between fwd and measurment give output
       out% aot = aod_nleta_temp(idx2(1),idx2(2))
-      
+      out % cm_mode = idx2(1)
+      out % fm_mode =  idx2(2)
+      out % fmf = fmf_nleta_temp(idx2(1),idx2(2))
       do i_cha =1,6 
          out% aot_channel(i_cha) = aod_allbands(idx2(1),idx2(2),i_cha)
       end do

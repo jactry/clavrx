@@ -46,8 +46,8 @@ contains
       integer :: idx(1), idx2(2)
       real :: val,val2
       real :: aod_allbands(4,5,6)
-      print*,'start muri algorithm'
-      call inp%info
+      !print*,'start muri algorithm'
+      ! call inp%info
       
       
       call lut % read_lut
@@ -118,7 +118,7 @@ contains
             
             aod_allbands (i_fm,i_cm,:) = aot_allbands(idx(1),:)
             
-            print*,i_fm,i_cm,    aod_nleta_temp(i_fm,i_cm) ,val,fmf_nleta_temp(i_fm,i_cm)     
+            !print*,i_fm,i_cm,    aod_nleta_temp(i_fm,i_cm) ,val,fmf_nleta_temp(i_fm,i_cm)     
             
          end do
       end do
@@ -128,7 +128,7 @@ contains
      idx2=minloc(err_nleta_temp)
       
       
-      print*,idx2
+      !print*,idx2
       
       
       

@@ -13,10 +13,18 @@ program one_pixel_run
    type ( muri_input_type) :: inp
    type ( muri_output_type) :: out
    
+   integer :: i,ii
+   
+   
+   
+   do i=20,50
+   
+   
+   
    inp % rfl(1) = 0.3 
    inp % rfl(2) = 0.28
    inp % rfl(3) = 0.28
-   inp % rfl(4) = 0.32
+   inp % rfl(4) = i/100.   !0.32
    inp % rfl(5) = 0.33
    inp % rfl(6) = 0.31
    
@@ -24,11 +32,18 @@ program one_pixel_run
    inp % sat = 13.
    inp % azi = 120.
    
-   call inp % info  
+   !call inp % info  
    
    call muri_algorithm (inp,out)
+   print*
+   print*,'channel 4 reflectance: ',fix(inp % rfl(4) )
+   print*,'AOT reference: ',out % aot
+   do ii=1,6 
    
-   print*,out
+   print*,'AOT channel',ii,out % aot_channel(ii)
+   
+   end do
+   end do
 
 
 end program one_pixel_run

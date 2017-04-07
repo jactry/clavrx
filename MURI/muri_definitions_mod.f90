@@ -7,6 +7,7 @@ module muri_definitions_mod
       real :: sol
       real :: sat
       real :: azi  
+      real :: ws
       
       contains
       
@@ -16,6 +17,7 @@ module muri_definitions_mod
    
    type muri_output_type
       real :: aot
+      real :: aot_channel(6)
    
    end type  muri_output_type
    

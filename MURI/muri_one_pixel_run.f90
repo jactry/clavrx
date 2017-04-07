@@ -14,11 +14,11 @@ program one_pixel_run
    type ( muri_output_type) :: out
    
    inp % rfl(1) = 0.3 
-   inp % rfl(2) = 0.1
-   inp % rfl(3) = 0.2
-   inp % rfl(4) = 0.122
+   inp % rfl(2) = 0.28
+   inp % rfl(3) = 0.28
+   inp % rfl(4) = 0.32
    inp % rfl(5) = 0.33
-   inp % rfl(6) = 0.11
+   inp % rfl(6) = 0.31
    
    inp % sol = 22.
    inp % sat = 13.

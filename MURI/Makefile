@@ -29,7 +29,7 @@ PATH_FLAGS = -I$(TEST_PATH) -I$(SUB_PATH)
 	$(fc) -c  $(CFLAGS) ${fflags} ${hdf5libs} ${cx_data_libs} ${cx_data_links}   $<
 	
 	
-OBJS = muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o muri_array_loop_sub.o muri_interface_mod.o
+OBJS = muri_one_pixel_run.o muri_retrieval_mod.o muri_forward_mod.o muri_definitions_mod.o muri_array_loop_sub.o muri_interface_mod.o muri_lut_mod.o lib_array.o
 
 .PHONY: all_muri clean
 
@@ -59,13 +59,11 @@ cx_read_io:
 muri_array_loop_sub.o:muri_array_loop_sub.f90 muri_interface_mod.o muri_retrieval_mod.o muri_definitions_mod.o
 muri_interface_mod.o:muri_interface_mod.f90
 muri_one_pixel_run.o:muri_one_pixel_run.f90 muri_retrieval_mod.o muri_definitions_mod.o
-muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_forward_mod.o
+muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_forward_mod.o lib_array.o
 muri_definitions_mod.o:muri_definitions_mod.f90
-muri_forward_mod.o:muri_forward_mod.f90
-
-
-
-
+muri_forward_mod.o:muri_forward_mod.f90 muri_lut_mod.o
+muri_lut_mod.o:muri_lut_mod.f90
+lib_array.o:lib_array.f90
 
 
 clean:

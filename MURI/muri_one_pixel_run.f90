@@ -36,7 +36,9 @@ program one_pixel_run
    
    call muri_algorithm (inp,out)
    print*
-   print*,'channel 4 reflectance: ',fix(inp % rfl(4) )
+   
+   print*,'channel 4 reflectance: ',inp % rfl(4) 
+   print*,'cm mode, fm mode :',out % cm_mode, out % fm_mode, out % fmf
    print*,'AOT reference: ',out % aot
    do ii=1,6 
    

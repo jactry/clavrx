@@ -284,35 +284,36 @@ module AVHRR_MODULE
   real (kind=real4), dimension(:,:), allocatable, private, save:: Vis_Intercept_2
   real (kind=real4), dimension(:,:), allocatable, private, save:: Vis_Intersection
 
-  contains
-!-------------------------------------------------------------------
-!-- define a Sc_Id that is unique value for each satellite
-!-------------------------------------------------------------------
- subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
+contains
+   !-------------------------------------------------------------------
+   !-- define a Sc_Id that is unique value for each satellite
+   !-------------------------------------------------------------------
+   subroutine ASSIGN_AVHRR_SAT_ID_NUM_INTERNAL()
 
-  if (AVHRR_KLM_Flag == sym%NO) then
-    if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N
-!      Sensor%Platform_Name = 'TIROS-N'
-       Sensor%Platform_Name = 'NOAA-05'
-       Sensor%Sensor_Name = 'AVHRR-1'
-       Sensor%WMO_Id = 708
-       Sensor%Instr_Const_File = "avhrr_5_instr.dat"
-       Sensor%Algo_Const_File = "avhrr_5_algo.dat"
-    endif
-    if(Sc_Id_AVHRR == 2 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-6
-       Sensor%Platform_Name = 'NOAA-06'
-       Sensor%Sensor_Name = 'AVHRR-1'
-       Sensor%WMO_Id = 706
-       Sensor%Instr_Const_File = "avhrr_6_instr.dat"
-       Sensor%Algo_Const_File = "avhrr_6_algo.dat"
-    endif
-    if(Sc_Id_AVHRR == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
-       Sensor%Platform_Name = 'NOAA-07'
-       Sensor%Sensor_Name = 'AVHRR-2'
-       Sensor%WMO_Id = 707
-       Sensor%Instr_Const_File = "avhrr_7_instr.dat"
-       Sensor%Algo_Const_File = "avhrr_7_algo.dat"
-    endif
+      if (AVHRR_KLM_Flag == sym%NO) then
+         if(Sc_Id_AVHRR == 1 .and. AVHRR_1_Flag == sym%YES) then  !TIROS-N   
+            Sensor%Platform_Name = 'NOAA-05'
+            Sensor%Sensor_Name = 'AVHRR-1'
+            Sensor%WMO_Id = 708
+            Sensor%Instr_Const_File = "avhrr_5_instr.dat"
+            Sensor%Algo_Const_File = "avhrr_5_algo.dat"
+         end if
+         
+         if(Sc_Id_AVHRR == 2 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-6
+            Sensor%Platform_Name = 'NOAA-06'
+            Sensor%Sensor_Name = 'AVHRR-1'
+            Sensor%WMO_Id = 706
+             Sensor%Instr_Const_File = "avhrr_6_instr.dat"
+            Sensor%Algo_Const_File = "avhrr_6_algo.dat"
+         end if
+         
+         if(Sc_Id_AVHRR == 4 .and. AVHRR_KLM_Flag == sym%NO) then  !NOAA-7
+            Sensor%Platform_Name = 'NOAA-07'
+            Sensor%Sensor_Name = 'AVHRR-2'
+            Sensor%WMO_Id = 707
+            Sensor%Instr_Const_File = "avhrr_7_instr.dat"
+            Sensor%Algo_Const_File = "avhrr_7_algo.dat"
+      endif
     if(Sc_Id_AVHRR == 6 .and. AVHRR_1_Flag == sym%YES) then  !NOAA-8
        Sensor%Platform_Name = 'NOAA-08'
        Sensor%Sensor_Name = 'AVHRR-2'
@@ -422,22 +423,22 @@ module AVHRR_MODULE
 !---------------------------------------------------------------
 ! read the avhrr constants into memory
 !-----------------------------------------------------------------
-subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
- character(len=*), intent(in):: Instr_Const_file
- integer:: ios0, erstat
- integer:: Instr_Const_lun
+   subroutine READ_AVHRR_INSTR_CONSTANTS(Instr_Const_file)
+      character(len=*), intent(in):: Instr_Const_file
+      integer:: ios0, erstat
+      integer:: Instr_Const_lun
 
- Instr_Const_lun = GET_LUN()
+      Instr_Const_lun = GET_LUN()
 
- open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
+      open(unit=Instr_Const_lun,file=trim(Instr_Const_file),status="old",position="rewind",action="read",iostat=ios0)
 
- erstat = 0
- if (ios0 /= 0) then
-    erstat = 19
-    print *, EXE_PROMPT, "Error opening AVHRR constants file, ios0 = ", ios0
-    print*, 'file : ',trim(Instr_Const_file)
-    stop 19
- endif
+      erstat = 0
+      if (ios0 /= 0) then
+         erstat = 19
+         print *, EXE_PROMPT, "Error opening AVHRR constants file, ios0 = ", ios0
+         print*, 'file : ',trim(Instr_Const_file)
+         stop 19
+      end if
 
   read(unit=Instr_Const_lun,fmt="(a3)") sat_name
   read(unit=Instr_Const_lun,fmt=*) Solar_Ch20
@@ -552,41 +553,48 @@ end subroutine READ_AVHRR_INSTR_CONSTANTS
 
 
  end subroutine DEFINE_1B_DATA
-!======================================================================
-! Determine what type of file based on the header
-!======================================================================
-!-------------------------------------------------------
-! read header to get data type and version of 1b data
-! inorder to get AVHRR_KLM_Flag and AVHRR_GAC_Flag which determine
-! the data format for subsequent read statements
-! note, AVHRR_Data_Type and AVHRR_Ver_1b are read in again later
-!-------------------------------------------------------
-   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local,AVHRR_GAC_Flag,AVHRR_KLM_Flag,AVHRR_AAPP_Flag, &
-                                        AVHRR_Ver_1b,AVHRR_Data_Type,Byte_Swap_1b,AVHRR_1_Flag)
+   
+   !======================================================================
+   ! Determine what type of file based on the header
+   !======================================================================
+   !-------------------------------------------------------
+   ! read header to get data type and version of 1b data
+   ! inorder to get AVHRR_KLM_Flag and AVHRR_GAC_Flag which determine
+   ! the data format for subsequent read statements
+   ! note, AVHRR_Data_Type and AVHRR_Ver_1b are read in again later
+   !-------------------------------------------------------
+   subroutine DETERMINE_AVHRR_FILE_TYPE(file_1b_local &
+         ,AVHRR_GAC_Flag &
+         ,AVHRR_KLM_Flag &
+         ,AVHRR_AAPP_Flag &
+         ,AVHRR_Ver_1b &
+         ,AVHRR_Data_Type &
+         ,Byte_Swap_1b &
+         ,AVHRR_1_Flag)
 
-    character(len=*), intent(in):: file_1b_local
-    integer(kind=int4), intent(out):: AVHRR_GAC_Flag
-    integer(kind=int4), intent(out):: AVHRR_KLM_Flag
-    integer(kind=int4), intent(out):: AVHRR_AAPP_Flag
-    integer(kind=int2), intent(out):: AVHRR_Ver_1b
-    integer(kind=int4), intent(out):: AVHRR_1_Flag
-    integer(kind=int2), intent(out):: AVHRR_Data_Type
-    integer(kind=int4), intent(out):: Byte_Swap_1b
+      character(len=*), intent(in):: file_1b_local
+      integer(kind=int4), intent(out):: AVHRR_GAC_Flag
+      integer(kind=int4), intent(out):: AVHRR_KLM_Flag
+      integer(kind=int4), intent(out):: AVHRR_AAPP_Flag
+      integer(kind=int2), intent(out):: AVHRR_Ver_1b
+      integer(kind=int4), intent(out):: AVHRR_1_Flag
+      integer(kind=int2), intent(out):: AVHRR_Data_Type
+      integer(kind=int4), intent(out):: Byte_Swap_1b
 
-    integer(kind=int1), dimension(100):: Header_Buffer_Temp
-    integer:: word_start
-    integer:: bytes_per_word
-    integer:: Number_Of_Words
-    integer:: Number_Of_Words_Read
-    integer(kind=int4):: i4word
-    integer(kind=int2), dimension(2):: data_byte
-    integer(kind=int2):: Start_Year_Temp
+      integer(kind=int1), dimension(100):: Header_Buffer_Temp
+      integer:: word_start
+      integer:: bytes_per_word
+      integer:: Number_Of_Words
+      integer:: Number_Of_Words_Read
+      integer(kind=int4):: i4word
+      integer(kind=int2), dimension(2):: data_byte
+      integer(kind=int2):: Start_Year_Temp
 
-    !--- use c-routine
-    bytes_per_word = 1
-    word_start = 0
-    Number_Of_Words = 100
-    call mreadf_int(file_1b_local//CHAR(0),word_start,bytes_per_word, &
+      !--- use c-routine
+      bytes_per_word = 1
+       word_start = 0
+      Number_Of_Words = 100
+      call mreadf_int(file_1b_local//CHAR(0),word_start,bytes_per_word, &
                     Number_Of_Words,Number_Of_Words_Read,Header_Buffer_Temp)
 
     !--- use instrinsic fortran read

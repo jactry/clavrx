@@ -15,7 +15,7 @@
 # -------------------------------------------------------------- 
 # Specify path to NetCDF library here 
 # --------------------------------------------------------------
- HDF_PREFIX  = /opt/hdf4/4.2.9-intel-14.0-2/
+ HDF_PREFIX  = /opt/hdf4/4.2.7.ifort/
  FFLAGS_HDF  = -I$(HDF_PREFIX)/include/
  LDFLAGS_HDF = -L$(HDF_PREFIX)/lib/ -lmfhdf -ldf -ljpeg -lz
  

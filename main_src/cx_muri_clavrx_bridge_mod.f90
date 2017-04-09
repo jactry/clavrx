@@ -54,7 +54,7 @@ contains
       
       
       
-      muri % aod = output % aod
+      muri % aod = output % aot
      
    end subroutine cx_muri_algorithm
    

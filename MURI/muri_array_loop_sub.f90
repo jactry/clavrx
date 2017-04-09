@@ -21,7 +21,7 @@ subroutine muri_array_loop (input, output )
    type ( muri_input_type) :: inp_pixel
    type ( muri_output_type) :: out_pixel
    integer :: i,j,k
-   print*,'starrrrrt...'
+   print*,' MUUURI starrrrrt...'
    print*,shape(input)
    
    
@@ -39,13 +39,21 @@ subroutine muri_array_loop (input, output )
             inp_pixel % rfl(k) = input % ref(k,i,j)
          end do
          call muri_algorithm( inp_pixel, out_pixel )
-      
+         do k=1, 6
+            output % aot_channel(k,i,j) = out_pixel % aot_channel(k)
+         end do 
+         output % aot(i,j) = out_pixel % aot
+         output % cm_mode(i,j) = out_pixel % cm_mode
+         output % fm_mode(i,j) = out_pixel % fm_mode
+         output % fmf(i,j) = out_pixel % fmf 
       end do
    end do   
    
+  
+   
    print*,'end....'
 
-
+   
 
 
 

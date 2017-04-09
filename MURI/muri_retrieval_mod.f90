@@ -124,8 +124,8 @@ contains
       end do
       
       
-     val2= minval(err_nleta_temp)
-     idx2=minloc(err_nleta_temp)
+      val2= minval(err_nleta_temp)
+      idx2=minloc(err_nleta_temp)
       
       
       !print*,idx2

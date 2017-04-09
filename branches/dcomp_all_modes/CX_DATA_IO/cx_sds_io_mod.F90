@@ -250,8 +250,8 @@ module cx_sds_io_mod
    !
    !
    !
-   function cx_sds_read_2d_real ( file, sds_name, out )
-      integer :: cx_sds_read_2d_real
+   integer function cx_sds_read_2d_real ( file, sds_name, out )
+      !integer :: cx_sds_read_2d_real
       character (len = * ), intent(in) :: file
       character (len = * ), intent(in) :: sds_name 
       real, intent(out), allocatable :: out(:,:)

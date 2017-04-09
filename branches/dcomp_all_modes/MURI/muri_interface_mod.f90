@@ -10,6 +10,7 @@ module muri_interface_mod
       real,allocatable :: azi(:,:)
       real,allocatable :: ref(:,:,:)
       real,allocatable :: windspeed(:,:)
+      logical, allocatable :: do_it(:,:)
       
       contains
       procedure :: allocate=>muri_in_array_type__allocate
@@ -43,6 +44,7 @@ contains
       allocate ( this % sat( dim1,dim2))
       allocate ( this % azi( dim1,dim2))
       allocate ( this % windspeed( dim1,dim2))
+      allocate ( this % do_it(dim1,dim2))
       
      
       allocate ( this % ref( 6,dim1,dim2))
@@ -58,7 +60,7 @@ contains
       deallocate ( this % sat)
       deallocate ( this % azi)
       deallocate ( this % windspeed)
-      
+      deallocate ( this % do_it)
      
       deallocate ( this % ref)
       
@@ -80,7 +82,7 @@ contains
       allocate ( this % fmf( dim1,dim2))
       allocate ( this % fm_mode( dim1,dim2))
       allocate ( this % cm_mode( dim1,dim2))
-      
+      this % aot = -999.
    
    end  subroutine muri_out_array_type__allocate
    

@@ -15,7 +15,7 @@ module cx_muri_clavrx_bridge_mod
          muri_in_array_type &
        , muri_out_array_type
    use pixel_common, only: &
-      geo,ch
+      geo,ch,cldmask,sfc
    
    type cx_muri_structure
       real,allocatable :: aod(:,:)
@@ -46,16 +46,18 @@ contains
      
       do i=1,6 
          print*,i
-         input % ref(i,:,:) = ch(ahi_map_modis(i))%ref_toa
+         input % ref(i,:,:) = ch(ahi_map_modis(i))%ref_toa/100.
         
       end do
       
+      input % do_it = CLDMASK%cld_mask == 0 .AND. sfc%land .NE. 1
+      call output % allocate(dim1,dim2)
       call  muri_array_loop (input, output )
       
       
       
       muri % aod = output % aot
-     
+      call output % deallocate
    end subroutine cx_muri_algorithm
    
    

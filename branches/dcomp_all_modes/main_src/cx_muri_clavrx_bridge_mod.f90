@@ -37,7 +37,7 @@ contains
       integer :: i 
       integer, parameter :: ahi_map_modis(6) = [3,4,1,2,6,7]
      
-      print*,'muri starts'
+      
       call input % allocate ( dim1,dim2)
      
       input % sol = geo % solzen
@@ -45,7 +45,7 @@ contains
       input % azi = geo % relaz
      
       do i=1,6 
-         print*,i
+         
          input % ref(i,:,:) = ch(ahi_map_modis(i))%ref_toa/100.
         
       end do
@@ -58,6 +58,7 @@ contains
       
       muri % aod = output % aot
       call output % deallocate
+      call input % deallocate
    end subroutine cx_muri_algorithm
    
    

@@ -21,14 +21,15 @@ subroutine muri_array_loop (input, output )
    type ( muri_input_type) :: inp_pixel
    type ( muri_output_type) :: out_pixel
    integer :: i,j,k
-   print*,' MUUURI starrrrrt...'
    
    
    
-
+   
+   
+   print*,count ( input % do_it )
   
+   do i = 1, input % dim(1)
   
-  do i = 1, input % dim(1)
       do j = 1, input % dim(2)
          if ( .not. input % do_it(i,j)) cycle
         ! print*,i,j
@@ -56,7 +57,7 @@ subroutine muri_array_loop (input, output )
    
   
    
-   print*,'end....'
+  
 
    
 

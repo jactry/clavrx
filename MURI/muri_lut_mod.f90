@@ -10,6 +10,7 @@ module muri_lut_mod
    
    implicit none 
    type muri_lut_type
+      logical :: is_read = .false.
       real, allocatable :: sol(:,:)
       real, allocatable :: sat(:,:)
       real, allocatable :: azi(:,:)
@@ -24,16 +25,18 @@ module muri_lut_mod
       real :: refl_coarse (8,6,5)
       
       contains
-      procedure :: read_lut
-     
-     
+      procedure ::read_lut => muri_lut_type__read_lut 
+ 
    end type muri_lut_type
-
+   
+   type ( muri_lut_type)  :: lut
+   
+   
 contains
   !
    !
    !
-   subroutine read_lut(this)
+   subroutine muri_lut_type__read_lut(this)
       class(muri_lut_type ) :: this
       
       character (len =400)::lut_file
@@ -47,6 +50,10 @@ contains
       real,allocatable :: sat_zen_ang(:,:)
       logical :: file_exists
       real, allocatable :: temp_2d_real(:,:)
+      
+      
+      if ( this % is_read) return
+      
       lut_file = trim('/DATA/AHI_AEROSOL/AHI_Aerosol_LUT/AHI_Ocean_Aerosol_LUT_v1.hdf')
       INQUIRE(file = lut_file,EXIST=file_exists)
       if ( .not. file_exists) then 
@@ -67,16 +74,24 @@ contains
       istatus = cx_sds_read ( trim(lut_file),'Aer_AOT_total', this % aot_aer )
       
       
-      ! - this is okay 
+      ! - this is okay LUTs replicate results for some dimensions
       this % aot_aer_fine =   this % aot_aer(1,1,1,:,:,1,1:4)
       this % aot_aer_coarse = this % aot_aer(1,1,1,:,:,1,5:9)
       
       !TODO this has to be interpolated
       this % refl_fine =   this % app_refl(1,1,1,:,:,1,1:4)
       this % refl_coarse = this % app_refl(1,1,1,:,:,1,5:9)
-     
+      this % is_read = .true.
       
-   end subroutine read_lut
+   end subroutine muri_lut_type__read_lut
+   !
+   !
+   !
+  ! subroutine muri_lut_type__sub_table ( this, sol,sat,azi,ws )
+      
+   
+   
+ !  end subroutine muri_lut_type__sub_table
    
   
    

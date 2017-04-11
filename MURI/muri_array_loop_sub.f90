@@ -23,10 +23,6 @@ subroutine muri_array_loop (input, output )
    integer :: i,j,k
    
    
-   
-   
-   
-   print*,count ( input % do_it )
   
    do i = 1, input % dim(1)
   

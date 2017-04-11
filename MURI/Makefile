@@ -59,7 +59,7 @@ cx_read_io:
 muri_array_loop_sub.o:muri_array_loop_sub.f90 muri_interface_mod.o muri_retrieval_mod.o muri_definitions_mod.o
 muri_interface_mod.o:muri_interface_mod.f90
 muri_one_pixel_run.o:muri_one_pixel_run.f90 muri_retrieval_mod.o muri_definitions_mod.o
-muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_forward_mod.o lib_array.o
+muri_retrieval_mod.o:muri_retrieval_mod.f90 muri_definitions_mod.o muri_lut_mod.o lib_array.o
 muri_definitions_mod.o:muri_definitions_mod.f90
 muri_forward_mod.o:muri_forward_mod.f90 muri_lut_mod.o
 muri_lut_mod.o:muri_lut_mod.f90

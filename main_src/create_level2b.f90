@@ -433,6 +433,7 @@ program create_level2b
       deallocate(Lon_Inp)
       deallocate(Lat_Inp)
       deallocate(Gap_inp)
+      deallocate(sen_inp)
 
       is_first_file = .false.
    end do file_loop

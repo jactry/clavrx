@@ -1102,7 +1102,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        !--- compute total transmission for combining terms
        Tau_Total = Tau_Aer + Tau_Ray + Tau_Gas
        Trans_Total = exp(-Tau_Total*Airmass_Factor)
-        print*,chan_idx,Tau_Aer , Tau_Ray , Tau_Gas, trans_total
+       ! print*,'Routine ATNOS_CORR in PIXEL_ROTUINES: ',chan_idx,Tau_Aer , Tau_Ray , Tau_Gas, trans_total
        if (Chan_Idx /= 44) then
 
          !--- compute atmospherically corrected reflectance (at sfc level)s

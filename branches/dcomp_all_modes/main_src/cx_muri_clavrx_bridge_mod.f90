@@ -55,7 +55,7 @@ contains
       call  muri_array_loop (input, output )
       
       
-      
+      !call muri % allocate (dim1,dim2)
       muri % aod = output % aot
       call output % deallocate
       call input % deallocate

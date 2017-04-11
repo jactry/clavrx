@@ -5,10 +5,8 @@ module muri_retrieval_mod
       muri_input_type &
       , muri_output_type
    
-   use muri_forward_mod, only: &
-      muri_fwd_type &
-      , muri_forward &
-      ,  muri_lut_type
+   use muri_lut_mod, only: &
+      lut
    
    use lib_array
       
@@ -24,8 +22,8 @@ contains
       type( muri_input_type), intent(in) :: inp
       type( muri_output_type), intent(out) :: out
       
-      type ( muri_fwd_type ) :: fwd
-      type ( muri_lut_type)  :: lut
+     
+      
       integer :: i_fm, i_cm
       real :: fmr
       real :: refl_toa (8,11,6)
@@ -49,6 +47,8 @@ contains
       !print*,'start muri algorithm'
       ! call inp%info
       
+      err_nleta_temp = huge(err_nleta_temp)
+      err_sqrt = huge(err_sqrt)
       
       call lut % read_lut
       
@@ -98,11 +98,6 @@ contains
                n1 = inp % rfl(i_cha) - refl_corrsp(:,i_cha)
                n2 = inp % rfl(i_cha) - refl_toa(1,1,i_cha) + 0.001
                
-               
-             
-               
-               
-               
                err(:,i_cha) = n1/n2
                
             end do
@@ -124,18 +119,11 @@ contains
       end do
       
       
-      val2= minval(err_nleta_temp)
-      idx2=minloc(err_nleta_temp)
+      val2 = minval(err_nleta_temp)
+      idx2 = minloc(err_nleta_temp)
       
       
-      !print*,idx2
-      
-      
-      
-      
-      
-      
-       !- once find a good match between fwd and measurment give output
+      !- once find a good match between fwd and measurment give output
       out% aot = aod_nleta_temp(idx2(1),idx2(2))
       out % cm_mode = idx2(1)
       out % fm_mode =  idx2(2)

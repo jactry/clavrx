@@ -32,6 +32,7 @@ subroutine muri_array_loop (input, output )
          inp_pixel % sat = input % sat(i,j)
          inp_pixel % sol = input % sol(i,j)
          inp_pixel % azi = input % azi(i,j)
+         inp_pixel % ws = 2.0
          do k=1,6
             inp_pixel % rfl(k) = input % ref(k,i,j)
          end do

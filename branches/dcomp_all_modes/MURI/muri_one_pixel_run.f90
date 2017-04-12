@@ -17,7 +17,7 @@ program one_pixel_run
    
    
    
-   do i=20,50
+   do i=20,20
    
    
    
@@ -48,6 +48,9 @@ program one_pixel_run
    
    end do
    end do
+   
+   
+  
 
 
 end program one_pixel_run

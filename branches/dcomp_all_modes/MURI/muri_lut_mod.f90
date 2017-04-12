@@ -55,6 +55,9 @@ contains
       
       if ( this % is_read) return
       
+     print*,'start'
+      
+      
       lut_file = trim('/DATA/AHI_AEROSOL/AHI_Aerosol_LUT/AHI_Ocean_Aerosol_LUT_v1.hdf')
       INQUIRE(file = lut_file,EXIST=file_exists)
       if ( .not. file_exists) then 
@@ -82,15 +85,8 @@ contains
      
       istatus = cx_sds_read ( trim(lut_file),'Aer_AOT_total', this % aot_aer )
       
-      
-      ! - this is okay LUTs replicate results for some dimensions
-      this % aot_aer_fine =   this % aot_aer(1,1,1,:,:,1,1:4)
-      this % aot_aer_coarse = this % aot_aer(1,1,1,:,:,1,5:9)
-      
-      !TODO this has to be interpolated
-      this % refl_fine =   this % app_refl(1,1,1,:,:,1,1:4)
-      this % refl_coarse = this % app_refl(1,1,1,:,:,1,5:9)
       this % is_read = .true.
+      print*,'end;'
       
    end subroutine muri_lut_type__read_lut
    !
@@ -112,27 +108,34 @@ contains
       integer :: i,j,k
       
       
-      allocate (temp_4d(size(this % sol), size(this % sat),size(this % azi),size(this % ws) ))
+      ! allocate (temp_4d(size(this % sol), size(this % sat),size(this % azi),size(this % ws) ))
       do i = 1, 8
          do j = 1, 6
             do k = 1, 4
-               temp_4d = this % app_refl(:,:,:,i,j,:,k)
-               this % refl_fine (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,temp_4d,sol,sat,azi,ws )
-                temp_4d = this % aot_aer(:,:,:,i,j,:,k)
-               this % aot_aer_fine (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,temp_4d,sol,sat,azi,ws )
+              
+              ! allocate ( temp_4d, source = this % app_refl(:,:,:,i,j,:,k) )
+               
+               !temp_4d = this % app_refl(:,:,:,i,j,:,k)
+              
+               this % refl_fine (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,this % app_refl(:,:,:,i,j,:,k),sol,sat,azi,ws )
+              ! deallocate ( temp_4d)
+               ! temp_4d = this % aot_aer(:,:,:,i,j,:,k)
+               this % aot_aer_fine (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,this % aot_aer(:,:,:,i,j,:,k),sol,sat,azi,ws )
                
             end do
          end do
       end do 
       
-      
+      !allocate (temp_4d(size(this % sol), size(this % sat),size(this % azi),size(this % ws) ))
        do i = 1, 8
          do j = 1, 6
             do k = 1, 5
-               temp_4d = this % app_refl(:,:,:,i,j,:,k+4)               
-               this % refl_coarse (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,temp_4d,sol,sat,azi,ws )
-               temp_4d = this % aot_aer(:,:,:,i,j,:,k+4)
-               this % aot_aer_coarse (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,temp_4d,sol,sat,azi,ws )
+              ! allocate ( temp_4d, source = this % app_refl(:,:,:,i,j,:,k) )
+               !temp_4d = this % app_refl(:,:,:,i,j,:,k+4)               
+               this % refl_coarse (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,this % app_refl(:,:,:,i,j,:,k+4) ,sol,sat,azi,ws )
+               !deallocate ( temp_4d)
+             !  temp_4d = this % aot_aer(:,:,:,i,j,:,k+4)
+               this % aot_aer_coarse (i,j,k) = interp4d (this % sol, this % sat, this % azi, this%ws,this % aot_aer(:,:,:,i,j,:,k+4),sol,sat,azi,ws )
             end do
          end do
       end do   

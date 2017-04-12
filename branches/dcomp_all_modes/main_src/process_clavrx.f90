@@ -364,7 +364,7 @@
    integer(kind=int4):: Line_Idx  !generic line (across scan) index
    integer(kind=int4):: Phase_Called_Flag
    logical:: Level1b_Exists
-   integer, parameter:: num_Segment_Time_points=15
+   integer, parameter:: num_Segment_Time_points=16
    real(kind=real4), dimension(num_Segment_Time_points):: Segment_Time_Point_Seconds
    real(kind=real4) :: Start_Time_Point_Hours
    real(kind=real4) :: End_Time_Point_Hours
@@ -1404,12 +1404,15 @@
                
                
                !- call AHI AEROSOL algorithm
-               
+                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if ( trim(Sensor%Sensor_Name) == 'AHI' ) then
-                 ! call muri % allocate (Image%Number_of_elements , Image%Number_Of_Lines_Read_This_Segment)
-                 ! call CX_MURI_ALGORITHM (Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
+                  
+                  call muri % allocate (Image%Number_of_elements , Image%Number_Of_Lines_Read_This_Segment)
+                  call CX_MURI_ALGORITHM (Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
                end if
-              
+              End_Time_Point_Hours = COMPUTE_TIME_HOURS()
+               Segment_Time_Point_Seconds(16) =  Segment_Time_Point_Seconds(16) + &
+                     & 60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)  
                
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
@@ -1523,7 +1526,11 @@
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
                    60.0*60.0*(End_Time_Point_Hours - Start_Time_Point_Hours)
-
+            
+            
+            ! can close muri
+            if ( muri % is_set) call muri % deallocate()
+            
             !*************************************************************************
             ! Marker: RTM Structure Memory Deallocation
             !*************************************************************************
@@ -1579,7 +1586,7 @@
         !*************************************************************************
         ! Marker: End of loop over orbital segments
         !*************************************************************************
-
+         
       end do Segment_loop
 
       call mesg ( "Finished Processing All Orbital Segments")
@@ -1642,6 +1649,7 @@
       call mesg ("Time for Cloud Height (sec) = ", Segment_Time_Point_Seconds(8))
       call mesg ("Time for Cloud Opt/Micro (sec) = ", Segment_Time_Point_Seconds(9))
       call mesg ("Time for NL-COMP (sec) = ", Segment_Time_Point_Seconds(15))
+      call mesg ("Time for MURI (sec) = ", Segment_Time_Point_Seconds(16))
       call mesg ("Time for Cloud Base (sec) = ", Segment_Time_Point_Seconds(10))
       call mesg ("Time for Volcanic Ash (sec) = ", Segment_Time_Point_Seconds(11))
       call mesg ("Time for Earth Radiation Budget (sec) = ", Segment_Time_Point_Seconds(12))

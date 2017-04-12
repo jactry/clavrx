@@ -44,14 +44,39 @@ contains
       integer :: idx(1), idx2(2)
       real :: val,val2
       real :: aod_allbands(4,5,6)
+      integer:: k,i,j
       !print*,'start muri algorithm'
       ! call inp%info
       
       err_nleta_temp = huge(err_nleta_temp)
       err_sqrt = huge(err_sqrt)
-      
+     
       call lut % read_lut
+      
       call lut % sub_table (inp % sol,inp%sat,inp%azi,inp%ws)
+      
+      
+      ! simple test
+   !   call lut % sub_table (22.,13.,120.,2.)
+      
+   !   do k = 1,4
+    !     print*
+   !      print*,'fine ',k
+   !      do i= 1,8
+   !         write(*,'(f7.5)') lut % refl_fine(i,:,k)
+           
+  !       end do
+ !     end do
+      
+  !    do k = 1,5
+  !    print*
+   !      print*,'coarse ',k
+   !      do i= 1,8
+   !         print*,lut % refl_coarse(i,:,k)
+    !     end do
+   !   end do
+      
+      
       
       ! - loop over fine and coarse mode
       do i_fm = 1, 4

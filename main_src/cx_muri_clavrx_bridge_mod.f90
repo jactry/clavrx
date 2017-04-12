@@ -18,6 +18,7 @@ module cx_muri_clavrx_bridge_mod
       geo,ch,cldmask,sfc
    
    type cx_muri_structure
+      logical :: is_set = .false.
       real,allocatable :: aod(:,:)
         contains
         procedure :: allocate =>  cx_muri_structure__allocate
@@ -37,12 +38,13 @@ contains
       integer :: i 
       integer, parameter :: ahi_map_modis(6) = [3,4,1,2,6,7]
      
-      
+     
       call input % allocate ( dim1,dim2)
      
       input % sol = geo % solzen
       input % sat = geo % satzen
       input % azi = geo % relaz
+      input % windspeed = 2.0
      
       do i=1,6 
          
@@ -59,6 +61,8 @@ contains
       muri % aod = output % aot
       call output % deallocate
       call input % deallocate
+      
+      
    end subroutine cx_muri_algorithm
    
    
@@ -67,10 +71,12 @@ contains
       class(cx_muri_structure) :: this
       integer, intent(in) :: dim1,dim2
       allocate ( this % aod ( dim1,dim2))
+      this % is_set = .true.
    end subroutine cx_muri_structure__allocate
    
    subroutine cx_muri_structure__deallocate(this)
       class(cx_muri_structure) :: this
+      if ( allocated (this % aod) ) deallocate ( this % aod)
    
    end subroutine cx_muri_structure__deallocate
 

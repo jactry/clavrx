@@ -237,7 +237,7 @@ contains
     end do   
     
     value = interp2d(w,x,temp_array_2d_interp,w0,x0) !,bounds_error=.true.,fill_value = -999.)
-   
+   deallocate (temp_array_2d_interp)
    
    
          

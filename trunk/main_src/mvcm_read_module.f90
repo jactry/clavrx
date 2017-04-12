@@ -28,8 +28,6 @@ module MVCM_READ_MODULE
            , Sym &
            , Missing_Value_Int1
 
-    use HDF, only: DFACC_read
-
     implicit none
 
     public:: DETERMINE_MVCM_NAME
@@ -58,7 +56,8 @@ module MVCM_READ_MODULE
   if (index(Image%Level1b_Name,'VGEOM') == 1) then 
 
     !--- search should be the date and start time (ie. d20130426_t083000
-    Search_String = 'IFFCMO_npp_'//Image%Level1b_Name(12:28)//'*.hdf'
+    !Search_String = 'IFFCMO_npp_'//Image%Level1b_Name(12:28)//'*.hdf'
+    Search_String = 'VCLDMK_snpp_'//Image%Level1b_Name(12:28)//'*.nc'
 
     Files => FILE_SEARCH(trim(Image%Level1b_Path),trim(Search_String),count=Num_Files)
 
@@ -120,17 +119,20 @@ module MVCM_READ_MODULE
 ! seg refers to the data segment needed for clavr-x
 !------------------------------------------------------------------------------------------
  subroutine READ_MVCM_DATA(Seg_Idx)
+
+    use NETCDF_READ_MODULE
+
     integer, intent(in):: Seg_Idx
-    integer:: Sd_Id, Sds_Id, Status_Flag, Sds_Rank, Sds_Data_Type, Num_Attrs
-    integer(kind=int4), dimension(3):: Sds_Dims, Sds_Stride, Sds_Start, Sds_Edges
+    integer:: Sd_Id, Group_Id, Sds_Id, Status_Flag
+    integer, dimension(2):: DimID
+    integer(kind=int4), dimension(2):: Sds_Dims, Sds_Stride, Sds_Start, Sds_Edges
     character(len=120):: Sds_Name, Sds_Name_Temp
-    integer:: sfstart, sfginfo, sfrdata, sfend, sfendacc, sfn2index, sfselect
-    integer(kind=int1), dimension(:,:,:), allocatable:: I1_Buffer
-    integer:: Nx_Slab_Data, Nx_Slab_Read_Start, Nx_Slab_Read_End, Nx_Seg, Nx_Slab_Count
-    integer:: Ny_Slab_Data, Ny_Slab_Read_Start, Ny_Slab_Read_End, Ny_Seg, Ny_Seg_Max, Ny_Slab_Count
+    integer(kind=int4), dimension(:,:), allocatable:: I4_Buffer
+    integer:: Nx_Slab_Read_Start, Nx_Seg, Nx_Slab_Count
+    integer:: Ny_Slab_Read_Start, Ny_Seg, Ny_Seg_Max, Ny_Slab_Count
 
     Status_Flag = 0
-    Sds_Name = "Cloud_Mask"
+    Sds_Name = "Integer_Cloud_Mask"
     Cloud_Mask_Aux_Read_Flag = sym%NO   !will be set to yes if successful
 
     if (trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file") then
@@ -139,7 +141,8 @@ module MVCM_READ_MODULE
     endif
 
     !--- open file for read
-    Sd_Id = sfstart(trim(Image%Level1b_Path)//trim(Image%Auxiliary_Cloud_Mask_File_Name), DFACC_read)
+    Status_Flag = nf90_open(trim(Image%Level1b_Path)//trim(Image%Auxiliary_Cloud_Mask_File_Name), &
+                   nf90_nowrite, Sd_Id) + Status_Flag
 
     !--- if file is unreadable, exit
     if (Sd_Id <= 0) then
@@ -148,77 +151,61 @@ module MVCM_READ_MODULE
          return
      endif
 
+    !--- get information
+    Status_Flag = nf90_inq_ncid(Sd_Id, "geophysical_data", Group_Id) + Status_Flag
+    Status_Flag = nf90_inq_varid(Group_Id, trim(Sds_Name), Sds_Id) + Status_Flag
+    ! --- get dimention of file
+    Status_Flag = nf90_inquire_variable(Group_Id, Sds_Id, dimids = DimID) + Status_Flag
+    Status_Flag = nf90_inquire_dimension(Group_Id, DimID(1), len = Sds_Dims(1)) + Status_Flag
+    Status_Flag = nf90_inquire_dimension(Group_Id, DimID(2), len = Sds_Dims(2)) + Status_Flag
+
+    if (Status_Flag /= 0) then
+         print *, EXE_PROMPT, MVCM_PROMPT, "MVCM Sds information could not be read: "
+         return
+    endif
+
     !determine expected size of data slab
     Nx_Seg = Image%Number_of_Elements
     Ny_Seg_Max = Image%Number_of_Lines_Per_Segment
     Ny_Seg = Image%Number_of_Lines_Read_This_Segment
 
-    !--- open sds
-    Sds_Id = sfselect(Sd_Id, sfn2index(Sd_Id,trim(Sds_Name)))
-    if (Sds_Id <= 0) then
-         Status_Flag = 1
-         Status_Flag = sfend(Sd_Id) + Status_Flag
-         print *, EXE_PROMPT, MVCM_PROMPT, "MVCM Sds Could Not Be Opened: "
-         return
-     endif
-
-    !--- get information
-    Status_Flag = sfginfo(Sds_Id, Sds_Name_Temp, Sds_Rank, Sds_Dims,  &
-                          Sds_Data_Type, Num_Attrs) + Status_Flag
-    if (Status_Flag /= 0) then
-         print *, EXE_PROMPT, MVCM_PROMPT, "MVCM Sds information could not be read: "
-         Status_Flag = sfend(Sd_Id) + Status_Flag
-         return
-    endif
-
     !--- define size of data
-    Nx_Slab_Data = Sds_Dims(1)
-    Ny_Slab_Data = Sds_Dims(2)
+    Nx_Slab_Read_Start = 1
+    Ny_Slab_Read_Start = (Seg_Idx-1) * Ny_Seg_Max + 1
+    Nx_Slab_Count = Sds_Dims(1)
+    Ny_Slab_Count = Ny_Seg
 
-    Nx_Slab_Read_Start = 0
-    Nx_Slab_Read_End = Nx_Slab_Data-1
-    Ny_Slab_Read_Start = (Seg_Idx-1)*Ny_Seg_Max
-    Ny_Slab_Read_End = Ny_Slab_Read_Start + Ny_Seg -1
     !--- constrain to size of data
-    Ny_Slab_Read_End = min(Ny_Slab_Read_End,Ny_Slab_Data)
+    if ((Seg_Idx * Ny_Seg) .gt. Sds_Dims(2)) Ny_Slab_Count = Sds_Dims(2) - Ny_Slab_Read_Start
 
-    Nx_Slab_Count = Nx_Slab_Read_End - Nx_Slab_Read_Start + 1 
-    Ny_Slab_Count = Ny_Slab_Read_End - Ny_Slab_Read_Start + 1 
+    Sds_Stride = (/1, 1/)
+    Sds_Start = (/Nx_Slab_Read_Start, Ny_Slab_Read_Start/)
+    Sds_Edges = (/Nx_Slab_Count, Ny_Slab_Count/)
 
-    Sds_Stride = (/1, 1, 1/)
-    Sds_Start = (/Nx_Slab_Read_Start, Ny_Slab_Read_Start, 0/)
-    Sds_Edges = (/Nx_Slab_Count, Ny_Slab_Count,1/) 
+    if (.not. allocated(I4_Buffer)) allocate(I4_Buffer(Nx_Slab_Count, Ny_Slab_Count),stat=Status_Flag)
+    call read_netcdf_2d_int(Group_Id, Sds_Start, Sds_Edges, trim(Sds_Name), I4_Buffer)
 
-    !--- compute number of lines to read for this segment
-    if (.not. allocated(I1_Buffer)) allocate(I1_Buffer(Nx_Slab_Count, Ny_Slab_Count, 1))
-
-    Status_Flag = sfrdata(Sds_Id, Sds_Start, Sds_Stride, Sds_Edges, I1_Buffer) + Status_Flag
     if (Status_Flag /= 0) then
          print *, EXE_PROMPT, MVCM_PROMPT, "MVCM Sds could not be read: "
-         Status_Flag = sfend(Sd_Id) + Status_Flag
-         return
-    endif
-
-    Status_Flag = sfendacc(Sds_Id) + Status_Flag
-    if (Status_Flag /= 0) then
-         print *, EXE_PROMPT, MVCM_PROMPT, "MVCM Sds could not be closed: "
-         Status_Flag = sfend(Sd_Id) + Status_Flag
          return
     endif
 
     !--- close file
-    Status_Flag = sfend(Sd_Id) + Status_Flag
+    Status_Flag = nf90_close(Sd_Id) + Status_Flag
     if (Status_Flag /= 0) then
          print *, EXE_PROMPT, MVCM_PROMPT, "MVCM file could not be closed: "
          return
     endif
 
-    Cldmask%Cld_Mask_Aux(:,1:Ny_Slab_Count) = ishft(ishft(I1_Buffer(:,:,1),5),-6) 
-
     !--- switch CLAVR-x convection for mask
-    Cldmask%Cld_Mask_Aux(:,1:Ny_Slab_Count) = 3-Cldmask%Cld_Mask_Aux(:,1:Ny_Slab_Count)
+    Cldmask%Cld_Mask_Aux(:,1:Ny_Slab_Count) = 3-I4_Buffer(:,1:Ny_Slab_Count)
 
-    if (allocated(I1_Buffer)) deallocate(I1_Buffer)
+    ! --- set missing to CLAVR-x missing
+    where (Cldmask%Cld_Mask_Aux .lt. 0 .or. Cldmask%Cld_Mask_Aux .gt. 3)
+       Cldmask%Cld_Mask_Aux = Missing_Value_Int1
+    endwhere
+
+    if (allocated(I4_Buffer)) deallocate(I4_Buffer,stat=Status_Flag)
 
     Cloud_Mask_Aux_Read_Flag = sym%YES
 

@@ -51,6 +51,7 @@ contains
       err_sqrt = huge(err_sqrt)
       
       call lut % read_lut
+      call lut % sub_table (inp % sol,inp%sat,inp%azi,inp%ws)
       
       ! - loop over fine and coarse mode
       do i_fm = 1, 4

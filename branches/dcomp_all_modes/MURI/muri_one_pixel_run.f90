@@ -32,6 +32,8 @@ program one_pixel_run
    inp % sat = 13.
    inp % azi = 120.
    
+   inp % ws = 2.4
+   
    !call inp % info  
    
    call muri_algorithm (inp,out)

@@ -374,7 +374,8 @@ viewing_geometry_module.o: viewing_geometry_module.f90 constant.o
 nwp_common.o: nwp_common.f90 pixel_common.o constant.o
 level2.o: level2.f90 constant.o pixel_common.o hdf.o hdf_params.o scaling_params.o clavrx_message_module.o
 level2b.o: level2b.f90 constant.o hdf.o hdf_params.o level2.o scaling_params.o
-mvcm_read_module.o: mvcm_read_module.f90 hdf.o file_utility.o constant.o pixel_common.o file_tools.o
+mvcm_read_module.o: mvcm_read_module.f90 hdf.o file_utility.o constant.o pixel_common.o file_tools.o netcdf_read_module.o
+	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) mvcm_read_module.f90
 planck.o: planck.f90 constant.o calibration_constants.o pixel_common.o
 reposition_module.o: reposition_module.f90 constant.o num_mod.o pixel_common.o reposnx.o
 seviri_module.o: seviri_module.f90 pixel_common.o constant.o num_mod.o cgms_nav.o goes_module.o file_utility.o viewing_geometry_module.o

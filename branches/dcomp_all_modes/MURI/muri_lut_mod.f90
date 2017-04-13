@@ -54,14 +54,13 @@ contains
       
       
       if ( this % is_read) return
-      
-     print*,'start'
-      
-      
+       
       lut_file = trim('/DATA/AHI_AEROSOL/AHI_Aerosol_LUT/AHI_Ocean_Aerosol_LUT_v1.hdf')
+		lut_file = trim('/home/awalther/AHI_Ocean_Aerosol_LUT_v1.hdf')
       INQUIRE(file = lut_file,EXIST=file_exists)
       if ( .not. file_exists) then 
-         print*,'LUT file not there stopping'
+         print*,'MURI LUT file not there stopping'
+			print*,'CLAVR-x was searching at ',lut_file
          stop
       
       end if
@@ -86,7 +85,7 @@ contains
       istatus = cx_sds_read ( trim(lut_file),'Aer_AOT_total', this % aot_aer )
       
       this % is_read = .true.
-      print*,'end;'
+      
       
    end subroutine muri_lut_type__read_lut
    !

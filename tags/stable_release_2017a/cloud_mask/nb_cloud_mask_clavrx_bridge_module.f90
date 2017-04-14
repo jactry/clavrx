@@ -135,10 +135,10 @@ contains
    real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
-   logical, parameter:: USE_DIAG = .true.
+   logical, parameter:: USE_DIAG = .false.
    logical, parameter:: USE_PRIOR_TABLE = .true.
-   logical, parameter:: USE_CORE_TABLES = .false.
-   logical, parameter:: USE_065UM_RTM = .false.
+   logical, parameter:: USE_CORE_TABLES = .true.
+   logical, parameter:: USE_065UM_RTM = .true.
    integer:: Num_Elem
    integer:: Num_Line
 

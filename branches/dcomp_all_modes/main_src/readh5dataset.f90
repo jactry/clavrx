@@ -1025,8 +1025,7 @@ CONTAINS
     !<<<<<<<<<<<<<<<<<<<<<<< Start of routine code >>>>>>>>>>>>>>>>>>
 
     CALL DebugMessage(" === in H5ReadInteger1D int8 ===")
-      print*,'could be wrong in readhdf5 check.... stop here'
-      !stop 
+     
     ! Initialise the HDF5 file and open all levels up to
     ! the one that needs to be read.
 

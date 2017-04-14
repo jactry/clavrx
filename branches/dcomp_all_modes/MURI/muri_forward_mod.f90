@@ -5,7 +5,7 @@ module muri_forward_mod
    use muri_lut_mod, only: &
       muri_lut_type
    
-   type(muri_lut_type) :: lut
+   type(muri_lut_type),save :: lut
    
    type muri_fwd_type
       real :: rfl(6)

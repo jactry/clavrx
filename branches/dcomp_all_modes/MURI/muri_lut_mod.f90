@@ -30,7 +30,7 @@ module muri_lut_mod
  
    end type muri_lut_type
    
-   type ( muri_lut_type)  :: lut
+   type ( muri_lut_type),save  :: lut
    
    
 contains
@@ -67,16 +67,16 @@ contains
       istatus = cx_sds_finfo ( trim(lut_file), ftype, nsds,sds_name, natt,att_name)
      
       istatus = cx_sds_read ( trim(lut_file),'Solar_Zenith_Angles', temp_2d_real)
-      allocate ( this %sol, source = temp_2d_real(1,:))
+      allocate ( this %sol(size(temp_2d_real(1,:)) ), source = temp_2d_real(1,:))
       
       istatus = cx_sds_read ( trim(lut_file),'View_Zenith_Angles',temp_2d_real )
-      allocate ( this %sat, source = temp_2d_real(1,:))
+      allocate ( this %sat(size(temp_2d_real(1,:))), source = temp_2d_real(1,:))
       
       istatus = cx_sds_read ( trim(lut_file),'Relative_Azimuth_Angles', temp_2d_real)
-      allocate ( this %azi, source = temp_2d_real(1,:))
+      allocate ( this %azi(size(temp_2d_real(1,:))), source = temp_2d_real(1,:))
       
       istatus = cx_sds_read ( trim(lut_file),'Wind_Speed', temp_2d_real)
-      allocate ( this %ws, source = temp_2d_real(1,:))
+      allocate ( this %ws(size(temp_2d_real(1,:))), source = temp_2d_real(1,:))
       
       istatus = cx_sds_read ( trim(lut_file),'AOT_at_550nm',temp_2d_real)
       this % aot_550nm(:) = temp_2d_real (1,:)

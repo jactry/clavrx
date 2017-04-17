@@ -50,9 +50,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
  
    real :: gas_coeff (3)
    
-   real :: trans_unc_ozone ( N_CHAN )
+   real :: trans_unc_total ( N_CHAN )
    real :: trans_rayleigh ( N_CHAN )
-   real :: trans_unc_wvp ( N_CHAN )
    real :: trans_total ( N_CHAN )
       
    integer , parameter :: CHN_VIS = 1
@@ -240,7 +239,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    line_loop: do line_idx = 1 , nr_lines
       elem_loop: do elem_idx = 1,   nr_elem
-         
+        ! if ( elem_idx .ne. 1500) cycle
          
          if ( .not. cloud_array (elem_idx,line_idx)  ) cycle elem_loop
          
@@ -270,7 +269,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                , air_mass_array(elem_idx,line_idx) &
                , input % gas_coeff ( chn_idx) % d , ozone_coeff, 0.044 &
                , trans_total(chn_idx) &
-               , trans_unc_wvp(chn_idx) &
+               , trans_unc_total(chn_idx) &
                      )
            
             
@@ -301,7 +300,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
 
          ! - vis               
          obs_vec ( 1 ) = input % refl (CHN_VIS)  % d (elem_idx, line_idx) / 100.
-         obs_unc ( 1 ) = trans_unc_ozone ( CHN_VIS) +  trans_unc_wvp  ( CHN_VIS)  +calib_err (CHN_VIS)
+         obs_unc ( 1 ) = trans_unc_total ( CHN_VIS)  +calib_err (CHN_VIS)
          
          alb_vec ( 1 ) =  alb_sfc ( CHN_VIS)
          alb_unc ( 1) = 0.05
@@ -314,7 +313,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             obs_unc( 2 ) = obs_vec( 2 ) * 0.1 
          else
             obs_vec( 2 ) = input % refl ( CHN_NIR)  % d (elem_idx, line_idx) /100.
-            obs_unc( 2 ) = max ( trans_unc_wvp  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
+            obs_unc( 2 ) = max ( trans_unc_total  ( CHN_NIR ) , 0.01 )  + calib_err (CHN_NIR)
          end if
          
 		
@@ -330,6 +329,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
          state_apriori (2) = 1.3
          if  (water_phase_array ( elem_idx, line_idx) ) state_apriori(2) = 1.0
          
+			
                   
          call dcomp_algorithm ( &
                 &   obs_vec &
@@ -352,7 +352,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
                 & , input % lut_path &
                 & , debug_mode  )
         
-      ! debug_mode = 4
+       
        if ( debug_mode == 4  ) then
             print*,'=======================> input:',CHN_NIR
             print*,'Elem Line: ', elem_idx,line_idx
@@ -367,6 +367,8 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
             print*, 'dcomp mode:', input % mode
             print*, 'output: '
             print*, dcomp_out % cod, dcomp_out % cps
+				print*,'ozone uncert ch1.:',trans_unc_total ( CHN_VIS) 
+				print*, 'calib error :',calib_err (CHN_VIS)
             print*
            
             print*,'==============================='

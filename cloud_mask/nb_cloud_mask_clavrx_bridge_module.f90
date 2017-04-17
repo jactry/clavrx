@@ -207,7 +207,8 @@ contains
    !-----------    loop over pixels -----   
    line_loop: do i = 1, Image%Number_Of_Elements
       elem_loop: do  j = 1, Image%Number_Of_Lines_Read_This_Segment
-
+			
+			
          call SET_INPUT(i,j)
 
          !---call cloud mask routine

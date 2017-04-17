@@ -6,7 +6,7 @@ module cx_read_ascii_line_mod
       module procedure read_option_line_int 
       module procedure  read_option_line_string 
       module procedure read_option_line_l6 
-       module procedure read_option_line_real_9
+		module procedure read_option_line_real_7 
    end interface read_ascii_line
    
 contains   
@@ -51,18 +51,17 @@ contains
       
    end subroutine read_option_line_l6
    
-      subroutine read_option_line_real_9 ( lun , data_i )
+	 subroutine read_option_line_real_7 ( lun , data_i )
       implicit none
       integer :: lun
-      real :: data_i (9)
-      
-      
-  
+      real :: data_i (7)
+
       read(unit=lun,fmt=*)  data_i
       
-      
-     
-      
-   end subroutine read_option_line_real_9
+           
+   end subroutine read_option_line_real_7
+	
+	
+ 
 
 end module cx_read_ascii_line_mod

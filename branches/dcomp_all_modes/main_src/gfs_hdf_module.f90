@@ -615,6 +615,11 @@ Istatus = sfend(sd_Id_2)
 !--- fix GFS bug in RH
 call FIX_GFS_RH()
 
+!--- convert ozone from mass mixing ratio(g/g) to volume missing ratio (ppmv)
+where(Ozone_Prof_Nwp > 0)
+    Ozone_Prof_Nwp = 1.0e06*Ozone_Prof_Nwp * 0.602
+endwhere
+
 !--- Convert Zsfc_Nwp to meters
 where (Zsfc_Nwp /= Missing_Nwp)
   Zsfc_Nwp = Zsfc_Nwp * 1000.0

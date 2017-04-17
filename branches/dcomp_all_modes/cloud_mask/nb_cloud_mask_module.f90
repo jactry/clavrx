@@ -731,7 +731,7 @@ module NB_CLOUD_MASK
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Ref_138um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um
-
+							  
                      case default
                        Classifier_Value(Class_Idx) = Missing_Value_Real4
                       !print *, "Unknown Classifier Naive Bayesian Cloud Mask, returning"
@@ -751,7 +751,8 @@ module NB_CLOUD_MASK
              Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
 
              Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
-
+				
+				
         enddo  cirrus_class_loop 
 
         Cond_Ratio_1D_Cirrus = product(Cond_Ratio)

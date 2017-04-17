@@ -127,7 +127,7 @@ subroutine dcomp_array_loop ( input, output , debug_mode_user)
    
    ! - executable ---------
    
-   debug_mode = 4
+   debug_mode = 0
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
   
    array_dim = shape ( input % sat % d )

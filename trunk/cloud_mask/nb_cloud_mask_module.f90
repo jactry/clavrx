@@ -100,6 +100,7 @@ module NB_CLOUD_MASK
  real, dimension(:), allocatable, private, save:: Cond_Ratio
  real, dimension(:), allocatable, private, save:: Posterior_Cld_Probability_By_Class
  real, dimension(:), allocatable, private, save:: Classifier_Value
+ real, dimension(:), allocatable, private, save:: Classifier_Value_Output
 
  ! netCDF parameters
    integer, parameter, private :: sds_rank_1d = 1
@@ -207,11 +208,13 @@ module NB_CLOUD_MASK
    !------------------------------------------------------------------------------------------
    if (allocated(Cond_Ratio)) deallocate(Cond_Ratio)
    if (allocated(Classifier_Value)) deallocate(Classifier_Value)
+   if (allocated(Classifier_Value_Output)) deallocate(Classifier_Value_Output)
    if (allocated(Posterior_Cld_Probability_By_Class)) deallocate(Posterior_Cld_Probability_By_Class)
 
    allocate(Cond_Ratio(N_Class)) 
    allocate(Posterior_Cld_Probability_By_Class(N_Class)) 
    allocate(Classifier_Value(N_Class)) 
+   allocate(Classifier_Value_Output(N_Class)) 
 
    !--- Initialize flags
    Cld_Flags = 0
@@ -416,6 +419,7 @@ module NB_CLOUD_MASK
           all_class_loop: do Class_Idx = 1, N_class
 
              Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
              Cond_Ratio(Class_Idx) =  1.0
 
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
@@ -424,6 +428,7 @@ module NB_CLOUD_MASK
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("T_Max-T") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -432,6 +437,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_11um_Max == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Max - Input%Bt_11um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("T_Std") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -439,6 +445,7 @@ module NB_CLOUD_MASK
                        if (Coastal_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Std == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Std
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Btd_11_67") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -453,6 +460,7 @@ module NB_CLOUD_MASK
                        if (Input%Use_Sounder_11um == symbol%YES) then
                          Classifier_Value(Class_Idx) = Input%Bt_11um_Sounder - Input%Bt_67um
                        endif
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Btd_11_85") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -461,6 +469,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        if (Input%Bt_85um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um - Input%Bt_85um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375") 
                        if (Input%Chan_On_375um == symbol%NO) cycle
@@ -473,6 +482,7 @@ module NB_CLOUD_MASK
 
                        Classifier_Value(Class_Idx) = emiss_375um_test( &
                                          Input%Emiss_375um,Input%Emiss_375um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375_Day") 
                        if (Input%Chan_On_375um == symbol%NO) cycle
@@ -486,6 +496,7 @@ module NB_CLOUD_MASK
 
                        Classifier_Value(Class_Idx) = emiss_375um_day_test( &
                                          Input%Emiss_375um,Input%Emiss_375um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375_Night") 
                        if (Input%Chan_On_375um == symbol%NO) cycle
@@ -498,6 +509,7 @@ module NB_CLOUD_MASK
 
                        Classifier_Value(Class_Idx) = emiss_375um_night_test( &
                                         Input%Emiss_375um,Input%Emiss_375um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                      case("Btd_375_11_All") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -512,6 +524,8 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
                                                      (Input%Bt_375um_Clear - Input%Bt_11um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
+
                      case("Btd_375_11_Day") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
@@ -525,6 +539,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
                                                      (Input%Bt_375um_Clear - Input%Bt_11um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                      case("Btd_375_11_Night") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -537,6 +552,7 @@ module NB_CLOUD_MASK
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Bt_375um - Input%Bt_11um) - &
                                                      (Input%Bt_375um_Clear - Input%Bt_11um_Clear)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ref_063_Day")
                        if (Input%Solzen < 90.0) then
@@ -550,6 +566,7 @@ module NB_CLOUD_MASK
                          if (Input%Ref_063um == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_063um_Clear, Input%Ref_063um)
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        else
                          if (Input%Chan_On_DNB == symbol%NO) cycle
                          if (Lunar_Oceanic_Glint_Flag == symbol%YES) cycle
@@ -565,6 +582,7 @@ module NB_CLOUD_MASK
                          Classifier_Value(Class_Idx) =  &
                              reflectance_gross_contrast_test(Input%Ref_Lunar_Clear, &
                                                              Input%Ref_Lunar)
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        endif
 
                     case("Ref_Std")
@@ -575,6 +593,7 @@ module NB_CLOUD_MASK
                          if (Coastal_Flag == symbol%YES) cycle
                          if (Input%Ref_063um_Std == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_063um_Std
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        else
                          if (Input%Chan_On_DNB == symbol%NO) cycle
                          if (Lunar_Spatial_Flag == symbol%NO) cycle
@@ -584,6 +603,7 @@ module NB_CLOUD_MASK
                          if (Input%Ref_Lunar_Std == Missing_Value_Real4) cycle
                          if (Input%Ref_Lunar_Std <= 0.0) cycle
                          Classifier_Value(Class_Idx) = Input%Ref_Lunar_Std
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        endif
 
                     case("Ref_063_Min_3x3_Day")
@@ -596,6 +616,7 @@ module NB_CLOUD_MASK
                          if (Input%Ref_063um == Missing_Value_Real4) cycle
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_063um_Min, Input%Ref_063um)
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        else
                          if (Input%Chan_On_DNB == symbol%NO) cycle
                          if (Lunar_Spatial_Flag == symbol%NO) cycle
@@ -609,6 +630,7 @@ module NB_CLOUD_MASK
                          if (Input%Ref_Lunar_Min <= 0.0) cycle
                          Classifier_Value(Class_Idx) = relative_visible_contrast_test( &
                                        Input%Ref_Lunar_Min, Input%Ref_Lunar)
+                         Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                        endif
 
                     case("Ref_Ratio_Day")
@@ -621,6 +643,7 @@ module NB_CLOUD_MASK
                        if (Input%Ref_086um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = reflectance_ratio_test( &
                                          Input%Ref_063um,Input%Ref_086um)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ref_138_Day")
                        if (Input%Chan_On_138um == symbol%NO) cycle
@@ -629,6 +652,7 @@ module NB_CLOUD_MASK
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Ref_138um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ref_160_Day")
                        if (Input%Chan_On_160um == symbol%NO) cycle
@@ -637,6 +661,7 @@ module NB_CLOUD_MASK
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Ref_160um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_160um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ref_375_Day")
                        if (Input%Chan_On_375um == symbol%NO) cycle
@@ -645,6 +670,7 @@ module NB_CLOUD_MASK
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Ref_375um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_375um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ndsi_Day")
                        if (Input%Chan_On_063um == symbol%NO) cycle
@@ -656,6 +682,7 @@ module NB_CLOUD_MASK
                        if (Input%Ref_063um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = (Input%Ref_063um - Input%Ref_160um) /  &
                                                      (Input%Ref_063um + Input%Ref_160um)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
                     
                      case default
                        Classifier_Value(Class_Idx) = Missing_Value_Real4
@@ -699,6 +726,7 @@ module NB_CLOUD_MASK
                        if (Input%Emiss_11um_Tropo == Missing_Value_Real4) cycle
                        if (Cold_Scene_Flag == symbol%YES) cycle
                        Classifier_Value(Class_Idx) = Input%Emiss_11um_Tropo
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("FMFT")
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -711,6 +739,7 @@ module NB_CLOUD_MASK
                        Classifier_Value(Class_Idx) =  &
                            split_window_test(Input%Bt_11um_Clear, Input%Bt_12um_Clear, &
                                              Input%Bt_11um, Input%Bt_12um)
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Bt_11_67_Covar") 
                        if (Input%Chan_On_11um == symbol%NO) cycle
@@ -718,6 +747,7 @@ module NB_CLOUD_MASK
                        if (Dry_Scene_Flag == symbol%YES) cycle
                        if (Input%Bt_11um_Bt_67um_Covar == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um_Bt_67um_Covar
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
 
                     case("Ref_138_Day")
@@ -727,6 +757,10 @@ module NB_CLOUD_MASK
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Input%Ref_138um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Ref_138um
+                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
+
+                     case default
+                       Classifier_Value(Class_Idx) = Missing_Value_Real4
 
              end select
 
@@ -835,9 +869,9 @@ module NB_CLOUD_MASK
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "T_Max-T") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "FMFT") then
          !if (trim(Classifier_Value_Name(Class_Idx,1)) == "Btd_375_11_Day") then
-              !if (present(Diag)) Diag%Array_2 = Classifier_Value(Class_Idx)
-              !if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
-              !if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
+         !     if (present(Diag)) Diag%Array_1 = Classifier_Value_Output(Class_Idx)
+         !     if (present(Diag)) Diag%Array_2 = Posterior_Cld_Probability_By_Class(Class_Idx)
+         !     if (present(Diag)) Diag%Array_3 = Cld_Flags(Class_To_Test_Idx(Class_Idx))
          !endif
 
          enddo

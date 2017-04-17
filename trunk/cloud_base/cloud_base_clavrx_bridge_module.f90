@@ -71,7 +71,8 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call algorithm to make cloud geometrical boundaries
    !-----------------------------------------------------------------------
-   call CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
+   call CLOUD_BASE_ALGORITHM(Input, Symbol, Output)
+   !call CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished

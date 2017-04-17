@@ -718,7 +718,10 @@ module NB_CLOUD_MASK
             (Prob_Water_Core /= MISSING_VALUE_REAL4 .and. Prob_Water_Core < 0.5)) then   ! prob_water_if_loop
 
         cirrus_class_loop: do Class_Idx = 1, N_class
-
+				
+				Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Cond_Ratio(Class_Idx) =  1.0
+				
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("Emiss_Tropo")
@@ -775,7 +778,7 @@ module NB_CLOUD_MASK
              Bin_Idx = max(1,min(N_bounds-1,Bin_Idx))
 
              Cond_Ratio(Class_Idx) = Class_Cond_Ratio(Bin_Idx,Class_Idx,Sfc_Idx)
-
+				
         enddo  cirrus_class_loop 
 
         Cond_Ratio_1D_Cirrus = product(Cond_Ratio)

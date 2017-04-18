@@ -60,6 +60,9 @@ module cx_conf_mod
       integer , allocatable, dimension(:) :: wmo_id
       integer, allocatable, dimension (:)  :: ETsensor 
       integer, allocatable, dimension (:)  :: ETresolu 
+		character , allocatable :: sensorname(:)
+		contains
+		procedure, public :: conf_file__add_sensorname
    end  type conf_file_type
    
    type conf_algo_modes_type
@@ -74,6 +77,8 @@ module cx_conf_mod
       integer :: expert_mode
       character (len=256) :: ancil_path
       character (len=256) :: temp_path
+		character ( len = 50) :: file_list
+		logical :: file_list_user_set = .false.
       type (conf_algo_modes_type ) :: user_modes
       type (conf_algo_modes_type ) :: updated_modes
       integer :: rtm_mode
@@ -99,6 +104,7 @@ module cx_conf_mod
       contains
       procedure, public :: set_config
       procedure, private :: read_user_configuration
+		procedure, private :: read_user_arguments
       procedure, private :: read_input_files
       procedure, public :: update_modes
       procedure, public :: print_files
@@ -113,7 +119,8 @@ module cx_conf_mod
       enumerator :: ETsensor_goes_first =5
       enumerator :: ETsensor_goes_mop =5
       enumerator :: ETsensor_goes_il =6
-      enumerator :: ETsensor_goes_last =6
+		enumerator :: ETsensor_goes_r = 7
+      enumerator :: ETsensor_goes_last =7
       enumerator :: ETsensor_viirs 
       enumerator :: ETsensor_mtsat
       enumerator :: ETsensor_aqua_mac 
@@ -142,15 +149,15 @@ contains
       
       
       class ( conf_main_type ) :: conf
-      character ( len =256 ) :: input_file = 'file_list'
+     		
       integer :: n_files
       integer :: i_file
       integer :: ios
       integer :: ppp
       
-      if ( .not. file_test(trim(input_file))) return
+      if ( .not. file_test(trim(conf % file_list))) return
      
-      ppp = file_nr_lines (trim(input_file))
+      ppp = file_nr_lines (trim(conf % file_list))
       
       n_files = ppp - 2
    
@@ -162,7 +169,7 @@ contains
       
       
        lun = get_lun()
-      open(unit=lun,file = trim(input_file ),status="old",action="read",iostat=ios)
+      open(unit=lun,file = trim(conf % file_list ),status="old",action="read",iostat=ios)
       read(unit=lun,fmt="(a)")  conf % file % l1b_path
       read(unit=lun,fmt="(a)")  conf % file % out_path
      
@@ -231,6 +238,8 @@ contains
             sensor = ETsensor_goes_il
          case ( 78, 180,182,184)
             sensor = ETsensor_goes_mop
+			case ( 186)
+				sensor = ETsensor_goes_r	
          end select
       
       end if
@@ -238,13 +247,47 @@ contains
       if ( sensor == ETsensor_invalid ) sensor = ETsensor_avhrr
      
    end function sensor_from_filename
+	
+	
+	!
+	!
+	!
+	subroutine conf_file__add_sensorname ( self)
+		class( conf_file_type ) :: self
+		
+		select case (self % ETsensor(1))
+		case(ETsensor_invalid) 
+		case(ETsensor_avhrr)
+		case(ETsensor_aqua )
+		case(ETsensor_terra)
+		case(ETsensor_seviri) 
+		
+		case(ETsensor_goes_mop)
+		case(ETsensor_goes_il)
+		case(ETsensor_goes_r)
+		
+		case(ETsensor_viirs )
+		case(ETsensor_mtsat)
+		case(ETsensor_aqua_mac) 
+		case(ETsensor_iff_viirs)
+		case(ETsensor_iff_aqua)
+		case(ETsensor_ahi)
+		
+		
+		case default
+		end select
+	
+	end subroutine conf_file__add_sensorname
    
    ! called from process_clavrx
    !
    !
    subroutine set_config ( conf)
       class ( conf_main_type ) :: conf
-      
+      call conf % read_user_arguments()
+		
+		print*,conf % file_list
+		
       call conf % read_user_configuration ()
       call conf % read_input_files
      
@@ -434,7 +477,32 @@ contains
       
    end subroutine read_user_configuration
    
-   
+   subroutine read_user_arguments (self)
+		class(conf_main_type) :: self
+		integer :: iargc
+		integer :: fargc
+		character(len=30) :: fargv
+		integer :: i
+		character(len=1020):: File_List
+		fargc = iargc()
+		
+		
+		self % file_list ='file_list'
+		
+		do i = 1, fargc
+			call getarg(i,fargv)
+			if (trim(fargv) == "-filelist") then
+            call getarg(i+1,file_list )
+				self % file_list = trim(file_list)
+				
+				self % file_list_user_set = .true.
+          end if  		
+		end do
+		
+		
+	
+	
+	end subroutine read_user_arguments
    !
    !
    !

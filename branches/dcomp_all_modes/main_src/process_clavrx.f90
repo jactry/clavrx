@@ -364,8 +364,8 @@
    integer(kind=int4):: Line_Idx  !generic line (across scan) index
    integer(kind=int4):: Phase_Called_Flag
    logical:: Level1b_Exists
-   integer, parameter:: num_Segment_Time_points=16
-   real(kind=real4), dimension(num_Segment_Time_points):: Segment_Time_Point_Seconds
+   integer, parameter:: NUM_SEGMENT_TIME_POINTS=16
+   real(kind=real4), dimension(NUM_SEGMENT_TIME_POINTS):: Segment_Time_Point_Seconds
    real(kind=real4) :: Start_Time_Point_Hours
    real(kind=real4) :: End_Time_Point_Hours
 

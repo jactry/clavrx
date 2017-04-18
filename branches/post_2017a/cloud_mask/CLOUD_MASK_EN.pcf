@@ -1,0 +1,105 @@
+#
+# CLOUD_MASK_EN
+# Modified - WCS3 - 12/23/2016
+#
+CLOUD_MASK_EN
+PRODUCT
+
+#
+# Set flag for output
+#
+OUTPUT_TO_FILE: Y
+
+############################################
+# This section needed for Default PCF only #
+############################################
+
+#
+# Structure information used for code generation
+#
+
+#
+# For GOESR either Framework_Input_Structure or Framework_Output_Structure
+#
+MAIN_STRUCTURE_TYPE: Framework_Output_Structure
+
+#
+# Algorithm structure type
+#
+ALGORITHM_STRUCTURE_TYPE: Cloud_Mask_Structure
+
+#
+# Algorithm structure name (long)
+#
+# Output example: AWG_CLOUD_MASK
+#
+# Input example: SFC_EMISS_SEEBOR
+# 
+#
+# 
+ALGORITHM_STRUCTURE_NAME: CLOUD_MASK_EN
+
+################################
+# End Default PCF only Section #
+################################
+
+#
+# Dependencies
+#
+DEPENDENCIES:
+
+SATELLITE_DATA:
+
+NWP_DATA:
+NWP_GFS
+
+RTM:
+#PFAAST
+#CRTM
+
+LAND_MASK:
+LAND_MASK_NASA_1KM
+
+COAST_MASK:
+COAST_MASK_NASA_1KM
+
+DESERT_MASK:
+DESERT_MASK_CALCLTED
+
+SNOW_MASK:
+SNOW_MASK_NWP
+
+SURFACE_TYPE:
+SFC_TYPE_AVHRR_1KM
+
+PSEUDO_EMISSIVITY:
+GOESR_ABI_CHN7_EMISS
+
+SURFACE_ELEVATION:
+SFC_ELEV_GLOBE_1KM
+
+SST:
+OISST_DAILY_QTRDEG
+
+SURFACE_EMISSIVITY:
+SFC_EMISS_SEEBOR
+
+SURFACE_ALBEDO:
+SFC_ALBEDO
+
+
+#
+# Settings
+#
+OTHER:
+CldMask_Packed_Constant: 8 
+Flag_Constant: 33
+Meta10: 10
+Meta20: 20
+#ancillary data path were both SfcAlb and sensor LUTs reside
+Ancillary_Path:/fjord/jgs/patmosx/Ancil_Data/clavrx_ancil_data_new/static/luts/nb_cloud_mask/
+#Sensor specific LUT
+FileName: viirs_default_nb_cloud_mask_lut.nc
+
+
+END CLOUD_MASK_EN

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<!--
+   Baseline XML description out2 struct variables used in GEOCAT.
+   Edit this list instead of output_constants_autogen.f90 or    
+   output_pointers_autogen.f90, which are now generated from this list.
+
+   "$Id: out2.xml 1080 2015-03-17 12:59:07Z stevew $"
+-->
+
+<geocat_out2 xmlns="http://cimss.ssec.wisc.edu/goesr/xsd/geocat_out2.xsd-1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://cimss.ssec.wisc.edu/goesr/xsd/geocat_out2.xsd-1.0 geocat_out2.xsd">
+  
+  <out_list>
+
+    <out_var sdsname="cld_probability" 
+             varname="cld_probability" 
+             dimstr="NX_NY"
+             units="none"
+             scaling="NO_SCALE"
+             output_type="DFNT_FLOAT32"
+             min="-999.0"
+             max="-999.0"
+             numtype="real4">
+    </out_var>
+
+    </out_list>
+</geocat_out2>

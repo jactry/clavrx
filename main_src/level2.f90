@@ -201,7 +201,8 @@ module LEVEL2_ROUTINES
       , Tpw_Above_Cloud_Nwp_Pix &
       , Inversion_Strength_Nwp_Pix &
       , Inversion_Base_Nwp_Pix &
-      , Inversion_Top_Nwp_Pix
+      , Inversion_Top_Nwp_Pix &
+		, Bt_Ch31_Std_3x3
       
     
    use CLOUD_TYPE_BRIDGE_MODULE,only: &

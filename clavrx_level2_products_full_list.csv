@@ -51,7 +51,7 @@ SWITCH_CL,NAME,CLAVRX_NAME,DIM,DATA_DEPTH,SCALED,ACT_RANGE1,ACT_RANGE2,STANDARD_
 1,"temp_12_0um_nom","ch(32)%bt_toa",2,2,1,180.000,340.000,"toa_brightness_temperature","K","top of atmosphere brightness temperature at the nominal wavelength of 12.0 microns - NOAA CDR","none"
 1,"refl_0_65um_nom_min_3x3","ref_Ch1_Min_3x3",2,2,1,-2.00000,120.000,"bidirectional_reflectance_0_65_micron_nom_min_3x3","%","3x3 pixel minimum reflectanceat the nominal wavelength of 0.65 microns","none"
 1,"refl_0_65um_nom_stddev_3x3","Ref_Ch1_Std_3x3",2,1,1,0.00000,20.0000,"not specified","%","standard deviation of the 0.63 micron reflectance computed over a 3x3 pixel array","none"
-1,"temp_11_0um_nom_stddev_3x3","Ref_Ch1_Std_3x3",2,1,1,0.00000,20.0000,"not specified","K","standard deviation of the 11 micron brightness temperature computed over a 3x3 pixel array","none"
+1,"temp_11_0um_nom_stddev_3x3","Bt_Ch31_Std_3x3",2,1,1,0.00000,20.0000,"not specified","K","standard deviation of the 11 micron brightness temperature computed over a 3x3 pixel array","none"
 1,"temp_11_0um_nom_max_3x3","Bt_Ch31_Max_3x3",2,2,1,180.000,340.000,"not specified","K","maximum of the 11 micron brightness temperature computed over a 3x3 pixel array","none"
 1,"cloud_probability","CLDMASK%posterior_cld_probability",2,2,1,0.00000,1.00000,"not specified","none","probability of a pixel being cloudy from the Bayesian cloud mask","none"
 1,"cloud_mask","CLDMASK%cld_mask",2,1,0,0.00000,0.00000,"not specified","none","integer classification of the cloud mask including clear=0, probably-clear=1, probably-cloudy=2, cloudy=3","0"

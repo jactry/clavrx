@@ -1,6 +1,6 @@
-! Created on Wed Mar  8 21:53:41 2017
+! Created on Tue Apr 18 20:20:26 2017
 ! by awalther
-! on machine: kuu.local
+! on machine: saga.ssec.wisc.edu
 select case(trim(name))
 case("scan_line_number")
    if (allocated ( scan_number)) then
@@ -220,9 +220,9 @@ case("refl_0_65um_nom_stddev_3x3")
       data_dim2_dtype_r4 = Ref_Ch1_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_stddev_3x3")
-   if (allocated ( Ref_Ch1_Std_3x3)) then
-      if ( .NOT. sensor%chan_on_flag_default(1) ) cycle 
-      data_dim2_dtype_r4 = Ref_Ch1_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Bt_Ch31_Std_3x3)) then
+      if ( .NOT. sensor%chan_on_flag_default(31) ) cycle 
+      data_dim2_dtype_r4 = Bt_Ch31_Std_3x3(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("temp_11_0um_nom_max_3x3")
    if (allocated ( Bt_Ch31_Max_3x3)) then

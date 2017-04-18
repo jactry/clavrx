@@ -972,7 +972,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
   line_loop: do Line_Idx = Line_Idx_Min, Line_Idx_Max
 
   element_loop: do Elem_Idx = Elem_Idx_Min, Elem_Idx_Max
-      if ( line_idx .ne. 40 .or. elem_idx .ne. 70) cycle
+      
      !--- check for bad individual pixels
      if (Bad_Pixel_Mask(Elem_Idx,Line_Idx) ) cycle
 
@@ -1107,7 +1107,7 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
 
          !--- compute atmospherically corrected reflectance (at sfc level)s
          ch(Chan_Idx)%Ref_Sfc(Elem_Idx,Line_Idx) = (ch(Chan_Idx)%Ref_Toa(Elem_Idx,Line_Idx) - Ref_ss) / Trans_Total
-
+         
          !--- compute top of clear-sky atmosphere reflectance
          ch(Chan_Idx)%Ref_Toa_Clear(Elem_Idx,Line_Idx) = Ref_ss + Trans_Total*100.0*Albedo_View
 
@@ -1122,11 +1122,12 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
        endif
       
     end do  channel_loop
+    
 
    end do element_loop
 
  end do line_loop
-
+ 
 end subroutine ATMOS_CORR
 
 !======================================================================
@@ -2520,6 +2521,7 @@ end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
 
   integer, intent(in):: Line_Idx_Min
   integer, intent(in):: Line_Idx_max
+  integer :: i
 
   if (Sensor%Chan_On_Flag_Default(31) ) then
      call COMPUTE_TSFC(Line_Idx_Min,Line_Idx_Max)

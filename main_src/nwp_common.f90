@@ -201,6 +201,7 @@ module NWP_COMMON
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_uni_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_uni_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: T_Trop_Nwp
+  real (kind=real4), dimension(:,:), allocatable, public, save :: Z_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
   real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
@@ -427,6 +428,8 @@ subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
   integer(kind=int4), intent(in):: Smooth_Nwp_Opt
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Z_Trop_Nwp,Ztropo_Nwp_Pix,Smooth_Nwp_Opt)
+  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(P_Trop_Nwp,Ptropo_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_Nwp_Opt)
   call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_Nwp_Opt)
@@ -865,6 +868,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     allocate(Tmpair_uni_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Tmpsfc_uni_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(T_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
+    allocate(Z_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(P_Trop_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Rhsfc_Nwp(Nlon_Nwp, Nlat_Nwp))
     allocate(Uth_Nwp(Nlon_Nwp, Nlat_Nwp))
@@ -946,6 +950,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
     Tmpair_Uni_Nwp = 0
     Tmpsfc_Uni_Nwp = 0
     T_Trop_Nwp = 0
+    Z_Trop_Nwp = 0
     P_Trop_Nwp = 0
     Rhsfc_Nwp = 0
     Uth_Nwp = 0
@@ -1058,6 +1063,7 @@ subroutine DESTROY_NWP_ARRAYS
     if (allocated(Tmpair_uni_Nwp))    deallocate(Tmpair_uni_Nwp)
     if (allocated(Tmpsfc_uni_Nwp))    deallocate(Tmpsfc_uni_Nwp)
     if (allocated(T_Trop_Nwp))        deallocate(T_Trop_Nwp)
+    if (allocated(Z_Trop_Nwp))        deallocate(Z_Trop_Nwp)
     if (allocated(P_Trop_Nwp))        deallocate(P_Trop_Nwp)
     if (allocated(Rhsfc_Nwp))         deallocate(Rhsfc_Nwp)
     if (allocated(hght500_Nwp))       deallocate(hght500_Nwp)
@@ -1434,6 +1440,9 @@ subroutine FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
     if (Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) == 0) then
         Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = 1   !assume top level if no trop found
     endif         
+
+    !--- store tropause height so when interpolate to pixel level
+    Z_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) = Z_Prof_Nwp(Tropo_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx),Lon_Nwp_Idx,Lat_Nwp_Idx)
 
 !--------------------------------------------------------------------
 !--- find stratopause level starting at 500 mb by looking for levels

@@ -1110,7 +1110,6 @@ subroutine ATMOS_CORR(Line_Idx_Min,Num_Lines)
          
          !--- compute top of clear-sky atmosphere reflectance
          ch(Chan_Idx)%Ref_Toa_Clear(Elem_Idx,Line_Idx) = Ref_ss + Trans_Total*100.0*Albedo_View
-				if ( chan_idx .eq. 1) print*,Elem_Idx,Line_Idx,ch(Chan_Idx)%Ref_Toa_Clear(Elem_Idx,Line_Idx),ref_ss,trans_total,albedo_view
 
        else
 

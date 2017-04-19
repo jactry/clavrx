@@ -295,8 +295,6 @@ module PIXEL_COMMON
    
    type :: cloud_mask_definition
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
-  type :: cloud_mask_definition
-     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Binary
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Aux
      integer (kind=int1),dimension(:,:),allocatable:: Adj_Pix_Cld_Mask
@@ -2571,10 +2569,9 @@ end subroutine DESTROY_AEROSOL_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   integer, intent(in):: dim1, dim2, dim3
-  endif
-<<<<<<< .working
+ 
   allocate(CLDMASK%Cld_Mask_Qf(dim1,dim2))
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      allocate(CLDMASK%Cld_Mask(dim1,dim2))
      allocate(CLDMASK%Cld_Mask_Binary(dim1,dim2))
      allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))
@@ -2587,7 +2584,7 @@ subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
   if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      CLDMASK%Cld_Mask = Missing_Value_Int1
      CLDMASK%Cld_Mask_Binary = Missing_Value_Int1
      CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
@@ -2600,7 +2597,7 @@ subroutine RESET_CLOUD_MASK_ARRAYS()
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(CLDMASK%Cld_Mask_Qf)
-  if (Cld_Flag == sym%YES) then
+  if (Cld_Flag ) then
      deallocate(CLDMASK%Cld_Mask)
      deallocate(CLDMASK%Cld_Mask_Binary)
      deallocate(CLDMASK%Cld_Mask_Aux)  

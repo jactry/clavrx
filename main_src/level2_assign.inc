@@ -1,4 +1,4 @@
-! Created on Tue Apr 18 20:20:26 2017
+! Created on Wed Apr 19 15:09:22 2017
 ! by awalther
 ! on machine: saga.ssec.wisc.edu
 select case(trim(name))
@@ -483,8 +483,8 @@ case("insolation_dcomp")
       data_dim2_dtype_r4 = Insolation_Dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("insolation_diffuse_dcomp")
-   if (allocated ( Insolation_Dcomp_Diffuse)) then
-      data_dim2_dtype_r4 = Insolation_Dcomp_Diffuse(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
+   if (allocated ( Insolation_Diffuse_Dcomp)) then
+      data_dim2_dtype_r4 = Insolation_Diffuse_Dcomp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)
    end if
 case("cdnc_dcomp")
    if (allocated ( cdnc_dcomp)) then

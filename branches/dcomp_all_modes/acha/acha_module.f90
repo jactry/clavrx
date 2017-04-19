@@ -1686,7 +1686,7 @@ module AWG_CLOUD_HEIGHT
           				Lapse_Rate = EMPIRICAL_LAPSE_RATE(Input%Surface_Temperature(Elem_Idx,Line_Idx), &
                                      Output%Tc(Elem_Idx,Line_Idx), 1)
       					endif
-!=======================
+
       					!--- constrain lapse rate to be with -2 and -10 K/km
       					Lapse_Rate = min(-2.0,max(-10.0,Lapse_Rate))
 
@@ -1726,37 +1726,37 @@ module AWG_CLOUD_HEIGHT
   						write(unit=lun_diag,fmt=*) "Meta_Data_Flags =",  Meta_Data_Flags
 						endif 
 
-					!-----------------------------------------------------------------------------
-					!--- compute height and pressure uncertainties 
-					!-----------------------------------------------------------------------------
+						!-----------------------------------------------------------------------------
+						!--- compute height and pressure uncertainties 
+						!-----------------------------------------------------------------------------
 
-					!-- Compute Height Uncertainty
-					Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+						!-- Compute Height Uncertainty
+						Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
                                           ABS_LAPSE_RATE_DT_DZ_UNCER
 
-					if (Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
-    				Output%Lower_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
+						if (Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+    					Output%Lower_Zc_Uncertainty(Elem_Idx,Line_Idx) = Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) /  &
                                                      ABS_LAPSE_RATE_DT_DZ_UNCER
-					end if
+						end if
 
-					!-- Compute Pressure Uncertainty
-					Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+						!-- Compute Pressure Uncertainty
+						Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
                                           ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%Pc(Elem_Idx,Line_Idx)
 
-					Output%LOWER_Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
+						Output%LOWER_Pc_Uncertainty(Elem_Idx,Line_Idx) = Output%LOWER_Zc_Uncertainty(Elem_Idx,Line_Idx) *  &
                                           ABS_LAPSE_RATE_DlnP_DZ_UNCER * Output%LOWER_Pc(Elem_Idx,Line_Idx)
 
-					!-----------------------------------------------------------------------------
-					!--- quality flags of the retrieved parameters
-					!-----------------------------------------------------------------------------
+						!-----------------------------------------------------------------------------
+						!--- quality flags of the retrieved parameters
+						!-----------------------------------------------------------------------------
 						do Param_Idx = 1,Num_Param    !loop over parameters
-      			if (Sx(Param_Idx,Param_Idx) < 0.111*Sa(Param_Idx,Param_Idx) ) THEN
-          		Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_1_3_APRIORI_RETREVIAL
-      			elseif (Sx(Param_Idx,Param_Idx) < 0.444*Sa(Param_Idx,Param_Idx)) THEN
-          		Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_2_3_APRIORI_RETREVIAL
-      			else
-          		Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_LOW_QUALITY_RETREVIAL
-      			endif
+      				if (Sx(Param_Idx,Param_Idx) < 0.111*Sa(Param_Idx,Param_Idx) ) THEN
+          			Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_1_3_APRIORI_RETREVIAL
+      				elseif (Sx(Param_Idx,Param_Idx) < 0.444*Sa(Param_Idx,Param_Idx)) THEN
+          			Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_2_3_APRIORI_RETREVIAL
+      				else
+          			Output%OE_Qf(Param_Idx,Elem_Idx,Line_Idx) = CTH_PARAM_LOW_QUALITY_RETREVIAL
+      				endif
 						end do
 
 					else   
@@ -1777,136 +1777,136 @@ module AWG_CLOUD_HEIGHT
                              Output%Lower_Zc(Elem_Idx,Line_Idx),&
                              T_Tropo, Z_Tropo, P_Tropo,&
                              Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
-					end if 
+						end if 
 
-					!--- set derived parameters to missing
-					Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-					Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-					Output%Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-					Output%Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-					Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-					Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						!--- set derived parameters to missing
+						Output%Tau(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						Output%Reff(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						Output%Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						Output%Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						Output%Zc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+						Output%Pc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
 
-					!--- set quality flags
-					Output%OE_Qf(:,Elem_Idx,Line_Idx) = 0
-					Output%Qf(Elem_Idx,Line_Idx) = 1
+						!--- set quality flags
+						Output%OE_Qf(:,Elem_Idx,Line_Idx) = 0
+						Output%Qf(Elem_Idx,Line_Idx) = 1
 					
-					!--- estimate height and pressure
-			  	call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
+						!--- estimate height and pressure
+			  		call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                           Output%Tc(Elem_Idx,Line_Idx), &
                           Output%Zc(Elem_Idx,Line_Idx), &
                           T_Tropo, Z_Tropo, P_Tropo,&
                           Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
-				endif                              !end successful retrieval if statement
+					endif                              !end successful retrieval if statement
 				
-				!--- if retrieval done for an undetected pixel, label the Output%Qf
-				if (Undetected_Cloud == symbol%YES) then
-					Output%Qf(Elem_Idx,Line_Idx) = 2
-				endif
+					!--- if retrieval done for an undetected pixel, label the Output%Qf
+					if (Undetected_Cloud == symbol%YES) then
+						Output%Qf(Elem_Idx,Line_Idx) = 2
+					endif
 
-				!-----------------------------------------------------------------
-				! End Retrieval Post Processing
-				!-----------------------------------------------------------------
+					!-----------------------------------------------------------------
+					! End Retrieval Post Processing
+					!-----------------------------------------------------------------
 
-			endif     ! ---------- end of data check
+				endif     ! ---------- end of data check
 
 
-			!------------------------------------------------------------------------
-			! Pack Quality Flags Output
-			!------------------------------------------------------------------------
-  		!--- bit1  
-  		Output%Packed_Qf(Elem_Idx,Line_Idx) =  1_int1
+				!------------------------------------------------------------------------
+				! Pack Quality Flags Output
+				!------------------------------------------------------------------------
+  			!--- bit1  
+  			Output%Packed_Qf(Elem_Idx,Line_Idx) =  1_int1
 
-  		!--- bit2
-  		if (Output%OE_Qf(1,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL)  then
+  			!--- bit2
+  			if (Output%OE_Qf(1,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL)  then
       		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 2_int1
-  		endif
+  			endif
 
-  		!--- bit3
-  		if (Output%OE_Qf(2,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL) then
-      	Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
+  			!--- bit3
+  			if (Output%OE_Qf(2,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL) then
+      		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 4_int1
-  		endif
+  			endif
 
-  		!--- bit4
-  		if (Output%OE_Qf(3,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL) then
-      	Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
+  			!--- bit4
+  			if (Output%OE_Qf(3,Elem_Idx,Line_Idx)  /= CTH_PARAM_FAILED_RETREVIAL) then
+      		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 8_int1
-  		endif
+  			endif
 
-  		!--- bit5
-  		if (Output%OE_Qf(1,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
-      	Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
+  			! --- bit5
+  			if (Output%OE_Qf(1,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
+      		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 16_int1
-  		endif
+  			endif
 
-  		!--- bit6
-  		if (Output%OE_Qf(2,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
-      	Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
+  			!--- bit6
+  			if (Output%OE_Qf(2,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
+      		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 32_int1
-  		endif
+  			endif
 
-  		!--- bit7
-  		if (Output%OE_Qf(3,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
-      	Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
+  			!--- bit7
+  			if (Output%OE_Qf(3,Elem_Idx,Line_Idx)  == CTH_PARAM_LOW_QUALITY_RETREVIAL) then
+      		Output%Packed_Qf(Elem_Idx,Line_Idx) =    &
                      Output%Packed_Qf(Elem_Idx,Line_Idx) + 64_int1
-  		endif
+  			endif
 
-  		!------------------------------------------------------------------------
-  		! Pack Meta Data for Output
-  		!------------------------------------------------------------------------
-  		do i = 1, 8
-    		Output%Packed_Meta_Data(Elem_Idx,Line_Idx) = Output%Packed_Meta_Data(Elem_Idx,Line_Idx) +  &
+  			!------------------------------------------------------------------------
+  			! Pack Meta Data for Output
+  			!------------------------------------------------------------------------
+  			do i = 1, 8
+    			Output%Packed_Meta_Data(Elem_Idx,Line_Idx) = Output%Packed_Meta_Data(Elem_Idx,Line_Idx) +  &
                                                  int((2**(i-1)) * Meta_Data_Flags(i),kind=int1)
-  		enddo
+  			enddo
 
 
-  		!-------------------------------------------------------------------------
-  		!--- spectral cloud emissivity
-  		!-------------------------------------------------------------------------
-  		call KNOWING_P_COMPUTE_T_Z(Output%Pc(Elem_Idx,Line_Idx),Tc_Temp,Zc_Temp,Lev_Idx)
+  			!-------------------------------------------------------------------------
+  			!--- spectral cloud emissivity
+  			!-------------------------------------------------------------------------
+  			call KNOWING_P_COMPUTE_T_Z(Output%Pc(Elem_Idx,Line_Idx),Tc_Temp,Zc_Temp,Lev_Idx)
 
-  		if (Input%Chan_On_67um == symbol%YES) then
+  			if (Input%Chan_On_67um == symbol%YES) then
         	Output%Ec_67um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
                              Input%Rad_67um(Elem_Idx,Line_Idx), &
                              Input%Rad_Clear_67um(Elem_Idx,Line_Idx), &
                              ACHA_RTM_NWP%Black_Body_Rad_Prof_67um)
-  		endif
-  		if (Input%Chan_On_85um == symbol%YES) then
+  			endif
+  			if (Input%Chan_On_85um == symbol%YES) then
         	Output%Ec_85um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
                              Input%Rad_85um(Elem_Idx,Line_Idx), &
                              Input%Rad_Clear_85um(Elem_Idx,Line_Idx), &
                              ACHA_RTM_NWP%Black_Body_Rad_Prof_85um)
-  		endif
+  			endif
 
-  		if (Input%Chan_On_11um == symbol%YES) then
-        Output%Ec_11um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+  			if (Input%Chan_On_11um == symbol%YES) then
+        	Output%Ec_11um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
                              Input%Rad_11um(Elem_Idx,Line_Idx), &
                              Input%Rad_Clear_11um(Elem_Idx,Line_Idx), &
                              ACHA_RTM_NWP%Black_Body_Rad_Prof_11um)
-  		endif
+  			endif
 
-  		if (Input%Chan_On_12um == symbol%YES) then
-        Output%Ec_12um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+  			if (Input%Chan_On_12um == symbol%YES) then
+        	Output%Ec_12um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
                              Input%Rad_12um(Elem_Idx,Line_Idx), &
                              Input%Rad_Clear_12um(Elem_Idx,Line_Idx), &
                              ACHA_RTM_NWP%Black_Body_Rad_Prof_12um)
-  		endif
+  			endif
 
-  		if (Input%Chan_On_133um == symbol%YES) then
-        Output%Ec_133um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
+  			if (Input%Chan_On_133um == symbol%YES) then
+        	Output%Ec_133um(Elem_Idx,Line_Idx) = COMPUTE_REFERENCE_LEVEL_EMISSIVITY( Lev_Idx, &
                              Input%Rad_133um(Elem_Idx,Line_Idx), &
                              Input%Rad_Clear_133um(Elem_Idx,Line_Idx), &
                              ACHA_RTM_NWP%Black_Body_Rad_Prof_133um)
-  		endif
+  			endif
 
 
-  		!---- null profile pointers each time 
-  		call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
+  			!---- null profile pointers each time 
+  			call NULL_PIX_POINTERS(Input, ACHA_RTM_NWP)
 
-  		!---close diagnostic output
+  			!---close diagnostic output
   			if (lun_diag > 0) then
         	close(unit=lun_diag)
   			endif
@@ -1915,12 +1915,12 @@ module AWG_CLOUD_HEIGHT
 
 		end do Line_Loop
 
-!---------------------------------------------------------------------------
-! if selected, compute a background cirrus temperature and use for last pass
-!---------------------------------------------------------------------------
-if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
+		!---------------------------------------------------------------------------
+		! if selected, compute a background cirrus temperature and use for last pass
+		!---------------------------------------------------------------------------
+		if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
 
-    call COMPUTE_TEMPERATURE_CIRRUS( &
+    	call COMPUTE_TEMPERATURE_CIRRUS( &
                  Output%Cloud_Type,   &
                  Output%Tc,          &
                  Output%Ec,          &
@@ -1930,13 +1930,13 @@ if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
                  MISSING_VALUE_REAL4, &
                  Temperature_Cirrus)
 
-endif
+		endif
 
-end do pass_loop
+	end do pass_loop
 
-!------------------------------------------------------------------------
-! Apply Parallax Correction 
-!------------------------------------------------------------------------
+	!------------------------------------------------------------------------
+	! Apply Parallax Correction 
+	!------------------------------------------------------------------------
   call PARALLAX_ACHA(Output%Zc, Input%Surface_Elevation, &
                      Input%Latitude, Input%Longitude, &
                      Input%Sensor_Zenith_Angle, &
@@ -1944,9 +1944,9 @@ end do pass_loop
                      Output%Latitude_Pc,&
                      Output%Longitude_Pc) 
 
-!------------------------------------------------------------------------
-! clean-up and prepare for exit
-!------------------------------------------------------------------------
+	!------------------------------------------------------------------------
+	! clean-up and prepare for exit
+	!------------------------------------------------------------------------
   !--- deallocate 2D arrays
   if (allocated(Elem_Idx_LRC)) deallocate(Elem_Idx_LRC)
   if (allocated(Line_Idx_LRC)) deallocate(Line_Idx_LRC)
@@ -1967,30 +1967,30 @@ end do pass_loop
   deallocate(x_Ap)
   deallocate(Delta_X)
   deallocate(K)
-  	deallocate(Sa)
-  	deallocate(Sa_inv)
-  	deallocate(Sx)
-  	deallocate(Sx_inv)
-  	deallocate(E)
-  	deallocate(Sy)
-  	deallocate(Sy_inv)
-  	deallocate(Emiss_Vector)
-  	deallocate(AKM)
+  deallocate(Sa)
+  deallocate(Sa_inv)
+  deallocate(Sx)
+  deallocate(Sx_inv)
+  deallocate(E)
+  deallocate(Sy)
+  deallocate(Sy_inv)
+  deallocate(Emiss_Vector)
+  deallocate(AKM)
 
 	end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 
-!-----------------------------------------------------------------
-! InterpoLate within profiles knowing P to determine T and Z
-!-----------------------------------------------------------------
-subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Lev_Idx)
+	!-----------------------------------------------------------------
+	! InterpoLate within profiles knowing P to determine T and Z
+	!-----------------------------------------------------------------
+	subroutine KNOWING_P_COMPUTE_T_Z(P,T,Z,Lev_Idx)
 
-     real, intent(in):: P
-     real, intent(out):: T
-     real, intent(out):: Z
-     integer, intent(out):: Lev_Idx
-     real:: dp
-     real:: dt
-     real:: dz
+    real, intent(in):: P
+    real, intent(out):: T
+    real, intent(out):: Z
+    integer, intent(out):: Lev_Idx
+    real:: dp
+    real:: dt
+    real:: dz
 
      !--- interpoLate pressure profile
      call LOCATE(Press_Prof_RTM,Num_Levels_RTM_Prof,P,Lev_Idx)

@@ -254,6 +254,8 @@ module PIXEL_COMMON
      integer(kind=int1), dimension(:,:), allocatable:: Snow
      integer(kind=int1), dimension(:,:), allocatable:: Sfc_Type
      real (kind=real4), dimension(:,:), allocatable:: Zsfc
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc_Max
+     real (kind=real4), dimension(:,:), allocatable:: Zsfc_Std
      real (kind=real4), dimension(:,:), allocatable:: Zsfc_Hires
   end type surface_definition
 
@@ -293,6 +295,9 @@ module PIXEL_COMMON
    
    type :: cloud_mask_definition
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
+  type :: cloud_mask_definition
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask
+     integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Binary
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Aux
      integer (kind=int1),dimension(:,:),allocatable:: Adj_Pix_Cld_Mask
      integer (kind=int1),dimension(:,:),allocatable:: Cld_Mask_Qf
@@ -348,6 +353,7 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Ec_11um
     real (kind=real4), dimension(:,:), allocatable:: Ec_12um
     real (kind=real4), dimension(:,:), allocatable:: Ec_133um
+    integer (kind=int1), dimension(:,:), allocatable:: Cloud_Type
   end type acha_definition
 
   type :: ccl_definition
@@ -383,6 +389,7 @@ module PIXEL_COMMON
   integer,public, save:: Cmr_File_Flag
   integer,public, save:: Cloud_Mask_Aux_Flag
   integer,public, save:: Cloud_Mask_Aux_Read_Flag
+  integer,public, save:: Cloud_Type_Aux_Read_Flag
   integer,public, save:: Cloud_Mask_Bayesian_Flag
   integer,public, save:: Ref_cal_1b 
   integer,public, save:: Therm_cal_1b
@@ -506,7 +513,7 @@ module PIXEL_COMMON
   integer (kind=int2), dimension(:), allocatable, public:: Scan_Day
   integer (kind=int2), dimension(:), allocatable, public:: Scan_Year
   real (kind=real4), dimension(:), allocatable, public:: Utc_Scan_Time_Hours
-  
+  real (kind=real4), dimension(:,:), allocatable, public:: Pixel_Local_Time_Hours
   real (kind=real4), dimension(:,:), allocatable, public:: Pixel_Time
 
   real (kind=real4), dimension(:,:), allocatable,save,public:: Solzen_Anchor
@@ -658,7 +665,7 @@ module PIXEL_COMMON
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Fire_Mask
   integer(kind=int1), dimension(:,:), allocatable, public, target:: Thin_Cirr_Mask
 
-
+  !--- cloud Mask arrays
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Phase
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Cld_Type_IR
@@ -666,7 +673,6 @@ module PIXEL_COMMON
   integer (kind=int1),dimension(:,:),allocatable, public, save, target:: Ctp_Multilayer_Flag
 
   !--- Auxilliary variables
-  
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Type_Aux
   integer (kind=int1),dimension(:,:),allocatable, public, save:: Cld_Phase_Aux
   real (kind=real4),dimension(:,:),allocatable, public, save, target::Zc_Aux
@@ -719,7 +725,7 @@ module PIXEL_COMMON
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_Qf
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: DCOMP_Quality_Flag
      integer (kind=int2), dimension(:,:), allocatable, public,target, save:: DCOMP_Info_Flag
-     
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Fit
 
      !-- Nlcomp cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_Nlcomp
@@ -746,7 +752,7 @@ module PIXEL_COMMON
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Transmission_View
      real (kind=real4), dimension(:,:), allocatable, public, save,target:: Cloud_063um_Transmission_Solar
      real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_DCOMP_Diffuse
+     real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_Diffuse_DCOMP
 
      !--- SASRAB output
      real (kind=real4), dimension(:,:), allocatable, public, save:: Insolation_All_Sky
@@ -842,6 +848,8 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public:: Trans_Atm_Ch20_Solar_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ems_Ch20_Clear_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ttropo_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ztropo_Nwp_Pix
+  real (kind=real4), dimension(:,:), allocatable, public, target:: Ptropo_Nwp_Pix
   real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_11um_Tropo_Nadir_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_12um_Tropo_Rtm
   real (kind=real4), dimension(:,:), allocatable, public, target:: Beta_11um_85um_Tropo_Rtm
@@ -859,8 +867,16 @@ integer, allocatable, dimension(:,:), public, save, target :: j_LRC
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ec_Co2
   real (kind=real4), dimension(:,:), allocatable, public, target:: Tc_Cirrus_Background 
   real (kind=real4), dimension(:,:), allocatable, public, target:: Zc_Cirrus_Background 
+
 !--- modis white sky albedo maps
   real (kind=real4), dimension(:,:), allocatable, public, target:: Ndvi_Sfc_White_Sky
+
+!--- BCM Variables 
+     real (kind=real4), dimension(:,:), allocatable, public, target:: BTD_11_12um_NWC
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_39um_NWC
+     real (kind=real4), dimension(:,:), allocatable, public, target:: Emiss_Tropo_11um_LRC
+
+
 
 !---- other static arrays carried by this module
 
@@ -1072,7 +1088,13 @@ subroutine CREATE_PIXEL_ARRAYS()
            Scan_Day(dim2), &
            Scan_Year(dim2), &
            Utc_Scan_Time_Hours(dim2), &
+           Pixel_Local_Time_Hours(dim1,dim2), &
            Pixel_Time(dim1,dim2))
+
+  ! Other BCM output arrays
+  allocate (BTD_11_12um_NWC(dim1,dim2), &
+            Emiss_39um_NWC(dim1,dim2), &
+            Emiss_Tropo_11um_LRC(dim1,dim2))
 
   !--------------------------------------------------------------------------------
   ! Initialize variables that are not reset for each segment
@@ -1126,7 +1148,7 @@ subroutine DESTROY_PIXEL_ARRAYS()
              Bad_Scan_Flag,  &
              Scan_Number, &
              Scan_Time,Scan_Day,Scan_Year,Utc_Scan_Time_Hours, &
-             Pixel_Time)
+             Pixel_Local_Time_Hours,Pixel_Time)
 
   if (allocated(Covar_Ch27_Ch31_5x5)) deallocate(Covar_Ch27_Ch31_5x5)
 
@@ -1199,6 +1221,11 @@ subroutine DESTROY_PIXEL_ARRAYS()
   if (allocated(Gap_Line_Idx_Pattern)) deallocate(Gap_Line_Idx_Pattern)
   if (allocated(IFF_Gap_Mask)) deallocate(IFF_Gap_Mask)
 
+  !--- BCM arrays
+  deallocate (BTD_11_12um_NWC, &
+              Emiss_39um_NWC, &
+              Emiss_Tropo_11um_LRC)
+
 
 end subroutine DESTROY_PIXEL_ARRAYS
 
@@ -1211,6 +1238,9 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Bad_Pixel_Mask = .FALSE.     !not initialized to missing
       Ch3a_On_AVHRR = Missing_Value_Int1
 
+      Cloud_Mask_Aux_Read_Flag = sym%NO
+      Cloud_Type_Aux_Read_Flag = sym%NO
+
       call RESET_SENSOR_ARRAYS()
       call RESET_NAV_ARRAYS()
       call RESET_GEO_ARRAYS()
@@ -1221,6 +1251,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       call RESET_THERM_CHANNEL_ARRAYS()
       call RESET_EXTRA_CHANNEL_ARRAYS()
       call RESET_BTD_ARRAYS()
+      call RESET_CLOUD_MASK_ARRAYS()
       call RESET_ACHA_ARRAYS()
       call RESET_CCL_ARRAYS()
       call RESET_ASOS_ARRAYS()
@@ -1274,6 +1305,7 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
     
       Scan_Time = Missing_Value_Int4
       Utc_Scan_Time_Hours = Missing_Value_Real4
+      Pixel_Local_Time_Hours = Missing_Value_Real4
       Pixel_Time = Missing_Value_Real4
 
       i_LRC = Missing_Value_Int4
@@ -1283,6 +1315,11 @@ subroutine RESET_PIXEL_ARRAYS_TO_MISSING()
       Gap_Pixel_Mask = sym%NO
       Gap_Line_Idx = Missing_Value_Int4
       IFF_Gap_Mask = sym%NO     
+
+      !--- BCM arrays
+      BTD_11_12um_NWC = Missing_Value_Real4
+      Emiss_39um_NWC = Missing_Value_Real4
+      Emiss_Tropo_11um_LRC = Missing_Value_Real4
 
 
 end subroutine RESET_PIXEL_ARRAYS_TO_MISSING
@@ -1478,6 +1515,8 @@ subroutine CREATE_NWP_PIX_ARRAYS(dim1,dim2)
    allocate(Tpw_Nwp_Pix(dim1,dim2))
    allocate(Ozone_Nwp_Pix(dim1,dim2))
    allocate(Ttropo_Nwp_Pix(dim1,dim2))
+   allocate(Ztropo_Nwp_Pix(dim1,dim2))
+   allocate(Ptropo_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Spd_10m_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Dir_10m_Nwp_Pix(dim1,dim2))
    allocate(Wnd_Spd_Cld_Top_Nwp_Pix(dim1,dim2))
@@ -1515,6 +1554,8 @@ subroutine RESET_NWP_PIX_ARRAYS()
    Tpw_Nwp_Pix = Missing_Value_Real4
    Ozone_Nwp_Pix = Missing_Value_Real4
    Ttropo_Nwp_Pix = Missing_Value_Real4
+   Ztropo_Nwp_Pix = Missing_Value_Real4
+   Ptropo_Nwp_Pix = Missing_Value_Real4
    Wnd_Spd_10m_Nwp_Pix = Missing_Value_Real4
    Wnd_Dir_10m_Nwp_Pix = Missing_Value_Real4
    Wnd_Spd_Cld_Top_Nwp_Pix = Missing_Value_Real4
@@ -1552,6 +1593,8 @@ subroutine DESTROY_NWP_PIX_ARRAYS()
    deallocate(Tpw_Nwp_Pix)
    deallocate(Ozone_Nwp_Pix)
    deallocate(Ttropo_Nwp_Pix)
+   deallocate(Ztropo_Nwp_Pix)
+   deallocate(Ptropo_Nwp_Pix)
    deallocate(Wnd_Spd_10m_Nwp_Pix)
    deallocate(Wnd_Dir_10m_Nwp_Pix)
    deallocate(Wnd_Spd_Cld_Top_Nwp_Pix)
@@ -2009,6 +2052,8 @@ subroutine CREATE_SURFACE_ARRAYS(dim1,dim2)
    allocate(Sfc%Snow(dim1,dim2))
    allocate(Sfc%Sfc_Type(dim1,dim2))
    allocate(Sfc%Zsfc(dim1,dim2))
+   allocate(Sfc%Zsfc_Max(dim1,dim2))
+   allocate(Sfc%Zsfc_Std(dim1,dim2))
    allocate(Sfc%Zsfc_Hires(dim1,dim2))
 end subroutine CREATE_SURFACE_ARRAYS
 subroutine RESET_SURFACE_ARRAYS
@@ -2031,6 +2076,8 @@ subroutine RESET_SURFACE_ARRAYS
    Sfc%Snow = Missing_Value_Int1
    Sfc%Sfc_Type = Missing_Value_Int1
    Sfc%Zsfc = Missing_Value_Real4
+   Sfc%Zsfc_Max = Missing_Value_Real4
+   Sfc%Zsfc_Std = Missing_Value_Real4
    Sfc%Zsfc_Hires = Missing_Value_Real4
 end subroutine RESET_SURFACE_ARRAYS
 subroutine DESTROY_SURFACE_ARRAYS
@@ -2053,6 +2100,8 @@ subroutine DESTROY_SURFACE_ARRAYS
    deallocate(Sfc%Snow)
    deallocate(Sfc%Sfc_Type)
    deallocate(Sfc%Zsfc)
+   deallocate(Sfc%Zsfc_Max)
+   deallocate(Sfc%Zsfc_Std)
    deallocate(Sfc%Zsfc_Hires)
 end subroutine DESTROY_SURFACE_ARRAYS
 !------------------------------------------------------------------------------
@@ -2107,6 +2156,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Ec_11um(dim1,dim2))
     allocate(ACHA%Ec_12um(dim1,dim2))
     allocate(ACHA%Ec_133um(dim1,dim2))
+    allocate(ACHA%Cloud_Type(dim1,dim2)) 
    endif
 
    !--- these accumulate through the whole image, do not reset with each segment
@@ -2163,6 +2213,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Ec_11um = Missing_Value_Real4
     ACHA%Ec_12um = Missing_Value_Real4
     ACHA%Ec_133um = Missing_Value_Real4
+    ACHA%Cloud_Type = Missing_Value_Int1
 
 end subroutine RESET_ACHA_ARRAYS
 
@@ -2213,6 +2264,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Ec_11um) 
     deallocate(ACHA%Ec_12um) 
     deallocate(ACHA%Ec_133um) 
+    deallocate(ACHA%Cloud_Type) 
 
 end subroutine DESTROY_ACHA_ARRAYS
 !------------------------------------------------------------------------------
@@ -2292,6 +2344,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Iwp_DCOMP(dim1,dim2))
       allocate(Iwp_Tau_DCOMP(dim1,dim2))
       allocate(Cwp_DCOMP(dim1,dim2))
+      allocate(Cwp_Fit(dim1,dim2))
       allocate(Cwp_Ice_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Water_Layer_DCOMP(dim1,dim2))
       allocate(Cwp_Scwater_Layer_DCOMP(dim1,dim2))
@@ -2309,7 +2362,7 @@ subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
       allocate(Cloud_063um_Transmission_View(dim1,dim2))
       allocate(Cloud_063um_Transmission_Solar(dim1,dim2))
       allocate(Insolation_DCOMP(dim1,dim2))
-      allocate(Insolation_DCOMP_Diffuse(dim1,dim2))
+      allocate(Insolation_Diffuse_DCOMP(dim1,dim2))
       allocate(Cost_DCOMP(dim1,dim2))
       allocate(Error_Cov_Matrix_Cod(dim1,dim2))
       allocate(Error_Cov_Matrix_Ref(dim1,dim2))
@@ -2345,6 +2398,7 @@ subroutine RESET_DCOMP_ARRAYS()
       Iwp_DCOMP = Missing_Value_Real4
       Iwp_Tau_DCOMP = Missing_Value_Real4
       Cwp_DCOMP = Missing_Value_Real4
+      Cwp_Fit = Missing_Value_Real4
       Cwp_Ice_Layer_DCOMP = Missing_Value_Real4
       Cwp_Water_Layer_DCOMP = Missing_Value_Real4
       Cwp_Scwater_Layer_DCOMP = Missing_Value_Real4
@@ -2362,7 +2416,7 @@ subroutine RESET_DCOMP_ARRAYS()
       Cloud_063um_Transmission_View = Missing_Value_Real4
       Cloud_063um_Transmission_Solar = Missing_Value_Real4
       Insolation_DCOMP = Missing_Value_Real4
-      Insolation_DCOMP_Diffuse = Missing_Value_Real4
+      Insolation_Diffuse_DCOMP = Missing_Value_Real4
       Cost_DCOMP = Missing_Value_Real4
       Error_Cov_Matrix_Cod = Missing_Value_Real4
       Error_Cov_Matrix_Ref = Missing_Value_Real4
@@ -2398,6 +2452,7 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Iwp_DCOMP)
       deallocate(Iwp_Tau_DCOMP)
       deallocate(Cwp_DCOMP)
+      deallocate(Cwp_Fit)
       deallocate(Cwp_Ice_Layer_DCOMP)
       deallocate(Cwp_Water_Layer_DCOMP)
       deallocate(Cwp_Scwater_Layer_DCOMP)
@@ -2415,7 +2470,7 @@ subroutine DESTROY_DCOMP_ARRAYS()
       deallocate(Cloud_063um_Transmission_View)
       deallocate(Cloud_063um_Transmission_Solar)
       deallocate(Insolation_DCOMP)
-      deallocate(Insolation_DCOMP_Diffuse)
+      deallocate(Insolation_Diffuse_DCOMP)
       deallocate(Cost_DCOMP)
       deallocate(Error_Cov_Matrix_Cod)
       deallocate(Error_Cov_Matrix_Ref)
@@ -2516,64 +2571,44 @@ end subroutine DESTROY_AEROSOL_ARRAYS
 !-----------------------------------------------------------
 subroutine CREATE_CLOUD_MASK_ARRAYS(dim1,dim2,dim3)
   integer, intent(in):: dim1, dim2, dim3
+  endif
+<<<<<<< .working
   allocate(CLDMASK%Cld_Mask_Qf(dim1,dim2))
-  if (Cld_Flag ) then
-     allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))
-     allocate(CLDMASK%Cld_Test_Vector_Packed(dim3,dim1,dim2))
+  if (Cld_Flag == sym%YES) then
      allocate(CLDMASK%Cld_Mask(dim1,dim2))
+     allocate(CLDMASK%Cld_Mask_Binary(dim1,dim2))
+     allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))
      allocate(CLDMASK%Adj_Pix_Cld_Mask(dim1,dim2))
      allocate(CLDMASK%Posterior_Cld_Probability(dim1,dim2))
      allocate(CLDMASK%Prior_Cld_Probability(dim1,dim2))
      allocate(CLDMASK%Bayes_Mask_Sfc_Type(dim1,dim2))
+     allocate(CLDMASK%Cld_Test_Vector_Packed(dim3,dim1,dim2))
   endif
-  !Fix needed to get around issue when GFS turned off for AVHRR
-  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-     if (.not. allocated(CLDMASK%Cld_Mask_Aux)) allocate(CLDMASK%Cld_Mask_Aux(dim1,dim2))  
-  endif
-  
 end subroutine CREATE_CLOUD_MASK_ARRAYS
 subroutine RESET_CLOUD_MASK_ARRAYS()
-  
-   if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
-  
-  if (Cld_Flag ) then
-  
+  if (allocated(CLDMASK%Cld_Mask_Qf)) CLDMASK%Cld_Mask_Qf = Missing_Value_Int1
+  if (Cld_Flag == sym%YES) then
      CLDMASK%Cld_Mask = Missing_Value_Int1
+     CLDMASK%Cld_Mask_Binary = Missing_Value_Int1
      CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
      CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
      CLDMASK%Posterior_Cld_Probability = Missing_Value_Real4
      CLDMASK%Prior_Cld_Probability = Missing_Value_Real4
      CLDMASK%Cld_Test_Vector_Packed = 0
      CLDMASK%Bayes_Mask_Sfc_Type = Missing_Value_Int1
-     
-  endif
-  !Fix needed to get around issue when GFS turned off for AVHRR
-  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-        
-     CLDMASK%Cld_Mask_Aux = Missing_Value_Int1
-     
   endif
 end subroutine RESET_CLOUD_MASK_ARRAYS
 subroutine DESTROY_CLOUD_MASK_ARRAYS()
   deallocate(CLDMASK%Cld_Mask_Qf)
-  if (Cld_Flag ) then
-     deallocate(CLDMASK%Cld_Mask_Aux)
-     deallocate(CLDMASK%Cld_Test_Vector_Packed)
+  if (Cld_Flag == sym%YES) then
      deallocate(CLDMASK%Cld_Mask)
+     deallocate(CLDMASK%Cld_Mask_Binary)
+     deallocate(CLDMASK%Cld_Mask_Aux)  
      deallocate(CLDMASK%Adj_Pix_Cld_Mask)
      deallocate(CLDMASK%Posterior_Cld_Probability)
      deallocate(CLDMASK%Prior_Cld_Probability)
+     deallocate(CLDMASK%Cld_Test_Vector_Packed)
      deallocate(CLDMASK%Bayes_Mask_Sfc_Type)
-  endif
-  !Fix needed to get around issue when GFS turned off for AVHRR
-  if (trim(Sensor%Sensor_Name) == 'AVHRR-1' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-2' .or. &
-      trim(Sensor%Sensor_Name) == 'AVHRR-3') then
-     if (allocated(CLDMASK%Cld_Mask_Aux)) deallocate(CLDMASK%Cld_Mask_Aux)  
   endif
 end subroutine DESTROY_CLOUD_MASK_ARRAYS
 !-----------------------------------------------------------

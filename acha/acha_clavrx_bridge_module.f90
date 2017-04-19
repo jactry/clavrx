@@ -66,10 +66,12 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-
+!Input%Invalid_Data_Mask = .true.
+!Input%Invalid_Data_Mask( 2560,1) = .false.
    !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
-
+   ! call print_screen ( 2560,1)
+  !stop
    !-----------------------------------------------------------------------
    !--- Call algorithm to make ACHA optical and microphysical properties
    !-----------------------------------------------------------------------
@@ -424,5 +426,98 @@ module ACHA_CLAVRX_BRIDGE
      Diag%Array_2 => Diag_Pix_Array_2 
      Diag%Array_3 => Diag_Pix_Array_3 
  end subroutine SET_DIAG
+ 
+ subroutine print_screen ( elem,line)
+ integer :: elem,line
+ 
+ 	print*,output % pc ( elem,line)
+	print*,output % tc ( elem,line)
+	   print*,Input%ACHA_Mode_Flag_In 
+    print*,Input%Number_of_Elements 
+    print*,Input%Number_of_Lines 
+    print*,Input%Smooth_Nwp_Fields_Flag
+    print*,Input%Process_Undetected_Cloud_Flag 
+    print*,Input%Sensor_Resolution_KM 
+    print*,Input%WMO_Id 
+    
+    print*,Input%Chan_On_67um 
+    print*,Input%Chan_On_85um 
+    print*,Input%Chan_On_11um 
+    print*,Input%Chan_On_12um 
+    print*,Input%Chan_On_136um
+    print*,Input%Chan_On_139um
+    print*,Input%Chan_On_142um
+    print*,Input%Invalid_Data_Mask  ( elem,line)
+	! print*,allocated(ch(27)%Bt_Toa)
+	! print*,allocated(Input%Bt_67um )
+	! print*,shape((Input%Bt_67um )
+   ! if ( allocated(Input%Bt_67um )) print*,'67',Input%Bt_67um  ( elem,line)
+	! print*,'85',allocated ( Input%Bt_85um)
+    print*,Input%Bt_85um  ( elem,line)
+    print*,Input%Bt_11um  ( elem,line)
+    print*,Input%Bt_12um  ( elem,line)
+    !print*,Input%Bt_136um  ( elem,line)
+    !print*,Input%Bt_139um  ( elem,line)
+    !print*,Input%Bt_142um  ( elem,line)
+    !print*,Input%Rad_67um  ( elem,line)
+    print*,Input%Rad_85um  ( elem,line)
+    print*,Input%Rad_11um  ( elem,line)
+    print*,Input%Rad_12um  ( elem,line)
+    !print*,Input%Rad_133um ( elem,line)
+    !print*,Input%Rad_136um ( elem,line)
+    !print*,Input%Rad_139um ( elem,line)
+    !print*,Input%Rad_142um ( elem,line)
+	 print*,'geometry'
+    print*,Input%Cosine_Zenith_Angle  ( elem,line)
+    print*,Input%Sensor_Zenith_Angle  ( elem,line)
+    print*,Input%Sensor_Azimuth_Angle ( elem,line)
+	 print*,'surface'
+    print*,Input%Surface_Temperature  ( elem,line)
+    print*,Input%Surface_Air_Temperature  ( elem,line)
+	 print*,'tropr'
+    print*,Input%Tropopause_Temperature  ( elem,line)
+    print*,Input%Tropopause_Height  ( elem,line)
+    print*,Input%Tropopause_Pressure  ( elem,line)
+    print*,Input%Surface_Pressure  ( elem,line)
+    print*,Input%Surface_Elevation  ( elem,line)
+    print*,Input%Latitude  ( elem,line)
+    print*,Input%Longitude  ( elem,line)
+	 print*,'clear'
+   ! print*,Input%Rad_Clear_67um  ( elem,line)
+    print*,Input%Rad_Clear_85um  ( elem,line)
+    print*,Input%Rad_Clear_11um  ( elem,line)
+    print*,Input%Rad_Clear_12um  ( elem,line)
+   ! print*,Input%Rad_Clear_136um ( elem,line)
+   ! print*,Input%Rad_Clear_139um ( elem,line)
+   ! print*,Input%Rad_Clear_142um ( elem,line)
+	 print*,'surf emis'
+    print*,Input%Surface_Emissivity_39um  ( elem,line)
+    print*,Input%Surface_Emissivity_11um  ( elem,line)
+    print*,Input%Surface_Emissivity_12um  ( elem,line)
+    print*,Input%Surface_Emissivity_85um  ( elem,line)
+    !print*,Input%Surface_Emissivity_133um ( elem,line)
+    !print*,Input%Surface_Emissivity_136um ( elem,line)
+    !print*,Input%Surface_Emissivity_139um ( elem,line)
+    !nedprint*,Input%Surface_Emissivity_142um ( elem,line)
+   ! print*,Input%Surface_Emissivity_67um  ( elem,line)
+	 print*,'snow'
+    print*,Input%Snow_Class  ( elem,line)
+    print*,Input%Surface_Type  ( elem,line)
+    print*,Input%Cloud_Mask  ( elem,line)
+    print*,Input%Cloud_Probability  ( elem,line)
+    print*,Input%Cloud_Type  ( elem,line)
+    print*,Input%Elem_Idx_Nwp  ( elem,line)
+    print*,Input%Line_Idx_Nwp  ( elem,line)
+    print*,Input%Elem_Idx_Opposite_Corner_NWP  ( elem,line)
+    print*,Input%Line_Idx_Opposite_Corner_NWP  ( elem,line)
+    print*,Input%Viewing_Zenith_Angle_Idx_Rtm  ( elem,line)
+    print*,Input%Latitude_Interp_Weight_NWP  ( elem,line)
+    print*,Input%Longitude_Interp_Weight_NWP  ( elem,line)
+    print*,Input%Elem_Idx_LRC_Input  ( elem,line)
+    print*,Input%Line_Idx_LRC_Input  ( elem,line)
+    print*,Input%Tc_Cirrus_Sounder  ( elem,line)
+ 
+ 
+ end  subroutine print_screen
 
 end module ACHA_CLAVRX_BRIDGE

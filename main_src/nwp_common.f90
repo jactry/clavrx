@@ -115,7 +115,9 @@ module NWP_COMMON
    , nav &
    , smooth_nwp_flag &
    , image &
-   , space_mask
+   , space_mask &
+	, ptropo_nwp_pix &
+	, ztropo_nwp_pix
    
    use cx_science_tools_mod,only : &
       vapor &

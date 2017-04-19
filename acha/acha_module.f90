@@ -72,7 +72,20 @@ module AWG_CLOUD_HEIGHT
            INVERT_MATRIX, ACHA_FETCH_PIXEL_NWP_RTM, &
            LOCATE, acha_diag_struct
 
-  use ACHA_MICROPHYSICAL_MODULE
+  use ACHA_MICROPHYSICAL_MODULE,only: &
+   a_beta_11um_133um_fit_ice &
+	, a_beta_11um_133um_fit_water &
+	, a_beta_11um_67um_fit_ice &
+	, a_beta_11um_67um_fit_water &
+	, a_beta_11um_85um_fit_ice &
+	, a_beta_11um_85um_fit_water &
+	, b_beta_11um_133um_fit_ice &
+	, b_beta_11um_133um_fit_water &
+	, b_beta_11um_67um_fit_ice &
+	, b_beta_11um_67um_fit_water &
+	, b_beta_11um_85um_fit_ice &
+	, b_beta_11um_85um_fit_water &
+	, setup_ice_microphysical_model
 
   implicit none
 
@@ -108,7 +121,7 @@ module AWG_CLOUD_HEIGHT
 
   !--- include the non-system specific variables
   include 'acha_parameters.inc'
-
+ 
   !--- interpolated profiles
   real, private, dimension(Num_Levels_RTM_Prof) :: Temp_Prof_RTM
   real, private, dimension(Num_Levels_RTM_Prof) :: Press_Prof_RTM
@@ -282,7 +295,7 @@ module AWG_CLOUD_HEIGHT
   !===============================================================================
   !  Argument Declaration
   !==============================================================================
-
+	implicit none
   type(acha_input_struct), intent(inout) :: Input
   type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output

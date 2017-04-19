@@ -187,6 +187,12 @@ module CCL_MODULE
          Output%Cloud_Layer = 21
   endwhere
 
+!ynoh (cira/csu) ! for H-M-L cloud layers
+  where (Mask_High == 1 .and. Mask_Mid == 1 .and. Mask_Low == 1)
+         Output%Cloud_Layer = 31
+  endwhere
+!ynoh (cira/csu)
+
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
  !--------------------------------------------------------------------

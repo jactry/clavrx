@@ -113,7 +113,7 @@ module NB_CLOUD_MASK_CLAVRX_BRIDGE
    type(mask_input), private :: Input   
    type(mask_output), private :: Output   
    type(diag_output), private :: Diag  
-   type(symbol_naive_bayesian), private :: Symbol
+   type(symbol_naive_bayesian), private :: Symbol 
 
   !--- string to control on-screen prompts
   character(*), parameter, private :: EXE_PROMPT_CM = "NB Cloud Mask Bridge >> "

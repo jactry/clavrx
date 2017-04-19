@@ -99,7 +99,7 @@ module LEVEL2_ROUTINES
       , dcomp_quality_flag &
       , dcomp_info_flag &
       , insolation_dcomp &
-      , insolation_dcomp_diffuse &
+      , insolation_diffuse_dcomp &
       , tau_nlcomp &
       , reff_nlcomp &
       , tau_nlcomp_cost &

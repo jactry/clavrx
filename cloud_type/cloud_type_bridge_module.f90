@@ -174,12 +174,12 @@ contains
                cycle
             end if 
             
-            if (CLDMASK%cld_mask (i,j) == et_cloudiness_class % CLEAR ) then
+            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i,j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (CLDMASK%cld_mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (CLDMASK%Cld_Mask (i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i,j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if
@@ -221,12 +221,12 @@ contains
                cycle
             end if 
             
-            if (CLDMASK%cld_mask ( i,j) == et_cloudiness_class % CLEAR ) then
+            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % CLEAR ) then
                cld_type (i , j ) = et_cloud_type % CLEAR
                 cycle
             end if
                 
-            if (CLDMASK%cld_mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
+            if (CLDMASK%Cld_Mask ( i,j) == et_cloudiness_class % PROB_CLEAR ) then
                cld_type (i , j ) = et_cloud_type % PROB_CLEAR
                cycle
             end if   

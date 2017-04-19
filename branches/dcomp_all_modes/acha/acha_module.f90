@@ -48,6 +48,11 @@ module AWG_CLOUD_HEIGHT
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
 ! 9 - 11 + 12 + 13.3-pseudo um       -
+!
+! MULTI_LAYER_LOGIC_FLAG
+! 0 - (baseline) just use the multilayer id in cloud type
+! 1 - treat all multilayer like cirrus
+! 2 - assume all cirrus are multilayer and let acha decide
 !----------------------------------------------------------------------
 !Changes needed to get into SAPF
 !
@@ -153,8 +158,8 @@ module AWG_CLOUD_HEIGHT
   real, private:: Btd_11um_12um_Btd_11um_85um_Covar
   real, private:: Btd_11um_67um_Btd_11um_133um_Covar
 
-  real, private, PARAMETER:: Dt_Dz_Strato = -6500.0 !K/m
-  real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
+! real, private, PARAMETER:: Dt_Dz_Strato = -0.0065 !K/m
+! real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
   real, private, PARAMETER:: MISSING_VALUE_REAL4 = -999.0
   integer(kind=int1), private, PARAMETER:: MISSING_VALUE_INTEGER1 = -128
   integer(kind=int4), private, PARAMETER:: MISSING_VALUE_INTEGER4 = -999
@@ -315,7 +320,6 @@ module AWG_CLOUD_HEIGHT
   integer:: Pass_Idx_Min
   integer:: Pass_Idx_Max
   real:: Lapse_Rate
-  real:: Abs_Lapse_Rate_dP_dZ
   real:: Delta_Cld_Temp_Sfc_Temp
 
   real:: Convergence_Criteria
@@ -426,12 +430,16 @@ module AWG_CLOUD_HEIGHT
   integer(kind=int4), allocatable, dimension(:,:):: Elem_Idx_LRC
   integer(kind=int4), allocatable, dimension(:,:):: Line_Idx_LRC
   logical, allocatable, dimension(:,:):: Skip_LRC_Mask
+  real (kind=real4):: Tc_Opaque_Lrc
   real (kind=real4):: Bt_11um_Lrc
   real (kind=real4):: Bt_11um_Std
   real (kind=real4):: Btd_11um_67um_Std
   real (kind=real4):: Btd_11um_85um_Std
   real (kind=real4):: Btd_11um_12um_Std
   real (kind=real4):: Btd_11um_133um_Std
+  real (kind=real4):: T_Tropo
+  real (kind=real4):: Z_Tropo
+  real (kind=real4):: P_Tropo
 
   !--- scalar local variables
   integer (kind=int4):: i1,i2,j1,j2
@@ -463,7 +471,6 @@ module AWG_CLOUD_HEIGHT
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
-
   
   !---------------------------------------------------------------------------
   !-- setup microphysical models
@@ -628,18 +635,29 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--------------------------------------------------------------------------
-  ! Assume all CIRRUS are Overlapped - Experimental
+  ! Multi-Layer Logic Implemented via cloud type
   !-------------------------------------------------------------------------
-  where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
-     Input%Cloud_Type = symbol%OVERLAP_TYPE
-  endwhere
+
+  Output%Cloud_Type = Input%Cloud_Type
+ 
+  if (MULTI_LAYER_LOGIC_FLAG == 1) then 
+   where(Input%Cloud_Type == symbol%OVERLAP_TYPE)
+     Output%Cloud_Type = symbol%CIRRUS_TYPE
+   endwhere
+  endif
+
+  if (MULTI_LAYER_LOGIC_FLAG == 2) then 
+   where(Input%Cloud_Type == symbol%CIRRUS_TYPE)
+     Output%Cloud_Type = symbol%OVERLAP_TYPE
+   endwhere
+  endif
+
 
   !--------------------------------------------------------------------------
   ! determine processing order of pixels
   !--------------------------------------------------------------------------
-
   call COMPUTE_PROCESSING_ORDER(&
-                                Input%Invalid_Data_Mask, Input%Cloud_Type,&
+                                Input%Invalid_Data_Mask, Output%Cloud_Type,&
                                 ELem_Idx_LRC,Line_Idx_LRC, &
                                 Pass_Idx_Min,Pass_Idx_Max,USE_CIRRUS_FLAG, &
                                 Output%Processing_Order) 
@@ -657,7 +675,7 @@ module AWG_CLOUD_HEIGHT
    !--------------------------------------------------------------------------
    if ((Pass_Idx == 0) .or. (Pass_Idx == 3)) then
 
-     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Input%Cloud_Type, &
+     call  COMPUTE_LOWER_CLOUD_TEMPERATURE(Output%Cloud_Type, &
                                         USE_LOWER_INTERP_FLAG, &
                                         Input%Surface_Temperature, &
                                         Output%Tc,&
@@ -724,7 +742,10 @@ module AWG_CLOUD_HEIGHT
     Ivza =  Input%Viewing_Zenith_Angle_Idx_RTM(Elem_Idx,Line_Idx)
     ilrc = Elem_Idx_LRC(Elem_Idx,Line_Idx)
     jlrc = Line_Idx_LRC(Elem_Idx,Line_Idx)
-    Cloud_Type = Input%Cloud_Type(Elem_Idx,Line_Idx)
+    Cloud_Type = Output%Cloud_Type(Elem_Idx,Line_Idx)
+    T_Tropo = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
+    Z_Tropo = Input%Tropopause_Height(Elem_Idx,Line_Idx)
+    P_Tropo = Input%Tropopause_Pressure(Elem_Idx,Line_Idx)
     
     !--- Qc indices
     if (Input%Elem_Idx_Nwp(Elem_Idx,Line_Idx) <= 0 .or. &
@@ -738,8 +759,8 @@ module AWG_CLOUD_HEIGHT
     !---  filter pixels for last pass for cirrus correction
     if (Pass_Idx == Pass_Idx_Max .and. USE_CIRRUS_FLAG == symbol%YES) then
 
-        if (Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%CIRRUS_TYPE .and. &
-            Input%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE) then
+        if (Output%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%CIRRUS_TYPE .and. &
+            Output%Cloud_Type(Elem_Idx,Line_Idx) /= symbol%OVERLAP_TYPE) then
              cycle
         endif
 
@@ -1118,8 +1139,10 @@ module AWG_CLOUD_HEIGHT
   if ((ilrc /= MISSING_VALUE_INTEGER4) .and. &
       (jlrc /= MISSING_VALUE_INTEGER4)) then
            Bt_11um_Lrc =  Input%Bt_11um(ilrc,jlrc)
+           Tc_Opaque_Lrc = Tc_Opaque(ilrc,jlrc)
   else
            Bt_11um_Lrc = MISSING_VALUE_REAL4
+           Tc_Opaque_Lrc = MISSING_VALUE_REAL4
   endif
 
   call COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
@@ -1128,7 +1151,7 @@ module AWG_CLOUD_HEIGHT
                        Input%Latitude(Elem_Idx,Line_Idx), &
                        Input%Tropopause_Temperature(Elem_Idx,Line_Idx), &
                        Input%Bt_11um(Elem_Idx,Line_Idx), &
-                       Bt_11um_Lrc, &
+                       Tc_Opaque_Lrc, &
                        Tc_Opaque(Elem_Idx,Line_Idx), &
                        Input%Cosine_Zenith_Angle(Elem_Idx,Line_Idx), &
                        Input%Snow_Class(Elem_Idx,Line_Idx), &
@@ -1136,6 +1159,10 @@ module AWG_CLOUD_HEIGHT
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
+
+   Diag%Array_1(Elem_Idx,Line_Idx) = T_Tropo
+   Diag%Array_2(Elem_Idx,Line_Idx) = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
+   Diag%Array_3(Elem_Idx,Line_Idx) = Z_Tropo
 
    if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "==========================================================="
@@ -1153,9 +1180,9 @@ module AWG_CLOUD_HEIGHT
       Tc_Ap = Temperature_Cirrus(Elem_Idx,Line_Idx)
   endif
 
-   if (lun_diag > 0) then 
+  if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "Cirrus Temperature = ", Temperature_Cirrus(Elem_Idx,Line_Idx)
-   endif 
+  endif 
 
   !------------------------------------------------------------------------
   ! fill x_ap vector with a priori values  
@@ -1318,8 +1345,8 @@ Retrieval_Loop: do
   Tc_Temp = x(1)
   Ts_Temp = x(4)
 
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
-  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Pc_temp,Tc_temp,Zc_Temp,T_Tropo,Z_Tropo,P_Tropo,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
+  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Ps_temp,Ts_temp,Zs_Temp,T_Tropo,Z_Tropo,P_Tropo,Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
   !--- compute 11um radiative transfer terms
   Rad_Ac_11um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
@@ -1340,6 +1367,7 @@ Retrieval_Loop: do
  
   Trans_Atm = GENERIC_PROFILE_INTERPOLATION(Zs_Temp, &
                              Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Trans_Prof_11um)
+
   Bs = PLANCK_RAD_FAST(Input%Chan_Idx_11um,Ts_Temp)
 
   Rad_Clear_11um = Rad_Atm + Trans_Atm*Emiss_Sfc_11um*Bs   
@@ -1570,6 +1598,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx), &
                                Output%Lower_Tc(Elem_Idx,Line_Idx), &
                                Output%Lower_Zc(Elem_Idx,Line_Idx), &
+                               T_Tropo, Z_Tropo,P_Tropo, &
                                Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif
 
@@ -1583,18 +1612,16 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  !-------------------------------------------------------------------------- 
  !--  If Lower Cloud is placed at surface - assume this single layer
  !--------------------------------------------------------------------------
- if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
-     Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
-    Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Output%Lower_Tc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Output%Lower_Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
-    Input%Cloud_Type(Elem_Idx,Line_Idx) = symbol%CIRRUS_TYPE
-    Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
- endif  
-
-!if (Input%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
-!    Diag%Array_3(Elem_Idx,Line_Idx) = 1.0 - Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) / Ts_Ap_Uncer
-!endif
+ if (MULTI_LAYER_LOGIC_FLAG == 0 .or. MULTI_LAYER_LOGIC_FLAG == 2) then 
+   if (Output%Lower_Zc(Elem_Idx,Line_Idx) < 1000.0 .and.  &
+      Output%Cloud_Type(Elem_Idx,Line_Idx) == symbol%OVERLAP_TYPE) then
+      Output%Lower_Zc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Lower_Tc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Lower_Pc(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+      Output%Cloud_Type(Elem_Idx,Line_Idx) = symbol%CIRRUS_TYPE
+      Output%Lower_Tc_Uncertainty(Elem_Idx,Line_Idx) = MISSING_VALUE_REAL4
+   endif  
+ endif
 
  !--- set quality flag for a successful retrieval
  Output%Qf(Elem_Idx,Line_Idx) = 3
@@ -1603,6 +1630,7 @@ if (Fail_Flag(Elem_Idx,Line_Idx) == symbol%NO) then  !successful retrieval if st
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx),&
+                            T_Tropo, Z_Tropo, P_Tropo,&
                             Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
  !--- check for NWP profile inversion and set meta data flag.
@@ -1724,6 +1752,7 @@ else
     call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Lower_Pc(Elem_Idx,Line_Idx),&
                                Output%Lower_Tc(Elem_Idx,Line_Idx),&
                                Output%Lower_Zc(Elem_Idx,Line_Idx),&
+                               T_Tropo, Z_Tropo, P_Tropo,&
                                Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
  endif 
 
@@ -1743,6 +1772,7 @@ else
  call KNOWING_T_COMPUTE_P_Z(Cloud_Type,Output%Pc(Elem_Idx,Line_Idx), &
                             Output%Tc(Elem_Idx,Line_Idx), &
                             Output%Zc(Elem_Idx,Line_Idx), &
+                            T_Tropo, Z_Tropo, P_Tropo,&
                             Lev_Idx,ierror,NWP_Profile_Inversion_Flag)
 
 endif                              !end successful retrieval if statement
@@ -1868,7 +1898,7 @@ end do Line_Loop
 if (USE_CIRRUS_FLAG == symbol%YES .and. Pass_Idx == Pass_Idx_Max - 1) then
 
     call COMPUTE_TEMPERATURE_CIRRUS( &
-                 Input%Cloud_Type,   &
+                 Output%Cloud_Type,   &
                  Output%Tc,          &
                  Output%Ec,          &
                  EMISSIVITY_MIN_CIRRUS, &
@@ -1999,12 +2029,15 @@ end subroutine KNOWING_Z_COMPUTE_T_P
 !-----------------------------------------------------------------
 ! InterpoLate within profiles knowing T to determine P and Z
 !-----------------------------------------------------------------
-subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversion_Flag)
+subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,T_Tropo,Z_Tropo,P_Tropo,klev,ierr,Level_Within_Inversion_Flag)
 
      integer (kind=int1), intent(in):: Cloud_Type
      real, intent(in):: T
      real, intent(out):: P
      real, intent(out):: Z
+     real, intent(in):: T_Tropo
+     real, intent(in):: Z_Tropo
+     real, intent(in):: P_Tropo
      integer, intent(out):: klev
      integer, intent(out):: ierr
      real:: dp
@@ -2043,13 +2076,13 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
 
      !--- check to see if colder than min, than assume above tropopause
      !--- and either limit height to tropopause or extrapoLate in stratosphere
-     if (T < minval(Temp_Prof_RTM(kstart:kend))) then
+     if (T < minval(Temp_Prof_RTM(kstart:kend)) .or. T < T_Tropo) then
          if (ALLOW_STRATOSPHERE_SOLUTION_FLAG == 1 .and. Cloud_Type == symbol%OVERSHOOTING_TYPE) then
-           Z = Hght_Prof_RTM(kstart) + (T - Temp_Prof_RTM(kstart)) / Dt_Dz_Strato
-           call KNOWING_Z_COMPUTE_T_P(P,R4_Dummy,Z,klev)
+           Z = Z_Tropo + (T - T_Tropo) / Dt_Dz_Strato
+           P = P_Tropo + (Z - Z_Tropo) * Dp_Dz_Strato
          else
-           P = Press_Prof_RTM(kstart)
-           Z = Hght_Prof_RTM(kstart)
+           P = P_Tropo
+           Z = Z_Tropo
            klev = kstart + 1
          endif
          ierr = symbol%NO
@@ -2075,6 +2108,9 @@ subroutine KNOWING_T_COMPUTE_P_Z(Cloud_Type,P,T,Z,klev,ierr,Level_Within_Inversi
         kend = Sfc_Level_RTM
         nlevels_temp = kend - kstart + 1
         call LOCATE(Temp_Prof_RTM(kstart:kend),nlevels_temp,T,klev)
+        if (klev == 0) then
+            klev = minloc(abs(T-Temp_Prof_RTM(kstart:kend)),1)
+        endif
         klev = klev + kstart - 1
         klev = max(1,min(Num_Levels_RTM_Prof-1,klev))
     endif
@@ -2642,7 +2678,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
                            Latitude, &
                            Ttropo, &
                            T11um, &
-                           T11um_Lrc, &
+                           Tc_Opaque_Lrc, &
                            Tc_Opaque, &
                            Mu, &
                            Snow_Flag, &
@@ -2659,7 +2695,7 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4), intent(in):: Latitude
   real(kind=real4), intent(in):: Ttropo
   real(kind=real4), intent(in):: T11um
-  real(kind=real4), intent(in):: T11um_Lrc
+  real(kind=real4), intent(in):: Tc_Opaque_Lrc
   real(kind=real4), intent(in):: Tc_Opaque
   real(kind=real4), intent(in):: Mu
   integer(kind=int1), intent(in):: Snow_Flag
@@ -2678,13 +2714,16 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
   real(kind=real4):: Emiss_Weight2
 
   !--- calipso values (not multiplier on uncer values)
-  call compute_cirrus_apriori(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
+  call COMPUTE_CIRRUS_APRIORI(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
 
+
+  !-- -initialize with the opaque cloud temperature
   Tc_Ap_Opaque = Tc_Opaque
 
-  if (T11um_Lrc /= MISSING_VALUE_REAL4) then
-      Tc_Ap_Opaque = T11um_Lrc
+  if (Tc_Opaque_Lrc /= MISSING_VALUE_REAL4) then
+      Tc_Ap_Opaque = Tc_Opaque_Lrc
   endif
+
   if (Tc_Ap_Opaque == MISSING_VALUE_REAL4) then
      Tc_Ap_Opaque = T11um
   endif
@@ -2700,41 +2739,54 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
 
   if (Cloud_Phase == symbol%ICE_PHASE) then
 
-!   if (Emiss_11um_Tropo <= 0.0) then
-!           Emiss_Weight = 0.0
-!   elseif (Emiss_11um_Tropo > 1.0) then
-!           Emiss_Weight = 1.0
-!   else
-!           Emiss_Weight = Emiss_11um_Tropo
-!   endif
+!==============
+    if (Emiss_11um_Tropo <= 0.0) then
+            Emiss_Weight = 0.0
+    elseif (Emiss_11um_Tropo > 1.0) then
+            Emiss_Weight = 1.0
+    else
+            Emiss_Weight = Emiss_11um_Tropo
+    endif
 
-!   Emiss_Weight2 = Emiss_Weight
+    Emiss_Weight2 = Emiss_Weight
 
-!   Tc_Ap = Emiss_Weight2*Tc_Ap_Opaque + &
-!           (1.0-Emiss_Weight2)*Tc_Ap_Cirrus
+    Tc_Ap = Emiss_Weight2*Tc_Ap_Opaque + &
+            (1.0-Emiss_Weight2)*Tc_Ap_Cirrus
 
-!   Tc_Ap_Uncer = Emiss_Weight2*Tc_Ap_Uncer_Opaque + &
-!           (1.0-Emiss_Weight2)*Tc_Ap_Uncer_Cirrus
+    Tc_Ap_Uncer = Emiss_Weight2*Tc_Ap_Uncer_Opaque + &
+            (1.0-Emiss_Weight2)*Tc_Ap_Uncer_Cirrus
 
-!   Ec_Ap = min(0.99,max(0.1,Emiss_Weight)) 
-!   Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
+    !---- for very thick clouds, we want to ignore the LRC to 
+    !---  to maintain spatial structure like overshooting columns
+    if (Emiss_11um_Tropo > 0.95 .and. Tc_Opaque /= MISSING_VALUE_REAL4) then
+      Tc_Ap = Tc_Opaque
+      Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
+    endif
 
-!   Beta_Ap = Beta_Ap_Ice
-!   Beta_Ap_Uncer = Beta_Ap_Uncer_Ice
+    !---- for very thin clouds, ignore opaque solution
+    if (Emiss_11um_Tropo < 0.5) then
+      Tc_Ap = Tc_Ap_Cirrus
+      Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+    endif
+
 
 !==============
-    Tc_Ap = min(Tc_Ap_Cirrus,Tc_Ap_Opaque)
-    Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+!   Tc_Ap = min(Tc_Ap_Cirrus,Tc_Ap_Opaque)
+!   Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
+
+    !---- for very thick clouds, we want to ignore the LRC to 
+    !---  to maintain spatial structure like overshooting columns
+!   if (Emiss_11um_Tropo > 0.95 .and. Tc_Opaque /= MISSING_VALUE_REAL4) then
+!     Tc_Ap = Tc_Opaque
+!     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
+!   endif
+!==============
+
+    !--- emissivity and beta a priori
     Ec_Ap = min(0.99,max(0.1,Emiss_11um_Tropo)) 
     Ec_Ap_Uncer = Ec_Ap_Uncer_Cirrus
     Beta_Ap = Beta_Ap_Ice
     Beta_Ap_Uncer = Beta_Ap_Uncer_Ice
-
-    if (Emiss_11um_Tropo > 0.90) then
-      Tc_Ap = Tc_Ap_Opaque
-      Tc_Ap_Uncer = Tc_Ap_Opaque
-    endif
-
 
 
   endif
@@ -3902,6 +3954,7 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Cld_Type, &
    Mask1 = 0
    where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
            Cld_Type == symbol%OPAQUE_ICE_TYPE .or.  &
+           Cld_Type == symbol%OVERSHOOTING_TYPE .or.  &
            Cld_Type == symbol%OVERLAP_TYPE) .and.  &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud >= Emissivity_Thresh)
@@ -3911,14 +3964,14 @@ subroutine COMPUTE_TEMPERATURE_CIRRUS(Cld_Type, &
    !---- make target mask
    Mask2 = 0
    where( (Cld_Type == symbol%CIRRUS_TYPE .or. &
-           Cld_Type == symbol%OPAQUE_ICE_TYPE) .and.  &
+           Cld_Type == symbol%OVERLAP_TYPE) .and. &
            Temperature_Cloud /= Missing .and. &
            Emissivity_Cloud < Emissivity_Thresh)
       Mask2 = 1
    end where
 
 
-   call MEAN_SMOOTH(Mask1,Mask2,Missing,2,2,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
+   call MEAN_SMOOTH(Mask1,Mask2,Missing,5,5,Count_Thresh,Box_Width,Num_Elements,Num_Lines, &
                     Temperature_Cloud,Temperature_Cirrus)
 
    !--------------------------------------
@@ -4164,10 +4217,13 @@ end subroutine COMPUTE_BOX_WIDTH
         j1 = min(Num_Lines,max(1,j - N))
         j2 = min(Num_Lines,max(1,j + N))
 
-        do i = 1 + N + di, Num_Elements - N - di, di + 1
+        !do i = 1 + N + di, Num_Elements - N - di, di + 1
+        do i = 1 + di, Num_Elements - di, di + 1
 
-          i1 = i - N
-          i2 = i + N
+        !  i1 = i - N
+        !  i2 = i + N
+           i1 = min(Num_Elements,max(1,i - N))
+           i2 = min(Num_ELements,max(1,i + N))
 
           Z_Out(i,j) = Missing
 
@@ -4239,7 +4295,7 @@ end function OCEANIC_LAPSE_RATE_OLD
 ! estimate cirrus aprior temperature and uncertainty from a precomputed 
 ! latitude table (stored in acha_parameters.inc)
 !----------------------------------------------------------------------------
-subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_uncer)
+subroutine COMPUTE_CIRRUS_APRIORI(t_tropo, latitude, tc_apriori, tc_apriori_uncer)
   real, intent(in):: t_tropo
   real, intent(in):: latitude
   real, intent(out):: tc_apriori
@@ -4252,11 +4308,17 @@ subroutine compute_cirrus_apriori(t_tropo, latitude, tc_apriori, tc_apriori_unce
   lat_idx = int((latitude - lat_min) / delta_lat) + 1
   lat_idx = max(1,min(lat_idx, num_lat_cirrus_ap))
   
-  tc_apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)
-  tc_apriori_uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
+  Tc_Apriori = t_tropo + TC_CIRRUS_MEAN_LAT_VECTOR(lat_idx)
+  Tc_Apriori_Uncer = TC_CIRRUS_STDDEV_LAT_VECTOR(lat_idx)
+  
+  !--- values of the std dev are too small so use a fixed value for uncertainty
+  Tc_Apriori_Uncer = 20.0
 
-end subroutine compute_cirrus_apriori
+end subroutine COMPUTE_CIRRUS_APRIORI
 
+!--------------------------------------------------------------------------
+!
+!--------------------------------------------------------------------------
   FUNCTION get_lun_acha() RESULT( lun )
 
 

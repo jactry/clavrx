@@ -16,6 +16,7 @@ module CCL_SERVICES_MOD
        ACHA, &
        CCL, &
        Sfc, &
+       CLDMASK, &
        Bad_Pixel_Mask, &
        I_Lrc, &
        J_Lrc, &
@@ -27,7 +28,6 @@ module CCL_SERVICES_MOD
        Lat_Nwp_Fac, &
        Zen_Idx_Rtm, &
        Smooth_Nwp_Flag, &
-       CLDMASK, &
        Cld_Type, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &

@@ -14,6 +14,6 @@ cppflags =
 beconv = -fconvert=big-endian
 hdflibs = -L$(SSEC_HDF4_LIB)  -I$(SSEC_HDF4_INC) -lmfhdf -ldf -ljpeg -lz
 hdfincs = -I$(SSEC_HDF4_INC)
-netcdflibs = -L$(HOME)/lib/netcdf3_2017/lib -I$(HOME)/lib/netcdf3_2017/include -lnetcdf
-hdf5libs = -I/Users/awalther/lib/old_structure/hdf5_build/hdf5_build_2017/hdf5/include/ -L/Users/awalther/lib/old_structure/hdf5_build/hdf5_build_2017/hdf5/lib/
+netcdflibs = -L$(SSEC_NETCDF3_LIB) -I$(SSEC_NETCDF3_INC) -lnetcdf
+hdf5libs = -I$(SSEC_HDF5_INC) -L$(SSEC_HDF5_LIB)
 hdf5links = -lhdf5_fortran -lhdf5 -lz

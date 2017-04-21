@@ -693,7 +693,7 @@ module PIXEL_COMMON
 
      !-- DCOMP cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP
-     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_ap
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_Ap
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: vis_Ref_fm
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Iwp_DCOMP
@@ -713,6 +713,12 @@ module PIXEL_COMMON
      integer (kind=int1), dimension(:,:), allocatable, public,target, save:: DCOMP_Quality_Flag
      integer (kind=int2), dimension(:,:), allocatable, public,target, save:: DCOMP_Info_Flag
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Cwp_Fit
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_1
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_2
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_DCOMP_3
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_1
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_2
+     real (kind=real4), dimension(:,:), allocatable, public,target, save:: Reff_DCOMP_3
 
      !-- Nlcomp cloud algorithm results
      real (kind=real4), dimension(:,:), allocatable, public,target, save:: Tau_Nlcomp
@@ -2307,12 +2313,18 @@ end subroutine DESTROY_ASOS_ARRAYS
 subroutine CREATE_DCOMP_ARRAYS(dim1,dim2)
    integer, intent(in):: dim1, dim2
    if (Cld_Flag == sym%YES) then
+      allocate(Tau_DCOMP_1(dim1,dim2))
+      allocate(Tau_DCOMP_2(dim1,dim2))
+      allocate(Tau_DCOMP_3(dim1,dim2))
       allocate(Tau_DCOMP(dim1,dim2))
       allocate(Tau_Aux(dim1,dim2))
       allocate(Reff_Aux(dim1,dim2))
       allocate(Tau_DCOMP_Ap(dim1,dim2))
       allocate(Vis_Ref_Fm(dim1,dim2))
       allocate(Reff_DCOMP(dim1,dim2))
+      allocate(Reff_DCOMP_1(dim1,dim2))
+      allocate(Reff_DCOMP_2(dim1,dim2))
+      allocate(Reff_DCOMP_3(dim1,dim2))
       allocate(Lwp_DCOMP(dim1,dim2))
       allocate(Iwp_DCOMP(dim1,dim2))
       allocate(Iwp_Tau_DCOMP(dim1,dim2))
@@ -2356,11 +2368,17 @@ end subroutine CREATE_DCOMP_ARRAYS
 subroutine RESET_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       Tau_DCOMP = Missing_Value_Real4
+      Tau_DCOMP_1 = Missing_Value_Real4
+      Tau_DCOMP_2 = Missing_Value_Real4
+      Tau_DCOMP_3 = Missing_Value_Real4
       Tau_Aux = Missing_Value_Real4
       Reff_Aux = Missing_Value_Real4
       Tau_DCOMP_Ap = Missing_Value_Real4
       Vis_Ref_Fm = Missing_Value_Real4
       Reff_DCOMP = Missing_Value_Real4
+      Reff_DCOMP_1 = Missing_Value_Real4
+      Reff_DCOMP_2 = Missing_Value_Real4
+      Reff_DCOMP_3 = Missing_Value_Real4
       Lwp_DCOMP = Missing_Value_Real4
       Iwp_DCOMP = Missing_Value_Real4
       Iwp_Tau_DCOMP = Missing_Value_Real4
@@ -2404,11 +2422,17 @@ end subroutine RESET_DCOMP_ARRAYS
 subroutine DESTROY_DCOMP_ARRAYS()
    if (Cld_Flag == sym%YES) then
       deallocate(Tau_DCOMP)
+      deallocate(Tau_DCOMP_1)
+      deallocate(Tau_DCOMP_2)
+      deallocate(Tau_DCOMP_3)
       deallocate(Tau_Aux)
       deallocate(Reff_Aux)
       deallocate(Tau_DCOMP_Ap)
       deallocate(Vis_Ref_Fm)
       deallocate(Reff_DCOMP)
+      deallocate(Reff_DCOMP_1)
+      deallocate(Reff_DCOMP_2)
+      deallocate(Reff_DCOMP_3)
       deallocate(Lwp_DCOMP)
       deallocate(Iwp_DCOMP)
       deallocate(Iwp_Tau_DCOMP)

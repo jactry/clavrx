@@ -65,8 +65,9 @@ contains
       
       end if
       istatus = cx_sds_finfo ( trim(lut_file), ftype, nsds,sds_name, natt,att_name)
-     
+     print*,'a'
       istatus = cx_sds_read ( trim(lut_file),'Solar_Zenith_Angles', temp_2d_real)
+       print*,'b'
       allocate ( this %sol(size(temp_2d_real(1,:)) ), source = temp_2d_real(1,:))
       
       istatus = cx_sds_read ( trim(lut_file),'View_Zenith_Angles',temp_2d_real )

@@ -1406,9 +1406,11 @@
                !- call AHI AEROSOL algorithm
                 Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
                if ( trim(Sensor%Sensor_Name) == 'AHI' ) then
-                  
+                  print*,'statrt muri'
                   call muri % allocate (Image%Number_of_elements , Image%Number_Of_Lines_Read_This_Segment)
+                  print*,'rrt'
                   call CX_MURI_ALGORITHM (Image%Number_Of_Elements,Image%Number_Of_Lines_Read_This_Segment)
+                  print*,'eee'
                end if
               End_Time_Point_Hours = COMPUTE_TIME_HOURS()
                Segment_Time_Point_Seconds(16) =  Segment_Time_Point_Seconds(16) + &

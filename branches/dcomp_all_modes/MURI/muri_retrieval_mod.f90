@@ -83,8 +83,8 @@ contains
          do i_cm = 1, 5
             
             ! loop over fine mode ratio
-            do i_fmr = 0,10
-               fmr = i_fmr/10.
+            do i_fmr = 1,11
+               fmr = (i_fmr-1)/10.
                
                do i_opt = 1, 8
                   do i_cha = 1,6

@@ -38,9 +38,9 @@ contains
       integer :: i 
       integer, parameter :: ahi_map_modis(6) = [3,4,1,2,6,7]
      
-     
+     print*,'allocate strat'
       call input % allocate ( dim1,dim2)
-     
+      print*,'allocate end'
       input % sol = geo % solzen
       input % sat = geo % satzen
       input % azi = geo % relaz
@@ -52,7 +52,7 @@ contains
         
       end do
       
-      input % do_it = CLDMASK%cld_mask == 0 .AND. sfc%land .NE. 1
+      input % do_it = CLDMASK%cld_mask(1:dim1,1:dim2) == 0 .AND. sfc%land(1:dim1,1:dim2) .NE. 1
       call output % allocate(dim1,dim2)
       call  muri_array_loop (input, output )
       

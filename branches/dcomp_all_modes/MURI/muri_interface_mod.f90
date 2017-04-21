@@ -38,6 +38,7 @@ contains
    subroutine muri_in_array_type__allocate(this,dim1,dim2)
       class(muri_in_array_type) :: this
       integer :: dim1,dim2
+      call this % deallocate()
       this % dim(1) = dim1
       this % dim(2) = dim2
       allocate ( this % sol( dim1,dim2))
@@ -56,14 +57,20 @@ contains
    subroutine muri_in_array_type__deallocate(this)
       class(muri_in_array_type) :: this
       this % dim = [0,0]
-      deallocate ( this % sol)
-      deallocate ( this % sat)
-      deallocate ( this % azi)
-      deallocate ( this % windspeed)
-      deallocate ( this % do_it)
-     
-      deallocate ( this % ref)
-      
+      print*,'reached'
+      print*,'a',allocated (this % sol)
+      if (allocated (this % sol) ) deallocate ( this % sol)
+      print*,'a',allocated (this % sat)
+      if (allocated (this % sat) ) deallocate ( this % sat)
+      print*,'a',allocated (this % azi)
+      if (allocated (this % azi) ) deallocate ( this % azi)
+      print*,'a',allocated (this % windspeed)
+      if (allocated (this % windspeed) ) deallocate ( this % windspeed)
+      print*,'a',allocated (this % sat)
+      if (allocated (this % do_it) ) deallocate ( this % do_it)
+      print*,'a',allocated (this % sat)
+      if (allocated (this % ref) ) deallocate ( this % ref)
+       print*,'end reached'
    
    end subroutine  muri_in_array_type__deallocate 
    
@@ -93,11 +100,11 @@ contains
       subroutine muri_out_array_type__deallocate(this)
       class(muri_out_array_type) :: this
       this % dim = [0,0]
-      deallocate ( this % aot)
-      deallocate ( this % aot_channel)
-      deallocate ( this % fmf)
-      deallocate ( this % fm_mode)
-      deallocate ( this % cm_mode)
+      if (allocated (this% aot) ) deallocate ( this % aot)
+      if (allocated (this% aot_channel) ) deallocate ( this % aot_channel)
+      if (allocated (this% fmf) ) deallocate ( this % fmf)
+      if (allocated (this% fm_mode) ) deallocate ( this % fm_mode)
+      if (allocated (this% cm_mode) ) deallocate ( this % cm_mode)
      
       
       

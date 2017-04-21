@@ -985,7 +985,7 @@ contains
       
       case ( 'AVHRR-3')  
          possible_acha_modes(1:2)   = [1, 3]
-         possible_dcomp_modes(1:2)    = [1,3] 
+         possible_dcomp_modes(1:3)    = [1,3,9] 
 			
 			!if (Sensor%WMO_Id == 208) possible_dcomp_modes(1) = 1 !NOAA-17
       	!if (Sensor%WMO_Id == 3) possible_dcomp_modes(1) = 1   !METOP-A

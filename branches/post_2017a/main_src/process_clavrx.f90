@@ -789,7 +789,6 @@
                call DEFINE_HDF_FILE_STRUCTURES(Image%Number_Of_Lines, &
                               Dir_Level2, &
                               Image%Level1b_Name, &
-                              Rtm_File_Flag, &
                               Level2_File_Flag, &
                               c1,c2,planck_a1(20),planck_a2(20),planck_nu(20), &
                               planck_a1(31),planck_a2(31),planck_nu(31), &
@@ -1320,7 +1319,7 @@
             !*******************************************************************
             Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
 
-            call WRITE_PIXEL_HDF_RECORDS(Rtm_File_Flag,Level2_File_Flag)
+            call WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
             
             End_Time_Point_Hours = COMPUTE_TIME_HOURS()
             Segment_Time_Point_Seconds(13) =  Segment_Time_Point_Seconds(13) + &
@@ -1435,7 +1434,7 @@
       call WRITE_ALGORITHM_ATTRIBUTES()
 
       !--- close pixel level hdf files
-      call CLOSE_PIXEL_HDF_FILES(Rtm_File_Flag,Level2_File_Flag)
+      call CLOSE_PIXEL_HDF_FILES(Level2_File_Flag)
 
       !--- diagnostic screen output
       call mesg ("<----- Timing Results ----->")

@@ -133,9 +133,10 @@ contains
             
             val= minval(err_sqrt)
             idx=minloc(err_sqrt)
+           
             aod_nleta_temp(i_fm,i_cm) = aot_temp(idx(1))
             err_nleta_temp(i_fm,i_cm) = val
-            fmf_nleta_temp(i_fm,i_cm) = (idx(1)) /10.
+            fmf_nleta_temp(i_fm,i_cm) = (idx(1) - 1 ) /10.
             
             aod_allbands (i_fm,i_cm,:) = aot_allbands(idx(1),:)
             

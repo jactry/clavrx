@@ -1,13 +1,13 @@
 fc=gfortran
 FC77=gfortran
 LDFLAGS_ARCH=
-FFLAGS_ARCH=-g -O0 -ffree-line-length-none -fbounds-check
+FFLAGS_ARCH=-g -Og -C -ffree-line-length-none -fbounds-check -fimplicit-none -fimplicit-none  -Wall  -Wline-truncation  -Wcharacter-truncation  -Wsurprising  -Waliasing  -Wimplicit-interface  -Wunused-parameter  -fwhole-file  -fcheck=all  -std=f2008  -pedantic  -fbacktrace
 #AR=ar r
 
-fflags = -O0  -ffast-math -funroll-loops -fno-range-check -ffree-line-length-200
-fflags_pfast = -O0  -ffast-math -funroll-loops -ffixed-form -fno-automatic
-fflags_sasrab_f77 = -O0  -ffast-math -funroll-loops -ffixed-form -fno-automatic
-fflags_sasrab_f90 = -O0  -ffast-math -funroll-loops -fno-automatic
+fflags = -Og  -ffast-math -funroll-loops -ffree-line-length-200
+fflags_pfast = -Og  -ffast-math -funroll-loops -ffixed-form -fno-automatic
+fflags_sasrab_f77 = -Og  -ffast-math -funroll-loops -ffixed-form -fno-automatic
+fflags_sasrab_f90 = -Og  -ffast-math -funroll-loops -fno-automatic
 ldflags = -O20
 cpp = -cpp
 cppflags = 

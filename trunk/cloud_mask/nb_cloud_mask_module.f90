@@ -161,6 +161,7 @@ module NB_CLOUD_MASK
    logical, intent(in):: Use_Prior_Table
    logical, intent(in):: Use_Core_Tables
    type(diag_output), intent(out), Optional :: Diag
+   integer, save:: Diag_Warning_Flag = 0
 
    !-- local pointers that point to global variables
    integer (kind=INT1), dimension(NUMBER_OF_FLAGS):: Cld_Flags
@@ -221,9 +222,14 @@ module NB_CLOUD_MASK
    Cld_Flag_Bit_Depth = 2     ! needs to be 2 for reserving space for missing tests
 
    !--- initialize diagnostic output
+   if (present(Diag) .and. Diag_Warning_Flag == 0) then
+      print *, "CLAVR-x / NB Cloud Mask ===>  Diagnostic Output Turned On"
+      Diag_Warning_Flag = 1
+   endif
    if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
    if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
    if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+   
 
    !------------------------------------------------------------------------------------------
    !  MAIN CODE
@@ -391,14 +397,20 @@ module NB_CLOUD_MASK
           Cld_Flags(18) = Spare_Value          ;    Cld_Flag_Bit_Depth(18) = 1
 
           !---------------------------------------------------------------------------------
-          ! compute cloud probability for core classifiers
+          ! initialize all three Cond_Ratios to 1 (which is neutral impact)
           !---------------------------------------------------------------------------------
           Cond_Ratio_Core = 1.0
+          Cond_Ratio_1D_All = 1.0
+          Cond_Ratio_1D_Cirrus = 1.0
+
+          !---------------------------------------------------------------------------------
+          ! compute cloud probability for core classifiers
+          !---------------------------------------------------------------------------------
           Prob_Clear_Core = MISSING_VALUE_REAL4
           Prob_Water_Core = MISSING_VALUE_REAL4
           Prob_Ice_Core = MISSING_VALUE_REAL4
 
-          if (Use_Core_Tables .eqv. .true.) then
+          if (Use_Core_Tables) then
              call COMPUTE_CORE(Input%Emiss_11um_Tropo,Input%Ref_375um, Input%Ref_160um, Input%Bt_11um_Std,Input%Solzen, &
                 Sfc_Idx, Input%Chan_On_11um, Input%Chan_On_375um, Input%Chan_On_160um, &
                 Prob_Clear_Core, Prob_Water_Core, Prob_Ice_Core)
@@ -414,8 +426,17 @@ module NB_CLOUD_MASK
 
           !---------------------------------------------------------------------------------
           ! compute cloud probability for All 1d NB classifiers
+          !
+          ! Please note that if the Core Tables are used, 1D classifiers that
+          ! are redundant with the Core Tables are turned-off.  If the Core
+          ! Tables are changed, then this switching has to also be changed
+          ! This switching accomplished via "if (.not. Use_Core_Tables) cycle"
           !---------------------------------------------------------------------------------
-          Cond_Ratio_1D_All = 1.0
+
+          !--- run if no core value or if core value is not definite
+          if ((Prob_Clear_Core  == MISSING_VALUE_REAL4) .or. &
+              (Prob_Clear_Core > 0.01 .and. Prob_Clear_Core < 0.99)) then   ! prob_clear_if_loop
+
           all_class_loop: do Class_Idx = 1, N_class
 
              Classifier_Value(Class_Idx) = Missing_Value_Real4
@@ -425,6 +446,7 @@ module NB_CLOUD_MASK
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
 
                     case("T_11") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Bt_11um == Missing_Value_Real4) cycle
                        Classifier_Value(Class_Idx) = Input%Bt_11um
@@ -440,6 +462,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("T_Std") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Mountain_Flag == symbol%YES) cycle
                        if (Coastal_Flag == symbol%YES) cycle
@@ -472,6 +495,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
@@ -485,6 +509,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375_Day") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Oceanic_Glint_Flag == symbol%YES) cycle
@@ -499,6 +524,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Emiss_375_Night") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
                        if (Night_375_Flag == symbol%NO) cycle
@@ -512,6 +538,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                      case("Btd_375_11_All") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
@@ -527,6 +554,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                      case("Btd_375_11_Day") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
@@ -542,6 +570,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                      case("Btd_375_11_Night") 
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_11um == symbol%NO) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Solar_Contam_Flag == symbol%YES) cycle
@@ -645,16 +674,8 @@ module NB_CLOUD_MASK
                                          Input%Ref_063um,Input%Ref_086um)
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
-                    case("Ref_138_Day")
-                       if (Input%Chan_On_138um == symbol%NO) cycle
-                       if (Forward_Scattering_Flag == symbol%YES) cycle
-                       if (Day_063_Flag == symbol%NO) cycle
-                       if (Mountain_Flag == symbol%YES) cycle
-                       if (Input%Ref_138um == Missing_Value_Real4) cycle
-                       Classifier_Value(Class_Idx) = Input%Ref_138um
-                       Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
-
                     case("Ref_160_Day")
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_160um == symbol%NO) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
@@ -664,6 +685,7 @@ module NB_CLOUD_MASK
                        Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
 
                     case("Ref_375_Day")
+                       if (.not. Use_Core_Tables) cycle
                        if (Input%Chan_On_375um == symbol%NO) cycle
                        if (Forward_Scattering_Flag == symbol%YES) cycle
                        if (Day_063_Flag == symbol%NO) cycle
@@ -696,7 +718,6 @@ module NB_CLOUD_MASK
                 cycle
              endif
 
-
              !--- interpolate class conditional values
              Bin_Idx = int ((Classifier_Value(Class_Idx) - Classifier_Bounds_Min(Class_Idx,Sfc_Idx))  /    &
                            Delta_Classifier_Bounds(Class_Idx,Sfc_Idx)) + 1
@@ -711,15 +732,15 @@ module NB_CLOUD_MASK
         !---------------------------------------------------------------------------------
         ! compute cloud probability for Likely Ice Clouds 1d NB classifiers
         !---------------------------------------------------------------------------------
-        Cond_Ratio_1D_Cirrus = 1.0
 
         !--- run if no core value or core value shows a likely water cloud
         if ((Prob_Water_Core  == MISSING_VALUE_REAL4) .or. &
             (Prob_Water_Core /= MISSING_VALUE_REAL4 .and. Prob_Water_Core < 0.5)) then   ! prob_water_if_loop
 
         cirrus_class_loop: do Class_Idx = 1, N_class
-				
-				Classifier_Value(Class_Idx) = Missing_Value_Real4
+
+             Classifier_Value(Class_Idx) = Missing_Value_Real4
+             Classifier_Value_Output(Class_Idx) = Classifier_Value(Class_Idx)
              Cond_Ratio(Class_Idx) =  1.0
 				
              select case (trim(Classifier_Value_Name(Class_Idx,Sfc_Idx)))
@@ -783,7 +804,10 @@ module NB_CLOUD_MASK
 
         Cond_Ratio_1D_Cirrus = product(Cond_Ratio)
 
-        endif    ! water_prob_if_loop
+        endif    ! prob_water_if_loop
+
+        endif ! prob_clear_if_loop
+
 
         !------------------------------------------------------------------------------------------------------------
         !--- compute posterior probabilites for each pixel
@@ -792,6 +816,11 @@ module NB_CLOUD_MASK
         r = Cond_Ratio_Core*Cond_Ratio_1D_All*Cond_Ratio_1D_Cirrus
 
         Output%Posterior_Cld_Probability =  1.0 / (1.0 + r/Prior_Yes_Temp - r)
+
+        !------- Diagnostic Output of Three Probs
+        !if (present(Diag)) Diag%Array_1 = 1.0 / (1.0 + Cond_Ratio_Core/Prior_Yes_Temp - Cond_Ratio_Core)
+        !if (present(Diag)) Diag%Array_2 = 1.0 / (1.0 + Cond_Ratio_1D_All/Prior_Yes_Temp - Cond_Ratio_1D_All)
+        !if (present(Diag)) Diag%Array_3 = 1.0 / (1.0 + Cond_Ratio_1D_Cirrus/Prior_Yes_Temp - Cond_Ratio_1D_Cirrus)
 
         !--- constrain 
         if (r < 0.001) Output%Posterior_Cld_Probability = 1.0

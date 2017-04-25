@@ -69,6 +69,8 @@ module CLOUD_BASE
   type(acha_input_struct), intent(inout) :: Input
   type(acha_output_struct), intent(inout) :: Output
   type(acha_diag_struct), intent(inout), optional :: Diag
+  integer, save:: Diag_Warning_Flag = 0
+
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -111,10 +113,14 @@ module CLOUD_BASE
    Output%Pc_Top = MISSING_VALUE_REAL
    Output%Pc_Base = MISSING_VALUE_REAL
 
-  !--- initialize diagnostic output
-  if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
-  if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
-  if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
+   !--- initialize diagnostic output
+   if (present(Diag) .and. Diag_Warning_Flag == 0) then
+      print *, "CLAVR-x / Cloud Base ===>  Diagnostic Output Turned On"
+      Diag_Warning_Flag = 1
+   endif
+   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
+   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines

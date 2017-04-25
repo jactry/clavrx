@@ -138,7 +138,7 @@ contains
    logical, parameter:: USE_DIAG = .false.
    logical, parameter:: USE_PRIOR_TABLE = .true.
    logical, parameter:: USE_CORE_TABLES = .true.
-   logical, parameter:: USE_065UM_RTM = .true.
+   logical, parameter:: USE_065UM_RTM = .false.
    integer:: Num_Elem
    integer:: Num_Line
 
@@ -157,8 +157,6 @@ contains
 
    allocate(Ref1_Clr_Routine(num_elem,num_line))
    Ref1_Clr_Routine = Ref1_Clr_Routine
-
-
 
    !------------------------------------------------------------------------------------------
    !--- on first segment, read table

@@ -237,9 +237,13 @@
   ! the surface and actual reflection toward the satellite.) 
   !------------------------------------------------------------------------------------
   real elemental function glint_angle ( sol_zen , sen_zen , rel_az  )
-     real, intent(in) :: sol_zen
-     real, intent(in) :: sen_zen
-     real, intent(in) :: rel_az
+      real, intent(in) :: sol_zen
+      real, intent(in) :: sen_zen
+      real, intent(in) :: rel_az
+      real :: acos
+      real :: cos
+      real :: sin
+      real :: max
 
      glint_angle = cos ( sol_zen * DTOR ) * cos ( sen_zen * DTOR ) +    &
                    sin ( sol_zen * DTOR ) * sin ( sen_zen * DTOR ) * cos ( rel_az * DTOR )
@@ -331,6 +335,7 @@
    real, intent(out):: asol, phis
    real:: tsm, xlo, xla, xj, a1, a2, et, tsv, ah, a3, delta, amuzero, elev, &
          az, caz, azim, pi2
+   real :: sin  , cos    
 ! real, parameter:: pi = 3.14159265,DTOR = pi / 180.0
 !
 ! solar position (zenithal angle asol, azimuthal angle phi

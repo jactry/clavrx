@@ -89,8 +89,7 @@ contains
       integer, intent(in) :: dim1,dim2
       print*,'aou is allocated : ',this % is_allocated
       if ( this % is_allocated ) then
-          !if ( dim1 .eq. this % dim(1) .and.  dim2 .eq. this % dim(2) ) 
-          return      
+          if ( dim1 .eq. this % dim(1) .and.  dim2 .eq. this % dim(2) ) return      
       end if 
       print*,'out allocate again'
       call this % deallocate()
@@ -112,11 +111,14 @@ contains
    !
       subroutine muri_out_array_type__deallocate(this)
       class(muri_out_array_type) :: this
+      integer :: test
+      
       this % dim = [0,0]
       
       print*,allocated (this% aot)
       
-      if (allocated (this% aot) ) deallocate ( this % aot)
+      if (allocated (this% aot) ) deallocate ( this % aot, STAT =  test)
+      print*,test
       print*,allocated(this% aot_channel)
       if (allocated (this% aot_channel) ) deallocate ( this % aot_channel)
       print*,allocated (this% fmf)

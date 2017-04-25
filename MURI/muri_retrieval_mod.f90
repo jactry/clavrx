@@ -45,17 +45,17 @@ contains
       real :: val,val2
       real :: aod_allbands(4,5,6)
       integer:: k,i,j
-      !print*,'start muri algorithm'
+     
       ! call inp%info
       
       err_nleta_temp = huge(err_nleta_temp)
       err_sqrt = huge(err_sqrt)
-     
+    
       call lut % read_lut
       
       call lut % sub_table (inp % sol,inp%sat,inp%azi,inp%ws)
       
-      
+     
       ! simple test
    !   call lut % sub_table (22.,13.,120.,2.)
       
@@ -140,7 +140,7 @@ contains
             
             aod_allbands (i_fm,i_cm,:) = aot_allbands(idx(1),:)
             
-            !print*,i_fm,i_cm,    aod_nleta_temp(i_fm,i_cm) ,val,fmf_nleta_temp(i_fm,i_cm)     
+           ! print*,i_fm,i_cm,    aod_nleta_temp(i_fm,i_cm) ,val,fmf_nleta_temp(i_fm,i_cm)     
             
          end do
       end do

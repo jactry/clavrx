@@ -1,7 +1,7 @@
 fc=gfortran
 FC77=gfortran
 LDFLAGS_ARCH=
-FFLAGS_ARCH=-g -O0 -ffree-line-length-none
+FFLAGS_ARCH=-g -O0 -ffree-line-length-none -fbounds-check
 #AR=ar r
 
 fflags = -O0  -ffast-math -funroll-loops -fno-range-check -ffree-line-length-200

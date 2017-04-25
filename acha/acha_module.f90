@@ -300,6 +300,7 @@ module AWG_CLOUD_HEIGHT
   type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
   type(acha_diag_struct), intent(inout), optional :: Diag
+  logical, save:: is_first_segment = .true.
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -481,6 +482,13 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--- initialize diagnostic output
+  if ( present(Diag) .and. is_first_segement ) then
+      print*, "CLAVR-x / ACHA ===> Diagnostic Output Turned on"
+  end if
+  
+  
+  
+  
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
@@ -1182,9 +1190,6 @@ module AWG_CLOUD_HEIGHT
                      Ec_Ap,Ec_Ap_Uncer, &
                      Beta_Ap,Beta_Ap_Uncer)
 
-  				Diag%Array_1(Elem_Idx,Line_Idx) = T_Tropo
-  				Diag%Array_2(Elem_Idx,Line_Idx) = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
-  				Diag%Array_3(Elem_Idx,Line_Idx) = Z_Tropo
 
   				if (lun_diag > 0) then 
     				write(unit=lun_diag,fmt=*) "==========================================================="
@@ -1976,6 +1981,8 @@ module AWG_CLOUD_HEIGHT
   deallocate(Sy_inv)
   deallocate(Emiss_Vector)
   deallocate(AKM)
+  
+  is_first_segement = .false.
 
 	end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 

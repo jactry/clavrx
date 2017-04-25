@@ -287,6 +287,8 @@ module AWG_CLOUD_HEIGHT
   type(acha_symbol_struct), intent(in) :: Symbol_In
   type(acha_output_struct), intent(inout) :: Output
   type(acha_diag_struct), intent(inout), optional :: Diag
+  integer, save:: Diag_Warning_Flag = 0
+
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -468,6 +470,10 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--- initialize diagnostic output
+  if (present(Diag) .and. Diag_Warning_Flag == 0) then
+      print *, "CLAVR-x / ACHA ===>  Diagnostic Output Turned On"
+      Diag_Warning_Flag = 1
+  endif
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
@@ -1159,10 +1165,6 @@ module AWG_CLOUD_HEIGHT
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
-
-   Diag%Array_1(Elem_Idx,Line_Idx) = T_Tropo
-   Diag%Array_2(Elem_Idx,Line_Idx) = Input%Tropopause_Temperature(Elem_Idx,Line_Idx)
-   Diag%Array_3(Elem_Idx,Line_Idx) = Z_Tropo
 
    if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "==========================================================="

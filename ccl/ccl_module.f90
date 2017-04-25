@@ -55,6 +55,8 @@ module CCL_MODULE
   type(ccl_symbol_struct), intent(inout) :: Symbol_In
   type(ccl_output_struct), intent(inout) :: Output
   type(ccl_diag_struct), intent(inout), optional :: Diag
+  integer, save:: Diag_Warning_Flag = 0
+
 
   integer:: Num_Elems
   integer:: Num_Lines
@@ -92,6 +94,10 @@ module CCL_MODULE
   Output%Cloud_Layer = MISSING_VALUE_INTEGER1
 
   !--- initialize diagnostic output
+  if (present(Diag) .and. Diag_Warning_Flag == 0) then
+      print *, "CLAVR-x / CCL ===>  Diagnostic Output Turned On"
+      Diag_Warning_Flag = 1
+  endif
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4

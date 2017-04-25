@@ -22,13 +22,13 @@ subroutine muri_array_loop (input, output )
    type ( muri_output_type) :: out_pixel
    integer :: i,j,k
    
-   
+   print*, '========>    .. >',input % dim
   
    do i = 1, input % dim(1)
   
       do j = 1, input % dim(2)
          if ( .not. input % do_it(i,j)) cycle
-        ! print*,i,j
+        
          inp_pixel % sat = input % sat(i,j)
          inp_pixel % sol = input % sol(i,j)
          inp_pixel % azi = input % azi(i,j)

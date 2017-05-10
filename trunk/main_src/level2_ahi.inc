@@ -79,8 +79,8 @@
      Sds_Num_Level2_Cldalb = 68,         Sds_Num_Level2_Cldalb_Flag = 1, &
      Sds_Num_Level2_Cldtrn = 69,         Sds_Num_Level2_Cldtrn_Flag = 1, &
      Sds_Num_Level2_Cldfrac = 70,        Sds_Num_Level2_Cldfrac_Flag = 1, &
-     Sds_Num_Level2_Cldfrac_Uncer = 71,  Sds_Num_Level2_Cldfrac_Uncer_Flag = 0, &
-     Sds_Num_Level2_Etrop = 72,          Sds_Num_Level2_Etrop_Flag = 0, &
+     Sds_Num_Level2_Cldfrac_Uncer = 71,  Sds_Num_Level2_Cldfrac_Uncer_Flag = 1, &
+     Sds_Num_Level2_Etrop = 72,          Sds_Num_Level2_Etrop_Flag = 1, &
      Sds_Num_Level2_Aot1 = 73,           Sds_Num_Level2_Aot1_Flag = 0, & !off for GOES
      Sds_Num_Level2_Olr = 74,            Sds_Num_Level2_Olr_Flag = 1, & !off for GOES
      Sds_Num_Level2_Ndvi = 75,           Sds_Num_Level2_Ndvi_Flag = 0, & !off for GOES

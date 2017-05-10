@@ -101,39 +101,19 @@ MODULE PIXEL_ROUTINES
    !  called by process_clavrx inside segment loop
    !    HISTORY: 2014/12/29 (AW); removed unused ch3a_on_avhrr for modis and goes
    !----------------------------------------------------------------------
-   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line, is_last_segment)
+   subroutine SET_CHAN_ON_FLAG(Chan_On_Flag_Default, Chan_On_Flag_Per_Line)
 
-      integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
-      integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
-      logical, intent(in):: is_last_segment
-      integer:: Number_of_Elements
-      integer:: Number_of_Lines
-      integer:: Line_Idx
-     
-      logical :: dcomp_first_valid_line_avhrr_set = .false. 
+     integer(kind=int1), dimension(:), intent(in):: Chan_On_Flag_Default
+     integer(kind=int1), dimension(:,:), intent(out):: Chan_On_Flag_Per_Line
+     integer:: Number_of_Elements
+     integer:: Number_of_Lines
+     integer:: Line_Idx
 
-      Number_of_Elements = Image%Number_Of_Elements
-      Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
-    
-      line_loop: do Line_Idx = 1, Number_Of_Lines
-          ! - change dcomp _mode according ch3a_on flag
-          ! - this change of dcomp_mode is only possible once for one file
-          ! - First daytime line determines dcomp mode for whole file
-          ! - AW 02/13/2017
-         if ( index(Sensor%Sensor_Name,'AVHRR') > 0 &
-            .and. .not. dcomp_first_valid_line_avhrr_set  &
-            .and. Geo%Solzen(1,line_idx) .lt. 82) then
-            if (Ch3a_On_Avhrr(Line_Idx) == sym%YES) then
-                dcomp_first_valid_line_avhrr_set = .true.
-                dcomp_mode = 1
-            end if
-            if (Ch3a_On_Avhrr(Line_Idx) == sym%NO) then
-               dcomp_first_valid_line_avhrr_set = .true.
-                dcomp_mode = 3
-            
-            end if
-         end if   
-         
+     Number_of_Elements = Image%Number_Of_Elements
+     Number_of_Lines = Image%Number_Of_Lines_Read_This_Segment
+      
+     line_loop: do Line_Idx = 1, Number_Of_Lines
+      
          ! - for all sensors : set chan_on_flag ( dimension [n_chn, n_lines] to default ) 
          Chan_On_Flag_Per_Line(:,Line_Idx) = Chan_On_Flag_Default   
          
@@ -156,14 +136,6 @@ MODULE PIXEL_ROUTINES
          endif
 
       end do line_loop
-      
-      
-      if ( is_last_segment) dcomp_first_valid_line_avhrr_set = .false. 
-      
-     
-      
-      
-     
 
    end subroutine SET_CHAN_ON_FLAG
 
@@ -1236,7 +1208,6 @@ end subroutine ATMOS_CORR
             (trim(Sensor%Sensor_Name) == 'AVHRR-3') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IL-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-MP-IMAGER') .or. &
-            (trim(Sensor%Sensor_Name) == 'GOES-RU-IMAGER') .or. &
             (trim(Sensor%Sensor_Name) == 'GOES-IP-SOUNDER') .or. &
             (trim(Sensor%Sensor_Name) == 'SEVIRI') .or. &
             (trim(Sensor%Sensor_Name) == 'MTSAT-IMAGER') .or. &
@@ -1491,22 +1462,22 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
       i2 = min(Image%Number_Of_Elements,i+n)
         
       !--- initial cloud mask based
-      if (CLDMASK%Cld_Mask(i,j) == sym%CLEAR) then
+      if (cld_Mask(i,j) == sym%CLEAR) then
          Tsfc_Qf(i,j) = 3
          Ndvi_Qf(i,j) = 3
          Rsr_Qf(i,j) = 3
       endif
-      if (CLDMASK%Cld_Mask(i,j) == sym%PROB_CLEAR) then
+      if (cld_Mask(i,j) == sym%PROB_CLEAR) then
          Tsfc_Qf(i,j) = 2
          Ndvi_Qf(i,j) = 2
          Rsr_Qf(i,j) = 2
       endif
-      if (CLDMASK%Cld_Mask(i,j) == sym%PROB_CLOUDY) then
+      if (cld_Mask(i,j) == sym%PROB_CLOUDY) then
          Tsfc_Qf(i,j) = 1
          Ndvi_Qf(i,j) = 1
          Rsr_Qf(i,j) = 1
       endif
-      if (CLDMASK%Cld_Mask(i,j) == sym%CLOUDY) then
+      if (cld_Mask(i,j) == sym%CLOUDY) then
          Tsfc_Qf(i,j) = 0
          Ndvi_Qf(i,j) = 0
          Rsr_Qf(i,j) = 0
@@ -1542,7 +1513,7 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
 
         Aot_Qf(i,j) = 0
         
-        if ((CLDMASK%Cld_Mask(i,j) == sym%CLEAR) .and.  &
+        if ((Cld_Mask(i,j) == sym%CLEAR) .and.  &
             (Sfc%Land_Mask(i,j) == sym%NO) .and.  &
             (Geo%Solzen(i,j) < 70.00) .and.  &
             (Sfc%Snow(i,j) == sym%NO_SNOW)) then
@@ -1562,18 +1533,18 @@ end subroutine COMPUTE_SPATIAL_CORRELATION_ARRAYS
         endif
 
         !--- assign high quality pixels around a cloudy results as qf = 2
-        max_Mask = maxval(CLDMASK%Cld_Mask(i1:i2,j1:j2))
-        if (max_Mask >= 2) then
-         if (Aot_Qf(i,j) == 3) then
-           Aot_Qf(i,j) = 2
-         endif
-         if (Ndvi_Qf(i,j) == 3) then
-           Ndvi_Qf(i,j) = 2
-         endif
-         if (Tsfc_Qf(i,j) == 3) then
-           Tsfc_Qf(i,j) = 2
-         endif
+        max_Mask = maxval(cld_Mask(i1:i2,j1:j2))
+      if (max_Mask >= 2) then
+        if (Aot_Qf(i,j) == 3) then
+          Aot_Qf(i,j) = 2
         endif
+        if (Ndvi_Qf(i,j) == 3) then
+          Ndvi_Qf(i,j) = 2
+        endif
+        if (Tsfc_Qf(i,j) == 3) then
+          Tsfc_Qf(i,j) = 2
+        endif
+      endif
 
      !--- forcing the reporting of aerosol for this condition (A. Evan)
      if (Dust_Mask(i,j) == sym%YES) then
@@ -1649,15 +1620,6 @@ subroutine COMPUTE_SPATIAL_UNIFORMITY(jmin,jmax)
    ! compute 3x3 metric
    !----------------------------------------------------------------------
    nbox = 1   !1 gives a 3x3 box
-
-   !--- Surface 
-       CALL COMPUTE_SPATIAL_UNIFORMITY_NxN_WITH_INDICES( &
-                                       Sfc%Zsfc,nbox, Uni_Land_Mask_Flag_No, &
-                                       Bad_Pixel_Mask, Sfc%Land_Mask, &
-                                       1,Image%Number_Of_Elements,jmin,jmax, &
-                                       Temp_Pix_Array_1,Temp_Pix_Array_2,&
-                                       Sfc%Zsfc_Max,Sfc%Zsfc_Std, &
-                                       Elem_Idx_Max,Line_Idx_Max,Elem_Idx_Min,Line_Idx_Min)
 
    !--- Bt_Ch31 
    if (Sensor%Chan_On_Flag_Default(31) == sym%YES) then
@@ -2182,7 +2144,6 @@ subroutine MODIFY_LAND_CLASS_WITH_NDVI(Line_Idx_Min,Num_Lines)
     if (Sensor%Chan_On_Flag_Default(2) == sym%NO) cycle
     if (Geo%Solzen(Elem_Idx,Line_Idx) > Solzen_Threshold) cycle
     if (index(Sensor%Sensor_Name,'MODIS') > 0) cycle                         !modis ch2 saturates, need to modify for MODIS
-    if (index(Sensor%Sensor_Name,'GOES-RU-IMAGER') > 0) cycle
 
     Ndvi_Temp = (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) - ch(1)%Ref_Toa(Elem_idx,Line_Idx)) / &
                 (ch(2)%Ref_Toa(Elem_Idx,Line_Idx) + ch(1)%Ref_Toa(Elem_idx,Line_Idx)) 
@@ -2342,7 +2303,7 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
 
   Number_of_Elements = Image%Number_Of_Elements
 
-  CLDMASK%Adj_Pix_Cld_Mask = Missing_Value_Int1
+  Adj_Pix_Cld_Mask = Missing_Value_Int1
 
   line_loop: do Line_Idx = Line_Start, Number_of_Lines + Line_Start - 1
 
@@ -2354,7 +2315,7 @@ subroutine ADJACENT_PIXEL_CLOUD_MASK(Line_Start,Number_of_Lines)
       i1 = max(1,Elem_Idx - 1)
       i2 = min(Number_of_Elements,Elem_Idx + 1)
 
-      CLDMASK%Adj_Pix_Cld_Mask(Elem_Idx,Line_Idx) = maxval(CLDMASK%Cld_Mask(i1:i2,j1:j2))
+      Adj_Pix_Cld_Mask(Elem_Idx,Line_Idx) = maxval(Cld_Mask(i1:i2,j1:j2))
 
     enddo element_loop
   enddo line_loop
@@ -2480,12 +2441,11 @@ end subroutine COMPUTE_DCOMP_PERFORMANCE_METRICS
       Mask_local = 0
       Nonconfident_Mask_local = 0
 
-      where(CLDMASK%Cld_Mask == sym%CLEAR .or. CLDMASK%Cld_Mask == sym%PROB_CLEAR .or.  &
-            CLDMASK%Cld_Mask == sym%PROB_CLOUDY .or. CLDMASK%Cld_Mask == sym%Cloudy)
+      where(Cld_Mask == sym%CLEAR .or. Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY .or. Cld_Mask == sym%Cloudy)
          Mask_local = 1
       end where
 
-      where(CLDMASK%Cld_Mask == sym%PROB_CLEAR .or. CLDMASK%Cld_Mask == sym%PROB_CLOUDY)
+      where(Cld_Mask == sym%PROB_CLEAR .or. Cld_Mask == sym%PROB_CLOUDY)
          Nonconfident_Mask_local = 1
       end where
 

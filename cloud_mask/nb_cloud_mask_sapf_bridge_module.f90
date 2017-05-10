@@ -1,3 +1,4 @@
+!$Id$
 !-------------------------------------------------------------------------------
 !
 ! PURPOSE: 
@@ -16,7 +17,6 @@
 !   - in the desired routine, set the diag variables to what you want
 !   - when done, repeat this in reverse
 !
-! SAPF NOTE: set NearNbr: 1 in NWP PCF file to use interpolated 2D NWP arrays
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 
@@ -40,7 +40,6 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    USE SfcType_Access_Mod
    USE PseudoEmiss_Access_Mod
    USE NWP_Access_Mod
-   USE NWP_INTP
    USE Numerical_Routines
    USE RTM_Data_Access_Mod
    USE RTM_Access_Mod
@@ -49,10 +48,8 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    USE NF_PARM
    ! -- MODULES USED
    use NB_CLOUD_MASK
-   use NB_CLOUD_MASK_ADDONS
+   use CLOUD_MASK_ADDONS
    use NB_CLOUD_MASK_SERVICES
-   use NB_CLOUD_MASK_SOLAR_RTM
-   use NB_CLOUD_MASK_LUT_MODULE
 
    implicit none
 
@@ -102,7 +99,6 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Max_3x3
    REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Min_3X3
    REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Ref_Ch1_Stddev_3X3
-   REAL, DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: ABI_Ch2_Ref_Toa_Clear
 
    REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Mean_3x3
    REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE :: Bt_Ch31_Max_3x3
@@ -131,7 +127,6 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Longitude
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: SolZen
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: SatZen
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: CosSatZen
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: ScatAng
    
    INTEGER(BYTE), DIMENSION(:,:), POINTER, PRIVATE :: SpaceMask
@@ -165,16 +160,6 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: GlintZen
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: EmsCh7ClSlr
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Sst_Anal_Uni
-   
-   !Stuff for Atmos correction
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Tpw_Nwp_Pix
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ozone_Nwp_Pix
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Tsfc_Nwp_Pix
-   REAL(SINGLE), DIMENSION(:,:), ALLOCATABLE, TARGET, PRIVATE  ::Prior_Cld_Probability
-
-
-
-
 
 !   INTEGER(LONG) :: Sfc_Idx_NWP
    REAL(SINGLE), PRIVATE :: Chn7_Sol_Energy
@@ -209,8 +194,6 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Ems_39_Med_3x3
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Bt_39_Std_3x3
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Covar_67_11_5x5
-   logical, parameter:: USE_PRIOR_TABLE = .true.
-   logical, parameter:: USE_065UM_RTM = .true.
 
    
 contains
@@ -245,30 +228,18 @@ contains
    real(SINGLE) :: Glint_Zen_Thresh=40.0
    integer(long) :: VIIRS_375M_resolution_index
    character (len=1020):: Naive_Bayes_File_Name_Full_Path
-   character (len=1020):: Prior_File_Name_Full_Path
-   character (len=1020):: Ancil_dir
-   character (len=1020):: NB_file_LUT
    integer, parameter:: Nmed = 2
-   real(kind=real4):: Nmed_Total, Refl_Thresh
+   real(kind=real4):: Nmed_Total
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_1
    integer(kind=int1), dimension(:,:), allocatable:: I1_Temp_2
-   integer ::  month
-   integer(kind=int2) ::  month_prior
-   integer :: i, j, nx, ny
+   integer :: i, j
    logical:: Use_Diag
 
    Use_Diag = .false.
 
    !---- set paths and mask classifier file name to their values in this framework
-      CALL NFIP_CloudMask_AncilPath(Ctxt%CLOUD_MASK_Src1_T00, Ancil_dir)
-      CALL Convert_Char_C2Fortran(Ancil_dir)
-   
-      CALL NFIP_CloudMask_FileName(Ctxt%CLOUD_MASK_Src1_T00, NB_file_LUT)
-      CALL Convert_Char_C2Fortran(NB_file_LUT)
-    
-      Naive_Bayes_File_Name_Full_Path = TRIM(Ancil_dir)//TRIM(NB_file_LUT)     
-   
-   
+   Naive_Bayes_File_Name_Full_Path = Ctxt%CLOUD_MASK_Src1_T00%AncilPath
+      
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
@@ -284,7 +255,6 @@ contains
    allocate(Diag_Pix_Array_2(num_elem,num_line))
    allocate(Diag_Pix_Array_3(num_elem,num_line))
    allocate(Ems_Ch20_Std_Median_3x3(num_elem,num_line))
-   allocate(ABI_Ch2_Ref_Toa_Clear(num_elem,num_line))
 
    allocate(Dummy_IBand(num_elem,num_line))
    allocate(Ref_Uni_ChI1(num_elem,num_line))
@@ -318,8 +288,6 @@ contains
    CALL NFIA_Sat_Nav_GlintAng(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, GlintZen)
    CALL NFIA_Sat_Nav_SatZen(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, SatZen)
 
-   CALL NFIA_Sat_Nav_COS_SatZen(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CosSatZen)
-
    !Bad Pixel Mask
    CALL NFIA_Sat_L1b_BadPixMsk(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14, Bad_Pixel_Mask) !Bad_Pixel_Mask
 
@@ -330,13 +298,7 @@ contains
    CALL NFIA_SnowMask_Mask(Ctxt%SNOW_MASK_Src1_T00, SnowMask)
    CALL NFIA_SfcType_Mask(Ctxt%SURFACE_TYPE_Src1_T00, Surface_Type)
    CALL NFIA_SfcElev_Elevation(Ctxt%SURFACE_ELEVATION_Src1_T00, SfcElev)
-   
-   !TPW and Ozone for TOA correctio
-   CALL NFIA_NWP_TPW_Pix(Ctxt%NWP_DATA_Src1_T00, Tpw_Nwp_Pix)
-   CALL NFIA_NWP_OzoneColumn_Pix(Ctxt%NWP_DATA_Src1_T00, Ozone_Nwp_Pix)
-   
-   !surface temperature
-   CALL NFIA_NWP_TempSfc_Pix(Ctxt%NWP_DATA_Src1_T00, Tsfc_Nwp_Pix)
+
    
    !Brightness Temps
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI7, Chn7BT)   !3.9
@@ -378,9 +340,6 @@ contains
    !Calculate 11um topopause emissivity
    CALL NFIA_CloudMask_Emiss11High(Ctxt%CLOUD_MASK_Src1_T00, Emiss_11um_Tropo_Rtm)
    CALL Compute_Emiss_Tropo_Chn14(Emiss_11um_Tropo_Rtm, Ctxt)
-   
-   !get month
-   CALL NFIP_Sat_Month(Ctxt%SATELLITE_DATA_Src1_T00, Month)
 
 
    !Cloud Mask outputs
@@ -390,6 +349,7 @@ contains
    CALL NFIA_CloudMask_Dust_Mask(Ctxt%CLOUD_MASK_Src1_T00, Dust_Mask)
    CALL NFIA_CloudMask_Smoke_Mask(Ctxt%CLOUD_MASK_Src1_T00, Smoke_Mask)
    CALL NFIA_CloudMask_Fire_Mask(Ctxt%CLOUD_MASK_Src1_T00, Fire_Mask)
+   CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
    CALL NFIA_CloudMask_Glint_Mask(Ctxt%CLOUD_MASK_Src1_T00, Glint_Mask)
 
    !Cloud Mask training outputs
@@ -451,48 +411,6 @@ contains
    !--- set structure (symbol, input, output, diag)  elements to corresponding values in this framework
    call SET_SYMBOL()
 
-   !----------------------------------------------------------------------------
-   !--- on first segment, read table
-   !----------------------------------------------------------------------------
-   if (.not. Is_Classifiers_Read) then
-
-       call READ_NAIVE_BAYES_LUT(TRIM(Naive_Bayes_File_Name_Full_Path), &
-                                 Output%Cloud_Mask_Bayesian_Flag)
-
-   endif
-
-   !---  Read and Compute Prior Cloud Probability
-   if (USE_PRIOR_TABLE) then 
-     Nx = size(Longitude,1)
-     Ny = size(Longitude,2)
-     allocate(Prior_Cld_Probability(Nx,Ny))
-     Prior_File_Name_Full_Path = trim(Ancil_dir)//"nb_cloud_mask_calipso_prior.nc"
-     if (.not. Is_Prior_Read) call READ_PRIOR(Prior_File_Name_Full_Path)
-     month_prior = month
-     call COMPUTE_PRIOR(Longitude,Latitude,month_prior,Prior_Cld_Probability) 
-   endif
-      
-   
-   !--- Compute TOA Clear-Sky 0.65um Reflectance
-
-   if (USE_065UM_RTM .eqv. .true.)  then 
-   
-     ABI_Ch2_Ref_Toa_Clear = 0
-     
-     call  CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
-                                   Tpw_Nwp_Pix, &
-                                   Ozone_Nwp_Pix, &
-                                   ScatAng, &
-                                   SatZen, &
-                                   SolZen, &
-                                   Ref_Ch2_Clear, &
-                                   Surface_Type, &
-                                   SnowMask, &
-                                   ABI_Ch2_Ref_Toa_Clear)
-   endif
-         
-
-!    
    ! -----------    loop over pixels -----   
    line_loop: do Line_Idx = 1, Num_Line
       elem_loop: do  Elem_Idx = 1, Num_Elem
@@ -501,8 +419,6 @@ contains
            Dust_Mask(Elem_Idx,Line_Idx)  = 0
            Fire_Mask(Elem_Idx,Line_Idx)  = 0
            Thin_Cirr_Mask(Elem_Idx,Line_Idx)  = 0
-           Cld_Test_Vector_Packed(:,Elem_Idx,Line_Idx) = 0
-
 
         !-------------------------------------------------------------------
         ! Do space mask check here
@@ -543,34 +459,12 @@ contains
                     IF (Chn14BT(Elem_Idx,Line_Idx) < Chn14ClrBT(Elem_Idx,Line_Idx) - 5.0) then
                         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
-                    
-                    if (SatZen(Elem_Idx,Line_Idx) < 45.0) then
-                        if (Bt_Ch31_Stddev_3x3(Elem_Idx,Line_Idx) > 1.0) then
-                            Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
-                        endif
-                    endif
                 endif
-                
           !-turn off if non-uniform in reflectance
                 IF (CHN_FLG(2) == sym%YES) then
-                   if (SatZen(Elem_Idx,Line_Idx) < 45.0) then
-                        if (Ref_Ch1_Stddev_3X3(Elem_Idx,Line_Idx) > 2.0) then
-                            Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
-                        endif
-                    endif
-                    
-                    if (Chn2Refl(Elem_Idx,Line_Idx) < 5.0) then
+                    IF (Ref_Ch1_Stddev_3x3(Elem_Idx,Line_Idx) > 1.0) then
                         Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
                     endif
-                    !-turn off if bright
-                    if (Glintzen(Elem_Idx,Line_Idx) > 10.0 .and. &
-                        Glintzen(Elem_Idx,Line_Idx) < 40.0) then
-                            Refl_Thresh = 25.0 - Glintzen(Elem_Idx,Line_Idx)/3.0
-                            if (Chn2Refl(Elem_Idx,Line_Idx) > Refl_Thresh) then
-                                Glint_Mask(Elem_Idx,Line_Idx) = sym%NO
-                            endif
-                    endif
-                    
                 endif
             endif  !Glintzen check
 
@@ -607,9 +501,8 @@ contains
                       Naive_Bayes_File_Name_Full_Path, &
                       Symbol,  &
                       Input, &
-                      Output, &
-                      USE_PRIOR_TABLE) !, & 
-                      !Diag)   !optional
+                      Output)
+                     ! Diag)   !optional
 
 
 
@@ -632,15 +525,13 @@ contains
 
          call SET_OUTPUT(Elem_Idx,Line_Idx)
          if (Use_Diag) call SET_DIAG(Elem_Idx,Line_Idx)
-           
-            
    
       end do elem_loop
    end do line_loop
 
-   !---------------------------------------------------------------------------
+   !------------------------------------------------------------------------------
    ! Apply Median Filters
-   !---------------------------------------------------------------------------
+   !------------------------------------------------------------------------------
    Nmed_Total = (2.0*Nmed+1)**2
    allocate(I1_Temp_1(Input%Num_Elem, Input%Num_Line))
    allocate(I1_Temp_2(Input%Num_Elem, Input%Num_Line))
@@ -693,10 +584,11 @@ contains
                                       ibset(Cld_Test_Vector_Packed(2,i,j),7)
            if (Thin_Cirr_Mask(i,j) == 1) Cld_Test_Vector_Packed(3,i,j) = &
                                       ibset(Cld_Test_Vector_Packed(3,i,j),3)
+
       end do elem_loop_pack
    end do line_loop_pack
-   
-      
+
+
 !-------------------------------------------------------------------------------
 ! on last segment, wipe out the lut from memory and reset is_read_flag to no
 !-------------------------------------------------------------------------------
@@ -716,8 +608,6 @@ contains
    deallocate(Bt_Uni_ChI4)
    deallocate(Bt_Uni_ChI5)
    deallocate(Thin_Cirr_Mask)
-   deallocate(ABI_Ch2_Ref_Toa_Clear)
-   if (allocated(Prior_Cld_Probability)) deallocate(Prior_Cld_Probability)
    
    if (allocated(Ref_Ch1_Mean_3X3)) deallocate(Ref_Ch1_Mean_3X3)
    if (allocated(Ref_Ch1_Max_3x3)) deallocate(Ref_Ch1_Max_3x3)
@@ -764,8 +654,6 @@ contains
    GlintZen => null()
    EmsCh7ClSlr => null()
    Sst_Anal_Uni => null()
-   Tpw_Nwp_Pix => null()
-   Ozone_Nwp_Pix => null()
    Chn1Refl => null()
    Chn2Refl => null()
    Chn3Refl => null()
@@ -779,10 +667,6 @@ contains
    Dust_Mask => null()
    Smoke_Mask => null()
    Fire_Mask => null()
-   Ozone_Nwp_Pix => null()
-   Tpw_Nwp_Pix => null()
-   Tsfc_Nwp_Pix => null()
-   CosSatZen => null()
    
    !Increment segment number
    Segment_Number_CM = Segment_Number_CM +1
@@ -910,7 +794,6 @@ contains
    !============================================================================
    subroutine SET_INPUT(i,j, Ctxt)
       integer, intent (in) :: i, j
-      REAL(KIND=REAL4) :: Tsfc_NWP, Tsfc_SST, Tsfc
       TYPE(CLOUD_MASK_EN_Ctxt) :: Ctxt
 
       Input%Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
@@ -954,7 +837,7 @@ contains
       Input%Ref_041um = Chn1Refl(i,j)
 
       Input%Ref_063um = Chn2Refl(i,j)
-      Input%Ref_063um_Clear = ABI_Ch2_Ref_Toa_Clear(i,j)
+      Input%Ref_063um_Clear = Ref_Ch2_Clear(i,j)
       Input%Ref_063um_Std = Ref_64_Std_3X3(i,j)
       Input%Ref_063um_Min = Ref_64_Min_3x3(i,j)
 
@@ -1009,21 +892,6 @@ contains
         Input%Use_Sounder_11um = sym%YES
         Input%Bt_11um_Sounder = Missing_Value_Real4
         Input%Bt_11um_Bt_67um_Covar = Missing_Value_Real4
-      endif
-
-      !get best Sfc temperature
-      
-      Tsfc_NWP = Tsfc_Nwp_Pix(i,j)
-!      CALL NFIP_SST_SSTClim(Ctxt%SST_Src1_T00, i, j, Tsfc_SST )
-!      CALL OBTAIN_SFCTEMP(Tsfc_SST, Tsfc_NWP, Input%Land_Class, Tsfc)
-      
-      Input%Sfc_Temp = Tsfc_NWP
-
-      
-      Input%Path_Tpw = Tpw_Nwp_Pix(i,j) / CosSatZen(i,j)
-    
-      if (USE_PRIOR_TABLE) then 
-        Input%Prior = Prior_Cld_Probability(i,j)
       endif
       
    end subroutine SET_INPUT
@@ -1196,7 +1064,7 @@ contains
             !
 
             CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, BlackCldRadProfChn14)
-            
+
             Blkbdy_Tropo_Rad_Chn14 = BlackCldRadProfChn14(Tropo_Idx_NWP)
             !
             !---Tropopause Emissivity

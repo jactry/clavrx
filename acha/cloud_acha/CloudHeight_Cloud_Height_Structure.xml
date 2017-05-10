@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<framework_data_structure name="CloudHeight">
+    <structure name="CloudHeight" classification="" allocate_substructs="YES" substruct_name="" channel_dependent="">
+        <variable name="CldTopTemp" sds_name="CldTopTemp" long_name="Cloud Top Temperature" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="Kelvin" valid_range="180,340">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldTopPres" sds_name="CldTopPres" long_name="Cloud Top Presssure" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="hPa" valid_range="0,1100">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldTopHght" sds_name="CldTopHght" long_name="Cloud Top Height" data_type="REAL" precision="SINGLE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="Meter" valid_range="-300,20000">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Flag" sds_name="CldHgtFlag" long_name="Cloud Height Processing Flag" data_type="INTEGER" precision="BYTE" dimension="3" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,6">
+            <dimension>CldHgtFlgCnst</dimension>
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="FlagsPacked" sds_name="CldPackedFlag" long_name="Cloud Height Diagnostic Flag" data_type="INTEGER" precision="BYTE" dimension="3" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="-128,127">
+            <dimension>FlgPakedCnst</dimension>
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldTopEmss" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldTopReff" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldOptDpth" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldLWP" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldIWP" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldBta1112" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Emiss11Hgh" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldHgtQF" sds_name="CloudHgtQF" long_name="Cloud Height Quality Flag" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,6">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="LRCMask" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="XLRCIdx" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="YLRCIdx" long_name="" data_type="INTEGER" precision="LONG" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="CldLayer" sds_name="CloudLayer" long_name="Cloud Layer" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="0" units="1" valid_range="0,3">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="InverFlag" sds_name="InverFlag" long_name="Inversion Flag" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="0" units="1" valid_range="0,1">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="TcLowerCld" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="PcLowerCld" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="ZcLowerCld" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="TcError" sds_name="TcError" long_name="Tc Error" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="EcError" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="B1112Error" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="PcError" sds_name="PcError" long_name="Pc Error" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="ZcError" sds_name="ZcError" long_name="Zc Error" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Cost" sds_name="Cost" long_name="Cost" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+        <variable name="Cloud_Layer" sds_name="Cloud_Layer" long_name="Cloud Layer" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+        <variable name="Total_Cld_Frac" sds_name="Total_Cloud_Fraction" long_name="Total Cloud Fraction" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="TotCldFracUnc" sds_name="Total_Cloud_Fraction_Uncer" long_name="Total Cloud Fraction Uncertainty" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="High_Cld_Frac" sds_name="High_Cloud_Fraction" long_name="High Cloud Fraction" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Mid_Cld_Frac" sds_name="Mid_Cloud_Fraction" long_name="Mid Cloud Fraction" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+        <variable name="Low_Cld_Frac" sds_name="Low_Cloud_Fraction" long_name="Low Cloud Fraction" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+        <variable name="Shadow_Mask" sds_name="Shadow_Mask" long_name="Shadow Mask" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+
+        <variable name="CldHgtFlgCnst" sds_name="CldHgtFlgCnst" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="FlgPakedCnst" sds_name="FlgPakedCnst" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="AncilPath" long_name="" data_type="CHARACTER" precision="LEN=256" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="AncilSubDir" long_name="" data_type="CHARACTER" precision="LEN=256" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="FileName" long_name="" data_type="CHARACTER" precision="LEN=256" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        <variable name="SizeFactor" long_name="" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+
+
+        <variable name="MinTemp" sds_name="MinCldTopTemp" long_name="Minimum of cloud top temperature" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="340.0" units="Kelvin" valid_range="">
+        </variable>
+        <variable name="MaxTemp" sds_name="MaxCldTopTemp" long_name="Maximum of cloud top temperature" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="180.0" units="Kelvin" valid_range="">
+        </variable>
+        <variable name="MeanTemp" sds_name="MeanCldTopTemp" long_name="Mean of cloud top temperature" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="Kelvin" valid_range="">
+        </variable>
+        <variable name="StdDevTemp" sds_name="StdDevCldTopTemp" long_name="Std Dev of cloud top temperature" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="Kelvin" valid_range="">
+        </variable>
+
+        <variable name="MinPres" sds_name="MinCldTopPres" long_name="Minimum of cloud top pressure" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="1100.0" units="hPa" valid_range="">
+        </variable>
+        <variable name="MaxPres" sds_name="MaxCldTopPres" long_name="Maximum of cloud top pressure" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0.0" units="hPa" valid_range="">
+        </variable>
+        <variable name="MeanPres" sds_name="MeanCldTopPres" long_name="Mean of cloud top pressure" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="hPa" valid_range="">
+        </variable>
+        <variable name="StdDevPres" sds_name="StdDevCldTopPres" long_name="Std Dev of cloud top pressure" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="hPa" valid_range="">
+        </variable>
+
+        <variable name="MinHght" sds_name="MinCldTopHeight" long_name="Minimum of cloud top Height" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="20000.0" units="Meter" valid_range="">
+        </variable>
+        <variable name="MaxHght" sds_name="MaxCldTopHeight" long_name="Maximum of cloud top Height" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="-300.0" units="Meter" valid_range="">
+        </variable>
+        <variable name="MeanHght" sds_name="MeanCldTopHeight" long_name="Mean of cloud top Height" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="Meter" valid_range="">
+        </variable>
+        <variable name="StdDevHght" sds_name="StdDevCldTopHeight" long_name="Std Dev of cloud top Height" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="Meter" valid_range="">
+        </variable>
+
+        <variable name="NumQAFlag" sds_name="NumOfQualityFlag" long_name="Number of quality flag" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="6" units="1" valid_range="">
+        </variable>
+        <variable name="TotalCldPix" sds_name="TotalCloudPixel" long_name=" Total Number of detected cloud pixels" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="1" valid_range="">
+        </variable>
+        <variable name="TermPixPct" sds_name="TerminatorPixPct" long_name="Percent of terminator pixels" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+        <variable name="Cat0Pct" sds_name="ValidRetrPct" long_name="Valid, good converged retrieval" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat1Pct" sds_name="InvalidRetrSpaceViewPct" long_name="Invalid pixel due to space view" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat2Pct" sds_name="InvalidRetrSatZenPct" long_name="Invalid pixel due to being outside of sensor zenith range" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat3Pct" sds_name="InvalidRetrBadDataPct" long_name="Invalid earth pixel due to bad data: bad or missing 11 um BT or bad missing clear sky 11 um BT" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat4Pct" sds_name="InvalidRetrCldMaskPct" long_name="Invalid due to cloud mask being clear or probably clear" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat5Pct" sds_name="InvalidRetrMissCldTypePct" long_name="Invalid due to missing cloud type" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="Cat6Pct" sds_name="InvalidRetrFailedPct" long_name="Failed Retrieval" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+        <variable name="DayPixPct" sds_name="DayTimePixPct" long_name="Percent of daytime pixels" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+        <variable name="NitPixPct" sds_name="NightTimePixPct" long_name="Percent of nighttime pixels" data_type="REAL" precision="SINGLE" dimension="0" coordinates="" fill_value="0" units="%" valid_range="0,100">
+        </variable>
+
+        <variable name="Cat0Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat1Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat2Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat3Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat4Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat5Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Cat6Cnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="DayPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="NitPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="SumPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="TermPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="TotalPixCnt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="TotPixAtpt" long_name="" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="SumTemp" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="SumPres" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="SumHght" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+        <variable name="Sum2Temp" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Sum2Pres" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+        <variable name="Sum2Hght" long_name="" data_type="REAL" precision="DOUBLE" dimension="0" coordinates="" fill_value="0" units="" valid_range="">
+        </variable>
+
+
+        <variable name="ProcOrder" sds_name="ProcOrder" long_name="Processing_Order" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="Longitude Latitude" fill_value="" units="1" valid_range="0,4">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+        <variable name="ChanOnNum" sds_name="ChanOnNum" long_name="num of channel on" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="1" units="" valid_range="">
+        </variable>
+
+        <variable name="ChanOn" sds_name="ChanOn" long_name="Channel On info" data_type="INTEGER" precision="BYTE" dimension="1" coordinates="" fill_value="" units="1" valid_range="">
+            <dimension>ChanOnNum</dimension>
+        </variable>
+
+        <variable name="AchaMode" sds_name="AchaMode" long_name="Acha Mode" data_type="INTEGER" precision="LONG" dimension="0" coordinates="" fill_value="" units="" valid_range="">
+        </variable>
+        
+	
+	<variable name="Latitude_Pc" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+	<variable name="Longitude_Pc" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+	<variable name="Zc_Top" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+	<variable name="Zc_base" long_name="" data_type="REAL" precision="SINGLE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+	<variable name="Packed_Qf" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+	<variable name="Packed_Mdata" long_name="" data_type="INTEGER" precision="BYTE" dimension="2" coordinates="" fill_value="" units="" valid_range="">
+            <dimension>NUF_COLUMNS</dimension>
+            <dimension>NUF_ROWS</dimension>
+        </variable>
+
+    </structure>
+</framework_data_structure>

@@ -52,7 +52,7 @@ module MODIS_MODULE
                 , scan_number &
                 , Cloud_Mask_Aux_Read_Flag &
                 , Cloud_Mask_Aux_Flag &
-                , CLDMASK &
+                , Cld_mask_Aux &
                 , Cld_Phase_Aux &
                 , Cld_Type_Aux &
                 , Zc_Aux &
@@ -200,8 +200,7 @@ subroutine DETERMINE_MODIS_GEOLOCATION_FILE(Modis_1b_Name &
     else if (trim(Sensor%Sensor_Name) == 'MODIS-CSPP') then
          Auxiliary_Geolocation_File_Name = TRIM(Auxiliary_Geolocation_File_Name)
     else  
-!---stw         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
-         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-30:ilen)
+         Auxiliary_Geolocation_File_Name = Auxiliary_Geolocation_File_Name(ilen-40:ilen)
     endif
 
     print *, EXE_PROMPT, MODULE_PROMPT, "Will use MODIS Geolocation File = ", trim(Auxiliary_Geolocation_File_Name)
@@ -1042,7 +1041,7 @@ error_check: do while (Error_Status == 0 .and. End_Flag == 0)
 
           call READ_MODIS_LEVEL1B_CLOUD_MASK(trim(Image%Level1b_Path),  &
                                              trim(Image%Auxiliary_Cloud_Mask_File_Name), &
-                                             CLDMASK%Cld_Mask_Aux, & 
+                                             Cld_Mask_Aux, & 
                                              Cld_Phase_Aux, & 
                                              Cld_Type_Aux, & 
                                              Zc_Aux, & 

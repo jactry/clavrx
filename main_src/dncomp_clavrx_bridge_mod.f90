@@ -56,13 +56,11 @@ module dcomp_clavrx_bridge_mod
        , sfc &
        , sensor &
        , image &
-       , cldmask &
        , acha &
        , cld_type &
+       , cld_mask &
        , bad_pixel_mask &
        , lwp_dcomp, reff_dcomp, tau_dcomp, iwp_dcomp &
-       , tau_dcomp_1, tau_dcomp_2, tau_dcomp_3 &
-       , reff_dcomp_1, reff_dcomp_2, reff_dcomp_3 &
        , tau_dcomp_qf, reff_dcomp_qf &
        , tau_dcomp_cost , reff_dcomp_cost &
        , dcomp_info_flag, dcomp_quality_flag &
@@ -134,11 +132,9 @@ contains
       
       integer, allocatable :: possible_channels ( : )
       logical :: chan_on ( N_CHN ) = .false.
-      integer :: i, i_mode
+      integer :: i
       integer :: CHN_VIS
       integer :: CHN_NIR
-      
-      integer :: dcomp_mode_local
       
       interface
          subroutine dcomp_array_loop (a , b , debug_mode_user)
@@ -197,198 +193,176 @@ contains
          end if
       end do 
       
-      
-      do i_mode =1, 3 
-         dcomp_mode_local = i_mode
-         if ( dcomp_mode .ne. i_mode .and. dcomp_mode .ne. 9 ) cycle
+      ! - here we have to add channels for snow
      
-         !-allocate input
-         dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
+      !-allocate input
+      dcomp_input = dncomp_in_type ( dim_1, dim_2, chan_on )
       
       
-         if ( .not. run_nlcomp) then      
-            !- check mode
-            CHN_VIS = 1
-            select case ( dcomp_mode_local )
-               case ( 1 ) 
-                  CHN_NIR = 6               
-               case ( 2 )
-                  CHN_NIR = 7
-               case ( 3 )
-                  CHN_NIR = 20
-               case default
-                  print*, 'dcomp mode ',dcomp_mode_local,' not possible'
-                  return
-            end select
-      
-            if ( dcomp_input % is_channel_on (CHN_NIR) .eqv. .false.) then
-               if ( iseg_in == 1 ) then
-                  print*,'dcomp NIR channel is not set! ==> MODIS equaivalant channel: ', CHN_NIR
-                  call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
-               end if
+      if ( .not. run_nlcomp) then      
+         !- check mode
+         CHN_VIS = 1
+         select case ( dcomp_mode )
+            case ( 1 ) 
+               CHN_NIR = 6               
+            case ( 2 )
+               CHN_NIR = 7
+            case ( 3 )
+               CHN_NIR = 20
+            case default
+               print*, 'dcomp mode ',dcomp_mode,' not possible'
                return
+         end select
+      
+         if ( dcomp_input % is_channel_on (CHN_NIR) .eqv. .false.) then
+            if ( iseg_in == 1 ) then
+               print*,'dcomp NIR channel is not set! ==> MODIS equaivalant channel: ', CHN_NIR
+               call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
             end if
+            return
+         end if
      
    
-            if ( dcomp_input % is_channel_on (CHN_VIS) .eqv. .false.) then
-               if ( iseg_in == 1 ) then
-                  print*, 'dcomp VIS channel is not set! ==> MODIS equaivalant channel: ', CHN_VIS
-                  call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
-               end if
-               return
+         if ( dcomp_input % is_channel_on (CHN_VIS) .eqv. .false.) then
+            if ( iseg_in == 1 ) then
+               print*, 'dcomp VIS channel is not set! ==> MODIS equaivalant channel: ', CHN_VIS
+               call mesg ( 'all dcomp results are set to missing values', color=41 , level = -1 ) 
             end if
+            return
          end if
+      end if
       
-         ! == CONFIGURE 
+      ! == CONFIGURE 
       
          ! - dcomp-mode
-         dcomp_input % mode = dcomp_mode_local
+      dcomp_input % mode = dcomp_mode
          ! - ancil/lut path
-         dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
+      dcomp_input % lut_path = trim(ancil_data_dir)//"/static/luts/cld/"   
          ! - wmo sensor id
-         dcomp_input % sensor_wmo_id = sensor % wmo_id
-         dcomp_input % sun_earth_dist = sun_earth_distance
+      dcomp_input % sensor_wmo_id = sensor % wmo_id
+      dcomp_input % sun_earth_dist = sun_earth_distance
             
          ! -  Satellite Data
       
-         ! - all reflectance channels
-         do i = 1, 19 
-            if ( dcomp_input % is_channel_on (i)) then
-               dcomp_input % refl ( i ) % d = ch(i)%ref_toa
-               dcomp_input % alb_sfc ( i ) % d = ch(i) % sfc_ref_white_sky
-               dcomp_input % gas_coeff(i) % d = solar_rtm % tau_h2o_coef(i,:)
-            end if     
-         end do   
+      ! - all reflectance channels
+      do i = 1, 19 
+         if ( dcomp_input % is_channel_on (i)) then
+             dcomp_input % refl ( i ) % d = ch(i)%ref_toa
+             dcomp_input % alb_sfc ( i ) % d = ch(i) % sfc_ref_white_sky
+             dcomp_input % gas_coeff(i) % d = solar_rtm % tau_h2o_coef(i,:)
+         end if     
+      end do   
       
-         if ( dcomp_input % is_channel_on (20)) then
-            dcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
-            dcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)
-            dcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
-            dcomp_input % trans_ac_nadir (20) % d = dcomp_rtm % trans_ir_ac_nadir
-            dcomp_input % rad_clear_sky_toc (20) % d = dcomp_rtm % rad_clear_sky_toc_ch20
-            dcomp_input % rad_clear_sky_toa (20) % d = dcomp_rtm % rad_clear_sky_toa_ch20
-            ! -- Solar irradiance in channel 20
-            dcomp_input % solar_irradiance ( 20) = solar_ch20_nu
+      if ( dcomp_input % is_channel_on (20)) then
+         dcomp_input % rad ( 20 ) % d = ch(20)%rad_toa
+         dcomp_input % alb_sfc ( 20) % d = 100.0*(1.0 - ch(20)%sfc_emiss)
+         dcomp_input % emiss_sfc ( 20) % d = ch(20)%sfc_emiss
+         dcomp_input % trans_ac_nadir (20) % d = dcomp_rtm % trans_ir_ac_nadir
+         dcomp_input % rad_clear_sky_toc (20) % d = dcomp_rtm % rad_clear_sky_toc_ch20
+         dcomp_input % rad_clear_sky_toa (20) % d = dcomp_rtm % rad_clear_sky_toa_ch20
+         ! -- Solar irradiance in channel 20
+         dcomp_input % solar_irradiance ( 20) = solar_ch20_nu
           
-         end if
-         ! IR channels
-         do i = 21, 45
-            if ( dcomp_input % is_channel_on (i)) dcomp_input % rad ( i ) % d = ch(i)%rad_toa
-         end do
+      end if
+      
+      do i = 21, 45
+         if ( dcomp_input % is_channel_on (i)) dcomp_input % rad ( i ) % d = ch(i)%rad_toa
+      end do
       
       
       
-         if ( run_nlcomp) then
-            if ( dcomp_input % is_channel_on (44)) then
-               dcomp_input % refl ( 44 ) % d = ch(44)%ref_lunar_toa
-               dcomp_input % alb_sfc ( 44 ) % d = ch(1)%sfc_ref_white_sky
-            end if   
-            dcomp_input % zen_lunar % d = geo % lunzen
-            dcomp_input % azi_lunar % d = geo % lunrelaz
+      if ( run_nlcomp) then
+         if ( dcomp_input % is_channel_on (44)) then
+            dcomp_input % refl ( 44 ) % d = ch(44)%ref_lunar_toa
+            dcomp_input % alb_sfc ( 44 ) % d = ch(1)%sfc_ref_white_sky
+         end if   
+         dcomp_input % zen_lunar % d = geo % lunzen
+         dcomp_input % azi_lunar % d = geo % lunrelaz
       
-         end if
+      end if
       
       
-         dcomp_input % sat % d = geo % satzen
-         dcomp_input % sol % d = geo % solzen
-         dcomp_input % azi % d = geo % relaz
+      dcomp_input % sat % d = geo % satzen
+      dcomp_input % sol % d = geo % solzen
+      dcomp_input % azi % d = geo % relaz
       
    
               
          ! - Cloud products
-         dcomp_input % cloud_press % d = acha % pc
-         dcomp_input % cloud_temp % d  = acha % tc
-         dcomp_input % tau_acha % d    = acha % tau
-         dcomp_input % cloud_mask % d  = cldmask % cld_mask
+      dcomp_input % cloud_press % d = acha % pc
+      dcomp_input % cloud_temp % d  = acha % tc
+      dcomp_input % tau_acha % d    = acha % tau
+      dcomp_input % cloud_mask % d  = cld_mask
 !ccm
-         dcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
+      dcomp_input % cloud_type % d  = cld_type(1:dim_1,1:dim_2)
 !end ccm
 !ccm      dcomp_input % cloud_type % d  = cld_type
                   
          ! - Flags
-         dcomp_input % is_land % d = sfc % land_mask == 1 
-         dcomp_input % is_valid % d = bad_pixel_mask /= 1
+      dcomp_input % is_land % d = sfc % land_mask == 1 
+      dcomp_input % is_valid % d = bad_pixel_mask /= 1
       
            
-         dcomp_input % press_sfc % d =  dcomp_rtm % sfc_nwp
-         dcomp_input % snow_class % d = sfc % snow
+      dcomp_input % press_sfc % d =  dcomp_rtm % sfc_nwp
+      dcomp_input % snow_class % d = sfc % snow
             
          ! - Atmospheric contents
          ! ozone column in Dobson
-         dcomp_input % ozone_nwp % d = dcomp_rtm % ozone_path
+      dcomp_input % ozone_nwp % d = dcomp_rtm % ozone_path
          ! Total water Vapour above the cloud
-         dcomp_input % tpw_ac % d = dcomp_rtm % tpw_ac
+      dcomp_input % tpw_ac % d = dcomp_rtm % tpw_ac
            
 
 
       
+      call dcomp_rtm % deallocate_it()
       
+      ! === THE MAIN CALL of DCOMP ===  
       
-         ! === THE MAIN CALL of DCOMP ===  
-      
-         if (run_nlcomp) then
-            call nlcomp_array_loop_sub (dcomp_input,dncomp_output )
-         else  
-            debug_mode = 0
-            call dcomp_input % check_input (debug_mode)
-            call dcomp_array_loop ( dcomp_input , dncomp_output , debug_mode_user = debug_mode)
-         end if
-         ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
+      if (run_nlcomp) then
+         call nlcomp_array_loop_sub (dcomp_input,dncomp_output )
+      else  
+         debug_mode = 0
+         call dcomp_input % check_input (debug_mode)
+         call dcomp_array_loop ( dcomp_input , dncomp_output , debug_mode_user = debug_mode)
+      end if
+      ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
 !ccm
 
 
             ! === POPULATE CLAVR-X VARIABLES FROM PIXEL_COMMON
       
-         if ( run_nlcomp) then
+      if ( run_nlcomp) then
       
-            tau_nlcomp (1:dim_1,1:dim_2)   = dncomp_output % cod % d
-            reff_nlcomp  (1:dim_1,1:dim_2) = dncomp_output % cps % d
-            tau_nlcomp_cost(1:dim_1,1:dim_2) = dncomp_output % cod_unc % d
-            reff_nlcomp_cost(1:dim_1,1:dim_2) = dncomp_output % ref_unc % d
-            nlcomp_quality_flag(1:dim_1,1:dim_2) = dncomp_output %  quality % d
-            nlcomp_info_flag(1:dim_1,1:dim_2) = dncomp_output % info % d
+         tau_nlcomp (1:dim_1,1:dim_2)   = dncomp_output % cod % d
+         reff_nlcomp  (1:dim_1,1:dim_2) = dncomp_output % cps % d
+         tau_nlcomp_cost(1:dim_1,1:dim_2) = dncomp_output % cod_unc % d
+         reff_nlcomp_cost(1:dim_1,1:dim_2) = dncomp_output % ref_unc % d
+         nlcomp_quality_flag(1:dim_1,1:dim_2) = dncomp_output %  quality % d
+         nlcomp_info_flag(1:dim_1,1:dim_2) = dncomp_output % info % d
       
-         else
+      else
       
-            tau_dcomp (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
-            reff_dcomp  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
-            
-            
-            select case (dcomp_mode_local)
-            case (1)
-               tau_dcomp_1 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
-               reff_dcomp_1  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
-            case(2)
-         
-               tau_dcomp_2 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
-               reff_dcomp_2  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
-         
-            case(3)
-               tau_dcomp_3 (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
-               reff_dcomp_3  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
-            end select
-            
-            
-            
-            
-            lwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % lwp % d(1:dim_1,1:dim_2)
-            iwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % iwp % d(1:dim_1,1:dim_2)
+         tau_dcomp (1:dim_1,1:dim_2)   = dncomp_output % cod % d(1:dim_1,1:dim_2)
+         reff_dcomp  (1:dim_1,1:dim_2) = dncomp_output % cps % d(1:dim_1,1:dim_2)
+         lwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % lwp % d(1:dim_1,1:dim_2)
+         iwp_dcomp (1:dim_1,1:dim_2)   = dncomp_output % iwp % d(1:dim_1,1:dim_2)
       
-            tau_dcomp_cost(1:dim_1,1:dim_2)     = dncomp_output % cod_unc % d(1:dim_1,1:dim_2)
-            reff_dcomp_cost(1:dim_1,1:dim_2)    = dncomp_output % ref_unc % d(1:dim_1,1:dim_2)
-            dcomp_quality_flag(1:dim_1,1:dim_2) = dncomp_output % quality % d(1:dim_1,1:dim_2)
-            dcomp_info_flag(1:dim_1,1:dim_2)    = dncomp_output % info % d(1:dim_1,1:dim_2)
+         tau_dcomp_cost(1:dim_1,1:dim_2)     = dncomp_output % cod_unc % d(1:dim_1,1:dim_2)
+         reff_dcomp_cost(1:dim_1,1:dim_2)    = dncomp_output % ref_unc % d(1:dim_1,1:dim_2)
+         dcomp_quality_flag(1:dim_1,1:dim_2) = dncomp_output % quality % d(1:dim_1,1:dim_2)
+         dcomp_info_flag(1:dim_1,1:dim_2)    = dncomp_output % info % d(1:dim_1,1:dim_2)
       
-            cloud_063um_transmission_solar(1:dim_1,1:dim_2) = dncomp_output % cld_trn_sol % d(1:dim_1,1:dim_2)
-            cloud_063um_transmission_view(1:dim_1,1:dim_2)  = dncomp_output % cld_trn_obs % d(1:dim_1,1:dim_2)
-            cloud_063um_albedo(1:dim_1,1:dim_2)             = dncomp_output % cld_alb % d(1:dim_1,1:dim_2)
-            cloud_063um_spherical_albedo(1:dim_1,1:dim_2)   = dncomp_output % cld_sph_alb % d(1:dim_1,1:dim_2)
+         cloud_063um_transmission_solar(1:dim_1,1:dim_2) = dncomp_output % cld_trn_sol % d(1:dim_1,1:dim_2)
+         cloud_063um_transmission_view(1:dim_1,1:dim_2)  = dncomp_output % cld_trn_obs % d(1:dim_1,1:dim_2)
+         cloud_063um_albedo(1:dim_1,1:dim_2)             = dncomp_output % cld_alb % d(1:dim_1,1:dim_2)
+         cloud_063um_spherical_albedo(1:dim_1,1:dim_2)   = dncomp_output % cld_sph_alb % d(1:dim_1,1:dim_2)
       
-            DCOMP_RELEASE_VERSION = dncomp_output % version
-         end if
+         DCOMP_RELEASE_VERSION = dncomp_output % version
+      end if
       
-      end do
-      call dcomp_rtm % deallocate_it()
+      
+
       
 
    end subroutine awg_cloud_dncomp_algorithm

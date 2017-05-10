@@ -127,7 +127,7 @@ module OISST_ANALYSIS
   real, parameter, private:: del_lat_sst_anal = (last_lat_sst_anal - first_lat_sst_anal)/(num_lat_sst_anal-1)
   real, parameter, private:: min_sst_anal = -4.0, max_sst_anal=36.0
 
-  real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal,1,1):: temp_i4_buffer
+  integer(kind=int2), dimension(num_lon_sst_anal,num_lat_sst_anal):: temp_i2_buffer
   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_anal_map
   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_err_map
   real(kind=real4), dimension(num_lon_sst_anal,num_lat_sst_anal), private, save:: oisst_anal_map_uni
@@ -174,8 +174,8 @@ module OISST_ANALYSIS
 
       oisst_filename_tmp= "avhrr-only-v2."//year_string//month_string//day_string
       oisst_filename_tmp = trim(oisst_path)//trim(year_string)//"/"//trim(oisst_filename_tmp)
-      oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.nc"
-      oisst_filename_tmp = trim(oisst_filename_tmp)//".nc"
+      oisst_filename_tmp_preliminary = trim(oisst_filename_tmp)//"_preliminary.gz"
+      oisst_filename_tmp = trim(oisst_filename_tmp)//".gz"
 
       !--- check for regular file
       if (file_exists(trim(oisst_filename_tmp)) .eqv. .true.) then
@@ -201,50 +201,65 @@ end function GET_OISST_MAP_FILENAME
 ! Read the Data
 !----------------------------------------------------------------------
   subroutine READ_OISST_ANALYSIS_MAP(sst_anal_name)
-
-!   use READH5DATASET, only: &
-!      H5READDATASET
-   use NETCDF_READ_MODULE
-
    character(len=*), intent(in):: sst_anal_name
    character(len=1020):: file_temp
    character(len=1020):: system_string
    integer(kind=int4):: iyrst,imst,idst,i,j
+   integer:: oisst_lun
+   integer:: ios0,ios1,ios2,ios3,ios4,ios5,erstat
    integer:: ii,jj
-   integer:: ios0
-   integer:: ncid, nc_var_id
-   integer, dimension(4) :: sds_start_4d, sds_edge_4d
+
+   !--- uncompress
+   system_string = "gunzip -c "//trim(sst_anal_name)// &
+        " > "//trim(Temporary_Data_Dir)//"temp_oisst_file"
+   call system(system_string)
+
+   file_temp = trim(Temporary_Data_Dir)//"temp_oisst_file"
+
+   Number_of_Temporary_Files = Number_of_Temporary_Files + 1
+   Temporary_File_Name(Number_of_Temporary_Files) = "temp_oisst_file"
 
    !------------------------------------------------------------------------------
    ! read in data
    !------------------------------------------------------------------------------
+   ios0 = 0
+   ios1 = 0
+   ios2 = 0
+   ios3 = 0
+   ios4 = 0
+   ios5 = 0
+  
+   oisst_lun = GET_LUN()
+   open(unit=oisst_lun,file=trim(file_temp),access="sequential",status="old", &
+       action="read",form="unformatted", iostat = ios0,CONVERT="BIG_ENDIAN") !use this line for Lahey or gfortran
 
-   ios0 = nf90_open(trim(sst_anal_name), mode = nf90_nowrite, ncid = ncid)
+   if (ios0 /= 0) then
+      erstat = 66
+      print *,EXE_PROMPT, "Error opening oisst file, ",trim(sst_anal_name)," ios0 = ", ios0
+      stop 66
+   endif
 
-   sds_start_4d = 1
-   sds_edge_4d(1) = num_lon_sst_anal
-   sds_edge_4d(2) = num_lat_sst_anal 
-   sds_edge_4d(3) = 1
-   sds_edge_4d(4) = 1
+   read(unit=oisst_lun,iostat=ios1) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
+   oisst_anal_map = temp_i2_buffer * 0.01
 
-   call read_netcdf_4d_real(ncid,sds_start_4d,sds_edge_4d,'sst',temp_i4_buffer)
-   oisst_anal_map = temp_i4_buffer(:,:,1,1) * 0.01
+   read(unit=oisst_lun,iostat=ios2) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
 
-   call read_netcdf_4d_real(ncid,sds_start_4d,sds_edge_4d,'err',temp_i4_buffer)
-   oisst_err_map = temp_i4_buffer(:,:,1,1) * 0.01
+   read(unit=oisst_lun,iostat=ios3) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
+   oisst_err_map = temp_i2_buffer * 0.01
 
-   call read_netcdf_4d_real(ncid,sds_start_4d,sds_edge_4d,'ice',temp_i4_buffer)
-   oisst_cice_map = temp_i4_buffer(:,:,1,1) * 0.01
+   read(unit=oisst_lun,iostat=ios4) iyrst,imst,idst,((temp_i2_buffer(i,j),i=1,num_lon_sst_anal),j=1,num_lat_sst_anal)
+   oisst_cice_map = temp_i2_buffer * 0.01
 
-   ios0 = nf90_close(ncid)
+   close(unit=oisst_lun,iostat=ios5)
 
-   if (ios0 /= 0) then 
+   if (ios0+ios1+ios2+ios3+ios4+ios5 /= 0) then 
 
      print *, EXE_PROMPT,"Error reading OISST Analysis file, file = ", trim(sst_anal_name)
 
      use_sst_anal = 0
 
      return
+         
    endif 
 
    print *, EXE_PROMPT,"OISST analysis read in successfully"

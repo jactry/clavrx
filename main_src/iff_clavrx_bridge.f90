@@ -37,7 +37,7 @@ module IFF_CLAVRX_BRIDGE
        , Nav &
        , Image &
        , Iff_Gap_Mask &
-       , CLDMASK &
+       , Cld_Mask_Aux &
        , Cloud_Mask_Aux_Flag &
        , Cloud_Mask_Aux_Read_Flag &
        , Scan_Number &
@@ -252,7 +252,7 @@ contains
 
       ! --- check if we need to read cloud mask aux
       if ( iff_conf % iff_cloud_mask_on .and. size(out % prd % cld_mask) > 0 ) then
-         CLDMASK%cld_mask_aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
+         cld_mask_aux( : ,1 : c_seg_lines ) = out % prd % cld_mask
          Cloud_Mask_Aux_Read_Flag = 1
       else
          Cloud_Mask_Aux_Read_Flag = 0

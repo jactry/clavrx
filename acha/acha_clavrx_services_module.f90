@@ -15,7 +15,6 @@ module ACHA_SERVICES_MOD
        Sensor, &
        Image, &
        ACHA, &
-       CLDMASK, &
        Sfc, &
        Bad_Pixel_Mask, &
        I_Lrc, &
@@ -30,12 +29,13 @@ module ACHA_SERVICES_MOD
        Tair_Nwp_Pix, &
        Tsfc_Nwp_Pix, &
        Ttropo_Nwp_Pix, &
-       Ztropo_Nwp_Pix, &
-       Ptropo_Nwp_Pix, &
        Psfc_Nwp_Pix, &
        Smooth_Nwp_Flag, &
        Process_Undetected_Cloud_Flag, &
+       Posterior_Cld_Probability, &
+       Cld_Mask, &
        Cld_Type, &
+       Cld_Test_Vector_Packed, &
        Shadow_Mask, &
        Tc_Cirrus_Background, &
        Diag_Pix_Array_1, &
@@ -111,8 +111,6 @@ module ACHA_SERVICES_MOD
  real, dimension(:,:), pointer:: Surface_Temperature
  real, dimension(:,:), pointer:: Surface_Air_Temperature
  real, dimension(:,:), pointer:: Tropopause_Temperature
- real, dimension(:,:), pointer:: Tropopause_Height
- real, dimension(:,:), pointer:: Tropopause_Pressure
  real, dimension(:,:), pointer:: Surface_Pressure
  real, dimension(:,:), pointer:: Surface_Elevation
  real, dimension(:,:), pointer:: Latitude
@@ -237,7 +235,6 @@ end type acha_rtm_nwp_struct
    integer (kind=int1), dimension(:,:), pointer :: Packed_Meta_Data
    integer(kind=int1), dimension(:,:), pointer :: Processing_Order   
    integer(kind=int1), dimension(:,:), pointer :: Inversion_Flag
-   integer(kind=int1), dimension(:,:), pointer :: Cloud_Type
   end type acha_output_struct
   
 !Symbol stucture

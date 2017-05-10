@@ -66,7 +66,6 @@ module ACHA_CLAVRX_BRIDGE
    !-----------------------------------------------------------------------
    !--- Call to AWG CLoud Height Algorithm (ACHA)
    !-----------------------------------------------------------------------
-
    call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output)
    !call AWG_CLOUD_HEIGHT_ALGORITHM(Input, Symbol, Output, Diag)
 
@@ -89,8 +88,8 @@ module ACHA_CLAVRX_BRIDGE
          , Shadow_Mask ) 
 
    !---- copy shadow result into cloud mask test bits
-   where (Shadow_Mask == 1 .and. CLDMASK%Cld_Mask == 0 )  
-           CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (CLDMASK%Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
+   where (Shadow_Mask == 1 .and. Cld_Mask == 0 )  
+           Cld_Test_Vector_Packed ( 2 , :, : )  = ibset (Cld_Test_Vector_Packed ( 2 , :, : )  , 6 )
    end where
 
    !-----------------------------------------------------------------------
@@ -132,8 +131,6 @@ module ACHA_CLAVRX_BRIDGE
      Input%Surface_Temperature => null()
      Input%Surface_Air_Temperature =>  null()
      Input%Tropopause_Temperature =>  null()
-     Input%Tropopause_Height =>  null()
-     Input%Tropopause_Pressure =>  null()
      Input%Surface_Pressure =>  null()
      Input%Surface_Elevation =>  null()
      Input%Latitude =>  null()
@@ -212,7 +209,6 @@ module ACHA_CLAVRX_BRIDGE
      Output%Ec_11um =>  null()
      Output%Ec_12um =>  null()
      Output%Ec_133um =>  null()
-     Output%Cloud_Type =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -311,7 +307,6 @@ module ACHA_CLAVRX_BRIDGE
    Output%Ec_11um => ACHA%Ec_11um
    Output%Ec_12um => ACHA%Ec_12um
    Output%Ec_133um => ACHA%Ec_133um
-   Output%Cloud_Type => ACHA%Cloud_Type
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -359,8 +354,6 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Temperature =>Tsfc_Nwp_Pix
    Input%Surface_Air_Temperature => Tair_Nwp_Pix
    Input%Tropopause_Temperature => Ttropo_Nwp_Pix
-   Input%Tropopause_Height => Ztropo_Nwp_Pix
-   Input%Tropopause_Pressure => Ptropo_Nwp_Pix
    Input%Surface_Pressure => Psfc_Nwp_Pix
    Input%Surface_Elevation => Sfc%Zsfc
    Input%Latitude => Nav%Lat
@@ -383,8 +376,8 @@ module ACHA_CLAVRX_BRIDGE
    Input%Surface_Emissivity_67um => ch(27)%Sfc_Emiss
    Input%Snow_Class => Sfc%Snow
    Input%Surface_Type => Sfc%Sfc_Type
-   Input%Cloud_Mask => CLDMASK%Cld_Mask
-   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
+   Input%Cloud_Mask => Cld_Mask
+   Input%Cloud_Probability => Posterior_Cld_Probability
    Input%Cloud_Type => Cld_Type
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp

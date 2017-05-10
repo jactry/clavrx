@@ -14,12 +14,13 @@ module ASOS_SERVICES_MOD
        Geo, &
        Sensor, &
        Image, &
-       CLDMASK, &
        ACHA, &
        ASOS, &
        Sfc, &
        Bad_Pixel_Mask, &
+       Cld_Mask, &
        Cld_Type, &
+       Posterior_Cld_Probability, &
        Diag_Pix_Array_1, &
        Diag_Pix_Array_2, &
        Diag_Pix_Array_3

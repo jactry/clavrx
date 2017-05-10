@@ -152,7 +152,6 @@ module RT_UTILITIES
 
     use CX_PFAAST_MOD, only: &
        COMPUTE_TRANSMISSION_PFAAST
-
    implicit none
    
    private:: EMISSIVITY, &
@@ -737,11 +736,11 @@ contains
                 
                      Chan_Idx_For_Pfaast = Chan_Idx
                      if (Chan_Idx .eq. 45) Chan_Idx_For_Pfaast = 33
-                     Sc_Name_Rtm = SENSOR_NAME_FOR_RTM(Sensor%WMO_id,Sensor%Sensor_Name, Chan_Idx)
+                     Sc_Name_Rtm = SENSOR_NAME_FOR_RTM(sensor%wmo_id,sensor%sensor_name, Chan_Idx)
                     
-!print *, 'Calling PFAAST ', Chan_Idx, Chan_Idx_For_Pfaast, Sc_Name_Rtm
+!print *, 'Calling PFAAST ', Chan_Idx, Chan_Idx_For_Pfaast
  
-                     call COMPUTE_TRANSMISSION_PFAAST( &
+                     CALL COMPUTE_TRANSMISSION_PFAAST( &
                            trim(Ancil_Data_Dir) &
                         ,  T_Prof_rtm &
                         ,  Wvmr_Prof_Rtm &
@@ -1391,9 +1390,6 @@ contains
 
       case(259) !GOES-15
         Sensor_Name_Rtm = 'GOES-15'
-
-      case(270) !GOES-16
-        Sensor_Name_Rtm = 'GOES-16'
 
       case(706) !NOAA-6
         Sensor_Name_Rtm = 'AVHRR-NOAA06'
@@ -2194,34 +2190,6 @@ contains
         Solar_Rtm%Tau_O2(20) = -0.00000
         Solar_Rtm%Tau_CO2(20) = 0.01666
         Solar_Rtm%Tau_CH4(20) = 0.00723
-
-      case(270)     ! GOES-16 - From AHI numbers.
-        Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00006477, 0.00332966,-0.00009980/) ! computed 02/17/2016 AW
-        Solar_Rtm%Tau_H2O_Coef(6,:)  = (/ -0.00001320,0.00070498,-0.00001705/)  ! computed 02/17/2016 AW
-        Solar_Rtm%Tau_H2O_Coef(7,:)  = (/ -0.00000919, 0.00120421,-0.0000568/)  ! computed 02/17/2016 AW
-        Solar_Rtm%Tau_H2O_Coef(20,:) = (/ -0.00020694, 0.01548648,-0.0009537/)  ! computed 02/17/2016 AW
-        ! - from here is faked from METEOSAT-8
-        ! - from here is faked from METEOSAT-8
-        Solar_Rtm%Tau_Ray(1) = 0.05396
-        Solar_Rtm%Tau_O3(1) =  0.02354
-        Solar_Rtm%Tau_O2(1) =  0.00047
-        Solar_Rtm%Tau_CO2(1) =-0.00000
-        Solar_Rtm%Tau_CH4(1) =-0.00000
-        Solar_Rtm%Tau_Ray(2) = 0.02057
-        Solar_Rtm%Tau_O3(2) =  0.00129
-        Solar_Rtm%Tau_O2(2) =  0.00046
-        Solar_Rtm%Tau_CO2(2) =-0.00000
-        Solar_Rtm%Tau_CH4(2) =-0.00000
-        Solar_Rtm%Tau_Ray(6) = 0.00120
-        Solar_Rtm%Tau_O3(6) = -0.00000
-        Solar_Rtm%Tau_O2(6) = -0.00000
-        Solar_Rtm%Tau_CO2(6) = 0.01191
-        Solar_Rtm%Tau_CH4(6) = 0.00626
-        Solar_Rtm%Tau_Ray(20) = 0.00000
-        Solar_Rtm%Tau_O3(20) =  0.00013
-        Solar_Rtm%Tau_O2(20) = -0.00000
-        Solar_Rtm%Tau_CO2(20) = 0.09197
-        Solar_Rtm%Tau_CH4(20) = 0.00843
 
       case(706)    !NOAA-6
         Solar_Rtm%Tau_H2O_Coef(1,:)  = (/  0.00080858, 0.00517629,-0.00020678/)

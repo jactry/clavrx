@@ -97,7 +97,6 @@ contains
          if (  use_modis_channel_equivalent ) then
             ! - modis channel
             if ( .not. any ( kban_in ==  coef % modis_channel_eqv)) then
-               taut = -1.
                return            
             end if
             kban = minloc ( abs ( coef % modis_channel_eqv - kban_in ), 1)
@@ -116,9 +115,7 @@ contains
          end if
          kban = minloc ( abs ( coef % native_channel - kban_in ), 1)
       
-      end if 
-      
-     
+      end if  
       
       ! - computes mid-layer values for reference
       if ( .not. are_ref_profiles_set ) then

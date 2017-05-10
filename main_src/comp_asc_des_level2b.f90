@@ -79,6 +79,7 @@ program COMPILE_ASC_DES_LEVEL2B
 
  implicit none
 
+ integer, parameter:: NCDC_Attributes_Flag = 0    !Set this to 1 to emulate NCDC 2009 data format
  integer, parameter:: N_Files_Max = 1200
  integer(kind=int4):: N_Command_Line_Args
  integer, parameter:: Source_Length_Max = 1000
@@ -97,7 +98,6 @@ program COMPILE_ASC_DES_LEVEL2B
  integer(kind=int4), dimension(2):: Sds_Output_Start_XY
  integer(kind=int4), dimension(2):: Sds_Output_Stride_XY
  integer(kind=int4), dimension(2):: Sds_Dims
- logical, dimension(:,:), allocatable:: Mask_Output
  real(kind=real4), dimension(:), allocatable:: Input_Array_1d
  real(kind=real4), dimension(:), allocatable:: Output_Array_1d
 
@@ -211,12 +211,14 @@ program COMPILE_ASC_DES_LEVEL2B
 
  real(kind=real4), dimension(:,:), allocatable:: Solzen_Input
  real(kind=real4), dimension(:,:), allocatable:: Senzen_Input
+ real(kind=real4), dimension(:,:), allocatable:: Post_Cld_Prob_Input
  real(kind=real4), dimension(:,:), allocatable:: Senzen_Output
  real(kind=real4), dimension(:,:), allocatable:: Solzen_Output
  integer(kind=int4), dimension(:,:), allocatable:: Temp_Mask_Output
  real(kind=real4), dimension(:,:), allocatable:: Time_Output
  real(kind=real4), dimension(:,:), allocatable:: Scan_Line_Number_Output
  real(kind=real4), dimension(:,:), allocatable:: Scan_Element_Number_Output
+ real(kind=real4), dimension(:,:), allocatable:: Post_Cld_Prob_Output
  real(kind=real4), dimension(:,:), allocatable:: Bad_Pixel_Mask_Output
  integer(kind=int2), dimension(:,:), allocatable:: Element_Number_Output
 
@@ -594,6 +596,7 @@ Sds_Output_Stride_XY = (/1,1/)
      allocate(Scan_Element_Number_Output(Nlon_Output,Nlat_Output))
      allocate(Senzen_Output(Nlon_Output,Nlat_Output))
      allocate(Solzen_Output(Nlon_Output,Nlat_Output))
+     allocate(Post_Cld_Prob_Output(Nlon_Output,Nlat_Output))
      allocate(Bad_Pixel_Mask_Output(Nlon_Output,Nlat_Output))
      allocate(Scaled_Sds_Data_Output(Nlon_Output,Nlat_Output))
      allocate(Unscaled_Sds_Data_Output(Nlon_Output,Nlat_Output))
@@ -619,6 +622,7 @@ Sds_Output_Stride_XY = (/1,1/)
      Scan_Element_Number_Output = missing_value_int4
      Senzen_Output = Missing_Value_Real4
      Solzen_Output = Missing_Value_Real4
+     Post_Cld_Prob_Output = Missing_Value_Real4
      Bad_Pixel_Mask_Output = Missing_Value_Real4
      Scaled_Sds_Data_Output = Missing_Value_Real4
      Unscaled_Sds_Data_Output = Missing_Value_Real4
@@ -781,6 +785,7 @@ Sds_Output_Stride_XY = (/1,1/)
           allocate(Lat_Input(Num_Elements_Input,Num_Lines_Input))
           allocate(Senzen_Input(Num_Elements_Input,Num_Lines_Input))
           allocate(Solzen_Input(Num_Elements_Input,Num_Lines_Input))
+          allocate(Post_Cld_Prob_Input(Num_Elements_Input,Num_Lines_Input))
           allocate(Gap_Pixel_Mask_Input(Num_Elements_Input,Num_Lines_Input))
 
           Sds_lon%Variable_Name = "longitude"
@@ -1085,12 +1090,41 @@ Sds_Output_Stride_XY = (/1,1/)
                   Input_Update_Index(Ipoint) = Ielem + (Iline-1)*Num_Elements_Input
                   Output_Update_Index(Ipoint) = Ilon + (Ilat-1)*Nlon_Output
                   Scan_Element_Number_Output(Ilon,Ilat) = Ielem
-                  Scan_Line_Number_Output(Ilon,Ilat) = Iline
-                  Solzen_Output(Ilon,Ilat) = Solzen_Input(Ielem,Iline)
-                  Bad_Pixel_Mask_Output(Ilon,Ilat) = Bad_Pixel_Mask_Input(Ielem,Iline)
                 endif
            enddo
           enddo
+
+         !--- update results
+
+          !---new
+          if (ipoint > 0) then
+
+           !--- update scan line number
+           Input_Array_1d = reshape(Scan_Line_Number_Input, (/Num_Elements_Input * Num_Lines_Input/))  
+           Output_Array_1d = reshape(Scan_Line_Number_Output, (/Nlon_Output*Nlat_Output/))  
+           Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
+           Scan_Line_Number_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
+
+           !--- update Solzen
+           Input_Array_1d = reshape(Solzen_Input, (/Num_Elements_Input * Num_Lines_Input/))  
+           Output_Array_1d = reshape(Solzen_Output, (/Nlon_Output*Nlat_Output/))  
+           Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
+           Solzen_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
+
+           !--- update post_Cld_Prob
+           Input_Array_1d = reshape(Post_Cld_Prob_Input, (/Num_Elements_Input * Num_Lines_Input/))  
+           Output_Array_1d = reshape(Post_Cld_Prob_Output, (/Nlon_Output*Nlat_Output/))  
+           Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
+           Post_Cld_Prob_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
+
+           !--- update bad_pixel_mask
+           Input_Array_1d = reshape(Bad_Pixel_Mask_Input, (/Num_Elements_Input * Num_Lines_Input/))  
+           Output_Array_1d = reshape(Bad_Pixel_Mask_Output, (/Nlon_Output*Nlat_Output/))  
+           Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
+           Bad_Pixel_Mask_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
+
+         endif
+
 
          deallocate(Senzen_Input)
          deallocate(Solzen_Input)
@@ -1099,6 +1133,7 @@ Sds_Output_Stride_XY = (/1,1/)
          deallocate(Scan_Line_Number_Input)
          deallocate(Lon_Input)
          deallocate(Lat_Input)
+         deallocate(Post_Cld_Prob_Input)
          deallocate(Bad_Pixel_Mask_Input)
          deallocate(Gap_Pixel_Mask_Input)
 
@@ -1106,13 +1141,6 @@ Sds_Output_Stride_XY = (/1,1/)
          ! loop through SDS's and store the information about them
          ! note, this has to be zero based indices
          !---------------------------------------------------------------------
-         !--- make a mask for selecting pixels - this will be same for all sds'
-         allocate(Mask_Output(Nlon_Output,Nlat_Output))
-         Mask_Output = .false.
-         where(Update_Output_Mask == sym%YES .and. Ielem_Output > 0 .and. Iline_Output > 0)
-            Mask_Output = .true.
-         endwhere
-
          if (First_Valid_Input == sym%YES) then
            Sds_loop_1: do Isds = 0, Num_Sds_Input-1
             
@@ -1181,31 +1209,16 @@ Sds_Output_Stride_XY = (/1,1/)
             !--- switching between 2d to 3d arrays necessitated 
             !----by seg faults on ifort
             !-----------------------------------------------------------
-            !if (ipoint > 0) then
-            ! Input_Array_1d = reshape(Scaled_Sds_Data_Input, (/Num_Elements_Input * Num_Lines_Input/))  
-            ! Scaled_Sds_Data_Output = Scaled_Sds_Data_Output_Full(:,:,Isds)
-            ! Output_Array_1d = reshape(Scaled_Sds_Data_Output, (/Nlon_Output*Nlat_Output/))  
-            ! Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
-            ! Scaled_Sds_Data_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
-            ! Scaled_Sds_Data_Output_Full(:,:,Isds) = Scaled_Sds_Data_Output
-            !endif
-
-            !-----------------------------------------------------------
-            !--- update composite
-            !-----------------------------------------------------------
             if (ipoint > 0) then
-             do Ilon = 1, Nlon_Output
-              do Ilat = 1, Nlat_Output
-                if (Mask_Output(Ilon,Ilat)) then
-                 Scaled_Sds_Data_Output_Full(Ilon,Ilat,Isds) =  &
-                           Scaled_Sds_Data_Input(Ielem_Output(Ilon,Ilat),Iline_Output(Ilon,Ilat))
-               endif
-              enddo
-             enddo
+             Input_Array_1d = reshape(Scaled_Sds_Data_Input, (/Num_Elements_Input * Num_Lines_Input/))  
+             Scaled_Sds_Data_Output = Scaled_Sds_Data_Output_Full(:,:,Isds)
+             Output_Array_1d = reshape(Scaled_Sds_Data_Output, (/Nlon_Output*Nlat_Output/))  
+             Output_Array_1d(Output_Update_Index(1:ipoint)) = Input_Array_1d(Input_Update_Index(1:ipoint))
+             Scaled_Sds_Data_Output = reshape(Output_Array_1d, (/Nlon_Output,Nlat_Output/))
+             Scaled_Sds_Data_Output_Full(:,:,Isds) = Scaled_Sds_Data_Output
             endif
 
          end do Sds_loop_2
-         if (allocated(Mask_Output)) deallocate(Mask_Output)
 
          !----------------------------------------------------------------------
          ! deallocate allcoated input arrays
@@ -1517,6 +1530,7 @@ Sds_Output_Stride_XY = (/1,1/)
     if (allocated(Scan_Line_Number_Output)) deallocate(Scan_Line_Number_Output)
     if (allocated(Scan_Element_Number_Output)) deallocate(Scan_Element_Number_Output)
     if (allocated(Senzen_Output)) deallocate(Senzen_Output)
+    if (allocated(Post_Cld_Prob_Output)) deallocate(Post_Cld_Prob_Output)
     if (allocated(Solzen_Output)) deallocate(Solzen_Output)
     if (allocated(Scaled_Sds_Data_Output)) deallocate(Scaled_Sds_Data_Output)
     if (allocated(Unscaled_Sds_Data_Output)) deallocate(Unscaled_Sds_Data_Output)

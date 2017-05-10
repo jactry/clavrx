@@ -56,7 +56,7 @@ module IR_CLOUD_TYPE_BAUM_MODULE
                           Geo,    &
                           Sensor, &
                           Sfc,    &
-                          CLDMASK, &
+                          Cld_Mask, &
                           Bad_Pixel_Mask, &
                           I_Nwp, &
                           J_Nwp, &
@@ -66,6 +66,7 @@ module IR_CLOUD_TYPE_BAUM_MODULE
                           Beta_11um_67um_Tropo_Rtm, &
                           Beta_11um_133um_Tropo_Rtm, &
                           Beta_11um_133fusum_Tropo_Rtm, &
+                          Cld_Test_Vector_Packed, &
                           Cld_Phase_IR, &
                           Cld_Type_IR, &
                           Diag_Pix_Array_1, &
@@ -173,7 +174,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
      ! Determine if a non-cloud type has been determined in the
      ! cloud mask, if so, set the type flag and exit
      !-------------------------------------------------------------
-     Fire_Flag = BTEST(CLDMASK%Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
+     Fire_Flag = BTEST(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
      if (Fire_Flag) then
         Cld_Type_IR(Elem_Idx,Line_Idx) = sym%FIRE_TYPE
         Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%UNKNOWN_PHASE
@@ -181,14 +182,14 @@ subroutine IR_CLOUD_TYPE_BAUM()
      endif
 
      !--- set clear to clear phase
-     if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
+     if (Cld_Mask(Elem_Idx,Line_Idx) == sym%CLEAR) then
           Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
           Cld_Type_IR(Elem_Idx,Line_Idx) = sym%CLEAR_TYPE
           cycle
      endif
 
      !--- set probably clear to clear phase
-     if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
+     if (Cld_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
           Cld_Phase_IR(Elem_Idx,Line_Idx) = sym%CLEAR_PHASE
           Cld_Type_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE
           cycle
@@ -291,7 +292,7 @@ subroutine IR_CLOUD_TYPE_BAUM()
 
   if (Cld_Phase_IR(Elem_Idx,Line_Idx) == sym%CLEAR_PHASE) then
 
-           if (CLDMASK%Cld_Mask(Elem_Idx,Line_Idx)== sym%CLEAR) then 
+           if (Cld_Mask(Elem_Idx,Line_Idx)== sym%CLEAR) then 
               Cld_Type_IR(Elem_Idx,Line_Idx) = sym%CLEAR_TYPE
            else
               Cld_Type_IR(Elem_Idx,Line_Idx) = sym%PROB_CLEAR_TYPE

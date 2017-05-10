@@ -134,7 +134,6 @@ subroutine UNIVERSAL_CLOUD_TYPE()
   integer (kind=int1), dimension(:,:), pointer:: Cloud_Mask
   integer (kind=int1), dimension(:,:), pointer:: Cloud_Phase
   integer (kind=int1), dimension(:,:), pointer:: Cloud_Type
-  integer (kind=int1), dimension(:,:,:), pointer:: Cloud_Test_Vector_Packed
   integer (kind=int1), dimension(:), pointer:: Channel_On_Flag
   real (kind=real4), dimension(:,:), pointer:: Ref_16um
   real (kind=real4), dimension(:,:), pointer:: Ref_375um
@@ -241,7 +240,7 @@ subroutine UNIVERSAL_CLOUD_TYPE()
      ! Determine if a non-cloud type has been determined in the
      ! cloud mask, if so, set the type flag and exit
      !-------------------------------------------------------------
-     Fire_Flag = BTEST(Cloud_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
+     Fire_Flag = BTEST(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx), 7)
      if (Fire_Flag == sym%YES) then
         Cloud_Type(Elem_Idx,Line_Idx) = sym%FIRE_TYPE
         Cloud_Phase(Elem_Idx,Line_Idx) = sym%UNKNOWN_PHASE
@@ -502,12 +501,12 @@ subroutine UNIVERSAL_CLOUD_TYPE()
      if (Cloud_Mask(Elem_Idx,Line_Idx) == sym%CLEAR .or. &
         Cloud_Mask(Elem_Idx,Line_Idx) == sym%PROB_CLEAR) then
 
-        if (ibits(Cloud_Test_Vector_Packed(2,Elem_Idx,Line_Idx),4,1) == 1) then
+        if (ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),4,1) == 1) then
             Cloud_Type(Elem_Idx,Line_Idx) = sym%SMOKE_TYPE
             cycle    
         endif
  
-        if (ibits(Cloud_Test_Vector_Packed(2,Elem_Idx,Line_Idx),5,1) == 1)  then
+        if (ibits(Cld_Test_Vector_Packed(2,Elem_Idx,Line_Idx),5,1) == 1)  then
             Cloud_Type(Elem_Idx,Line_Idx) = sym%DUST_TYPE
             cycle
         endif

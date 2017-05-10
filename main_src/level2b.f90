@@ -134,7 +134,7 @@ module LEVEL2B_ROUTINES
  contains
 
 !====================================================================
-! subroutine Name: REGRID
+! SUBROUTINE Name: REGRID
 !
 ! Function: 
 !       routines to remap data to a regular lat,lon grid
@@ -218,7 +218,7 @@ Iline_Output = Missing_Value_Int4
 
 Max_Allowable_Distance = 1.0*sqrt(dlat**2 + dlon**2)
 
-allocate(Min_Dist_Grid(Nlon,Nlat))
+ALLOCATE(Min_Dist_Grid(Nlon,Nlat))
 Min_Dist_Grid = big_number
 
 do Ielem = 1, nx
@@ -330,7 +330,7 @@ do Ielem = 1, nx
   end do
 end do
 
-deallocate(Min_Dist_Grid)
+DEALLOCATE(Min_Dist_Grid)
 !--- make grid lat and lons
   do Ilat = 1, Nlat
     do Ilon = 1, Nlon
@@ -346,7 +346,7 @@ deallocate(Min_Dist_Grid)
   end subroutine REGRID
 
 !====================================================================
-! subroutine Name: indices_to_position
+! SUBROUTINE Name: indices_to_position
 !
 ! Function: 
 !       Converts grid indicies to lat/lon position
@@ -384,7 +384,7 @@ subroutine indices_to_position(Ilat,Ilon, lat, lon,  &
 end subroutine indices_to_position
 
 !====================================================================
-! subroutine Name: POSITION_TO_INDICES
+! SUBROUTINE Name: POSITION_TO_INDICES
 !
 ! Function: 
 !       Converts lat/lon position to grid indicies 
@@ -456,7 +456,7 @@ end subroutine POSITION_TO_INDICES
 
 
 !---------------------------------------------------------------
-! subroutine Name: DEFINE_SDS
+! SUBROUTINE Name: DEFINE_SDS
 !
 ! Function:
 !       Define the SDS's of the Level 2b file
@@ -510,7 +510,7 @@ subroutine DEFINE_SDS_RANK1(Sd_Id,            &
 
   end subroutine DEFINE_SDS_RANK1
 !---------------------------------------------------------------
-! subroutine Name: DEFINE_SDS_RANK2
+! SUBROUTINE Name: DEFINE_SDS_RANK2
 !
 ! Function:
 !       Define the SDS's of the Level 2b file
@@ -575,7 +575,7 @@ subroutine DEFINE_SDS_RANK2(Sd_Id,            &
 
   end subroutine DEFINE_SDS_RANK2
 !---------------------------------------------------------------
-! subroutine Name: DEFINE_SDS_RANK3
+! SUBROUTINE Name: DEFINE_SDS_RANK3
 !
 ! Function:
 !       Define the SDS's of the Level 2b file
@@ -642,7 +642,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
   end subroutine DEFINE_SDS_RANK3
 !------------------------------------------------------------------------------------------------
-! subroutine Name: READ_SDS_RANK1
+! SUBROUTINE Name: READ_SDS_RANK1
 !
 ! Function:
 !     Reads 1dimensional SDSs from Level 2b files. 
@@ -726,7 +726,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: READ_SDS_RANK2
+! SUBROUTINE Name: READ_SDS_RANK2
 !
 ! Function:
 !     Reads 2-dimensional SDSs from Level 2b files. 
@@ -814,7 +814,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
    end subroutine READ_SDS_RANK2
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: READ_SDS_RANK3
+! SUBROUTINE Name: READ_SDS_RANK3
 !
 ! Function:
 !     Reads 3-dimensional SDSs from Level 2b files and reshape to 2 dimensions
@@ -900,7 +900,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
    end subroutine READ_SDS_RANK3
 !------------------------------------------------------------------------------------------------
-! subroutine Name: UNSCALE_SDS_RANK1
+! SUBROUTINE Name: UNSCALE_SDS_RANK1
 !
 ! Function:
 !     Unscales scaled SDS data from level2b files
@@ -931,7 +931,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
    end subroutine UNSCALE_SDS_RANK1
 !------------------------------------------------------------------------------------------------
-! subroutine Name: UNSCALE_SDS_RANK2
+! SUBROUTINE Name: UNSCALE_SDS_RANK2
 !
 ! Function:
 !     Unscales scaled SDS data from level2b files
@@ -963,7 +963,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
    end subroutine UNSCALE_SDS_RANK2
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: UNSCALE_SDS_RANK3
+! SUBROUTINE Name: UNSCALE_SDS_RANK3
 !
 ! Function:
 !     Unscales scaled SDS data from level2b files
@@ -992,7 +992,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
    end subroutine UNSCALE_SDS_RANK3
 !------------------------------------------------------------------------------------------------
-! subroutine Name: SCALE_SDS_RANK1
+! SUBROUTINE Name: SCALE_SDS_RANK1
 !
 ! Function:
 !     Scales unscaled SDS data from level2b files
@@ -1027,7 +1027,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
    end subroutine SCALE_SDS_RANK1
 !------------------------------------------------------------------------------------------------
-! subroutine Name: SCALE_SDS_RANK2
+! SUBROUTINE Name: SCALE_SDS_RANK2
 !
 ! Function:
 !     Scales unscaled SDS data from level2b files
@@ -1063,7 +1063,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
    end subroutine SCALE_SDS_RANK2
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: SCALE_SDS_RANK3
+! SUBROUTINE Name: SCALE_SDS_RANK3
 !
 ! Function:
 !     Scales unscaled SDS data from level2b files
@@ -1100,7 +1100,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 
 
 !-----------------------------------------------------------------------------
-! subroutine Name: WRITE_SDS_RANK1
+! SUBROUTINE Name: WRITE_SDS_RANK1
 !
 ! Function:
 !     Write 1 dimensional data to a HDF file
@@ -1159,7 +1159,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
    end subroutine WRITE_SDS_RANK1
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: WRITE_SDS_RANK2
+! SUBROUTINE Name: WRITE_SDS_RANK2
 !
 ! Function:
 !     Write 2 dimensional data to a HDF file
@@ -1214,7 +1214,7 @@ subroutine DEFINE_SDS_RANK3(Sd_Id,            &
 end subroutine WRITE_SDS_RANK2
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: WRITE_SDS_RANK3
+! SUBROUTINE Name: WRITE_SDS_RANK3
 !
 ! Function:
 !     Write 3 dimensional data to a HDF file
@@ -1270,7 +1270,7 @@ end subroutine WRITE_SDS_RANK2
 end subroutine WRITE_SDS_RANK3
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: COPY_GLOBAL_ATTRIBUTES
+! SUBROUTINE Name: COPY_GLOBAL_ATTRIBUTES
 !
 ! Function:
 !    Copies the global attributes from one file and puts them in a different file
@@ -1348,7 +1348,7 @@ subroutine COPY_GLOBAL_ATTRIBUTES(Sd_Id_Input,Sd_Id_Output)
    end subroutine 
 
 !------------------------------------------------------------------------------------------------
-! subroutine Name: SUBSET_LEVEL2b
+! SUBROUTINE Name: SUBSET_LEVEL2b
 !
 ! Function:
 !    Reads in a level-2b file and then write out a subset of it
@@ -1610,20 +1610,20 @@ subroutine COPY_GLOBAL_ATTRIBUTES(Sd_Id_Input,Sd_Id_Output)
 ! taken from:
 ! http://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fSEED.html
 !----------------------------------------------------------------------
-  subroutine init_random_seed()
-            integer :: i, n, clock
-            integer, DIMENSION(:), ALLOCATABLE :: seed
+  SUBROUTINE init_random_seed()
+            INTEGER :: i, n, clock
+            INTEGER, DIMENSION(:), ALLOCATABLE :: seed
           
-            call RANDOM_SEED(size = n)
-            allocate(seed(n))
+            CALL RANDOM_SEED(size = n)
+            ALLOCATE(seed(n))
           
-            call SYSTEM_CLOCK(COUNT=clock)
+            CALL SYSTEM_CLOCK(COUNT=clock)
           
             seed = clock + 37 * (/ (i - 1, i = 1, n) /)
-            call RANDOM_SEED(PUT = seed)
+            CALL RANDOM_SEED(PUT = seed)
           
-            deallocate(seed)
-  end subroutine init_random_seed
+            DEALLOCATE(seed)
+  END SUBROUTINE init_random_seed
 !--------------------------------------------------------------------
 ! File Search - similar to IDL
 !--------------------------------------------------------------------
@@ -1945,7 +1945,7 @@ subroutine WRITE_SCALING_ATTRIBUTES(Sds,Istatus_Sum)
      !--- determined if a scaled Sds, if so write needed attributes for scaling
      if (Sds%Scaling_Type > 0) then
 
-      Istatus_Sum = sfsnatt(Sds%Id_Output, "unscaled_missing", DFNT_FLOAT32, 1, Sds%Unscaled_Missing) + Istatus_Sum
+!      Istatus_Sum = sfsnatt(Sds%Id_Output, "actual_missing", DFNT_FLOAT32, 1, Sds%Unscaled_Missing) + Istatus_Sum
       Istatus_Sum = sfsnatt(Sds%Id_Output, "actual_range", DFNT_FLOAT32, 2, Sds%Actual_Range) + Istatus_Sum
       if (Sds%Data_Type == DFNT_INT8) then
          Istatus_Sum = sfsnatt(Sds%Id_Output, "valid_range", Sds%Data_Type, 2, int(Sds%valid_range,kind=int1)) + Istatus_Sum
@@ -2012,7 +2012,7 @@ subroutine READ_SCALING_ATTRIBUTES(Sds,Istatus)
 
 
     if (Sds%Scaling_Type /= sym%NO_SCALING) then
-       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"unscaled_missing"), Sds%Unscaled_Missing)
+       Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_missing"), Sds%Unscaled_Missing)
        Istatus = sfrnatt(Sds%Id_Input, sffattr(Sds%Id_Input,"actual_range"), Sds%Actual_Range)
     endif
 

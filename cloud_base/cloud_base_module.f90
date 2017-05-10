@@ -59,7 +59,7 @@ module CLOUD_BASE
 ! modification history
 !
 !------------------------------------------------------------------------------
-  subroutine CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
+  subroutine CLOUD_BASE_ALGORITHM(Input, Symbol, Output)
 
   !===============================================================================
   !  Argument Declaration
@@ -68,9 +68,6 @@ module CLOUD_BASE
   type(symbol_acha), intent(inout) :: Symbol
   type(acha_input_struct), intent(inout) :: Input
   type(acha_output_struct), intent(inout) :: Output
-  type(acha_diag_struct), intent(inout), optional :: Diag
-  integer, save:: Diag_Warning_Flag = 0
-
 
   !===============================================================================
   !  Pixel level RTM structure
@@ -112,15 +109,6 @@ module CLOUD_BASE
    Output%Zc_Base = MISSING_VALUE_REAL
    Output%Pc_Top = MISSING_VALUE_REAL
    Output%Pc_Base = MISSING_VALUE_REAL
-
-   !--- initialize diagnostic output
-   if (present(Diag) .and. Diag_Warning_Flag == 0) then
-      print *, "CLAVR-x / Cloud Base ===>  Diagnostic Output Turned On"
-      Diag_Warning_Flag = 1
-   endif
-   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
-   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
-   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
 
    !--------------------------------------------------------------------------
    ! loop over pixels in scanlines
@@ -247,11 +235,7 @@ module CLOUD_BASE
 
 
 !  Compute cloud base
-!old     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10000.0) then
-!ynoh (cira/csu)
-     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0) then
-!ynoh (cira/csu)
-!
+     if (Cloud_Type == symbol%CIRRUS_TYPE .and. Input%Tau(Elem_Idx,Line_Idx) < 1.0 .and. Input%Zc(Elem_Idx,Line_Idx)  > 10000.0) then
        Output%Zc_Base(Elem_Idx,Line_Idx) = min(Input%Zc(Elem_Idx,Line_Idx), &
                                            max(Zc_Base_Min,  &
                                            Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness))
@@ -259,18 +243,11 @@ module CLOUD_BASE
        if (Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness < Zc_Base_Min)  Output%Zc_Base_Qf(Elem_Idx,Line_Idx) = 2
        if (Output%Zc_Top(Elem_Idx,Line_Idx) - Cloud_Geometrical_Thickness >= Input%Zc(Elem_Idx,Line_Idx))  Output%Zc_Base_Qf(Elem_Idx,Line_Idx) = 4
      else
-
-!-------------
-!ynoh (cira/csu)
-! no Cloud Type input
        if (Input%Zc(Elem_Idx,Line_Idx) > 0 .and. (Input%CWP(Elem_Idx,Line_Idx)  > 0 .or. Input%CWP_nwp(Elem_Idx,Line_Idx) > 0)) then
          call CIRA_base_hgt(Input%Zc(Elem_Idx,Line_Idx),Input%CWP(Elem_Idx,Line_Idx), Input%CWP_NWP(Elem_Idx,Line_Idx) ,&
-              Input%CCL(Elem_Idx,Line_Idx),Input%Surface_Elevation(Elem_Idx,Line_Idx), &
+              Cloud_Type,Input%CCL(Elem_Idx,Line_Idx),Input%Surface_Elevation(Elem_Idx,Line_Idx), &
               Cloud_Geometrical_Thickness_eff,Output%Zc_Base(Elem_Idx,Line_Idx),Output%Zc_Base_Qf(Elem_Idx,Line_Idx))
        endif
-!ynoh (cira/csu)
-!-------------
-
      endif 
 
        ! compute Pc_Base from Zc_Base
@@ -285,9 +262,6 @@ module CLOUD_BASE
  end do Element_Loop
 
 end do Line_Loop
-
-!Diag%Array_1 = Output%Pc_Base
-!Diag%Array_2 = Output%Zc_Base
 
 end subroutine CLOUD_BASE_ALGORITHM
 
@@ -404,16 +378,10 @@ end subroutine NULL_PIX_POINTERS
 !-----------------------------------------------------------------
 ! CIRA's base code, interpret from IDL codes 
 !-----------------------------------------------------------------
-!ynoh (cira/csu)
-subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base,cbh_qf)
-!ynoh (cira/csu)
+subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,Cloud_Type,CCL,Surf_Elev,Cloud_Geometrical_Thickness,Zc_base,cbh_qf)
 
   real(kind=real4), intent(in) :: Zc,Cwp,Cwp_nwp,CCL,Surf_Elev
-
-!ynoh (cira/csu)
-!  integer,intent(in) :: Cloud_Type
-!ynoh (cira/csu)
-
+  integer,intent(in) :: Cloud_Type
   real(kind=real4), intent(out) :: Cloud_Geometrical_Thickness,Zc_base
   integer(kind=int1),intent(out) :: cbh_qf
 
@@ -430,10 +398,7 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thicknes
   real,parameter :: mincbh = 0.0, maxcbh = 20.0*1000
   integer, dimension(5) :: qf
  ! integer :: cbh_qf
-
-!ynoh (cira/csu)
-!  integer :: statusflag,status_below_sfc,status_high_top
-!ynoh (cira/csu)
+  integer :: statusflag,status_below_sfc,status_high_top
 
 !                      min cth       ;slope         y-int          r2      n    median CWP
   regr_coeff(1,:,1) = [0.00000,      2.25812,     0.405590,    0.0236532, 5921., 0.0710000]
@@ -457,13 +422,9 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thicknes
 
   qf = [0,1,2,3,4]
   cbh_qf = qf(1)
-
-
-!ynoh (cira/csu)
-!  statusflag = 0
-!  status_below_sfc = -1
-!  status_high_top = -2
-!ynoh (cira/csu)
+  statusflag = 0
+  status_below_sfc = -1
+  status_high_top = -2
 
 ! start retrieval
        Zc_local = Zc/1000.
@@ -471,10 +432,12 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thicknes
        Cwp_nwp_local = Cwp_nwp/1000.
 
 ! force large cwp to cap at 1.2 kg/m2
-       if (Zc_local > 20.0)    Zc_local = 20.0
        if (CWP_local > 1.2)    CWP_local = 1.2
+       if (Zc_local > 20.0)    Zc_local = 20.0
        if (Cwp_nwp_local > 1.2) Cwp_nwp_local = 1.2
+
        if (Cwp_local < 0 .and. Cwp_nwp_local > 0) Cwp_local = Cwp_nwp_local
+
 
        zdelta = 2.0
        ibin = floor(Zc_local)/floor(zdelta)+1
@@ -490,23 +453,21 @@ subroutine CIRA_base_hgt(Zc,Cwp,Cwp_nwp,CCL,Surf_Elev,Cloud_Geometrical_Thicknes
        Cloud_Geometrical_Thickness = slope*CWP_local+yint
        Cloud_Geometrical_Thickness = Cloud_Geometrical_Thickness*1000.
 
-!ynoh (cira/csu)
-!       if (Cloud_Geometrical_Thickness > Zc_local*1000) statusflag = status_below_sfc
-!ynoh (cira/csu)
+       if (Cloud_Geometrical_Thickness > Zc_local*1000) statusflag = status_below_sfc
 
        Zc_Base = Zc_local*1000-Cloud_Geometrical_Thickness
 
-!--------
-!ynoh (cira/csu)
-! An adjustment for large cwp greater than 1.0 kg/m2 (no cloud type involved)            
-! updated for a smooth transition (20170109)
-    if ( CCL > Surf_Elev .and. CCL < Zc_Base ) then
-       if ( Cwp_local >= 1.2 ) Zc_Base = CCL
-       if ( Cwp_local >= 1.0 .and. Cwp_local < 1.2 ) &                 
-            Zc_Base = Zc_Base + (CCL-Zc_Base)*( (Cwp_local-1.0)/(1.2-1.0) )                    
-    endif
-!ynoh (cira/csu)
-!--------
+! adjustment based on cloud type
+! type 9 is overshooting
+       if (Cloud_Type == 9 .and. CCL > 0.0 .and. CCL < Zc_Base) then
+           if (Zc_Base < Zc_local*1000 .and. Zc_Base > 2000. .and. Cloud_Geometrical_Thickness > 9000.) then
+               Zc_Base = CCL
+           endif
+
+           if (Zc_local < 10000./1000 .and. Cloud_Geometrical_Thickness > 8000.) then
+               Zc_Base = CCL
+           endif
+       endif
 
 ! apply quality flag
        if (Zc_Base < Surf_Elev) then

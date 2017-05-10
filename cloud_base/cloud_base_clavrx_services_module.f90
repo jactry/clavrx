@@ -84,12 +84,6 @@ module CLOUD_BASE_SERVICES
 
  end type acha_input_struct
 
- type, public :: acha_diag_struct
-  real (kind=real4), dimension(:,:), pointer:: Array_1
-  real (kind=real4), dimension(:,:), pointer:: Array_2
-  real (kind=real4), dimension(:,:), pointer:: Array_3
- end type acha_diag_struct
-
  !---RTM and NWP pixel level structure
  type, public :: acha_rtm_nwp_struct
 

@@ -1,4 +1,3 @@
-!$Id: baseline_cloud_mask_thresholds.inc 1887 2016-11-24 20:03:09Z wstraka $
 !----------------------------------------------------------------------
 !--- parametes to control some internal computations (LRC and NWC)
 !----------------------------------------------------------------------

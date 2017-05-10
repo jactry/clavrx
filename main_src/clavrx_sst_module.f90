@@ -36,7 +36,7 @@
 module CLAVRX_SST_MODULE
 use CONSTANTS
 use PIXEL_COMMON, only: ch, sensor, geo, sfc, Bad_Pixel_Mask, Sst_Unmasked, Sst_Masked,  &
-                        CLDMASK
+                        Cld_Mask
 use ALGORITHM_CONSTANTS
 
 implicit none
@@ -131,8 +131,6 @@ select case (Sensor%WMO_Id)
 
       case(259) !GOES-15
 
-      case(270) !GOES-16
-
       case(706) !NOAA-6
 
       case(707) !NOAA-7
@@ -192,7 +190,7 @@ subroutine COMPUTE_MASKED_SST()
 
       Sst_Masked = Sst_Unmasked
 
-      where(CLDMASK%Cld_Mask == sym%Cloudy .or. CLDMASK%Cld_Mask == sym%Prob_Cloudy) 
+      where(Cld_Mask == sym%Cloudy .or. Cld_Mask == sym%Prob_Cloudy) 
               Sst_Masked = MISSING_VALUE_REAL4
       endwhere
 

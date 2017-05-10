@@ -18,12 +18,12 @@ module NB_CLOUD_MASK_SOLAR_RTM
  integer, parameter, private:: ipre = real4
 
  real, parameter, private:: Rayleigh_Optical_Depth_065um = 0.055
- real, parameter, private:: Aerosol_Optical_Depth_065um = 0.12
+ real, parameter, private:: Aerosol_Optical_Depth_065um = 0.1
  real, parameter, private:: Aerosol_Single_Scatter_Albedo_065um = 0.8
  real, parameter, private:: Aerosol_Asymmetry_Parameter = 0.6
  real, dimension(3), parameter, private:: OD_ozone_coef = (/0.000566454,8.25224e-05,1.94007e-08/)
  real, dimension(3), parameter, private:: OD_h2o_coef = (/  0.000044758, 0.00264790,-0.0000713698/)
- real, parameter, private:: dtor = 0.0174533
+ real, parameter, private:: dtor = 57.29578
 
  real, dimension(0:13),parameter, private:: Ch1_Sfc_Alb_Umd = &
                                                       (/0.0500, & !0
@@ -102,8 +102,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
 ! Restrictions:  None
 !
 !====================================================================
- subroutine CLEAR_SKY_TOA_RTM_065UM(Bad_Pixel_Mask, &
-                                    TPW, &
+ subroutine CLEAR_SKY_TOA_RTM_065UM(TPW, &
                                     TOzone, &
                                     Scat_Zen, &
                                     Sat_Zen, &
@@ -113,7 +112,6 @@ module NB_CLOUD_MASK_SOLAR_RTM
                                     Snow_Class, &
                                     Toa_Clear_Sky_Refl)
 
-   integer(kind=int1), dimension(:,:), intent(in):: Bad_Pixel_Mask
    real, dimension(:,:), intent(in):: TPW
    real, dimension(:,:), intent(in):: TOzone
    real, dimension(:,:), intent(in):: Scat_Zen
@@ -144,25 +142,15 @@ module NB_CLOUD_MASK_SOLAR_RTM
    real:: Refl_Sing_Scat_a
    real:: Refl_Sing_Scat_b
    real:: Refl_Sing_Scat_c
-   real:: Refl_Sing_Scat
    real:: OD_ozone
    real:: OD_h2o
    integer:: Elem_Idx,Line_Idx, Num_Elem, Num_Line
 
-   Num_Elem = size(Sol_Zen,1)
    Num_Line = size(Sol_Zen,2)
-
-   !--- initialize to missing
-   TOA_Clear_Sky_Refl = MISSING_VALUE_REAL4
 
    do Elem_Idx = 1, Num_Elem
     do Line_Idx = 1, Num_Line
 
-    !--- skip if bad data
-    if (Bad_Pixel_Mask(ELem_Idx,Line_Idx) == 1) cycle
-
-    !--- skip if night
-    if (Sol_Zen(ELem_Idx,Line_Idx) > 90.0) cycle
 
     !--- compute cosine of scattering angle
     Cos_Scat_Zen = cos(Scat_Zen(Elem_Idx,Line_Idx) * dtor)
@@ -172,21 +160,13 @@ module NB_CLOUD_MASK_SOLAR_RTM
     !-------------------------------------------------------------------------------
     !  Surface Albedo
     !-------------------------------------------------------------------------------
-    if (Sfc_Type(Elem_Idx,Line_Idx) < 0) cycle   !check for missing sfc type
-
-    !--- set to surface-type default value
     Sfc_Alb_Sun = Ch1_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
-
-    !--- if land and white sky is available, use it
-    if (Sfc_Type(Elem_Idx,Line_Idx) > 0 .and. Surface_Reflectance(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
+    if (Surface_Reflectance(Elem_Idx,Line_Idx) /= MISSING_VALUE_REAL4) then
        Sfc_Alb_Sun =  Surface_Reflectance(Elem_Idx,Line_Idx) / 100.0    ! must be between 0 and 1
     endif
-
-    !--- if snow, use precomputed value based on surface type
     if (Snow_Class(Elem_Idx,Line_Idx) > 1) then
          Sfc_Alb_Sun = Ch1_Snow_Sfc_Alb_Umd(Sfc_Type(Elem_Idx,Line_Idx))
     endif
-
     Sfc_Alb_View =  Sfc_Alb_Sun
 
     !-------------------------------------------------------------------------------
@@ -248,9 +228,7 @@ module NB_CLOUD_MASK_SOLAR_RTM
     Refl_Sing_Scat_c = (OD_Iso_Scat_Total / (2.0 * Cos_Sat_Zen)) * &
                         Trans_Iso_Total_Sun * Sfc_Alb_Sun
 
-    Refl_Sing_Scat = 100.0 * (Refl_Sing_Scat_a + Refl_Sing_Scat_b + Refl_Sing_Scat_c)
-
-    TOA_Clear_Sky_Refl(Elem_Idx,Line_Idx) =  Refl_Sing_Scat + 100.0*Transmission_Sing_Scat*Sfc_Alb_View
+    TOA_Clear_Sky_Refl(Elem_Idx,Line_Idx) = 100.0 * (Refl_Sing_Scat_a + Refl_Sing_Scat_b + Refl_Sing_Scat_c)
 
     enddo
    enddo

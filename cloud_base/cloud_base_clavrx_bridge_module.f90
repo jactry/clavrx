@@ -28,15 +28,12 @@ module CLOUD_BASE_CLAVRX_BRIDGE
 
  public :: CLOUD_BASE_BRIDGE
 
- private:: SET_DIAG, NULL_DIAG
-
  !--------------------------------------------------------------------
  ! define structures that will be arguments 
  !--------------------------------------------------------------------
  type(Symbol_acha), private :: Symbol
  type(acha_input_struct), private :: Input
  type(acha_output_struct), private :: Output
- type(acha_diag_struct), private :: Diag
 
  contains
 
@@ -65,14 +62,12 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    !----set Symbols to local values
    call SET_SYMBOL()
 
-   !---- initialize diagnostic structure
-   call SET_DIAG()
-
    !-----------------------------------------------------------------------
    !--- Call algorithm to make cloud geometrical boundaries
    !-----------------------------------------------------------------------
-   call CLOUD_BASE_ALGORITHM(Input, Symbol, Output)
-   !call CLOUD_BASE_ALGORITHM(Input, Symbol, Output, Diag)
+   call CLOUD_BASE_ALGORITHM(Input, &
+                             Symbol, &
+                             Output)
 
    !-----------------------------------------------------------------------
    !--- Null pointers after algorithm is finished
@@ -129,14 +124,6 @@ module CLOUD_BASE_CLAVRX_BRIDGE
      Input%CWP => null()
      Input%CWP_nwp => null()
  end subroutine NULL_INPUT_POINTERS
- !-----------------------------------------------------------------------------
- ! Nullify the pointers holding diagnostic
- !-----------------------------------------------------------------------------
- subroutine NULL_DIAG()
-     Diag%Array_1 =>  null()
-     Diag%Array_2 =>  null()
-     Diag%Array_3 =>  null()
- end subroutine NULL_DIAG
  !-----------------------------------------------------------------------------
  ! Nullify the pointers holding output
  !-----------------------------------------------------------------------------
@@ -254,9 +241,9 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%Surface_Type => Sfc%Sfc_Type
 
    Input%Surface_Elevation => Sfc%Zsfc
-   Input%Cloud_Mask => CLDMASK%Cld_Mask
+   Input%Cloud_Mask => Cld_Mask
    Input%Cloud_Type => Cld_Type
-   Input%Cloud_Probability => CLDMASK%Posterior_Cld_Probability
+   Input%Cloud_Probability => Posterior_Cld_Probability
 
    Input%Elem_Idx_LRC_Input => I_LRC
    Input%Line_Idx_LRC_Input =>  J_LRC
@@ -285,13 +272,5 @@ module CLOUD_BASE_CLAVRX_BRIDGE
    Input%CWP => Cwp_Dcomp
    Input%CWP_nwp => Cwp_Nwp_Pix
  end subroutine SET_INPUT
-!----------------------------------------------------------------------
-!
-!----------------------------------------------------------------------
- subroutine SET_DIAG
-     Diag%Array_1 => Diag_Pix_Array_1 
-     Diag%Array_2 => Diag_Pix_Array_2 
-     Diag%Array_3 => Diag_Pix_Array_3 
- end subroutine SET_DIAG
 
 end module CLOUD_BASE_CLAVRX_BRIDGE

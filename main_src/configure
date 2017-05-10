@@ -158,7 +158,7 @@ my $hdflibs = "-L$opt{hdf4root}/lib"
 
 my $hdfincs = "-I$opt{hdf4root}/include";
 
-my $netcdflibs = "-L$opt{netcdflib}lib -I$opt{netcdflib}include -lnetcdf -lnetcdff";
+my $netcdflibs = "-L$opt{netcdflib}lib -I$opt{netcdflib}include -lnetcdf";
 
 # Inform about HDF5 libraries
 if (exists($opt{'hdf5root'}) || exists($opt{'hdf5-default'})) {
@@ -518,7 +518,7 @@ Command line options:
 
    --netcdflib=<directory>                                                                                                                                                              
          Path to the directory where NetCDF library files are stored.                                                                                                                   
-         Default is /usr/local/netcdf4/lib.
+         Default is /usr/local/netcdf/lib.
 
   --cmask_dir=<directory>
          Path to the directory where bayesian cloud mask files are stored.

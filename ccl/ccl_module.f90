@@ -55,8 +55,6 @@ module CCL_MODULE
   type(ccl_symbol_struct), intent(inout) :: Symbol_In
   type(ccl_output_struct), intent(inout) :: Output
   type(ccl_diag_struct), intent(inout), optional :: Diag
-  integer, save:: Diag_Warning_Flag = 0
-
 
   integer:: Num_Elems
   integer:: Num_Lines
@@ -94,10 +92,6 @@ module CCL_MODULE
   Output%Cloud_Layer = MISSING_VALUE_INTEGER1
 
   !--- initialize diagnostic output
-  if (present(Diag) .and. Diag_Warning_Flag == 0) then
-      print *, "CLAVR-x / CCL ===>  Diagnostic Output Turned On"
-      Diag_Warning_Flag = 1
-  endif
   if (present(Diag)) Diag%Array_1 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_2 = Missing_Value_Real4
   if (present(Diag)) Diag%Array_3 = Missing_Value_Real4
@@ -192,12 +186,6 @@ module CCL_MODULE
          Mask_Temp = 1
          Output%Cloud_Layer = 21
   endwhere
-
-!ynoh (cira/csu) ! for H-M-L cloud layers
-  where (Mask_High == 1 .and. Mask_Mid == 1 .and. Mask_Low == 1)
-         Output%Cloud_Layer = 31
-  endwhere
-!ynoh (cira/csu)
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box

@@ -1328,7 +1328,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "not specified", &
                                "integer classification of the cloud type including clear "// &
                                "and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,"//&
-                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke", &
+                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke,13=fire", &
                                DFNT_INT8, sym%NO_SCALING, Min_Cld_Type, Max_Cld_Type, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
@@ -1353,7 +1353,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "not specified", &
                                "ir integer classification of the cloud type including clear "// &
                                "and aerosol type,0=clear,1=probably clear,2=fog,3=water,4=supercooled water,"//&
-                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke", &
+                               "5=mixed,6=opaque_ice,7=cirrus,8=overlapping,9=overshooting,10=unknown,11=dust,12=smoke,13=fire", &
                                DFNT_INT8, sym%NO_SCALING, Min_Cld_Type, Max_Cld_Type, &
                                "none", Real(Missing_Value_Int1,kind=real4), Istatus)
       Istatus_Sum = Istatus_Sum + Istatus

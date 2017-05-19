@@ -53,8 +53,9 @@ module SIMPLE_COD
       integer, intent(in):: Number_Elements
       integer:: Solzen_Idx, Senzen_Idx, Relaz_Idx, Opd_Idx
       integer:: Read_Table_Error
-      real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
+      real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc, Ref_Toa_Temp
       integer:: Elem_Idx, Line_Idx
+      logical:: Negative_Opd
 
       if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return
 
@@ -95,7 +96,17 @@ module SIMPLE_COD
             Temp_Vector = Alb_Sfc / (1.0 - Alb_Sfc * Spherical_Albedo_Lut)
             Ref_Toa_Vector = (Ref_Vector + Temp_Vector * Transmission_Lut(:,Solzen_Idx)*Transmission_Lut(:,Senzen_Idx))
 
-            call LOCATE(Ref_Toa_Vector, Number_Opd, Ref_Toa, Opd_Idx)
+            !--------------------------------------------------------
+            !handle negative optical depths
+            !--------------------------------------------------------
+            Ref_Toa_Temp = Ref_Toa
+            Negative_Opd = .false.
+            if (Ref_Toa < Ref_Toa_Vector(1)) then
+               Ref_Toa_Temp = Ref_Toa_Vector(1) + (Ref_Toa_Vector(1)-Ref_Toa) 
+               Negative_Opd = .true.
+            endif 
+
+            call LOCATE(Ref_Toa_Vector, Number_Opd, Ref_Toa_Temp, Opd_Idx)
             Opd_Idx = min(Number_Opd-1,max(1,Opd_Idx))
 
             dRef = Ref_Toa_Vector(Opd_Idx+1)-Ref_Toa_Vector(Opd_Idx)
@@ -103,9 +114,13 @@ module SIMPLE_COD
             if (dRef > 0) then
                dOpd_dRef = (Opd_Lut(Opd_Idx+1) - Opd_Lut(Opd_Idx))/dRef
             endif
-            Opd = Opd_Lut(Opd_Idx) + dOpd_dRef * (Ref_Toa - Ref_Toa_Vector(Opd_Idx))
+            Opd = Opd_Lut(Opd_Idx) + dOpd_dRef * (Ref_Toa_Temp - Ref_Toa_Vector(Opd_Idx))
             Opd = min(max(Opd_Lut(1),Opd),Opd_Lut(Number_Opd))
             ch(1)%Opd(Elem_Idx,Line_Idx) = 10.0**Opd
+
+            if (Negative_Opd) then
+               ch(1)%Opd(Elem_Idx,Line_Idx) = Opd_Lut(1) - ch(1)%Opd(Elem_Idx,Line_Idx) 
+           endif
 
          enddo Line_Loop
       enddo Element_Loop
@@ -122,8 +137,9 @@ module SIMPLE_COD
       integer, intent(in):: Number_Elements
       integer:: Solzen_Idx, Senzen_Idx, Relaz_Idx, Opd_Idx
       integer:: Read_Table_Error
-      real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc
+      real:: Ref_Toa, Opd, dRef, dOpd_dRef, Alb_Sfc, Ref_Toa_Temp
       integer:: Elem_Idx, Line_Idx
+      logical:: Negative_Opd
 
       if (Sensor%Chan_On_Flag_Default(44) == sym%NO)  return
       if (Sensor%Chan_On_Flag_Default(1) == sym%NO)  return     !issue - we need ch1 and ch2 white sky
@@ -172,7 +188,17 @@ module SIMPLE_COD
             Temp_Vector = Alb_Sfc / (1.0 - Alb_Sfc * Spherical_Albedo_Lut)
             Ref_Toa_Vector = (Ref_Vector + Temp_Vector * Transmission_Lut(:,Solzen_Idx)*Transmission_Lut(:,Senzen_Idx))
 
-            call LOCATE(Ref_Toa_Vector, Number_Opd, Ref_Toa, Opd_Idx)
+            !--------------------------------------------------------
+            !handle negative optical depths
+            !--------------------------------------------------------
+            Ref_Toa_Temp = Ref_Toa
+            Negative_Opd = .false.
+            if (Ref_Toa < Ref_Toa_Vector(1)) then
+               Ref_Toa_Temp = Ref_Toa_Vector(1) + (Ref_Toa_Vector(1)-Ref_Toa) 
+               Negative_Opd = .true.
+            endif 
+
+            call LOCATE(Ref_Toa_Vector, Number_Opd, Ref_Toa_Temp, Opd_Idx)
             Opd_Idx = min(Number_Opd-1,max(1,Opd_Idx))
 
             dRef = Ref_Toa_Vector(Opd_Idx+1)-Ref_Toa_Vector(Opd_Idx)
@@ -180,9 +206,13 @@ module SIMPLE_COD
             if (dRef > 0) then
                dOpd_dRef = (Opd_Lut(Opd_Idx+1) - Opd_Lut(Opd_Idx))/dRef
             endif
-            Opd = Opd_Lut(Opd_Idx) + dOpd_dRef * (Ref_Toa - Ref_Toa_Vector(Opd_Idx))
+            Opd = Opd_Lut(Opd_Idx) + dOpd_dRef * (Ref_Toa_Temp - Ref_Toa_Vector(Opd_Idx))
             Opd = min(max(Opd_Lut(1),Opd),Opd_Lut(Number_Opd))
             ch(44)%Opd(Elem_Idx,Line_Idx) = 10.0**Opd
+
+            if (Negative_Opd) then
+               ch(44)%Opd(Elem_Idx,Line_Idx) = Opd_Lut(1) - ch(44)%Opd(Elem_Idx,Line_Idx) 
+            endif
 
          enddo Line_Loop
       enddo Element_Loop

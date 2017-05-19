@@ -1316,7 +1316,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "atmosphere_optical_thickness_due_to_cloud_assuming_water_phase", &
                                "cloud optical depth at the nominal wavelength of 0.65 microns, "//&
                                "and water phase with 10 micron particle size determined for cloud mask use", &
-                                DFNT_INT16, sym%LINEAR_SCALING, Min_Tau, Max_Tau, &
+                                DFNT_INT16, sym%LINEAR_SCALING, Min_Tau_Mask, Max_Tau_Mask, &
                                "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -4490,7 +4490,7 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
         endwhere
       endif
 
-      call SCALE_VECTOR_I2_RANK2(Temp_Pix_Array_1,sym%LINEAR_SCALING,Min_Tau,Max_Tau,Missing_Value_Real4,Two_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(Temp_Pix_Array_1,sym%LINEAR_SCALING,Min_Tau_Mask,Max_Tau_Mask,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Cod_Mask), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
                          Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
 

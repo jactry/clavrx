@@ -40,8 +40,9 @@ module MVCM_READ_MODULE
 !------------------------------------------------------------------------------------
 ! Determine the name of the MVCM file for the Level1b file
 !------------------------------------------------------------------------------------
- subroutine DETERMINE_MVCM_NAME()
+ subroutine DETERMINE_MVCM_NAME(Seg_Idx)
 
+  integer, intent(in):: Seg_Idx
   character(len=100):: Search_String
   character(len=1020), dimension(:), pointer:: Files
   integer:: Num_Files
@@ -68,7 +69,9 @@ module MVCM_READ_MODULE
 
     Image%Auxiliary_Cloud_Mask_File_Name = Files(1)
 
-    print *, EXE_PROMPT, MVCM_PROMPT, "NASA VIIRS Level1b MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
+    if (Seg_Idx == 1) &
+       print *, EXE_PROMPT, MVCM_PROMPT, "NASA VIIRS Level1b MVCM File Found, ", &
+            trim(Image%Auxiliary_Cloud_Mask_File_Name)
 
   endif
 
@@ -100,11 +103,35 @@ module MVCM_READ_MODULE
 
     Image%Auxiliary_Cloud_Mask_File_Name = Files(1)
 
-    print *, EXE_PROMPT, MVCM_PROMPT, "NASA MODIS Level1b MVCM File Found, ",trim(Image%Auxiliary_Cloud_Mask_File_Name)
+    if (Seg_Idx == 1) &
+       print *, EXE_PROMPT, MVCM_PROMPT, "NASA MODIS Level1b MVCM File Found, ", &
+            trim(Image%Auxiliary_Cloud_Mask_File_Name)
+
 
   endif
 
   !--- SIPS IFF VIIRS Level1b
+  if (index(Image%Level1b_Name,'IFFSVM') == 1) then
+
+    !--- search should be the date and start time (ie. d20130426_t083000
+    !Search_String = 'IFFCMO_npp_'//Image%Level1b_Name(12:28)//'*.hdf'
+    Search_String = 'VCLDMK_snpp_'//Image%Level1b_Name(12:28)//'*.nc'
+
+    Files => FILE_SEARCH(trim(Image%Level1b_Path),trim(Search_String),count=Num_Files)
+
+    if (Num_Files == 0 .or. Num_Files > 1) then
+        print *, EXE_PROMPT, MVCM_PROMPT, "MVCM File Not Found, "
+        return
+    endif
+
+    Image%Auxiliary_Cloud_Mask_File_Name = Files(1)
+
+    if (Seg_Idx == 1) &
+       print *, EXE_PROMPT, MVCM_PROMPT, "IFF-VIIRS Level1b MVCM File Found, ", &
+            trim(Image%Auxiliary_Cloud_Mask_File_Name)
+
+  endif
+
   !--- SIPS IFF MODIS Level1b
 
   

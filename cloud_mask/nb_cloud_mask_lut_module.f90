@@ -461,11 +461,13 @@ end subroutine RESET_NB_CLOUD_MASK_PRIOR_LUT
   !-----------------------------------------------------------------------------------
   subroutine COMPUTE_CORE(Emiss_Tropo,Refl_375um, Refl_160um, Bt_11um_Stddev,Solzen, &
                           Nb_Sfc_Type, Chan_On_11um, Chan_On_375um, Chan_On_160um, &
+                          Oceanic_Glint_Flag, Forward_Scattering_Flag, Solar_Contam_Flag, &
                           Prob_Clear, Prob_Water, Prob_Ice)
 
     real, intent(in):: Emiss_Tropo,Refl_375um, Refl_160um, Bt_11um_Stddev, Solzen
     integer, intent(in):: Nb_Sfc_Type
     integer, intent(in):: Chan_On_11um, Chan_On_375um, Chan_On_160um
+    integer, intent(in)::  Oceanic_Glint_Flag, Forward_Scattering_Flag, Solar_Contam_Flag
     real, intent(out):: Prob_Clear, Prob_Water, Prob_Ice
 
     Prob_Clear = MISSING_VALUE_REAL4
@@ -479,6 +481,12 @@ end subroutine RESET_NB_CLOUD_MASK_PRIOR_LUT
 
         call COMPUTE_DEFAULT_CORE_PROBABILITY(Emiss_Tropo, Bt_11um_Stddev, Nb_Sfc_Type, Prob_Clear, Prob_Water, Prob_Ice)
 
+    endif
+
+
+    !--- under these conditions, stick the default and do nothing else
+    if (Oceanic_Glint_Flag == 1 .or.  Forward_Scattering_Flag == 1 .or. Solar_Contam_Flag == 1) then
+       return
     endif
 
 

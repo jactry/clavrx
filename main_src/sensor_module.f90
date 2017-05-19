@@ -191,11 +191,6 @@ module SENSOR_MODULE
          Image%Start_Time = Start_Time_Tmp
          Image%End_Time = End_Time_Tmp
 
-
-         !---- determine auxilliary cloud mask name
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
-          call DETERMINE_MVCM_NAME()
-         endif
 #else
          PRINT *, "No HDF5 libraries installed, stopping"
          stop
@@ -1119,11 +1114,6 @@ module SENSOR_MODULE
             Ierror = sym%YES
          endif
 
-         !---- determine auxilliary cloud mask name
-         if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK .and. &
-             trim(Image%Auxiliary_Cloud_Mask_File_Name) == "no_file") then 
-          call DETERMINE_MVCM_NAME()
-         endif
       endif
 
 
@@ -1501,6 +1491,7 @@ module SENSOR_MODULE
 
          !--- read auxillary cloud mask
          if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then 
+           call DETERMINE_MVCM_NAME(Segment_Number)
            call READ_MVCM_DATA(Segment_Number)
          endif
 #else
@@ -1519,7 +1510,10 @@ module SENSOR_MODULE
          ! If error reading, then go to next file
          if (Ierror_Level1b /= 0) return
 
+         !---- determine auxilliary cloud mask name and read it
          if (Cloud_Mask_Aux_Flag /= sym%No_AUX_CLOUD_MASK) then
+           if (Segment_Number == 1) print *,'Searching and reading MVCM'
+           call DETERMINE_MVCM_NAME(Segment_Number)
            call READ_MVCM_DATA(Segment_Number)
          endif
 

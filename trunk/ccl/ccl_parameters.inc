@@ -53,3 +53,11 @@
  real, private, parameter:: MISSING_VALUE_REAL4 = -999.0
  real, private, parameter:: MISSING_VALUE_INTEGER1 = -128
  integer, private, parameter:: MISSING_VALUE_INTEGER4 = -999
+
+ !--- flight level
+ integer (kind=int4), parameter:: NUM_FLIGHT_LEVELS = 5
+ integer, private, parameter,dimension(NUM_FLIGHT_LEVELS-1):: FLIGHT_LEVELS = (/24000,18000,10000,5000/)
+
+ logical, private, parameter:: USE_BASE = .true.
+ logical, private, parameter:: USE_LOWER = .false.
+

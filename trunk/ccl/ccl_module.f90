@@ -25,6 +25,42 @@
 !
 ! Public routines used in this MODULE:
 !
+! Cloud Layer Definition
+!
+! Layered Cloud Layer Meanings
+! 00000000 = 0 = Clear
+! 00000001 = 1 = Low
+! 00000010 = 2 = Mid
+! 00000100 = 4 = High
+! 00000101 = 5 = High and Low
+! 00000110 = 6 = High and Mid
+! 00000011 = 3 = Mid and Low
+! 00000111 = 7 = High and Mid and Low
+!
+! to extract
+! to see if low cloud, ibits(layer,0,1)
+! to see if mid cloud, ibits(layer,1,1)
+! to see if high cloud, ibits(layer,2,1)
+!
+! FL Layer Meanings
+! 0 = Clear
+! 1 = SFC - 5 kft
+! 2 = 5 - 10 kft
+! 3 = 10 - 18 kft
+! 4 = 18 - 24 kft
+! 5 = 24  TOA kft
+! 6 = 5+4
+! 7 = 5+4+3
+! 8 = 5+4+3+2
+! 9 = 5+4+3+2+1
+! 10 = 4+3
+! 11 = 4+3+2
+! 12 = 4+3+2+1
+! 13 = 3+2
+! 14 = 3+2+1
+! 15 = 2+1
+
+!
 !--------------------------------------------------------------------------------------
 module CCL_MODULE
 
@@ -61,21 +97,18 @@ module CCL_MODULE
   integer:: Num_Elems
   integer:: Num_Lines
   integer :: i,j                    !pixel indices
-  integer :: i1,i2,j1,j2            !pixel indices of big box
-  integer :: i11,i22,j11,j22        !pixel indices of skipped pixels
-  integer:: N
-  integer:: M
+  integer :: i1,i2,j1,j2            !pixel indices of ccl box
+  integer :: i11,i22,j11,j22        !pixels inices of area which ccl result is valid
+  integer :: ni, nj                 !size of ccl box
+  integer:: N                       !width of ccl box
+  integer:: M                       !width of ccl region
   integer :: Num_Good
   integer :: Num_Cloud
   integer:: Num_High, Num_Mid, Num_Low, Num_Clear, Num_All
   real:: Clear_Fraction
 
-  integer (kind=int1), dimension(:,:), allocatable:: Mask_High
-  integer (kind=int1), dimension(:,:), allocatable:: Mask_Mid
-  integer (kind=int1), dimension(:,:), allocatable:: Mask_Temp
-  integer (kind=int1), dimension(:,:), allocatable:: Mask_Low
-  integer (kind=int1), dimension(:,:), allocatable:: Mask_Clear
-  real (kind=real4), dimension(:,:), allocatable:: Pixel_Uncertainty
+  real (kind=4), dimension(:,:), allocatable:: Pixel_Uncertainty
+  integer (kind=1), dimension(:,:), allocatable:: pos, len      !ibits arguments
 
 
   !-------------------------------------------------------------------------------
@@ -130,11 +163,6 @@ module CCL_MODULE
   !--------------------------------------------------------------------
   Num_Elems = Input%Number_of_Elements
   Num_Lines = Input%Number_of_Lines
-  allocate(Mask_High(Num_Elems, Num_Lines)) 
-  allocate(Mask_Mid(Num_Elems, Num_Lines)) 
-  allocate(Mask_Temp(Num_Elems, Num_Lines)) 
-  allocate(Mask_Low(Num_Elems, Num_Lines))
-  allocate(Mask_Clear(Num_Elems, Num_Lines))
   allocate(Pixel_Uncertainty(Num_Elems, Num_Lines))
 
   !--- make cloud fraction pixel level uncertainty
@@ -146,89 +174,102 @@ module CCL_MODULE
      Pixel_Uncertainty = Input%Cloud_Probability
   endwhere
 
-! do j = 1,Input%Number_of_Lines
-!     do i = 1, Input%Number_of_Elements
-!       if (Input%Cloud_Probability(i,j) < 0.5) THEN
-!         Pixel_Uncertainty(i,j) = Input%Cloud_Probability(i,j)
-!       endif
-!       
-!       if (Input%Cloud_Probability(i,j) >= 0.5) THEN
-!         Pixel_Uncertainty(i,j) = 1.0 - Input%Cloud_Probability(i,j)
-!       endif
-!      
-!     enddo
-! enddo
-
   !------- identify clear and H/M/L pixels
-  Mask_High = 0
-  Mask_Mid = 0
-  Mask_Temp = 0
-  Mask_Low = 0
-  Mask_Clear = 0
+  Output%Cloud_Layer = 0
   where (Input%Pc /= MISSING_VALUE_REAL4 .and. Input%Pc <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
-        Mask_High = 1
-        Output%Cloud_Layer = 3
+        Output%Cloud_Layer = ibset(Output%Cloud_Layer,2) 
   endwhere
-  where (Input%Pc < LOW_CLOUD_MIN_PRESSURE_THRESH .and. Input%Pc > HIGH_CLOUD_MAX_PRESSURE_THRESH)
-         Mask_Mid = 1
-        Output%Cloud_Layer = 2
+  where (Input%Pc /= MISSING_VALUE_REAL4 .and.  & 
+         Input%Pc > HIGH_CLOUD_MAX_PRESSURE_THRESH .and. &
+         Input%Pc < LOW_CLOUD_MIN_PRESSURE_THRESH) 
+         Output%Cloud_Layer = ibset(Output%Cloud_Layer,1) 
   endwhere
   where (Input%Pc >= LOW_CLOUD_MIN_PRESSURE_THRESH)
-         Mask_Low = 1
-        Output%Cloud_Layer = 1
+        Output%Cloud_Layer = ibset(Output%Cloud_Layer,0) !0001
   endwhere
+
+  !--- account for depth of clouds using base
+  if (USE_BASE) then
+    where (ibits(Output%Cloud_Layer,2,1) == 1 .and. Input%Pc_Base > HIGH_CLOUD_MAX_PRESSURE_THRESH)
+         Output%Cloud_Layer = ibset(Output%Cloud_Layer,1)
+    endwhere
+    where (ibits(Output%Cloud_Layer,1,1) == 1 .and. Input%Pc_Base > LOW_CLOUD_MIN_PRESSURE_THRESH)
+         Output%Cloud_Layer = ibset(Output%Cloud_Layer,0) 
+    endwhere
+  endif
+
+  !--- add in lower clouds obscured by higher clouds
+  if (USE_LOWER) then
+    where (Input%Pc_Lower /= MISSING_VALUE_REAL4 .and. Input%Pc_Lower <= HIGH_CLOUD_MAX_PRESSURE_THRESH)
+        Output%Cloud_Layer = ibset(Output%Cloud_Layer,2) 
+    endwhere
+    where (Input%Pc_Lower /= MISSING_VALUE_REAL4 .and.  & 
+           Input%Pc_Lower > HIGH_CLOUD_MAX_PRESSURE_THRESH .and. &
+           Input%Pc_Lower < LOW_CLOUD_MIN_PRESSURE_THRESH) 
+        Output%Cloud_Layer = ibset(Output%Cloud_Layer,1) 
+    endwhere
+    where (Input%Pc_Lower >= LOW_CLOUD_MIN_PRESSURE_THRESH)
+        Output%Cloud_Layer = ibset(Output%Cloud_Layer,0) !0001
+    endwhere
+  endif
+
   where (Input%Cloud_Mask == Symbol%CLEAR .or. Input%Cloud_Mask == Symbol%PROB_CLEAR)
-         Mask_Clear = 1
-         Output%Cloud_Layer = 0
+         Output%Cloud_Layer = 0   !0000
   endwhere 
-
-  !--- add in obscured clouds
-  where (Mask_High == 1 .and. Input%Pc_Base > HIGH_CLOUD_MAX_PRESSURE_THRESH)
-         Mask_Mid = 1
-         Output%Cloud_Layer = 12
-  endwhere
-  where (Mask_Mid == 1 .and. Input%Pc_Base > LOW_CLOUD_MIN_PRESSURE_THRESH)
-         Mask_Low = 1
-         Mask_Temp = 1
-         Output%Cloud_Layer = 21
-  endwhere
-
-!ynoh (cira/csu) ! for H-M-L cloud layers
-  where (Mask_High == 1 .and. Mask_Mid == 1 .and. Mask_Low == 1)
-         Output%Cloud_Layer = 31
-  endwhere
-!ynoh (cira/csu)
 
  !--------------------------------------------------------------------
  ! compute pixel-level cloud cover for each layer over the box
+ ! N = ccl box size
+ ! M = ccl result spacing
  !--------------------------------------------------------------------
 
- line_loop_cover: DO j = 1, Num_Lines, 2*M+1
+ line_loop_cover: do j = 1, Num_Lines, 2*M+1
 
     j1 = max(1,j-N)
     j2 = min(Num_Lines,j+N)
     j11 = max(1,j-M)
     j22 = min(Num_Lines,j+M)
 
-    element_loop_cover: DO i = 1, Num_Elems, 2*M+1
+    element_loop_cover: do i = 1, Num_Elems, 2*M+1
 
       i1 = max(1,i-N)
       i2 = min(Num_Elems,i+N)
       i11 = max(1,i-M)
       i22 = min(Num_Elems,i+M)
 
+      ni = i2 - i1 + 1 
+      nj = i2 - i1 + 1 
+
+      if (allocated(pos)) deallocate(pos)
+      if (allocated(len)) deallocate(len)
+
+      allocate(pos(ni,nj), len(ni,nj))
+      len = 1
+     
       !--- check for a bad pixel pixel
       if (Input%Invalid_Data_Mask(i,j) == Symbol%YES) cycle
 
-      !--- count all of the pixels in each layer
-      Num_High = int(sum(real(Mask_High(i1:i2,j1:j2))))
-      Num_Mid = int(sum(real(Mask_Mid(i1:i2,j1:j2))))
-      Num_Low = int(sum(real(Mask_Low(i1:i2,j1:j2))))
-      Num_Clear = int(sum(real(Mask_Clear(i1:i2,j1:j2))))
+      !-- High
+      pos = 2
+      Num_High = int(sum(real(ibits(Output%Cloud_Layer(i1:i2,j1:j2),pos,len))))
+
+      !-- Mid
+      pos = 1
+      Num_Mid = int(sum(real(ibits(Output%Cloud_Layer(i1:i2,j1:j2),pos,len))))
+
+      !-- Low
+      pos = 0
+      Num_Low = int(sum(real(ibits(Output%Cloud_Layer(i1:i2,j1:j2),pos,len))))
+
+
+      Num_Clear = count(Input%Cloud_Probability(i1:i2,j1:j2) < 0.5 .and. &
+                        Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL4)         
       Num_Cloud = count(Input%Cloud_Probability(i1:i2,j1:j2) >= 0.5)        
       Num_Good = count(Input%Cloud_Probability(i1:i2,j1:j2) /= MISSING_VALUE_REAL4)        
-      !Num_All = Num_High + Num_Mid + Num_Low + Num_Clear
       Num_All = Num_Cloud + Num_Clear
+
+
+      !print *, "test ", Num_High, Num_Mid, Num_Low, Num_Clear, Num_Cloud, Num_Good, Num_All
 
       !--- see if there are any valid mask points, if not skip this pixel
       if (Num_Good < COUNT_MIN_CCL) then
@@ -254,14 +295,11 @@ module CCL_MODULE
 
       !--- Low Cloud Fraction - ignore emissivity calc in ECA
       Output%Low_Cloud_Fraction(i11:i22,j11:j22) = real(Num_Low)/real(Num_All)
+      !print *, "Low Cloud Fraction = ", real(Num_Low)/real(Num_All)
 
     end do element_loop_cover
  end do line_loop_cover
 
- if (allocated(Mask_High)) deallocate(Mask_High)
- if (allocated(Mask_Mid)) deallocate(Mask_Mid)
- if (allocated(Mask_Low)) deallocate(Mask_Low)
- if (allocated(Mask_Clear)) deallocate(Mask_Clear)
  if (allocated(Pixel_Uncertainty)) deallocate(Pixel_Uncertainty)
 
  end subroutine COMPUTE_CLOUD_COVER_LAYERS

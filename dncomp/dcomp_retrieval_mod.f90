@@ -154,8 +154,8 @@ contains
          case ( 4)
             channels = [6,20]   
          case default
-           print*,'this mode is not set stop'
-           stop
+           
+           stop 'this mode is not set stop'
       end select 
       
       debug_mode = 0

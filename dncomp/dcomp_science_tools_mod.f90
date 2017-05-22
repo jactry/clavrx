@@ -132,9 +132,8 @@ contains
       solar = 4.8461549
       ew = 306.29122     
    case default
-      print*,'missing sensor calibration'
-	  print*, 'add to get_rad_refl_factor.f90'
-      stop
+      
+      stop 'missing sensor calibration; add in get_rad_refl_factor.f90' 
    end select 	
    
    
@@ -321,8 +320,8 @@ end function get_rad_refl_factor
 	  
       case default
          print*,'missing sensor calibration for sensor ', sensor
-	      print*, 'add to get_planck_radiance_39um'
-            stop
+	      
+            stop ' stop; add to get_planck_radiance_39um'
       end select 	
 	  
     

@@ -387,8 +387,8 @@ contains
  
          IF (istatus /= 0) THEN
             PRINT "(a,'Error reading sds data from cloud lut files, stopping')",EXE_PROMPT
-            print*,trim(lut_file)
-            STOP
+           
+            stop trim(lut_file)
          END IF
 
 		   !--- Close the lookup table file

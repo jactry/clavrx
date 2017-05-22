@@ -482,7 +482,7 @@ module AWG_CLOUD_HEIGHT
   endif
 
   !--- initialize diagnostic output
-  if ( present(Diag) .and. is_first_segement ) then
+  if ( present(Diag) .and. is_first_segment ) then
       print*, "CLAVR-x / ACHA ===> Diagnostic Output Turned on"
   end if
   
@@ -1982,7 +1982,7 @@ module AWG_CLOUD_HEIGHT
   deallocate(Emiss_Vector)
   deallocate(AKM)
   
-  is_first_segement = .false.
+  is_first_segment = .false.
 
 	end subroutine  AWG_CLOUD_HEIGHT_ALGORITHM
 

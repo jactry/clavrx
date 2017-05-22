@@ -156,13 +156,13 @@ module NWP_COMMON
            TEMPORAL_INTERP_TMPSFC_NWP, &
            COMPUTE_PIXEL_NWP_PARAMETERS
 
- interface CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY
-     module procedure  &
+   interface CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY
+      module procedure  &
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_I1, &
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_I2, &
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_I4, &
          CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY_R4
- end interface
+   end interface
 
    interface INTERPOLATE_NWP
       module procedure  &
@@ -170,226 +170,225 @@ module NWP_COMMON
          INTERPOLATE_NWP_I2, &
          INTERPOLATE_NWP_I4, &
          INTERPOLATE_NWP_R4
-   end interface
-!----------------------------------------------------------------------
-!--- set this parameter to 1 when reading GFS hdf files that have
-!--- x as the first index, not z
-!----------------------------------------------------------------------
-  integer, public, save:: REFORMAT_GFS_ZXY
+      end interface
+   !----------------------------------------------------------------------
+   !--- set this parameter to 1 when reading GFS hdf files that have
+   !--- x as the first index, not z
+   !----------------------------------------------------------------------
+   integer, public, save:: REFORMAT_GFS_ZXY
 
-! NWP array declarations
-  integer (kind=int4), save, public :: npoints, Nlevels_Nwp
-  integer (kind=int4), save, public :: Nlat_Nwp, Nlon_Nwp
-  real (kind=real4),   save, public :: dLat_Nwp, dLon_Nwp
-  real (kind=real4), public :: lat1_Nwp
-  real (kind=real4), public :: lon1_Nwp
-  real (kind=real4), save, public :: missing_Nwp
-  real, public, parameter :: Psfc_max_Nwp = 1100.0
-  real (kind=real8), public, save :: ncep_time_Before
-  real (kind=real8), public, save :: ncep_time_After
-  integer,           dimension(:,:), allocatable, public, save :: Mask_Nwp
-  integer,           dimension(:,:), allocatable, public, save :: bad_Nwp_mask
-  integer,           dimension(:,:), allocatable, public, save :: sfc_type_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Satzen_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Solzen_Nwp
+   ! NWP array declarations
+   integer (kind=int4), save, public :: npoints, Nlevels_Nwp
+   integer (kind=int4), save, public :: Nlat_Nwp, Nlon_Nwp
+   real (kind=real4),   save, public :: dLat_Nwp, dLon_Nwp
+   real (kind=real4), public :: lat1_Nwp
+   real (kind=real4), public :: lon1_Nwp
+   real (kind=real4), save, public :: missing_Nwp
+   real, public, parameter :: Psfc_max_Nwp = 1100.0
+   real (kind=real8), public, save :: ncep_time_Before
+   real (kind=real8), public, save :: ncep_time_After
+   integer,           dimension(:,:), allocatable, public, save :: Mask_Nwp
+   integer,           dimension(:,:), allocatable, public, save :: bad_Nwp_mask
+   integer,           dimension(:,:), allocatable, public, save :: sfc_type_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Satzen_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Solzen_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save, target :: Psfc_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Pmsl_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Zsfc_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp_Before
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp_After
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_uni_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_uni_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: T_Trop_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Z_Trop_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Uth_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Hght500_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Ozone_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Weasd_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: U_Wnd_10m_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: V_Wnd_10m_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Spd_10m_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Dir_10m_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Land_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Sea_Ice_Frac_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Tropo_Level_Nwp
+   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level850_Nwp
+   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level700_Nwp
+   integer (kind=int4), dimension(:,:), allocatable, public, save :: Level500_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Sfc_Level_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Strength_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Base_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Top_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
+   integer (kind=int4), dimension(:,:,:), allocatable, public, save :: Inversion_Level_Profile_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Lifting_Condensation_Level_Height_Nwp !km
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Convective_Condensation_Level_Height_Nwp !km
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Freezing_Level_Height_Nwp !km
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Upper_Limit_Water_Height_Nwp !km
+   real (kind=real4), dimension(:,:), allocatable, public, save :: K_Index_Nwp !K
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Pc_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Sc_Lwp_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Lwp_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Iwp_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Cwp_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Cloud_Fraction_Satellite_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: High_Cloud_Fraction_Satellite_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Mid_Cloud_Fraction_Satellite_Nwp
+   real (kind=real4), dimension(:,:), allocatable, public, save :: Low_Cloud_Fraction_Satellite_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Ncld_Layers_Nwp
+   integer (kind=int1), dimension(:,:), allocatable, public, save :: Cld_Type_Nwp
+   real (kind=real4), dimension(:), allocatable, public, save :: Lat_Nwp
+   real (kind=real4), dimension(:), allocatable, public, save :: Lon_Nwp
+   real (kind=real4), dimension(:), allocatable, target, public, save :: P_Std_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Z_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: T_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, save, public :: Rh_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, save, public :: Ozone_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Tpw_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Clwmr_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: U_Wnd_Prof_Nwp
+   real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: V_Wnd_Prof_Nwp
+   real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_1
+   real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_2
+   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_1
+   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_2
+   real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d
+   real (kind=real4), dimension(:), allocatable, save, public :: temp1d_Nwp
 
-  real (kind=real4), dimension(:,:), allocatable, public, save, target :: Psfc_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Pmsl_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Zsfc_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp_Before
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_Nwp_After
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpair_uni_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tmpsfc_uni_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: T_Trop_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Z_Trop_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: P_Trop_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Rhsfc_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Tpw_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Uth_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Hght500_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Ozone_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Weasd_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: U_Wnd_10m_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: V_Wnd_10m_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Spd_10m_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Wnd_Dir_10m_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Land_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Sea_Ice_Frac_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Tropo_Level_Nwp
-  integer (kind=int4), dimension(:,:), allocatable, public, save :: Level850_Nwp
-  integer (kind=int4), dimension(:,:), allocatable, public, save :: Level700_Nwp
-  integer (kind=int4), dimension(:,:), allocatable, public, save :: Level500_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Sfc_Level_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Strength_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Base_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save ::  Inversion_Top_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Inversion_Level_Nwp
-  integer (kind=int4), dimension(:,:,:), allocatable, public, save :: Inversion_Level_Profile_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Lifting_Condensation_Level_Height_Nwp !km
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Convective_Condensation_Level_Height_Nwp !km
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Freezing_Level_Height_Nwp !km
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Upper_Limit_Water_Height_Nwp !km
-  real (kind=real4), dimension(:,:), allocatable, public, save :: K_Index_Nwp !K
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Pc_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Sc_Lwp_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Lwp_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Iwp_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Cwp_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Cloud_Fraction_Satellite_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: High_Cloud_Fraction_Satellite_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Mid_Cloud_Fraction_Satellite_Nwp
-  real (kind=real4), dimension(:,:), allocatable, public, save :: Low_Cloud_Fraction_Satellite_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Ncld_Layers_Nwp
-  integer (kind=int1), dimension(:,:), allocatable, public, save :: Cld_Type_Nwp
-  real (kind=real4), dimension(:), allocatable, public, save :: Lat_Nwp
-  real (kind=real4), dimension(:), allocatable, public, save :: Lon_Nwp
-  real (kind=real4), dimension(:), allocatable, target, public, save :: P_Std_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Z_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: T_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, save, public :: Rh_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, save, public :: Ozone_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Tpw_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: Clwmr_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: U_Wnd_Prof_Nwp
-  real (kind=real4), dimension(:,:,:), allocatable, target, save, public :: V_Wnd_Prof_Nwp
-  real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_1
-  real (kind=real4), dimension(:,:), allocatable, save, public :: temp2d_Nwp_2
-  real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_1
-  real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d_Nwp_2
-  real (kind=real4), dimension(:,:,:), allocatable, save, public :: temp3d
-  real (kind=real4), dimension(:), allocatable, save, public :: temp1d_Nwp
+   integer(kind=int4), save, public:: nwp_start_hour
+   integer(kind=int4), save, public:: nwp_end_hour
 
-  integer(kind=int4), save, public:: nwp_start_hour
-  integer(kind=int4), save, public:: nwp_end_hour
+   !--- nwp profiles interpolated to the pixel level
+   real (kind=real4), dimension(:), allocatable, public, save :: T_Prof_Nwp_pix
+   real (kind=real4), dimension(:), allocatable, public, save :: Z_Prof_Nwp_pix
 
-!--- nwp profiles interpolated to the pixel level
-  real (kind=real4), dimension(:), allocatable, public, save :: T_Prof_Nwp_pix
-  real (kind=real4), dimension(:), allocatable, public, save :: Z_Prof_Nwp_pix
-
-!--- local parameters
-  real(kind=real4), public, parameter :: P_Trop_Max = 300.0
-  real(kind=real4), public, parameter :: P_Trop_Min = 25.0
-  real(kind=real4), public, parameter :: P_Inversion_Min = 700.0
-  real(kind=real4), public, parameter :: Delta_T_Inversion = 0.0  !05
+   
+   
+   
+   real(kind=real4), public, parameter :: P_Inversion_Min = 700.0
+   real(kind=real4), public, parameter :: Delta_T_Inversion = 0.0  !05
 
 contains
-!-------------------------------------------------------------
-! subroutine QC_NWP()
-!
-! Subroutine to quality control NWP data
-!
-! Check the values of some fields and set Bad_Nwp_Mask
-! accordingly
-!
-! The tests run here are arbitrary but are based on known
-! failures
-!
-!-------------------------------------------------------------
- subroutine QC_NWP()
+   
+   !-------------------------------------------------------------
+   ! subroutine QC_NWP()
+   !
+   ! Subroutine to quality control NWP data
+   !
+   ! Check the values of some fields and set Bad_Nwp_Mask
+   ! accordingly
+   !
+   ! The tests run here are arbitrary but are based on known
+   ! failures
+   !
+   !-------------------------------------------------------------
+   subroutine QC_NWP()
 
-  integer:: Lon_Nwp_Idx, Lat_Nwp_Idx
+      integer:: Lon_Nwp_Idx, Lat_Nwp_Idx
+      
+      
+      
+      where ( P_Trop_Nwp <= 0.0 .or. &
+                     T_Trop_Nwp <= 0.0 .or. &
+                     Zsfc_Nwp > 10000.0 .or. &
+                     Psfc_Nwp > 1500.0 .or. &
+                     Tmpsfc_Nwp > 400.0 .or. &
+                     Tmpsfc_Nwp <= 0.0 )
+                     
+         Bad_Nwp_Mask = sym%YES
+      end where               
 
-  
-  do Lon_Nwp_Idx = 1, Nlon_Nwp
-     do Lat_Nwp_Idx = 1, Nlat_Nwp
+   end subroutine QC_NWP
 
-        if ((P_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0) .or. &
-            (T_Trop_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0) .or. &
-            (Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 10000.0) .or. &
-            (Psfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 1500.0) .or. &
-            (Tmpsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) > 400.0) .or. &
-            (Tmpsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) <= 0.0)) then
+   !----------------------------------------------------------------------
+   ! subroutine COMPUTE_TSFC_NWP(i1,nx,j1,ny,Smooth_Nwp_Opt)
+   !
+   ! compute a pixel level surface temperature from the NWP fields
+   ! and smooth if option chosen
+   !
+   ! i1 = first element index
+   ! nx = number of element indices
+   ! j1 = first element index
+   ! ny = number of element indices
+   ! Smooth_Nwp_Opt = flag to smooth nwp
+   !
+   ! This must be called After MAP_PIXEL_NWP
+   !----------------------------------------------------------------------
+   subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Lines)
+      implicit none
+      integer(kind=int4), intent(in):: Elem_Idx_Start
+      integer(kind=int4), intent(in):: Num_Elements
+      integer(kind=int4), intent(in):: Line_Idx_Start
+      integer(kind=int4), intent(in):: Num_Lines
+      
+      integer(kind=int4) :: Elem_Idx_End
+      integer(kind=int4) :: Line_Idx_End
+      integer(kind=int4) :: Elem_Idx
+      integer(kind=int4) :: Line_Idx
+      real (kind=real4) :: Delta_Zsfc
+      real (kind=real4) :: Delta_Tsfc
+      real (kind=real4) :: Delta_Lapse_Rate
+      real(kind=real4) :: Zsfc_Nwp_Pix
+      integer(kind=int4) :: Ilev_start
+      integer(kind=int4) :: Ilev_end
+      integer(kind=int4) :: Lon_Nwp_Idx
+      integer(kind=int4) :: Lat_Nwp_Idx
+      integer(kind=int4) :: Lon_Nwp_Idx_x
+      integer(kind=int4) :: Lat_Nwp_Idx_x
+      integer(kind=int4) :: Sfc_Level_Idx
 
-            Bad_Nwp_Mask(Lon_Nwp_Idx,Lat_Nwp_Idx) = sym%YES
+      Elem_Idx_End = Elem_Idx_Start + Num_Elements - 1
+      Line_Idx_End = Line_Idx_Start + Num_Lines - 1
 
-        endif
+      do Elem_Idx = Elem_Idx_Start, Elem_Idx_End
+         do Line_Idx = Line_Idx_Start,Line_Idx_End
 
-     enddo
-  enddo
+            if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
+               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
+               cycle
+            end if
 
-end subroutine QC_NWP
+            Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
+            Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
 
-!----------------------------------------------------------------------
-! subroutine COMPUTE_TSFC_NWP(i1,nx,j1,ny,Smooth_Nwp_Opt)
-!
-! compute a pixel level surface temperature from the NWP fields
-! and smooth if option chosen
-!
-! i1 = first element index
-! nx = number of element indices
-! j1 = first element index
-! ny = number of element indices
-! Smooth_Nwp_Opt = flag to smooth nwp
-!
-! This must be called After MAP_PIXEL_NWP
-!----------------------------------------------------------------------
-subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Lines)
+            if (Lon_Nwp_Idx == 0 .or. Lat_Nwp_Idx == 0) then
+               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
+               cycle
+            endif
 
-  integer(kind=int4), intent(in):: Elem_Idx_Start
-  integer(kind=int4), intent(in):: Num_Elements
-  integer(kind=int4), intent(in):: Line_Idx_Start
-  integer(kind=int4), intent(in):: Num_Lines
-  integer(kind=int4) :: Elem_Idx_End
-  integer(kind=int4) :: Line_Idx_End
-  integer(kind=int4) :: Elem_Idx
-  integer(kind=int4) :: Line_Idx
-  real (kind=real4) :: Delta_Zsfc
-  real (kind=real4) :: Delta_Tsfc
-  real (kind=real4) :: Delta_Lapse_Rate
-  real(kind=real4) :: Zsfc_Nwp_Pix
-  integer(kind=int4) :: Ilev_start
-  integer(kind=int4) :: Ilev_end
-  integer(kind=int4) :: Lon_Nwp_Idx
-  integer(kind=int4) :: Lat_Nwp_Idx
-  integer(kind=int4) :: Lon_Nwp_Idx_x
-  integer(kind=int4) :: Lat_Nwp_Idx_x
-  integer(kind=int4) :: Sfc_Level_Idx
+            Lon_Nwp_Idx_x = i_Nwp_x(Elem_Idx,Line_Idx)
+            Lat_Nwp_Idx_x = j_Nwp_x(Elem_Idx,Line_Idx)
+            Sfc_Level_Idx = Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)
 
-  Elem_Idx_End = Elem_Idx_Start + Num_Elements - 1
-  Line_Idx_End = Line_Idx_Start + Num_Lines - 1
+            !----------------------------------------------------------------------------------
+            ! modify Tsfc_Nwp_Pix for sub-nwp elevation
+            !
+            !  Zsfc = pixel level elevation in meters
+            !  Zsfc_Nwp = nwp level elevation in km
+            !
+            !----------------------------------------------------------------------------------
+            
+            if (Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
 
-  do Elem_Idx = Elem_Idx_Start, Elem_Idx_End
-    do Line_Idx = Line_Idx_Start,Line_Idx_End
+               !--- assume all surface features are in lowest half of profile
+               Ilev_end = Nlevels_Nwp
+               Ilev_start = Nlevels_Nwp/2
 
-     if (Bad_Pixel_Mask(Elem_Idx,Line_Idx)) then
-             Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
-             cycle
-     endif
+               if ((Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Real4) .and. &
+                  (Sfc%Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4) .and. &
+                  (Lon_Nwp_Idx > 0) .and. &
+                  (Lat_Nwp_Idx > 0) .and. &
+                  (Lon_Nwp_Idx_x > 0) .and. &
+                  (Lat_Nwp_Idx_x > 0) .and. &
+                  (Sfc_Level_Idx > 1)) then
 
-     Lon_Nwp_Idx = i_Nwp(Elem_Idx,Line_Idx)
-     Lat_Nwp_Idx = j_Nwp(Elem_Idx,Line_Idx)
-
-     if (Lon_Nwp_Idx == 0 .or. Lat_Nwp_Idx == 0) then
-             Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Missing_Value_Real4
-             cycle
-     endif
-
-     Lon_Nwp_Idx_x = i_Nwp_x(Elem_Idx,Line_Idx)
-     Lat_Nwp_Idx_x = j_Nwp_x(Elem_Idx,Line_Idx)
-     Sfc_Level_Idx = Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx)
-
-     !----------------------------------------------------------------------------------
-     ! modify Tsfc_Nwp_Pix for sub-nwp elevation
-     !
-     !  Zsfc = pixel level elevation in meters
-     !  Zsfc_Nwp = nwp level elevation in km
-     !
-     !----------------------------------------------------------------------------------
-     if (Sfc%Land(Elem_Idx,Line_Idx) == sym%LAND) then
-
-        !--- assume all surface features are in lowest half of profile
-        Ilev_end = Nlevels_Nwp
-        Ilev_start = Nlevels_Nwp/2
-
-        if ((Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Real4) .and. &
-           (Sfc%Zsfc(Elem_Idx,Line_Idx) /= Missing_Value_Real4) .and. &
-           (Lon_Nwp_Idx > 0) .and. (Lat_Nwp_Idx > 0) .and. (Lon_Nwp_Idx_x > 0) .and. (Lat_Nwp_Idx_x > 0) .and. &
-           (Sfc_Level_Idx > 1)) then
-
-          !--- compute a smooth surface elevation from NWP 
-          Zsfc_Nwp_Pix = INTERPOLATE_NWP( &
+                  !--- compute a smooth surface elevation from NWP 
+                  Zsfc_Nwp_Pix = INTERPOLATE_NWP( &
                        Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx), &
                        Zsfc_Nwp(Lon_Nwp_Idx_x,Lat_Nwp_Idx), &
                        Zsfc_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx_x), &
@@ -397,312 +396,317 @@ subroutine MODIFY_TSFC_NWP_PIX(Elem_Idx_Start,Num_Elements,Line_Idx_Start,Num_Li
                        Lon_Nwp_fac(Elem_Idx,Line_Idx), &
                        Lat_Nwp_fac(Elem_Idx,Line_Idx))
         
-          !--- compute the near surface lapse rate (K/m) 
-          Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
+                  !--- compute the near surface lapse rate (K/m) 
+                  Delta_Lapse_Rate = (T_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
                               - T_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx)) / &
                             (Z_Prof_Nwp(Sfc_Level_Idx,Lon_Nwp_Idx,Lat_Nwp_Idx) &
                             - Z_Prof_Nwp(Sfc_Level_Idx-1,Lon_Nwp_Idx,Lat_Nwp_Idx))
-        else
-          Delta_Lapse_Rate = 0
-        endif
+               else
+                  Delta_Lapse_Rate = 0
+               end if
 
-        !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
-        Delta_Zsfc = Sfc%Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
-        Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
-        Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
+               !--- compute the pertubation to NWP surface temp to account for sub-grid elevation
+               Delta_Zsfc = Sfc%Zsfc(Elem_Idx,Line_Idx) - Zsfc_Nwp_Pix !meters
+               Delta_Tsfc = Delta_Lapse_Rate * Delta_Zsfc       !K
+               Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) = Tsfc_Nwp_Pix(Elem_Idx,Line_Idx) + Delta_Tsfc   !K
 
-     endif
+            end if
 
-    enddo
-  enddo   
+         end do
+      end do   
 
-end subroutine MODIFY_TSFC_NWP_PIX
+   end subroutine MODIFY_TSFC_NWP_PIX
 
-!----------------------------------------------------------------------
-! subroutine COMPUTE_NWP_PARAMETERS(Smooth_Nwp_Opt)
-!
-! compute parameters from NWP fields and smooth if option chosen
-!
-! This must be called After MAP_PIXEL_NWP
-!----------------------------------------------------------------------
-subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
+   !----------------------------------------------------------------------
+   ! subroutine COMPUTE_NWP_PARAMETERS(Smooth_Nwp_Opt)
+   !
+   ! compute parameters from NWP fields and smooth if option chosen
+   !
+   ! This must be called After MAP_PIXEL_NWP
+   !----------------------------------------------------------------------
+   subroutine COMPUTE_PIXEL_NWP_PARAMETERS(Smooth_Nwp_Opt)
 
-  integer(kind=int4), intent(in):: Smooth_Nwp_Opt
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Z_Trop_Nwp,Ztropo_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(P_Trop_Nwp,Ptropo_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Weasd_Nwp,Weasd_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sea_Ice_Frac_Nwp,Sea_Ice_Frac_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tpw_Nwp,Tpw_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ozone_Nwp,Ozone_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(K_Index_Nwp,K_Index_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sc_Lwp_Nwp,Sc_Lwp_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lwp_Nwp,Lwp_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Iwp_Nwp,Iwp_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cwp_Nwp,Cwp_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pc_Nwp,Pc_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cloud_Fraction_Satellite_Nwp,Cfrac_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ncld_Layers_Nwp,Ncld_Layers_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cld_Type_Nwp,Cld_Type_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Spd_10m_Nwp,Wnd_Spd_10m_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Dir_10m_Nwp,Wnd_Dir_10m_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lifting_Condensation_Level_Height_Nwp,LCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Convective_Condensation_Level_Height_Nwp,CCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Strength_Nwp,Inversion_Strength_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Base_Nwp,Inversion_Base_Nwp_Pix,Smooth_Nwp_Opt)
-  call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Top_Nwp,Inversion_Top_Nwp_Pix,Smooth_Nwp_Opt)
+      integer(kind=int4), intent(in):: Smooth_Nwp_Opt
+      
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpsfc_Nwp,Tsfc_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(T_Trop_Nwp,Ttropo_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Z_Trop_Nwp,Ztropo_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(P_Trop_Nwp,Ptropo_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tmpair_Nwp,Tair_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Rhsfc_Nwp,Rh_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Psfc_Nwp,Psfc_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Weasd_Nwp,Weasd_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sea_Ice_Frac_Nwp,Sea_Ice_Frac_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Tpw_Nwp,Tpw_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ozone_Nwp,Ozone_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(K_Index_Nwp,K_Index_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pmsl_Nwp,Pmsl_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Sc_Lwp_Nwp,Sc_Lwp_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lwp_Nwp,Lwp_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Iwp_Nwp,Iwp_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cwp_Nwp,Cwp_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Pc_Nwp,Pc_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cloud_Fraction_Satellite_Nwp,Cfrac_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Ncld_Layers_Nwp,Ncld_Layers_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Cld_Type_Nwp,Cld_Type_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Spd_10m_Nwp,Wnd_Spd_10m_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Wnd_Dir_10m_Nwp,Wnd_Dir_10m_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Lifting_Condensation_Level_Height_Nwp,LCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Convective_Condensation_Level_Height_Nwp,CCL_Height_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Strength_Nwp,Inversion_Strength_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Base_Nwp,Inversion_Base_Nwp_Pix,Smooth_Nwp_Opt)
+      call CONVERT_NWP_ARRAY_TO_PIXEL_ARRAY(Inversion_Top_Nwp,Inversion_Top_Nwp_Pix,Smooth_Nwp_Opt)
 
-end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
+   end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
 
-!-------------------------------------------------------------
-! subroutine MAP_PIXEL_NWP(j1,j2)
-!
-! Subroutine to find nwp cell where each in a segment lies
-!-------------------------------------------------------------
- subroutine MAP_PIXEL_NWP(Number_of_Elements,Number_of_Lines)
+   !-------------------------------------------------------------
+   ! subroutine MAP_PIXEL_NWP(j1,j2)
+   !
+   ! Subroutine to find nwp cell where each in a segment lies
+   !-------------------------------------------------------------
+   subroutine MAP_PIXEL_NWP(Number_of_Elements,Number_of_Lines)
 
-  integer, intent(in):: Number_of_Elements,Number_of_Lines
-  integer:: Elem_Idx,Line_Idx,Ierr
+      integer, intent(in):: Number_of_Elements,Number_of_Lines
+      integer:: Elem_Idx,Line_Idx,Ierr
 
 
-  i_Nwp = Missing_Value_int1
-  j_Nwp = Missing_Value_int1
-  i_Nwp_x = Missing_Value_int1
-  j_Nwp_x = Missing_Value_int1
-  Lon_Nwp_Fac = Missing_Value_Real4
-  Lat_Nwp_Fac = Missing_Value_Real4
+      i_Nwp = Missing_Value_int1
+      j_Nwp = Missing_Value_int1
+      i_Nwp_x = Missing_Value_int1
+      j_Nwp_x = Missing_Value_int1
+      Lon_Nwp_Fac = Missing_Value_Real4
+      Lat_Nwp_Fac = Missing_Value_Real4
 
-  do Line_Idx = 1, Number_of_Lines
-     do Elem_Idx = 1, Number_of_Elements
+      do Line_Idx = 1, Number_of_Lines
+         do Elem_Idx = 1, Number_of_Elements
                                                                                                                                          
-      !--- check for valid geolocation
-      if (Nav%Lon(Elem_Idx,Line_Idx) < -180.0 .or. Nav%Lon(Elem_Idx,Line_Idx) > 180.0 .or. &
-          Nav%Lat(Elem_Idx,Line_Idx) < -90.0 .or. Nav%Lat(Elem_Idx,Line_Idx) > 90.0) then
-          cycle
-      endif 
+            !--- check for valid geolocation
+            if (Nav%Lon(Elem_Idx,Line_Idx) < -180.0 .or. Nav%Lon(Elem_Idx,Line_Idx) > 180.0 .or. &
+               Nav%Lat(Elem_Idx,Line_Idx) < -90.0 .or. Nav%Lat(Elem_Idx,Line_Idx) > 90.0) then
+               
+               cycle
+            endif 
         
-      !--- compute NWP cell to pixel mapping
-      call FIND_NWP_GRID_CELL(Nav%Lon(Elem_Idx,Line_Idx),Nav%Lat(Elem_Idx,Line_Idx), &
+            !--- compute NWP cell to pixel mapping
+            call FIND_NWP_GRID_CELL(Nav%Lon(Elem_Idx,Line_Idx),Nav%Lat(Elem_Idx,Line_Idx), &
                               i_Nwp(Elem_Idx,Line_Idx),j_Nwp(Elem_Idx,Line_Idx), &
                               i_Nwp_x(Elem_Idx,Line_Idx),j_Nwp_x(Elem_Idx,Line_Idx),  &
                               Lon_Nwp_fac(Elem_Idx,Line_Idx), Lat_Nwp_fac(Elem_Idx,Line_Idx),Ierr)
 
-       !-- if there is an error, flag pixel as bad
-      if (Ierr == 1) then
-         i_Nwp(Elem_Idx,Line_Idx) = Missing_Value_int1
-         j_Nwp(Elem_Idx,Line_Idx) = Missing_Value_int1
-         i_Nwp_x(Elem_Idx,Line_Idx) = Missing_Value_int1
-         j_Nwp_x(Elem_Idx,Line_Idx) = Missing_Value_int1
-         Lon_Nwp_fac(Elem_Idx,Line_Idx) = Missing_Value_Real4
-         Lat_Nwp_fac(Elem_Idx,Line_Idx) = Missing_Value_Real4
-         cycle
+            !-- if there is an error, flag pixel as bad
+            if (Ierr == 1) then
+               i_Nwp(Elem_Idx,Line_Idx) = Missing_Value_int1
+               j_Nwp(Elem_Idx,Line_Idx) = Missing_Value_int1
+               i_Nwp_x(Elem_Idx,Line_Idx) = Missing_Value_int1
+               j_Nwp_x(Elem_Idx,Line_Idx) = Missing_Value_int1
+               Lon_Nwp_fac(Elem_Idx,Line_Idx) = Missing_Value_Real4
+               Lat_Nwp_fac(Elem_Idx,Line_Idx) = Missing_Value_Real4
+               cycle
+            end if
+
+         enddo
+      enddo
+
+   end subroutine MAP_PIXEL_NWP
+
+   !------------------------------------------------------------------
+   ! Compute NWP Levels for each NWP Gridcell
+   !
+   ! must be called aftrer MAP_PIXEL_NWP
+   !------------------------------------------------------------------
+   subroutine COMPUTE_NWP_LEVELS_SEGMENT(Number_of_Elements,Number_of_Lines)
+
+      integer, intent(in):: Number_of_Elements
+      integer, intent(in):: Number_of_Lines
+      integer:: Elem_Idx
+      integer:: Line_Idx
+      integer:: Lat_NWP_Idx
+      integer:: Lon_NWP_Idx
+
+      !--- intialize levels to missing
+      Sfc_Level_Nwp = Missing_Value_Int1
+      Tropo_Level_Nwp = Missing_Value_Int1
+      Level850_Nwp = Missing_Value_Int1
+      Level700_Nwp = Missing_Value_Int1
+      Level500_Nwp = Missing_Value_Int1
+
+      !--- loop through each pixel and if the
+      do Line_Idx = 1, Number_of_Lines
+         do Elem_Idx = 1, Number_of_Elements
+
+            !--- alias nwp indices for this nwp cell using predetermined global variables
+            Lon_NWP_Idx = i_Nwp(Elem_Idx,Line_Idx)   
+            Lat_NWP_Idx = j_Nwp(Elem_Idx,Line_Idx)  
+
+            !--- check for valid nwp mapping and data, if not skip
+            if (Lon_NWP_Idx < 1 .or. Lat_Nwp_Idx < 1) cycle
+            if (Bad_Nwp_Mask(Lon_NWP_Idx,Lat_NWP_Idx) == sym%YES) cycle
+
+            !-- if this populated for this nwp cell, skip this pixel
+            if (Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Int1) cycle
+
+            !--- find needed nwp levels for this nwp cell, store in global variables
+            call FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
+
+         end do
+      end do
+
+   end subroutine COMPUTE_NWP_LEVELS_SEGMENT
+
+   !------------------------------------------------------------------
+   ! subroutine FIND_NWP_GRID_CELL(lon, lat, Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, lonfac, latfac, ierror)
+   !
+   ! Subroutine to convert lat, lon into NWP grid-cell
+   !
+   ! input:
+   !   lon - longitude (-180 to 180)
+   !   lat - latitude (-90 to 90)
+   ! output:
+   !   Lat_Nwp_Idx - nwp latitude index of the nearest nwp latitude
+   !   Lon_Nwp_Idx - nwp longitude index of the nearest nwp longitude
+   !   Lat_Nwp_Idxx - nwp latitude index of the nearest nwp latitude diagonal
+   !   Lon_Nwp_Idxx - nwp longitude index of the nearest nwp longitude diagonal
+   !   latfac - latitude weight between Lat_Nwp_Idx(0.0) and Lat_Nwp_Idxx(1.0)
+   !   lonfac - longitude weight between Lon_Nwp_Idx(0.0) and Lon_Nwp_Idxx(1.0)
+   !  
+   !
+   ! imagine a pixel, x, surrounded by nwp vertices (O)
+   !
+   !        O            O            O
+   !                     -   x
+   !
+   !        O            O            O
+   !                                 --- 
+   !
+   !  point O is (Lon_Nwp_Idx,Lat_Nwp_Idx) and O is (Lon_Nwp_Idxx,Lat_Nwp_Idxx)
+   !        -                   ---
+   !
+   ! modified to return information needed to spatially interpolate
+   !------------------------------------------------------------------
+   subroutine FIND_NWP_GRID_CELL(lon, lat, Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, lonfac, latfac, ierror)
+
+      real (kind=real4), intent(in) :: lon, lat
+      integer (kind=int4), intent(out) :: Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, ierror
+      real (kind=real4), intent(out) :: latfac
+      real (kind=real4), intent(out) :: lonfac
+
+      real (kind=real4) :: rlat
+      real (kind=real4) :: rlon
+      real (kind=real4) :: rLon_Nwp
+      real (kind=real4) :: rLon_Nwpx
+      logical :: Is_Dateline
+
+      ierror = 0
+      rlon = lon
+      rlat = lat
+      Is_Dateline = .false.
+
+      !--- convert negative lons to go from 180 to 360 degrees
+      if (rlon < 0.0) then
+         rlon = rlon + 360.0
+      end if
+
+      !--- Find Position in NWP grid
+      if (rlon < 0.0 .or. rlon > 360.0 .or. rlat < -90.0 .or. rlat > 90.0) then
+         ierror = 1
+         Lat_Nwp_Idx = 0
+         Lon_Nwp_Idx = 0
+      else
+         Lat_Nwp_Idx = max(1, min(Nlat_Nwp, nint( (rlat-lat1_Nwp) / dLat_Nwp + 1.0) ))
+         Lon_Nwp_Idx = max(1, min(Nlon_Nwp, nint( (rlon-lon1_Nwp) / dLon_Nwp + 1.0) ))
       endif
 
-     enddo
-  enddo
-
- end subroutine MAP_PIXEL_NWP
-!------------------------------------------------------------------
-! Compute NWP Levels for each NWP Gridcell
-!
-! must be called aftrer MAP_PIXEL_NWP
-!------------------------------------------------------------------
- subroutine COMPUTE_NWP_LEVELS_SEGMENT(Number_of_Elements,Number_of_Lines)
-
-  integer, intent(in):: Number_of_Elements
-  integer, intent(in):: Number_of_Lines
-  integer:: Elem_Idx
-  integer:: Line_Idx
-  integer:: Lat_NWP_Idx
-  integer:: Lon_NWP_Idx
-
-  !--- intialize levels to missing
-  Sfc_Level_Nwp = Missing_Value_Int1
-  Tropo_Level_Nwp = Missing_Value_Int1
-  Level850_Nwp = Missing_Value_Int1
-  Level700_Nwp = Missing_Value_Int1
-  Level500_Nwp = Missing_Value_Int1
-
-  !--- loop through each pixel and if the
-  do Line_Idx = 1, Number_of_Lines
-     do Elem_Idx = 1, Number_of_Elements
-
-      !--- alias nwp indices for this nwp cell using predetermined global variables
-      Lon_NWP_Idx = i_Nwp(Elem_Idx,Line_Idx)   
-      Lat_NWP_Idx = j_Nwp(Elem_Idx,Line_Idx)  
-
-      !--- check for valid nwp mapping and data, if not skip
-      if (Lon_NWP_Idx < 1 .or. Lat_Nwp_Idx < 1) cycle
-      if (Bad_Nwp_Mask(Lon_NWP_Idx,Lat_NWP_Idx) == sym%YES) cycle
-
-      !-- if this populated for this nwp cell, skip this pixel
-      if (Sfc_Level_Nwp(Lon_Nwp_Idx,Lat_Nwp_Idx) /= Missing_Value_Int1) cycle
-
-      !--- find needed nwp levels for this nwp cell, store in global variables
-      call FIND_NWP_LEVELS(Lon_Nwp_Idx,Lat_Nwp_Idx)
-
-     enddo
-  enddo
-
- end subroutine COMPUTE_NWP_LEVELS_SEGMENT
-!------------------------------------------------------------------
-! subroutine FIND_NWP_GRID_CELL(lon, lat, Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, lonfac, latfac, ierror)
-!
-! Subroutine to convert lat, lon into NWP grid-cell
-!
-! input:
-!   lon - longitude (-180 to 180)
-!   lat - latitude (-90 to 90)
-! output:
-!   Lat_Nwp_Idx - nwp latitude index of the nearest nwp latitude
-!   Lon_Nwp_Idx - nwp longitude index of the nearest nwp longitude
-!   Lat_Nwp_Idxx - nwp latitude index of the nearest nwp latitude diagonal
-!   Lon_Nwp_Idxx - nwp longitude index of the nearest nwp longitude diagonal
-!   latfac - latitude weight between Lat_Nwp_Idx(0.0) and Lat_Nwp_Idxx(1.0)
-!   lonfac - longitude weight between Lon_Nwp_Idx(0.0) and Lon_Nwp_Idxx(1.0)
-!  
-!
-! imagine a pixel, x, surrounded by nwp vertices (O)
-!
-!        O            O            O
-!                     -   x
-!
-!        O            O            O
-!                                 --- 
-!
-!  point O is (Lon_Nwp_Idx,Lat_Nwp_Idx) and O is (Lon_Nwp_Idxx,Lat_Nwp_Idxx)
-!        -                   ---
-!
-! modified to return information needed to spatially interpolate
-!------------------------------------------------------------------
-  subroutine FIND_NWP_GRID_CELL(lon, lat, Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, lonfac, latfac, ierror)
-
-    real (kind=real4), intent(in) :: lon, lat
-    integer (kind=int4), intent(out) :: Lon_Nwp_Idx, Lat_Nwp_Idx, Lon_Nwp_Idxx, Lat_Nwp_Idxx, ierror
-    real (kind=real4), intent(out) :: latfac
-    real (kind=real4), intent(out) :: lonfac
-
-    real (kind=real4) :: rlat
-    real (kind=real4) :: rlon
-    real (kind=real4) :: rLon_Nwp
-    real (kind=real4) :: rLon_Nwpx
-    integer:: Is_Dateline
-
-    ierror = 0
-    rlon = lon
-    rlat = lat
-    Is_Dateline = 0
-
-    !--- convert negative lons to go from 180 to 360 degrees
-    if (rlon < 0.0) then
-       rlon = rlon + 360.0
-    endif
-
-    !--- Find Position in NWP grid
-    if (rlon < 0.0 .or. rlon > 360.0 .or. rlat < -90.0 .or. rlat > 90.0) then
-       ierror = 1
-       Lat_Nwp_Idx = 0
-       Lon_Nwp_Idx = 0
-    else
-       Lat_Nwp_Idx = max(1, min(Nlat_Nwp, nint( (rlat-lat1_Nwp) / dLat_Nwp + 1.0) ))
-       Lon_Nwp_Idx = max(1, min(Nlon_Nwp, nint( (rlon-lon1_Nwp) / dLon_Nwp + 1.0) ))
-    endif
-
-    rLon_Nwp = Lon_Nwp(Lon_Nwp_Idx)
-    if (Lon_Nwp(Lon_Nwp_Idx) < 0.0) then
-       rLon_Nwp = rLon_Nwp + 360.0
-    endif
-
-    !---  latitude interpolation information
-    if (Lat_Nwp_Idx > 1 .and. Lat_Nwp_Idx < Nlat_Nwp) then
-      if (sign(1.0,lat-Lat_Nwp(Lat_Nwp_Idx)) == sign(1.0,dLat_Nwp)) then
-         Lat_Nwp_Idxx = Lat_Nwp_Idx + 1
-      else
-         Lat_Nwp_Idxx = Lat_Nwp_Idx - 1
+      rLon_Nwp = Lon_Nwp(Lon_Nwp_Idx)
+      if (Lon_Nwp(Lon_Nwp_Idx) < 0.0) then
+         rLon_Nwp = rLon_Nwp + 360.0
       endif
-      Lat_Nwp_Idxx = min(Nlat_Nwp,max(1,Lat_Nwp_Idxx))
 
-      !--- compute latitude interpolation factor
-      if (Lat_Nwp(Lat_Nwp_Idxx) /= Lat_Nwp(Lat_Nwp_Idx)) then
-         latfac = (lat - Lat_Nwp(Lat_Nwp_Idx))/(Lat_Nwp(Lat_Nwp_Idxx)-Lat_Nwp(Lat_Nwp_Idx))
-      else
-         latfac = 0.0
+      !---  latitude interpolation information
+      if (Lat_Nwp_Idx > 1 .and. Lat_Nwp_Idx < Nlat_Nwp) then
+         if (sign(1.0,lat-Lat_Nwp(Lat_Nwp_Idx)) == sign(1.0,dLat_Nwp)) then
+            Lat_Nwp_Idxx = Lat_Nwp_Idx + 1
+         else
+            Lat_Nwp_Idxx = Lat_Nwp_Idx - 1
+         endif
+         Lat_Nwp_Idxx = min(Nlat_Nwp,max(1,Lat_Nwp_Idxx))
+
+         !--- compute latitude interpolation factor
+         if (Lat_Nwp(Lat_Nwp_Idxx) /= Lat_Nwp(Lat_Nwp_Idx)) then
+            latfac = (lat - Lat_Nwp(Lat_Nwp_Idx))/(Lat_Nwp(Lat_Nwp_Idxx)-Lat_Nwp(Lat_Nwp_Idx))
+         else
+            latfac = 0.0
+         end if
+      
+      end if
+
+      !---- determine dateline flag
+      if (abs(lon - Lon_Nwp(Lon_Nwp_Idx)) > abs(dLon_Nwp)) then
+         Is_Dateline = .true.
+      end if
+
+      !---  longitude interpolation information
+      if (Lon_Nwp_Idx > 1 .and. Lon_Nwp_Idx < Nlon_Nwp) then
+         if (sign(1.0,lon-Lon_Nwp(Lon_Nwp_Idx)) == sign(1.0,dLon_Nwp)) then
+            if (.not. Is_Dateline ) then
+               Lon_Nwp_Idxx = Lon_Nwp_Idx + 1
+            else
+               Lon_Nwp_Idxx = Lon_Nwp_Idx - 1
+            end if
+         else
+            if ( .not. Is_Dateline ) then
+               Lon_Nwp_Idxx = Lon_Nwp_Idx - 1
+            else
+               Lon_Nwp_Idxx = Lon_Nwp_Idx + 1
+            endif
+         endif
       endif
       
-    endif
+      Lon_Nwp_Idxx = min(Nlon_Nwp,max(1,Lon_Nwp_Idxx))
 
-    !---- determine dateline flag
-    if (abs(lon - Lon_Nwp(Lon_Nwp_Idx)) > abs(dLon_Nwp)) then
-       Is_Dateline = 1
-    endif
-
-    !---  longitude interpolation information
-    if (Lon_Nwp_Idx > 1 .and. Lon_Nwp_Idx < Nlon_Nwp) then
-      if (sign(1.0,lon-Lon_Nwp(Lon_Nwp_Idx)) == sign(1.0,dLon_Nwp)) then
-          if (Is_Dateline == 0) then
-            Lon_Nwp_Idxx = Lon_Nwp_Idx + 1
-          else
-            Lon_Nwp_Idxx = Lon_Nwp_Idx - 1
-          endif
-      else
-          if (Is_Dateline == 0) then
-            Lon_Nwp_Idxx = Lon_Nwp_Idx - 1
-          else
-            Lon_Nwp_Idxx = Lon_Nwp_Idx + 1
-          endif
+      !--- make a positive definite value of lon at Lon_Nwp_Idxx
+      rLon_Nwpx = Lon_Nwp(Lon_Nwp_Idxx)
+      if (Lon_Nwp(Lon_Nwp_Idxx) < 0.0) then
+         rLon_Nwpx = rLon_Nwpx + 360.0
       endif
-    endif
-    Lon_Nwp_Idxx = min(Nlon_Nwp,max(1,Lon_Nwp_Idxx))
 
-    !--- make a positive definite value of lon at Lon_Nwp_Idxx
-    rLon_Nwpx = Lon_Nwp(Lon_Nwp_Idxx)
-    if (Lon_Nwp(Lon_Nwp_Idxx) < 0.0) then
-       rLon_Nwpx = rLon_Nwpx + 360.0
-    endif
+      !--- recompute date line flag including Lon_Nwp_Idxx point
+      if (abs(lon - Lon_Nwp(Lon_Nwp_Idx)) > abs(dLon_Nwp)) then
+         Is_Dateline = .true.
+      endif
+      if (abs(lon - Lon_Nwp(Lon_Nwp_Idxx)) > abs(dLon_Nwp)) then
+         Is_Dateline = .true.
+      endif
 
-    !--- recompute date line flag including Lon_Nwp_Idxx point
-    if (abs(lon - Lon_Nwp(Lon_Nwp_Idx)) > abs(dLon_Nwp)) then
-       Is_Dateline = 1
-    endif
-    if (abs(lon - Lon_Nwp(Lon_Nwp_Idxx)) > abs(dLon_Nwp)) then
-       Is_Dateline = 1
-    endif
+      !--- compute longitude interpolation factor
+      if ( .not. Is_Dateline ) then
+         if (Lon_Nwp(Lon_Nwp_Idxx)/=Lon_Nwp(Lon_Nwp_Idx)) then
+            lonfac = (lon - Lon_Nwp(Lon_Nwp_Idx))/(Lon_Nwp(Lon_Nwp_Idxx)-Lon_Nwp(Lon_Nwp_Idx))
+         else
+            lonfac = 0.0
+         endif
+      else
+         if (rLon_Nwp /= rLon_Nwpx) then
+            lonfac = abs((rlon - rLon_Nwp)/(rLon_Nwp-rLon_Nwpx))
+         else
+            lonfac = 0.0
+         endif
+      endif
 
-    !--- compute latitude interpolation factor
-    if (Is_Dateline == 0) then
-       if (Lon_Nwp(Lon_Nwp_Idxx)/=Lon_Nwp(Lon_Nwp_Idx)) then
-          lonfac = (lon - Lon_Nwp(Lon_Nwp_Idx))/(Lon_Nwp(Lon_Nwp_Idxx)-Lon_Nwp(Lon_Nwp_Idx))
-       else
-          lonfac = 0.0
-       endif
-    else
-       if (rLon_Nwp /= rLon_Nwpx) then
-          lonfac = abs((rlon - rLon_Nwp)/(rLon_Nwp-rLon_Nwpx))
-       else
-          lonfac = 0.0
-       endif
-    endif
+      !--- constrain
+      lonfac = min(0.5,max(0.0,lonfac))
+      latfac = min(0.5,max(0.0,latfac))
+      Lon_Nwp_Idxx = min(Nlon_Nwp,max(1,Lon_Nwp_Idxx))
+      Lat_Nwp_Idxx = min(Nlat_Nwp,max(1,Lat_Nwp_Idxx))
 
-    !--- constrain
-    lonfac = min(0.5,max(0.0,lonfac))
-    latfac = min(0.5,max(0.0,latfac))
-    Lon_Nwp_Idxx = min(Nlon_Nwp,max(1,Lon_Nwp_Idxx))
-    Lat_Nwp_Idxx = min(Nlat_Nwp,max(1,Lat_Nwp_Idxx))
-
-  end subroutine FIND_NWP_GRID_CELL
+   end subroutine FIND_NWP_GRID_CELL
 
 
-!----------------------------------------------------------------------------
-! Function INTERPOLATE_NWP
-! 
-! general interpolation routine for nwp fields
-!
+   !----------------------------------------------------------------------------
+   ! Function INTERPOLATE_NWP
+   ! 
+   ! general interpolation routine for nwp fields
+   !
 ! description of arguments
 ! Lon_Nwp_Idx, Lat_Nwp_Idx - nwp indices of closest nwp cell
 ! Lon_Nwp_Idxx,Lat_Nwp_Idxx - nwp indices of nwp cells of diagnoal of bounding box
@@ -745,6 +749,7 @@ end subroutine COMPUTE_PIXEL_NWP_PARAMETERS
          (lonx) * ((1.0-latx) * z2 + (latx)* z4)
   endif
  end function INTERPOLATE_NWP_I4
+ 
  function INTERPOLATE_NWP_I2(z1,z2,z3,z4,lonx,latx) result(z)
   integer(kind=int2), intent(in):: z1
   integer(kind=int2), intent(in):: z2

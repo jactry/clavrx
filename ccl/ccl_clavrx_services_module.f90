@@ -63,6 +63,7 @@ module CCL_SERVICES_MOD
  integer (kind=int1),dimension(:,:), pointer:: Cloud_Type
  real, dimension(:,:), pointer:: Pc
  real, dimension(:,:), pointer:: Pc_Base
+ real, dimension(:,:), pointer:: Pc_Lower
 
  integer (kind=int4), dimension(:,:), pointer:: Elem_Idx_NWP
  integer (kind=int4), dimension(:,:), pointer:: Line_Idx_NWP
@@ -106,6 +107,7 @@ end type ccl_rtm_nwp_struct
    real, dimension(:,:), pointer:: High_Cloud_Fraction
    real, dimension(:,:), pointer:: Mid_Cloud_Fraction
    real, dimension(:,:), pointer:: Low_Cloud_Fraction
+   real, dimension(:,:,:), pointer:: Flight_Level_Fraction
    integer (kind=int1), dimension(:,:), pointer:: Cloud_Layer
   end type ccl_output_struct
   

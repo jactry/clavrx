@@ -70,6 +70,7 @@ module CCL_CLAVRX_BRIDGE
    CCL%High_Cloud_Fraction = Output%High_Cloud_Fraction
    CCL%Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
    CCL%Low_Cloud_Fraction = Output%Low_Cloud_Fraction
+   CCL%Flight_Level_Fraction = Output%Flight_Level_Fraction
    CCL%Cld_Layer = Output%Cloud_Layer
 
    !-----------------------------------------------------------------------
@@ -95,6 +96,7 @@ module CCL_CLAVRX_BRIDGE
      Input%Cloud_Type =>  null()
      Input%Pc =>  null()
      Input%Pc_Base =>  null()
+     Input%Pc_Lower =>  null()
      Input%Elem_Idx_Nwp =>   null()
      Input%Line_Idx_Nwp =>  null()
      Input%Elem_Idx_Opposite_Corner_NWP =>  null()
@@ -121,6 +123,7 @@ module CCL_CLAVRX_BRIDGE
      Output%Mid_Cloud_Fraction =>  null()
      Output%Low_Cloud_Fraction =>  null()
      Output%Cloud_Layer =>  null()
+     Output%Flight_Level_Fraction =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -193,6 +196,7 @@ module CCL_CLAVRX_BRIDGE
    Output%Mid_Cloud_Fraction => CCL%Mid_Cloud_Fraction
    Output%Low_Cloud_Fraction => CCL%Low_Cloud_Fraction
    Output%Cloud_Layer => CCL%Cld_Layer
+   Output%Flight_Level_Fraction => CCL%Flight_Level_Fraction
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()
@@ -210,6 +214,7 @@ module CCL_CLAVRX_BRIDGE
    Input%Cloud_Type => Cld_Type
    Input%Pc => ACHA%Pc
    Input%Pc_Base => ACHA%Pc_Base
+   Input%Pc_Lower => ACHA%Lower_Pc
 
    Input%Elem_Idx_Nwp =>  I_Nwp
    Input%Line_Idx_Nwp => J_Nwp

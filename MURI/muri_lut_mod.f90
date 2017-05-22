@@ -56,7 +56,7 @@ contains
       if ( this % is_read) return
        
       lut_file = trim('/DATA/AHI_AEROSOL/AHI_Aerosol_LUT/AHI_Ocean_Aerosol_LUT_v1.hdf')
-		lut_file = trim('/home/awalther/AHI_Ocean_Aerosol_LUT_v1.hdf')
+		!lut_file = trim('/home/awalther/AHI_Ocean_Aerosol_LUT_v1.hdf')
       INQUIRE(file = lut_file,EXIST=file_exists)
       if ( .not. file_exists) then 
          print*,'MURI LUT file not there stopping'

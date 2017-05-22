@@ -65,6 +65,9 @@ contains
           fill_value_tmp = 0._dp
        end if
     end if
+    
+    fill_value_tmp = -999.
+    bounds_error_tmp = .false.
 
     if(size(w).ne.size(array,1)) stop "w does not match array"
     if(size(x).ne.size(array,2)) stop "x does not match array"
@@ -78,7 +81,7 @@ contains
 
     if(i1==-1) then
        if(bounds_error_tmp) then
-          write(0,'("ERROR: Interpolation out of bounds : ",ES11.4," in [",ES11.4,":",ES11.4,"]")') w0,w(1),w(size(w))
+          write(0,'("ERROR: Interpolation out of bounds 4D w : ",ES11.4," in [",ES11.4,":",ES11.4,"]")') w0,w(1),w(size(w))
           stop
        else
           value = fill_value_tmp
@@ -126,12 +129,12 @@ contains
       
          temp_2d = array(ii,jj,:,:)
         
-         temp_array_2d_interp(ii,jj) = interp2d (y,z,temp_2d , y0,z0)!,bounds_error=.true.,fill_value = -999.)
+         temp_array_2d_interp(ii,jj) = interp2d (y,z,temp_2d , y0,z0,bounds_error=bounds_error_tmp,fill_value = fill_value)
         
       end do
     end do   
     
-    value = interp2d (w,x,temp_array_2d_interp,w0,x0)!,bounds_error=.true.,fill_value = -999.)
+    value = interp2d (w,x,temp_array_2d_interp,w0,x0,bounds_error=bounds_error_tmp,fill_value = fill_value)
    
 
   end function interp4d_dp
@@ -172,7 +175,8 @@ contains
           fill_value_tmp = 0._dp
        end if
     end if
-   
+        fill_value_tmp = -999.
+    bounds_error_tmp = .false.
     if(size(w).ne.size(array,1)) stop "w does not match array in 4d_interp"
     if(size(x).ne.size(array,2)) stop "x does not match array in 4d_interp"
     if(size(y).ne.size(array,3)) stop "y does not match array in 4d_interp"
@@ -231,12 +235,12 @@ contains
       do jj = 1, size(x)
       
          
-         temp_array_2d_interp(ii,jj) = interp2d (y,z, array(ii,jj,:,:) , y0,z0,bounds_error=.true.,fill_value = -999.)
+        ! temp_array_2d_interp(ii,jj) = interp2d (y,z, array(ii,jj,:,:) , y0,z0,bounds_error=bounds_error_tmp,fill_value = fill_value)
       
       end do
     end do   
     
-    value = interp2d(w,x,temp_array_2d_interp,w0,x0) !,bounds_error=.true.,fill_value = -999.)
+ !   value = interp2d(w,x,temp_array_2d_interp,w0,x0 ,bounds_error=bounds_error_tmp,fill_value = fill_value)
    deallocate (temp_array_2d_interp)
    
    

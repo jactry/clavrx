@@ -181,8 +181,7 @@
    use cx_conf_mod , only:  &
       conf_main_type &
       , set_config
-   
-   
+     
    use cx_muri_clavrx_bridge_mod
    
    use date_tools_mod, only: &
@@ -190,8 +189,7 @@
          , compute_month &
          , compute_day &
          , compute_time_hours
-   
-   
+     
    use DCOMP_DERIVED_PRODUCTS_MODULE, only: &
       compute_adiabatic_cloud_props &
       , compute_cloud_water_path &
@@ -246,15 +244,19 @@
    use NCEP_REANALYSIS, only: &
       read_ncep_reanalysis_data
    
-   use NWP_COMMON   
+   use NWP_COMMON  
+   
+   use cx_nwp_mod, only: &
+      nwp_main_type
+      
+   use date_tools_mod    
    
    use NUMERICAL_TOOLS_MOD, only: &
            compute_median_segment
    
    use MODIS_MODULE, only:
    
-   
-    use OCA_MODULE, only: &
+   use OCA_MODULE, only: &
        READ_OCA
    
    use OISST_ANALYSIS, only: &
@@ -456,7 +458,9 @@
    integer:: Chan_Idx
    type (conf_main_type) :: conf
    
-  
+   type ( nwp_main_type) :: nwp
+   type ( date_type ) :: time_start
+   type ( date_type ) :: time_end
    
  !  interface 
  !  subroutine AWG_CLOUD_DNCOMP_ALGORITHM_IBAND (  iseg_in , infile, path, algorithm_started )  
@@ -489,8 +493,7 @@
    call mesg ( '<----------  Start of CLAVRXORB ----------> $Id$' &
       , level = verb_lev % MINIMAL , color = 43 )
    
-   
-   
+    
    
    !----------------------------------------------------------------------------
    ! Initialize some flags
@@ -516,8 +519,11 @@
    !*************************************************************************
 
    call SETUP_USER_DEFINED_OPTIONS()
+  
 
-
+    
+  
+      
    !--- make directory for temporary files created during this run
    call system("mkdir "//trim(Temporary_Data_Dir))
 
@@ -674,7 +680,13 @@
       ! Knowing the sensor, interogate files to start, end date and time
       !----------------------------------------------------------------------
       call SET_DATA_DATE_AND_TIME ( AREAstr)
-
+      
+      call time_start % set_date_with_doy ( Image%Start_Year, Image%Start_doy ,13,0)
+      call time_end % set_date ( Image%End_Year,Image%End_doy,14,0)
+      call nwp % populate (   time_start , time_end , ancil_data_dir , 3 )
+      
+      stop
+         
       !----------------------------------------------------------------------
       ! Output sensor and image parameters to screen
       !----------------------------------------------------------------------

@@ -66,8 +66,8 @@ character(len=20) :: sensor_name
       case(810)
          sensor_name = 'COMS-1'   
       case default
-         print*,'please inform  andi.walther@ssec.wisc.edu wmo id: ', id 
-         stop
+         print*,'sensor wmo id: ', id 
+         stop 'please inform  andi.walther@ssec.wisc.edu wmo id: '
    end select
    
    

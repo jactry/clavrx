@@ -298,8 +298,8 @@ contains
          chan_string(20) = '5'  
          sensor_identifier = trim(self % lut_path) //'MTSAT'       
       case default
-          print*,'add sensor in dcomp_lut_mod.f90 routine populate...', trim(self%sensor)
-          stop
+         print*,' Sensor is ', trim(self%sensor)   
+         stop 'add sensor in dcomp_lut_mod.f90 routine populate...'
   
       end select sensor_block
      
@@ -564,8 +564,8 @@ contains
       
       if ( self % has_sol ) then 
          if ( .not. file_test ( self % file )) then 
-            print*, 'file not available channel ', self % file
-            stop
+            print*, 'file:   ', self % file
+            stop 'stop because file not available channel '
          end if        
          call read_hdf_dcomp_data_rfl ( &
               self % file &              ! - input
@@ -578,7 +578,7 @@ contains
       if ( self % has_ems ) then
          if ( .not. file_test ( self % file_ems )) then 
             print*, 'file ems not available channel ',  self % file_ems
-            stop
+            stop 'file ems not available channel '
          end if
          call read_hdf_dcomp_data_ems ( &
                   self%file_ems &       ! - input
@@ -603,7 +603,7 @@ contains
     
       if ( .not. file_test(hdf_file) ) then
          print*,'lut file not existing! ==> ', trim(hdf_file)
-         stop
+         stop 'lut file not existing! ==> '
       end if
       
 

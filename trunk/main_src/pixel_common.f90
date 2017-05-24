@@ -332,6 +332,7 @@ module PIXEL_COMMON
     real (kind=real4), dimension(:,:), allocatable:: Lower_Pc
     real (kind=real4), dimension(:,:), allocatable:: Lower_Zc
     real (kind=real4), dimension(:,:), allocatable:: Lower_Tc
+    real (kind=real4), dimension(:,:), allocatable:: Lower_Alt
     integer(kind=int1), dimension(:,:), allocatable:: Processing_Order
     integer(kind=int1), dimension(:,:), allocatable:: Inversion_Flag
     integer (kind=int1), dimension(:,:), allocatable:: Quality_Flag
@@ -360,6 +361,7 @@ module PIXEL_COMMON
     real(kind=real4), dimension(:,:), allocatable, public :: High_Cloud_Fraction
     real(kind=real4), dimension(:,:), allocatable, public :: Mid_Cloud_Fraction
     real(kind=real4), dimension(:,:), allocatable, public :: Low_Cloud_Fraction
+!   real(kind=real4), dimension(:,:,:), allocatable, public :: Flight_Level_Fraction
   end type ccl_definition
 
   type :: asos_definition
@@ -2126,6 +2128,7 @@ subroutine CREATE_ACHA_ARRAYS(dim1,dim2)
     allocate(ACHA%Lower_Pc(dim1,dim2)) 
     allocate(ACHA%Lower_Zc(dim1,dim2)) 
     allocate(ACHA%Lower_Tc(dim1,dim2)) 
+    allocate(ACHA%Lower_Alt(dim1,dim2)) 
     allocate(ACHA%Processing_Order(dim1,dim2)) 
     allocate(ACHA%Inversion_Flag(dim1,dim2)) 
     allocate(ACHA%Quality_Flag(dim1,dim2)) 
@@ -2183,6 +2186,7 @@ subroutine RESET_ACHA_ARRAYS()
     ACHA%Lower_Pc = Missing_Value_Real4
     ACHA%Lower_Zc = Missing_Value_Real4
     ACHA%Lower_Tc = Missing_Value_Real4
+    ACHA%Lower_Alt = Missing_Value_Real4
     ACHA%Processing_Order = Missing_Value_Int1
     ACHA%Inversion_Flag = Missing_Value_Int1
     ACHA%Quality_Flag = Missing_Value_Int1
@@ -2234,6 +2238,7 @@ subroutine DESTROY_ACHA_ARRAYS()
     deallocate(ACHA%Lower_Pc) 
     deallocate(ACHA%Lower_Zc) 
     deallocate(ACHA%Lower_Tc) 
+    deallocate(ACHA%Lower_Alt) 
     deallocate(ACHA%Processing_Order) 
     deallocate(ACHA%Inversion_Flag) 
     deallocate(ACHA%Quality_Flag) 
@@ -2264,6 +2269,7 @@ subroutine CREATE_CCL_ARRAYS(dim1,dim2)
     allocate (CCL%High_Cloud_Fraction(dim1,dim2))
     allocate (CCL%Mid_Cloud_Fraction(dim1,dim2))
     allocate (CCL%Low_Cloud_Fraction(dim1,dim2))
+!   allocate (CCL%Flight_Level_Fraction(dim1,dim2,5))
    endif
 end subroutine CREATE_CCL_ARRAYS
 subroutine RESET_CCL_ARRAYS()
@@ -2273,6 +2279,7 @@ subroutine RESET_CCL_ARRAYS()
     if (allocated(CCL%High_Cloud_Fraction)) CCL%High_Cloud_Fraction = Missing_Value_Real4
     if (allocated(CCL%Mid_Cloud_Fraction)) CCL%Mid_Cloud_Fraction = Missing_Value_Real4
     if (allocated(CCL%Low_Cloud_Fraction)) CCL%Low_Cloud_Fraction = Missing_Value_Real4
+!   if (allocated(CCL%Flight_Level_Fraction)) CCL%Flight_Level_Fraction = Missing_Value_Real4
 end subroutine RESET_CCL_ARRAYS
 subroutine DESTROY_CCL_ARRAYS()
     if (allocated(CCL%Cld_Layer)) deallocate (CCL%Cld_Layer)
@@ -2281,6 +2288,7 @@ subroutine DESTROY_CCL_ARRAYS()
     if (allocated(CCL%High_Cloud_Fraction)) deallocate (CCL%High_Cloud_Fraction)
     if (allocated(CCL%Mid_Cloud_Fraction)) deallocate (CCL%Mid_Cloud_Fraction)
     if (allocated(CCL%Low_Cloud_Fraction)) deallocate (CCL%Low_Cloud_Fraction)
+!   if (allocated(CCL%Flight_Level_Fraction)) deallocate (CCL%Flight_Level_Fraction)
 end subroutine DESTROY_CCL_ARRAYS
 !------------------------------------------------------------------------------
 ! Automatic Surface Observing System (ASOS) data structure routines

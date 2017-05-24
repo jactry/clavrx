@@ -70,7 +70,7 @@ module CCL_CLAVRX_BRIDGE
    CCL%High_Cloud_Fraction = Output%High_Cloud_Fraction
    CCL%Mid_Cloud_Fraction = Output%Mid_Cloud_Fraction
    CCL%Low_Cloud_Fraction = Output%Low_Cloud_Fraction
-   CCL%Flight_Level_Fraction = Output%Flight_Level_Fraction
+!  CCL%Flight_Level_Fraction = Output%Flight_Level_Fraction
    CCL%Cld_Layer = Output%Cloud_Layer
 
    !-----------------------------------------------------------------------
@@ -123,7 +123,7 @@ module CCL_CLAVRX_BRIDGE
      Output%Mid_Cloud_Fraction =>  null()
      Output%Low_Cloud_Fraction =>  null()
      Output%Cloud_Layer =>  null()
-     Output%Flight_Level_Fraction =>  null()
+!    Output%Flight_Level_Fraction =>  null()
  end subroutine NULL_OUTPUT
  !-----------------------------------------------------------------------------
  ! Copy needed Symbol elements
@@ -196,7 +196,7 @@ module CCL_CLAVRX_BRIDGE
    Output%Mid_Cloud_Fraction => CCL%Mid_Cloud_Fraction
    Output%Low_Cloud_Fraction => CCL%Low_Cloud_Fraction
    Output%Cloud_Layer => CCL%Cld_Layer
-   Output%Flight_Level_Fraction => CCL%Flight_Level_Fraction
+!  Output%Flight_Level_Fraction => CCL%Flight_Level_Fraction
  end subroutine SET_OUTPUT
 !--------------------------------------------------------
  subroutine SET_INPUT()

@@ -483,7 +483,6 @@ end subroutine RESET_NB_CLOUD_MASK_PRIOR_LUT
 
     endif
 
-
     !--- under these conditions, stick the default and do nothing else
     if (Oceanic_Glint_Flag == 1 .or.  Forward_Scattering_Flag == 1 .or. Solar_Contam_Flag == 1) then
        return
@@ -501,7 +500,7 @@ end subroutine RESET_NB_CLOUD_MASK_PRIOR_LUT
     endif
 
     !----- day
-    if (Solzen < 80.0) then
+    if (Solzen < 75.0) then
 
       !--3.75um (preferred)
       if (Chan_On_375um == symbol_YES) then

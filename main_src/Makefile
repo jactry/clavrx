@@ -68,7 +68,7 @@ endif
 #-----------------------------------------------------------------------------
 #                          -- Find other source code directories --
 #-----------------------------------------------------------------------------
-VPATH = ./pfast:$(ACHA):$(BASE):$(CCL):$(ASOS):$(CTYPE):$(CMASK):$(BASELINEMASK):$(SASRAB):$(PFAAST)
+VPATH = ./pfast:$(ACHA):$(BASE):$(CCL):$(ASOS):$(CTYPE):$(CMASK):$(BASELINEMASK):$(SASRAB):$(PFAAST):$(EXTRA)
 
 SHELL = /bin/sh
 .SUFFIXES:
@@ -430,7 +430,7 @@ nb_cloud_mask_netcdf_read_module.o: $(CMASK)/nb_cloud_mask_netcdf_read_module.f9
 	$(fc) -c $(fflags) $(cppflags) $(cpp) $(CLAVRX_ID_FLAG) $(netcdflibs) $(CMASK)/nb_cloud_mask_netcdf_read_module.f90
 
 #universal_cloud_type.o:$(CTYPE)/universal_cloud_type.f90 constant.o pixel_common.o
-ir_cloud_type_baum_module.o: ir_cloud_type_baum_module.f90 constant.o pixel_common.o
+ir_cloud_type_baum_module.o: $(EXTRA)/ir_cloud_type_baum_module.f90 constant.o pixel_common.o
 
 baseline_cloud_mask.o: $(BASELINEMASK)/baseline_cloud_mask.f90 pixel_common.o constant.o nwp_common.o rtm_common.o planck.o clavrx_message_module.o calibration_constants.o
 

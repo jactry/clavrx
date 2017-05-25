@@ -855,6 +855,7 @@ end subroutine DETERMINE_AVHRR_1
        if (Bad_Scan_Flag(Line_Idx) == sym%YES) then
                Nav%Lat_1b(:,Line_Idx) = Missing_Value_Real4
                Nav%Lon_1b(:,Line_Idx) = Missing_Value_Real4
+               Bad_Pixel_Mask(:,Line_Idx) = sym%YES
        endif
 
   end do segment_loop

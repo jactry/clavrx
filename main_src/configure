@@ -337,16 +337,16 @@ if (exists($opt{'extra_dir'}))
 {
    if (length($opt{'extra_dir'}))
    {
-      print CONFIG "export CTYPE=$opt{'extra_dir'}\n";
+      print CONFIG "export EXTRA=$opt{'extra_dir'}\n";
    }
    else
    {
-      print CONFIG "export CTYPE=../extra_src/\n";
+      print CONFIG "export EXTRA=../extra_src/\n";
    }
 }
 else
 {
-      print CONFIG "export CTYPE=../extra_src/\n";
+      print CONFIG "export EXTRA=../extra_src/\n";
 
 }
 

@@ -1,3 +1,4 @@
+!$Id$
 !-------------------------------------------------------------------------------
 !
 ! PURPOSE: 
@@ -17,6 +18,7 @@
 !   - when done, repeat this in reverse
 !
 ! SAPF NOTE: set NearNbr: 1 in NWP PCF file to use interpolated 2D NWP arrays
+! SAPF NOTE 2: Will need proper corrected SFC albedo module and function calls
 !-------------------------------------------------------------------------------
 module NB_CLOUD_MASK_SAPF_BRIDGE
 
@@ -158,6 +160,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn9BT
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn9BT
    
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7SfcEmiss
 
@@ -265,10 +268,14 @@ contains
    
       CALL NFIP_CloudMask_FileName(Ctxt%CLOUD_MASK_Src1_T00, NB_file_LUT)
       CALL Convert_Char_C2Fortran(NB_file_LUT)
-    
+          
       Naive_Bayes_File_Name_Full_Path = TRIM(Ancil_dir)//TRIM(NB_file_LUT)     
    
-   
+      CALL NFIP_CloudMask_FileName2(Ctxt%CLOUD_MASK_Src1_T00, NB_file_LUT)
+      CALL Convert_Char_C2Fortran(NB_file_LUT)  
+      
+      Prior_File_Name_Full_Path = TRIM(Ancil_dir)//TRIM(NB_file_LUT) 
+       
    Num_Elem = Ctxt%SegmentInfo%Current_Column_Size
    Num_Line = Ctxt%SegmentInfo%Current_Row_Size
    
@@ -341,6 +348,7 @@ contains
    !Brightness Temps
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI7, Chn7BT)   !3.9
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI9, Chn9BT)   !6.7
+   CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI10, Chn10BT)   !6.7
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI11, Chn11BT) !8.5
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI13, Chn13BT) !10.3
    CALL NFIA_Sat_L1b_BrtTemp(Ctxt%SATELLITE_DATA_Src1_T00, COMMON_RESOLUTION, CHN_ABI14, Chn14BT) !11
@@ -370,6 +378,7 @@ contains
    CALL NFIA_SST_SSTClimUnif(Ctxt%SST_Src1_T00, Sst_Anal_Uni)
 
    !MODIS White sky Albedo
+   !Will need proper function calls -here SURFACE_ALBEDO_Src1_T00 -> SFC_ALBEDO_COMPOS_AN
    CALL NFIA_SfcAlbd_SfcAlbedo(Ctxt%SURFACE_ALBEDO_Src1_T00, 1, Ref_Ch2_Clear)
    CALL NFIA_SfcAlbd_SfcAlbedo(Ctxt%SURFACE_ALBEDO_Src1_T00, 3, Ref_Ch5_Clear)
    
@@ -390,6 +399,7 @@ contains
    CALL NFIA_CloudMask_Dust_Mask(Ctxt%CLOUD_MASK_Src1_T00, Dust_Mask)
    CALL NFIA_CloudMask_Smoke_Mask(Ctxt%CLOUD_MASK_Src1_T00, Smoke_Mask)
    CALL NFIA_CloudMask_Fire_Mask(Ctxt%CLOUD_MASK_Src1_T00, Fire_Mask)
+   CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
    CALL NFIA_CloudMask_Glint_Mask(Ctxt%CLOUD_MASK_Src1_T00, Glint_Mask)
 
    !Cloud Mask training outputs
@@ -400,6 +410,9 @@ contains
    CALL NFIA_CloudMask_Ems_39_Med_3x3(Ctxt%CLOUD_MASK_Src1_T00, Ems_39_Med_3x3)
    CALL NFIA_CloudMask_Bt_39_Std_3x3(Ctxt%CLOUD_MASK_Src1_T00, Bt_39_Std_3x3)
    CALL NFIA_CloudMask_Covar_67_11_5x5(Ctxt%CLOUD_MASK_Src1_T00, Covar_67_11_5x5)
+   
+   
+   
  
   !Binary Cloud Mask
    CALL NFIA_CloudMask_MaskBinary(Ctxt%CLOUD_MASK_Src1_T00, Cloud_Mask_Binary)
@@ -466,7 +479,7 @@ contains
      Nx = size(Longitude,1)
      Ny = size(Longitude,2)
      allocate(Prior_Cld_Probability(Nx,Ny))
-     Prior_File_Name_Full_Path = trim(Ancil_dir)//"nb_cloud_mask_calipso_prior.nc"
+!AK     Prior_File_Name_Full_Path = trim(Ancil_dir)//"nb_cloud_mask_calipso_prior.nc"
      if (.not. Is_Prior_Read) call READ_PRIOR(Prior_File_Name_Full_Path)
      month_prior = month
      call COMPUTE_PRIOR(Longitude,Latitude,month_prior,Prior_Cld_Probability) 
@@ -598,6 +611,18 @@ contains
                Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
         ENDIF
       
+
+         IF ((CHN_FLG(9) == sym%NO) .and. &
+             (CHN_FLG(10)== sym%YES) .and. &
+             (CHN_FLG(14)== sym%YES)) THEN
+
+            Covar_67_11_5x5(Elem_Idx,Line_Idx) = Covariance_local(&
+              Chn14BT(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+              Chn10BT(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max), &
+              Elem_Idx_width, Line_Idx_width, &
+               Bad_Pixel_Mask(Elem_Idx_min:Elem_Idx_max,Line_Idx_min:Line_Idx_max))
+        ENDIF
+
          ! Set inputs
          
          call SET_INPUT(Elem_Idx,Line_Idx,Ctxt)         
@@ -609,7 +634,7 @@ contains
                       Input, &
                       Output, &
                       USE_PRIOR_TABLE) !, & 
-                      !Diag)   !optional
+!                      Diag)   !optional
 
 
 
@@ -696,7 +721,7 @@ contains
       end do elem_loop_pack
    end do line_loop_pack
    
-      
+   
 !-------------------------------------------------------------------------------
 ! on last segment, wipe out the lut from memory and reset is_read_flag to no
 !-------------------------------------------------------------------------------
@@ -760,6 +785,7 @@ contains
    Chn15BT => null()
    Chn7BT => null()
    Chn9BT => null()
+   Chn10BT => null()
    Chn7SfcEmiss => null()
    GlintZen => null()
    EmsCh7ClSlr => null()
@@ -975,6 +1001,18 @@ contains
       Input%Emiss_375um_Clear = EmsCh7ClSlr(i,j)
 
       Input%Bt_67um = Chn9BT(i,j)
+      
+      ! Check for GOES-13/15 WV channel
+   
+      IF ((CHN_FLG(9) == sym%NO) .and. &
+           (CHN_FLG(10)== sym%YES)) THEN
+            
+            Input%Bt_67um = Chn9BT(i,j)
+            Input%Chan_On_67um = CHN_FLG(10
+      ENDIF
+
+
+
       Input%Bt_85um = Chn11BT(i,j)
 
       Input%Bt_10um = Chn13BT(i,j)
@@ -1196,7 +1234,7 @@ contains
             !
 
             CALL NFIA_RTM_Grid_CloudProf(Ctxt%RTM_Src1_T00, Elem_Idx, Line_Idx, CHN_ABI14, BlackCldRadProfChn14)
-            
+
             Blkbdy_Tropo_Rad_Chn14 = BlackCldRadProfChn14(Tropo_Idx_NWP)
             !
             !---Tropopause Emissivity

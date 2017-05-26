@@ -160,7 +160,7 @@ module NB_CLOUD_MASK_SAPF_BRIDGE
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn15BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7BT
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn9BT
-   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn9BT
+   REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn10BT
    
    REAL(SINGLE), DIMENSION(:,:), POINTER, PRIVATE :: Chn7SfcEmiss
 
@@ -1008,7 +1008,7 @@ contains
            (CHN_FLG(10)== sym%YES)) THEN
             
             Input%Bt_67um = Chn9BT(i,j)
-            Input%Chan_On_67um = CHN_FLG(10
+            Input%Chan_On_67um = CHN_FLG(10)
       ENDIF
 
 

@@ -14,7 +14,7 @@
 ! 
 !-------------------------------------------------------------------------------------
 module MVCM_READ_MODULE
-
+      use NETCDF
     use PIXEL_COMMON, only: Image, Cldmask, Cloud_Mask_Aux_Flag, Cloud_Mask_Aux_Read_Flag
     use NUMERICAL_ROUTINES, only: COMPUTE_MONTH, COMPUTE_DAY, LEAP_YEAR_FCT
     use FILE_TOOLS, only: FILE_SEARCH
@@ -148,6 +148,8 @@ module MVCM_READ_MODULE
  subroutine READ_MVCM_DATA(Seg_Idx)
 
     use NETCDF_READ_MODULE
+    
+    implicit none
 
     integer, intent(in):: Seg_Idx
     integer:: Sd_Id, Group_Id, Sds_Id, Status_Flag
@@ -157,7 +159,7 @@ module MVCM_READ_MODULE
     integer(kind=int4), dimension(:,:), allocatable:: I4_Buffer
     integer:: Nx_Slab_Read_Start, Nx_Seg, Nx_Slab_Count
     integer:: Ny_Slab_Read_Start, Ny_Seg, Ny_Seg_Max, Ny_Slab_Count
-
+    integer :: nf90_inq_ncid
     Status_Flag = 0
     Sds_Name = "Integer_Cloud_Mask"
     Cloud_Mask_Aux_Read_Flag = sym%NO   !will be set to yes if successful

@@ -999,7 +999,7 @@ contains
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-RU-IMAGER')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
-         possible_dcomp_modes(1:3)  =  [1, 2, 3]
+         possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ( 'MTSAT-IMAGER')
          possible_acha_modes(1:4)   =  [ 1, 2, 3 , 6 ]
          possible_dcomp_modes(1)    =  3

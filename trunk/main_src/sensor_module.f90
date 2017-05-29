@@ -85,7 +85,7 @@ module SENSOR_MODULE
 #endif
 
    use CLAVRX_MESSAGE_MODULE
-   use MVCM_READ_MODULE
+   !use MVCM_READ_MODULE
 
    implicit none
 

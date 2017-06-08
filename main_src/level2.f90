@@ -2482,7 +2482,7 @@ subroutine DEFINE_HDF_FILE_STRUCTURES(Num_Scans, &
                                "not specified", &
                                "emissivity at the nominal wavelength of 11 microns, "// &
                                "assuming the cloud was located at the Tropopause", &
-                               DFNT_INT8, sym%LINEAR_SCALING, &
+                               DFNT_INT16, sym%LINEAR_SCALING, &
                                Min_Etropo, Max_Etropo, "none", Missing_Value_Real4, Istatus)
       Istatus_Sum = Istatus_Sum + Istatus
      endif
@@ -5169,9 +5169,9 @@ subroutine WRITE_PIXEL_HDF_RECORDS(Level2_File_Flag)
 
      !--- etrop
      if (Sds_Num_Level2_Etrop_Flag == sym%YES .and. Sensor%Chan_On_Flag_Default(31) == sym%YES) then     
-      call SCALE_VECTOR_I1_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,One_Byte_Temp)
+      call SCALE_VECTOR_I2_RANK2(ch(31)%Emiss_Tropo,sym%LINEAR_SCALING,Min_Etropo,Max_Etropo,Missing_Value_Real4,Two_Byte_Temp)
       Istatus = sfwdata(Sds_Id_Level2(Sds_Num_Level2_Etrop), Sds_Start_2d, Sds_Stride_2d, Sds_Edge_2d, &
-                        One_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
+                        Two_Byte_Temp(:, Line_Idx_Min_Segment:Sds_Edge_2d(2) + Line_Idx_Min_Segment - 1)) + Istatus
      endif
 
     !--- Beta_11_67

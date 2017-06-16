@@ -42,8 +42,8 @@
      Sds_Num_Level2_Ch17 = 31 ,          Sds_Num_Level2_Ch17_Flag = 0, &
      Sds_Num_Level2_Ch18 = 32 ,          Sds_Num_Level2_Ch18_Flag = 0, &
      Sds_Num_Level2_Ch19 = 33 ,          Sds_Num_Level2_Ch19_Flag = 0, &
-     Sds_Num_Level2_Ch20_Ref = 34 ,      Sds_Num_Level2_Ch20_Ref_Flag = 0, &
-     Sds_Num_Level2_Ch20_Bt = 35 ,       Sds_Num_Level2_Ch20_Bt_Flag = 0, &
+     Sds_Num_Level2_Ch20_Ref = 34 ,      Sds_Num_Level2_Ch20_Ref_Flag = 1, &
+     Sds_Num_Level2_Ch20_Bt = 35 ,       Sds_Num_Level2_Ch20_Bt_Flag = 1, &
      Sds_Num_Level2_Ch21 = 36 ,          Sds_Num_Level2_Ch21_Flag = 0, &
      Sds_Num_Level2_Ch22 = 37 ,          Sds_Num_Level2_Ch22_Flag = 0, &
      Sds_Num_Level2_Ch23 = 38 ,          Sds_Num_Level2_Ch23_Flag = 0, &

@@ -74,8 +74,9 @@
            WIND_DIRECTION, &
            COUNTSUBSTRING, &
            SPLIT_STRING, &
-           REPLACE_CHAR_IN_STRG
-           
+           REPLACE_CHAR_IN_STRG, &
+           svdcmp, pythag, &
+           GEN_INVERSE           
   contains
 
 !----------------------------------------------------------------------
@@ -502,9 +503,12 @@ function INVERT_MATRIX(Matrix, Matrix_Inv, Matrix_Size) RESULT(Status)
 
     case default
 
-      Status = Sym%FAILURE
-
-      print*,"Invalid matrix size."
+      call GEN_INVERSE(Matrix,Matrix_Inv,Matrix_Size,Matrix_Size,Singular_Flag)
+      if (Singular_Flag == 1) THEN
+        print *, "non-diagonal failure, matrix size greater than 4"
+        Status = Sym%FAILURE
+        !print*,"Invalid matrix size."
+      endif
 
   end select
 
@@ -1571,4 +1575,308 @@ endfunction
 
 !------------------------------------------------------------------------------------- 
 
+!***************************************************************
+!** compute general inverse of a matrix using svdcmp from 
+!** Numerical Recipes
+!** input:
+!**        A - a matrix whose general inverse is sought
+!**        m,p dimensions of matrix A   
+!** output:
+!**        A_inv - general inerse of A
+!**        ierr - error code from svdcmp
+!***************************************************************
+subroutine GEN_INVERSE(A,A_inv,m,p,ierr)
+ real (kind=ipre), intent(in), dimension(:,:):: A
+ integer, intent(in):: m,p
+ integer, intent(out):: ierr
+ real (kind=ipre), intent(out), dimension(:,:):: A_inv
+ integer:: i
+ real (kind=ipre), dimension(p,p):: W,V
+ real (kind=ipre), dimension(m,p):: U
+ real (kind=ipre), dimension(p):: ww
+ U = A
+ if ( p == 0 ) then
+   print *,"p = 0 in gen_inv",m,p,shape(W)
+   stop
+ endif
+ call svdcmp(U,m,p,m,p,ww,V,ierr)
+ W=0.0
+  do i = 1,p
+    W(i,i)=1.0/ww(i)
+  enddo 
+ A_inv = matmul(V,matmul(W,transpose(U)))
+end subroutine GEN_INVERSE
+!----------------------------------------------------------------
+
+ subroutine svdcmp(a,m,n,mp,np,w,v,ierr)
+   integer, intent(in):: m,mp,n,np
+   integer, intent(out):: ierr
+!  real (kind=ipre), intent(inout), dimension(:,:):: a(mp,np),v(np,np),w(np)
+   real (kind=ipre), intent(inout), dimension(:,:):: a
+   real (kind=ipre), intent(out), dimension(:,:):: v
+   real (kind=ipre), intent(out), dimension(:):: w
+   integer, parameter:: NMAX=500
+!CU    USES pythag
+   integer:: i,its,j,jj,k,l,nm
+   real (kind=ipre):: anorm,c,f,g,h,s,sscale,x,y,z
+   real (kind=ipre), dimension(NMAX):: rv1
+      ierr = 0
+      g=0.0
+      sscale=0.0
+      anorm=0.0
+      twentyfive: do i=1,n
+        l=i+1
+        rv1(i)=sscale*g
+        g=0.0
+        s=0.0
+        sscale=0.0
+        if(i<=m)then
+          do  k=i,m
+            sscale=sscale+abs(a(k,i))
+          enddo
+          if(sscale/=0.0)then
+            do k=i,m
+              a(k,i)=a(k,i)/sscale
+              s=s+a(k,i)*a(k,i)
+            end do
+            f=a(i,i)
+            g=-sign(sqrt(s),f)
+            h=f*g-s
+            a(i,i)=f-g
+            do j=l,n
+              s=0.0
+              do k=i,m
+                s=s+a(k,i)*a(k,j)
+              end do
+              f=s/h
+              do k=i,m
+                a(k,j)=a(k,j)+f*a(k,i)
+              end do
+            end do
+            do k=i,m
+              a(k,i)=sscale*a(k,i)
+            end do
+          endif
+        endif
+        w(i)=sscale *g
+        g=0.0
+        s=0.0
+        sscale=0.0
+        if((i<=m).and.(i/=n))then
+          do k=l,n
+            sscale=sscale+abs(a(i,k))
+          enddo
+          if(sscale/=0.0)then
+            do k=l,n
+              a(i,k)=a(i,k)/sscale
+              s=s+a(i,k)*a(i,k)
+            enddo 
+            f=a(i,l)
+            g=-sign(sqrt(s),f)
+            h=f*g-s
+            a(i,l)=f-g
+            do k=l,n
+              rv1(k)=a(i,k)/h
+            enddo 
+            do j=l,m
+              s=0.0
+              do k=l,n
+                s=s+a(j,k)*a(i,k)
+              enddo
+              do k=l,n
+                a(j,k)=a(j,k)+s*rv1(k)
+              enddo
+            enddo
+            do k=l,n
+              a(i,k)=sscale*a(i,k)
+            enddo
+          endif
+        endif
+        anorm=max(anorm,(abs(w(i))+abs(rv1(i))))
+       end do twentyfive
+      do i=n,1,-1
+        if(i < n)then
+          if(g /= 0.0)then
+            do j=l,n
+              v(j,i)=(a(i,j)/a(i,l))/g
+            enddo
+            do j=l,n
+              s=0.0
+              do k=l,n
+                s=s+a(i,k)*v(k,j)
+              enddo
+              do k=l,n
+                v(k,j)=v(k,j)+s*v(k,i)
+              enddo
+            enddo
+          endif
+          do j=l,n
+            v(i,j)=0.0
+            v(j,i)=0.0
+          enddo
+        endif
+        v(i,i)=1.0
+        g=rv1(i)
+        l=i
+      enddo
+      do i=min(m,n),1,-1
+        if (i == 0) then
+          print *,"error in svdcmp",m,n,i
+        endif
+        l=i+1
+        g=w(i)
+        do j=l,n
+          a(i,j)=0.0
+        enddo
+        if(g /= 0.0)then
+          g=1.0/g
+          do j=l,n
+            s=0.0
+            do k=l,m
+              s=s+a(k,i)*a(k,j)
+            enddo
+            f=(s/a(i,i))*g
+            do k=i,m
+              a(k,j)=a(k,j)+f*a(k,i)
+            enddo
+          enddo
+          do j=i,m
+            a(j,i)=a(j,i)*g
+          enddo
+        else
+          do j= i,m
+            a(j,i)=0.0
+          end do
+        endif
+        a(i,i)=a(i,i)+1.0
+      enddo
+      fortynine: do k=n,1,-1
+        fortyeight: do its=1,30
+          do l=k,1,-1
+            nm=l-1
+            if((abs(rv1(l))+anorm) == anorm)  then
+!              goto 2
+               exit
+            endif
+            if((abs(w(nm))+anorm) == anorm) then
+!                goto 1
+                 exit
+            endif
+          enddo
+  if((abs(rv1(l))+anorm) /= anorm)  then
+!1      c=0.0
+        c=0.0
+        s=1.0
+        do i=l,k
+            f=s*rv1(i)
+            rv1(i)=c*rv1(i)
+            if((abs(f)+anorm) == anorm) then
+!              goto 2
+               exit
+            endif
+            g=w(i)
+            h=pythag(f,g)
+            w(i)=h
+            h=1.0/h
+            c= (g*h)
+            s=-(f*h)
+            do j=1,m
+              y=a(j,nm)
+              z=a(j,i)
+              a(j,nm)=(y*c)+(z*s)
+              a(j,i)=-(y*s)+(z*c)
+            enddo
+         enddo
+       endif
+!2         z=w(k)
+          z=w(k)
+          if (l == k)then
+            if(z < 0.0)then
+              w(k)=-z
+              do j=1,n
+                v(j,k)=-v(j,k)
+              enddo
+            endif
+!           goto 3
+            exit
+          endif
+!         if(its.eq.30) pause 'no convergence in svdcmp'
+          if(its == 30) then
+             ierr = 1
+             return
+          endif
+          x=w(l)
+          nm=k-1
+          y=w(nm)
+          g=rv1(nm)
+          h=rv1(k)
+          f=((y-z)*(y+z)+(g-h)*(g+h))/(2.0*h*y)
+          g=pythag(f,1.0_ipre)
+          f=((x-z)*(x+z)+h*((y/(f+sign(g,f)))-h))/x
+          c=1.0
+          s=1.0
+          do j=l,nm
+            i=j+1
+            g=rv1(i)
+            y=w(i)
+            h=s*g
+            g=c*g
+            z=pythag(f,h)
+            rv1(j)=z
+            c=f/z
+            s=h/z
+            f= (x*c)+(g*s)
+            g=-(x*s)+(g*c)
+            h=y*s
+            y=y*c
+            do jj=1,n
+              x=v(jj,j)
+              z=v(jj,i)
+              v(jj,j)= (x*c)+(z*s)
+              v(jj,i)=-(x*s)+(z*c)
+            enddo
+            z=pythag(f,h)
+            w(j)=z
+            if(z/=0.0)then
+              z=1.0/z
+              c=f*z
+              s=h*z
+            endif
+            f= (c*g)+(s*y)
+            x=-(s*g)+(c*y)
+            do jj=1,m
+              y=a(jj,j)
+              z=a(jj,i)
+              a(jj,j)= (y*c)+(z*s)
+              a(jj,i)=-(y*s)+(z*c)
+            end do
+          end do
+          rv1(l)=0.0
+          rv1(k)=f
+          w(k)=x
+        end do fortyeight
+!3       continue
+ end do fortynine
+ end subroutine svdcmp
+!***********************************************************************
+
+ function pythag(a,b) result(pyth)
+   real (kind=ipre), intent(in):: a,b
+   real (kind=ipre):: pyth
+   real (kind=ipre):: absa,absb
+     absa=abs(a)
+     absb=abs(b)
+       if (absa > absb) then
+           pyth = absa * sqrt(1.0+(absb/absa)**2)
+       else
+           if (absb == 0) then
+               pyth = 0.0
+           else
+               pyth = absb*sqrt(1.0 + (absa/absb)**2)
+           endif
+       endif
+ end function pythag
+
+!------------------------------------------------------------------------------------- 
 end module NUMERICAL_ROUTINES
+

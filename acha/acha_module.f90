@@ -48,6 +48,8 @@ module AWG_CLOUD_HEIGHT
 ! 7 - 11 + 6.7 + 13.3 um             6
 ! 8 - 11 + 12 + 13.3 um              3
 ! 9 - 11 + 12 + 13.3-pseudo um       -
+!10 - 11 + 8.5 + 12 + 13.3-pseudo um       -
+!11 - 11 + 6.7 + 8.5 + 12 + 13.3-pseudo um       -
 !
 ! MULTI_LAYER_LOGIC_FLAG
 ! 0 - (baseline) just use the multilayer id in cloud type
@@ -157,6 +159,8 @@ module AWG_CLOUD_HEIGHT
   real, private:: Btd_11um_12um_Btd_11um_67um_Covar
   real, private:: Btd_11um_12um_Btd_11um_85um_Covar
   real, private:: Btd_11um_67um_Btd_11um_133um_Covar
+  real, private:: Btd_11um_85um_Btd_11um_133um_Covar
+  real, private:: Btd_11um_67um_Btd_11um_85um_Covar
 
 ! real, private, PARAMETER:: Dt_Dz_Strato = -0.0065 !K/m
 ! real, private, PARAMETER:: Sensor_Zenith_Threshold = 70.0
@@ -517,6 +521,10 @@ module AWG_CLOUD_HEIGHT
        Num_Obs = 3
      case(9)  !11,12,13.3 goes-r with pseudo 13.3
        Num_Obs = 3
+     case(10)  !11,12,8.5,13.3
+       Num_Obs = 4
+     case(11)  !11,12,8.5,12,13.3,6.7
+       Num_Obs = 5
   end select
 
   !--- allocate needed 2d arrays for processing this segment
@@ -997,23 +1005,26 @@ module AWG_CLOUD_HEIGHT
 
    Bt_11um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2),Input%Invalid_Data_Mask(i1:i2,j1:j2))
 
-   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+   if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. &
+       Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 11) then
     Btd_11um_67um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_67um(i1:i2,j1:j2),&
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
-   if (Acha_Mode_Flag == 5) then
+   if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
     Btd_11um_85um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_85um(i1:i2,j1:j2), &
                                                     Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
    if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or.  &
        Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or.  &
-       Acha_Mode_Flag == 9) then
+       Acha_Mode_Flag == 9 .or. Acha_Mode_Flag == 10 .or.  &
+       Acha_Mode_Flag == 11) then
     Btd_11um_12um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_12um(i1:i2,j1:j2), &
                                                    Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
 
-   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
+   if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9 .or. &
+       Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
     Btd_11um_133um_Std = COMPUTE_STANDARD_DEVIATION( Input%Bt_11um(i1:i2,j1:j2) -  Input%Bt_133um(i1:i2,j1:j2), &
                                                     Input%Invalid_Data_Mask(i1:i2,j1:j2))
    endif
@@ -1026,50 +1037,70 @@ module AWG_CLOUD_HEIGHT
    select case(Acha_Mode_Flag)
      case(1)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
      case(2)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_67um_Std**2 
      case(3)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
      case(4)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
      case(5)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_85um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_85um_Std**2 
      case(6)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(3) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
      case(7)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_133um_Std**2 
        y_variance(3) = Btd_11um_67um_Std**2 
      case(8,9)
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
        y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
-       y_variance(1) =  Bt_11um_Std**2
+       y_variance(1) = Bt_11um_Std**2
        y_variance(2) = Btd_11um_12um_Std**2 
        y_variance(3) = Btd_11um_133um_Std**2 
+      case(10)
+       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
+       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_85um(Elem_Idx,Line_Idx)
+       y(4) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
+       y_variance(1) = Bt_11um_Std**2
+       y_variance(2) = Btd_11um_12um_Std**2 
+       y_variance(3) = Btd_11um_85um_Std**2 
+       y_variance(4) = Btd_11um_133um_Std**2 
+      case(11)
+       y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
+       y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
+       y(3) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_85um(Elem_Idx,Line_Idx)
+       y(4) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_133um(Elem_Idx,Line_Idx)
+       y(5) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_67um(Elem_Idx,Line_Idx)
+       y_variance(1) = Bt_11um_Std**2
+       y_variance(2) = Btd_11um_12um_Std**2 
+       y_variance(3) = Btd_11um_85um_Std**2 
+       y_variance(4) = Btd_11um_133um_Std**2 
+       y_variance(5) = Btd_11um_67um_Std**2 
      case DEFAULT
        y(1) =  Input%Bt_11um(Elem_Idx,Line_Idx)
        y(2) =  Input%Bt_11um(Elem_Idx,Line_Idx) -  Input%Bt_12um(Elem_Idx,Line_Idx)
@@ -1165,6 +1196,9 @@ module AWG_CLOUD_HEIGHT
                        Tc_Ap,Tc_Ap_Uncer, &
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
+
+Diag%Array_1(Elem_Idx,Line_Idx) = Tc_Ap
+Diag%Array_2(Elem_Idx,Line_Idx) =Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
 
    if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "==========================================================="
@@ -1375,7 +1409,10 @@ Retrieval_Loop: do
   Rad_Clear_11um = Rad_Atm + Trans_Atm*Emiss_Sfc_11um*Bs   
 
   !--- compute 12um radiative transfer terms
-  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
+  if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. &
+      Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. &
+      Acha_Mode_Flag == 9 .or. Acha_Mode_Flag == 10 .or. &
+      Acha_Mode_Flag == 11) then
      Rad_Ac_12um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_12um)
 
@@ -1402,7 +1439,9 @@ Retrieval_Loop: do
   endif
 
   !--- 13.3um clear radiative transfer terms
-  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
+  if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. &
+      Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9 .or. &
+      Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
      Rad_Ac_133um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_133um)
 
@@ -1429,7 +1468,7 @@ Retrieval_Loop: do
 
   endif
 
-  if (Acha_Mode_Flag == 5) then
+  if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
      Rad_Ac_85um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_85um)
 
@@ -1456,7 +1495,8 @@ Retrieval_Loop: do
 
   endif
 
-  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+  if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. &
+      Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 11) then
      Rad_Ac_67um = GENERIC_PROFILE_INTERPOLATION(Zc_Temp, &
                             Hght_Prof_RTM,ACHA_RTM_NWP%Atm_Rad_Prof_67um)
 
@@ -2264,6 +2304,9 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   Singular_Flag =  INVERT_MATRIX(Sx_inv, Sx, p)
   if (Singular_Flag == symbol%YES) then
    print *, "Cloud Height warning ==> Singular Sx in ACHA "
+ ! print *, "Sa_Inv = ", Sa_Inv
+ ! print *, "Sy_Inv = ", Sy_Inv
+ ! print *, "K  = ", K
    Converged_Flag = symbol%NO
    Fail_Flag = symbol%YES
    return
@@ -2515,6 +2558,12 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   real(kind=real4):: dB_dTs_12um
   real(kind=real4):: dB_dTs_133um
 
+  !--- Kernel and forward model terms
+  real:: f_T_11,dT_11_dTc, dT_11_dec, dT_11_dbeta, dT_11_dTs
+  real:: f_Btd_11_67,dBtd_11_67_dTc, dBtd_11_67_dec, dBtd_11_67_dbeta, dBtd_11_67_dTs
+  real:: f_Btd_11_85,dBtd_11_85_dTc, dBtd_11_85_dec, dBtd_11_85_dbeta, dBtd_11_85_dTs
+  real:: f_Btd_11_12,dBtd_11_12_dTc, dBtd_11_12_dec, dBtd_11_12_dbeta, dBtd_11_12_dTs
+  real:: f_Btd_11_133,dBtd_11_133_dTc, dBtd_11_133_dec, dBtd_11_133_dbeta, dBtd_11_133_dTs
 
   !---  for notational convenience, rename elements of x to local variables
   Tc = x(1)
@@ -2536,107 +2585,196 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
   if (Chan_On_12um == symbol%YES) Bs_12um = PLANCK_RAD_FAST( Chan_Idx_12um, Ts, dB_dT = dB_dTs_12um)
   if (Chan_On_133um == symbol%YES) Bs_133um = PLANCK_RAD_FAST( Chan_Idx_133um, Ts, dB_dT = dB_dTs_133um)
 
-  !----- compute channel Emissivities
+ !----------------------------------------------------------------------------------------------
+ ! Make Terms for the Kernel Matrix
+ !----------------------------------------------------------------------------------------------
 
-  !-- ch32
-  dEmiss_12um_dEmiss_11um = Beta_11um_12um * (1.0-Emiss_11um)**(Beta_11um_12um - 1.0)
-  Emiss_12um = 1.0 - (1.0-Emiss_11um)**Beta_11um_12um
-
-  !--ch33
-  Beta_11um_133um = a_Beta_11um_133um_fit + b_Beta_11um_133um_fit * Beta_11um_12um
-  dBeta_11um_133um_dBeta_11um_12um = b_Beta_11um_133um_fit
-  dEmiss_133um_dEmiss_11um = Beta_11um_133um * (1.0-Emiss_11um)**(Beta_11um_133um - 1.0)
-  Emiss_133um = 1.0 - (1.0-Emiss_11um)**Beta_11um_133um
-
-  !--ch29
-  Beta_11um_85um = a_Beta_11um_85um_fit + b_Beta_11um_85um_fit * Beta_11um_12um
-  dBeta_11um_85um_dBeta_11um_12um = b_Beta_11um_85um_fit
-  dEmiss_85um_dEmiss_11um = Beta_11um_85um * (1.0-Emiss_11um)**(Beta_11um_85um - 1.0)
-  Emiss_85um = 1.0 - (1.0-Emiss_11um)**Beta_11um_85um
-
-  !--ch27
-  Beta_11um_67um = a_Beta_11um_67um_fit + b_Beta_11um_67um_fit * Beta_11um_12um
-  dBeta_11um_67um_dBeta_11um_12um = b_Beta_11um_67um_fit
-  dEmiss_67um_dEmiss_11um = Beta_11um_67um * (1.0-Emiss_11um)**(Beta_11um_67um - 1.0)
-  Emiss_67um = 1.0 - (1.0-Emiss_11um)**Beta_11um_67um
-
- !--- define Transmission as complement of Emissivity
- Trans_67um = (1.0 - Emiss_67um)
- Trans_85um = (1.0 - Emiss_85um)
- Trans_11um = (1.0 - Emiss_11um)
- Trans_12um = (1.0 - Emiss_12um)
- Trans_133um = (1.0 - Emiss_133um)
-
- !--- forward model and Kernel for  11um channel
- Rad_11um = Emiss_11um*Rad_Ac_11um + Trans_Ac_11um * Emiss_11um * Bc_11um +  Trans_11um * Rad_Clear_11um
- f(1) = PLANCK_TEMP_FAST(Chan_Idx_11um,Rad_11um,dB_dT = dB_dT_11um)
- K(1,1) = (Trans_Ac_11um * Emiss_11um * dB_dTc_11um) / dB_dT_11um               !dT_11um / dT_c
- K(1,2) = (Rad_Ac_11um + Trans_Ac_11um*Bc_11um - Rad_Clear_11um)/dB_dT_11um     !dT_11um / dEmiss_c
- K(1,3) = 0.0                                                                   !dT_11um / dbeta
- K(1,4) = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um * Emiss_Sfc_11um    !dT_11um / dT_s
-
- !--- forward model for 11um - 12um
- if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 9) then
-   Rad_12um = Emiss_12um*Rad_Ac_12um + Trans_Ac_12um * Emiss_12um * Bc_12um +  Trans_12um * Rad_Clear_12um
-   f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_12um,Rad_12um,dB_dT = dB_dT_12um)
-   K(2,1) = K(1,1) - Trans_Ac_12um * Emiss_12um * dB_dTc_12um / dB_dT_12um   
-   K(2,2) = K(1,2) -  (Rad_Ac_12um + Trans_Ac_12um*Bc_12um-Rad_Clear_12um)*&
+ !--- 11 um
+ if (Acha_Mode_Flag > 0) then
+     Trans_11um = (1.0 - Emiss_11um)
+     Rad_11um = Emiss_11um*Rad_Ac_11um + Trans_Ac_11um * Emiss_11um * Bc_11um +  Trans_11um * Rad_Clear_11um
+     f_T_11 = PLANCK_TEMP_FAST(Chan_Idx_11um,Rad_11um,dB_dT = dB_dT_11um)
+     dT_11_dTc = (Trans_Ac_11um * Emiss_11um * dB_dTc_11um) / dB_dT_11um               !dT_11um / dT_c
+     dT_11_dec = (Rad_Ac_11um + Trans_Ac_11um*Bc_11um - Rad_Clear_11um)/dB_dT_11um     !dT_11um / dEmiss_c
+     dT_11_dbeta = 0.0                                                                   !dT_11um / dbeta
+     dT_11_dTs = ((1.0 - Emiss_11um) * Trans_Ac_11um * Trans_Bc_11um * dB_dTs_11um) / dB_dT_11um * Emiss_Sfc_11um    !dT_11um / dT_s
+ endif
+ !--- 11 - 12 um
+ if (Acha_Mode_Flag == 3 .or. Acha_Mode_Flag == 5 .or. &
+     Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 8 .or. &
+     Acha_Mode_Flag == 9 .or. Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
+     dEmiss_12um_dEmiss_11um = Beta_11um_12um * (1.0-Emiss_11um)**(Beta_11um_12um - 1.0)
+     Emiss_12um = 1.0 - (1.0-Emiss_11um)**Beta_11um_12um
+     Trans_12um = (1.0 - Emiss_12um)
+     Rad_12um = Emiss_12um*Rad_Ac_12um + Trans_Ac_12um * Emiss_12um * Bc_12um +  Trans_12um * Rad_Clear_12um
+     f_Btd_11_12 = f_T_11 - PLANCK_TEMP_FAST(Chan_Idx_12um,Rad_12um,dB_dT = dB_dT_12um)
+     dBtd_11_12_dTc  = dT_11_dTc - Trans_Ac_12um * Emiss_12um * dB_dTc_12um / dB_dT_12um   
+     dBtd_11_12_dec = dT_11_dec -  (Rad_Ac_12um + Trans_Ac_12um*Bc_12um-Rad_Clear_12um)*&
                       (dEmiss_12um_dEmiss_11um)/dB_dT_12um  
-   K(2,3) = (Rad_Ac_12um+Trans_Ac_12um*Bc_12um-Rad_Clear_12um)/ &
-            dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
-   K(2,4) = K(1,4) -  (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um * Emiss_Sfc_12um
+     dBtd_11_12_dbeta = (Rad_Ac_12um+Trans_Ac_12um*Bc_12um-Rad_Clear_12um)/ &
+                        dB_dT_12um*alog(1.0-Emiss_11um)*(1.0-Emiss_12um)    
+     dBtd_11_12_dTs = dT_11_dTs - (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um * Emiss_Sfc_12um
  endif
- !--- forward model for 11um - 133um
- if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7) then
+ !--- 11 - 133 um
+ if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or.  &
+     Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 1) then
+   Beta_11um_133um = a_Beta_11um_133um_fit + b_Beta_11um_133um_fit * Beta_11um_12um
+   dBeta_11um_133um_dBeta_11um_12um = b_Beta_11um_133um_fit
+   dEmiss_133um_dEmiss_11um = Beta_11um_133um * (1.0-Emiss_11um)**(Beta_11um_133um - 1.0)
+   Emiss_133um = 1.0 - (1.0-Emiss_11um)**Beta_11um_133um
+   Trans_133um = (1.0 - Emiss_133um)
    Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
-   f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
-   K(2,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
-   K(2,2) = K(1,2) - (Rad_Ac_133um + Trans_ac_133um*Bc_133um - Rad_Clear_133um)*&
+   f_Btd_11_133 = f_T_11 - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
+   dBtd_11_133_dTc = dT_11_dTc - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
+   dBtd_11_133_dec = dT_11_dec - (Rad_Ac_133um + Trans_ac_133um*Bc_133um - Rad_Clear_133um)*&
                      (dEmiss_133um_dEmiss_11um)/dB_dT_133um
-   K(2,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
-             dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(2,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
+   dBtd_11_133_dbeta = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
+                        dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
+   dBtd_11_133_dTs = dT_11_dTs - (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
  endif
- if (Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9) then
-   Rad_133um = Emiss_133um*Rad_Ac_133um + Trans_Ac_133um * Emiss_133um * Bc_133um +  Trans_133um * Rad_Clear_133um
-   f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_133um,Rad_133um,dB_dT = dB_dT_133um)
-   K(3,1) = K(1,1) - Trans_Ac_133um*Emiss_133um*dB_dTc_133um/dB_dT_133um
-   K(3,2) = K(1,2) - (Rad_Ac_133um + Trans_ac_133um*Bc_133um - Rad_Clear_133um)*&
-                     (dEmiss_133um_dEmiss_11um)/dB_dT_133um
-   K(3,3) = (Rad_Ac_133um + Trans_ac_133um*Bc_133um -Rad_Clear_133um)/ &
-             dB_dT_133um * alog(1.0-Emiss_11um)*(1.0-Emiss_133um)
-   K(3,4) = K(1,4) -  (Trans_Ac_133um * Trans_133um * Trans_Bc_133um * dB_dTs_133um) / dB_dT_133um * Emiss_Sfc_133um
- endif
- if (Acha_Mode_Flag == 5) then
-   Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um +  Trans_85um * Rad_Clear_85um
-   f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_85um,Rad_85um,dB_dT = dB_dT_85um)
-   K(3,1) = K(1,1) - Trans_Ac_85um*Emiss_85um*dB_dTc_85um/dB_dT_85um
-   K(3,2) = K(1,2) - (Rad_Ac_85um + Trans_ac_85um*Bc_85um - Rad_Clear_85um)*&
+ !--- 11 - 8.5 um
+ if (Acha_Mode_Flag == 5 .or. Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
+   Beta_11um_85um = a_Beta_11um_85um_fit + b_Beta_11um_85um_fit * Beta_11um_12um
+   dBeta_11um_85um_dBeta_11um_12um = b_Beta_11um_85um_fit
+   dEmiss_85um_dEmiss_11um = Beta_11um_85um * (1.0-Emiss_11um)**(Beta_11um_85um - 1.0)
+   Emiss_85um = 1.0 - (1.0-Emiss_11um)**Beta_11um_85um
+   Trans_85um = (1.0 - Emiss_85um)
+   Rad_85um = Emiss_85um*Rad_Ac_85um + Trans_Ac_85um * Emiss_85um * Bc_85um + Trans_85um * Rad_Clear_85um
+   f_Btd_11_85 = f_T_11 - PLANCK_TEMP_FAST(Chan_Idx_85um,Rad_85um,dB_dT = dB_dT_85um)
+   dBtd_11_85_dTc = dT_11_dTc - Trans_Ac_85um*Emiss_85um*dB_dTc_85um/dB_dT_85um
+   dBtd_11_85_dec = dT_11_dec - (Rad_Ac_85um + Trans_ac_85um*Bc_85um - Rad_Clear_85um)*&
                      (dEmiss_85um_dEmiss_11um)/dB_dT_85um
-   K(3,3) = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
+   dBtd_11_85_dbeta = (Rad_Ac_85um + Trans_ac_85um*Bc_85um -Rad_Clear_85um)/ &
              dB_dT_85um * alog(1.0-Emiss_11um)*(1.0-Emiss_85um)
-   K(3,4) = K(1,4) -  (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um * Emiss_Sfc_85um
+   dBtd_11_85_dTs = dT_11_dTs - (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um * Emiss_Sfc_85um
  endif
- if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7) then
+ !--- 11 - 6.7
+ if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. &
+    Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
+   Beta_11um_67um = a_Beta_11um_67um_fit + b_Beta_11um_67um_fit * Beta_11um_12um
+   dBeta_11um_67um_dBeta_11um_12um = b_Beta_11um_67um_fit
+   dEmiss_67um_dEmiss_11um = Beta_11um_67um * (1.0-Emiss_11um)**(Beta_11um_67um - 1.0)
+   Emiss_67um = 1.0 - (1.0-Emiss_11um)**Beta_11um_67um
+   Trans_67um = (1.0 - Emiss_67um)
    Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
-   f(3) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
-   K(3,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
-   K(3,2) = K(1,2) - (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)*&
+   f_Btd_11_67 = f_T_11 - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
+   dBtd_11_67_dTc = dT_11_dTc - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
+   dBtd_11_67_dec = dT_11_dec - (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)*&
                      (dEmiss_67um_dEmiss_11um)/dB_dT_67um
-   K(3,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
-             dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(3,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
+   dBtd_11_67_dbeta = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
+                      dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
+   dBtd_11_67_dTs = dT_11_dTs -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
  endif
- if (Acha_Mode_Flag == 2) then
-   Rad_67um = Emiss_67um*Rad_Ac_67um + Trans_Ac_67um * Emiss_67um * Bc_67um + Trans_67um * Rad_Clear_67um
-   f(2) = f(1) - PLANCK_TEMP_FAST(Chan_Idx_67um,Rad_67um,dB_dT = dB_dT_67um)
-   K(2,1) = K(1,1) - Trans_Ac_67um*Emiss_67um*dB_dTc_67um/dB_dT_67um
-   K(2,2) = K(1,2) - (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)*&
-                     (dEmiss_67um_dEmiss_11um)/dB_dT_67um
-   K(2,3) = (Rad_Ac_67um + Trans_ac_67um*Bc_67um - Rad_Clear_67um)/ &
-             dB_dT_67um * alog(1.0-Emiss_11um)*(1.0-Emiss_67um)
-   K(2,4) = K(1,4) -  (Trans_Ac_67um * Trans_67um * Trans_Bc_67um * dB_dTs_67um) / dB_dT_67um * Emiss_Sfc_67um
- endif
+
+ !----------------------------------------------------------------------------------------------
+ ! Fill in the Kernel Matrix
+ !----------------------------------------------------------------------------------------------
+  f(1) = f_T_11
+  K(1,1) = dT_11_dTc     
+  K(1,2) = dT_11_dec    
+  K(1,3) = dT_11_dbeta
+  K(1,4) = dT_11_dTs
+  select case(Acha_Mode_Flag)
+     case(2)  !11,12
+        f(2) = f_Btd_11_67
+        K(2,1) = dBtd_11_67_dTc     
+        K(2,2) = dBtd_11_67_dec    
+        K(2,3) = dBtd_11_67_dbeta
+        K(2,4) = dBtd_11_67_dTs
+     case(3)  !11,12
+        f(2) = f_Btd_11_12
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+     case(4) !11,13.3
+        f(2) = f_Btd_11_133
+        K(2,1) = dBtd_11_133_dTc     
+        K(2,2) = dBtd_11_133_dec    
+        K(2,3) = dBtd_11_133_dbeta
+        K(2,4) = dBtd_11_133_dTs
+     case(5) !11,12,8.5
+        f(2) = f_Btd_11_12
+        f(3) = f_Btd_11_85
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+        K(3,1) = dBtd_11_85_dTc     
+        K(3,2) = dBtd_11_85_dec    
+        K(3,3) = dBtd_11_85_dbeta
+        K(3,4) = dBtd_11_85_dTs
+     case(6) !11,12,6.7
+        f(2) = f_Btd_11_12
+        f(3) = f_Btd_11_67
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+        K(3,1) = dBtd_11_67_dTc     
+        K(3,2) = dBtd_11_67_dec    
+        K(3,3) = dBtd_11_67_dbeta
+        K(3,4) = dBtd_11_67_dTs
+     case(7) !11,13.3,6.7
+        f(2) = f_Btd_11_133
+        f(3) = f_Btd_11_67
+        K(2,1) = dBtd_11_133_dTc     
+        K(2,2) = dBtd_11_133_dec    
+        K(2,3) = dBtd_11_133_dbeta
+        K(2,4) = dBtd_11_133_dTs
+        K(3,1) = dBtd_11_67_dTc     
+        K(3,2) = dBtd_11_67_dec    
+        K(3,3) = dBtd_11_67_dbeta
+        K(3,4) = dBtd_11_67_dTs
+     case(8,9) !11,12,13.3
+        f(2) = f_Btd_11_12
+        f(3) = f_Btd_11_133
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+        K(3,1) = dBtd_11_133_dTc     
+        K(3,2) = dBtd_11_133_dec    
+        K(3,3) = dBtd_11_133_dbeta
+        K(3,4) = dBtd_11_133_dTs
+     case(10) !11,12,8.5,13.3
+        f(2) = f_Btd_11_12
+        f(3) = f_Btd_11_85
+        f(4) = f_Btd_11_133
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+        K(3,1) = dBtd_11_85_dTc     
+        K(3,2) = dBtd_11_85_dec    
+        K(3,3) = dBtd_11_85_dbeta
+        K(3,4) = dBtd_11_85_dTs
+        K(4,1) = dBtd_11_133_dTc     
+        K(4,2) = dBtd_11_133_dec    
+        K(4,3) = dBtd_11_133_dbeta
+        K(4,4) = dBtd_11_133_dTs
+     case(11) !11,12,8.5,13.3,6.7
+        f(2) = f_Btd_11_12
+        f(3) = f_Btd_11_85
+        f(4) = f_Btd_11_133
+        f(5) = f_Btd_11_67
+        K(2,1) = dBtd_11_12_dTc     
+        K(2,2) = dBtd_11_12_dec    
+        K(2,3) = dBtd_11_12_dbeta
+        K(2,4) = dBtd_11_12_dTs
+        K(3,1) = dBtd_11_85_dTc     
+        K(3,2) = dBtd_11_85_dec    
+        K(3,3) = dBtd_11_85_dbeta
+        K(3,4) = dBtd_11_85_dTs
+        K(4,1) = dBtd_11_133_dTc     
+        K(4,2) = dBtd_11_133_dec    
+        K(4,3) = dBtd_11_133_dbeta
+        K(4,4) = dBtd_11_133_dTs
+        K(5,1) = dBtd_11_67_dTc     
+        K(5,2) = dBtd_11_67_dec    
+        K(5,3) = dBtd_11_67_dbeta
+        K(5,4) = dBtd_11_67_dTs
+  end select
 
  !--- determine number of channels
   select case(Acha_Mode_Flag)
@@ -2657,16 +2795,31 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
        Emiss_Vector(3) = Emiss_85um
      case(6)  !goes-im 3 chan
        Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_67um
-       Emiss_Vector(3) = Emiss_12um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_67um
      case(7)  !goes-np 3 chan
        Emiss_Vector(1) = Emiss_11um
-       Emiss_Vector(2) = Emiss_67um
-       Emiss_Vector(3) = Emiss_133um
+       Emiss_Vector(2) = Emiss_133um
+       Emiss_Vector(3) = Emiss_67um
      case(8)  !goes-r
        Emiss_Vector(1) = Emiss_11um
        Emiss_Vector(2) = Emiss_12um
        Emiss_Vector(3) = Emiss_133um
+     case(9)  !goes-r
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_133um
+     case(10)  
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_85um
+       Emiss_Vector(4) = Emiss_133um
+     case(11)  
+       Emiss_Vector(1) = Emiss_11um
+       Emiss_Vector(2) = Emiss_12um
+       Emiss_Vector(3) = Emiss_85um
+       Emiss_Vector(4) = Emiss_133um
+       Emiss_Vector(5) = Emiss_67um
   end select
 
 end subroutine COMPUTE_FORWARD_MODEL_AND_KERNEL
@@ -2717,7 +2870,6 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
 
   !--- calipso values (not multiplier on uncer values)
   call COMPUTE_CIRRUS_APRIORI(Ttropo, Latitude, Tc_Ap_Cirrus, Tc_Ap_Uncer_Cirrus)
-
 
   !-- -initialize with the opaque cloud temperature
   Tc_Ap_Opaque = Tc_Opaque
@@ -2770,19 +2922,6 @@ subroutine COMPUTE_APRIORI_BASED_ON_PHASE_ETROPO( &
       Tc_Ap = Tc_Ap_Cirrus
       Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
     endif
-
-
-!==============
-!   Tc_Ap = min(Tc_Ap_Cirrus,Tc_Ap_Opaque)
-!   Tc_Ap_Uncer = Tc_Ap_Uncer_Cirrus
-
-    !---- for very thick clouds, we want to ignore the LRC to 
-    !---  to maintain spatial structure like overshooting columns
-!   if (Emiss_11um_Tropo > 0.95 .and. Tc_Opaque /= MISSING_VALUE_REAL4) then
-!     Tc_Ap = Tc_Opaque
-!     Tc_Ap_Uncer = Tc_Ap_Uncer_Opaque
-!   endif
-!==============
 
     !--- emissivity and beta a priori
     Ec_Ap = min(0.99,max(0.1,Emiss_11um_Tropo)) 
@@ -2848,8 +2987,12 @@ end subroutine DETERMINE_SFC_TYPE_FORWARD_MODEL
 ! Using Andy's simpler expression
 !
 ! This assumes that 
-! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um,5=8.5+11+12um
-!                 6=11+6.7+12um,7=11+6.7+13.3um,8=11+12+13.3um
+! Acha_Mode_Flag: 1=11um,2=11+6.7um,3=11+12um,4=11+13.3um, $
+!                 5=11+12+8.5um
+!                 6=11+6.7+12um,7=11+6.7+13.3um,
+!                 8=11+12+13.3um
+!                 9=11+12+13.3um(pseudo)
+!                 10=11+12+8.5+13.3um
 !
 ! Input:
 ! Emiss_Vector = a vector of emissivities in each channel. 
@@ -2964,13 +3107,67 @@ subroutine COMPUTE_SY_BASED_ON_CLEAR_SKY_COVARIANCE(   &
     Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
     Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
     Sy(1,3) = Trans2*Bt_11um_Btd_11um_133um_Covar
+
     Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + &
               Trans2*Btd_11um_12um_Btd_11um_12um_Covar
     Sy(2,1) = Sy(1,2)
     Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
+
     Sy(3,3) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
     Sy(3,1) = Sy(1,3)
     Sy(3,2) = Sy(2,3)
+
+  case(10)
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
+    Sy(1,3) = Trans2*Bt_11um_Btd_11um_85um_Covar
+    Sy(1,4) = Trans2*Bt_11um_Btd_11um_133um_Covar
+
+    Sy(2,1) = Sy(1,2)
+    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
+    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_85um_Covar
+    Sy(2,4) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
+
+    Sy(3,1) = Sy(1,3)
+    Sy(3,2) = Sy(2,3)
+    Sy(3,3) = T11um_85um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_85um_Btd_11um_85um_Covar
+    Sy(3,4) = Trans2*Btd_11um_85um_Btd_11um_133um_Covar
+
+    Sy(4,1) = Sy(1,4)
+    Sy(4,2) = Sy(2,4)
+    Sy(4,3) = Sy(3,4)
+    Sy(4,4) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
+
+  case(11)
+    Sy(1,1) = T11um_Cal_Uncer**2 + Sub_Pixel_Uncer(1) + Trans2*Bt_11um_Bt_11um_Covar
+    Sy(1,2) = Trans2*Bt_11um_Btd_11um_12um_Covar
+    Sy(1,3) = Trans2*Bt_11um_Btd_11um_85um_Covar
+    Sy(1,4) = Trans2*Bt_11um_Btd_11um_133um_Covar
+    Sy(1,5) = Trans2*Bt_11um_Btd_11um_67um_Covar
+
+    Sy(2,1) = Sy(1,2)
+    Sy(2,2) = T11um_12um_Cal_Uncer**2 + Sub_Pixel_Uncer(2) + Trans2*Btd_11um_12um_Btd_11um_12um_Covar
+    Sy(2,3) = Trans2*Btd_11um_12um_Btd_11um_85um_Covar
+    Sy(2,4) = Trans2*Btd_11um_12um_Btd_11um_133um_Covar
+    Sy(2,5) = Trans2*Btd_11um_12um_Btd_11um_67um_Covar
+
+    Sy(3,1) = Sy(1,3)
+    Sy(3,2) = Sy(2,3)
+    Sy(3,3) = T11um_85um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_85um_Btd_11um_85um_Covar
+    Sy(3,4) = Trans2*Btd_11um_85um_Btd_11um_133um_Covar
+    Sy(3,5) = Trans2*Btd_11um_67um_Btd_11um_85um_Covar
+
+    Sy(4,1) = Sy(1,4)
+    Sy(4,2) = Sy(2,4)
+    Sy(4,3) = Sy(3,4)
+    Sy(4,4) = T11um_133um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_133um_Btd_11um_133um_Covar
+    Sy(4,5) = Trans2*Btd_11um_67um_Btd_11um_133um_Covar
+
+    Sy(5,1) = Sy(1,5)
+    Sy(5,2) = Sy(2,5)
+    Sy(5,3) = Sy(3,5)
+    Sy(5,4) = Sy(4,5)
+    Sy(5,5) = T11um_67um_Cal_Uncer**2 + Sub_Pixel_Uncer(3) + Trans2*Btd_11um_67um_Btd_11um_67um_Covar
 
   end select
 
@@ -3023,6 +3220,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Water
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Water
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Water
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Water
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Water
  endif
  !--- Land
  if (Sfc_Type_Forward_Model == 1) then
@@ -3061,6 +3260,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Land
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Land
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Land
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Land
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Land
  endif
 
  !--- Snow
@@ -3100,6 +3301,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Snow
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Snow
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Snow
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Snow
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Snow
  endif
 
  !--- Desert
@@ -3139,6 +3342,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Desert
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Desert
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Desert
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Desert
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Desert
  endif
  !--- Arctic
  if (Sfc_Type_Forward_Model == 4) then
@@ -3177,6 +3382,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Arctic
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Arctic
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Arctic
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Arctic
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Arctic
  endif
  !--- Antarctic
  if (Sfc_Type_Forward_Model == 5) then
@@ -3215,6 +3422,8 @@ subroutine SET_CLEAR_SKY_COVARIANCE_TERMS(Sfc_Type_Forward_Model)
    Btd_11um_12um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_85um_Covar_Antarctic
    Btd_11um_12um_Btd_11um_67um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_Antarctic
    Btd_11um_67um_Btd_11um_133um_Covar = Btd_11um_67um_Btd_11um_133um_Covar_Antarctic
+   Btd_11um_85um_Btd_11um_133um_Covar = Btd_11um_12um_Btd_11um_133um_Covar_Antarctic   !FIXME
+   Btd_11um_67um_Btd_11um_85um_Covar = Btd_11um_12um_Btd_11um_67um_Covar_AntArctic     !FIXME
  endif
 
 end subroutine SET_ClEAR_SKY_COVARIANCE_TERMS
@@ -3826,7 +4035,8 @@ subroutine CHECK_ACHA_MODE( &
        return
    endif
 
-   if ((Chan_On_85um == symbol%NO) .and. (Acha_Mode_Input == 5)) then
+   if ((Chan_On_85um == symbol%NO) .and. &
+       (Acha_Mode_Input == 5 .or. Acha_Mode_Input == 10 .or. Acha_Mode_Input==11)) then
        Acha_Mode_Error_Flag = 1
        return
    endif
@@ -3834,7 +4044,11 @@ subroutine CHECK_ACHA_MODE( &
    if ((Chan_On_12um == symbol%NO) .and. &
        ((Acha_Mode_Input == 3) .or. &
         (Acha_Mode_Input == 5) .or. &
-        (Acha_Mode_Input == 6))) then
+        (Acha_Mode_Input == 6) .or. &
+        (Acha_Mode_Input == 8) .or. &
+        (Acha_Mode_Input == 9) .or. &
+        (Acha_Mode_Input == 10) .or. &
+        (Acha_Mode_Input == 11))) then
        Acha_Mode_Error_Flag = 1
        return
    endif
@@ -3842,7 +4056,9 @@ subroutine CHECK_ACHA_MODE( &
    if ((Chan_On_133um == symbol%NO) .and. &
        ((Acha_Mode_Input == 4) .or. &
         (Acha_Mode_Input == 7) .or. &
-        (Acha_Mode_Input == 8))) then
+        (Acha_Mode_Input == 8) .or. &
+        (Acha_Mode_Input == 10) .or. &
+        (Acha_Mode_Input == 11))) then
        Acha_Mode_Error_Flag = 1
        return
    endif

@@ -94,7 +94,10 @@ public:: SETUP_ICE_MICROPHYSICAL_MODEL
      case(3:5,200:209,223,706:708)  ! AVHRR
         include 'acha_ice_cloud_microphysical_model_noaa19.inc'
 
-     case(173,270)  ! AHI, ABI
+     case(173)  ! AHI
+        include 'acha_ice_cloud_microphysical_model_ahi.inc'
+
+     case(270)  !  ABI
         include 'acha_ice_cloud_microphysical_model_abi.inc'
 
      case(224) ! VIIRS 

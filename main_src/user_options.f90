@@ -949,7 +949,7 @@ contains
    subroutine CHECK_ALGORITHM_CHOICES(SensorName)
       character (len=*) , intent(in) :: SensorName
       
-      integer :: possible_acha_modes ( 8 )
+      integer :: possible_acha_modes ( 10 )
       integer :: possible_dcomp_modes ( 4 )
  
       !------------------------------------------------------------------------
@@ -963,6 +963,9 @@ contains
       !---              6 = 11/12/6.7
       !---              7 = 11/13.3/6.7
       !---              8 = 11/12/13.3)
+      !---              9 = 11/12/13.3(pseudo)
+      !---              10 = 8.5/11/12/13.3
+      !---              11 = 6.7/8.5/11/12/13.3
       !------------------------------------------------------------------------
       
       acha % mode = acha_mode_User_Set     
@@ -998,7 +1001,7 @@ contains
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]  
          possible_dcomp_modes(1)    =  3
       case ( 'GOES-RU-IMAGER')
-         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_acha_modes(1:10)   =  [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ( 'MTSAT-IMAGER')
          possible_acha_modes(1:4)   =  [ 1, 2, 3 , 6 ]
@@ -1017,7 +1020,7 @@ contains
          possible_acha_modes(1:4)   =  [1, 3, 5, 9]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('AQUA-IFF')
-         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_acha_modes(1:10)   =  [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('AVHRR-IFF')
          possible_acha_modes(1:4)   =  [1, 3, 4, 8]
@@ -1026,16 +1029,16 @@ contains
          possible_acha_modes(1:3)   =  [1, 3, 6]
          possible_dcomp_modes(1:1)  =  [3]
       case ('MODIS')
-         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8] 
+         possible_acha_modes(1:10)   =  [1, 2, 3, 4, 5, 6, 7, 8, 10, 11] 
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9 ]
       case ('MODIS-CSPP')
-         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_acha_modes(1:10)   =  [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ('MODIS-MAC')
          possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case ( 'AHI')
-         possible_acha_modes(1:8)   =  [1, 2, 3, 4, 5, 6, 7, 8]
+         possible_acha_modes(1:10)   =  [1, 2, 3, 4, 5, 6, 7, 8, 10, 11]
          possible_dcomp_modes(1:4)  =  [1, 2, 3, 9]
       case default 
          print*,'sensor ',SensorName, ' is not set in check channels user_options settings Inform andi.walther@ssec.wisc.edu'   

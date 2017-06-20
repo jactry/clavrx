@@ -1197,8 +1197,8 @@ module AWG_CLOUD_HEIGHT
                        Ec_Ap,Ec_Ap_Uncer, &
                        Beta_Ap,Beta_Ap_Uncer)
 
-Diag%Array_1(Elem_Idx,Line_Idx) = Tc_Ap
-Diag%Array_2(Elem_Idx,Line_Idx) =Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
+!Diag%Array_1(Elem_Idx,Line_Idx) = Tc_Ap
+!Diag%Array_2(Elem_Idx,Line_Idx) =Input%Tc_Cirrus_Sounder(Elem_Idx,Line_Idx)
 
    if (lun_diag > 0) then 
      write(unit=lun_diag,fmt=*) "==========================================================="
@@ -2616,8 +2616,8 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
      dBtd_11_12_dTs = dT_11_dTs - (Trans_Ac_12um * Trans_12um * Trans_Bc_12um * dB_dTs_12um) / dB_dT_12um * Emiss_Sfc_12um
  endif
  !--- 11 - 133 um
- if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or.  &
-     Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 1) then
+ if (Acha_Mode_Flag == 4 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. Acha_Mode_Flag == 9 .or.  &
+     Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
    Beta_11um_133um = a_Beta_11um_133um_fit + b_Beta_11um_133um_fit * Beta_11um_12um
    dBeta_11um_133um_dBeta_11um_12um = b_Beta_11um_133um_fit
    dEmiss_133um_dEmiss_11um = Beta_11um_133um * (1.0-Emiss_11um)**(Beta_11um_133um - 1.0)
@@ -2649,8 +2649,7 @@ subroutine OPTIMAL_ESTIMATION(Iter_Idx,Iter_Idx_Max,nx,ny, &
    dBtd_11_85_dTs = dT_11_dTs - (Trans_Ac_85um * Trans_85um * Trans_Bc_85um * dB_dTs_85um) / dB_dT_85um * Emiss_Sfc_85um
  endif
  !--- 11 - 6.7
- if (Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 8 .or. &
-    Acha_Mode_Flag == 10 .or. Acha_Mode_Flag == 11) then
+ if (Acha_Mode_Flag == 2 .or. Acha_Mode_Flag == 6 .or. Acha_Mode_Flag == 7 .or. Acha_Mode_Flag == 11) then
    Beta_11um_67um = a_Beta_11um_67um_fit + b_Beta_11um_67um_fit * Beta_11um_12um
    dBeta_11um_67um_dBeta_11um_12um = b_Beta_11um_67um_fit
    dEmiss_67um_dEmiss_11um = Beta_11um_67um * (1.0-Emiss_11um)**(Beta_11um_67um - 1.0)

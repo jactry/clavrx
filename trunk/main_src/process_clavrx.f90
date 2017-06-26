@@ -251,7 +251,8 @@
    TYPE (AREA_STRUCT) :: AREAstr
    TYPE (GVAR_NAV)    :: NAVstr
    
-   logical :: dncomp_run
+   logical :: nlcomp_run
+   logical :: dcomp_run
    
    character (len = 30) :: string_30
    character (len = 100) :: string_100
@@ -1209,12 +1210,13 @@
     
                ! - lunar reflectance
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-               
+               nlcomp_run = .false.
                if ((trim(Sensor%Sensor_Name) == 'VIIRS' .or. trim(Sensor%Sensor_Name) == 'VIIRS-NASA') &
                        .and. Sensor%Chan_On_Flag_Default(44) == sym % yes .and. Nlcomp_Mode > 0) then
                   if ( count (ch(44)%Ref_Lunar_Toa > 0) > 0 ) then
+                     
                      call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , nlcomp_mode = .true. &
-                        , algorithm_started = dncomp_run)
+                        , algorithm_started = nlcomp_run)
                   endif   
                endif   
           
@@ -1224,23 +1226,26 @@
      
                !--- cloud optical depth and effective radius from vis/nir approach
                Start_Time_Point_Hours = COMPUTE_TIME_HOURS()
-
+               
+               dcomp_run = .false.
                if (Dcomp_Mode > 0) then
                   
-                  call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dncomp_run)
+                  call AWG_CLOUD_DNCOMP_ALGORITHM( Iseg_In = Segment_Number , algorithm_started = dcomp_run)
                   call SET_DCOMP_VERSION()
-                  if ( dncomp_run ) then
+                    
+               endif
+               
+               
+               if ( dcomp_run .or. nlcomp_run) then
                      call COMPUTE_CLOUD_WATER_PATH(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                      call COMPUTE_DCOMP_INSOLATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment,Sun_Earth_Distance)
                      call COMPUTE_ADIABATIC_CLOUD_PROPS(Line_Idx_Min_segment,Image%Number_Of_Lines_Read_This_Segment)
                      call COMPUTE_DCOMP_PERFORMANCE_METRICS(DCOMP_Processed_Count,DCOMP_Valid_Count)
                      call ADJUST_DCOMP_LWP()
-                  endif
-                  
                endif
 
                !--- compute precipation from optical properties
-               if (Dcomp_Mode > 0 ) then
+               if (dcomp_run ) then
                   call COMPUTE_PRECIPITATION(Line_Idx_Min_Segment,Image%Number_Of_Lines_Read_This_Segment)
                endif
 

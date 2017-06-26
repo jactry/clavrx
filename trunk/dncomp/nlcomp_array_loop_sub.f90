@@ -103,7 +103,7 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    real :: ozone_path_nwp
    
    ! - executable
-   
+   print*,'nlcomp starts........'
    
    debug_mode = 1
    if ( present ( debug_mode_user)) debug_mode = debug_mode_user
@@ -368,6 +368,16 @@ subroutine nlcomp_array_loop_sub ( input , output, debug_mode_user )
    ! -DCOMP_INFO_THIN_CLOUD
    where ( output % cod % d < 4 .and. output % cod % d > 0 )
       info_flag = ibset ( info_flag, 7)
+   end where
+   
+   
+   where ( is_obs .and. .not. is_cloud )
+      output % cld_trn_sol % d   =  1.0 
+      output % cld_trn_obs % d   =  1.0  
+      output % cld_alb % d       =  0.0
+      output % cld_sph_alb % d   =  0.0  
+      output % cod % d           =  0.0
+      output % cps % d           =  -999.0
    end where
    
    output % quality % d = quality_flag

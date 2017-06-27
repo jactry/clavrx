@@ -218,6 +218,28 @@ select case(habit_idx)
         C_g_11um_FIT_ICE =   -0.11560
 
    case(10)  !-- ice clouds modeled as two-habit model (hexagonal column and ensemble of 20-elem distorted hexagonal-column aggregates) (b=0.10)
+        A_BETA_11um_67um_FIT_ICE =    1.71762
+        B_BETA_11um_67um_FIT_ICE =   -0.68722
+        A_BETA_11um_85um_FIT_ICE =    2.66274
+        B_BETA_11um_85um_FIT_ICE =   -1.63058
+        A_BETA_11um_133um_FIT_ICE =   -0.24116
+        B_BETA_11um_133um_FIT_ICE =    1.25183
+        A_Re_Beta_FIT_ICE = -492.37556
+        B_Re_Beta_FIT_ICE = 1315.56215
+        C_Re_Beta_FIT_ICE =  -1170.13380         
+        D_Re_Beta_FIT_ICE =  347.07167
+        A_Qe_065um_FIT_ICE =    2.13547
+        B_Qe_065um_FIT_ICE =   -0.11069
+        C_Qe_065um_FIT_ICE =    0.02634
+        A_Qe_11um_FIT_ICE =    0.92451
+        B_Qe_11um_FIT_ICE =    0.97306
+        C_Qe_11um_FIT_ICE =   -0.22244
+        A_wo_11um_FIT_ICE =    0.18708
+        B_wo_11um_FIT_ICE =    0.27926
+        C_wo_11um_FIT_ICE =   -0.05882
+        A_g_11um_FIT_ICE =    0.73150
+        B_g_11um_FIT_ICE =    0.23727
+        C_g_11um_FIT_ICE =   -0.05790
 
    case default  !-- ice clouds modeled as empirical model (b=0.10)
         A_BETA_11um_67um_FIT_ICE =  -1.85234
